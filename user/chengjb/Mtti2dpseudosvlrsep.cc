@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 {
    sf_init(argc,argv);
 
-   clock_t t1, t2, t3, t4, t5, t44;
+   clock_t t1, t2, t3, t4, t5, t44=0;
    float   timespent;
 
    t1=clock();

@@ -64,7 +64,10 @@ def Flow(sources,flow,bindir,rsfflow=1,
             pars.insert(0,command)
             # special rule for metaprograms
             if rsfprog and rsfprog[len(prefix):] in \
-                    ('conjgrad','cconjgrad','mpi','omp'):
+                    ('conjgrad','dottest','cconjgrad','cdottest',
+                     'conjgradmpi','dottestmpi','cconjgradmpi','cdottestmpi',
+                     'mpi','omp'):
+                # find the next program
                 n = 1
                 command2 = pars.pop(n)
                 while '=' in command2:
@@ -82,6 +85,9 @@ def Flow(sources,flow,bindir,rsfflow=1,
                         sources.append(command2)
                         if rsfprog2 not in coms:
                             coms.append(rsfprog2)
+                    if rsfprog2.startswith(prefix+'mpi') and mpirun:
+                        pars.insert(n,mpirun)
+                        n += 1
                 if re.match(r'[^/]+\.exe$',command2): # local program
                     command2 = os.path.join('.',command2)                 
                 pars.insert(n,command2)
@@ -95,15 +101,18 @@ def Flow(sources,flow,bindir,rsfflow=1,
         steps.append(string.join(substeps," | "))
     #<- assemble the pipeline
     command = string.join(steps," && ")
+    mpiprog = rsfprog and (rsfprog[:len(prefix)+3] == prefix+'mpi' or \
+                           rsfprog == prefix+'conjgradmpi' or \
+                           rsfprog == prefix+'cconjgradmpi')
     if stdout==1:
-        if rsfprog and rsfprog[:len(prefix)+3] == prefix+'mpi':
+        if mpiprog:
             command = command + " --output=$TARGET"
         else:
             command = command + " > $TARGET"
     elif stdout==0:
         command = command + " >/dev/null"
     if stdin:
-        if rsfprog and rsfprog[:len(prefix)+3] == prefix+'mpi':
+        if mpiprog:
             command = command + " --input=$SOURCE"
         else:
             command = "< $SOURCE " + command

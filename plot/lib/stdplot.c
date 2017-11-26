@@ -39,6 +39,7 @@ static bool labelrot, transp, barmove, wheretics, scalebar, vertbar, wherebartic
 static bool cube=false, movie=false, flat, xreverse, yreverse;
 static char blank[]=" ";
 static const float aspect=0.8, ticksep=1.75;
+static float larnersz;
 
 static struct Label {
     char where;
@@ -446,14 +447,14 @@ static void make_labels (sf_file in, char where1, char where2)
 
     if (!sf_getfloat ("labelsz",&labelsz)) labelsz=8.;
 
-    float larnersz =0.0f;
-    if (!sf_getfloat ("larnersz",&larnersz)) larnersz=0.0;
+    if (!sf_getfloat ("larnersz",&larnersz)) larnersz=0.0f;
     /* give the font size as a fraction of the total screen height, 
        this is based on Ken Larner's 1/20 rule.
        Any positive larnersz value will overwrite labelsz with 
        the appropiate rule*/
 
-    if(larnersz >0.0f) labelsz = (72.0f)*orig2/larnersz; // inches to pt conversion
+    if(larnersz >0.0f) labelsz = (72.0f)*orig2/larnersz; /* inches to pt conversion */
+
     /* label size */
     if (cube) {
 	labelsz *= 0.03; /* slightly smaller */
@@ -680,7 +681,7 @@ static void make_baraxis (float min, float max)
 
     if (!sf_getint ("nbartic",&(baraxis->ntic))) 
 	baraxis->ntic = 0.5 + (vertbar? inch2: inch1)/(aspect*labelsz);
-    /* nbartic number of scalebar ticmarks */
+    /*( nbartic number of scalebar ticmarks )*/
 
     if (NULL == (baraxis->format = sf_getstring("formatbar"))) {
 	/* format for ticmark labels in the scalebar */

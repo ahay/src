@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH -J qrtm_marm
+#SBATCH -A TCCS
+#SBATCH -t 02:00:00
+#SBATCH -n 16
+#SBATCH -N 16
+#SBATCH -p development
+#SBATCH --mail-type=begin
+#SBATCH --mail-type=end
+#SBATCH --mail-user=junzhesun@utexas.edu
+#SBATCH --uid=jsun
+#SBATCH -o qrtm_marm.%j.out
+#SBATCH -e qrtm_marm.%j.err
+export OMP_NUM_THREADS=14;scons

@@ -217,8 +217,8 @@ int main(int argc, char *argv[])
 
 	int ix, iz, is, it, wfit, im, ik, i, j;
     int ns, nx, nz, nt, wfnt, rnx, rnz, nzx, rnzx, vnx;
-	int scalet, snap, snapshot, fnx, fnz, fnzx, nk, nb, rjump, nr;
-	int rectx, rectz, gpz, n, m, pad1, trunc, spx, spz;
+	int scalet, snap, snapshot, fnx, fnz, fnzx, nk, nb, nr, ndr, nr0;
+	int rectx, rectz, repeat, gpz, n, m, pad1, trunc, spx, spz;
 
 	float dt, t0, z0, dz, x0, dx, s0, ds, wfdt, srctrunc;
 
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 	struct timeval tim;
 	
 	sf_complex c, **lt, **rt;
-	sf_complex *ww, **dd;
+	sf_complex *ww, **dd, ***dd3;
 	float *rr, **temsnap;
 	sf_complex *cwave, *cwavem, **wave, *curr;
 
@@ -237,16 +237,16 @@ int main(int argc, char *argv[])
 	sf_file Fdat, Fsrc;
 	sf_file Fwfld, Fvel;
 	sf_file Fleft, Fright;
-	FILE *swap;
 
-	int cpuid, numprocs, nth;
+	int cpuid, numprocs, nth, iturn, nspad;
+	sf_complex *sendbuf, *recvbuf;
 	MPI_Comm comm=MPI_COMM_WORLD;
+
+	sf_init(argc, argv);
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &cpuid);
 	MPI_Comm_size(comm, &numprocs);
-
-	sf_init(argc, argv);
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -259,75 +259,72 @@ int main(int argc, char *argv[])
 	gettimeofday(&tim, NULL);
 	tstart=tim.tv_sec+(tim.tv_usec/1000000.0);
 
-	if(!sf_getbool("wantwf", &wantwf)) wantwf=false;
-	if(!sf_getint("pad1", &pad1)) pad1=1;
-	/* padding factor on the first axis */
+	if(!sf_getbool("wantwf", &wantwf)) wantwf=false; /* want wavefield or not */
+	if(!sf_getint("pad1", &pad1)) pad1=1; /* padding factor on the first axis */
 
-	if(!sf_getint("nb", &nb)) sf_error("Need nb= ");
-	if(!sf_getfloat("srctrunc", &srctrunc)) srctrunc=0.4;
-	if(!sf_getint("rectx", &rectx)) rectx=2;
-	if(!sf_getint("rectz", &rectz)) rectz=2;
+	if(!sf_getint("nb", &nb)) sf_error("Need nb= "); /* boundary width */
+	if(!sf_getfloat("srctrunc", &srctrunc)) srctrunc=0.4; /* source truncation */
+	if(!sf_getint("rectx", &rectx)) rectx=2; /* source smoothing in x-direction */
+	if(!sf_getint("rectz", &rectz)) rectz=2; /* source smoothing in z-direction */
+	if(!sf_getint("repeat", &repeat)) repeat=2; /* repeat numbers of source smoothing */
 
-	if(!sf_getint("scalet", &scalet)) scalet=1;
-	if(!sf_getint("snap", &snap)) snap=100;
-	/* interval of the output wavefield */
-	if(!sf_getint("snapshot", &snapshot)) snapshot=0;
-	/* print out the wavefield snapshots of this shot */
-	if(!sf_getint("rjump", &rjump)) rjump=3;
+	if(!sf_getint("scalet", &scalet)) scalet=1; /* wavefield storage interval */
+	if(!sf_getint("snap", &snap)) snap=100; /* wavefield output interval when wantwf=y */
+	if(!sf_getint("snapshot", &snapshot)) snapshot=0; /* print out the wavefield snapshots of this shot */
 
-	if(!sf_getint("ns", &ns)) sf_error("Need ns=");
-	if(!sf_getfloat("ds", &ds)) sf_error("Need ds=");
-	if(!sf_getfloat("s0", &s0)) sf_error("Need s0=");
-	if(!sf_getint("rnx", &rnx)) sf_error("Need rnx=");
-	if(!sf_getint("gpz", &gpz)) sf_error("Need gpz=");
-	if(!sf_getint("spx", &spx)) sf_error("Need spx=");
-	if(!sf_getint("spz", &spz)) sf_error("Need spz=");
+	if(!sf_getint("ns", &ns)) sf_error("Need ns="); /* shot number */
+	if(!sf_getfloat("ds", &ds)) sf_error("Need ds="); /* shot interval */
+	if(!sf_getfloat("s0", &s0)) sf_error("Need s0="); /* shot origin */
+	if(!sf_getint("rnx", &rnx)) sf_error("Need rnx="); /* coverage area of one shot */
+	if(!sf_getint("nr", &nr)) nr=rnx; /* receiver number */
+	if(!sf_getint("ndr", &ndr)) ndr=1; /* receiver interval */
+	if(!sf_getint("nr0", &nr0)) nr0=0; /* receiver origin */
+	if(!sf_getint("gpz", &gpz)) sf_error("Need gpz="); /* depth of geophone */
+	if(!sf_getint("spx", &spx)) sf_error("Need spx="); /* horizontal location of source */
+	if(!sf_getint("spz", &spz)) sf_error("Need spz="); /* depth of source */
 
 	/* input/output files */
-	Fsrc=sf_input("in");
-	Fdat=sf_output("out");
+	Fsrc=sf_input("--input");
+	Fdat=sf_output("--output");
 
 	if(wantwf){
-		Fwfld=sf_output("Fwfld");
+		Fwfld=sf_output("Fwfld"); /* wavefield */
 	}
-	Fvel=sf_input("Fpadvel");
+	Fvel=sf_input("Fpadvel"); /* velocity */
 
 	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); t0=sf_o(at);
 	ax=sf_iaxa(Fvel, 2); vnx=sf_n(ax); dx=sf_d(ax);
-	//if((ns-1)*((int)(ds/dx)) != vnx-rnx) sf_error("Please check the geometry parameters!");
-    /* assume the padded length in horizontal direction is the rnx */
 	az=sf_iaxa(Fvel, 1); rnz=sf_n(az); dz=sf_d(az); z0=sf_o(az);
 	
     nx=rnx+2*nb; nz=rnz+2*nb;
 	nzx=nx*nz; rnzx=rnz*rnx;
-    x0=-(rnx-1)*dx/2.;
-	nr=(rnx-1)/rjump+1;
+    x0=(nr0-spx)*dx;
 
     sf_setn(ax, nr);
-	sf_setd(ax, dx*rjump);
-    sf_seto(ax, x0);
-    sf_setlabel(ax, "Offset");
-    sf_setunit(ax, "km");
-    
+	sf_setd(ax, dx*ndr);
+	sf_seto(ax, x0);
+	sf_setlabel(ax, "Offset");
+	sf_setunit(ax, "km");
+
 	wfnt=(nt-1)/scalet+1;
 	wfdt=dt*scalet;
-    sf_setn(at, wfnt);
+	sf_setn(at, wfnt);
 	sf_setd(at, wfdt);
 	sf_seto(at, t0);
 	sf_setlabel(at, "Time");
 	sf_setunit(at, "s");
-    
-    /* set up the output files */
+
+	/* set up the output files */
 	sf_oaxa(Fdat, at, 1);
 	sf_oaxa(Fdat, ax, 2);
 	sf_putint(Fdat, "n3", ns);
 	sf_putfloat(Fdat, "d3", ds);
 	sf_putfloat(Fdat, "o3", s0);
-    sf_putstring(Fdat, "label3", "shot");
-    sf_putstring(Fdat, "unit3", "km");
+	sf_putstring(Fdat, "label3", "shot");
+	sf_putstring(Fdat, "unit3", "km");
 	sf_settype(Fdat, SF_COMPLEX);
-    
-    if(wantwf){
+
+	if(wantwf){
 		sf_setn(at, (wfnt-1)/snap+1);
 		sf_setd(at, wfdt*snap);
 		sf_oaxa(Fwfld, az, 1);
@@ -338,184 +335,194 @@ int main(int argc, char *argv[])
 		sf_settype(Fwfld, SF_FLOAT);
 	}
 
+	if(ns%numprocs==0) nspad=ns;
+	else nspad=(ns/numprocs+1)*numprocs;
+
 	/* print axies parameters for double check */
 	sf_warning("nt=%d, dt=%g, scalet=%d, wfnt=%d, wfdt=%g",nt, dt, scalet, wfnt, wfdt);
 	sf_warning("vnx=%d, nx=%d, dx=%g, nb=%d, rnx=%d, x0=%g", vnx, nx, dx, nb, rnx, x0);
-	sf_warning("rnx=%d, rjump=%d, nr=%d", rnx, rjump, nr);
+	sf_warning("rnx=%d, nr0=%d, ndr=%d, nr=%d", rnx, nr0, ndr, nr);
 	sf_warning("nz=%d, rnz=%d, dz=%g, z0=%g", nz, rnz, dz, z0);
 	sf_warning("spx=%d, spz=%d, gpz=%d", spx, spz, gpz);
-	sf_warning("cpuid=%d, numprocs=%d", cpuid, numprocs);
+	sf_warning("cpuid=%d, numprocs=%d, nspad=%d", cpuid, numprocs, nspad);
 	sf_warning("ns=%d, ds=%g, s0=%g", ns, ds, s0);
-	
-    gpz=gpz+nb;
-    spz=spz+nb;
-    spx=spx+nb;
+
+	gpz=gpz+nb;
+	spz=spz+nb;
+	spx=spx+nb;
 
 	/* allocate storage and read data */
 	ww=sf_complexalloc(nt);
 	sf_complexread(ww, nt, Fsrc);
 	sf_fileclose(Fsrc);
-	
+
 	nk=cfft2_init(pad1, nz, nx, &fnz, &fnx);
 	fnzx=fnz*fnx;
 
 	dd=sf_complexalloc2(wfnt, nr);
+	if(cpuid==0) dd3=sf_complexalloc3(wfnt, nr, numprocs);
 	rr=sf_floatalloc(nzx);
-	reflgen(nz, nx, spz, spx, rectz, rectx, 0, rr);
+	reflgen(nz, nx, spz, spx, rectz, rectx, repeat, rr);
 
 	curr=sf_complexalloc(fnzx);
 	cwave=sf_complexalloc(nk);
 	cwavem=sf_complexalloc(nk);
-    icfft2_allocate(cwavem);
+	icfft2_allocate(cwavem);
 
-	swap=fopen("temswap.bin","wb+");
-	path1=sf_getstring("path1");
-	path2=sf_getstring("path2");
+	/* initialize data (helpful when MPI_Gather & ns<numprocs) */
+	for(ix=0; ix<nr; ix++)
+		for(it=0; it<wfnt; it++)
+			dd[ix][it]=sf_cmplx(0.,0.);
+
+	path1=sf_getstring("path1"); /* path of left matrices './mat/left' */
+	path2=sf_getstring("path2"); /* path of right matrices './mat/left' */
 	if(path1==NULL) path1="./mat/left";
 	if(path2==NULL) path2="./mat/right";
-	/* shot loop */
-	for (is=cpuid; is<ns; is+=numprocs){
-		/* construct the names of left and right matrices */
-		left=sf_charalloc(strlen(path1));
-		right=sf_charalloc(strlen(path2));
-		strcpy(left, path1);
-		strcpy(right, path2);
-		sprintf(number, "%d", is+1);
-		strcat(left, number);
-		strcat(right, number);
 
-		Fleft=sf_input(left);
-		Fright=sf_input(right);
-		
-		if(!sf_histint(Fleft, "n1", &n) || n != nzx) sf_error("Need n1=%d in Fleft", nzx);
-		if(!sf_histint(Fleft, "n2", &m)) sf_error("No n2 in Fleft");
-		if(!sf_histint(Fright, "n1", &n) || n != m) sf_error("Need n1=%d in Fright", m);
-		if(!sf_histint(Fright, "n2", &n) || n != nk) sf_error("Need n2=%d in Fright", nk);
-		
-		/* allocate storage for each shot migration */
-		lt=sf_complexalloc2(nzx, m);
-		rt=sf_complexalloc2(m, nk);
-		sf_complexread(lt[0], nzx*m, Fleft);
-		sf_complexread(rt[0], m*nk, Fright);
-        sf_fileclose(Fleft);
-		sf_fileclose(Fright);
-		
-		wave=sf_complexalloc2(fnzx, m);
-		if(is == snapshot) temsnap=sf_floatalloc2(rnz, rnx);
-		
-		trunc=srctrunc/dt+0.5;
-		
+	/* shot loop */
+	for (iturn=0; iturn*numprocs<nspad; iturn++){
+		is=iturn*numprocs+cpuid;
+
+		if(is<ns){ /* effective shot loop */
+			/* construct the names of left and right matrices */
+			left=sf_charalloc(strlen(path1));
+			right=sf_charalloc(strlen(path2));
+			strcpy(left, path1);
+			strcpy(right, path2);
+			sprintf(number, "%d", is+1);
+			strcat(left, number);
+			strcat(right, number);
+
+			Fleft=sf_input(left);
+			Fright=sf_input(right);
+
+			if(!sf_histint(Fleft, "n1", &n) || n != nzx) sf_error("Need n1=%d in Fleft", nzx);
+			if(!sf_histint(Fleft, "n2", &m)) sf_error("No n2 in Fleft");
+			if(!sf_histint(Fright, "n1", &n) || n != m) sf_error("Need n1=%d in Fright", m);
+			if(!sf_histint(Fright, "n2", &n) || n != nk) sf_error("Need n2=%d in Fright", nk);
+
+			/* allocate storage for each shot migration */
+			lt=sf_complexalloc2(nzx, m);
+			rt=sf_complexalloc2(m, nk);
+			sf_complexread(lt[0], nzx*m, Fleft);
+			sf_complexread(rt[0], m*nk, Fright);
+			sf_fileclose(Fleft);
+			sf_fileclose(Fright);
+
+			wave=sf_complexalloc2(fnzx, m);
+			if(is==snapshot) temsnap=sf_floatalloc2(rnz, rnx);
+
+			trunc=srctrunc/dt+0.5;
+
 #ifdef _OPENMP
 #pragma omp parallel for private(iz)
 #endif
-		for(iz=0; iz<fnzx; iz++){
-			curr[iz]=sf_cmplx(0.,0.);
-		}
-		
-		wfit=0;
-		for(it=0; it<nt; it++){
-			sf_warning("Forward propagation is=%d/%d it=%d/%d;",is+1, ns,it+1, nt);
-			
-			cfft2(curr, cwave);
-			for(im=0; im<m; im++){
+			for(iz=0; iz<fnzx; iz++){
+				curr[iz]=sf_cmplx(0.,0.);
+			}
+
+			wfit=0;
+			for(it=0; it<nt; it++){
+				//sf_warning("Forward propagation is=%d/%d it=%d/%d;",is+1, ns,it+1, nt);
+
+				cfft2(curr, cwave);
+				for(im=0; im<m; im++){
 #ifdef _OPENMP
 #pragma omp parallel for private(ik)
 #endif
-				for(ik=0; ik<nk; ik++){
+					for(ik=0; ik<nk; ik++){
 #ifdef SF_HAS_COMPLEX_H
-					cwavem[ik]=cwave[ik]*rt[ik][im];
+						cwavem[ik]=cwave[ik]*rt[ik][im];
 #else
-					cwavem[ik]=sf_cmul(cwave[ik],rt[ik][im]);
+						cwavem[ik]=sf_cmul(cwave[ik],rt[ik][im]);
 #endif
+					}
+					icfft2(wave[im],cwavem);
 				}
-				icfft2(wave[im],cwavem);
-			}
 
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, iz, i, j, im, c) shared(curr, it)
 #endif
-			for(ix=0; ix<nx; ix++){
-				for(iz=0; iz<nz; iz++){
-					i=iz+ix*nz;
-					j=iz+ix*fnz;
-					
-					if(it<trunc){
-#ifdef SF_HAS_COMPLEX_H
-						c=ww[it]*rr[i];
-#else
-						c=sf_crmul(ww[it],rr[i]);
-#endif
-					}else{
-						c=sf_cmplx(0.,0.);
-					}
-			//		c += curr[j];
-					
-					for(im=0; im<m; im++){
-#ifdef SF_HAS_COMPLEX_H
-						c += lt[im][i]*wave[im][j];
-#else
-						c += sf_cmul(lt[im][i], wave[im][j]);
-#endif
-					}
-					curr[j]=c;
-				}
-			}
-			
-			if(it%scalet==0){
-				for(ix=0; ix<nr; ix++){
-					dd[ix][wfit]=curr[gpz+(ix*rjump+nb)*fnz];
-				}
-				if(wantwf && is == snapshot && wfit%snap==0){
-					for(ix=0; ix<rnx; ix++){
-						for(iz=0; iz<rnz; iz++){
-							temsnap[ix][iz]=crealf(curr[(ix+nb)*fnz+(iz+nb)]);
-						}
-					}
-					sf_floatwrite(temsnap[0], rnzx, Fwfld);
-				}
-				wfit++;
-			}
-		} //end of it
-        
-        free(*rt); free(rt);
-        free(*lt); free(lt);
-        free(*wave); free(wave);
-        free(left); free(right);
-		if(is==snapshot) {free(*temsnap); free(temsnap);}
+				for(ix=0; ix<nx; ix++){
+					for(iz=0; iz<nz; iz++){
+						i=iz+ix*nz;
+						j=iz+ix*fnz;
 
-		fseeko(swap, is*nr*wfnt*sizeof(float complex), SEEK_SET);
-		fwrite(dd[0], sizeof(float complex)*wfnt, nr, swap);
+						if(it<trunc){
+#ifdef SF_HAS_COMPLEX_H
+							c=ww[it]*rr[i];
+#else
+							c=sf_crmul(ww[it],rr[i]);
+#endif
+						}else{
+							c=sf_cmplx(0.,0.);
+						}
+						//		c += curr[j];
+
+						for(im=0; im<m; im++){
+#ifdef SF_HAS_COMPLEX_H
+							c += lt[im][i]*wave[im][j];
+#else
+							c += sf_cmul(lt[im][i], wave[im][j]);
+#endif
+						}
+						curr[j]=c;
+					}
+				}
+
+				if(it%scalet==0){
+					for(ix=0; ix<nr; ix++){
+						dd[ix][wfit]=curr[gpz+(ix*ndr+nr0+nb)*fnz];
+					}
+					if(wantwf && is == snapshot && wfit%snap==0){
+						for(ix=0; ix<rnx; ix++){
+							for(iz=0; iz<rnz; iz++){
+								temsnap[ix][iz]=crealf(curr[(ix+nb)*fnz+(iz+nb)]);
+							}
+						}
+						sf_floatwrite(temsnap[0], rnzx, Fwfld);
+					}
+					wfit++;
+				}
+			} //end of it
+
+			free(*rt); free(rt);
+			free(*lt); free(lt);
+			free(*wave); free(wave);
+			free(left); free(right);
+			if(is==snapshot) {free(*temsnap); free(temsnap);}
+		} // is<ns
+
+		if(cpuid==0){
+			sendbuf=dd[0];
+			recvbuf=dd3[0][0];
+		}else{
+			sendbuf=dd[0];
+			recvbuf=NULL;
+		}
+		MPI_Gather(sendbuf, nr*wfnt, MPI_COMPLEX, recvbuf, nr*wfnt, MPI_COMPLEX, 0, comm);
+
+		if(cpuid==0){
+			if((iturn+1)*numprocs<=ns) sf_complexwrite(dd3[0][0], nr*wfnt*numprocs, Fdat);
+			else sf_complexwrite(dd3[0][0], nr*wfnt*(ns-iturn*numprocs), Fdat);
+		}
 	} //end of shot loop
 	MPI_Barrier(comm);
 
-	if(cpuid==0){
-		for(is=0; is<ns; is++){
-			fseeko(swap, is*nr*wfnt*sizeof(float complex), SEEK_SET);
-			fread(dd[0], sizeof(float complex), wfnt*nr, swap);
-			sf_complexwrite(dd[0], wfnt*nr, Fdat);
-		}
-		fclose(swap);
-		//remove("temswap.bin");
-	}
-	MPI_Barrier(comm);
-
 	cfft2_finalize();
-    
     sf_fileclose(Fdat);
-	
-	if(wantwf){
-		sf_fileclose(Fwfld);
-	}
+	if(wantwf) {sf_fileclose(Fwfld);}
+
 	free(ww); free(rr);
 	free(*dd); free(dd);
+	if(cpuid==0) {free(**dd3); free(*dd3); free(dd3);}
 	free(cwave); free(cwavem); free(curr);
-	
+		
 	gettimeofday(&tim, NULL);
 	tend=tim.tv_sec+(tim.tv_usec/1000000.0);
 	sf_warning(">> The computing time is %.3lf minutes <<", (tend-tstart)/60.);
 
 	MPI_Finalize();
-	exit(0);
 }
 
 void reflgen(int nzb, int nxb, int spz, int spx,

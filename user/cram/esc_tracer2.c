@@ -374,7 +374,7 @@ void sf_esc_tracer2_compute (sf_esc_tracer2 esc_tracer, float z, float x, float 
         dd = fabs (sigma*sqrt (fz*fz + fx*fx));
         if (!esc_tracer->parab) {
             /* Length of this segment of the characteristic */
-            dd = fabsf (sigma*sqrt (fz*fz + fx*fx));
+            dd = fabs (sigma*sqrt (fz*fz + fx*fx));
             t += dd*(s + sp)*0.5;
         }
         ll += dd;

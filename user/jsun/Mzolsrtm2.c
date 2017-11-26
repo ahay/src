@@ -22,7 +22,7 @@
 #include <omp.h>
 #endif
 
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 #include "timer.h"
 /*******************************************************/
 /* wave propagation utils*/
@@ -32,7 +32,6 @@ typedef struct Geopar {
     int   nz;
     float dx;
     float dz;
-    float ox;
     int   gpz;
     /*time parameters*/
     int nt;
@@ -53,39 +52,70 @@ typedef struct Geopar {
     float dkx;
     float kz0;
     float kx0;
-    /*lowrank parameters*/
-    int m; 
-    int n2; // left: m*n2
-    int n;  //right: n2*n
+    /*for tapering */
+    int taper;
+    float thresh;
 } * geopar; /*geometry parameters*/
 
 int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_complex **rt, geopar geop, sf_complex ***wvfld)
 /*< zero-offset exploding reflector modeling/migration >*/
 {
-    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfnt, wfit, snap;
+    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfit, snap;
     int im, i, j, m2, ik, nk, pad1;
-    float dt, dx, dz, ox;
+    float dx, dz;
     sf_complex *curr, **wave, *cwave, *cwavem, c;
     sf_complex *currm;
     bool verb;
+    
+    /*for tapering*/
+    int taper;
+    float dkx,dkz,kx0,kz0,kx,kz,ktmp,kx_trs,kz_trs,thresh;
+    float *ktp;
 
     nx  = geop->nx;
     nz  = geop->nz;
     dx  = geop->dx;
     dz  = geop->dz;
-    ox  = geop->ox;
     gpz = geop->gpz;
     nt  = geop->nt;
-    dt  = geop->dt;
     snap= geop->snap;
-    nzx2= geop->nzx2;
-    m2  = geop->m2;
-    wfnt= geop->wfnt;
     pad1= geop->pad1;
     verb= geop->verb;
+    nzx2= geop->nzx2;
+    /*nk = geop->nk;*/
+    m2  = geop->m2;
+    taper = geop->taper;
+    thresh = geop->thresh;
 
     nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
     if (nk!=geop->nk) sf_error("nk discrepancy!");
+
+    if (taper) {
+        dkz = 1./(nz2*dz); kz0 = -0.5/dz;
+        dkx = 1./(nx2*dx); kx0 = -0.5/dx;
+        kz_trs = thresh*fabs(kz0);
+        kx_trs = thresh*fabs(kx0);
+        sf_warning("dkz=%f,dkx=%f,kz0=%f,kx0=%f",dkz,dkx,kz0,kx0);
+        sf_warning("nk=%d,nkz=%d,nkx=%d",nk,nz2,nx2);
+        sf_warning("Applying kz tapering below %f",kz_trs);
+        sf_warning("Applying kx tapering below %f",kx_trs);
+        ktp = sf_floatalloc(nk);
+        /* constructing the tapering op */
+        for (ix=0; ix < nx2; ix++) {
+            kx = kx0+ix*dkx;
+            for (iz=0; iz < nz2; iz++) {
+                kz = kz0+iz*dkz;
+                ktmp = 1.;
+                if (fabs(kx) > kx_trs)
+                    ktmp *= (fabs(kx)>kx_trs)? powf((fabs(kx0)-fabs(kx)+kx_trs)/kx0,2) : 1.;
+                if (fabs(kz) > kz_trs)
+                    ktmp *= (fabs(kz)>kz_trs)? powf((fabs(kz0)-fabs(kz)+kz_trs)/kz0,2) : 1.;
+                ktp[iz+ix*nz2] = ktmp;
+            }
+        }
+    } else {
+	ktp = NULL;
+    }
 
     curr = sf_complexalloc(nzx2);
     cwave  = sf_complexalloc(nk);
@@ -105,13 +135,13 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 	curr[iz] = sf_cmplx(0.,0.);
     }
 
-    if (adj) { /* migration <- read data */
+    if (adj) { /* migration */
         if (snap>0) wfit = (int)(nt-1)/snap; // wfnt-1
 	/* time stepping */
 	for (it=nt-1; it > -1; it--) {
 	    if (verb) sf_warning("it=%d;",it);
 	
-	    /* matrix multiplication */
+	    /* 4 - matrix multiplication */
 	    for (im = 0; im < m2; im++) {
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,i,j) shared(currm,lt,curr)
@@ -138,7 +168,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 #ifdef SF_HAS_COMPLEX_H
 		    c += wave[im][ik]*conjf(rt[ik][im]);
 #else
-		    c += sf_cmul(wave[im][ik],conjf(rt[ik][im])); //complex multiplies complex
+		    c = sf_cadd(c,sf_cmul(wave[im][ik],conjf(rt[ik][im]))); //complex multiplies complex
 #endif
 		}
 		cwave[ik] = c;
@@ -146,13 +176,34 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 
 	    icfft2(curr,cwave);
 
+            /* 3 - inject data */
 #ifdef _OPENMP
 #pragma omp parallel for private(ix)
 #endif
-	    for (ix=0; ix < nx; ix++) { /* data injection */
+	    for (ix=0; ix < nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H		
 		curr[gpz+ix*nz2] += dat[ix][it];
+#else
+		curr[gpz+ix*nz2] = sf_cadd(curr[gpz+ix*nz2],dat[ix][it]);
+#endif
 	    }
 
+            /* 2 - taper */
+            if (taper) {
+                if (it%taper == 0) {
+                    cfft2(curr,cwave);
+                    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+                        cwave[ik] = cwave[ik]*ktp[ik];
+#else
+                        cwave[ik] = sf_crmul(cwave[ik],ktp[ik]);
+#endif
+                    }
+                    icfft2(curr,cwave);
+                }
+            }
+
+            /* 1 - snapshot */
 	    if (snap > 0 && it%snap == 0) {
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,j)
@@ -166,7 +217,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 		if (snap>0) wfit--;
 	    }
 	} /*time iteration*/
-	/*generate image*/
+	/* 0 - generate image */
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
@@ -175,8 +226,8 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 		img[ix][iz] = curr[iz+ix*nz2];
 	    }
 	}
-    } else { /* modeling -> write data */
-	/*exploding reflector*/
+    } else { /* modeling */
+	/* 0 - exploding reflector */
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
@@ -189,13 +240,45 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 	/* time stepping */
 	for (it=0; it < nt; it++) {
 	    if (verb) sf_warning("it=%d;",it);
+
+            /* 1 - snapshot */
+	    if (snap > 0 && it%snap == 0) {
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz,j)
+#endif
+		for ( ix = 0; ix < nx; ix++) {
+		    for ( iz = 0; iz<nz; iz++ ) { 
+			j = iz+ix*nz2; /* padded grid */
+			wvfld[wfit][ix][iz] = curr[j];
+		    }
+		}
+		if (snap>0) wfit++;
+	    }
+
+            /* 2 - taper */
+            if (taper) {
+                if (it%taper == 0) {
+                    cfft2(curr,cwave);
+                    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+                        cwave[ik] = cwave[ik]*ktp[ik];
+#else
+                        cwave[ik] = sf_crmul(cwave[ik],ktp[ik]);
+#endif
+                    }
+                    icfft2(curr,cwave);
+                }
+            }
+
+            /* 3 - record data */
 #ifdef _OPENMP
 #pragma omp parallel for private(ix)
 #endif
 	    for (ix=0; ix < nx; ix++) { /* record data */
 		dat[ix][it] = curr[gpz+ix*nz2];
 	    }
-	    /* matrix multiplication */
+
+	    /* 4 - matrix multiplication */
 	    cfft2(curr,cwave);
 	    
 	    for (im = 0; im < m2; im++) {
@@ -225,23 +308,11 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 #ifdef SF_HAS_COMPLEX_H
 			c += lt[im][i]*wave[im][j];
 #else
-			c += sf_cmul(lt[im][i], wave[im][j]);
+			c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif	    
 		    }
 		    curr[j] = c;
 		}
-	    }
-	    if (snap > 0 && it%snap == 0) {
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz,j)
-#endif
-		for ( ix = 0; ix < nx; ix++) {
-		    for ( iz = 0; iz<nz; iz++ ) { 
-			j = iz+ix*nz2; /* padded grid */
-			wvfld[wfit][ix][iz] = curr[j];
-		    }
-		}
-		if (snap>0) wfit++;
 	    }
 	}
     }
@@ -255,8 +326,11 @@ int main(int argc, char* argv[])
 {
     bool adj,timer,verb;
     int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, gpz, wfnt;
-    int m2, n2, nk, nth=1;
-    float dt, dx, dz, ox;
+    int m2, n2, nk, taper;
+#ifdef _OPENMP
+    int nth=1;
+#endif
+    float dt, dx, dz, ox, oz, thresh;
     sf_complex **img, **dat, **lt, **rt, ***wvfld;
     sf_file data, image, left, right, snaps;
     double time=0.,t0=0.,t1=0.;
@@ -274,6 +348,10 @@ int main(int argc, char* argv[])
     /* padding factor on the first axis */
     if(!sf_getint("gpz",&gpz)) gpz=0;
     /* geophone surface */
+    if (!sf_getint("taper",&taper)) taper=0; 
+    /* tapering in the frequency domain */
+    if (!sf_getfloat("thresh",&thresh)) thresh=0.92; 
+    /* tapering threshold */
 
     if (adj) { /* migration */
 	data = sf_input("in");
@@ -282,6 +360,7 @@ int main(int argc, char* argv[])
 
 	if (!sf_histint(data,"n1",&nt)) sf_error("No n1= in input");
 	if (!sf_histfloat(data,"d1",&dt)) sf_error("No d1= in input");
+        if (!sf_getfloat("oz",&oz)) oz=0.; 
 
 	if (!sf_histint(data,"n2",&nx)) sf_error("No n2= in input");
 	if (!sf_histfloat(data,"d2",&dx)) sf_error("No d2= in input");
@@ -294,7 +373,7 @@ int main(int argc, char* argv[])
 
 	sf_putint(image,"n1",nz);
 	sf_putfloat(image,"d1",dz);
-	sf_putfloat(image,"o1",0.);
+	sf_putfloat(image,"o1",oz);
 	sf_putstring(image,"label1","Depth");
 
 	sf_putint(image,"n2",nx);
@@ -308,6 +387,7 @@ int main(int argc, char* argv[])
 
 	if (!sf_histint(image,"n1",&nz)) sf_error("No n1= in input");
 	if (!sf_histfloat(image,"d1",&dz)) sf_error("No d1= in input");
+	if (!sf_histfloat(image,"o1",&oz)) oz=0.;
 
 	if (!sf_histint(image,"n2",&nx))  sf_error("No n2= in input");
 	if (!sf_histfloat(image,"d2",&dx)) sf_error("No d2= in input");
@@ -401,17 +481,18 @@ int main(int argc, char* argv[])
     geop->nz  = nz;
     geop->dx  = dx;
     geop->dz  = dz;
-    geop->ox  = ox;
     geop->gpz = gpz;
     geop->nt  = nt;
     geop->dt  = dt;
     geop->snap= snap;
-    geop->nzx2= nzx2;
-    geop->nk  = nk;
-    geop->m2  = m2;
     geop->wfnt= wfnt;
     geop->pad1= pad1;
     geop->verb= verb;
+    geop->nzx2= nzx2;
+    geop->nk  = nk;
+    geop->m2  = m2;
+    geop->taper= taper;
+    geop->thresh= thresh;
 
     lrexp(img, dat, adj, lt, rt, geop, wvfld);
 

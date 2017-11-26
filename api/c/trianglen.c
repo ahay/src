@@ -111,4 +111,3 @@ void sf_trianglen_close(void)
     free(n);
 }
 
-/* 	$Id$	 */

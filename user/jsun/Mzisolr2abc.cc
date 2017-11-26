@@ -23,9 +23,9 @@
 using namespace std;
 
 static std::valarray<float> vs;
-static std::valarray<double> ksz,ksx;
+static std::valarray<double> kx,kz;
 static float dt,ct,cb,cl,cr;
-static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
+static int nkz,nz,nx,nbt,nbb,nbl,nbr,abc;
 static bool rev;
 
 int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
@@ -33,26 +33,42 @@ int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,zpx(0.0f,0.0f));
+    setvalue(res,zpx(0.0,0.0));
     for(int a=0; a<nr; a++) {
+        int i = rs[a];
+        int iz  = i%nz;
+        int ix  = (int) i/nz;
+        double c0 = vs[i];
 	for(int b=0; b<nc; b++) {
-	    int ikz = cs[b] % nkzs;
-	    int ikx = (int) cs[b]/nkzs;
-	    int iz  = rs[a] % nz;
-	    int ix  = (int) rs[a]/nz;
-	    double hypk = hypot(ksz[ikz],ksx[ikx]);
-	    double phase = vs[rs[a]]*hypk*dt;
-	    if (rev) phase*=-1;
-	    double phf = 1.;
-	    if (iz < nbt)
-		phf *= exp(-powf(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
-	    else if (iz > nz-1-nbb)
-		phf *= exp(-powf(cb*(iz-nz+1+nbb)*abs(ksz[ikz]/hypk),2));
-	    if (ix < nbl)
-		phf *= exp(-powf(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
-	    else if (ix > nx-1-nbr)
-		phf *= exp(-powf(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
-	    res(a,b) = zpx(cos(phase),sin(phase))*phf; 
+	    int j = cs[b];
+	    double k = hypot(kz[j],kx[j]);
+            double phase = c0*k*dt; 
+            zpx phf = zpx(cos(phase),sin(phase)); 
+	    //if (rev) phase*=-1;
+            //double phf = 1;
+ 
+            /* absorbing boundary */
+            if (abc==0) {
+                if (iz < nbt)
+                    phf *= exp(-pow(ct*(nbt-iz)*abs(kz[j]/k),2));
+                else if (iz > nz-1-nbb)
+                    phf *= exp(-pow(cb*(iz-nz+1+nbb)*abs(kz[j]/k),2));
+                if (ix < nbl)
+                    phf *= exp(-pow(cl*(nbl-ix)*abs(kx[j]/k),2));
+                else if (ix > nx-1-nbr)
+                    phf *= exp(-pow(cr*(ix-nx+1+nbr)*abs(kx[j]/k),2));
+            } else {
+                if (iz < nbt)
+                    phf *= exp(-pow(ct*(nbt-iz),2));
+                else if (iz > nz-1-nbb)
+                    phf *= exp(-pow(cb*(iz-nz+1+nbb),2));
+                if (ix < nbl)
+                    phf *= exp(-pow(cl*(nbl-ix),2));
+                else if (ix > nx-1-nbr)
+                    phf *= exp(-pow(cr*(ix-nx+1+nbr),2));
+            }
+	    res(a,b) = (rev) ? conj(phf) : phf;
+	    //res(a,b) = zpx(cos(phase),sin(phase))*phf; 
 	}
     }
     return 0;
@@ -86,11 +102,12 @@ int main(int argc, char** argv)
     par.get("cl",cl,0.0);
     par.get("cr",cr,0.0);
 
+    par.get("abc",abc,0); /*absorbing mode: 0-> direction dependent; 1-> direction independent.*/
+
     par.get("rev",rev,false);
 
     iRSF vel;
 
-//    int nz,nx;
     vel.get("n1",nz);
     vel.get("n2",nx);
     int m = nx*nz;
@@ -104,7 +121,6 @@ int main(int argc, char** argv)
     int nkz,nkx;
     fft.get("n1",nkz);
     fft.get("n2",nkx);
-    nkzs= nkz;
 
     float dkz,dkx;
     fft.get("d1",dkz);
@@ -116,16 +132,15 @@ int main(int argc, char** argv)
 
     int n = nkx*nkz;
 
-    std::valarray<double> kz(nkz),kx(nkx);
-    for (int iz=0; iz < nkz; iz++)
-	kz[iz] = 2*SF_PI*(kz0+iz*dkz);
-    for (int ix=0; ix < nkx; ix++)
-	kx[ix] = 2*SF_PI*(kx0+ix*dkx);
-
-    ksz.resize(nkz);
-    ksz = kz;
-    ksx.resize(nkx);
-    ksx = kx;
+    kx.resize(n);
+    kz.resize(n);
+    for (int ikx=0; ikx < nkx; ikx++) {
+	for (int ikz=0; ikz < nkz; ikz++) {
+	    int ik = ikz+ikx*nkz;
+	    kx[ik] = 2*SF_PI*(kx0+ikx*dkx);
+	    kz[ik] = 2*SF_PI*(kz0+ikz*dkz);
+	}
+    }
 
     vector<int> lidx, ridx;
     ZpxNumMat mid;
@@ -151,7 +166,6 @@ int main(int argc, char** argv)
     std::valarray<sf_complex> ldata(m*n2);
     for (int k=0; k < m*n2; k++) {
 	ldata[k] = sf_cmplx(real(ldat[k]),imag(ldat[k]));
-//	sf_warning("real of ldat=%g, imag of ldat=%g", real(ldat[k]),imag(ldat[k]));
     }
 
     oRSF left("left");
@@ -167,8 +181,8 @@ int main(int argc, char** argv)
     std::valarray<sf_complex> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) {
 	rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
-//    	sf_warning("real of rdat=%g, imag of rdat=%g", real(rdat[k]),imag(rdat[k]));
     }
+
     oRSF right;
     right.type(SF_COMPLEX);
     right.put("n1",n2);

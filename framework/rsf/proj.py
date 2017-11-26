@@ -15,7 +15,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, stat, sys, types, copy, re, string, urllib, ftplib
+import os, stat, sys, types, copy, re, string, urllib, ftplib, socket
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
@@ -212,7 +212,8 @@ combine ={
 # Environmental variables to pass to SCons
 keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','USER','WORK', 'SCRATCH',
            'LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','MIC_LD_LIBRARY_PATH',
-           'RSFMEMSIZE','PYTHONPATH','SFPENOPTS','MPICH_HOME','MODULEPATH','OMPI_MCA_btl')
+           'RSFMEMSIZE','PYTHONPATH','SFPENOPTS','MPICH_HOME',
+           'MODULEPATH','OMPI_MCA_btl','I_MPI_ROOT')
 
 #############################################################################
 class Project(Environment):
@@ -234,7 +235,7 @@ class Project(Environment):
         self.sfpen = os.path.join(self.bindir,'sfpen')
         self.pspen = os.path.join(self.bindir,'pspen')
         self.vppen = os.path.join(self.bindir,'vppen')
-        self.runonnode = os.path.join(self.bindir,'runonnode')
+#        self.runonnode = os.path.join(self.bindir,'runonnode')
         
         self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','madagascar','figs'))
         
@@ -256,6 +257,8 @@ class Project(Environment):
             getenv = os.environ.get(env)
             if getenv:
                 self.Append(ENV={env:getenv})
+
+        self.hostname = socket.gethostname()
 
         # Keep environmental variables needed for SLURM
         for env in os.environ.keys():
@@ -334,11 +337,6 @@ class Project(Environment):
             self.timer = ''
 
         self.mpirun = self.get('MPIRUN',WhereIs('ibrun') or WhereIs('mpirun'))
-        raddenv = os.environ.get('RSF_RADDENV', None)
-        if raddenv:
-            self.raddenv = raddenv
-        else:
-            self.raddenv = ''
 
         checkpar = self.get('CHECKPAR')
         self.checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
@@ -361,48 +359,8 @@ class Project(Environment):
         # self.jobs is the number of jobs
         # self.ip is the current CPU
 
-        # Karl Schleicher kls.  I'll move hosts.txt back to the current working 
-        # directory.  This method of pscons rsh to remote nodes only works
-        # for one pscons in the current working directory, otherwise the 
-        # multiple tasks will write to the same file and make a mess! 
-        # Esteban noticed this in December 2015.
-
-        # kls Karl Schleicher This can be trapped by making sure no hosts.txt
-        # already exists and exiting with an error.  hosts.txt will need to be
-        # deleted at the end.  That will be a project for another day!
-        # YOu cannot append pid to hosts.txt, or the next time you run, 
-        # the command wil be different and scons wilL think it needs to be 
-        # rerun.
-
-        if len(self.nodes) > 1:
-            self.hosts = self.cwd + '/hosts.txt'
-            print "using %s to keep track of nodes in use by pscons."%self.hosts
-            print "Only one pscons using remote hosts can be run in directory"
-            # I would like to delete hosts.txt file at end of scons.  Cannot just
-            # delete in def End(self).  Need to do after all the scons command
-            # complete. kls
-            if (os.path.isfile(self.hosts)):
-                # would like to delete at end and make error message here it exists.
-                os.unlink(self.hosts)
-            hosts_fd=open(self.hosts,'w')
-            hosts_fd.write("numnodes %4d\n"%len(self.nodes))
-            hosts_fd.write("host                                    state\n") 
-            for host in self.nodes:
-                hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
-            hosts_fd.close()
-           
         for key in self['ENV'].keys():
-            # quote the env values because stampede has env variable 
-            # SLURM_NODE_ALIASES=(null)  This makes problems in the ssh to nodes.
-            # on stampede there are many env keys starting with SLURM_ or
-            # TACC_ that include list of nodes or queue_job_number.  There
-            # will make pscons rerun the tasks.  Some are harmless but 
-            # clutter the printed job output.  They can be safely removed
-            if (key[:6]!='SLURM_' and 
-               key[:5]!='TACC_' and 
-               key[:12]!='_ModuleTable'):
-               self.environ = self.environ + " %s='%s'" %(key,self['ENV'][key])
-
+            self.environ = self.environ + " %s='%s'" %(key,self['ENV'][key])
 
     def __Split(self,split,reduction,
                 sfiles,tfiles,flow,stdout,stdin,jobmult,suffix,prefix,src_suffix):
@@ -496,7 +454,10 @@ class Project(Environment):
         else:
             sfiles = []
 
-        mpirun = '%s -np %s' % (self.mpirun,np)
+        if self.hostname[-15:] == 'tacc.utexas.edu':
+            mpirun = '%s tacc_affinity' % self.mpirun
+        else:
+            mpirun = '%s -np %s' % (self.mpirun,np)
 
         if split:
             if len(split) < 2:
@@ -548,10 +509,7 @@ class Project(Environment):
                     self.ip = 0
 
         if node != 'localhost':
-            if self.raddenv:
-                remote = ' '
-            else:
-                remote = '%s %s ' % (WhereIs('env'),self.environ)
+            remote = '%s $( %s $)' % (WhereIs('env'),self.environ)
         else:
             remote = ''
             
@@ -563,18 +521,8 @@ class Project(Environment):
         # May need to do it remotely
         if remote:
             command = re.sub('"','\\"',command)
-            if self.raddenv:
-                # runonnode cans to use hosts.txt to avoid pscond reruns
-                #command = string.join([self.runonnode,self.hosts,'\"',self.raddenv,
-                #                      '; cd ',self.cwd,';',command,'\"'])
-                command = string.join([self.runonnode,'\"',self.raddenv,
-                                       '; cd ',self.cwd,';',command,'\"'])
-            else:
-                # runonnode cans to use hosts.txt to avoid pscond reruns
-                #command = string.join([self.runonnode,self.hosts,
-                #                       '\"cd ',self.cwd,';',command,'\"'])
-                command = string.join([self.runonnode,
-                                       '\"cd ',self.cwd,';',command,'\"'])        
+            command = string.join(['$( ssh',node,'$) \"cd ',self.cwd,';',command,'\"'])
+        
         targets = []
         for file in tfiles:
             if (not re.search(suffix + '$',file)) and ('.' not in file):
@@ -663,9 +611,6 @@ class Project(Environment):
             self.Alias('test',self.test)
         else:
             self.Echo('test',None,err='Nothing to test')
-        # this will delete file while scons is running
-        #if (os.path.isfile(self.hosts)):
-        #    os.unlink(self.hosts)
     def Info(self,target=None,source=None,env=None):
         'Store project information in a file'
         infofile = str(target[0])

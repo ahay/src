@@ -251,11 +251,7 @@ static void check_compat (int esize, int nin, int nopen, sf_file *ins,
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
 	    if (!sf_histint(in,key,&ni) || (id != axis && ni != n[id-1]))
-#if defined(__cplusplus) || defined(c_plusplus)
-		sf_error("%s mismatch: need %ld",key,(long int) n[id-1]);
-#else
-	        sf_error("%s mismatch: need %lld",key,(long long int) n[id-1]);
-#endif
+		sf_error("%s mismatch: need %d",key,(int) n[id-1]);
 	    if (id == axis) naxis[i] = ni;
 	    (void) snprintf(key,3,"d%d",id);
 	    if (sf_histfloat(ins[0],key,&d)) {

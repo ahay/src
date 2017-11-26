@@ -14,9 +14,64 @@ replacement for the Unix \texttt{make} utility \cite[]{make}. The
 SCons configuration files (\texttt{SConstruct} scripts) are written in
 the Python programming language.
 
+SCons is a tool traditionally used for compiling programs. An \texttt{SConstruct} file for compilation may look like the following
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\begin{lstlisting}
+env = Environment()
+env.Append(CPPFLAGS=['-Wall','-g'])
+env.Program('hello',['hello.c', 'main.c'])
+\end{lstlisting}
+and produce something like
+\begin{verbatim}
+bash$ scons -Q
+gcc -o hello.o -c -Wall -g hello.c
+gcc -o main.o -c -Wall -g main.c
+gcc -o hello hello.o main.o
+\end{verbatim}
+to compile the \texttt{hello} program from the source files \texttt{hello.c} and \texttt{main.c}.
+
+Madagascar uses SCons to compile its programs from the source. The
+more frequent usage, however, comes from adopting SCons to manage data
+processing flows.
+
 \subsection{Useful SCons options}
 
+The \texttt{scons} program takes a number of options. Some of the commonly used options are:
+\begin{description}
+  \item[scons -h] (help) displays a help message.
+  \item[scons -Q] (quiet) suppresses progress messages.
+  \item[scons -n] (no exec) outputs the commands required for building the specified target (or the default targets if no target is specified) without actually executing them. It can be used to generate a shell script out of SConstruct script, as follows:
+\begin{verbatim}
+scons -nQ > script.sh
+\end{verbatim}
+\end{description}
+
 \section{Why use SCons?}
+
+In the compilation task, the target (an executible program) may
+require multiple sources. The sources may have multiple dependencies
+among them. When one of the sources changes, the target should be
+recompiled. However, it would be wasteful to compile sources that are
+not affected by the change. The famous Unix \texttt{make} utility was
+developed to keep track of the dependencies and to make the
+compilation task more efficient. A free, open-source version of
+\texttt{make}, \emph{GNU make}, was developed by Richard Stallman
+\cite[]{make}.
+
+Creating data analysis workflows has a lot in common with compiling
+programs: input data files enter the workflow and are getting
+transformed into other files, generating intermediate outputs and,
+finally, the resulting figures or other outputs. When processing is
+done in stages and then certain parameters are ge
+
+When the concept of reproducible research was pioneered by Jon
+Claerbout at the Stanford Exploration Project (SEP), the tool of
+choice for handling processing flows was an old dialect of
+\texttt{make} called \texttt{cake}
+\cite[]{Nichols.sep.61.341,Claerbout.sep.67.145,Claerbout.sep.73.451,Claerbout.sep.77.427}. Later
+SEP converted to using \emph{GNU make} \cite{Schwab.sep.89.217}.
+
+SCons offers a comparable functionality but with a superior design...
 
 \section{Managing data processing flows using \texttt{rsf.proj}}
 
@@ -27,4 +82,4 @@ the Python programming language.
 \section{Creating books and reports using \texttt{rsf.book}}
 
 \bibliographystyle{seg}
-\bibliography{scons}
+\bibliography{scons,SEP2}

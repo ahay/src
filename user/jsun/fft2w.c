@@ -35,10 +35,10 @@ static sf_complex **cc=NULL,*dd=NULL;
 #ifdef SF_HAS_FFTW
 static fftwf_plan cfg=NULL, icfg=NULL;
 #else
-static kiss_fftr_cfg cfg, icfg;
-static kiss_fft_cfg cfg1, icfg1, cfg2, icfg2;
-static kiss_fft_cpx **tmp, *ctrace2;
-static sf_complex *trace2;
+static kiss_fftr_cfg cfg=NULL, icfg=NULL;
+static kiss_fft_cfg cfg1=NULL, icfg1=NULL, cfg2=NULL, icfg2=NULL;
+static kiss_fft_cpx **tmp=NULL, *ctrace2=NULL;
+static sf_complex *trace2=NULL;
 #endif
 
 int fft2_init(bool cmplx1        /* if complex transform */,
@@ -243,7 +243,6 @@ void fft2_finalize()
     if (NULL != icfg2) { free(icfg2); icfg2=NULL; }
     if (NULL != tmp) { free(*tmp); free(tmp); tmp=NULL; }
     if (NULL != trace2) { free(trace2); trace2=NULL; }
-    if (NULL != ctrace2) { free(ctrace2); ctrace2=NULL; }
 #endif
     if (cmplx) {
       if (NULL != cc) { free(*cc); free(cc); cc=NULL; }

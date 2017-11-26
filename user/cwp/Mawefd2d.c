@@ -26,32 +26,13 @@
 #include <time.h>
 #endif
 #include "fdutil.h"
-
-#ifndef SF_HAS_SSE
-#undef __SSE__
-#endif
-#ifndef SF_HAS_AVX
-#undef __AVX__
-#endif
-
-#ifdef sun
-#define restrict
-#endif
-
-#if defined __SSE__ || defined __AVX__
-#include <immintrin.h>
-#endif
+#include "ts_kernel.h"
 
 static float* compute_fdcoef(int nop, float dz, float dx,
     bool is_optimized, const int d_order);
 static int factorial(int n);
 static float* normal_fdcoef(int nop, const int d_order);
 static float* optimal_fdcoef(int nop, const int d_order);
-
-static void step_forward(float** restrict u0, float** restrict u1,
-    float** restrict vel, float** restrict rho,
-    float* restrict fdcoef_d2, float* restrict fdcoef_d1,
-    int nop, int nzpad, int nxpad);
 static float* damp_make(int ntransit);
 static void apply_abc(float** uu2, float** uu1, int nz, int nx, int nbd,
     abcone2d abc, int nop, float* damp);
@@ -80,7 +61,7 @@ main(int argc, char** argv)
   int nbd;  /* ABC boundary size */
   int fdorder;  /* finite difference spatial accuracy order */
   int nzpad,nxpad; /* boundary padded model size */
-  int ix,it,is,nx,nz,nt,ns,nr;
+  int ix,it,nx,nz,nt,ns,nr;
   float dx,dz,dt,dt2;
   float* damp=NULL; /* damping profile for hybrid bc */
   float* ws;  /* wavelet */
@@ -99,8 +80,6 @@ main(int argc, char** argv)
   fdm2d fdm = NULL;
   abcone2d abc = NULL;
   sponge spo = NULL;
-
-  int nbell;
 
   double wall_clock_time_s, wall_clock_time_e;
 
@@ -142,9 +121,6 @@ main(int argc, char** argv)
   if (!sf_getbool("adj",&adj))    adj=false; /* adjoint flag */
 
   if (!sf_getbool("free",&fsrf) && !sf_getbool("fsrf",&fsrf)) fsrf=false; /* Free surface flag */
-
-  if (!sf_getint("nbell",&nbell)) nbell=5; /* gaussian for source injection */
-
   if (!sf_getbool("optfd",&optfd))  optfd=false; /* optimized FD coefficients flag */
   if (!sf_getint("fdorder",&fdorder))  fdorder=4; /* spatial FD order */
   if (!sf_getbool("hybridbc",&hybrid))  hybrid=false;  /* hybrid Absorbing BC */
@@ -255,8 +231,6 @@ main(int argc, char** argv)
   if (sinc) crsinc = sinc2d_make(nr,rec2d,fdm);
   else      crlint = lint2d_make(nr,rec2d,fdm);
 
-  if (!sinc) fdbell_init(nbell);
-
   /* temperary array */
   tmp_array = sf_floatalloc2(nz,nx);
 
@@ -294,7 +268,7 @@ main(int argc, char** argv)
     *(vel[0]+ix) *= *(vel[0]+ix)*dt2;
   if (fsrf && !hybrid) {
     for (ix=0; ix<nxpad; ix++)
-      memset(vel[ix],0,sizeof(float)*fdm->nb);
+      memset(vel[ix],0,sizeof(float)*(fdm->nb+1));
   }
 
   for (it=0; it<nt; it++) {
@@ -303,33 +277,29 @@ main(int argc, char** argv)
     tic=omp_get_wtime();
 #endif
 
-    step_forward(u0,u1,vel,rho,fdcoef_d2,fdcoef_d1,nop,nzpad,nxpad);
+    step_forward_2d(u0,u1,vel,rho,fdcoef_d2,fdcoef_d1,nop,nzpad,nxpad);
 
     if (adj) { /* backward inject source wavelet */
       if (expl) {
         sf_seek(file_wav,(off_t)(nt-it-1)*sizeof(float),SEEK_SET);
         sf_floatread(ws,1,file_wav);
-        ws[0] *= dt2;
-        if (sinc) sinc2d_inject1(u0,ws[0],cssinc);
-        else      lint2d_inject1(u0,ws[0],cslint);
+        if (sinc) sinc2d_inject1_with_vv(u0,ws[0],cssinc,vel);
+        else      lint2d_inject1_with_vv(u0,ws[0],cslint,vel);
       } else { 
         sf_seek(file_wav,(off_t)(nt-it-1)*ns*sizeof(float),SEEK_SET);
         sf_floatread(ws,ns,file_wav);
-        for (is=0; is<ns; is++) ws[is] *= dt2;
-        if (sinc) sinc2d_inject(u0,ws,cssinc);
-        else      lint2d_inject(u0,ws,cslint);
+        if (sinc) sinc2d_inject_with_vv(u0,ws,cssinc,vel);
+        else      lint2d_inject_with_vv(u0,ws,cslint,vel);
       }
     } else { /* forward inject source wavelet */
       if (expl) {
         sf_floatread(ws,1,file_wav);
-        ws[0] *= dt2;
-        if (sinc) sinc2d_inject1(u0,ws[0],cssinc);
-        else      lint2d_inject1(u0,ws[0],cslint);
+        if (sinc) sinc2d_inject1_with_vv(u0,ws[0],cssinc,vel);
+        else      lint2d_inject1_with_vv(u0,ws[0],cslint,vel);
       } else {
         sf_floatread(ws,ns,file_wav);
-        for (is=0; is<ns; is++) ws[is] *= dt2;
-        if (sinc) sinc2d_inject(u0,ws,cssinc);
-        else      lint2d_inject(u0,ws,cslint);
+        if (sinc) sinc2d_inject_with_vv(u0,ws,cssinc,vel);
+        else      lint2d_inject_with_vv(u0,ws,cslint,vel);
       }
     }
 
@@ -385,182 +355,6 @@ main(int argc, char** argv)
   return 0;
 }
 
-
-  static void 
-step_forward(float** restrict u0, float** restrict u1,
-    float** restrict vel, float** restrict rho,
-    float* restrict fdcoef_d2, float* restrict fdcoef_d1,
-    int nop, int nzpad, int nxpad)
-{
-  int ix, iz, iop;
-  float c0 = fdcoef_d2[0];
-  float *cz = &fdcoef_d2[0];
-  float *cx = &fdcoef_d2[nop];
-  float *bz, *bx;
-  float du_z = 0.f, du_x = 0.f;
-  float drho_z = 0.f, drho_x = 0.f;
-  float lap;
-  float drho_dot_du;
-
-  if (rho != NULL) { /* variable density */
-    bz = &fdcoef_d1[0];
-    bx = &fdcoef_d1[nop];
-  }
-
-#ifdef __SSE__
-#define vType __m128
-#define _prefix_loadu_ps _mm_loadu_ps
-#define _prefix_storeu_ps _mm_storeu_ps
-#define _prefix_add_ps _mm_add_ps
-#define _prefix_sub_ps _mm_sub_ps
-#define _prefix_mul_ps _mm_mul_ps
-#define _prefix_div_ps _mm_div_ps
-#define _prefix_set1_ps _mm_set1_ps
-#elif defined __AVX__
-#define vType __m256
-#define _prefix_loadu_ps _mm256_loadu_ps
-#define _prefix_storeu_ps _mm256_storeu_ps
-#define _prefix_add_ps _mm256_add_ps
-#define _prefix_sub_ps _mm256_sub_ps
-#define _prefix_mul_ps _mm256_mul_ps
-#define _prefix_div_ps _mm256_div_ps
-#define _prefix_set1_ps _mm256_set1_ps
-#endif
-
-#ifdef _OPENMP
-#pragma omp parallel for			\
-  schedule(static,1)				\
-  shared(nxpad,nzpad,u0,u1,vel,c0,cx,cz) \
-  private(ix,iz,iop,lap,du_z,du_x,drho_z,drho_x,drho_dot_du)
-#endif
-#if defined (__SSE__) || defined (__AVX__)
-    for (ix=nop; ix<nxpad-nop; ix++) {
-#ifdef __SSE__
-      for (iz=nop; iz<nzpad-nop; iz+=4) {
-#elif defined __AVX__
-        for (iz=nop; iz<nzpad-nop; iz+=8) {
-#endif
-          /* load u0 u1 vel from memory to register */
-          vType vec_u0 = _prefix_loadu_ps(&u0[ix][iz]);
-          vType vec_u1 = _prefix_loadu_ps(&u1[ix][iz]);
-          vec_u0 = _prefix_sub_ps(_prefix_mul_ps(_prefix_set1_ps(2.f),vec_u1),vec_u0);
-
-          vType vec_lap = _prefix_mul_ps(vec_u1,_prefix_set1_ps(c0));
-          for (iop=1; iop<=nop; iop++) {
-            /* z axis derivative <1st axis> */
-            vec_lap = _prefix_add_ps(vec_lap,
-                _prefix_mul_ps(
-                  _prefix_set1_ps(cz[iop]),
-                  _prefix_add_ps(
-                    _prefix_loadu_ps(&u1[ix][iz+iop]),
-                    _prefix_loadu_ps(&u1[ix][iz-iop])
-                    )
-                  )
-                );
-            /* x axis derivative <2nd axis> */
-            vec_lap = _prefix_add_ps(vec_lap,
-                _prefix_mul_ps(
-                  _prefix_set1_ps(cx[iop]),
-                  _prefix_add_ps(
-                    _prefix_loadu_ps(&u1[ix+iop][iz]),
-                    _prefix_loadu_ps(&u1[ix-iop][iz])
-                    )
-                  )
-                );
-          }
-
-          if (rho != NULL) {
-            vType vec_du_z = _prefix_set1_ps(0.f);
-            vType vec_du_x = _prefix_set1_ps(0.f);
-            vType vec_drho_z = _prefix_set1_ps(0.f);
-            vType vec_drho_x = _prefix_set1_ps(0.f);
-            for (iop=1; iop<=nop; iop++) {
-              vec_du_z = _prefix_add_ps(vec_du_z,
-                  _prefix_mul_ps(
-                    _prefix_set1_ps(bz[iop]),
-                    _prefix_sub_ps(
-                      _prefix_loadu_ps(&u1[ix][iz+iop]),
-                      _prefix_loadu_ps(&u1[ix][iz-iop])
-                      )
-                    )
-                  );
-              vec_drho_z = _prefix_add_ps(vec_drho_z,
-                  _prefix_mul_ps(
-                    _prefix_set1_ps(bz[iop]),
-                    _prefix_sub_ps(
-                      _prefix_loadu_ps(&rho[ix][iz+iop]),
-                      _prefix_loadu_ps(&rho[ix][iz-iop])
-                      )
-                    )
-                  );
-              vec_du_x = _prefix_add_ps(vec_du_x,
-                  _prefix_mul_ps(
-                    _prefix_set1_ps(bx[iop]),
-                    _prefix_sub_ps(
-                      _prefix_loadu_ps(&u1[ix+iop][iz]),
-                      _prefix_loadu_ps(&u1[ix-iop][iz])
-                      )
-                    )
-                  );
-              vec_drho_x = _prefix_add_ps(vec_drho_x,
-                  _prefix_mul_ps(
-                    _prefix_set1_ps(bx[iop]),
-                    _prefix_sub_ps(
-                      _prefix_loadu_ps(&rho[ix+iop][iz]),
-                      _prefix_loadu_ps(&rho[ix-iop][iz])
-                      )
-                    )
-                  );
-            }
-            vec_lap = _prefix_sub_ps(vec_lap,
-                _prefix_div_ps(
-                  _prefix_add_ps(
-                    _prefix_mul_ps(vec_du_z,vec_drho_z),
-                    _prefix_mul_ps(vec_du_x,vec_drho_x)
-                    ),
-                  _prefix_loadu_ps(&rho[ix][iz])
-                  )
-                );
-          }
-          vec_u0 = _prefix_add_ps(vec_u0,_prefix_mul_ps(_prefix_loadu_ps(&vel[ix][iz]),vec_lap));
-          _prefix_storeu_ps(&u0[ix][iz],vec_u0);
-        }
-      }
-
-#undef vType
-#undef _prefix_loadu_ps
-#undef _prefix_storeu_ps
-#undef _prefix_add_ps
-#undef _prefix_sub_ps
-#undef _prefix_mul_ps
-#undef _prefix_div_ps
-#undef _prefix_set1_ps
-
-#else
-      for (ix=nop; ix<nxpad-nop; ix++) {
-        for (iz=nop; iz<nzpad-nop; iz++) {
-          lap = u1[ix][iz]*c0;
-          for (iop=1; iop<=nop; iop++) {
-            lap += (u1[ix][iz-iop] + u1[ix][iz+iop]) * cz[iop]
-              + (u1[ix-iop][iz] + u1[ix+iop][iz]) * cx[iop];
-          }
-          if (rho != NULL) { /* variable density term */
-            du_z = du_x = drho_z = drho_x = 0.f;
-            for (iop=1; iop<=nop; iop++) {
-              du_z += (u1[ix][iz+iop] - u1[ix][iz-iop]) * bz[iop];
-              du_x += (u1[ix+iop][iz] - u1[ix-iop][iz]) * bx[iop];
-              drho_z += (rho[ix][iz+iop] - rho[ix][iz-iop]) * bz[iop];
-              drho_x += (rho[ix+iop][iz] - rho[ix-iop][iz]) * bx[iop];
-            }
-            drho_dot_du = (du_z*drho_z + du_x*drho_x)/rho[ix][iz];
-            lap -= drho_dot_du;
-          }
-          u0[ix][iz] = 2.*u1[ix][iz] - u0[ix][iz] + vel[ix][iz]*lap;
-        }
-      }
-#endif
-      return;
-    }
 
   static float*
     damp_make(int ntransit)
@@ -724,12 +518,8 @@ step_forward(float** restrict u0, float** restrict u1,
       for (ix=0; ix<nxpad; ix++) {
         for (ib=nbd-nop; ib<nbd; ib++) {
           iz = nbd-ib-1;
-          if (abc->free) {
-            uu2[ix][iz] = 0.0f;
-          } else {
-            uu2[ix][iz] = uu1[ix][iz+1] 
-              + (uu1[ix][iz] - uu2[ix][iz+1])*abc->bzl[ix];
-          }
+          uu2[ix][iz] = uu1[ix][iz+1] 
+            + (uu1[ix][iz] - uu2[ix][iz+1])*abc->bzl[ix];
           iz = nzpad-nbd+ib;
           uu2[ix][iz] = uu1[ix][iz-1] 
             + (uu1[ix][iz] - uu2[ix][iz-1])*abc->bzh[ix];
@@ -738,17 +528,14 @@ step_forward(float** restrict u0, float** restrict u1,
           for (ib=0; ib<nbd-nop; ib++) {
             damp_ib = damp[ib];
             iz = nbd-ib-1;
-            if (abc->free) {
-              uu2[ix][iz] = 0.0f;
-            } else {
-              uu2_bc = uu1[ix][iz+1] + (uu1[ix][iz] - uu2[ix][iz+1])*abc->bzl[ix];
-              uu2[ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[ix][iz]*damp_ib;
-            }
+            uu2_bc = uu1[ix][iz+1] + (uu1[ix][iz] - uu2[ix][iz+1])*abc->bzl[ix];
+            uu2[ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[ix][iz]*damp_ib;
             iz = nzpad-nbd+ib;
             uu2_bc = uu1[ix][iz-1] + (uu1[ix][iz] - uu2[ix][iz-1])*abc->bzh[ix];
             uu2[ix][iz] = uu2_bc*(1.f - damp_ib) + uu2[ix][iz]*damp_ib;
           }
         }
+        if (abc->free)  memset(uu2[ix], 0, sizeof(float)*(nbd+1));
       }
 
 #ifdef _OPENMP

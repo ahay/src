@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
     sf_putints (lag,"n",w,dim1);
 
 
-    bound (dim1, w, w, a, bb);
+    bound (dim1, false, w, w, a, bb);
     for (i=0; i < bb->nh; i++) {
 	bb->flt[i] = 2.;
     }

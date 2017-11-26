@@ -202,31 +202,25 @@ pt2d hwt2d_orth(pt2d P, pt2d O, pt2d M)
 /*< orthogonal step forward  >*/
 {
     pt2d   R;
-    vc2d OP,OM,MO,OR;
+    vc2d OR,MP;
     float  lo;
-    int sMOP;
-    
+
     lo = O.v * at.d;
 
-    MO = vec2d(&M,&O); MO = nor2d(&MO);
-    OM = vec2d(&O,&M); OM = nor2d(&OM);
-    OP = vec2d(&O,&P); OP = nor2d(&OP);
-
-    /* orientation sign */
-    sMOP = ((MO.dz*OP.dx) - (OP.dz*MO.dx))>0?-1:+1;
-/*    sf_warning("sign=%d %g %g %g %g %g %g",sMOP,*/
-/*	       MO.dz*OP.dx, OP.dz*MO.dx,*/
-/*	       MO.dx,MO.dz,OP.dx,OP.dz);*/
-
-    /* bisector vector */
-    OR.dx = OM.dx + OP.dx; 
-    OR.dz = OM.dz + OP.dz;
+    MP = vec2d(&M,&P); MP = nor2d(&MP);
+    if(MP.dx != 0) {
+	OR.dz = 1.;
+	OR.dx = - (MP.dz/MP.dx) * OR.dz;
+    } else {
+	OR.dx = 1.;
+	OR.dz = - (MP.dx/MP.dz) * OR.dx;
+    }
     OR = nor2d(&OR);
-
-    R.x = O.x + sMOP * OR.dx * lo;
-    R.z = O.z + sMOP * OR.dz * lo;
+    
+    R.x = O.x + OR.dx * lo;
+    R.z = O.z + OR.dz * lo;
     R.v = 0.0;
     R.v = hwt2d_getv(R);
-    
+
     return(R);
 }

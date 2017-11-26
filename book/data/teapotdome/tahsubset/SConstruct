@@ -1,6 +1,9 @@
 from rsf.proj import *
 
-SConscript('../fetch/SConstruct')
+# bad idea to uncomment the SConstruct.  It will download and return segy, even
+# when the fetch directory is up to date.  fetch is separate directory to avoid
+# the repeated reruns.
+#SConscript('../fetch/SConstruct')
 
 Flow(['gather_subset.rsf','gather_subset_hdr.rsf','onetrace.rsf','onetrace_hdr.rsf'],
      ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
@@ -12,8 +15,8 @@ Flow(['gather_subset.rsf','gather_subset_hdr.rsf','onetrace.rsf','onetrace_hdr.r
      | sftahmakeskey pkey=iline,xline skey=cdpt verbose=1      
      | sftahnmo 
        verbose=1  
-       tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 
-       vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
      | sftahwrite 
         verbose=1                           
 	label2="cdpt"  o2=1 n2=34  d2=1   
@@ -35,9 +38,9 @@ Flow(['alltraces.rsf','alltraces_hdr.rsf'],
 	sort="iline:169,181  xline:104,116 offset:0,11000" 
         verbose=1  
      | sftahnmo 
-       verbose=1  
-       tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 
-       vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 
+       verbose=1
+       tnmo=0,.617,.769,.913,1.027,1.196,1.767,3.010.00
+       vnmo=9132.86,10764.47,10941.73,11235.75,11902.71,12580.03,14513.85,16982.86
      | sftahmakeskey 
         pkey=dt
 	skey=tracr

@@ -22,7 +22,7 @@
 #include <omp.h>
 #endif
 
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 #include "timer.h"
 
 /* wave propagation matrices */
@@ -51,6 +51,7 @@ typedef struct Geopar {
     int nzx2;
     int nk;
     int m2;
+    int m2b;
     /*fft parameters*/
     int nkz;
     int nkx;
@@ -88,25 +89,20 @@ void lrexp_close(void)
 void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_complex **rt, geopar geop, sf_complex ***wvfld)
 /*< zero-offset exploding reflector modeling/migration >*/
 {
-    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfnt, wfit, snap;
+    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfit, snap;
     int im, i, j, m2, ik, nk, pad1;
-    float dt, dx, dz, ox;
     sf_complex *curr, **wave, *cwave, *cwavem, c;
     sf_complex *currm;
     bool verb;
 
     nx  = geop->nx;
     nz  = geop->nz;
-    dx  = geop->dx;
-    dz  = geop->dz;
-    ox  = geop->ox;
     gpz = geop->gpz;
     nt  = geop->nt;
-    dt  = geop->dt;
     snap= geop->snap;
     nzx2= geop->nzx2;
-    m2  = geop->m2;
-    wfnt= geop->wfnt;
+    if(adj) m2 = geop->m2b;
+    else m2 = geop->m2;
     pad1= geop->pad1;
     verb= geop->verb;
 
@@ -164,7 +160,7 @@ void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_compl
 #ifdef SF_HAS_COMPLEX_H
 		    c += wave[im][ik]*conjf(rt[ik][im]);
 #else
-		    c += sf_cmul(wave[im][ik],conjf(rt[ik][im])); //complex multiplies complex
+		    c = sf_cadd(c,sf_cmul(wave[im][ik],conjf(rt[ik][im]))); //complex multiplies complex
 #endif
 		}
 		cwave[ik] = c;
@@ -177,7 +173,11 @@ void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_compl
 #endif
 	    /* data injection */
 	    for (ix=0; ix < nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H		
 		curr[gpz+ix*nz2] += dat[it+ix*nt];
+#else
+		curr[gpz+ix*nz2] = sf_cadd(curr[gpz+ix*nz2],dat[it+ix*nt]);
+#endif
 	    }
 
 	    if (snap > 0 && it%snap == 0) {
@@ -253,7 +253,7 @@ void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_compl
 #ifdef SF_HAS_COMPLEX_H
 			c += lt[im][i]*wave[im][j];
 #else
-			c += sf_cmul(lt[im][i], wave[im][j]);
+			c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif	    
 		    }
 		    curr[j] = c;
@@ -290,7 +290,7 @@ void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_compl
 //  lrexp(img, dat, adj, ltf, rtf, geop, wvfld);
 //}
 
-void lrexp_op(int nx, const sf_complex* x, sf_complex* y, void* mat)
+void lrexp_op(int nx, sf_complex* x, sf_complex* y, void* mat)
 /*< lowrank onestep exploding reflector linear operator (square matrix, img to img) >*/
 {
   geopar geop;

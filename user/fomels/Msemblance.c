@@ -20,17 +20,22 @@
 
 int main(int argc, char* argv[])
 {
+    bool weighted;
     int j, n2, i2, ni, *fold = NULL, axis;
+    float o2, d2;
     off_t i, n, i3, n3;
     sf_file in, out;
     char key1[7];
     float *trace;
-    double t, *dstack, *dstack2;
+    double t, num, den, h, sh, *dstack, *dstack2, *hstack, *hstack2;
 
     sf_init (argc, argv);
 
     in  = sf_input ( "in");
     out = sf_output("out");
+
+    if (!sf_getbool("weighted",&weighted)) weighted=false;
+    /* if use weighted semblance */
 
     if (!sf_getint("axis",&axis)) axis=2;
     /* which axis to stack */
@@ -46,6 +51,11 @@ int main(int argc, char* argv[])
 
     sprintf(key1,"n%d",axis);
     if (!sf_histint(in,key1,&n2)) sf_error("No %s= in input",key1);
+    sprintf(key1,"o%d",axis);
+    if (!sf_histfloat(in,key1,&o2)) o2=0.0f;
+    sprintf(key1,"d%d",axis);
+    if (!sf_histfloat(in,key1,&d2)) d2=1.0f;
+    
     n3 = sf_unshiftdim(in,out,axis);
  
     fold = sf_intalloc (n);
@@ -54,14 +64,31 @@ int main(int argc, char* argv[])
     dstack  = (double*) sf_alloc(n,sizeof(double));
     dstack2 = (double*) sf_alloc(n,sizeof(double));
 
+    if (weighted) {
+	hstack = (double*) sf_alloc(n,sizeof(double));
+	hstack2 = (double*) sf_alloc(n,sizeof(double));
+    } else {
+	hstack = NULL;
+	hstack2 = NULL;
+    }
+
     for (i3=0; i3 < n3; i3++) {
 	for (i=0; i < n; i++) {
 	    dstack[i]  = 0.0;
 	    dstack2[i] = 0.0;
+	    if (weighted) {
+		hstack[i]  = 0.0;
+		hstack2[i] = 0.0;
+	    }
 	    fold[i] = 0;
 	}
+
+	sh = 0.0;
         
         for (i2=0; i2 < n2; i2++) {
+	    h = o2+i2*d2;
+	    sh += h;
+
             sf_floatread (trace, n, in);
             for (i=0; i < n; i++) {
 		t = (double) trace[i];
@@ -69,6 +96,12 @@ int main(int argc, char* argv[])
                 if (0.0 != t) {
 		    dstack[i] += t;
 		    dstack2[i] += t*t;
+
+		    if (weighted) {
+			hstack[i] += t*h;
+			hstack2[i] += t*t*h;
+		    }
+
 		    fold[i]++; 
 		}
             }
@@ -77,10 +110,21 @@ int main(int argc, char* argv[])
 
 	for (i=0; i < n; i++) {
 	    if (fold[i] > 0) {
-		dstack[i]  /= fold[i];
-		dstack2[i] /= fold[i];
+		if (weighted) {
+		    num = (dstack[i]*hstack2[i]- dstack2[i]*hstack[i])*
+			(n2*hstack[i]-dstack[i]*sh);
+		    den = (n2*hstack2[i]-dstack2[i]*sh);
+		    den *= den;
+		} else {
+		    num = dstack[i]/fold[i];
+		    num *= num;
+		    den = dstack2[i]/fold[i];
+		}
+
+		trace[i] = (den > 0.0f)? num/den: 0.0f;
+	    } else {
+		trace[i] = 0.0f;
 	    }
-	    trace[i] = dstack[i]*dstack[i]/dstack2[i];
 	}
 	    	
         sf_floatwrite(trace, n, out); 

@@ -1,0 +1,214 @@
+from rsf.proj import *
+
+# Download Viking Graben data
+Fetch('seismic.segy','viking')
+#Fetch('seismic.segy','VikingGrabbenLine12',
+#      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
+#      server='local')
+
+# Convert from SEGY to RSF
+Flow('viking tviking viking.asc viking.bin','seismic.segy',
+     '''
+     segyread tfile=${TARGETS[1]} 
+     hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''')
+
+# Far-field wavelet
+Fetch('FarField.dat','Mobil_Avo_Viking_Graben_Line_12',
+      top='open.source.geoscience/open_data',
+      server='http://s3.amazonaws.com')
+
+# Convert from ASCII to RSF
+Flow('wavelet','FarField.dat',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=500 o1=0 d1=0.0008 
+     label1=Time unit1=s n2=1 | dd form=native
+     ''')
+
+# Subsample to data sampling
+Flow('wavelet4','wavelet','window j1=5 | pad n1=1500')
+
+prog = Program('convolve.c')
+convolve = str(prog[0])
+
+# Estimate PEF by iterative least-squares inversion
+Flow('filter0',None,'spike n1=100 k1=1')
+Flow('filter',['wavelet4',convolve,'filter0'],
+     '''
+     conjgrad ./${SOURCES[1]} nf=100 data=${SOURCES[0]}
+     niter=100 mod=${SOURCES[2]} 
+     ''')
+
+# Wavelet deconvolution
+Flow('wdecon',['filter','wavelet4',convolve],
+     '''
+     ./${SOURCES[2]} data=${SOURCES[1]} adj=n | 
+     add ${SOURCES[1]} scale=-1,1 | window n1=100
+     ''')
+
+# Process all traces
+Flow('decon',['filter','viking',convolve],
+     '''
+     ./${SOURCES[2]} data=${SOURCES[1]} adj=n | 
+     add ${SOURCES[1]} scale=-1,1
+     ''')
+
+# Average trace amplitude
+Flow('arms','decon',
+     'mul $SOURCE | stack axis=1 | math output="log(input)" ')
+
+# shot/offset indeces: fldr and tracf
+Flow('index','tviking','window n1=2 f1=2 | transp')
+
+Flow('fldr tracf scarms','arms index',
+     '''
+     sc index=${SOURCES[1]} out2=${TARGETS[1]} pred=${TARGETS[2]} 
+     niter=10
+     ''')
+
+# Apply to all traces
+
+Flow('ampl','scarms',
+     '''
+     math output="exp(-input/2)" | 
+     spray axis=1 n=1500 d=0.004 o=0
+     ''')
+Flow('adecon','decon ampl','mul ${SOURCES[1]}')
+
+# Convert to CDP gathers, time-power gain 
+Flow('cmps','adecon',
+     '''
+     intbin xk=cdpt yk=cdp | window max1=4 | 
+     pow pow1=2 
+     ''')
+
+Result('cmps',
+       '''
+       byte gainpanel=all | transp plane=23 memsize=5000 |
+       grey3 frame1=750 frame2=1000 frame3=20 
+       point1=0.8 point2=0.8
+       title="CMP Gathers" label2="CMP Number" 
+       ''')
+    
+# Extract offsets
+Flow('offsets mask','tviking',
+     '''
+     headermath output=offset | 
+     intbin head=$SOURCE xk=cdpt yk=cdp mask=${TARGETS[1]} | 
+     dd type=float |
+     scale dscale=0.001
+     ''')
+
+# Extract one CMP gather
+########################
+
+Flow('mask1','mask','window n3=1 f3=1200 squeeze=n')
+Flow('cmp','cmps mask1',
+     'window n3=1 f3=1200 | headerwindow mask=${SOURCES[1]}')
+Plot('cmp','grey title="CMP gather" clip=8.66')
+
+Flow('offset','offsets mask1',
+     '''
+     window n3=1 f3=1200 squeeze=n | 
+     headerwindow mask=${SOURCES[1]}
+     ''')
+
+# Mute 
+Flow('mute','cmp',
+     '''
+     reverse which=2 | put label2=Offset unit2=km o2=0.287 d2=0.05 | 
+     mutter half=n v0=1.2
+     ''')
+Plot('mute','grey title="Mute first arrival" clip=8.66')
+
+# Velocity scan
+
+Flow('vscan1','mute',
+     '''
+     vscan semblance=y half=n v0=1.2 nv=131 dv=0.02 
+     ''')
+Plot('vscan1',
+     'grey color=j allpos=y title="Semblance scan" unit2=km/s')
+
+# Automatic pick
+
+Flow('vpick1','vscan1',
+     '''
+     mutter inner=y x0=1.4 half=n v0=0.45 t0=0.5 | 
+     pick rect1=50 vel0=1.5
+     ''')
+Plot('vpick1',
+     '''
+     graph yreverse=y transp=y plotcol=7 plotfat=7 
+     pad=n min2=1.2 max2=3.8 wantaxis=n wanttitle=n
+     ''')
+
+Plot('vscan2','vscan1 vpick1','Overlay')
+
+Result('vscan1','cmp mute vscan2','SideBySideAniso')
+
+Flow('nmo','mute vpick1','nmo half=n velocity=${SOURCES[1]}')
+Plot('nmo','grey title="NMO with primary velocity" ')
+
+# Parabolic Radon transform
+
+Flow('radon','nmo',
+     'radon adj=y spk=n parab=y p0=-0.1 dp=0.002 np=151')
+Plot('radon',
+     '''
+     grey title="Parabolic Radon transform" 
+     label2=Curvature unit2="s/km\^2\_" 
+     ''')
+
+Flow('inv','radon','radon adj=n parab=y nx=60 dx=0.05 ox=0.287')
+Plot('inv',
+     'grey title="Inverse parabolic Radon transform" clip=8.66')
+
+Result('parab','nmo radon inv','SideBySideAniso')
+
+qmin=0.01 # minimum curvature for noise
+tmin=0.75 # minimum time for noise
+
+Flow('cut','radon','cut min2=%g min1=%g' % (qmin,tmin))
+Plot('cut',
+     '''
+     grey title="Radon transform cut" 
+     label2=Curvature unit2="s/km\^2\_" 
+     ''')
+
+Flow('signal','cut','radon adj=n parab=y nx=60 dx=0.05 ox=0.287')
+Plot('signal','grey title="Radon transform signal" ')
+
+Result('cut','radon cut signal','SideBySideAniso')
+
+# Apply inverse NMO
+
+Flow('primary','signal vpick1',
+     'inmo half=n velocity=${SOURCES[1]}')
+Plot('primary','grey title="Demultiple" clip=8.66')
+
+Flow('multiples','mute primary','add scale=1,-1 ${SOURCES[1]}')
+Plot('multiples','grey title="Multiples" clip=8.66')
+
+Result('primary','mute primary multiples','SideBySideAniso')
+
+# Velocity scan
+
+Flow('pvscan1','primary',
+     '''
+     vscan semblance=y half=n v0=1.2 nv=131 dv=0.02 
+     ''')
+Plot('pvscan1',
+     'grey color=j allpos=y title="Primary semblance scan" ')
+
+Flow('mvscan1','multiples',
+     '''
+     vscan semblance=y half=n v0=1.2 nv=131 dv=0.02 
+     ''')
+Plot('mvscan1',
+     'grey color=j allpos=y title="Multiples semblance scan" ')
+
+Result('pvscan1','vscan1 pvscan1 mvscan1','SideBySideAniso')
+
+End()
+

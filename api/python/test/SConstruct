@@ -4,11 +4,7 @@ import os, sys
 Flow('test.attr','clip.py',
      '''
      spike n1=1000 n2=100 n3=10 nsp=1 k1=500 |  
-     PYTHONPATH=%s LD_LIBRARY_PATH=%s %s 
      ./$SOURCE clip=0.5 | attr
-     ''' % (os.environ.get('PYTHONPATH',''),
-            os.environ.get('LD_LIBRARY_PATH',''),
-            sys.executable),stdin=0)
-
+     ''',stdin=0)
 
         

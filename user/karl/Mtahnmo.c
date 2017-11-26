@@ -106,6 +106,15 @@ int main(int argc, char* argv[])
   float o1;
   float d1;
   int indx_offset;
+  int indx_xline;
+  int indx_iline;
+  double dxline;
+  double diline;
+  double vel_dxline=-1e31;
+  double vel_diline=-1e31;
+  char* xlinehdrkey;
+  char* ilinehdrkey;
+  float* local_velocity=NULL;
   float* local_sloth=NULL;
   float v0;
   int indx_time;
@@ -121,6 +130,17 @@ int main(int argc, char* argv[])
   char* offsetname;
   float lmute;
   bool inv;
+  char* vfile_filename=NULL;
+  sf_file vfile=NULL;
+  sf_axis vfile_axa_array[SF_MAX_DIM];
+  int iaxis;
+  int numvnmo=0;
+  int numtnmo=0;
+  char** list_of_floats;
+  float* vnmo;
+  float* tnmo;
+  float t0;
+
   /******************************************************/
   /* code block for standard tah Trace And Header setup */
   /******************************************************/
@@ -213,41 +233,75 @@ int main(int argc, char* argv[])
    
   /* set up velocity function ( really (1/v)**2, sloth */
   local_sloth=sf_floatalloc(n1_traces);
-  /* just constant velocity today */
-  if(1==1){
-    char** list_of_floats;
-    float* vnmo;
-    float* tnmo;
-    int numvnmo;
-    int numtnmo;
-    float t0;
+  /* see if vfile is input */
+  vfile_filename=sf_getstring("vfile");
+  fprintf(stderr,"vfile_filename=%s\n",vfile_filename);
+  /* kls test if vnmo/tnmo are input */
+  /* if vfilename!=NULL and vnmo/tnmo are input, make error exit saying 
+     velocities are defined twice and user needs to rework parameters */
+  if(vfile_filename!= NULL){
+    fprintf(stderr,"sf_input\n");
+    vfile=sf_input(vfile_filename);
+    fprintf(stderr,"copy axis\n");
+    for (iaxis=0; iaxis<SF_MAX_DIM; iaxis++){
+      /* sf_axis temp; */
+      vfile_axa_array[iaxis]=sf_iaxa(vfile,iaxis+1);
+      if(verbose>2){
+	fprintf(stderr,"axis=%d sf_n(vfile_axa_array[iaxis])=%d\n",
+		iaxis+1,sf_n(vfile_axa_array[iaxis]));
+      }
+    }
+    /* kls test numt in input velocity is same as n1_traces. */
+    if(n1_traces!=sf_n(vfile_axa_array[0])){
+      fprintf(stderr,"numtime in velocity file=%d\n",
+	      sf_n(vfile_axa_array[0]));
+      fprintf(stderr,"numtime in traces file=%d\n",n1_traces);
+      sf_error("numtime must be same in vfile and input traces");
+    }
+    if(verbose>1)fprintf(stderr,"numtime in traces matches vfile\n");
+    /* allocate space to read velocity from the file */
+    local_velocity=sf_floatalloc(sf_n(vfile_axa_array[0]));
+  }
+  /* these are read event if no vfile and not needed, but it simplifies
+     later code in the "process trace" loop */
+  /* get iline and xline headerkeys to index into vfile */
+  xlinehdrkey=sf_getstring("xline");
+  /* name of the trace header key to index into vfile */
+  if(xlinehdrkey==NULL)xlinehdrkey="xline";
+  indx_xline=segykey(xlinehdrkey);
+  ilinehdrkey=sf_getstring("iline");
+  /* name of the trace header key to index into vfile */
+  if(ilinehdrkey==NULL)ilinehdrkey="iline";
+  indx_iline=segykey(ilinehdrkey);
 
-    if(verbose>1)fprintf(stderr,"read vnmo/tnmo\n");
-    /* use this fundtion to find out number of velocities and time 
-       input in vnmo and tnmo */
-    list_of_floats=sf_getnstring("vnmo",&numvnmo);
-    /* list of NMO velocities for the time in tnmo */
-    if(verbose>1){
-      int i;
-      fprintf(stderr,"numvnmo=%d\n",numvnmo);
-      for (i=0; i<numvnmo; i++){
-	fprintf(stderr,"velocities=%s\n",list_of_floats[i]);
-      }
+  /* read user parameters tnmo/vnmo */
+  
+  if(verbose>1)fprintf(stderr,"read vnmo/tnmo from command line\n");
+  /* use this fundtion to find out number of velocities and time 
+     input in vnmo and tnmo */
+  list_of_floats=sf_getnstring("vnmo",&numvnmo);
+  /* list of NMO velocities for the time in tnmo */
+  if(verbose>1){
+    int i;
+    fprintf(stderr,"numvnmo=%d\n",numvnmo);
+    for (i=0; i<numvnmo; i++){
+      fprintf(stderr,"velocities=%s\n",list_of_floats[i]);
     }
-    /* should free this list of strings, but that is only a little memory */\
-    list_of_floats=sf_getnstring("tnmo",&numtnmo);
-    /* NMO times for the vnmo velocities. */
-    if(verbose>1){
-      int i;
-      for (i=0; i<numtnmo; i++){
-	fprintf(stderr,"times=%s\n",list_of_floats[i]);
-      }
+  }
+  /* should free this list of strings, but that is only a little memory */ \
+  list_of_floats=sf_getnstring("tnmo",&numtnmo);
+  /* NMO times for the vnmo velocities. */
+  if(verbose>1){
+    int i;
+    for (i=0; i<numtnmo; i++){
+      fprintf(stderr,"times=%s\n",list_of_floats[i]);
     }
-    if(numvnmo!=numtnmo){
-      sf_error("number vnmo floats=%d != number tnmo floats=%d",
-	       numvnmo,numtnmo);
-    }
-    if(numvnmo==0)sf_error("vnmo parameter is required");
+  }
+  if(numvnmo!=numtnmo){
+    sf_error("number vnmo floats=%d != number tnmo floats=%d",
+	     numvnmo,numtnmo);
+  }
+  if(numvnmo>0){
     vnmo=sf_floatalloc(numvnmo);
     tnmo=sf_floatalloc(numtnmo);
     if(verbose>1)fprintf(stderr,"sf_getfloats(vnmo)");
@@ -270,20 +324,21 @@ int main(int argc, char* argv[])
       intlin(numtnmo,tnmo,vnmo,vnmo[0],vnmo[numvnmo-1],1,&t0,&v0);
       local_sloth[indx_time]=1.0/(v0*v0);
     }    
-  } 
-  /* kls
-     previous if(1==1) clause if for it no input velocity file
-     need to add else { set up the input velocity file (ie open the file(
-     inside the trace loop need to get iline and xline form trace heder
-     and use that to read the velocity at (iline,xline) into local_sloth
-     then compute local_sloth as 1/(v*v)
-
-     will need to get input velocity shape:
-       if (!sf_histint(invelocity,"n1",&n1_velocity))
-          sf_error("input velocity file does not define n1");
-     test n1_velocity!=n1_trace error
-     and do the same for d1, o2, d2, etc 
-   */
+  }
+  
+  /* test either tnmo/vnmo input or vfile.  Not both */
+  if (numvnmo>0 && vfile!=NULL){
+    fprintf(stderr,"**************************************************\n");
+    fprintf(stderr,"**************************************************\n");
+    fprintf(stderr,"**************************************************\n");
+    sf_error("Both tnmo/vnmo and vfile are input.  Only one allowed.");
+  }
+  if (numvnmo==0 && vfile==NULL){
+    fprintf(stderr,"**************************************************\n");
+    fprintf(stderr,"**************************************************\n");
+    fprintf(stderr,"**************************************************\n");
+    sf_error("No velocity defined.  Input tnmo/vnmo or vfile.");
+  }
 
   if(verbose>0)fprintf(stderr,"allocate arrays for the trace loop\n");
   r_index_tx_of_it0=sf_floatalloc(n1_traces);
@@ -301,13 +356,35 @@ int main(int argc, char* argv[])
     /* process the tah. */
     /********************/
     /* this program applies moveout */
-    /* kls this should be only be done when velocity (local_sloth) 
-       or offset changes */
     if(typehead == SF_INT){   
-      /* just cast the header to int so the print works */
+      /* cast the header to int  */
       offset=((int*)fheader)[indx_offset];
+      dxline=((int*)fheader)[indx_xline];
+      diline=((int*)fheader)[indx_iline];
     } else {
       offset=       fheader [indx_offset];
+      dxline=       fheader [indx_xline];
+      diline=       fheader [indx_iline];
+    }
+    /* if using vfile, read the required velocity (only when location 
+       changes). */
+    if(vfile!=NULL){
+      /* if xline or iline as changed, read a new velocity function */
+      if(vel_dxline!=dxline || vel_diline!=diline){
+	if(verbose>1) fprintf(stderr,"new (dxlne,diline)=(%f,%f)\n",
+			      dxline,diline);
+	/* kls read new data to local_velocity */
+	read3dfile(verbose,local_velocity,vfile,
+		   vfile_axa_array,dxline,diline);
+	vel_dxline=dxline;
+	vel_diline=diline;
+        /* kls convert velocity to local_sloth */
+	for(indx_time=0; indx_time<n1_traces; indx_time++){
+	  float v;
+	  v=local_velocity[indx_time];
+	  local_sloth[indx_time]=1/(v*v);
+	}
+      }
     }
     offset2=offset*offset;
     for(indx_time=0; indx_time<n1_traces; indx_time++){

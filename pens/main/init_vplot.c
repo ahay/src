@@ -232,11 +232,11 @@ float           mkscale;/* global marker scale */
 float           dashscale;	/* global dashed line scale */
 char            *interact=NULL;	/* Where to store coordinate
 						 * file */
-float           greyc = 1.;	/* Nonlinear correction */
-float           pixc = 1.;	/* Pixel overlap correction */
 float           redpow = 1., redmap[4] = {1., 0., 0., 0.};
 float           greenpow = 1., greenmap[4] = {0., 1., 0., 0.};
 float           bluepow = 1., bluemap[4] = {0., 0., 1., 0.};
+
+float           pixc, greyc;
 
 /* filter options - resettable between plots */
 int             user_rotate;
@@ -390,8 +390,8 @@ void init_vplot (int argc, char* argv[])
                     2    Ordered Dither
                     3    Minimized Average Error Method
                     4    Digital Halftoning */
-    sf_getfloat ("greyc",  &greyc); /* "grey correction" modifies the grey scale used to display a raster to simulate the nonlinearity of displays, see "man vplotraster" */
-    sf_getfloat ("pixc",  &pixc);   /* "pixel  correction" controls  alteration of the grey scale, see "man vplotraster". */
+    if (!sf_getfloat ("greyc",  &greyc)) greyc=1.0; /* "grey correction" modifies the grey scale used to display a raster to simulate the nonlinearity of displays, see "man vplotraster" */
+    if (!sf_getfloat ("pixc",  &pixc)) pixc=1.0;   /* "pixel  correction" controls  alteration of the grey scale, see "man vplotraster". */
 
     sf_getint ("txfont",  &dev.txfont);
     sf_getint ("txprec",  &dev.txprec);

@@ -73,7 +73,7 @@ Result('cerr',
 # Find complex polynomial roots
 
 Flow('cpoly','cpef','window n2=1 | math output=-1 | cat axis=2 $SOURCE')
-Flow('croots','cpoly','transp | roots verb=n niter=100 sort=r | transp')
+Flow('croots','cpoly','transp | roots verb=n niter=0 sort=r | transp')
 
 # Frequency components
 

@@ -142,8 +142,8 @@ int main(int argc, char* argv[])
 		    if (sq <= 0.) continue;
 
 		    y = sqrtf(sq);
-		    ty = ry*fabsf(1.-x*h/(t*t))/y;
-		    tx = SF_MAX(ty, rx*fabsf(1.-h/t)/y);
+		    ty = ry*fabsf(1.0f-x*h/(t*t))/y;
+		    tx = SF_MAX(ty, rx*fabsf(1.0f-h/t)/y);
 
 		    if (tx >= dy*vel) continue;
 

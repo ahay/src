@@ -1,0 +1,97 @@
+from rsf.proj import *
+from rsf.gallery import constant
+from rsf.recipes.tpx import TPX, FPX
+
+constant.get_zodata('data')
+Result('data','grey title="Zero Offset" ')
+
+nx = 351
+
+Flow('fft','data','cosft sign2=1')
+
+Flow('stolt','fft','stolt vel=1',split=[2,'omp'])
+
+Flow('mig','stolt','cosft sign2=-1')
+
+Result('mig',
+       '''
+       window min2=0 max2=1.5 | 
+       grey title="Image"
+       ''')
+
+# Warp to square time
+
+Flow('data2','data','t2warp | put unit1="s\^2\_" ')
+
+Result('data2','grey title="Zero Offset (Warped)" label1="Squared Time" ')
+
+# Dip decomposition
+
+dxdt=0.01/0.023984
+pmax=5
+
+#TPX('tpx','data2',nt=1500,np=201,p0=-pmax/dxdt)
+
+#Flow('txp','tpx','transp plane=23 memsize=5000')
+
+#Result('txp',
+#       '''
+#       byte gainpanel=all |
+#       grey3 frame1=500 frame2=150 frame3=80 point1=0.8 point2=0.8 flat=n title=TXP unit3=s/m
+#       label1="Squared Time" unit3="s\^2\_/m"
+#       ''')
+
+# t,x -> f,p,x
+v0=0.5
+dv=0.01
+nv=101
+
+FPX('fpx','data2',nw=360,np=201,p0=-pmax/dxdt,v0=v0)
+
+Flow('fkp','fpx','transp plane=23 | fft3 axis=2')
+
+# oriented velocity continuation: f,k,p -> f,v,k,p
+Flow('vc','fkp','ovczo nv=%d dv=%g v0=%g' % (nv,dv,v0))
+
+# f,v,k,p -> t,x,v,p, window out the parts with nothing in them 
+Flow('txvp','vc',
+     '''
+     transp plane=23 memsize=5000 |
+     fft3 axis=2 inv=y |
+     pad n1=751 |
+     fft1 inv=y| t2warp inv=y | put unit1=s unit4="s\^2\_/km"
+     ''')
+
+# get a t,x,v
+Flow('txv','txvp','stack axis=4')
+
+# frames from velocity continuation
+for k in range(4):
+    vel = (0.5,0.75,1.0,1.25)[k]
+    vc = 'vc%d' % k
+    Flow(vc,'txv','window min2=0 max2=1.5 n3=1 min3=%g' % vel)
+    Plot(vc,'grey title="Velocity Continuation (v=%g km/s)" clip=2e-5' % vel)
+
+    # common-image dip angle gathers
+    cigs = []
+    for n in range(3):
+        x = (0.25,0.5,0.75)[n]
+        cig = 'cig%d-%d' % (k,n)
+        Flow(cig,'txvp','window n2=1 min2=%g n3=1 min3=%g' % (x,vel))
+        Plot(cig,'grey title="Dip Angle Gather (x=%g km, v=%g km/s)" ' % (x,vel))
+        cigs.append(cig)
+    cig = 'cig%d' % k
+    Result(cig,cigs,'SideBySideAniso')
+
+    ovc = 'ovc%d' % k
+    Flow(ovc,'txvp','window min2=0 max2=1.5 n3=1 min3=%g' % vel)
+    Result(ovc,
+           '''
+           byte gainpanel=all |
+           grey3 flat=n frame1=750 frame2=50 frame3=125 point1=0.7 point2=0.7
+           title="Oriented Velocity Continuation (v=%g km/s)" 
+           ''' % vel)
+
+Result('vc','vc0 vc1 vc2 vc3','TwoRows')
+
+End()

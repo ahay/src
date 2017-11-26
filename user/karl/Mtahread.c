@@ -71,7 +71,8 @@ int main(int argc, char* argv[])
   int n_traces, n_headers; 
   sf_datatype typehead;
   sf_datatype typein;
-  float* header=NULL;
+  float* fheader=NULL;
+  int* iheader=NULL;
   float* intrace=NULL;
   int i_trace;
   char* infile_filename=NULL;
@@ -84,6 +85,8 @@ int main(int argc, char* argv[])
   float o_in[SF_MAX_DIM+1];
   float d_in[SF_MAX_DIM+1];
   int indx_of_keys[SF_MAX_DIM+1];
+  int indx_of_ns;
+  int indx_of_dt;
   int traceindx[SF_MAX_DIM+1];
   float tracecoord[SF_MAX_DIM+1];
   int indxleft;
@@ -121,7 +124,7 @@ int main(int argc, char* argv[])
 
   /* get the axis labels on the input file */
   /* these will be used if users requests makeheaders */
-  for (iaxis=2; iaxis<SF_MAX_DIM+1; iaxis++){
+  for (iaxis=1; iaxis<SF_MAX_DIM+1; iaxis++){
     sprintf(parameter,"label%d",iaxis);
     if(verbose>1)fprintf(stderr,"first try to read %s\n",parameter);
     /* get label, o, n, and i for each axis.  These will be used to 
@@ -150,11 +153,6 @@ int main(int argc, char* argv[])
     }
   }
   /* compute index_of_keys after calling segy_init */ 
-
-
-
-
-
 
   if(verbose>0)
     fprintf(stderr,"set up output file for tah - should be stdout\n");
@@ -233,8 +231,8 @@ int main(int argc, char* argv[])
   
   /* must be float or int */
   if(verbose>1)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
-  header = sf_floatalloc(n1_headers);
- 
+  fheader = sf_floatalloc(n1_headers);
+  iheader = (int*)fheader;
   if(verbose>1)fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
 
   intrace= sf_floatalloc(n1_traces);
@@ -264,6 +262,11 @@ int main(int argc, char* argv[])
     tempint=segykey("epx");
     fprintf(stderr,"epx tempint=%d\n",tempint);
   }
+
+  /* get indx_of_ns and indx_of_dt that will also be loaded */
+  indx_of_ns=segykey("ns");
+  indx_of_dt=segykey("dt");
+
   if(makeheader){
     for (iaxis=2; iaxis<SF_MAX_DIM+1; iaxis++){
       if(0==strcmp("none",label_in[iaxis])){
@@ -283,6 +286,10 @@ int main(int argc, char* argv[])
 	fprintf(stderr,"indx_of_keys[%d]=%d\n",iaxis,indx_of_keys[iaxis]);
       }
     }
+    if(verbose>1){
+      fprintf(stderr,"indx_of_ns=%d\n",indx_of_ns);
+      fprintf(stderr,"indx_of_dt=%d\n",indx_of_dt);
+    }
   }
   /* put the history from the input file to the output */
   if(verbose>1)fprintf(stderr,"fileflush out\n");
@@ -296,7 +303,7 @@ int main(int argc, char* argv[])
     /**************************/
     /* read trace and headers */
     /**************************/
-    sf_floatread(header,n1_headers,inheaders);
+    sf_floatread(fheader,n1_headers,inheaders);
     sf_floatread(intrace,n1_traces,infile);
 
     if(makeheader){
@@ -310,19 +317,42 @@ int main(int argc, char* argv[])
 		  i_trace,   iaxis,   tracecoord[iaxis]);
 	}
 	if(indx_of_keys[iaxis]>=0){
-	  /* kls what's needed to add to make this work with integer headers?*/
-	  header[indx_of_keys[iaxis]]=tracecoord[iaxis];
+	  if(typehead==SF_FLOAT)fheader[indx_of_keys[iaxis]]=tracecoord[iaxis];
+	  else iheader[indx_of_keys[iaxis]]=SF_NINT(tracecoord[iaxis]);
+	}
+      }
+      /* load ns and dt headers */
+      if(verbose>1)fprintf(stderr,"n1_traces=%d\n",n1_traces);
+      if(typehead==SF_FLOAT){
+	fheader[indx_of_ns]=n1_traces;
+	/* fprintf(stderr,"fheader[indx_of_ns]=%e\n",fheader[indx_of_ns]); */
+      }else{
+	iheader[indx_of_ns]=n1_traces;
+	/* fprintf(stderr,"iheader[indx_of_ns]=%d\n",iheader[indx_of_ns]); */
+      }
+      if(verbose>1){
+	fprintf(stderr,"label_in[1]=%s\n", label_in[1]);
+      }
+      /* strcmp returns 0 if both are equal */
+      if(strcmp(label_in[1],"Time")==0){
+	/*convert seconds to microseconds */
+	if(typehead==SF_FLOAT){
+	  fheader[indx_of_dt]=d_in[1]*1000000.0; 
+	  /* fprintf(stderr,"fheader[indx_of_dt]=%e\n",fheader[indx_of_dt]); */
+	} else {
+	  iheader[indx_of_dt]=SF_NINT(d_in[1]*1000000.0); 
+	  /* fprintf(stderr,"iheader[indx_of_dt]=%d\n",iheader[indx_of_dt]); */
 	}
       }
     }
     /***************************/
-    /* write trace and headers */
+    /* Write trace and headers */
     /***************************/
     /* trace and header will be preceeded with words:
        1- type record: 4 charactors 'tah '.  This will support other
           type records like 'htah', hidden trace and header.
        2- the length of the length of the trace and header. */
-    put_tah(intrace, header, n1_traces, n1_headers, out);
+    put_tah(intrace, fheader, n1_traces, n1_headers, out);
   }
 
   exit(0);

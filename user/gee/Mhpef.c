@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], n0[SF_MAX_DIM];
     int a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
-    int dim, n123, i, niter, na, *kk,      nd;
+    int dim, n123, i, niter, na, *kk;
     float *dd, tol;
     sf_filter aa;   
     char varname[6], *lagfile;
@@ -123,10 +123,8 @@ int main(int argc, char* argv[])
 
     sf_floatread (dd,n123,in);
 
-    bound (dim, n0, n, a, aa); 
-    for (i=0, nd=1; i<dim; i++) nd*=n[i]; 
-
-	
+    bound (dim, false, n0, n, a, aa); 
+ 	
     find_mask(n123, kk, aa);   /* account for missing data */
     
     if (NULL != sf_getstring("maskout")) {
@@ -134,7 +132,7 @@ int main(int argc, char* argv[])
 	mask = sf_output("maskout");
 
 	for (i=0; i < n123; i++) {
-	    kk[i] = aa->mis[i]? 0.: 1.;
+	    kk[i] = aa->mis[i]? 0: 1;
 	}
 	
 	sf_settype(mask,SF_INT);

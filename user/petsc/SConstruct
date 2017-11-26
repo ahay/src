@@ -42,13 +42,12 @@ if petscdir:
                 LIBPATH=['../../lib'],
                 LIBS=[env.get('DYNLIB','')+'rsf'])
 
-    for source in src:
-        inc = env.RSF_Include(source,prefix='')
-        obj = env.StaticObject(source)
+for source in src:
+    inc = env.RSF_Include(source,prefix='')
+    env.Ignore(inc,inc)
+    if petscdir:
+        obj = env.StaticObject(source)  
         env.Depends(obj,inc)
-else:
-    for source in src:
-        inc = env.RSF_Include(source,prefix='')
     
 mains = Split(progs)
 for prog in mains:

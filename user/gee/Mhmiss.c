@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
  
     if (NULL != lag) sf_fileclose(lag);
 
-    bound (dim, m, n, a, aa);
+    bound (dim, false, m, n, a, aa);
 
     sf_floatread (aa->flt,na,filt);
     sf_fileclose(filt);

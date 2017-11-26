@@ -1,0 +1,15 @@
+In this paper I glossed over several problems.
+First, $\sigma$ should be a space-varying function rather than
+the constant I proposed. A bootstrap approach (using
+the model residual at one non-linear iteration as our guess
+at a space-varying $\sigma$) might prove effective but hasn't been
+tested.  How to calculate $\sigma$ for the non-missing data problem
+is an open question. In the generic geophysical operator $\bf L$, we often
+don't know
+which model components are estimated through the data fitting
+goal and which are estimated by the model styling goal.
+Finally, I made the  assumption that I was dealing with
+models with  a normal distribution. 
+Whether replacing $\bf v$ with another distribution
+or using something similar to the geostatistician's {\it normal-score transform}
+would be effective in correctly modeling these distributions is unknown.

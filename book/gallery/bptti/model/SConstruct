@@ -34,28 +34,7 @@ for par in pars:
                   (0,1.5)[par=='vp' or par=='vx'],
                   units[par]))
 
-
-zcat = WhereIs('gzcat') or WhereIs('zcat')
-
-shots =[]
-tshots = []
-for s in range(4):
-    sgy = 'Anisotropic_FD_Model_Shots_part%d.sgy' % (s+1)
-    sgyz = sgy+'.gz'
-
-    Fetch(sgyz,'BP',top=os.environ.get('DATAPATH'),server='local')
-    Flow(sgy,sgyz,zcat + ' $SOURCE',stdin=0)
-
-    shot = 'shot%d' % s
-    Flow([shot,'t'+shot,shot+'.asc'],sgy,
-         'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]}')
-
-    shots.append(shot)
-    tshots.append('t'+shot)
-
-Flow('shot',shots,'cat axis=2 ${SOURCES[1:4]}')
-Flow('tshot',tshots,'cat axis=2 ${SOURCES[1:4]}')
-
+bptti.getshots('shot','tshot')
 
 #C20 INPUT MODEL INFORMATION                                                    
 #C21 dX and dZ are 6.25m,  Surface Type:  Absorbing                              

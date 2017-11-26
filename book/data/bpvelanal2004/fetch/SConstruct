@@ -1,0 +1,89 @@
+from rsf.proj import *
+
+# files have names like:
+#wget ftp://software.seg.org/pub/datasets/2D/2004_BP_Vel_Benchmark/shots0001_0200.segy.gz
+# or
+#wget https://s3.amazonaws.com/open.source.geoscience/open_data/bpvelanal2004/shots0001_0200.segy.gz
+
+
+for filename in ['density_z6.25m_x12.5m',
+                 'vel_z6.25m_x12.5m_exact',
+		 'vel_z6.25m_x12.5m_lw',
+                 'vel_z6.25m_x12.5m_nosalt',
+                 'vel_z6.25m_x12.5m_saltindex',
+                 'vel_z6.25m_x12.5m_wbindex',
+                 'shots0001_0200',
+		 'shots0201_0400',
+		 'shots0401_0600',
+		 'shots0601_0800',
+		 'shots0801_1000',
+		 'shots1001_1200',
+                 'shots1201_1348']:
+    Fetch(filename+'.segy.gz',dir='bpvelanal2004',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
+      usedatapath=1)
+
+    Flow(filename+'.segy',
+         filename+'.segy.gz',
+        '''
+        gunzip 
+        ''')
+
+    Flow([filename+'.rsf' ,filename+'_hdr.rsf',
+          filename+'.thdr',filename+'.bhdr'],
+         filename+'.segy',
+         '''
+         sfsegyread tfile=${TARGETS[1]} 
+           hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+         ''')
+
+Flow('shots.rsf',
+     ['shots0001_0200.rsf',
+      'shots0201_0400.rsf',
+      'shots0401_0600.rsf',
+      'shots0601_0800.rsf',
+      'shots0801_1000.rsf',
+      'shots1001_1200.rsf',
+      'shots1201_1348.rsf'],
+     'sfcat  ${SOURCES[0:7]} axis=2',stdin=0)
+
+Flow('shots_hdr.rsf',
+     ['shots0001_0200_hdr.rsf',
+      'shots0201_0400_hdr.rsf',
+      'shots0401_0600_hdr.rsf',
+      'shots0601_0800_hdr.rsf',
+      'shots0801_1000_hdr.rsf',
+      'shots1001_1200_hdr.rsf',
+      'shots1201_1348_hdr.rsf'],
+     'sfcat  ${SOURCES[0:7]} axis=2',stdin=0)
+
+for filename in ['central_shot_674',
+    	         'zero_offset_section']:
+   Flow(filename+'.display',
+        '../fetch/'+filename+'.gif',
+        'open ${SOURCES[0]}',
+        stdin=0,stdout=0)
+
+for filename in ['2004_Benchmark_READMES.pdf','README_Modification',
+                 'central_shot_674.gif','eage_abstract.pdf',
+                 'vel_6.25m.gif','zero_offset_section.gif']:
+    Fetch(filename,dir='bpvelanal2004',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
+      usedatapath=0)
+
+for filename in ['central_shot_674','zero_offset_section',
+                 'vel_6.25m','zero_offset_section']:
+   Flow(filename+'.display',
+        '../fetch/'+filename+'.gif',
+        'open ${SOURCES[0]}',
+        stdin=0,stdout=0)
+
+Flow('2004_Benchmark_READMES.display','2004_Benchmark_READMES.pdf',
+        'open ${SOURCES[0]}',stdin=0,stdout=-1)
+Flow('eage_abstract.display','eage_abstract.pdf',
+        'open ${SOURCES[0]}',stdin=0,stdout=-1)
+print "cat README_Modification"
+
+End()
+
+      

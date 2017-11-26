@@ -1,0 +1,303 @@
+\author{Thomas Bayes}
+%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 5}
+
+\begin{abstract}
+  This homework has four parts. 
+  \begin{enumerate}
+    \item A theoretical question related to covariance estimation.
+    \item Attenuation of surface-wave noise in 
+        seismic data collected over sand dunes using match filtering.
+    \item Stochastic simulation of natural patterns.
+    \item Missing data interpolation for ocean floor topography.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+The homework code is available from the \texttt{Madagascar} repository
+by running
+\begin{verbatim}
+svn co https://github.com/ahay/src/trunk/book/geo384h/hw5
+\end{verbatim}
+
+\section{Theory}
+
+Suppose that we use the gradient operator for data interpolation:
+\begin{equation}
+\label{eq:grad}
+\min\,\left|\nabla \mathbf{m}\right|^2\;.
+\end{equation}  
+This approach roughly corresponds to minimizing the surface area and
+represents the behavior of a soap film or a thin rubber sheet.
+
+The corresponding inverse model covariance operator is the negative Laplacian
+$\mathbf{C}_m^{-1}=\nabla^T\,\nabla=-\nabla^2$. The corresponding
+covariance operator corresponds to the Green's function $G(\mathbf{x})$ that solves
+\begin{equation}
+\label{eq:green}
+-\nabla^2 G = \delta(\mathbf{x}-\mathbf{x}_0)\;.
+\end{equation}
+In 2-D, the Green's function has the form 
+\begin{equation}
+\label{eq:g2d}
+G(\mathbf{x}) = \displaystyle A - \frac{\ln |\mathbf{x}-\mathbf{x}_0|}{2\pi}
+\end{equation}
+with some constant $A$.
+
+To derive equation~(\ref{eq:g2d}), we can introduce polar coordinates
+around $\mathbf{x}_0$ with the radius $r= |\mathbf{x}-\mathbf{x}_0|$
+and note that the Laplacian operator for a radially-symmetric function
+$\phi(r)$ in polar coordinates takes the form
+\begin{equation}
+\label{eq:polar}
+\nabla^2 \phi = \displaystyle \frac{1}{r}\,\frac{d}{dr}\,\left(r\,\frac{d \phi}{dr}\right)
+\end{equation}  
+Away from the point $\mathbf{x}_0$, solving
+\begin{equation}
+\label{eq:away}
+\frac{1}{r}\,\frac{d}{dr}\,\left(r\,\frac{d G}{dr}\right) = 0
+\end{equation}
+leads to $G(r) = A + B\,\ln r$. To find the constant $B$, we can
+integrate $\nabla^2 G$ over a circle with some small radius $\epsilon$
+around the origin and apply the Green's theorem
+\begin{equation}
+\label{eq:integrate}
+-1 = \iint \nabla^2 G dx\,dy = \oint \nabla G \cdot \vec{ds} = 
+\int\limits_{0}^{2\pi} \left.\frac{\partial G}{\partial r}\right|_{r=\epsilon}\,\epsilon\,d\theta = 2\pi\,B\;.
+\end{equation}
+
+Derive the model covariance function $G(\mathbf{x})$ which corresponds
+to replacing equation~(\ref{eq:grad}) with equation
+\begin{equation}
+\label{eq:lap}
+\min\,\left|\nabla^2 \mathbf{m}\right|^2
+\end{equation} 
+and approximates the behavior of a thin elastic plate.
+
+
+\section{Match Filtering for Attenuation of Surface Seismic Waves}
+\inputdir{match}
+
+\sideplot{data}{width=\textwidth}{Seismic shot record from sand dunes in the Middle East. The data are contaminated by ground roll propagating in the sand.}
+
+Figure~\ref{fig:data} shows a section out of a seismic shot record
+collected over sand dunes in the Middle East. The data are
+contaminated by ground roll propagating in the sand. A major data
+analysis task is to separate the signal (reflection waves) from the
+noise (surface waves).
+
+\plot{spec0}{width=0.8\textwidth}{Data spectrum. Solid line -- original data. Dashed line -- initial noise model and signal model.}
+
+A quick look at the data spectrum (Figure~\ref{fig:spec0}) shows that the
+noise is mostly concentrated at low frequencies. We can use this fact
+to create a noise model by low-pass filtering.
+
+\plot{noise0}{width=\textwidth}{(a) Noise model created by low-pass filtering of the original data. (b) Result of subtraction of the noise model from the data.}
+
+Figure~\ref{fig:noise0} shows the noise model from low-pass filtering
+and inner muting and the result of subtracting this model from the
+data. Our next task is to match the model to the true noise by solving
+the least-squares optimization problem
+\begin{equation}
+\label{eq:ls}
+\min \|\mathbf{N}\,\mathbf{f} - \mathbf{d}\|^2\;,
+\end{equation}
+where $\mathbf{d}$ is the data, $\mathbf{f}$ is a \emph{matching filter}, and
+$\mathbf{N}$ represents convolution of the noise model
+$\mathbf{n}_0$ with the filter. After minimization, $\mathbf{n} =
+\mathbf{N}\,\mathbf{f}$ becomes the new noise model, and
+$\mathbf{d}-\mathbf{n}$ becomes the estimated signal. Match filtering
+is implemented in program \texttt{match.c}. Some parts of this program
+are left out for you to fill.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/match.c]{match/match.c}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \texttt{hw6/match}
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{match.c} file to fill in missing parts.
+\item Test your modifications by running the dot product test.
+\begin{verbatim}
+scons dot.test
+\end{verbatim}
+Repeating this several times, make sure that the numbers in the test match.
+\item  Modify the \texttt{SConstruct} file to display the results of match filtering
+and include them in your assignment.
+\item \textbf{EXTRA CREDIT} for improving the results by finding either better parameters or a better algorithm. 
+\end{enumerate}
+
+%\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/SConstruct]{match/SConstruct}
+
+
+\section{Natural patterns}
+\inputdir{pattern}
+
+In this section we will extract multidimensional spatial patterns from
+natural images using the method of \cite{textures}. Four examples,
+shown in Figures~\ref{fig:horizon}-\ref{fig:your}, contain:
+\begin{enumerate}
+\item Seismic horizon slice.
+\item A slice from a CT-scan of a rock sample.
+\item A remote-sensing satellite image.
+\item Your own data (to be replaced by you).
+\end{enumerate}
+In each of the cases, we follow the same workflow:
+\begin{enumerate}
+\item Remove a linear trend from the data.
+\item Estimate a multi-dimensional prediction-error filter (PEF) on a helix.
+\item Apply the inverse of the estimated PEF to random normally-distributed numbers
+  to create a random spatial texture, which shares the covariance with the input. 
+\end{enumerate}
+
+\plot{horizon}{width=0.8\textwidth}{Pattern extraction from a seismic time horizon.}
+\plot{square}{width=0.8\textwidth}{Pattern extraction from a CT-scan of a rock sample.}
+\plot{sat}{width=0.8\textwidth}{Pattern extraction from a satellite image.}
+\plot{your}{width=0.8\textwidth}{Pattern extraction from your own data.}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{pattern/SConstruct}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \verb#geo391/hw6/pattern#
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to replace Figure~\ref{fig:your} with the figure containing your own data.
+\item Why does the method fail in extracting some of the patterns? Did it succeed in extracting patterns from your data?
+\end{enumerate}
+
+\section{Missing ocean-floor data interpolation}
+\inputdir{seabeam}
+
+SeaBeam is an apparatus for measuring water depth both directly under
+a boat and somewhat off to the sides of the boat's track. In this part
+of the assignment, we will use a benchmark dataset from \cite{gee}:
+SeaBeam data from a single day of acquisition. The original data are
+shown in Figure~\ref{fig:seabeam0}a.
+
+\plot{seabeam0}{width=0.8\textwidth}{(a) Water depth measurements from one day
+  of SeaBeam acquisition. (b) Mask for locations of known data.}
+
+Program~\texttt{interpolate.c} implements two alternative methods:
+regularized inversion using convolution with a multi-dimensional
+filter and preconditioning, which uses the inverse operation
+(recursive deconvolution or polynomial division on a helix) for model
+reparameterization.
+
+Our first attempt is to use the Laplacian-factor filter from the
+previous homework. The results from the two methods are shown in
+Figure~\ref{fig:lseabeam}. They are not very successful in hiding
+the ``acquisition footprint''.
+
+\plot{lseabeam}{width=0.8\textwidth}{Left: missing data interpolation using regularization by convolution with a Laplacian factor. 
+Right: missing data interpolation using model reparameterization by
+deconvolution (polynomial division) with a Laplacian factor.}
+
+Next, we will try to estimate the model covariance from the available
+data. The covariance can be estimated using two alternative methods:
+the fast Fourier transform (FFT) method \cite[]{jim} and the
+prediction-error filter (PEF) method \cite[]{textures}. Random
+realizations of model patterns from the two methods and the
+corresponding 2-D Fourier spectra are shown in Figures~\ref{fig:rand2}
+and~\ref{fig:rand}.
+
+\plot{rand2}{width=0.8\textwidth}{Left: data pattern generated using FFT method for covariance estimation.
+Right: its Fourier spectrum.}
+
+\plot{rand}{width=0.8\textwidth}{Left: data pattern generated using PEF method for inverse covariance estimation.
+Right: its Fourier spectrum.}
+
+
+Our new attempt to interpolate missing data using the helical
+prediction-error filter is shown in Figure~\ref{fig:seabeam}.
+
+\plot{seabeam}{width=0.8\textwidth}{Left: missing data interpolation using regularization by 
+convolution with a prediction-error filter. 
+Right: missing data interpolation using model reparameterization by
+deconvolution (polynomial division) with a prediction-error filter.}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=seabeam/interpolate.c]{seabeam/interpolate.c}
+
+%\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=seabeam/SConstruct]{seabeam/SConstruct}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \texttt{hw5/seabeam}
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to implement the following tasks:
+\begin{enumerate}
+\item Find the number of iterations required for both methods shown in Figure~\ref{fig:seabeam} to achieve similar results.
+\item To provide a more quantitative comparison, modify the
+\texttt{interpolate.c} program to output a measure of convergence
+(such as the least-squares misfit) as a function of the number
+of iterations\footnote{You can study the interfaces to
+the \texttt{sf\_solver} and
+\texttt{sf\_solver\_prec} programs. See
+\url{https://sourceforge.net/p/rsf/code/HEAD/tree/trunk/api/c/bigsolver.c}}. Generate figures comparing convergence with and without preconditioning.
+\end{enumerate}
+\item A method for generating multiple realizations of missing data interpolation is:
+\begin{enumerate}
+\item Start with a random realization $\mathbf{m}_0$ such as the one shown in Figures~\ref{fig:rand2} or \ref{fig:rand}.
+\item Instead of estimating $\mathbf{m}$ such that $\mathbf{K}\,\mathbf{m} = \mathbf{d}$, 
+      estimate $\mathbf{x}$ such that 
+\[
+\mathbf{K}\,\mathbf{x} = \mathbf{d}- \mathbf{K}\,\mathbf{m_0}\;.
+\]
+\item The estimate for $\mathbf{m}$ is then  $\widehat{\mathbf{m}} = \widehat{\mathbf{x}}+\mathbf{m_0}$.
+\end{enumerate}
+Implement several realizations of missing data interpolation using
+several realizations of $\mathbf{m}_0$. You can do it by modifying
+either \texttt{SConstruct} or \texttt{interpolate.c}.
+\item Include your results in the paper.
+\item \textbf{EXTRA CREDIT} for implementing missing data interpolation using the FFT method for model covariance.
+\end{enumerate}
+
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \texttt{hw5}.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Bayes's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+sftour scons -c
+\end{verbatim}
+to remove intermediate files.
+\item Run
+\begin{verbatim}
+scons pdf
+\end{verbatim}
+to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+e-mail.
+\end{enumerate}
+
+\bibliographystyle{seg}
+\bibliography{hw5}

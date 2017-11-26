@@ -22,8 +22,6 @@
 
 #include <rsf.h>
 
-#include "general_traveltime_3D.h"
-
 #ifndef _general_traveltime_3D_h
 
 typedef struct threed {

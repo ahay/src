@@ -14,9 +14,6 @@ Plot('vel',
      barlabel=Velocity barunit=m/s barreverse=y
      ''')
 
-# Density
-Flow('den','vel','math output=1')
-
 # Source
 Flow('sou',None,
      'spike n1=2 nsp=2 k1=1,2 mag=400,100 o1=0 o2=0')
@@ -30,10 +27,6 @@ Plot('sou',
 
 Result('vel','vel sou','Overlay')
 
-# Receiver
-Flow('rec',None,
-     'spike n1=2 nsp=2 k1=1,2 mag=400,100 o1=0 o2=0')
-
 # Wavelet
 Flow('wav',None,
      '''
@@ -43,11 +36,11 @@ Flow('wav',None,
 Result('wav','wiggle poly=y pclip=100 title=Wavelet')
 
 # Finite-difference modeling
-Flow('dat wvl','wav vel den sou rec',
+Flow('dat wvl','wav vel sou',
      '''
      transp | 
-     awefd2d vel=${SOURCES[1]} den=${SOURCES[2]} 
-     sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} 
+     awefd2d vel=${SOURCES[1]} cden=y
+     sou=${SOURCES[2]} rec=${SOURCES[2]} wfl=${TARGETS[1]} 
      verb=y free=n snap=y dabc=y jdata=1 jsnap=10 
      ''')
 

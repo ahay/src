@@ -22,13 +22,13 @@ int main(int argc, char* argv[])
 {
   int nx, ny, nt, npara, nc;
   float x, y, dx, dy, dt, x0, y0, tini, t0;
-  float **t0sq,**time, *coeff, ***dtime; 
+  float **t0sq,**time, *coeff, ***dtime, *offsetx, *offsety; 
   float w1,w2,w3,A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5,A,B,C;
   int i,j,k,test;
   int count = 0;
-  bool verb;
+  bool verb, gather;
 
-  sf_file inp, out, fit ,inicoef;
+  sf_file inp, out, fit ,inicoef, offsx, offsy;
 
   sf_init(argc, argv);
     inp = sf_input("in");
@@ -52,12 +52,21 @@ int main(int argc, char* argv[])
     
     /*Verbal flag*/
     if (!sf_getbool("verb",&verb)) verb=false;
+    if (!sf_getbool("gather",&gather)) gather=false;
     
     /*Memory allocation*/
     coeff = sf_floatalloc(npara);
     t0sq = sf_floatalloc2(nx,ny);
     time = sf_floatalloc2(nx,ny);
     dtime = sf_floatalloc3(nx,ny,npara);
+    if (gather) {
+        offsx = sf_input("offsetx"); /*for 2D gather (spiral sorted) input*/
+	    offsy = sf_input("offsety");
+    	offsetx = sf_floatalloc(nx);
+    	offsety = sf_floatalloc(nx);
+    	sf_floatread(offsetx,nx,offsx);
+    	sf_floatread(offsety,nx,offsy);
+    }
     
     /*Output dimension*/
     if (!sf_histint(inicoef,"n1",&nc) || nc != npara) 
@@ -82,10 +91,16 @@ int main(int argc, char* argv[])
 
         /* Loops for each x and y*/
             for(j=0;j<ny;j++){
-                y = y0 + j*dy;
+                if (!gather) y = y0 + j*dy;
                 
                 for(i=0;i<nx;i++){
-                    x = x0 + i*dx;
+                    if (!gather) {
+                    	x = x0 + i*dx;
+                    } else {
+                    	x = offsetx[i];
+                    	y = offsety[i];
+                    }
+                    
                     t0 = sqrt(t0sq[j][i]);
                     
                     /* Avoid dividing by zero*/

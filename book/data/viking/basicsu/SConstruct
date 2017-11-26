@@ -1,0 +1,167 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+import os
+
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+segyread        = os.path.join(CWPROOT,'bin/segyread')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+susort          = os.path.join(CWPROOT,'bin/susort')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+suvelan         = os.path.join(CWPROOT,'bin/suvelan')
+sunmo           = os.path.join(CWPROOT,'bin/sunmo')
+sustack         = os.path.join(CWPROOT,'bin/sustack')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+sugazmig        = os.path.join(CWPROOT,'bin/sugazmig')
+velconv         = os.path.join(CWPROOT,'bin/velconv')
+smooth2         = os.path.join(CWPROOT,'bin/smooth2')
+unisam2         = os.path.join(CWPROOT,'bin/unisam2')
+transp          = os.path.join(CWPROOT,'bin/transp')
+sumigpspi       = os.path.join(CWPROOT,'bin/sumigpspi')
+sumigfd         = os.path.join(CWPROOT,'bin/sumigfd')
+sufilter        = os.path.join(CWPROOT,'bin/sufilter')
+sufft           = os.path.join(CWPROOT,'bin/sufft')
+suamp           = os.path.join(CWPROOT,'bin/suamp')
+suspike         = os.path.join(CWPROOT,'bin/suspike')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+
+# fetch data from TRIP repo
+fetches = {
+    'paracdp.segy' : ['mobil', 'http://www.trip.caam.rice.edu'],
+    'logs_and_sources.tar' : ['mobil', 'http://www.trip.caam.rice.edu'],
+}
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])   
+
+# extract SU from SEGY
+Flow('paracdp.su', 'paracdp.segy', segyread + ' tape=paracdp.segy conv=1 | ' + sugain + ' qclip=0.99 > ${TARGETS[0]}; /bin/rm binary header', stdin=0, stdout=-1)
+
+# extract CDPs for VA
+Flow('cdp200.su', 'paracdp.su', suwind + ' tmax=3 key=cdp min=200 max=200')
+Flow('cdp700.su', 'paracdp.su', suwind + ' tmax=3 key=cdp min=700 max=700')
+Flow('cdp1300.su', 'paracdp.su', suwind + ' tmax=3 key=cdp min=1300 max=1300')
+Flow('cdp2000.su', 'paracdp.su', suwind + ' tmax=3 key=cdp min=2000 max=2000')
+
+# create VELAN panels
+Flow('velan200.su', 'cdp200.su', suvelan)
+Flow('velan700.su', 'cdp700.su', suvelan)
+Flow('velan1300.su', 'cdp1300.su', suvelan)
+Flow('velan2000.su', 'cdp2000.su', suvelan)
+
+# QC vrms picks - apply NMO to analysis CDPs
+Flow('nmo200.su', 'cdp200.su', sunmo + ' tnmo=0.0,1.25,1.8,2.7,3.0 vnmo=1500,1900,2050,2600,2700 voutfile=vrmst200')
+Flow('nmo700.su', 'cdp700.su', sunmo + ' tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 vnmo=1500,1750,1900,2050,2200,2450,2700 voutfile=vrmst700')
+Flow('nmo1300.su', 'cdp1300.su', sunmo + ' tnmo=0.0,1.0,1.25,1.7,2.1,2.4,2.75 vnmo=1500,1800,1900,2000,2200,2400,2600 voutfile=vrmst1300')
+Flow('nmo2000.su', 'cdp2000.su', sunmo + ' tnmo=0.0,1.25,1.6,2.25,2.6,2.75 vnmo=1500,1950,2050,2250,2400,2700 voutfile=vrmst2000')
+Flow('nmo2000lo.su', 'cdp2000.su', sunmo + ' tnmo=0.0,1.2,1.5,1.8,2.1,2.6,2.75 vnmo=1500,1800,1800,1800,2200,2400,2700 voutfile=vrmst2000lo')
+
+# truncate data at 3s, apply NMO correction to every CDP, output interpolated vrmst file
+Flow(['paranmo.su', 'paravrmst.bin'], 'paracdp.su', suwind + ' tmax=3 | ' + sunmo + ' cdp=200,700,1300,2000 tnmo=0.0,1.25,1.8,2.7,3.0 vnmo=1500,1900,2050,2600,2700 tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 vnmo=1500,1750,1900,2050,2200,2450,2700 tnmo=0.0,1.0,1.25,1.7,2.1,2.4,2.75 vnmo=1500,1800,1900,2000,2200,2400,2600 tnmo=0.0,1.25,1.6,2.25,2.6,2.8 vnmo=1500,1950,2050,2200,2400,2500 voutfile=paravrmst.bin')
+
+# with Jie's filter
+Flow(['paracdpf.su'], 'paracdp.su', sufilter + ' f=5,10,30,40 | ' + suwind + ' tmax=3')
+Flow(['paranmof.su'], 'paracdpf.su', sunmo + ' cdp=200,700,1300,2000 tnmo=0.0,1.25,1.8,2.7,3.0 vnmo=1500,1900,2050,2600,2700 tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 vnmo=1500,1750,1900,2050,2200,2450,2700 tnmo=0.0,1.0,1.25,1.7,2.1,2.4,2.75 vnmo=1500,1800,1900,2000,2200,2400,2600 tnmo=0.0,1.25,1.6,2.25,2.6,2.8 vnmo=1500,1950,2050,2200,2400,2500')
+
+# zero phase bandpass filter a la Jie
+Flow('bp05103040.su', None, suspike + ' nt=101 ntr=1 dt=0.004 offset=0 nspk=1 ix1=1 it1=51 | ' + sushw + ' key=delrt a=-200 | ' + sufilter + ' f=5,10,30,40')
+
+# stack, with/without agc
+Flow('parastack.su', 'paranmo.su', sustack)
+Flow('parastackagc.su','paranmo.su',sugain + ' agc=1 | ' + sustack)
+Flow('parastackf.su', 'paranmof.su', sustack)
+Flow('parastackagcf.su','paranmof.su',sugain + ' agc=1 | ' + sustack)
+
+# convert velocity to vintt - smooth first to avoid kinks -> disconts
+Flow('paravrmstsm.bin', 'paravrmst.bin', smooth2 + ' n1=751 n2=2142 r1=20 r2=20 | ' + smooth2 + ' n1=751 n2=2142 r1=20 r2=20')
+Flow('paravintt.bin', 'paravrmstsm.bin', velconv + ' intype=vrmst outtype=vintt dt=0.004 nt=751')
+Flow('paravintz.bin', 'paravrmstsm.bin', velconv + ' intype=vrmst outtype=vintz dt=.004 nt=751 dz=10.0 nz=401')
+
+# Gazdag poststack time migration followed by agc
+Flow('paragazmig.su', ['parastack.su','paravintt.bin'], sugazmig + ' dx=12.5 vfile=${SOURCES[1]} | ' + sugain + ' agc=1')
+
+# Gazdag PSPI poststack depth migration
+Flow('vtransp.bin','paravintz.bin',transp + ' n1=401')
+Flow('parapspi.su', ['parastack.su','vtransp.bin'], sumigpspi + ' vfile=${SOURCES[1]} nz=401 dz=10 dx=12.5 tmpdir=/var/tmp | ' + sugain + ' agc=1')
+
+# Jie's filtered version
+Flow('parapspif.su', ['parastackf.su','vtransp.bin'], sumigpspi + ' vfile=${SOURCES[1]} nz=401 dz=10 dx=12.5 tmpdir=/var/tmp | ' + sugain + ' agc=1')
+Flow('parapspif','parapspif.su','suread suxdr=y endian=0  read=data | put d1=10 label1="Depth (m)" d2=12.5 o2=14100 label2="Midpoint (m)" unit1=m unit2=m | window max1=3000')
+
+# create RSF files for grid data
+for file in ['paravrmst', 'paravintt']:
+    Flow(file,file + '.bin',
+      '''echo n1=751 >  ${TARGET};
+      echo d1=4.0 >> ${TARGET};
+      echo o1=0.0 >> ${TARGET}
+      echo n2=2142 >> ${TARGET};
+      echo d2=12.5 >> ${TARGET};
+      echo o2=1617.5 >> ${TARGET};	
+      echo data_format=native_float >> ${TARGET};
+      echo in=./${SOURCE} >> ${TARGET}''',
+      stdin=0, stdout=-1)
+for file in ['paravintz']:
+    Flow(file,file + '.bin',
+      '''echo n1=401 >  ${TARGET};
+      echo d1=10.0 >> ${TARGET};
+      echo o1=0.0 >> ${TARGET};
+      echo n2=2142 >> ${TARGET};
+      echo d2=12.5 >> ${TARGET};
+      echo o2=1617.5 >> ${TARGET};		
+      echo data_format=native_float >> ${TARGET};
+      echo in=./${SOURCE} >> ${TARGET}''',
+      stdin=0, stdout=-1)
+
+# plot analysis CDPs
+Result('cdp200','cdp200.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 title="CDP 200" ')
+Result('cdp700','cdp700.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 title="CDP 700"')
+Result('cdp1300','cdp1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 title="CDP 1300"')
+Result('cdp2000','cdp2000.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 title="CDP 2000" ')
+
+# plot velan panels
+Result('velan200','velan200.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7 allpos=y title="CDP 200" ')
+Result('velan700','velan700.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7  allpos=y title="CDP 700" ')
+Result('velan1300','velan1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7  allpos=y title="CDP 1300"  ')
+
+Plot('velan1300','velan1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000  allpos=y title="CDP 1300" ')
+
+Result('velan2000','velan2000.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=VRMS unit1=s o2=1500 d2=50 | grey color=j min1=1 max2=3000 xinch=5 yinch=7  allpos=y title="CDP 2000" ')
+
+# plot nmo corrected cdps
+Result('nmo200','nmo200.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 200" ')
+Result('nmo700','nmo700.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 700" ')
+Result('nmo1300','nmo1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 1300" ')
+
+Plot('nmo1300','nmo1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 pclip=95 title="CDP 1300" ')
+Plot('zoomnmo1300','nmo1300.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey max1=1 pclip=95 title="CDP 1300" ')
+
+Result('nmo2000lo','nmo2000lo.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 2000"')
+Result('nmo2000','nmo2000.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Trace unit1=s | grey min1=1 xinch=5 yinch=7 pclip=95 title="CDP 2000" ')
+
+#plot stacks, pre- and post-migration - best with agc
+Result('parastack','parastack.su','suread suxdr=y endian=0  read=data | put label1="Time" label2="Midpoint" o2=1617.5 d2=12.5 unit1=s unit2=m | grey clip=1.e+7 xinch=10 yinch=5 title=Stack')
+Result('parastackagc','parastackagc.su','suread suxdr=y endian=0 read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 title="AGC Stack" ')
+Result('parastackagcf','parastackagcf.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey xinch=10 yinch=5 title="AGC Stack" ')
+Plot('parastackagcf','parastackagcf.su', 'suread suxdr=y endian=0 read=data | put label1=Time label2=Midpoint o2=1617.5 d2=12.5 unit1=s unit2=m | grey title="su filter stack" ')
+Result('paragazmig','paragazmig.su','suread suxdr=y endian=0 read=data | put label1=Time label2=Midpoint unit1=s unit2=m o2=1617.5 d2=12.5 | grey xinch=10 yinch=5 title="Gazdag Migration" ')
+Result('parapspi', 'parapspi.su','suread suxdr=y endian=0 read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5 title="PSPI Migration" ')
+Result('parapspif', 'parapspif.su','suread suxdr=y endian=0 read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | grey xinch=10 yinch=5 title="PSPI Migration" ')
+Result('parapspiwind', 'parapspi.su','suread suxdr=y endian=0 read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3000 min2=14000 max2=18000 | grey xinch=5 yinch=5 title="PSPI Migration" ')
+Result('parapspiwindf', 'parapspif.su','suread suxdr=y endian=0 read=data | put d1=10 label1="Depth" d2=12.5 o2=1617.5 label2="Midpoint" unit1=m unit2=m | window max1=3000 min2=14000 max2=18000 | grey xinch=5 yinch=5 title="PSPI Migration" ')
+
+Result('paravintz','put d1=10 label1="Depth" unit1=m d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y titlr="Interval Velocity" mean=y')
+Result('paravintt','put d1=0.004 label1="Time" unit1=s d2=12.5 label2="Midpoint" unit2=m | grey xinch=10 yinch=5 color=j scalebar=y barreverse=y title="Interval Velocity" mean=y')
+
+End()

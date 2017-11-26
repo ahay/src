@@ -1,0 +1,168 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+#I cannot access the propietary server to look at A Klokov's data
+# data
+#data="viking_offsets.rsf"
+#vel="viking_target_veltmig.rsf"
+#Fetch ([data,vel],'viking',server)
+#Fetch (["viking_offsets.rsf","viking_target_veltmig.rsf"],'viking',server)
+
+#Result("viking_offsets","sfgrey title=viking_offsets")
+
+#Result("viking_target_veltmig","sfgrey title=viking_target_veltmig")
+
+
+# try to translate Symes' SU into sftah
+# fetch data from TRIP repo
+fetches = {
+    'paracdp.segy' : ['mobil', 'http://www.trip.caam.rice.edu'],
+    'logs_and_sources.tar' : ['mobil', 'http://www.trip.caam.rice.edu'],
+}
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])   
+
+Flow(['paracdp.rsf' ,'paracdp_hdr.rsf',
+      'paracdp.thdr','paracdp.bhdr'],
+     'paracdp.segy',
+     '''
+     sfsegyread tfile=${TARGETS[1]} 
+       hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+     ''')
+
+for cdp in [200,700,1300,2000]:
+    # extract CDPs for VA
+    cdpfile='cdp%d'%cdp
+    Flow([cdpfile+".rsf",cdpfile+"_hdr.rsf"],'paracdp.rsf',
+         '''
+	 sftahsort sort="cdp:%d,%d,1 -offset" input=$SOURCE \
+         | sftahwindow tmax=3.0 \
+	 | sftahwrite verbose=1 output=$TARGET mode=seq
+	 '''%(cdp,cdp),stdin=0,stdout=0)
+    Flow('offset%d.rsf'%cdp,'cdp%d_hdr.rsf'%cdp,
+     '''
+     sfdd type=float | sfheadermath output=offset
+     ''')
+    Flow('velan%d'%cdp, 'cdp%d.rsf offset%d.rsf'%(cdp,cdp),
+         '''
+         vscan semblance=y half=n offset=${SOURCES[1]} nv=50 v0=1400 dv=50 
+         ''')
+
+# these are not in loop because velocity varies
+Flow('nmo200.rsf nmo200_hdr.rsf', 'cdp200.rsf cdp200_hdr.rsf',
+     '''
+     sftahread input=${SOURCES[0]} \
+     |sftahnmo \
+         tnmo=0.0,1.25,1.8,2.7,3.0 \
+	 vnmo=1500,1900,2050,2600,2700 \
+     |sftahwrite output=$TARGET mode=seq
+     ''',stdin=0,stdout=0)
+Flow('nmo700.rsf nmo700_hdr.rsf', 'cdp700.rsf cdp700_hdr.rsf',
+     '''
+     sftahread input=${SOURCES[0]} \
+     |sftahnmo \
+         tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 \
+	 vnmo=1500,1750,1900,2050,2200,2450,2700 \
+     |sftahwrite output=$TARGET mode=seq
+     ''',stdin=0,stdout=0)
+# symes velocity does not have knee at water bottom:
+#         tnmo=0.0,1.0,1.25,1.7,2.1,2.4,2.75 \
+#	 vnmo=1500,1800,1900,2000,2200,2400,2600 \
+
+Flow('nmo1300.rsf nmo1300_hdr.rsf', 'cdp1300.rsf cdp1300_hdr.rsf',
+     '''
+     sftahread input=${SOURCES[0]} \
+     |sftahnmo \
+         tnmo=0.0,.5,1.0,1.25,1.7,2.1,2.4,2.75 \
+	 vnmo=1450,1450,1800,1900,2000,2200,2400,2600 \
+     |sftahwrite output=$TARGET mode=seq
+     ''',stdin=0,stdout=0)
+Flow('nmo2000.rsf nmo2000_hdr.rsf', 'cdp2000.rsf cdp2000_hdr.rsf',
+     '''
+     sftahread input=${SOURCES[0]} \
+     |sftahnmo \
+         tnmo=0.0,1.25,1.6,2.25,2.6,2.75 \
+	 vnmo=1500,1950,2050,2250,2400,2700 \
+     |sftahwrite output=$TARGET mode=seq
+     ''',stdin=0,stdout=0)
+Flow('nmo2000lo.rsf nmo2000lo_hdr.rsf', 'cdp2000.rsf cdp2000_hdr.rsf',
+     '''
+     sftahread input=${SOURCES[0]} \
+     |sftahnmo \
+         tnmo=0.0,1.2,1.5,1.8,2.1,2.6,2.75 \
+	 vnmo=1500,1800,1800,1800,2200,2400,2700 \
+     |sftahwrite output=$TARGET mode=seq
+     ''',stdin=0,stdout=0)
+
+
+# plot analysis CDPs without nmo
+for cdp in [200,700,1300,2000]:
+    Result('cdp%d'%cdp  , 'sfgrey min1=1 xinch=5 yinch=7 title="CDP %d" ' % cdp)
+
+
+# plot velan panels
+# kls maybe run sfipick
+for cdp in [200,700,1300,2000]:
+    Result('velan%d'%cdp, 'sfgrey color=j min1=1 max2=3000 xinch=5 yinch=7 allpos=y title="CDP %d" ' % cdp)
+    Plot('velan%d'%cdp, 'sfgrey color=j min1=1 max2=3000 allpos=y title="CDP %d" ' % cdp)
+
+# plot nmo corrected cdps
+for cdp in [200,700,1300,2000]:
+    Result('nmo%d'%cdp  , 'sfgrey min1=1 xinch=5 yinch=7 pclip=95 title="CDP %d" ' % cdp)
+    Plot('nmo%d'%cdp  , 'sfgrey min1=1 pclip=95 title="CDP %d" ' % cdp)
+Result('zoomnmo1300','nmo1300', 
+           'sfgrey max1=1 xinch=5 yinch=7 title="cdp 1300 with nmo"')
+Plot('zoomnmo1300','nmo1300', 
+           'sfgrey max1=1 title="cdp 1300 with nmo"')
+
+
+
+
+
+
+# repeat with the bandpass filter on the paracdp file
+
+
+
+
+#for cdp in [200,700,1300,2000]:
+#    Result('anmo%d'%cdp  , 'nmo%d'%cdp  , 'sfgrey pclip=95')
+
+# it would be great to have space variant nmo
+# kls symes omitted  sftahgain tpow=2
+Flow('parastack','paracdp.rsf paracdp_hdr.rsf',
+     '''
+     sftahsort input=${SOURCES[0]} sort=cdp \
+     | sftahgain tpow=2 \
+     | sftahwindow tmax=3.0 \
+     | sftahnmo \
+         tnmo=0.0,1.25,1.4,1.8,2.0,2.5,3.0 \
+	 vnmo=1500,1750,1900,2050,2200,2450,2700 \
+     | sftahstack key=cdp xmute=0,10000 tmute=0,10 ntaper=25 \
+     | sftahwrite output=$TARGET \
+       label2=cdp o2=1 n2=2142 d2=1 
+     ''',stdin=0,stdout=0)
+
+Result('parastack','parastack',
+       'sfgrey  clip=1.e+7 xinch=10 yinch=5 title="parastack"')
+
+Plot('parastackagcf','parastack',
+	'''
+	sfagc rect1=125
+	| sfbandpass flo=5 fhi=35 
+	| sfgrey title='agc filtered parastack'
+	''')
+Result('parastackagcf','parastack',
+	'''
+	sfagc rect1=125
+	| sfbandpass flo=5 fhi=35 
+	| sfgrey  xinch=10 yinch=5 title='agc filtered parastack'
+	''')
+
+# sfimage <parastack.rsf 
+	 
+#Symes SConstruct continue with interpolating stacking velocity time
+# data, convert to interval velocity depth, and migration (two kinds)
+
+
+End()

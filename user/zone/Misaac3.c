@@ -240,24 +240,24 @@ int main(int argc, char* argv[])
 	/* Interpolation order*/
 	
 	if (!sf_getfloat("xmin",&xbmin)) {
-		xbmin=xx[0][0];
+		xbmin= (xx[0][0]<xx[nr3+1][0])? xx[0][0]:xx[nr3+1][0];
 	}
-	/* The x-minimum boundary if not entered, set to xs*/
+	/* The x-minimum boundary if not entered, set to min(xs,xr)*/
 	
 	if (!sf_getfloat("ymin",&ybmin)) {
-		ybmin=xx[0][1];
+		ybmin=(xx[0][1]<xx[nr3+1][1])? xx[0][1]:xx[nr3+1][1];
 	}
-	/* The y-minimum boundary if not entered, set to ys*/
+	/* The y-minimum boundary if not entered, set to min(ys,yr)*/
 	
 	if (!sf_getfloat("xmax",&xbmax)) {
-		xbmax=xx[nr3+1][0];
+		xbmax=(xx[0][0]>xx[nr3+1][0])? xx[0][0]:xx[nr3+1][0];
 	}
-	/* The x-maximum boundary if not entered, set to xr*/
+	/* The x-maximum boundary if not entered, set to max(xr,xr)*/
 	
 	if (!sf_getfloat("ymax",&ybmax)) {
-		ybmax=xx[nr3+1][1];
+		ybmax= (xx[0][1]>xx[nr3+1][1])? xx[0][1]:xx[nr3+1][1];
 	}
-	/* The x-maximum boundary if not entered, set to yr*/
+	/* The y-maximum boundary if not entered, set to max(ys,yr)*/
 	
 	if (!sf_getint("niter",&niter)) sf_error("Please enter the number of iterations");
 	/* The number of iterations*/

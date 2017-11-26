@@ -34,11 +34,10 @@ int main(int argc, char* argv[])
 
     row_out = sf_output("out");
     col_out = sf_output("col_out");
+    sf_fileflush(col_out,col_in);
 
     if (!sf_histint(row_in,"n1",&nr)) sf_error("No n1= in input");
     if (!sf_histint(col_in,"n1",&nc)) sf_error("No n1= in input");
-
-    sf_putint(col_out,"n1",nc);
 
     nx = nr+nc;
     x = sf_floatalloc(nx);

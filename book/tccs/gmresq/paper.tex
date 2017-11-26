@@ -1,0 +1,280 @@
+\title{$Q$-compensated least-squares reverse time migration using lowrank one-step wave extrapolation}
+\author{Junzhe Sun$^*$\footnotemark[1], Sergey Fomel\footnotemark[1], Tieyuan Zhu\footnotemark[1]$^,$\footnotemark[2] and Jingwei Hu\footnotemark[3]}
+\maketitle
+
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+Austin, TX 78713 \\
+\footnotemark[2] Department of Geosciences and Institute of Natural Gas Research \\
+The Pennsylvania State University \\
+University Park, PA 16802 \\
+\footnotemark[3]Department of Mathematics \\
+Purdue University \\
+West Lafayette, IN 47907 
+}
+
+\footnote{Parts of this paper were presented at 2014 and 2015 SEG meetings}
+
+\lefthead{Sun, Fomel, Zhu \& Hu}
+\righthead{Lowrank one-step $Q$-LSRTM}
+
+\begin{abstract}
+\new{Attenuation of seismic waves needs to be taken into account in order to improve the accuracy of seismic imaging. In viscoacoustic media, reverse time migration (RTM) can be performed with $Q$-compensation, which is also known as $Q$-RTM. Least-squares RTM (LSRTM) has also been shown to be able to compensate for attenuation through linearized inversion. However, seismic attenuation may significantly slow down the convergence rate of the least-squares iterative inversion process without proper preconditioning.}
+\old{$Q$-compensated reverse time migration ($Q$-RTM) is a method that has been recently introduced to compensate for seismic attenuation during imaging. Least squares reverse time migration (LSRTM) can also be employed to compensate for attenuation through iterations, but may suffer from a slow convergence rate.} We show that incorporating attenuation compensation into LSRTM can improve the speed of convergence in attenuating media, obtaining high-quality images within the first few iterations. Based on the lowrank one-step seismic modeling operator in viscoacoustic media, we derive its adjoint operator using non-stationary filtering theory. The proposed forward and adjoint operators can be efficiently applied to propagate viscoacoustic waves and to implement attenuation compensation. Recognizing that, in viscoacoustic media, the wave equation Hessian may become ill-conditioned, we propose to precondition LSRTM with $Q$-compensated RTM. Numerical examples show that the resulting $Q$-LSRTM method has a significantly faster convergence rate than LSRTM, and thus is preferable for practical applications.
+
+%Reverse time de-migration (RTDM) is formulated as the adjoint operator of reverse time migration (RTM). In acoustic medium, RTM provides a good approximation to the inverse of RTDM, and can be used to iteratively invert for the reflectivity image in least-squares RTM (LSRTM). In viscoelastic medium, however, the adjoint of the RTDM operator is far from its inverse because of amplitude attenuation during both forward and backward wave propagation. As a result, LSRTM in attenuating medium may suffer from a slow convergence rate due to the ill-conditioned wave-equation Hessian. To improve the convergence rate, we propose preconditioning LSRTM by replacing the original RTM operator with a better approximate inverse to the RTDM operator, namely the $Q$-compensated RTM ($Q$-RTM). Since the inverted matrix is numerically non-Hermitian, we use the Generalized Minimum Residual (GMRES) method instead of the Conjugate Gradient (CG) method as the iterative method. Numerical tests demonstrate that the proposed $Q$-LSRTM approach converges significantly faster than LSRTM, and is capable of producing high-quality attenuation-compensated images within the first few iterations.
+\end{abstract}
+
+\section{Introduction}
+Seismic attenuation is caused by the effective anelastic properties of the Earth \cite[]{aki,carc}, and may lead to poor illumination and misplacement of reflectors in a migration image. To directly compensate for seismic attenuation during reverse time migration (RTM) \cite[]{baysal83,McMechan83,whitmore83}, \cite{zhang10} proposed a viscoacoustic wave equation involving a pseudo-differential operator based on the constant-$Q$ model \cite[]{kja79} with decoupled effects of amplitude loss and velocity dispersion. \cite{suh12} extended the operator to vertically transversely isotropic (VTI) media. \cite{bai13} adopted a similar approach for attenuation compensation in RTM, but used a viscoacoustic wave equation without memory variables. Using fractional Laplacians, \cite{zhu14a} proposed a constant-$Q$ viscoacoustic wave equation with separate terms accounting for amplitude loss and velocity dispersion, which was further applied for $Q$-compensated RTM using both synthetic and field data \cite[]{zhu14b,zhu15fld}. \cite{fletcher12,me15c} investigated stable approaches for Q-compensation in RTM. 
+
+The imaging problem can also be cast as an inverse problem, with the objective of minimizing the $L_2$ norm of the difference between recorded data and predicted data \cite[]{ronen2000}. Such approaches are known as least-squares migration \cite[]{nemeth99,tang09,dai11}, and more specifically least-squares RTM (LSRTM) in the context of RTM \cite[]{wong11,dai12,dai13,zhang13ls,yujin,me14a,xue14,hou15}. LSRTM is capable of mitigating imaging artifacts and enhancing subsurface illumination, and may have a correlative objective function to relax the amplitude matching requirement \cite[]{zhang14}. Pioneering works of linearized inversion in viscoacoustic and viscoelastic media have been done by \cite{ribodetti95,ribodetti00} using an asymptotic theory and by \cite{blanch94,blanch95b} using the wave equation. Recently, \cite{dutta14} and \cite{me14b} have shown that LSRTM can be applied for attenuation compensation in viscoacoustic media. \cite{dutta14} used the standard linear solid (SLS) model \cite[]{rob94,blanch95}, with a simplified stress-strain relation and incorporated a single relaxation mechanism \cite[]{blanch95b}. \cite{me14b} employed the lowrank one-step method to solve the constant-$Q$ wave equation, which allows for an efficient formulation involving fractional Laplacians \cite[]{carc10,zhu14a}. The computational cost of LSRTM depends on the number of iterations, which hinges on the conditioning of the wave-equation Hessian that it tries to invert. In acoustic media, RTM is an efficient approximation to the inverse of reverse time de-migration (RTDM), the forward modeling operator, and provides accurate kinematic information of subsurface structures \cite[]{symes08}. In viscoacoustic media, however, RTM is a poor approximation to the inverse of RTDM, because the wave amplitude suffers from attenuation during both forward and backward propagation \cite[]{zhu14a,me15a}. As a result, the wave-equation Hessian becomes ill-conditioned, and iterative LSRTM\old{ without a proper preconditioner} suffers from a slow convergence rate. \new{To improve the convergence rate of LSRTM in viscoacoustic media, we propose to seek for a proper preconditioner that mitigates the effect of attenuation in the inversion.} 
+%The adjoint operator of RTM is commonly refered to as reverse time de-migration (RTDM), which reconstructs the first-order reflection wavefield from a given reflectivity image \cite[]{lailly83,tarantola84a,zhang12}. When implemented in the data space with an iterative gradient-based method, such as the Conjugate Gradient (CG) algorithm \cite[]{hestenes1952cg}, LSRTM requires applying RTM and RTDM iteratively to converge to a better solution. Therefore, 
+
+In this paper, to construct LSRTM in viscoacoustic media, we use the lowrank one-step wave extrapolation \cite[]{me15b} and derive its adjoint operator based on non-stationary linear filtering theory \cite[]{margrave98}. \cite{me15a} have successfully applied the lowrank one-step wave extrapolation operator to solve the constant-$Q$ wave equation with fractional Laplacians. 
+%It resembles the well-known phase shift plus interpolation (PSPI) method for solving the one-way wave equation \cite[]{gazdag84,kessinger}. In the limit of an exhaustive set of reference velocities, the PSPI method corresponds to a kind of non-stationary combination filter. For solving the one-way wave equation, \cite{margraveandferguson} introduced the non-stationary phase shift (NSPS) wave extrapolation, which is the adjoint of PSPI and a form of non-stationary convolution filter. Following an analogous strategy, we propose a NSPS-like operator for the two-way wave extrapolation as the adjoint operator. We further demonstrate that the forward and adjoint operators can be combined to construct a symmetric operator with increased phase accuracy. 
+To solve the problem of slow convergence of LSRTM in viscoacoustic media, we propose to construct a preconditioned formulation by replacing the viscoacoustic RTM operator, \new{i.e. RTM based on the solution of the viscoacoustic wave equation forward and backward in time,} with a better approximate inverse of the RTDM operator, i.e. the $Q$-compensated RTM or $Q$-RTM \cite[]{zhang10,suh12,bai13,zhu14b}. $Q$-RTM involves a modeling operator with separate control over amplitude and phase, and is designed to compensate for the amplitude loss along the attenuated wavepaths. As a result, the preconditioned wave-equation Hessian is well-conditioned, helping the new framework to quickly converge to the true amplitude solution within only a few iterations. Since the inverted matrix is numerically non-Hermitian, we adopt the Generalized Minimum Residual (GMRES) algorithm, a Krylov subspace method \cite[]{saad1986gmres}, for iterative inversion. \new{Using a synthetic model, we test the ability of the proposed $Q$-LSRTM to dramatically enhancing image quality at a reasonable cost.}
+
+\newpage
+
+\section{Theory}
+
+\subsection{Wave extrapolation in viscoacoustic media}
+We first briefly review the basic theory of lowrank one-step wave extrapolation in visco\-acoustic media, and derive its adjoint operator for applications to RTM and LSRTM. 
+
+A constant-$Q$ model \cite[]{kja79} describes an attenuating medium whose \new{quality factor $Q$ is constant in frequency (but may vary in space), indicating that the} attenuation coefficient is linear in frequency. \cite{zhu14a} derived the following approximate constant-$Q$ wave equation with decoupled fractional Laplacians for modeling and imaging in viscoacoustic media:
+\begin{eqnarray}
+  \label{eq:frac1}
+ \frac{1}{c^2}\frac{\partial^2 P}{\partial t^2} = \nabla^2 P + \beta_1 \{ \eta (-\nabla^2)^{\gamma+1} - \nabla^2 \} P 
+ + \beta_2 \tau \frac{\partial}{\partial t}(-\nabla^2)^{\gamma+1/2} P \;, 
+\end{eqnarray}
+where
+\begin{eqnarray}
+\eta(\mathbf{x}) &=& -c_0^{2\gamma(\mathbf{x})}\omega_0^{-2\gamma(\mathbf{x})}\cos(\pi \gamma(\mathbf{x})) \;, \\ 
+\tau(\mathbf{x}) &=& -c_0^{2\gamma(\mathbf{x})-1}\omega_0^{-2\gamma(\mathbf{x})}\sin(\pi \gamma(\mathbf{x})) \;, \\
+c^2(\mathbf{x}) &=& c_0^2(\mathbf{x})\cos^2(\pi\gamma(\mathbf{x})/2) \;, \\
+\gamma(\mathbf{x}) &=& \arctan(1/Q(\mathbf{x}))/\pi \;.
+\end{eqnarray}
+Here $\gamma$ is a dimensionless parameter that ranges between $0$ to $1/2$. $P(\mathbf{x},t)$ is the pressure wavefield, $c_0(\mathbf{x})$ is the acoustic velocity model defined at a reference frequency $\omega_0$. The $\beta_1$ and $\beta_2$ parameters act like on/off switches that control velocity dispersion and amplitude loss effects, respectively \cite[]{zhu14a}. For simplicity of notation, in the rest \old{part} of the paper the fractional Laplacian operators are denoted as $\mathbf{L} = (-\nabla^2)^{\gamma+1}$ and $\mathbf{H} = (-\nabla^2)^{\gamma+1/2}$.
+
+Setting both $\beta_1$ and $\beta_2$ to one, equation~\ref{eq:frac1} leads to the viscoacoustic dispersion relation with fractional powers of the wave number:
+\begin{equation}
+  \label{eq:dispfrac1}
+  \frac{\omega^2}{c^2} = -\eta |\mathbf{k}|^{2\gamma +2} - i \omega\tau |\mathbf{k}|^{2\gamma +1} \;, 
+\end{equation}
+Solving for $\omega$ in equation~\ref{eq:dispfrac1} yields:
+\begin{equation}
+  \label{eq:omega}
+  \omega = \frac{-ip_1 + p_2}{2} \; ,
+\end{equation}
+where:
+\begin{eqnarray}
+  \label{eq:p1}
+  p_1 &=& \tau c^2|\mathbf{k}|^{2\gamma+1} \; , \\
+  \label{eq:p2}
+  p_2 &=& \sqrt{-\tau^2c^4|\mathbf{k}|^{4\gamma+2}-4\eta c^2|\mathbf{k}|^{2\gamma+2}} \;.
+\end{eqnarray}
+The phase function $\phi (\mathbf{x},\mathbf{k},\Delta t)$ that determines the phase shift of \new{the} wavefield for propagation in time is then defined as
+\begin{equation}
+  \label{eq:phasefunc}
+  \phi (\mathbf{x},\mathbf{k},\Delta t) \approx \frac{-ip_1 + p_2}{2}\,\Delta t \; .
+\end{equation}
+
+The one-step wave extrapolation provides an approximate solution to equation~\ref{eq:frac1} by incorporating the phase function defined in equation~\ref{eq:phasefunc} into the Fourier integral operator (FIO):
+\begin{equation}
+  \label{eq:exp}
+  P(\mathbf{x},t+\Delta t) = \int \hat{P}(\mathbf{k},t)\,e^{i\mathbf{k} \cdot \mathbf{x} + i\,\phi(\mathbf{x},\mathbf{k},\Delta t)}\,d\mathbf{k}\;,
+\end{equation}
+where $\hat{P}$ is the spatial Fourier transform of $P$. The accuracy of the approximation increases with smaller $\Delta t$ \cite[]{lowrank}. The adjoint of operator in equation~\ref{eq:exp} can be expressed as
+\begin{equation}
+  \label{eq:expadj}
+  \hat{P}(\mathbf{k},t) = \int P(\mathbf{x},t+\Delta t)\,e^{-i\mathbf{k} \cdot \mathbf{x} - i\,\bar{\phi}(\mathbf{x},\mathbf{k},\Delta t)}\,d\mathbf{x}\; ,
+\end{equation}
+where $\bar{\phi}$ denotes the complex conjugate of $\phi$.
+
+The FIOs introduced in equations~\ref{eq:exp} and ~\ref{eq:expadj} can be efficiently applied using the lowrank onestep wave extrapolation \cite{me15a}, which we also refer to as the lowrank PSPI operator because of its resemblance to the well-known PSPI method for solving the one-way wave equation \cite[]{gazdag84,kessinger,margraveandferguson}. The detailed formulation of lowrank PSPI operator, as well as the derivation of its adjoint operator, the lowrank NSPS operator, is shown in the appendix. RTM and LSRTM in viscoacoustic media can therefore be constructed using the forward and adjoint operators. 
+
+\subsection{Viscoacoustic RTM and RTDM}
+
+To obtain a seismic image with an attenuated record from the $i$-th shot $d_i(\mathbf{x}_r,t)$, where $\mathbf{x}_r$ denotes the receiver location, viscoacoustic RTM can be carried out in the following three steps:
+\begin{enumerate}[leftmargin=*]
+  \item Forward propagate the source wavefield $S_i(\mathbf{x},t)$ by solving
+  \begin{equation}
+  \label{eq:for}
+    \frac{1}{c^2}\frac{\partial^2 S_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} S_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t}\mathbf{H} S_i(\mathbf{x},t) = \delta(\mathbf{x}-\mathbf{x}_i) f(t) \; .
+  \end{equation}
+  \item Backward propagate the receiver wavefield $R_i(\mathbf{x},t)$ by injecting the observed seismic record as the boundary condition $R_i(\mathbf{x}_r,t) = d_i(\mathbf{x}_r,t)$ and solving
+  \begin{equation}
+  \label{eq:back}
+    \frac{1}{c^2}\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} R_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = 0 \;.
+  \end{equation}
+  \item Apply the cross-correlation imaging condition \cite[]{iei}:
+  \begin{equation}
+    \label{eq:ccr}
+    I(\mathbf{x}) = \sum\limits_i \sum\limits_t S_i(\mathbf{x},t) \bar{R}_i(\mathbf{x},t) \;,
+  \end{equation}
+  where $\bar{R}$ denotes the complex conjugate of $R$ \cite[]{me13}.
+\end{enumerate}
+
+Reverse-time demigration (RTDM) in viscoacoustic media can be formulated as the adjoint of the RTM process:
+\begin{enumerate}[leftmargin=*]
+  \item Calculate the source wavefield $S_i(\mathbf{x},t)$ in the background velocity model in \new{the} same manner as RTM by solving equation~\ref{eq:for}.
+  \item Generate the receiver wavefield $R_i(\mathbf{x},t)$ by using the stacked image $I(\mathbf{x})$ as a secondary source and solving:
+  \begin{equation}
+    \label{eq:back2}
+    \frac{1}{c^2}\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} R_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = I(\mathbf{x})S_i(\mathbf{x},t) \; .
+  \end{equation}
+  \item Extract the predicted seismic record (denoted by the hat) at receiver locations $\mathbf{x}_r$:
+  \begin{equation}
+    \widehat{d}_i(\mathbf{x}_r,t) = R_i(\mathbf{x}_r,t) \;.
+  \end{equation}
+\end{enumerate}
+
+Note that, in order to make the RTDM adjoint to RTM, the wave extrapolation operator used to solve equation~\ref{eq:back2} needs to be the adjoint of the operator used to solve equation~\ref{eq:back}. For example, if lowrank PSPI is used to solve equation~\ref{eq:back}, then lowrank NSPS (derived in the appendix) needs to be used to solve equation~\ref{eq:back2}. 
+If we write the RTM process symbolically as $\widehat{\mathbf{m}} = \mathbf{A}^* \mathbf{d}$, where $\widehat{\mathbf{m}}$ is the stacked image, $\mathbf{A}^*$ is the viscoacoustic RTM operator and $*$ denotes the adjoint, then the RTDM process corresponds to $\widehat{\mathbf{d}} = \mathbf{A} \mathbf{m}$, where $\widehat{\mathbf{d}}$ represents the predicted data and $\mathbf{A}$ is the viscoacoustic RTDM operator.
+
+\subsection{Least-squares RTM in viscoacoustic media}
+
+LSRTM aims to minimize the misfit between the observed data and predicted data measured by the quadratic function:
+\begin{equation}
+J(\mathbf{m}) = \frac{1}{2}\| \widehat{\mathbf{d}} - \mathbf{d} \|^2_2 = \frac{1}{2}\| \mathbf{A} \mathbf{m} - \mathbf{d} \|^2_2 \; .
+\end{equation}
+Since $\mathbf{A}$ is a linear operator, a gradient-based local optimization method, such as the Conjugate Gradient method (CG), is usually applied to iteratively update the image \cite[]{dai13,xue14}. $J(\mathbf{m})$ is minimized when $\mathbf{m}$ satisfies \cite[]{ipt}
+\begin{equation}
+  \label{eq:truemod}
+\mathbf{m} = (\mathbf{A}^* \, \mathbf{A})^{-1}\mathbf{A}^* \, \mathbf{d} \; .
+\end{equation}
+The square matrix $\mathbf{A}^* \, \mathbf{A}$ is known as the wave-equation Hessian, and its condition number affects the convergence rate of LSRTM implemented as \new{an} iterative inversion \cite[]{plessix04}. In acoustic media, RTM usually provides a good approximation to the inverse of RTDM, and the Hessian matrix is well-conditioned \cite[]{symes08}. However, in viscoacoustic media, because both RTM and RTDM operators attenuate seismic waves, the image obtained by the aforementioned algorithm suffers from twice the amplitude loss accumulated along the reflection wavepath. Therefore, differently from the pure acoustic case, viscoacoustic RTM provides a poor approximation to the inverse of viscoacoustic RTDM, which makes the Hessian matrix $\mathbf{A}^* \, \mathbf{A}$ ill-conditioned. \new{In the presence of strong attenuation and without proper preconditioning,} this could slow down the convergence rate of an iterative method like CG and, in practice, may require a prohibitively large number of iterations to achieve a satisfactory result.
+
+\subsection{$Q$-compensated LSRTM using the GMRES method}
+
+To compensate for attenuation in seismic images, \cite{zhu14b} and \cite{me15a} proposed the $Q$-compensated RTM ($Q$-RTM). $Q$-RTM in general can be formulated as follows:
+\begin{enumerate}[leftmargin=*]
+  \item Forward propagate the source wavefield $S_i(\mathbf{x},t)$ with $Q$-compensation by solving:
+  \begin{equation}
+  \label{eq:Qfor}
+    \frac{1}{c^2}\frac{\partial^2 S_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} S_i(\mathbf{x},t) + \tau \frac{\partial}{\partial t}\mathbf{H} S_i(\mathbf{x},t) = \delta(\mathbf{x}-\mathbf{x}_i) f(t) \; .
+  \end{equation}
+  \item Backward propagate the receiver wavefield $R_i(\mathbf{x},t)$ with $Q$-compensation by solving:
+  \begin{equation}
+  \label{eq:Qback}
+    \frac{1}{c^2}\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} R_i(\mathbf{x},t) + \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = 0 \;,
+  \end{equation}
+  with the boundary condition: $R_i(\mathbf{x}_r,t) = d_i(\mathbf{x}_r,t)$.
+  \item Apply the imaging condition (equation~\ref{eq:ccr}).
+\end{enumerate}
+Notice the sign reversal in front of $\tau$ in equations~\ref{eq:Qfor}-\ref{eq:Qback} in comparison with equations~\ref{eq:for}-\ref{eq:back}. This reversal aims to recover the attenuated wavefield by undoing phase distortion and amplifying the amplitude. Practically it may also exponentially increase noise through each time step. A low-pass filter can be applied to stabilize the extrapolation process. Another robust compensation strategy was developed by \cite{me15c} based on stable division between wavefields. Both the source and receiver wavefields need to be compensated in order to accumulate compensation along the entire reflection wavepath. Since $Q$-RTM is capable of restoring the attenuated energy in the seismic image \cite[]{zhu14b,me15a}, it is reasonable to expect that $Q$-RTM is better than viscoacoustic RTM in approximating the inverse of viscoacoustic RTDM .
+
+We propose to replace the original viscoacoustic RTM $\mathbf{A}^*$ with $Q$-RTM $\mathbf{A}^*_c$ as the backward operator. The true model defined in equation~\ref{eq:truemod} can be equivalently expressed as:
+\begin{equation}
+  \label{eq:truemod2}
+\mathbf{m} = (\mathbf{A}^*_c \, \mathbf{A})^{-1}\mathbf{A}^*_c \, \mathbf{d} \; .
+\end{equation}
+
+Additionally, an RTM image may contain low-frequency noise, which can be efficiently removed by a Laplacian filter~\cite[]{zhang09prac}. We propose to cascade the $Q$-RTM operator with a Laplacian filter to help with the least-squares inversion and speed up the convergence rate. Correspondingly, the inverted model is expressed as
+\begin{equation}
+  \label{eq:truemod3}
+\mathbf{m} = (\mathbf{L}\mathbf{A}^*_c\mathbf{A})^{-1} \mathbf{L}\mathbf{A}^*_c \mathbf{d}\;,
+\end{equation}
+where $\mathbf{L}$ denotes the Laplacian operator. Since the operator $\mathbf{L}\mathbf{A}^*_c\mathbf{A}$ is closer to an identity operator than $\mathbf{A}^*\mathbf{A}$, the iterative inversion process will converge faster. Equation~\ref{eq:truemod3} can be viewed as the solution of the preconditioned (weighted) least-squares system that seeks to minimize
+\begin{equation}
+  \label{eq:pls}
+J_p(\mathbf{m}) = \frac{1}{2}\| \mathbf{P} (\mathbf{A} \mathbf{m} - \mathbf{d}) \|^2_2 \; ,
+\end{equation}
+which leads to the solution
+\begin{equation}
+  \label{eq:truemod4}
+\mathbf{m} = (\mathbf{A}^* \mathbf{P}^* \mathbf{P} \mathbf{A})^{-1} \mathbf{A}^* \mathbf{P}^* \mathbf{P} \, \mathbf{d} \;.
+\end{equation}
+
+Instead of looking for the preconditioner $\mathbf{P}$, we simply replace $\mathbf{A}^* \mathbf{P}^* \mathbf{P}$ with $\mathbf{L} \mathbf{A}^*_c$. Note that, theoretically, the inverted matrix in equation~\ref{eq:truemod4} is Hermitian. The new formulation (equation~\ref{eq:truemod3}), however, makes the inverted matrix numerically non-Hermitian. One complication with equation~\ref{eq:truemod3} is that because the square matrix being inverted is no longer Hermitian, iterative methods for Hermitian positive-definite matrices are not optimal \cite[]{saad2003iterative}. Therefore, we implement a complex-valued restarted generalized minimum residual algorithm, GMRES(m), which solves a least-squares system by searching for the vector in the Krylov subspace with minimum residual \cite[]{saad1986gmres}. We refer to the method of solving equation~\ref{eq:truemod3} by GMRES(m) as $Q$-compensated LSRTM or $Q$-LSRTM. As demonstrated in the numerical examples of the next section, $Q$-LSRTM is capable of achieving a significantly faster convergence rate than conventional LSRTM, and, in practice, produces the desired image within only a few iterations.
+
+\section{Numerical Examples}
+\inputdir{bpgas}
+\multiplot{2}{vel,q}{width=0.45\textwidth}{BP gas-cloud model. (a) A portion of the BP 2004 velocity model; (b) the corresponding quality factor $Q$ model. \label{fig:bpq}}
+\plot{shots}{width=0.8\textwidth}{Prestack data with attenuation. A total of $31$ shots were modeled.}
+\multiplot{3}{cref,imgd,imgc}{width=0.45\textwidth}{(a) The true reflectivity model; (b) image obtained by dispersion-only RTM without compensating for amplitude; (c) image obtained by $Q$-RTM. Note that no Laplacian filter is applied, and the color scales for RTM and $Q$-RTM images are different from that of the true model.}
+\multiplot{3}{img-n-5,img-n-15,img-n-30}{width=0.45\textwidth}{The results of the original LSRTM through iterations. (a) after $5$ iterations; (b) after $15$ iterations; (c) after $30$ iterations. \label{fig:imgvs}}
+\multiplot{3}{img-v-5,img-v-15,img-v-30}{width=0.45\textwidth}{The results of the LSRTM with Laplacian filter through iterations. (a) after $5$ iterations; (b) after $15$ iterations; (c) after $30$ iterations. \label{fig:imgvls}}
+\multiplot{3}{img-c-5,img-c-15,img-c-30}{width=0.45\textwidth}{The result of the proposed $Q$-LSRTM through iterations. (a) after $5$ iterations; (b) after $15$ iterations; (c) after $30$ iterations. \label{fig:imgcls}}
+\multiplot{3}{compare-n,compare-v,compare-c}{width=0.28\textwidth}{Image traces extracted at $X=2500\;m$ from the $30$th iteration results (represented by the blue dashed line) compared with the true model (red solid line). (a) LSRTM; (b) LSRTM with the Laplacian filter; (c) $Q$-LSRTM. \label{fig:compare}}
+\plot{conv}{width=0.8\textwidth}{Convergence curves calculated by the $L_2$ norm of model misfit. The dot-dashed line corresponds to the original LSRTM, the dashed line corresponds to LSRTM with a Laplacian filter and the solid line corresponds to the proposed $Q$-LSRTM.}
+
+
+To test the convergence rate of $Q$-LSRTM, we use a portion of \new{the} BP 2004 velocity model \cite[]{bp2004} and the corresponding $Q$ model suggested by \cite{zhu14b} (Figure~\ref{fig:bpq}). The model features a low-velocity, low-$Q$ area which is assumed to be caused by the presence of a gas chimney. The model has a spatial sampling rate of $12.5\;m$ along both vertical and horizontal directions. A total of $31$ shots with a spacing of $162.5\;m$ have been modeled with attenuation, and the source is a Ricker wavelet with $22.5\;Hz$ peak frequency (Figure~\ref{fig:shots}). Performing RTM without compensating for amplitude loss, \new{i.e. using the dispersion-only operator,} leads to an image corresponding to Figure~\ref{fig:imgd}, which suffers from poor illumination below the gas chimney. In contrast, $Q$-RTM appears capable of recovering the amplitude at deeper reflectors (Figure~\ref{fig:imgc}), but the image still exhibits some differences from the true reflectivity. \new{Note that the dispersion-only RTM image and $Q$-RTM image have the same phase but differ in amplitude.} Next, we perform LSRTM \new{(equation~\ref{eq:truemod})} and $Q$-LSRTM \new{(equation~\ref{eq:truemod3})} through a number of iterations.\old{ with the results shown in Figures~\ref{fig:imgvs}, \ref{fig:imgvls} and \ref{fig:imgcls}.} \new{To test the separate effect of applying a Laplacian filter without compensating for attenuation, we also perform LSRTM with a Laplacian operator that removes low frequency artifacts. For fairness of comparison, all three methods are driven by the GMRES method, and because the tested model is small enough, they were not run in a restarted fashion. Using the original LSRTM (Figure~\ref{fig:imgvs}), the inversion process attempts to remove low frequency noise and improve the illumination of deeper reflectors. However, at $30$th iteration, the reflector amplitude and sharpness beneath the attenuating area still have not been recovered. LSRTM with a Laplacian filter (Figure~\ref{fig:imgvls}) achieves a somewhat sharper image, but because a Laplacian filter boosts high frequency components in the image, the reflectors beneath the attenuating zone remain poorly illuminated. In contrast, the proposed $Q$-LSRTM method (Figure~\ref{fig:imgcls}) produces sharper reflectors with well-balanced illumination, especially in the area beneath the gas chimney using the same number of iterations.}\old{We can observe that the $Q$-LSRTM (Figure~\ref{fig:imgcls}) produces sharper reflectors, especially in the area beneath the gas chimney, than the original LSRTM (Figure~\ref{fig:imgvs}) when using the same number of iterations. Additionally, we test the separate effect of applying a Laplacian filter without compensating for attenuation, which behaves similarly to the original LSRTM (Figure~\ref{fig:imgvls}).} Note that the color scales used in all the three cases are kept the same as that of the true model (Figure~\ref{fig:cref}). Figure~\ref{fig:compare} compares the image traces extracted at $X=2500\;m$ from the $30$th iteration results against the true model. Clearly, the result obtained by the proposed $Q$-LSRTM best represents the true reflectivity, especially at deeper parts beneath the gas chimney (below $800\;m$ depth). 
+
+%The low-frequency noise (Figure~\ref{fig:imgc}), however, prohibits $Q$-LSRTM to obtain a satisfactory result at early iterations (Figure~\ref{fig:imgc-5}). On the other hand, $Q$-LSRTM with the help of a Laplacian filter can rapidly converge to the true solution. 
+
+To measure the convergence rate, we calculate the model residual as the $L_2$ norm of the misfit between the model calculated at each iteration $\mathbf{m}_k$ and the true model $\mathbf{m}^*$, normalized by the $L_2$ norm of the true model:
+\begin{equation}
+  \label{eq:res}
+  r = \frac{\|\mathbf{m}_k - \mathbf{m}^* \|^2_2}{\|\mathbf{m}^*\|^2_2} \; .
+\end{equation}
+Figure~\ref{fig:conv} shows the comparison of convergence rates. With the help of a Laplacian filter, LSRTM is able to achieve a slightly faster convergence rate at early iterations than the original LSRTM. The proposed $Q$-LSRTM, on the other hand, converges significantly faster than the other two methods. \new{Convergence is achieved by $Q$-LSRTM within approximately $50$ iterations, while the other two methods have not converged even after $100$ iterations.} The fast convergence is an important property, because for large-scale 3D seismic imaging problems only a few iterations can be afforded in practice.
+
+\section{Discussion}
+In this work, the GMRES method is used to invert the non-Hermitian matrices. Similar to the CG method, the full GMRES method (with no restarts) converges in no more than $n$ steps where $n$ is the total size of the model. However, the GMRES method requires additional memory to store the previous stepping directions. In the numerical examples presented above, because the model space is small enough, no restarts are needed. However, for large 3D models, restarts might be required for a large number of iterations, which could compromise global optimality. Fortunately, the proposed method, as well as other types of preconditioners, is designed to achieve a satisfying result within only a small number of iterations. In practical applications where each iteration consumes large computing resources, only a small number of iterations is usually afforded. \\
+The goal of preconditioning LSRTM in viscoacoustic media using $Q$-RTM is to alleviate the computational burden on iterative inversion by compensating for attenuation explicitly in wave propagation. Therefore, the iterations can be spent on removing migration artifacts and compensating irregularities in subsurface illumination caused by other reasons, such as acquisition footprint. Due to attenuation, the events of the reflectors beneath the attenuating zone yield a smaller amplitude compared with un-attenuated events, and approximately correspond to smaller eigenvalues of the forward operator \cite[]{blanch94}. Inversion routines based on Krylov subspace methods, such as CG and GMRES, will favor large eigenvalues, which approximately correspond to shallower and un-attenuated reflectors. This leads to the observed behavior of LSRTM without Q-compensation, which first focused on improving shallow reflectors above the attenuation zone. \cite{blanch94} suggested a simple way of assigning more weights to deeper reflectors, by post-conditioning the seismic record with an increasing function of time. The proposed method is similar in spirit but more accurate, in that $Q$-compensation removes the true effect of attenuation in the gradient by accurately compensating for attenuation along the entire wave path. 
+
+\section{Conclusions}
+We have introduced a novel way of preconditioning least-squares RTM to achieve a faster convergence rate in viscoacoustic media. The data-space preconditioner is implicitly defined by the $Q$-compensated RTM operator, with the goal of recovering amplitude loss due to attenuation and removing low frequency artifacts in the gradient. Since the square matrix to be inverted becomes numerically non-Hermitian, we adopt the GMRES algorithm to perform iterative inversion. Our synthetic examples show that the proposed $Q$-LSRTM is capable of producing an accurate $Q$-compensated image within significantly fewer iterations than LSRTM, and thus is preferable in application to accurate seismic imaging in attenuating media.
+
+\section{Acknowledgments}
+We thank Joakim Blanch, Aaron Stanton, and one anonymous reviewer for their suggestions that helped to improve the paper. We thank Mrinal Sen and Lexing Ying for constructive discussions. We thank the sponsors of the Texas Consortium for Computation Seismology (TCCS) for financial support. The first author is supported additionally by the Statoil Fellows Program at UT Austin, and the third author is supported by the Jackson School Distinguished Postdoctoral Fellowship at UT Austin. We thank Texas Advanced Computing Center (TACC) for providing computational resources used in this study.
+
+%\appendix
+\section{Appendix A: Derivation of the lowrank PSPI and NSPS operators}
+\label{sec:adjoint}
+
+Let $p(\mathbf{x},t)$ be the seismic wavefield at location $\mathbf{x}$ and time $t$, with the spatial Fourier transform denoted by $P(\mathbf{k},t)$. The wavefield at the next time step $t+ \Delta t$ can be approximated by the Fourier integral operator \cite[]{wards,lowrank}:
+\begin{equation}
+  \label{eq:pspi}
+  p(\mathbf{x},t+\Delta t) = \int P(\mathbf{k},t)\,e^{i\,\phi(\mathbf{x},\mathbf{k},\Delta t) + i\mathbf{x} \cdot \mathbf{k}}\,d\mathbf{k}\;,
+\end{equation}
+where $\phi(\mathbf{x},\mathbf{k},\Delta t)$ is the phase function.
+The mixed-domain operator in equation~\ref{eq:pspi} is also referred to as the one-step wave extrapolation operator \cite[]{zhang09,me13}. Because the wave extrapolation matrix is complex, it propagates a complex wavefield with the imaginary part being the Hilbert transform of the real part:
+ \begin{equation}
+  \label{eq:hilb}
+P(\mathbf{k},t)=P_r \pm F[H(p_r(\mathbf{x},t))]\;,
+\end{equation}
+where $P$ and $P_r$, respectively, denote the complex wavefield and real wavefield, and $F$ denotes spatial Fourier transform \cite[]{zhang09}.
+
+Converting the dual-domain expression~\ref{eq:pspi} into the space domain, we obtain
+\begin{equation}
+  \label{eq:pspi2}
+  p(\mathbf{x},t+\Delta t) = \int p(\mathbf{y},t) \int e^{i\,\phi(\mathbf{x},\mathbf{k},\Delta t) + i\mathbf{k} \cdot \mathbf{(x-y)}}\,d\mathbf{k}\,d\mathbf{y}\;.
+\end{equation}
+The adjoint form of operator~\ref{eq:pspi} can be written as:
+\begin{equation}
+  \label{eq:nsps}
+  P(\mathbf{k},t) = \int p(\mathbf{x},t+\Delta t) e^{-i\,\bar{\phi}(\mathbf{x},\mathbf{k},\Delta t) - i\mathbf{x} \cdot \mathbf{k}}\,d\mathbf{x}\;. 
+\end{equation}
+where $\bar{\phi}$ denotes the complex conjugate of $\phi$. The $-i\bar{\phi}$ term in equation~\ref{eq:nsps} indicates stepping backward in time. Expressing the dual domain operator~\ref{eq:nsps} in the space domain and stepping forward in time, we arrive at a different operator:
+\begin{equation}
+  \label{eq:nsps2}
+  p(\mathbf{x},t+\Delta t) = \int p(\mathbf{y},t) \int e^{i\,\phi(\mathbf{y},\mathbf{k},\Delta t) + i\mathbf{k} \cdot \mathbf{(x-y)}}\,d\mathbf{k}\,d\mathbf{y}\;.
+\end{equation}
+The phase function in equation~\ref{eq:pspi2} depends on the output space $\mathbf{x}$, and thus represents a kind of non-stationary combination filter \cite[]{margrave98}. In comparison, the phase function appearing in equation~\ref{eq:nsps2} depends on the input space $\mathbf{y}$, and leads to a kind of non-stationary convolution filter. Both operators \ref{eq:pspi2} and \ref{eq:nsps2} apply the same wave-propagation phase function, $\phi(\mathbf{x},\mathbf{k},\Delta t)$; the one-step low-rank wave extrapolation operator~\ref{eq:pspi2} applies the phase function in the wavenumber domain after forward Fourier transform, whereas the new operator~\ref{eq:nsps2} applies the phase function in the space domain before the inverse Fourier transform. The essential difference between the two is that the non-stationary convolution has the physical interpretation of scaled, linear superposition of the non-stationary filter impulse responses, as suggested by Huygens' principle, whereas non-stationary combination filters do not have such implications \cite[]{margrave98}. The mixed-domain operator~\ref{eq:pspi2} is an equivalent to the most accurate limiting case of phase shift plus interpolation (PSPI) method \cite[]{gazdag84,kessinger}, which has been a popular choice for one-way wavefield extrapolators. The proposed operator~\ref{eq:nsps2} is analogous to the non-stationary phase shift (NSPS) method \cite[]{margrave98,margraveandferguson} for one-way wave extrapolation. 
+
+The low-rank algorithm introduced by \cite{lowrank} is a separable approximation that selects a set of $N$ representative spatial locations and $M$ representative wavenumbers, which correspond to rows and columns from the original wave-propag\-ation matrix. The low-rank one-step wave extrapolation uses low-rank decomposition to approximate the mixed-domain phase function in equation~\ref{eq:pspi2}:
+\begin{eqnarray}
+\label{eq:lrkpspi}
+&& p(\mathbf{x},t+\Delta t) \approx \\
+&& \sum\limits_{m=1}^M W(\mathbf{x},\mathbf{k}_m) \left( \sum\limits_{n=1}^N a_{mn} \left(\int e^{i \mathbf{x} \cdot \mathbf{k}} W(\mathbf{x}_n,\mathbf{k}) P(\mathbf{k},t) d\mathbf{k} \right) \right)\; , \nonumber 
+\end{eqnarray}
+whose computational cost effectively equals that of applying $N$ inverse fast Fourier transforms per time step, where $N$ is the approximation rank and is typically a number less than ten.
+
+With the help of low-rank decomposition, the computational effort for the new NSPS method can be made identical to that of the low-rank PSPI wave extrapolation, by approximating the wave propagation operator appearing in equation~\ref{eq:nsps2} with
+\begin{eqnarray}
+\label{eq:lrknsps}
+&& P(\mathbf{k},t+\Delta t) \approx \\
+&& \sum\limits_{n=1}^N W(\mathbf{x}_n,\mathbf{k}) \left( \sum\limits_{m=1}^M a_{mn} \left(\int e^{-i \mathbf{x} \cdot \mathbf{k}} W(\mathbf{x},\mathbf{k}_m) p(\mathbf{x},t) d\mathbf{x} \right) \right)\; . \nonumber 
+\end{eqnarray}
+Note that, for simplicity of notation, equations~\ref{eq:lrkpspi} and \ref{eq:lrknsps} do not include an operation of the forward and inverse Fourier transforms in place between $p(\mathbf{x},t)$ and $P(\mathbf{k},t)$. 
+
+In this appendix we have presented the adjoint operator to lowrank onestep wave extrapolation. Because the derivation of the adjoint operator is discrete, i.e., using the lowrank approximation matrices instead of state and adjoint state equations, the result presented in the appendix has wider applications not limited to the scope of this paper. For example, in full-waveform inversion applications, where the adjoint state equation is difficult to obtain, the discrete adjoint operator described in this appendix can be efficiently applied to calculated the adjoint state variable. This strategy is usually refered to as discretize then optimize \cite[]{betts2010practical}.
+
+\bibliographystyle{seg}
+\bibliography{gmres}

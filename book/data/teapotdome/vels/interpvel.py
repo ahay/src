@@ -4,6 +4,7 @@ import sys, re, os
 from numpy import *
 from scipy.interpolate import interp1d
 from scipy.interpolate import Rbf
+import rsf.api as rsf
 
 # Dump RSF text header to standard output
 def create_rsf_header (n, d, o, file):
@@ -35,15 +36,48 @@ def show_slice (slice, pnt, nx, ny, title='Constant time slice'):
     plt.colorbar ()
     plt.show ()
 
+# get parameters from command line
+command_line_par=rsf.Par()
+
 #
 # Survey parameters
-nxline = 188
-ninline = 345
-finline = 1 # First inline
-fxline = 1 # First xline
+nxline=command_line_par.int("nxline")
+if nxline==None:
+    print "nxline is a required parameter in interpvel"
+    sys.exit(2)
+
+ninline=command_line_par.int("ninline")
+if ninline==None:
+    print "ninline is a required parameter in interpvel"
+    sys.exit(2)
+
+fxline=command_line_par.int("fxline")
+if fxline==None:
+    print "fxline is a required parameter in interpvel"
+    sys.exit(2)
+
+finline=command_line_par.int("finline")
+if finline==None:
+    print "finline is a required parameter in interpvel"
+    sys.exit(2)
+
 # Time axis
-maxt = 3001
-dt = 2
+maxt=command_line_par.int("maxt")
+if maxt==None:
+    print "maxt is a required parameter in interpvel"
+    sys.exit(2)
+
+dt=command_line_par.int("dt")
+if dt==None:
+    print "dt is a required parameter in interpvel"
+    sys.exit(2)
+
+print >>sys.stderr,"nxline=",nxline," fxline=",fxline
+print >>sys.stderr,"ninline=",ninline," finline=",finline
+print >>sys.stderr,"maxt=",maxt," fxline=",dt
+
+maskfile =command_line_par.string("mask")
+print >>sys.stderr,"maskfile=",maskfile
 # Densely sampled time axis
 tint = arange (0, maxt, dt, dtype = float32)
 nt = size (tint)
@@ -129,15 +163,22 @@ vvol = zeros ((nt, ninline, nxline), dtype = float32)
 
 # Gor along time slices and do triangulation
 for it in range (nt):
-    print >> sys.stderr, "Processing slice", it + 1, "of", nt
+    if it<3 or it%50==0:
+        print >> sys.stderr, "Processing slice", it + 1, "of", nt
+    if it==2:
+        print >> sys.stderr,"now print status for every 50 slices"
     vvol[it] = mask*interp_for_const_t (pnt, vint[it,:], gx, gy)
+print >> sys.stderr, "Completed all time slices"
 
 # Finally, dump trace by trace to binary file
 binfile = 'vvol.dat' # Binary part
 bfid = open (binfile, 'w+')
 print vvol.shape
 for il in range (ninline):
-    print >> sys.stderr, "Saving inline", il + 1, "of", ninline
+    if il<3 or il%50==0:
+        print >> sys.stderr, "Saving inline", il + 1, "of", ninline
+    if il==2:
+        print >> sys.stderr,"now print status for every 50 lines"
     for xl in range (nxline):
         vvol[:,il,xl].tofile (bfid)
 bfid.flush ()

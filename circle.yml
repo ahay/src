@@ -1,0 +1,25 @@
+## Customize the test machine
+machine:
+  # Add some environment variables
+  environment:
+    RSFROOT: ${HOME}/RSFROOT
+    RSFFIGS: ${HOME}/RSFROOT/figs
+
+## Checking out additional repos
+checkout:
+  pre:
+    - git clone https://github.com/ahay/figs.git $RSFFIGS
+
+## Customize dependencies
+dependencies:
+  override:
+    - ./configure && make install && source env.sh 
+
+## Customize test commands
+test:
+  override:
+    - source env.sh && cd book && scons test
+
+
+
+    

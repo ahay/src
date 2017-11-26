@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "cfft3.h"
+#include "cfft3w.h"
 
 int main(int argc, char* argv[])
 {
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	sf_oaxa(snaps,ay,3);
 	sf_oaxa(snaps,at,4);
 	sf_settype(snaps,SF_FLOAT);
-	sf_putint(snaps,"n4",nt/snap);
+	sf_putint(snaps,"n4",(nt-1)/snap+1);
 	sf_putfloat(snaps,"d4",dt*snap);
 	sf_putfloat(snaps,"o4",0.);
     } else {
@@ -111,6 +111,8 @@ int main(int argc, char* argv[])
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
     wave = sf_complexalloc2(nzx2,m2);
+
+    icfft3_allocate(cwavem);
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz]=sf_cmplx(0.,0.);
@@ -151,7 +153,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
 			c += lt[im][i]*wave[im][j];
 #else
-			c += sf_cmul(lt[im][i],wave[im][j]);
+			c = sf_cadd(c,sf_cmul(lt[im][i],wave[im][j]));
 #endif
 		    }
 		    
@@ -179,5 +181,6 @@ int main(int argc, char* argv[])
 	}
     }
     
+    cfft3_finalize();
     exit (0);
 }

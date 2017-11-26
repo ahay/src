@@ -101,6 +101,12 @@ def param(par):
         
     if(par['dratio3d']>1): par['dheight3d']=12
     else:                  par['dheight3d']=12*par['dratio3d']
+
+    if(par['xmax'] > par['xmin']):
+    	par['mapratio']=1.0*(par['ymax']-par['ymin'])/(par['xmax']-par['xmin'])
+    else:
+	par['mapratio']=1.0
+    par['mapheight']=11*par['mapratio']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    
     if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1. ' + ' '
@@ -319,6 +325,21 @@ def waveplot(custom,par):
            par['lt'],par['ut'],
         par['labelattr']+' '+custom)
 
+# plot wavefield section
+def wflzplot(custom,par):
+    return '''
+    graph title=""
+    min1=%g max1=%g
+    min2=-1 max2=+1
+    plotfat=8 plotcol=5
+    label1=%s unit1=%s
+    label2="" unit2=""
+    screenratio=0.3 screenht=4
+    %s
+    ''' % (par['zmin'],par['zmax'],
+           par['lz'],par['uz'],
+        par['labelattr']+' '+custom)
+
 # plot spectrum
 def specplot(custom,par):
     return '''
@@ -427,6 +448,35 @@ def wom2d(wom,wfld,velo,vmean,nfrm,weight,par):
         %sadd < ${SOURCES[0]} add=-%g |
         scale axis=123 |
         spray axis=3 n=%d o=%g d=%g
+        >%s datapath=%s/;
+        '''%(M8R,vmean,nfrm,0,1,vtmp,DPT) 
+        +
+        '''
+        %sadd scale=1,%g <%s %s >${TARGETS[0]};
+        '''%(M8R,weight,vtmp,wtmp) 
+        +
+        '''
+        %srm %s %s
+        '''%(M8R,wtmp,vtmp),
+        stdin=0,
+        stdout=0)
+
+def wom3d(wom,wfld,velo,vmean,nfrm,weight,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    wtmp = wfld + 'tmp'+myid(16)
+    vtmp = wfld + 'vel'+myid(16)
+
+    Flow(wom,[velo,wfld],
+        '''
+        %sscale < ${SOURCES[1]} axis=123 >%s datapath=%s/;
+        '''%(M8R,wtmp,DPT) 
+        +
+        '''
+        %sadd < ${SOURCES[0]} add=-%g |
+        scale axis=123 |
+        spray axis=4 n=%d o=%g d=%g
         >%s datapath=%s/;
         '''%(M8R,vmean,nfrm,0,1,vtmp,DPT) 
         +
@@ -606,3 +656,19 @@ def array3d(cube,byte,custom,par,
              vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
              %(scale,scale,-1+(-nv+1+int(ifrm/nh))*dy,-1-(ifrm%nh)*dx))        
     Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
+
+# ------------------------------------------------------------
+def mapXY(custom,par):
+    return '''
+    graph title=""
+    labelrot=n wantaxis=y yreverse=y 
+    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
+    screenratio=%g screenht=%g wantscalebar=%s
+    plotcol=2
+    %s
+    ''' % (par['ymin'],par['ymax'],par['ly'],par['uy'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
+           par['mapratio'],par['mapheight'],par['scalebar'],
+           par['labelattr']+' '+custom)
+

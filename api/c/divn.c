@@ -112,6 +112,20 @@ void sf_divn_combine (const float* one, const float* two, float *prod)
 	prod[i] = p;	
     }
 }
+
+void sf_divn_combine_sign (const float* one, const float* two, float *prod)
+/*< compute product of two divisions (with a sign) >*/
+{
+    int i;
+    float p;
+
+    for (i=0; i < n; i++) {
+	p = sqrtf(fabsf(one[i]*two[i]));
+	if (one[i] < 0. || two[i] < 0.) 
+	    p = -p;
+	prod[i] = p;
+    }
+}
     
 
-/* 	$Id$	 */
+

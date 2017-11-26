@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "mpikirmod.h"
-
 #ifndef _mpikirmod_h
 
 typedef struct KTable {

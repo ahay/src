@@ -29,7 +29,7 @@ Flow('cpoly','cpef','window n3=1 | math output=-1 | cat axis=3 $SOURCE')
 Flow('croots','cpoly',
      '''
      transp plane=23 | transp plane=12 |
-     roots verb=n niter=100 sort=p |
+     roots verb=n niter=0 sort=p |
      transp plane=12 | transp plane=23
      ''')
 

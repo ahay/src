@@ -40,6 +40,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("depth",&depth)) depth=false;
     /* y: depth migration, n: time migration */
 
+    if (!sf_getbool ("stack",&stack)) stack=true;
+    /* if y: stack migrated image */
+
     if (inv) { /* modelling */
 	if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&nx)) nx=1;
@@ -61,9 +64,6 @@ int main(int argc, char* argv[])
 	sf_putint(out,"n4",ny); sf_putfloat(out,"d4",dy);
 	sf_putfloat(out,"o4",0.);
     } else { /* migration */
-	if (!sf_getbool ("stack",&stack)) stack=true;
-	/* if y: stack migrated image */
-
 	if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&nh)) nh=1;
 	if (!sf_histint(in,"n3",&nx)) nx=1;

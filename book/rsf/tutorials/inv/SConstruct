@@ -1,0 +1,51 @@
+from rsf.proj import *
+
+# construct the model
+
+Flow('imp1',None,'spike n1=10 mag=%g ' % (2550 * 2650))
+Flow('imp2',None,'spike n1=5  mag=%g ' % (2700 * 2750))
+Flow('imp3',None,'spike n1=12 mag=%g ' % (2400 * 2450))
+Flow('imp4',None,'spike n1=8  mag=%g ' % (2800 * 3000))
+Flow('imp5',None,'spike n1=16 mag=%g ' % (2550 * 2650))
+
+Flow('imp','imp1 imp2 imp3 imp4 imp5',
+     'cat axis=1 ${SOURCES[1:5]} | put label1=Sample unit1=')
+
+Result('imp','put d1=1 | graph title=Impedance')
+
+# From impedance to reflectivity
+
+Flow('ref','imp','ai2refl')
+Result('ref','put d1=1 | graph title=Reflectivity')
+
+
+# Convolution with a Ricker wavelet
+Flow('ricker','ref','spike k1=11 | ricker1 freq=0.2')
+Result('ricker','put d1=1 | window n1=21 | graph title=Wavelet')
+
+Flow('data','ref','ricker1 freq=0.2')
+Result('data','put d1=1 | graph title=Data')
+
+Flow('spikes','ref','spray axis=2 n=41 d=1 unit= label=Sample | spike k1=6 p2=1')
+Flow('matrix','spikes','ricker1 freq=0.2')
+
+Result('matrix',
+       '''
+       put d1=1 | 
+       grey color=viridis title=Matrix transp=n screenratio=1
+       ''')
+
+# LS inversion by conjugate gradients
+
+Flow('inv','data','conjgrad ricker1 freq=0.2 mod=$SOURCE niter=10')
+Flow('pred','inv','ricker1 freq=0.2')
+
+Plot('mod','ref','put d1=1 | graph title=Model plotcol=5')
+Plot('inv','inv ref','cat axis=2 ${SOURCES[1]} | put d1=1 | graph title="Estimated Model" dash=0,1 plotcol=4,5')
+
+Plot('data','put d1=1 | window j1=2 | graph title=Data symbol=* symbolsz=6 plotcol=5')
+Plot('pred','put d1=1 | window j1=2 | graph title="Predicted Data" symbol=* symbolsz=6 plotcol=4')
+
+Result('inv','mod data inv pred','TwoRows')
+
+End()

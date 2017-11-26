@@ -1,0 +1,9 @@
+from rsf.proj import *
+SConscript('../Fetchpaper/SConstruct')
+SConscript('../Geompaper/SConstruct')
+SConscript('../Firstlookpaper/SConstruct')
+SConscript('../Scdeconpaper/SConstruct')
+SConscript('../Velspaper/SConstruct')
+SConscript('../Zomigpaper/SConstruct')
+
+End()

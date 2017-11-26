@@ -1,5 +1,6 @@
 Salah Al-Hadab <salah.alhadab@gmail.com>
 Tariq Alkhalifah <tariq.alkhalifah@kaust.edu.sa>
+Sean Bader <sbader@utexas.edu>
 Vladimir Bashkardin <bash@mail.utexas.edu>
 Filippo Broggini <filippo.broggini@gmail.com>
 Jules Browaeys <jules.browaeys@total.com>
@@ -19,6 +20,7 @@ Gang Fang <fanggang723@gmail.com>
 Mehdi Far <mehdi.far@beg.utexas.edu>
 Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 
+Bill Harlan <bill.harlan@gmail.com>
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Jie Hou <jasonhupc@gmail.com>
 Jingwei Hu <hu@ices.utexas.edu>
@@ -37,6 +39,7 @@ Yang Liu <yangliu1979@gmail.com>
 Yujin Liu <seisinv@gmail.com>
 Xuxin Ma <xuxin.ma@kaust.edu.sa>
 Douglas McCowan <dwmccowan@windstream.net>
+Dmitrii Merzlikin <dmitrii.merzlikin@utexas.edu>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 Jorge Monsegny <jmonsegny@hotmail.com>
 Francesco Perrone <perfrancesco@gmail.com>
@@ -51,6 +54,7 @@ Christos Saragiotis <christos.saragiotis@gmail.com>
 Paul Sava <psava@mines.edu>
 Karl Schleicher <k_schleicher@hotmail.com>
 Reza Shahidi <rshahidi@gmail.com>
+Yunzhi Shi <yzshi08@utexas.edu>
 Jeffrey Shragge <jshragge@gmail.com>
 Eduardo Filpo Silva <effsilva@mines.edu>
 Xiaolei Song <songxl1984@gmail.com>

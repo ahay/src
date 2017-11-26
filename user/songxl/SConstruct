@@ -25,7 +25,7 @@ ffdtti2
 '''
 # differenciate
 
-mpi_progs = 'tti4rtm ffdrtm ffdrtms ffdrtmto ttirtmsa'
+mpi_progs = 'tti4rtm ffdrtm ffdrtms mpiffdrtmto ttirtmsa'
 
 
 ccprogs = 'ortholr ortlr orthollr ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan lfdp1 lfdp2 ormatrix'
@@ -52,6 +52,7 @@ if fftw:
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
 mains = Split(progs)

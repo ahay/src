@@ -315,7 +315,7 @@ main (int argc,char **argv)
 	    for (iz=0; iz<nz; ++iz) {
 		temp[iz] = z[iz];
 	    } else { 
-	    for (iz=0; iz<nz; ++iz) temp[iz] = abs(z[iz]);
+	    for (iz=0; iz<nz; ++iz) temp[iz] = fabsf(z[iz]);
 	    perc=100.0;
 	}
 

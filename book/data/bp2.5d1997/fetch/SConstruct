@@ -1,0 +1,65 @@
+from rsf.proj import *
+
+# files have names like:
+#wget ftp://software.seg.org/pub/datasets/2D/1997_2.5D/1997_2.5D_shots.segy.gz
+# or
+# get https://s3.amazonaws.com/open.source.geoscience/open_data/bp2.5d1997/1997_2.5D_shots.segy.gz
+
+Fetch('SEG1998.tar.gz',dir='bp2.5d1997',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
+      usedatapath=0)
+
+Flow('SEG1998',
+     'SEG1998.tar.gz',
+        '''
+        tar -xvz 
+        ''',stdout=-1)
+
+for filename in ['1997_2.5D_shots']:
+    #filename='1997_2.5D_shots'
+    #         1997_2.5D_shots.segy.gz
+    #segyname=1997_2.5D_shots.segy
+    Fetch(filename+'.segy.gz',dir='bp2.5d1997',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
+      usedatapath=0)
+
+    Flow(filename+'.segy',
+         filename+'.segy.gz',
+        '''
+        gunzip 
+        ''')
+
+for filename in ['model','vsmooth','vsmoother']:
+    Fetch(filename+'.segy',dir='bp2.5d1997',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
+      usedatapath=0)
+
+for filename in ['model','vsmooth','vsmoother','1997_2.5D_shots']:
+    Flow([filename+'.rsf' ,filename+'_hdr.rsf',
+          filename+'.thdr',filename+'.bhdr'],
+         filename+'.segy',
+         '''
+         sfsegyread tfile=${TARGETS[1]} 
+           hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+         ''')
+
+for filename in ['README.txt','README_Modification',
+                 'migration.gif']:
+    Fetch(filename,dir='bp2.5d1997',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
+      usedatapath=0)
+
+Flow('migration.display',
+        'migration.gif',
+        'open ${SOURCES[0]}',
+        stdin=0,stdout=0)
+Flow('README.display',
+        'README.txt',
+        '/bin/cat ${SOURCES[0]}',
+        stdin=0,stdout=-1)
+Flow('README_Modification.display',
+        '../fetch/README_Modification ',
+        '/bin/cat ${SOURCES[0]}',
+        stdin=0,stdout=-1)
+
+End()

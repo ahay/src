@@ -24,6 +24,7 @@ objects = []
 for source in Split(src):
     inc = env.RSF_Include(source,prefix='pen_')
     obj = env.StaticObject(source+'.c')
+    env.Ignore(source+'.h',source+'.h')
     env.Depends(obj,inc)
     objects.append(obj)
 

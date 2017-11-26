@@ -5,9 +5,9 @@ complex than the simple masking operator used in the missing
 data problem.  One of the most attractive potential uses for a 
 range of equiprobable models is in velocity estimation.  
 As a result I decided to next test the methodology on one of the simplest
-velocity estimation operators, the Dix equation \cite{GEO20.01.00680086}.
+velocity estimation operators, the Dix equation \cite[]{GEO20-01-00680086}.
 \par 
-Following the methodology of \longcite{Clapp.sep.97.bob1},  I
+Following the methodology of \cite{Clapp.sep.97.bob1},  I
 start from a CMP gather $q(t,i)$ moveout corrected with velocity $v$.
 A good starting guess for our RMS velocity function
 is the maximum ``instantaneous stack energy'',
@@ -18,18 +18,18 @@ is the maximum ``instantaneous stack energy'',
 Not all times have reflections so we don't  weight each $v_{\rm rms}(t)$ 
 equivalently. 
 Instead we introduce 
-a diagonal weighting matrix, $\bold W$,
+a diagonal weighting matrix, $\mathbf{W}$,
 found from stack energy at each selected $v_{\rm rms}(t)$.
 
 Our data fitting goal becomes
 \begin{equation}
-\bold 0
+\mathbf{0}
 \quad\approx\quad
-\bold W
+\mathbf{W}
 \left[
-\bold C\bold u
+\mathbf{C u
 -
-\bold d
+d}
 \right] .
 \end{equation}
 We are multiplying our RMS function by our time $\tau$ so
@@ -46,17 +46,17 @@ the model to introduce velocity changes that follow structural
 dip.
 I replace
 the zero vector with a random vector and  precondition the problem 
-\cite{Fomel.sep.95.sergey1}  to get
+\cite[]{Fomel.sep.95.sergey1}  to get
 \beqa
-\zero &\approx& {\bold W'} ( \bold C \prec \pvar - \data )  \nonumber \\
+\zero &\approx& {\mathbf{W}'} ( \mathbf{C} \prec \pvar - \data )  \nonumber \\
 \sigma \bf v &\approx& \epsilon \pvar \label{eq:mydix} .
 \eeqa
 \par
 To test the methodology I took a 2-D line from a 3-D
 North Sea dataset provided by Unocal. 	
-Figure~\ref{fig:scale.10.x2} shows four different realizations
+Figure~\ref{fig:scale} shows four different realizations
 with varying levels of $\sigma$.
-\plot{scale.10.x2}{width=6.0in,height=5.5in}{Four different realization
+\plot{scale}{width=6.0in,height=5.5in}{Four different realization
 of fitting goals
 (\ref{eq:mydix}) with increasing levels of Gaussian noise in $\bf v$.}
 

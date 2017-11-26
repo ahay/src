@@ -1,0 +1,226 @@
+from rsf.proj import *
+
+# Retrieve data
+Fetch('vp_marmousi-ii.segy',"marm2")
+
+# Processing units will be m and s.  
+# Input vel file is in km/s. mult by 1000 to m/s
+# Use km in space domain and km/s for velocity
+
+Flow('vp vp_hdr vp_hfile.txt vp_hfile.bin','vp_marmousi-ii.segy', 
+     ''' 
+     sfsegyread tape=$SOURCE tfile=${TARGETS[1]} \
+                hfile=${TARGETS[2]} bfile=${TARGETS[3]} \
+     | sfput d1=1.249 o1=0 label1=Depth    unit1=m  \
+           d2=1.249 o2=0 label2=Distance unit2=m  \
+     | sfwindow min1=0 max1=2000 min2=0 max2=5000 j1=10 j2=10 \
+     | sfmath output='input*1000'
+     ''')
+
+# plot the input velocity.  Use allpos=y to plot velocity.
+Result('vp',
+       '''
+       grey color=j titlefat=4 titlesz=8 labelfat=4 labelsz=8 
+            screenratio=1.0 barwidth=0.6
+            allpos=y scalebar=y n1tic=50 n2tic=40 verb=y 
+            title="Original Velocity"
+       ''')
+
+# smooth for vp finite difference modeling and plot. (allpos=y for velocity)
+Flow('vpforward','vp','smooth rect1=3 rect2=3 repeat=3') 
+Result('vpforward',
+       '''
+       grey color=j titlefat=4 titlesz=8 labelfat=4 labelsz=8 
+            screenratio=1.0 barwidth=0.6
+            allpos=y scalebar=y n1tic=50 n2tic=40 verb=y 
+            title="Smooth Velocity for Modeling"
+       ''')
+
+
+# smooth vp for nmo/migration and plot. (allpos=y for velocity)
+Flow('vpmigration','vp','smooth rect1=10 rect2=10 repeat=5') 
+Result('vpmigration',
+       '''
+       grey color=j titlefat=4 titlesz=8 labelfat=4 labelsz=8 
+            screenratio=1.0 barwidth=0.6
+            allpos=y scalebar=y n1tic=50 n2tic=40 verb=y 
+            title="Smooth Velocity for Migration"
+       ''')
+
+# model 10 shotpoints
+# put for sftah... need d3, distance between shotpoints.
+#kls need to add parameter time=time.rsf (default is time without .rsf)
+Flow('shots sfmodelingtime','vpforward',
+        '''
+        sfmodeling2d csdgather=n fm=10 amp=1 dt=0.0015 ns=10 ng=400 nt=2000
+            sxbeg=1 szbeg=1 jsx=40 jsz=0 gxbeg=0 gzbeg=0 jgx=1 jgz=0 
+            time=${TARGETS[1]} 
+        | sfput d3=500 label3=sx label2=gx unit2=traces o3=0
+        ''')
+
+# plot all 10 shots as movie
+Result('shots',
+       '''
+       sfgrey color=j titlefat=4 titlesz=8 labelfat=4 labelsz=8 
+            screenratio=1.0 
+            allpos=n scalebar=n n1tic=50 n2tic=40 
+            title="fd modeled shots"
+       ''')
+
+# plot shot at x=2500 for paper
+Result('shot2500','shots',
+       '''
+       sfwindow n3=1 min3=2500 |
+       sfgrey color=j titlefat=4 titlesz=8 labelfat=4 labelsz=8 
+              screenratio=1.0 
+              allpos=n scalebar=n n1tic=50 n2tic=40 
+              title="fd modeled shot"
+       ''')
+
+# make velocity field constant 1500 m/s and model direct arrivals
+Flow('arr sfmodelingtime1','vpforward',
+     '''
+     sfmath output="1500" |
+     sfmodeling2d csdgather=n fm=10 amp=1 dt=0.0015 ns=10 ng=400 nt=2000
+         sxbeg=1 szbeg=1 jsx=40 jsz=0 gxbeg=0 gzbeg=0 jgx=1 jgz=0
+            time=${TARGETS[1]} 
+     ''')
+
+
+# subtract modeled direct arrivals (a type of noise) from shots
+Flow('mutearr','shots arr',
+     '''
+     sfadd scale=-1,1 ${SOURCES[1]}
+     ''')
+
+# plot all 10 shots as movie
+Result('mutearr',
+       '''
+       sfgrey color=j titlefat=4 titlesz=8 labelfat=4 labelsz=8 screenratio=1.0 
+              allpos=n scalebar=n n1tic=50 n2tic=40 
+              title="First Arrival Removed"
+       ''')
+
+# plot shot at x=2500 for paper
+Result('mutearr2500','mutearr',
+       '''
+       sfwindow n3=1 min3=2500 | 
+       sfgrey color=j titlefat=4 titlesz=8 labelfat=4 labelsz=8 screenratio=1.0 
+              allpos=n scalebar=n n1tic=50 n2tic=40 
+              title="First Arrival Removed"
+       ''')
+
+dt = 0.0015
+# stretch velocity from depth to time
+Flow('vel_t','vpmigration',
+     'sfdepth2time velocity=${SOURCES[0]} dt=%g nt=2000'%(dt))
+# generate rms velocity :
+# input is vel_t the vlocity stretched to time
+# sfmul multiply input data by itself to make v**2
+# sfcausint integrate v**2 (this does not include scaling by dt)
+# sfmath scale by dt and divide by t
+Flow('vrms','vel_t',
+     '''
+     sfmul $SOURCE | 
+     sfcausint |
+     sfmath output="sqrt(input*%g/(x1+%g))" |
+     sfput n3=1 d3=1 o3=0 
+     '''%(dt,dt))
+
+# sftahnmo requires velocity in m/s for every cdp.  
+# d2=12.49, but cdp int is half this (ie 6.245 or 12.49/2)
+# interleave the velocity to double the number of traces.  Should
+# interpolationm but this will be pretty good.
+
+Flow('vrms2_m','vrms vrms',
+     '''
+     interleave axis=2 ${SOURCES[1]} | 
+     put d2=6.245
+     ''') 
+
+#Make an empty file for the segy headers.  SEGY standard contains 91 rows
+Flow('mutearr_hdr.rsf',None,
+     '''
+     math n1=91 n2=4000 output="0"
+     ''')
+
+# build trace headers for the synthetic traces.  Will be used to sort traces.
+Flow('Mmutearr.rsf Mmutearr_hdr.rsf','mutearr.rsf mutearr_hdr.rsf',
+     '''
+	 sftahread input=${SOURCES[0]} makeheader=y
+         | sftahheadermath outputkey=gx output="gx"
+         | sftahheadermath outputkey=sx output="sx"
+         | sftahheadermath outputkey=cdpx output="(gx+sx)/2"
+         | sftahheadermath outputkey=cdp output="int(cdpx/6.245)"
+         | sftahheadermath outputkey=offset output="abs(sx-gx)"
+         | sftahgethw key=sx,gx,cdp,cdpx,offset
+         | sftahwrite  
+        verbose=1              
+        mode=seq             
+        output=${TARGETS[0]}
+        outheaders=${TARGETS[1]} 
+     ''',stdout=0,stdin=0)
+
+# make cdp gathers for displays. Not used in this script
+Flow('CDP CDP_hdr','Mmutearr.rsf Mmutearr_hdr.rsf',
+      '''
+      sftahsort input=$SOURCE sort="cdp offset"
+      | sftahwrite output=${TARGETS[0]}
+        mode=seq             
+      ''',stdout=0,stdin=0)
+
+# Sort to cdp gathers, remove selay in ricker wavelet, 
+# gain for spreading correction, biuld headers used by sftahnmo to read
+# space variant velocity, and stack the data
+Flow('stack.rsf stack_hdr.rsf','Mmutearr.rsf Mmutearr_hdr.rsf vrms2_m.rsf',
+     '''
+      sftahsort input=$SOURCE sort="cdp offset"
+      | sftahheadermath outputkey=sstat output=-250
+      | sftahstatic sign=-1
+      | sftahgain tpow=1.5             
+      | sftahheadermath outputkey=xline output=cdp*6.245
+      | sftahheadermath outputkey=iline output=0
+      | sftahnmo vfile=vrms2_m.rsf
+      | sftahstack key=cdp xmute=0,5000 tmute=0,5
+      | sftahwrite output=${TARGETS[0]} mode=seq
+     ''',stdout=0,stdin=0)
+# can use this line for v(t) velocity in sftahnmo
+#      | sftahnmo tnmo=0,1,2,2.5,3,4 vnmo=1510,1600,1700,1800,1900,1980
+
+# Display the stack
+Result('stack',
+       '''
+       grey pclip=99 titlefat=4 titlesz=8 labelfat=4 labelsz=8 barwidth=0.6
+       allpos=n scalebar=n n1tic=50 n2tic=40 verb=y screenratio=1.0 
+       title="NMO and Stack"
+       ''')
+
+# Kirchhoff migration and display
+Flow('ktmig','stack.rsf vrms2_m.rsf',
+     '''
+     put d2=6.25 |
+     kirchnew velocity=${SOURCES[1]}
+     ''')
+Result('ktmig',
+       '''
+       grey pclip=98 titlefat=4 titlesz=8 labelfat=4 labelsz=8 barwidth=0.6
+       allpos=n scalebar=n n1tic=50 n2tic=40 verb=y screenratio=1.0 
+       title="Kirchhoff Post Stack Mig"
+       ''')
+
+# Kichhoff least squares migration and display.
+Flow('invsparse err_sparse','stack vrms2_m.rsf',
+     '''
+     put d2=6.25 |
+     kirchinvs velocity=${SOURCES[1]} niter=1 liter=3 ps=1
+     err=${TARGETS[1]} verb=1
+     ''')
+Result('invsparse',
+       '''
+       grey pclip=98 titlefat=4 titlesz=8 labelfat=4 labelsz=8 barwidth=0.6
+       allpos=n scalebar=n n1tic=50 n2tic=40 verb=y screenratio=1.0
+       title="Least-Squares Kirchhoff Mig"
+       ''')
+
+End()
+

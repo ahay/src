@@ -3,7 +3,7 @@ from rsf.proj import *
 # download well-log data
 Fetch('L-30.las','1406_Make_a_synthetic',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+      top='seg/tutorials-2014/master')
 
 # Convert to RSF
 Flow('L-30','L-30.las','las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
@@ -54,7 +54,7 @@ for case in ('DT','RHOB','DEPTH'):
 
 # Compute time-to-depth relationship
 
-log_start_time = 0.410553230106 # (s)
+log_start_time = 0.410498125651  # (s)
 
 # windowed samples - 3837
 
@@ -198,7 +198,7 @@ Result('synth','zw ztw rtw synthw','SideBySideAniso')
 
 Fetch('PenobXL_1155.txt','1406_Make_a_synthetic',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master')
+      top='seg/tutorials-2014/master')
 
 Flow('seismic','PenobXL_1155.txt',
      '''

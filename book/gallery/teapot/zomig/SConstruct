@@ -1,64 +1,46 @@
 from rsf.proj import *
-import math
+from rsf.gallery import teapot
 
-Flow('vel','tvpairs.txt',
-     '''
-     echo in=$SOURCE data_format=ascii_float n1=2 n2=10 |
-     dd form=native
-     ''',stdin=0)
-
-Flow('Vrms_interp','vel',
-    '''
-      transp | linear
-          n1=2049 o1=0 d1=0.002 
-    ''')
-
-Result('Vrms_interp',
-     '''
-     graph  title=Interpolated_Velocity 
-     ''')
-
-Flow ('Vint','Vrms_interp','dix niter=100 rect1=15')
+teapot.get_vint1('Vint')
 
 Result('Vint',
      '''
-     graph  title=Interval Velocity 
+     graph  title="Interval Velocity" label1=Time unit1=s
      ''')
 	
-
 Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
 
-Result('final_stack',
-	'''
-	window j3=20 |
-	grey title=stack
-       	label1=Time     unit1=sec 
-       	label2=xline    unit2=count
-       ''')
+Plot('final_stack',
+     '''
+     window j3=20 |
+     grey title=stack
+     label1=Time     unit1=sec 
+     label2=xline    unit2=count
+     ''',view=1)
 
-Result('final_stack_filter', 'final_stack',
-	'''
-	window j3=20 |
-	bandpass fhi=20 |
-	grey title=filterred_stack
-       	label1=Time    unit2=sec 
-       	label2=xline   unit1=count
-        ''')
-
+Plot('final_stack_filter', 'final_stack',
+     '''
+     window j3=20 |
+     bandpass fhi=20 |
+     grey title=filterred_stack
+     label1=Time    unit2=sec 
+     label2=xline   unit1=count
+      ''',view=1)
 
 Flow ('spray2','Vint','spray axis=2 n=188 d=1 o=1')
 
 Result('spray2',
      	'''
      	window j3=20 |
-     	sfgrey color=j  title=Interval Velocity interpolated
+     	sfgrey color=j  title="Interval Velocity Interpolated" 
+        scalebar=y mean=y barreverse=y
      	''')
 
 Flow ('Vint3D','spray2','spray axis=3 n=345 d=1 o=1')
 
 Result('Vint3D',
      '''
-     sfbyte | sfgrey3 color=j flat=n 
+     sfbyte mean=y | sfgrey3 color=j flat=n title="Interval Velocity" 
      ''')
 
 
@@ -66,15 +48,16 @@ Flow('Vint3Dz','Vint3D','time2depth dz=30 intime=y nz=1200 velocity=$SOURCE')
 
 Result('Vint3Dz',
      '''
-     byte | sfgrey3 color=j  flat=n title=Interval Velocity interpolated
+     byte mean=y | sfgrey3 color=j  flat=n title="Interval Velocity"
      ''')
+
 ########    Change velocity to slowness  ##########################
 
 Flow('slo','Vint3Dz','put d2=110 d3=110 | transp | transp plane=23 | math output=1/input')
 
 Result('slo',
      '''
-     byte | sfgrey3 color=j  flat=n title=Interval Velocity interpolated
+     byte mean=y gainpanel=all | sfgrey3 color=j  flat=n title="Interval Slowness" 
      ''')
 
 
@@ -97,7 +80,7 @@ Flow('real','fft','real')
 
 Result('real',
      '''
-     byte | sfgrey3 color=j  flat=n title=FFT
+     byte gainpanel=all | sfgrey3 flat=n title=FFT frame1=100 frame2=100 frame3=50
      ''')
 
 
@@ -114,58 +97,57 @@ Flow('mig','fft slo',
      nrmax=1 slo=${SOURCES[1]}
      ''',split=[3,87],reduce='add')
 
-Result('mig',
-       '''
-       window j3=20 | 
-       grey title=Migration_depth_slices
-       label2=Depth    unit2=ft 
-       label1=Distance unit1=ft
-       ''')
+Plot('mig',
+     '''
+     window j3=20 | 
+     grey title="Migration Depth Slices" gainpanel=all
+     label2=Depth    unit2=ft 
+     label1=Distance unit1=ft
+     ''',view=1)
 
-# ouput of migration is depth slizes.  transpose back to y,x,z 
+# ouput of migration is depth slices.  transpose back to y,x,z 
 # (or z,x,y if you prefer fortran terminology)
 
 Flow('mig_z','mig',
      'transp plane=23 | transp plane=12')
 
-Result('mig_z',
-       '''
-       window j3=20 | 
-       grey title=Migration transp=y
-       label2=Depth    unit2=ft 
-       label1=Distance unit1=ft
-       ''')
-
+Plot('mig_z',
+     '''
+     window j3=20 | 
+     grey title=Migration transp=y 
+     label2=Depth    unit2=ft 
+     label1=Distance unit1=ft
+     ''',view=1)
 
 Flow('mig_t','mig_z Vint3D','depth2time dt=.002 nt=2049 velocity=${SOURCES[1]}')
 
-Result('mig_t',
-	'''
-	window j3=20 n1=1501 |
-	put d2=20 d3=20 |	
-	grey title=migration_data_in_time
-       	label1=Time    unit1=s  
-       	label2=Trace unit2=num.
-       ''')
+Plot('mig_t',
+     '''
+     window j3=20 n1=1501 |
+     put d2=20 d3=20 |	
+     grey title="Migration Data in Time" gainpanel=all
+     label1=Time    unit1=s  
+     label2=Trace unit2=num.
+     ''',view=1)
 
 Fetch('filt_mig.sgy','teapot',server='http://s3.amazonaws.com',top='')
-Flow('filt_mig','filt_mig.sgy',
+
+Flow('filt_mig filt_mig_hdr filt_mig.asc filt_mig.bin','filt_mig.sgy',
      '''
      sfsegyread 
-         tfile=filt_mig_hdr 
-	 tape=${SOURCES[0]} 
-	 hfile=filt_mig.asc 
-	 bfile=filt_mig.bin
+         tfile=${TARGETS[1]}
+	 hfile=${TARGETS[2]}
+	 bfile=${TARGETS[3]}
      | sfput n2=188 o2=1 n3=345 o3=1
-     ''',stdin=0)
+     ''')
 	
-Result('filt_mig',
-	'''
-	window j3=20 |
-	grey title=commercial_mig
-       	label1=Time     unit1=sec 
-       	label2=xline    unit2=count
-       ''')
+Plot('filt_mig',
+     '''
+     window j3=20 |
+     grey title="Commercial Migration" gainpanel=all
+     label1=Time     unit1=sec 
+     label2=xline    unit2=count
+     ''',view=1)
 
 End()
 

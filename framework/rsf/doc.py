@@ -830,7 +830,7 @@ comment['c'] = re.compile(r'\/\*(?P<comment>(?:[^*]+|\*[^/])+)\*\/')
 param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
                         '(?P<type>bool|largeint|int|float|double)'
                         '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
-                        '\s*\&(?P<var>[\w\_\[\]\.\+\-]+)\s*[\)]\s*[\)]?\s*'
+                        '\s*\&(?P<var>[\w\_\[\]\.\+\-\>]+)\s*[\)]\s*[\)]?\s*'
                         '(?:[\{]|' # either \{ or
                         '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|'
                         'sf_[^\;]+)?' # or sf_error

@@ -415,7 +415,7 @@ int main(int argc, char* argv[])
         for(i=-1;i<=1;i++)
 	    for(j=-1;j<=1;j++)
 	    {
-		if(fabs(i)+fabs(j)==2)
+		if(SF_ABS(i)+SF_ABS(j)==2)
 		{
 		    p2[isxm+i][iszm+j]+=i*Ricker(t, f0, t0, A);
 		    q2[isxm+i][iszm+j]+=j*Ricker(t, f0, t0, A);

@@ -1,5 +1,5 @@
 /* this function implements the autoregression in the fx domain
-in order to compute the spitz's PEF taps */
+   in order to compute the spitz's PEF taps */
 
 /*
   Copyright (C) 2010 Politecnico di Milano
@@ -34,18 +34,18 @@ static sf_complex* dat1;
 static sf_complex* dat2;
 
 void fxPEF_init(int lag1 /* lag for internal complex convolution */,
-				int nx1 /* data size */,
-				sf_complex* xx_up1,
-				sf_complex* xx_dw1 )
+		int nx1 /* data size */,
+		sf_complex* xx_up1,
+		sf_complex* xx_dw1 )
 /*<initialize>*/
 {
-	lag=lag1;
-	nx=nx1;
-	xx_up =  xx_up1;
-	xx_dw =  xx_dw1;
+    lag=lag1;
+    nx=nx1;
+    xx_up =  xx_up1;
+    xx_dw =  xx_dw1;
 
-	dat1   =  sf_complexalloc(nx);
-	dat2   =  sf_complexalloc(nx);
+    dat1   =  sf_complexalloc(nx);
+    dat2   =  sf_complexalloc(nx);
 
 }
 
@@ -53,8 +53,8 @@ void fxPEF_init(int lag1 /* lag for internal complex convolution */,
 void fxPEF_close(void)
 /*<close>*/
 {
-	free(dat1);
-	free(dat2);
+    free(dat1);
+    free(dat2);
 }
 
 
@@ -64,32 +64,32 @@ void fxPEF_lop(bool adj, bool add, int nb, int ndata, sf_complex* bb, sf_complex
 	
 
 
-	int nd1,nd2,id;
+    int nd1,nd2,id;
 		
     nd1=ndata/2;
-	nd2=ndata/2;
+    nd2=ndata/2;
 
-	dat1   =  sf_complexalloc(nd1);
-	dat2   =  sf_complexalloc(nd2);	
+    dat1   =  sf_complexalloc(nd1);
+    dat2   =  sf_complexalloc(nd2);	
 
+    for (id=0;id<nd1;id++) {
+	dat1[id]=data[id];
+	dat2[id]=data[id+nd1];
+    }
+
+    sf_cadjnull(adj, add, nb, ndata, bb, data);
+
+    cicaf1_init(nx, xx_up,lag); 
+    cicaf1_dw_init(nx, xx_dw,lag); 
+    carray(  cicaf1_lop,   cicaf1_dw_lop, adj, add, nb, nd1, nd2, bb, dat1, dat2);
+    /* sf_array_simple(adj, add, nb, nd1, nd2, bb, dat1, dat2); */
+
+    if (!adj){
 	for (id=0;id<nd1;id++) {
-		dat1[id]=data[id];
-		dat2[id]=data[id+nd1];
-	}
-
-	sf_cadjnull(adj, add, nb, ndata, bb, data);
-
-	cicaf1_init(nx, xx_up,lag); 
-	cicaf1_dw_init(nx, xx_dw,lag); 
-	carray(  cicaf1_lop,   cicaf1_dw_lop, adj, add, nb, nd1, nd2, bb, dat1, dat2);
-	//sf_array_simple(adj, add, nb, nd1, nd2, bb, dat1, dat2);
-
-	if (!adj){
-		for (id=0;id<nd1;id++) {
-			data[id]=dat1[id];
-			data[id+nd1]=dat2[id];
-		}	
-	}
+	    data[id]=dat1[id];
+	    data[id+nd1]=dat2[id];
+	}	
+    }
 }
 
 

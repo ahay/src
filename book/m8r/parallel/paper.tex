@@ -35,7 +35,72 @@ in parallel.
 \lstinputlisting[firstline=574,lastline=585,frame=single]{\RSF/user/psava/fdutil.c}
 
 To simplify OpenMP-based processing for data-parallel tasks,
-Madagascar provides \texttt{sfomp} utility. Suppose, for example, ...
+Madagascar provides \texttt{sfomp} utility. Suppose, for example, that
+the input file \texttt{input.rsf} contains a number of traces, which
+we want to process in parallel with a bandpass filter. The serial execution
+\begin{verbatim}
+< input.rsf sfbandpass fhi=50 > output.rsf
+\end{verbatim}
+becomes parallel by inserting \texttt{sfomp} before the command, as follows:
+\begin{verbatim}
+< input.rsf sfomp sfbandpass fhi=50 > output.rsf
+\end{verbatim}
+
+By default, \texttt{sfomp} uses the number of threads equivalent to
+the number of available cores. To use a different number, you can set
+\texttt{OMP\_NUM\_THREADS} environmental variable.
+
+By default, \texttt{sfomp} splits the input over the last dimension,
+processes different parts of the data, and concatenates the outputs
+along the same dimension. To change this behavior, you can use
+\texttt{split=} and \texttt{join=} parameters. For example, to
+transpose a 2-D dataset in parallel, we can split it over one
+dimension and join over the other dimension:
+\begin{verbatim}
+< original.rsf sfomp sftransp split=1 join=2 > transp.rsf
+\end{verbatim}
+The result should be equivalent to that of running
+\begin{verbatim}
+< original.rsf sfomp sftransp split=2 join=1 > transp.rsf
+\end{verbatim}
+If, instead of concatenating, the results should be added together,
+use \texttt{join=0}.
+
+Certain programs have multiple input or output files. If some of the
+input files need to be split similarly to the file coming from the
+standard input, use an underscore in front of the parameter name. For
+example, the \texttt{sfnmo} program takes the NMO velocity as an extra
+input. If the serial execution is
+\begin{verbatim}
+< cmp.rsf sfnmo velocity=vel.rsf > nmo.rsf
+\end{verbatim}
+the corresponding parallel run will be
+\begin{verbatim}
+< cmp.rsf sfomp sfnmo _velocity=vel.rsf > nmo.rsf
+\end{verbatim}
+provided that \texttt{vel.rsf} can be split along the last axis
+similarly to \texttt{cmp.rsf}.
+
+SCons processing makes it easier to handle different cases by
+modifying the \texttt{Flow} command. The three examples above may
+appear as follows in an \texttt{SConstruct} file:
+
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+Flow('output','input','bandpass fhi=50',
+     split=[2,'omp'])
+Flow('transp','original','transp',
+     split=[2,'omp'],join='cat axis=1')
+Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
+     split=[3,'omp',[0,1]])
+\end{lstlisting}
+
+The first parameter in the \texttt{split=} list indicates the axis to
+split, the second parameter tells SCons to user \texttt{sfomp} for the
+splitting, and the third (optional parameter) lists the numbers of the
+source files that need splitting (starting from zero). Splitting all
+of the source files is the default behavior, therefore the
+\texttt{[0,1]} list in the last example is actually not needed.
 
 \section{MPI programming and sfmpi}
 
@@ -45,14 +110,81 @@ distributed-memory architectures \cite[]{pacheco,gropp}. There are several alter
 implementations of MPI, the popular open-source implementations
 include MPICH\footnote{\url{https://www.mpich.org/}} and Open
 MPI\footnote{\url{https://www.open-mpi.org/}}. Madagascar detects the
-existence of MPI at the installation configuration stage. [FLAGS]
+existence of MPI at the installation configuration stage. 
 
-To simplify MPI-based processing for data-parallel tasks,
-Madagascar provides \texttt{sfmpi} utility...
+To simplify MPI-based processing for data-parallel tasks, Madagascar
+provides \texttt{sfmpi} utility. The functionality of \texttt{sfmpi}
+is largely similar to that of \texttt{sfomp} but the computation can
+be distributed across multiple nodes. For example, running a bandpass
+filter in parallel by splitting the input data over the slowest
+dimension and using 16 nodes can be done with
+\begin{verbatim}
+mpirun -np 10 sfmpi sfbandpass fhi=50 --input=input.rsf --output=output.rsf
+\end{verbatim}
+On different systems, \texttt{mpirun} might be replaced with another
+command launching an MPI process. In Madagascar's configuration
+(\texttt{\$RSFROOT/share/madagascar/etc/config.py}), this command is
+specified by \texttt{MPIRUN=} configuration variable.
 
-\section{GPU programming}
+Similarly to \texttt{sfomp}, \texttt{sfmpi} splits the input over the last dimension,
+processes different parts of the data, and concatenates the outputs
+along the same dimension. To change this behavior, you can use
+\texttt{split=} and \texttt{join=} parameters. For example, to
+transpose a 2-D dataset in parallel, we can split it over one
+dimension and join over the other dimension:
+\begin{verbatim}
+mpirun -np 10 sfmpi sftransp --input=original.rsf split=1 join=2 --output=transp.rsf
+\end{verbatim}
+If, instead of concatenating, the results should be added together, use \texttt{join=0}.
+
+While \texttt{sfomp} is restricted to shared memory, \texttt{sfmpi}
+can be used more flexibly on both shared-memory and distributed-memory
+systems. Another difference is that the threads specified by
+\texttt{-np} parameters are treated differently: one of the nodes is
+reserved as the ``head node'' for handling input and output, and the
+computation is performed on the remaining nodes. In the example above
+(\texttt{mpirun -np 10}), 9 nodes are used for the computation while
+one node is used for input/output.
+
+SCons processing looks similar to the OMP case but replacing \texttt{omp} with \texttt{mpi}:
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+Flow('output','input','bandpass fhi=50',
+     split=[2,'mpi'])
+Flow('transp','original','transp',
+     split=[2,'mpi'],join='cat axis=1')
+Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
+     split=[3,'mpi',[0,1]])
+\end{lstlisting}
+
+%\section{GPU programming}
 
 \section{Parallel processing in SCons: pscons}
+
+One of the powerful features of SCons is its ability to perform
+parallel processing. If different targets can be generated
+independently from one another, this processing can be performed in
+parallel. Suppose, for example, that the \texttt{SConstruct} contains
+a loop, where different slices are extracted from a 3-D cube.
+\begin{lstlisting}
+for slice in range(10):
+    Flow('slice'+str(slice),'cube','window n3=1 f3=%d' % slice)
+\end{lstlisting}  
+Because different slices can be generated independently, SCons can do it in parallel if run with the \texttt{-j} flag:
+\begin{verbatim}
+scons -j 10
+\end{verbatim}
+The number after \texttt{-j} corresponds to the number of parallel
+threads. Madagascar provides a script called \texttt{pscons} (for
+``parallel scons''), which makes the task easier: \texttt{pscons}
+figures out the number of cores on the current node and runs
+\texttt{scons -j} using that number.
+
+In the case of data-parallel processing, independent targets may not
+exist initially. However, we can create them by breaking the input
+data into different files and processing them separately...
+
+Pros and cons (new targets, data tolerance)...
 
 \section{Parallel processing on shared clusters: sfbatch}
 

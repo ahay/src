@@ -47,9 +47,10 @@ env.Prepend(CPPPATH=['../../include'],
 		  dynpre+'rsf', dynpre+'rsfplot'])
 
 for source in src:
-	inc = env.RSF_Include(source,prefix='')
-	obj = env.StaticObject(source)
-	env.Depends(obj,inc)
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
+    env.Depends(obj,inc)
 
 lapack = env.get('LAPACK')
 blas   = env.get('BLAS') and lapack

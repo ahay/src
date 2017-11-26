@@ -65,7 +65,7 @@ Result('cerr',window + graph)
 
 Flow('cpoly','cpef','window n2=1 | math output=-1 | cat axis=2 $SOURCE')
 Flow('croots','cpoly',
-     'transp | roots verb=n niter=100 sort=p | transp')
+     'transp | roots verb=n niter=0 sort=p | transp')
 
 # Frequency components
 

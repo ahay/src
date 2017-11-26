@@ -116,23 +116,21 @@ int main (int argc, char* argv[])
     if (end0>0) memcpy(tr+beg0+n0,zero,end0);
 
     for (itr=0; itr < ntr; itr++) {
-	inside = true;
-	for (nj=j=1; j < dim; nj *= n2[j], j++) {
-	    i = (itr/nj)%n2[j];
-	    if (i < beg[j] || i >= beg[j]+n[j]) {
-		inside = false;
-		break;
+    	inside = true;
+    	for (nj=j=1; j < dim; nj *= n2[j], j++) {
+  	    i = (itr/nj)%n2[j];
+   	    if (i < beg[j] || i >= beg[j]+n[j]) {
+       		inside = false;
+      		break;
+        }
+    	}
+	    if (inside) {
+	      sf_charread (tr+beg0,n0,in);
+	      sf_charwrite(tr,n20,out);
+	    } else {
+	      sf_charwrite(zero,n20,out);
 	    }
-	}
-	if (inside) {
-	    sf_charread (tr+beg0,n0,in);
-	    sf_charwrite(tr,n20,out);
-	} else {
-	    sf_charwrite(zero,n20,out);
-	}
     }
-
-
     exit (0);
 }
 

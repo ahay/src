@@ -40,6 +40,10 @@ def las2rsf(lasf,rsff):
         rsf.put(key+'_units',item.units)
         desc = ' '.join(item.descr.translate(None,'"').split()[1:])
         rsf.put(name,desc)
+    for name in las.well.names:
+        item = las.well.items[name]
+        desc = item.data.translate(None,'"')
+        rsf.put(name,desc)
     rsf.write(data)
     rsf.close()
 

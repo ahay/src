@@ -24,7 +24,7 @@
 
 /*automatically generated headers*/
 #include "waveutils.h"
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 
 /*******************************************************/
 /* wave propagation utils*/
@@ -1023,7 +1023,7 @@ int ccrimg(sf_complex **img, sf_complex ***wvfld, sf_complex ***wvfld_b, float *
   return 0;
 }
 
-int stable_div(int n, float *num, float *den, float *ratio, float eps, float max)
+int stable_div_old(int n, float *num, float *den, float *ratio, float eps, float max)
 /*< stable division >*/
 {
   int i;

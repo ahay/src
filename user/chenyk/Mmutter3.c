@@ -27,7 +27,11 @@ int main(int argc, char* argv[])
   inp = sf_input("in");
   out = sf_output("out"); 
   
-  if(NULL!=sf_getstring("mask")) mask=sf_output("mask");	
+  if(NULL!=sf_getstring("mask")) {
+      mask=sf_output("mask");	
+  } else {
+      mask=NULL;
+  }
     
   if (!sf_getfloat("v",&v)) v=1.5;
   if (!sf_getfloat("x2",&x2)) x2=0.0;
@@ -53,7 +57,7 @@ int main(int argc, char* argv[])
       t_max=sqrtf((o3+i3*d3-x3)*(o3+i3*d3-x3)+(o2+i2*d2-x2)*(o2+i2*d2-x2))/v;
       i1_max=(t_max-o1)/d1+1;
       if(i1_max<0) i1_max=0; if(i1_max>n1) i1_max=n1; 
-      if(NULL!=sf_getstring("mask"))	
+      if(NULL!=mask)	
 	 {
       	memset(dd,0,n1*sizeof(float));    
       	for (i1=i1_max; i1 < n1; i1++) {

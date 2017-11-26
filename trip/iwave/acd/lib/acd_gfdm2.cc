@@ -44,26 +44,26 @@ int acd_tsfm2(RDOM * dd, RDOM *d0, RDOM * d, RDOM * r, int ia, void * fdpars) {
   IPNT i;
 
   // pointers for 2D case
-  register ireal ** restrict uc2;
-  register ireal ** restrict up2;
-  register ireal ** restrict csq2;
-  register ireal ** restrict uc2d;
-  register ireal ** restrict up2d;
-  register ireal ** restrict csq2d;
+  ireal ** restrict uc2;
+  ireal ** restrict up2;
+  ireal ** restrict csq2;
+  ireal ** restrict uc2d;
+  ireal ** restrict up2d;
+  ireal ** restrict csq2d;
     
-  register ireal ** restrict uc2d0;
-  register ireal ** restrict up2d0;
-  register ireal ** restrict csq2d0;
-  register ireal ** restrict uc2dd;
-  register ireal ** restrict up2dd;
+  ireal ** restrict uc2d0;
+  ireal ** restrict up2d0;
+  ireal ** restrict csq2d0;
+  ireal ** restrict uc2dd;
+  ireal ** restrict up2dd;
 
   /* pointers for 3D case
-  register ireal *** restrict uc3;
-  register ireal *** restrict up3;
-  register ireal *** restrict csq3;
-  register ireal *** restrict uc3d;
-  register ireal *** restrict up3d;
-  register ireal *** restrict csq3d;
+  ireal *** restrict uc3;
+  ireal *** restrict up3;
+  ireal *** restrict csq3;
+  ireal *** restrict uc3d;
+  ireal *** restrict up3d;
+  ireal *** restrict csq3d;
   */ 
  
   int ndim;                       // problem dmn
@@ -226,27 +226,27 @@ int acd_tsam2(RDOM * db, RDOM *b, RDOM * d, RDOM * r, int ia, void * fdpars) {
   IPNT n;
 
   // pointers for 2D case
-  register ireal ** restrict uc2;
-  register ireal ** restrict up2;
-  register ireal ** restrict csq2;
-  register ireal ** restrict uc2d;
-  register ireal ** restrict up2d;
-  register ireal ** restrict csq2d;
+  ireal ** restrict uc2;
+  ireal ** restrict up2;
+  ireal ** restrict csq2;
+  ireal ** restrict uc2d;
+  ireal ** restrict up2d;
+  ireal ** restrict csq2d;
     
-  register ireal ** restrict uc2b;
-  register ireal ** restrict up2b;
-  register ireal ** restrict csq2b;
-  register ireal ** restrict uc2db;
-  register ireal ** restrict up2db;
+  ireal ** restrict uc2b;
+  ireal ** restrict up2b;
+  ireal ** restrict csq2b;
+  ireal ** restrict uc2db;
+  ireal ** restrict up2db;
 
 
   /* pointers for 3D case
-  register ireal *** restrict uc3;
-  register ireal *** restrict up3;
-  register ireal *** restrict csq3;
-  register ireal *** restrict uc3d;
-  register ireal *** restrict up3d;
-  register ireal *** restrict csq3d;
+  ireal *** restrict uc3;
+  ireal *** restrict up3;
+  ireal *** restrict csq3;
+  ireal *** restrict uc3d;
+  ireal *** restrict up3d;
+  ireal *** restrict csq3d;
   */
 
   int ndim;                       // problem dmn

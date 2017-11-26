@@ -1,0 +1,210 @@
+# sfbatch exe="OMP_NUM_THREADS=8 scons lock" wall="9:00:00" np=100 nodes=50 ppn=2 queue=normal 
+
+from rsf.proj import *
+import os
+
+# Prepare data
+# Download Anisotropic_FD_Model_Shots_part*.sgy.gz from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+dat={}
+for i in range(4):
+    dat[i] = 'Anisotropic_FD_Model_Shots_part%d'%(i+1)
+    Fetch(dat[i]+'.sgy.gz','BP',top=os.environ.get('DATAPATH'),server='local')
+    Flow(dat[i]+'.sgy',dat[i]+'.sgy.gz','gunzip -c $SOURCE ',stdin=0)
+    Flow(dat[i],dat[i]+'.sgy','segyread endian=y')
+
+Flow('shot',dat.values(),'cat axis=2 ${SOURCES[1:4]} | put n2=800 d2=0.0125 o2=-10.025 n3=1641 d3=0.05 o3=0 label2="Offset" unit2="km" label3="Shot" unit3="km"')
+
+# Prepare model
+# Download ModelParams.tar.gz from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+tgz = 'ModelParams.tar.gz'
+Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
+
+pars = Split('epsilon delta vp theta')
+sgy = {}
+for par in pars:
+    sgy[par] = os.path.join('ModelParams',par.capitalize() + '_Model.sgy')
+
+Flow(sgy.values(),tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+units = {
+        'epsilon':'',
+        'delta':'',
+        'vp':'km/s',
+        'theta':'degrees'
+}
+
+for par in pars:
+    Flow([par,par+'.asc',par+'.bin'],sgy[par],
+         '''
+         segyread hfile=${TARGETS[1]} bfile=${TARGETS[2]} read=d |
+         put
+         o2=0 d2=0.00625 label2=Distance unit2=km
+         o1=0 d1=0.00625 label1=Depth unit1=km %s |
+         window j1=3 j2=2 |
+         pad2 top=5 left=802 right=761
+         ''' % ('','| scale dscale=0.001')[par=='vp'])
+         #right=563
+    Result(par,
+           '''
+           window f2=802 n2=6298 | put o1=0 |
+           grey color=j barlabel=%s scalebar=y
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           parallel2=n screenht=4 screenratio=0.3
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vp'],
+                  ('','km/s')[par=='vp']))
+
+Flow('vx','vp epsilon',
+     '''
+     math e=${SOURCES[1]} output="input*sqrt(1+2*e)"
+     ''')
+#Flow('eta','epsilon delta',
+#     '''
+#     math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
+#     ''')
+Flow('eta','epsilon delta',
+        '''
+        math d=${SOURCES[1]} output="((1.+2.*input)/(1.+2.*d)-1.)/2."
+        ''')
+for par in ('vx','eta'):
+    Result(par,
+           '''
+           window f2=802 n2=6298 | put o1=0 |
+           grey color=j barlabel=%s scalebar=y
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           parallel2=n screenht=4 screenratio=0.3
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vx'],
+                  ('','km/s')[par=='vx']))
+
+Flow('theta0','theta','smooth rect1=20 rect2=30')
+
+# Source
+par = {
+    # model pars
+    'nx' :  7861,    # velocity model length 
+    'nz' :  606,     # velocity model depth
+    'nt' :  2301,    # record time length
+    'dx' :  0.0125,  # sampling in x
+    'dz' :  0.01875, # sampling in z
+    'dt' :  0.004,   # sampling in time
+    'labelx': "Distance",
+    'labelz': "Depth",
+    'unitx' : "km",
+    'unitz' : "km",
+    'ns'    : 1641, # number of shots
+    'sintv' : 4,    # shot interval on mesh
+    'spz'   : 0,    # shot depth on mesh
+    'gpz'   : 0,    # receiver depth on mesh
+    'gpl'   : 800,  # receiver length of single shot
+    'snpint': 1,    # snapshot interval
+    # abc parameters 
+    'nb'    : 50,  # padding length
+    'cb'    : 2.0, # decay strength (default is 1)
+    #source
+    'srcbgn'  : 0.048, # source begin time
+    'kt'      : 16, # 48/4
+    'frq'     : 19.3,  # peak frequency of ricker wavelet (in Hz)
+}
+
+Flow('csource',None,
+		'''
+		spike n1=%(nt)d d1=%(dt)g k1=%(kt)d |
+		imagsrc frequency=%(frq)g |
+		scale rscale=100 | 
+                rtoc
+		''' %par)
+Result('csource','real |graph max1=1. label2=Amplitude label1=Time title=')
+
+# Acquisition geometry
+Flow('geo',None,'acqgeo nz=606 nx=7861 ny=1 sou_z=5 sou_ox=802 sou_oy=0 sou_jx=4 sou_jy=1 sou_nx=1641 sou_ny=1 rec_z=5 rec_nx=800 rec_ny=1 npad=501 noff=3 roll=1')
+
+# Create folders to tempory files
+os.system('[ -e ./shotdir ] && echo "shotdir exists" || mkdir shotdir')
+os.system('[ -e ./wfldir  ] && echo "wfldir exists"  || mkdir wfldir ')
+os.system('[ -e ./imgdir  ] && echo "imgdir exists"  || mkdir imgdir ')
+
+# Data
+Flow('data','shot',
+        '''
+        remap1 d1=0.004 n1=2301 |
+        mutter v0=1.5 t0=0.15 half=n
+        ''')
+
+datdir = './shotdir/'
+for i in range(1641):
+    dat = datdir+'shot-%d.rsf' %i
+    Flow(dat,'data',
+            '''
+            window n3=1 f3=%d |
+            put o2=%g o3=0 d3=1
+            ''' %(i,i*0.05-10.025))
+
+# Forward modeling (not needed)
+#Flow('test','csource geo vx vp eta theta0',
+#     '''
+#     mpicfftrtm
+#     wav=$SOURCE geo=${SOURCES[1]}
+#     velx=${SOURCES[2]} velz=${SOURCES[3]} eta=${SOURCES[4]} theta=${SOURCES[5]} 
+#     media=1
+#     seed=2013 npk=50 eps=1e-4 jump=2
+#     verb=y 
+#     dabc=y nb=%(nb)d cb=%(cb)g
+#     nbell=2
+#     dat_dir=shotdir2 wfl_dir=wfldir2
+#     snap=y jsnap=10
+#     sht_set=1000 sht_num=1
+#     ''' %par,stdin=0,stdout=0,np=8)
+
+# Reverse-time migration (please uncomment the following command)
+
+# sfmpicfftrtm requires revolve.c (not provided with Madagascar because of licensing concerns)
+# When installing revolve.c in user/jsun, modify checkup and repsup
+# #define checkup 1024
+# #define repsup 1024
+
+Flow('bptti-img','csource geo vx vp eta theta0',
+     '''
+     mpicfftrtm migr=y
+     wav=$SOURCE geo=${SOURCES[1]}
+     velx=${SOURCES[2]} velz=${SOURCES[3]} eta=${SOURCES[4]} theta=${SOURCES[5]} 
+     image=$TARGET
+     media=1
+     seed=2013 npk=50 eps=1e-4 jump=2
+     verb=y 
+     dabc=y nb=%(nb)d cb=%(cb)g
+     nbell=2
+     dat_dir=shotdir wfl_dir=wfldir
+     img_dir=imgdir
+     snap=y jsnap=500
+     revolve_snaps=500 info=1
+     ''' %par,stdin=0,stdout=0,np=8)
+
+Result('bptti-img',
+       '''
+       window f1=5 f2=802 n2=6298 | put o1=0 |
+       sflaplac | pow pow1=1.5 |
+       grey labelsz=4 titlesz=5 wanttitle=n screenht=4 screenratio=0.3
+       ''')
+
+Result('zoom1','bptti-img',
+       '''
+       window f2=802 n2=6298 | put o1=0 |
+       sflaplac | pow pow1=1.5 |
+       window min1=1.5 max1=7 min2=29 max2=55 |
+       grey labelsz=4 titlesz=5 wanttitle=n screenht=4 screenratio=0.22
+       ''')
+
+Result('zoom2','bptti-img',
+       '''
+       window f2=802 n2=6298 | put o1=0 |
+       sflaplac | pow pow1=1.5 |
+       window min1=4.0 max1=8.0 min2=60 max2=78 |
+       grey labelsz=4 titlesz=5 wanttitle=n screenht=4 screenratio=0.22
+       ''')
+
+End()

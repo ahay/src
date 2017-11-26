@@ -1,0 +1,3 @@
+uses=['sfdd', 'sftransp', 'sfbandpass', 'sfwindow', 'sfgrey', 'sfcosft', 'sfmutter', 'sfput', 'sfmath', 'sfomp', 'sfiwarp', 'sfpad', 'sfspray', 'sfbyte', 'sfgrey3', 'sfslice', 'sfgraph', 'sfscale', 'sfcat', 'sfadd', 'sfnnshape']
+data=['data/viking/stack.HH']
+size= 3619941052

@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-static float *coord, ***out, *rat2, *num, *den, g0, dg, o1, d1, o2, d2;
+static float *coord, ***out, *rat2, *num, *den, g0, dg, o1, d1, o2, d2, g1;
 static int n2g, ntr, n1, n2, ng, order;
 static bool shift;
 static sf_bands spl;
@@ -52,6 +52,7 @@ void warpscan_init(int m1     /* input trace length */,
     ng = ng1;
     g0 = g01;
     dg = dg1;
+    g1 = g0+(ng-1)*dg;
     n2g = n2*ng*ntr;
     order = order1;
     shift = shift1;
@@ -67,7 +68,9 @@ void warpscan_init(int m1     /* input trace length */,
     sf_divn_init(dim, n2g, m, rect, niter, verb);
 }
 
-void warpscan(float** inp /* input data [ntr][n1] */, 
+void warpscan(bool cheb   /* use Chebyshev scan */,
+	      bool sign   /* use signed similarity */,
+	      float** inp /* input data [ntr][n1] */, 
 	      float** oth /* target data [ntr][n2] */,
 	      float* rat1)
 /*< scan >*/
@@ -85,7 +88,11 @@ void warpscan(float** inp /* input data [ntr][n1] */,
 	}
 	
 	for (ig=0; ig < ng; ig++) {
-	    g = g0 + ig*dg;
+	    if (cheb) {
+		g = 0.5*(g0+g1)+0.5*(g1-g0)*cosf(ig*SF_PI/(ng-1));
+	    } else {
+		g = g0 + ig*dg;
+	    }
 
 	    for (i1=0; i1 < n2; i1++) {
 		coord[i1] = shift? o2+i1*d2+g: (o2+i1*d2)*g;
@@ -126,7 +133,11 @@ void warpscan(float** inp /* input data [ntr][n1] */,
     }
     sf_divn(num,den,rat2);
     
-    sf_divn_combine(rat1,rat2,rat1);
+    if (sign) {
+	sf_divn_combine_sign(rat1,rat2,rat1);
+    } else {
+	sf_divn_combine(rat1,rat2,rat1);
+    }
 }
 
 /* 	$Id: Mwarpscan.c 744 2004-08-17 18:46:07Z fomels $	 */

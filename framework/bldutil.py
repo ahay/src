@@ -295,6 +295,7 @@ def build_install_c(env, progs_c, srcroot, bindir, libdir, glob_build, bldroot):
     for source in src:
         inc = env.RSF_Include(source,prefix='')
         obj = env.StaticObject(source)
+        env.Ignore(inc,inc)
         env.Depends(obj,inc)
 
     mains_c = Split(progs_c)
@@ -335,14 +336,6 @@ def build_install_f90(env, progs_f90, srcroot, bindir, api, bldroot, glob_build)
         env.Prepend(LIBS=['rsff90','rsf'], # order matters when linking
                     LIBPATH=[os.path.join(srcroot,'lib')],
                     F90PATH=os.path.join(srcroot,'include'))
-
-        F90base = os.path.basename(F90)
-        if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
-            env.Append(F90FLAGS=' -J${SOURCE.dir}')
-        elif F90base[:5] == 'ifort':
-            env.Append(F90FLAGS=' -module ${SOURCE.dir}/../../include')
-        elif F90base[:5] == 'pgf90':
-            env.Append(F90FLAGS=' -module ${SOURCE.dir} -I${SOURCE.dir}')
 
         for prog in mains_f90:
             if not glob_build:

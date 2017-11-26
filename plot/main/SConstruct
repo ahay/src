@@ -3,8 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-box contour contour3 dots graph graph3 grey grey3 grey4 plas pldb
-plotrays thplot vplotdiff wiggle
+bargraph box contour contour3 dots graph graph3 grey grey3 grey4 plas
+pldb plotrays thplot vplotdiff wiggle
 '''
 
 try:

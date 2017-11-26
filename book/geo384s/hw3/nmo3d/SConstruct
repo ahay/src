@@ -1,0 +1,116 @@
+from rsf.proj import *
+
+# Download Teapot Dome field data
+Fetch('npr3_gathers.sgy','teapot',
+      server='http://s3.amazonaws.com',top='')
+#Fetch('npr3_gathers.sgy','TeapotDome3D',
+#      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
+#      server='local')
+
+# Convert from SEGY to RSF
+Flow('traces header header.asc','npr3_gathers.sgy',
+     'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]}')
+
+# Seismic data corresponds to trid=1
+Flow('trid','header','headermath output=trid | mask min=1 max=1')
+
+################################################################
+# Extract CMP gather at xline=100 iline=200 !!! MODIFY BELOW !!! 
+################################################################
+Flow('xline','header',
+     'headermath output=xline | mask min=100 max=100')
+Flow('iline','header',
+     'headermath output=iline | mask min=200 max=200')
+Flow('maskcmp','trid xline iline','mul ${SOURCES[1:3]}')
+
+Flow('tcmp','header maskcmp','headerwindow mask=${SOURCES[1]}')
+
+# Extract offset, convert from ft to kft
+Flow('offset0','tcmp',
+     '''
+     headermath output=offset | 
+     dd type=float | scale dscale=0.001
+     ''')
+Flow('offset','offset0','headersort head=$SOURCE')
+Flow('cmp','traces maskcmp offset0',
+     '''
+     headerwindow mask=${SOURCES[1]} | 
+     headersort head=${SOURCES[2]} | 
+     bandpass flo=5
+     ''')
+
+Result('cmp3','cmp offset',
+       '''
+       wiggle poly=y yreverse=y transp=y xpos=${SOURCES[1]} 
+       label2=Offset unit2=kft title="3D CMP Gather" 
+       ''')
+
+# Scan different NMO velocities
+nmos = []
+for v in range(10,20):
+    nmo = 'nmo%d' % v
+    vel = 'vel%d' % v
+    Flow(vel,'cmp','spike n1=2049 mag=%d' % v)
+    Flow(nmo,['cmp','offset',vel],
+         'nmo half=n offset=${SOURCES[1]} velocity=${SOURCES[2]}')
+    nmos.append(nmo)
+Result('nmos',nmos,
+       '''
+       merge axis=2 ${SOURCES[1:%d]} | window min1=0.5 max1=2.5 | 
+       grey title="NMO Scan from 10 kft/s to 19 kft/s" wantaxis2=n
+       ''' % len(nmos))
+
+Flow('vscan','cmp offset',
+     '''
+     vscan half=n semblance=y v0=9 nv=101 dv=0.1 
+     offset=${SOURCES[1]} nb=4
+     ''')
+
+Plot('vscan',
+     'grey color=j allpos=y title="Semblance Scan" unit2=kft/s')
+
+# Interactive picking
+
+# !!! UNCOMMENT NEXT TWO LINES !!!
+#Flow('picks.txt','vscan',
+#     'ipick color=j allpos=y wanttitle=n unit2=kft/s')
+
+Flow('picks','picks.txt',
+     '''
+     wc -l | 
+     sed 's/^/in=$SOURCE data_format=ascii_float n1=3 n2=/' |
+     dd form=native | window n1=2
+     ''')
+
+Plot('picks',
+     '''
+     dd type=complex | window | 
+     graph symbol=+ symbolsz=8 yreverse=y transp=y wanttitle=n
+     plotcol=7 plotfat=7 pad=n min2=9 max2=19 wantaxis=n 
+     ''')
+
+Result('picks','vscan picks','Overlay')
+
+Flow('vpick','picks vscan',
+     'transp | linear pattern=${SOURCES[1]} rect=5 sort=y')
+
+Plot('vpick',
+     '''
+     graph yreverse=y transp=y plotcol=7 plotfat=7 
+     pad=n min2=9 max2=19 wantaxis=n wanttitle=n
+     ''')
+
+Plot('vscan3','vscan vpick','Overlay')
+
+# Apply NMO
+
+Flow('nmo','cmp offset vpick',
+     'nmo half=n offset=${SOURCES[1]} velocity=${SOURCES[2]}')
+
+Plot('cmp','grey title="CMP gather" ')
+Plot('nmo','grey title=NMO')
+
+Result('nmo3','cmp vscan3 nmo','SideBySideAniso',
+       vppen='txscale=1.5')
+
+End()

@@ -233,7 +233,7 @@ void split2(bool verb                   /* verbosity flag */,
 
 		    /* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H
-		    LOOPxy( d = fabsf(4.*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
+		    LOOPxy( d = fabsf(4.0f*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
 			    d = ds2/(d*d+ds2);
 			    wx[ix][iy] += wk[ix][iy]*d;
 			    wt[ix][iy] += d;
@@ -321,7 +321,7 @@ void split2(bool verb                   /* verbosity flag */,
 
 		    /* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H
-		    LOOPxy( d = fabsf(4.*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
+		    LOOPxy( d = fabsf(4.0f*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
 			    d = ds2/(d*d+ds2);
 			    wx[ix][iy] += wk[ix][iy]*d;
 			    wt[ix][iy] += d; );

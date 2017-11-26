@@ -1,0 +1,11 @@
+from rsf.tex import *
+
+End(use='hyperref,listings',options='reproduce',
+    color='nmo1 nmo2 vstack cmp700 cmp1050 cmp1400 cmp1750 map vpick envelope picks nmo3',
+    include=r'''
+\newlength{\boxwidth}
+\setlength{\boxwidth}{\textwidth}
+\addtolength{\boxwidth}{-50pt} 
+\setlength{\fboxsep}{10pt}
+\newcommand{\answer}[1]{\noindent\fbox{\parbox{\boxwidth}{\textbf{Answer:} #1}}}
+    ''')

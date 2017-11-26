@@ -1,0 +1,82 @@
+from rsf.proj import *
+
+Flow('vel1',None,
+     	'''
+     	math output=1.5 n1=100 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel2',None,
+     	'''
+     	math output=1.6 n1=100 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel',['vel1','vel2'], 'cat axis=1 ${SOURCES[1]}')
+Result('vel','grey title="True velocity model" color=j mean=y scalebar=y')
+
+Flow('vel1stlayer',None,
+     	'''
+     	math output=1.5 n1=200 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+
+#offset domain commaon image gather (ODCIG) or space shift CIG
+Flow('odcig','vel vel1stlayer',
+	'''
+	sfrtmodcig vel1stlayer=${SOURCES[1]}  nb=20 nh=30 
+	nt=1500 kt=450 fm=25 dt=0.001 ns=19 ng=200 csdgather=n
+	sxbeg=10 szbeg=1 jsx=10 jsz=0 gxbeg=0 gzbeg=1 jgx=1 jgz=0 
+	''')
+Result('odcig',
+	'''
+	byte allpos=n gainpanel=all |
+	grey3 frame1=150 frame2=100 frame3=30 flat=n label3=Offset unit3=km
+	''')
+
+#=====================================================================
+#ODCIG (x1,x2,x3)=(z,x,h): switch x2 and x3, -->(z,h,x)
+Flow('odcigall','odcig','transp plane=23')
+
+# ODCIG to tan
+def hcig2ssk():
+    return '''
+    slant adj=y p0=-2 np=2000 dp=0.004 |
+    put label2=tan
+    '''
+# tan to angle
+def hssk2ang():
+    return '''
+    tan2ang a0=-10 na=141 da=0.5 |
+    put label2=ang
+    '''
+#===================================================================
+#starting from here, I do not understand how to extract ADCIG according to my ODCIG
+# maybe the following is wrong; need help from Mahesh!!
+#===================================================================
+#extract offset gather at different horizontal location x
+for n in range(1,6,1):
+    x=0.1+0.2*(n-1)
+
+    myodcig='odcig%d' % n
+    odcig2tan='odcig2tan%d' % n
+    tan2angle='tan2angle%d'%n
+    adcig='adcig%d' % n
+
+    # extract my ODCIG
+    Flow(myodcig,'odcigall','window n3=1 min3=%g'%x)
+    Plot(myodcig,'grey font=2 title="ODCIG at %g km" '%x)
+
+    # Angle domain common image gather (ADCIG): ODCIG--> ADCIG
+    Flow(odcig2tan,myodcig,hcig2ssk())
+
+    #convert tan to angle
+    Flow(tan2angle,odcig2tan,hssk2ang())	
+    Plot(adcig, tan2angle,
+        ''' 
+	window min2=0 max2=50|
+	grey label2=Degree unit2="o" title="ADCIG at %g km"
+	'''%x)
+
+Result('odcigs',['odcig1','odcig2','odcig3','odcig4','odcig5'],'SideBySideAniso')
+Result('adcig','adcig1 adcig2 adcig3 adcig4 adcig5','SideBySideAniso')
+
+End()

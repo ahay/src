@@ -1,8 +1,4 @@
-/* Convolution with a Ricker wavelet. 
-
-January 2013 program of the month:
-http://ahay.org/rsflog/index.php?/archives/318-Program-of-the-month-sfricker1.html
-*/
+/* Convolution with a Ricker wavelet. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -22,12 +18,11 @@ http://ahay.org/rsflog/index.php?/archives/318-Program-of-the-month-sfricker1.ht
 */
 
 #include <rsf.h>
-#include "ricker.h"
+#include "mricker.h"
 
 int main(int argc, char* argv[])
 {
-    bool deriv;
-    int n1, n2, i2, order;
+    int n1, n2, i2;
     int fft_size;
     float d1, freq, *trace=NULL;
     sf_file in=NULL, out=NULL;
@@ -39,22 +34,19 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
+    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+
     if (!sf_getfloat("frequency",&freq)) {
       /* peak frequency for Ricker wavelet (in Hz) */
       if (!sf_getfloat("freq",&freq)) freq=0.2;
       /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
     } else {
-      if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-      freq *= 2.*d1;
+      freq *= 2.*d1; /* division by Nyquist=1/(2.*dt) */
     }
-
-    if (!sf_getbool("deriv",&deriv)) deriv=false;
-    /* apply a half-order derivative filter */
-    order = deriv? 2:0;
 
     trace = sf_floatalloc(n1);
     fft_size = 2*kiss_fft_next_fast_size((n1+1)/2);
-    ricker_init(fft_size, 0.5*freq, order);
+    ricker_init(fft_size, 0.5*freq, d1);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);

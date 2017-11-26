@@ -1,0 +1,888 @@
+\published{Geophysics, 81, no. 2, T63-T77, (2016)}
+
+\title{Simulating propagation of decoupled elastic waves using low-rank approximate mixed-domain integral operators for anisotropic media}
+
+\author{
+Jiubing Cheng\footnotemark[1], Tariq Alkhalifah\footnotemark[2], Zedong Wu\footnotemark[3], Peng Zou\footnotemark[4] and Chenlong Wang\footnotemark[5]
+}
+
+\address{
+\footnotemark[1] Tongji University, State Key Laboratory of Marine Geology, Shanghai, China. E-mail: cjb1206@tongji.edu.cn \\
+\footnotemark[2] King Abdullah University of Science and Technology, Thuwal, Saudi Arabia. E-mail: tariq.alkhalifah@kaust.edu.sa \\
+\footnotemark[3] King Abdullah University of Science and Technology, Thuwal, Saudi Arabia. E-mail: zedong.wu@kaust.edu.sa \\
+\footnotemark[4] Tongji University, Shanghai, China. E-mail: 1533006@tongji.edu.cn \\
+\footnotemark[5] Tongji University, Shanghai, China. E-mail: skoltyz.10000@163.com 
+}
+
+\lefthead{Cheng et al.}
+\righthead{Propagate decoupled anisotropic elastic waves}
+
+\maketitle
+
+\begin{abstract}
+	In elastic imaging, the extrapolated vector fields are decoupled
+	into pure wave modes, such that the imaging condition produces interpretable
+	images.
+	Conventionally, mode decoupling in anisotropic media is costly as
+	the operators involved are dependent on the velocity, and thus are not stationary.
+	We develop an efficient pseudo-spectral approach to directly extrapolate
+	the decoupled elastic waves using low-rank approximate
+	mixed-domain integral operators on the basis of \new{the} elastic displacement wave equation.
+	We apply $k$-space adjustment to the pseudo-spectral solution to allow for
+	a relatively large extrapolation time-step. 
+	The low-rank approximation is, thus, applied to the spectral operators that
+	simultaneously extrapolate and decompose the elastic wavefields.
+    Synthetic examples \new{on transversely isotropic and orthorhombic models}
+	show that, our \old{approaches have}\new{approach has} the potential to efficiently and
+	accurately simulate the propagations of the decoupled quasi-P and quasi-S
+	modes as well as the total wavefields, for elastic wave modeling, imaging
+	and inversion.
+\end{abstract}
+
+\section{Introduction}
+
+Multicomponent seismic data are increasingly acquired on land and at the ocean bottom
+in an attempt to better understand the geological structure and characterize oil and
+gas reservoirs.
+Seismic modeling, reverse-time migration (RTM), and full-waveform inversion (FWI) in
+areas with complex geology all require high-accuracy numerical algorithms for time
+extrapolation of waves.
+Because seismic waves propagate through the earth as a superposition of P- and S-wave
+modes, an elastic wave equation is usually more accurate for wavefield
+extrapolation than an acoustic wave equation.
+Wave mode decoupling can not only help elastic imaging to produce physically interpretable images,
+which characterize reflectivities of various reflection types \cite[]{wapenaar:1987,dellinger.etgen:1990,yan.sava:2008},
+but also provide more opportunity to mitigate the parameter trade-offs in elastic waveform inversion \cite[]{wang.cheng:2015}.
+
+For isotropic media, far-field P and S waves can be separated by
+taking the divergence and curl in the extrapolated elastic wavefields
+\cite[]{aki.richards:1980,sun.mcmechan:2001}. 
+Alternatively, \cite{ma.zhu:2003} and \cite{zhang:2007} extrapolated vector P and S modes separately in an
+elastic wavefield by decomposing the wave equation into P- and S-wave components.
+In the meantime, decoupling of wave modes yields familiar scalar wave equations
+for P and S modes \cite[]{aki.richards:1980}.
+In anisotropic media, one cannot, so simply, derive explicit single-mode
+time-space-domain differential wave equations.
+Generally, P and S modes do not respectively polarize parallel and perpendicular to
+the wave vectors, and thus are called quasi-P (qP) and quasi-S (qS) waves. They cannot
+be fully decoupled with divergence and curl operations \cite[]{dellinger.etgen:1990}.
+
+Anisotropic wave propagation can be formally decoupled in the wavenumber-domain to
+yield single-mode pseudo-differential equations \cite[]{liu:2009}. 
+Unfortunately, these equations in time-space domain cannot be solved with traditional
+numerical schemes unless further approximation to the dispersion relation or phase
+velocity is applied
+\cite[]{etgen:2009,chu:2011,fowler.king:2011,zhan:2012,song:2013,wu:2014,du:2014}.
+To avoid solving the pseudo-differential equation, \cite{xu.zhou:2014}
+proposed a nonlinear wave equation for pseudoacoustic qP-wave with an auxiliary
+scalar operator depending on the material parameters and the phase direction of the
+propagation at each spatial location.
+All these efforts are restricted to pure-mode scalar waves and do not honor
+the elastic effects such as mode conversion.
+\cite{cheng.kang:2014} and \cite{kang.cheng:2012} have proposed approaches to propagate the
+partially decoupled wave modes using the so-called pseudo-pure-mode wave equations,
+ and then obtain completely decoupled qP or qS waves by
+correcting the polarization deviation of the
+pseudo-pure-mode wavefields.
+Their approaches honor the kinematics of all wave modes
+but may distort the reflection/transmission coefficients if high contrasts exist
+in the velocity fields.
+
+Alternatively, many have developed approaches to decouple qP- and qS-wave modes
+from the extrapolated elastic wavefields.
+\cite {dellinger.etgen:1990} generalized the divergence and curl operations to anisotropic media
+by constructing separators as polarization projection in the wavenumber-domain.
+To tackle heterogeneity, these mode separators were rewritten
+by \cite{yan.sava:2009} as nonstationary spatial filters determined by the local
+polarization directions.
+\cite{zhang.mcmechan:2010} proposed a wavefield decomposition method to separate
+elastic wavefields into vector qP- and qS-wave fields
+for vertically transverse isotropic (VTI) media. 
+Accordingly, \cite{cheng.fomel:2014} proposed fast mixed-domain algorithms
+for mode separation and vector decomposition in heterogeneous anisotropic media by applying low-rank
+approximation to the involved Fourier integral operators (FIOs) of the general form.
+
+The motivation of this study is to develop an efficient approach to propagate and
+decouple the elastic waves for general anisotropic media. The primary strategy is to
+merge the numerical solutions for time extrapolation and vector decomposition into a unified
+Fourier integral framework and speed up the solutions using the low-rank approximation.
+This paper is organized as follows.
+We first demonstrate a pseudo-spectral \old{(pseudo-spectral)} solution to extrapolate the elastic displacement wavefields in
+time-domain.
+Then we propose to merge the spectral operations for time extrapolation into the
+integral framework for vector decomposition of the wave modes. Applying
+low-rank approximations to the involved mixed-domain matrices, we obtain
+an efficient algorithm for simultaneous propagating and decoupling the elastic
+wavefields.
+We demonstrate the validity of the proposed method using 2-D and 3-D synthetic
+examples on the transversely isotropic (TI) \new{and orthorhombic} models with \new{increasing complexity}\old{vertical or tilted symmetry axis}.
+
+\section{Propagating coupled elastic wavefields}
+
+Following \cite{carcione:2007},
+we denote the spatial variables $x$, $y$ and $z$ of a right-hand Cartesian system by
+the indices $i, j,$ \ldots $=1$, $2$ and $3$, respectively, the position vector by
+$\mathbf{x}$, a partial derivative with respect to a variable $x_i$ with $\partial_i$,
+and the first and second time derivatives with $\partial_t$ and $\partial_{tt}$.
+Matrix transposition is denoted by the superscript $``T"$. We also denote $\sqrt{-1}$ by $i$, the
+scalar and matrix products by the symbol $``\cdot"$,
+the dyadic product by the symbol $``\otimes"$.
+The Einstein convention of repeated indices is assumed unless otherwise specified.
+
+\subsection{Pseudo-spectral solution of the elastic wave equation}
+
+Wave propagation in general anisotropic elastic media is governed by the linearized
+momentum balance law and a linear constitutive relation between the stress and strain
+tensors. These governing equations can be combined to write the displacement
+formalism as,
+\begin{equation}
+\label{eq:3de}
+\rho\partial^2_{tt}\mathbf{u} = \bigtriangledown{\cdot{[\mathbf{C}\cdot(\bigtriangledown^{T}\cdot\mathbf{u})]}} +
+\mathbf{f},
+\end{equation}
+with $\mathbf{u}=(u_x,u_y,u_z)^{T}$ represents the vector wavefields, $\mathbf{f}$
+is the body force vector per unit volume, $\mathbf{C}$ is the $6\times6$ elasticity
+matrix representing the stiffness tensor with the Voigt's menu, and the spatial
+differential operator $\bigtriangledown$ has the following matrix representation:
+\begin{equation}
+\label{eq:grad}
+\bigtriangledown =
+\begin{pmatrix}{\partial}_x &0 &0 &0& {\partial}_z & {\partial}_y \cr
+0& {\partial}_y &0 & {\partial}_z  &0 & {\partial}_x \cr
+0& 0& {\partial}_z & {\partial}_y & {\partial}_x &0 \end{pmatrix}.
+\end{equation}
+
+The pseudo-spectral method calculates the spatial derivatives using the fast Fourier transform
+(FFT), while
+approximating the temporal derivative with a finite-difference.
+Neglecting the source term, equation \ref{eq:3de} is rewritten in the spatial
+Fourier-domain for a homogeneous medium as,
+\begin{equation}
+\label{eq:3deh}
+\partial^2_{tt}\hat{\mathbf{u}} + \mathbf{\Gamma}\hat{\mathbf{u}} =
+\mathbf{0},
+\end{equation}
+in which $\hat{\mathbf{u}}$ is the wavefields in the wavenumber-domain,
+$\mathbf{k}=(k_x,k_y,k_z)$ is the wavenumber vector, and
+$\mathbf{\Gamma}=1/\rho\mathbf{L}\cdot\bar{\mathbf{C}}\cdot\mathbf{L}^{T}$ represents the
+$3\times3$ \new{density normalized} Christoffel matrix with the wavenumber-domain counterpart of the space
+differential operator (removing the imaginary unit $i$) satisfies,
+\begin{equation}
+\label{eq:gradientL}
+\mathbf{L}=
+\begin{pmatrix}k_x & 0 &0 &0 & k_z & k_y \cr 
+               0 & k_y & 0 & k_z &0 & k_x \cr
+               0 & 0 & k_z & k_y & k_x &0\end{pmatrix}.
+\end{equation}
+
+To calculate the 2nd-order temporal derivatives, we use the standard leapfrog scheme,
+i.e.,
+\begin{equation}
+\label{eq:leapfrog}
+\partial^2_{tt}{u^{(n)}_{i}} = \frac{u^{(n+1)}_i - 2u^{(n)}_i +u^{(n-1)}_i}{\Delta{t^2}},
+\end{equation}
+in which $\Delta{t}=t^{n+1}-t^n$ is the time-step.
+For constant density homogeneous media, applying the two-step time-marching scheme
+leads to the pseudo-spectral formula:
+\begin{equation}
+\label{eq:ps}
+\partial^2_{tt}{\mathbf{u}^{(n)}} = \mathbf{\Psi} \mathbf{u}^{(n)},
+\end{equation}
+with the spectral operator defined with the following kernel:
+\begin{equation}
+\label{eq:spect}
+\mathbf{\Psi}:=
+(2\pi)^{-3}\int{\int{\mathbf{\Gamma}(\mathbf{k})e^{i\mathbf{k}\cdot(\mathbf{x}-\mathbf{y})}d\mathbf{y}d\mathbf{k}}}.
+\end{equation}
+Phase terms in the integral operator can be absorbed into forward and inverse Fourier transforms.
+This implies that the wavefields are first transformed into
+wavenumber-domain using forward FFTs,
+then multiplied with the corresponding components of the Christoffel matrix, and finally
+transformed back into space-domain using inverse FFTs.
+For locally smooth media, we use a spatially varying Christoffel matrix to
+tackle the heterogeneity, i.e.,
+\begin{equation}
+\label{eq:spectx}
+\mathbf{\Psi}:=
+(2\pi)^{-3}\int{\int{\mathbf{\Gamma}(\mathbf{x},\mathbf{k})e^{i\mathbf{k}\cdot(\mathbf{x}-\mathbf{y})}d\mathbf{y}d\mathbf{k}}}.
+\end{equation}
+The extended formation of this pseudo-spectral elastic wave propagator is shown in Appendix B.
+Spectral methods are charaterized by the use of Fourier basis functions to describe the field variables and 
+have the advantages over finite-difference schemes that the mesh requirements are more relaxed \cite[]{kosloff:1989,liu.li:2000}.
+
+\subsection{Adjustment to the pseudo-spectral solution}
+
+Generally, the two-step time-marching pseudo-spectral solution is limited to \new{a} small time-step,
+as larger time-steps lead to numerical dispersion and stability issues.
+At more computational costs, high-order finite-difference \cite[]{dablain:1986}
+can be applied to address this difficulty.
+As an alternative to second-order temporal differencing, a time integration technique based on 
+rapid expansion method (REM) can provide higher accuracy with less computational efforts
+\cite[]{kosloff:1989}.
+As \cite{du:2014} demonstrated, one-step time marching schemes \cite[]{zhang.zhang:2009,sun.fomel:2013},
+especially using optimized polynomial expansion, usually give more accurate
+approximations to heterogeneous extrapolators for larger time-steps.
+In this section, we discuss a strategy to extend the time-step for the previous two-step time-marching
+pseudo-spectral scheme
+according to the eigenvalue decomposition of the Christoffel matrix.
+
+Since the Christoffel matrix is symmetric positive definite, it has a unique
+eigen-decomposition of the form:
+\begin{equation}
+\label{eq:decomp1}
+\mathbf{\Gamma} = \sum_{i=1}^{3}{\lambda^2_i\mathbf{a}_i\otimes{\mathbf{a}_i}},
+\end{equation}
+where $\lambda^2_i$'s are the eigenvalues and $\mathbf{a}_i$'s are the eigenvectors
+of $\mathbf{\Gamma}$, with $\mathbf{a}_i\cdot{\mathbf{a}_j}=\delta_{ij}$.
+The three eigenvalues correspond to phase velocities of the three wave modes with
+$\lambda_i = v_{i}k$ (in which $k=|\mathbf{k}|$, and $v_i$ represents the phase velocity) representing the circular frequency,
+and the corresponding eigenvector $\mathbf{a}_i = ({a_i}_x, {a_i}_y,
+{a_i}_z)$ represents the normalized polarization vector for the given mode.
+An alternative form of the above decomposition yields:
+\begin{equation}
+\label{eq:decomp2}
+\mathbf{\Gamma} = \mathbf{Q}\mathbf{\Lambda}{\mathbf{Q}^{T}},
+\end{equation}
+with
+\begin{equation}
+\label{eq:lambda}
+\mathbf{\Lambda}=
+\begin{pmatrix}{\lambda^2_1} & 0 &0 \cr 
+	0 & {\lambda^2_2} & 0\cr
+	0 & 0 & {\lambda^2_3}\end{pmatrix},
+\end{equation}
+\begin{equation}
+\label{eq:qq}
+\mathbf{Q}=
+\begin{pmatrix}{a_1}_x & {a_2}_x &{a_3}_x \cr 
+	{a_1}_y & {a_2}_y &{a_3}_y \cr
+	{a_1}_z & {a_2}_z &{a_3}_z \end{pmatrix}.
+\end{equation}
+Note $\mathbf{Q}$ is an \old{orthorgonal}\new{orthogonal} matrix, i.e.,
+$\mathbf{Q}^{-1}=\mathbf{Q}^{T}$.
+
+The eigenvalues represent the frequencies and satisfy the condition given by,
+\begin{equation}
+\label{eq:freqband}
+\lambda_i = v_{i}k \le 2\pi{f_{max}},
+\end{equation}
+in which $f_{max}$ is the maximum frequency of the source.
+Therefore, we suggest to filter out the high-wavenumber components in the wavefields
+beyond $2\pi{f_{max}}/v_{min}$ ($v_{min}$ is the minimum phase velocity in the computational model)
+caused by the numerical errors to enhance numerical stability.
+
+According to above eigen-decomposition, we apply the $k$-space adjustment to our
+pseudo-spectral scheme by modifying the eigenvalues
+of Christoffel matrix for the anisotropic elastic wave equation (see Appendix C), i.e.,
+\begin{equation}
+\label{eq:lambda1}
+\overline{\mathbf{\Lambda}}=
+\begin{pmatrix}{\lambda^2_1}{sinc}^2(\lambda_1{\Delta{t}/2}) & 0 &0 \cr 
+	0 & {\lambda^2_2}{sinc}^2(\lambda_2{\Delta{t}/2}) & 0\cr
+	0 & 0 & {\lambda^2_3}{sinc}^2(\lambda_3{\Delta{t}/2})\end{pmatrix}.
+\end{equation}
+Thus this adjustment inserts a modified Christoffel matrix, i.e.,
+$\overline{\mathbf{\Gamma}} = \mathbf{Q}\overline{\mathbf{\Lambda}}{\mathbf{Q}^{T}}$,
+into the original pseudo-spectral formula on the basis of equations \ref{eq:ps} and \ref{eq:spectx}.
+Note that the $k$-space adjustment to the pseudo-spectral solution has been widely used in acoustic and ultrasound \cite[]{bojarski:1982,tabei:2002}
+and elastic isotropic wavefield simulation \cite[]{liu:1995,firouzi:2012}.
+
+\section{Propagating decoupled elastic wavefields}
+
+Above pseudo-spectral operators propagate the elastic wavefields as a superposition of qP- and qS-wave modes.
+To obtain physically interpretable results for seismic imaging and waveform inversion, wave
+mode decoupling is required during wavefield extrapolation.
+The key concept of mode decoupling is based on polarization.
+In a general anisotropic medium, the qP and qS
+modes do not polarize parallel and perpendicular to the wave vectors.
+Moreover, unlike the well-behaved qP mode, the two qS modes do not consistently polarize as a
+function of the propagation direction (or wavenumber) and
+thus cannot be designated as SV and SH waves, except in isotropic and TI media
+\cite[]{winterstein,crampin:1991}.
+Even for a TI medium, it is a challenge to find the right solution of the shear singularity problem and
+obtain two completely separated S-modes with correct amplitudes
+\cite[]{yan.sava:2011,cheng.fomel:2014}.
+Therefore, we restrict to extrapolate the decoupled qP- and qS- wave modes in this paper.
+
+\subsection{Vector decomposition of the elastic wave modes}
+
+According to \cite{zhang.mcmechan:2010}, one can decompose qP and qS modes in
+the elastic wavefields for a homogeneous anisotropic medium using:
+\begin{equation}
+\label{eq:decomPS}
+u_i^{(m)}(\mathbf{k})=d_{ij}^{(m)}(\mathbf{k})\tilde{u}_j(\mathbf{k}),
+\end{equation} 
+where $m=\{qP, qS\}$, $i, j=\{x, y, z\}$, and the decomposition operators satisfy:
+\begin{equation}
+\begin{array}{lcl}
+\label{eq:decP}
+    d_{xx}^{(qP)}(\mathbf{k}) = a_{x}^2(\mathbf{k}), \\ 
+    d_{yy}^{(qP)}(\mathbf{k}) = a_{y}^2(\mathbf{k}), \\ 
+    d_{zz}^{(qP)}(\mathbf{k}) = a_{z}^2(\mathbf{k}), \\
+    d_{xy}^{(qP)}(\mathbf{k}) = a_{x}(\mathbf{k})a_{y}(\mathbf{k}),
+    \\
+    d_{xz}^{(qP)}(\mathbf{k}) = a_{x}(\mathbf{k})a_{z}(\mathbf{k}),
+    \\
+    d_{yz}^{(qP)}(\mathbf{k}) = a_{y}(\mathbf{k})a_{z}(\mathbf{k}),
+\end{array}
+\end{equation}
+and 
+\begin{equation}
+\begin{array}{lcl}
+\label{eq:decS}
+    d_{xx}^{(qS)}(\mathbf{k}) = a_{y}^2(\mathbf{k})+a_{z}^2(\mathbf{k}), \\ 
+    d_{yy}^{(qS)}(\mathbf{k}) = a_{x}^2(\mathbf{k})+a_{z}^2(\mathbf{k}), \\ 
+    d_{zz}^{(qS)}(\mathbf{k}) = a_{x}^2(\mathbf{k})+a_{y}^2\mathbf{k}), \\ 
+    d_{xy}^{(qS)}(\mathbf{k}) = -a_{x}(\mathbf{k})a_{y}(\mathbf{k}),
+    \\
+    d_{xz}^{(qS)}(\mathbf{k}) = -a_{x}(\mathbf{k})a_{z}(\mathbf{k}),
+    \\
+    d_{yz}^{(qS)}(\mathbf{k}) = -a_{y}(\mathbf{k})a_{z}(\mathbf{k}),
+\end{array}
+\end{equation}
+in which $a_{x}(\mathbf{k})$, $a_{y}(\mathbf{k})$ and
+$a_{z}(\mathbf{k})$ represent the $x$-, $y$- and $z$-components
+of the normalized polarization vector of qP-wave.
+
+As demonstrated by \cite{cheng.fomel:2014}, one can decompose the wave modes
+in a heterogeneous anisotropic medium using the following mixed-domain integral operations:
+\begin{equation}
+\begin{array}{lcl}
+\label{eq:decomXK3}
+u_{x}^{(m)}(\mathbf{x})
+&=&\int{e^{i\mathbf{k}\mathbf{x}}d_{xx}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_{x}(\mathbf{k})}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}d_{xy}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_{y}(\mathbf{k})}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{ e^{i\mathbf{k}\mathbf{x}}d_{xz}^{(m)}(\mathbf{x},\mathbf{k})
+			  \tilde{u}_{z}(\mathbf{k})}\,\mathrm{d}\mathbf{k},\\
+u_{y}^{(m)}(\mathbf{x})
+&=&\int{e^{i\mathbf{k}\mathbf{x}}d_{xy}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_{x}(\mathbf{k})}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}d_{yy}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_{y}(\mathbf{k})}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{ e^{i\mathbf{k}\mathbf{x}}d_{yz}^{(m)}(\mathbf{x},\mathbf{k})
+			  \tilde{u}_{z}(\mathbf{k})}\,\mathrm{d}\mathbf{k},\\
+u_{z}^{(m)}(\mathbf{x})
+&=&\int{e^{i\mathbf{k}\mathbf{x}}d_{xz}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_{x}(\mathbf{k})}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}d_{yz}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_{y}(\mathbf{k})}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{ e^{i\mathbf{k}\mathbf{x}}d_{zz}^{(m)}(\mathbf{x},\mathbf{k}) \tilde{u}_{z}(\mathbf{k})}\,\mathrm{d}\mathbf{k}.
+\end{array}
+\end{equation}
+
+\subsection{Extrapolating the decoupled elastic waves}
+
+For heterogeneous anisotropic media, the wavefield propagator (equation~\ref{eq:ps}) and the
+vector decomposition operators (equation~\ref{eq:decomXK3}) are both in the general form of
+FIOs. Naturally, we merge them to derive a new mixed-domain integral solution
+for extrapolating the decoupled elastic wavefields:
+\begin{equation}
+\begin{array}{lcl}
+\label{eq:extrapdecom3}
+u_{x}^{(m)}(\mathbf{x},t+\Delta{t})&=&-u_{x}^{(m)}(\mathbf{x},t-\Delta{t})
++\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{xx}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_x(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{xy}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_y(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{xz}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_z(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}, \\
+u_{y}^{(m)}(\mathbf{x},t+\Delta{t})&=&-u_{y}^{(m)}(\mathbf{x},t-\Delta{t})
++\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{yx}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_x(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{yy}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_y(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{yz}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_z(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}, \\
+u_{z}^{(m)}(\mathbf{x},t+\Delta{t})&=&-u_{z}^{(m)}(\mathbf{x},t-\Delta{t})
++\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{zx}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_x(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{zy}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_y(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}\overline{w}_{zz}^{(m)}(\mathbf{x},\mathbf{k})\tilde{u}_z(\mathbf{k},t)}\,\mathrm{d}\mathbf{k},
+\end{array}
+\end{equation}
+with the propagation matrices for the decoupled wave modes given as
+\begin{equation}
+\label{eq:op}
+\overline{w}_{ij}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{ki}^{(m)}(\mathbf{x},\mathbf{k})w_{kj}{(\mathbf{x},\mathbf{k})},
+\end{equation}
+in which $w_{kj}(\mathbf{x},\mathbf{k})$ is defined by the spatially varying Christoffel
+matrix and the length of time-step, namely
+\begin{equation}
+	\begin{array}{lcl} 
+		\label{eq:extrap}
+		w_{kk}(\mathbf{x},\mathbf{k})=2-\Delta{t}^2\Gamma_{kk}{(\mathbf{x},\mathbf{k})}, \\
+		w_{kj}(\mathbf{x},\mathbf{k})=-\Delta{t}^2\Gamma_{kj}{(\mathbf{x},\mathbf{k})}. \\
+	\end{array}
+\end{equation}
+The extended formulation of equation~\ref{eq:op} is given in Appendix B.
+Note the symmetry properties exist: $d_{ki}^{(m)}=d_{ik}^{(m)}$ and $w_{kj}=w_{jk}$,
+and the modified Christoffel matrix will be used if the $k$-space adjustment is applied for the 
+pseudo-spectral solutions.
+
+To drive the time extrapolation of the decomposed wavefields using
+equation~\ref{eq:extrapdecom3}, we must update the total elastic
+wavefields by superposing qP- and qS-waves at each time-step using
+\begin{equation}
+\begin{array}{lcl}
+\label{eq:couple3}
+	u_{x}(\mathbf{x}) =
+	u_{x}^{(qP)}(\mathbf{x})+u_{x}^{(qS)}(\mathbf{x}),\\
+	u_{y}(\mathbf{x}) =
+	u_{y}^{(qP)}(\mathbf{x})+u_{y}^{(qS)}(\mathbf{x}),\\
+	u_{z}(\mathbf{x}) =
+	u_{z}^{(qP)}(\mathbf{x})+u_{z}^{(qS)}(\mathbf{x}).\\
+\end{array}
+\end{equation}
+Thus equations~\ref{eq:extrapdecom3} to \ref{eq:couple3} compose the
+spectral-like operators to simultaneously extrapolate and decouple
+the elastic wavefields for 3D anisotropic media.
+The computation complexity of the straightforward implementation of the integral
+operators in equations~\ref{eq:spectx} and \ref{eq:extrapdecom3} is $O(N^2_x)$,
+which is prohibitively expensive when the size of model $N_x$ is large.
+
+To tackle strong heterogeneity due to fast varying stiffness coefficients, we suggest to split the displacement equation into the
+displacement-stress equation and then solve it using the staggered-grid pseudo-spectral scheme
+\cite[]{ozdenvar.mcmechan:1996,carcione:1999,bale:2003}.
+Note when using staggered grids, the operators to extrapolate the decoupled wave modes must be modified in order to
+account for the shifts in medium properties and fields variables. We will investigate this issue in the future work.
+
+\section{Fast algorithm using low-rank decomposition}
+
+As proposed by \cite{cheng.fomel:2014},
+low-rank decomposition of the mixed-domain matrix
+$d(\mathbf{x},\mathbf{k})$ in equation \ref{eq:decomXK3}
+yields very efficient algorithm for mode decoupling
+in heterogeneous anisotropic media. We find that the same strategy works for numerical
+implementations of above pseudo-spectral operators for elastic wave propagation.
+
+For example, the mixed-domain matrix, i.e., $w(\mathbf{x},\mathbf{k})$ or
+$\overline{w}(\mathbf{x},\mathbf{k})$ in
+the FIOs, can be approximated by the following separated representation
+\cite[]{fomel:2013}: 
+\begin{equation}
+	\begin{array}{lcl}
+    \label{eq:lowrank}
+    W(\mathbf{x},\mathbf{k})\approx
+        \sum_{m=1}^M \sum_{n=1}^N B(\mathbf{x},\mathbf{k}_{m})A_{mn}C(\mathbf{x}_{n},\mathbf{k}),
+\end{array}
+\end{equation}
+in which $B(\mathbf{x},\mathbf{k}_{m})$
+is a mixed-domain matrix with reduced wavenumber dimension $M$, $C(\mathbf{x}_{n},\mathbf{k})$ is a mixed-domain
+matrix with reduced spatial dimension $N$, $A_{mn}$ is a ${M}\times{N}$ matrix
+with $N$ and $M$ representing the rank of this decomposition.
+Physically, a separable low-rank approximation amounts to selecting
+a set of $N$ ($N\ll{N_{x}}$) representative spatial locations and $M$ ($M\ll{N_{x}}$) representative wavenumbers.
+Construction of the separated representation follows the method of \cite{engquist.ying:2009}.
+The ranks ${M}$ and ${N}$ are dependent on the complexities (heterogeneity and anisotropy) of the medium and 
+the estimate of the approximation accuracy
+to the mixed-domain matrices (In the numerical examples, we aim for the relative single-precision accuracy of $10^{-6}$).
+More explainations on low-rank decomposition is available in \cite{fomel:2013} and \cite{cheng.fomel:2014}.
+As we observe, the ranks are generally very small for our applications.
+For homogeneous media, the ranks naturally reduce to $1$. If there is heterogeneity, the ranks increase to $2$
+for isotropic media but exceed $2$ for anisotropic media. The $k$-space adjustment may slightly increase the ranks for the heterogeneous media.
+
+Thus the above low-rank approximation speeds up computation of the FIOs since
+\begin{equation}
+	\begin{array}{lcl}
+    \label{eq:lowrankFIO}
+\int{e^{i\mathbf{k}\mathbf{x}}W(\mathbf{x},\mathbf{k})\tilde{u}_{j}(\mathbf{k})}\,\mathrm{d}\mathbf{k}\\
+\approx
+\sum_{m=1}^M B(\mathbf{x},\mathbf{k}_{m})\left(\sum_{n=1}^NA_{mn}\left(\int{e^{i\mathbf{k}\mathbf{x}}
+C(\mathbf{x}_{n},\mathbf{k})\tilde{u}_{j}(\mathbf{k})\,\mathrm{d}\mathbf{k}}\right)\right).
+\end{array}
+\end{equation}
+Evaluation of the last formula is effectively equivalent to applying $N$ inverse FFTs
+each time-step. Accordingly, the computation complexity reduces to
+$O(NN_x\log{N_x})$.
+In multiple-core implementations, the matrix operations in equation~\ref{eq:lowrankFIO} are easy to parallelize.
+
+\section{examples}
+We will \new{first} demonstrate the proposed approach on two-layer TI and {orthorhombic} models, and \new{then on the complex} SEG Hess VTI and BP 2007 TTI models, repectively.
+
+\subsection{2D two-layer VTI/TTI model}
+The first example is on a 2D two-layer model, in which the first layer is a
+VTI medium with $v_{p0}=2500 m/s$, $v_{s0}=1200 m/s$, $\epsilon=0.2$, and $\delta=-0.2$,
+and the second layer is a tilted TI (TTI) medium with $v_{p0}=3600 m/s$, $v_{s0}=1800 m/s$,
+$\epsilon=0.2$, $\delta=0.1$ and $\theta=30^{\circ}$. 
+A point source is placed at the center of this model.
+Firstly, we compare the synthetic elastic wavefields by solving the elastic
+displacement wave equation using the 10th-order explicit finite-difference (FD) and low-rank
+pseudo-spectral schemes (with or without the $k$-space adjustment), respectively.
+Figure 1 shows the wavefield snapshots at the time of 0.3 s using the spatial sampling
+$\Delta{x}=\Delta{z}=5 m$ and time-step $\Delta{t}=0.5 ms$.
+Only the low-rank pseudo-spectral solutions with the $k$-space adjustment are displayed because 
+the three schemes produce very similar results. The vertical slices through the z-components of 
+the elastic wavefields show little differences among them (Figure 2).
+For the low-rank pseudo-spectral scheme, the ranks are all $2$ for the decomposition of the mixed-domain matrices
+$w_{xx}$, $w_{zz}$ and $w_{xz}$ in equation \ref{eq:extrap},
+and the $k$-space adjustment doesn't change the ranks.
+It takes CPU time of 0.20, 0.23 and 0.23 seconds for them to finish the wavefield extrapolation of one time-step.
+Additional 4.3 and 8.2 seconds have been used to finish the low-rank decomposition of the involved mixed-domain matrices
+before wavefield extrapolation.
+We observe the FD scheme unstable if the time-step is increased to 1.0 ms and 
+the low-rank pseudo-spectral scheme unstable if the time-step is increased to 2.0
+ms (with unchanged spatial sampling). However, the low-rank pseudo-spectral solution using the $k$-space adjustment 
+produces acceptable results even the time-step is increased to 3.0 ms
+and the maximum time exceeds 3 s.
+Figure 3 and Figure 4 compare the wavefield snapshots and the vertical slices at the time of 0.6 s
+using the three schemes with the increased spatial sampling (namely $\Delta{x}=\Delta{z}=10$ m).
+The FD scheme tends to exhibit dispersion artifacts with the chosen model size and extrapolation step,
+while low-rank pseudo-spectral scheme exhibit acceptable accuracy. 
+The $k$-space adjustment permits larger time-steps without reducing accuracy or introducing instability.
+For this example, it has produced the best results with less numerical dispersion.
+Thanks to the larger spatial and temporal sampling, the same CPU time is used for each scheme as in Figure 1.
+In addition, only the ranks for the low-rank decomposition of the matrix $w_{12}$ reduce to $1$ when we change the tilt angle of the second layer to $0$.
+
+\inputdir{twolayer2dti.2nd.coupled.0.5ms}
+\multiplot{2}{ElasticxKSSInterf,ElasticzKSSInterf}{width=0.23\textwidth}
+{
+Horizontal and vertical components of the elastic wavefields at the time of 0.3 s synthesized by solving the
+	2nd-order elastic wave equation with $\Delta{x}=\Delta{z}=5$ m and $\Delta{t}=0.5$ ms.
+}
+\multiplot{3}{ElasticzFDwave,ElasticzPSLRwave,ElasticzKSwave}{width=0.4\textwidth}
+{
+Vertical slices through the vertical components of the synthetic elastic wavefields at $x=0.75$ km: (a) 10th-order FD, (b) low-rank pseudo-spectral and (c) low-rank pseudo-spectral using the $k$-space adjustment.
+}
+
+\inputdir{twolayer2dti.2nd.coupled.compare}
+\multiplot{3}{ElasticzFDInterfC,ElasticzPSLRInterfC,ElasticzKSSInterfC}{width=0.23\textwidth}
+{
+Vertical components of the elastic wavefields at the time of 0.6 s synthesized using three schemes with the same spatial sampling
+$\Delta{x}=\Delta{z}=10$ m: (a) 10th-order FD and (b) low-rank pseudo-spectral with $\Delta{t}=1.5$ ms,
+and (c) low-rank pseudo-spectral solution using the $k$-space adjustment with $\Delta{t}=3.0$ ms.
+}
+\multiplot{3}{ElasticzFDwave,ElasticzPSLRwave,ElasticzKSSwave}{width=0.4\textwidth}
+{
+Vertical slices through the vertical components at $x=1.5$ km in Figure 3: (a) 10th-order FD,
+(b) low-rank pseudo-spectral and (c) low-rank pseudo-spectral using the $k$-space adjustment.
+}
+
+Secondly, we compare two approaches to get the decoupled elastic wavefields
+during time extrapolation.
+The first approach uses the low-rank pseudo-spectral algorithm
+to synthesize the elastic wavefields and then apply the low-rank vector
+decomposition algorithm \cite[]{cheng.fomel:2014} to get the vector qP- and
+qSV-wave fields (Figure 5).
+The second extrapolates the decoupled qP- and
+qSV-wave fields using the proposed low-rank mixed-domain integral operations (Figure 6).
+Extrapolation steps of $\Delta{x}=\Delta{z}=10$ m and $\Delta{t}=1.0$ ms are used in this example.
+The ranks are still $2$
+for the involved low-rank decomposition of the propagation matrices defined in equation~\ref{eq:op}. 
+The Two approaches produce comparable elastic wavefields,
+in which we can observe all transmitted and reflected waves including mode
+conversions.
+For one step of time extrapolation, it takes the CPU time of 0.6 ms for the first approach
+and 0.5 ms for the second.
+This means that merging time extrapolation and vector decomposition into a unified
+Fourier integral framework 
+provides more efficient solution than operating them in sequence
+for anisotropic media thanks to the reduced number of forward and inverse FFTs.
+
+\inputdir{twolayer2dti.2nd.decoupled.1ms}
+\multiplot{6}{ElasticxPSLR1Interf,ElasticzPSLR1Interf,ElasticPxPSLR1Interf,ElasticPzPSLR1Interf,ElasticSxPSLR1Interf,ElasticSzPSLR1Interf}{width=0.21\textwidth}
+{
+Elastic wavefields at the time of 0.6 s synthesized by using low-rank pseudo-spectral solution of the displacement
+wave equation followed with low-rank vector decomposition:
+(a) x- and (b) z-components of the displacement wavefields;
+(c) x- and (d) z-components of the qP-wave fields;
+(e) x- and (f) z-components of the qSV-wave fields.
+}
+\multiplot{6}{ElasticPxPSLRInterf,ElasticPzPSLRInterf,ElasticSxPSLRInterf,ElasticSzPSLRInterf,ElasticxPSLRInterf,ElasticzPSLRInterf}{width=0.21\textwidth}
+{
+Elastic wavefields at the time of 0.6 s synthesized by using low-rank pseudo-spectral operators
+for extrapolating and decomposing the elastic waves simultaneously:
+(a) x- and (b) z-components of the qP-wave displacement wavefields;
+(c) x- and (d) z-components of the qSV-wave displacement wavefields;
+(e) x- and (f) z-components of the total elastic wavefields.
+}
+
+\subsection{3D two-layer VTI/orthorhombic model}
+
+\inputdir{twolayer3delr.ort}
+Figure 7 shows synthetic vector displacement fields using the proposed approach for a 3-D two-layer model, with a horizontal reflector at 1.167 km.
+The first layer is a VTI medium with $v_{p0}=2500 m/s$, $v_{s0}=1400 m/s$, $\epsilon=0.25$, $\delta=0.05$, and $\gamma=0.15$,
+and the second is an orthorhombic medium representing a vertically fratcured TI formation \cite[]{schoenberg:1997,tsvankin:2001}, which has
+the parameters 
+$v_{p0}=3000 m/s$, $v_{s0}=1600 m/s$, $\epsilon_1=0.30$, $\epsilon_2=0.15$, $\delta_1=0.08$, $\delta_2=-0.05$, $\delta_3=-0.10$, $\gamma_1=0.20$ and $\gamma_2=0.05$.
+A exploration source is located at the center of the model.
+We achieve efficient simulation of dispersion-free 3D elastic wave propagation for the decoupled and total displacement fields.
+Shear wave splitting can be observed in the qS-wave fields.
+
+\multiplot{9}{ElasticPx,ElasticSx,Elasticx,ElasticPy,ElasticSy,Elasticy,ElasticPz,ElasticSz,Elasticz}{width=0.28\textwidth}
+{
+Synthesized decomposed and total elastic wavefields for a orthorhombic model with a VTI overburden:
+qP (left), qS (mid) and total (right) elastic displacement fields (top: x-component, mid: y-component, bottom: z-component).
+}
+
+\subsection{SEG Hess VTI model}
+
+Then we demonstrate the approach in the 2D Hess VTI model (Figure 8).
+Vertical qS-wave velocity is set to equal half the vertical qP-wave velocity everywhere.
+A point-source is placed at location of (13.264, 4.023) km.
+For comparison, spatial step length $\Delta{x}=\Delta{z}=40.0$ ft and time-step $\Delta{t}=1.0$
+ms are used in this example.
+Figure 9 displays the decoupled and total displacement fields synthesized by using the low-rank pseudo-spectral algorithm
+that simultaneously extrapolate the decoupled qP- and qSV-wave modes. The ranks $N, M$ are in [8,10] for the low-rank
+	decomposition of the involved matrices (The ranks reduce to [1,3] if we only propagate the coupled elastic wavefields).
+The wavefield snapshots show that the proposed wave propagator honors the elastic effects such as mode conversion.
+It takes the CPU time of 111.6 s to decompose the mixed-domain matrices in advance, and about 9397.7 s to extrapolate the
+	decoupled wavefields to the maximum time of 1100.0 s.
+Figure 10 displays the total displacement fields synthesized by the 10th-order FD solution of the elastic
+wave equation and the decoupled qP- and qSV-wave fields using the low-rank vector decomposition
+for heterogeneous TI media \cite[]{cheng.fomel:2014}.
+The ranks are in $[6,7]$ for the decomposition of the involved mode decoupling matrices $d_{ij}$.
+The FD solution shows strong numerical dispersion of the qSV-waves due to inadequate
+sampling because the modeling of qSV-wave using FD scheme demands finer grid cell size.
+Except the CPU time of 36.7 s to decompose the mixed-domain matrices for mode decoupling,
+ it takes 568.0 s to extrapolate and 4690.3 s to decouple the elastic wavefields
+to get qP- and qS-wave fields for all the time-steps.
+To achieve the same good quality as the low-rank pseudo-spectral solution in Figure 8, we decrease the spatial
+sampling to $\Delta{x}=\Delta{z}=20.0$ ft and the temporal sampling to 0.5 ms.
+Except the CPU time of 133.8 s to decompose the mixed-domain matrices for mode decoupling,
+ it takes 3922.8 s to extrapolate and 14212.0 s to decouple the elastic wavefields to the maximum time.
+This means the low-rank pseudo-spectral scheme more efficient to obtain decoupled elastic wavefields
+for TI media.
+
+\inputdir{hessvti.2nd.decoupled}
+\multiplot{3}{vp-hess,epsilon-hess,delta-hess}{width=0.4\textwidth}
+  {
+SEG/Hess VTI model with parameters of (a) vertical P-wave velocity, Thomsen coefficients
+(b) $\epsilon$ and (c) $\delta$.
+}
+
+\multiplot{6}{ElasticPxKS,ElasticPzKS,ElasticSxKS,ElasticSzKS,ElasticxKS,ElasticzKS}{width=0.3\textwidth}
+{
+  Synthesized decoupled and total displacement fields using the low-rank pseudo-spectral
+  solution with the $k$-space adjustment that simultaneously extrapolate and decouple qP- and qSV-wave fields in SEG/Hess VTI model:
+  (a) x- and (b) z-components of qP-wave fields;
+  (c) x- and (d) z-components of qSV-wave fields;
+  (e) x- and (f) z-components of the total displacement fields.
+}
+
+\multiplot{6}{ElasticxFD,ElasticzFD,ElasticPxFD,ElasticPzFD,ElasticSxFD,ElasticSzFD}{width=0.3\textwidth}
+  {
+ Elastic wavefield extrapolation using 10th-order FD scheme and low-rank vector decomposition
+ in SEG/Hess VTI model:
+ (a) x- and (b) z-components of the synthetic elastic displacement wavefields at 1.1 s;
+ (c) x- and (d) z-components of vector qP-wave fields;
+ (e) x- and (f) z-components of vector qSV-wave fields.
+  } 
+
+\subsection{BP 2007 TTI model}
+{
+The last example displays the application to the BP 2007 TTI  model (Figure 11).
+Vertical qS-wave velocity is set to equal sixty percent of the vertical qP-wave velocity everywhere.
+Extrapolation steps of $\Delta{x}=\Delta{z}=12.5 $ m and $\Delta{t}=1.0$ ms are used here.
+Because the principal axes of the medium are not aligned with the Cartesian axes, we have apply the Bond transformation
+to get the stiffness matrix under the Cartesian system.
+Before wavefield extrapolation, separated representations of the mixed operator matrixes are constructed using the
+low-rank decomposition approach within the computational zone.
+For this complex model, the ranks are about $30$ for the decomposition of the involved matrixes.
+As shown in Figure 12, the approach describes very well the propagations of the decoupled qP- and qS-waves as well as the total
+ displacement fields even for this complex TTI model. 
+We can clearly observe the converted waves from the dipping salt flanks and other strong-contrast interfaces.
+And the qP- and qS-waves are free of numerical dispersion in the decoupled and total wavefields.
+}
+\inputdir{bptti2007.smooth}
+\multiplot{4}{vp0,epsi,del,the}{width=0.25\textwidth}
+{
+Partial of BP 2007 TTI model with parameters of (a) vertical P-wave velocity, Thomsen coefficients
+(b) $\epsilon$ and (c) $\delta$, and (d) tilt angle $\theta$.
+}
+
+\multiplot{6}{ElasticPxKS,ElasticPzKS,ElasticSxKS,ElasticSzKS,ElasticxKS,ElasticzKS}{width=0.25\textwidth}
+{
+ Synthesized decoupled and total displacement fields at the time of 1.2 s using the low-rank pseudo-spectral
+ solution with the $k$-space adjustment that simultaneously extrapolate and decouple qP- and qSV-wave fields in the BP 2007 TI model:
+  (a) x- and (b) z-components of qP-wave fields;
+  (c) x- and (d) z-components of qSV-wave fields;
+  (e) x- and (f) z-components of the total displacement fields.
+}
+
+
+\section{conclusions}
+We have proposed a recursive integral method to simultaneously extrapolate and 
+decompose the elastic wavefields on the base of second-order displacement equation for heterogeneous anisotropic media.
+The computational efficiency is guaranteed by merging the operations of 
+time extrapolation and vector decomposition into a unified Fourier integral
+framework and speeding up the solutions using the low-rank approximation.
+The use of the $k$-space adjustment permits larger time-steps without reducing accuracy
+or introducing instability in the low-rank pseudo-spectral scheme.
+The synthetic example shows that our method could produce dispersion-free decoupled
+and total elastic wavefields efficiently.
+We expect that the proposed approaches to extrapolate the decoupled elastic waves have great potential for applications such
+as elastic RTM and FWI of multicomponent seismic data acquired on land and at the
+ocean bottom.
+The focus for future work will be on the staggered-grid pseudo-spectral solution of the displacement-stress or velocity-stress equation
+	for anisotropic media with strong heterogeneity and lower order of symmetry.
+
+\section{ACKNOWLEDGMENTS}
+We would like to thank Sergey Fomel for sharing his experience in
+designing low-rank approximate algorithms for wave propagation.
+The first author appreciates Tengfei Wang and Junzhe Sun for useful discussion in this study.
+We acknowledge supports from the National
+Natural Science Foundation of China (No.41474099) and Shanghai Natural Science Foundation
+(No.14ZR1442900).
+This publication is also based upon work supported by
+the King Abdullah University of Science and Technology (KAUST) Office of Sponsored Research (OSR) under Award No. 2230.
+We thank SEG, BP and HESS Corporation for making the 2D VTI and TTI models available.
+
+\append{Components of the Christoffel matrix}
+For a general anisotropic medium, the components of the \new{density normalized} Christoffel matrix
+$\mathbf{\Gamma}$ are given as follows,
+\begin{equation}
+\label{eq:gama}
+\begin{split}
+\Gamma_{11} &= [C_{11}k^2_x + C_{66}k^2_y + C_{55}k^2_z +2C_{56}k_yk_z +2C_{15}k_xk_z +2C_{16}k_xk_y]/{\rho}, \\
+\Gamma_{22} &= [C_{66}k^2_x + C_{22}k^2_y + C_{44}k^2_z +2C_{24}k_yk_z +2C_{46}k_xk_z +2C_{26}k_xk_y]/{\rho}, \\
+\Gamma_{33} &= [C_{55}k^2_x + C_{44}k^2_y + C_{33}k^2_z +2C_{34}k_yk_z +2C_{35}k_xk_z +2C_{45}k_xk_y]/{\rho}, \\
+\Gamma_{12} &= [C_{16}k^2_x + C_{26}k^2_y + C_{45}k^2_z +(C_{46}+C_{25})k_yk_z +(C_{14}+C_{56})k_xk_z +(C_{12}+C_{66})k_xk_y]/{\rho}, \\
+\Gamma_{13} &= [C_{15}k^2_x + C_{46}k^2_y + C_{35}k^2_z +(C_{45}+C_{36})k_yk_z +(C_{13}+C_{55})k_xk_z +(C_{14}+C_{56})k_xk_y]/{\rho}, \\
+\Gamma_{23} &= [C_{56}k^2_x + C_{24}k^2_y + C_{34}k^2_z +(C_{44}+C_{23})k_yk_z +(C_{36}+C_{45})k_xk_z +(C_{25}+C_{46})k_xk_y]/{\rho}. 
+\end{split}
+\end{equation}
+
+\append{Extended formulations of the pseudo-spectral operators}
+According to equations \ref{eq:ps} and \ref{eq:spectx}, we express the pseudo-spectral operator that can be used to extrapolate
+the coupled elastic wavefields in its extended formation:
+\begin{equation}
+\begin{array}{lcl}
+\label{eq:extrap3}
+u_{x}(\mathbf{x},t+\Delta{t})&=&-u_{x}(\mathbf{x},t-\Delta{t})
++\int{e^{i\mathbf{k}\mathbf{x}}w_{xx}(\mathbf{x},\mathbf{k})\tilde{u}_x(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{e^{i\mathbf{k}\mathbf{x}}w_{xy}(\mathbf{x},\mathbf{k})\tilde{u}_y(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}w_{xz}(\mathbf{x},\mathbf{k})\tilde{u}_z(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}, \\
+u_{y}(\mathbf{x},t+\Delta{t})&=&-u_{y}(\mathbf{x},t-\Delta{t})
++\int{e^{i\mathbf{k}\mathbf{x}}w_{xy}(\mathbf{x},\mathbf{k})\tilde{u}_x(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{e^{i\mathbf{k}\mathbf{x}}w_{yy}(\mathbf{x},\mathbf{k})\tilde{u}_y(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}w_{yz}(\mathbf{x},\mathbf{k})\tilde{u}_z(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}, \\
+u_{z}(\mathbf{x},t+\Delta{t})&=&-u_{z}(\mathbf{x},t-\Delta{t})
++\int{e^{i\mathbf{k}\mathbf{x}}w_{xz}(\mathbf{x},\mathbf{k})\tilde{u}_x(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
+\\
+&+&\int{e^{i\mathbf{k}\mathbf{x}}w_{yz}(\mathbf{x},\mathbf{k})\tilde{u}_y(\mathbf{k},t)}\,\mathrm{d}\mathbf{k}
++\int{e^{i\mathbf{k}\mathbf{x}}w_{zz}(\mathbf{x},\mathbf{k})\tilde{u}_z(\mathbf{k},t)}\,\mathrm{d}\mathbf{k},
+\end{array}
+\end{equation}
+in which $\tilde{u}_x(\mathbf{k},t)$, $\tilde{u}_y(\mathbf{k},t)$ and $\tilde{u}_z(\mathbf{k},t)$ represent the three
+	components of the elastic wavefields in wavenumber-domain at the time of $t$.
+
+For a VTI or orthorhombic medium, we express the stiffness tensor as a Voigt matrix: 
+\begin{equation}
+\mathbf{C} = 
+\begin{pmatrix}C_{11} &C_{12} &C_{13} &0 &0 &0 \cr
+         C_{12} &C_{22} &C_{23} &0 &0 &0 \cr
+         C_{13} &C_{23} &C_{33} &0 &0 &0 \cr 
+         0& 0&  0 & C_{44} &0 &0 \cr
+         0& 0&  0 &0 & C_{55} &0 \cr
+         0& 0&  0 &0 &0 &C_{66}\end{pmatrix},
+\end{equation}
+in which there are only five independent coefficient with
+$C_{12}=C_{11}-2C_{66}$, $C_{22}=C_{11}$, $C_{23}=C_{13}$ and $C_{55}=C_{44}$, for a VTI medium.
+Therefore, the propagation matrix has the following extended formulation,
+\begin{equation}
+\label{eq:ww}
+\begin{array}{lcl} 
+w_{xx}(\mathbf{k})=2-\Delta{t}^2[C_{11}k^2_x+C_{66}k^2_y+C_{55}k^2_z], \\
+w_{yy}(\mathbf{k})=2-\Delta{t}^2[C_{66}k^2_x+C_{22}k^2_y+C_{44}k^2_z], \\
+w_{zz}(\mathbf{k})=2-\Delta{t}^2[C_{55}k^2_x+C_{44}k^2_y+C_{33}k^2_z], \\
+w_{xy}(\mathbf{k})=-\Delta{t}^2[C_{12}+C_{66}]{k_x}{k_y}, \\
+w_{xz}(\mathbf{k})=-\Delta{t}^2[C_{13}+C_{55}]{k_x}{k_z}, \\
+w_{yz}(\mathbf{k})=-\Delta{t}^2[C_{23}+C_{44}]{k_y}{k_z}.
+\end{array}
+\end{equation}
+
+If the principal axes of the medium are not aligned with the Cartesian axes, e.g., for the tilted TI and orthorhombic media,
+we should apply the Bond transformation \cite[]{winterstein,carcione:2007} to get the stiffness matrix
+under the Cartesian system.
+This will introduce more mixed partial derivative terms in the wave equation, which demands lots of computational effort
+if a finite-difference algorithm is used to extrapolate the wavefields.
+Fortunately, for the pseudo-spectral solution, it only introduces negligible computation to prepare the propagation matrix
+and no extra computation for the wavefield extrapolation.
+
+Similarly, we can write the propagation matrix $\overline{w}_{ij}^{(m)}$ (in equation~\ref{eq:op}) for the decoupled elastic waves
+in its extended formulation:
+\begin{equation}
+\begin{array}{lcl}
+\label{eq:com}
+\overline{w}_{xx}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xx}^{(m)}(\mathbf{x},\mathbf{k})w_{xx}(\mathbf{x},\mathbf{k})+d_{xy}^{(m)}(\mathbf{x},\mathbf{k})w_{xy}(\mathbf{x},\mathbf{k})+d_{xz}^{(m)}(\mathbf{x},\mathbf{k})w_{xz}(\mathbf{x},\mathbf{k}), \\
+\overline{w}_{xy}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xx}^{(m)}(\mathbf{x},\mathbf{k})w_{xy}(\mathbf{x},\mathbf{k})+d_{xy}^{(m)}(\mathbf{x},\mathbf{k})w_{yy}(\mathbf{x},\mathbf{k})+d_{xz}^{(m)}(\mathbf{x},\mathbf{k})w_{yz}(\mathbf{x},\mathbf{k}), \\
+\overline{w}_{xz}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xx}^{(m)}(\mathbf{x},\mathbf{k})w_{xz}(\mathbf{x},\mathbf{k})+d_{xy}^{(m)}(\mathbf{x},\mathbf{k})w_{yz}(\mathbf{x},\mathbf{k})+d_{xz}^{(m)}(\mathbf{x},\mathbf{k})w_{zz}(\mathbf{x},\mathbf{k}), \\
+\overline{w}_{yx}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xy}^{(m)}(\mathbf{x},\mathbf{k})w_{xx}(\mathbf{x},\mathbf{k})+d_{yy}^{(m)}(\mathbf{x},\mathbf{k})w_{xy}(\mathbf{x},\mathbf{k})+d_{yz}^{(m)}(\mathbf{x},\mathbf{k})w_{xz}(\mathbf{x},\mathbf{k}), \\
+\overline{w}_{yy}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xy}^{(m)}(\mathbf{x},\mathbf{k})w_{xy}(\mathbf{x},\mathbf{k})+d_{yy}^{(m)}(\mathbf{x},\mathbf{k})w_{yy}(\mathbf{x},\mathbf{k})+d_{yz}^{(m)}(\mathbf{x},\mathbf{k})w_{yz}(\mathbf{x},\mathbf{k}), \\
+\overline{w}_{yz}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xy}^{(m)}(\mathbf{x},\mathbf{k})w_{xz}(\mathbf{x},\mathbf{k})+d_{yy}^{(m)}(\mathbf{x},\mathbf{k})w_{yz}(\mathbf{x},\mathbf{k})+d_{yz}^{(m)}(\mathbf{x},\mathbf{k})w_{zz}(\mathbf{x},\mathbf{k}), \\
+\overline{w}_{zx}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xz}^{(m)}(\mathbf{x},\mathbf{k})w_{xx}(\mathbf{x},\mathbf{k})+d_{yz}^{(m)}(\mathbf{x},\mathbf{k})w_{xy}(\mathbf{x},\mathbf{k})+d_{zz}^{(m)}(\mathbf{x},\mathbf{k})w_{xz}(\mathbf{x},\mathbf{k}),
+\\
+\overline{w}_{zy}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xz}^{(m)}(\mathbf{x},\mathbf{k})w_{xy}(\mathbf{x},\mathbf{k})+d_{yz}^{(m)}(\mathbf{x},\mathbf{k})w_{yy}(\mathbf{x},\mathbf{k})+d_{zz}^{(m)}(\mathbf{x},\mathbf{k})w_{yz}(\mathbf{x},\mathbf{k}),
+\\
+\overline{w}_{zz}^{(m)}(\mathbf{x},\mathbf{k}) =
+d_{xz}^{(m)}(\mathbf{x},\mathbf{k})w_{xz}(\mathbf{x},\mathbf{k})+d_{yz}^{(m)}(\mathbf{x},\mathbf{k})w_{yz}(\mathbf{x},\mathbf{k})+d_{zz}^{(m)}(\mathbf{x},\mathbf{k})w_{zz}(\mathbf{x},\mathbf{k}).
+\end{array}
+\end{equation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\append{K-space adjustment to the pseudo-spectral solution}
+According to the eigen-decomposition of the Christoffel matrix (see Equations 9 to 12), we can obtain the scalar
+wavefields for homogeneous anisotropic media using the theory of mode separation \cite []{dellinger.etgen:1990},
+\begin{equation}
+\label{eq:timestep}
+\hat{\overline{u}}_i = Q_{ij}\hat{u}_j,
+\end{equation}
+in which $\hat{\overline{u}}_i$ with $i=1, 2,3$ represents the scalar qP-, qS$_1$- and
+qS$_2$-wave fields.
+So these wavefields satisfy the same scalar wave equation
+\begin{equation}
+\label{eq:scalarh}
+\partial^2_{tt}\hat{\overline{u}}_i + (v_i{k})^2\hat{\overline{u}}_i = 0.
+\end{equation}
+The standard leapfrog scheme for this equation can be expressed as
+\begin{equation}
+\label{eq:timestep}
+\frac{\hat{\overline{u}}^{(n+1)}_i - 2\hat{\overline{u}}^{(n)}_i +
+\hat{\overline{u}}^{(n-1)}_i}{\Delta{t}^2} = -\lambda^2_i\hat{\overline{u}}^{(n)}_i.
+\end{equation}
+It is well known that this solution is limited to small time-steps for stable wave
+propagation.
+
+Fortunately, there is an exact time-steping solution  
+for the second-order time derivatives allowing for any size of time-steps 
+for homogeneous medium \cite[]{cox:2007,etgen:2009}, namely:
+\begin{equation}
+\label{eq:kspace}
+\frac{\hat{\overline{u}}^{(n+1)}_i - 2\hat{\overline{u}}^{(n)}_i +
+\hat{\overline{u}}^{(n-1)}_i}{\Delta{t}^2} =
+\frac{-\sin^2(\lambda_i\Delta{t}/2)}{(\Delta{t}/2)^2}\hat{\overline{u}}^{(n)}_i.
+\end{equation}
+Comparing equations \ref{eq:timestep} and \ref{eq:kspace} shows that, it is possible
+to extend the length of time-step without reducing the
+accuracy by replacing $(\lambda_i\Delta{t}/2)^2$ with $\sin^2{(\lambda_i\Delta{t}/2})$.
+This opens up a possibility by replacing $k^2$ with
+$k^2{sinc^2(\lambda_i\Delta{t}/2)}$ as
+a $k$-space adjustment to the spatial derivatives, which may convert the time-stepping
+pseudo-spectral solution into an exact one for homogeneous media, and stable for larger
+time-steps (for a given level of accuracy) in heterogeneous media
+\cite[]{bojarski:1982}.
+
+Nowadays, the $k$-space scheme is widely used to improve the approximation of the temporal
+derivative in acoustic and ultrasound \cite[]{tabei:2002,cox:2007,fang.fomel:2014}.
+As far as we know, \cite{liu:1995} was the first to apply $k$-space ideas to elastic wave problems. He
+derived a $k$-space form of the dyadic Green's function for the
+second-order wave equation and used it to calculate the scattered field
+iteratively in a Born series. \cite{firouzi:2012} proposed a 
+$k$-space scheme on the base of the first-order elastic wave equation for isotropic media.
+
+Accordingly, we apply the $k$-space adjustment to improve the performance of our two-step time-marching
+pseudo-spectral solution of the anisotropic elastic wave equation.
+To propagate the elastic waves on the base of equations \ref{eq:ps} and
+\ref{eq:spectx},
+we need modify the eigenvalues of Christoffel matrix as in Equation~\ref{eq:lambda1}.
+
+
+\newpage
+\bibliographystyle{seg} 
+\bibliography{reference}

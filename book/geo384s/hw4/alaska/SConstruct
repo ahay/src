@@ -1,0 +1,163 @@
+from rsf.proj import *
+
+# Shots after ground-roll removal by Stegosaurus
+Fetch('rshots.HH','alaska')
+Flow('rshots','rshots.HH','dd form=native')
+
+def plotshots(title):
+    return '''
+    pow pow1=1.5 | byte gainpanel=all pclip=90 |
+    grey3 frame1=1000 frame2=55 frame3=30 title="%s"
+    flat=n point1=0.7 point2=0.7
+    ''' % title
+
+Result('rshots',plotshots('Shots after Groundroll Attenuation'))
+
+# Average trace amplitude
+Flow('arms','rshots',
+     'mul $SOURCE | stack axis=1 | math output="log(input)" ')
+Result('arms','grey title=Log-Amplitude mean=y pclip=90')
+
+# Remove long-period offset term
+Flow('arms2','arms','smooth rect1=5 | add scale=-1,1 $SOURCE')
+Result('arms2','grey title=Log-Amplitude clip=1.13')
+
+# Integer indeces for different terms
+Flow('shot','arms2','math output="(x2-44)/0.44" ')
+Flow('offset','arms2','math output="(x1+5.225)/0.11" ')
+Flow('receiver','arms2','math output="(x1+x2-44+5.225)/0.11" ')
+Flow('cmp','arms2','math output="(x1/2+x2-44+5.225/2)*2/0.11" ')
+
+nx = 96 # number of offsets
+ns = 56 # number of shots
+nt = nx*ns # number of traces
+
+Flow('index','shot offset receiver cmp',
+     '''
+     cat axis=3 ${SOURCES[1:4]} | dd type=int | 
+     put n1=%d n2=4 n3=1
+     ''' % nt)
+
+# Transform from 2-D to 1-D
+Flow('arms1','arms2','put n2=1 n1=%d' % nt)
+
+prog = Program('surface-consistent.c')
+sc = str(prog[0])
+
+Flow('model',['arms1','index',sc],
+     './${SOURCES[2]} index=${SOURCES[1]} verb=y')
+
+# Least-squares inversion by conjugate gradients
+Flow('sc',['arms1','index',sc,'model'],
+     '''
+     conjgrad ./${SOURCES[2]} index=${SOURCES[1]} 
+     mod=${SOURCES[3]} niter=30
+     ''')
+
+Flow('scarms',['sc','index',sc],
+     '''
+     ./${SOURCES[2]} index=${SOURCES[1]} adj=n | 
+     put n1=%d n2=%d
+     ''' % (nx,ns))
+Result('scarms',
+       '''
+       grey mean=y title="Surface-Consistent Log-Amplitude" 
+       clip=1.13
+       ''')
+
+Flow('adiff','arms2 scarms','add scale=1,-1 ${SOURCES[1]}')
+Result('adiff','grey title=Difference clip=1.13')
+
+size=dict(shot=ns,offset=nx,receiver=316,cmp=536)
+
+f1 = 0
+for case in ('shot','offset','receiver','cmp'):
+    n1=size[case]
+    
+    Result(case,'sc',
+           '''
+           window n1=%d f1=%d | put o1=1 d1=1 | 
+           graph title="%s Term" 
+           label1="%s Number" unit1= label2=Amplitude unit2=
+           ''' % (n1,f1,case.capitalize(),case.capitalize()))
+    f1 += n1
+
+Flow('ampl','scarms',
+     'math output="exp(-input/2)" | spray axis=1 n=3000 d=0.002 o=0')
+Flow('ashots','rshots ampl','mul ${SOURCES[1]} | cut n3=1 f3=49')
+
+Result('ashots',plotshots('Shots after Amplitude Normalization'))
+
+# Sort to CMPs
+
+Flow('cmps mask','ashots',
+     'shot2cmp half=n mask=${TARGETS[1]} | pow pow1=2')
+Flow('mask1','mask','spray axis=1 n=1')
+
+# Select one CMP
+
+Flow('cmp1','cmps','window n3=1 f3=200')
+Plot('cmp1','grey title=CMP')
+
+Flow('vscan1','cmp1','vscan semblance=y half=n nv=151 v0=7 dv=0.1')
+Plot('vscan1','grey color=j allpos=y title="Velocity Scan" ')
+
+Flow('vpick1','vscan1','pick rect1=100')
+Plot('vpick1',
+     '''
+     graph plotcol=7 plotfat=5 wantaxis=n wanttitle=n 
+     yreverse=y transp=y min2=7 max2=22 pad=n
+     ''')
+Plot('vscanpick1','vscan1 vpick1','Overlay')
+
+Flow('nmo1','cmp1 vpick1','nmo velocity=${SOURCES[1]} half=n')
+Plot('nmo1','grey title=NMO')
+
+Result('nmo','cmp1 vscanpick1 nmo1','SideBySideAniso')
+
+# Apply to all CMPs
+
+Flow('vscans','cmps mask1',
+     '''
+     vscan semblance=y half=n nv=151 v0=7 dv=0.1 
+     mask=${SOURCES[1]}
+     ''',split=[3,'omp'])
+Flow('vpicks','vscans','pick rect1=100 rect2=20')
+
+Result('vpicks',
+       '''
+       grey color=j scalebar=y barreverse=y mean=y 
+       title="Picked NMO Velocity" 
+       ''')
+
+Flow('nmos','cmps vpicks','nmo velocity=${SOURCES[1]} half=n')
+
+# Examine one CMP
+
+cmp = 200 # !!! MODIFY ME !!!
+
+Flow('vscan2','vscans','window n3=1 f3=%d' % cmp)
+Plot('vscan2','grey color=j allpos=y title="Velocity Scan" ')
+
+Flow('vpick2','vpicks','window n2=1 f2=%d' % cmp)
+Plot('vpick2',
+     '''
+     graph plotcol=7 plotfat=5 wantaxis=n wanttitle=n 
+     yreverse=y transp=y min2=7 max2=22 pad=n
+     ''')
+Plot('vscanpick2','vscan2 vpick2','Overlay')
+
+Flow('nmo2','nmos','window n3=1 f3=%d' % cmp)
+Plot('nmo2','grey title=NMO')
+
+Result('nmo2','cmp1 vscanpick2 nmo2','SideBySideAniso')
+
+# Stack
+
+Flow('stack0','nmos','stack')
+Result('stack0','grey title="First Stack" ')
+
+Flow('stack1','stack0','despike2 wide2=10')
+Result('stack1','grey title="Median-Filtered Stack" ')
+
+End()

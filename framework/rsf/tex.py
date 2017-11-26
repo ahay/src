@@ -97,7 +97,7 @@ subdir = re.compile(r'\\setfigdir{([^\}]+)')
 beamer = re.compile(r'\\documentclass[^\{]*\{beamer\}')
 hastoc =  re.compile(r'\\tableofcontents')
 figure = re.compile(r'\\contentsline \{figure\}\{\\numberline \{([^\}]+)')
-subfigure = re.compile(r'\\contentsline \{subfigure\}\{\\numberline \{([\w])')
+subfigure = re.compile(r'\\contentsline \{subfigure\}\{\\numberline \{\(([\w])')
 logfigure = re.compile(r'\s*\<use ([^\>]+)')
 suffix = re.compile('\.[^\.]+$')
 cwpslides = re.compile(r'\\documentclass[^\{]*\{cwpslides\}')
@@ -268,8 +268,7 @@ def latify(target=None,source=None,env=None):
 
 def sage_emit(target=None, source=None, env=None):
     sage = str(source[0])    
-    stem = suffix.sub('',sage)
-    target.append(stem+'.py')
+    target.append(sage+'.py')
     return target, source
 
 def latex_emit(target=None, source=None, env=None):

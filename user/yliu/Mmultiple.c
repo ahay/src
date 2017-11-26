@@ -1,6 +1,7 @@
-/* 2-D shot gather multiple prediction (SRME)
+/* 2-D shot gather multiple prediction (SRMP)
 The axes in the input are {offset,shot,frequency}
 The axes in the output are {prediction(if stack=n),offset,shot,frequency}
+Requirement: offset interval = shot interval
 */
 /*
   Copyright (C) 2009 University of Texas at Austin

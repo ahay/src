@@ -52,5 +52,5 @@ SConscript(dirs='gui',name='SConscript',exports='env bindir pkgdir system user d
 # Self-documentation
 
 Doc = Builder (action = Action(rsf.doc.selfdoc,varlist=['rsfprefix','lang','version','strip']),
-               src_suffix='.c',suffix='.py')
+               src_suffix='.c',suffix='.py',source_scanner=None)
 env.Append(BUILDERS = {'Doc' : Doc})

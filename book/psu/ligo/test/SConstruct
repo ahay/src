@@ -1,0 +1,159 @@
+from rsf.proj import *
+#import rsf.suproj as su
+
+# process LIGO H1 & L1 data using Madagascar
+# Feb 12 2016
+
+########################################
+# download GW150914 H1 & L1 data
+# Fetch the dataset
+########################################
+FILE='H-H1_LOSC_4_V1-1126259446-32'
+#FILE='L-L1_LOSC_4_V1-1126259446-32'
+Fetch(FILE+'.txt.gz',
+      server='https://losc.ligo.org',
+      top='s/events',
+      dir='GW150914')
+
+Flow(FILE+'.txt',FILE+'.txt.gz',
+     '''
+     /bin/cp ${SOURCES[0]} temp${SOURCES[0]};
+     gunzip temp${SOURCES[0]};
+     mv temp${TARGETS[0]} ${TARGETS[0]}
+     ''', stdout=0, stdin=0) 
+
+# read .txt data with awk to skip the first three descriptive lines
+Flow('temp.txt','H-H1_LOSC_4_V1-1126259446-32.txt','awk "NR>3 {print}" ')
+
+Flow('H1','temp.txt',
+     '''
+     echo in=${SOURCES[0]} n2=1 n1=131072 data_format=ascii_float |
+     dd form=native |
+     put d1=0.000244140625 o1=-16.4219999313
+     ''')
+
+# load local .txt file when internat is not available.
+#Flow('H1',None,
+#     '''
+#     echo in=strain_H1.out n2=1 n1=131072 data_format=ascii_float |
+#     dd form=native |
+#     put d1=0.000244140625 o1=-16.4219999313
+#     ''')
+
+# plot +- 5 seconds around the event:
+# tevent = 1126259462.422         # Mon Sep 14 09:50:45 GMT 2015 
+# deltat = 5.                     # seconds around the event
+# display data
+
+dt = 0.000244140625
+Result('H1','graph title="LIGO H1 32 seconds data" plotfat=2 label1=Time unit1=s label2=Strain')
+Flow('H1s','H1','window f1=66854 n1=660 ')
+#Flow('L1s','L1','window f1=66854 n1=660 ')
+
+Result('H1s','graph title="LIGO H1 data (Sep 14 09:50:45 2015)" plotfat=2 label1=Time unit1=s label2=Strain')
+#Result('L1s','graph title="LIGO L1 data"')
+
+
+# Spectra
+#Flow('spec','H1s', 'spectra')
+#Result('spec','math output="log(input)" | rtoc | math output="log(x1)+I*input" | graph plotfat=4')
+
+########################################
+# 1-D Fourier Transform
+########################################
+Flow('fft','H1','rtoc | fft3 axis=1 pad=2')
+
+########################################
+# Power Spectra Density
+########################################
+Flow('psd','fft','math output="input*conj(input)"')
+
+########################################
+# Amplitude spectra density 4096=1/dt
+########################################
+Flow('asd','psd','math output="sqrt(input)" ')
+
+       #math output="log(input)" | math output="log(x1)/log(10)+I*input" |
+Result('asd',
+     '''
+       window f1=132000 n1=120096 | math output="abs(input)" | real | math output="log(input)" | 
+       graph title="Amplitude spectra" label1='Freq' label2='Log(Amp. Spectra)' unit1=Hz
+       labelsz=8. plotfat=1 grid=n
+     ''')
+
+Flow('asd2','asd','math output="4096/input"')
+
+########################################
+# whitening
+########################################
+Flow('wh','fft asd2','mul ${SOURCES[1]} | fft3 axis=1 pad=2 inv=y | real')
+
+Result('wh',
+     '''
+     window f1=66854 n1=660 |
+     graph title="H1 After whitening" plotfat=2 label1=Time unit1=s label2=Strain
+     ''')
+
+########################################
+# band pass [20, 300] Hz
+########################################
+Flow('bp','wh',
+     '''
+     scale dscale=1 |
+     bandpass flo=30 fhi=320
+     ''')
+
+Result('bp',
+     '''
+     window f1=66854 n1=660 |
+     graph title="After bandpass [30 320] Hz" plotfat=2 label1=Time unit1=s label2=Strain
+     ''')
+########################################
+# read processed data from LIGO
+########################################
+Fetch('strain_H1_whitenbp.out','ligo')
+
+Flow('strain_H1_whitenbp','strain_H1_whitenbp.out',
+     '''
+     echo in=$SOURCE n2=1 n1=131072 data_format=ascii_float |
+     dd form=native |
+     put d1=0.000244140625 o1=-16.4219999313
+     ''',stdin=0)
+
+Flow('final','bp strain_H1_whitenbp','cat axis=2 ${SOURCES[1:2]} | window f1=66854 n1=660')
+Plot('final','graph plotfat=2 label1=Time unit1=s label2=Strain title="Compare to LIGO processed data"')
+
+Flow('final2','bp strain_H1_whitenbp','cat axis=2 ${SOURCES[1:2]} | window f1=66000 n1=2260')
+
+########################################
+# label them
+########################################
+Plot('label1',None,'''
+     box y0=7. x0=5.1 xt=1.0 yt=0.5 label="RSF"''')
+Plot('LIGO',None,'''
+     box y0=8 x0=8.8 xt=0.5 yt=0.5 label="LIGO"''')
+Plot('final2','graph plotfat=2 label1=Time unit1=s label2=Strain wanttitle=n')
+
+########################################
+# plot final processed waveform
+########################################
+Result('final3','final label1 LIGO','Overlay')
+
+########################################
+# time-frequency analysis
+########################################
+Flow('tf','bp','window f1=66000 n1=2260 | ltft rect=20 verb=n nw=200 dw=2 niter=50')
+
+Plot('tf',
+       '''
+       transp |
+       math output="abs(input)" | real |
+       byte allpos=y pclip=99 |
+       grey color=linearlfb label2=Time yreverse=n title=Time-frequency map
+       unit2=s label1="\F5 Freq \F-1" unit1=Hz screenratio=0.7
+       wanttitle=n 
+       ''')
+
+Result('final4','final2 tf','TwoRows')
+
+End()

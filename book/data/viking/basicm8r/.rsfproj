@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sftahsort', 'sftahwindow', 'sftahwrite', 'sfdd', 'sfheadermath', 'sfvscan', 'sftahread', 'sftahnmo', 'sfgrey', 'sftahgain', 'sftahstack', 'sfagc', 'sfbandpass']
+data=['http://www.trip.caam.rice.edu/data/mobil/paracdp.segy', 'http://www.trip.caam.rice.edu/data/mobil/logs_and_sources.tar']
+size=  774044716

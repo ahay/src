@@ -82,6 +82,8 @@ int qsort_compare(const void *a, const void *b){
 int main(int argc, char* argv[])
 {
   sf_file infile=NULL, out=NULL, inheaders=NULL;
+  off_t infile_start;
+  off_t inheaders_start;
   int n1_traces;
   int n1_headers;
 
@@ -136,6 +138,10 @@ int main(int argc, char* argv[])
   */
   if(infile_filename==NULL) infile = sf_input ("in");
   else infile = sf_input (infile_filename);
+  infile_start=sf_tell(infile);
+  if(verbose>1)
+    fprintf(stderr,"sf_tell(infile)=%lld\n",infile_start);
+
 
   if(verbose>0)
     fprintf(stderr,"set up output file for tah - should be stdout\n");
@@ -169,6 +175,11 @@ int main(int argc, char* argv[])
 		       headers_filename);
 
   inheaders = sf_input(headers_filename);
+  /* get offset to start of data.  This is needed for seek when .rsf@ data
+     is appended to end of .rsf file. */
+  inheaders_start=sf_tell(inheaders);
+  if(verbose>1)
+    fprintf(stderr,"sf_tell(inheaders)=%lld\n",inheaders_start);
 
   if (!sf_histint(infile,"n1",&n1_traces))
     sf_error("input file does not define n1");
@@ -424,10 +435,14 @@ int main(int argc, char* argv[])
     /**************************/
     file_tracenum=pntrs_to_sortkeys[i_trace]->tracenumber;
 
-    sf_seek(inheaders,  file_tracenum*n1_headers*sizeof(float),  SEEK_SET);
+    sf_seek(inheaders,  
+	    file_tracenum*n1_headers*sizeof(float)+inheaders_start,  
+	    SEEK_SET);
     sf_floatread(header,n1_headers,inheaders);
 
-    sf_seek(infile,  file_tracenum*n1_traces*sizeof(float),  SEEK_SET);
+    sf_seek(infile,  
+	    file_tracenum*n1_traces*sizeof(float)+infile_start,  
+	    SEEK_SET);
     sf_floatread(intrace,n1_traces,infile);
 
     /***************************/

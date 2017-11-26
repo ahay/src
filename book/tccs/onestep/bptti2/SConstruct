@@ -1,0 +1,200 @@
+from rsf.proj import *
+
+# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+tgz = 'ModelParams.tar.gz'
+
+Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
+
+pars = Split('epsilon delta vp theta')
+
+sgy = {}
+for par in pars:
+    sgy[par] = os.path.join('ModelParams',par.capitalize() + '_Model.sgy')
+
+Flow(sgy.values(),tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+units = {
+        'epsilon':'',
+        'delta':'',
+        'vp':'km/s',
+        'theta':'degrees'
+}
+for par in pars:
+    Flow([par,par+'.asc',par+'.bin'],sgy[par],
+         '''
+         segyread hfile=${TARGETS[1]} bfile=${TARGETS[2]} read=d |
+         put
+         o2=0 d2=0.00625 label2=Distance unit2=km
+         o1=0 d1=0.00625 label1=Depth unit1=km %s |
+         transp plane=12
+         ''' % ('','| scale dscale=0.001')[par=='vp'])
+
+    Result(par,
+           '''
+           window j1=8 j2=2 |
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           parallel2=n transp=n
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vp'],
+                  units[par]))
+
+
+# Assume vs is half vp
+Flow('vs','vp',
+     '''
+     math output="0.3*input"
+     ''')
+#Flow('depth','vp','window n2=1 | math output="(x1/78.7188)/4 + 1/4"')
+#Flow('scale','depth','spray n=1801 d=0.00625 o=0')
+#Flow('vs','vp scale',
+#     '''
+#     math s=${SOURCES[1]} output="input*s"
+#     ''')
+Flow('vx','vp epsilon',
+     '''
+     math e=${SOURCES[1]} output="input*sqrt(1+2*e)"
+     ''')
+Flow('eta','epsilon delta',
+     '''
+     math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
+     ''')
+for par in ('vx','eta'):
+    Result(par,
+           '''
+           window j1=8 j2=2 |
+           grey color=j barlabel=%s scalebar=y
+           screenwd=12.595 screenht=1.8
+           labelsz=4 titlesz=6 barreverse=y
+           wanttitle=y allpos=%d bias=%g barunit=%s
+           parallel2=n transp=n title=%s
+           ''' % (par.capitalize(),
+                  par != 'theta',
+                  (0,1.5)[par=='vx'],
+                  ('','km/s')[par=='vx'],
+                  par.capitalize()))
+
+# Parameter define
+name = {'vp':'V\_z\^','vx':'V\_x\^','eta':'\F10 h\F3 ','theta':'\F10 q\F3 ','theta0':'\F10 q\F3 ','vs':'V\_s\^','q1':'q\_1\^','q3':'q\_3\^'}
+cname = {'c11':'c\_11\^','c13':'c\_13\^','c33':'c\_33\^','c55':'c\_55\^'}
+
+Flow('theta0','theta','smooth rect1=100 rect2=100')
+
+for par in ('vp','vx','eta','theta','theta0','vs'):
+    Flow(par+'end2',par,'window j1=8 j2=4 | window  n1=512 min1=34.5 n2=450 | transp | expand top=100 bottom=100 left=50 right=50 | put o1=-2.5 o2=32')
+    Result(par+'end2',
+           '''
+           window n2=512 min2=34.5 n1=450 min1=0 |
+           grey color=j barlabel="%s" scalebar=y
+           screenwd=10.24 screenht=4.5
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=%d bias=%g barunit=%s
+           title=%s
+           ''' % (name[par],
+                  par != 'theta' and par != 'theta0',
+                  (0,1.5)[par=='vp' or par=='vx'],
+                  ('','km/s')[par=='vp' or par=='vx'],
+                  par.capitalize()))
+
+# Calculate and plot q1 and q3
+Flow('c33','vpend2','''math output='input*input' ''')
+Flow('c11','vxend2','''math output='input*input' ''')
+Flow('c55','vsend2','''math output='input*input' ''')
+Flow('c13','etaend2 c11 c33 c55','''
+    math c11=${SOURCES[1]} c33=${SOURCES[2]} c55=${SOURCES[3]} 
+    output='sqrt((c11*(c33-c55))/(1+2*input))-c55' 
+    ''')
+for par in ('c11','c13','c33','c55'):
+    fig = 'n'+par
+    Result(fig,par,
+           '''
+           window n2=512 min2=34.5 n1=450 min1=0 |
+           grey color=j barlabel="%s" scalebar=y
+           screenwd=10.24 screenht=4.5
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=y bias=%g barunit="%s"
+           title=%s
+           ''' % (cname[par],
+                  0,
+                  'km\^2/\_s\^2',
+                  par.capitalize()))
+Flow('q1','c11 c13 c33 c55',''' 
+    math c13=${SOURCES[1]} c33=${SOURCES[2]} c55=${SOURCES[3]}
+    output='(c55*(input-c55)+(c55+c13)*(c55+c13))/(c33*(input-c55))'
+    ''')
+Flow('q3','c11 c13 c33 c55',''' 
+    math c13=${SOURCES[1]} c33=${SOURCES[2]} c55=${SOURCES[3]}
+    output='(c55*(c33-c55)+(c55+c13)*(c55+c13))/(input*(c33-c55))'
+    ''')
+for par in ('q1','q3'):
+    Result(par,
+           '''
+           grey color=j barlabel="%s" scalebar=y
+           screenwd=10.24 screenht=4.5
+           labelsz=4 titlesz=5 barreverse=y
+           wanttitle=n allpos=n bias=1.15
+	   ''' % (name[par]))
+
+Flow('refl','vpend2','spike k1=107 k2=306 | smooth rect1=2 rect2=2 repeat=2 ')
+
+Flow('fft','vpend2','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+
+#modeling
+nt0=1801
+dtt=0.0005
+sponge=50
+sponge1=100
+par=0.015
+par1=0.01
+
+for m in [4,10,20,30,40]:
+    right = 'right_%d' %m
+    left  = 'left_%d' %m
+    source1 = 'source1_%d' %m
+    real = 'real_%d' %m
+    imag = 'imag_%d' %m
+    csource1 = 'csource1_%d' %m
+    csource = 'csource_%d' %m
+    wave = 'wave_%d' %m
+    wavesnaps = 'wavesnaps-%d' %m
+
+    nt = (nt0-1)*4/m + 1
+    dt=0.001*m
+    factor=dt/dtt
+    ntt=(nt-1)*factor+1
+    ktt=0.12/dtt
+
+    Flow(source1,None,
+         '''
+         spike n1=%d d1=%g k1=%d |
+         ricker1 frequency=16
+         '''%(ntt,dtt,ktt))
+    Flow(real,source1,'math "output=0"')
+    Flow(imag,source1,'envelope hilb=y order=500 | halfint | halfint | math output="input/2" ')
+
+    Flow(csource1,[real,imag],'cmplx ${SOURCES[1]}')
+    Flow(csource,csource1,'window j1=%d'% factor)
+    Flow([right,left],'vpend2 vxend2 etaend2 theta0end2 fft vsend2',
+         '''
+         zanisolr2 seed=2010 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} fft=${SOURCES[4]} vels=${SOURCES[5]} left=${TARGETS[1]} 
+         npk=100 eps=1e-4 nbt=%d nbb=%d nbl=%d nbr=%d ct=%g cb=%g cl=%g cr=%g os=y sub=n mode=0 abc=1 approx=0
+         ''' % (dt,sponge1,sponge1,sponge,sponge,par,par1,par,par) )
+    Flow(wave,[csource,'refl',left,right],
+         '''
+         cfftwave2taper ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} pad1=1 verb=y cmplx=n taper=4 snap=1 snaps=$TARGET
+         ''',stdout=0)
+
+    Flow(wavesnaps,wave,'window j3=%d min3=0.62 max3=6.2 | stack axis=3'%(340*4/m))
+    Result(wavesnaps,
+           '''
+           window n1=450 min1=0 n2=512 min2=34.5 |
+           grey title="Wavefield Snapshots" wanttitle=n
+           label1=Depth unit1=km label2=Distance unit2=km
+           min2=38 max2=56 screenwd=14.5 screenht=8.2
+           labelfat=4 labelsz=8
+           ''' )
+
+End()

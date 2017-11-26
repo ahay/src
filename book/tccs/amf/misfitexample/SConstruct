@@ -1,0 +1,29 @@
+from rsf.proj import * 
+
+Flow('wavelet1',None,'''spike nsp=1 mag=1 n1=1001 d1=0.001 o1=0.0 k1=400 | ricker1 frequency=10 | math output="input*1000"''') 
+Flow('wavelet2',None,'''spike nsp=1 mag=1 n1=1001 d1=0.001 o1=0.0 k1=500 | ricker1 frequency=10 | math output="input*800"''') 
+Flow('wavelet3',None,'''spike nsp=1 mag=1 n1=1001 d1=0.001 o1=0.0 k1=700 | ricker1 frequency=10 | math output="input*600"''') 
+
+Flow('data',['wavelet1','wavelet2','wavelet3'],'cat axis=1 ${SOURCES[1:-1]}')
+
+
+Flow('stretch','data','spray axis=2 n=101 o=0.8 d=0.004 | math output="x1*x2" ')
+Flow('sdata',['data','stretch'],'spray axis=2 n=101 o=0.8 d=0.004 | iwarp warp=${SOURCES[1]}')
+
+
+
+Flow('wavelet4',None,'''spike nsp=1 mag=1 n1=1001 d1=0.001 o1=0.0 k1=400 | ricker1 frequency=10 | math output="input*1000"''') 
+Flow('wavelet5',None,'''spike nsp=1 mag=1 n1=1001 d1=0.001 o1=0.0 k1=600 | ricker1 frequency=10 | math output="input*900"''') 
+Flow('wavelet6',None,'''spike nsp=1 mag=1 n1=1001 d1=0.001 o1=0.0 k1=500 | ricker1 frequency=10 | math output="input*500"''') 
+
+Flow('syn',['wavelet4','wavelet5','wavelet6'],'cat axis=1 ${SOURCES[1:-1]}')
+
+Result('data-syn',['data','syn'],'''cat axis=2 ${SOURCES[1]} | graph dash=0,2 screenratio=0.6 screenht=8 wanttitle=n plotfat=5 labelsz=6
+                                labelfat=4 titlesz=8 titlefat=3 label1=Time unit1=s''')
+
+
+Flow(['filt','pred'],['sdata','syn'],'''lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=10 niter=400''')
+Result('filt','grey color=j wanttitle=n scalebar=y labelfat=4 labelsz=6 screenratio=1.2 label1=Time unit1=s label2=Stretching grid=y')
+
+
+End()

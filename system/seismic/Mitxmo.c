@@ -110,7 +110,7 @@ int main (int argc, char* argv[])
 		ft = 1.-p2*v;
 
 		if (ft < 0.) {
-		    for (it=0; it < nt; it++) {
+		    for (; it < nt; it++) {
 			t[ip][it]=t0-10.*dt;
 			x[ip][it]=x0-10.*dx;
 		    }

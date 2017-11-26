@@ -1,8 +1,11 @@
-/* 2-D Prestack Kirchhoff time migration with antialiasing. 
+/* 2-D prestack Kirchhoff time migration with antialiasing. 
 The axes in the input are {time,midpoint,offset}
 The axes in the offset are {1,midpoint,offset}
 The axes in the output are {time,midpoint}
 The axes in the "image gather" are {time,midpoint,offset}
+
+February 2016 program of the month:
+http://ahay.org/blog/2016/02/18/program-of-the-month-sfmig2/
 */
 /*
   Copyright (C) 2010 University of Texas at Austin
@@ -23,59 +26,81 @@ The axes in the "image gather" are {time,midpoint,offset}
 */
 #include <rsf.h>
 
-static float pick(float ti, float deltat, 
-		  const float *trace,
-		  int nt, float dt, float t0)
+static void pick(bool adj, float ti, float deltat, 
+		 float *trace, float *out, int i,
+		 int nt, float dt, float t0)
 /* pick a traveltime sample from a trace */
 {
     int it, itm, itp;
     float ft, tm, tp, ftm, ftp, imp;
 
     ft = (ti-t0)/dt; it = floorf(ft); ft -= it; 
-    if ( it < 0 || it >= nt-1) return 0.0;
+    if ( it < 0 || it >= nt-1) return;
  
     tm = ti-deltat-dt;
     ftm = (tm-t0)/dt; itm = floorf(ftm); ftm -= itm; 
-    if (itm < 0) return 0.0;
+    if (itm < 0) return;
                  
     tp = ti+deltat+dt;
     ftp = (tp-t0)/dt; itp = floorf(ftp); ftp -= itp; 
-    if (itp >= nt-1) return 0.0;
+    if (itp >= nt-1) return;
 
     imp = dt/(dt+tp-tm);
     imp *= imp;
-		
-    return imp*(
-	2.*(1.-ft)*trace[it] + 2.*ft*trace[it+1] -
-	(1.-ftm)*trace[itm] - ftm*trace[itm+1]    - 
-	(1.-ftp)*trace[itp] - ftp*trace[itp+1]);    
+
+    if (adj) {
+	out[i] += imp*(
+	    2.*(1.-ft)*trace[it] + 2.*ft*trace[it+1] -
+	    (1.-ftm)*trace[itm] - ftm*trace[itm+1]    - 
+	    (1.-ftp)*trace[itp] - ftp*trace[itp+1]);    
+    } else {
+	trace[it] += 2.*(1-ft)*imp*out[i];
+	trace[it+1] += 2.*ft*imp*out[i];
+	trace[itm] -= (1.-ftm)*imp*out[i];
+	trace[itm+1] -= ftm*imp*out[i];
+	trace[itp] -= (1.-ftp)*imp*out[i];
+	trace[itp+1] -= ftp*imp*out[i];
+    }
 }
 
 int main(int argc, char* argv[])
 {
+    bool adj, half, verb, normalize;
     int nt, nx, nh, nh2, ix, ih, iy, i, nn, it, **fold, apt;
-    float *trace, **out, **v, rho, **outd, *pp, *off;
+    float *trace, **image, **v, rho, **stack, *pp, *off;
     float h, x, t, h0, dh, dx, ti, tx, t0, t1, t2, dt, vi, aal, angle;
-    sf_file inp, mig, vel, gather, offset;
-    bool half, verb;
+    sf_file inp, out, vel, gather, offset;
 
     sf_init (argc,argv);
     inp = sf_input("in");
-    vel = sf_input("vel");
-    mig = sf_output("out");
+    vel = sf_input("vel");  
+    out = sf_output("out");
+       
+    if (!sf_getbool("adj",&adj)) adj=true;
+    /* adjoint flag (y for migration, n for modeling) */
+
+    if (!sf_getbool("normalize",&normalize)) normalize=true;
+    /* normalize for the fold */
+ 
 
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1=");
     if (!sf_histint(inp,"n2",&nx)) sf_error("No n2=");
-     if (!sf_histint(inp,"n3",&nh)) sf_error("No n3=");
 
     if (!sf_histfloat(inp,"o1",&t0)) sf_error("No o1=");
     if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1=");
     if (!sf_histfloat(inp,"d2",&dx)) sf_error("No d2=");
 
-    sf_putint(mig,"n3",1);
-    sf_putfloat(mig,"d3",1.);
-    sf_putfloat(mig,"o3",0.);
-    
+    if (adj) {
+	if (!sf_histint(inp,"n3",&nh)) sf_error("No n3=");
+       
+	sf_putint(out,"n3",1);
+    } else {
+	if (!sf_getint("nh",&nh)) sf_error("Need nh=");
+	/* number of offsets (for modeling) */
+	
+	sf_putint(out,"n3",nh);
+    }	
+
     if (NULL != sf_getstring("gather")) {
 	gather = sf_output("gather");
     } else {
@@ -112,8 +137,19 @@ int main(int argc, char* argv[])
 	sf_floatread (off,nh2,offset);
 	sf_fileclose(offset);
     } else {
-	if (!sf_histfloat(inp,"o3",&h0)) sf_error("No o3=");
-	if (!sf_histfloat(inp,"d3",&dh)) sf_error("No d3=");
+	if (adj) {
+	    if (!sf_histfloat(inp,"o3",&h0)) sf_error("No o3=");
+	    if (!sf_histfloat(inp,"d3",&dh)) sf_error("No d3=");
+	    sf_putfloat(out,"d3",1.);
+	    sf_putfloat(out,"o3",0.);
+	} else {
+	    if (!sf_getfloat("dh",&dh)) sf_error("Need dh=");
+	    /* offset sampling (for modeling) */
+	    if (!sf_getfloat("h0",&h0)) sf_error("Need h0=");
+	    /* first offset (for modeling) */
+	    sf_putfloat(out,"d3",dh);
+	    sf_putfloat(out,"o3",h0);
+	}
 	
 	if (!half) dh *= 0.5;
 
@@ -130,29 +166,74 @@ int main(int argc, char* argv[])
     sf_floatread(v[0],nt*nx,vel);
 
     trace = sf_floatalloc(nt);
-    out = sf_floatalloc2(nt,nx);
-    outd = sf_floatalloc2(nt,nx);
-    fold = sf_intalloc2(nt,nx);
+    image = sf_floatalloc2(nt,nx);
+    stack = sf_floatalloc2(nt,nx);
+
+    if (normalize) {
+	fold = sf_intalloc2(nt,nx);
+    } else {
+	fold = NULL;
+    }
 
     nn = 2*kiss_fft_next_fast_size((nt+1)/2);
     pp = sf_floatalloc(nn);
 
     sf_halfint_init (true, nn, rho);
 
-    for (i=0; i < nt*nx; i++) {
-	outd[0][i] = 0.;  
-	fold[0][i] = 0;  
+    if (adj) {
+	for (i=0; i < nt*nx; i++) {
+	    stack[0][i] = 0.;  
+	}
+    } else {
+	sf_floatread(stack[0],nt*nx,inp); 
+    }
+
+    if (NULL != fold) {
+	for (i=0; i < nt*nx; i++) {
+	    fold[0][i] = 0;  
+	}
     }
 
     for (ih=0; ih < nh; ih++) {
         if (verb) sf_warning("offset %d of %d;",ih+1,nh);
-	for (i=0; i < nt*nx; i++) {
-	    out[0][i] = 0.;
+
+	if (adj) {
+	    for (i=0; i < nt*nx; i++) {
+		image[0][i] = 0.;
+	    }
+	} else {
+	    for (iy=0; iy < nx; iy++) {
+		for (it=0; it < nt; it++) {
+		    image[iy][it] = stack[iy][it];
+		}
+	    }
+	}
+
+	if (!adj) {
+	    for (iy=0; iy < nx; iy++) {
+		for (it=0; it < nt; it++) {
+		    pp[it] = image[iy][it];
+		}
+		for (it=nt; it < nn; it++) {
+		    pp[it] = 0.;
+		}
+		sf_halfint (false, pp);
+		for (it=0; it < nt; it++) {
+		    image[iy][it] = pp[it];
+		}
+	    }
 	}
 
 	for (iy=0; iy < nx; iy++) { 
-	    sf_floatread (trace,nt,inp);
-	    sf_doubint(true, nt,trace);
+	    if (adj) {
+		sf_floatread (trace,nt,inp);
+		sf_doubint(true, nt,trace);
+	    } else {
+		for (it=0; it < nt; it++) {
+		    trace[it]=0.0f;
+		}
+	    }
+
 	    h = fabsf(off[ih*nx+iy]);
 
 	    for (ix=0; ix < nx; ix++) { 
@@ -174,42 +255,49 @@ int main(int argc, char* argv[])
 		    tx = fabsf(x-h)/(vi*vi*(t1+dt))+
 		         fabsf(x+h)/(vi*vi*(t2+dt));
 
-		    out[ix][it] += 
-			pick(ti,fabsf(tx*dx*aal),trace,nt,dt,t0);
+		    pick(adj,ti,fabsf(tx*dx*aal),trace,image[ix],it,nt,dt,t0);
 		} 
 	    } 
+
+	    if (!adj) {
+		sf_doubint(true, nt,trace);
+		sf_floatwrite (trace,nt,out);
+	    }
 	} 
 
-	for (iy=0; iy < nx; iy++) {
-	    for (it=0; it < nt; it++) {
-		pp[it] = out[iy][it];
+	if (adj) {
+	    for (iy=0; iy < nx; iy++) {
+		for (it=0; it < nt; it++) {
+		    pp[it] = image[iy][it];
+		}
+		for (it=nt; it < nn; it++) {
+		    pp[it] = 0.;
+		}
+		sf_halfint (true, pp);
+		for (it=0; it < nt; it++) {
+		    image[iy][it] = pp[it];
+		}
 	    }
-	    for (it=nt; it < nn; it++) {
-		pp[it] = 0.;
-	    }
-	    sf_halfint (true, pp);
-	    for (it=0; it < nt; it++) {
-		out[iy][it] = pp[it];
-	    }
-	}
 
-	if (NULL != gather) sf_floatwrite(out[0],nt*nx,gather);
+	    if (NULL != gather) sf_floatwrite(image[0],nt*nx,gather);
 
-	for (iy=0; iy < nx; iy++) {
-	    for (it=0; it < nt; it++) {
-		outd[iy][it] += out[iy][it];
-		if (0.!=out[iy][it]) fold[iy][it]++;
+	    for (iy=0; iy < nx; iy++) {
+		for (it=0; it < nt; it++) {
+		    stack[iy][it] += image[iy][it];
+		    if (NULL != fold && 0.!=image[iy][it]) fold[iy][it]++; 
+		}
 	    }
 	}
     }
     if (verb) sf_warning(".");
 
-    for (i=0; i < nt*nx; i++) {
-	outd[0][i] = outd[0][i]/(fold[0][i]+FLT_EPSILON);  
+    if (NULL != fold) {
+	for (i=0; i < nt*nx; i++) {
+	    stack[0][i] /= (fold[0][i]+FLT_EPSILON);  
+	}
     }
-    sf_floatwrite(outd[0],nt*nx,mig); 
+    
+    if (adj) sf_floatwrite(stack[0],nt*nx,out); 
 
     exit(0);
 }
-
-/* 	$Id$	 */

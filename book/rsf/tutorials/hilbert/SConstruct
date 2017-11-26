@@ -6,7 +6,7 @@ trace = 'trace_il1190_xl1155.trace'
 
 Fetch(trace,'data',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master/1410_Phase')
+      top='seg/tutorials-2014/master/1410_Phase')
 
 # Convert format to RSF
 
@@ -49,7 +49,7 @@ sgy = 'penobscot_xl1155.sgy'
 
 Fetch(sgy,'data',
       server='https://raw.githubusercontent.com',
-      top='seg/tutorials/master/1410_Phase')
+      top='seg/tutorials-2014/master/1410_Phase')
 
 Flow('data tdata',sgy,'segyread tfile=${TARGETS[1]}')
 Flow('hdata','data','envelope hilb=y')
@@ -166,7 +166,7 @@ Flow('epeaks bar','ipeaks2 ppeaks',
 
 Result('epeaks','dpeaks epeaks',
        '''
-       rtoc | math output="input+I*x2" |
+       rtoc | math output="input+I*x2" | 
        graph symbol='.' min1=2 max1=3 min2=0 max2=600 
        title="Absolute Phase Error at Envelope Peaks" 
        transp=y yreverse=y depth=${SOURCES[1]} 
