@@ -39,7 +39,7 @@ println("getbool")
 
 println("input")
 inp = m8r.input(m8r.getstring("file"))
-@test m8r.shape(inp) == [2, 3]
+@test m8r.size(inp) == [2, 3]
 @test m8r.gettype(inp) == 4
 dat = m8r.read(inp)
 @test dat == Float32[1 0 0; 0 4 2]
