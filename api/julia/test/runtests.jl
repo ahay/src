@@ -82,8 +82,36 @@ m8r.floatwrite(Float32[1.5; 2.5], Int32[m8r.leftsize(out, 0)][], out)
 @test m8r.histstring(out, "unit2") == "µm"
 run(`sfrm test_out_float.rsf`)
 
+println("input complex")
+open("test_inp_complex.rsf", "w") do rsf_f
+    run(pipeline(`sfspike n1=2 k1=1,2,2
+                               n2=3 k2=1,2,3
+                               nsp=3 mag=1,4,2`,
+                       `sfrtoc`,
+                       `sfmath output='input + I' out=stdout`, rsf_f))
+end
+inp = m8r.input("test_inp_complex.rsf")
+@test m8r.size(inp) == [2, 3]
+@test m8r.gettype(inp) == 5
+dat = m8r.read(inp)
+@test dat == Complex64[1+im im im; im 4+im 2+im]
 
+@test m8r.histint(inp, "n1") == 2
+@test m8r.histint(inp, "n2") == 3
+@test m8r.histfloat(inp, "d1") ≈ 0.004
+@test m8r.histfloat(inp, "d2") ≈ 0.1
+@test m8r.histfloat(inp, "o1") ≈ 0
+@test m8r.histfloat(inp, "o2") ≈ 0
+@test m8r.histstring(inp, "label1") == "Time"
+@test m8r.histstring(inp, "label2") == "Distance"
+@test m8r.histstring(inp, "unit1") == "s"
+@test m8r.histstring(inp, "unit2") == "km"
+run(`sfrm test_inp_complex.rsf`)
 
+println("output complex")
+out = m8r.output("test_out_complex.rsf")
+m8r.setformat(out, "complex")
+@test m8r.gettype(out) == 5
 m8r.putint(out, "n1", 1)
 m8r.putint(out, "n2", 2)
 m8r.putfloat(out, "d1", 3)
@@ -95,6 +123,7 @@ m8r.putstring(out, "label2", "é")
 m8r.putstring(out, "unit1", "普通话")
 m8r.putstring(out, "unit2", "µm")
 
+m8r.complexwrite(Complex64[0.5+im; 2+im], Int32[m8r.leftsize(out, 0)][], out)
 
 @test m8r.histint(out, "n1") == 1
 @test m8r.histint(out, "n2") == 2
@@ -107,4 +136,5 @@ m8r.putstring(out, "unit2", "µm")
 @test m8r.histstring(out, "unit1") == "普通话"
 @test m8r.histstring(out, "unit2") == "µm"
 
+run(`sfrm test_out_complex.rsf`)
 println("all good!")

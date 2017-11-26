@@ -4,6 +4,7 @@ export File,
        init,
        input,
        output,
+       setformat,
        histint,
        histfloat,
        histstring,
@@ -45,6 +46,10 @@ end
 function output(tag::String)
     rsf = ccall((:sf_output,"libdrsf"),Ptr{UInt8},(Ptr{UInt8},),tag)
     File(tag,rsf)
+end
+
+function setformat(file::File,format::String)
+    ccall((:sf_setformat,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8}),file.rsf,format)
 end
 
 function histint(file::File,name::String)
@@ -109,8 +114,16 @@ function floatread(arr::Array{Float32,1},size::Int32,file::File)
     ccall((:sf_floatread,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
+function complexread(arr::Array{Complex64,1},size::Int32,file::File)
+    ccall((:sf_complexread,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
 function floatwrite(arr::Array{Float32,1},size::Int32,file::File)
     ccall((:sf_floatwrite,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
+function complexwrite(arr::Array{Complex64,1},size::Int32,file::File)
+    ccall((:sf_complexwrite,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function putint(file::File,name::String,val::Int)
@@ -148,8 +161,10 @@ function read(file::File)
     data = zeros(t[t_idx], sz)
     if t_idx == 4
         floatread(data, sz, file)
+    elseif t_idx == 5
+        complexread(data, sz, file)
     else
-        throw("Can only read Float32 (not implemented)")
+        throw("Can only read Float32 and Complex64 (not implemented)")
     end
     return reshape(data, sh...)
 end
