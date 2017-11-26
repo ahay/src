@@ -18,7 +18,7 @@ export File,
        putint,
        putfloat,
        putstring,
-       shape,
+       size,
        read
 
 immutable File
@@ -127,7 +127,7 @@ function putstring(file::File,name::String,val::String)
     ccall((:sf_putstring,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Ptr{UInt8}),file.rsf,name,val)
 end
 
-function shape(file::File)
+function size(file::File)
     size = leftsize(file, 0)
     dim = 1
     s = Int32[]
@@ -142,7 +142,7 @@ end
 
 function read(file::File)
     t = [UInt8, UInt8, Int, Float32, Complex64, Int16, Float64, Int]
-    sh::Array{Int} = shape(file)
+    sh::Array{Int} = size(file)
     sz::Int32 = prod(sh)
     t_idx = gettype(file)
     data = zeros(t[t_idx], sz)
