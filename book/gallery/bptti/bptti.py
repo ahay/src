@@ -1,7 +1,9 @@
 from rsf.proj import *
 import sys
 
-# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+# Fetch will not work unless you do the following:
+# 1. Download ModelParams.tar.gz from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+# 2. Put in under $DATAPATH/BP
 tgz = 'ModelParams.tar.gz'
 
 Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
@@ -42,3 +44,23 @@ def getmod(par):
         sys.exit(0)
 
 # Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/Anisotropic_FD_Model_Shots_part1.sgy.gz
+
+shots =[]
+tshots = []
+for s in range(4):
+    segy = 'Anisotropic_FD_Model_Shots_part%d.sgy' % (s+1)
+    segyz = segy+'.gz'
+
+    Fetch(segyz,'BP',top=os.environ.get('DATAPATH'),server='local')
+    Flow(segy,segyz,zcat + ' $SOURCE',stdin=0)
+
+    shot = 'shot%d' % s
+    Flow([shot,'t'+shot,shot+'.asc'],segy,
+         'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]}')
+
+    shots.append(shot)
+    tshots.append('t'+shot)
+
+def getshots(myshots,mytshots):
+    Flow(myshots,shots,'cat axis=2 ${SOURCES[1:4]}')
+    Flow(mytshots,tshots,'cat axis=2 ${SOURCES[1:4]}')

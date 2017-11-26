@@ -168,7 +168,7 @@ float iwinlcg_eval(const float *x,
 	}
     }
 
-    sf_deriv_free(); free(din); free(dout);
+    sf_deriv_close(); free(din); free(dout);
 
     /* partial i partial h */
     din  = sf_floatalloc(nn[2]);
@@ -188,7 +188,7 @@ float iwinlcg_eval(const float *x,
 	}
     }
 
-    sf_deriv_free(); free(din); free(dout);
+    sf_deriv_close(); free(din); free(dout);
 
     /* estimate slope */
     iwidip_fdip(image, pimage);

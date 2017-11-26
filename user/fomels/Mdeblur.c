@@ -19,11 +19,11 @@
 
 #include <rsf.h>
 
-#include "ntriangle1.h"
+#include "nsmooth1.h"
 
 int main(int argc, char* argv[])
 {
-    int i1, i2, n1, n2, n12, **ns, nbox, niter, iter, nliter;
+    int i1, i2, n1, n2, n12, niter, iter, nliter;
     float *data, *modl, *wght, eps, **nr;
     bool verb;
     sf_file in, out, rect;
@@ -44,18 +44,9 @@ int main(int argc, char* argv[])
     modl = sf_floatalloc(n12);
     wght = sf_floatalloc(n12);
     nr = sf_floatalloc2(n1,n2);
-    ns = sf_intalloc2(n1,n2);
 
     sf_floatread(data,n12,in);
     sf_floatread(nr[0],n12,rect);
-
-    nbox=1;
-    for (i2=0; i2 < n2; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    if (nbox < nr[i2][i1]) nbox = ceilf(nr[i2][i1]);
-	    ns[i2][i1]=0;
-	}
-    }
 
     for (i1=0; i1 < n12; i1++) {
 	wght[i1] = 1.;
@@ -73,12 +64,12 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.;
     /* regularization parameter */
 
-    ntriangle1_init(nbox,n1,n2,nr,ns);
+    nsmooth1_init(n1,n2,nr);
     sf_weight_init(wght);
     sf_hilbert_init(n1, 10, 1.);
 
     for (iter=0; iter < nliter; iter++) {
-	sf_solver_prec(ntriangle1_lop,sf_cgstep,sf_weight_lop,
+	sf_solver_prec(nsmooth1_lop,sf_cgstep,sf_weight_lop,
 		       n12,n12,n12,modl,data,niter,eps,
 		       "verb",verb,"end");
 	sf_cgstep_close();

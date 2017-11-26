@@ -2,7 +2,7 @@ import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'gpi3dzo'
+progs = 'gpi3dzo psovc psovcp flatlinpiwrapper flatlinpiwrapper2d chaindr anovc anovcv mig2s mig2semb linpipwd2d linpipwd2dca mig2pwd pwdtensor pwdtensorh'
 
 mpi_progs = ''
 
@@ -30,6 +30,7 @@ src = Glob('[a-z]*.c')
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
+    env.Ignore(inc,inc)
     env.Depends(obj,inc)
 
 mains = Split(progs)
@@ -43,11 +44,13 @@ for prog in mains:
 ccmains = Split(ccprogs)
 subs = Split(subs)
 
-if 'c++' in env.get('API',[]):
+ccompile = 'c++' in env.get('API',[]) and not 'NO_COMPLEX' in env.get('CPPDEFINES',[])
+
+if ccompile:
     objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
 
 for prog in ccmains:
-    if 'c++' in env.get('API',[]):
+    if ccompile:
         prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
         env.Depends(prog,map (lambda x: x + '.hh', subs))
     else:
@@ -55,6 +58,13 @@ for prog in ccmains:
     if root:
         env.Install(bindir,prog)
 
+
+for prog in Split('t2warp'):
+    sources = ['Test' + prog,prog]
+    bldutil.depends(env,sources,prog)
+    sources = map(lambda x: x + '.o',sources)
+    env.Object('Test' + prog + '.c')
+    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')     
 
 ######################################################################
 # SELF-DOCUMENTATION

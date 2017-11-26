@@ -54,7 +54,7 @@ sf_filter lace_pef(int dim     /* number of dimensions */,
 	aa->lag[ih] = sf_cart2line(dim, nd, ii);
     }
     na[0] *= jump;
-    bound(dim, nd, nd, na, aa);  /* define  aa->mis */
+    bound(dim, false, nd, nd, na, aa);  /* define  aa->mis */
     na[0] /= jump;
     
     find_pef(n, dd, aa, nh*2);    /* estimate aa coefficients */

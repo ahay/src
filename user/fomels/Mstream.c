@@ -20,11 +20,11 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv, adj, linear;
-    int n1, n2, na, i, i1, i2, ia, dim, dim0, n[SF_MAX_DIM];
+    bool inv, adj, linear, kn, box;
+    int n1, n2, na, i1, i2, ia, ja, *mask;
     float dd, da, dn, rn, eps;
-    float *d, *a, *r, *d2=NULL, *r2=NULL;
-    sf_file inp, pef, out, pat;
+    float *d, *a, *r, *d2, *r2, **aa;
+    sf_file inp, pef, out, pat, known;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -37,19 +37,8 @@ int main(int argc, char* argv[])
     /* adjoint flag (for linear operator) */
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
-    dim0 = sf_filedims(inp,n);
-    if (!sf_getint("dim",&dim)) dim=dim0;
-    /* dimensionality */
-
-    n1=1;
-    n2=1;
-    for (i=0; i < dim0; i++) {
-	if (i < dim) {
-	    n1 *= n[i];
-	} else {
-	    n2 *= n[i];
-	}
-    }
+    if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
+    n2 = sf_leftsize(inp,1);
 
     if (!sf_getint("na",&na)) sf_error("Need na=");
     /* PEF filter size (not including leading one) */
@@ -62,6 +51,15 @@ int main(int argc, char* argv[])
     d = sf_floatalloc(n1);
     r = sf_floatalloc(n1);
     a = sf_floatalloc(na);
+    
+    if (!sf_getbool("box",&box)) box=false;
+    /* box prediction */
+
+    if (box) {
+	aa =  sf_floatalloc2(na,na);
+    } else {
+	aa = NULL;
+    }
 
     linear = (NULL != sf_getstring("pattern"));
     /* pattern data (for linear operator) */
@@ -72,6 +70,8 @@ int main(int argc, char* argv[])
 	r2  = sf_floatalloc(n1);
     } else {
 	pat = inp;
+	d2 = NULL;
+	r2 = NULL;
     }
 
     if (NULL != sf_getstring("pef")) {
@@ -84,8 +84,18 @@ int main(int argc, char* argv[])
 	pef = NULL;
     }
 
+    if (NULL != sf_getstring("known")) {
+	/* known data locations (optional) */
+	known = sf_input("known");
+	if (SF_INT != sf_gettype(known)) sf_error("Need int type in known");
+	mask = sf_intalloc(n1);
+    } else {
+	known = NULL;
+    }
+
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(inv? r: d,n1,pat);
+	if (NULL != known) sf_intread(mask,n1,known);
 
 	if (linear)  {
 	    if (adj) {
@@ -120,6 +130,14 @@ int main(int argc, char* argv[])
 	    }
 	}
 
+	if (NULL != aa) {
+	    for (ia=0; ia < na; ia++) {
+		for (ja=0; ja < na; ja++) {
+		    aa[ia][ja] = 0.0f;
+		}
+	    }
+	}
+
 	if (NULL != pef) {
 	    for (ia=0; ia < na; ia++) {
 		sf_floatwrite(a,na,pef);
@@ -127,12 +145,14 @@ int main(int argc, char* argv[])
 	}
 	
 	for (i1=na; i1 < n1; i1++) {
+	    kn = (NULL == known) || (1==mask[i1]);
+
 	    if (inv) {
-		rn = r[i1]/eps;
+		rn = kn? r[i1]/eps: 0.0f;
 		dn = rn*(eps+dd)-da;
 		d[i1] = dn;
 	    } else {
-		dn = d[i1];
+		dn = kn? d[i1]: -da;
 		rn = (dn+da)/(eps+dd);
 		r[i1] = eps*rn;
 	    }
@@ -142,12 +162,6 @@ int main(int argc, char* argv[])
 	    }
 
 	    if (NULL != pef) sf_floatwrite(a,na,pef);
-
-	    dd += dn*dn - d[i1-na]*d[i1-na];	    
-	    da = dn*a[0];
-	    for (ia=1; ia < na; ia++) {
-		da += a[ia]*d[i1-ia];
-	    }
 
 	    if (linear) {
 		if (adj) {
@@ -161,6 +175,31 @@ int main(int argc, char* argv[])
 			r2[i1] += a[ia]*d2[i1-1-ia];
 		    }
 		}
+	    }
+
+	    if (NULL != aa) {
+		for (ja=0; ja < na; ja++) {
+		    /* save the first element to later subtract it */
+		    aa[na-1][ja] = aa[0][ja];
+		}
+		for (ia=0; ia < na-1; ia++) {
+		    /* shift elements */
+		    for (ja=0; ja < na; ja++) {
+			aa[ia][ja] = aa[ia+1][ja];
+		    }
+		}
+		for (ja=0; ja < na; ja++) {
+		    /* save the new filter, update average */
+		    da = (a[ja] + rn*d[i1-1-ja] - aa[na-1][ja])/na;
+		    aa[na-1][ja] = a[ja];
+		    a[ja] += da;
+		}
+	    }
+
+	    dd += dn*dn - d[i1-na]*d[i1-na];	    
+	    da = dn*a[0];
+	    for (ia=1; ia < na; ia++) {
+		da += a[ia]*d[i1-ia];
 	    }
 	}
 

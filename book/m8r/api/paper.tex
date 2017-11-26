@@ -399,6 +399,24 @@ The Julia clip function is listed below.
 
 \lstinputlisting[frame=single]{\rsfclip}
 
+\lstinputlisting[firstline=9,lastline=10,frame=single]{\rsfclip} We
+start by figuring out the input file dimensions. The first dimension
+is the trace length, the product of all other dimensions correspond to
+the number of traces.
+
+\lstinputlisting[firstline=14,lastline=14,frame=single]{\rsfclip}
+Next, we allocate the trace array of the single-precision floating point type.
+
+\lstinputlisting[firstline=16,lastline=20,frame=single]{\rsfclip}
+Finally, we do the actual work: loop over input traces, reading,
+clipping, and writing out each trace.
+
+\subsection{Compiling}
+
+The Julia script does not require compilation. Simply make sure that
+\texttt{\$RSFROOT/lib} is in \texttt{JULIA\_LOAD\_PATH} and
+\texttt{LD\_LIBRARY\_PATH}.
+
 \section{Installation} 
 
 To install the interface to a particular language, use \texttt{API=}
@@ -407,8 +425,9 @@ Fortran-77 and Fortran-90 API bindings in addition to the basic package, run
 \begin{verbatim}
 scons API=f77,f90 config
 \end{verbatim}
-Only the C, C++, and Python interfaces are configured by default. The configuration
-parameters are stored in \\ \texttt{\$RSFROOT/share/madagascar/etc/config.py}.
+The following interfaces are configured by default: C, C++, Julia, and
+Python. The configuration parameters are stored in
+\texttt{\$RSFROOT/share/madagascar/etc/config.py}.
 
 \bibliographystyle{seg} 
 \bibliography{api}

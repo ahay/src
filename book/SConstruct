@@ -1,4 +1,4 @@
-import os, string
+import os, string, glob, shutil
 import rsf.sftour
 import rsf.doc
 import rsf.prog
@@ -15,22 +15,31 @@ geo384w
 geo391
 hansung
 icp
+jlu
 milano
 rsf
 sep
 slim
 swag
 tccs
+tongji
 trip
 tutorial
 uwa
+xjtu
 '''
 
 nonreproducible = '''
+data/teapotdome/fetch
+data/teapotdome/scdecon
+data/teapotdome/vels
 geo391/hw2/sorting
+rsf/bash/mpi
 rsf/bash/plot
 rsf/rsf/plplot
 rsf/programming/cube
+rsf/programming/svd
+rsf/school2012/plot
 rsf/school2015/matlab
 rsf/tutorials/colormaps
 slim/geo2008NewInsightsPareto/geop
@@ -43,11 +52,14 @@ tccs/opwd/wrap
 tccs/emdpf/fxdecon
 tccs/emdpf/hyper
 tccs/emdpf/linear
+tccs/fpwd/sigmoid
 trip/hug/marm1s_shallow
 tccs/synwav/gch1
 tccs/shemd/hyperoil
 tccs/shemd/synth1
 tccs/shemd/fxemddemo
+tccs/shemd/fxmssademo
+xjtu/primer/testelastic2d
 '''
 
 all =  ARGUMENTS.get('all', 'n')
@@ -93,11 +105,15 @@ def publicproj(project):
 
 def progtest(target=None,source=None,env=None):
     cwd = os.getcwd()
+    testdir = os.environ.get('CIRCLE_ARTIFACTS')
     for project in env.get('projects'):
         if publicproj(project):
             print 'Testing in %s' % project
             print '-----------' + '-'*len(project)
             if os.system('scons test'):
+                if testdir and os.path.isdir(testdir):
+                    for vpl in glob.glob('Fig/*.vpl'):
+                        shutil.copy2(vpl,testdir)
                 return 1
         os.chdir(cwd)            
     return 0

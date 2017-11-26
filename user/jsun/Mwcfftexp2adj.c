@@ -22,7 +22,7 @@
 #include <omp.h>
 #endif
 
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 #include "timer.h"
 
 int main(int argc, char* argv[])

@@ -41,6 +41,7 @@ if sparsepath and sparselibs:
     
 for source in src:
     inc = env.RSF_Include(source,prefix='')
+    env.Ignore(inc,inc)
     if sparselibs:
         obj = env.StaticObject(source)
         env.Depends(obj,inc)

@@ -17,7 +17,7 @@ ptaupmo3 ptaupmo ptaupmoVTI pveltran map2coh pveltranVTI pveltran3
 pyramid radial radial2 radon randrefl rays2 rays2a rays3 refer refl2ai
 ricker ricker1 ricker2 rweab rwesrmig rwezomig s2ofz s2ofz2 segyheader
 segyread segywrite shifts shoot2 shot2cmp shotconstkirch shotholes
-shotprop shstack simivscan sin slant srmva srseidel srsyn sstep2
+shotprop simivscan sin slant srmva srseidel srsyn sstep2
 stacks stolt stolt2 stoltstretch stretch stripes tan2ang taupmo
 time2depth tlagtoang2d tshift txpscan txpnmo vczo vczo2 vczo3 velmod
 veltran voft vofz vscan xlagtoang2d zoeppritz zomig zomva
@@ -59,6 +59,7 @@ for source in src:
                 orthovelo = obj
         else:
                 obj = env.StaticObject(source)
+        env.Ignore(inc,inc)
         env.Depends(obj,inc)
     
         if os.path.splitext(str(source))[0] in libsrc:
@@ -105,7 +106,7 @@ for prog in mains:
                 doc = os.path.splitext(other)[0]
                 docalias[doc] = 'sf'+prog
 
-for prog in Split('cbanded ctridiagonal t2warp veltran'):
+for prog in Split('cbanded ctridiagonal veltran'):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)

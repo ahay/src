@@ -19,18 +19,21 @@
 import os, sys, time
 
 required_pars=dict(
-    batch= 'pbs, sge, or slurm', 
-    job=   'script name',
-    path=  'directory path',
-    queue= 'type of the queue',
-    mail=  'email for the user',
-    acct=  'account name',
-    wall=  'wall time',
-    nodes= 'number of nodes',
-    ppn=   'processes per node',
-    exe=   'command to run',
-    np=    'number of threads'
+    batch=   'pbs, sge, or slurm', 
+    queue=   'type of the queue',
+    mail=    'email for the user',
+    acct=    'account name',
+    wall=    'wall time',
+    nodes=   'number of nodes',
+    ppn=     'processes per node',
+    np=      'number of tasks',
+    exe=     'command to run',
     )
+optional_pars=dict(
+    modules= 'modules to load',    
+    path=    'directory path',
+    job=     'script name',
+)
 
 if len(sys.argv) < 2:
     # selfdoc
@@ -41,6 +44,11 @@ if len(sys.argv) < 2:
     for the following keys:''' % sys.argv[0]
     for key in required_pars.keys():
         print '    %s= %s# %s' % (key,' ' * (7-len(key)), required_pars[key])
+    print '''
+
+    The following keys are optional:'''
+    for key in optional_pars.keys():
+        print '    %s= %s# %s' % (key,' ' * (7-len(key)), optional_pars[key])
     sys.exit(1)
 
 # Read the default parameter file from ~/.batch
@@ -83,24 +91,39 @@ if parfile:
 
     exec pars in locals()
 
-for key in required_pars.keys():
+cwd = os.getcwd()
+dirname = os.path.split(os.path.dirname(cwd))[1]
+
+for key in required_pars.keys()+optional_pars.keys():
     # look for the key on the command line
     klen=len(key)+1
     for arg in sys.argv[1:]:
         if arg[:klen] == key+'=':
             locals()[key] = arg[klen:]
             sys.argv.remove(arg)
+
+for key in required_pars.keys():
     # check if the required key is specified
     if not locals().has_key(key):
         print '''
         %s: need %s= parameter.
         ''' % (sys.argv[0],key) 
         sys.exit(3)
-        
+
+for key in optional_pars.keys():
+    # check if the required key is specified
+    if not locals().has_key(key):
+        # set default values
+        if key=='modules':
+            modules = ''
+        elif key=='path':
+            path = cwd
+        elif key=='job':
+            job = '-'.join([dirname,time.strftime('%Y-%m-%d@%H:%M:%S')])
+
 #exe = ' '.join(sys.argv[1:])
 
 # Write a batch script file
-cwd = os.getcwd()
 jobid = os.path.join(cwd,'jobid')
 
 # figure out the number of nodes
@@ -112,6 +135,10 @@ if nodes > np/ppn:
     nodes = max(1,np/ppn)
 
 np = nodes*ppn
+
+for module in modules.split(','):
+    if module:
+        exe = 'module load %s\n' % module + exe
     
 if batch == 'pbs':
     submit = '/usr/bin/qsub'
@@ -140,6 +167,7 @@ elif batch == 'slurm':
     f.write('#SBATCH -A ' + acct + '\n')
     f.write('#SBATCH -t '+wall + '\n')
     f.write('#SBATCH -n ' + str(np) + '\n')
+    f.write('#SBATCH -N ' + str(nodes) + '\n')
     f.write('#SBATCH -p '+queue + '\n')
     f.write('#SBATCH --mail-type=begin\n')
     f.write('#SBATCH --mail-type=end\n')

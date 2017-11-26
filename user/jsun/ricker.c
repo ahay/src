@@ -56,8 +56,6 @@ void ricker_init(int nfft   /* time samples */,
 	    default:
 		shape[iw].r = w*expf(1-w)/nfft;
 		shape[iw].i = 0.;
-		//shape[iw].r = 0.;
-		//shape[iw].i = -sqrt(w)/freq*expf(1-w)/nfft/2;
 		break;
 	}
     }
@@ -73,4 +71,4 @@ void ricker_close(void)
     sf_freqfilt_close();
 }
 
-/* 	$Id: ricker.c 5023 2009-11-23 01:19:26Z sfomel $	 */
+/* 	$Id$	 */

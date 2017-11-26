@@ -16,43 +16,12 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "mpiml_traveltime_vconstant.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
 #include "mpigeneral_traveltime.h"
 /*^*/
-
-#ifndef _mpiml_traveltime_vconstant_h
-
-typedef struct twod {
-	float x; /* x-coordinate*/
-	float z; /* z-coordinate*/
-	float d1; /* First derivative*/
-	float d2; /* Second derivative*/
-	float v1; /* Velocity at the reflector from above*/
-	float v2; /* Velocity at the reflector from below*/
-	float gx1;/* x-direction velocity gradient from above*/
-	float gx2;/* x-direction velocity gradient from below*/
-	float gz1;/* z-direction velocity gradient from above*/
-	float gz2;/* z-direction velocity gradient from below*/
-	float c111;/* c11 from above*/
-	float c112;/* c11 from below*/
-	float c331;/* c33 from above*/
-	float c332;/* c33 from below*/
-	float Q11; /* Q1 (anelliptic parameter) from above*/
-	float Q12; /* Q1 (anelliptic parameter) from below*/
-	float Q31; /* Q3 (anelliptic parameter) from above*/
-	float Q32; /* Q3 (anelliptic parameter) from below*/
-	float S11; /* S1 from above*/
-	float S12; /* S1 from below*/
-	float S31; /* S3 from above*/
-	float S32; /* S3 from below*/
-} twod;
-/* Structure pointer */
-
-#endif
 
 static float eps = 0.0001; /*small constant to avoid division by zero*/
 

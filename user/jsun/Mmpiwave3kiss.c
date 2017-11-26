@@ -325,8 +325,8 @@ int main(int argc, char* argv[])
   if(!sf_getbool("verb",&verb)) verb=true; /* verbosity */
 
   /* setup I/O files */
-  Fw = sf_input ("input" );
-  Fo = sf_output("output");
+  Fw = sf_input ("--input" );
+  Fo = sf_output("--output");
   Fr = sf_input ("ref");
 
   /* Read/Write axes */

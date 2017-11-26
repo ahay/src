@@ -25,13 +25,12 @@
 
 int main(int argc, char * argv[])
 {
-
     sf_file inA, outC, inB;
     int an1, an2, bn1, bn2;
-    int im, in, ik, m, n, k;
+    int im, in, ik, m, k, i3, n3;
     
     float **a, **b, **c;
-    sf_axis aax1, aax2, bax1, bax2, cax1, cax2;
+    sf_axis aax1, bax2;
     
     /* init RSF */
     sf_init (argc, argv);
@@ -47,46 +46,42 @@ int main(int argc, char * argv[])
     if(!sf_histint(inA, "n2", &an2)) an2 = 1;
     if(!sf_histint(inB, "n2", &bn2)) bn2 = 1;
 
-    if(sf_leftsize(inA,2)>1) sf_error("Input should be a matrix!");
-    if(sf_leftsize(inB,2)>1) sf_error("Input should be a matrix!");
+    n3 = sf_leftsize(inA,2);
+    if (n3 != sf_leftsize(inB,2)) sf_error("Size mismatch");
     
-    if(an2 != bn1) sf_error("Input do not match!");
+    if(an2 != bn1) sf_error("Inputs do not match!");
 
     aax1 = sf_iaxa(inA, 1);
-    aax2 = sf_iaxa(inA, 2);
-    bax1 = sf_iaxa(inB, 1);
     bax2 = sf_iaxa(inB, 2);
-    
-    cax1 = aax1;
-    cax2 = bax2;
+
+    sf_oaxa(outC, aax1, 1);
+    sf_oaxa(outC, bax2, 2);
     
     a = sf_floatalloc2(an1, an2);
     b = sf_floatalloc2(bn1, bn2);
-    
-    sf_floatread(a[0], an1*an2, inA);
-    sf_floatread(b[0], bn1*bn2, inB);
 
     m = an1;
-    n = an2;
     k = bn2;
     
     c = sf_floatalloc2(m,k);
-
-    for(im=0; im< an1; im++) {
-	for (ik=0; ik<bn2; ik++ ) {
-	    c[ik][im]=0.0;
-	    for (in=0; in<an2; in++) {
-		c[ik][im]+=a[in][im]*b[ik][in];
+	
+    for (i3=0; i3 < n3; i3++) {    
+	sf_floatread(a[0], an1*an2, inA);
+	sf_floatread(b[0], bn1*bn2, inB);
+    
+	for(im=0; im< an1; im++) {
+	    for (ik=0; ik<bn2; ik++ ) {
+		c[ik][im]=0.0;
+		for (in=0; in<an2; in++) {
+		    c[ik][im]+=a[in][im]*b[ik][in];
+		}
 	    }
 	}
+    
+	sf_floatwrite(c[0], m*k, outC);
     }
-    sf_oaxa(outC, cax1, 1);
-    sf_oaxa(outC, cax2, 2);
-    
-    sf_floatwrite(c[0], m*k, outC);
 
-    exit(0);
-    
+    exit(0);    
 }
 
 		

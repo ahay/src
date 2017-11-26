@@ -1,9 +1,3 @@
 from rsf.tex import*
-env=Environment()
-if sys.platform == 'darwin':
-    env['ENV']['PATH'] = ':'.join(['/opt/local/bin',env['ENV']['PATH']])
-os.environ['PSTEXPENOPTS']='color=y fat=3 fatmult=1.5'
 
-
-
-End(use='listings,amsmath,color')
+End(use='listings,amsmath,color',color='ALL',options='reproduce')

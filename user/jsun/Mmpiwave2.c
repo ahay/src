@@ -194,8 +194,8 @@ int main(int argc, char* argv[])
   }
 
   /* setup I/O files */
-  Fw = sf_input ("input" );
-  Fo = sf_output("output");
+  Fw = sf_input ("--input" );
+  Fo = sf_output("--output");
   Fr = sf_input ("ref");
 
   if (SF_COMPLEX != sf_gettype(Fw)) sf_error("Need complex input");

@@ -43,8 +43,8 @@ Flow('shots','shot head',
 
 Result('shots',
        '''
-       pow pow1=2 | byte gainpanel=all | 
-       grey3 flat=n frame1=500 frame2=1500 frame3=500
+       window j2=2 j3=2 | pow pow1=2 | byte gainpanel=all | 
+       grey3 flat=n frame1=500 frame2=750 frame3=250 title=Shots
        ''')
 
 #C15   dx and dz are 5 meters,    Surface type: Free                             

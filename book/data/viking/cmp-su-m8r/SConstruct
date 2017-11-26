@@ -1,0 +1,51 @@
+from rsf.proj import *
+
+###################################
+# compare su and madagascar results
+###################################
+Result('nmo1300',
+       '../basicsu/nmo1300.vpl ../basicm8r/nmo1300.vpl',
+       'SideBySideAniso')
+
+Result('velan1300',
+       '../basicsu/velan1300.vpl ../basicm8r/velan1300.vpl',
+       'SideBySideAniso')
+
+Result('zoomnmo1300',
+       '../basicsu/zoomnmo1300.vpl ../basicm8r/zoomnmo1300.vpl',
+       'SideBySideAniso')
+
+Result('parastackagcf',
+       '../basicsu/parastackagcf.vpl ../basicm8r/parastackagcf.vpl',
+       'SideBySideAniso')
+
+###################################
+# madagascar preprocessing results
+###################################
+Result('rawstack','../firstlook/Fig/rawstack.vpl ../decon/Fig/rawstack.vpl',
+       'SideBySideAniso') 
+Result('ntg','../firstlook/Fig/ntg.vpl ../decon/Fig/ntg.vpl',
+       'SideBySideAniso') 
+Result('zoomnmo1300raw',
+       '../firstlook/Fig/zoomnmo1300.vpl ../basicm8r/zoomnmo1300.vpl',
+       'SideBySideAniso') 
+
+Result('zoomnmo1300decon',
+       '../firstlook/Fig/zoomnmo1300.vpl ../decon/Fig/zoomnmo1300.vpl',
+       'SideBySideAniso') 
+Result('velan',
+       '../basicm8r/velan1300.vpl ../firstlook/Fig/velan1300.vpl',
+       'SideBySideAniso') 
+Result('stack',
+       '../basicm8r/parastackagcf.vpl ../firstlook/Fig/rawstack.vpl',
+       'SideBySideAniso') 
+Result('ntgstack',
+       '../firstlook/Fig/ntg.vpl ../firstlook/Fig/rawstack.vpl',
+       'SideBySideAniso') 
+Result('deconstack',
+       '../basicm8r/parastackagcf.vpl ../decon/Fig/rawstack.vpl',
+       'SideBySideAniso') 
+Result('agcstack',
+       '../basicm8r/parastackagcf.vpl ../decon/Fig/agcstack.vpl',
+       'SideBySideAniso') 
+End()

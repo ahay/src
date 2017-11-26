@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     aa = createhelix(dim,n,center,gap,a);
 
-    bound(dim, n, n, a, aa);
+    bound(dim, false, n, n, a, aa);
     find_mask(n12, known, aa);
     find_pef (n12, dd, aa, 2*aa->nh);
     aa = compress(aa, FLT_EPSILON);
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     } else {
 	bb = createhelix(dim,n,center,gap,b);
 
-	bound(dim, n, n, b, bb);
+	bound(dim, false, n, n, b, bb);
 	find_mask(n12, known, bb);
 	find_pef (n12, dd, bb, 2*bb->nh);
 	bb = compress(bb, FLT_EPSILON);

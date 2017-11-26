@@ -1,3 +1,3 @@
-uses=['sfspike', 'sfricker1', 'sfmath', 'sfenvelope', 'sfhalfint', 'sfcmplx', 'sfwindow', 'sfgraph', 'sfcat', 'sfsmooth', 'sfrtoc', 'sffft3', 'sfgrey', 'sffraclr2', 'sfcfftwave2', 'sfadd']
+uses=['sfspike', 'sfricker1', 'sfmath', 'sfenvelope', 'sfhalfint', 'sfcmplx', 'sfwindow', 'sfgraph', 'sfcat', 'sfsmooth', 'sfrtoc', 'sffft3', 'sfgrey', 'sfzfraclr2', 'sfcfftwave2', 'sfadd']
 data=[]
 size=  824330972

@@ -126,7 +126,7 @@ void kweight( float **bs, /* slowness */
     smin = sf_quantile(0,nn,ss);
     free(ss);
 
-    ko  = abs(wo) * smin;
+    ko  = fabsf(wo) * smin;
     ko *= ko;
 
     KOOP(

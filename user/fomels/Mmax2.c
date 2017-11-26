@@ -18,24 +18,12 @@
 */
 #include <rsf.h>
 
-static bool not_max(float **dat, int i2, int i1)
-{
-    float d;
-    int k1, k2;
-
-    d = dat[i2][i1];
-    for (k2=-1; k2 <= 1; k2++) {
-	for (k1=-1; k1 <= 1; k1++) {
-	    if ((k1 || k2) && dat[i2+k2][i1+k1] >= d) return true;
-	}
-    }
-    return false;
-}
+#include "max2.h"
 
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, n12, i1, i2, i3, np, ip;
-    float o1, o2, d1, d2;
+    float o1, o2, d1, d2, x, y;
     float **pick, **slice, **slice2;
     sf_file in, out;
 
@@ -83,11 +71,13 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n1; i1++) {
 		/* check for local maxima on a grid */
 		if (not_max(slice2,i2+1,i1+1)) continue;
-		pick[ip][0]=o1+i1*d1;
-		pick[ip][1]=o2+i2*d2;
-		pick[ip][2]=slice[i2][i1];
+
+		/* now try to locate it more precisely */		
+		pick[ip][2]=max2(slice2,i2,i1,&x,&y);
+		pick[ip][0]=o1+(i1+x)*d1;
+		pick[ip][1]=o2+(i2+y)*d2;
+
 		ip++;
-		/* now try to locate it more precisely */
 	    }
 	}
 	if (0==ip) {

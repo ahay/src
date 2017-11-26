@@ -72,7 +72,7 @@ void kirmod_table(char type    /* type of velocity distribution */,
 	    px /= (r*v1);
 	    py /= (r*v1);
 	    pz = fabsf(pz)/(r*dz);
-	    table->tn = sqrtf(fabsf(1./(v1*v1)-px*px-py*py));
+	    table->tn = sqrtf(fabsf(1.0f/(v1*v1)-px*px-py*py));
 	    break;		     
 	case 'c': /* constant velocity */
 	    table->t = r/v1;
@@ -85,7 +85,7 @@ void kirmod_table(char type    /* type of velocity distribution */,
 	    px /= (r*v1);
 	    py /= (r*v1);
 	    pz = fabsf(pz)/(r*dz);
-	    table->tn = sqrtf(fabsf(1./(v1*v1)-px*px-py*py));
+	    table->tn = sqrtf(fabsf(1.0f/(v1*v1)-px*px-py*py));
 	    break;		    
 	case 's': /* linear sloth */
 	    v0 = 0.5*(v1+v2);
@@ -107,9 +107,9 @@ void kirmod_table(char type    /* type of velocity distribution */,
 		table->a = a;
 		table->ar = 1./sigma;
 	    }
-	    px = (px/sigma+0.5*gx*sigma);  /* => p/(rv) */
-	    py = (py/sigma+0.5*gy*sigma);  /* => p/(rv) */
-	    pz = fabsf(pz+0.5*sigma*sigma*gz)/(sqrtf(v2)*sigma*dz);
+	    px = (px/sigma+0.5f*gx*sigma);  /* => p/(rv) */
+	    py = (py/sigma+0.5f*gy*sigma);  /* => p/(rv) */
+	    pz = fabsf(pz+0.5f*sigma*sigma*gz)/(sqrtf(v2)*sigma*dz);
 	    table->tn = sqrtf(fabsf(v2-px*px-py*py));
 	    break;
 	case 'v': /* linear velocity */
@@ -123,10 +123,10 @@ void kirmod_table(char type    /* type of velocity distribution */,
 		table->a = a;
 		table->ar = rad;
 	    }
-	    px = (px-0.5*r*r*gx/v2)*rad;           /* => p/(r*v) */
-	    py = (py-0.5*r*r*gy/v2)*rad;           /* => p/(r*v) */
-	    pz = fabsf(pz*v2-0.5*r*r*gz)/(v0*a*dz);
-	    table->tn = sqrtf(fabsf(1./(v2*v2)-px*px-py*py));
+	    px = (px-0.5f*r*r*gx/v2)*rad;           /* => p/(r*v) */
+	    py = (py-0.5f*r*r*gy/v2)*rad;           /* => p/(r*v) */
+	    pz = fabsf(pz*v2-0.5f*r*r*gz)/(v0*a*dz);
+	    table->tn = sqrtf(fabsf(1.0f/(v2*v2)-px*px-py*py));
 	    break;
 	default:
 	    sf_error("%s: type %c is not implemented",__FILE__,type);

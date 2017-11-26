@@ -22,7 +22,7 @@ from rsf.proj import *
 # to get all the traces change sftahwrite label2 to:
 #	label3="fldr"  o3=14 n3=850  d3=1   
 
-SConscript('../fetch/SConstruct')
+#SConscript('../fetch/SConstruct')
 
 # compute surface consistant amplitude for start time 0.
 # Put _st0 in the  file names.

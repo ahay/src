@@ -14,7 +14,7 @@ from rsf.proj import *
 
 Fetch('penobscot_subset.bin','data',
       server='https://github.com',
-      top='seg/tutorials/raw/master/1512_Semblance_coherence_and_discontinuity')
+      top='seg/tutorials-2015/raw/master/1512_Semblance_coherence_and_discontinuity')
 
 Flow('penobscot','penobscot_subset.bin',
      '''
@@ -23,14 +23,104 @@ Flow('penobscot','penobscot_subset.bin',
      o2=1253 d2=1 label2=Crossline
      o3=1207 d3=1 label3=Inline
      data_format=native_short |
-     dd type=float
+     dd type=float | transp plane=23
      ''',stdin=0)
 
 Result('penobscot',
        '''
        byte gainpanel=all |
-       grey3 title="Seismic data" frame1=25 frame2=100 frame3=100
-       flat=n point1=0.25 point2=0.75
+       grey3 title="Seismic data" frame1=27 frame2=125 frame3=100
+       flat=y point1=0.25 
+       ''')
+
+for case in range(3):
+    coh = 'coh%d' % case
+    Flow(coh,'penobscot','coherence mode=c%d twod=n' % (case+1))
+    Result(coh,
+           '''
+           byte gainpanel=all allpos=y pclip=95 |
+           grey3 title="%s" frame1=27 frame2=125 frame3=100
+           flat=y point1=0.25 color=b
+           ''' % ('Bahorich and Farmer (1995)','Marfurt et al. (1998)','Gersztenkorn and Marfurt (1999)')[case])
+
+
+# Gradient structure tensor
+
+Flow('dz','penobscot','deriv order=1')
+Flow('dx','penobscot','transp | deriv order=1 | transp')
+Flow('dy','penobscot','transp plane=23 | deriv order=1 | transp plane=23')
+
+Flow('grad','dz dx dy',
+     '''
+     cat axis=4 ${SOURCES[1:3]} | 
+     transp plane=34 | transp plane=23 | transp plane=12 | spray axis=2 n=1
+     ''')
+Flow('gradt','grad','transp')
+Flow('gst','grad gradt','matrix B=${SOURCES[1]} | smooth rect3=3 rect4=3 rect5=3')
+
+# Singular values
+
+Flow('eig','gst','svd')
+
+Flow('eig1','eig','window n1=1')
+Flow('eig2','eig','window n1=1 f1=1')
+
+Flow('coh','eig1 eig2','math l1=${SOURCES[0]} l2=${SOURCES[1]} output="(l1-l2)/(l1+l2)" ')
+
+Result('coh',
+       '''
+       byte gainpanel=all allpos=y pclip=95 |
+       grey3 title="Randen et al. (2000)" frame1=27 frame2=125 frame3=100
+       flat=y point1=0.25 unit2= unit3= color=b
+       ''')
+
+# Dip estimation
+Flow('dip','penobscot','fdip rect1=5 rect2=20 rect3=20')
+
+Result('dip1','dip',
+       '''
+       window n4=1 | byte gainpanel=all | \
+       grey3 frame1=27 frame2=125 frame3=100 flat=y point1=0.25 color=j title="Inline Dip" 
+       ''')
+
+Result('dip2','dip',
+       '''
+       window f4=1 | byte gainpanel=all | \
+       grey3 frame1=27 frame2=125 frame3=100 flat=y point1=0.25 color=j title="Inline Dip" 
+       ''')
+
+# Structure smoothing
+
+Flow('pwsmooth','penobscot dip','pwspray2 ns2=2 ns3=2 dip=${SOURCES[1]} | transp | median')
+
+Result('pwsmooth',
+       '''
+       byte gainpanel=all |
+       grey3 title="Structure-oriented Smoothing" frame1=27 frame2=125 frame3=100
+       flat=y point1=0.25 
+       ''')
+
+Flow('dip2','pwsmooth','fdip rect1=5 rect2=20 rect3=20')
+Flow('pwspray','pwsmooth dip2','pwspray2 ns2=2 ns3=2 dip=${SOURCES[1]}')
+
+box=3
+
+Flow('pwdiff','pwsmooth pwspray',
+     'spray axis=2 n=25 | math s=${SOURCES[1]} output="(s-input)^2" ')
+
+Flow('pcoh','pwdiff',
+     '''
+     transp plane=12 | spray axis=2 n=1 | put n1=5 n2=5 | 
+     boxsmooth rect1=%d | boxsmooth rect2=%d | 
+     window f1=%d f2=%d | 
+     stack axis=2 min=y | stack axis=1 min=y 
+     ''' % (box,box,box-1,box-1))
+
+Result('pcoh',
+       '''
+       byte gainpanel=all allpos=y pclip=95 |
+       grey3 title="Karimi et al. (2015)" frame1=27 frame2=125 frame3=100
+       flat=y point1=0.25 unit2= unit3= color=B
        ''')
 
 End()

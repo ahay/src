@@ -30,7 +30,7 @@ sftahsort \\
 | sftahscdecon \\
    key="sx,sy" \\
    length=140 \\
-   pmoise=.001 \\
+   pnoise=.001 \\
    verbose=0  \\
 |  sftahwrite output=shotdecon.rsf \\
    mode=seq \\
@@ -106,9 +106,9 @@ int main(int argc, char* argv[])
   int ikey;
   char** list_of_keys;
   int *indx_of_keys;
-  int indx_sx, indx_sy, indx_gx, indx_gy;
-  int indx_iline, indx_xline, indx_offset;
-  int indx_cdpx, indx_cdpy;
+/*  int indx_sx, indx_sy, indx_gx, indx_gy;
+    int indx_iline, indx_xline, indx_offset;
+    int indx_cdpx, indx_cdpy; */
   int gather_maxfold;
   float** gather_traces;
   float** gather_headers;
@@ -116,12 +116,11 @@ int main(int argc, char* argv[])
   int iitrace;
   bool eof_get_tah;
   bool end_of_gather;
-  float sx, sy, gx, gy, offx, offy;
   int fold;
   int maxfold=0;
   float* outtrace=NULL;
-  float* outheader=NULL;  
-  int* ioutheader=NULL; 
+/*  float* outheader=NULL;  
+  int* ioutheader=NULL; */
   float* first_gather_header=NULL;
 
   /* variables from sfpef (or sftahpef or supef) */
@@ -314,15 +313,15 @@ int main(int argc, char* argv[])
   /* I used Mtahstack.c and Mtahgethw to for inspiration for data flow */
 
   /* more initalization before starting the trace read loop */
-  indx_sx=segykey("sx");
-  indx_sy=segykey("sy");
-  indx_gx=segykey("gx");
-  indx_gy=segykey("gy");
-  indx_iline=segykey("iline");
-  indx_xline=segykey("xline");
-  indx_offset=segykey("offset");
-  indx_cdpx=segykey("cdpx");
-  indx_cdpy=segykey("cdpx");
+/*  indx_sx=segykey("sx");
+    indx_sy=segykey("sy");
+    indx_gx=segykey("gx");
+    indx_gy=segykey("gy");
+    indx_iline=segykey("iline");
+    indx_xline=segykey("xline");
+    indx_offset=segykey("offset");
+    indx_cdpx=segykey("cdpx");
+    indx_cdpy=segykey("cdpx"); */
 
   /* allocate processing arrays */
   gather_maxfold=1000;
@@ -331,8 +330,8 @@ int main(int argc, char* argv[])
   
   /* allocate output trace arrays */
   outtrace  = sf_floatalloc(n1_traces);
-  outheader = sf_floatalloc(n1_headers);
-  ioutheader=(int*)outheader;
+/*  outheader = sf_floatalloc(n1_headers);
+    ioutheader=(int*)outheader; */
 
   /***************************/
   /* start trace loop        */

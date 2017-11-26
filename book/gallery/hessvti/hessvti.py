@@ -34,6 +34,12 @@ Flow('eta_hess','epsilon_hess delta_hess',
      math e=${SOURCES[0]} d=${SOURCES[1]} output="((1+2*e)/(1+2*d)-1)/2"
      ''')
 
+# artificial vs
+Flow('vs_hess','vp_hess',
+     '''
+     math output="input*0.5"
+     ''')
+
 def get_model(name):    
     for par in Split(name):
         Flow(par,par+'_hess','cp')

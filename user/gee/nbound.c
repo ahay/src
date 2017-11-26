@@ -42,7 +42,7 @@ void nbound (int ip     /* patch number */,
     aa->mis = sf_boolalloc(n);
     bb = aa->hlx[ip];
 
-    bound (dim, nd, nd, na, bb);
+    bound (dim, false, nd, nd, na, bb);
 
     for (i=0; i < n; i++) {
 	aa->mis[i] = bb->mis[i];

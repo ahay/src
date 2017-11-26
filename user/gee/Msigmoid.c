@@ -1,7 +1,7 @@
 /* 2-D synthetic model from J.F.Claerbout. 
 
-October 2014 program of the month:
-http://ahay.org/blog/2014/10/08/program-of-the-month-sfsigmoid/
+   October 2014 program of the month:
+   http://ahay.org/blog/2014/10/08/program-of-the-month-sfsigmoid/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -29,7 +29,7 @@ http://ahay.org/blog/2014/10/08/program-of-the-month-sfsigmoid/
 
 int main (int argc, char* argv[])
 {
-    bool taper;
+    bool taper, reflectivity;
     int large, n1, n2, i1, i2, it, is;
     float *imp1, *imp2;
     float **dipper, **earth, **refl, **sig1, **sig2, **fault;
@@ -57,6 +57,9 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("d1",&d1)) d1=0.004; sf_putfloat(mod,"d1",d1);
     if (!sf_getfloat("d2",&d2)) d2=0.032; sf_putfloat(mod,"d2",d2);
     /* sampling */
+
+    if (!sf_getbool("reflectivity",&reflectivity)) reflectivity=true;
+    /* if output reflectivity (otherwise output impedance model) */
 
     if (!sf_getbool("taper",&taper)) taper=true;
     /* if taper the edges */
@@ -149,35 +152,40 @@ int main (int argc, char* argv[])
 	}
     }
 
-    for (i2= 0; i2 < n2; i2++) {
-	refl[i2][0] = 0.;
-	for (i1= 1; i1 < n1; i1++) {
-	    refl[i2][i1] = 
-		(earth[i2][i1-1] - earth[i2][i1])/
-		(earth[i2][i1-1] + earth[i2][i1]);
-	}
-    }
-
-    if (taper) {
-
-	for (i2= 0; i2 < 10; i2++) {
-	    for (i1= 0; i1 < n1; i1++) {
-		refl[i2][i1] *= (i2/10.);
-		refl[n2-i2-1][i1] *= (i2/10.);
+    if(reflectivity){
+	for (i2= 0; i2 < n2; i2++) {
+	    refl[i2][0] = 0.;
+	    for (i1= 1; i1 < n1; i1++) {
+		refl[i2][i1] = 
+		    (earth[i2][i1-1] - earth[i2][i1])/
+		    (earth[i2][i1-1] + earth[i2][i1]);
 	    }
 	}
 
-	for (i2= 0; i2 < 5; i2++) {
-	    for (i1= 0; i1 < n1; i1++) {
-		refl[i2][i1] *= (i2/5.);
-		refl[n2-i2-1][i1] *= (i2/5.);
+	if (taper) {
+
+	    for (i2= 0; i2 < 10; i2++) {
+		for (i1= 0; i1 < n1; i1++) {
+		    refl[i2][i1] *= (i2/10.);
+		    refl[n2-i2-1][i1] *= (i2/10.);
+		}
+	    }
+
+	    for (i2= 0; i2 < 5; i2++) {
+		for (i1= 0; i1 < n1; i1++) {
+		    refl[i2][i1] *= (i2/5.);
+		    refl[n2-i2-1][i1] *= (i2/5.);
+		}
 	    }
 	}
-    }
 
-    sf_floatwrite (refl[0],n1*n2,mod);
+	sf_floatwrite (refl[0],n1*n2,mod);
+
+    }else{
+	/* output the impedance model */
+	sf_floatwrite (earth[0],n1*n2,mod);
+    }
 
     exit (0);
 }
 
-/* 	$Id$	 */

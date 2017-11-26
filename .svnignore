@@ -6,3 +6,4 @@ env.sh
 env.csh
 .sconf_temp
 Makefile
+*.pyc

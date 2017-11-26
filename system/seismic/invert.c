@@ -23,7 +23,8 @@ void invert(sf_operator oper /* linear operator */,
 	    int niter        /* number of iterations */,
 	    int miter        /* memory */, 
 	    int nx, int ny   /* model and data size */,
-	    float *x         /* model */, 
+	    float *x         /* model */,
+            float *x0        /* inital model */, 
 	    const float *y   /* data */, 
 	    float *error     /* least-squares error */)
 /*< Iterative least-squares optimization >*/
@@ -33,7 +34,7 @@ void invert(sf_operator oper /* linear operator */,
 
     sf_cdstep_init();
     sf_solver(oper,sf_cdstep,nx,ny,x,y,niter,
-	      "nmem",0,"nfreq",miter,"err",error,"verb",true,"end");
+	      "x0",x0,"nmem",0,"nfreq",miter,"err",error,"verb",true,"end");
     sf_cdstep_close();
 
     norm = 0.;

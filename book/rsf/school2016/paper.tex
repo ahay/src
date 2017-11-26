@@ -1,0 +1,291 @@
+\author{Maurice the Aye-Aye}
+%%%%%%%%%%%%%%%%%%%%%
+\title{Madagascar tutorial}
+
+\lefthead{Maurice}
+\righthead{Tutorial}
+\footer{TCCS-11}
+
+\begin{abstract}  
+This tutorial takes you through different steps required for writing a report paper with reproducible examples. You will experiment with running Madagascar programs on the command line, using SCons to conduct numerical experiments, solving a simple research problem, and including experimental results in the written report. 
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing this tutorial requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://ahay.org/}
+\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. 
+
+\section{Introduction}
+
+In this tutorial, you will be asked to run commands from the Unix
+shell (identified by \texttt{bash\$}) and to edit files in a text
+editor. Different editors are available in a typical Unix environment
+(\texttt{vi}, \texttt{emacs}, \texttt{gedit}, \texttt{nedit}, etc.)
+
+Your first assignment:
+\begin{enumerate}
+\item Open a Unix shell.
+\item Change directory to the tutorial directory
+\begin{verbatim}
+bash$ cd $RSFSRC/book/rsf/school2016
+\end{verbatim}
+\item Open the \texttt{paper.tex} file in your favorite editor, for example by
+running
+\begin{verbatim}
+bash$ nedit paper.tex & 
+\end{verbatim}
+\item Look at the first line in the file and change the author name from Maurice the Aye-Aye to your name (first things first). 
+\end{enumerate}
+
+\section{First steps}
+
+You can skip this section if you are already familiar with Madagascar.
+
+If these are your first experience, let us start with simple steps.
+
+\begin{enumerate}
+\item Create a new directory and change to it.
+\begin{verbatim}
+bash$ mkdir first
+bash$ cd first
+\end{verbatim}
+\item Let us create some data. Run
+\begin{verbatim}
+bash$ sfmath n1=501 d1=0.004 output=1.5+x1 > vel.rsf
+\end{verbatim}
+\item Run 
+\begin{verbatim}
+bash$ file vel.rsf
+\end{verbatim}
+to verify that \texttt{vel.rsf} is a ASCII text file. Examine the contents of the file by running
+\begin{verbatim}
+bash$ cat vel.rsf
+\end{verbatim}
+Find a string starting with \texttt{in=}. It should point to the location of the binary file containing the actual data. 
+\item A more convenient way to check the file parameters is running
+\begin{verbatim}
+bash$ sfin vel.rsf
+\end{verbatim}
+Verify that the reported binary file size in bytes corresponds to the number of elements multiplied by the size of one element (4 bytes for a single-precision floating-point number).
+\item To inspect data elements one by one, run
+\begin{verbatim}
+bash$ < vel.rsf sfdisfil | more
+\end{verbatim}
+What is the minimum and maximum value?
+\item A more convenient way to check the data statistics is by running
+\begin{verbatim}
+bash$ < vel.rsf sfattr
+\end{verbatim}
+Note that you can run any of the Madagascar programs (\texttt{sfmath}, \texttt{sfin}, \texttt{sfdisfil}, \texttt{sfattr}) on the command line without parameters to display their brief documentation. For examine, run
+\begin{verbatim}
+bash$ sfattr
+\end{verbatim}
+to figure out what parameter to give to this program to display only the maximum value of the input data.
+\item Now let us display the data on the screen. Run
+\begin{verbatim}
+bash$ < vel.rsf sfgraph wanttitle=n \
+label1=Time unit1=s label2=Velocity unit2=km/s | sfpen
+\end{verbatim}
+\item Suppose we want the time axis in the display to run vertically. Run
+\begin{verbatim}
+bash$ sfgraph
+\end{verbatim}
+without parameters to figure out which parameter transposes the axes. Generate a new graph.
+\item Running all commands on the command line can be tedious, especially for complex processing flows. The preferred way to control processing flows in Madagascar is by using the SCons utility. Create a file called \texttt{SConstruct} using your favorite editor, for example
+\begin{verbatim}
+bash$ gedit SConstruct &
+\end{verbatim}
+Your first \texttt{SConstruct} may contain the following lines:
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\begin{lstlisting}[frame=single]
+from rsf.proj import *
+
+Flow('vel',None,'math n1=501 d1=0.004 output=1.5+x1')
+Plot('vel','''
+graph wanttitle=n 
+label1=Time unit1=s label2=Velocity unit2=km/s
+''')
+\end{lstlisting}
+The \texttt{SConstruct} file is written in the Python language.
+The first line tells SCons to load all commands from the \texttt{rsf.proj} module, which contains the definitions of \texttt{Flow} and \texttt{Plot} commands. Note that Python uses triple quotes for strings that span multiple lines.
+\item To see what commands SCons is going to execute without actually executing them, run
+\begin{verbatim}
+bash$ scons -nQ
+\end{verbatim}
+Note that you can save the output of this command in a Shell script. Running processing flows with SCons scripts rather than Shell scripts is, however, a more powerful method, as we shall see next.
+\item Run 
+\begin{verbatim}
+bash$ scons
+\end{verbatim}
+to build the targets specified in \texttt{SConstruct}: files \texttt{vel.rsf} and \texttt{vel.vpl}. The second file is a figure in Vplot binary format. You can display it on the screen by running
+\begin{verbatim}
+bash$ sfpen vel.vpl
+\end{verbatim}
+\item Edit the \texttt{SConstruct} file to modify the number of samples (\texttt{n1=}  parameter.) Then run 
+\begin{verbatim}
+bash$ scons
+\end{verbatim}
+again to rebuild the targets.
+\item Now edit the \texttt{SConstruct} file to change \texttt{wanttitle=n} parameter to give your figure a title, for example \texttt{title="My Velocity"}. Run 
+\begin{verbatim}
+bash$ scons
+\end{verbatim}
+and observe that, this time, SCons does not rebuild all the targets but only the target (\texttt{vel.vpl} file) affected by the parameter change. This behavior makes SCons particularly convenient for working with complex workflows and conducting experiments, which require repeated changes of parameters.
+\end{enumerate}
+
+\section{Making synthetic data}
+\inputdir{synth}
+
+\plot{cmp}{width=0.8\textwidth}{RMS velocity profile (left) and synthetic CMP gather (right).}
+
+\plot{cmp2}{width=0.8\textwidth}{RMS velocity profiles for primaries and multiples (left) and synthetic multiple-infected CMP gather (right).}
+
+\plot{nmo}{width=0.8\textwidth}{Semblance scan (left) and NMO with the primary velocity (right) applied to the synthetic CMP gather from Figure~\ref{fig:cmp2}.}
+
+\begin{enumerate}
+
+\item Change directory to \texttt{../synth}.
+
+\item We will start by generating a synthetic CMP (common midpoint) gather using a linearly increasing RMS (root-mean-square) velocity,  a random reflectivity, and a Ricker wavelet (Figure~\ref{fig:cmp}). To display this figure on your screen, run
+\begin{verbatim}
+bash$ scons cmp.view
+\end{verbatim}
+You can examine the \texttt{SConstruct} file to see the programs and parameter selections for generating these data. What does \texttt{sfinmo} do?
+
+\item Next, we add some regular noise to the gather in the form of multiple reflections. In a rough approximation, the velocity trend of surface-related pegleg multiples follows that of the primary reflections but with a delay by the time of the water-bottom reflection (Figure~\ref{fig:cmp2}.) To reproduce the figure on your screen, run
+\begin{verbatim}
+bash$ scons cmp2.view
+\end{verbatim}
+
+\item To better understand the effect of multiples on the data, we can examine the result of velocity analysis by semblance scanning and NMO (normal moveout) correction using the velocity of the primary reflection (Figure~\ref{fig:nmo}.) NMO flattens primary reflections and highlights multiple reflections as curved events. In processing field data, we may not know the primary velocity precisely and would need to estimate it. 
+
+\item \textbf{CHALLENGE 1:} The modeled synthetic data uses rough approximations. Your first challenge is to try making it more realistic or more challenging. You can modify the \texttt{SConstruct} file to change parameters (such as the water depth), to add noise (check out \texttt{sfnoise}), amplitude variations with offset, other kinds of multiples, etc.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=synth/SConstruct]{synth/SConstruct}
+
+\section{Separating primaries and multiples using hyperbolic Radon transform}
+\inputdir{radon}
+
+Next, we will apply the hyperbolic Radon transform (also known as the velocity stack or the velocity transform) to our modeled CMP gather in order to separate primaries and multiples. As suggested by \cite{GEO50-12-27272741}, the hyperbolic Radon transform can be made invertible by employing an iterative least-squares inversion.
+
+\begin{enumerate}
+
+\item Change directory to \texttt{../radon}.
+
+\plot{radon}{width=0.8\textwidth}{Synthetic CMP gather (left) its hyperbolic Radon transform (right).}
+
+\item We will use the same CMP gather as in the previous section. Figure~\ref{fig:radon} shows the selected gather and its hyperbolic Radon transform. To display it on your screen, run
+\begin{verbatim}
+bash$ scons radon.view
+\end{verbatim}
+
+\item The program for implementing the hyperbolic Radon transform is included in this directory and is called \texttt{hradon.c}. The program has an adjoint flag (\texttt{adj=}) to switch between the forward and adjoint operations. The forward operation (\texttt{adj=no}) transforms from the Radon time-velocity domain to the CMP time-offset domain. The adjoint operation  (\texttt{adj=yes}) transforms in the opposite direction. 
+
+To test if the adjoint operator is implemented correctly in this program, you can run the dot-product test
+\begin{verbatim}
+bash$ sfdottest ./hradon.exe mod=radon.rsf dat=cmp2.rsf \
+ov=1.3 dv=0.02 nv=111 ox=0.05 dx=0.025 nx=100
+\end{verbatim}
+The output should display a pair of numbers equal to six digits of accuracy. You can run the test multiple times.
+
+The result of going back from the Radon domain to the CMP domain using the adjoint operation is shown in Figure~\ref{fig:adj}. To display it on your screen, run
+\begin{verbatim}
+bash$ scons adj.view
+\end{verbatim}
+
+\multiplot{2}{adj,inv}{width=0.8\textwidth}{Synthetic CMP gather reconstructed from the inverse transform (left) and its difference wit the original gather (right). Top: using adjoint transform, bottom: using 10 iterations of iterative least-squares inversion.}
+
+\item As is evident from the right plot in Figure~\ref{fig:adj} (the difference between the predicted and the original data), the adjoint operation does not reconstruct the data exactly. To achieve a better reconstruction, we can run iterative least-squares inversion using the method of conjugate gradients. The result is shown in Figure~\ref{fig:inv}. To display it on your screen, run
+\begin{verbatim}
+bash$ scons inv.view
+\end{verbatim}
+
+Notice that only 10 conjugate-gradient iterations are sufficient to achieve a reasonable reconstruction.
+
+\item \textbf{CHALLENGE 2:} Can you make this process faster? The computational cost of the method is proportional to the number of conjugate-gradient iterations. Can we accelerate the convergence to achieve the same result with less iterations?
+
+Open the \texttt{hradon.c} program in an editor and uncomment the lines containing calls to \texttt{halfint\_lop} (the half-order derivative filter for correcting the wavelet shape). Replace \texttt{XXXX} with \texttt{true} or \texttt{false} as appropriate and comment out extra calls to \texttt{sf\_floatread} and \texttt{sf\_floatwrite}. To check if you did it correctly, run the dot-product test
+\begin{verbatim}
+bash$ sfdottest ./hradon.exe mod=radon.rsf dat=cmp2.rsf \
+ov=1.3 dv=0.02 nv=111 ox=0.05 dx=0.025 nx=100
+\end{verbatim}
+Did including the half-order derivative filter improve the convergence of conjugate gradients? 
+
+You can try to achieve  a further acceleration using preconditioning by diagonal weighting. Appropriate weights can be found by experimentation or by using the asymptotic theory \cite[]{GEO68-03-10321042}. 
+
+\item Separating primaries and multiples in the Radon domain amounts to muting (Figure~\ref{fig:mute}.) To display the muting result and its inverse transform to the CMP space, run
+\begin{verbatim}
+scons mute.view mult.view
+\end{verbatim}
+Verify that the separated primaries and multiples sum to the original CMP gather (check out the \texttt{sfadd} program.)
+
+To confirm the separation, we can also run the semblance scan on the separated results (Figure~\ref{fig:vscan}.) To display it on your screen, run
+\begin{verbatim}
+scons vscan.view
+\end{verbatim}
+
+\plot{mute}{width=0.8\textwidth}{Isolating signal in the hyperbolic Radon domain (left) by muting (right).}
+
+\multiplot{2}{mult,vscan}{width=0.8\textwidth}{(a) Separated primaries and multiples. (b) Velocity analysis using semblance scan applied to separated primaries and multiples.}
+
+\item \textbf{CHALLENGE 3:} Figure~\ref{fig:mult,vscan} shows some energy leakage between the estimated primaries and multiples. Can you improve the signal localization in the Radon domain for better separation? Modify the \texttt{SConstruct} file to implement iterative inversion using sparsity regularization to achieve a sparser output.
+
+\end{enumerate}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=radon/hradon.c]{radon/hradon.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=radon/SConstruct]{radon/SConstruct}
+
+\section{Writing a report}
+
+\begin{enumerate}
+\item Change directory to the parent directory
+\begin{verbatim}
+bash$ cd ..
+\end{verbatim}
+This should be the directory which contains \texttt{paper.tex}.
+\item Run
+\begin{verbatim}
+bash$ sftour scons lock
+\end{verbatim}
+The \texttt{sftour} command visits all subdirectories and runs \texttt{scons lock}, which copies result files to a different location so that they will not get modified until further notice.
+\item You can also run
+\begin{verbatim}
+bash$ sftour scons -c
+\end{verbatim}
+to clean intermediate results.
+\item Edit the file \texttt{paper.tex} to include your additional results. If you have not used \LaTeX\ before, no worries. \LaTeX\ is a descriptive language. Study the file, and it should become evident by example how to include figures.
+\item Run
+\begin{verbatim}
+bash$ scons read
+\end{verbatim}
+to generate a PDF report \texttt{paper.pdf} and open it with a PDF viewing program. 
+\item Want to submit your paper to \emph{Geophysics}? Edit \texttt{SConstruct} in the 
+paper directory to add \texttt{options=manuscript} to the \texttt{End} statement. Then run
+\begin{verbatim}
+bash$ scons read
+\end{verbatim}
+again.
+\item If you have \LaTeX2HTML installed, you can also generate an HTML version of your paper by running
+\begin{verbatim}
+bash$ scons html
+\end{verbatim}
+and opening \verb#paper_html/index.html# in a web browser.
+\end{enumerate}
+
+\bibliographystyle{seg}
+\bibliography{SEG}
+
+

@@ -27,6 +27,7 @@ cipcut
 ewefdm
 awefd2d awefd3d
 '''
+# ltftnew
 
 targets.c_mpi = \
 '''

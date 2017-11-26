@@ -27,53 +27,53 @@ static int nb, lag;
 static sf_complex* bb;
 
 void cicai1_init(int nb1           /* filter size */, 
-		         sf_complex* bb1  /* filter taps [nb] */,
-			     int lag1  /* filter lag (lag=1 is causal) */) 
+		 sf_complex* bb1  /* filter taps [nb] */,
+		 int lag1  /* filter lag (lag=1 is causal) */) 
 /*< initialize >*/
 {
 
     nb  = nb1;
     lag = lag1;
-	bb = bb1;
+    bb = bb1;
 }
 
 void cicai1_lop(bool adj, bool add, int nx, int ny, sf_complex* xx, sf_complex* yy)
 /*< linear operator >*/
 {
     		
-	int x, b, y;
+    int x, b, y;
     if(ny != nx) sf_error("%s: size problem: %d != %d",__FILE__,ny,nx);
 
     sf_cadjnull(adj, add, nx, ny, xx, yy);
-    //sf_warning("############cicaf############");
+    /* sf_warning("############cicaf############"); */
     for (b=0; b < nb; b++) {
-		for (y=nb; y <= ny; y++) { 
+	for (y=nb; y <= ny; y++) { 
 
-			x = y - b - 1;	
-		#ifdef SF_HAS_COMPLEX_H
-			if( adj) {		/* CONJUGATE TRANSPOSE OPERATOR*/		
+	    x = y - b - 1;	
+#ifdef SF_HAS_COMPLEX_H
+	    if( adj) {		/* CONJUGATE TRANSPOSE OPERATOR*/		
 				
-				xx[x] = xx[x] + (yy[y-lag] * conjf(bb[b]) );
+		xx[x] = xx[x] + (yy[y-lag] * conjf(bb[b]) );
 
-				//sf_warning("bb[b]=y[%d]-x[%d]=",y-lag,x); cprint(bb[b]);
-			}
-	    	else     { 				
+		/* sf_warning("bb[b]=y[%d]-x[%d]=",y-lag,x); cprint(bb[b]); */
+	    }
+	    else     { 				
 
-		    	yy[y-lag]  =yy[y-lag]+( bb[b] * xx[x]);
-				//sf_warning("y[%d]-x[%d]=",y-lag,x); cprint(yy[y]); cprint(xx[x]); cprint(bb[b]);
-        	}
-		#else
-	    	if( adj) {		/* CONJUGATE TRANSPOSE OPERATOR*/
-				xx[x] = sf_cadd(xx[x], sf_cmul(yy[y-lag], sf_conjf(bb[b])) ); 
-				//sf_warning("bb[b]=y[%d]-x[%d]=",y-lag,x); cprint(bb[b]);
-			}
-	    	else     { 				
+		yy[y-lag]  =yy[y-lag]+( bb[b] * xx[x]);
+		/* sf_warning("y[%d]-x[%d]=",y-lag,x); cprint(yy[y]); cprint(xx[x]); cprint(bb[b]); */
+	    }
+#else
+	    if( adj) {		/* CONJUGATE TRANSPOSE OPERATOR*/
+		xx[x] = sf_cadd(xx[x], sf_cmul(yy[y-lag], sf_conjf(bb[b])) ); 
+		/* sf_warning("bb[b]=y[%d]-x[%d]=",y-lag,x); cprint(bb[b]); */
+	    }
+	    else     { 				
 
-		    	yy[y-lag] = sf_cadd(yy[y-lag], sf_cmul(bb[b], xx[x]) ); 
-				//sf_warning("y[%d]-x[%d]=",y-lag,x); cprint(yy[y]);
-        	}
-		#endif
-		}
+		yy[y-lag] = sf_cadd(yy[y-lag], sf_cmul(bb[b], xx[x]) ); 
+		/* sf_warning("y[%d]-x[%d]=",y-lag,x); cprint(yy[y]); */
+	    }
+#endif
+	}
     }
 }
 

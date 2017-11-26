@@ -1,0 +1,114 @@
+from rsf.proj import *
+
+# Download Teapot Dome field data
+Fetch('npr3_field.sgy','teapot',
+      server='http://s3.amazonaws.com',top='')
+#Fetch('npr3_field.sgy','TeapotDome3D',
+#      top='/home/p1/seismic_datasets/public/SeismicProcessingClass',
+#      server='local')
+
+# Extract trace headers only
+Flow('header header.asc','npr3_field.sgy',
+     'segyread tfile=${TARGETS[0]} hfile=${TARGETS[1]} read=head',
+     stdout=0)
+
+# Seismic data corresponds to trid=1
+Flow('trid','header','headermath output=trid | mask min=1 max=1')
+Flow('theader','header trid','headerwindow mask=${SOURCES[1]}')
+
+for key in Split('sx sy gx gy'):
+    Flow(key,'theader',
+         '''
+         headermath output=%s | dd type=float | 
+         scale dscale=1e-6
+         ''' % key)
+
+# Shot coordinates
+Flow('scoord','sx sy','cmplx ${SOURCES[1]}')
+Result('scoord',
+       '''
+       graph symbol="+" title="Shots" 
+       label1=x label2=y unit1=kft unit2=kft plotcol=5
+       ''')
+
+# Receiver coordinates
+Flow('gcoord','gx gy','cmplx ${SOURCES[1]}')
+Result('gcoord',
+       '''
+       graph symbol="x" title="Receivers" 
+       label1=x label2=y unit1=kft unit2=kft plotcol=3
+       ''')
+
+# sort by xline and iline
+Flow('binorder','theader','headermath output="345*xline+iline" ')
+Flow('headersort','theader binorder',
+     'headersort head=${SOURCES[1]}')
+
+# Convert to 3D map
+Flow('bin3 mask','headersort',
+     '''
+     intbin3 head=$SOURCE xkey=-1 yk=iline zk=xline 
+     mask=${TARGETS[1]}
+     ''')
+
+# Extract CMP fold
+Flow('fold','mask','dd type=float | stack axis=1 norm=n')
+Result('fold',
+       '''
+       grey color=T pclip=100 
+       scalebar=y allpos=y transp=n yreverse=n 
+       title="Fold Map" barlabel=Fold label1=iline label2=xline
+       ''')
+
+# Offset distribution
+Flow('hist','theader',
+     'headermath output=offset | histogram n1=201 o1=0 d1=100')
+Result('hist',
+       '''
+       dd type=float | 
+       dots title="Offset Distribution" label1=Offset unit1=ft
+       ''')
+
+########################################################
+# Select offsets greater than 10,000 (!!! MODIFY ME !!!)
+########################################################
+Flow('offsetmask','bin3',
+     'headermath output=offset | mask min=10000 | window')
+
+Flow('fold2','mask offsetmask',
+     'mul ${SOURCES[1]} | dd type=float | stack axis=1 norm=n')
+Result('fold2',
+       '''
+       grey color=T pclip=100 scalebar=y allpos=y transp=n 
+       title="Fold Map for Offset > 10 kft" 
+       barlabel=Fold label1=iline label2=xline yreverse=n 
+       ''')
+
+#############################################################
+# Extract headers for xline=100 iline=200 (!!! MODIFY ME !!!)
+#############################################################
+Flow('cmpmask','mask','window n3=1 min3=100 n2=1 min2=200')
+Flow('cmp','bin3 cmpmask',
+     '''
+     window n4=1 min4=100 n3=1 min3=200 | 
+     headerwindow mask=${SOURCES[1]}
+     ''')
+
+for key in Split('sx sy gx gy'):
+    Flow('cmp-'+key,'cmp',
+         '''
+         headermath output=%s | dd type=float | 
+         scale dscale=1e-6
+         ''' % key)
+    
+Flow('cmp-s','cmp-sx cmp-sy','cmplx ${SOURCES[1]}')
+Flow('cmp-r','cmp-gx cmp-gy','cmplx ${SOURCES[1]}')
+Flow('cmp-sr','cmp-s cmp-r','cat axis=1 ${SOURCES[1]}')
+
+Result('cmp-sr',
+       '''
+       graph plotcol=6 label1=x label2=y unit1=kft unit2=kft
+       title="Source-Receiver pairs for CMP (100,200)" 
+       ''')
+
+End()

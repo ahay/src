@@ -12,7 +12,7 @@ def plot3(title):
     byte gainpanel=all |
     grey3 frame1=80 frame2=220 frame3=140
     title="%s"
-    label1="Time (s)" label2="In-line (m)" label3="Cross-line (m)"
+    label1=Time unit1=s label2=In-line unit2=m label3=Cross-line unit3=m
     ''' % title
 
 zplot = '''
@@ -33,6 +33,8 @@ Flow('zdip','zovol','dip rect1=10 rect2=40 rect3=40')
 Flow('xdip','zdip','window n4=1')
 Flow('ydip','zdip','window f4=1')
 
+Flow('ydipt','ydip','transp memsize=500 plane=23')
+
 Result('xdip',plot3('In-line Slope') + ' color=j')
 Result('ydip',plot3('Cross-line Slope') + ' color=j')
 
@@ -44,11 +46,11 @@ Flow('ypwd','zpwd','window f4=1')
 Result('xpwd',plot3('Isolated Diffractions (In-line)'))
 Result('ypwd',plot3('Isolated Diffractions (Cross-line)'))
 
-Flow('shp','zovol xdip ydip',
+Flow('shp','zovol xdip ydipt',
      '''
-     pwdsmooth2 dip=${SOURCES[1]} rect2=3 |
+     pwsmooth dip=${SOURCES[1]} ns=1 |
      transp memsize=500 plane=23 |
-     pwdsmooth2 dip=${SOURCES[2]} rect2=3 |
+     pwsmooth dip=${SOURCES[2]} ns=1 |
      transp memsize=500 plane=23 |
      add scale=-1,1 ${SOURCES[0]}
      ''')

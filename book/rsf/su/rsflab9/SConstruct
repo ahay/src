@@ -52,7 +52,7 @@ Flow('stoltm','cosft vint',
      '''
      stoltstretch velocity=${SOURCES[1]} nstretch=5 vel=1.5 pad=4000 |
      stolt vel=1.5 minstr=0.5
-     ''',split=[2,2142])
+     ''',split=[2,2142,[0]])
 Flow('stolt','stoltm vint',
      '''
      stoltstretch velocity=${SOURCES[1]} nstretch=5 vel=1.5 inv=y |
@@ -61,7 +61,7 @@ Flow('stolt','stoltm vint',
 title['stolt'] = 'Stolt time section'
 
 # Phase-shift migration
-Flow('phasem','cosft vint','gazdag velocity=${SOURCES[1]} verb=y',split=[2,2142])
+Flow('phasem','cosft vint','gazdag velocity=${SOURCES[1]} verb=y',split=[2,2142,[0]])
 Flow('phase','phasem','cosft sign2=-1')
 title['phase'] = 'Phase-shift time section'
 

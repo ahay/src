@@ -51,11 +51,6 @@ int main (int argc, char* argv[])
     if (!sf_getbool("half",&half)) half=false;
     /* if y, half-offset instead of full offset */
 
-    if (half) {
-	xd *= 2.;
-	xo *= 2.;
-    }
-
     
     vel = sf_floatalloc(n1);
     dip = sf_floatalloc(n1*xn);
@@ -64,6 +59,11 @@ int main (int argc, char* argv[])
     sf_putint(out,"n2",xn);
     sf_putfloat(out,"d2",xd);
     sf_putfloat(out,"o2",xo);
+
+    if (half) {
+	xd *= 2.;
+	xo *= 2.;
+    }
 
     if (mute) {
 	

@@ -1,0 +1,130 @@
+from rsf.proj import *
+
+Fetch('gravity.dat','gravity')
+
+# Data convert
+Flow('gravity.asc','gravity.dat',
+     '''
+     awk -F ',' 'BEGIN{count=0}
+     {count=count+1;print count, " ",$1, " ", $2, " ", $3 }'
+     ''')
+Flow('gravity','gravity.asc',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=4 n2=46472 |
+     dd form=native |
+     put d1=1 o1=0 d2=1 o2=0
+     ''',stdin=0)
+
+# Receiver Coordinates
+Flow('x','gravity','window n1=1 f1=1')
+Flow('y','gravity','window n1=1 f1=2')
+
+Flow('location','x y','cmplx $SOURCES')
+Result('location',
+       '''
+       window j1=50 |
+       graph symbol=x title="Location"
+       transp=n label1=X label2=Y
+       ''')
+Flow('off','x y','cat ${SOURCES[1]} axis=2 | transp plane=12')
+
+Flow('g','gravity','window n1=1 f1=3')
+
+# Binning to a regular grid
+nx=340
+x0=1585
+dx=1
+ny=287 
+y0=500
+dy=1
+
+Flow('bin fold','g off',
+     '''
+     bin head=${SOURCES[1]} fold=${TARGETS[1]} interp=2
+     xkey=0 ykey=1
+     nx=%d x0=%g dx=%g
+     ny=%d y0=%g dy=%g
+     ''' % (nx,x0,dx,ny,y0,dy))
+Result('fold',
+       '''
+       reverse | 
+       grey transp=n scalebar=y title=Fold 
+       label1=X label2=Y
+       ''')
+
+Plot('cbin','bin',
+     '''
+     reverse |
+     contour nc=20 c0=-95 dc=5
+     transp=n allpos=n wanttitle=n wantaxis=n
+     ''')
+Plot('gbin','bin',
+     '''
+     reverse |
+     grey transp=n color=a title="Gravity data" 
+     label1=X label2=Y
+     ''')
+Result('bin','gbin cbin','Overlay')
+
+# Nonlocal median filter
+Flow('mtm','bin','mtm nfw1=10 nfw2=4 pclip=80')
+Plot('cmtm','mtm',
+     '''
+     reverse |
+     contour nc=50 c0=-95 dc=5
+     transp=n allpos=n wanttitle=n wantaxis=n
+     ''')
+Plot('gmtm','mtm',
+     '''
+     reverse |
+     grey transp=n color=a title="Adaptive filter" 
+     label1=X label2=Y
+     ''')
+Result('mtm','gmtm cmtm','Overlay')
+
+
+# x derivative using simple first-order derivative
+Flow('sxder','bin','igrad')
+Plot('csxder','sxder',
+     '''
+     reverse |
+     contour nc=1 c0=-1 dc=1
+     transp=n allpos=n wanttitle=n wantaxis=n
+     ''')
+Plot('gsxder','sxder',
+     '''
+     reverse |
+     grey transp=n title="Simple derivative (horizontal)" 
+     color=a label1=X label2=Y
+     ''')
+Result('sxder','gsxder csxder','Overlay')
+
+# y derivative using FIR Hilbert transform
+Flow('hxder','bin','transp | deriv order=20 | transp')
+Plot('chxder','hxder',
+     '''
+     reverse |
+     contour nc=1 c0=-1 dc=1 plotcol=9
+     transp=n allpos=n wanttitle=n wantaxis=n
+     ''')
+Plot('ghxder','hxder',
+     '''
+     reverse |
+     grey transp=n title="Hilbert derivative (vertical)" 
+     color=a label1=X label2=Y
+     ''')
+Result('hxder','ghxder chxder','Overlay')
+
+# Continuation
+Flow('cont','bin',
+     '''
+     gravcon z=-0.1 iter=n verb=y
+     ''')
+Result('cont',
+       '''
+       reverse |
+       grey transp=n color=a title="Continuation" 
+       label1=X label2=Y
+       ''')
+
+End()

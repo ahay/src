@@ -1,5 +1,5 @@
-/* 2-D two-components wavefield modeling using original elastic displacement wave equation in TTI media. */
-/*
+/* 2-D two-components wavefield modeling using original elastic displacement wave equation in TTI media.
+
    Copyright (C) 2012 Tongji University, Shanghai, China 
    Authors: Jiubing Cheng, Wei Kang and Tengfei Wang
      
@@ -49,11 +49,15 @@ int main(int argc, char* argv[])
         float **p1, **p2, **p3, **q1, **q2, **q3;  /* wavefield array */
 
         float   A, fx, fz;
+		clock_t t1, t2, t3;
 
         sf_init(argc,argv);
 
         sf_file Fo1, Fo2;
+		float timespent;
        
+		t1 = clock();
+
         /*  wavelet parameter for source definition */
         f0=30.0;                  
         t0=0.04;                  
@@ -130,7 +134,7 @@ int main(int argc, char* argv[])
 	/****************begin to calculate wavefield****************/
 	/****************begin to calculate wavefield****************/
         sf_warning("==================================================");
-        sf_warning("==      Propagation Using Elastic Wave Eq.      ==");
+        sf_warning("==      Porpagation Using Elastic Wave Eq.      ==");
         sf_warning("==================================================");
        coeff_2dx=sf_floatalloc(mm);
        coeff_2dz=sf_floatalloc(mm);
@@ -159,6 +163,7 @@ int main(int argc, char* argv[])
         coeff1dmix(coeff_1dx,dx);
         coeff1dmix(coeff_1dz,dz);
 
+		t2 = clock();
 	for(it=0;it<ns;it++)
 	{
 		t=it*dt;
@@ -167,10 +172,10 @@ int main(int argc, char* argv[])
                 for(i=-1;i<=1;i++)
                 for(j=-1;j<=1;j++)
                 {
-                     if(fabs(i)+fabs(j)==2)
+                     if(SF_ABS(i)+SF_ABS(j)==2)
                      {
-                          p2[isxm+i][iszm+j]+=i*Ricker(t, f0, t0, A);
-                          q2[isxm+i][iszm+j]+=j*Ricker(t, f0, t0, A);
+                          p2[isxm+i][iszm+j]+=sqrt(2.0)*i*Ricker(t, f0, t0, A);
+                          q2[isxm+i][iszm+j]+=sqrt(2.0)*j*Ricker(t, f0, t0, A);
                      }
                 }
         // 2D equil-energy force source (e.g., Wu's PhD)
@@ -225,6 +230,12 @@ int main(int argc, char* argv[])
 		if(it%100==0)
 			sf_warning("Elastic: it= %d",it);
         }/* it loop */
+   t3=clock();
+   timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
+   sf_warning("CPU time for wavefield extrapolation.: %f(second)",timespent);
+
+   timespent=(float)(t3-t1)/(ns*CLOCKS_PER_SEC);
+   sf_warning("All CPU time: %f(second)",timespent);
 
         free(*p1);
         free(*p2);

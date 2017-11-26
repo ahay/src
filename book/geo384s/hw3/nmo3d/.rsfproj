@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheadermath', 'sfmask', 'sfmul', 'sfheaderwindow', 'sfdd', 'sfscale', 'sfheadersort', 'sfbandpass', 'sfwiggle', 'sfspike', 'sfnmo', 'sfmerge', 'sfwindow', 'sfgrey', 'sfvscan', 'sfgraph', 'sftransp', 'sflinear']
+data=['http://s3.amazonaws.com/teapot/npr3_gathers.sgy']
+size= 6216829548

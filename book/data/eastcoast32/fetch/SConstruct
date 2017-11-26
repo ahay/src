@@ -1,23 +1,54 @@
 from rsf.suproj import * 
 
-#http://woodshole.er.usgs.gov/operations/ia/public_ds_info.php?fa=1978-015-FA
-#http://cotuit.er.usgs.gov/Data/1978-015-FA/NL/001/01/32-obslogs/32obslog.pdf   #http://cotuit.er.usgs.gov/Data/1978-015-FA/SE/001/18/
-#################### 
-# Fetch the dataset and convert to multiple rsf files
-# check web at
-# http://energy.usgs.gov/GeochemistryGeophysics/\
-# SeismicDataProcessingInterpretation/\
-# NPRASeismicDataArchive/tabid/494/\
-# Agg2146_SelectTab/4/Default.aspx
-####################
+# 11/01/2017 discoverred USGS moved the data.  It is all still available
+
+#https://s3.amazonaws.com/open.source.geoscience/open_data/eastcoast32/
+# has all the files.  Right now use USGS site for downloads and amazon 
+# as backup
+
+# you can set this variable to switch download server
+#downloadsource='open.source.geoscience'
+downloadsource='usgs'
+
+if downloadsource=='usgs':
+	server='http://cotuit.er.usgs.gov'
+	top='files/1978-015-FA/NL/001/01'
+	dir='32-obslogs'
+	reportserver='https://pubs.usgs.gov'
+	reporttop='of/1995'
+	reportdir='0027'
+        filestop='files/1978-015-FA/SE/001'
+        filesdir='18'
+	stackdir='39'
+else:
+	server='https://s3.amazonaws.com'
+	top='open.source.geoscience/open_data'
+	dir='eastcoast32'
+	reportserver=server
+	reporttop=top
+	reportdir=dir
+        filestop=top
+	filesdir=dir
+	stackdir=dir
 
 # download and view the observer notes:
 Fetch('32obslog.pdf',
-      server='http://cotuit.er.usgs.gov',
-      top='Data/1978-015-FA/NL/001/01',
-      dir='32-obslogs')
-Result('observerlog','32obslog.pdf',
-       'acroread ${SOURCES[0]}',stdin=0)
+      server='%s'%server,
+      top='%s'%top,
+      dir='%s'%dir)
+
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+if pdfread:
+   Result('observerlog','32obslog.pdf',
+	  pdfread + ' ${SOURCES[0]}',stdin=0)
+
+
+Fetch('report.pdf',server='%s'%reportserver,top='%s'%reporttop,
+	           dir='%s'%reportdir)
+if pdfread:
+   Result('report','report.pdf',
+	  pdfread + ' ${SOURCES[0]}',stdin=0)
 
 
 rawsegy=['U32A_01','U32A_02','U32A_03','U32A_04','U32A_05',
@@ -30,51 +61,19 @@ rawsegy=['U32A_01','U32A_02','U32A_03','U32A_04','U32A_05',
 # and 'U32_01'
 # the line is collected in 3 parts. 32, 32a, and 32b
 
-# this directory is to fatch the data.  Simple displays provides
-# the results that scons wants to avoid message 
-# There is nothing to view
-# The ntg does not have the recording delay applied, so the deep 
-# water portion of the line is displayed without the 1, 2, 3, or 4 seconds 
-# delay applied.
+# this directory is to fetch the data.  pdf's are displayed
+# fetched data is shared by su and madagascar processing
 
-segyread = '''
-segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
-tape=$SOURCE endian=%d
-| segyclean
-| suwind tmax=12.28
-| suwind key=tracf min=48 max=48
-''' % (1-little_endian())
-
-ntgsu = []
 for file in rawsegy  :
     Fetch(file+'.SGY',
-          server='http://cotuit.er.usgs.gov',
-    	  top='Data/1978-015-FA/SE/001',
-      	  dir='18')
-    Flow([file+'ntg', file+'.bin',  file+'.asc'],
-         file+'.SGY',segyread,stdin=0)
-    ntgsu.append(file+'ntg') 
-
-# concatinate the *ntg.su files. One for each SEGY file and display
-Result('ntg',ntgsu,
-       'cat ${SOURCES} | suximage perc=90 title=ntg f2=1')
-
+          server='%s'%server,
+    	  top='%s'%filestop,
+      	  dir='%s'%filesdir)
 # download, convert, and view previous processing stack
 Fetch('CSDS32_1.SGY',
-      server='http://cotuit.er.usgs.gov',
-      top='Data/1978-015-FA/SE/001',
-      dir='39')
+      server='%s'%server,
+      top='%s'%filestop,
+      dir='%s'%stackdir)
 
-Flow(['checkstack','checkstack.bin','checkstack.asc'],
-        'CSDS32_1.SGY',
-        '''
-	    segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
-	        tape=$SOURCE endian=%d
-	    | segyclean 
-    	''' % (1-little_endian()),
-     stdin=0)
-
-Result('checkstack','checkstack',
-       'suximage title="checkstack" perc=90')
 
 End()

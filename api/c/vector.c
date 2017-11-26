@@ -305,6 +305,25 @@ vc3d rot3d(vc3d *nn,
 }
 
 /*------------------------------------------------------------*/
+
+void vc2dread1(sf_file F,
+               vc2d   *v,
+               size_t  n1)
+/*< input vector2d 1-D vector >*/
+{
+    int i1;
+    float **w;
+    w=sf_floatalloc2(2,n1);
+
+    sf_floatread(w[0],2*n1,F);
+    for( i1=0; i1<n1; i1++) {
+        v[i1].dx = w[i1][0];
+        v[i1].dz = w[i1][1];
+    }
+
+    free(*w); free(w);
+}
+
 void vc3dread1(sf_file F,
                vc3d   *v,
                size_t  n1)

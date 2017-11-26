@@ -1,0 +1,135 @@
+from rsf.proj import *
+def Grey(data,other): 
+	Result(data,'grey label2=CMP  unit2="km" label1=Time unit1="s" title="" wherexlabel=t wanttitle=y wheretitle=b  screenratio=1.4 max1=2.5 %s '%other)
+#clip=1.84785e+06 
+# Stack sections of synthetic field data
+# Display part of data
+
+# Get data
+
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
+
+# Plot one CMP
+Plot('cmp','bei',
+     '''
+     window f3=100 n3=1 |
+     put o2=1 d2=1 label1="Time" unit1="s" label2="Trace" | 
+     wiggle poly=y yreverse=y transp=y title="CMP" 
+     ''')
+
+# Velocity scan
+
+Flow('scn','bei','mutter v0=1.4 | vscan avosemblance=y v0=1.4 nv=48 dv=0.025')
+
+#Flow('avoscn','bei','mutter v0=1.4 | vscan avosemblance=y v0=1.4 nv=48 dv=0.025')
+
+# Pick NMO velocity
+
+Flow('vel','scn','mutter x0=1.5 v0=0.67 half=n | pick rect1=40 rect2=10 | window')
+#Flow('avovel','avoscn','mutter x0=1.5 v0=0.67 half=n | pick rect1=40 rect2=10 | window')
+
+# Apply NMO
+
+Flow('nmo1','bei vel','mutter v0=1.4 | nmo velocity=${SOURCES[1]}')
+
+#Flow('avonmo1','bei avovel','mutter v0=1.4 | nmo velocity=${SOURCES[1]}')
+
+# Add AVO anomaly
+Flow('top','nmo1','window n1=125')
+Flow('mid','nmo1','window f1=125 n1=250 | math output="input*(1-x2*%g)"' % (2.0/(23*0.067)) )
+Flow('bot','nmo1','window f1=375')
+
+Flow('nmo','top mid bot',
+     '''
+     cat axis=1 ${SOURCES[1:3]} | noise seed=2007 var=0.01
+     ''')
+
+
+
+# Apply DMO
+
+Flow('dmo','nmo',
+     '''
+     window f1=15 | logstretch nout=2048 | fft1 | transp plane=13 memsize=500 |
+     findmo |
+     transp memsize=500 plane=13 | fft1 inv=y | window n1=2048 | logstretch inv=y | pad beg1=15 
+     ''')
+
+Flow('dmo1','dmo','window squeeze=n')
+
+#-------------simislarity stack
+
+Flow('stack1', 'dmo', 'stack')
+
+
+## initial stack
+Result('stack1','stack1', 'agc rect1=50 | grey  min1=0.5 max1=3.0 title="" label2=CMP label1=Time unit1=s unit2=km screenratio=0.75 ')     
+
+## ref trace
+Flow('ref','dmo','window n2=1')
+
+Flow('stacks', 'ref','spray axis=3 n=25 | transp plane=23')
+
+Flow('weight', 'dmo1 stacks', 
+     '''similarity other=${SOURCES[1]} niter=40 rect1=5 rect2=8 rect3=20
+     ''')
+## local similarity
+#Result('weight',    
+#       '''
+#       byte allpos=y gainpanel=all |
+#       grey3 flat=n frame1=490 frame2=13 frame3=60 title="" color=j 
+#       label1=Time unit1=s label2=Offset label3=CMP unit2=km unit3=km point2=0.35 point1=0.55 screenratio=0.7 
+#       ''')
+
+
+Flow('tweight','weight','threshold pclip=99.9')
+
+Flow('simistack1','tweight dmo1',                                                             
+     '''
+     sfmath y=${SOURCES[1]} output=input*y | stack 
+     ''')
+
+Flow('nor','tweight','stack | stack axis=1 | spray n=1000 | transp  | put d1=0.004 o1=-4.19095e-0')
+
+Flow('simistack','simistack1 nor','sfmath y=${SOURCES[1]} output=input/y ')
+
+Flow('snrstack', 'dmo', 'snrstack w=20 ee=1e-1 esp=10000')
+
+Result('snrstack','snrstack','agc rect1=50 | grey min1=0.5 max1=3.0 title="" label2=CMP label1=Time unit1=s unit2=km screenratio=0.75 ')
+Result('simistack','simistack','agc rect1=50 | grey min1=0.5 max1=3.0 title="" label2=CMP label1=Time unit1=s unit2=km screenratio=0.75 ') 
+
+Flow('stack1-A','stack1','window min1=1.2 max1=1.5 min2=8.0 max2=9.0')
+Flow('snrstack-A','snrstack','window min1=1.2 max1=1.5 min2=8.0 max2=9.0')
+Flow('simistack-A','simistack','window min1=1.2 max1=1.5 min2=8.0 max2=9.0')
+Grey('stack1-A','screenratio=0.75 max1=1.5 title=""')
+Grey('snrstack-A','screenratio=0.75 max1=1.5 title=""') 
+#Result('snrstack-A','grey label2=Midpoint  unit2="km" clip= label1=Time unit1="s" title="" wherexlabel=t wanttitle=y wheretitle=b  screenratio=0.75 max1=1.5 title="SNR"') 
+
+Grey('simistack-A','screenratio=0.75 max1=1.5 title=""') 
+
+
+
+## Creating framebox
+x=8.0
+y=1.2
+w=1.0
+w1=0.3
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=7.705 max1=16.0465 min2=0.5 max2=3.0 pad=n plotfat=15 plotcol=2 screenratio=0.75
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+Result('stack1-gulf','Fig/stack1.vpl frame','Overlay')
+Result('snrstack-gulf','Fig/snrstack.vpl frame','Overlay')
+Result('simistack-gulf','Fig/simistack.vpl frame','Overlay')
+
+
+#Result('field','stack1 snrstack simistack ','SideBySideAniso')
+
+End()

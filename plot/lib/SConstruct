@@ -32,6 +32,7 @@ for source in psrc:
 
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
+    env.Ignore(source+'.h',source+'.h')
     objects.append(obj)
 
     if dynlib:

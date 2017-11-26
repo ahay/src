@@ -4,15 +4,15 @@ if not WhereIs('mpirun'):
     sys.stderr.write("\nNo MPI.\n")
     sys.exit(1)
 
-NP = int(ARGUMENTS.get('NP','3'))
+NP = int(ARGUMENTS.get('NP','4'))
 
 Flow('a',None,'math n1=512 n2=256 output="x1+x2"')
 Flow('b',None,'math n1=512 n2=256 output="-x1-x2"')
 
 Flow('c','a b',
      '''
-     mpihello input=${SOURCES[0]} b=${SOURCES[1]}
-     ''',stdin=0,np=NP)
+     mpihello b=${SOURCES[1]}
+     ''',np=NP)
 
 End()
 

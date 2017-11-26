@@ -1,0 +1,6 @@
+from rsf.tex import *
+
+End('paper',options='11pt,reproduce',
+    use='framed,listings,amsmath,amssymb,graphicx,xcolor,natbib,hyperref',color='ALL')
+
+

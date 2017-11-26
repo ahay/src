@@ -81,7 +81,7 @@ void derive_1( int n1, int n2, float d1,
 	for(i1=0;i1<n1;i1++) dyd1[i2][i1] /= d1;
     }
     
-    sf_deriv_free();
+    sf_deriv_close();
     
 }
 
@@ -114,7 +114,7 @@ void derive_2( int n1, int n2, float d2,
     }
     
     free(yy); free(der2);
-    sf_deriv_free();
+    sf_deriv_close();
     
 }
 

@@ -157,7 +157,7 @@ int main(int argc, char* argv[])
 	   are missing or different than I think they should be add them to
 	   the output file history */
 	/* no idea why this always has to be added to history, but I get 
-	   errors it I remove 1 || */
+	   errors it I remove the forcing condition below (i.e. 1 || ) */
 	if(1 || !sf_histint(in,segykeyword(i),&tempint) || tempint!=i){
 	    sf_putint(out,segykeyword(i),i);
 	}
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
     if (NULL==(outputkey=sf_getstring("outputkey")))sf_error("Need outputkey=");
     /* name of the header key to put the results of the output equation */
     if(!sf_histint(out,outputkey,&outkeyindx)){
-	sf_error("need outkey is not a header key in the input data=");
+	sf_error("user parameter outputkey is not an input data header key.");
     }
     if(verbose>0)fprintf(stderr,"outkeyindx=%d\n",outkeyindx);
 

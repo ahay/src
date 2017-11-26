@@ -18,6 +18,7 @@ plplotlibpath = env.get('PLPLOTLIBPATH','')
 ##############################################################################
 
 inc = env.RSF_Include('plvpl')
+env.Ignore('plvpl.h','plvpl.h')
 
 if plplot:
     env.Prepend(CPPPATH=['../../include',env.get('PLPLOTPATH')],

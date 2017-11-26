@@ -3,6 +3,9 @@
 The input should have n2=2 (coordinates,values)
 
 For output, specify either n1= o1= d1= or pattern=
+
+March 2016 program of the month:
+http://ahay.org/blog/2016/03/23/program-of-the-month-sflinear/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -77,15 +80,15 @@ int main(int argc, char* argv[])
     if (!sf_getint("n1",&n1) && 
 	(NULL== pattern ||
 	 !sf_histint(pattern,"n1",&n1))) sf_error("Need n1=");
-    /* Output grid size */
+    /*(n1 Output grid size )*/
     if (!sf_getfloat("d1",&d1) && 
 	(NULL== pattern ||
 	 !sf_histfloat(pattern,"d1",&d1))) sf_error("Need d1=");
-    /* Output sampling */
+    /*(d1 Output sampling )*/
     if (!sf_getfloat("o1",&o1) &&
 	(NULL== pattern ||
 	 !sf_histfloat(pattern,"o1",&o1))) sf_error("Need o1=");
-    /* Output origin */
+    /*(o1 Output origin )*/
 
     sf_putint(out,"n1",n1);
     sf_putfloat(out,"o1",o1);

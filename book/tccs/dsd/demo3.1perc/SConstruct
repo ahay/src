@@ -109,7 +109,7 @@ Flow('conflictn-dif','conflictn conflictn-re','add scale=1,-1 ${SOURCES[1]}')
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Syn_ddtf'
 matfun1 = 'Syn_ddtf_dec'
 matfun2 = 'Syn_ddtf_rec'

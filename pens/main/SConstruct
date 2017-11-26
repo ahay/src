@@ -30,6 +30,7 @@ for source in sources:
     env.RSF_Include(source,prefix='pen_')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
+    env.Ignore(source+'.h',source+'.h')
     objects.append(obj)
 
 docalias = {}
@@ -44,6 +45,7 @@ placs = []
 env.RSF_Include('vppen',prefix='pen_')
 obj = env.StaticObject('vppen.c')
 env.Depends(obj,['vppen.h','../include/gendoc.h','_vp.h'])
+env.Ignore('vppen.h','vppen.h')
 main = env.Program('vppen',[obj,]+objects)
 mains.append(main)
 
@@ -54,6 +56,7 @@ inc = env.get('XINC')
 lib = env.get('XLIBPATH')
 
 env.RSF_Include('xtpen',prefix='pen_')
+env.Ignore('xtpen.h','xtpen.h')
 
 if inc and lib:
     obj = env.StaticObject('xtpen.c',CPPPATH=env.get('CPPPATH',[])+inc)
@@ -71,6 +74,7 @@ mains.append(xtmain)
 # x11pen
 #######
 env.RSF_Include('x11pen',prefix='pen_')
+env.Ignore('x11pen.h','x11pen.h')
 
 if inc and lib:
     obj = env.StaticObject('x11pen.c',CPPPATH=env.get('CPPPATH',[])+inc)
@@ -90,6 +94,7 @@ mains.append(main)
 env.RSF_Include('pspen',prefix='pen_')
 obj = env.StaticObject('pspen.c')
 env.Depends(obj,['pspen.h','../include/gendoc.h','_vp.h'])
+env.Ignore('pspen.h','pspen.h')
 main = env.Program('pspen',[obj,]+objects)
 mains.append(main)
 
@@ -97,6 +102,7 @@ mains.append(main)
 #######
 
 env.RSF_Include('raspen',prefix='pen_')
+env.Ignore('raspen.h','raspen.h')
 
 for pen in ('ppm','tiff','jpeg'):
     cap = pen.upper()
@@ -136,6 +142,7 @@ gifanim = env.get('GIFANIM')
 ffmpeg = env.get('FFMPEG')
 
 env.RSF_Include('gdpen',prefix='gd_')
+env.Ignore('gdpen.h','gdpen.h')
 
 if gd:
     path =  env.get('CPPPATH',[])
@@ -170,6 +177,7 @@ mains.append(main)
 #######
 
 env.RSF_Include('crpen',prefix='pen_')
+env.Ignore('crpen.h','crpen.h')
 path = env.get('CAIROPATH')
 
 for pen in ('png','pdf','svg'):
@@ -204,6 +212,7 @@ oglflags = env.get('OPENGLFLAGS')
 oglpath = env.get('OPENGLPATH')
 
 env.RSF_Include('oglpen',prefix='ogl_')
+env.Ignore('oglpen.h','oglpen.h')
 
 if ogl or oglflags:
     if type(ogl) is not types.ListType:

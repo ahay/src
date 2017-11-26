@@ -307,7 +307,7 @@ void cgsolve(float* z, int npnt,
        This function solves the inverse bilinear interpolation with 
        preconditioning using congugate gradient psuedo code described in 
        "Merits and challenges for accurate velocity model building by 3D 
-       gridded tomography by Guo et al. 
+       gridded tomography" by Guo et al. 
      */
 
      r=(float*)malloc(npnt*sizeof(float));

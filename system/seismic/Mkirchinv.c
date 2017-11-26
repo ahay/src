@@ -30,9 +30,9 @@ int main(int argc, char* argv[])
 {
     int n12, n1, n2, n3, i3, sw, niter;
     bool hd, ps;
-    float *data, *modl, *vrms, *error=NULL, o1,d1,o2,d2;
+    float *data, *modl, *modl0, *vrms, *error=NULL, o1,d1,o2,d2;
     char *errfile;
-    sf_file in, out, vel, err=NULL;
+    sf_file in, out, vel, in0, err=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -66,6 +66,15 @@ int main(int argc, char* argv[])
     data = sf_floatalloc(n12);
     modl = sf_floatalloc(n12);
 
+    if (NULL != sf_getstring("model0")) {
+        in0 = sf_input("model0");
+        modl0 = sf_floatalloc(n12);
+        sf_floatread(modl0,n12,in0);
+        sf_fileclose(in0);
+    } else {
+        modl0 = NULL;
+    } 
+
     if (niter > 0) {
 	errfile = sf_getstring("err");
 	/* output file for error */
@@ -86,7 +95,7 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread (data,n12,in);
 
-	invert(kirchnew_lop,niter,niter,n12,n12,modl,data,error);
+	invert(kirchnew_lop,niter,niter,n12,n12,modl,modl0,data,error);
 
 	sf_floatwrite (modl,n12,out);
 	if (NULL != err) sf_floatwrite(error,niter,err);

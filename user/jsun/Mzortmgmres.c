@@ -22,7 +22,7 @@
 #include <omp.h>
 #endif
 
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 #include "timer.h"
 #include "zolsrtm2.h"
 #include "cgmres.h"
@@ -31,7 +31,10 @@ int main(int argc, char* argv[])
 {
     bool adj,timer,verb,gmres;
     int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, gpz, wfnt, i;
-    int m2, n2, nk, nth=1;
+    int m2, m2b, n2, nk;
+#ifdef _OPENMP
+    int nth=1;
+#endif
     int niter, mem;
     float dt, dx, dz, ox;
     sf_complex *img, *imgout, *dat, **lt1, **rt1, **lt2, **rt2, ***wvfld;
@@ -164,14 +167,14 @@ int main(int argc, char* argv[])
     rightb = sf_input("rightb");
     
     if (!sf_histint(leftb,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in leftb",nzx);
-    if (!sf_histint(leftb,"n2",&m2))  sf_error("No n2= in leftb");
-    if (!sf_histint(rightb,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in rightb",m2);
+    if (!sf_histint(leftb,"n2",&m2b))  sf_error("No n2= in leftb");
+    if (!sf_histint(rightb,"n1",&n2) || n2 != m2b) sf_error("Need n1=%d in rightb",m2b);
     if (!sf_histint(rightb,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in rightb",nk);
     
     lt1 = sf_complexalloc2(nzx,m2); /* propagator for forward modeling */
     rt1 = sf_complexalloc2(m2,nk);
-    lt2 = sf_complexalloc2(nzx,m2); /* propagator for backward imaging */
-    rt2 = sf_complexalloc2(m2,nk);
+    lt2 = sf_complexalloc2(nzx,m2b); /* propagator for backward imaging */
+    rt2 = sf_complexalloc2(m2b,nk);
     img = sf_complexalloc(nz*nx);
     dat = sf_complexalloc(nt*nx);
     imgout = sf_complexalloc(nz*nx);
@@ -181,8 +184,8 @@ int main(int argc, char* argv[])
 
     sf_complexread(lt1[0],nzx*m2,leftf);
     sf_complexread(rt1[0],m2*nk,rightf);
-    sf_complexread(lt2[0],nzx*m2,leftb);
-    sf_complexread(rt2[0],m2*nk,rightb);
+    sf_complexread(lt2[0],nzx*m2b,leftb);
+    sf_complexread(rt2[0],m2b*nk,rightb);
     if (adj) sf_complexread(dat,ntx,data);
     else sf_complexread(img,nzx,image);
 
@@ -215,6 +218,7 @@ int main(int argc, char* argv[])
     geop->nzx2= nzx2;
     geop->nk  = nk;
     geop->m2  = m2;
+    geop->m2b = m2b;
     geop->wfnt= wfnt;
     geop->pad1= pad1;
     geop->verb= verb;

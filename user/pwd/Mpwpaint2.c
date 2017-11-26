@@ -51,6 +51,8 @@ int main (int argc, char *argv[])
 	time = NULL;
     } else if (data) {
 	sf_error("Need seed=");
+	seed = NULL;
+	time = NULL;
     } else {
 	seed = NULL;
 	time = sf_floatalloc(n1);

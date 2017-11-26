@@ -159,7 +159,7 @@ def frq(frqRC,frqCC,datCC,cos,par):
          put label1=g label2=t label3=w
          ''' % par)
     Plot(par['prefix']+frqRC,frqRC,'window j3=10 | real | transp |' % par
-         + rgrey('title= gainpanel=a',par),view=1)
+         + rgrey('title= gainpanel=a',par))
 
 # run migration
 def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):

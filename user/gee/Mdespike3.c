@@ -50,10 +50,10 @@ int main(int argc, char* argv[])
 	for (i3=0; i3 < n3; i3++) { shift3 = SF_MAX (0, SF_MIN (n3-wide3, i3-wide3/2));
 	    for (i2=0; i2 < n2; i2++) { shift2 = SF_MAX (0, SF_MIN (n2-wide2, i2-wide2/2));
 		for (i1=0; i1 < n1; i1++) { shift1 = SF_MAX (0, SF_MIN (n1-wide1, i1-wide1/2));
-		    for (i=0; i < wide; i++) {
-			for (j=0; j < wide; j++) {
-			    for (k=0; k < wide; k++) {
-				win[i][j][k] = data[shift3+k][shift2+i][shift1+j];
+		    for (i=0; i < wide3; i++) {
+			for (j=0; j < wide2; j++) {
+			    for (k=0; k < wide1; k++) {
+				win[i][j][k] = data[shift3+i][shift2+j][shift1+k];
 			    }
 			}
 		    }

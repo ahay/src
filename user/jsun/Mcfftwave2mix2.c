@@ -1,4 +1,4 @@
-/* Complex 2-D wave propagation (with kiss-fft)*/
+/* Complex 2-D wave propagation */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "cfft2nsps.h"
+#include "cfft2w.h"
 
 int main(int argc, char* argv[])
 {

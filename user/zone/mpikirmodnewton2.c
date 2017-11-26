@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <float.h>
 #include <rsf.h>
-#include "mpikirmodnewton2.h"
 #include <mpi.h>
 
 #include "mpikirmod2.h"

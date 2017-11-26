@@ -18,7 +18,7 @@
 */
 
 #include <rsf.h>
-#include "jacobi2.h"
+#include "ceig.h"
 
 static float (*func)(sf_complex);
 
@@ -36,9 +36,9 @@ int main(int argc, char* argv[])
 {
     bool verb;
     char *sort;
-    int j, k, n, m, i2, n2, iter, niter, *map;
+    int j, k, n, m, i2, n2, niter, *map;
     sf_complex **a, *e, *old;
-    float s2,s0=1.,tol, dist, dk;
+    float tol, dist, dk;
     sf_file poly, root;
 
     sf_init(argc,argv);
@@ -83,7 +83,8 @@ int main(int argc, char* argv[])
     e = sf_complexalloc(n);
     old = sf_complexalloc(n-1);
     map = sf_intalloc(n-1);
-    jacobi2_init(n,verb);
+
+    ceig_init(verb,n);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_complexread(e,n,poly);
@@ -108,27 +109,8 @@ int main(int argc, char* argv[])
 	    a[m-1][j]=sf_cneg(sf_cdiv(e[j],e[m]));
 #endif
 	}
-	for (iter=0; iter < niter; iter++) {
-	    s2 = 0.;
-	    for (j=0; j < m; j++) {
-		for (k=0; k < m; k++) {
-		    s2 += jacobi2(a,m,j,k);
-		}
-	    }
-	    if (verb) sf_warning("iter=%d s2=%g",iter+1,s2);
-	    if (0==iter) {
-		s0 = s2;
-	    } else {
-		if (s2 <= s0*tol) break;
-	    }
-	}
 
-	for (j=0; j < m; j++) {
-	    e[j]=a[j][j];
-	}
-	for (j=m; j < n-1; j++) {
-	    e[j]=sf_cmplx(0.,0.);
-	}
+	ceig(niter,tol,m,a,e);
 	
 	if (0==i2) {
 	    /* sort the first set of roots */

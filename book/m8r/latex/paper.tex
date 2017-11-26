@@ -11,7 +11,15 @@ Lamport in early 1980s \cite[]{latex} as an extension of Donuld
 Knuth's \TeX system \cite[]{tex}. \LaTeX is widely used in different
 fields of science and engineering.
 
-\LaTeX files are text files...
+\LaTeX files are text files that can be edited in regular text
+editors. Similarly to HTML and Markdown, \LaTeX is a descriptive
+language: one can learn it by example following other \LaTeX
+documents. As of 2016, the Madagascar package contains more than 200
+papers and book chapters written in \LaTeX. You can find the source of
+this chapter in
+\href{https://github.com/ahay/src/blob/master/book/m8r/latex/paper.tex}
+     {\$RSFSRC/book/m8r/latex/paper.tex}
+and attached in the appendix.
 
 SEG\TeX is a collection of \LaTeX macros developed for geophysical
 publications, such as \emph{Geophysics} articles, SEG (Society of
@@ -25,9 +33,67 @@ document into multiple outputs: paper in a journal, chapter in a book,
 an expanded abstract for a conference, etc. It can also produce
 multiple output formats, namely PDF and HTML.
 
-\section{Example paper}
+\section{SCons processing}
+
+Handling \LaTeX documents in Madagascar is made easier with customized
+SCons rules provided in \texttt{rsf.tex} package (for handling
+individual papers) and \texttt{rsf.book} package (for handling books
+and reports).
+
+If a \LaTeX paper file has the name
+\texttt{article.tex}, the \texttt{SConstruct} script for processing it
+may look like
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  from rsf.tex import *
+
+  Paper('article',use='amsmath',options='10pt')
+\end{lstlisting}
+After running
+\begin{verbatim}
+scons article.pdf
+\end{verbatim}
+the paper will be processed to generate a PDF document.
+
+According to
+the Madagascar convention, the source LaTeX file
+(\texttt{article.tex}) does not contain the usual preamble
+\texttt{\\documentclass} information, as well as
+\texttt{\\begin{document}} and \texttt{\\end{document}} commands. This
+  is done so that the same paper could be easily integrated into a
+  collection of papers in a report or as a chapter in a book. Running \texttt{scons article.pdf} generates an intermediate file \texttt{article.ltx}, which contains the following preamble:
+\lstset{language=tex,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  \documentclass[10pt]{geophysics}
+  \usepackage{amsmath}
+  \begin{document}
+\end{lstlisting}
+  and ends with
+\begin{lstlisting}
+  \end{document}
+\end{lstlisting}
+  
+Several optional arguments can be supplied to the \texttt{Paper()} command:
+\begin{description}
+\item[source=] specifies
+\item[lclass=] specifies
+\item[scons=] specifies
+\item[use=] specifies
+\item[include=] specifies
+\item[options=] specifies
+\end{description}
+Some additional arguments control the placement of reproducible
+figures and are described in the next section.
+
+End()...
+
+\subsection{Including reproducible results}
 
 \subsection{Multiple outputs}
+
+\subsubsection{Multiple styles}
+
+\subsubsection{Multiple formats}
 
 \section{Including papers into books and reports}
 
@@ -39,3 +105,9 @@ Claerbout's vision of reproducible research \cite[]{sep}.
 
 \bibliographystyle{seg}
 \bibliography{latex}
+
+\appendix
+\section{Appendix: The source of this document}
+
+\verbatiminput{paper.tex}
+

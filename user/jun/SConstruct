@@ -24,15 +24,6 @@ env['LINK']=F90
 
 mains = Split(progs)
 
-if 'f90' in api and F90:
-
-    F90base =  os.path.basename(F90)
-
-    if F90base[:8] == 'gfortran' or F90base[:3] == 'gfc':
-        env.Append(F90FLAGS=' -J${SOURCE.dir}')
-    elif F90base[:5] == 'ifort':
-        env.Append(F90FLAGS=' -module ${SOURCE.dir}/../../include')
-
 for prog in mains:
     sources = ['M' + prog]
 
@@ -52,7 +43,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),mains)
+    docs = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90',SCANNERS=[]),mains)
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

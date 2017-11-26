@@ -1,0 +1,44 @@
+
+import os, sys, re, string
+sys.path.append('../../framework')
+import bldutil
+
+pyprogs = 'backusave mqrbf'
+
+progs = ''' '''
+#refl
+#'''
+
+mains = Split(progs)
+
+try:  # distributed version
+    Import('env root pkgdir bindir libdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+
+#################
+# PYTHON PROGRAMS
+#################
+
+if root: # no compilation, just rename
+    pymains = Split(pyprogs)
+    exe = env.get('PROGSUFFIX','')
+    for prog in pymains:
+        binary = os.path.join(bindir,'sf'+prog+exe)
+        env.InstallAs(binary,'M'+prog+'.py')
+        env.AddPostAction(binary,Chmod(str(binary),0755))
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    
+    docs = map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+    env.Depends(docs,'#/framework/rsf/doc.py')	
+
+    doc = env.RSF_Docmerge(main,docs)
+    env.Install(pkgdir,doc)

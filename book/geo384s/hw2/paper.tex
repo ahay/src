@@ -1,0 +1,378 @@
+\author{Team: Longhorns}
+%%%%%%%%%%%%%%%%%%%%%%%%
+\title{GEO 365N/384S Seismic Data Processing \\ Computational Assignment 2}
+
+\begin{abstract}
+  This assignment has three parts:
+  \begin{enumerate}
+  \item Analyzing seismic acquisition geometry for a 3D land survey.     
+  \item Applying post-stack Fourier-domain seismic migration on 2D
+    marine data.
+  \item Applying Fourier-domain filtering to attenuate ground-roll noise in 2D
+    land data.                  
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org/}
+\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. 
+
+To setup the Madagascar environment in the JGB 3.216B computer lab, run the following commands:
+\begin{verbatim}
+module load madagascar-devel
+source $RSFROOT/share/madagascar/etc/env.csh
+setenv DATAPATH $HOME/data/
+setenv RSFBOOK $HOME/data/book
+setenv RSFFIGS $HOME/data/figs
+\end{verbatim}
+You can put these commands in your \verb+$HOME/.cshrc+ file to run them automatically at login time.
+
+To setup the \LaTeX\ environment, run the following commands:
+\begin{verbatim}
+cd
+git clone https://github.com/SEGTeX/texmf.git
+texhash
+\end{verbatim}
+You only need to do it once.
+
+The homework code is available from the class repository
+by running
+\begin{verbatim}
+svn co https://github.com/TCCS-BEG/geo384s/trunk/hw2
+\end{verbatim}
+You can also download it from your team's private repository.
+
+\section{Generating this document}
+
+At any point of doing this computational assignment, you can
+regenerate this document and display it on your screen.
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw2}:
+\begin{verbatim}
+cd hw2
+\end{verbatim}
+\item Run
+\begin{verbatim}
+sftour scons lock
+scons read &
+\end{verbatim}
+\end{enumerate}
+
+As the first step, open \texttt{hw2/paper.tex} file in your favorite
+editor and edit the first line to enter the name of your team. Then
+run \texttt{scons read} again.
+
+\section{Seismic acquisition geometry}
+\inputdir{land3d}
+
+In this part of the assignment, we will analyze the acquisition
+geometry of a 3D land seismic survey (the Teapot Dome dataset).
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw2/land3d}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item Run
+\begin{verbatim}
+scons scoord.view 
+\end{verbatim}
+and
+\begin{verbatim}
+scons gcoord.view 
+\end{verbatim}
+to observe the distribution of sources and receivers in the Teapot Dome dataset.
+
+\item Run
+\begin{verbatim}
+scons fold.view 
+\end{verbatim}
+to observe the CMP (common midpoint) fold map (Figure~\ref{fig:fold}). The numbers in the map
+indicate the number of traces for each midpoint bin.
+
+What is the maximum fold? 
+
+\answer{% Enter your answer here
+
+}
+
+Can you find the physical size of one midpoint bin in this dataset?
+
+\answer{% Enter your answer here
+
+}
+
+\item The distribution (histogram) of offsets is plotted in Figure~\ref{fig:hist}. If we plot the CMP fold map not for all traces but only for traces with offsets larger than 10~kft, the fold map takes the shape shown in Figure~\ref{fig:fold2}. Run
+\begin{verbatim}
+scons fold2.view 
+\end{verbatim}
+to display it on your screen. What is the maximum fold?
+
+Find the minimum offset such that the maximum CMP fold for traces with offsets larger than the selected offset is equal to 10. Edit the \texttt{SConstruct} file to generate a new plot.
+
+\multiplot{2}{fold,fold2}{width=0.45\textwidth}{CMP fold map: (a) all offsets, (b) offsets greater than 10 kft.}
+
+\sideplot{hist}{width=\textwidth}{Distribution of offsets in the Teapot Dome dataset.}
+
+\item Figure~\ref{fig:cmp-sr} plots all source-receiver pairs for a CMP bin at Crossline 100 and Inline 200. Run
+\begin{verbatim}
+scons cmp-sr.view 
+\end{verbatim}
+to display it on your screen. 
+
+\sideplot{cmp-sr}{width=\textwidth}{Source-receiver pairs plotted as lines for the CMP bin at Crossline 100 and Inline 200 inline location.}
+
+Find a CMP bin with the maximum fold and create a similar plot for that bin. Edit the \texttt{SConstruct} file to make the change.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=data/SConstruct]{land3d/SConstruct}
+
+\section{Post-stack migration}
+\inputdir{migration}
+
+In this part of the assignment, we will jump to end of the processing flow and experiment with seismic migration applied to the previously generated stack of the Viking Graben dataset. The particular migration algorithm that we will use is Stolt migration based on the Fourier transform \cite[]{GEO50-11-22192244}.
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw2/migration}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item The input to migration is the stacked section (Figure~\ref{fig:viking}.) You can display it on your screen by running 
+\begin{verbatim}
+scons viking.view
+\end{verbatim}
+
+\plot{viking}{width=\textwidth}{Viking Graben stack.}
+
+\item Stolt migration amounts to a 2D Fourier transform from the time-space $\{t,y\}$ coordinates of the stack to the frequency-wavenumber coordinates $\{\omega,k\}$ followed by mapping from $\omega$ to $\omega_0$ according to
+\begin{equation}
+\label{eq:stolt}
+\omega = \sqrt{\omega_0^2 + \frac{v^2}{4}\,k^2}\;,
+\end{equation}
+where $v$ is the migration velocity, and the inverse Fourier transform
+from $\{\omega_0,k\}$ to $\{t_0,x_0\}$ coordinates of the
+time-migrated image.
+
+To compute and display the map from equation~(\ref{eq:stolt}), run
+\begin{verbatim}
+scons map2.view
+\end{verbatim}
+
+To display the 2-D Fourier transform (actually 2-D cosine transform)
+of the Viking Graben data before and after Stolt mapping with
+$v=2$~km/s (Figure~\ref{fig:cosft,cosft2}), run
+\begin{verbatim}
+scons cosft.view
+scons cosft2.view
+\end{verbatim}
+
+\multiplot{2}{cosft,cosft2}{width=0.45\textwidth}{Viking Graben stack in the Cosine transform domain before (a) and after (b) Stolt migration with velocity 2 km/s.}
+\plot{mig2}{width=\textwidth}{Viking Graben stack migrated with velocity of 2 km/s.}
+
+What makes it possible to use real-valued cosine transform instead of
+the complex-valued Fourier transform in this case?
+
+\answer{% Put your answer here
+
+}
+
+\item Run
+\begin{verbatim}
+scons mig2.view
+\end{verbatim}
+to display a seismic image migrated with the velocity of 2~km/s. To look at the change brought by migration (Figure~\ref{fig:mig2}), run
+\begin{verbatim}
+sfpen Fig/viking.vpl Fig/mig2.vpl
+\end{verbatim}
+What changes do you notice?
+
+\answer{%Put your answer here
+
+}
+
+\item Of course, the real velocity is not constant and is likely to change in space. To try a more realistic velocity distribution, we will start first with a velocity increasing linearly with vertical time (Figure~\ref{fig:vmig}.) The velocity starts with 1.5~km/s (water velocity) at the surface and increases to 3.5~km/s at the vertical time of 4 s. To perform migration with a variable velocity using the Stolt method, we will migrate with a number of constant velocities in the range from 1.5 to 3.5~km/s and then slice through this ensemble of migrations to create an image \cite[]{GEO57-01-00510059}. Thanks to the speed of the FFT algorithm, the whole operation is reasonably fast.
+
+\multiplot{2}{vmig,vmigp}{width=0.45\textwidth}{Variable migration velocity with a vertical gradient (a) and manually updated (b).}
+
+To generate an image using an ensemble of Stolt migrations (Figure~\ref{fig:mig}), run
+\begin{verbatim}
+scons mig.vpl
+scons mig.view
+\end{verbatim}
+To look at the change brought by a variable velocity, run
+\begin{verbatim}
+sfpen Fig/mig2.vpl Fig/mig.vpl
+\end{verbatim}
+Do you notice any interesting changes?
+
+\plot{mig}{width=\textwidth}{Viking Graben stack migrated with variable velocity.}
+
+\item Let us select a small region of the image where a particularly interesting change occurs. One of such regions is shown in Figure~\ref{fig:zoom}. To display it on your screen, run
+\begin{verbatim}
+scons box.view
+scons zoom.view
+\end{verbatim}
+
+\plot{zoom}{width=\textwidth}{Zoomed comparison: (a) unmigrated stack, (b) migrated with 2 km/s, (c) migrated with variable velocity.}
+
+Edit and modify the \texttt{SConstruct} file to select a different region that you find interesting and modify the figure.
+
+You can use \texttt{sfzoom} program to zoom an image interactively and to find a good window:
+\begin{verbatim}
+sfzoom slice.rsf
+\end{verbatim}
+
+\item Our simple linearly-increasing velocity is also not accurate. Let us try to improve it. One way to do it is by using interactive processing: looking through images migrated with different velocities and picking the best focused results. Figure~\ref{fig:vmigp} shows a migrated velocity updated in this manner. The corresponding image is shown in Figure~\ref{fig:migp}.
+
+To generate your own picks interactively, uncomment the following line in the \texttt{SConstruct} file:
+\begin{verbatim}
+Flow('picks.txt','migs','ipick')
+\end{verbatim}
+and run
+\begin{verbatim}
+scons picks.txt
+\end{verbatim}
+The interactive program \texttt{sfipick} will allow you to step
+through images created by modifying the linearly-increasing velocity
+and to pick values corresponding to the best-focused features. To see
+the results of your picking, run
+\begin{verbatim}
+scons picks.view
+scons vmigp.view
+scons migp.view
+\end{verbatim}
+You may need to adjust \texttt{n2=20} parameter in
+the \texttt{SConstruct} file to correspond to the number of your
+picks.
+
+If you are not satisfied with the result, you can remove the \texttt{picks.txt} file and repeat this step.
+
+\plot{migp}{width=\textwidth}{Viking Graben stack migrated with updated velocity.}
+
+Later in the class, we will work with more accurate and more automatic
+methods for estimation of migration velocities using prestack data.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=data/SConstruct]{migration/SConstruct}
+
+\section{Ground-roll attenuation}
+\inputdir{groundroll}
+
+In this part of the assignment, we will start processing the 2D land
+dataset from Alaska going from field records and proceeding to the
+important step of attenuating ground-roll noise (surface waves
+obscuring useful reflections).
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw2/groundroll}.
+\item Run
+\begin{verbatim}
+scons -c
+\end{verbatim}
+to remove (clean) previously generated files.
+\item The first processing steps involve collecting data from three input SEGY files, convert them to the RSF format, and extracting acquisition geometry to transform the data into shot gathers (Figure~\ref{fig:shots}). Run
+\begin{verbatim}
+scons shots.view
+\end{verbatim}
+to see the result of this step. Run
+\begin{verbatim}
+scons shots.vpl
+\end{verbatim}
+to see a movie looping through different shots.
+\item The next step is \emph{elevation statics}: applying time shifts to each trace to correct for the variable elevation of sources and receivers. The elevation data comes from observer notes. Run
+\begin{verbatim}
+scons eshots.view
+\end{verbatim}
+to see the result of the elevation static corrections. In this dataset,
+the static shift caused by elevation is small (Figure~\ref{fig:estat}).
+
+\multiplot{2}{shots,eshots}{width=0.45\textwidth}{Alaska shot gathers before (a) and after (b) elevation statics.}
+\sideplot{estat}{width=\textwidth}{Elevation statics for the Alaska data.}
+
+\item The focus of this assignment will be on removing the ground-roll
+  (surface-wave) noise from the data. To prepare the data for the
+  ground-roll removal, we will apply first a number of normalizing corrections:
+\begin{enumerate}
+\item A time-power correction (multiplication by time).
+\item Muting of data appearing before the direct arrival corresponding to the assumed near-surface velocity (10~kft/s).    
+\item Variable automatic-gain correction (AGC) performed by normalizing the data by the local average.
+\end{enumerate}
+To see the results of this step, run
+\begin{verbatim}
+scons gshots.view
+\end{verbatim}
+\item We will design the ground-roll elimination filter as a muting function in the Fourier domain. 
+
+\multiplot{2}{gshots,fshots}{width=0.45\textwidth}{Alaska shot gathers after gain and mute correction (a) and ground-roll attenuation (b).}
+
+Let us design the filter by focusing on one selected shot gather. The
+2-D Fourier spectrum of the gather before and after filtering is shown
+in Figure~\ref{fig:fft,filter}. The Fourier-domain mute function is
+shown in Figure~\ref{fig:mute}. The corresponding separation of the gather into signal and noise is shown in Figure~\ref{fig:signal}. Ideally, we would like to see no noise remaining in the estimated signal and no signal leaking into the estimated noise.
+
+To reproduce the denoising result, run
+\begin{verbatim}
+scons signal.view
+\end{verbatim}
+To display the Fourier-domain functions, run
+\begin{verbatim}
+scons fft.view
+scons mute.view
+scons filter.view
+\end{verbatim}
+
+The mute function is implemented in the attached \texttt{filter.c}
+program and is designed as a triangular wedge controlled by two
+command-line parameters: velocities \texttt{v1} and \texttt{v2}. The
+filter passes seismic events with velocities higher than \texttt{v2},
+attenuates those with velocities smaller than \texttt{v1}, and makes a
+smooth transition in between using a sine taper. 
+
+\multiplot{2}{fft,filter}{width=0.45\textwidth}{fft,filter}{The 2-D Fourier spectrum of the Alaska shot before (a) and after (b) ground-roll attenuation.} 
+
+\sideplot{mute}{width=0.9\textwidth}{Fourier-domain mute function used for ground-roll attenuation.} 
+
+\plot{signal}{width=0.8\textwidth}{Shot gather separated into signal and noise by ground-roll attenuation.}
+
+To run the ground-roll attenuation filter on all shot gathers, run
+\begin{verbatim}
+scons fshots.view
+\end{verbatim}
+
+\item Your task is to try improving the quality of the noise attenuation. You can do it by selecting better parameters or (for \textbf{EXTRA CREDIT}) by modifying the \texttt{filter.c} program or replacing it with your own program. Test your change not only on the selected shot gather but also on other gathers to make sure you achieve an improvement. Document your processing choices and create new figures if necessary.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=sorting/clip.c]{groundroll/filter.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=data/SConstruct]{groundroll/SConstruct}
+
+\end{enumerate}
+
+\section{Saving your work}
+
+It is important to save all files that you edit by hand (such
+as \texttt{paper.tex} and \texttt{SConstruct}) in a version-control
+system every time you make a revision.  The completed assignment is
+due in two weeks and should be submitted through your private GitHub
+repository.
+
+\bibliographystyle{seg}
+\bibliography{SEG}

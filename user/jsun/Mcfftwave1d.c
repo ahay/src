@@ -90,6 +90,9 @@ int main(int argc, char* argv[])
 	prev   = sf_complexalloc(nx2);
 	rprev = NULL;
       }
+    } else {
+	prev = NULL;
+	rprev = NULL;
     }
 
     if (NULL != sf_getstring("right")) {

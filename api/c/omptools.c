@@ -8,7 +8,7 @@
 #endif
 
 /*------------------------------------------------------------*/
-int omp_init()
+int omp_init(void)
 /*< init OMP parameters >*/
 {
     int ompnth=1;

@@ -1,0 +1,51 @@
+import os, sys, string
+sys.path.append('../../framework')
+import bldutil
+
+try:  # distributed version
+    Import('env root bindir pkgdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript('../../api/c++/SConstruct')
+
+inc = Glob('[a-z]*.hh')
+
+cpp = 'c++' in env.get('API',[])
+
+if cpp:
+    libs = [env.get('DYNLIB','')+'rsf++',
+            env.get('DYNLIB','')+'rsf']
+    env.Prepend(CPPPATH=['../../include'],
+                LIBPATH=['../../lib'],
+                LIBS=libs)
+
+    lib = env.StaticLibrary('harlan','cg.cc',CCFLAGS='')
+    env.Install('../../lib',lib)
+    env.Install('../../include',inc)
+
+env.Command('Mtestcg.cc','cg.cc','cp $SOURCE $TARGET')
+
+if cpp:
+    prog = env.Program('testcg',['Mtestcg.cc',lib],
+                       CPPDEFINES=env.get('CPPDEFINES',[])+['TESTCG'])
+    env.Depends(prog,inc)
+else:
+    prog = env.RSF_Place('sftestcg',None,var='LAPACK',package='lapack')
+
+if root:
+    env.Install(bindir,prog)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    
+    docs = [env.Doc('testcg','Mtestcg.cc',lang='c++')]
+    env.Depends(docs,'#/framework/rsf/doc.py')
+    doc = env.RSF_Docmerge(main,docs)
+    env.Install(pkgdir,doc)
+#####################################################################

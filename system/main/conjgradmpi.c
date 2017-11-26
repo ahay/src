@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 {
     int i, iter, niter;
     float *buf, *buf2, *wht;
-    double rn, rnp, alpha, beta;
+    double rn, rnp=0.0, alpha, beta;
     off_t nm, nd, msiz, dsiz, pos;
     size_t nbuf, mbuf, dbuf, len, iolen, cmdlen;
     FILE *xfile, *Rfile, *gfile, *Gfile, *sfile, *Sfile;
@@ -105,17 +105,17 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=1;
     /* number of iterations */
 
-    Rfile = sf_tempfile(&R,"w+b"); 
+    Rfile = sf_tempfile(&R,"w+"); 
     xfile = sf_tempfile(&x,"w+b"); 
-    gfile = sf_tempfile(&g,"w+b");
-    Gfile = sf_tempfile(&G,"w+b");
+    gfile = sf_tempfile(&g,"w+");
+    Gfile = sf_tempfile(&G,"w+");
     sfile = sf_tempfile(&s,"w+b");
     Sfile = sf_tempfile(&S,"w+b");
 
-    fclose(Rfile); Rrsf = sf_output(R);
+    fclose(Rfile); Rrsf = sf_output(R); sf_readwrite(Rrsf,true); sf_fileflush(Rrsf,dat);
     fclose(xfile);
-    fclose(gfile); grsf = sf_output(g); sf_fileflush(grsf,mod);
-    fclose(Gfile); Grsf = sf_output(G);
+    fclose(gfile); 
+    fclose(Gfile); 
     fclose(sfile);
     fclose(Sfile);
 
@@ -170,6 +170,7 @@ int main(int argc, char* argv[])
 	    DLOOP( sf_floatread(buf,dbuf,dat); 
 		   for (i=0; i < dbuf; i++) { buf[i] = -buf[i]; }
 		   sf_floatwrite(buf,dbuf,Rrsf); );
+	    sf_fflush(Rrsf);
 	} 
 	
 	sf_warning("iter %d of %d",iter+1,niter);
@@ -183,8 +184,6 @@ int main(int argc, char* argv[])
 
 	sf_warning(cmdline);
 	sf_system(cmdline);
-
-	gfile = fopen(g,"w+b");
 	
 	/* rn = ddot(g) */
 	    
@@ -192,7 +191,7 @@ int main(int argc, char* argv[])
 
 	if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
 
-	sf_seek(grsf,0,SEEK_SET);
+	grsf = sf_input(g); 
 	
 	MLOOP( sf_floatread(buf,mbuf,grsf);
 
@@ -202,7 +201,7 @@ int main(int argc, char* argv[])
 	       }
 
 	       for (i=0; i < mbuf; i++) { rn += (double) buf[i] * buf[i]; }
-	       MWRITE(gfile); );
+	    );
 	    
 	sfile = fopen(s,"r+b");
 
@@ -217,16 +216,13 @@ int main(int argc, char* argv[])
 
 	rnp = rn;
 	    
-	if (0 > fseeko(gfile,0,SEEK_SET))
-	    sf_error ("seek problem");
-
 	/* s = g + alpha*s */
 
 	if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
 
 	sf_seek(grsf,0,SEEK_SET);
 	    
-	MLOOP( MREAD(gfile); sf_floatwrite(buf,mbuf,grsf);
+	MLOOP( sf_floatread(buf,mbuf,grsf);
 		   
 	       if (NULL != mwt) { 
 		   sf_floatread(wht,mbuf,mwt);
@@ -245,9 +241,9 @@ int main(int argc, char* argv[])
 	       } 
 		   
 	       MWRITE(sfile); );
-
-	fclose(gfile);
+	
 	fclose(sfile);
+	sf_fileclose(grsf);
 
 	sf_warning("grad=%lg",rn);
 
@@ -264,7 +260,7 @@ int main(int argc, char* argv[])
 	
 	/* reads G, does computations with it */
 
-	Sfile = fopen(S,"r+b");
+	Sfile = fopen(S,"r+b"); if (NULL == Sfile) sf_error("Cannot open %s:",S);
 
 	/* beta = ddot(ss) */
 
@@ -272,7 +268,7 @@ int main(int argc, char* argv[])
 
 	/* ss = gg + alpha * ss */
 
-	sf_seek(Grsf,0,SEEK_SET);
+	Grsf = sf_input(G); 
 
 	DLOOP( sf_floatread(buf,dbuf,Grsf);
 
@@ -284,7 +280,7 @@ int main(int argc, char* argv[])
 		   if (0 > fseeko(Sfile,pos,SEEK_SET))
 		       sf_error ("seek problem");
 		    
-		   cblas_saxpy(dbuf,alpha,buf2,1,buf,1);
+		   cblas_saxpy(dbuf,alpha,buf2,1,buf,1);		   
 	       }
 
 	       beta += cblas_dsdot(dbuf,buf,1,buf,1);
@@ -292,6 +288,8 @@ int main(int argc, char* argv[])
 	       DWRITE(Sfile); );
 
 	fclose(Sfile);
+
+	sf_fileclose(Grsf);
 
 	alpha = - rn/beta;
 
@@ -318,9 +316,10 @@ int main(int argc, char* argv[])
 	Sfile = fopen(S,"rb");  if (NULL == Sfile) sf_error("Cannot open %s:",S);
 
 	sf_seek(Rrsf,0,SEEK_SET);
-	
+
 	DLOOP(
 	    pos = sf_tell(Rrsf);
+	    
 	    sf_floatread(buf,dbuf,Rrsf);
 	    
 	    DREAD2 (Sfile);
@@ -328,6 +327,7 @@ int main(int argc, char* argv[])
 	    cblas_saxpy(dbuf,alpha,buf2,1,buf,1);
 	       
 	    sf_seek(Rrsf,pos,SEEK_SET);
+	    
 	    sf_floatwrite(buf,dbuf,Rrsf);
 	    );
 
@@ -343,6 +343,7 @@ int main(int argc, char* argv[])
     unlink(R);
     unlink(x);
     unlink(g);
+    unlink(G);
     unlink(s);
     unlink(S);
 

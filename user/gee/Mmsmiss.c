@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 	for (id=0; id < dim; id++) {
 	    b[id] = a[id]*jump[is];
 	}
-	bound (dim, m, n, b, aa);
+	bound (dim, false, m, n, b, aa);
 	for (id=0; id < nd; id++) {
 	    msaa->mis[is][id] = aa->mis[id];
 	}

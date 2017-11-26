@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 {
     int niter, nd, n1, n2, i1, i2, rect1, rect2, order;
     float **vr, **vi, **wt, **v0, **dp, wti, lam;
-    sf_file vrms, vint, weight, vout, dip;
+    sf_file vrms, vint, weight, vout, dip, prior;
 
     sf_init(argc,argv);
     vrms = sf_input("in");
@@ -78,11 +78,25 @@ int main(int argc, char* argv[])
     }
     if (wti > 0.) wti = sqrtf(n1*n2/wti);
 
+    if (NULL != sf_getstring("prior")) {
+	/* prior velocity model */
+	prior = sf_input("prior");
+	sf_floatread(v0[0],nd,prior);
+
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		v0[i2][i1] *= -v0[i2][i1];
+	    }
+	}
+    } else {
+	prior = NULL;
+    }
+
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    vr[i2][i1] *= vr[i2][i1]*(i1+1.); /* vrms^2*t - data */
 	    wt[i2][i1] *= wti/(i1+1.); /* decrease weight with time */	 
-	    v0[i2][i1] = -vr[i2][0];
+	    if (NULL==prior) v0[i2][i1] = -vr[i2][0];
 	}
     }
     

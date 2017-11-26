@@ -1,4 +1,8 @@
-/* Seislet transform */
+/* Seislet transform 
+
+April 2017 program of the month:
+http://ahay.org/blog/2017/04/19/program-of-the-month-sfseislet/
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
    

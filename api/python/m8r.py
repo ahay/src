@@ -164,6 +164,7 @@ class File(object):
         if isinstance(tag,File):
             # copy file (name is ignored)
             self.__init__(tag.tag)
+            tag.close()
         elif _swig_ and isinstance(tag,numpy.ndarray):
             # numpy array
             if not name:
@@ -240,7 +241,7 @@ class File(object):
             mul = Filter('scale')(dscale=float(other))
             return mul[self]
         except:
-            mul = Filter('add')(mode='product')
+            mul = Filter('mul')(mode='product')
             return mul[self,other]
     def __div__(self,other):
         'Overload division'
@@ -256,21 +257,27 @@ class File(object):
     def dot(self,other):
         'Dot product'
         # incorrect for complex numbers
-        prod = self.__mul__(other).reshape()
-        stack = Filter('stack')(norm=False,axis=1)[prod]
+        prod = self.__mul__(other)
+        stack = Filter('stack')(norm=False,axis=0)[prod]
         return stack[0]
-    def dot2(self):
+    def cdot2(self):
         'Dot product with itself'
         abs2 = Filter('math')(output="abs(input)").real[self]
         return abs2.dot(abs2)
+    def dot2(self):
+        'Dot product with itself'
+        return self.dot(self)
     def __array__(self,context=None):
         'numpy array'
         if _swig_:
-            # danger: dangling open file descriptor
             if None == self.narray:
                 if not hasattr(self,'file'):
-                    self.file = c_rsf.sf_input(self.tag)
-                self.narray = c_rsf.rsf_array(self.file)
+                    f = c_rsf.sf_input(self.tag)
+                else:
+                    f = self.file
+                self.narray = c_rsf.rsf_array(f)
+                if not hasattr(self,'file'):
+                    c_rsf.sf_fileclose(f)
             return self.narray
         else:
             # gets only the real part of complex arrays
@@ -368,6 +375,7 @@ class File(object):
         if self.temp:
             Filter('rm',run=True)(0,self)
     def __del__(self):
+        print 'Closing File'
         self.close()
 
 if _swig_:
@@ -385,6 +393,7 @@ if _swig_:
         def close(self):
             c_rsf.sf_fileclose(self.file)
         def __del__(self):
+            print 'Closing ', self.file
             self.close()
             File.close(self)
         def settype(self,type):
@@ -436,9 +445,11 @@ if _swig_:
             if isinstance(tag,File):
                 # copy file
                 self.__init__(tag.tag)
+                self.copy = True
             else:
                 self.file = c_rsf.sf_input(tag)
                 _File.__init__(self,tag)
+                self.copy = False
         def read(self,data):
             if self.type == 'float':
                 c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
@@ -446,6 +457,10 @@ if _swig_:
                 c_rsf.sf_complexread(numpy.reshape(data,(data.size)),self.file)
             else:
                 raise TypeError, 'Unsupported file type %s' % self.type
+        def close(self):
+            if not self.copy:
+                c_rsf.sf_fileclose(self.file)
+            _File.close(self)
 
     class Output(_File):
         def __init__(self,tag='out',src=None):
@@ -465,16 +480,23 @@ if _swig_:
                    srctype = c_rsf.sf_gettype(srcfile)
                 c_rsf.sf_settype(self.file,_File.type.index(srctype))
                 c_rsf.sf_fileflush(self.file,srcfile)
+                if not hasattr(src,'file'):
+                    c_rsf.sf_fileclose(srcfile)
             _File.__init__(self,self.tag)
         def write(self,data):
             if self.type == 'float':
-                c_rsf.sf_floatwrite(numpy.reshape(data.astype('f'),(data.size,)),self.file)
+                c_rsf.sf_floatwrite(numpy.reshape(data.astype(numpy.float32),(data.size,)),self.file)
             elif self.type == 'complex':
                 c_rsf.sf_complexwrite(numpy.reshape(data,(data.size,)),
                                       self.file)
+            elif self.type == 'int':
+                c_rsf.sf_intwrite(numpy.reshape(data.astype(numpy.int32),(data.size,)),self.file)
             else:
                 raise TypeError, 'Unsupported file type %s' % self.type
-
+        def close(self):
+            c_rsf.sf_fileclose(self.file)
+            _File.close(self)
+            
 else:
 
     class Input(object):

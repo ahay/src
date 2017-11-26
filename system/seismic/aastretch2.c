@@ -23,7 +23,8 @@
 static int nt, nd, **x;
 static float t0,dt, **w, *a, *tmp, *tmp2;
 static bool *m;
-static const int nk=5;
+
+#define NK 5
 
 void aastretch2_init (int n1   /* trace length */, 
 		      float o1 /* trace origin */, 
@@ -36,12 +37,12 @@ void aastretch2_init (int n1   /* trace length */,
     dt = d1; 
     nd = n2;
     
-    x = sf_intalloc2(nk,nd);
+    x = sf_intalloc2(NK,nd);
     m = sf_boolalloc(nd);
-    w = sf_floatalloc2(nk,nd);
+    w = sf_floatalloc2(NK,nd);
     a = sf_floatalloc(nd);
 
-    tmp = sf_floatalloc(n1*nk);
+    tmp = sf_floatalloc(n1*NK);
     tmp2 = sf_floatalloc(n1);
 }
 
@@ -51,8 +52,8 @@ void aastretch2_define (const float *coord  /* data coordinates [nd] */,
 			const float *amp    /* amplitude [nd] */)
 /*< Set up interpolation >*/
 {
-    int id, ix[nk], j;
-    float rx[nk];
+    int id, ix[NK], j;
+    float rx[NK];
 
     for (id = 0; id < nd; id++) {
 	m[id] = false;
@@ -63,7 +64,7 @@ void aastretch2_define (const float *coord  /* data coordinates [nd] */,
 	rx[3] = coord[id] - delt2[id] - dt;
 	rx[4] = coord[id] - delt1[id] - dt;
 
-	for (j=0; j < nk; j++) {
+	for (j=0; j < NK; j++) {
 	    rx[j] = (rx[j] - t0)/dt; 
 	    ix[j] = rx[j]; 
 	    if ((ix[j] < 0) || (ix[j] > nt - 2)) {
@@ -110,7 +111,7 @@ void aastretch2_lop (bool adj    /* adjoint flag */,
 	    tmp[it+4*nt] = -0.5*tmp2[it];
 	}
     } else {
-	for (it=0; it < nk*nt; it++) {
+	for (it=0; it < NK*nt; it++) {
 	    tmp[it]=0.;
 	}
     }
@@ -119,7 +120,7 @@ void aastretch2_lop (bool adj    /* adjoint flag */,
 	if (m[id]) continue;
 	
 	aa = a[id];
-	for (j=0; j < nk; j++) {
+	for (j=0; j < NK; j++) {
 	    i1 = x[id][j]; 
 	    i2 = i1 + 1;
 	    

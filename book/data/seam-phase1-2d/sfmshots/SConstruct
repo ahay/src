@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 #Flow('headerattr.txt','../fetch/vp_hdr.rsf',
 #     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
@@ -30,7 +32,7 @@ Flow('mshots','vel',
      ''')
 
 #Result('mshotsb','byte gainpanel=all |grey')
-Result('mshots','grey')
+Plot('mshots','grey title=Shots',view=1)
 
 Flow('mshotscsd','vel',
      ''' sfmshots 
@@ -41,7 +43,7 @@ Flow('mshotscsd','vel',
      ''')
 
 #Result('mshotsb','byte gainpanel=all |grey')
-Result('mshotscsd','grey')
+Plot('mshotscsd','grey title=Shots',view=1)
 
 Flow('mshots1','vel',
      ''' sfmshots 
@@ -53,9 +55,9 @@ Flow('mshots1','vel',
 
 Plot('mshots1','grey title=Shots',view=1)
 # could display 16 shots every km
-Result('seam','../fetch/shots.rsf',
-       '''
-       window j3=10 n3=2 max1=6 | grey
-       ''')
+Plot('seam','../fetch/shots.rsf',
+     '''
+     window j3=10 n3=2 max1=6 | grey title=Shots
+     ''',view=1)
  
 End()

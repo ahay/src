@@ -184,62 +184,93 @@ void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
 	}
 }
 
+
+void muting(float *datas,int ntd, int gxbeg,int gzbeg,int jgx,int jgz,int sxbeg,int szbeg,int jsx,int jsz,int is, float vmute)
+{
+	int ig,it;
+	float SX=dx*(sxbeg+is*jsx);
+	float SZ=dz*(szbeg+is*jsz);
+	float GX=0;
+	float GZ=0;
+	float dist=0;
+	float t=0;
+	int kt=0;
+	for(ig=0; ig<ng; ig++)
+	{       
+		GX=(gxbeg+jgx*ig)*dx;
+		GZ=(gzbeg+jgz*ig)*dx;
+		dist=sqrt(  (SX-GX)*(SX-GX)  +(SZ-GZ)*(SZ-GZ)           );
+		t=dist/vmute;
+		kt=(int)(t/dt)+ntd;
+		if(kt>nt) kt=nt;
+		for(it=0; it<kt; it++) datas[it*ng+ig]=0;
+	}
+}
+
 int main(int argc, char* argv[])
 {
-	bool csdgather;
-	int iz, ix, ib,is, it, jsx, jsz, jgx, jgz, sxbeg, szbeg, gxbeg, gzbeg, distx, distz;
-	float *trans, tmp, amp;
+	bool csdgather,mute;
+	int iz, ix, ib,is, it, jsx, jsz, jgx, jgz, sxbeg, szbeg, gxbeg, gzbeg, distx, distz, ntd;
+	float *trans, tmp, amp, vmute;
 	clock_t start, end;
 	sf_file vinit, shots;
 
-    	/* initialize Madagascar */
-    	sf_init(argc,argv);
+	/* initialize Madagascar */
+	sf_init(argc,argv);
 #ifdef _OPENMP
-    	omp_init();
+	omp_init();
 #endif
 
-    	/*< set up I/O files >*/
-    	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
-    	shots=sf_output("out");  /* output image with correlation imaging condition */ 
+	/*< set up I/O files >*/
+	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
+	shots=sf_output("out");  /* output image with correlation imaging condition */ 
 
-    	/* get parameters for forward modeling */
-    	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
-    	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");
-    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
+	/* get parameters for forward modeling */
+	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
+	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");
+	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
 	if (!sf_getfloat("amp",&amp)) amp=1000;
 	/* maximum amplitude of ricker */
-    	if (!sf_getfloat("fm",&fm)) fm=10;	
+	if (!sf_getfloat("fm",&fm)) fm=10;	
 	/* dominant freq of ricker */
-    	if (!sf_getint("nb",&nb))   nb=30;
+	if (!sf_getint("nb",&nb))   nb=30;
 	/* thickness of sponge ABC  */
-    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
+	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
 	/* time interval */
-    	if (!sf_getint("nt",&nt))   sf_error("no nt");	
+	if (!sf_getint("nt",&nt))   sf_error("no nt");	
 	/* total modeling time steps */
-    	if (!sf_getint("ns",&ns))   sf_error("no ns");	
+	if (!sf_getint("ns",&ns))   sf_error("no ns");	
 	/* total shots */
-    	if (!sf_getint("ng",&ng))   sf_error("no ng");	
+	if (!sf_getint("ng",&ng))   sf_error("no ng");	
 	/* total receivers in each shot */	
-    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
+	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
 	/* source x-axis  jump interval  */
-    	if (!sf_getint("jsz",&jsz))   jsz=0;
+	if (!sf_getint("jsz",&jsz))   jsz=0;
 	/* source z-axis jump interval  */
-    	if (!sf_getint("jgx",&jgx))   jgx=1;
+	if (!sf_getint("jgx",&jgx))   jgx=1;
 	/* receiver x-axis jump interval */
-    	if (!sf_getint("jgz",&jgz))   jgz=0;
+	if (!sf_getint("jgz",&jgz))   jgz=0;
 	/* receiver z-axis jump interval */
-    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
+	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
 	/* x-begining index of sources, starting from 0 */
-    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
+	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
 	/* z-begining index of sources, starting from 0 */
-    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
+	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
 	/* x-begining index of receivers, starting from 0 */
-    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");
+	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");
 	/* z-begining index of receivers, starting from 0 */
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=false;
-	/* default, common shot-gather; if n, record at every point*/
+	/* default, common shot-gather; if n, record at every point */
+	if (!sf_getbool("mute",&mute)) mute=false;
+	/* if yes, muting the direct arrivals */
+	if(mute){
+		if (!sf_getfloat("vmute",&vmute))   vmute=1500;
+		/* muting velocity to remove the low-freq artifacts, unit=m/s*/
+		if (!sf_getint("tdmute",&ntd))   ntd=2.0/(fm*dt);
+		/* number of deleyed time samples to mute */
+	}
 
 	sf_putint(shots,"n1",nt);	
 	sf_putint(shots,"n2",ng);
@@ -337,6 +368,8 @@ int main(int argc, char* argv[])
 
 			record_seis(&dobs[it*ng], gxz, p0, ng);
 		}
+
+		if (mute) muting(dobs,ntd,gxbeg,gzbeg,jgx,jgz,sxbeg,szbeg,jsx,jsz,is, vmute);
 		matrix_transpose(dobs, trans, ng, nt);
 		sf_floatwrite(trans, ng*nt, shots);
 		
@@ -355,6 +388,6 @@ int main(int argc, char* argv[])
 	free(*p1); free(p1);
 	free(bndr);
 
-    	exit(0);
+	exit(0);
 }
 
