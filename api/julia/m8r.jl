@@ -1,5 +1,7 @@
 module m8r
 
+import Base.size
+
 export File,
        init,
        input,
