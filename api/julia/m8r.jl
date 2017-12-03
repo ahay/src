@@ -1,6 +1,7 @@
 module m8r
 
 import Base.size
+import Base.read
 
 export File,
        init,
