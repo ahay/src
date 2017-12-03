@@ -146,9 +146,10 @@ end
 function size(file::File)
     size = leftsize(file, 0)
     dim = 1
-    s = Int32[]
+    n = histint(file, string("n", dim))
+    s = Int32[n]
+    size /= n
     while size > 1
-        n = histint(file, string("n", dim))
         push!(s, n)
         size /= n
         dim += 1
