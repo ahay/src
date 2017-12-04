@@ -148,6 +148,25 @@ function close(file::File)
     ccall((:sf_fileclose,"libdrsf"), Void, (Ptr{UInt8},), file.rsf)
 end
 
+"""
+    size(file)
+
+The size of `file`, an Int32 array representing the length of each of its
+dimensions.
+
+# Examples
+
+```julia-repl
+julia> open("spike.rsf", "w") do rsf_f
+run(pipeline(`sfspike n1=2 n2=3`, rsf_f))
+end
+
+julia> inp = input("spike.rsf")
+
+julia> size(inp)
+(2, 3)
+```
+"""
 function size(file::File)
     size = leftsize(file, 0)
     dim = 1
@@ -164,6 +183,26 @@ function size(file::File)
     return Tuple(s)
 end
 
+"""
+    read(file)
+
+Reads `file`, returning its contents.
+
+# Examples
+
+```julia-repl
+julia> open("spike.rsf", "w") do rsf_f
+run(pipeline(`sfspike n1=2 n2=3`, rsf_f))
+end
+
+julia> inp = input("spike.rsf")
+
+julia> dat = read(inp)
+2×3 Array{Float32,2}:
+ 1.0  1.0  1.0
+ 1.0  1.0  1.0
+```
+"""
 function read(file::File)
     t = [
          UInt8, # SF_UCHAR
