@@ -1,3 +1,4 @@
+__precompile__()
 module m8r
 
 import Base.size
