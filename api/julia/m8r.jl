@@ -43,6 +43,11 @@ function init()
 end
 
 function input(tag::String)
+    if tag ≠ "in"
+        if !isfile(tag)
+            throw("SystemError: unable to read file $tag")
+        end
+    end
     rsf = ccall((:sf_input,"libdrsf"),Ptr{UInt8},(Ptr{UInt8},),tag)
     File(tag,rsf)
 end
