@@ -1,30 +1,25 @@
 __precompile__()
+"""
+    m8r.jl
+
+Julia interface to Madagascar
+"""
 module m8r
 
 import Base.size
 import Base.read
 
-export File,
-       init,
-       input,
-       output,
-       setformat,
-       histint,
-       histfloat,
-       histstring,
-       getint,
-       getfloat,
-       getstring,
-       getbool,
-       gettype,
-       leftsize,
-       floatread,
-       floatwrite,
-       putint,
-       putfloat,
-       putstring,
+export RSFROOT,
+       File,
        size,
-       read
+       read,
+       readall
+
+if haskey(ENV, "RSFROOT")
+    RSFROOT = ENV["RSFROOT"]
+else
+    RSFROOT = nothing
+end
 
 immutable File
     tag::String
