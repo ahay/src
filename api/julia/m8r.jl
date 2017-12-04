@@ -162,7 +162,7 @@ function size(file::File)
         size /= n
         dim += 1
     end
-    return s
+    return Tuple(s)
 end
 
 function read(file::File)
@@ -176,8 +176,8 @@ function read(file::File)
          Float64, # SF_DOUBLE
          Int, # SF_LONG
         ]
-    sh::Array{Int} = size(file)
-    sz::Int32 = prod(sh)
+    n = Int[i for i in size(file)]
+    sz::Int32 = prod(n)
     t_idx = gettype(file)
     data = zeros(t[t_idx], sz)
     if t_idx == 4
@@ -187,7 +187,7 @@ function read(file::File)
     else
         throw("Can only read Float32 and Complex64 (not implemented)")
     end
-    return reshape(data, sh...)
+    return reshape(data, n...)
 end
 
 end
