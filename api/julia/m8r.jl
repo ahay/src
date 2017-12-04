@@ -144,6 +144,10 @@ function putstring(file::File,name::String,val::String)
     ccall((:sf_putstring,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Ptr{UInt8}),file.rsf,name,val)
 end
 
+function close(file::File)
+    ccall((:sf_fileclose,"libdrsf"), Void, (Ptr{UInt8},), file.rsf)
+end
+
 function size(file::File)
     size = leftsize(file, 0)
     dim = 1
