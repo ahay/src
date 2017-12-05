@@ -364,25 +364,36 @@ function write(name::String, dat::AbstractArray, n=nothing, d=nothing,
     Base.wait(p)
     m8r.read((rin, win))
 
-    # Slightly roundabout way
-    # 1) Create file
-    out = output(name)
-    write(out, dat, n, d, o, l, u)
+    write(output(name), dat, n, d, o, l, u)
+end
 
-    # 2) Read with dummy sfwindow
+function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
+                  l=nothing, u=nothing)
+    if haskey(ENV, "TMPDATAPATH")
+        name = joinpath(mktempdir(ENV["TMPDATAPATH"]), "julia.rsf")
+    elseif haskey(ENV, "DATAPATH")
+        name = joinpath(mktempdir(ENV["DATAPATH"]), "julia.rsf")
+    else
+        name = joinpath(mktempdir(), "julia.rsf")
+    end
+
+    # Slightly roundabout way
+    # 1) Write file to disk
+    write(name, dat, n, d, o, l, u)
+
+    # 2) Pipe it to dummy sfwindow
     old_stdin = STDIN
     (rin, win) = redirect_stdin()
     progpath = joinpath(RSFROOT, "bin", "sfwindow")
     pipe = `$progpath squeeze=n out=stdout`
-    p = spawn(pipeline(pipe, stdin=out.tag, stdout=win))
+    p = spawn(pipeline(pipe, stdin=name, stdout=win))
     redirect_stdin(old_stdin)
     Base.wait(p)
 
     # 3) Remove temp
     progpath = joinpath(RSFROOT, "bin", "sfrm")
-    tag = out.tag
-    run(pipeline(`$progpath $tag`))
-    dir = dirname(tag)
+    run(pipeline(`$progpath $name`))
+    dir = dirname(name)
     spawn(pipeline(`rmdir $dir`))
     return rin, win
 end
