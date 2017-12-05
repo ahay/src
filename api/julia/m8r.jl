@@ -11,6 +11,7 @@ import Base.read
 
 export size,
        read,
+       readall,
 
 if haskey(ENV, "RSFROOT")
     RSFROOT = ENV["RSFROOT"]
@@ -224,5 +225,56 @@ function read(file::File)
     end
     return reshape(data, n...)
 end
+
+"""
+    readall(file)
+
+Reads `file`, returning its contents and header. File can be accessed
+through `File.rsf` or file name.
+
+# Examples
+
+```julia-repl
+julia> open("spike.rsf", "w") do rsf_f
+run(pipeline(`sfspike n1=2 n2=3`, rsf_f))
+end
+
+julia> inp = input("spike.rsf")
+
+julia> dat, n, d, o, l, u = readall(inp)
+(Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
+
+julia> readall("spike.rsf")
+(Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
+```
+"""
+function readall(file::File)
+    data = read(file)
+    n = Int[i for i in size(file)]
+    d = Float32[]
+    o = Float32[]
+    l = String[]
+    u = String[]
+    for i in 1:length(n)
+        append!(d, [histfloat(file, "d"*dec(i))])
+        append!(o, [histfloat(file, "o"*dec(i))])
+        append!(l, [histstring(file, "label"*dec(i))])
+        append!(u, [histstring(file, "unit"*dec(i))])
+    end
+    return data, n, d, o, l, u
+end
+
+readall(name::String) = readall(input(name))
+
+function readall(stdin::NTuple{2, Base.PipeEndpoint})
+    rin, win = stdin
+    flush(win)
+    old_stdin = STDIN
+    redirect_stdin(rin)
+    data = readall("in")
+    redirect_stdin(old_stdin)
+    return data
+end
+
 
 end
