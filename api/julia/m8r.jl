@@ -148,7 +148,7 @@ function close(file::File)
 end
 
 """
-    size(file)
+    size(file::m8r.File) -> Tuple
 
 The size of `file`, an Int32 array representing the length of each of its
 dimensions.
@@ -160,7 +160,7 @@ julia> open("spike.rsf", "w") do rsf_f
 run(pipeline(`sfspike n1=2 n2=3`, rsf_f))
 end
 
-julia> inp = input("spike.rsf")
+julia> inp = m8r.input("spike.rsf")
 
 julia> size(inp)
 (2, 3)
@@ -185,11 +185,13 @@ end
 """
     read(file)
 
-Reads `file`, returning its contents and header. File can be accessed
-through `File.rsf` or file name.
+Reads RSF `file`, returning its contents and header. `file` may be file handle 
+(`m8r.File`), filename (`m8r.File.tag`), or `NTuple{2, Base.PipeEndpoint}`. This
+last option is useful for reading pipes from `sf` commands (see last example).
 
 # Examples
 
+## Reading file handle
 ```julia-repl
 julia> open("spike.rsf", "w") do rsf_f
 run(pipeline(`sfspike n1=2 n2=3`, rsf_f))
@@ -199,8 +201,17 @@ julia> inp = input("spike.rsf")
 
 julia> dat, n, d, o, l, u = read(inp)
 (Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
+```
 
+## Reading file name
+```julia-repl
 julia> read("spike.rsf")
+(Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
+```
+
+## Reading pipe
+```julia-repl
+julia> sfspike(;n1=1, n2=2) |> read
 (Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
 ```
 """
@@ -254,24 +265,70 @@ function read(stdin::NTuple{2, Base.PipeEndpoint})
     return data
 end
 
+"""
+    write(file, dat, n, d, o, label, unit)
+
+Write RSF `file`. `file` may be file handle (`m8r.File`), filename
+(`m8r.File.tag`) or absent:
+
+    write(dat, n, d, o, label, unit) -> NTuple{2, Base.PipeEndpoint}
+
+This last option is useful for writing pipes to `sf` commands (see last
+example). However, it must be noted that in those cases `write` can be omitted.
+
+In all methods, `n`, `d`, `o`, `label`, and `unit` are optional. If given, they
+should be of type `AbstractArray`.
+
+!!! warning "Writing to file handles"
+
+    Do *not* use supply the file as an `m8r.File` type unless you know exactly
+    what you are doing. Because of how Madagascar is set up, calling m8r.output
+    sets the filetype to whatever was used for the last m8r.input("in") call. If
+    this function has not yet been called, it will default to `Float32`.
+    Therefore, it is *impossible* to create a `Complex` file afterwards. Other
+    `write` methods overcome this limitation by writing dummy files to dummy
+    pipes to "trick" Madagascar into switching file types.
+
+    In addition, do not try to write to a filehandle which has alread been
+    written to with `write`, as `write` closes the file. Doing so will cause a
+    segfault.
+
+# Examples
+
+## Write file by name
+```julia-repl
+julia> write("spike.rsf", [1., 2.])
+
+julia> read("spike.rsf")
+(Float32[1.0, 2.0], [2], Float32[1.0], Float32[0.0], String[""], String[""])
+```
+
+## Write to pipe
+```julia-repl
+julia> write([1. im]) |> sfreal |> read
+(Complex{Float32}[1.0+0.0im 0.0+1.0im], [1, 2], Float32[1.0, 1.0], Float32[0.0, 0.0], String["", ""], String["", ""])
+```
+
+## Writing file handle (avoid this!)
+```julia-repl
+julia> out = output("spike.rsf")
+
+julia> write(out, [1., 2]) # write(out, [im, 2]) will not work due to warning
+
+julia> read(out.tag)
+(Float32[1.0, 2.0], [2], Float32[1.0], Float32[0.0], String[""], String[""])
+```
+"""
 function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
                   o=nothing, l=nothing, u=nothing)
     if n == nothing
         n = size(dat)
     end
     dim = length(n)
-    if d == nothing
-        d = [1 for i in 1:dim]
-    end
-    if o == nothing
-        o = [0 for i in 1:dim]
-    end
-    if l == nothing
-        l = ["" for i in 1:dim]
-    end
-    if u == nothing
-        u = ["" for i in 1:dim]
-    end
+    d = d == nothing ? [1 for i in 1:dim] : d
+    o = o == nothing ? [0 for i in 1:dim] : o
+    l = l == nothing ? ["" for i in 1:dim] : l
+    u = u == nothing ? ["" for i in 1:dim] : u
     for i in 1:dim
         putint(file, "n$i", n[i])
         putfloat(file, "d$i", d[i])
@@ -281,27 +338,17 @@ function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
     end
 
     if eltype(dat) <: AbstractFloat
-        floatwrite(Array{Float32}(dat), Int32[leftsize(file, 0)][], file)
+        floatwrite(Array{Float32}(vec(dat)), Int32[leftsize(file, 0)][], file)
     elseif eltype(dat) <: Complex
-        complexwrite(Array{Complex64}(dat), Int32[leftsize(file, 0)][], file)
+        complexwrite(Array{Complex64}(vec(dat)), Int32[leftsize(file, 0)][],
+                     file)
     else
         throw("Can only write Float32 and Complex64 (not implemented)")
     end
     close(file)
 end
-write(name::String, dat::AbstractArray, n=nothing, d=nothing, o=nothing,
-         l=nothing, u=nothing) = write(output(name), dat, n, d, o, l, u)
-
-function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
-                  l=nothing, u=nothing)
-    if haskey(ENV, "TMPDATAPATH")
-        name = joinpath(mktempdir(ENV["TMPDATAPATH"]), "julia.rsf")
-    elseif haskey(ENV, "DATAPATH")
-        name = joinpath(mktempdir(ENV["DATAPATH"]), "julia.rsf")
-    else
-        name = tempname()
-        name = joinpath(dirname(name), "sf"*basename(name))*".rsf"
-    end
+function write(name::String, dat::AbstractArray, n=nothing, d=nothing,
+               o=nothing, l=nothing, u=nothing)
     # This is necessary in case previous command run created a complex file
     spike = joinpath(RSFROOT, "bin", "sfspike")
     old_stdin = STDIN
