@@ -6,6 +6,9 @@ Base.append!(ARGS, ["int1=1", "float1=1e-99", "str1=ḉ", "bool1=n"])
 using m8r
 m8r.init()
 
+println("RSFROOT")
+@test m8r.RSFROOT ≠ nothing
+
 println("getfloat")
 @test m8r.getfloat("float1") ≈ 0
 @test m8r.getfloat("float2", 2) ≈  2
@@ -38,7 +41,7 @@ open("test_inp_float.rsf", "w") do rsf_f
                                nsp=3 mag=1,4,2 out=stdout`, rsf_f))
 end
 inp = m8r.input("test_inp_float.rsf")
-@test m8r.size(inp) == [2, 3]
+@test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 4
 dat = m8r.read(inp)
 @test dat == Float32[1 0 0; 0 4 2]
@@ -80,6 +83,15 @@ m8r.floatwrite(Float32[1.5; 2.5], Int32[m8r.leftsize(out, 0)][], out)
 @test m8r.histstring(out, "label2") == "é"
 @test m8r.histstring(out, "unit1") == "普通话"
 @test m8r.histstring(out, "unit2") == "µm"
+m8r.close(out)
+
+stdout = STDOUT
+(rout, wout) = redirect_stdout()
+run(pipeline(`sfdisfil`, stdin="test_out_float.rsf", stdout=wout))
+data = convert(String, readavailable(rout))
+close(rout)
+redirect_stdout(stdout)
+@test data == "   0:           1.5          2.5\n"
 run(`sfrm test_out_float.rsf`)
 
 println("input complex")
@@ -91,7 +103,7 @@ open("test_inp_complex.rsf", "w") do rsf_f
                        `sfmath output='input + I' out=stdout`, rsf_f))
 end
 inp = m8r.input("test_inp_complex.rsf")
-@test m8r.size(inp) == [2, 3]
+@test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 5
 dat = m8r.read(inp)
 @test dat == Complex64[1+im im im; im 4+im 2+im]
@@ -135,6 +147,14 @@ m8r.complexwrite(Complex64[0.5+im; 2+im], Int32[m8r.leftsize(out, 0)][], out)
 @test m8r.histstring(out, "label2") == "é"
 @test m8r.histstring(out, "unit1") == "普通话"
 @test m8r.histstring(out, "unit2") == "µm"
+m8r.close(out)
 
+stdout = STDOUT
+(rout, wout) = redirect_stdout()
+run(pipeline(`sfdisfil`, stdin="test_out_complex.rsf", stdout=wout))
+data = convert(String, readavailable(rout))
+close(rout)
+redirect_stdout(stdout)
+@test data == "   0:        0.5,         1i         2,         1i\n"
 run(`sfrm test_out_complex.rsf`)
 println("all good!")
