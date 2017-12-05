@@ -9,11 +9,8 @@ module m8r
 import Base.size
 import Base.read
 
-export RSFROOT,
-       File,
-       size,
+export size,
        read,
-       readall
 
 if haskey(ENV, "RSFROOT")
     RSFROOT = ENV["RSFROOT"]
