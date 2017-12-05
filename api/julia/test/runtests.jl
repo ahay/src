@@ -157,4 +157,52 @@ close(rout)
 redirect_stdout(stdout)
 @test data == "   0:        0.5,         1i         2,         1i\n"
 run(`sfrm test_out_complex.rsf`)
+
+println("prog")
+println("    read")
+dat, n, d, o, l, u = sfspike(n1=4, nsp=2, k1=(1,2), mag=(1,3)) |>
+                     x -> sfwindow(x; n1=3) |>
+                     read
+@test dat ≈ [1.0, 3.0, 0.0]
+@test n == [3]
+@test d ≈ [0.004]
+@test o ≈ [0]
+@test l == ["Time"]
+@test u == ["s"]
+
+dat, n, d, o, l, u = sfspike(n1=4, nsp=2, k1=(1,2), mag=(1,3)) |>
+                     sfrtoc |>
+                     x -> sfmath(x; output="input + I") |>
+                     x -> sfwindow(x; n1=3) |>
+                     read
+@test dat ≈ [1.0+1.0im, 3.0+1.0im, 1.0im]
+@test n == [3]
+@test d ≈ [0.004]
+@test o ≈ [0]
+@test l == ["Time"]
+@test u == ["s"]
+
+println("    write")
+dat, n, d, o, l, u = write([1.1; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
+                                  ["a" "b" "c"], ["d" "e" "f"]) |>
+                     read
+@test dat ≈ [1.1 0 0.5]
+@test n == [1, 3]
+@test d ≈ [0.1, 0.2]
+@test o ≈ [0.4, 0.5]
+@test l == ["a", "b"]
+@test u == ["d", "e"]
+
+dat, n, d, o, l, u = write([im; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
+                                  ["a" "b" "c"], ["d" "e" "f"]) |>
+                     x -> sfadd(x; scale=2) |>
+                     read
+@test dat ≈ [2im 0 1]
+@test n == [1, 3]
+@test d ≈ [0.1, 0.2]
+@test o ≈ [0.4, 0.5]
+@test l == ["a", "b"]
+@test u == ["d", "e"]
+
+
 println("all good!")

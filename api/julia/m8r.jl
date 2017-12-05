@@ -340,5 +340,55 @@ function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     return rin, win
 end
 
+function process_args(;kwargs...)
+    args = String[]
+    for (key, val) in kwargs
+        if typeof(val) <: Tuple
+            val = join(["$v" for v in val], ",")
+        end
+        push!(args, "$key=$val")
+    end
+    return args
+end
+
+if RSFROOT ≠ nothing
+    progs = filter(x -> startswith(x, "sf"),
+                   readdir(joinpath(RSFROOT, "bin")))
+    for (F, S) = [ (Symbol(p), p) for p in progs ]
+        @eval export $F
+        @eval function ($F)(stdin::NTuple{2, Base.PipeEndpoint};
+                            kwargs...)
+                args = process_args(;kwargs...)
+                progpath = joinpath(RSFROOT, "bin", $S)
+                pipe = `$progpath $args out=stdout`
+                rin, win = stdin
+                p = spawn(pipeline(pipe, stdin=rin, stdout=win))
+                Base.wait(p)
+                return rin, win
+        end
+        @eval function ($F)(;kwargs...)
+                args = process_args(;kwargs...)
+                progpath = joinpath(RSFROOT, "bin", $S)
+                pipe = `$progpath $args out=stdout`
+                old_stdin = STDIN
+                (rin, win) = redirect_stdin()
+                p = spawn(pipeline(pipe, stdout=win))
+                redirect_stdin(old_stdin)
+                Base.wait(p)
+                return rin, win
+        end
+        @eval function ($F)(file::File; kwargs...)
+                args = process_args(;kwargs...)
+                progpath = joinpath(RSFROOT, "bin", $S)
+                pipe = `$progpath $args out=stdout`
+                old_stdin = STDIN
+                (rin, win) = redirect_stdin()
+                p = spawn(pipeline(pipe, stdin=file.tag, stdout=win))
+                redirect_stdin(old_stdin)
+                Base.wait(p)
+                return rin, win
+        end
+    end
+end
 
 end
