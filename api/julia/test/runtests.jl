@@ -4,7 +4,6 @@ using Base.Test
 Base.append!(ARGS, ["int1=1", "float1=1e-99", "str1=ḉ", "bool1=n"])
 
 using m8r
-m8r.init()
 
 println("RSFROOT")
 @test m8r.RSFROOT ≠ nothing

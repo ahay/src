@@ -25,7 +25,7 @@ immutable File
     rsf::Ptr{UInt8}
 end
 
-function init()
+function __init__()
     src = Base.source_path()
     argv = src == nothing ? ["julia"] : [basename(src)]
     if isempty(ARGS)
