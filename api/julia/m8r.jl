@@ -456,6 +456,10 @@ this `input` may be absent.
                 Base.wait(p)
                 return rin, win
         end
+        @eval function ($F)(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
+            l=nothing, u=nothing)
+            return write(dat, n, d, o, l, u) |> ($F)
+        end
     end
 end
 
