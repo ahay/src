@@ -12,6 +12,7 @@ import Base.read
 export size,
        read,
        readall,
+       writeall
 
 if haskey(ENV, "RSFROOT")
     RSFROOT = ENV["RSFROOT"]
@@ -274,6 +275,92 @@ function readall(stdin::NTuple{2, Base.PipeEndpoint})
     data = readall("in")
     redirect_stdin(old_stdin)
     return data
+end
+
+function writeall(file::File, dat::AbstractArray, n=nothing, d=nothing,
+                  o=nothing, l=nothing, u=nothing)
+    if n == nothing
+        n = size(dat)
+    end
+    dim = length(n)
+    if d == nothing
+        d = [1 for i in 1:dim]
+    end
+    if o == nothing
+        o = [0 for i in 1:dim]
+    end
+    if l == nothing
+        l = ["" for i in 1:dim]
+    end
+    if u == nothing
+        u = ["" for i in 1:dim]
+    end
+    for i in 1:dim
+        putint(file, "n$i", n[i])
+        putfloat(file, "d$i", d[i])
+        putfloat(file, "o$i", o[i])
+        putstring(file, "label$i", l[i])
+        putstring(file, "unit$i", u[i])
+    end
+
+    if eltype(dat) <: AbstractFloat
+        floatwrite(Array{Float32}(dat), Int32[leftsize(file, 0)][], file)
+    elseif eltype(dat) <: Complex
+        complexwrite(Array{Complex64}(dat), Int32[leftsize(file, 0)][], file)
+    else
+        throw("Can only write Float32 and Complex64 (not implemented)")
+    end
+    close(file)
+end
+writeall(name::String, dat::AbstractArray, n=nothing, d=nothing, o=nothing,
+         l=nothing, u=nothing) = writeall(output(name), dat, n, d, o, l, u)
+
+function writeall(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
+                  l=nothing, u=nothing)
+    if haskey(ENV, "TMPDATAPATH")
+        name = joinpath(mktempdir(ENV["TMPDATAPATH"]), "julia.rsf")
+    elseif haskey(ENV, "DATAPATH")
+        name = joinpath(mktempdir(ENV["DATAPATH"]), "julia.rsf")
+    else
+        name = tempname()
+        name = joinpath(dirname(name), "sf"*basename(name))*".rsf"
+    end
+    # This is necessary in case previous command run created a complex file
+    spike = joinpath(RSFROOT, "bin", "sfspike")
+    old_stdin = STDIN
+    (rin, win) = redirect_stdin()
+    if  eltype(dat) <: AbstractFloat
+        pipe = `$spike n1=1 out=stdout`
+    else eltype(dat) <: Complex
+        rtoc = joinpath(RSFROOT, "bin", "sfrtoc")
+        pipe = pipeline(`$spike n1=1`, `$rtoc out=stdout`)
+    end
+    p = spawn(pipeline(pipe, stdout=win))
+    redirect_stdin(old_stdin)
+    Base.wait(p)
+    m8r.readall((rin, win))
+
+    # Slightly roundabout way
+    # 1) Create file
+    out = output(name)
+    writeall(out, dat, n, d, o, l, u)
+
+    # 2) Read with dummy sfwindow
+    old_stdin = STDIN
+    (rin, win) = redirect_stdin()
+    progpath = joinpath(RSFROOT, "bin", "sfwindow")
+    pipe = `$progpath squeeze=n out=stdout`
+    p = spawn(pipeline(pipe, stdin=out.tag, stdout=win))
+    redirect_stdin(old_stdin)
+    Base.wait(p)
+
+    # 3) Remove temp
+    progpath = joinpath(RSFROOT, "bin", "sfrm")
+    tag = out.tag
+    run(pipeline(`$progpath $tag`))
+    dir = dirname(tag)
+    spawn(pipeline(`rmdir $dir`))
+    return rin, win
 end
 
 
