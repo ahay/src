@@ -414,7 +414,16 @@ if RSFROOT ≠ nothing
                    readdir(joinpath(RSFROOT, "bin")))
     for (F, S) = [ (Symbol(p), p) for p in progs ]
         @eval export $F
-        @eval function ($F)(stdin::NTuple{2, Base.PipeEndpoint};
+        @eval begin
+            progname = $S
+"""
+    $progname(input) -> NTuple{2, Base.PipeEndpoint}"
+
+Runs RSF program $progname on data provided by `input`. This may be `m8r.File`
+or, more commonly `NTuple{2, Base.PipeEndpoint}`. If the program needs no input,
+this `input` may be absent.
+"""
+            function ($F)(stdin::NTuple{2, Base.PipeEndpoint};
                             kwargs...)
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
@@ -423,6 +432,7 @@ if RSFROOT ≠ nothing
                 p = spawn(pipeline(pipe, stdin=rin, stdout=win))
                 Base.wait(p)
                 return rin, win
+            end
         end
         @eval function ($F)(;kwargs...)
                 args = process_args(;kwargs...)
