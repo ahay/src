@@ -279,6 +279,10 @@ example). However, it must be noted that in those cases `write` can be omitted.
 In all methods, `n`, `d`, `o`, `label`, and `unit` are optional. If given, they
 should be of type `AbstractArray`.
 
+Finally, one may write from a pipe to a file with:
+
+    write(stdin::NTuple{2, Base.PipeEndpoint}, file::String)
+
 !!! warning "Writing to file handles"
 
     Do *not* use supply the file as an `m8r.File` type unless you know exactly
@@ -307,6 +311,14 @@ julia> read("spike.rsf")
 ```julia-repl
 julia> write([1. im]) |> sfreal |> read
 (Complex{Float32}[1.0+0.0im 0.0+1.0im], [1, 2], Float32[1.0, 1.0], Float32[0.0, 0.0], String["", ""], String["", ""])
+```
+
+## Write from pipe
+```julia-repl
+julia> sfspike(;n1=1) |> x -> write(x, "spike.rsf")
+
+julia> read("spike.rsf")
+(Float32[1.0, 2.0], [2], Float32[1.0], Float32[0.0], String[""], String[""])
 ```
 
 ## Writing file handle (avoid this!)
@@ -396,6 +408,11 @@ function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     dir = dirname(name)
     spawn(pipeline(`rmdir $dir`))
     return rin, win
+end
+
+function write(stdin::NTuple{2, Base.PipeEndpoint}, name::String)
+    dat = read(stdin)
+    write(name, dat...)
 end
 
 function process_args(;kwargs...)

@@ -203,5 +203,14 @@ dat, n, d, o, l, u = write([im; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
 @test l == ["a", "b"]
 @test u == ["d", "e"]
 
+sfspike(;n1=1) |> x -> write(x, "test_write.rsf")
+dat, n, d, o, l, u = read("test_write.rsf")
+@test dat ≈ [1.]
+@test n == [1]
+@test d ≈ [0.004]
+@test o ≈ [0]
+@test l == ["Time"]
+@test u == ["s"]
+run(`sfrm test_write.rsf`)
 
 println("all good!")
