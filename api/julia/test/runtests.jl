@@ -43,7 +43,7 @@ end
 inp = m8r.input("test_inp_float.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 4
-dat = m8r.read(inp)
+dat, = m8r.read(inp)
 @test dat == Float32[1 0 0; 0 4 2]
 
 @test m8r.histint(inp, "n1") == 2
@@ -105,7 +105,7 @@ end
 inp = m8r.input("test_inp_complex.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 5
-dat = m8r.read(inp)
+dat, = m8r.read(inp)
 @test dat == Complex64[1+im im im; im 4+im 2+im]
 
 @test m8r.histint(inp, "n1") == 2

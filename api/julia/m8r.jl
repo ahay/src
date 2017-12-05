@@ -13,7 +13,6 @@ import Base.write
 export size,
        read,
        write
-       readall,
 
 if haskey(ENV, "RSFROOT")
     RSFROOT = ENV["RSFROOT"]
@@ -186,7 +185,8 @@ end
 """
     read(file)
 
-Reads `file`, returning its contents.
+Reads `file`, returning its contents and header. File can be accessed
+through `File.rsf` or file name.
 
 # Examples
 
@@ -197,10 +197,11 @@ end
 
 julia> inp = input("spike.rsf")
 
-julia> dat = read(inp)
-2×3 Array{Float32,2}:
- 1.0  1.0  1.0
- 1.0  1.0  1.0
+julia> dat, n, d, o, l, u = read(inp)
+(Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
+
+julia> read("spike.rsf")
+(Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
 ```
 """
 function read(file::File)
@@ -225,33 +226,8 @@ function read(file::File)
     else
         throw("Can only read Float32 and Complex64 (not implemented)")
     end
-    return reshape(data, n...)
-end
 
-"""
-    readall(file)
-
-Reads `file`, returning its contents and header. File can be accessed
-through `File.rsf` or file name.
-
-# Examples
-
-```julia-repl
-julia> open("spike.rsf", "w") do rsf_f
-run(pipeline(`sfspike n1=2 n2=3`, rsf_f))
-end
-
-julia> inp = input("spike.rsf")
-
-julia> dat, n, d, o, l, u = readall(inp)
-(Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
-
-julia> readall("spike.rsf")
-(Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
-```
-"""
-function readall(file::File)
-    data = read(file)
+    data = reshape(data, n...)
     n = Int[i for i in size(file)]
     d = Float32[]
     o = Float32[]
@@ -266,14 +242,14 @@ function readall(file::File)
     return data, n, d, o, l, u
 end
 
-readall(name::String) = readall(input(name))
+read(name::String) = read(input(name))
 
-function readall(stdin::NTuple{2, Base.PipeEndpoint})
+function read(stdin::NTuple{2, Base.PipeEndpoint})
     rin, win = stdin
     flush(win)
     old_stdin = STDIN
     redirect_stdin(rin)
-    data = readall("in")
+    data = read("in")
     redirect_stdin(old_stdin)
     return data
 end
@@ -339,7 +315,7 @@ function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     p = spawn(pipeline(pipe, stdout=win))
     redirect_stdin(old_stdin)
     Base.wait(p)
-    m8r.readall((rin, win))
+    m8r.read((rin, win))
 
     # Slightly roundabout way
     # 1) Create file
