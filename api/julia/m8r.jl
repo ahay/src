@@ -8,11 +8,12 @@ module m8r
 
 import Base.size
 import Base.read
+import Base.write
 
 export size,
        read,
+       write
        readall,
-       writeall
 
 if haskey(ENV, "RSFROOT")
     RSFROOT = ENV["RSFROOT"]
@@ -277,7 +278,7 @@ function readall(stdin::NTuple{2, Base.PipeEndpoint})
     return data
 end
 
-function writeall(file::File, dat::AbstractArray, n=nothing, d=nothing,
+function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
                   o=nothing, l=nothing, u=nothing)
     if n == nothing
         n = size(dat)
@@ -312,10 +313,10 @@ function writeall(file::File, dat::AbstractArray, n=nothing, d=nothing,
     end
     close(file)
 end
-writeall(name::String, dat::AbstractArray, n=nothing, d=nothing, o=nothing,
-         l=nothing, u=nothing) = writeall(output(name), dat, n, d, o, l, u)
+write(name::String, dat::AbstractArray, n=nothing, d=nothing, o=nothing,
+         l=nothing, u=nothing) = write(output(name), dat, n, d, o, l, u)
 
-function writeall(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
+function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
                   l=nothing, u=nothing)
     if haskey(ENV, "TMPDATAPATH")
         name = joinpath(mktempdir(ENV["TMPDATAPATH"]), "julia.rsf")
@@ -343,7 +344,7 @@ function writeall(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     # Slightly roundabout way
     # 1) Create file
     out = output(name)
-    writeall(out, dat, n, d, o, l, u)
+    write(out, dat, n, d, o, l, u)
 
     # 2) Read with dummy sfwindow
     old_stdin = STDIN
