@@ -431,13 +431,28 @@ if RSFROOT ≠ nothing
         @eval export $F
         @eval begin
             progname = $S
+            manfile = joinpath(m8r.RSFROOT, "share", "man", "man1", progname*".1")
+            if isfile(manfile)
+                old_stdout = STDOUT
+                (rout, wout) = redirect_stdout()
+                run(pipeline(`man $manfile`, stdout=wout, stdin=DevNull,
+                            stderr=DevNull))
+                Base.close(wout)
+                manpage = "\n# RSF Documentation\n"
+                manpage *= convert(String, readavailable(rout))
+                Base.close(rout)
+                redirect_stdout(old_stdout)
+            else
+                manpage = ""
+            end
+
 """
     $progname(input) -> NTuple{2, Base.PipeEndpoint}"
 
 Runs RSF program $progname on data provided by `input`. This may be `m8r.File`
 or, more commonly `NTuple{2, Base.PipeEndpoint}`. If the program needs no input,
 this `input` may be absent.
-"""
+$manpage"""
             function ($F)(stdin::NTuple{2, Base.PipeEndpoint};
                             kwargs...)
                 args = process_args(;kwargs...)
