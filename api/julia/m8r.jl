@@ -418,6 +418,8 @@ function process_args(;kwargs...)
     for (key, val) in kwargs
         if typeof(val) <: Tuple
             val = join(["$v" for v in val], ",")
+        elseif typeof(val) <: Bool
+            val = val ? "y" : "n"
         end
         push!(args, "$key=$val")
     end

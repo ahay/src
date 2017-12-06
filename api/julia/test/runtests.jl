@@ -159,15 +159,15 @@ run(`sfrm test_out_complex.rsf`)
 
 println("prog")
 println("    read")
-dat, n, d, o, l, u = sfspike(n1=4, nsp=2, k1=(1,2), mag=(1,3)) |>
-                     x -> sfwindow(x; n1=3) |>
+dat, n, d, o, l, u = sfspike(n1=4, n2=2, nsp=2, k1=(1,2), mag=(1,3)) |>
+                     x -> sfwindow(x; n1=1, squeeze=false) |>
                      read
-@test dat ≈ [1.0, 3.0, 0.0]
-@test n == [3]
-@test d ≈ [0.004]
-@test o ≈ [0]
-@test l == ["Time"]
-@test u == ["s"]
+@test dat ≈ [1. 1.]
+@test n == [1, 2]
+@test d ≈ [0.004, 0.1]
+@test o ≈ [0, 0]
+@test l == ["Time", "Distance"]
+@test u == ["s", "km"]
 
 dat, n, d, o, l, u = sfspike(n1=4, nsp=2, k1=(1,2), mag=(1,3)) |>
                      sfrtoc |>
