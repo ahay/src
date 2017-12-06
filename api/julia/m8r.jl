@@ -6,12 +6,10 @@ Julia interface to Madagascar
 """
 module m8r
 
-import Base.size
 import Base.read
 import Base.write
 
-export size,
-       read,
+export read,
        write
 
 if haskey(ENV, "RSFROOT")
@@ -148,7 +146,7 @@ function close(file::File)
 end
 
 """
-    size(file::m8r.File) -> Tuple
+    m8r.size(file::m8r.File) -> Tuple
 
 The size of `file`, an Int32 array representing the length of each of its
 dimensions.
@@ -162,7 +160,7 @@ end
 
 julia> inp = m8r.input("spike.rsf")
 
-julia> size(inp)
+julia> m8r.size(inp)
 (2, 3)
 ```
 """
