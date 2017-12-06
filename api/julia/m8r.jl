@@ -78,7 +78,7 @@ function getint(name::String, val::Int)
     ccall((:sf_getint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cint}),name,val)
     return val[]
 end
-getint(name; val::Int = 0) = getint(name, val)
+getint(name::String; val::Int = 0) = getint(name, val)
 
 function getfloat(name::String, val::Real)
     val = Cfloat[val]
