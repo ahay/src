@@ -111,6 +111,14 @@ function leftsize(file::File,dim::Int)
     ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{UInt8},Cint),file.rsf,dim)
 end
 
+function ucharread(arr::Array{UInt8,1},size::Int32,file::File)
+    ccall((:sf_ucharread,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
+function charread(arr::Array{UInt8,1},size::Int32,file::File)
+    ccall((:sf_charread,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
 function intread(arr::Array{Int32,1},size::Int32,file::File)
     ccall((:sf_intread,"libdrsf"),Void,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
@@ -127,8 +135,14 @@ function shortread(arr::Array{Int16,1},size::Int32,file::File)
     ccall((:sf_shortread,"libdrsf"),Void,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
+function ucharwrite(arr::Array{UInt8,1},size::Int32,file::File)
+    ccall((:sf_ucharwrite,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
 function longread(arr::Array{Clong,1},size::Int32,file::File)
     ccall((:sf_longread,"libdrsf"),Void,(Ptr{Clong},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+function charwrite(arr::Array{UInt8,1},size::Int32,file::File)
+    ccall((:sf_charwrite,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function intwrite(arr::Array{Int32,1},size::Int32,file::File)
@@ -252,7 +266,11 @@ function read(file::File)
     sz::Int32 = prod(n)
     itypes = gettype(file)
     data = zeros(types[itypes], sz)
-    if itypes == 3
+    if itypes == 1
+        ucharread(data, sz, file)
+    elseif itypes == 2
+        charread(data, sz, file)
+    elseif itypes == 3
         intread(data, sz, file)
     elseif itypes == 4
         floatread(data, sz, file)
@@ -377,7 +395,9 @@ function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
         putstring(file, "unit$i", u[i])
     end
 
-    if eltype(dat) <: Int32
+    if eltype(dat) <: UInt8
+        charwrite(Array{UInt8}(vec(dat)), Int32[leftsize(file, 0)][], file)
+    elseif eltype(dat) <: Int32
         intwrite(Array{Int32}(vec(dat)), Int32[leftsize(file, 0)][], file)
     elseif eltype(dat) <: AbstractFloat
         floatwrite(Array{Float32}(vec(dat)), Int32[leftsize(file, 0)][], file)
