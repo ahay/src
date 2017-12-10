@@ -41,7 +41,7 @@ inp = m8r.input("test_inp_uchar.rsf")
 @test m8r.size(inp) == (5,)
 @test m8r.gettype(inp) == 1
 @test m8r.getform(inp) == 1
-dat, = m8r.read(inp)
+dat, = rsf_read(inp)
 @test dat == UInt8[97, 32, 98, 65, 63]
 @test m8r.histint(inp, "n1") == 5
 @test m8r.histfloat(inp, "d1") ≈ 0
@@ -95,7 +95,7 @@ run(pipeline(`echo n1=5 data_format=ascii_char in=test_inp_char.txt out=stdout`,
 inp = m8r.input("test_inp_char.rsf")
 @test m8r.size(inp) == (5,)
 @test m8r.gettype(inp) == 2
-dat, = m8r.read(inp)
+dat, = rsf_read(inp)
 @test dat == UInt8[97, 32, 98, 65, 63]
 @test m8r.histint(inp, "n1") == 5
 @test m8r.histfloat(inp, "d1") ≈ 0
@@ -153,7 +153,7 @@ inp = m8r.input("test_inp_int.rsf")
 @test m8r.gettype(inp) == 3
 @test m8r.getform(inp) in [2, 3]
 @test m8r.esize(inp) == 4
-dat, = m8r.read(inp)
+dat, = rsf_read(inp)
 @test dat == Int32[1 0 0; 0 4 2]
 @test m8r.histint(inp, "n1") == 2
 @test m8r.histint(inp, "n2") == 3
@@ -214,7 +214,7 @@ run(pipeline(`sfspike n1=2 k1=1,2,2
 inp = m8r.input("test_inp_float.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 4
-dat, = m8r.read(inp)
+dat, = rsf_read(inp)
 @test dat == Float32[1 0 0; 0 4 2]
 
 @test m8r.histint(inp, "n1") == 2
@@ -275,7 +275,7 @@ run(pipeline(pipeline(`sfspike n1=2 k1=1,2,2
 inp = m8r.input("test_inp_complex.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 5
-dat, = m8r.read(inp)
+dat, = rsf_read(inp)
 @test dat == Complex64[1+im im im; im 4+im 2+im]
 
 @test m8r.histint(inp, "n1") == 2
@@ -337,7 +337,7 @@ run(pipeline(pipeline(`sfspike n1=2 k1=1,2,2
 inp = m8r.input("test_inp_short.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 6
-dat, = m8r.read(inp)
+dat, = rsf_read(inp)
 @test dat == Int16[1 0 0; 0 4 2]
 
 @test m8r.histint(inp, "n1") == 2
@@ -394,7 +394,7 @@ println("prog")
 println("    read")
 dat, n, d, o, l, u = sfspike(n1=4, n2=2, nsp=2, k1=(1,2), mag=(1,3)) |>
                      x -> sfwindow(x; n1=1, squeeze=false) |>
-                     read
+                     rsf_read
 @test dat ≈ [1. 1.]
 @test n == [1, 2]
 @test d ≈ [0.004, 0.1]
@@ -406,7 +406,7 @@ dat, n, d, o, l, u = sfspike(n1=4, nsp=2, k1=(1,2), mag=(1,3)) |>
                      sfrtoc |>
                      x -> sfmath(x; output="input + I") |>
                      x -> sfwindow(x; n1=3) |>
-                     read
+                     rsf_read
 @test dat ≈ [1.0+1.0im, 3.0+1.0im, 1.0im]
 @test n == [3]
 @test d ≈ [0.004]
@@ -415,9 +415,9 @@ dat, n, d, o, l, u = sfspike(n1=4, nsp=2, k1=(1,2), mag=(1,3)) |>
 @test u == ["s"]
 
 println("    write")
-dat, n, d, o, l, u = write([1.1; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
-                                  ["a" "b" "c"], ["d" "e" "f"]) |>
-                     read
+dat, n, d, o, l, u = rsf_write([1.1; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
+                               ["a" "b" "c"], ["d" "e" "f"]) |>
+                     rsf_read
 @test dat ≈ [1.1 0 0.5]
 @test n == [1, 3]
 @test d ≈ [0.1, 0.2]
@@ -425,10 +425,10 @@ dat, n, d, o, l, u = write([1.1; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
 @test l == ["a", "b"]
 @test u == ["d", "e"]
 
-dat, n, d, o, l, u = write([im; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
-                                  ["a" "b" "c"], ["d" "e" "f"]) |>
+dat, n, d, o, l, u = rsf_write([im; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
+                               ["a" "b" "c"], ["d" "e" "f"]) |>
                      x -> sfadd(x; scale=2) |>
-                     read
+                     rsf_read
 @test dat ≈ [2im 0 1]
 @test n == [1, 3]
 @test d ≈ [0.1, 0.2]
@@ -436,8 +436,8 @@ dat, n, d, o, l, u = write([im; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
 @test l == ["a", "b"]
 @test u == ["d", "e"]
 
-sfspike(;n1=1) |> x -> write(x, "test_write.rsf")
-dat, n, d, o, l, u = read("test_write.rsf")
+sfspike(;n1=1) |> x -> rsf_write(x, "test_write.rsf")
+dat, n, d, o, l, u = rsf_read("test_write.rsf")
 @test dat ≈ [1.]
 @test n == [1]
 @test d ≈ [0.004]

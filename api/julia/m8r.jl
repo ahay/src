@@ -6,11 +6,8 @@ Julia interface to Madagascar
 """
 module m8r
 
-import Base.read
-import Base.write
-
-export read,
-       write
+export rsf_read,
+       rsf_write
 
 if haskey(ENV, "RSFROOT")
     RSFROOT = ENV["RSFROOT"]
@@ -221,7 +218,7 @@ function size(file::File)
 end
 
 """
-    read(file)
+    rsf_read(file)
 
 Reads RSF `file`, returning its contents and header. `file` may be file handle 
 (`m8r.File`), filename (`m8r.File.tag`), or `NTuple{2, Base.PipeEndpoint}`. This
@@ -237,23 +234,23 @@ end
 
 julia> inp = input("spike.rsf")
 
-julia> dat, n, d, o, l, u = read(inp)
+julia> dat, n, d, o, l, u = rsf_read(inp)
 (Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
 ```
 
 ## Reading file name
 ```julia-repl
-julia> read("spike.rsf")
+julia> rsf_read("spike.rsf")
 (Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
 ```
 
 ## Reading pipe
 ```julia-repl
-julia> sfspike(;n1=1, n2=2) |> read
+julia> sfspike(;n1=1, n2=2) |> rsf_read
 (Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
 ```
 """
-function read(file::File)
+function rsf_read(file::File)
     types = [
          UInt8, # SF_UCHAR
          UInt8, # SF_CHAR
@@ -299,35 +296,35 @@ function read(file::File)
     return data, n, d, o, l, u
 end
 
-read(name::String) = read(input(name))
+rsf_read(name::String) = rsf_read(input(name))
 
-function read(stdin::NTuple{2, Base.PipeEndpoint})
+function rsf_read(stdin::NTuple{2, Base.PipeEndpoint})
     rin, win = stdin
     flush(win)
     old_stdin = STDIN
     redirect_stdin(rin)
-    data = read("in")
+    data = rsf_read("in")
     redirect_stdin(old_stdin)
     return data
 end
 
 """
-    write(file, dat, n, d, o, label, unit)
+    rsf_write(file, dat, n, d, o, label, unit)
 
 Write RSF `file`. `file` may be file handle (`m8r.File`), filename
 (`m8r.File.tag`) or absent:
 
-    write(dat, n, d, o, label, unit) -> NTuple{2, Base.PipeEndpoint}
+    rsf_write(dat, n, d, o, label, unit) -> NTuple{2, Base.PipeEndpoint}
 
 This last option is useful for writing pipes to `sf` commands (see last
-example). However, it must be noted that in those cases `write` can be omitted.
+example). However, it must be noted that in those cases `rsf_write` can be omitted.
 
 In all methods, `n`, `d`, `o`, `label`, and `unit` are optional. If given, they
 should be of type `AbstractArray`.
 
 Finally, one may write from a pipe to a file with:
 
-    write(stdin::NTuple{2, Base.PipeEndpoint}, file::String)
+    rsf_write(stdin::NTuple{2, Base.PipeEndpoint}, file::String)
 
 !!! warning "Writing to file handles"
 
@@ -336,34 +333,34 @@ Finally, one may write from a pipe to a file with:
     sets the filetype to whatever was used for the last m8r.input("in") call. If
     this function has not yet been called, it will default to `Float32`.
     Therefore, it is *impossible* to create a `Complex` file afterwards. Other
-    `write` methods overcome this limitation by writing dummy files to dummy
+    `rsf_write` methods overcome this limitation by writing dummy files to dummy
     pipes to "trick" Madagascar into switching file types.
 
-    In addition, do not try to write to a filehandle which has alread been
-    written to with `write`, as `write` closes the file. Doing so will cause a
+    In addition, do not try to write to a filehandle which has already been
+    written to with `rsf_write`, as `rsf_write` closes the file. Doing so will cause a
     segfault.
 
 # Examples
 
 ## Write file by name
 ```julia-repl
-julia> write("spike.rsf", [1., 2.])
+julia> rsf_write("spike.rsf", [1., 2.])
 
-julia> read("spike.rsf")
+julia> rsf_read("spike.rsf")
 (Float32[1.0, 2.0], [2], Float32[1.0], Float32[0.0], String[""], String[""])
 ```
 
 ## Write to pipe
 ```julia-repl
-julia> write([1. im]) |> sfreal |> read
+julia> rsf_write([1. im]) |> sfreal |> rsf_read
 (Complex{Float32}[1.0+0.0im 0.0+1.0im], [1, 2], Float32[1.0, 1.0], Float32[0.0, 0.0], String["", ""], String["", ""])
 ```
 
 ## Write from pipe
 ```julia-repl
-julia> sfspike(;n1=1) |> x -> write(x, "spike.rsf")
+julia> sfspike(;n1=1) |> x -> rsf_write(x, "spike.rsf")
 
-julia> read("spike.rsf")
+julia> rsf_read("spike.rsf")
 (Float32[1.0, 2.0], [2], Float32[1.0], Float32[0.0], String[""], String[""])
 ```
 
@@ -371,14 +368,14 @@ julia> read("spike.rsf")
 ```julia-repl
 julia> out = output("spike.rsf")
 
-julia> write(out, [1., 2]) # write(out, [im, 2]) will not work due to warning
+julia> rsf_write(out, [1., 2]) # rsf_write(out, [im, 2]) will not work due to warning
 
-julia> read(out.tag)
+julia> rsf_read(out.tag)
 (Float32[1.0, 2.0], [2], Float32[1.0], Float32[0.0], String[""], String[""])
 ```
 """
-function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
-                  o=nothing, l=nothing, u=nothing)
+function rsf_write(file::File, dat::AbstractArray, n=nothing, d=nothing,
+                   o=nothing, l=nothing, u=nothing)
     if n == nothing
         n = size(dat)
     end
@@ -407,12 +404,12 @@ function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
     elseif eltype(dat) <: Int16
         shortwrite(Array{Int16}(vec(dat)), Int32[leftsize(file, 0)][], file)
     else
-        throw("Cannot write uchar, char")
+        throw("Cannot write long, double")
     end
     close(file)
 end
-function write(name::String, dat::AbstractArray, n=nothing, d=nothing,
-               o=nothing, l=nothing, u=nothing)
+function rsf_write(name::String, dat::AbstractArray, n=nothing, d=nothing,
+                   o=nothing, l=nothing, u=nothing)
     # This is necessary in case previous command run created a complex file
     spike = joinpath(RSFROOT, "bin", "sfspike")
     old_stdin = STDIN
@@ -426,13 +423,13 @@ function write(name::String, dat::AbstractArray, n=nothing, d=nothing,
     p = spawn(pipeline(pipe, stdout=win))
     redirect_stdin(old_stdin)
     Base.wait(p)
-    m8r.read((rin, win))
+    rsf_read((rin, win))
 
-    write(output(name), dat, n, d, o, l, u)
+    rsf_write(output(name), dat, n, d, o, l, u)
 end
 
-function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
-                  l=nothing, u=nothing)
+function rsf_write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
+                   l=nothing, u=nothing)
     if haskey(ENV, "TMPDATAPATH")
         name = joinpath(mktempdir(ENV["TMPDATAPATH"]), "julia.rsf")
     elseif haskey(ENV, "DATAPATH")
@@ -443,7 +440,7 @@ function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
 
     # Slightly roundabout way
     # 1) Write file to disk
-    write(name, dat, n, d, o, l, u)
+    rsf_write(name, dat, n, d, o, l, u)
 
     # 2) Pipe it to dummy sfwindow
     old_stdin = STDIN
@@ -462,9 +459,9 @@ function write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     return rin, win
 end
 
-function write(stdin::NTuple{2, Base.PipeEndpoint}, name::String)
-    dat = read(stdin)
-    write(name, dat...)
+function rsf_write(stdin::NTuple{2, Base.PipeEndpoint}, name::String)
+    dat = rsf_read(stdin)
+    rsf_write(name, dat...)
 end
 
 function process_args(;kwargs...)
@@ -544,7 +541,7 @@ $manpage"""
         end
         @eval function ($F)(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
             l=nothing, u=nothing)
-            return write(dat, n, d, o, l, u) |> ($F)
+            return rsf_write(dat, n, d, o, l, u) |> ($F)
         end
     end
 end
