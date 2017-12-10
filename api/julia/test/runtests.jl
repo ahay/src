@@ -34,11 +34,13 @@ println("getbool")
 
 println("input uchar")
 run(pipeline(`echo "a bA?"`, stdout="test_inp_uchar.txt"))
-run(pipeline(`echo n1=5 data_format=ascii_uchar in=test_inp_uchar.txt out=stdout`,
+run(pipeline(`echo n1=5 data_format=ascii_uchar in=test_inp_uchar.txt
+              out=stdout`,
              stdout="test_inp_uchar.rsf"))
 inp = m8r.input("test_inp_uchar.rsf")
 @test m8r.size(inp) == (5,)
 @test m8r.gettype(inp) == 1
+@test m8r.getform(inp) == 1
 dat, = m8r.read(inp)
 @test dat == UInt8[97, 32, 98, 65, 63]
 @test m8r.histint(inp, "n1") == 5
@@ -149,6 +151,8 @@ run(pipeline(pipeline(`sfspike n1=2 k1=1,2,2
 inp = m8r.input("test_inp_int.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 3
+@test m8r.getform(inp) in [2, 3]
+@test m8r.esize(inp) == 4
 dat, = m8r.read(inp)
 @test dat == Int32[1 0 0; 0 4 2]
 @test m8r.histint(inp, "n1") == 2

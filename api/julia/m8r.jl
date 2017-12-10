@@ -49,6 +49,18 @@ function output(tag::String)
     File(tag,rsf)
 end
 
+function gettype(file::File)
+    return ccall((:sf_gettype,"libdrsf"),Cuint,(Ptr{UInt8},),file.rsf) + 1
+end
+
+function getform(file::File)
+    return ccall((:sf_getform,"libdrsf"),Cuint,(Ptr{UInt8},),file.rsf) + 1
+end
+
+function esize(file::File)
+    return ccall((:sf_esize,"libdrsf"),Csize_t,(Ptr{UInt8},),file.rsf)
+end
+
 function setformat(file::File,format::String)
     ccall((:sf_setformat,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8}),file.rsf,format)
 end
@@ -102,10 +114,6 @@ function getbool(name::String, val::Bool)
     return val[]
 end
 getbool(name::String; val::Bool = true) = getbool(name, val)
-
-function gettype(file::File)
-    return ccall((:sf_gettype,"libdrsf"),Cuint,(Ptr{UInt8},),file.rsf) + 1
-end
 
 function leftsize(file::File,dim::Int)
     ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{UInt8},Cint),file.rsf,dim)
