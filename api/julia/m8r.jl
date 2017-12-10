@@ -3,6 +3,14 @@ __precompile__()
     m8r.jl
 
 Julia interface to Madagascar
+
+Built on the C API, the Julia API provides most lower level functions for
+reading, writing and manipulating various types of RSF files. It also provides
+higher level read and write functions, documented in `?rsf_read` and
+`?rsf_write`.
+
+The Julia API also provides searmless access to Madagascar programs. These can
+be accessed as Julia functions. For example, see `?sfwindow`.
 """
 module m8r
 
