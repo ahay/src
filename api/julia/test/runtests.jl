@@ -32,13 +32,73 @@ println("getbool")
 @test m8r.getbool("bool3", val=false) == false
 @test m8r.getbool("bool4") == true
 
+println("input int")
+run(pipeline(pipeline(`sfspike n1=2 k1=1,2,2
+                               n2=3 k2=1,2,3
+                               nsp=3 mag=1,4,2`,
+                      `sfdd type=int`),
+             stdout="test_inp_int.rsf"))
+inp = m8r.input("test_inp_int.rsf")
+@test m8r.size(inp) == (2, 3)
+@test m8r.gettype(inp) == 3
+dat, = m8r.read(inp)
+@test dat == Int32[1 0 0; 0 4 2]
+@test m8r.histint(inp, "n1") == 2
+@test m8r.histint(inp, "n2") == 3
+@test m8r.histfloat(inp, "d1") ≈ 0.004
+@test m8r.histfloat(inp, "d2") ≈ 0.1
+@test m8r.histfloat(inp, "o1") ≈ 0
+@test m8r.histfloat(inp, "o2") ≈ 0
+@test m8r.histstring(inp, "label1") == "Time"
+@test m8r.histstring(inp, "label2") == "Distance"
+@test m8r.histstring(inp, "unit1") == "s"
+@test m8r.histstring(inp, "unit2") == "km"
+run(`sfrm test_inp_int.rsf`)
+
+println("output int")
+out = m8r.output("test_out_int.rsf")
+m8r.setformat(out, "int")
+@test m8r.gettype(out) == 3
+m8r.putint(out, "n1", 1)
+m8r.putint(out, "n2", 2)
+m8r.putfloat(out, "d1", 3)
+m8r.putfloat(out, "d2", 4)
+m8r.putfloat(out, "o1", 5)
+m8r.putfloat(out, "o2", 6)
+m8r.putstring(out, "label1", "a")
+m8r.putstring(out, "label2", "é")
+m8r.putstring(out, "unit1", "普通话")
+m8r.putstring(out, "unit2", "µm")
+
+m8r.intwrite(Int32[1; 2], Int32[m8r.leftsize(out, 0)][], out)
+
+@test m8r.histint(out, "n1") == 1
+@test m8r.histint(out, "n2") == 2
+@test m8r.histfloat(out, "d1") ≈ 3
+@test m8r.histfloat(out, "d2") ≈ 4
+@test m8r.histfloat(out, "o1") ≈ 5
+@test m8r.histfloat(out, "o2") ≈ 6
+@test m8r.histstring(out, "label1") == "a"
+@test m8r.histstring(out, "label2") == "é"
+@test m8r.histstring(out, "unit1") == "普通话"
+@test m8r.histstring(out, "unit2") == "µm"
+m8r.close(out)
+
+stdout = STDOUT
+(rout, wout) = redirect_stdout()
+run(pipeline(`sfdisfil`, stdin="test_out_int.rsf", stdout=wout))
+data = convert(String, readavailable(rout))
+close(rout)
+redirect_stdout(stdout)
+@test data == "   0:    1    2 \n"
+run(`sfrm test_out_int.rsf`)
+
 
 println("input float")
-open("test_inp_float.rsf", "w") do rsf_f
-    run(pipeline(`sfspike n1=2 k1=1,2,2
-                               n2=3 k2=1,2,3
-                               nsp=3 mag=1,4,2 out=stdout`, rsf_f))
-end
+run(pipeline(`sfspike n1=2 k1=1,2,2
+                      n2=3 k2=1,2,3
+                      nsp=3 mag=1,4,2 out=stdout`,
+             stdout="test_inp_float.rsf"))
 inp = m8r.input("test_inp_float.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 4

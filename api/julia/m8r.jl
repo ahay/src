@@ -111,12 +111,20 @@ function leftsize(file::File,dim::Int)
     ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{UInt8},Cint),file.rsf,dim)
 end
 
+function intread(arr::Array{Int32,1},size::Int32,file::File)
+    ccall((:sf_intread,"libdrsf"),Void,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
 function floatread(arr::Array{Float32,1},size::Int32,file::File)
     ccall((:sf_floatread,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function complexread(arr::Array{Complex64,1},size::Int32,file::File)
     ccall((:sf_complexread,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
+function intwrite(arr::Array{Int32,1},size::Int32,file::File)
+    ccall((:sf_intwrite,"libdrsf"),Void,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function floatwrite(arr::Array{Float32,1},size::Int32,file::File)
@@ -214,10 +222,10 @@ julia> sfspike(;n1=1, n2=2) |> read
 ```
 """
 function read(file::File)
-    t = [
+    types = [
          UInt8, # SF_UCHAR
          UInt8, # SF_CHAR
-         Int, # SF_INT
+         Int32, # SF_INT
          Float32, # SF_FLOAT
          Complex64, # SF_COMPLEX
          Int16, # SF_SHORT
@@ -226,11 +234,13 @@ function read(file::File)
         ]
     n = Int[i for i in size(file)]
     sz::Int32 = prod(n)
-    t_idx = gettype(file)
-    data = zeros(t[t_idx], sz)
-    if t_idx == 4
+    itypes = gettype(file)
+    data = zeros(types[itypes], sz)
+    if itypes == 3
+        intread(data, sz, file)
+    elseif itypes == 4
         floatread(data, sz, file)
-    elseif t_idx == 5
+    elseif itypes == 5
         complexread(data, sz, file)
     else
         throw("Can only read Float32 and Complex64 (not implemented)")
@@ -347,7 +357,9 @@ function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
         putstring(file, "unit$i", u[i])
     end
 
-    if eltype(dat) <: AbstractFloat
+    if eltype(dat) <: Int32
+        intwrite(Array{Int32}(vec(dat)), Int32[leftsize(file, 0)][], file)
+    elseif eltype(dat) <: AbstractFloat
         floatwrite(Array{Float32}(vec(dat)), Int32[leftsize(file, 0)][], file)
     elseif eltype(dat) <: Complex
         complexwrite(Array{Complex64}(vec(dat)), Int32[leftsize(file, 0)][],
