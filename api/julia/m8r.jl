@@ -286,7 +286,7 @@ function rsf_read(file::File)
     elseif itypes == 6
         shortread(data, sz, file)
     else
-        throw("Cannot read uchar, char")
+        throw("Cannot read long, double")
     end
 
     data = reshape(data, n...)
