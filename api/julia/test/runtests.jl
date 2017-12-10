@@ -154,13 +154,12 @@ redirect_stdout(stdout)
 run(`sfrm test_out_float.rsf`)
 
 println("input complex")
-open("test_inp_complex.rsf", "w") do rsf_f
-    run(pipeline(`sfspike n1=2 k1=1,2,2
+run(pipeline(pipeline(`sfspike n1=2 k1=1,2,2
                                n2=3 k2=1,2,3
                                nsp=3 mag=1,4,2`,
-                       `sfrtoc`,
-                       `sfmath output='input + I' out=stdout`, rsf_f))
-end
+                      `sfrtoc`,
+                      `sfmath output='input + I' out=stdout`),
+    stdout="test_inp_complex.rsf"))
 inp = m8r.input("test_inp_complex.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 5
