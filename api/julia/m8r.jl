@@ -123,6 +123,14 @@ function complexread(arr::Array{Complex64,1},size::Int32,file::File)
     ccall((:sf_complexread,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
+function shortread(arr::Array{Int16,1},size::Int32,file::File)
+    ccall((:sf_shortread,"libdrsf"),Void,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
+function longread(arr::Array{Clong,1},size::Int32,file::File)
+    ccall((:sf_longread,"libdrsf"),Void,(Ptr{Clong},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
 function intwrite(arr::Array{Int32,1},size::Int32,file::File)
     ccall((:sf_intwrite,"libdrsf"),Void,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
@@ -133,6 +141,14 @@ end
 
 function complexwrite(arr::Array{Complex64,1},size::Int32,file::File)
     ccall((:sf_complexwrite,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
+function shortwrite(arr::Array{Int16,1},size::Int32,file::File)
+    ccall((:sf_complexwrite,"libdrsf"),Void,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+end
+
+function longwrite(arr::Array{Clong,1},size::Int32,file::File)
+    ccall((:sf_longwrite,"libdrsf"),Void,(Ptr{Clong},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function putint(file::File,name::String,val::Int)
@@ -230,7 +246,7 @@ function read(file::File)
          Complex64, # SF_COMPLEX
          Int16, # SF_SHORT
          Float64, # SF_DOUBLE
-         Int, # SF_LONG
+         Clong, # SF_LONG (UNIX: Int, Windows: Int32)
         ]
     n = Int[i for i in size(file)]
     sz::Int32 = prod(n)
@@ -242,8 +258,12 @@ function read(file::File)
         floatread(data, sz, file)
     elseif itypes == 5
         complexread(data, sz, file)
+    elseif itypes == 6
+        shortread(data, sz, file)
+    elseif itypes == 7
+        longread(data, sz, file)
     else
-        throw("Can only read Float32 and Complex64 (not implemented)")
+        throw("Cannot read uchar, char")
     end
 
     data = reshape(data, n...)
@@ -364,8 +384,12 @@ function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
     elseif eltype(dat) <: Complex
         complexwrite(Array{Complex64}(vec(dat)), Int32[leftsize(file, 0)][],
                      file)
+    elseif eltype(dat) <: Int16
+        shortwrite(Array{Int16}(vec(dat)), Int32[leftsize(file, 0)][], file)
+    elseif eltype(dat) <: Clong
+        longwrite(Array{Clong}(vec(dat)), Int32[leftsize(file, 0)][], file)
     else
-        throw("Can only write Float32 and Complex64 (not implemented)")
+        throw("Cannot write uchar, char")
     end
     close(file)
 end
