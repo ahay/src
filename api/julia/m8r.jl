@@ -139,8 +139,6 @@ function ucharwrite(arr::Array{UInt8,1},size::Int32,file::File)
     ccall((:sf_ucharwrite,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function longread(arr::Array{Clong,1},size::Int32,file::File)
-    ccall((:sf_longread,"libdrsf"),Void,(Ptr{Clong},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 function charwrite(arr::Array{UInt8,1},size::Int32,file::File)
     ccall((:sf_charwrite,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
@@ -159,10 +157,6 @@ end
 
 function shortwrite(arr::Array{Int16,1},size::Int32,file::File)
     ccall((:sf_complexwrite,"libdrsf"),Void,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
-end
-
-function longwrite(arr::Array{Clong,1},size::Int32,file::File)
-    ccall((:sf_longwrite,"libdrsf"),Void,(Ptr{Clong},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function putint(file::File,name::String,val::Int)
@@ -278,8 +272,6 @@ function read(file::File)
         complexread(data, sz, file)
     elseif itypes == 6
         shortread(data, sz, file)
-    elseif itypes == 7
-        longread(data, sz, file)
     else
         throw("Cannot read uchar, char")
     end
@@ -406,8 +398,6 @@ function write(file::File, dat::AbstractArray, n=nothing, d=nothing,
                      file)
     elseif eltype(dat) <: Int16
         shortwrite(Array{Int16}(vec(dat)), Int32[leftsize(file, 0)][], file)
-    elseif eltype(dat) <: Clong
-        longwrite(Array{Clong}(vec(dat)), Int32[leftsize(file, 0)][], file)
     else
         throw("Cannot write uchar, char")
     end
