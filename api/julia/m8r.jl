@@ -217,9 +217,7 @@ dimensions.
 # Examples
 
 ```julia-repl
-julia> open("spike.rsf", "w") do rsf_f
-run(pipeline(`sfspike n1=2 n2=3`, rsf_f))
-end
+julia> run(pipeline(`sfspike n1=2 n2=3`, stdout="spike.rsf"))
 
 julia> inp = m8r.input("spike.rsf")
 
@@ -254,9 +252,7 @@ last option is useful for reading pipes from `sf` commands (see last example).
 
 ## Reading file handle
 ```julia-repl
-julia> open("spike.rsf", "w") do rsf_f
-run(pipeline(`sfspike n1=2 n2=3`, rsf_f))
-end
+julia> run(pipeline(`sfspike n1=2 n2=3`, stdout="spike.rsf"))
 
 julia> inp = input("spike.rsf")
 
