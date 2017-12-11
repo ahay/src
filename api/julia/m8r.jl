@@ -10,7 +10,25 @@ higher level read and write functions, documented in `?rsf_read` and
 `?rsf_write`.
 
 The Julia API also provides searmless access to Madagascar programs. These can
-be accessed as Julia functions. For example, see `?sfwindow`.
+be accessed as Julia functions. For example, see `?sfwindow`. These functions
+can be piped to each other using Julia's currying (function composition)
+operator `|>`. They can then be read to memory or written to disk. See examples
+below.
+
+# Examples
+
+## Piping to variable
+```julia-repl
+julia> data = sfspike(n1=2) |> x -> sfwindow(x;n1=1) |> rsf_read
+
+julia> data
+(Float32[1.0], [1], Float32[0.004], Float32[0.0], String["Time"], String["s"])
+```
+
+## Piping to disk
+```julia-repl
+julia> sfspike(n1=2) |> x -> sfwindow(x;n1=1) |> x -> rsf_write(x, "spike.rsf")
+```
 """
 module m8r
 
