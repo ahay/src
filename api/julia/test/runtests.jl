@@ -65,7 +65,7 @@ m8r.putstring(out, "label2", "é")
 m8r.putstring(out, "unit1", "普通话")
 m8r.putstring(out, "unit2", "µm")
 
-m8r.ucharwrite(UInt8[1; 2], Int32[m8r.leftsize(out, 0)][], out)
+m8r.ucharwrite(UInt8[1; 2], m8r.leftsize(out, 0), out)
 
 @test m8r.histint(out, "n1") == 1
 @test m8r.histint(out, "n2") == 2
@@ -119,7 +119,7 @@ m8r.putstring(out, "label2", "é")
 m8r.putstring(out, "unit1", "普通话")
 m8r.putstring(out, "unit2", "µm")
 
-m8r.charwrite(UInt8[1; 2], Int32[m8r.leftsize(out, 0)][], out)
+m8r.charwrite(UInt8[1; 2], m8r.leftsize(out, 0), out)
 
 @test m8r.histint(out, "n1") == 1
 @test m8r.histint(out, "n2") == 2

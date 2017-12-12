@@ -91,13 +91,13 @@ end
 function histint(file::File,name::String)
     val = Cint[0]
     ccall((:sf_histint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ptr{Cint}),file.rsf,name,val)
-    return val[]
+    return convert(Int, val[])
 end
 
 function histfloat(file::File,name::String)
     val = Cfloat[0]
     ccall((:sf_histfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ptr{Cfloat}),file.rsf,name,val)
-    return val[]
+    return convert(Float32, val[])
 end
 
 function histstring(file::File,name::String)
@@ -108,17 +108,17 @@ function histstring(file::File,name::String)
     return unsafe_string(val)
 end
 
-function getint(name::String, val::Int)
+function getint(name::String, val::Integer)
     val = Cint[val]
     ccall((:sf_getint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cint}),name,val)
-    return val[]
+    return convert(Int, val[])
 end
-getint(name::String; val::Int = 0) = getint(name, val)
+getint(name::String; val::Integer = 0) = getint(name, val)
 
 function getfloat(name::String, val::Real)
     val = Cfloat[val]
     ccall((:sf_getfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cfloat}),name,val)
-    return val[]
+    return convert(Float32, val[])
 end
 getfloat(name::String; val::Real = 0) = getfloat(name, val)
 
@@ -138,65 +138,78 @@ function getbool(name::String, val::Bool)
 end
 getbool(name::String; val::Bool = true) = getbool(name, val)
 
-function leftsize(file::File,dim::Int)
+function leftsize(file::File,dim::Integer)
+    dim::Cint = dim
     ccall((:sf_leftsize,"libdrsf"),Culonglong,(Ptr{UInt8},Cint),file.rsf,dim)
 end
 
-function ucharread(arr::Array{UInt8,1},size::Int32,file::File)
+function ucharread(arr::Array{UInt8,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_ucharread,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function charread(arr::Array{UInt8,1},size::Int32,file::File)
+function charread(arr::Array{UInt8,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_charread,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function intread(arr::Array{Int32,1},size::Int32,file::File)
+function intread(arr::Array{Int32,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_intread,"libdrsf"),Void,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function floatread(arr::Array{Float32,1},size::Int32,file::File)
+function floatread(arr::Array{Float32,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_floatread,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function complexread(arr::Array{Complex64,1},size::Int32,file::File)
+function complexread(arr::Array{Complex64,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_complexread,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function shortread(arr::Array{Int16,1},size::Int32,file::File)
+function shortread(arr::Array{Int16,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_shortread,"libdrsf"),Void,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function ucharwrite(arr::Array{UInt8,1},size::Int32,file::File)
+function ucharwrite(arr::Array{UInt8,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_ucharwrite,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function charwrite(arr::Array{UInt8,1},size::Int32,file::File)
+function charwrite(arr::Array{UInt8,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_charwrite,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function intwrite(arr::Array{Int32,1},size::Int32,file::File)
+function intwrite(arr::Array{Int32,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_intwrite,"libdrsf"),Void,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function floatwrite(arr::Array{Float32,1},size::Int32,file::File)
+function floatwrite(arr::Array{Float32,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_floatwrite,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function complexwrite(arr::Array{Complex64,1},size::Int32,file::File)
+function complexwrite(arr::Array{Complex64,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_complexwrite,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function shortwrite(arr::Array{Int16,1},size::Int32,file::File)
+function shortwrite(arr::Array{Int16,1},size::Integer,file::File)
+    size::Csize_t = size
     ccall((:sf_complexwrite,"libdrsf"),Void,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function putint(file::File,name::String,val::Int)
-    val = convert(Cint, val)
+function putint(file::File,name::String,val::Integer)
+    val::Cint = val
     ccall((:sf_putint,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Cint),file.rsf,name,val)
 end
 
 function putfloat(file::File,name::String,val::Real)
-    val = convert(Cfloat, val)
+    val::Cfloat = val
     ccall((:sf_putfloat,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Cfloat),file.rsf,name,val)
 end
 
@@ -229,7 +242,7 @@ function size(file::File)
     size = leftsize(file, 0)
     dim = 1
     n = histint(file, string("n", dim))
-    s = Int32[n]
+    s = [n]
     size /= n
     dim += 1
     while size > 1
@@ -284,7 +297,7 @@ function rsf_read(file::File)
          Clong, # SF_LONG (UNIX: Int, Windows: Int32)
         ]
     n = Int[i for i in size(file)]
-    sz::Int32 = prod(n)
+    sz = prod(n)
     itypes = gettype(file)
     data = zeros(types[itypes], sz)
     if itypes == 1
@@ -304,7 +317,6 @@ function rsf_read(file::File)
     end
 
     data = reshape(data, n...)
-    n = Int[i for i in size(file)]
     d = Float32[]
     o = Float32[]
     l = String[]
@@ -415,16 +427,15 @@ function rsf_write(file::File, dat::AbstractArray, n=nothing, d=nothing,
     end
 
     if eltype(dat) <: UInt8
-        charwrite(Array{UInt8}(vec(dat)), Int32[leftsize(file, 0)][], file)
+        charwrite(Array{UInt8}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: Int32
-        intwrite(Array{Int32}(vec(dat)), Int32[leftsize(file, 0)][], file)
+        intwrite(Array{Int32}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: AbstractFloat
-        floatwrite(Array{Float32}(vec(dat)), Int32[leftsize(file, 0)][], file)
+        floatwrite(Array{Float32}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: Complex
-        complexwrite(Array{Complex64}(vec(dat)), Int32[leftsize(file, 0)][],
-                     file)
+        complexwrite(Array{Complex64}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: Int16
-        shortwrite(Array{Int16}(vec(dat)), Int32[leftsize(file, 0)][], file)
+        shortwrite(Array{Int16}(vec(dat)), leftsize(file, 0), file)
     else
         throw("Cannot write long, double")
     end
