@@ -351,7 +351,8 @@ Write RSF `file`. `file` may be file handle (`m8r.File`), filename
     rsf_write(dat, n, d, o, label, unit) -> NTuple{2, Base.PipeEndpoint}
 
 This last option is useful for writing pipes to `sf` commands (see last
-example). However, it must be noted that in those cases `rsf_write` can be omitted.
+example). However, it must be noted that in those cases `rsf_write` can be
+omitted.
 
 In all methods, `n`, `d`, `o`, `label`, and `unit` are optional. If given, they
 should be of type `AbstractArray`.
@@ -371,8 +372,8 @@ Finally, one may write from a pipe to a file with:
     pipes to "trick" Madagascar into switching file types.
 
     In addition, do not try to write to a filehandle which has already been
-    written to with `rsf_write`, as `rsf_write` closes the file. Doing so will cause a
-    segfault.
+    written to with `rsf_write`, as `rsf_write` closes the file. Doing so will
+    cause a segfault.
 
 # Examples
 
@@ -517,7 +518,8 @@ if RSFROOT ≠ nothing
         @eval export $F
         @eval begin
             progname = $S
-            manfile = joinpath(m8r.RSFROOT, "share", "man", "man1", progname*".1")
+            manfile = joinpath(m8r.RSFROOT, "share", "man", "man1",
+                               progname*".1")
             if isfile(manfile)
                 old_stdout = STDOUT
                 (rout, wout) = redirect_stdout()
