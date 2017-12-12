@@ -224,7 +224,7 @@ end
 """
     m8r.size(file::m8r.File) -> Tuple
 
-The size of `file`, an Int32 array representing the length of each of its
+The size of `file`, an Int array representing the length of each of its
 dimensions.
 
 # Examples
