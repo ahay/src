@@ -420,7 +420,7 @@ julia> rsf_read(out.tag)
 function rsf_write(file::File, dat::AbstractArray, n=nothing, d=nothing,
                    o=nothing, l=nothing, u=nothing)
     if n == nothing
-        n = size(dat)
+        n = Base.size(dat)
     end
     dim = length(n)
     d = d == nothing ? [1 for i in 1:dim] : d
