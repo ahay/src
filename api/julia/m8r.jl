@@ -593,8 +593,8 @@ $manpage"""
                 return rin, win
         end
         @eval function ($F)(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
-            l=nothing, u=nothing)
-            return rsf_write(dat, n, d, o, l, u) |> ($F)
+            l=nothing, u=nothing; kwargs...)
+            return rsf_write(dat, n, d, o, l, u) |> x -> $F(x; kwargs...)
         end
     end
 end
