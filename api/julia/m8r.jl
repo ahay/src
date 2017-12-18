@@ -285,7 +285,7 @@ julia> sfspike(;n1=1, n2=2) |> rsf_read
 (Float32[1.0 1.0 1.0; 1.0 1.0 1.0], [2, 3], Float32[0.004, 0.1], Float32[0.0, 0.0], String["Time", "Distance"], String["s", "km"])
 ```
 """
-function rsf_read(file::File)
+function rsf_read(file::File; headers_only::Bool=false)
     types = [
          UInt8, # SF_UCHAR
          UInt8, # SF_CHAR
@@ -298,6 +298,22 @@ function rsf_read(file::File)
         ]
     n = Int[i for i in size(file)]
     sz = prod(n)
+
+    d = Float32[]
+    o = Float32[]
+    l = String[]
+    u = String[]
+    for i in 1:length(n)
+        append!(d, [histfloat(file, "d"*dec(i))])
+        append!(o, [histfloat(file, "o"*dec(i))])
+        append!(l, [histstring(file, "label"*dec(i))])
+        append!(u, [histstring(file, "unit"*dec(i))])
+    end
+
+    if headers_only
+        return n, d, o, l, u
+    end
+
     itypes = gettype(file)
     data = zeros(types[itypes], sz)
     if itypes == 1
@@ -317,27 +333,19 @@ function rsf_read(file::File)
     end
 
     data = reshape(data, n...)
-    d = Float32[]
-    o = Float32[]
-    l = String[]
-    u = String[]
-    for i in 1:length(n)
-        append!(d, [histfloat(file, "d"*dec(i))])
-        append!(o, [histfloat(file, "o"*dec(i))])
-        append!(l, [histstring(file, "label"*dec(i))])
-        append!(u, [histstring(file, "unit"*dec(i))])
-    end
+
     return data, n, d, o, l, u
 end
 
-rsf_read(name::String) = rsf_read(input(name))
+rsf_read(name::String; headers_only::Bool=false) =
+    rsf_read(input(name); headers_only=headers_only)
 
-function rsf_read(stdin::NTuple{2, Base.PipeEndpoint})
+function rsf_read(stdin::NTuple{2, Base.PipeEndpoint}; headers_only::Bool=false)
     rin, win = stdin
     flush(win)
     old_stdin = STDIN
     redirect_stdin(rin)
-    data = rsf_read("in")
+    data = rsf_read("in"; headers_only=headers_only)
     redirect_stdin(old_stdin)
     return data
 end
