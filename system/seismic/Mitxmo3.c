@@ -23,14 +23,14 @@
 #include <omp.h>
 #endif
 
-#include "orthovelo.h"
 #include "warp3.h"
 
 int main (int argc, char* argv[])
 {
     bool inv,cij;
-    int it,ipx, ipy, nt,nx, ny, npx, npy, ileft, nleft;
-    float dt, t0, px, px0, px2, py, py0, py2 , v, vx, vy, vz, vgp, sx, st, sy, ft, dpx, dpy, eps, x0, dx, y0, dy;
+    int it,ipx, ipy, nt,nx, ny, npx, npy;
+    float dt, t0, px, px0, px2, py, py0, py2 , v, sx, st, sy, ft, dpx, dpy, eps, x0, dx, y0, dy;
+    float vp, vn1, vn2, eta1, eta2, eta3, etaxy, f1, f2, dxx, dyy, dtt;
     float c11, c22, c33, c44, c55, c66, c12, c13, c23;
     float ***tp, *vel, *c_11, *c_22, *c_33, *c_44, *c_55, *c_66, *c_12, *c_13, *c_23, ***txy, ***t, ***x, ***y;
     sf_file inp, out;
@@ -127,11 +127,8 @@ int main (int argc, char* argv[])
     	sf_putfloat(out,"o3",py0);
     }
 
-    nleft = sf_leftsize(inp,3);
-
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
-
     warp3_init(nt, t0, dt,
 	       nx, x0, dx,
 	       ny, y0, dy /* output grid */,
@@ -144,7 +141,6 @@ int main (int argc, char* argv[])
     y = sf_floatalloc3(nt,npx,npy);
 
     txy   = sf_floatalloc3(nt,nx,ny);
-    
     if (cij) { /* Orthorhombic */
         c_11 = sf_floatalloc(nt);
         c_22 = sf_floatalloc(nt);
@@ -155,29 +151,27 @@ int main (int argc, char* argv[])
         c_12 = sf_floatalloc(nt);
         c_13 = sf_floatalloc(nt);
         c_23 = sf_floatalloc(nt);
+        
     } else { /* Isotropic */
         vel = sf_floatalloc(nt);
+    }
+
+
+	if (cij) { /* Orthorhombic */
+		sf_floatread (c_11,nt,C11);
+		sf_floatread (c_22,nt,C22);
+		sf_floatread (c_33,nt,C33);
+		sf_floatread (c_44,nt,C44);
+		sf_floatread (c_55,nt,C55);
+		sf_floatread (c_66,nt,C66);
+		sf_floatread (c_12,nt,C12);
+		sf_floatread (c_13,nt,C13);
+		sf_floatread (c_23,nt,C23);
+	} else { /* Isotropic */
+		sf_floatread (vel,nt,velocity);
    }
-
-
-    for (ileft = 0; ileft < nleft; ileft++) {
-
-	    if (cij) { /* Orthorhombic */
-            sf_floatread (c_11,nt,C11);
-            sf_floatread (c_22,nt,C22);
-            sf_floatread (c_33,nt,C33);
-            sf_floatread (c_44,nt,C44);
-            sf_floatread (c_55,nt,C55);
-            sf_floatread (c_66,nt,C66);
-            sf_floatread (c_12,nt,C12);
-            sf_floatread (c_13,nt,C13);
-            sf_floatread (c_23,nt,C23);
-        } else { /* Isotropic */
-	        sf_floatread (vel,nt,velocity);
-       }
-       
 /*  #pragma omp parallel for default(shared)				\
-    private(ipy,py,ipx,px,st,sx,sy,it,c11,c22,c33,c44,c55,c66,c12,c13,c23,vx,vy,vz,vgp,v,py2,px2,ft) */
+    private(ipy,py,ipx,px,st,sx,sy,it,c11,c22,c33,c44,c55,c66,c12,c13,c23,vp,vn2,vn1,eta1,eta2,eta3,etaxy,f1,f2,dyy,dxx,dtt,v,py2,px2,ft) */
     for (ipy = 0; ipy < npy; ipy++) {
 	    py = py0 + ipy*dpy;
 	    py2 = py*py;
@@ -192,24 +186,46 @@ int main (int argc, char* argv[])
     	    for (it=0; it < nt; it++) {
 	    	    if (cij) { /* Orthorhombic */
                     c11 = c_11[it]; c22 = c_22[it]; c33 = c_33[it]; c44 = c_44[it]; c55 = c_55[it]; 
-                    c66 = c_66[it]; c12 = c_12[it]; c13 = c_13[it]; c23 = c_23[it];  
-                    vx = xPvelo(c11,c22,c33,c44,c55,c66,c12,c13,c23,px,py); /* group velocity computation*/
-                    vy = yPvelo(c11,c22,c33,c44,c55,c66,c12,c13,c23,px,py);
-                    vz = zPvelo(c11,c22,c33,c44,c55,c66,c12,c13,c23,px,py);
-                    vgp = sqrtf(vx*vx+vy*vy+vz*vz);
+                    c66 = c_66[it]; c12 = c_12[it]; c13 = c_13[it]; c23 = c_23[it];
+                    
+                    /* Pseudoacoustic parameters*/
+                    vp = sqrtf(c33);
+                    vn2 = sqrtf((c33*c55 + c13*(c13 + 2*c55))/(c33 - c55));
+                    vn1 = sqrtf((c33*c44 + c23*(c23 + 2*c44))/(c33 - c44));
+                    eta1 = (c22*(c33 - c44))/(2*c33*c44 + 2*c23*(c23 + 2*c44))-0.5;
+                    eta2 = (c11*(c33 - c55))/(2*c33*c55 + 2*c13*(c13 + 2*c55))-0.5;
+                    eta3 = (c22*(c11 - c66))/(2*c11*c66 + 2*c12*(c12 + 2*c66))-0.5;
+                    etaxy =sqrtf((1+2*eta1)*(1+2*eta2)/(1+2*eta3))-1;
+                 
+                    f1 = 1-(1+2*eta2)*px*px*vn2*vn2-(1+2*eta1)*py*py*vn1*vn1+((1+2*eta2)*(1+2*eta1)-(1+etaxy)*(1+etaxy))*px*px*py*py*vn1*vn1*vn2*vn2;
+                    f2 = 1-2*eta2*px*px*vn2*vn2-2*eta1*py*py*vn1*vn1+(4*eta1*eta2-etaxy*etaxy)*px*px*py*py*vn1*vn1*vn2*vn2;
+                    
+                    if (f1/f2 < 0.) { /* Ignore from consideration */
+            		    for (it=0; it < nt; it++) {
+                			t[ipy][ipx][it]=t0-(nt+10)*dt;
+                			x[ipy][ipx][it]=x0-(nx+10)*dx;
+                			y[ipy][ipx][it]=y0-(ny+10)*dy;
+            		    }
+            		    break;
+            		}
+                     
+                    dtt = 1/(f2*sqrt(f2*f1))*(f1*f2 + px*px*vn2*vn2*powf(-1+py*py*vn1*vn1*(2*eta1-etaxy),2) + py*py*vn1*vn2*powf(-1+px*px*vn2*vn2*(2*eta2-etaxy),2) );
+                    dxx = px*vn2*vn2/(f2*sqrtf(f2*f1))*powf(-1+py*py*vn1*vn1*(2*eta1-etaxy),2);
+                    dyy = py*vn1*vn1/(f2*sqrtf(f2*f1))*powf(-1+px*px*vn2*vn2*(2*eta2-etaxy),2);
+                     
             		if (it==0) {
-            		    st = t0*(vgp/vz)/dt;
-            		    sx = vx*st;
-            		    sy = vy*st;
+            		    st = t0*dtt/dt;
+            		    sx = t0*dxx/dt;
+            		    sy = t0*dyy/dt;
             		}
 
             		t[ipy][ipx][it] = st*dt;
             		x[ipy][ipx][it] = sx*dt;
             		y[ipy][ipx][it] = sy*dt;
             		
-            		st += (vgp/vz);
-            		sx += vx*(vgp/vz);
-            		sy += vy*(vgp/vz);
+            		st += dtt;
+            		sx += dxx;
+            		sy += dyy;
             		
                 } else { /* Isotropic */
                 
@@ -242,13 +258,12 @@ int main (int argc, char* argv[])
             		st += ft;
             		sx += px*v*ft;
             		sy += py*v*ft;
-               }
+                }
     	    }
     	}
 	}
 	
-
-
+	
 	if (inv) {
 	    sf_floatread (tp[0][0],nt*npx*npy,inp);	    
 	    warp3(tp,t,x,y,txy);	    
@@ -258,24 +273,14 @@ int main (int argc, char* argv[])
 	    fwarp3(txy,t,x,y,tp);
 	    sf_floatwrite (tp[0][0],nt*npx*npy,out);
 	}
-    }
-
-/*	 for (ipy = 0; ipy < npy; ipy++) {*/
-/*    	for (ipx = 0; ipx < npx; ipx++) {*/
-/*    	    for (it=0; it < nt; it++) {*/
-/*            		x[ipy][ipx][it] = abs(x[ipy][ipx][it])-abs(y[ipy][ipx][it]);*/
-/*               }*/
-/*    	    }*/
-/*    	}*/
-sf_file testtime, testdiff1,testdiff2;
-testtime = sf_output("time");
-testdiff1 = sf_output("diff1");
-testdiff2 = sf_output("diff2");
-sf_floatwrite(t[0][0],nt*npx*npy,testtime);
-sf_floatwrite(x[0][0],nt*npx*npy,testdiff1);
-sf_floatwrite(y[0][0],nt*npx*npy,testdiff2);
-
-
-
+	
+	sf_file testtime,testx,testy;
+	testtime = sf_output("time");
+	testx = sf_output("x");
+	testy = sf_output("y");
+	sf_floatwrite(t[0][0],nt*npx*npy,testtime);
+	sf_floatwrite(x[0][0],nt*npx*npy,testx);
+	sf_floatwrite(y[0][0],nt*npx*npy,testy);
+	
     exit (0);
 }
