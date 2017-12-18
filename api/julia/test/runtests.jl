@@ -436,7 +436,7 @@ dat, n, d, o, l, u = rsf_write([im; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
 @test l == ["a", "b"]
 @test u == ["d", "e"]
 
-sfspike(;n1=1) |> x -> rsf_write(x, "test_write.rsf")
+sfspike(;n1=1) |> x -> rsf_write("test_write.rsf", x)
 dat, n, d, o, l, u = rsf_read("test_write.rsf")
 @test dat ≈ [1.]
 @test n == [1]

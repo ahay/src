@@ -27,7 +27,7 @@ julia> data
 
 ## Piping to disk
 ```julia-repl
-julia> sfspike(n1=2) |> x -> sfwindow(x;n1=1) |> x -> rsf_write(x, "spike.rsf")
+julia> sfspike(n1=2) |> x -> sfwindow(x;n1=1) |> x -> rsf_write("spike.rsf", x)
 ```
 """
 module m8r
@@ -359,7 +359,7 @@ should be of type `AbstractArray`.
 
 Finally, one may write from a pipe to a file with:
 
-    rsf_write(stdin::NTuple{2, Base.PipeEndpoint}, file::String)
+    rsf_write(file::String, stdin::NTuple{2, Base.PipeEndpoint})
 
 !!! warning "Writing to file handles"
 
@@ -393,7 +393,7 @@ julia> rsf_write([1. im]) |> sfreal |> rsf_read
 
 ## Write from pipe
 ```julia-repl
-julia> sfspike(;n1=1) |> x -> rsf_write(x, "spike.rsf")
+julia> sfspike(;n1=1) |> x -> rsf_write("spike.rsf", x)
 
 julia> rsf_read("spike.rsf")
 (Float32[1.0, 2.0], [2], Float32[1.0], Float32[0.0], String[""], String[""])
@@ -493,7 +493,7 @@ function rsf_write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     return rin, win
 end
 
-function rsf_write(stdin::NTuple{2, Base.PipeEndpoint}, name::String)
+function rsf_write(name::String, stdin::NTuple{2, Base.PipeEndpoint})
     dat = rsf_read(stdin)
     rsf_write(name, dat...)
 end
