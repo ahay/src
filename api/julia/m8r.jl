@@ -542,8 +542,9 @@ if RSFROOT ≠ nothing
                 run(pipeline(`man $manfile`, stdout=wout, stdin=DevNull,
                             stderr=DevNull))
                 Base.close(wout)
-                manpage = "\n# RSF Documentation\n"
-                manpage *= convert(String, readavailable(rout))
+                manpage = convert(String, readavailable(rout))
+                manpage = replace(manpage, "\n", "\n\t")
+                manpage = "\n# RSF Documentation\n"*manpage
                 Base.close(rout)
                 redirect_stdout(old_stdout)
             else
@@ -553,9 +554,10 @@ if RSFROOT ≠ nothing
 """
     $progname(input) -> NTuple{2, Base.PipeEndpoint}"
 
-Runs RSF program $progname on data provided by `input`. This may be `m8r.File`
-or, more commonly `NTuple{2, Base.PipeEndpoint}`. If the program needs no input,
-this `input` may be absent.
+Runs RSF program $progname on the data provided by `input`. This may be an
+`m8r.File`, a `NTuple{2, Base.PipeEndpoint}` (that is, the output of another sf
+command) or, an array (and optionally, n, d, o, l, u). If the program requires
+no input, it may be absent.
 $manpage"""
             function ($F)(stdin::NTuple{2, Base.PipeEndpoint};
                             kwargs...)
