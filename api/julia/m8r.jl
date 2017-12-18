@@ -437,14 +437,14 @@ function rsf_write(file::File, dat::AbstractArray, n=nothing, d=nothing,
 
     if eltype(dat) <: UInt8
         charwrite(Array{UInt8}(vec(dat)), leftsize(file, 0), file)
-    elseif eltype(dat) <: Int32
-        intwrite(Array{Int32}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: AbstractFloat
         floatwrite(Array{Float32}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: Complex
         complexwrite(Array{Complex64}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: Int16
         shortwrite(Array{Int16}(vec(dat)), leftsize(file, 0), file)
+    elseif eltype(dat) <: Integer
+        intwrite(Array{Int32}(vec(dat)), leftsize(file, 0), file)
     else
         throw("Cannot write long, double")
     end
@@ -452,15 +452,23 @@ function rsf_write(file::File, dat::AbstractArray, n=nothing, d=nothing,
 end
 function rsf_write(name::String, dat::AbstractArray, n=nothing, d=nothing,
                    o=nothing, l=nothing, u=nothing)
-    # This is necessary in case previous command run created a complex file
-    spike = joinpath(RSFROOT, "bin", "sfspike")
+    # Madagascar's output function inherits the type of the previous input.
+    # Therefore, in order to have the correct output type, one must create a
+    # dummy input of the correct type.
     old_stdin = STDIN
     (rin, win) = redirect_stdin()
-    if  eltype(dat) <: AbstractFloat
-        pipe = `$spike n1=1 out=stdout`
-    else eltype(dat) <: Complex
+    spike = joinpath(RSFROOT, "bin", "sfspike")
+    if eltype(dat) <: Int16
+        dd = joinpath(RSFROOT, "bin", "sfdd")
+        pipe = pipeline(`$spike n1=1`, `$dd type=short`)
+    elseif eltype(dat) <: Complex
         rtoc = joinpath(RSFROOT, "bin", "sfrtoc")
         pipe = pipeline(`$spike n1=1`, `$rtoc out=stdout`)
+    elseif eltype(dat) <: Integer
+        dd = joinpath(RSFROOT, "bin", "sfdd")
+        pipe = pipeline(`$spike n1=1`, `$dd type=int`)
+    else
+        pipe = `$spike n1=1 out=stdout`
     end
     p = spawn(pipeline(pipe, stdout=win))
     redirect_stdin(old_stdin)
