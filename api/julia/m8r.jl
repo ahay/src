@@ -573,15 +573,17 @@ $manpage"""
                             kwargs...)
                 rin, win = stdin
                 returnval = (rin, win)
+                outstdout = "out=stdout"
                 i = find(x->x[1] == :to_file, kwargs)
                 if length(i) > 0
                     win = kwargs[i[]][2]
                     deleteat!(kwargs, i[])
+                    outstdout = ""
                     returnval = nothing
                 end
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
-                pipe = `$progpath $args out=stdout`
+                pipe = `$progpath $args $outstdout`
                 Base.wait(spawn(pipeline(pipe, stdin=rin, stdout=win)))
                 return returnval
             end
@@ -590,15 +592,17 @@ $manpage"""
                 old_stdin = STDIN
                 (rin, win) = redirect_stdin()
                 returnval = (rin, win)
+                outstdout = "out=stdout"
                 i = find(x->x[1] == :to_file, kwargs)
                 if length(i) > 0
                     win = kwargs[i[]][2]
                     deleteat!(kwargs, i[])
+                    outstdout = ""
                     returnval = nothing
                 end
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
-                pipe = `$progpath $args out=stdout`
+                pipe = `$progpath $args $outstdout`
                 Base.wait(spawn(pipeline(pipe, stdout=win)))
                 redirect_stdin(old_stdin)
                 return returnval
@@ -607,15 +611,17 @@ $manpage"""
                 old_stdin = STDIN
                 (rin, win) = redirect_stdin()
                 returnval = (rin, win)
+                outstdout = "out=stdout"
                 i = find(x->x[1] == :to_file, kwargs)
                 if length(i) > 0
                     win = kwargs[i[]][2]
                     deleteat!(kwargs, i[])
+                    outstdout = ""
                     returnval = nothing
                 end
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
-                pipe = `$progpath $args out=stdout`
+                pipe = `$progpath $args $outstdout`
                 Base.wait(spawn(pipeline(pipe, stdin=file.tag, stdout=win)))
                 redirect_stdin(old_stdin)
                 return returnval
