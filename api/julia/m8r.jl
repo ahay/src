@@ -264,6 +264,8 @@ end
 Reads RSF `file`, returning its contents and header. `file` may be file handle 
 (`m8r.File`), filename (`m8r.File.tag`), or `NTuple{2, Base.PipeEndpoint}`. This
 last option is useful for reading pipes from `sf` commands (see last example).
+When called with `headers_only` keyword argument set to `true`, does not read
+contents, only headers.
 
 # Examples
 
