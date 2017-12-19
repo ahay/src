@@ -446,6 +446,16 @@ dat, n, d, o, l, u = rsf_read("test_write.rsf")
 @test u == ["s"]
 run(`sfrm test_write.rsf`)
 
+sfspike(;to_file="test_write.rsf", n1=1)
+dat, n, d, o, l, u = rsf_read("test_write.rsf")
+@test dat ≈ [1.]
+@test n == [1]
+@test d ≈ [0.004]
+@test o ≈ [0]
+@test l == ["Time"]
+@test u == ["s"]
+run(`sfrm test_write.rsf`)
+
 dat, n, d, o, l, u = sfwindow([1 2; 2 3; 4 5]; n1=1) |> rsf_read
 @test [1, 2] == dat
 @test n == [2]

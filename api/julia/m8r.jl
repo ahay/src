@@ -29,6 +29,10 @@ julia> data
 ```julia-repl
 julia> sfspike(n1=2) |> x -> sfwindow(x; n1=1) |> x -> rsf_write("spike.rsf", x)
 ```
+Alternatively, and this is especially useful when the contents of the output are too large to be held in RAM, the line above can be replaced with
+```julia-repl
+julia> sfspike(n1=2) |> x -> sfwindow(x; to_file="spike.rsf", n1=1)
+```
 """
 module m8r
 
@@ -550,42 +554,71 @@ if RSFROOT ≠ nothing
             end
 
 """
-    $progname(input) -> NTuple{2, Base.PipeEndpoint}"
+    $progname(input; to_file, kwargs...) -> output
 
-Runs RSF program $progname on the data provided by `input`. This may be an
-`m8r.File`, a `NTuple{2, Base.PipeEndpoint}` (that is, the output of another sf
-command) or, an array (and optionally, n, d, o, l, u). If the program requires
-no input, it may be absent.
+Runs RSF program `$progname` on the data provided by `input`. This may be an
+`m8r.File`, a `NTuple{2, Base.PipeEndpoint}` (that is, the output of another
+`sf` command) or, an array (and optionally, positional arguments n, d, o, l, u).
+If the program requires no input, it may be absent.
+
+If the keyword argument `to_file` is absent, `output` is a 2-tuple of pipes,
+that is, `NTuple{2, Base.PipeEndpoint}`. If `to_file` is present, contents are
+written to the filename it points to. In this case, `output` is `nothing`.
+
+It is also possible to pass keyword arguments to the `$progname`. See `?m8r`
+for examples.
+
 $manpage"""
             function ($F)(stdin::NTuple{2, Base.PipeEndpoint};
                             kwargs...)
+                rin, win = stdin
+                returnval = (rin, win)
+                i = find(x->x[1] == :to_file, kwargs)
+                if length(i) > 0
+                    win = kwargs[i[]][2]
+                    deleteat!(kwargs, i[])
+                    returnval = nothing
+                end
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
                 pipe = `$progpath $args out=stdout`
                 Base.wait(spawn(pipeline(pipe, stdin=rin, stdout=win)))
-                rin, win = stdin
-                return rin, win
+                return returnval
             end
         end
         @eval function ($F)(;kwargs...)
+                old_stdin = STDIN
+                (rin, win) = redirect_stdin()
+                returnval = (rin, win)
+                i = find(x->x[1] == :to_file, kwargs)
+                if length(i) > 0
+                    win = kwargs[i[]][2]
+                    deleteat!(kwargs, i[])
+                    returnval = nothing
+                end
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
                 pipe = `$progpath $args out=stdout`
                 Base.wait(spawn(pipeline(pipe, stdout=win)))
-                old_stdin = STDIN
-                (rin, win) = redirect_stdin()
                 redirect_stdin(old_stdin)
-                return rin, win
+                return returnval
         end
         @eval function ($F)(file::File; kwargs...)
+                old_stdin = STDIN
+                (rin, win) = redirect_stdin()
+                returnval = (rin, win)
+                i = find(x->x[1] == :to_file, kwargs)
+                if length(i) > 0
+                    win = kwargs[i[]][2]
+                    deleteat!(kwargs, i[])
+                    returnval = nothing
+                end
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
                 pipe = `$progpath $args out=stdout`
                 Base.wait(spawn(pipeline(pipe, stdin=file.tag, stdout=win)))
-                old_stdin = STDIN
-                (rin, win) = redirect_stdin()
                 redirect_stdin(old_stdin)
-                return rin, win
+                return returnval
         end
         @eval function ($F)(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
             l=nothing, u=nothing; kwargs...)
