@@ -19,7 +19,7 @@ below.
 
 ## Piping to variable
 ```julia-repl
-julia> data = sfspike(n1=2) |> x -> sfwindow(x;n1=1) |> rsf_read
+julia> data = sfspike(n1=2) |> x -> sfwindow(x; n1=1) |> rsf_read
 
 julia> data
 (Float32[1.0], [1], Float32[0.004], Float32[0.0], String["Time"], String["s"])
@@ -27,7 +27,7 @@ julia> data
 
 ## Piping to disk
 ```julia-repl
-julia> sfspike(n1=2) |> x -> sfwindow(x;n1=1) |> x -> rsf_write("spike.rsf", x)
+julia> sfspike(n1=2) |> x -> sfwindow(x; n1=1) |> x -> rsf_write("spike.rsf", x)
 ```
 """
 module m8r
@@ -538,7 +538,7 @@ if RSFROOT ≠ nothing
                 old_stdout = STDOUT
                 (rout, wout) = redirect_stdout()
                 run(pipeline(`man $manfile`, stdout=wout, stdin=DevNull,
-                            stderr=DevNull))
+                             stderr=DevNull))
                 Base.close(wout)
                 manpage = convert(String, readavailable(rout))
                 manpage = replace(manpage, "\n", "\n\t")
