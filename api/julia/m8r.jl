@@ -470,9 +470,8 @@ function rsf_write(name::String, dat::AbstractArray, n=nothing, d=nothing,
     else
         pipe = `$spike n1=1 out=stdout`
     end
-    p = spawn(pipeline(pipe, stdout=win))
+    Base.wait(spawn(pipeline(pipe, stdout=win)))
     redirect_stdin(old_stdin)
-    Base.wait(p)
     rsf_read((rin, win))
 
     rsf_write(output(name), dat, n, d, o, l, u)
@@ -497,9 +496,8 @@ function rsf_write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     (rin, win) = redirect_stdin()
     progpath = joinpath(RSFROOT, "bin", "sfwindow")
     pipe = `$progpath squeeze=n out=stdout`
-    p = spawn(pipeline(pipe, stdin=name, stdout=win))
+    Base.wait(spawn(pipeline(pipe, stdin=name, stdout=win)))
     redirect_stdin(old_stdin)
-    Base.wait(p)
 
     # 3) Remove temp
     progpath = joinpath(RSFROOT, "bin", "sfrm")
@@ -564,9 +562,8 @@ $manpage"""
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
                 pipe = `$progpath $args out=stdout`
+                Base.wait(spawn(pipeline(pipe, stdin=rin, stdout=win)))
                 rin, win = stdin
-                p = spawn(pipeline(pipe, stdin=rin, stdout=win))
-                Base.wait(p)
                 return rin, win
             end
         end
@@ -574,22 +571,20 @@ $manpage"""
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
                 pipe = `$progpath $args out=stdout`
+                Base.wait(spawn(pipeline(pipe, stdout=win)))
                 old_stdin = STDIN
                 (rin, win) = redirect_stdin()
-                p = spawn(pipeline(pipe, stdout=win))
                 redirect_stdin(old_stdin)
-                Base.wait(p)
                 return rin, win
         end
         @eval function ($F)(file::File; kwargs...)
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
                 pipe = `$progpath $args out=stdout`
+                Base.wait(spawn(pipeline(pipe, stdin=file.tag, stdout=win)))
                 old_stdin = STDIN
                 (rin, win) = redirect_stdin()
-                p = spawn(pipeline(pipe, stdin=file.tag, stdout=win))
                 redirect_stdin(old_stdin)
-                Base.wait(p)
                 return rin, win
         end
         @eval function ($F)(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
