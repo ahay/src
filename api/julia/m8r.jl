@@ -45,6 +45,13 @@ else
     RSFROOT = nothing
 end
 
+#if Libdl.find_library("libdrsf") == ""
+    #push!(Libdl.DL_LOAD_PATH, joinpath(RSFROOT, "lib"))
+    #if Libdl.find_library("libdrsf") == ""
+        #throw("Cannot find C api. Make sure RSFROOT/lib is in LD_LIBRARY_PATH")
+    #end
+#end
+
 immutable File
     tag::String
     rsf::Ptr{UInt8}
@@ -386,7 +393,7 @@ Finally, one may write from a pipe to a file with:
     limitation with other `rsf_write` methods by writing dummy files to dummy
     pipes to "trick" Madagascar into switching file types.
 
-    In addition, do *not* try to write to a filer handle which has already been
+    In addition, do *not* try to write to a file handle which has already been
     written to with `rsf_write`, as `rsf_write` closes the file. Doing so will
     cause a segfault.
 
