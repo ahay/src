@@ -377,15 +377,16 @@ Finally, one may write from a pipe to a file with:
 
 !!! warning "Writing to file handles"
 
-    Do *not* use supply the file as an `m8r.File` type unless you know exactly
-    what you are doing. Because of how Madagascar is set up, calling m8r.output
-    sets the filetype to whatever was used for the last m8r.input("in") call. If
-    this function has not yet been called, it will default to `Float32`.
-    Therefore, it is *impossible* to create a `Complex` file afterwards. Other
-    `rsf_write` methods overcome this limitation by writing dummy files to dummy
-    pipes to "trick" Madagascar into switching file types.
+    Do *not* supply the file as an `m8r.File` type unless you know exactly what
+    you are doing. Because of how Madagascar is set up, calling `m8r.output`
+    automatically sets the filetype to whatever was read in the previous
+    `m8r.input("in")` call. If this function has not yet been called, defaults
+    to `float`. Therefore, it is *impossible* to create a `complex` file
+    immediately after reading a `float`-type file. We overcome this limitation
+    with other `rsf_write` methods which write dummy files to dummy pipes to
+    "trick" Madagascar into switching file types.
 
-    In addition, do not try to write to a filehandle which has already been
+    In addition, do *not* try to write to a filehandle which has already been
     written to with `rsf_write`, as `rsf_write` closes the file. Doing so will
     cause a segfault.
 
