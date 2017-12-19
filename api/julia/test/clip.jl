@@ -2,7 +2,6 @@
 
 using m8r
 
-m8r.init()
 inp = m8r.input("in")
 out = m8r.output("out")
 
@@ -18,6 +17,4 @@ for i2 in 1:n2
     trace = clamp.(trace,-clip,clip)
     m8r.floatwrite(trace,n1,out)
 end
-
-
 
