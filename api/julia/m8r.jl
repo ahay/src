@@ -464,6 +464,7 @@ function rsf_write(file::File, dat::AbstractArray, n=nothing, d=nothing,
     end
     close(file)
 end
+
 function rsf_write(name::String, dat::AbstractArray, n=nothing, d=nothing,
                    o=nothing, l=nothing, u=nothing)
     # Madagascar's output function inherits the type of the previous input.
@@ -490,6 +491,8 @@ function rsf_write(name::String, dat::AbstractArray, n=nothing, d=nothing,
 
     rsf_write(output(name), dat, n, d, o, l, u)
 end
+rsf_write(file::Union{String, File}, dat::AbstractArray; n=nothing, d=nothing,
+          o=nothing, l=nothing, u=nothing) = rsf_write(file, dat, n, d, o, l, u)
 
 function rsf_write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
                    l=nothing, u=nothing)
@@ -520,6 +523,8 @@ function rsf_write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     spawn(pipeline(`rmdir $dir`))
     return rin, win
 end
+rsf_write(dat::AbstractArray; n=nothing, d=nothing, o=nothing, l=nothing,
+          u=nothing) = rsf_write(dat, n, d, o, l, u)
 
 function rsf_write(name::String, stdin::NTuple{2, Base.PipeEndpoint})
     dat = rsf_read(stdin)
