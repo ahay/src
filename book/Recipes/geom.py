@@ -466,7 +466,7 @@ def boxarray2d(cc,nz,oz,dz,nx,ox,dx,par):
               stdout=0)
 
 
-def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dypar):
+def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
