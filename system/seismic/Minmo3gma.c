@@ -1,5 +1,5 @@
 /* 3-D Inverse generalized normal moveout.
-   V elocity file contains slowness squared with n2=16 (wx,wy,wxy,A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5)
+   Velocity file contains slowness squared with n2=16 (wx,wxy,wy,A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5)
    following Sripanich and Fomel (2015).
 */
 /*
@@ -74,8 +74,8 @@ int main (int argc, char* argv[])
 
     trace = sf_floatalloc(nt);
     wx = sf_floatalloc(nt);
-    wy = sf_floatalloc(nt);
     wxy = sf_floatalloc(nt);
+	wy = sf_floatalloc(nt);
     a1 = sf_floatalloc(nt);
     a2 = sf_floatalloc(nt);
     a2 = sf_floatalloc(nt);

@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+
+import numpy as np
+import m8r
+import sys
+
 import math
  
 class InterpText:
@@ -31,20 +36,46 @@ class InterpText:
                       (self.xin[i+1]-self.xin[i])
         return self.yin[-1]
 
+# read the recnoSpn and recnoDelrt files that define Spn and Delrt as 
+# functions of the input recno (the value of fldr in the input trace header).
 recnoSpn = InterpText()
 recnoSpn.read('recnoSpn.txt')
 
 recnoDelrt = InterpText()
 recnoDelrt.read('recnoDelrt.txt')
 
+# set up to read parameters and read and write the seismic data
+par = m8r.Par()
+inp  = m8r.Input()
+output = m8r.Output("out")
+
+# get locations of the header keys used to initialize geometry
+#input headers
+indx_fldr =inp.get_segy_keyindx('fldr')
+indx_tracf=inp.get_segy_keyindx('tracf')
+#output headers
+indx_ep   = inp.get_segy_keyindx('ep')
+indx_sx    =inp.get_segy_keyindx('sx')
+indx_gx    =inp.get_segy_keyindx('gx')
+indx_cdp   =inp.get_segy_keyindx('cdp')
+indx_offset=inp.get_segy_keyindx('offset')
+indx_delrt =inp.get_segy_keyindx('delrt')
+
+sys.stderr.write('indx_fldr=%s\n'%repr(indx_fldr))
+sys.stderr.write('indx_ep=%s\n'%repr(indx_ep))
+sys.stderr.write('indx_cdp=%s\n'%repr(indx_cdp))
+
+
 prev_fldr=-9999
 fldr_bias=0
 
-for line in open('hdrfile.txt'):
-    tokens=line.split()
-    tracl =long(tokens[0])
-    fldr  =long(tokens[1])
-    tracf =long(tokens[2]) 
+while True:
+    eof_get_tah, intrace, inheader = inp.get_tah()
+    if eof_get_tah:
+        break
+
+    fldr =inheader[indx_fldr ]
+    tracf=inheader[indx_tracf]
 
     # sometimes fldr does not increase.  It seems the field record number
     # is a 3 digit decimal integer.  When it reaches 999 the next fldr is 000.
@@ -57,18 +88,15 @@ for line in open('hdrfile.txt'):
     fldr += fldr_bias
     ep=-999999
     sx    =-999999999
-    sy    =-999999999
     gx    =-999999999
-    gy    =-999999999
     cdp   =-999999
     offset=-999999
     shot=long(round(recnoSpn.linearInterp(fldr)))
     delrt=long(round(recnoDelrt.linearInterp(fldr)))
-    if shot>0 :
+    if shot>0 :   # if this is a trace to process
         ep=shot
         # use spnCable.txt file to figure out group location
         r_sx=float(6087-ep)*50.0
-        r_sy=0
 
         # trace 48 is the near trace.  trace 1 is far trace
         # first 24 traces are at 100m, last 48 are at 50m
@@ -78,7 +106,7 @@ for line in open('hdrfile.txt'):
         # I measure first break at 335 ms.  (335ms-51ms)*1.49 m/ms = 423m 
         # increase by half group and half source arrays lengths (50/2+50/2)
         # and I get 473.  Close to the shot by shot observer notes = 470m.
-        # to look at forst breaks on shots with 0 time delay:
+        # to look at first breaks on shots with 0 time delay:
         # <allshots.su  suwind key=ep min=3577 max=3607 |  suximage perc=90
  
         nearoff=470
@@ -87,7 +115,6 @@ for line in open('hdrfile.txt'):
         else:
             offset=23*100+nearoff+75+50+50*(23-tracf)
         r_gx=r_sx-offset
-        r_gy=0
         
         # cdps should increase in the opposite direction to the fldr
         # that means the last shot collected will map a trace to 101
@@ -103,19 +130,14 @@ for line in open('hdrfile.txt'):
         cdp = round((smallestmidpointx - (r_sx+r_gx)/2.0)/50.0+101.0)-44
 
         sx=long(round(r_sx))
-        sy=long(round(r_sy))
         gx=long(round(r_gx))
-        gy=long(round(r_gy))
 
-    print str(fldr)  \
-         + " " + str(ep)      \
-         + " " + str(sx)      \
-         + " " + str(sy)      \
-         + " " + str(gx)      \
-         + " " + str(gy)      \
-         + " " + str(cdp)     \
-         + " " + str(tracf)   \
-         + " " + str(offset)  \
-         + " " + str(delrt) 
+    inheader[indx_fldr ]=fldr
+    inheader[indx_ep    ]=ep
+    inheader[indx_sx    ]=sx
+    inheader[indx_gx    ]=gx
+    inheader[indx_cdp   ]=cdp
+    inheader[indx_offset]=offset
+    inheader[indx_delrt ]=delrt
 
- 
+    output.put_tah(intrace,inheader)
