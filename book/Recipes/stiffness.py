@@ -493,7 +493,7 @@ def cplot3d(cc,i1,i2,i3,par):
 
     Flow(cc+'-all',[cc+'-row1',cc+'-row2',cc+'-row3',cc+'-row4',cc+'-row5',cc+'-row6'],'cat axis=1 space=n ${SOURCES[1:6]}')
 
-    Result(cc,cc+'-all','grey pclip=100 title="" wantaxis=n screenratio=1 allpos=y color=j')
+    Result(cc,cc+'-all','grey pclip=100 title="" wantaxis=n screenratio=1 allpos=y')
     
 def fcplot3d(cc,i1,i2,i3,par):
     ''' Full 21 coefficient plot for stiffness tensor '''
