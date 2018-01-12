@@ -1,5 +1,5 @@
 /* mask linear operator for 2D test
-*/
+ */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
@@ -27,43 +27,43 @@ static float *mask;
 void mask_init(int n1_, int n2_, float *mask_)
 /*< initialize mask operator >*/
 {
-  n1=n1_;
-  n2=n2_;
-  mask=mask_;
+    n1=n1_;
+    n2=n2_;
+    mask=mask_;
 }
 
 void mask_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex *dd)
 /*< linear operator >*/
 {
-  int i1, i2;
-  if(nm!=n1*n2) sf_error("datasize mismatch");
-  if(nd!=n1*n2) sf_error("datasize mismatch");
+    int i1, i2;
+    if(nm!=n1*n2) sf_error("datasize mismatch");
+    if(nd!=n1*n2) sf_error("datasize mismatch");
 
-  sf_cadjnull(adj, add, nm, nd, mm, dd);
+    sf_cadjnull(adj, add, nm, nd, mm, dd);
 
-  if(adj){
-    for(i2=0; i2<n2; i2++){
-      if(mask[i2]){
-	  for(i1=0; i1<n1; i1++) {
+    if(adj){
+	for(i2=0; i2<n2; i2++){
+	    if(mask[i2]){
+		for(i1=0; i1<n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H	    
-	      mm[i1+n1*i2]+=dd[i1+n1*i2];
+		    mm[i1+n1*i2]+=dd[i1+n1*i2];
 #else
-	      mm[i1+n1*i2]=sf_cadd(mm[i1+n1*i2],dd[i1+n1*i2]);
+		    mm[i1+n1*i2]=sf_cadd(mm[i1+n1*i2],dd[i1+n1*i2]);
 #endif
-	  }
-      }
-    }
-  }else{
-    for(i2=0; i2<n2; i2++){
-      if(mask[i2]){
-	  for(i1=0; i1<n1; i1++) {
+		}
+	    }
+	}
+    }else{
+	for(i2=0; i2<n2; i2++){
+	    if(mask[i2]){
+		for(i1=0; i1<n1; i1++) {
 #ifdef SF_HAS_COMPLEX_H	  
-	      dd[i1+n1*i2]+=mm[i1+n1*i2];
+		    dd[i1+n1*i2]+=mm[i1+n1*i2];
 #else
-	      dd[i1+n1*i2]=sf_cadd(dd[i1+n1*i2],mm[i1+n1*i2]);
+		    dd[i1+n1*i2]=sf_cadd(dd[i1+n1*i2],mm[i1+n1*i2]);
 #endif
-	  }
-      }
+		}
+	    }
+	}
     }
-  }
 }
