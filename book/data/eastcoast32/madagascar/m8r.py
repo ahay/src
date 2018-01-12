@@ -20,10 +20,8 @@ import numpy as np
 try:
     import c_m8r as c_rsf
     _swig_ = True
-    #sys.stderr.write('_swig_==True\n')
 except:
     _swig_ = False
-    #sys.stderr.write('_swig_==False\n')
 #_swig_ = False   #kls allow temporary test of with old major path in the code
 #sys.stderr.write('reset _swig_=%s\n'%repr(_swig_))
 
@@ -52,7 +50,6 @@ def view(name):
         print 'No IPython Image support'
         return None
 
-# from apibak
 class Par(object):
     '''parameter table'''
     def __init__(self,argv=sys.argv):
@@ -260,29 +257,22 @@ class File(object):
         'numpy array'
         if False and _swig_: #kls I broke path that uses c_rsf.sf_input
             if None == self.narray:
-                if not hasattr(self,'file'):
+                if not hasattr(self,'f'):
                     f = c_rsf.sf_input(self.tag)
                 else:
                     f = self.f
                 self.narray = c_rsf.rsf_array(f)
-                if not hasattr(self,'file'):
+                if not hasattr(self,'f'):
                     c_rsf.sf_fileclose(f)
             return self.narray
         else:
             # gets only the real part of complex arrays
-            old=False #kls
-            if old:
-                val = os.popen('%s < %s' % 
-                           (Filter('disfil')(number=False),self)).read()
-
-                return map(lambda x: float(x.rstrip(',')),val.split())
-            else:
-                # should be able to dp something like this, which is used in 
-                # class Input.read()
-                #sys.stderr.write('in __array__\n')
-                tempinput=Input(self.filename)
-                #sys.stderr,write('call getall\n')
-                return tempinput.getalldata()
+            # should be able to dp something like this, which is used in 
+            # class Input.read()
+            #sys.stderr.write('in __array__\n')
+            tempinput=Input(self.filename)
+            #sys.stderr,write('call getall\n')
+            return tempinput.getalldata()
             
     def __array_wrap__(self,array,context=None):
         inp = Input(self) 
@@ -516,14 +506,17 @@ class Input(_File):
                 self.type='float'
                 self.form='native'
                 esize=4
+                self.datatype=np.float32
             elif data_format=='native_complex':
                 self.type='complex'
                 self.form='native'
-                esize=4
+                esize=8
+                self.datatype=np.complex64
             elif data_format=='native_int':
                 self.type='int'
                 self.form='native'
                 esize=4
+                self.datatype=np.int32
             else:
                 sys.stderr.write('error reading from input file.\n')
                 sys.stderr.write('data_format=%s\n'%data_format)
@@ -586,128 +579,26 @@ class Input(_File):
                 pos += 1
 
     def read(self,data):
-        datatype="unknown"
-            
-        data_format=self.string('data_format')
-        esize=self.int('esize')
-
-        if (data_format == 'native_float' and 
-            esize == 4):
-            datatype=np.float32
-
-        if (data_format == 'native_complex' and 
-            esize == 8):
-            datatype=np.complex64
-
-        if (data_format == 'native_int' and 
-            esize == 4):
-            datatype=np.int32
 
         shape=data.shape
         datacount=data.size
-        #sys.stderr.write('shape=%s\n'%repr(shape))
-        if datatype != "unknown":
-            #sys.stderr.write('Input.read size=%s\n'%str(datacount))
-            data=data.reshape(datacount)
-            data[:]=np.fromfile(self.f,dtype=datatype,count=datacount)
-            data=data.reshape(shape)
-            return
-        else:
-            sys.stderr.write('error reading from input file.\n')
-            sys.stderr.write('datatype unknown\n')
-            sys.stderr.write('filename=%s.\n',self.filename)
-            sys.stderr.write('data_format='+repr(data_format)+'\n')
-            sys.stderr.write('esize='+repr(esize)+'\n')
-            sys.stderr.write('error - exiting program\n')
-            quit()
-
+        data=data.reshape(datacount)
+        data[:]=np.fromfile(self.f,dtype=self.datatype,count=datacount)
+        data=data.reshape(shape)
+        return
         # kls update to allow reading part of input data
-        # add readshpe parameter. if not input use self.shape()
+        # add readshape parameter. if not input use self.shape()
+
     def gettrace(self):
-        datatype="unknown"
-            
-        data_format=self.string('data_format')
-        esize=self.int('esize')
-
-        if (data_format == 'native_float' and 
-            esize == 4):
-            datatype=np.float32
-
-        if (data_format == 'native_complex' and 
-            esize == 8):
-            datatype=np.complex64
-
-        if (data_format == 'native_int' and 
-            esize == 4):
-            datatype=np.int32
-
-        #sys.stderr.write('self.shape()=%s\n'%repr(self.shape()))
-        #sys.stderr.write('self.shape()[-1]=%s\n'%repr(self.shape()[-1]))
-        #trace = np.zeros(self.shape()[-1],dtype=datatype)
-        #self.read(trace)
-        #sys.stderr.write('np.max(trace)=%s\n'%repr(np.max(trace)))
-        #return trace
-
-        #shape=data.shape
         datacount=self.shape()[-1]
-        #sys.stderr.write('datacount=%s\n'%repr(datacount))
-        if datatype != "unknown":
-            #sys.stderr.write('Input.read size=%s\n'%str(datacount))
-            #data=data.reshape(datacount)
-            data=np.fromfile(self.f,dtype=datatype,count=datacount)
-            return data
-        else:
-            sys.stderr.write('error reading from input file.\n')
-            sys.stderr.write('datatype unknown\n')
-            sys.stderr.write('filename=%s.\n',self.filename)
-            sys.stderr.write('data_format='+repr(data_format)+'\n')
-            sys.stderr.write('esize='+repr(esize)+'\n')
-            sys.stderr.write('error - exiting program\n')
-            quit()
+        data=np.fromfile(self.f,dtype=self.datatype,count=datacount)
+        return data
 
-    # kls write function     def getalldata() # like gettrace, but reads all
     def getalldata(self):
-        datatype="unknown"
-            
-        data_format=self.string('data_format')
-        esize=self.int('esize')
-
-        if (data_format == 'native_float' and 
-            esize == 4):
-            datatype=np.float32
-
-        if (data_format == 'native_complex' and 
-            esize == 8):
-            datatype=np.complex64
-
-        if (data_format == 'native_int' and 
-            esize == 4):
-            datatype=np.int32
-
-        #sys.stderr.write('self.shape()=%s\n'%repr(self.shape()))
-        #sys.stderr.write('self.shape()[-1]=%s\n'%repr(self.shape()[-1]))
-        #trace = np.zeros(self.shape()[-1],dtype=datatype)
-        #self.read(trace)
-        #sys.stderr.write('np.max(trace)=%s\n'%repr(np.max(trace)))
-        #return trace
-
-        #shape=data.shape
         datacount=self.leftsize()
-        #sys.stderr.write('datacount=%s\n'%repr(datacount))
-        if datatype != "unknown":
-            #sys.stderr.write('Input.read size=%s\n'%str(datacount))
-            #data=data.reshape(datacount)
-            data=np.fromfile(self.f,dtype=datatype,count=datacount)
-            data=data.reshape(self.shape())
-            return data
-        else:
-            sys.stderr.write('error reading from input file.\n')
-            sys.stderr.write('datatype unknown\n')
-            sys.stderr.write('filename=%s.\n',self.filename)
-            sys.stderr.write('data_format='+repr(data_format)+'\n')
-            sys.stderr.write('esize='+repr(esize)+'\n')
-            sys.stderr.write('error - exiting program\n')
-            quit()
+        data=np.fromfile(self.f,dtype=self.datatype,count=datacount)
+        data=data.reshape(self.shape())
+        return data
 
     def get_tah(self):
         #sys.stderr.write("in get_tah(self)\n")
@@ -718,34 +609,23 @@ class Input(_File):
         type_input_record=temp.tostring().decode()
         #sys.stderr.write("type_input_record=%s\n"%type_input_record)
     
+        #read the length of the trace+header
+        fromfilearray=np.fromfile(self.f,dtype=np.int32,count=1);
+        if fromfilearray.size != 1:
+            return (True, None, None)
+        input_record_length=fromfilearray[0];
+
         n1_traces=self.int('n1_traces')
         #sys.stderr.write('n1_traces=%s\n'%repr(n1_traces))
 
-        data_format=self.string('data_format')
-        esize=self.int('esize')
-
-        if (data_format == 'native_float' and 
-            esize == 4):
-            tracetype=np.float32
-
-        if (data_format == 'native_complex' and 
-            esize == 8):
-            tracetype=np.complex64
-
-        if (data_format == 'native_int' and 
-            esize == 4):
-            tracetype=np.int32
-        
-        if tracetype != "unknown":
-            #sys.stderr.write('Input.read size=%s\n'%str(datacount))
-            #data=data.reshape(datacount)
-            trace=np.fromfile(self.f,dtype=tracetype,count=n1_traces)
-            if trace.size != n1_traces:
-                return (True, None, None)
+        trace=np.fromfile(self.f,dtype=self.datatype,count=n1_traces)
+        if trace.size != n1_traces:
+            return (True, None, None)
     
         header_format=self.string('header_format')
         esize=self.int('esize')
 
+        headertype="unknown"
         if (header_format == 'native_float' and 
             esize == 4):
             headertype=np.float32
@@ -757,12 +637,7 @@ class Input(_File):
         if (header_format == 'native_int' and 
             esize == 4):
             headertype=np.int32
-        fromfilearray=np.fromfile(self.f,dtype=np.int32,count=1);
-        if fromfilearray.size != 1:
-            return (True, None, None)
 
-        input_record_length=fromfilearray[0];
-    
         n1_headers=self.int('n1_headers')
         #sys.stderr.write('n1_headers=%s\n'%repr(n1_headers))
         if headertype != "unknown":
@@ -939,30 +814,27 @@ class Output(_File):
 
     def put_tah(self,trace,header):
         if not self.headerflushed:
-            #sys.stderr.write('Output.write add datatype to file header\n')
-            #sys.stderr.write('data.dtype=%s\n'%repr(data.dtype))
-            if False: # I do not think this is needed
-                if trace.dtype==np.float32:
-                    self.put('data_format','native_float')
-                if trace.dtype==np.complex64:
-                    sys.stderr.write('error: python Output.put_tah does\n')
-                    sys.stderr.write('       support complex traces\n')
-                    # if you want to add this fix esize below
-                    quit()
-                    self.put('data_format','native_complex')
-                if trace.dtype==np.int32:
-                    self.put('data_format','native_int')
-                if header.dtype==np.float32:
-                    self.put('header_format','native_float')
-                if header.dtype==np.complex64:
-                    sys.stderr.write('error: cannot use complex headrs\n')
-                    quit()
-                    self.put('header_format','native_complex')
-                if header.dtype==np.int32:
-                    self.put('header_format','native_int')
-            #sys.stderr.write("flushheader in Output.write\n")
+            if trace.dtype==np.float32:
+                self.put('data_format','native_float')
+            if trace.dtype==np.complex64:
+                sys.stderr.write('error: python Output.put_tah does\n')
+                sys.stderr.write('       support complex traces\n')
+                # if you want to add this fix esize below
+                quit()
+                self.put('data_format','native_complex')
+            if trace.dtype==np.int32:
+                self.put('data_format','native_int')
+
+            if header.dtype==np.float32:
+                self.put('header_format','native_float')
+            if header.dtype==np.complex64:
+                sys.stderr.write('error: cannot use complex headrs\n')
+                quit()
+                self.put('header_format','native_complex')
+            if header.dtype==np.int32:
+                self.put('header_format','native_int')
             self.flushheader(first_input)
-        # kls should check array data type matches file data_format
+        # kls check array data type matches file data_format
         #temp=np.array([116,  97, 104,  32], dtype=np.int8)
         temp=np.array('tah ',dtype=str)
         temp.tofile(self.f)
@@ -1005,23 +877,6 @@ class Output(_File):
             self.f.flush()
             self.f.close()
             self.f=open(self.filename,"w")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 dataserver = os.environ.get('RSF_DATASERVER',
                             'http://www.reproducibility.org')
