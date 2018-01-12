@@ -1,5 +1,5 @@
 /* Generalized p-norm thresholding operator for complex/float numbers
-*/
+ */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
@@ -30,28 +30,28 @@ void sf_cpthresh(sf_complex *x, int n, float thr, float p, char* mode)
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(i,a,b) shared(x,n,thr,p,mode)
 #endif
-	for(i=0;i<n;i++){
-	  a=cabsf(x[i]);/* complex numbers */
-	  b=(a==0.)?1.0:0.0;
-	    	if (strcmp(mode,"hard") == 0) { /* hard thresholding*/
+    for(i=0;i<n;i++){
+	a=cabsf(x[i]);/* complex numbers */
+	b=(a==0.)?1.0:0.0;
+	if (strcmp(mode,"hard") == 0) { /* hard thresholding*/
 #ifdef SF_HAS_COMPLEX_H
-		    x[i]=(x[i])*(a>thr?1.:0.);
+	    x[i]=(x[i])*(a>thr?1.:0.);
 #else
-		    x[i]=sf_crmul(x[i],(a>thr?1.:0.));
+	    x[i]=sf_crmul(x[i],(a>thr?1.:0.));
 #endif
-	    	} else{
-			if (strcmp(mode,"soft") == 0) a=1.0-thr/(a+b);/* soft thresholding */
-		    	if (strcmp(mode,"pthresh") == 0) a=1.0-powf((a+b)/thr, p-2.0);
-		    	/* generalized quasi p-norm thresholding*/
-		    	if (strcmp(mode,"exp") == 0) a=expf(-powf((a+b)/thr, p-2.0));
-		    	/* exponential shrinkage */
+	} else{
+	    if (strcmp(mode,"soft") == 0) a=1.0-thr/(a+b);/* soft thresholding */
+	    if (strcmp(mode,"pthresh") == 0) a=1.0-powf((a+b)/thr, p-2.0);
+	    /* generalized quasi p-norm thresholding*/
+	    if (strcmp(mode,"exp") == 0) a=expf(-powf((a+b)/thr, p-2.0));
+	    /* exponential shrinkage */
 #ifdef SF_HAS_COMPLEX_H
-			x[i]=(x[i])*(a>0.0?a:0.0);
+	    x[i]=(x[i])*(a>0.0?a:0.0);
 #else
-			x[i]=sf_crmul(x[i],(a>0.0?a:0.0));
+	    x[i]=sf_crmul(x[i],(a>0.0?a:0.0));
 #endif
-		}
 	}
+    }
 }
 
 void sf_pthresh(float *x, int n, float thr, float p, char* mode)
@@ -63,18 +63,18 @@ void sf_pthresh(float *x, int n, float thr, float p, char* mode)
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(i,a,b) shared(x,n,thr,p,mode)
 #endif
-	for(i=0;i<n;i++){
-	  a=fabsf(x[i]);/* float numbers */
-	  b=(a==0.)?1.0:0.0;
-	    	if (strcmp(mode,"hard") == 0) x[i]=(x[i])*(a>thr?1.:0.);/* hard thresholding*/
-	    	else{
-			if (strcmp(mode,"soft") == 0) a=1.0-thr/(a+b);/* soft thresholding */
-		    	if (strcmp(mode,"pthresh") == 0) a=1.0-powf((a+b)/thr, p-2.0);
-		    	/* generalized quasi p-norm thresholding*/
-		    	if (strcmp(mode,"exp") == 0) a=expf(-powf((a+b)/thr, p-2.0));
-		    	/* exponential shrinkage */
+    for(i=0;i<n;i++){
+	a=fabsf(x[i]);/* float numbers */
+	b=(a==0.)?1.0:0.0;
+	if (strcmp(mode,"hard") == 0) x[i]=(x[i])*(a>thr?1.:0.);/* hard thresholding*/
+	else{
+	    if (strcmp(mode,"soft") == 0) a=1.0-thr/(a+b);/* soft thresholding */
+	    if (strcmp(mode,"pthresh") == 0) a=1.0-powf((a+b)/thr, p-2.0);
+	    /* generalized quasi p-norm thresholding*/
+	    if (strcmp(mode,"exp") == 0) a=expf(-powf((a+b)/thr, p-2.0));
+	    /* exponential shrinkage */
 
-			x[i]=(x[i])*(a>0.0?a:0.0);
-		}
+	    x[i]=(x[i])*(a>0.0?a:0.0);
 	}
+    }
 }

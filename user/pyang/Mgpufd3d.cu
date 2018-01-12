@@ -1,5 +1,5 @@
 /* GPU-based finite difference on 3-D grid
-*/
+ */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University (Pengliang Yang)
 
@@ -18,9 +18,9 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   Reference:
-    Micikevicius, Paulius. "3D finite difference computation on GPUs
-    using CUDA." Proceedings of 2nd Workshop on General Purpose 
-    Processing on Graphics Processing Units. ACM, 2009.
+  Micikevicius, Paulius. "3D finite difference computation on GPUs
+  using CUDA." Proceedings of 2nd Workshop on General Purpose 
+  Processing on Graphics Processing Units. ACM, 2009.
 */
 
 #include <stdio.h>
@@ -55,12 +55,12 @@ __constant__ float stencil[radius+1]={-205.0/72.0,8.0/5.0,-1.0/5.0,8.0/315.0,-1.
 __global__ void cuda_ricker_wavelet(float *wlt, float fm, float dt, int nt)
 /*< generate ricker wavelet with time deley >*/
 {
-	int it=threadIdx.x+blockDim.x*blockIdx.x;
-    	if (it<nt){
-	  float tmp = PI*fm*fabsf(it*dt-1.0/fm);//delay the wavelet to exhibit all waveform
-	  tmp *=tmp;
-	  wlt[it]= (1.0-2.0*tmp)*expf(-tmp);// ricker wavelet at time: t=nt*dt
-	}
+    int it=threadIdx.x+blockDim.x*blockIdx.x;
+    if (it<nt){
+	float tmp = PI*fm*fabsf(it*dt-1.0/fm);//delay the wavelet to exhibit all waveform
+	tmp *=tmp;
+	wlt[it]= (1.0-2.0*tmp)*expf(-tmp);// ricker wavelet at time: t=nt*dt
+    }
 }
 
 
@@ -68,25 +68,25 @@ __global__ void cuda_ricker_wavelet(float *wlt, float fm, float dt, int nt)
 __global__ void cuda_set_sg(int *szxy, int szbeg, int sxbeg, int sybeg, int jsz, int jsx, int jsy, int ns, int n1, int n2, int n3)
 /*< set the positions of sources and geophones in whole domain >*/
 {
-	int id=threadIdx.x+blockDim.x*blockIdx.x;
-	int nn1=n1+2*radius;
-	int nn2=n2+2*radius;
-    	if (id<ns) szxy[id]=(szbeg+id*jsz+radius)+nn1*(sxbeg+id*jsx+radius)+nn1*nn2*(sybeg+id*jsy+radius);
+    int id=threadIdx.x+blockDim.x*blockIdx.x;
+    int nn1=n1+2*radius;
+    int nn2=n2+2*radius;
+    if (id<ns) szxy[id]=(szbeg+id*jsz+radius)+nn1*(sxbeg+id*jsx+radius)+nn1*nn2*(sybeg+id*jsy+radius);
 }
 
 
 __global__ void cuda_add_source(bool add, float *p, float *source, int *szxy, int ns)
 /*< add/subtract sources: length of source[]=ns, index stored in szxy[] >*/
 {
-  int id=threadIdx.x+blockIdx.x*blockDim.x;
+    int id=threadIdx.x+blockIdx.x*blockDim.x;
 
-  if(id<ns){
-    if(add){
-      p[szxy[id]]+=source[id];
-    }else{
-      p[szxy[id]]-=source[id];
+    if(id<ns){
+	if(add){
+	    p[szxy[id]]+=source[id];
+	}else{
+	    p[szxy[id]]-=source[id];
+	}
     }
-  }
 }
 
 __global__ void cuda_step_fd3d(float *p0, float *p1, float *vv, float _dz2, float _dx2, float _dy2, int n1, int n2, int n3)
@@ -185,9 +185,9 @@ __global__ void cuda_step_fd3d(float *p0, float *p1, float *vv, float _dz2, floa
 #pragma unroll 4
         for (int i=1; i <= radius ; i++)
         {
-	  c1 +=stencil[i]*(tile[t2][t1-i]+ tile[t2][t1+i]);
-	  c2 +=stencil[i]*(tile[t2-i][t1]+ tile[t2+i][t1]);
-	  c3 +=stencil[i]*(infront[i-1]  + behind[i-1]  ); 
+	    c1 +=stencil[i]*(tile[t2][t1-i]+ tile[t2][t1+i]);
+	    c2 +=stencil[i]*(tile[t2-i][t1]+ tile[t2+i][t1]);
+	    c3 +=stencil[i]*(infront[i-1]  + behind[i-1]  ); 
         }
 	c1*=_dz2;	
 	c2*=_dx2;
@@ -197,23 +197,23 @@ __global__ void cuda_step_fd3d(float *p0, float *p1, float *vv, float _dz2, floa
 }
 
 void velocity_transform(float *v0, float*vv, float dt, int n1, int n2, int n3)
- /*< velocit2 transform: vv=v0*dt; vv<--vv^2 >*/
+/*< velocit2 transform: vv=v0*dt; vv<--vv^2 >*/
 {
-  int i1, i2, i3, nn1, nn2, nn3;
-  float tmp;
+    int i1, i2, i3, nn1, nn2, nn3;
+    float tmp;
 
-  nn1=n1+2*radius;
-  nn2=n2+2*radius;
-  nn3=n3+2*radius;
+    nn1=n1+2*radius;
+    nn2=n2+2*radius;
+    nn3=n3+2*radius;
 
-  for(i3=0; i3<n3; i3++){
-    for(i2=0; i2<n2; i2++){
-      for(i1=0; i1<n1; i1++){
-	tmp=v0[i1+n1*i2+n1*n2*i3]*dt;
-	vv[(i1+radius)+nn1*(i2+radius)+nn1*nn2*(i3+radius)]=tmp*tmp;
-      }
-    }
-  }  
+    for(i3=0; i3<n3; i3++){
+	for(i2=0; i2<n2; i2++){
+	    for(i1=0; i1<n1; i1++){
+		tmp=v0[i1+n1*i2+n1*n2*i3]*dt;
+		vv[(i1+radius)+nn1*(i2+radius)+nn1*nn2*(i3+radius)]=tmp*tmp;
+	    }
+	}
+    }  
 
     for         (i3=0; i3<nn3; 	i3++) {
 	for     (i2=0; i2<nn2; 	i2++) {
@@ -248,142 +248,142 @@ void velocity_transform(float *v0, float*vv, float dt, int n1, int n2, int n3)
 void window3d(float *a, float *b, int n1, int n2, int n3)
 /*< window a 3d subvolume >*/
 {
-	int i1, i2, i3, nn1, nn2;
-	nn1=n1+2*radius;
-	nn2=n2+2*radius;
+    int i1, i2, i3, nn1, nn2;
+    nn1=n1+2*radius;
+    nn2=n2+2*radius;
 	
-	for(i3=0; i3<n3; i3++)
+    for(i3=0; i3<n3; i3++)
 	for(i2=0; i2<n2; i2++)
-	for(i1=0; i1<n1; i1++)
-	{
+	    for(i1=0; i1<n1; i1++)
+	    {
 		a[i1+n1*i2+n1*n2*i3]=b[(i1+radius)+nn1*(i2+radius)+nn1*nn2*(i3+radius)];
-	}
+	    }
 }
 
 
 int main(int argc, char* argv[])
 {
-	bool verb;
-	int nz, nx, ny, nnz, nnx, nny, ns, nt, kt, it, is, szbeg, sxbeg, sybeg, jsz, jsx, jsy;
-	int *d_szxy;
-	float dz, dx, dy, fm, dt, _dz2, _dx2, _dy2;
-	float *v0, *vv, *d_wlt, *d_vv, *d_p0, *d_p1, *ptr;
-	sf_file Fv, Fw;
+    bool verb;
+    int nz, nx, ny, nnz, nnx, nny, ns, nt, kt, it, is, szbeg, sxbeg, sybeg, jsz, jsx, jsy;
+    int *d_szxy;
+    float dz, dx, dy, fm, dt, _dz2, _dx2, _dy2;
+    float *v0, *vv, *d_wlt, *d_vv, *d_p0, *d_p1, *ptr;
+    sf_file Fv, Fw;
 
-    	sf_init(argc,argv);
-	Fv=sf_input("in");
-	Fw=sf_output("out");
+    sf_init(argc,argv);
+    Fv=sf_input("in");
+    Fw=sf_output("out");
 
-    	if (!sf_getbool("verb",&verb)) verb=false; /* verbosit2 */
-    	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");
-    	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");
-    	if (!sf_histint(Fv,"n3",&ny)) sf_error("No n3= in input");
-    	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");
-    	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");
-    	if (!sf_histfloat(Fv,"d3",&dy)) sf_error("No d3= in input");
-   	if (!sf_getint("nt",&nt))  sf_error("nt required");
-	/* total number of time steps */
-    	if (!sf_getint("kt",&kt)) sf_error("kt required");
-	/* record wavefield at time kt */
-   	if (!sf_getfloat("dt",&dt))  sf_error("dt required");
-	/* time sampling interval */
-   	if (!sf_getfloat("fm",&fm))  fm=20;
-	/* dominant frequency of Ricker wavelet */
-   	if (!sf_getint("ns",&ns))  ns=1;
-	/* number of sources */
-	if (!sf_getint("szbeg",&szbeg)) sf_error("No szbeg");
-	/* source beginning of z-axis */
-	if (!sf_getint("sxbeg",&sxbeg)) sf_error("No sxbeg");
-	/* source beginning of x-axis */
-	if (!sf_getint("sybeg",&sybeg)) sf_error("No sybeg");
-	/* source beginning of y-axis */
-	if (!sf_getint("jsz",&jsz)) sf_error("No jsz");
-	/* source jump interval in z-axis */
-	if (!sf_getint("jsx",&jsx)) sf_error("No jsx");
-	/* source jump interval in x-axis */
-	if (!sf_getint("jsy",&jsy)) sf_error("No jsy");
-	/* source jump interval in y-axis */
+    if (!sf_getbool("verb",&verb)) verb=false; /* verbosit2 */
+    if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");
+    if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");
+    if (!sf_histint(Fv,"n3",&ny)) sf_error("No n3= in input");
+    if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");
+    if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");
+    if (!sf_histfloat(Fv,"d3",&dy)) sf_error("No d3= in input");
+    if (!sf_getint("nt",&nt))  sf_error("nt required");
+    /* total number of time steps */
+    if (!sf_getint("kt",&kt)) sf_error("kt required");
+    /* record wavefield at time kt */
+    if (!sf_getfloat("dt",&dt))  sf_error("dt required");
+    /* time sampling interval */
+    if (!sf_getfloat("fm",&fm))  fm=20;
+    /* dominant frequency of Ricker wavelet */
+    if (!sf_getint("ns",&ns))  ns=1;
+    /* number of sources */
+    if (!sf_getint("szbeg",&szbeg)) sf_error("No szbeg");
+    /* source beginning of z-axis */
+    if (!sf_getint("sxbeg",&sxbeg)) sf_error("No sxbeg");
+    /* source beginning of x-axis */
+    if (!sf_getint("sybeg",&sybeg)) sf_error("No sybeg");
+    /* source beginning of y-axis */
+    if (!sf_getint("jsz",&jsz)) sf_error("No jsz");
+    /* source jump interval in z-axis */
+    if (!sf_getint("jsx",&jsx)) sf_error("No jsx");
+    /* source jump interval in x-axis */
+    if (!sf_getint("jsy",&jsy)) sf_error("No jsy");
+    /* source jump interval in y-axis */
 
-	sf_putint(Fw,"n1",nz);
-	sf_putint(Fw,"n2",nx);
-	sf_putint(Fw,"n3",ny);
+    sf_putint(Fw,"n1",nz);
+    sf_putint(Fw,"n2",nx);
+    sf_putint(Fw,"n3",ny);
 
-	_dz2=1.0/(dz*dz);
-	_dx2=1.0/(dx*dx);
-	_dy2=1.0/(dy*dy);
-	nnz=nz+2*radius;
-	nnx=nx+2*radius;
-	nny=ny+2*radius;
-    	v0=(float*)malloc(nz*nx*ny*sizeof(float));
-    	vv=(float*)malloc(nnz*nnx*nny*sizeof(float));
-	sf_floatread(v0, nz*nx*ny, Fv);// read velocit2 model v0
-	velocity_transform(v0, vv, dt, nz, nx, ny);// init
+    _dz2=1.0/(dz*dz);
+    _dx2=1.0/(dx*dx);
+    _dy2=1.0/(dy*dy);
+    nnz=nz+2*radius;
+    nnx=nx+2*radius;
+    nny=ny+2*radius;
+    v0=(float*)malloc(nz*nx*ny*sizeof(float));
+    vv=(float*)malloc(nnz*nnx*nny*sizeof(float));
+    sf_floatread(v0, nz*nx*ny, Fv);// read velocit2 model v0
+    velocity_transform(v0, vv, dt, nz, nx, ny);// init
 
-    	cudaSetDevice(0);// initialize device, default device=0;
-	sf_check_gpu_error("Failed to initialize device!");
+    cudaSetDevice(0);// initialize device, default device=0;
+    sf_check_gpu_error("Failed to initialize device!");
 
-	dim3 dimg, dimb;
-	dimg.x=(nz+BlockSize1-1)/BlockSize1;
-	dimg.y=(nx+BlockSize2-1)/BlockSize2;
-	dimb.x=BlockSize1;
-	dimb.y=BlockSize2;
+    dim3 dimg, dimb;
+    dimg.x=(nz+BlockSize1-1)/BlockSize1;
+    dimg.y=(nx+BlockSize2-1)/BlockSize2;
+    dimb.x=BlockSize1;
+    dimb.y=BlockSize2;
 
-	/* allocate memory on device */
-	cudaMalloc(&d_wlt, nt*sizeof(float));
-	cudaMalloc(&d_vv, nnz*nnx*nny*sizeof(float));
-	cudaMalloc(&d_p0, nnz*nnx*nny*sizeof(float));
-	cudaMalloc(&d_p1, nnz*nnx*nny*sizeof(float));
-	cudaMalloc(&d_szxy, ns*sizeof(int));
-	sf_check_gpu_error("Failed to allocate memory for variables!");
+    /* allocate memory on device */
+    cudaMalloc(&d_wlt, nt*sizeof(float));
+    cudaMalloc(&d_vv, nnz*nnx*nny*sizeof(float));
+    cudaMalloc(&d_p0, nnz*nnx*nny*sizeof(float));
+    cudaMalloc(&d_p1, nnz*nnx*nny*sizeof(float));
+    cudaMalloc(&d_szxy, ns*sizeof(int));
+    sf_check_gpu_error("Failed to allocate memory for variables!");
 
-	cuda_ricker_wavelet<<<(nt+511)/512, 512>>>(d_wlt, fm, dt, nt);
-	cudaMemcpy(d_vv, vv, nnz*nnx*nny*sizeof(float), cudaMemcpyHostToDevice);
-	cuda_set_sg<<<1, ns>>>(d_szxy, szbeg, sxbeg, sybeg, jsz, jsx, jsy, ns, nz, nx, ny);
+    cuda_ricker_wavelet<<<(nt+511)/512, 512>>>(d_wlt, fm, dt, nt);
+    cudaMemcpy(d_vv, vv, nnz*nnx*nny*sizeof(float), cudaMemcpyHostToDevice);
+    cuda_set_sg<<<1, ns>>>(d_szxy, szbeg, sxbeg, sybeg, jsz, jsx, jsy, ns, nz, nx, ny);
 
-	float mstimer;
-	clock_t t0, t1;
-	cudaEvent_t start, stop;
-  	cudaEventCreate(&start);	
-	cudaEventCreate(&stop);
-	for(is=0; is<ns; is++){
-	  cudaEventRecord(start);
+    float mstimer;
+    clock_t t0, t1;
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);	
+    cudaEventCreate(&stop);
+    for(is=0; is<ns; is++){
+	cudaEventRecord(start);
 
-	  cudaMemset(d_p0, 0, nnz*nnx*nny*sizeof(float));
-	  cudaMemset(d_p1, 0, nnz*nnx*nny*sizeof(float));
-	  for(it=0; it<nt; it++){
+	cudaMemset(d_p0, 0, nnz*nnx*nny*sizeof(float));
+	cudaMemset(d_p1, 0, nnz*nnx*nny*sizeof(float));
+	for(it=0; it<nt; it++){
 	    cuda_add_source<<<1,1>>>(true, d_p1, &d_wlt[it], &d_szxy[is], 1);
 	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, _dz2, _dx2, _dy2, nz, nx, ny);
 	    ptr=d_p0; d_p0=d_p1; d_p1=ptr;//toggle buffers
 
 	    if(it==kt){
-	      t0 = clock();
+		t0 = clock();
 
-	      cudaMemcpy(vv, d_p0, nnz*nnx*nny*sizeof(float), cudaMemcpyDeviceToHost);
-	      window3d(v0, vv, nz, nx, ny);
-	      sf_floatwrite(v0, nz*nx*ny, Fw);	  
+		cudaMemcpy(vv, d_p0, nnz*nnx*nny*sizeof(float), cudaMemcpyDeviceToHost);
+		window3d(v0, vv, nz, nx, ny);
+		sf_floatwrite(v0, nz*nx*ny, Fw);	  
 
- 	      t1 = clock();
- 	      sf_warning("save the volume: %f (s)", ((float)(t1-t0))/CLOCKS_PER_SEC); 	
+		t1 = clock();
+		sf_warning("save the volume: %f (s)", ((float)(t1-t0))/CLOCKS_PER_SEC); 	
 	    }
 
 	    sf_warning("it=%d",it);
-	  }
-	  cudaEventRecord(stop);
-          cudaEventSynchronize(stop);
-  	  cudaEventElapsedTime(&mstimer, start, stop);
-    	  sf_warning("%d shot finished: %g (s)",is+1, mstimer*1.e-3);
 	}
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&mstimer, start, stop);
+	sf_warning("%d shot finished: %g (s)",is+1, mstimer*1.e-3);
+    }
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 
-	/* free memory on device */
-	cudaFree(d_wlt);
-	cudaFree(d_vv);
-	cudaFree(d_p0);
-	cudaFree(d_p1);
-	cudaFree(d_szxy);
-	free(v0);
-	free(vv);
+    /* free memory on device */
+    cudaFree(d_wlt);
+    cudaFree(d_vv);
+    cudaFree(d_p0);
+    cudaFree(d_p1);
+    cudaFree(d_szxy);
+    free(v0);
+    free(vv);
 
-    	exit (0);
+    exit (0);
 }

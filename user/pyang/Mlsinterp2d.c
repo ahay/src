@@ -1,5 +1,5 @@
 /* Least-squares interpolation for 2D validition
-*/
+ */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 

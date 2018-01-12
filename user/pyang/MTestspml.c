@@ -1,5 +1,5 @@
 /* 2D acoustic FD using Split PML (SPML) absorbing boundary condition
-NB: Staggered grid finite difference used!
+   NB: Staggered grid finite difference used!
 */
 /*
   Copyright (C) 2012  Xi'an Jiaotong University (Pengliang Yang)
@@ -33,9 +33,9 @@ void expand2d(float** b, float** a)
     int iz,ix;
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(ix,iz)			\
-	shared(b,a,nb,nz,nx)
+#pragma omp parallel for default(none)		\
+    private(ix,iz)				\
+    shared(b,a,nb,nz,nx)
 #endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
@@ -65,9 +65,9 @@ void window2d(float **a, float **b)
     int iz,ix;
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(ix,iz)			\
-	shared(b,a,nb,nz,nx)
+#pragma omp parallel for default(none)		\
+    private(ix,iz)				\
+    shared(b,a,nb,nz,nx)
 #endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
@@ -79,184 +79,184 @@ void window2d(float **a, float **b)
 void  pmlcoeff_init(float *d1z, float *d2x, float vmax)
 /*< initialize PML abosorbing coefficients >*/
 {
-	int ix, iz;
- 	float Rc=1.e-5;
-    	float x, z, L=nb* SF_MAX(dx,dz);
-    	float d0=-3.*vmax*logf(Rc)/(2.*L*L*L);
+    int ix, iz;
+    float Rc=1.e-5;
+    float x, z, L=nb* SF_MAX(dx,dz);
+    float d0=-3.*vmax*logf(Rc)/(2.*L*L*L);
 
-	for(ix=0; ix<nxpad; ix++)
-	{
-		x=0;
-	    	if (ix>=0 && ix<nb)   x=(ix-nb)*dx;
-	    	else if(ix>=nxpad-nb && ix<nxpad) x=(ix-(nxpad-nb-1))*dx;
-	    	d2x[ix] = d0*x*x;
-	}
-	for(iz=0; iz<nzpad; iz++)
-	{
-		z=0;
-	    	if (iz>=0 && iz<nb)   z=(iz-nb)*dz;
-	    	else if(iz>=nzpad-nb && iz<nzpad) z=(iz-(nzpad-nb-1))*dz; 
-	    	d1z[iz] = d0*z*z;  
-	}
+    for(ix=0; ix<nxpad; ix++)
+    {
+	x=0;
+	if (ix>=0 && ix<nb)   x=(ix-nb)*dx;
+	else if(ix>=nxpad-nb && ix<nxpad) x=(ix-(nxpad-nb-1))*dx;
+	d2x[ix] = d0*x*x;
+    }
+    for(iz=0; iz<nzpad; iz++)
+    {
+	z=0;
+	if (iz>=0 && iz<nb)   z=(iz-nb)*dz;
+	else if(iz>=nzpad-nb && iz<nzpad) z=(iz-(nzpad-nb-1))*dz; 
+	d1z[iz] = d0*z*z;  
+    }
 }
 
 
 
 void step_forward(float **p, float **pz, float **px, float **vz, float **vx, float **vv, float *d1z, float *d2x)
 {
-	int i1, i2;
-	float tmp, diff1, diff2;
+    int i1, i2;
+    float tmp, diff1, diff2;
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none)			\
-	private(i1,i2,diff1,diff2)			\
-	shared(nzpad, nxpad, p, vz, vx, dt, _dz, _dx, d1z, d2x)
+#pragma omp parallel for default(none)				\
+    private(i1,i2,diff1,diff2)					\
+    shared(nzpad, nxpad, p, vz, vx, dt, _dz, _dx, d1z, d2x)
 #endif
-	for(i2=3; i2<nxpad-4; i2++)
+    for(i2=3; i2<nxpad-4; i2++)
 	for(i1=3; i1<nzpad-4; i1++)
 	{
-		diff1=	 1.196289062500000*(p[i2][i1+1]-p[i2][i1])
-			-0.079752604166667*(p[i2][i1+2]-p[i2][i1-1])
-			+0.009570312500000*(p[i2][i1+3]-p[i2][i1-2])
-			-0.000697544642857*(p[i2][i1+4]-p[i2][i1-3]);
-		diff2=	 1.196289062500000*(p[i2+1][i1]-p[i2][i1])
-			-0.079752604166667*(p[i2+2][i1]-p[i2-1][i1])
-			+0.009570312500000*(p[i2+3][i1]-p[i2-2][i1])
-			-0.000697544642857*(p[i2+4][i1]-p[i2-3][i1]);
-		vz[i2][i1]=((1.-0.5*dt*d1z[i1])*vz[i2][i1]+dt*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
-		vx[i2][i1]=((1.-0.5*dt*d2x[i2])*vx[i2][i1]+dt*_dx*diff2)/(1.+0.5*dt*d2x[i2]);
+	    diff1=	 1.196289062500000*(p[i2][i1+1]-p[i2][i1])
+		-0.079752604166667*(p[i2][i1+2]-p[i2][i1-1])
+		+0.009570312500000*(p[i2][i1+3]-p[i2][i1-2])
+		-0.000697544642857*(p[i2][i1+4]-p[i2][i1-3]);
+	    diff2=	 1.196289062500000*(p[i2+1][i1]-p[i2][i1])
+		-0.079752604166667*(p[i2+2][i1]-p[i2-1][i1])
+		+0.009570312500000*(p[i2+3][i1]-p[i2-2][i1])
+		-0.000697544642857*(p[i2+4][i1]-p[i2-3][i1]);
+	    vz[i2][i1]=((1.-0.5*dt*d1z[i1])*vz[i2][i1]+dt*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
+	    vx[i2][i1]=((1.-0.5*dt*d2x[i2])*vx[i2][i1]+dt*_dx*diff2)/(1.+0.5*dt*d2x[i2]);
 	}
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none)			\
-	private(i1,i2,diff1, diff2, tmp)		\
-	shared(nzpad, nxpad, vv, p, pz, px, vz, vx, dt, _dz, _dx, d1z, d2x)
+#pragma omp parallel for default(none)					\
+    private(i1,i2,diff1, diff2, tmp)					\
+    shared(nzpad, nxpad, vv, p, pz, px, vz, vx, dt, _dz, _dx, d1z, d2x)
 #endif
-	for(i2=4; i2<nxpad-3; i2++)
+    for(i2=4; i2<nxpad-3; i2++)
 	for(i1=4; i1<nzpad-3; i1++)
 	{
-		tmp=vv[i2][i1]; tmp=tmp*tmp;
-		diff1=	 1.196289062500000*(vz[i2][i1]-vz[i2][i1-1])
-			-0.079752604166667*(vz[i2][i1+1]-vz[i2][i1-2])
-			+0.009570312500000*(vz[i2][i1+2]-vz[i2][i1-3])
-			-0.000697544642857*(vz[i2][i1+3]-vz[i2][i1-4]);
-		diff2=	 1.196289062500000*(vx[i2][i1]-vx[i2-1][i1])
-			-0.079752604166667*(vx[i2+1][i1]-vx[i2-2][i1])
-			+0.009570312500000*(vx[i2+2][i1]-vx[i2-3][i1])
-			-0.000697544642857*(vx[i2+3][i1]-vx[i2-4][i1]);
-		pz[i2][i1]=((1.-0.5*dt*d1z[i1])*pz[i2][i1]+dt*tmp*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
-		px[i2][i1]=((1.-0.5*dt*d2x[i2])*px[i2][i1]+dt*tmp*_dx*diff2)/(1.+0.5*dt*d2x[i2]);
-		p[i2][i1]=px[i2][i1]+pz[i2][i1];
+	    tmp=vv[i2][i1]; tmp=tmp*tmp;
+	    diff1=	 1.196289062500000*(vz[i2][i1]-vz[i2][i1-1])
+		-0.079752604166667*(vz[i2][i1+1]-vz[i2][i1-2])
+		+0.009570312500000*(vz[i2][i1+2]-vz[i2][i1-3])
+		-0.000697544642857*(vz[i2][i1+3]-vz[i2][i1-4]);
+	    diff2=	 1.196289062500000*(vx[i2][i1]-vx[i2-1][i1])
+		-0.079752604166667*(vx[i2+1][i1]-vx[i2-2][i1])
+		+0.009570312500000*(vx[i2+2][i1]-vx[i2-3][i1])
+		-0.000697544642857*(vx[i2+3][i1]-vx[i2-4][i1]);
+	    pz[i2][i1]=((1.-0.5*dt*d1z[i1])*pz[i2][i1]+dt*tmp*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
+	    px[i2][i1]=((1.-0.5*dt*d2x[i2])*px[i2][i1]+dt*tmp*_dx*diff2)/(1.+0.5*dt*d2x[i2]);
+	    p[i2][i1]=px[i2][i1]+pz[i2][i1];
 	}
 }
 
 int main(int argc, char* argv[])
 {
-	bool verb;
-	int jt, ft, it, kt, i2, i1, sx, sz;
-	float tmp, vmax;
-	float *wlt, *d2x, *d1z;
-	float **v0, **vv, **p, **pz, **px, **vz, **vx;
-	sf_file Fv, Fw, Fpx, Fpz;
+    bool verb;
+    int jt, ft, it, kt, i2, i1, sx, sz;
+    float tmp, vmax;
+    float *wlt, *d2x, *d1z;
+    float **v0, **vv, **p, **pz, **px, **vz, **vx;
+    sf_file Fv, Fw, Fpx, Fpz;
 
-    	sf_init(argc,argv);
+    sf_init(argc,argv);
 #ifdef _OPENMP
-    	omp_init();
+    omp_init();
 #endif
 
-	Fv = sf_input("in");/* veloctiy model */
-	Fw = sf_output("out");/* wavefield snaps */
+    Fv = sf_input("in");/* veloctiy model */
+    Fw = sf_output("out");/* wavefield snaps */
 
-    	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
-    	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
-    	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
-    	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
-    	if (!sf_getint("nb",&nb)) nb=30; /* thickness of PML ABC */
-    	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
-    	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
-    	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
-   	if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
-    	if (!sf_getint("jt",&jt)) jt=1;	/* time interval */
+    if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
+    if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
+    if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
+    if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
+    if (!sf_getint("nb",&nb)) nb=30; /* thickness of PML ABC */
+    if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
+    if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
+    if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
+    if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
+    if (!sf_getint("jt",&jt)) jt=1;	/* time interval */
 
-    	if(!sf_getbool("verb",&verb)) verb=false;    /* verbosity, if y, output px and pz */
-	if(verb){
-		Fpz = sf_output("pz");/* wavefield component px */
-		Fpx = sf_output("px");/* wavefield component px */
-    		if (!sf_getint("kt",&kt)) sf_error("kt required"); /* output px and pz component at kt */
-	} else {
-	    Fpz = NULL;
-	    Fpx = NULL;
-	}
+    if(!sf_getbool("verb",&verb)) verb=false;    /* verbosity, if y, output px and pz */
+    if(verb){
+	Fpz = sf_output("pz");/* wavefield component px */
+	Fpx = sf_output("px");/* wavefield component px */
+	if (!sf_getint("kt",&kt)) sf_error("kt required"); /* output px and pz component at kt */
+    } else {
+	Fpz = NULL;
+	Fpx = NULL;
+    }
 
-	sf_putint(Fw,"n1",nz);
-	sf_putint(Fw,"n2",nx);
-    	sf_putint(Fw,"n3",(nt-ft)/jt);
-    	sf_putfloat(Fw,"d3",jt*dt);
-    	sf_putfloat(Fw,"o3",ft*dt);
+    sf_putint(Fw,"n1",nz);
+    sf_putint(Fw,"n2",nx);
+    sf_putint(Fw,"n3",(nt-ft)/jt);
+    sf_putfloat(Fw,"d3",jt*dt);
+    sf_putfloat(Fw,"o3",ft*dt);
 
-	_dx=1./dx;
-	_dz=1./dz;
-	nzpad=nz+2*nb;
-	nxpad=nx+2*nb;
-	sx=nxpad/2;
-	sz=nzpad/2;
+    _dx=1./dx;
+    _dz=1./dz;
+    nzpad=nz+2*nb;
+    nxpad=nx+2*nb;
+    sx=nxpad/2;
+    sz=nzpad/2;
 
-	wlt=sf_floatalloc(nt);
-	v0=sf_floatalloc2(nz,nx); 	
-	vv=sf_floatalloc2(nzpad, nxpad);
-	p =sf_floatalloc2(nzpad, nxpad);
-	pz=sf_floatalloc2(nzpad, nxpad);
-	px=sf_floatalloc2(nzpad, nxpad);
-	vz=sf_floatalloc2(nzpad, nxpad);
-	vx=sf_floatalloc2(nzpad, nxpad);
-	d1z=sf_floatalloc(nzpad);
-	d2x=sf_floatalloc(nxpad);
+    wlt=sf_floatalloc(nt);
+    v0=sf_floatalloc2(nz,nx); 	
+    vv=sf_floatalloc2(nzpad, nxpad);
+    p =sf_floatalloc2(nzpad, nxpad);
+    pz=sf_floatalloc2(nzpad, nxpad);
+    px=sf_floatalloc2(nzpad, nxpad);
+    vz=sf_floatalloc2(nzpad, nxpad);
+    vx=sf_floatalloc2(nzpad, nxpad);
+    d1z=sf_floatalloc(nzpad);
+    d2x=sf_floatalloc(nxpad);
 
-	for(it=0;it<nt;it++){
-		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
-		wlt[it]=(1.0-2.0*tmp)*expf(-tmp);
-	}
-	sf_floatread(v0[0],nz*nx,Fv);
-	expand2d(vv, v0);
-	memset(p [0],0,nzpad*nxpad*sizeof(float));
-	memset(px[0],0,nzpad*nxpad*sizeof(float));
-	memset(pz[0],0,nzpad*nxpad*sizeof(float));
-	memset(vx[0],0,nzpad*nxpad*sizeof(float));
-	memset(vz[0],0,nzpad*nxpad*sizeof(float));
-	vmax=v0[0][0];
-	for(i2=0; i2<nx; i2++)
+    for(it=0;it<nt;it++){
+	tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
+	wlt[it]=(1.0-2.0*tmp)*expf(-tmp);
+    }
+    sf_floatread(v0[0],nz*nx,Fv);
+    expand2d(vv, v0);
+    memset(p [0],0,nzpad*nxpad*sizeof(float));
+    memset(px[0],0,nzpad*nxpad*sizeof(float));
+    memset(pz[0],0,nzpad*nxpad*sizeof(float));
+    memset(vx[0],0,nzpad*nxpad*sizeof(float));
+    memset(vz[0],0,nzpad*nxpad*sizeof(float));
+    vmax=v0[0][0];
+    for(i2=0; i2<nx; i2++)
 	for(i1=0; i1<nz; i1++)
-		vmax=SF_MAX(v0[i2][i1],vmax);
-	pmlcoeff_init(d1z, d2x, vmax);
+	    vmax=SF_MAX(v0[i2][i1],vmax);
+    pmlcoeff_init(d1z, d2x, vmax);
 
-	for(it=0; it<nt; it++)
+    for(it=0; it<nt; it++)
+    {
+	if(it>=ft)
 	{
-		if(it>=ft)
-		{
-			window2d(v0,p);
-			sf_floatwrite(v0[0],nz*nx,Fw);
-		}
-		if(verb && (it==kt)){
-			window2d(v0,pz);
-			sf_floatwrite(v0[0],nz*nx,Fpz);
-			window2d(v0,px);
-			sf_floatwrite(v0[0],nz*nx,Fpx);
-		}
-		p[sx][sz]+=wlt[it];
-		step_forward(p, pz, px, vz, vx, vv, d1z, d2x);
+	    window2d(v0,p);
+	    sf_floatwrite(v0[0],nz*nx,Fw);
 	}
+	if(verb && (it==kt)){
+	    window2d(v0,pz);
+	    sf_floatwrite(v0[0],nz*nx,Fpz);
+	    window2d(v0,px);
+	    sf_floatwrite(v0[0],nz*nx,Fpx);
+	}
+	p[sx][sz]+=wlt[it];
+	step_forward(p, pz, px, vz, vx, vv, d1z, d2x);
+    }
 
-	free(wlt);
-	free(*v0); free(v0);
-	free(*vv); free(vv);
-	free(*p); free(p);
-	free(*px); free(px);
-	free(*pz); free(pz);
-	free(*vx); free(vx);
-	free(*vz); free(vz);
-	free(d1z);
-	free(d2x);
+    free(wlt);
+    free(*v0); free(v0);
+    free(*vv); free(vv);
+    free(*p); free(p);
+    free(*px); free(px);
+    free(*pz); free(pz);
+    free(*vx); free(vx);
+    free(*vz); free(vz);
+    free(d1z);
+    free(d2x);
 
-    	exit(0);
+    exit(0);
 }
 

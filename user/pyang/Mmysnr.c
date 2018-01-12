@@ -1,5 +1,5 @@
 /* print out signal-to-noise ratio in decibel (dB)
-*/
+ */
 
 /*
   Copyright (C) 2014 Xi'an Jiaotong University, UT Austin (Pengliang Yang)

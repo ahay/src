@@ -1,5 +1,5 @@
 /* Seislet-based POCS interpolation (2d validation)
-POCS=projection onto convex sets
+   POCS=projection onto convex sets
 */
 /*
   Copyright (C) 2014 Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -27,7 +27,7 @@ POCS=projection onto convex sets
 
 /* collapse is a feature from OpenMP 3 (2008) */
 #if defined(_OPENMP) && _OPENMP < 200805
-    #define collapse(x) 
+#define collapse(x) 
 #endif
 
 int main(int argc, char *argv[])
@@ -66,8 +66,8 @@ int main(int argc, char *argv[])
     /* starting data clip percentile (default is 99)*/
     if ( !(mode=sf_getstring("mode")) ) mode = "exp";
     /* thresholding mode: 'hard', 'soft','pthresh','exp';
-	'hard', hard thresholding;	'soft', soft thresholding; 
-	'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
+       'hard', hard thresholding;	'soft', soft thresholding; 
+       'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
     if (!sf_getfloat("p",&p)) 		p=0.35;
     /* norm=p, where 0<p<=1 */;
     if (strcmp(mode,"soft") == 0) 	p=1;
@@ -97,15 +97,15 @@ int main(int argc, char *argv[])
 	// perform thresholding; T{ At(drec) }
 #ifdef _OPENMP
 #pragma omp parallel for default(none) collapse(2)	\
-	private(i1,i2)					\
-	shared(n1,n2,pscale,dtmp,tmp)		
+    private(i1,i2)					\
+    shared(n1,n2,pscale,dtmp,tmp)		
 #endif
 	for(i2=0; i2<n2; i2++)		
-	for(i1=0; i1<n1; i1++) 
-	{	  
+	    for(i1=0; i1<n1; i1++) 
+	    {	  
 		//if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
-	}	
+	    }	
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
@@ -118,14 +118,14 @@ int main(int argc, char *argv[])
 	/* reinsertion: drec = dobs+(1-M)*A T{ At(drec) } */
 #ifdef _OPENMP
 #pragma omp parallel for default(none) collapse(2)	\
-	private(i1,i2)					\
-	shared(n1,n2,mask,drec,dobs)		
+    private(i1,i2)					\
+    shared(n1,n2,mask,drec,dobs)		
 #endif
 	for(i2=0; i2<n2; i2++) 		
-	for(i1=0; i1<n1; i1++) 
-	{
+	    for(i1=0; i1<n1; i1++) 
+	    {
 		if (mask[i1+i2*n1]) drec[i1+n1*i2]=dobs[i1+n1*i2];
-	}
+	    }
 
 	if (verb)    sf_warning("iteration %d;",iter+1);
     }

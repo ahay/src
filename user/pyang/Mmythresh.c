@@ -1,5 +1,5 @@
 /* Generalized thresholding operator
-*/
+ */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("pclip",&pclip)) 	pclip=99.;/* percentage to clip */
     if ( !(mode=sf_getstring("mode")) ) mode = "exp";
     /* thresholding mode='hard', 'soft','pthresh' or 'exp';
-	'hard', hard thresholding;	'soft', soft thresholding; 
-	'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
+       'hard', hard thresholding;	'soft', soft thresholding; 
+       'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
     if (!sf_getfloat("p",&p)) 		p=0.35; /* norm=p, where 0<p<=1 */;
     if (strcmp(mode,"soft") == 0) 	p=1;
     else if (strcmp(mode,"hard") == 0) 	p=0;
@@ -67,65 +67,65 @@ int main(int argc, char* argv[])
     thr=sf_quantile(n1,n,adat);
 
     if (thr>0.){// do thresholding if thr>0
-      if (NULL != dat) {// floating numbers
-	if (strcmp(mode,"hard")==0){
-	    for (i=0; i < n; i++)  {
-		a=fabsf(dat[i]);
-		dat[i]*=(a>thr)?1.:0.;
+	if (NULL != dat) {// floating numbers
+	    if (strcmp(mode,"hard")==0){
+		for (i=0; i < n; i++)  {
+		    a=fabsf(dat[i]);
+		    dat[i]*=(a>thr)?1.:0.;
+		}
+	    }else if(strcmp(mode,"soft")==0){
+		for (i=0; i < n; i++)  {
+		    a=fabsf(dat[i]);
+		    b=(a==0.)?1.:0.;
+		    a=1.0-thr/(a+b);
+		    dat[i]*=(a>0.)?a:0.;
+		}
+	    }else if (strcmp(mode,"pthresh") == 0){
+		for (i=0; i < n; i++)  {
+		    a=fabsf(dat[i]);
+		    b=(a==0.)?1.:0.;
+		    a=1.0-powf((a+b)/thr, p-2.0);
+		    dat[i]*=(a>0.)?a:0.;
+		}
+	    }else if (strcmp(mode,"exp") == 0){
+		for (i=0; i < n; i++)  {
+		    a=fabsf(dat[i]);
+		    b=(a==0.)?1.:0.;
+		    a=expf(-powf((a+b)/thr, p-2.0));
+		    dat[i]*=(a>0.)?a:0.;
+		}
 	    }
-	}else if(strcmp(mode,"soft")==0){
-	    for (i=0; i < n; i++)  {
-		a=fabsf(dat[i]);
-		b=(a==0.)?1.:0.;
-		a=1.0-thr/(a+b);
-		dat[i]*=(a>0.)?a:0.;
+	    sf_floatwrite(dat,n,out);
+	} else {// complex numbers
+	    if (strcmp(mode,"hard")==0){
+		for (i=0; i < n; i++)  {
+		    a=cabsf(cdat[i]);
+		    cdat[i]*=(a>thr)?1.:0.;
+		}
+	    }else if(strcmp(mode,"soft")==0){
+		for (i=0; i < n; i++)  {
+		    a=cabsf(cdat[i]);
+		    b=(a==0.)?1.:0.;
+		    a=1.0-thr/(a+b);
+		    cdat[i]*=(a>0.)?a:0.;
+		}
+	    }else if (strcmp(mode,"pthresh") == 0){
+		for (i=0; i < n; i++)  {
+		    a=cabsf(cdat[i]);
+		    b=(a==0.)?1.:0.;
+		    a=1.0-powf((a+b)/thr, p-2.0);
+		    cdat[i]*=(a>0.)?a:0.;
+		}
+	    }else if (strcmp(mode,"exp") == 0){
+		for (i=0; i < n; i++)  {
+		    a=cabsf(cdat[i]);
+		    b=(a==0.)?1.:0.;
+		    a=expf(-powf((a+b)/thr, p-2.0));
+		    cdat[i]*=(a>0.)?a:0.;
+		}
 	    }
-	}else if (strcmp(mode,"pthresh") == 0){
-	    for (i=0; i < n; i++)  {
-		a=fabsf(dat[i]);
-		b=(a==0.)?1.:0.;
-		a=1.0-powf((a+b)/thr, p-2.0);
-		dat[i]*=(a>0.)?a:0.;
-	    }
-	}else if (strcmp(mode,"exp") == 0){
-	    for (i=0; i < n; i++)  {
-		a=fabsf(dat[i]);
-		b=(a==0.)?1.:0.;
-		a=expf(-powf((a+b)/thr, p-2.0));
-		dat[i]*=(a>0.)?a:0.;
-	    }
+	    sf_complexwrite(cdat,n,out);
 	}
-	sf_floatwrite(dat,n,out);
-      } else {// complex numbers
-	if (strcmp(mode,"hard")==0){
-	    for (i=0; i < n; i++)  {
-		a=cabsf(cdat[i]);
-		cdat[i]*=(a>thr)?1.:0.;
-	    }
-	}else if(strcmp(mode,"soft")==0){
-	    for (i=0; i < n; i++)  {
-		a=cabsf(cdat[i]);
-		b=(a==0.)?1.:0.;
-		a=1.0-thr/(a+b);
-		cdat[i]*=(a>0.)?a:0.;
-	    }
-	}else if (strcmp(mode,"pthresh") == 0){
-	    for (i=0; i < n; i++)  {
-		a=cabsf(cdat[i]);
-		b=(a==0.)?1.:0.;
-		a=1.0-powf((a+b)/thr, p-2.0);
-		cdat[i]*=(a>0.)?a:0.;
-	    }
-	}else if (strcmp(mode,"exp") == 0){
-	    for (i=0; i < n; i++)  {
-		a=cabsf(cdat[i]);
-		b=(a==0.)?1.:0.;
-		a=expf(-powf((a+b)/thr, p-2.0));
-		cdat[i]*=(a>0.)?a:0.;
-	    }
-	}
-	sf_complexwrite(cdat,n,out);
-      }
     }
 
     exit(0);

@@ -1,26 +1,26 @@
 /* 2D prestack GPU-based RTM using effective boundary saving.
 
-Some basic descriptions of this code are in order.
-1) Coordinate configuration of seismic data:
+   Some basic descriptions of this code are in order.
+   1) Coordinate configuration of seismic data:
 
-		o--------------> x (2nd dim: *.y)
-		|
-		|
-		|
-		|
-		|
-		z (1st dim: *.x)
-	1st dim: i1=threadIdx.x+blockDim.x*blockIdx.x;
-	2nd dim: i2=threadIdx.y+blockDim.y*blockIdx.y;
-	(i1, i2)=i1+i2*nnz;
+   o--------------> x (2nd dim: *.y)
+   |
+   |
+   |
+   |
+   |
+   z (1st dim: *.x)
+   1st dim: i1=threadIdx.x+blockDim.x*blockIdx.x;
+   2nd dim: i2=threadIdx.y+blockDim.y*blockIdx.y;
+   (i1, i2)=i1+i2*nnz;
 
-2) stability condition:	
-	min(dx, dz)>sqrt(2)*dt*max(v) (NJ=2)
+   2) stability condition:	
+   min(dx, dz)>sqrt(2)*dt*max(v) (NJ=2)
    numerical dispersion condition:	
-	max(dx, dz)<min(v)/(10*fmax)  (NJ=2)
-	max(dx, dz)<min(v)/(5*fmax)   (NJ=4)
+   max(dx, dz)<min(v)/(10*fmax)  (NJ=2)
+   max(dx, dz)<min(v)/(5*fmax)   (NJ=4)
 
-3) This code doesn't save the history of forward time steps. We 
+   3) This code doesn't save the history of forward time steps. We 
    just save the least boundaries (referred to as effective boundary 
    in our work) of every time step and the two final steps of the 
    wavefield. Using this information, we can easily reconstruct 
@@ -29,7 +29,7 @@ Some basic descriptions of this code are in order.
    employed to save the boundaries of each step so that all the saved
    data can be computed on the device directly.
 
-4) In our implementation, we employ staggered grid based 
+   4) In our implementation, we employ staggered grid based 
    convolutional PML (CPML) boundary condition. Using 20 points for 
    CPML is enough to obtain perfect absorbing effect (while commonly 
    used sponge ABC may need 30 or more). However, we use 32 points on
@@ -38,7 +38,7 @@ Some basic descriptions of this code are in order.
    is half-warp (16 threads). The thickness of the boundary should be 
    times of 16. 
 
-5) The final images can be two kinds: result of correlation imaging 
+   5) The final images can be two kinds: result of correlation imaging 
    condition and the normalized one. The normalized correlation imaging
    result is preferred due to compensated illumination. Some filters 
    are popular and effective to remove the low frequency artifacts of 
@@ -48,7 +48,7 @@ Some basic descriptions of this code are in order.
 
 /*
   Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
-    Email: ypl.2100@gmail.com	    
+  Email: ypl.2100@gmail.com	    
 
   Acknowledgement: This code is written with the help of Baoli Wang.
 
@@ -66,9 +66,9 @@ Some basic descriptions of this code are in order.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Reference: Micikevicius, Paulius. "3D finite difference computation on GPUs
-	using CUDA." Proceedings of 2nd Workshop on General Purpose 
-	Processing on Graphics Processing Units. ACM, 2009.
+  Reference: Micikevicius, Paulius. "3D finite difference computation on GPUs
+  using CUDA." Proceedings of 2nd Workshop on General Purpose 
+  Processing on Graphics Processing Units. ACM, 2009.
 */
 
 #include <stdio.h>
@@ -144,12 +144,12 @@ void expand(float *b, float *a, int npml, int nnz, int nnx, int nz1, int nx1)
 void window(float *to, float *from, int npml, int nnz, int nnx, int nz1, int nx1)
 /*< window from: size=nnz*nnx; to: size=nz1*nx1; >*/
 {
-	int ix, iz;
-	for(ix=0;ix<nx1;ix++){
-		for(iz=0;iz<nz1;iz++){
-			to[iz+ix*nz1]=from[(iz+npml)+(ix+npml)*nnz];
-		}
+    int ix, iz;
+    for(ix=0;ix<nx1;ix++){
+	for(iz=0;iz<nz1;iz++){
+	    to[iz+ix*nz1]=from[(iz+npml)+(ix+npml)*nnz];
 	}
+    }
 }
 
 
@@ -166,23 +166,23 @@ void sf_check_gpu_error(const char *msg)
 void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float dt, int N)
 /*< sanity check about stability condition and non-dispersion condition >*/
 {
-	int i;
-	float C;
-	if(NJ==2) C=1;
-	else if (NJ==4)	 	C=0.857;
-	else if (NJ==6)		C=0.8;
-	else if (NJ==8) 	C=0.777;
-	else if (NJ==10)	C=0.759;
+    int i;
+    float C;
+    if(NJ==2) C=1;
+    else if (NJ==4)	 	C=0.857;
+    else if (NJ==6)		C=0.8;
+    else if (NJ==8) 	C=0.777;
+    else if (NJ==10)	C=0.759;
 
-	float maxvel=vel[0], minvel=vel[0];
-	for(i=0; i<N; i++)	{
-		if(vel[i]>maxvel) maxvel=vel[i];
-		if(vel[i]<minvel) minvel=vel[i];
-	}
-	float tmp=dt*maxvel*sqrtf(1.0/(dx*dx)+1.0/(dz*dz));
+    float maxvel=vel[0], minvel=vel[0];
+    for(i=0; i<N; i++)	{
+	if(vel[i]>maxvel) maxvel=vel[i];
+	if(vel[i]<minvel) minvel=vel[i];
+    }
+    float tmp=dt*maxvel*sqrtf(1.0/(dx*dx)+1.0/(dz*dz));
 
-	if (tmp>=C) printf("Stability condition not satisfied!\n");
-	if ( 	((NJ==2) &&(fm>=minvel/(10.0*max(dx,dz))))||
+    if (tmp>=C) printf("Stability condition not satisfied!\n");
+    if ( 	((NJ==2) &&(fm>=minvel/(10.0*max(dx,dz))))||
 		((NJ==4) &&(fm>=minvel/(5.0*max(dx,dz))))	)
 	printf("Non-dispersion relation not satisfied!\n");
 }
@@ -191,365 +191,365 @@ void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float d
 void device_alloc()
 /*< allocate variable space on device >*/
 {
-	cudaMalloc(&d_bell,	(2*nbell+1)*(2*nbell+1)*sizeof(float));
-    	cudaMalloc(&d_Sxz,	ns*sizeof(int));
-    	cudaMalloc(&d_Gxz, 	ng*sizeof(int));
-	cudaMalloc(&d_wlt,	nt*sizeof(float));
-    	cudaMalloc(&d_dobs, 	ng*nt*sizeof(float));
-    	cudaMalloc(&d_vel, 	N*sizeof(float));
-    	cudaMalloc(&d_sp0, 	N*sizeof(float));
-    	cudaMalloc(&d_sp1, 	N*sizeof(float));
-    	cudaMalloc(&d_svx, 	N*sizeof(float));
-    	cudaMalloc(&d_svz, 	N*sizeof(float));
-    	cudaMalloc(&d_gp0, 	N*sizeof(float));
-    	cudaMalloc(&d_gp1, 	N*sizeof(float));
-    	cudaMalloc(&d_gvx, 	N*sizeof(float));
-    	cudaMalloc(&d_gvz, 	N*sizeof(float));
-    	cudaMalloc(&d_bx1, 	2*npml*nnz*sizeof(float));// left and right ABC coefficients for p
-    	cudaMalloc(&d_bz1, 	2*npml*nnx*sizeof(float));// top and bottom ABC coefficients for p
-    	cudaMalloc(&d_bx2, 	2*npml*nnz*sizeof(float));// left and right ABC coefficients for v (vx, vz)
-    	cudaMalloc(&d_bz2, 	2*npml*nnx*sizeof(float));// top and bottom ABC coefficients for v (vx, vz)
-    	cudaMalloc(&d_convpx, 	2*npml*nnz*sizeof(float));//  (left and right)
-    	cudaMalloc(&d_convpz, 	2*npml*nnx*sizeof(float));//  (top and bottom)
-    	cudaMalloc(&d_convvx, 	2*npml*nnz*sizeof(float));//  (left and right)
-    	cudaMalloc(&d_convvz, 	2*npml*nnx*sizeof(float));//  (top and bottom)
-    	cudaMalloc(&d_Iss, 	N*sizeof(float));
-    	cudaMalloc(&d_Isg, 	N*sizeof(float));
-    	cudaMalloc(&d_I1, 	N*sizeof(float));
-    	cudaMalloc(&d_I2, 	N*sizeof(float));
-	cudaHostAlloc(&h_boundary, nt_h*2*(NJ-1)*(nx+nz)*sizeof(float), cudaHostAllocMapped);	
-	cudaMalloc(&d_boundary, (nt-nt_h)*2*(NJ-1)*(nx+nz)*sizeof(float));
-	sf_check_gpu_error("Failed to allocate required memory!");
+    cudaMalloc(&d_bell,	(2*nbell+1)*(2*nbell+1)*sizeof(float));
+    cudaMalloc(&d_Sxz,	ns*sizeof(int));
+    cudaMalloc(&d_Gxz, 	ng*sizeof(int));
+    cudaMalloc(&d_wlt,	nt*sizeof(float));
+    cudaMalloc(&d_dobs, 	ng*nt*sizeof(float));
+    cudaMalloc(&d_vel, 	N*sizeof(float));
+    cudaMalloc(&d_sp0, 	N*sizeof(float));
+    cudaMalloc(&d_sp1, 	N*sizeof(float));
+    cudaMalloc(&d_svx, 	N*sizeof(float));
+    cudaMalloc(&d_svz, 	N*sizeof(float));
+    cudaMalloc(&d_gp0, 	N*sizeof(float));
+    cudaMalloc(&d_gp1, 	N*sizeof(float));
+    cudaMalloc(&d_gvx, 	N*sizeof(float));
+    cudaMalloc(&d_gvz, 	N*sizeof(float));
+    cudaMalloc(&d_bx1, 	2*npml*nnz*sizeof(float));// left and right ABC coefficients for p
+    cudaMalloc(&d_bz1, 	2*npml*nnx*sizeof(float));// top and bottom ABC coefficients for p
+    cudaMalloc(&d_bx2, 	2*npml*nnz*sizeof(float));// left and right ABC coefficients for v (vx, vz)
+    cudaMalloc(&d_bz2, 	2*npml*nnx*sizeof(float));// top and bottom ABC coefficients for v (vx, vz)
+    cudaMalloc(&d_convpx, 	2*npml*nnz*sizeof(float));//  (left and right)
+    cudaMalloc(&d_convpz, 	2*npml*nnx*sizeof(float));//  (top and bottom)
+    cudaMalloc(&d_convvx, 	2*npml*nnz*sizeof(float));//  (left and right)
+    cudaMalloc(&d_convvz, 	2*npml*nnx*sizeof(float));//  (top and bottom)
+    cudaMalloc(&d_Iss, 	N*sizeof(float));
+    cudaMalloc(&d_Isg, 	N*sizeof(float));
+    cudaMalloc(&d_I1, 	N*sizeof(float));
+    cudaMalloc(&d_I2, 	N*sizeof(float));
+    cudaHostAlloc(&h_boundary, nt_h*2*(NJ-1)*(nx+nz)*sizeof(float), cudaHostAllocMapped);	
+    cudaMalloc(&d_boundary, (nt-nt_h)*2*(NJ-1)*(nx+nz)*sizeof(float));
+    sf_check_gpu_error("Failed to allocate required memory!");
 }
 
 
 void device_free()
 /*< free the variables on device >*/
 {
-	cudaFree(d_bell);
-    	cudaFree(d_Sxz);
-    	cudaFree(d_Gxz);
-	cudaFree(d_wlt);
-    	cudaFree(d_dobs);
-    	cudaFree(d_vel);
-    	cudaFree(d_sp0);
-    	cudaFree(d_sp1);
-    	cudaFree(d_svx);
-    	cudaFree(d_svz);
-    	cudaFree(d_gp0);
-    	cudaFree(d_gp1);
-    	cudaFree(d_gvx);
-    	cudaFree(d_gvz);
-	cudaFree(d_bx1);
-	cudaFree(d_bx2);
-	cudaFree(d_bz1);
-	cudaFree(d_bz2);
-    	cudaFree(d_convpx);
-    	cudaFree(d_convpz);
-    	cudaFree(d_convvx);
-    	cudaFree(d_convvz);
-	cudaFree(d_Iss);
-	cudaFree(d_Isg);
-	cudaFree(d_I1);
-	cudaFree(d_I2);
-	cudaFreeHost(h_boundary);
-    	cudaFree(d_boundary);
-	sf_check_gpu_error("Failed to free the allocated memory!");
+    cudaFree(d_bell);
+    cudaFree(d_Sxz);
+    cudaFree(d_Gxz);
+    cudaFree(d_wlt);
+    cudaFree(d_dobs);
+    cudaFree(d_vel);
+    cudaFree(d_sp0);
+    cudaFree(d_sp1);
+    cudaFree(d_svx);
+    cudaFree(d_svz);
+    cudaFree(d_gp0);
+    cudaFree(d_gp1);
+    cudaFree(d_gvx);
+    cudaFree(d_gvz);
+    cudaFree(d_bx1);
+    cudaFree(d_bx2);
+    cudaFree(d_bz1);
+    cudaFree(d_bz2);
+    cudaFree(d_convpx);
+    cudaFree(d_convpz);
+    cudaFree(d_convvx);
+    cudaFree(d_convvz);
+    cudaFree(d_Iss);
+    cudaFree(d_Isg);
+    cudaFree(d_I1);
+    cudaFree(d_I2);
+    cudaFreeHost(h_boundary);
+    cudaFree(d_boundary);
+    sf_check_gpu_error("Failed to free the allocated memory!");
 }
 
 void wavefield_init(float *d_p0, float *d_p1, float *d_vx, float *d_vz, float *d_convpx, float *d_convpz, float *d_convvx, float *d_convvz)
 /*< initialize wavefield variables >*/
 {
-	cudaMemset(d_p0, 	0,	N*sizeof(float));
-	cudaMemset(d_p1, 	0,	N*sizeof(float));
-	cudaMemset(d_vx, 	0,	N*sizeof(float));
-	cudaMemset(d_vz, 	0,	N*sizeof(float));
-	cudaMemset(d_convpx, 	0,	2*npml*nnz*sizeof(float));
-	cudaMemset(d_convpz, 	0,	2*npml*nnx*sizeof(float));
-	cudaMemset(d_convvx, 	0,	2*npml*nnz*sizeof(float));
-	cudaMemset(d_convvz, 	0,	2*npml*nnx*sizeof(float));
-	sf_check_gpu_error("Failed to initialize the wavefield variables!");
+    cudaMemset(d_p0, 	0,	N*sizeof(float));
+    cudaMemset(d_p1, 	0,	N*sizeof(float));
+    cudaMemset(d_vx, 	0,	N*sizeof(float));
+    cudaMemset(d_vz, 	0,	N*sizeof(float));
+    cudaMemset(d_convpx, 	0,	2*npml*nnz*sizeof(float));
+    cudaMemset(d_convpz, 	0,	2*npml*nnx*sizeof(float));
+    cudaMemset(d_convvx, 	0,	2*npml*nnz*sizeof(float));
+    cudaMemset(d_convvz, 	0,	2*npml*nnx*sizeof(float));
+    sf_check_gpu_error("Failed to initialize the wavefield variables!");
 }
 
 void step_forward(float *vel, float *d_p0, float *d_p1, float *d_vx, float *d_vz, float *d_convvx, float *d_convvz, float *d_convpx, float *d_convpz, float *d_bx1, float *d_bz1, float *d_bx2, float *d_bz2)
 /*< step of forward propagation >*/
 {
-	/* p0: p{it-1};  p1: p{it}; p2-->p0: p{it+1}; */
-	if (NJ==2)	{
-		cuda_forward_v_2<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_vz_2<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
-		cuda_PML_vx_2<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
-		cuda_forward_p_2<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_pz_2<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
-		cuda_PML_px_2<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
-	}else if (NJ==4){
-		cuda_forward_v_4<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_vz_4<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
-		cuda_PML_vx_4<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
-		cuda_forward_p_4<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_pz_4<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
-		cuda_PML_px_4<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
-	}else if (NJ==6){
-		cuda_forward_v_6<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_vz_6<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
-		cuda_PML_vx_6<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
-		cuda_forward_p_6<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_pz_6<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
-		cuda_PML_px_6<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
-	}else if (NJ==8){
-		cuda_forward_v_8<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_vz_8<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
-		cuda_PML_vx_8<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
-		cuda_forward_p_8<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_pz_8<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
-		cuda_PML_px_8<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
-	}else if (NJ==10){
-		cuda_forward_v_10<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_vz_10<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
-		cuda_PML_vx_10<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
-		cuda_forward_p_10<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-		cuda_PML_pz_10<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
-		cuda_PML_px_10<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
-	}
+    /* p0: p{it-1};  p1: p{it}; p2-->p0: p{it+1}; */
+    if (NJ==2)	{
+	cuda_forward_v_2<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_vz_2<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
+	cuda_PML_vx_2<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
+	cuda_forward_p_2<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_pz_2<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
+	cuda_PML_px_2<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
+    }else if (NJ==4){
+	cuda_forward_v_4<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_vz_4<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
+	cuda_PML_vx_4<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
+	cuda_forward_p_4<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_pz_4<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
+	cuda_PML_px_4<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
+    }else if (NJ==6){
+	cuda_forward_v_6<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_vz_6<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
+	cuda_PML_vx_6<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
+	cuda_forward_p_6<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_pz_6<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
+	cuda_PML_px_6<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
+    }else if (NJ==8){
+	cuda_forward_v_8<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_vz_8<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
+	cuda_PML_vx_8<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
+	cuda_forward_p_8<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_pz_8<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
+	cuda_PML_px_8<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
+    }else if (NJ==10){
+	cuda_forward_v_10<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_vz_10<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
+	cuda_PML_vx_10<<<dimglr1, dimblr1>>>(d_p1, d_convpx, d_bx2, d_vx, _dx, npml, nnz, nnx);
+	cuda_forward_p_10<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+	cuda_PML_pz_10<<<dimgtb1, dimbtb1>>>(d_vel, d_p0, d_convvz, d_bz1, d_vz, dt, _dz, npml, nnz, nnx);
+	cuda_PML_px_10<<<dimglr1, dimblr1>>>(d_vel, d_p0, d_convvx, d_bx1, d_vx, dt, _dx, npml, nnz, nnx);
+    }
 }
 
 void step_backward(float *d_vel, float *d_p0, float *d_p1, float *d_vx, float *d_vz)
 /*< step of backward propagation >*/
 {
-	/* p0: p{it-1};  p1: p{it}; p2-->p0: p{it+1}; */
-	if (NJ==2){
-		cuda_forward_v_2<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_forward_p_2<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-	}
-	else if (NJ==4)	{
-		cuda_forward_v_4<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_forward_p_4<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-	}
-	else if (NJ==6)	{
-		cuda_forward_v_6<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_forward_p_6<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-	}
-	else if (NJ==8)	{
-		cuda_forward_v_8<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_forward_p_8<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-	}
-	else if (NJ==10){
-		cuda_forward_v_8<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
-		cuda_forward_p_8<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
-	}
+    /* p0: p{it-1};  p1: p{it}; p2-->p0: p{it+1}; */
+    if (NJ==2){
+	cuda_forward_v_2<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_forward_p_2<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+    }
+    else if (NJ==4)	{
+	cuda_forward_v_4<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_forward_p_4<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+    }
+    else if (NJ==6)	{
+	cuda_forward_v_6<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_forward_p_6<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+    }
+    else if (NJ==8)	{
+	cuda_forward_v_8<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_forward_p_8<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+    }
+    else if (NJ==10){
+	cuda_forward_v_8<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
+	cuda_forward_p_8<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
+    }
 }
 
 
 int main(int argc, char* argv[])
 {
-	int tdmute, is, kt, distx, distz;
-	float phost, mstimer;
-    	sf_file vmodl, imag1, imag2; 
+    int tdmute, is, kt, distx, distz;
+    float phost, mstimer;
+    sf_file vmodl, imag1, imag2; 
 
-    	sf_init(argc,argv);/* initialize Madagascar */
+    sf_init(argc,argv);/* initialize Madagascar */
 
-    	vmodl = sf_input ("in");	
-	/* velocity model, unit=m/s */
-    	imag1 = sf_output("out");  	
-	/* output image with correlation imaging condition */ 
-    	imag2 = sf_output("imag2");  	
-	/* output image with normalized correlation imaging condition */ 
+    vmodl = sf_input ("in");	
+    /* velocity model, unit=m/s */
+    imag1 = sf_output("out");  	
+    /* output image with correlation imaging condition */ 
+    imag2 = sf_output("imag2");  	
+    /* output image with normalized correlation imaging condition */ 
 
-    	/* get parameters for RTM */
-    	if (!sf_histint(vmodl,"n1",&nz1)) sf_error("no n1");
-    	if (!sf_histint(vmodl,"n2",&nx1)) sf_error("no n2");
-    	if (!sf_histfloat(vmodl,"d1",&dz)) sf_error("no d1");
-   	if (!sf_histfloat(vmodl,"d2",&dx)) sf_error("no d2");
+    /* get parameters for RTM */
+    if (!sf_histint(vmodl,"n1",&nz1)) sf_error("no n1");
+    if (!sf_histint(vmodl,"n2",&nx1)) sf_error("no n2");
+    if (!sf_histfloat(vmodl,"d1",&dz)) sf_error("no d1");
+    if (!sf_histfloat(vmodl,"d2",&dx)) sf_error("no d2");
 
-    	if (!sf_getfloat("fm",&fm)) sf_error("no fm");	
-	/* dominant freq of ricker */
-    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
-	/* time interval */
+    if (!sf_getfloat("fm",&fm)) sf_error("no fm");	
+    /* dominant freq of ricker */
+    if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
+    /* time interval */
 
-    	if (!sf_getint("nt",&nt))   sf_error("no nt");	
-	/* total modeling time steps */
-    	if (!sf_getint("ns",&ns))   sf_error("no ns");	
-	/* total shots */
-    	if (!sf_getint("ng",&ng))   sf_error("no ng");	
-	/* total receivers in each shot */
+    if (!sf_getint("nt",&nt))   sf_error("no nt");	
+    /* total modeling time steps */
+    if (!sf_getint("ns",&ns))   sf_error("no ns");	
+    /* total shots */
+    if (!sf_getint("ng",&ng))   sf_error("no ng");	
+    /* total receivers in each shot */
 	
-    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
-	/* source x-axis  jump interval  */
-    	if (!sf_getint("jsz",&jsz))   jsz=0;
-	/* source z-axis jump interval  */
-    	if (!sf_getint("jgx",&jgx))   jgx=1;
-	/* receiver x-axis jump interval */
-    	if (!sf_getint("jgz",&jgz))   jgz=0;
-	/* receiver z-axis jump interval */
-    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
-	/* x-begining index of sources, starting from 0 */
-    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
-	/* z-begining index of sources, starting from 0 */
-    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
-	/* x-begining index of receivers, starting from 0 */
-    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");	
-	/* z-begining index of receivers, starting from 0 */
+    if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
+    /* source x-axis  jump interval  */
+    if (!sf_getint("jsz",&jsz))   jsz=0;
+    /* source z-axis jump interval  */
+    if (!sf_getint("jgx",&jgx))   jgx=1;
+    /* receiver x-axis jump interval */
+    if (!sf_getint("jgz",&jgz))   jgz=0;
+    /* receiver z-axis jump interval */
+    if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
+    /* x-begining index of sources, starting from 0 */
+    if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
+    /* z-begining index of sources, starting from 0 */
+    if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
+    /* x-begining index of receivers, starting from 0 */
+    if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");	
+    /* z-begining index of receivers, starting from 0 */
 
-    	if (!sf_getint("order",&NJ))   NJ=6;
-	/* order of finite difference, order=2,4,6,8,10 */
-    	if (!sf_getfloat("phost",&phost)) phost=0;
-	/* phost% points on host with zero-copy pinned memory, the rest on device */
-	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
-	/* default, common shot-gather; if n, record at every point*/
-	if (!sf_getfloat("vmute",&vmute))   vmute=1500;
-	/* muting velocity to remove the low-freq artifacts, unit=m/s*/
-	if (!sf_getint("tdmute",&tdmute))   tdmute=2.0/(fm*dt);
-	/* number of deleyed time samples to mute */
+    if (!sf_getint("order",&NJ))   NJ=6;
+    /* order of finite difference, order=2,4,6,8,10 */
+    if (!sf_getfloat("phost",&phost)) phost=0;
+    /* phost% points on host with zero-copy pinned memory, the rest on device */
+    if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
+    /* default, common shot-gather; if n, record at every point*/
+    if (!sf_getfloat("vmute",&vmute))   vmute=1500;
+    /* muting velocity to remove the low-freq artifacts, unit=m/s*/
+    if (!sf_getint("tdmute",&tdmute))   tdmute=2.0/(fm*dt);
+    /* number of deleyed time samples to mute */
 
-    	sf_putint(imag1,"n1",nz1);
-    	sf_putint(imag1,"n2",nx1);
-    	sf_putfloat(imag1,"d1",dz);
-    	sf_putfloat(imag1,"d2",dx);
-    	sf_putint(imag2,"n1",nz1);
-    	sf_putint(imag2,"n2",nx1);
-    	sf_putfloat(imag2,"d1",dz);
-    	sf_putfloat(imag2,"d2",dx);
+    sf_putint(imag1,"n1",nz1);
+    sf_putint(imag1,"n2",nx1);
+    sf_putfloat(imag1,"d1",dz);
+    sf_putfloat(imag1,"d2",dx);
+    sf_putint(imag2,"n1",nz1);
+    sf_putint(imag2,"n2",nx1);
+    sf_putfloat(imag2,"d1",dz);
+    sf_putfloat(imag2,"d2",dx);
 	
-	_dx=1.0/dx;
-	_dz=1.0/dz;
-	nt_h=0.01*phost*nt; 
+    _dx=1.0/dx;
+    _dz=1.0/dz;
+    nt_h=0.01*phost*nt; 
 
-	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
-	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2;
-    	nnz = 2*npml+nz;
-    	nnx = 2*npml+nx;
-	N=nnz*nnx;
-	dimbbell=dim3(2*nbell+1,2*nbell+1);
-    	dimb0=dim3(Block_Size1, Block_Size2);  	dimg0=dim3(nnz/Block_Size1, nnx/Block_Size2);
-	dimblr1=dim3(Block_Size1, 32);		dimglr1=dim3(nnz/Block_Size1, 2);
-	dimbtb1=dim3(32, Block_Size2); 		dimgtb1=dim3(2, nnx/Block_Size2);
-	dimblr2=dim3(nnz/Block_Size1,(NJ+15)/16); dimglr2=dim3(Block_Size1, 16);
-	dimbtb2=dim3(16, Block_Size2);		dimgtb2=dim3((NJ+15)/16, nnx/Block_Size2);
+    nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
+    nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2;
+    nnz = 2*npml+nz;
+    nnx = 2*npml+nx;
+    N=nnz*nnx;
+    dimbbell=dim3(2*nbell+1,2*nbell+1);
+    dimb0=dim3(Block_Size1, Block_Size2);  	dimg0=dim3(nnz/Block_Size1, nnx/Block_Size2);
+    dimblr1=dim3(Block_Size1, 32);		dimglr1=dim3(nnz/Block_Size1, 2);
+    dimbtb1=dim3(32, Block_Size2); 		dimgtb1=dim3(2, nnx/Block_Size2);
+    dimblr2=dim3(nnz/Block_Size1,(NJ+15)/16); dimglr2=dim3(Block_Size1, 16);
+    dimbtb2=dim3(16, Block_Size2);		dimgtb2=dim3((NJ+15)/16, nnx/Block_Size2);
 	
-	if (!(v0=(float*)malloc(nx1*nz1*sizeof(float)))) { sf_warning("out of memory!"); exit(1);}    	
-	if (!(seis=(float*)malloc(ng*nt*sizeof(float)))) { sf_warning("out of memory!"); exit(1);}    	
-	if (!(vel=(float*)malloc(N*sizeof(float)))) 	 { sf_warning("out of memory!"); exit(1);}    	
-	if (!(p=(float*)malloc(N*sizeof(float)))) 	 { sf_warning("out of memory!"); exit(1);}
-    	memset(v0, 0, nz1*nx1*sizeof(float));
-    	memset(seis, 0, ng*nt*sizeof(float));
-    	memset(vel, 0, N*sizeof(float));
-    	memset(p, 0, N*sizeof(float));
+    if (!(v0=(float*)malloc(nx1*nz1*sizeof(float)))) { sf_warning("out of memory!"); exit(1);}    	
+    if (!(seis=(float*)malloc(ng*nt*sizeof(float)))) { sf_warning("out of memory!"); exit(1);}    	
+    if (!(vel=(float*)malloc(N*sizeof(float)))) 	 { sf_warning("out of memory!"); exit(1);}    	
+    if (!(p=(float*)malloc(N*sizeof(float)))) 	 { sf_warning("out of memory!"); exit(1);}
+    memset(v0, 0, nz1*nx1*sizeof(float));
+    memset(seis, 0, ng*nt*sizeof(float));
+    memset(vel, 0, N*sizeof(float));
+    memset(p, 0, N*sizeof(float));
 
-   	sf_floatread(v0,nz1*nx1,vmodl);
-	expand(vel, v0, npml, nnz, nnx, nz1, nx1);
-	check_grid_sanity(NJ, vel, fm, dz, dx, dt, N);
+    sf_floatread(v0,nz1*nx1,vmodl);
+    expand(vel, v0, npml, nnz, nnx, nz1, nx1);
+    check_grid_sanity(NJ, vel, fm, dz, dx, dt, N);
 
-    	cudaSetDevice(0);
-	sf_check_gpu_error("Failed to initialize device");
-	device_alloc(); 
+    cudaSetDevice(0);
+    sf_check_gpu_error("Failed to initialize device");
+    device_alloc(); 
 
-	cudaEvent_t start, stop;
-  	cudaEventCreate(&start);	
-	cudaEventCreate(&stop);
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);	
+    cudaEventCreate(&stop);
 
-	cuda_init_bell<<<dim3(1,1),dim3(2*nbell+1,2*nbell+1)>>>(d_bell);
-	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, fm, dt, nt);
-	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
-	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
-	cuda_set_sg<<<(ns+255)/256, 256>>>(d_Sxz, sxbeg, szbeg, jsx, jsz, ns, npml, nnz);
+    cuda_init_bell<<<dim3(1,1),dim3(2*nbell+1,2*nbell+1)>>>(d_bell);
+    cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, fm, dt, nt);
+    if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
+    { sf_warning("sources exceeds the computing zone!"); exit(1);}
+    cuda_set_sg<<<(ns+255)/256, 256>>>(d_Sxz, sxbeg, szbeg, jsx, jsz, ns, npml, nnz);
 
-	if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+    if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+    { sf_warning("geophones exceeds the computing zone!"); exit(1);}
+    if (csdgather)	{
+	distx=sxbeg-gxbeg;
+	distz=szbeg-gzbeg;
+	if (!( sxbeg+(ns-1)*jsx+(ng-1)*jgx-distx <nx  && szbeg+(ns-1)*jsz+(ng-1)*jgz-distz <nz))	
 	{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
+    }
+    cuda_set_sg<<<(ng+255)/256, 256>>>(d_Gxz, gxbeg, gzbeg, jgx, jgz, ng, npml, nnz);
+
+    cudaMemcpy(d_vel, vel, N*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemset(d_Iss, 0,  	N*sizeof(float));
+    cudaMemset(d_Isg, 0,  	N*sizeof(float));
+    cudaMemset(d_I1, 0,  	N*sizeof(float));
+    cudaMemset(d_I2, 0,  	N*sizeof(float));    	
+    cuda_init_abcz<<<dimgtb1, dimbtb1>>>(d_vel, d_bz1, d_bz2, dx, dz, dt, npml, nnz, nnx);
+    cuda_init_abcx<<<dimglr1, dimblr1>>>(d_vel, d_bx1, d_bx2, dx, dz, dt, npml, nnz, nnx);
+
+    for(is=0; is<ns; is++)
+    {
+	cudaEventRecord(start);
+
+	cudaMemset(d_Isg, 	0,	N*sizeof(float));
+	cudaMemset(d_Iss, 	0,	N*sizeof(float));
+	cudaMemset(d_dobs, 	0,	nt*ng*sizeof(float));
+	cudaMemset(h_boundary, 	0,	nt_h*2*(NJ-1)*(nx+nz)*sizeof(float));
+	cudaMemset(d_boundary, 	0,	(nt-nt_h)*2*(NJ-1)*(nx+nz)*sizeof(float));
+	wavefield_init(d_sp0, d_sp1, d_svx, d_svz, d_convpx, d_convpz, d_convvx, d_convvz);
 	if (csdgather)	{
-		distx=sxbeg-gxbeg;
-		distz=szbeg-gzbeg;
-		if (!( sxbeg+(ns-1)*jsx+(ng-1)*jgx-distx <nx  && szbeg+(ns-1)*jsz+(ng-1)*jgz-distz <nz))	
-		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
+	    gxbeg=sxbeg+is*jsx-distx;
+	    cuda_set_sg<<<(ng+255)/256, 256>>>(d_Gxz, gxbeg, gzbeg, jgx, jgz, ng, npml, nnz);
 	}
-	cuda_set_sg<<<(ng+255)/256, 256>>>(d_Gxz, gxbeg, gzbeg, jgx, jgz, ng, npml, nnz);
-
-    	cudaMemcpy(d_vel, vel, N*sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemset(d_Iss, 0,  	N*sizeof(float));
-	cudaMemset(d_Isg, 0,  	N*sizeof(float));
-	cudaMemset(d_I1, 0,  	N*sizeof(float));
-	cudaMemset(d_I2, 0,  	N*sizeof(float));    	
-	cuda_init_abcz<<<dimgtb1, dimbtb1>>>(d_vel, d_bz1, d_bz2, dx, dz, dt, npml, nnz, nnx);
-	cuda_init_abcx<<<dimglr1, dimblr1>>>(d_vel, d_bx1, d_bx2, dx, dz, dt, npml, nnz, nnx);
-
-    	for(is=0; is<ns; is++)
+	for(kt=0; kt<nt; kt++)
 	{
-		cudaEventRecord(start);
+	    cuda_add_bellwlt<<<dim3(1,1), dimbbell>>>(d_sp1, d_bell, &d_wlt[kt], &d_Sxz[is], 1, npml, nnz, nnx, true);
+	    /*cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, true);*/
+	    step_forward(d_vel, d_sp0, d_sp1, d_svx, d_svz, d_convvx, d_convvz, d_convpx, d_convpz, d_bx1, d_bz1, d_bx2, d_bz2);
+	    ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
-	    	cudaMemset(d_Isg, 	0,	N*sizeof(float));
-		cudaMemset(d_Iss, 	0,	N*sizeof(float));
-		cudaMemset(d_dobs, 	0,	nt*ng*sizeof(float));
-		cudaMemset(h_boundary, 	0,	nt_h*2*(NJ-1)*(nx+nz)*sizeof(float));
-	    	cudaMemset(d_boundary, 	0,	(nt-nt_h)*2*(NJ-1)*(nx+nz)*sizeof(float));
-		wavefield_init(d_sp0, d_sp1, d_svx, d_svz, d_convpx, d_convpz, d_convvx, d_convvz);
-		if (csdgather)	{
-			gxbeg=sxbeg+is*jsx-distx;
-			cuda_set_sg<<<(ng+255)/256, 256>>>(d_Gxz, gxbeg, gzbeg, jgx, jgz, ng, npml, nnz);
-		}
-		for(kt=0; kt<nt; kt++)
-		{
-			cuda_add_bellwlt<<<dim3(1,1), dimbbell>>>(d_sp1, d_bell, &d_wlt[kt], &d_Sxz[is], 1, npml, nnz, nnx, true);
-			/*cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, true);*/
-			step_forward(d_vel, d_sp0, d_sp1, d_svx, d_svz, d_convvx, d_convvz, d_convpx, d_convpz, d_bx1, d_bz1, d_bx2, d_bz2);
-			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
+	    cuda_record<<<(ng+255)/256, 256>>>(d_sp0, &d_dobs[kt*ng], d_Gxz, ng);
+	    cuda_mute<<<(ng+511)/512, 512>>>(&d_dobs[kt*ng], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, kt, tdmute, vmute, dt, dz, dx, ng);
 
-			cuda_record<<<(ng+255)/256, 256>>>(d_sp0, &d_dobs[kt*ng], d_Gxz, ng);
-			cuda_mute<<<(ng+511)/512, 512>>>(&d_dobs[kt*ng], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, kt, tdmute, vmute, dt, dz, dx, ng);
+	    if(kt<nt_h) cudaHostGetDevicePointer(&ptr, &h_boundary[kt*2*(NJ-1)*(nx+nz)], 0);
+	    else  ptr=&d_boundary[(kt-nt_h)*2*(NJ-1)*(nx+nz)];
+	    cuda_rw_innertb<<<dimgtb2, dimbtb2>>>(ptr, 	d_sp0, npml, nnz, nnx, NJ, false);
+	    cuda_rw_innerlr<<<dimglr2, dimblr2>>>(&ptr[2*(NJ-1)*nx], d_sp0, npml, nnz, nnx, NJ, false);
+	}
 
-			if(kt<nt_h) cudaHostGetDevicePointer(&ptr, &h_boundary[kt*2*(NJ-1)*(nx+nz)], 0);
-			else  ptr=&d_boundary[(kt-nt_h)*2*(NJ-1)*(nx+nz)];
-			cuda_rw_innertb<<<dimgtb2, dimbtb2>>>(ptr, 	d_sp0, npml, nnz, nnx, NJ, false);
-			cuda_rw_innerlr<<<dimglr2, dimblr2>>>(&ptr[2*(NJ-1)*nx], d_sp0, npml, nnz, nnx, NJ, false);
-		}
+	ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
+	wavefield_init(d_gp0, d_gp1, d_gvx, d_gvz, d_convpx, d_convpz, d_convvx, d_convvz);
+	for(kt=nt-1; kt>-1; kt--)
+	{
+	    /* read saved boundary */
+	    if(kt<nt_h) cudaHostGetDevicePointer(&ptr, &h_boundary[kt*2*(NJ-1)*(nx+nz)], 0);
+	    else  ptr=&d_boundary[(kt-nt_h)*2*(NJ-1)*(nx+nz)];
+	    cuda_rw_innertb<<<dimgtb2, dimbtb2>>>(ptr, 		d_sp1, npml, nnz, nnx, NJ, true);
+	    cuda_rw_innerlr<<<dimglr2, dimblr2>>>(&ptr[2*(NJ-1)*nx], d_sp1, npml, nnz, nnx, NJ, true);
 
-		ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-		wavefield_init(d_gp0, d_gp1, d_gvx, d_gvz, d_convpx, d_convpz, d_convvx, d_convvz);
-		for(kt=nt-1; kt>-1; kt--)
-		{
-			/* read saved boundary */
-			if(kt<nt_h) cudaHostGetDevicePointer(&ptr, &h_boundary[kt*2*(NJ-1)*(nx+nz)], 0);
-			else  ptr=&d_boundary[(kt-nt_h)*2*(NJ-1)*(nx+nz)];
-			cuda_rw_innertb<<<dimgtb2, dimbtb2>>>(ptr, 		d_sp1, npml, nnz, nnx, NJ, true);
-			cuda_rw_innerlr<<<dimglr2, dimblr2>>>(&ptr[2*(NJ-1)*nx], d_sp1, npml, nnz, nnx, NJ, true);
+	    /* backward time step source wavefield */
+	    step_backward(d_vel, d_sp0, d_sp1, d_svx, d_svz);
+	    /* subtract the wavelet */
+	    cuda_add_bellwlt<<<dim3(1,1), dimbbell>>>(d_sp1, d_bell, &d_wlt[kt], &d_Sxz[is], 1, npml, nnz, nnx, false);
+	    /*cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, false);*/
+	    ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
-			/* backward time step source wavefield */
-			step_backward(d_vel, d_sp0, d_sp1, d_svx, d_svz);
-			/* subtract the wavelet */
-			cuda_add_bellwlt<<<dim3(1,1), dimbbell>>>(d_sp1, d_bell, &d_wlt[kt], &d_Sxz[is], 1, npml, nnz, nnx, false);
-			/*cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, false);*/
-			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
+	    /* add receiver term */
+	    cuda_add_source<<<(ng+255)/256,256>>>(d_gp0, &d_dobs[kt*ng], d_Gxz, ng, true);
+	    /* backward time step receiver wavefield */
+	    step_forward(d_vel, d_gp0, d_gp1, d_gvx, d_gvz, d_convvx, d_convvz, d_convpx, d_convpz, d_bx1, d_bz1, d_bx2, d_bz2);
+	    ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
 
-			/* add receiver term */
-			cuda_add_source<<<(ng+255)/256,256>>>(d_gp0, &d_dobs[kt*ng], d_Gxz, ng, true);
-			/* backward time step receiver wavefield */
-			step_forward(d_vel, d_gp0, d_gp1, d_gvx, d_gvz, d_convvx, d_convvz, d_convpx, d_convpz, d_bx1, d_bz1, d_bx2, d_bz2);
-			ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
+	    cuda_cross_correlate<<<dimg0, dimb0>>>(d_Isg, d_Iss, d_sp0, d_gp0, npml, nnz, nnx);
+	}
+	cuda_imaging<<<dimg0, dimb0>>>(d_Isg, d_Iss, d_I1, d_I2, npml, nnz, nnx);
 
-			cuda_cross_correlate<<<dimg0, dimb0>>>(d_Isg, d_Iss, d_sp0, d_gp0, npml, nnz, nnx);
-		}
-		cuda_imaging<<<dimg0, dimb0>>>(d_Isg, d_Iss, d_I1, d_I2, npml, nnz, nnx);
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&mstimer, start, stop);
+	sf_warning("%d shot finished: %g (s)",is+1, mstimer*1.e-3);
+    }
+    cuda_laplace_filter<<<dimg0,dimb0>>>(d_I1,d_sp0,_dz,_dx, npml, nnz, nnx);
+    cudaMemcpy(p, d_sp0, N*sizeof(float), cudaMemcpyDeviceToHost);
+    window(v0, p, npml, nnz, nnx, nz1, nx1);
+    sf_floatwrite(v0,nz1*nx1,imag1); 
+    cuda_laplace_filter<<<dimg0,dimb0>>>(d_I2,d_gp0,_dz,_dx, npml, nnz,nnx);
+    cudaMemcpy(p, d_gp0, N*sizeof(float), cudaMemcpyDeviceToHost);
+    window(v0, p, npml, nnz, nnx, nz1, nx1);
+    sf_floatwrite(v0,nz1*nx1,imag2); 
 
-		cudaEventRecord(stop);
-  		cudaEventSynchronize(stop);
-  		cudaEventElapsedTime(&mstimer, start, stop);
-    		sf_warning("%d shot finished: %g (s)",is+1, mstimer*1.e-3);
-    	}
-	cuda_laplace_filter<<<dimg0,dimb0>>>(d_I1,d_sp0,_dz,_dx, npml, nnz, nnx);
-	cudaMemcpy(p, d_sp0, N*sizeof(float), cudaMemcpyDeviceToHost);
-	window(v0, p, npml, nnz, nnx, nz1, nx1);
-	sf_floatwrite(v0,nz1*nx1,imag1); 
-	cuda_laplace_filter<<<dimg0,dimb0>>>(d_I2,d_gp0,_dz,_dx, npml, nnz,nnx);
-	cudaMemcpy(p, d_gp0, N*sizeof(float), cudaMemcpyDeviceToHost);
-	window(v0, p, npml, nnz, nnx, nz1, nx1);
-	sf_floatwrite(v0,nz1*nx1,imag2); 
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
 
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);
+    free(seis);
+    free(v0);
+    free(vel);
+    free(p);
+    device_free();
 
-    	free(seis);
-    	free(v0);
-    	free(vel);
-    	free(p);
-	device_free();
-
-	return 0;
+    return 0;
 }
