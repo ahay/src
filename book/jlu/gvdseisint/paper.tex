@@ -1,0 +1,531 @@
+\published{Geophysical Prospecting, 65, S1, 82-93, (2017)}
+
+\title{Seismic data interpolation using generalised velocity-dependent seislet transform}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{GP-2017-2408}
+
+\address{
+\footnotemark[1] College of Geo-exploration Science and Technology,\\
+Jilin University \\ No.938 Xi minzhu street, \\ Changchun, China,
+130026}
+
+\author{Yang Liu\footnotemark[1], Peng Zhang\footnotemark[1], Cai Liu\footnotemark[1]}
+
+\footer{GP-2017-2408}
+\lefthead{Liu et al.}
+\righthead{Interpolation by generalised VD-seislet}
+\maketitle
+
+\begin{abstract}
+Data interpolation is an important step for seismic data analysis
+because many processing tasks, such as multiple attenuation and
+migration, are based on regularly sampled seismic data. Failed
+interpolations may introduce artifacts and eventually lead to
+inaccurate final processing results. In this paper, we generalize
+seismic data interpolation as a basis pursuit problem and propose an
+iteration framework for recovering missing data. The method is based
+on nonlinear iteration and sparse transform. A modified Bregman
+iteration is used for solving the constrained minimization problem
+based on compressed sensing. The new iterative strategy guarantees
+fast convergence by using a fixed threshold value. We also propose a
+generalized velocity-dependent (VD) formulation of the seislet
+transform as an effective sparse transform, in which the nonhyperbolic
+normal moveout equation serves as a bridge between local slope
+patterns and moveout parameters in the common-midpoint domain. It can
+also be reduced to the traditional VD-seislet if special heterogeneity
+parameter is selected. The generalized VD-seislet transform predicts
+prestack reflection data in offset coordinates, which provides a high
+compression of reflection events. The method was applied to synthetic
+and field data examples and the results show that the generalized
+VD-seislet transform can reconstruct missing data with the help of the
+modified Bregman iteration even for nonhyperbolic reflections under
+complex conditions, such as VTI media or aliasing.
+
+\end{abstract}
+
+\section{Introduction}
+In an ideal data acquisition system, continuous receivers are set up
+and each receiver has continuous sources, however, such an ideal
+system has not been achieved in practice. There are various
+geometries, and uniform data coverage is rarely achieved because of
+practical and economic constraints \cite[]{Stone94}. Furthermore,
+regular data distribution is prerequisite in some applications of
+seismic migrations
+\cite[]{Claerbout71,Gardner94,Biondi96,Zhang03}, multiple elimination
+\cite[]{Verschuur92,Dragoset98}, and 4D seismic monitoring
+\cite[]{Morice00}. Under such circumstances, new data points are
+  constructed with known data points through data interpolation.
+Therefore, data interpolation has become a key
+technique for data processing in seismic
+  exploration, especially wide azimuth seismic surveys.
+
+Many seismic data interpolation methods have been proposed in the past
+few years, among which the binning method and its improvements are the
+simplest. However, they always create artifacts, which affect the
+final processing results. Another approach is based on different types
+of continuation operators \cite[]{Stolt02,Fomel03,Liu10}.  Sometimes,
+these operators do not give good results at small offset distances
+because of limited integration apertures. In some methods, data
+interpolation is applied as an iterative optimization problem using a
+prediction-error filter (PEF). Several different prediction methods
+have been proposed, including $f$-$x$ prediction filter interpolation
+\cite[]{Spitz91,Porsani99,Wang02,Naghizadeh09} and $t$-$x$ domain PEF 
+interpolation
+\cite[]{Claerbout91,Fomel02,curry03,Liu11}. \cite{Gulunay03} used
+nonaliased lower frequencies to remove aliases. In fact,
+G\"{u}l\"{u}nay's method is equivalent to implementing Spitz's method
+in a different domain. \cite{Abma03} compared different $t$-$x$,
+$f$-$x$, and $f$-$k$ methods and determined their
+characteristics. Many interpolation algorithms have been implemented
+for various scenarios yielding improvements in seismic images. The
+latest data interpolation technologies bring revolutionary changes in
+the acquisition design, significantly reducing the cost, and
+turnaround time for seismic acquisition. Nevertheless, accurate
+handling of highly aliased seismic data with strongly irregular
+sampled acquisition grids and handling complex data in which seismic
+events interfere each other with different amplitudes and noise levels
+remain challenges for seismic data interpolation algorithms.
+
+If seismic data show sparsity in some domains, compressed sensing
+(CS) \cite[]{Donoho06} can be used for reconstructing missing
+data. CS-based methods for data interpolation usually consist of two
+parts, namely, sparse transform and iterative algorithm, and recently,
+they have been undergoing rapid development. There are different
+iterative approaches to solve the inverse problem corresponding to
+data interpolation. For instance, \cite{pocs} introduced a projection
+onto convex sets (POCS) algorithm to seismic data
+interpolation. \cite{Ma14} proposed a split inexact Uzawa
+algorithm. \cite{Yu15} used a two-stage method to solve objective
+function for data interpolation. \cite{Chen15} proposed a nonlinear
+shaping regularization for solving the inverse problem. Different
+iterative strategies have been designed to control the balance between
+fast convergence and accurate recovery of missing data. A widely used
+sparse transform for seismic data interpolation is Fourier transform
+under plane waves assumption
+\cite[]{antileak,frsi2,frsi3,Naghizadeh13}. The wavelet transform is
+powerful in representing piecewise
+signals \cite[]{mallat}; however, it is still not suitable for
+compressing nonstationary seismic data.
+
+Wavelet-like transforms have different applications in seismic data
+analysis \cite[]{Herrmann08b,Wang15,Bobmann15}. Seislet
+transform \cite[]{Fomel06} is a sparse transform specifically designed
+for characterizing seismic data. \cite{Fomel10a} further improved the
+seislet framework and proposed additional applications. The original
+seislet transform utilizes local data slopes estimated by plane-wave
+destruction (PWD) filters \cite[]{Fomel02,Chen13a,Chen13b}. However, a
+PWD operator can be sensitive to strong interference, which leads to
+occasional failure of the PWD-seislet transform in describing noisy
+signals. To address this problem, \cite{Liu15} proposed a
+velocity-dependent (VD) concept where local slopes in prestack data
+are evaluated from moveout parameters estimated by conventional
+velocity-analysis techniques.
+
+In this paper, we extended the velocity-dependent (VD)-seislet
+transform \cite[]{Liu15} to a nonhyperbolic pattern and applied it to
+data interpolation with a new modified Bregman iteration. We tested
+the performance of generalized VD-seislet transforms using numerical
+experiments with synthetic and field data, and the results are
+described in this paper.
+
+\section{Theory}
+
+\subsection{Generalized velocity-dependent seislet transform}
+
+The seislet framework was defined by \cite{Fomel10a}. It is based on
+the discrete wavelet transform and different data patterns, such as
+slopes or frequencies. In plane-wave construction
+\cite[]{Fomel06b,Fomel10b}, a seismic trace is predicted from its 
+neighbors by following locally varying slopes of seismic events. It
+has been used for designing PWD-seislet transforms. \cite{Liu15}
+proposed a velocity-dependent (VD) slope as the pattern in VD-seislet
+transform, where the normal moveout (NMO) equation serves as a bridge
+between local slopes and scanned NMO velocities. Seislet transforms
+with slope patterns show different characteristics compared to wavelet
+transform. Wavelet transforms involve no special pattern and sample
+shift is treated as an elementary prediction. Compared with
+PWD-seislet transform that predicts local plane waves, VD-seislet
+transforms involve the traces in common-midpoint (CMP) gather and
+predict elements along a time-distance curve.
+
+The general guidelines
+of the lifting scheme \cite[]{athome} can be followed for the
+discrete wavelet transform to define seislet
+transforms. The basic prediction $\mathbf{P}$ and update $\mathbf{U}$
+operators for a simple seislet transform are shown as follows
+\cite[]{Fomel10a}:
+\begin{eqnarray}
+  \label{eq:sp}
+  \mathbf{P[e]}_k & = & \left(\mathbf{R}_k^{(+)}[\mathbf{e}_{k-1}] + 
+  \mathbf{R}_k^{(-)}[\mathbf{e}_{k}]\right)/2 \\
+  \label{eq:su}
+  \mathbf{U[r]}_k & = & \left(\mathbf{R}_k^{(+)}[\mathbf{r}_{k-1}] + 
+    \mathbf{R}_k^{(-)}[\mathbf{r}_{k}]\right)/4\;,
+\end{eqnarray}
+where $\mathbf{e}_k$ is the even components of data at the $k$-th
+transform scale, $\mathbf{r}_k$ is the residual difference between the
+odd component of data and its prediction from the even component at
+the $k$-th transform scale.  $\mathbf{R}_k^{(+)}$ and
+$\mathbf{R}_k^{(-)}$ are operators that predict a component from its
+left and right neighbors according to different
+patterns. Equations~\ref{eq:sp} and \ref{eq:su} are defined by
+modifying Cohen-Daubechies-Feauveau (CDF) 5/3 biorthogonal wavelet
+construction \cite[]{Cohen92}. A higher-order seislet transform can
+also be defined by applying biorthogonal wavelets twice with different
+lifting operator coefficients \cite[]{Lian01}. For different types of
+slope-based seislets, the corresponding operator $\mathbf{R}_k$, which
+is related to different slope patterns by plane-wave construction
+\cite[]{Fomel10b}, must be defined.
+
+\cite{Liu15} used the classical hyperbolic model of
+reflection moveout at near offset to define seismic local slopes
+\begin{equation}
+  \label{eq:nmo} t(x) = \sqrt{t_0^2 + \frac{x^2}{v_{rms}^2(t_0)}}\;,
+\end{equation}
+where $t_0$ is the zero-offset traveltime, $t(x)$ is the corresponding
+traveltime recorded at offset $x$, and $v_{rms}(t_0)$ is the stacking
+or root mean square (RMS) velocity obtained through a standard
+velocity scan.
+
+For more general cases, the shifted hyperbola NMO
+equation \cite[]{Malovichko78,Castle94,Fomel01b} can be used to obtain
+more accurate slopes in some situations, such as large-offset gather
+or VTI media. The nonhyperbolic NMO equation is shown as follows:
+\begin{equation}
+  \label{eq:shnmo}
+  t(x) = t_0(1-\frac{1}{S})+\frac{1}{S}\sqrt{t_0^2 + \frac{S\,x^2}{v_{rms}^2(t_0)}}\;,
+\end{equation}
+where $S$ is the parameter describing
+heterogeneity. Equation~\ref{eq:shnmo} is reduced to
+equation~\ref{eq:nmo} when $S=1$.
+
+The generalized velocity-dependent (VD) slopes $\sigma=
+dt/dx$ can be calculated by:
+\begin{equation}
+  {\sigma(t,x)} = {\frac{x}{[S(t(x)-t_0)+t_0]v_{rms}^2(t_0,x)}}\;.
+  \label{eq:shslo}
+\end{equation}
+
+After the generalized velocity-dependent (VD)-slope pattern of seismic
+data is calculated, pattern-based operators $\mathbf{R}_k$ can be
+designed through plane-wave construction, which guarantees
+representation of nonhyperbolic primaries by the generalized
+VD-seislet transform. When the generalized VD-seislet transform is
+applied to a CMP gather, the predictable reflection information is
+compressed to large coefficients at small scales. The sparse
+characteristic of the generalized VD-seislet transform is suitable for
+reconstructing missing data in the inverse problem framework.
+
+\subsection{Modified Bregman iteration for data interpolation}
+Data reconstruction can be treated as a linear-estimation problem and
+solved by an iterative optimization algorithm \cite[]{Fomel03}.  Let
+$\mathbf{d}$ be the vector of observed data and $\mathbf{\Phi}$ be the
+regularized model, one can obtain the model-space
+regularization equation by using a \emph{forward modeling operator}
+$\mathbf{L}$:
+\begin{equation}
+  \label{eq:inter1}
+  \mathbf{d} = \mathbf{L} \mathbf{\Phi} \;.
+\end{equation}
+
+Missing data interpolation is a particular case of data
+reconstruction, where the input data are already given on a regular
+grid. One needs to reconstruct only the missing values in the empty
+bins. In general, $\mathbf{L}$ is selected as a mask operator
+$\mathbf{K}$ (a diagonal matrix with zeros at locations of missing
+data and ones elsewhere), and the problem becomes underdetermined. As
+an alternative theory of Nyquist/Shannon sampling theory, compressed
+sensing (CS) provides an important theoretical basis for
+reconstructing images \cite[]{Donoho06}. Analogous to CS, missing data
+interpolation can be generalized to a NP-hard problem
+\cite[]{Amaldi98} by using inverse generalized
+velocity-dependent (VD)-seislet transform $\mathbf{T}$:
+\begin{equation}
+  \label{eq:nphard}
+  \min_{\mathbf{m}}\|\mathbf{m}\|_0 \; s.t.\; \mathbf{KTm} = \mathbf{d}\;,
+\end{equation}
+where $\mathbf{m}$ is the transform coefficient and
+$\mathbf{\Phi}=\mathbf{Tm}$. Basis pursuit is a traditional method for
+solving the NP-hard problem (Equation~\ref{eq:nphard}), where the
+corresponding constrained minimization problem is as follows:
+\begin{equation}
+  \label{eq:convex}
+  \min_{\mathbf{m}}\|\mathbf{m}\|_1 \; s.t.\; \mathbf{KTm} = \mathbf{d}\;.
+\end{equation}
+Equation~\ref{eq:convex} is a convex optimization problem, which can
+be transformed into a linear program and then solved by conventional
+linear programming solvers. Bregman iteration was introduced by
+\cite{Osher05} in the context of image processing. This iteration 
+solves a sequence of convex problems
+\cite[]{Yin08}, and its general formulation is as follows:
+\begin{eqnarray}
+  \label{eqn:bregman3} 
+  \mathbf{d}^{k+1}&=&\mathbf{d}+(\mathbf{d}^k-\mathbf{KT}\mathbf{m}^{k})\;,\\
+  \label{eqn:bregman4}
+  \mathbf{m}^{k+1}&=&\arg\min_{\mathbf{m}}
+  \mu\|\mathbf{m}\|_1+ \frac{1}{2}\|\mathbf{KTm}-\mathbf{d}^{k+1}\|_2^2\;.
+\end{eqnarray}
+The advantage of the Bregman iteration is that the penalty parameter $\mu$
+in equation~\ref{eqn:bregman4} remains constant. We can therefore
+choose a fixed value for $\mu$ that minimizes the condition number of
+the sub-problems, which results in a fast convergence.
+
+An iterative procedure based on shrinkage, also called soft
+thresholding, is used by many researchers to solve
+equation~\ref{eqn:bregman4} \cite[]{Daubechies04}. However, it is
+difficult to find the adjoint of $\mathbf{KT}$. In a general case,
+forward generalized velocity-dependent (VD)-seislet transform
+$\mathbf{T^{-1}}$ is an approximate inverse of $\mathbf{KT}$; then the
+chain $\mathbf{T^{-1}KT}$ is close to the identity operator
+$\mathbf{I}$. Therefore, we can obtain an iteration with shaping
+regularization \cite[]{Fomel08} as follows:
+\begin{equation}
+  \label{eq:shaping}
+   \mathbf{m}^{k+1} = \mathbf{S}[\mathbf{T^{-1}}\mathbf{d}^{k+1}+
+    (\mathbf{I}-\mathbf{T^{-1}KT})\mathbf{m}^k]\;,
+\end{equation}
+where $\mathbf{S}$ is soft thresholding. The iteration
+(equation~\ref{eq:shaping}) will converge to the solution of the
+least-squares optimization problem regularized by a sparsity
+constraint (equation~\ref{eqn:bregman4}). Equation~\ref{eq:shaping}
+can be further reformulated as
+\begin{equation}
+  \label{eq:rshaping}
+   \mathbf{m}^{k+1} = \mathbf{S}[\mathbf{T^{-1}}(\mathbf{d}^{k+1}+
+    (\mathbf{I}-\mathbf{K})\mathbf{Tm}^k)]\;.
+\end{equation}
+
+Combining equation~\ref{eqn:bregman3} with the shaping solver
+(equation~\ref{eq:rshaping}), the framework of modified Bregman
+iteration is as follows:
+\begin{eqnarray}
+  \label{eqn:bregman5} 
+  \mathbf{d}^{k+1}&=&\mathbf{d}+(\mathbf{d}^k-\mathbf{KT}\mathbf{m}^{k})\;,\\
+  \label{eqn:bregman6}
+  \mathbf{m}^{k+1}&=&\mathbf{S}[\mathbf{T^{-1}}(\mathbf{d}^{k+1}+
+    (\mathbf{I}-\mathbf{K})\mathbf{Tm}^k)]\;.
+\end{eqnarray}
+
+This is the analog of ``adding back the residual'' in the
+Rudin-Osher-Fatemi (ROF) model for TV denoising \cite[]{Osher05}. By
+using a large threshold value, the modified Bregman iteration can
+guarantee fast convergence of the objective function
+(equation~\ref{eq:convex}) and accurate recovery of the regularized
+model $\mathbf{\Phi}$. The final interpolated result can be calculated
+by $\hat{\mathbf{d}}=\mathbf{T}\mathbf{m}^{N}$, where $N$ is
+the number of iteration.
+
+ \section{Synthetic Example}
+
+First, we applied the method to a 2D synthetic prestack dataset
+(Figure~\ref{fig:data,miss}a), which was created from a 2D slice of
+the benchmark French model \cite[]{french74}. The reflector with round
+dome and corners creates reflection events along midpoint and offset
+axes. The inflection points of the reflector lead to traveltime
+triplications at some offsets. Then we removed 70\% of randomly
+selected traces (Figure~\ref{fig:data,miss}b) from the input data
+(Figure~\ref{fig:data,miss}a). We directly used NMO
+equation~\ref{eq:nmo} to analyze data with missing traces because the
+dataset is limited in a near-offset range. The scanned parameters were
+obtained and the results are shown in Figure~\ref{fig:pick,dip}a. The
+velocity spectra of NMO from data show that the picked velocities are
+reasonable because velocity scan is less sensitive to missing
+traces. Next, we calculated the velocity-dependent (VD) slopes using
+the NMO velocities. The VD slopes calculated from
+equation~\ref{eq:shslo} with $S=1$ provided accurate results
+(Figure~\ref{fig:pick,dip}b). Data interpolation with the help of
+modified Bregman iteration (equations~\ref{eqn:bregman5}
+and \ref{eqn:bregman6}) recovers missing traces as long as seismic
+data are sufficiently sparse in the transform domain. To demonstrate
+the superior sparseness of the generalized VD-seislet coefficients, we
+compare the proposed method with Fourier projection onto convex sets
+(POCS) interpolation method \cite[]{pocs}. The results of the
+interpolation are shown in Figure~\ref{fig:pocs,inter}a after
+carefully selecting parameters. 50 iterations were selected as
+comparable computational cost as the modified Bregman iteration. Some
+artificial events were created because Fourier transform cannot
+provide a naturally sparse domain for curved events. The interpolated
+error is also slightly large at the locations of the gaps
+(Figure~\ref{fig:diff2,diff}a). The interpolated results can only be
+partially improved by cutting data into overlapping windows, unless
+the events display an ideal plane-wave pattern in each window. The
+generalized VD-seislet transform provides a much sparser domain for
+reflections.  Therefore, the modified Bregman iteration successfully
+interpolates missing traces (Figure~\ref{fig:pocs,inter}b). The number
+of iteration for the proposed method is 20, which is less than that of
+Fourier POCS. The difference between the interpolated result and
+Figure~\ref{fig:data,miss}a also shows that the proposed method
+provides reasonable results, in which parts of diffraction events are
+lost (Figure~\ref{fig:diff2,diff}b).
+
+ \inputdir{ocmodel}
+ \multiplot{2}{data,miss}{width=0.4\columnwidth}{Synthetic
+     prestack data from the benchmark French model (a) and data with
+     70\% traces removed (b).}
+ \multiplot{2}{pick,dip}{width=0.4\columnwidth}{Velocity spectra by
+   using NMO equation (a) and local slopes calculated by
+   equation~\ref{eq:shslo} with $S=1$.}
+ \multiplot{2}{pocs,inter}{width=0.4\columnwidth}{Interpolated results
+   by using different methods. Fourier POCS method (a) and the
+   proposed method (b).}
+ \multiplot{2}{diff2,diff}{width=0.4\columnwidth}{The difference
+   between interpolated results and synthetic prestack data. Fourier
+   POCS method (a) and the proposed method (b).}
+
+The second example is shown in Figure~\ref{fig:clean,mask}a. The
+amplitudes of the four reflection events show variation because of
+anisotropy. To evaluate missing trace interpolation
+(Figure~\ref{fig:clean,mask}b), we removed 70\% of randomly selected
+traces from the input data (Figure~\ref{fig:clean,mask}a). The
+variation of amplitude and curvature makes it difficult to recover the
+missing traces. The interpolated results are shown in
+Figure~\ref{fig:pocss,sinterd}b, which uses the generalized
+velocity-dependent (VD)-seislet transform and the modified Bregman
+iteration with 99\% percentile-based soft thresholding. The number of
+iteration is 20. In the interpolated result, it was visually difficult
+to distinguish the missing trace locations, which indicates successful
+interpolation. For comparison, we applied the Fourier POCS method to
+interpolate the missing traces (Figure~\ref{fig:pocss,sinterd}a). The
+data were divided into seven patches with 43\% overlap along the space
+axis and 200 iterations were run. The POCS method produces a
+reasonable result after carefully selecting parameters, but some
+artificial events were still present becausethe uniformed patching
+windows cannot guarantee the assumption of stationary plane waves.
+
+  \inputdir{vti}
+  \multiplot{2}{clean,mask}{width=0.4\columnwidth}{Synthetic data of
+    VTI media (a) and data with 70\% traces removed (b).}
+  \multiplot{2}{pocss,sinterd}{width=0.4\columnwidth}{Interpolated
+    results by using different methods. Fourier POCS method with
+      patching (a) and the proposed method (b).}
+
+ \section{Field Example}
+
+ To evaluate the performance of the proposed method in field
+ conditions, we used a historic marine dataset from the Gulf of
+ Mexico \cite[]{Claerbout08a}. Figure~\ref{fig:bei,bei-zero}a shows
+ the input data, in which near-offset information is completely
+ missing. We removed 40\% of randomly selected traces
+ (Figure~\ref{fig:bei,bei-zero}b) from the input data
+ (Figure~\ref{fig:bei,bei-zero}a). The velocity scanning from the
+ missing data can still generate accurate parameter fields using
+ equation~\ref{eq:shnmo}. Figure~\ref{fig:bei-vel,bei-s,bei-dip}a and
+ Figure~\ref{fig:bei-vel,bei-s,bei-dip}b show the velocity spectra and
+ $S$ spectra, respectively. Equation~\ref{eq:shslo} converts RMS
+ velocity and $S$ to seismic pattern
+ (Figure~\ref{fig:bei-vel,bei-s,bei-dip}c), which displays the varying
+ slopes in CMP gathers and common-offset sections. The generalized
+ velocity-dependent (VD)-seislet transform compresses predictable
+ information according to the local slopes along the offsets. We
+ applied the modified Bregman iteration with the generalized
+ VD-seislet transform to recover missing data. The results show that
+ the missing traces were interpolated well even when anisotropy is
+ present (Figure~\ref{fig:bfour3pocs,bei-seis2}b). For comparison, we
+ applied 3D Fourier transform with POCS
+ (Figure~\ref{fig:bfour3pocs,bei-seis2}a). The Fourier transform could
+ not recover the missing information as accurately as the generalized
+ VD-seislet transform. The results of the 3D Fourier POCS method show
+ obvious gaps caused by inaccurate interpolation, whereas the
+ generalized VD-seislet and the modified Bregman iteration strategy
+ provides a reasonably accurate result for interpolating missing data.
+
+ If we extend the generalized velocity-dependent (VD)-seislet
+ transform domain along the transform scale axis and recalculate the
+ slope field according to the new $x$-coordinate axis in
+ equation~\ref{eq:shslo}, the inverse generalized VD-seislet transform
+ will accomplish trace interpolation of the input CMP gather
+ (Figure~\ref{fig:cmp1,cmp2}a), which is selected from
+ Figure~\ref{fig:bei,bei-zero}a at the midpoint location 11.8925
+ km. We extended the generalized VD-seislet coefficients with small
+ random noise to consider the existence of realistic noise on
+ different scale levels.  Figure~\ref{fig:cmp1,cmp2}b shows that the
+ interpolated result provides four times more traces and removes most
+ aliasing. Thus, trace interpolation is a natural operation in the
+ generalized VD-seislet domain.
+
+ \inputdir{bei}
+ \multiplot{2}{bei,bei-zero}{width=0.8\columnwidth}{Marine data
+   with near-offset missing (a) and data with 40\% traces
+   removed (b).}
+ \multiplot{3}{bei-vel,bei-s,bei-dip}{width=0.45\columnwidth}{Velocity
+   section (a) and $S$ section (b) obtained by using
+   equation~\ref{eq:shnmo}, and velocity-dependent (VD)
+   slopes (c).}
+ \multiplot{2}{bfour3pocs,bei-seis2}{width=0.8\columnwidth}{Interpolated
+   results using different methods. 3D Fourier POCS method (a) and the
+   proposed method (b).}
+ \multiplot{2}{cmp1,cmp2}{width=0.45\columnwidth}{CMP gather before
+   (a) and after (b) trace interpolation. The interpolated gather has
+   four times more traces than the original one shown in
+   Figure~\ref{fig:cmp1,cmp2}a.}
+
+\section{Discussion}
+
+Compared with standard interpolation methods, such as PEF
+interpolation or Fourier POCS interpolation, the proposed algorithm
+has different characteristics. First, the generalized
+velocity-dependent (VD)-seislet transform may have difficulties in
+handling diffractions, and the velocity scan occasionally produces
+errors, which would decrease its recovery ability. It is possible to
+preprocess by using dip moveout. However, the generalized VD-seislet
+can handle crossing events only up to a certain extent because
+crossing points only account for a low percentage of data along
+time-distance curves. It also avoids the problem of event stretch
+according to the prediction method \cite[]{Fomel10a}, thus producting
+less artifacts than simple interpolation strategies, such as NMO
+before data interpolation and subsequent reverting. Meanwhile,
+standard methods can also not provide accurate interpolation of curved
+diffractions. Without patching, the generalized VD-seislet transform
+provides relatively accurate representation of seismic events with
+aliasing and amplitude anomalies. Fourier POCS are prone to create
+artifacts, which occur in the frequency-domain method even if data are
+cut into overlapping windows (patching). Furthermore, data patching
+causes non-intuitive selection of parameters. The standard PEF
+interpolation is designed under the assumption of stationary data and
+becomes less effective when this assumption is violated. Patching in
+PEF interpolation still fails in the presence of variable dips and
+usually leads to the problem of insufficient data availability in some
+child windows, e.g., complete lack of data at near-offset locations
+and large gaps. Finally, the proposed method applies a modified
+Bregman iteration, which guarantees fast convergence using a large
+threshold value, whereas Abma's POCS iteration with linear threshold
+model produces a slow convergence. Although a different threshold
+model \cite[]{Gao10} can be used, the POCS method cannot provide fast
+convergence even with more iterations when random noise are
+present. Therefore, the proposed method provides an alternative tool
+for interpolating missing traces in CMP gathers for structurally
+simple areas even with random noise, amplitude variation, and large
+gaps.
+
+\section{Conclusions}
+
+In this paper, we introduce a generalized velocity-dependent
+(VD)-seislet transform, a new domain for analyzing prestack reflection
+data in the CMP domain. The new transform could compress reflection
+data away from missing data. The nonhyperbolic NMO equation serves as
+a bridge between local slopes and scanned parameters that are not
+sensitive to data gap and aliasing. As examples, we applied the
+generalized VD-seislet transform in interpolating missing data under
+the new modified Bregman iteration framework to synthetic and field
+data. We expect the generalized VD-seislet transform to provide better
+compression ability for nonhyperbolic reflection events away from
+interference of missing traces. The current generalized VD-seislet
+transform based on equation~\ref{eq:shslo} only works for CMP gathers
+in structurally simple areas. For structurally complex areas,
+OC-seislet transform \cite[]{Liu10} can perform well but at the
+expense of high computation cost.
+
+\section{Acknowledgments}
+We thank Tijmen Jan Moser, one anonymous associate editor, and two
+anonymous reviewers for helpful suggestions, which improved the
+quality of the paper. This work is partly supported by National
+Natural Science Foundation of China (Grant No. 41522404 and 41430322)
+and National Key Research and Development Program of China (Grant
+No. 2016YFC0600505). All results are reproducible in the Madagascar
+open-source software environment \cite[]{m8r}.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,paper}
+

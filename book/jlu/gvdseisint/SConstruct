@@ -1,0 +1,6 @@
+from rsf.tex import *
+import os
+os.environ['PSTEXPENOPTS'] = 'color=y'
+
+End(use='listings,amsmath',hires='cmp1 cmp2')
+
