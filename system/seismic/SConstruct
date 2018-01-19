@@ -53,12 +53,14 @@ objects = []
 includes = []
 for source in src:
         inc = env.RSF_Include(source,prefix='')
-        # clang chokes trying to optimize the compilation of orthovelo
-        if str(source) == 'orthovelo.c' and env['PLATFORM'] == 'darwin':
-                obj = env.StaticObject(source,CFLAGS=env['CFLAGS']+' -O0')
-                orthovelo = obj
-        else:
-                obj = env.StaticObject(source)
+        ### legacy - note that "orthovelo.c" has been removed.
+        # # clang chokes trying to optimize the compilation of orthovelo
+        # if str(source) == 'orthovelo.c' and env['PLATFORM'] == 'darwin':
+        #         obj = env.StaticObject(source,CFLAGS=env['CFLAGS']+' -O0')
+        #         orthovelo = obj
+        # else:
+        #         obj = env.StaticObject(source)
+        obj = env.StaticObject(source)
         env.Ignore(inc,inc)
         env.Depends(obj,inc)
     
@@ -85,11 +87,13 @@ docalias = {}
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    if prog == 'itxmo3' and env['PLATFORM'] == 'darwin':
-        sources.remove('orthovelo')
-        main = env.Program(prog,map(lambda x: x + '.c',sources)+orthovelo)
-    else:
-        main = env.Program(prog,map(lambda x: x + '.c',sources))
+    ### legacy - note that "orthovelo.c" has been removed.
+    # if prog == 'itxmo3' and env['PLATFORM'] == 'darwin':
+    #     sources.remove('orthovelo')
+    #     main = env.Program(prog,map(lambda x: x + '.c',sources)+orthovelo)
+    # else:
+    #     main = env.Program(prog,map(lambda x: x + '.c',sources))
+    main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         install = env.Install(bindir,main[0])
 
