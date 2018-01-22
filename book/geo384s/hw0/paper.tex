@@ -26,16 +26,19 @@ To do the assignment on your personal computer, you need to install
 the required environments. An Internet connection is required for
 access to the data repository.
 
-To setup the Madagascar environment in the JGB 3.216B computer lab, run the following command:
+To setup the Madagascar environment in the JGB 3.216B computer lab, run the following commands:
 \begin{verbatim}
 $ module load madagascar-devel
+$ setenv RSFFIGS $DATAPATH
+$ setenv RSFBOOK $DATAPATH
 \end{verbatim}
-You can put this command in your \verb+$HOME/.cshrc+ file to run them automatically at login time. \footnote{All commands above assume you are using the default \texttt{cshell} environment; certain modifications apply to different shell environments.} To setup the \LaTeX\ environment, run the following commands:
+You can put these commands in your \verb+$HOME/.cshrc+ file to run them automatically at login time. \footnote{All commands above assume you are using the default \texttt{cshell} environment; certain modifications apply to different shell environments.}
+
+To setup the \LaTeX\ environment, run the following commands (you only need to do it once):
 \begin{verbatim}
 $ cd; git clone https://github.com/SEGTeX/texmf.git
 $ cd texmf; texhash
 \end{verbatim}
-You only need to do it once.
 
 The tutorial itself is available from the \texttt{Madagascar} repository
 by running
