@@ -29,8 +29,9 @@ access to the data repository.
 To setup the Madagascar environment in the JGB 3.216B computer lab, run the following commands:
 \begin{verbatim}
 $ module load madagascar-devel
-$ setenv RSFFIGS $DATAPATH
-$ setenv RSFBOOK $DATAPATH
+$ setenv DATAPATH $HOME/data/
+$ setenv RSFBOOK $HOME/data/book
+$ setenv RSFFIGS $HOME/data/figs
 \end{verbatim}
 You can put these commands in your \verb+$HOME/.cshrc+ file to run them automatically at login time. \footnote{All commands above assume you are using the default \texttt{cshell} environment; certain modifications apply to different shell environments.}
 
