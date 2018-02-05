@@ -1,0 +1,248 @@
+from rsf.proj import *
+
+def cubeplot(title,clip='',extra=''):
+    return '''
+    byte gainpanel=all %s bar=bar.rsf|
+    grey3 frame1=32 frame2=256 frame3=10 flat=y point1=0.7 point2=0.7
+    label1=Offset unit1=km label2="Midpoint wavenumber" unit2=1/km
+    label3="Frequency" unit3=Hz framelabelcol=7 
+    title="%s" %s wanttitle=n labelfat=4 font=2 titlefat=4
+    ''' % (clip,title,extra)
+
+Fetch('french.asc','french')
+
+Flow('french','french.asc',
+     '''
+     dd form=native | transp | scale dscale=0.0005 |
+     put d1=0.10265 d2=0.10265
+     label1=North-South label2=West-East unit1=km unit2=km
+     ''')
+
+Flow('french1','french.asc','dd form=native | transp | scale dscale=2')
+Flow('refl','french1',
+     '''
+     remap1 n1=161 o1=0 d1=51.325 | transp |
+     remap1 n1=161 o1=0 d1=51.325 | transp
+     ''')
+
+Flow('slice','french',
+     '''
+     window n1=1 f1=30 | put d1=0.025 |
+     remap1 n1=256 o1=0 d1=0.008 |
+     unif2 n1=256 d1=0.004 v00=1,2
+     ''')
+Result('slice','refl',
+       '''
+       unif3 v00=1.5,2.5 n1=401 d1=10.265 | 
+       put d1=0.003849375 d2=0.012720496894409938 d3=0.012720496894409938 |
+       transp plane=23 |
+       byte allpos=y bias=1 | window n3=1 f3=60 |
+       grey color=I wanttitle=n label1="Depth (km)" label2=Inline unit2=km
+       labelfat=4 font=2 titlefat=4 flat=n
+       ''')
+
+Flow('cup','slice',
+     '''
+     deriv | bandpass flo=10 fhi=50 |
+     transp memsize=1000| bandpass fhi=50 | transp
+     ''')
+
+Flow('data','cup',
+     '''
+     halfint inv=y |
+     preconstkirch zero=y inv=y h0=0 dh=0.008 nh=64 vel=1.5 |
+     window | transp plane=23
+     ''')
+
+Result('data',
+       'transp plane=23|'
+       +cubeplot('Data','clip=3.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+
+Flow('mask','data',
+     '''
+     window n1=1 | noise rep=y type=n seed=2016 |
+     mask min=0.2
+     ''')
+Flow('miss','data mask','headercut mask=${SOURCES[1]}')
+Result('miss',
+       'transp plane=23|'
+       +cubeplot('Miss','clip=3.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+Flow('vel','miss mask',
+     '''
+     vscan half=y semblance=y v0=1.2 dv=0.015 nv=100
+     mask=${SOURCES[1]}
+     ''')
+Result('vel',
+       cubeplot('Miss','xclip=3.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25 color=j') )
+
+Flow('pick','vel','scale axis=3 | pick rect1=45 rect2=15 | window')
+Result('pick',
+       '''
+       grey color=j allpos=n bias=1.5
+       scalebar=y barreverse=y barlabel=Velocity barunit="km/s"
+       label2=Midpoint unit2=km label1=Time unit1=s
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4 barwidth=0.1
+       title=""
+       ''')
+
+Flow('dip','pick',
+     '''
+     math output=1.5 |
+     v2d n=64 d=0.008 o=0 mute=y half=y v0=5
+     ''')
+Result('dip',
+       'transp plane=23|'
+       +cubeplot('Dip','allpos=y','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       bar=bar.rsf scalebar=y barreverse=y barwidth=0.1 \
+       barlabel=Slope barunit=samples\
+       frame1=150 frame2=125 frame3=25 color=j') )
+
+
+Flow('ccmask','mask',
+     'dd type=float| spray axis=1 n=256 d=0.004 o=0')
+
+Flow('inter','miss dip ccmask',
+     '''
+     seisbreg2 order=3 dip=${SOURCES[1]} mask=${SOURCES[2]}
+     oper=b verb=y niter=20 type=b perc=99. 
+     ''',split=[3,256,[0,1,2]])
+Result('inter',
+       'transp plane=23 |'
+       +cubeplot('Miss','clip=3.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+Flow('diff','inter data','add scale=1,-1 ${SOURCES[1]}')
+Result('diff',
+       'transp plane=23 |'
+       +cubeplot('Miss','clip=3.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+#################
+#  GVD-seislet
+#################
+
+Flow('gvel','miss mask',
+     '''
+     vscan half=y semblance=y v0=1.2 dv=0.02 nv=50 smax=2 ns=51 str=0.
+     mask=${SOURCES[1]}
+     ''')
+
+Flow('pick3','gvel',
+     '''
+     scale axis=4 | pick31 smooth=y rect1=50 gate1=3 gate2=3 an2=1
+     ''')
+
+Flow('pik-vel','pick3','window n4=1 f4=0  | smooth rect1=5 rect2=20')
+
+Result('pik-vel',
+       '''
+       grey color=j allpos=n bias=1.7
+       scalebar=y barreverse=y barlabel=S barunit=""
+       label2=Midpoint unit2=km label1=Time unit1=s
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4 barwidth=0.1
+       title=""
+       ''')
+
+Flow('pik-s','pick3','window n4=1 f4=1|smooth rect1=3 rect2=20')
+Result('pik-s',
+       '''
+       grey color=j allpos=n bias=1.5
+       scalebar=y barreverse=y barlabel=S barunit=""
+       label2=Midpoint unit2=km label1=Time unit1=s
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4 barwidth=0.1
+       title=""
+       ''')
+
+Flow('gvd-dip','pik-vel pik-s',
+     '''
+     sv2d n=64 d=0.008 o=0 mute=y half=y v0=20 anisotropy=${SOURCES[1]}      
+     ''')
+Result('gvd-dip',
+       'transp plane=23|'
+       +cubeplot('Dip','clip=2.13','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       bar=bar.rsf scalebar=y barreverse=y\
+       frame1=150 frame2=125 frame3=25 color=j') )
+
+Flow('gvd-inter','miss gvd-dip ccmask',
+     '''
+     seisbreg2 order=3 dip=${SOURCES[1]} mask=${SOURCES[2]}
+     oper=b verb=y niter=20 type=b perc=99
+     ''',split=[3,256,[0,1,2]])
+Result('gvd-inter',
+       'transp plane=23 |'
+       +cubeplot('Miss','clip=2.5','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+################
+## Fourier POCS
+################
+
+Flow('transp1','miss','transp plane=23 memsize=1000')
+Flow('t-mask1','ccmask','transp plane=23 memsize=1000')
+Flow('pocs-mask1','mask',
+     'dd type=float | math output=1-input | spray axis=1 n=256 d=0.004 o=0')
+
+npniter=50
+fforward = '''
+fft1 | fft3 | fft3 axis=3
+'''
+fbackward = '''
+fft3 axis=3 inv=y | fft3 inv=y | fft1 inv=y
+'''
+fdataa = 'miss'
+fplots = ['miss']
+for var in range(0,npniter): 
+    fold = fdataa
+    fdataa = 'fdataa%d' % var
+
+    # 1. Forward 3D Fourier
+    # 2. Thresholding
+    # 3. Inverse 3D Fourier
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(fdataa,[fold,'pocs-mask1','miss'],
+         fforward +
+         '''
+         | threshold pclip=%g |
+         ''' % (5.+((95.-5.)*var/((npniter-1))))
+         + fbackward +
+         '''
+         | add mode=p ${SOURCES[1]} | 
+         add ${SOURCES[2]}
+         ''')
+# Last frame
+Flow('cffinal',fdataa,
+     fforward +
+     '''
+     | threshold pclip=85. |
+     '''
+     + fbackward
+     )
+
+Result('pocs','cffinal',
+       'transp plane=23 |'
+       +cubeplot('POCS data','clip=3.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+Flow('diff2','cffinal data','add scale=1,-1 ${SOURCES[1]}')
+Result('diff2',
+       'transp plane=23 |'
+       +cubeplot('Miss','clip=3.1713','label1=Time unit1=s \
+       label2="Midpoint" unit2=km label3="Half offset" unit3=km \
+       frame1=150 frame2=125 frame3=25') )
+
+End()

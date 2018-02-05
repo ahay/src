@@ -1,0 +1,19 @@
+from rsf.proj import *
+
+# Download data
+Fetch('mona.img','imgs')
+
+# Convert to standard format
+Flow('mona','mona.img',
+     '''
+     echo n1=512 n2=513 in=$SOURCE data_format=native_uchar |
+     dd type=float
+     ''',stdin=0)
+
+Result('mona',
+       '''
+       grey transp=n allpos=y title="Mona Lisa"
+       color=b screenratio=1 wantaxis=n
+       ''')
+
+End()

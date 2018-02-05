@@ -1,0 +1,172 @@
+from rsf.proj import *
+
+##################################
+# Generate data
+##################################
+Flow('modl',None,
+     '''
+     spike n1=200 o1=-8 d1=0.08 n2=4
+     nsp=4 k2=1,2,3,4 mag=1,2.2,3.5,5
+     ''')
+Flow('refl',None,
+     '''
+     spike n1=200 n2=4 nsp=4 k2=1,2,3,4
+     mag=0.0909091,0.1428570,0.1111110,0.2000000
+     ''')
+
+###### sfkirmod generate full-offset axis.######
+Flow('clean','modl refl',
+     '''
+     kirmod nt=1000 dt=0.004 freq=20 refl=${SOURCES[1]}
+     ns=1 cmp=y nh=256 h0=0.1 dh=0.025 eta=0.5 type2=v vel=3
+     gradz=1 type=a |
+     put label2="Offset" 
+     ''')
+
+Result('clean',
+       '''
+       grey font=2 labelsz=6
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       o2num=0 d2num=1 n2tic=4
+       ''')
+
+# Zeroing parts of data
+Flow('mcut','clean',
+     '''
+     window n1=1 |
+     noise rep=y type=n seed=2008 |
+     mask min=0.2
+     ''')
+Flow('mask','clean mcut','headercut mask=${SOURCES[1]}')
+Flow('mmask','mcut','spray axis=1 n=1000 d=0.04 o=0.')
+Result('mask',
+       '''
+       grey font=2 labelsz=6 titlefat=4
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       o2num=0 d2num=1 n2tic=4 clip=0.00022781
+       ''')
+
+########################################
+## Generalized VD-seislet interpolation
+########################################
+Flow('maskvel','mask mcut',
+     '''
+     vscan v0=3 dv=0.025 nv=100 half=n semblance=y
+     smax=2 ns=51 str=0. mask=${SOURCES[1]}
+     ''')
+
+Flow('masklpick','maskvel',
+     '''
+     pick3 smooth=y rect1=150 vel1=2.5 vel2=1 gate1=10 gate2=4
+     ''')
+
+Flow('pvel','masklpick',
+     '''
+     window n4=1 
+     ''')
+Plot('pvel',
+     '''
+     graph font=2 labelsz=12 label2="Velocity"
+     labelfat=12 wanttitle=n yreverse=y transp=y unit2="km/s"
+     wherexlabel=t o2num=0 d2num=1 n2tic=4 plotfat=8
+     ''')
+
+Flow('ps','masklpick',
+     '''
+     window n4=1 f4=1
+     ''')
+Plot('ps',
+     '''
+     graph font=2 labelsz=12 label2="S"
+     labelfat=12 wanttitle=n yreverse=y transp=y unit2=""
+     wherexlabel=t o2num=0 d2num=1 n2tic=4  plotfat=8
+     ''')
+
+Result('line','pvel ps','SideBySideAniso')
+
+Flow('mlongnmo','mask mcut pvel ps',
+     '''
+     nmo velocity=${SOURCES[2]} half=n s=${SOURCES[3]} str=0.
+     mask=${SOURCES[1]}
+     ''')
+Result('mlongnmo',
+       '''
+       grey font=2 labelsz=6
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       o2num=0 d2num=1 n2tic=4
+       ''')
+
+Flow('masksv2dd','pvel ps',
+     '''
+     sv2d n=256 d=0.025 o=0.1 half=n mute=y v0=12
+     anisotropy=${SOURCES[1]}
+     ''')
+
+Flow('sinterd','mask masksv2dd mmask',
+     '''
+     seisbreg2 dip=${SOURCES[1]} order=1 verb=y niter=20 type=b perc=99.8
+     mask=${SOURCES[2]}
+     ''')
+Result('sinterd',
+       '''
+       grey font=2 labelsz=6
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       o2num=0 d2num=1 n2tic=4 clip=0.00022781
+       ''')
+
+Flow('gvddiff','clean sinterd','add scale=1,-1 ${SOURCES[1]}')
+Result('gvddiff',
+       '''
+       grey font=2 labelsz=6
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       o2num=0 d2num=1 n2tic=4 clip=0.00022781
+       ''')
+###############################
+###  Fourier POCS interpolation
+##############################
+Flow('mask22','mcut',
+     'dd type=float | math output=input | spray axis=1 n=1000 d=0.004 o=0')
+
+Flow('patch','mask','patch w=1000,64')
+Flow('wpatch','patch','window')
+
+Flow('patch2','mask22','patch w=1000,64')
+Flow('wpatch2','patch2','window')
+
+pocss = []
+for nw in range(0,7):
+    data = 'data-%d' % nw
+    mask = 'mask-%d' % nw
+    pocs = 'pocs-%d' % nw
+    Flow(data,'wpatch','window n3=1 f3=%d' % nw)
+    Flow(mask,'wpatch2','window n3=1 f3=%d' % nw)
+    Flow(pocs,[data,mask],
+         '''
+         fourmis2 mask=${SOURCES[1]} niter=200 oper=p ordert=0.
+         perc=95 verb=y
+         ''')
+    pocss.append(pocs)
+
+Flow('pocss',pocss,
+     '''
+     cat ${SOURCES[1:%d]} axis=3 | transp plane=34 |
+     patch inv=y weight=y
+     ''' % len(pocss))     
+
+Result('pocss',
+       '''
+       window |
+       grey font=2 labelsz=6
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       o2num=0 d2num=1 n2tic=4 clip=0.00022781
+        ''')
+
+Flow('pdiff','pocss clean','add scale=1,-1 ${SOURCES[1]}')
+Result('pdiff',
+       '''
+       grey font=2 labelsz=6
+       labelfat=4 wanttitle=n screenratio=1.45 screenht=8
+       o2num=0 d2num=1 n2tic=4 clip=0.00022781
+        ''')
+
+End()
