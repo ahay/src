@@ -75,7 +75,7 @@ Suppose you want to reformat the data so that instead of one trace of a
 thousand samples, it contains twenty traces with fifty samples each. Try
 running
 \begin{verbatim}
-bash$ < sin.rsf sed 's/n1=1000/n1=100 n2=10/' > sin10.rsf 
+bash$ < sin.rsf sed 's/n1=1000/n1=50 n2=20/' > sin10.rsf 
 bash$ < sin10.rsf sfwiggle title=Traces | sfpen
 \end{verbatim}
 or (using pipes)
@@ -143,7 +143,7 @@ How did the RSF program (\texttt{sfmath}) decide where to put the data file?
 In the order of priority, the rules for selecting the data file name and the
 data file directory are as follows:
 \begin{enumerate}
-\item Check \texttt{out=} parameter on the command line. The parameter
+\item Check \texttt{--out=} parameter on the command line. The parameter
   specifies the output data file location explicitly.
 \item Specify the path and the file name separately. 
   \begin{itemize}
@@ -183,7 +183,7 @@ Here are some examples:
 \begin{description}
 \item[Example 1] \ \\
 \begin{verbatim}
-bash$ sfspike n1=10 out=test1 > spike.rsf
+bash$ sfspike n1=10 --out=test1 > spike.rsf
 bash$ grep in spike.rsf
         in="test1"
 \end{verbatim}
@@ -211,9 +211,9 @@ in="/tmp/sfspikejcARVf"
 
 While the header and data files are separated by default, it is also possible
 to pack them together into one file. To do that, specify the program's
-``\texttt{out}'' parameter as \texttt{out=stdout}. Example:
+``\texttt{out}'' parameter as \texttt{--out=stdout}. Example:
 \begin{verbatim}
-bash$ sfspike n1=10 out=stdout > spike.rsf
+bash$ sfspike n1=10 --out=stdout > spike.rsf
 bash$ grep in spike.rsf
 Binary file spike.rsf matches
 bash$ sfin spike.rsf
@@ -325,27 +325,28 @@ It is possible to exchange RSF-formatted data with several other popular data fo
 RSF is mostly compatible with its predecessor, the SEPlib file format.
 However, there are several important differences:
 \begin{enumerate}
-\item SEPlib program typically use the element size (\texttt{esize=}
+\item SEPlib programs typically use the element size (\texttt{esize=}
 parameter) to distinguish between different data types:
 \texttt{esize=4} corresponds to floating point data, while
 \texttt{esize=8} corresponds to complex data. The typical type
-handling mechanism in RSF is different: RSF looks at
-\texttt{data\_format=} to determine the data type.
+handling mechanism in RSF is different: 
+data types are determined from the value of the <tt>data_format</tt> parameter.
 \item The default data form in SEPlib programs is
 typically XDR and not native as it is in RSF. 
 \item It is possible to pipe the
-output of RSF programs to SEPlib:
+output of Madagascar programs to SEPlib:
 \begin{verbatim}
 bash$ sfspike n1=1 | Attr want=min
-minimum value = 1 at 1
 \end{verbatim}
-However, piping the output of SEPlib programs to RSF (or, for that matter, any
-other non-SEPlib programs) will result in an unterminated process. Do not try
+(output should be: <tt>minimum value = 1 at 1</tt>).
+However, piping the output of SEPlib programs to Madagascar (or, for that matter, any
+other non-SEPlib programs) will result in an unterminated process. For example, the command
 \begin{verbatim}
-bash$ Spike n1=1 | sfattr want=ming
+bash$ Spike n1=1 | sfattr want=min
 \end{verbatim}
-That happens because SEPlib uses sockets for piping and expects a socket
-connection from the receiving program. RSF passes data through regular Unix
+will hang. This is 
+because SEPlib uses sockets for piping and expects a socket
+connection from the receiving program, while Madagascar passes data through regular Unix
 pipes.
 \item SEP3D is an extension of SEPlib for operating with irregularly sampled
   data \cite[]{Biondi.sep.92.343}. There is no equivalent of it in RSF for
@@ -490,14 +491,14 @@ file.rsf:
 
 Converting from RSF to ASCII is equally simple:
 \begin{verbatim}
-bash$ sfdd form=ascii out=file.asc < file.rsf > /dev/null
+bash$ sfdd form=ascii --out=file.asc < file.rsf > /dev/null
 bash$ cat file.asc
 1 1.5 3 4.8 9.1 7.3
 \end{verbatim}
 You can use the \texttt{line=} and \texttt{format=} parameters in
 \texttt{sfdd} to control the ASCII formatting:
 \begin{verbatim}
-bash$ sfdd form=ascii out=file.asc \
+bash$ sfdd form=ascii --out=file.asc \
 line=3 format="%3.1f " < file.rsf > /dev/null
 bash$ cat file.asc
 1.0 1.5 3.0
