@@ -92,8 +92,8 @@ Flow([file+'t', file+'t_hdr', file+'.bin',  file+'.asc'],
      ''')
 
 # sftahsort will select a range on the header.  Put tracr first will keep traces
-# in original order.  fldr:690,99999 will elliminate the low numberred shots 688 
-# and 689.
+# in original order.  fldr:690,99999 will elliminate the low numberred shots 
+# 688 and 689.
 Flow([file, file+'_hdr'],[file+'t', file+'t_hdr'],
      '''
      sftahsort input=${SOURCES[0]} \
@@ -113,7 +113,7 @@ Flow([file+'t', file+'t_hdr', file+'.bin',  file+'.asc'],
      sfsegyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
      | sfwindow max1=12.28
      ''')
-Flow([file, file+'_hdr'],[file+'t', file+'t_hdr'],
+Flow([file, file+'_hdr'],[file+'t', file+'t_hdr','./sftahfix_hdr_17.py'],
      '''
      sftahread input=${SOURCES[0]} \
      | ./sftahfix_hdr_17.py \
@@ -174,7 +174,7 @@ Flow('ntg','line',
        'sfput n2=48 n3=4792 | sfwindow  min2=48 max2=48')
 
 # sftahsort is faster because headers are used to select traces, 
-# but tracr is real by real.  no key to keep traces in original order
+# but tracr is reel by reel.  no key to keep traces in original order
 #Flow('ntg ntg_hdr','line line_hdr',
 #     '''
 #     sftahsort sort="tracr tracf:48,48" input=${SOURCES[0]} \
@@ -302,6 +302,14 @@ Flow('stack.rsf stack_hdr.rsf','cdps.rsf cdps_hdr.rsf',
 Result('stack','stack',
        '''
        sfgrey title="stack"  perc=90
+       ''')
+Result('zoomstack','stack',
+       '''
+       sfwindow min1=3 max1=10 min2=3000 | sfgrey title="stack"  perc=90
+       ''')
+Result('zoomstack1','stack',
+       '''
+       sfwindow min1=0 max1=7 max2=3000 | sfgrey title="stack"  perc=90
        ''')
 
 End()
