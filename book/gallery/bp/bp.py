@@ -3,13 +3,13 @@ from rsf.proj import *
 velsegy = 'vel_z6.25m_x12.5m_exact.segy'
 densegy = 'density_z6.25m_x12.5m.segy'
 
-Fetch(velsegy+'.gz',dir='2004_BP_Vel_Benchmark',
-      server='ftp://software.seg.org',top='pub/datasets/2D')
-Flow(velsegy,velsegy+'.gz','zcat $SOURCE',stdin=0)
+Fetch(velsegy+'.gz',dir='bpvelanal2004',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data')
+Flow(velsegy,velsegy+'.gz','gunzip -c $SOURCE',stdin=0)
 
-Fetch(densegy+'.gz',dir='2004_BP_Vel_Benchmark',
-      server='ftp://software.seg.org',top='pub/datasets/2D')
-Flow(densegy,densegy+'.gz','zcat $SOURCE',stdin=0)
+Fetch(densegy+'.gz',dir='bpvelanal2004',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data')
+Flow(densegy,densegy+'.gz','gunzip -c $SOURCE',stdin=0)
 
 def getdata(dat,segy,label,unit):
     Flow(dat,segy,
@@ -37,9 +37,10 @@ shots = [
     ]
 
 for shot in shots:
-    Fetch(shot+'.segy.gz',dir='2004_BP_Vel_Benchmark',
-          server='ftp://software.seg.org',top='pub/datasets/2D')
-    Flow(shot+'.segy',shot+'.segy.gz','zcat $SOURCE',stdin=0)
+    Fetch(shot+'.segy.gz',dir='bpvelanal2004',
+          server='https://s3.amazonaws.com',
+          top='open.source.geoscience/open_data')
+    Flow(shot+'.segy',shot+'.segy.gz','gunzip -c $SOURCE',stdin=0)
     Flow([shot,'t-'+shot,shot+'.asc',shot+'.bin'],shot+'.segy',
          '''
          segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
