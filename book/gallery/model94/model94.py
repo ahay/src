@@ -1,8 +1,8 @@
 from rsf.proj import *
 
-Fetch('velocity.segy.gz',dir='Model_1994',
-      server='ftp://software.seg.org',top='pub/datasets/2D')
-Flow('velocity.segy','velocity.segy.gz','zcat $SOURCE',stdin=0)
+Fetch('velocity.segy.gz',dir='bpmodel94',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data')
+Flow('velocity.segy','velocity.segy.gz','gunzip -c $SOURCE',stdin=0)
 
 def get_vel(velocity):
     Flow(velocity,'velocity.segy',
@@ -14,9 +14,10 @@ def get_vel(velocity):
 
 shots = 'Model94_shots.segy'
 
-Fetch(shots+'.gz',dir='Model_1994',
-      server='ftp://software.seg.org',top='pub/datasets/2D')
-Flow(shots,shots+'.gz','zcat $SOURCE',stdin=0)
+Fetch(shots+'.gz',dir='bpmodel94',
+      server='https://s3.amazonaws.com',top='open.source.geoscience/open_data')
+
+Flow(shots,shots+'.gz','gunzip -c $SOURCE',stdin=0)
 Flow('shots94 tshots94',shots,
      'segyread tfile=${TARGETS[1]}')
 

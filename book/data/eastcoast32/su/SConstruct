@@ -1,7 +1,7 @@
 from rsf.suproj import * 
 
 #SConscript('../fetch/SConstruct')
-# SCsontript will always rerun oher directory, I think because env changes.
+# SCsontript will always rerun other directory, I think because env changes.
 # perhaps scons sees PWD or DATAPATH has changed.  This works:
 import os
 os.system('cd ../fetch; scons')
@@ -18,7 +18,7 @@ os.system('cd ../fetch; scons')
 # Agg2146_SelectTab/4/Default.aspx
 ####################
 
-# to look at forst breaks on shots with 0 time delay:
+# to look at first breaks on shots with 0 time delay:
 # <allshots.su  suwind key=ep min=3577 max=3607 |  suximage perc=90
 
 # view the observer notes:
@@ -77,8 +77,8 @@ easysegy=['U32A_01','U32A_02','U32A_03','U32A_05',
 # and  'U32C_01','U32C_02','U32C_03'
 # and 'U32_01'
 # The line is collected in 3 parts. 32, 32a, and 32b.  There is plenty
-# to use on line 32A, so no attempt is made to process the other parts of 
-# the line
+# to use on line 32A, so I did not attempt to process the other parts of 
+# the line.
 
 for file in easysegy  :
     Flow([file, file+'.bin',  file+'.asc'],
@@ -91,7 +91,7 @@ for file in easysegy  :
          ''' % (1-little_endian()),
          stdin=0)
 
-    Flow(file+'_list1',file,'surange; echo file_list1 complete',stdout=0)
+    Flow(file+'.txt',file,'surange >${TARGETS[0]}; cat ${TARGETS[0]}',stdout=0)
 
 # now handle the tapes that need fixes (U32A_04 and U32A_17).
 # 'U32A_04' needs to have fldr 688 and 689 removed 
@@ -238,7 +238,7 @@ Result('ntgdelay','ntgdelay',
 # 10.230.  The delay to apply to make the multiple twice the watbot time
 # is .048.  I remember GSI required a 51 ms instrument delay.
 
-Result('ntg_pick_delay','ntgdelay',
+Result('ntgdelay_pef','ntgdelay',
        '''
        suwind count=1000 
        |  sugain tpow=1.0 
@@ -247,7 +247,7 @@ Result('ntg_pick_delay','ntgdelay',
        | suximage perc=90 title="ntgdelay with spreading, decon, and nmo" f2=1
        ''')
 # remove 51 ms delay and plot data to check work
-Result('ntg_static','ntgdelay',
+Result('ntgdelay_pef_51ms','ntgdelay',
        '''
        suwind count=1000 
        | suchw key1=tstat a=51 b=0 key2=offset 
@@ -255,7 +255,7 @@ Result('ntg_static','ntgdelay',
        | sugain tpow=1.0 
        | supef maxlag=.100 
        | sunmo tnmo=0 vnmo=1500 
-       | suximage perc=90 title="ntgdelay with spreading, decon, and nmo" f2=1
+       | suximage perc=90 title="ntgdelay, spreading, decon, nmo, 51ms " f2=1
        ''')
 
 Result('secondmovie','allshots',
@@ -270,7 +270,7 @@ Result('thirdmovie','allshots',
        | sugain tpow=1.0 
        | sumute xmute=0,4000 tmute=0,4 mode=0 
          key=offset 
-         taper=50 
+         ntaper=50 
        | suxmovie n2=192 loop=1 fframe=1 dframe=1 d1=.004
                 title="sugain, sumute record %g" perc=99
        ''')
@@ -286,7 +286,7 @@ Flow('cdps','allshots',
        xmute=0,4000 tmute=0,4 
        mode=0 
        key=offset 
-       taper=50 
+       ntaper=50 
      | supef maxlag=.100
      ''' ) 
 

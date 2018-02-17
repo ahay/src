@@ -21,7 +21,7 @@
 int main(int argc, char* argv[])
 {
   int nx, ny, nt, npara, nc;
-  float x, y, dx, dy, dt, x0, y0, tini, t0;
+  float x, y, dx, dy, dt, x0, y0, tini, t0, testval;
   float **t0sq,**time, *coeff, ***dtime, *offsetx, *offsety; 
   float w1,w2,w3,A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5,A,B,C;
   int i,j,k,test;
@@ -103,15 +103,18 @@ int main(int argc, char* argv[])
                     
                     t0 = sqrt(t0sq[j][i]);
                     
-                    /* Avoid dividing by zero*/
-                    if (x!=0 || y!=0 || t0!=0) {
-                    
                     A = A1*pow(x,4) + A2*pow(x,3)*y + A3*pow(x,2)*pow(y,2) + A4*x*pow(y,3) + A5*pow(y,4);
                     B = B1*pow(x,2) + B2*x*y + B3*pow(y,2);
                     C = C1*pow(x,4) + C2*pow(x,3)*y + C3*pow(x,2)*pow(y,2) + C4*x*pow(y,3) + C5*pow(y,4);
                     
+                    testval = pow(t0,2) + B + sqrt(pow(t0,4) + C + 2*pow(t0,2)*B);
+                    
+                    /* Avoid dividing by zero*/
+                    if (fabsf(testval)> 0.001) {
+                    
                     /* Compute traveltime (t^2)*/
                     time[j][i] = pow(t0,2) + w1*pow(x,2) + w2*x*y + w3*pow(y,2) + A/(pow(t0,2) + B + sqrt(pow(t0,4) + C + 2*pow(t0,2)*B));
+                    
                     /* Compute Derivatives */
                     dtime[0][j][i] = pow(x,2); // Wx
                     dtime[1][j][i] = x*y; // Wxy
