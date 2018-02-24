@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
 	bool wantwf, verb;
 
 	int ix, iz, is, it, wfit, im, ik, i, j, itau;
-    int ns, nx, nz, nt, wfnt, rnx, rnz, nzx, rnzx, vnx, ntau, htau, nds;
+    int ns, nx, nz, nt, nt2, ncut, wfnt, rnx, rnz, nzx, rnzx, vnx, ntau, htau, nds;
 	int scalet, snap, snapshot, fnx, fnz, fnzx, nk, nb;
 	int rectx, rectz, repeat, gpz, n, m, pad1, trunc, spx, spz;
 
@@ -301,6 +301,8 @@ int main(int argc, char *argv[])
     if(!sf_getint("ntau", &ntau)) sf_error("Need ntau="); /* number of time-shift */
     if(!sf_getfloat("dtau", &dtau)) sf_error("Need dtau="); /* interval of time-shift */
     if(!sf_getfloat("tau0", &tau0)) sf_error("Need tau0="); /* origin of time-shift */
+    
+	if(!sf_getint("ncut", &ncut)) ncut=0; /* number of cutting samples for generating non-negative source wavelet */
 
 	/* input/output files */
 	Fdat=sf_input("--input");
@@ -317,18 +319,19 @@ int main(int argc, char *argv[])
 	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); t0=sf_o(at);
     ax=sf_iaxa(Fvel, 2); vnx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax);
 	az=sf_iaxa(Fvel, 1); rnz=sf_n(az); dz=sf_d(az); z0=sf_o(az);
+    if(!sf_histint(Fdat, "n1", &nt2)) sf_error("Need n1= in input!");
+	/* number of time samples; nt is the length of the whole source wavelet */
     if(!sf_histint(Fdat, "n2", &nr)) sf_error("Need n2= in input!");
     if(!sf_histint(Fdat, "n3", &ns)) sf_error("Need n3= in input!");
     if(!sf_histfloat(Fdat, "d3", &ds)) sf_error("Need d3= in input!");
     if(!sf_histfloat(Fdat, "o3", &s0)) sf_error("Need o3= in input!");
     
-    wfnt=(nt-1)/scalet+1;
+    wfnt=(nt2-1)/scalet+1;
     wfdt=dt*scalet;
     
     /* double check the geometry parameters */
+	if(nt != nt2+ncut) sf_error("Need ncut= %d", nt-nt2);
     if(nds != (int)(ds/dx)) sf_error("Need ds/dx= %d", nds);
-	//sf_warning("s0=%g, x0+(rnx-1)*dx/2=%g", s0, x0+(rnx-1)*dx/2);
-    //if(s0 != x0+(rnx-1)*dx/2) sf_error("Wrong origin information!");
     if(vnx != nds*(ns-1)+rnx) sf_error("Wrong dimension in x axis!");
 
     /* set up the output files */
@@ -355,7 +358,7 @@ int main(int argc, char *argv[])
         sf_oaxa(Ffwf, ax, 2);
         sf_putint(Ffwf, "n3", (wfnt-1)/snap+1);
         sf_putfloat(Ffwf, "d3", snap*wfdt);
-        sf_putfloat(Ffwf, "o3", t0);
+        sf_putfloat(Ffwf, "o3", 0.);
         sf_putstring(Ffwf, "label3", "Time");
         sf_putstring(Ffwf, "unit3", "s");
         sf_settype(Ffwf, SF_FLOAT);
@@ -380,7 +383,7 @@ int main(int argc, char *argv[])
     
 	/* print axies parameters for double check */
     sf_warning("cpuid=%d, numprocs=%d, nspad=%d", cpuid, numprocs, nspad);
-	sf_warning("nt=%d, dt=%g, scalet=%d, wfnt=%d, wfdt=%g",nt, dt, scalet, wfnt, wfdt);
+	sf_warning("nt=%d, nt2=%d, ncut=%d, dt=%g, scalet=%d, wfnt=%d, wfdt=%g",nt, nt2, ncut, dt, scalet, wfnt, wfdt);
 	sf_warning("vnx=%d, nx=%d, dx=%g, nb=%d, rnx=%d", vnx, nx, dx, nb, rnx);
 	sf_warning("nr=%d, ndr=%d, nr0=%d", nr, ndr, nr0);
 	sf_warning("nz=%d, rnz=%d, dz=%g, z0=%g", nz, rnz, dz, z0);
@@ -398,10 +401,10 @@ int main(int argc, char *argv[])
     spz=spz+nb;
     spx=spx+nb;
 	nr0=nr0+nb;
-    trunc=srctrunc/dt+0.5;
+    trunc=srctrunc/dt+0.5+ncut;
     
-	dd=sf_complexalloc2(nt, nr);
-	if(cpuid==0) dd3=sf_complexalloc3(nt, nr, numprocs);
+	dd=sf_complexalloc2(nt2, nr);
+	if(cpuid==0) dd3=sf_complexalloc3(nt2, nr, numprocs);
 	rr=sf_floatalloc(nzx);
 	reflgen(nz, nx, spz, spx, rectz, rectx, repeat, rr);
     
@@ -473,15 +476,15 @@ int main(int argc, char *argv[])
         
         /* read data */
 		if(cpuid==0){
-			sf_seek(Fdat, ((off_t) is)*((off_t) nr)*((off_t) nt)*sizeof(float complex), SEEK_SET);
+			sf_seek(Fdat, ((off_t) is)*((off_t) nr)*((off_t) nt2)*sizeof(float complex), SEEK_SET);
 
 			if((iturn+1)*numprocs<=ns){
-				sf_complexread(dd3[0][0], nr*nt*numprocs, Fdat);
+				sf_complexread(dd3[0][0], nr*nt2*numprocs, Fdat);
 			}else{
-				sf_complexread(dd3[0][0], nr*nt*(ns-iturn*numprocs), Fdat);
+				sf_complexread(dd3[0][0], nr*nt2*(ns-iturn*numprocs), Fdat);
 				for(is=ns; is<nspad; is++)
 					for(ix=0; ix<nr; ix++)
-						for(it=0; it<nt; it++)
+						for(it=0; it<nt2; it++)
 							dd3[is-iturn*numprocs][ix][it]=sf_cmplx(0.,0.);
 				is=iturn*numprocs;
 			}
@@ -492,7 +495,7 @@ int main(int argc, char *argv[])
 			sendbufc=NULL;
 			recvbufc=dd[0];
 		}
-		MPI_Scatter(sendbufc, nt*nr, MPI_COMPLEX, recvbufc, nt*nr, MPI_COMPLEX, 0, comm);
+		MPI_Scatter(sendbufc, nt2*nr, MPI_COMPLEX, recvbufc, nt2*nr, MPI_COMPLEX, 0, comm);
 
 		if(is<ns){ /* effective shot loop */
 
@@ -552,7 +555,7 @@ int main(int argc, char *argv[])
 			/* forward propagation */
 			wfit=0;
 			for(it=0; it<nt; it++){
-				if(verb) sf_warning("Forward propagation it=%d/%d",it+1, nt);
+				if(verb) sf_warning("Forward propagation it=%d/%d",it-ncut, nt-ncut);
 
 				cfft2(curr, cwave);
 				for(im=0; im<m; im++){
@@ -614,7 +617,7 @@ int main(int argc, char *argv[])
 					}
 				}
 
-				if(it%scalet==0){
+				if(it%scalet==0 && it>=ncut){
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
 #endif
@@ -639,8 +642,8 @@ int main(int argc, char *argv[])
 			}
 
 			wfit=wfnt-1;
-			for(it=nt-1; it>=0; it--){
-				if(verb) sf_warning("Backward propagation it=%d/%d",it+1, nt);
+			for(it=nt2-1; it>=0; it--){
+				if(verb) sf_warning("Backward propagation it=%d/%d",it, nt2);
 #ifdef _OPENMP
 #pragma omp parallel for private(ix)
 #endif
