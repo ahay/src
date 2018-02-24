@@ -384,9 +384,11 @@ class _File(File):
     def close(self):
         self.f.close()
     def __del__(self):
-        sys.stderr.write( 'Closing _File')
-        self.close()
-        File.close(self)
+        # check if user call to flush or close already cleaned up
+        if not self.f.closed: 
+            self.close()
+        File.close(self) # this removes file if it is temporary
+
     def settype(self,type):
         if _swig_: # kls
             for i in xrange(len(_File.type)):
@@ -848,7 +850,8 @@ class Output(_File):
 
     def close(self):
         self.f.flush()
-        self.f.close()
+        if not self.pipe:
+            self.f.close()
 
     def flushheader(self,src):
         # write the header (saved from the previous (input) file
@@ -871,7 +874,9 @@ class Output(_File):
 
         #sys.stderr.write('in flushheader test self.pipe\n')
         if self.pipe:
-            #sys.stderr.write('self.pipe==True\n')
+            #sys.stderr.write('in flushheader self.pipe==True\n')
+            self.f.write('in="stdout"\n')
+            self.f.write('in="stdin"\n')
             self.f.write("%s%s%s"%(chr(SF_EOL),chr(SF_EOL),chr(SF_EOT)))
         else:
             #sys.stderr.write('self.pipe==False\n')
