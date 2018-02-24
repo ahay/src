@@ -8,7 +8,6 @@ pad2 padzero postrtm2d sgfdewe2d
 upsamp1 fwiupdate fwidir fwipe fwigrad fwiobj
 dzest2d pickmaxima pickprint
 addimag lsLU brfault padfault unfault
-veks2d veksd2d rcs
 '''
 
 ccprogs = ''
