@@ -62,6 +62,7 @@ corop
 pwave3d
 ocor3d
 findmax
+checkerboard
 '''
 
 dynlib = env.get('DYNLIB','')
