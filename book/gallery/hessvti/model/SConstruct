@@ -28,7 +28,21 @@ Flow('fft','vp','rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
 Flow('right left','vp vx eta theta fft',
      '''
      anisolr2 seed=2012 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
-     fft=${SOURCES[4]} left=${TARGETS[1]} npk=100
+     fft=${SOURCES[4]} left=${TARGETS[1]} npk=50
+     ''' % dt)
+
+# isotropic case
+Flow('iright ileft','vp vp theta theta fft',
+     '''
+     anisolr2 seed=2012 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     fft=${SOURCES[4]} left=${TARGETS[1]} npk=50
+     ''' % dt)
+
+# elliptic case
+Flow('eright eleft','vp vx theta theta fft',
+     '''
+     anisolr2 seed=2012 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     fft=${SOURCES[4]} left=${TARGETS[1]} npk=50
      ''' % dt)
 
 Flow('spike','vp','spike k1=751 k2=1809') 
@@ -57,6 +71,17 @@ Flow('hessexp','exp','transp')
 
 Result('hessexp','grey title="Exploding Reflector Data" ')
 
+
+Flow('iexp','refl ileft iright',
+     '''
+     fftexp0 cmplx=y
+     left=${SOURCES[1]} right=${SOURCES[2]} 
+     nt=%d dt=%g 
+     ''' % (nt,dt))
+
+Flow('ihessexp','iexp','transp')
+
+Result('ihessexp','grey title="Exploding Reflector Data (Isotropic)" ')
 
 
            

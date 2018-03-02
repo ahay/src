@@ -30,7 +30,7 @@ Flow('vx_hess','vp_hess epsilon_hess',
      ''')
 Flow('eta_hess','epsilon_hess delta_hess',
      '''
-     math e=${SOURCES[0]} d=${SOURCES[1]} output="((1+2*e)/(1+2*d)-1)/2"
+     math e=${SOURCES[0]} d=${SOURCES[1]} output="((1+2*e)/(1+2*d)-1)/2" | clip2 lower=0
      ''')
 
 # artificial vs
