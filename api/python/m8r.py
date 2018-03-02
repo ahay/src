@@ -552,6 +552,8 @@ class Input(_File):
         while pos < len(ilist):
             if '=' in ilist[pos]:
                 tokenlist = ilist[pos].split('=')
+ 		if len(tokenlist[1]) == 0:
+                    tokenlist[1]='""'
                 lhs = tokenlist[0]
                 rhs = tokenlist[1]
                 quotmark = None
@@ -872,7 +874,9 @@ class Output(_File):
 
         #sys.stderr.write('in flushheader test self.pipe\n')
         if self.pipe:
-            #sys.stderr.write('self.pipe==True\n')
+            #sys.stderr.write('in flushheader self.pipe==True\n')
+            self.f.write('in="stdout"\n')
+            self.f.write('in="stdin"\n')
             self.f.write("%s%s%s"%(chr(SF_EOL),chr(SF_EOL),chr(SF_EOT)))
         else:
             #sys.stderr.write('self.pipe==False\n')
