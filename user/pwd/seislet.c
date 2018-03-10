@@ -75,17 +75,17 @@ static void haar(bool adj)
 		    for (i1=0; i1 < n; i1++) {
 			t1[i1] = t[i+j][i1];  
 		    }
-		    predict_forw(true,t1,i,j); 
+		    predict_back(false,t1,i,j); 
 		    for (i1=0; i1 < n; i1++) {
 			t[i][i1] += t1[i1];
 			/* s = e + P'[d] */
 		    }
 		    for (i1=0; i1 < n; i1++) {
-			t2[i1] = -t[i][i1]/2; 
+			t2[i1] = t[i][i1]; 
 		    }
-		    predict_back(true,t2,i,j); 
+		    predict_forw(false,t2,i,j); 
 		    for (i1=0; i1 < n; i1++) {
-			t[i+j][i1] += t2[i1];
+			t[i+j][i1] -= t2[i1]/2;
 			/* d = o - U'[s] */
 		    }
 		}
@@ -166,43 +166,42 @@ static void linear(bool adj)
 	    } else {
 		for (i=0; i < nt-2*j; i += 2*j) {
 		    for (i1=0; i1 < n; i1++) {
-			t1[i1] = t[i][i1];
-			t2[i1] = t[i+2*j][i1];
+			t1[i1] = t[i+j][i1];
+			t2[i1] = t[i+j][i1];
 		    }
-		    predict_forw(true,t1,i,j);
-		    predict_back(true,t2,i+j,j);
+		    predict_back(false,t1,i,j);
+		    predict_forw(false,t2,i+j,j);
 		    for (i1=0; i1 < n; i1++) {
-			t[i+j][i1] -= (t1[i1]+t2[i1])/2; 
-                        /* d = o - P[e] */
+			t[i][i1]     += t1[i1]/2;
+			t[i+2*j][i1] += t2[i1]/2;
 		    }
 		}		
 		if (i+j < nt) {
 		    for (i1=0; i1 < n; i1++) {
-			t1[i1] = t[i][i1];
+			t1[i1] = t[i+j][i1];
 		    }
-		    predict_forw(true,t1,i,j);
+		    predict_back(false,t1,i,j);
 		    for (i1=0; i1 < n; i1++) {
-			t[i+j][i1] -= t1[i1];
-			/* d = o - P[e] */
+			t[i][i1] += t1[i1];
 		    }		    
 		}
 		for (i1=0; i1 < n; i1++) {
-		    t1[i1] = t[j][i1];
+		    t1[i1] = t[0][i1];
 		}
-		predict_back(true,t1,0,j);
+		predict_forw(false,t1,0,j);
 		for (i1=0; i1 < n; i1++) {
-		    t[0][i1] += t1[i1]/2;
+		    t[j][i1] -= t1[i1]/2;
 		}
 		for (i=2*j; i < nt-j; i += 2*j) {
 		    for (i1=0; i1 < n; i1++) {
-			t1[i1] = t[i+j][i1];
-			t2[i1] = t[i-j][i1];
+			t1[i1] = t[i][i1];
+			t2[i1] = t[i][i1];
 		    }
-		    predict_back(true,t1,i,j);
-		    predict_forw(true,t2,i-j,j);
+		    predict_forw(false,t1,i,j);
+		    predict_back(false,t2,i-j,j);
 		    for (i1=0; i1 < n; i1++) {
-			t[i][i1] += (t1[i1]+t2[i1])/4;
-			/* s = e + U d */
+			t[i+j][i1] -= t1[i1]/4;
+			t[i-j][i1] -= t2[i1]/4;
 		    }
 		}
 	    }
