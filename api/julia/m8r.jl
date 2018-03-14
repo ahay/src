@@ -101,13 +101,13 @@ end
 
 function histint(file::File,name::String)
     val = Cint[0]
-    ccall((:sf_histint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ptr{Cint}),file.rsf,name,val)
+    ccall((:sf_histint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ref{Cint}),file.rsf,name,val)
     return convert(Int, val[])
 end
 
 function histfloat(file::File,name::String)
     val = Cfloat[0]
-    ccall((:sf_histfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ptr{Cfloat}),file.rsf,name,val)
+    ccall((:sf_histfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ref{Cfloat}),file.rsf,name,val)
     return convert(Float32, val[])
 end
 
@@ -121,14 +121,14 @@ end
 
 function getint(name::String, val::Integer)
     val = Cint[val]
-    ccall((:sf_getint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cint}),name,val)
+    ccall((:sf_getint,"libdrsf"),Bool,(Ptr{UInt8},Ref{Cint}),name,val)
     return convert(Int, val[])
 end
 getint(name::String; val::Integer = 0) = getint(name, val)
 
 function getfloat(name::String, val::Real)
     val = Cfloat[val]
-    ccall((:sf_getfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cfloat}),name,val)
+    ccall((:sf_getfloat,"libdrsf"),Bool,(Ptr{UInt8},Ref{Cfloat}),name,val)
     return convert(Float32, val[])
 end
 getfloat(name::String; val::Real = 0) = getfloat(name, val)
@@ -144,7 +144,7 @@ getstring(name::String; val::String = "") = getstring(name, val)
 
 function getbool(name::String, val::Bool)
     val = Bool[val]
-    ccall((:sf_getbool,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Bool}),name,val)
+    ccall((:sf_getbool,"libdrsf"),Bool,(Ptr{UInt8},Ref{Bool}),name,val)
     return val[]
 end
 getbool(name::String; val::Bool = true) = getbool(name, val)
@@ -464,6 +464,7 @@ function rsf_write(file::File, dat::AbstractArray, n=nothing, d=nothing,
     end
     close(file)
 end
+
 function rsf_write(name::String, dat::AbstractArray, n=nothing, d=nothing,
                    o=nothing, l=nothing, u=nothing)
     # Madagascar's output function inherits the type of the previous input.
