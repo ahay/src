@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     bool adj;
     int nx, ny, nt, N, ix, iy, it, i, j, nw, iw;
     float dx, dy, dt, x0, y0, t0, x, y, t0f;
-    float /*w1,w2,w3, */ A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5;
+    float w1,w2,w3, A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5;
     float *dT, *X, *w, *coeff, **t0sq;
 
     sf_file inp, out, gather, inicoef, t0sqf;
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
     sf_floatread(t0sq[0],nx*ny,t0sqf);
     
     /* Initial coefficients*/
-    /*    w1 = coeff[0];w2 = coeff[1];w3 = coeff[2]; */
+    w1 = coeff[0];w2 = coeff[1];w3 = coeff[2];
     A1 = coeff[3];A2 = coeff[4];A3 = coeff[5];A4 = coeff[6];A5 = coeff[7];
     B1 = coeff[8];B2 = coeff[9];B3 = coeff[10];
     C1 = coeff[11];C2 = coeff[12];C3 = coeff[13];C4 = coeff[14];C5 = coeff[15];

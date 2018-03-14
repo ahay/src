@@ -10,6 +10,18 @@ from rsf.suproj import *
 #downloadsource='open.source.geoscience'
 downloadsource='usgs'
 
+# information on the web about this data archive is on these url's
+#http://woodshole.er.usgs.gov/operations/ia/public_ds_info.php?fa=1978-015-FA
+#http://cotuit.er.usgs.gov/Data/1978-015-FA/NL/001/01/32-obslogs/32obslog.pdf   
+#http://cotuit.er.usgs.gov/Data/1978-015-FA/SE/001/18/
+#################### 
+# Fetch the dataset and convert to multiple rsf files
+# check web at
+# http://energy.usgs.gov/GeochemistryGeophysics/\
+# SeismicDataProcessingInterpretation/\
+# NPRASeismicDataArchive/tabid/494/\
+# Agg2146_SelectTab/4/Default.aspx
+##
 if downloadsource=='usgs':
 	server='http://cotuit.er.usgs.gov'
 	top='files/1978-015-FA/NL/001/01'
@@ -69,11 +81,20 @@ for file in rawsegy  :
           server='%s'%server,
     	  top='%s'%filestop,
       	  dir='%s'%filesdir)
-# download, convert, and view previous processing stack
+    # This flow creates a little txt file with ls of one of the SGY file.
+    # This is enough processing to the command 'scons' will download the
+    # file.  With out a little processing, the Fetch is not triggerred.
+    Flow(file+'ls.txt',file+'.SGY','ls -l $SOURCES | tee $TARGETS',
+         stdin=0,stdout=-1)
+
+# download previous processing stack
 Fetch('CSDS32_1.SGY',
       server='%s'%server,
       top='%s'%filestop,
       dir='%s'%stackdir)
-
+file='CSDS32_1'
+# do enough processing of the stack SGY to trigger the fetch
+Flow(file+'ls.txt',file+'.SGY','ls -l $SOURCES | tee $TARGETS',
+     stdin=0,stdout=-1)
 
 End()

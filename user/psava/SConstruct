@@ -51,6 +51,7 @@ transp12
 esou epot
 regrid1d regrid2d regrid3d
 getattr
+checkerboard
 '''
 
 # vse

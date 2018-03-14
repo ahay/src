@@ -1,0 +1,374 @@
+\author{Maurice the Aye-Aye}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{GEO 365N/384S Seismic Data Processing \\ Computational Assignment 0}
+
+\maketitle
+
+\begin{abstract}
+  In this tutorial, you will go through different steps required for writing a research paper with reproducible examples with \texttt{Madagascar}. In particular, you will
+  \begin{enumerate}
+    \item identify a research problem,
+    \item suggest a solution and test it,
+    \item write  a report about your work.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing this tutorial requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEG}\TeX available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. An Internet connection is required for
+access to the data repository.
+
+To setup the Madagascar environment in the JGB 3.216B computer lab, run the following commands:
+\begin{verbatim}
+$ module load madagascar-devel
+$ setenv DATAPATH $HOME/data/
+$ setenv RSFBOOK $HOME/data/book
+$ setenv RSFFIGS $HOME/data/figs
+\end{verbatim}
+You can put these commands in your \verb+$HOME/.cshrc+ file to run them automatically at login time. \footnote{All commands above assume you are using the default \texttt{cshell} environment; certain modifications apply to different shell environments.}
+
+To setup the \LaTeX\ environment, run the following commands (you only need to do it once):
+\begin{verbatim}
+$ cd; git clone https://github.com/SEGTeX/texmf.git
+$ cd texmf; texhash
+\end{verbatim}
+
+The tutorial itself is available from the \texttt{Madagascar} repository
+by running
+\begin{verbatim}
+$ svn co https://github.com/ahay/src/trunk/book/geo384s/hw0
+\end{verbatim}
+
+\section{Generating this document}
+
+At any point of doing this computational assignment, you can
+regenerate this document and display it on your screen.
+
+\begin{enumerate}          
+\item Change directory to \texttt{hw0}:
+\begin{verbatim}
+$ cd hw0
+\end{verbatim}
+\item Run
+\begin{verbatim}
+$ sftour scons lock
+$ scons read &
+\end{verbatim}
+\end{enumerate}
+
+As the first step, open \texttt{hw0/paper.tex} file in your favorite
+editor (\texttt{vi}, \texttt{emacs}, \texttt{nano}, \texttt{gedit}, etc.) and edit the first line to enter your name. Then
+run \texttt{scons read} again.
+
+To remove (clean) previously generated files, run \texttt{\$ scons -c}. You can then rerun the program from scratch.
+
+
+\section{Problem definition}
+\inputdir{channel}
+
+\plot{horizon}{width=\textwidth}{Depth slice from 3-D seismic (left) and output of edge detection (right).}
+
+The left plot in Figure~\ref{fig:horizon} shows a depth slice from a 3-D
+seismic volume\footnote{Courtesy of Matt Hall (ConocoPhillips Canada
+Ltd.)}. You notice a channel structure and decide to extract it using
+and edge detection algorithm from the image processing literature
+\cite[]{canny}. In a nutshell, Canny's edge detector picks areas of
+high gradient that seem to be aligned along an edge. The extracted
+edges are shown in the right plot of Figure~\ref{fig:horizon}. The initial
+result is not too clear, because it is affected by random
+fluctuations in seismic amplitudes. The goal of your research project
+is to achieve a better result in automatic channel extraction.
+
+\begin{enumerate}
+\item Change directory to the project directory
+\begin{verbatim}
+$ cd channel
+\end{verbatim}
+\item Run
+\begin{verbatim}
+$ scons horizon.view
+\end{verbatim}
+A number of commands will appear in the shell followed by Figure~\ref{fig:horizon} appearing on your screen. 
+\item To understand the commands, examine the script that generated them by opening the \texttt{SConstruct} file in a text editor. Notice that, instead of shell commands, the script contains rules. 
+\begin{itemize}
+\item The first rule, \texttt{Fetch}, allows the script to download the input data file \texttt{horizon.asc} from the data server. 
+\item Other rules have the form \texttt{Flow(target,source,command)} for generating data files or \texttt{Plot} and  \texttt{Result} for 
+generating picture files. 
+\item \texttt{Fetch}, \texttt{Flow}, \texttt{Plot}, and \texttt{Result} are defined in \texttt{Madagascar}'s \texttt{rsf.proj} package, which extends the functionality of \href{http://www.scons.org}{SCons}
+\cite[]{icassp}.
+\end{itemize}
+\item To better understand how rules translate into commands, run 
+\begin{verbatim}
+$ scons -c horizon.rsf
+\end{verbatim}
+The \texttt{-c} flag tells scons to remove the \texttt{horizon.rsf} file and all its dependencies.
+\item Next, run
+\begin{verbatim}
+$ scons -n horizon.rsf
+\end{verbatim}
+The \texttt{-n} flag tells scons not to run the command but simply to display it on the screen. Identify the lines in the \texttt{SConstruct} file that generate the output you see on the screen.
+\item Run
+\begin{verbatim}
+$ scons horizon.rsf
+\end{verbatim}
+Examine the file \texttt{horizon.rsf} both by opening it in a text editor and by running
+\begin{verbatim}
+$ sfin horizon.rsf
+\end{verbatim}
+How many different \texttt{Madagascar} modules were used to create this file? What are the file dimensions? Where is the actual data stored?
+
+\answer{
+% Insert your answer here
+}
+
+\item Run
+\begin{verbatim}
+$ scons smoothed.rsf
+\end{verbatim}
+Notice that the \texttt{horizon.rsf} file is not being rebuilt.
+\item What does the \texttt{sfsmooth} module do? Find it out by running
+\begin{verbatim}
+$ sfsmooth
+\end{verbatim}
+without arguments. Has \texttt{sfsmooth} been used in any other \texttt{Madagascar} examples?
+
+\answer{
+% Insert your answer here
+}
+
+\item What other \texttt{Madagascar} modules perform smoothing? To find out, run
+\begin{verbatim}
+$ sfdoc -k smooth
+\end{verbatim}
+\item Notice that Figure~\ref{fig:horizon} does not make a very good use of the color scale. To improve the scale, find the mean value of the data by running
+\begin{verbatim}
+$ sfattr < horizon.rsf
+\end{verbatim}
+and insert it as a new value for the \texttt{bias=} parameter in the
+\texttt{SConstruct} file. Does smoothing by \texttt{sfsmooth} change
+the mean value?
+
+\answer{
+% Insert your answer here
+}
+
+\item Save the \texttt{SConstruct} file and run 
+\begin{verbatim}
+$ scons view
+\end{verbatim}
+to view improved images. Notice that \texttt{horizon.rsf} and \texttt{smoothed.rsf} files are not being rebuilt. SCons is smart enough to know that only the 
+part affected by your changes needs to be updated.
+\end{enumerate}
+
+As shown in Figure~\ref{fig:smoothed}, smoothing removes random
+amplitude fluctuations but at the same time broadens the channel and thus
+makes the channel edge detection unreliable. In the next part of this
+tutorial, you will try to find a better solution by examining a simple
+one-dimensional synthetic example.
+
+\plot{smoothed}{width=\textwidth}{Depth slice from Figure~\ref{fig:horizon} after smoothing (left) and output of edge detection (right).}
+
+\lstset{basicstyle=\small\ttfamily,breaklines=true}
+\lstset{
+    keywordstyle=\color{magenta},
+    stringstyle=\color{blue},
+    commentstyle=\color{cyan},
+    numberstyle=\color{red},
+}
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single, title=channel/SConstruct]{channel/SConstruct}
+
+\section{1-D synthetic}
+\inputdir{local}
+
+\multiplot{2}{step,smooth}{width=0.45\textwidth}{(a) 1-D synthetic to test edge-preserving smoothing. (b) Output of conventional triangle smoothing.}
+
+To better understand the effect of smoothing, you decide to create a
+one-dimensional synthetic example shown in Figure~\ref{fig:step}. The
+synthetic contains both sharp edges and random noise.  The output of
+conventional triangle smoothing is shown in
+Figure~\ref{fig:smooth}. We see an effect similar to the one in the
+real data example: random noise gets removed by smoothing at the
+expense of blurring the edges. Can you do better?
+
+\multiplot{2}{spray,local}{width=0.45\textwidth}{(a) Input synthetic trace duplicated multiple times. (b) Duplicated traces shifted so that each data 
+sample gets surrounded by its neighbors. The original trace is in the middle.}
+
+To better understand what is happening in the process of smoothing,
+let us convert 1-D signal into a 2-D signal by first replicating the
+trace several times and then shifting the replicated traces with
+respect to the original trace (Figure~\ref{fig:spray,local}). This
+creates a 2-D dataset, where each sample on the original trace is
+surrounded by samples from neighboring traces.
+
+Every local filtering operation can be understood as stacking traces
+from Figure~\ref{fig:local} multiplied by weights that correspond to
+the filter coefficients.
+
+\begin{enumerate}
+\item Change directory to the project directory
+\begin{verbatim}
+$ cd ../local
+\end{verbatim}
+\item Verify the claim above by running
+\begin{verbatim}
+$ scons smooth.view smooth2.view
+\end{verbatim}
+Open the \texttt{SConstruct} file in a text editor to verify that the first image is computed by \texttt{sfsmooth} and the second 
+image is computed by applying triangle weights and stacking. To compare the two images by flipping between them, run
+\begin{verbatim}
+$ sfpen Fig/smooth.vpl Fig/smooth2.vpl
+\end{verbatim}
+\item Edit \texttt{SConstruct} to change the weight from triangle
+\begin{equation}
+\label{eq:triangle}
+W_T(x) = 1-\frac{|x|}{x_0}
+\end{equation}
+to Gaussian
+\begin{equation}
+\label{eq:gaussian}
+W_G(x) = \exp{\left(-\alpha\,\frac{|x|^2}{x_0^2}\right)}
+\end{equation}
+Repeat the previous computation. Does the result change? What is a good value for $\alpha$? 
+
+\answer{
+% Insert your answer here
+}
+
+\item Thinking about this problem, you invent an idea\footnote{Actually, you reinvent the idea of \emph{bilateral} or \emph{non-local} filters
+\cite[]{tomasi,gilboa}.}. Why not apply non-linear filter weights that would discriminate between points not only based on their distance
+from the center point but also on the difference in function values
+between the points. That is, instead of filtering by
+\begin{equation}
+\label{eq:local}
+g(x) = \int f(y)\,W(x-y)\,dy\;,
+\end{equation}
+where $f(x)$ is input, $g(x)$ is output, and $W(x)$ is a linear weight, you decide to filter by
+\begin{equation}
+\label{eq:nonlocal}
+g(x) = \int f(y)\,\hat{W}\left(x-y,f(x)-f(y)\right)\,dy\;,
+\end{equation}
+where and $\hat{W}(x,z)$ is a non-linear weight. Compare the two weights by running
+\begin{verbatim}
+$ scons triangle.view similarity.view
+\end{verbatim}
+The results should look similar to Figure~\ref{fig:triangle,similarity}.
+\item The final output is Figure~\ref{fig:nlsmooth}. By examining \texttt{SConstruct}, find how to reproduce this figure.
+
+\clearpage
+
+\item \textbf{EXTRA CREDIT} If you are familiar with programming in C, add 1-D non-local filtering as a new \texttt{Madagascar} module \texttt{sfnonloc}. Ask the instructor for further instructions. 
+\end{enumerate}
+
+\multiplot{2}{triangle,similarity}{width=0.45\textwidth}{(a) Linear and stationary triangle weights. (b) Non-linear and non-stationary weights reflecting both distance
+between data points and similarity in data values.}
+
+\sideplot{nlsmooth}{width=\textwidth}{Output of non-local smoothing}
+
+Figure~\ref{fig:nlsmooth} shows that non-linear filtering can eliminate random noise while preserving the edges. The problem is solved! Now let us apply the result to our original problem.
+ 
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single, title=Mnonlocal.c]{Mnonlocal.c}
+
+\section{Solution}
+\inputdir{channel2}
+
+\begin{enumerate}
+\item Change directory to the project directory
+\begin{verbatim}
+$ cd ../channel2
+\end{verbatim}
+\item By now, you should know what to do next.
+\item Two-dimensional shifts generate a four-dimensional volume. Verify it by running
+\begin{verbatim}
+$ scons local.rsf
+\end{verbatim}
+and
+\begin{verbatim}
+$ sfin local.rsf
+\end{verbatim}
+View a movie of different shifts by running 
+\begin{verbatim}
+$ scons local.vpl
+\end{verbatim}
+\item Modify the filter weights by editing \texttt{SConstruct} in a text editor.
+Observe your final result by running
+\begin{verbatim}
+$ scons smoothed2.view
+\end{verbatim}
+\item The file $\texttt{norm.rsf}$ contains the non-linear weights stacked over different shifts. Add a \texttt{Result} statement to  \texttt{SConstruct} that would display
+the contents of $\texttt{norm.rsf}$ in a figure. Do you notice anything interesting?
+
+\answer{
+% Insert your answer here
+}
+
+\item Apply the Canny edge detection to your final result and display it in a figure.
+\item \textbf{EXTRA CREDIT} Change directory to \verb#../mona# and apply your method to the image of Mona Lisa. Can you extract her smile?
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single, title=channel2/SConstruct]{channel2/SConstruct}
+
+\sideplot{smoothed2}{width=0.75\textwidth}{Your final result.}
+
+\inputdir{mona}
+\sideplot{mona}{width=0.75\textwidth}{Can you apply your algorithm to Mona Lisa?}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single, title=mona/SConstruct]{mona/SConstruct}
+
+\section{Writing a report}
+
+\begin{enumerate}
+\item Change directory to the parent directory
+\begin{verbatim}
+$ cd ..
+\end{verbatim}
+This should be the directory that contains \texttt{paper.tex}.
+\item Run
+\begin{verbatim}
+$ sftour scons lock
+\end{verbatim}
+The \texttt{sftour} command visits all subdirectories and runs \texttt{scons lock}, which copies result files to a different location so that they do not get modified until further notice.
+\item You can also run
+\begin{verbatim}
+$ sftour scons -c
+\end{verbatim}
+to clean intermediate results.
+\item Edit the file \texttt{paper.tex} to include your additional results. If you have not used \LaTeX\ before, no worries. It is a descriptive language. Study the file, and it should become evident by example how to include figures.
+\item Run
+\begin{verbatim}
+$ scons paper.pdf
+\end{verbatim}
+and open \texttt{paper.pdf} with a PDF viewing program such as \textbf{Acrobat Reader}. 
+\item Want to submit your paper to \emph{Geophysics}? Edit \texttt{SConstruct} in the 
+paper directory to add \texttt{options=manuscript} to the \texttt{End} statement. Then run
+\begin{verbatim}
+$ scons paper.pdf
+\end{verbatim}
+again and display the result.
+\item If you have \LaTeX2HTML installed, you can also generate an HTML version of your paper by running
+\begin{verbatim}
+$ scons html
+\end{verbatim}
+and opening \verb#paper_html/index.html# in a web browser.
+\end{enumerate}
+
+%\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+%\lstinputlisting[frame=single]{SConstruct}
+
+\bibliographystyle{seg}
+\bibliography{school}
+
+
+

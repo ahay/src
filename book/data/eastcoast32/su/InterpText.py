@@ -46,6 +46,9 @@ for line in open('hdrfile.txt'):
     fldr  =long(tokens[1])
     tracf =long(tokens[2]) 
 
+    # sometimes fldr does not increase.  It seems the field record number
+    # is a 3 digit decimal integer.  When it reaches 999 the next fldr is 000.
+    # fldr_bias is 1000*(number of times fldr has recycled to 0). 
     if fldr<prev_fldr : 
         fldr_bias += 1000
         
@@ -71,7 +74,13 @@ for line in open('hdrfile.txt'):
         # first 24 traces are at 100m, last 48 are at 50m
         # cable length is 3600
         # near offset might be 440m and may be 540, 467, 473, 469, 475, or 470
-        # I will use 470m
+        # I will use 470m  
+        # I measure first break at 335 ms.  (335ms-51ms)*1.49 m/ms = 423m 
+        # increase by half group and half source arrays lengths (50/2+50/2)
+        # and I get 473.  Close to the shot by shot observer notes = 470m.
+        # to look at forst breaks on shots with 0 time delay:
+        # <allshots.su  suwind key=ep min=3577 max=3607 |  suximage perc=90
+ 
         nearoff=470
         if tracf > 24 :
             offset= (48-tracf) * 100 + nearoff

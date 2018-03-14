@@ -466,7 +466,7 @@ def boxarray2d(cc,nz,oz,dz,nx,ox,dx,par):
               stdout=0)
 
 
-def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dypar):
+def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
@@ -494,6 +494,95 @@ def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dypar):
          put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 label1="" unit1="" label2="" unit2="" label3="" unit3="" >${TARGETS[0]};
          '''%(M8R,ccx,ccz,ccy) +
          '''     
+         %srm %s %s %s %s
+         '''%(M8R,cco,ccx,ccy,ccz),
+              stdin=0,
+              stdout=0)
+
+def segment2d(cc,
+              ox,oz, # origin
+              nx,nz, # normal
+              ll,    # length
+              n,     # sampling
+              custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    cco=cc+'o'+myid(16)
+    ccx=cc+'x'+myid(16)
+    ccz=cc+'z'+myid(16)
+
+    o=0
+    d=1./n
+
+    nn = math.sqrt(nx*nx + nz*nz);
+    nx = nx / nn
+    nz = nz / nn
+
+    Flow(cc,None,
+         '''
+         %smath output="x1" n1=%d o1=%g d1=%g |
+         scale rscale=%g >%s datapath=%s/;
+         '''%(M8R,n,o,d,ll,cco,DPT) +
+         '''
+         %smath <%s output="%g+%g*input" >%s datapath=%s/;
+         '''%(M8R,cco,ox,nx,ccx,DPT) +
+         '''
+         %smath <%s output="%g+%g*input" >%s datapath=%s/;
+         '''%(M8R,cco,oz,nz,ccz,DPT) +
+         '''
+         %scat axis=2 space=n %s %s |
+         transp |
+         put o1=0 d1=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         '''%(M8R,ccx,ccz) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,cco,ccx,ccz),
+              stdin=0,
+              stdout=0)
+
+def segment3d(cc,
+            ox,oy,oz, # origin
+            nx,ny,nz, # normal
+            ll,       # length
+            n,       # sampling
+            custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+    
+    cco=cc+'o'+myid(16)
+    ccx=cc+'x'+myid(16)
+    ccy=cc+'y'+myid(16)
+    ccz=cc+'z'+myid(16)
+
+    o=0
+    d=1./n
+
+    nn = math.sqrt(nx*nx + ny*ny + nz*nz);
+    nx = nx / nn
+    ny = ny / nn
+    nz = nz / nn
+    
+    Flow(cc,None,
+         '''
+         %smath output="x1" n1=%d o1=%g d1=%g |
+         scale rscale=%g >%s datapath=%s/;
+         '''%(M8R,n,o,d,ll,cco,DPT) +
+         '''
+         %smath <%s output="%g+%g*input" >%s datapath=%s/;
+         '''%(M8R,cco,ox,nx,ccx,DPT) +
+         '''
+         %smath <%s output="%g+%g*input" >%s datapath=%s/;
+         '''%(M8R,cco,oy,ny,ccy,DPT) +
+         '''
+         %smath <%s output="%g+%g*input" >%s datapath=%s/;
+         '''%(M8R,cco,oz,nz,ccz,DPT) +
+         '''
+         %scat axis=2 space=n %s %s %s|
+         transp |
+         put o1=0 d1=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         '''%(M8R,ccx,ccy,ccz) +
+         '''
          %srm %s %s %s %s
          '''%(M8R,cco,ccx,ccy,ccz),
               stdin=0,
