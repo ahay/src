@@ -622,7 +622,7 @@ $manpage"""
                 redirect_stdin(old_stdin)
                 return returnval
         end
-        @eval function ($F)(file::File; kwargs...)
+        @eval function ($F)(tag::String; kwargs...)
                 old_stdin = STDIN
                 (rin, win) = redirect_stdin()
                 returnval = (rin, win)
@@ -637,9 +637,12 @@ $manpage"""
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
                 pipe = `$progpath $args $outstdout`
-                Base.wait(spawn(pipeline(pipe, stdin=file.tag, stdout=win)))
+                Base.wait(spawn(pipeline(pipe, stdin=tag, stdout=win)))
                 redirect_stdin(old_stdin)
                 return returnval
+        end
+        @eval function ($F)(file::File; kwargs...)
+            return $F(file.tag; kwargs...)
         end
         @eval function ($F)(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
             l=nothing, u=nothing; kwargs...)
