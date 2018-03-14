@@ -101,13 +101,13 @@ end
 
 function histint(file::File,name::String)
     val = Cint[0]
-    ccall((:sf_histint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ptr{Cint}),file.rsf,name,val)
+    ccall((:sf_histint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ref{Cint}),file.rsf,name,val)
     return convert(Int, val[])
 end
 
 function histfloat(file::File,name::String)
     val = Cfloat[0]
-    ccall((:sf_histfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ptr{Cfloat}),file.rsf,name,val)
+    ccall((:sf_histfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{UInt8},Ref{Cfloat}),file.rsf,name,val)
     return convert(Float32, val[])
 end
 
@@ -121,14 +121,14 @@ end
 
 function getint(name::String, val::Integer)
     val = Cint[val]
-    ccall((:sf_getint,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cint}),name,val)
+    ccall((:sf_getint,"libdrsf"),Bool,(Ptr{UInt8},Ref{Cint}),name,val)
     return convert(Int, val[])
 end
 getint(name::String; val::Integer = 0) = getint(name, val)
 
 function getfloat(name::String, val::Real)
     val = Cfloat[val]
-    ccall((:sf_getfloat,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Cfloat}),name,val)
+    ccall((:sf_getfloat,"libdrsf"),Bool,(Ptr{UInt8},Ref{Cfloat}),name,val)
     return convert(Float32, val[])
 end
 getfloat(name::String; val::Real = 0) = getfloat(name, val)
@@ -144,7 +144,7 @@ getstring(name::String; val::String = "") = getstring(name, val)
 
 function getbool(name::String, val::Bool)
     val = Bool[val]
-    ccall((:sf_getbool,"libdrsf"),Bool,(Ptr{UInt8},Ptr{Bool}),name,val)
+    ccall((:sf_getbool,"libdrsf"),Bool,(Ptr{UInt8},Ref{Bool}),name,val)
     return val[]
 end
 getbool(name::String; val::Bool = true) = getbool(name, val)
@@ -622,7 +622,7 @@ $manpage"""
                 redirect_stdin(old_stdin)
                 return returnval
         end
-        @eval function ($F)(file::File; kwargs...)
+        @eval function ($F)(tag::String; kwargs...)
                 old_stdin = STDIN
                 (rin, win) = redirect_stdin()
                 returnval = (rin, win)
@@ -637,9 +637,12 @@ $manpage"""
                 args = process_args(;kwargs...)
                 progpath = joinpath(RSFROOT, "bin", $S)
                 pipe = `$progpath $args $outstdout`
-                Base.wait(spawn(pipeline(pipe, stdin=file.tag, stdout=win)))
+                Base.wait(spawn(pipeline(pipe, stdin=tag, stdout=win)))
                 redirect_stdin(old_stdin)
                 return returnval
+        end
+        @eval function ($F)(file::File; kwargs...)
+            return $F(file.tag; kwargs...)
         end
         @eval function ($F)(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
             l=nothing, u=nothing; kwargs...)
