@@ -552,6 +552,8 @@ class Input(_File):
         while pos < len(ilist):
             if '=' in ilist[pos]:
                 tokenlist = ilist[pos].split('=')
+ 		if len(tokenlist[1]) == 0:
+                    tokenlist[1]='""'
                 lhs = tokenlist[0]
                 rhs = tokenlist[1]
                 quotmark = None
