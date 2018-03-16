@@ -331,14 +331,14 @@ class File(object):
         return self.dot(self)
     def __array__(self,context=None):
         'numpy array'
-        if _swig_: #kls I broke path that uses c_rsf.sf_input
+        if _swig_:
             if None == self.narray:
-                if not hasattr(self,'f'):
+                if not hasattr(self,'file'):
                     f = c_rsf.sf_input(self.tag)
                 else:
-                    f = self.f
+                    f = self.file
                 self.narray = c_rsf.rsf_array(f)
-                if not hasattr(self,'f'):
+                if not hasattr(self,'file'):
                     c_rsf.sf_fileclose(f)
             return self.narray
         else:
