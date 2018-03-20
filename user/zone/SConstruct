@@ -3,9 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdort3delasticcij
-isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton nmo3gmaprep nmo3gmafit
-rotater time2depthweak fermatrecursion vtihti2ort
+cij2moveout isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton nmo3gmaprep nmo3gmafit rotater time2depthweak fermatrecursion vtihti2ort
 '''
 
 # gausssource rays3a quarticlayer quartic expand3 vtihti2ort cij2moveout
@@ -14,12 +12,9 @@ rotater time2depthweak fermatrecursion vtihti2ort
 #fdtti3delasticcij nmo3gmaprep
 
 ccprogs = '''
-ort3dlrdecompcijP
-ort3dlrdecompcijS1
-ort3dlrdecompcijS2
 '''
 
-decomp = ['rickerjb.o','eigen3x3.o','decomplowrank.o','fdcoef.o','fwportelasticcij.o','fwpttielasticcij.o','kykxkztaper.o','puthead.o','vmodel.o','zero.o']
+#decomp = ['rickerjb.o','eigen3x3.o','decomplowrank.o','fdcoef.o','fwportelasticcij.o','fwpttielasticcij.o','kykxkztaper.o','puthead.o','vmodel.o','zero.o']
 
 try:  # distributed version
     Import('env root pkgdir bindir')
@@ -63,8 +58,8 @@ for source in src:
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
         env.Depends(obj,underscore_inc)
-	if obj[0].name in decomp:
-        	objs.append(obj)
+	#if obj[0].name in decomp:
+        #	objs.append(obj)
 
 mpicc = env.get('MPICC')
 

@@ -1,6 +1,8 @@
 from rsf.proj import *
 
-Fetch('model.segy',dir='1997_2.5D',server='http://software.seg.org',top='datasets/2D')
+Fetch('model.segy',dir='bp2.5d1997',server='https://s3.amazonaws.com',
+                   top='open.source.geoscience/open_data')
+
 
 def getvel(model):
     Flow(model,'model.segy',
@@ -15,8 +17,9 @@ def getvel(model):
 shots = '1997_2.5D_shots.segy'
 shotsgz = shots+'.gz'
 
-Fetch(shotsgz,dir='1997_2.5D',server='ftp://software.seg.org',top='/pub/datasets/2D')
-Flow(shots,shotsgz,'zcat $SOURCE',stdin=0)
+Fetch(shotsgz,dir='bp2.5d1997',server='https://s3.amazonaws.com',
+                   top='open.source.geoscience/open_data')
+Flow(shots,shotsgz,'gunzip -c $SOURCE',stdin=0)
 
 def getshots(data):
     Flow(data,shots,

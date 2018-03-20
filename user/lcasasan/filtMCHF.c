@@ -81,7 +81,6 @@ void MCHFfilt_apply(sf_complex *bb /*in*/,
 {
 	int lag=1;
 	int ih,ib,iN,i,j;
-	float eps;
 
 	
 	bb_for[0] = sf_cmplx(-1.,0.);
@@ -126,7 +125,7 @@ void MCHFfilt_apply(sf_complex *bb /*in*/,
 		mchf[iN]=sf_cmplx(0.0,0.0);
 	}
 
-	eps=0.00001; /* dumping parameter */
+	/* eps=0.00001; dumping parameter */
 
 	//sf_warning("###LOP CG SOLVER for MCHF Ntot=%d",Ntot);
 	ih=0;

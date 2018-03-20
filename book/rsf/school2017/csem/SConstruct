@@ -1,0 +1,23 @@
+from rsf.proj import *
+
+Fetch('Ts.H','csem')
+
+Flow('Ts','Ts.H','dd form=native')
+Result('Ts','graph title= label1=Time unit1=s label2=Amplitude')
+
+Flow('spectra','Ts','fft1 | math output="abs(input*(2/45001))" | real')
+Result('spectra','graph title= min1=0 max1=1.5')
+
+# random white noise #
+Flow('tsa','Ts','noise type=y range=2e-10 seed=1000')
+Result('tsa','graph title= ')
+
+# Calculate MVO curve #
+Flow('Exmvotsa','tsa',
+     'mvo f=0.08 m=1 nnw=125 n=1 | window n1=360 | put d1=1')
+Result('Exmvotsa',' graph title= ')
+
+End()
+
+
+

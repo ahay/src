@@ -265,6 +265,8 @@ void sf_floatread (float* arr, size_t size, sf_file file);
 void sf_intwrite (int* arr, size_t size, sf_file file);
 void sf_intread (int* arr, size_t size, sf_file file);
 
+int sf_try_charread2(char* arr, size_t size, sf_file file);
+
 void sf_complexwrite (sf_complex* arr, size_t size, sf_file file);
 void sf_complexread (sf_complex* arr, size_t size, sf_file file);
 

@@ -134,7 +134,7 @@ void csp2d_lop(bool adj, bool add, int nm, int nd,
                        w = 1.;
                     }
 
-                    //if (weight) w = 1.-fabsf(x/(he+1.e-12));
+                    /* if (weight) w = 1.-fabsf(x/(he+1.e-12)); */
 
                     he = (he-he0)/dhe+0.5;
                     ihe = floorf(he);

@@ -5,12 +5,11 @@ from rsf.proj import *
 
 ft2km = 0.0003048
 d = 20*ft2km
-
 for m in ['vp','delta','epsilon','crho']:
     sgy = 'timodel_%s.segy' % m
     sgyz = sgy + '.gz'
-    Fetch(sgyz,dir='Hess_VTI',server='ftp://software.seg.org',top='pub/datasets/2D')
-    Flow(sgy,sgyz,'zcat $SOURCE',stdin=0)
+    Fetch(sgyz,dir='hessvti',server='https://s3.amazonaws.com',top='open.source.geoscience/open_data')
+    Flow(sgy,sgyz,'gunzip -c $SOURCE',stdin=0)
     if m=='vp':
         Flow(m+'_hess',sgy,
              '''
@@ -31,7 +30,7 @@ Flow('vx_hess','vp_hess epsilon_hess',
      ''')
 Flow('eta_hess','epsilon_hess delta_hess',
      '''
-     math e=${SOURCES[0]} d=${SOURCES[1]} output="((1+2*e)/(1+2*d)-1)/2"
+     math e=${SOURCES[0]} d=${SOURCES[1]} output="((1+2*e)/(1+2*d)-1)/2" | clip2 lower=0
      ''')
 
 # artificial vs
@@ -49,8 +48,8 @@ sgy = ('timodel_shot_data_II_shot001-320.segy',
 
 for s in range(2):
     sgyz = sgy[s]+'.gz'
-    Fetch(sgyz,dir='Hess_VTI',server='ftp://software.seg.org',top='pub/datasets/2D')
-    Flow(sgy[s],sgyz,'zcat $SOURCE',stdin=0)
+    Fetch(sgyz,dir='hessvti',server='https://s3.amazonaws.com',top='open.source.geoscience/open_data')
+    Flow(sgy[s],sgyz,'gunzip -c $SOURCE',stdin=0)
 
     shot = 'shot%d' % s
     Flow([shot,'t'+shot],sgy[s],

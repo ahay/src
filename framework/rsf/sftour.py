@@ -97,5 +97,5 @@ if __name__ == "__main__":
     dirs = filter(lambda x: x[-5:] != '_html',
                   filter(os.path.isdir,glob.glob('[a-z]*')))
 
-    tour(dirs,comm,verbose)
+    tour(sorted(dirs),comm,verbose)
     sys.exit(0)

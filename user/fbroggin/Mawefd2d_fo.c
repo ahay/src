@@ -49,11 +49,6 @@ int main(int argc, char* argv[])
     bool verb,fsrf,snap,expl,dabc,recvz; 
     int  jsnap,ntsnap,jdata,srctype;
 
-    /* OMP parameters */
-	#ifdef _OPENMP
-    int ompnth;
-	#endif 
-
     /* I/O files */
     sf_file Fwav; /* wavelet   */
     sf_file Fsou; /* sources   */
@@ -69,12 +64,11 @@ int main(int argc, char* argv[])
     sf_axis as,ar;
 
     int     nt,nz,nx,ns,nr,nb,sizem;
-    int     it,iz,ix,id1,id2;
-    float   dt,dz,dx,idz,idx,time,ww_avg;
+    int     it,iz,ix;
+    float   dt,dz,dx,idz,idx,ww_avg;
 
     /* FDM structure */
     fdm2d    fdm;
-    abcone2d abc;
     sponge   spo;
 
     /* I/O arrays */
@@ -89,18 +83,18 @@ int main(int argc, char* argv[])
     float * vele;		/* velocity with expanded dimensions */
     float * roe;		/* density  with expanded dimensions */
     
-    float * restrict roz;		/* density for the FD scheme */
-    float * restrict rox;		/* density for the FD scheme */
+    float * roz;		/* density for the FD scheme */
+    float * rox;		/* density for the FD scheme */
 
-    float * restrict vel2ro;           /* vel^2*ro = 1/k (k is the compressibility) */
+    float * vel2ro;           /* vel^2*ro = 1/k (k is the compressibility) */
 
-    float * restrict vx,* restrict vz,* restrict p; /* x and y velocities and pressure fields */
+    float * vx,* vz,* p; /* x and y velocities and pressure fields */
 
     /* Linear interpolation weights/indices */
     lint2d cs,cr;
 
     /* FD operator size */
-    float co,cax,cbx,ccx,cdx,caz,cbz,ccz,cdz;
+    float cax,cbx,caz,cbz;
 
     /* Wavefield cut params */
     sf_axis   acz,acx;
@@ -111,10 +105,10 @@ int main(int argc, char* argv[])
     
     float scal;
     
-    int ioXx, ioXz, ioZz, ioZx, ioPx, ioPz, ioTx, ioTz;
+    int ioXx, ioXz, ioZz, ioZx, ioPx, ioPz;
     
    	float vel2, lamda2mu;
-	float cpx, cpz, bx, bz;
+	float bx, bz;
     
     /*------------------------------------------------------------*/
     /* Initialize RSF parameters 								  */
@@ -124,9 +118,9 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* Initialize OMP parameters */
     /*------------------------------------------------------------*/
-	#ifdef _OPENMP
-    ompnth=omp_init();
-	#endif
+#ifdef _OPENMP
+    omp_init();
+#endif
     
 	/*------------------------------------------------------------*/
 	/* Flags 													  */
@@ -404,7 +398,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel default (shared) \
 shared (rox, roz, vel2ro, p, vx, vz) \
-shared (fdm, expl, verb, dabc, cs, cr, abc, spo, dd, uc, ww)
+shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 #endif
 {  
 		if(verb && it%100==0) fprintf(stderr,"%5d/%5d\b\b\b\b\b\b\b\b\b\b\b",it,nt);
@@ -452,9 +446,9 @@ shared (fdm, expl, verb, dabc, cs, cr, abc, spo, dd, uc, ww)
 					See Jan Thorbecke's code for comparison. */
 					
 					/* IMPORTANT - I had to put a "-1" in the x index, but I'm not sure if that is correct */
-					time = it*dt;
-					id1 = floor(time/dt);
-					id2 = id1+1;
+					/* time = it*dt;
+					   id1 = floor(time/dt);
+					   id2 = id1+1; */
 					ww_avg = ww[ix+it*ns];
 					/*ww_avg = ww[id1]*(id2-time/dt) + ww[id2]*(time/dt-id1);*/
 				    scal = roz[(cs->jx[ix]-0)*fdm->nzpad+cs->jz[ix]+0] / dx;
@@ -495,9 +489,9 @@ shared (fdm, expl, verb, dabc, cs, cr, abc, spo, dd, uc, ww)
 				for (ix=0; ix<cs->n; ix++) {
 					/* Correction factor for the souce wavelet - Due to the finite-difference scheme
 					See Jan Thorbecke's code for comparison. */
-					time = it*dt;
-					id1 = floor(time/dt);
-					id2 = id1+1;
+					/* time = it*dt;
+					   id1 = floor(time/dt);
+					   id2 = id1+1; */
 					ww_avg = ww[ix+it*ns];
 					/*ww_avg = ww[id1]*(id2-time/dt) + ww[id2]*(time/dt-id1);*/
 					scal = vel2ro[cs->jx[ix]*fdm->nzpad+cs->jz[ix]] / dx;

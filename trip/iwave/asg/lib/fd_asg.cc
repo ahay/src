@@ -355,10 +355,10 @@ void asg_timestep(std::vector<RDOM *> dom,
   i_v[2] = 7;
 
   /* fill in pml arrays; these are no-ops after the first call */
-  register ireal * restrict ep[RARR_MAX_NDIM];  
-  register ireal * restrict epp[RARR_MAX_NDIM]; 
-  register ireal * restrict ev[RARR_MAX_NDIM];  
-  register ireal * restrict evp[RARR_MAX_NDIM]; 
+  ireal * restrict ep[RARR_MAX_NDIM];  
+  ireal * restrict epp[RARR_MAX_NDIM]; 
+  ireal * restrict ev[RARR_MAX_NDIM];  
+  ireal * restrict evp[RARR_MAX_NDIM]; 
   
   for (int idim=0;idim<asgpars->ndim;idim++) {
     IPNT gsa;
@@ -397,12 +397,12 @@ void asg_timestep(std::vector<RDOM *> dom,
   if (n==1) {
     if(fwd == true) {
       if (ndim == 2) {
-	register ireal ** restrict bulk2 = (dom[0]->_s)[0]._s2;
-	register ireal ** restrict buoy2 = (dom[0]->_s)[1]._s2;
-	register ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
-	register ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
-	register ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
-	register ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
+	ireal ** restrict bulk2 = (dom[0]->_s)[0]._s2;
+	ireal ** restrict buoy2 = (dom[0]->_s)[1]._s2;
+	ireal ** restrict p02 = (dom[0]->_s)[i_p[0]]._s2;
+	ireal ** restrict p12 = (dom[0]->_s)[i_p[1]]._s2;
+	ireal ** restrict v02 = (dom[0]->_s)[i_v[0]]._s2;
+	ireal ** restrict v12 = (dom[0]->_s)[i_v[1]]._s2;
 
 	if (iv == 0) {
 	  ireal * sdiv_alloc = (ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
@@ -444,14 +444,14 @@ void asg_timestep(std::vector<RDOM *> dom,
 	}
       }
       if (ndim == 3) {
-	register ireal *** restrict bulk3 = (dom[0]->_s)[0]._s3;
-	register ireal *** restrict buoy3 = (dom[0]->_s)[1]._s3;
-	register ireal *** restrict p03 = (dom[0]->_s)[i_p[0]]._s3;
-	register ireal *** restrict p13 = (dom[0]->_s)[i_p[1]]._s3;
-	register ireal *** restrict p23 = (dom[0]->_s)[i_p[2]]._s3;
-	register ireal *** restrict v03 = (dom[0]->_s)[i_v[0]]._s3;
-	register ireal *** restrict v13 = (dom[0]->_s)[i_v[1]]._s3;
-	register ireal *** restrict v23 = (dom[0]->_s)[i_v[2]]._s3;
+	ireal *** restrict bulk3 = (dom[0]->_s)[0]._s3;
+	ireal *** restrict buoy3 = (dom[0]->_s)[1]._s3;
+	ireal *** restrict p03 = (dom[0]->_s)[i_p[0]]._s3;
+	ireal *** restrict p13 = (dom[0]->_s)[i_p[1]]._s3;
+	ireal *** restrict p23 = (dom[0]->_s)[i_p[2]]._s3;
+	ireal *** restrict v03 = (dom[0]->_s)[i_v[0]]._s3;
+	ireal *** restrict v13 = (dom[0]->_s)[i_v[1]]._s3;
+	ireal *** restrict v23 = (dom[0]->_s)[i_v[2]]._s3;
 	if (iv == 0) {
 	  ireal * sdiv_alloc = (ireal *)usermalloc_((gec_p[0]-gsc_p[0]+1)*sizeof(ireal));
 	  ireal * sdiv = &(sdiv_alloc[-gsc_p[0]]);

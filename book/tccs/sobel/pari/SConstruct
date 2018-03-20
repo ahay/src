@@ -1,0 +1,135 @@
+from rsf.proj import *
+from math import pi
+import os.path
+
+env = Environment()
+
+gray = 'window f1=104 n1=1 | grey label1=IL label2=XL unit1= unit2= title=%s'
+white = 'window f1=104 n1=1 | grey allpos=y polarity=y label1=IL label2=XL unit1= unit2= title=%s'
+color = 'window f1=104 n1=1 | grey color=j scalebar=y label1=IL label2=XL unit1= unit2= title=%s barlabel=%s'
+gray3 = 'byte gainpanel=all | grey3 frame1=104 frame2=200 frame3=100 flat=y  point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=%s'
+white3 = 'byte gainpanel=all allpos=y polarity=y | grey3 frame1=104 frame2=200 frame3=100 flat=y  point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=%s'
+color3 = 'byte bar=bar.rsf gainpanel=all | grey3 color=j scalebar=y frame1=104 frame2=200 frame3=100 flat=y  point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=%s barlabel=%s'
+segy = 'Parihaka_PSTM_full_angle.sgy'
+
+Fetch(segy,dir='PARIHAKA-3D',
+      server='https://s3.amazonaws.com',
+      top='open.source.geoscience/open_data/newzealand/Taranaiki_Basin')
+
+Flow('seis head',segy,'segyread tfile=${TARGETS[1]}')
+Flow('parihaka','seis head','intbin head=${SOURCES[1]} xk=iline yk=xline | put label2=IL label3=XL')
+Flow('sub','parihaka','window min1=1 max1=1.62 min2=2200 max2=2600 min3=4820 max3=5200')
+#Result('sub',gray % '"Seismic data"')
+Result('sub',gray3 % '"Seismic data"' )
+
+Flow('iflat','sub','grad3 dim=2 | smooth rect3=3')
+Flow('flat','sub iflat','grad3 dim=3 | smooth rect2=3 | math x=${SOURCES[1]} output="sqrt(input*input+x*x)"')
+Result('flat',white3 % '"Flat Sobel"')
+
+########################
+#### DIP ESTIMATION ####
+########################
+# rect1, rect2, and rect3 control the smoothness of the local dip model
+# In images with structural complexity, less smoothing will yield a beter 
+# result.
+# However, poor quality images may require more smoothing.
+# For this subset of the Parihaka seismic data, I find results are best for
+# with a relatively small smoothing window (rect? = 10)
+Flow('dip','sub','fdip n4=2 rect1=10 rect2=10 rect3=10')
+Flow('idip','dip','window n4=1')
+Flow('xdip','dip','window f4=1')
+Flow('xdip23','xdip','transp plane=23')
+Result('idip',color3 % ('"IL Dip"','"Slope"') )
+Result('xdip',color3 % ('"XL Dip"','"Slope"') )
+
+####################################
+#### STRUCTURE-ENHANCING FILTER ####
+####################################
+# I use a larger smoothing window in the inline direction (ns2) to supress
+# acquisition footprint
+Flow('pari','sub dip','pwspray2 dip=${SOURCES[1]} ns2=3 ns3=1 | transp | median')
+Result('pari',gray3 % "Seismic Data" )
+
+################
+Flow('ipwd','pari idip','pwd n4=0 dip=${SOURCES[1]}')
+Flow('xpwd','pari xdip','pwd n4=1 dip=${SOURCES[1]}')
+Flow('isobel','ipwd xdip23','transp plane=23 | pwsmooth dip=${SOURCES[1]} ns=3 | transp plane=23')
+Flow('xsobel','xpwd idip','pwsmooth dip=${SOURCES[1]} ns=3')
+Result('isobel',white3 % '"IL Sobel"')
+Result('xsobel',white3 % '"XL Sobel"')
+
+Flow('sobel','isobel xsobel','math x=${SOURCES[1]} output="(input*input+x*x)" | smooth rect1=3')
+Result('sobel',white3 % '"Plane-wave Sobel"')
+
+Flow('ipwd2','sobel idip','pwd n4=0 dip=${SOURCES[1]}')
+Flow('xpwd2','sobel xdip','pwd n4=1 dip=${SOURCES[1]}')
+Flow('isobel2','ipwd2 xdip23','transp plane=23 | pwsmooth dip=${SOURCES[1]} ns=3 | transp plane=23')
+Flow('xsobel2','xpwd2 idip','pwsmooth dip=${SOURCES[1]} ns=3')
+
+Flow('sobel2','isobel2 xsobel2','math x=${SOURCES[1]} output="sqrt(input*input+x*x)" | smooth rect1=3')
+Result('sobel2',white3 % '"Cascaded Sobel"' )
+
+##########################
+#### AZIMUTH SCANNING ####
+##########################
+# Proper parameter selection is critical in this section.
+# If discontinuous features follow many different azimuths, use small 
+# smoothing parameters and large anisotropy parameter.
+# If discontinuous features follow consistent azimuth, set vel0 to that
+# azimuth and use large smoothing parameters.
+n1 = 208
+na = 45
+picks = []
+slices = []
+if os.path.isfile("slices.rsf") == False :
+    if os.path.isfile("slice-*.rsf") == False :
+        for i in range(n1):
+            isobelt = 'isobelt-%d' % i
+            xsobelt = 'xsobelt-%d' % i
+            Flow(isobelt,'isobel2','window f1=%d n1=1' % i )
+            Flow(xsobelt,'xsobel2','window f1=%d n1=1' % i )
+            asobels = []
+            for j in range(0,360,8):
+                a = j*pi/180
+                asobel = 'asobel-%d-%d' % (i,j)
+                Flow(asobel,[isobelt,xsobelt],'math x=${SOURCES[1]} output="abs(input*cos(%f)+x*sin(%f))"' % (a,a) )
+                asobels.append(asobel)
+
+            asobelt = 'asobel-%d' % i 
+            Flow(asobelt,asobels,'cat ${SOURCES[1:%d]} axis=3 | put d3=8 o3=0 | scale axis=3 | transp plane=23' % na )
+	    env.AddPostAction(asobelt+'.rsf','/bin/bash ./ignore.sh %s' % (asobelt) )
+
+            ################
+            pick = 'pick-%d' % i
+            Flow(pick,asobelt,'pick vel0=180 rect1=20 rect2=20 an=1')
+            picks.append(pick)
+
+            slice = 'slice-%d' % i
+            Flow(slice,[asobelt,pick],'slice pick=${SOURCES[1]}')
+            slices.append(slice)
+
+        Flow('picks',picks,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
+        Result('picks','byte bar=bar.rsf gainpanel=all bias=180 | grey3 color=j scalebar=y frame1=104 frame2=200 frame3=100 flat=y point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=Azimuth barlabel=Azimuth')
+	env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh isobelt')
+	env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh xsobelt')
+	env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh asobel')
+	env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh pick')
+
+        Flow('slices',slices,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
+        #Result('slices','clip clip=.02 value=1 | '+white3)
+        Result('slices',white3 % '"Azimuthal Sobel"')
+	env.AddPostAction('slices.rsf','/bin/bash ./ignore.sh slice')
+    else:
+        Flow('picks',picks,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
+        Result('picks','byte bar=bar.rsf gainpanel=all bias=180 | grey3 color=j scalebar=y frame1=104 frame2=200 frame3=100 flat=y point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=Azimuth barlabel=Azimuth')
+        env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh pick')
+
+        Flow('slices',slices,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
+        Result('slices',white3 % '"Azimuthal Sobel"')
+        env.AddPostAction('slices.rsf','/bin/bash ./ignore.sh slice')
+
+
+Flow('az','slices picks','mul ${SOURCES[1]}')
+Result('az','byte bar=bar.rsf gainpanel=all bias=180 minval=90 maxval=270 | grey3 color=j scalebar=y frame1=104 frame2=200 frame3=100 flat=y point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=Azimuth barlabel=Azimuth')
+
+End()

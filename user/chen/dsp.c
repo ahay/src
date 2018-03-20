@@ -113,7 +113,7 @@ void iirs(int na, float *a, int nb, float *b,
 {
     int k, n;
     double out;
-    for(n=0, out=0.0; n<n1; k++)
+    for(n=0, out=0.0; n<n1; n++)
     {
 	for(k=0; (k<=na && k<=n); k++)
 	    out += a[k]*x[(n-k)*d1];
@@ -135,7 +135,7 @@ void allpass(int na, float *a,
 {
     int k, n;
     double out;
-    for(n=0, out=0.0; n<n1; k++)
+    for(n=0, out=0.0; n<n1; n++)
     {
 	for(k=0; (k<=na && k<=n); k++)
 	    out += a[k]*x[(n-k)*d1];

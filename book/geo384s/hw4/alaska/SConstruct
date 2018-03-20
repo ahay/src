@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-# Shots after ground-roll removal by Emc-Hammer
+# Shots after ground-roll removal by Stegosaurus
 Fetch('rshots.HH','alaska')
 Flow('rshots','rshots.HH','dd form=native')
 

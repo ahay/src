@@ -1,5 +1,5 @@
 /* Analysis-based IST interpolation using seislet (2d validation)
-IST=iterative shrinkage-thresholding
+   IST=iterative shrinkage-thresholding
 */
 /*
   Copyright (C) 2013 Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -19,7 +19,7 @@ IST=iterative shrinkage-thresholding
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   Reference: On analysis-based two-step interpolation methods for randomly 
-	sampled seismic data, P Yang, J Gao, W Chen, Computers & Geosciences
+  sampled seismic data, P Yang, J Gao, W Chen, Computers & Geosciences
 */
 
 #include <rsf.h>
@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
     /* starting data clip percentile (default is 99)*/
     if ( !(mode=sf_getstring("mode")) ) mode = "exp";
     /* thresholding mode: 'hard', 'soft','pthresh','exp';
-	'hard', hard thresholding;	'soft', soft thresholding; 
-	'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
+       'hard', hard thresholding;	'soft', soft thresholding; 
+       'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
     if (!sf_getfloat("p",&p)) 		p=0.35;
     /* norm=p, where 0<p<=1 */;
     if (strcmp(mode,"soft") == 0) 	p=1;
@@ -97,32 +97,32 @@ int main(int argc, char *argv[])
     for(iter=0; iter<niter; iter++)  {
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
-	private(i1,i2)			\
-	shared(n1,n2,mask,drec,dobs)		
+#pragma omp parallel for default(none)		\
+    private(i1,i2)				\
+    shared(n1,n2,mask,drec,dobs)		
 #endif
 	for(i2=0; i2<n2; i2++)    		
-	for(i1=0; i1<n1; i1++) 
-	{	
+	    for(i1=0; i1<n1; i1++) 
+	    {	
 		if (mask[i1+i2*n1]) drec[i1+n1*i2]=dobs[i1+n1*i2];
-	}
+	    }
 
 	/* adjoint: At(drec) */
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec);
 
 	/* perform thresholding; T{ At(drec) } */
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(i1,i2)			\
-	shared(n1,n2,pscale,dtmp,tmp)		
+#pragma omp parallel for default(none)		\
+    private(i1,i2)				\
+    shared(n1,n2,pscale,dtmp,tmp)		
 #endif
 	for(i2=0; i2<n2; i2++)    		
-	for(i1=0; i1<n1; i1++) 
-	{	
-	  /* if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0; */
-	  /* set large scale to 0 */
+	    for(i1=0; i1<n1; i1++) 
+	    {	
+		/* if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0; */
+		/* set large scale to 0 */
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
-	}	
+	    }	
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;

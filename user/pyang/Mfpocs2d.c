@@ -1,5 +1,5 @@
 /* 2-D Two-step POCS interpolation using a general Lp-norm optimization
-*/
+ */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
@@ -18,7 +18,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   Reference: On analysis-based two-step interpolation methods for randomly 
-	sampled seismic data, P Yang, J Gao, W Chen, Computers & Geosciences
+  sampled seismic data, P Yang, J Gao, W Chen, Computers & Geosciences
 */
 #include <rsf.h>
 #include <math.h>
@@ -66,8 +66,8 @@ int main(int argc, char* argv[])
 	sf_error("pclip=%g should be > 0 and <= 100",pclip);
     if ( !(mode=sf_getstring("mode")) ) mode = "exp";
     /* thresholding mode: 'hard', 'soft','pthresh','exp';
-	'hard', hard thresholding;	'soft', soft thresholding; 
-	'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
+       'hard', hard thresholding;	'soft', soft thresholding; 
+       'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
     if (!sf_getfloat("p",&p)) 		p=0.35;
     /* norm=p, where 0<p<=1 */;
     if (strcmp(mode,"soft") == 0) 	p=1;
@@ -143,9 +143,9 @@ int main(int argc, char* argv[])
 	
 	/* update d_rec: d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
 	for(i2=0;i2<n2;i2++){
-		if (mask[i2]){			
-		    for(i1=0; i1<n1; i1++) dcurr[i1+n1*i2]=din[i1+n1*i2];
-		}
+	    if (mask[i2]){			
+		for(i1=0; i1<n1; i1++) dcurr[i1+n1*i2]=din[i1+n1*i2];
+	    }
 	}
 
 	if (verb)    sf_warning("iteration %d;",iter+1);

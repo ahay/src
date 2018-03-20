@@ -1,5 +1,5 @@
 /* POCS for 3D missing data interpolation
-*/
+ */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
@@ -94,13 +94,13 @@ int main(int argc, char* argv[])
 	
 	/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
 	for(i3=0; i3<n3; i3++)	
-	for(i2=0; i2<n2; i2++)
-	for(i1=0; i1<n1; i1++)
-	{ 
-		m=(mask[i2+i3*n2])?1:0;
-		index=i1+n1*i2+n1*n2*i3;
-		drec[index]=dobs[index]	+(1.-m)*drec[index];
-	}
+	    for(i2=0; i2<n2; i2++)
+		for(i1=0; i1<n1; i1++)
+		{ 
+		    m=(mask[i2+i3*n2])?1:0;
+		    index=i1+n1*i2+n1*n2*i3;
+		    drec[index]=dobs[index]	+(1.-m)*drec[index];
+		}
 	if (verb)    sf_warning("iteration %d;",iter);
     }
 

@@ -1,0 +1,290 @@
+from rsf.proj import *
+
+def cubeplot(title,clip='',extra=''):
+    return '''
+    byte gainpanel=all allpos=n %s  bar=bar.rsf |
+    grey3 frame1=68 frame2=750 frame3=256 flat=y point1=0.7 point2=0.7
+    label1=Offset unit1=km label2="Midpoint wavenumber" unit2=1/km
+    framelabelcol=7 label3="Frequency" unit3=Hz title="%s" wanttitle=n
+    labelfat=4 font=2 titlefat=4 labelsz=6 screenratio=0.6 screenht=8
+    color=i %s bar=bar.rsf
+    ''' % (clip,title,extra)
+
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh',
+     '''
+     dd form=native | put d2=0.134 o2=0.268 label2=Offset |
+     pad beg2=2 | pad end2=6 | mutter v0=1.4 half=n
+     ''')
+
+Result('bei',
+       'transp plane=23 | window n3=24 |'
+       +cubeplot('Input','clip=1.e+06','frame1=500 frame2=125 \
+       frame3=5 label1="Time" unit1=s label3="Offset" \
+       unit2=km label2="Midpoint" unit3=km  \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+
+########################
+# Velocity scan
+########################
+Flow('vscan','bei',
+     '''
+     mutter v0=1.4 half=n |
+     vscan v0=1.4 nv=48 dv=0.025 semblance=y half=n ns=51 smax=2 |
+     put label3="S" unit3=""
+     ''')
+
+
+Flow('pick','vscan',
+     '''
+     pick31 smooth=y rect1=70 gate1=5 gate2=7 verb=n 
+     ''',split=[4,250],reduce="cat axis=5")
+
+Flow('vel','pick',
+     'window n4=1 f4=0 | smooth rect1=3 rect2=15')
+
+Result('vel',
+       '''
+       put d2=0.0335 o2=7.705 | grey color=j allpos=y bias=1.9 
+       scalebar=y barreverse=y barlabel=Velocity barunit=km/s
+       label2=Midpoint unit2=km label1=Time unit1=s
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4 barwidth=0.1
+       title="" o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3
+       ''')
+
+Flow('s','pick',
+     'window n4=1 f4=1 | smooth rect1=3 rect2=15')
+       
+Result('s',
+       '''
+       put d2=0.0335 o2=7.705|grey color=j allpos=n bias=1.5
+       scalebar=y barreverse=y barlabel=S barunit=""
+       label2=Midpoint unit2=km label1=Time unit1=s
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4 barwidth=0.1
+       title="" o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3
+       ''')
+
+Flow('sdip','vel s',
+     '''
+     sv2d n=32 d=0.134 o=0. mute=y half=n v0=4
+     anisotropy=${SOURCES[1]}
+     ''')
+Result('sdip',
+       'transp plane=23 |  window n3=24 |'
+       +cubeplot('Converted dip','allpos=y','frame1=500 frame2=125 \
+       frame3=1 label1="Time" unit1=s label3="Offset" \
+       unit2=km label2="Midpoint" unit3=km color=j scalebar=n\
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+########################
+# Resample Interpolation
+########################
+Flow('vdseis','bei sdip',
+     '''
+     seislet dip=${SOURCES[1]} type=b verb=y adj=y inv=y unit=y
+     ''')
+
+Flow('ress1','vdseis',
+     '''
+     pad end2=96 | noise rep=y var=1.e+8 seed=2016
+     ''')
+
+Flow('ress','vdseis ress1',
+     '''
+     pad end2=96 | add scale=1,1 ${SOURCES[1]} | window n3=1 f3=125
+     ''')
+
+Flow('resd','vel s',
+     '''
+     sv2d n=128 d=0.0335 o=0. mute=y half=n v0=1.4 anisotropy=${SOURCES[1]} |
+     window n3=1 f3=125
+     ''')
+     
+Flow('resample','ress resd',
+     '''
+     seislet dip=${SOURCES[1]} type=b verb=y inv=y unit=y eps=0.1 
+     ''')
+
+Flow('cmp1','bei','window n3=1 f3=125')
+Result('cmp1',
+     '''
+     mutter v0=1.4 half=n | window f2=2 | window n2=24 |
+     grey screenratio=1.5 screenht=9 clip=2.e+06
+     label2=Offset unit2=km label1=Time unit1=s
+     title="CMP gather" labelfat=4 font=2
+     titlefat=4 labelsz=6 wanttitle=n
+     ''')
+
+Flow('cmp2','resample','scale rscale=4  | put d2=0.0335')
+Result('cmp2',
+     '''
+     mutter v0=1.4 half=n | window f2=8 | window n2=96 |
+     grey screenratio=1.5 screenht=9 clip=2.e+06
+     label2=Offset unit2=km label1=Time unit1=s
+     title="Resample by 4" labelfat=4 font=2
+     titlefat=4 labelsz=6  wanttitle=n
+     ''')
+
+########################
+# Missing trace Interpolation
+########################
+# Zero out random traces
+Flow('bei-mask','bei',
+     '''
+     window n1=1 | noise rep=y type=n seed=2012 |
+     mask min=-0.1 | cut n1=2 | cut n1=6 f1=26
+     ''')
+Result('bei-mask','dd type=float|grey title=""')
+
+Flow('bei-zero','bei bei-mask','headercut mask=${SOURCES[1]}')
+
+Result('bei-zero',
+       'transp plane=23 | window n3=24 |'
+       +cubeplot('Input','clip=1.e+06','frame1=500 frame2=125 \
+       frame3=5 label1="Time" unit1=s label3="Offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+############################
+# Velocity scanning and NMO
+############################
+v0=1.4
+nv=48
+dv=0.025
+
+Flow('bei-vscan','bei-zero bei-mask',
+     '''
+     mutter v0=%g half=n |
+     vscan semblance=y mask=${SOURCES[1]}
+     v0=%g nv=%d dv=%g half=n smax=2 ns=51 |
+     put label3="S"
+     ''' % (v0,v0,nv,dv))
+
+Flow('bei-pick','bei-vscan',
+     '''
+     pick31 smooth=y rect1=70 gate1=5 gate2=7 verb=n 
+     ''' ,split=[4,250],reduce="cat axis=5")
+
+Flow('bei-vel','bei-pick',
+     'window n4=1 f4=0 | smooth rect1=3 rect2=15')
+
+Result('bei-vel',
+       '''
+       put d2=0.0335 o2=7.705 | grey color=j allpos=y bias=1.8
+       scalebar=y barreverse=y barlabel=Velocity barunit=km/s
+       label2=Midpoint unit2=km label1=Time unit1=s
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4 barwidth=0.1
+       title="" o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3
+       ''')
+
+Flow('bei-s','bei-pick',
+     'window n4=1 f4=1 | smooth rect1=3 rect2=15')
+       
+Result('bei-s',
+       '''
+       put d2=0.0335 o2=7.705 | grey color=j allpos=n bias=1.48
+       scalebar=y barreverse=y barlabel=S barunit=""
+       label2=Midpoint unit2=km label1=Time unit1=s
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4 barwidth=0.1
+       title="" o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3
+       ''')
+
+Flow('bei-dip','bei-vel bei-s',
+     '''
+     sv2d n=32 d=0.134 o=0 mute=y half=n v0=1.4 anisotropy=${SOURCES[1]} |
+     put d3=0.0335 o3=7.705
+     ''')
+Result('bei-dip',
+       'transp plane=23 | window n3=24 |'
+       +cubeplot('Converted dip','allpos=y','frame1=500 frame2=125 \
+       frame3=5 label1="Time" unit1=s label3="Offset" \
+       unit2=km label2="Midpoint" unit3=km color=j scalebar=y bar=bar.rsf\
+       barwidth=0.1 barlabel=Slope barunit=samples  maxval=14 \
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4 \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+############################
+# Interpolation
+############################
+Flow('ccmask','bei-mask',
+     '''
+     dd type=float | 
+     spray axis=1 n=1000 d=0.004 o=0
+     ''')
+
+Flow('bei-seis2','bei-zero bei-dip ccmask',
+     '''
+     seisbreg2 order=3 dip=${SOURCES[1]} mask=${SOURCES[2]}
+     oper=b verb=y niter=20 type=b perc=95. |
+     mutter v0=1.4 half=n
+     ''',split=[3,250,[0,1,2]])
+
+Result('bei-seis2',
+       'transp plane=23 | window n3=24 |'
+       +cubeplot('Bregman','clip=1.e+06','frame1=500 frame2=125 \
+       frame3=5 label1="Time" unit1=s label3="Offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+Flow('dif-smooth','bei-seis2 bei','add scale=1,-1 ${SOURCES[1]}')
+Result('dif-smooth',
+       'transp plane=23 | window n3=24 |'
+       +cubeplot('Bregman','clip=1.e+06','frame1=500 frame2=125 \
+       frame3=7 label1="Time" unit1=s label3="Offset" \
+       unit2=km label2="Midpoint" unit3=km wanttitle=y title="dif-pick3"\
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+
+## ############################
+## # 3-D Fourier POCS
+pniter=50
+Flow('tczero','bei-zero','transp plane=23 memsize=1000')
+Flow('tccmask','ccmask','transp plane=23 memsize=1000')
+Flow('mask','bei-mask',
+     'dd type=float | math output=1-input | spray axis=1 n=1000 d=0.004 o=0')
+
+fniter=500
+fforward = '''
+fft1 | fft3 | fft3 axis=3
+'''
+fbackward = '''
+fft3 axis=3 inv=y | fft3 inv=y | fft1 inv=y
+'''
+fdata = 'bei-zero'
+fplots = ['bei-zero']
+for iter in range(fniter): 
+    fold = fdata
+    fdata = 'fdata%d' % iter
+
+    # 1. Forward 3D Fourier
+    # 2. Thresholding
+    # 3. Inverse 3D Fourier
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(fdata,[fold,'mask','bei-zero'],
+         fforward +
+         '''
+         | threshold pclip=%g |
+         ''' % (5.+((99.-5.)*iter*iter/((pniter-1)*(pniter-1))))
+         + fbackward +
+         '''
+         | add mode=p ${SOURCES[1]} | 
+         add ${SOURCES[2]}
+         ''')
+
+# Last frame
+Result('bfour3pocs','fdata499',
+       'put d2=0.134 | mutter v0=1.4 half=n | transp plane=23 | window n3=24 |'
+       + cubeplot('FPOCS','clip=1.e+06','frame1=500 frame2=125 \
+       frame3=5 label1="Time" unit1=s label3="Offset" \
+       unit2=km label2="Midpoint" unit3=km \
+       o1num=9 d1num=2 n1tic=4 o2num=1 d2num=1 n2tic=3'))
+
+End()
+
+
+
+
+
+

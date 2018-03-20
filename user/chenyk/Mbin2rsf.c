@@ -84,7 +84,8 @@ int main(int argc, char *argv[])
 	}
     /* if bfile is not input, data will be read from stdin */
 
-    fread(u,1,n1*n2*sizeof(float),bfile);
+    if (n1*n2*sizeof(float) != fread(u,1,n1*n2*sizeof(float),bfile))
+	sf_error ("%s: trouble reading:",__FILE__);
     fclose(bfile);
 
 /***************************************************/

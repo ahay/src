@@ -24,11 +24,10 @@
   dependency: The Journal of the Acoustical Society of America, 115, no. 4
   [2] J.M. Carcione, 2010, A generalization of the Fourier pseudospectral method,
   GEOPHYSICS, VOL. 75, NO. 6
-  [3] H. Igel, Pseudo Spectral tutorial
+  [3] H. Igel, tutorial on Pseudo Spectral tutorial
 */
 #include <rsf.h>
 #include <math.h>
-#include <complex.h>
 
 #ifdef SF_HAS_FFTW
 #include <fftw3.h>

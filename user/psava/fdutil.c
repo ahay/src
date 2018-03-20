@@ -261,7 +261,7 @@ static int    nbell;
 
 
 /*------------------------------------------------------------*/
-fdm2d fdutil_init(bool verb_,
+fdm2d fdutil2d_init(bool verb_,
 		  bool free_,
 		  sf_axis az_,
 		  sf_axis ax_,
@@ -295,6 +295,17 @@ fdm2d fdutil_init(bool verb_,
     fdm->ompchunk=ompchunk_;
 
     return fdm;
+}
+
+fdm2d fdutil_init(bool verb_,
+		  bool free_,
+		  sf_axis az_,
+		  sf_axis ax_,
+		  int     nb_,
+		  int ompchunk_)
+/*< old fdutil >*/
+{
+    fdutil2d_init(verb_,free_,az_,ax_,nb_,ompchunk_);
 }
 
 /*------------------------------------------------------------*/
@@ -419,9 +430,9 @@ void offgridadj(float **ti,
 }
 
 /*------------------------------------------------------------*/
-void expand(float** a, 
-	    float** b, 
-	    fdm2d fdm)
+void expand2d(float** a, 
+	      float** b, 
+	      fdm2d fdm)
 /*< expand domain >*/
 {
     int iz,ix;
@@ -445,6 +456,12 @@ void expand(float** a,
 	    b[fdm->nxpad-ix-1][iz] = b[fdm->nxpad-fdm->nb-1][iz];
 	}
     }
+}
+
+void expand(float** a,float** b,fdm2d fdm)
+/*< old expand >*/
+{
+    expand2d(a,b,fdm);
 }
 
 /*------------------------------------------------------------*/
@@ -657,8 +674,8 @@ void cut3d_slice(float** a,
 }
 
 /*------------------------------------------------------------*/
-void bfill(float** b, 
-	   fdm2d fdm)
+void bfill2d(float** b, 
+	     fdm2d fdm)
 /*< fill boundaries >*/
 {
     int iz,ix;
@@ -678,6 +695,47 @@ void bfill(float** b,
     }
 }
 
+void bfill(float** b,fdm2d fdm)
+/*< old bfill >*/
+{
+    bfill2d(b,fdm);
+}
+
+/*------------------------------------------------------------*/
+void bfill3d(float*** b, 
+	     fdm3d fdm)
+/*< fill boundaries >*/
+{
+    int iz,ix,iy;
+
+    for         (iy=0; iy<fdm->nypad; iy++) {
+	for     (ix=0; ix<fdm->nxpad; ix++) {
+	    for (iz=0; iz<fdm->nb;    iz++) {
+		b[iy][ix][           iz  ] = b[iy][ix][           fdm->nb  ];
+		b[iy][ix][fdm->nzpad-iz-1] = b[iy][ix][fdm->nzpad-fdm->nb-1];
+	    }
+	}
+    }
+
+    for         (iy=0; iy<fdm->nypad; iy++) {
+	for     (ix=0; ix<fdm->nb;    ix++) {
+	    for (iz=0; iz<fdm->nzpad; iz++) {
+		b[iy][           ix  ][iz] = b[iy][           fdm->nb  ][iz];
+		b[iy][fdm->nxpad-ix-1][iz] = b[iy][fdm->nxpad-fdm->nb-1][iz];
+	    }
+	}
+    }
+
+    for         (iy=0; iy<fdm->nb;    iy++) {
+	for     (ix=0; ix<fdm->nxpad; ix++) {
+	    for (iz=0; iz<fdm->nzpad; iz++) {
+		b[           iy  ][ix][iz] = b[           fdm->nb  ][ix][iz];
+		b[fdm->nypad-iy-1][ix][iz] = b[fdm->nypad-fdm->nb-1][ix][iz];
+	    }
+	}
+    }
+	
+}
 
 /*------------------------------------------------------------*/
 scoef3d sinc3d_make(int nc,

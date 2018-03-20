@@ -1,7 +1,14 @@
 from rsf.suproj import * 
 
+#SConscript('../fetch/SConstruct')
+# SCsontript will always rerun other directory, I think because env changes.
+# perhaps scons sees PWD or DATAPATH has changed.  This works:
+import os
+os.system('cd ../fetch; scons')
+
 #http://woodshole.er.usgs.gov/operations/ia/public_ds_info.php?fa=1978-015-FA
-#http://cotuit.er.usgs.gov/Data/1978-015-FA/NL/001/01/32-obslogs/32obslog.pdf   #http://cotuit.er.usgs.gov/Data/1978-015-FA/SE/001/18/
+#http://cotuit.er.usgs.gov/Data/1978-015-FA/NL/001/01/32-obslogs/32obslog.pdf   
+#http://cotuit.er.usgs.gov/Data/1978-015-FA/SE/001/18/
 #################### 
 # Fetch the dataset and convert to multiple rsf files
 # check web at
@@ -11,32 +18,15 @@ from rsf.suproj import *
 # Agg2146_SelectTab/4/Default.aspx
 ####################
 
-# first download the display of the previous stack
-# download and view the image of the previous stack:
-#Fetch('41_81_IM.JPG',
-#      server='http://certmapper.cr.usgs.gov',
-#      top='nersl/NPRA/SEISMIC/1981/41_81',
-#      dir='IMAGES')
-#THis can be done using:
-# wget http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/41_81/IMAGES/41_81_IM.JPG 
-#Result('prevstack','41_81_IM.JPG',
-#       'oodraw ${SOURCES[0]}',stdin=0)
+# to look at first breaks on shots with 0 time delay:
+# <allshots.su  suwind key=ep min=3577 max=3607 |  suximage perc=90
 
-# download and view the survey notes:
-#Fetch('41_81_S.PDF',
-#      server='http://certmapper.cr.usgs.gov',
-#      top='nersl/NPRA/SEISMIC/1981/41_81',
-#      dir='DOCUMENTS')
-#Result('surveylog','41_81_S.PDF',
-#       'acroread ${SOURCES[0]}',stdin=0)
-
-# download and view the observer notes:
-#Fetch('32obslog.pdf',
-#      server='http://cotuit.er.usgs.gov',
-#      top='Data/1978-015-FA/NL/001/01',
-#      dir='32-obslogs')
-Result('observerlog','../fetch/32obslog.pdf',
-       'acroread ${SOURCES[0]}',stdin=0)
+# view the observer notes:
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+if pdfread:
+   Result('observerlog','../fetch/32obslog.pdf',
+          pdfread + ' ${SOURCES[0]}',stdin=0)
 
 # convert, and view previous processing stack
 file='checkstack'
@@ -57,7 +47,7 @@ Result('zoomcheckstack','checkstack',
        suximage title="zoom checkstack" perc=90
        ''')
 
-# i added suwind to padd all traces to the same time length
+# suwind pads all traces to the same time length
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
 tape=$SOURCE endian=%d
@@ -70,28 +60,43 @@ rawsegy=['U32A_01','U32A_02','U32A_03','U32A_04','U32A_05',
          'U32A_11','U32A_12','U32A_13','U32A_14','U32A_15',
          'U32A_16','U32A_17','U32A_18','U32A_19','U32A_20',
 	 'U32A_21']
+
+# after running segyread and running surange and sugethw a few times
+# I learned two files have some special problems that need to be fixed:
+# 'U32A_04' needs to have fldr 688 and 689 removed 
+# 'U32A_17' needs to have fldr 500-510 renumberred to 700-710 
+
+# this is the list of segy files that fdo not need fixes:
 easysegy=['U32A_01','U32A_02','U32A_03','U32A_05',
          'U32A_06','U32A_07','U32A_08','U32A_09','U32A_10',
          'U32A_11','U32A_12','U32A_13','U32A_14','U32A_15',
          'U32A_16','U32A_18','U32A_19','U32A_20',
 	 'U32A_21']
-# after running segyread and running surange and sugethw a few times
-# I learned
-# 'U32A_04' needs to have fldr 688 and 689 removed 
-# 'U32A_17' needs to have fldr 500-510 renumberred to 700-710 
 
 # there are also 'U32B_01','U32B_02','U32B_03'
 # and  'U32C_01','U32C_02','U32C_03'
 # and 'U32_01'
-# I think the line is collected in 3 parts. 32, 32a, and 32b.  There is plany
-# to use on line 32A.
+# The line is collected in 3 parts. 32, 32a, and 32b.  There is plenty
+# to use on line 32A, so I did not attempt to process the other parts of 
+# the line.
 
 for file in easysegy  :
     Flow([file, file+'.bin',  file+'.asc'],
-         '../fetch/'+file+'.SGY',segyread,stdin=0)
-    Flow(file+'_list1',file,'surange; echo file_list1 complete',stdout=0)
+         '../fetch/'+file+'.SGY',
+         '''
+         segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+             tape=$SOURCE endian=%d
+         | segyclean
+         | suwind tmax=12.28
+         ''' % (1-little_endian()),
+         stdin=0)
 
-# now handle the exception tapes:
+    Flow(file+'.txt',file,'surange >${TARGETS[0]}; cat ${TARGETS[0]}',stdout=0)
+
+# now handle the tapes that need fixes (U32A_04 and U32A_17).
+# 'U32A_04' needs to have fldr 688 and 689 removed 
+# 'U32A_17' needs to have fldr 500-510 renumberred to 700-710 
+
 file='U32A_04'
 Flow([file, file+'.bin',  file+'.asc'],
      '../fetch/'+file+'.SGY',
@@ -177,6 +182,10 @@ Result('firstrec24','line',
        suximage perc=90
        ''')
 
+# The ntg does not have the recording delay applied, so the deep 
+# water portion of the line is displayed without the 1, 2, 3, or 4 seconds 
+# delay applied.
+
 Flow('ntg','line',
        'suwind key=tracf min=48 max=48')
 
@@ -226,10 +235,10 @@ Result('ntgdelay','ntgdelay',
 
 # plot the first 1000 traces of ntg with spreading, decon, and nmo
 # pick waterbottom and waterbottom multiple on first trace.  I get 5.139 and
-# 10.230.  The delay to apply to make the multiple twicwe the watbot time
+# 10.230.  The delay to apply to make the multiple twice the watbot time
 # is .048.  I remember GSI required a 51 ms instrument delay.
 
-Result('ntg_pick_delay','ntgdelay',
+Result('ntgdelay_pef','ntgdelay',
        '''
        suwind count=1000 
        |  sugain tpow=1.0 
@@ -238,7 +247,7 @@ Result('ntg_pick_delay','ntgdelay',
        | suximage perc=90 title="ntgdelay with spreading, decon, and nmo" f2=1
        ''')
 # remove 51 ms delay and plot data to check work
-Result('ntg_static','ntgdelay',
+Result('ntgdelay_pef_51ms','ntgdelay',
        '''
        suwind count=1000 
        | suchw key1=tstat a=51 b=0 key2=offset 
@@ -246,7 +255,7 @@ Result('ntg_static','ntgdelay',
        | sugain tpow=1.0 
        | supef maxlag=.100 
        | sunmo tnmo=0 vnmo=1500 
-       | suximage perc=90 title="ntgdelay with spreading, decon, and nmo" f2=1
+       | suximage perc=90 title="ntgdelay, spreading, decon, nmo, 51ms " f2=1
        ''')
 
 Result('secondmovie','allshots',
@@ -261,7 +270,7 @@ Result('thirdmovie','allshots',
        | sugain tpow=1.0 
        | sumute xmute=0,4000 tmute=0,4 mode=0 
          key=offset 
-         taper=50 
+         ntaper=50 
        | suxmovie n2=192 loop=1 fframe=1 dframe=1 d1=.004
                 title="sugain, sumute record %g" perc=99
        ''')
@@ -277,7 +286,7 @@ Flow('cdps','allshots',
        xmute=0,4000 tmute=0,4 
        mode=0 
        key=offset 
-       taper=50 
+       ntaper=50 
      | supef maxlag=.100
      ''' ) 
 

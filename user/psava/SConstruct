@@ -48,8 +48,13 @@ decibel
 itrack2d itrack3d
 injop2d injop3d
 transp12
+esou epot
+regrid1d regrid2d regrid3d
+getattr
+checkerboard
 '''
 
+# vse
 # awefd2d awefd3d
 
 # Python targets

@@ -12,7 +12,7 @@ pocsseislet rtm2d rtmadcig rtmodcig rtmva2d
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 viscoa2d viscoe2d excitationic
 '''
-
+# lsprtm2d
 progs_fftw='''
 dlct fpocs2d fpocs3d istinterp lsinterp2d istpad 
 pocs3d pocs ps2d mwni2d  myradon2

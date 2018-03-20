@@ -1,4 +1,39 @@
-==Release 2.0 (TBA)==
+==Release 2.1 (TBD)==
+
+===Additions and enhancements===
+
+To the reproducible documents collection: 
+
+* tccs/fwiseislet: Full-waveform inversion using seislet
+regularization (Xue, Zhu, and Fomel)
+
+To SCons:
+
+To documentation:
+
+To APIs:
+
+To the Python package:
+
+To programs:
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+In the build system:
+
+===Changes in defaults and interfaces===
+
+==Release 2.0 (2017-07-08)==
 
 ===Additions and enhancements===
 
@@ -83,6 +118,7 @@ To programs:
 * user/kregimbal: New contributor (Kelly Regimbal)
 * user/dmerzlikin: New contributor (Dmitrii Merzlikin)
 * user/sbader: New contributor (Sean Bader)
+* char to int conversion in sfdd
 
 ===Bug fixes===
 

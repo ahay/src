@@ -54,7 +54,7 @@ Result("mapped_stack3d","mapped_stack",
           | byte 
           | grey3 
             frame1=300 frame2=350 frame3=250 
-            title='Parihaka 3D' flat=n
+            title='GOM Garden Banks Blk 73 (from BOEM)' flat=n
           ''')
    
 End()

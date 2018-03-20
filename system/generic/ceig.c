@@ -57,7 +57,10 @@ void ceig(int niter      /* number of iterations */,
 	  sf_complex *e  /* [n] eigenvalues */)
 /*< find eigenvalues >*/
 {
-    int iter, j, k, info;
+    int iter, j, k;
+#ifdef SF_HAS_LAPACK
+    int info;
+#endif    
     float s2,s0=1.;
 
     if (niter > 0) { /* Jacobi iterations */
@@ -86,7 +89,7 @@ void ceig(int niter      /* number of iterations */,
 	    }
 	}
 #ifdef SF_HAS_LAPACK
-	cgeev_( "N", "N", &m, b, &m, e, work, &n2, work, &n2, work, &n2, rwork, &info );
+	cgeev_( "N", "N", &m, (MKL_Complex8*) b, &m, (MKL_Complex8*) e, (MKL_Complex8*) work, &n2, (MKL_Complex8*) work, &n2, (MKL_Complex8*) work, &n2, rwork, &info );
 	if (info) sf_error("cgeev_ failed");
 #else
 	sf_error("No LAPACK");

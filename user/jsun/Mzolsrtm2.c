@@ -60,9 +60,9 @@ typedef struct Geopar {
 int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_complex **rt, geopar geop, sf_complex ***wvfld)
 /*< zero-offset exploding reflector modeling/migration >*/
 {
-    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfnt, wfit, snap;
+    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfit, snap;
     int im, i, j, m2, ik, nk, pad1;
-    float dt, dx, dz;
+    float dx, dz;
     sf_complex *curr, **wave, *cwave, *cwavem, c;
     sf_complex *currm;
     bool verb;
@@ -78,9 +78,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
     dz  = geop->dz;
     gpz = geop->gpz;
     nt  = geop->nt;
-    dt  = geop->dt;
     snap= geop->snap;
-    wfnt= geop->wfnt;
     pad1= geop->pad1;
     verb= geop->verb;
     nzx2= geop->nzx2;
@@ -115,6 +113,8 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
                 ktp[iz+ix*nz2] = ktmp;
             }
         }
+    } else {
+	ktp = NULL;
     }
 
     curr = sf_complexalloc(nzx2);
@@ -168,7 +168,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 #ifdef SF_HAS_COMPLEX_H
 		    c += wave[im][ik]*conjf(rt[ik][im]);
 #else
-		    c += sf_cmul(wave[im][ik],conjf(rt[ik][im])); //complex multiplies complex
+		    c = sf_cadd(c,sf_cmul(wave[im][ik],conjf(rt[ik][im]))); //complex multiplies complex
 #endif
 		}
 		cwave[ik] = c;
@@ -181,7 +181,11 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 #pragma omp parallel for private(ix)
 #endif
 	    for (ix=0; ix < nx; ix++) {
+#ifdef SF_HAS_COMPLEX_H		
 		curr[gpz+ix*nz2] += dat[ix][it];
+#else
+		curr[gpz+ix*nz2] = sf_cadd(curr[gpz+ix*nz2],dat[ix][it]);
+#endif
 	    }
 
             /* 2 - taper */
@@ -304,7 +308,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 #ifdef SF_HAS_COMPLEX_H
 			c += lt[im][i]*wave[im][j];
 #else
-			c += sf_cmul(lt[im][i], wave[im][j]);
+			c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif	    
 		    }
 		    curr[j] = c;
@@ -322,7 +326,10 @@ int main(int argc, char* argv[])
 {
     bool adj,timer,verb;
     int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, gpz, wfnt;
-    int m2, n2, nk, nth=1, taper;
+    int m2, n2, nk, taper;
+#ifdef _OPENMP
+    int nth=1;
+#endif
     float dt, dx, dz, ox, oz, thresh;
     sf_complex **img, **dat, **lt, **rt, ***wvfld;
     sf_file data, image, left, right, snaps;

@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheadermath', 'sfmask', 'sfmul', 'sfheaderwindow', 'sfstack', 'sfmath', 'sfwindow', 'sftransp', 'sfconjgrad', 'sfput', 'sfgraph', 'sfdd', 'sfscale', 'sfnnshape', 'sfgrey']
+data=['http://s3.amazonaws.com/teapot/npr3_field.sgy']
+size= 6481633988

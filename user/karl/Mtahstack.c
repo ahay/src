@@ -345,9 +345,10 @@ int main(int argc, char* argv[])
 	}
       }
     }
-    /* if one of the headers changes, apply fold recovery, output trace, and 
-       set fold=0.  Fold=0 will initialize the stktrace to zero at top f loop*/
-    if(pkeychanged){
+    /* if one of the headers changes or if eof encounterred on get_tah complte
+       processing the gather: apply fold recovery, output trace, and set fold=0.
+       Fold=0 will initialize the stktrace to zero at top of loop*/
+    if(pkeychanged || eof_get_tah){
       /***********************************/
       /* divide by the time variant fold */
       /***********************************/

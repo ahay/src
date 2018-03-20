@@ -1,5 +1,5 @@
 /* Least-squares interpolation for 2D validition
-*/
+ */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
@@ -19,7 +19,6 @@
 */
 #include <rsf.h>
 #include <math.h>
-#include <complex.h>
 
 #include "masklop.h"
 #include "fftn.h"

@@ -1,5 +1,5 @@
 /* n-d fft operator 
-Note: The adjoint is made as the same as inverse by normalization!
+   Note: The adjoint is made as the same as inverse by normalization!
 */
 
 /*
@@ -34,12 +34,12 @@ fftwf_complex *tmp;
 void fftn_init(int rank, int *n)
 /*< initialize >*/
 {
-	int i;
-	num=1;
-	for(i=0; i<rank; i++) num*=n[i];
-    	tmp=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*num);
-    	fftn=fftwf_plan_dft(rank, n, tmp, tmp, FFTW_FORWARD, FFTW_MEASURE);	
-   	ifftn=fftwf_plan_dft(rank, n, tmp, tmp, FFTW_BACKWARD, FFTW_MEASURE);
+    int i;
+    num=1;
+    for(i=0; i<rank; i++) num*=n[i];
+    tmp=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*num);
+    fftn=fftwf_plan_dft(rank, n, tmp, tmp, FFTW_FORWARD, FFTW_MEASURE);	
+    ifftn=fftwf_plan_dft(rank, n, tmp, tmp, FFTW_BACKWARD, FFTW_MEASURE);
 }
 
 void fftn_lop (bool adj, bool add, int nx, int ny, sf_complex *xx, sf_complex *yy)

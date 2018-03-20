@@ -1,6 +1,6 @@
 /* Combining VTI and HTI parameters to orthorhombic according to Schoenberg & Sayer (1995)
-NOTE: HTI is defined in VTI grid with respect to the vertical (Ruger(1997)) 
-Refer to SEAM 2 notes for detailed description
+   NOTE: HTI is defined in VTI grid with respect to the vertical (Ruger(1997)) 
+   Refer to SEAM 2 notes for detailed description
 
 */
 /*
@@ -34,9 +34,9 @@ double  WORK[360];
 
 int main(int argc, char* argv[])
 {
-	int n[3],i,j,nm;
-	bool rotate;
-	float o[3],d[3];
+    int n[3],i,j,nm;
+    bool rotate;
+    float o[3],d[3];
     float C11v, C12v, C13v, C33v, C55v, C66v, C11h, C12h, C13h, C22h, C44h, C55h, Phi, cortf[36];
     double cvti[36],chti[36], ciso[36], cort[36], bond[36], temp[36];
     sf_file c11o,c22o,c33o,c44o,c55o,c66o,c12o,c13o,c23o,c16o,c26o,c36o,c45o,c33,c55,c11v,c66v,c12v,c13v,c11h,c55h,c12h,c13h,phi;
@@ -67,11 +67,17 @@ int main(int argc, char* argv[])
     /* Doing azimuthal rotation (y-> mono, n-> ortho)*/
     if (rotate) {
     	phi = sf_input("phi");
-		c16o = sf_output("c16o");
-		c26o = sf_output("c26o");
-		c36o = sf_output("c36o");
-		c45o = sf_output("c45o");
-    }	
+	c16o = sf_output("c16o");
+	c26o = sf_output("c26o");
+	c36o = sf_output("c36o");
+	c45o = sf_output("c45o");
+    }	else {
+	phi = NULL;
+	c16o = NULL;
+	c26o = NULL;
+	c36o = NULL;
+	c45o = NULL;
+    }
 
     /* get 3-D grid parameters */
     if (!sf_histint(c33,"n1",n))     sf_error("No n1= in input");
@@ -87,16 +93,16 @@ int main(int argc, char* argv[])
     /* get all cij (default = orthorhombic) ---------------------------------------------------------*/
     nm = n[0]*n[1]*n[2];
 
-	for (i=0;i<nm;i++) {
+    for (i=0;i<nm;i++) {
 
 	// Read VTI
-    sf_floatread(&C33v,1,c33); sf_floatread(&C55v,1,c55); sf_floatread(&C11v,1,c11v); 
-    sf_floatread(&C12v,1,c12v); sf_floatread(&C66v,1,c66v); sf_floatread(&C13v,1,c13v); 
+	sf_floatread(&C33v,1,c33); sf_floatread(&C55v,1,c55); sf_floatread(&C11v,1,c11v); 
+	sf_floatread(&C12v,1,c12v); sf_floatread(&C66v,1,c66v); sf_floatread(&C13v,1,c13v); 
     
-    // Read HTI
-    C22h=C33v; C44h=C55v; sf_floatread(&C11h,1,c11h);  sf_floatread(&C12h,1,c12h); 
-    sf_floatread(&C55h,1,c55h); sf_floatread(&C13h,1,c13h);  
-    if (rotate) sf_floatread(&Phi,1,phi); 
+	// Read HTI
+	C22h=C33v; C44h=C55v; sf_floatread(&C11h,1,c11h);  sf_floatread(&C12h,1,c12h); 
+	sf_floatread(&C55h,1,c55h); sf_floatread(&C13h,1,c13h);  
+	if (rotate) sf_floatread(&Phi,1,phi); 
 
 
 	// Construct 6x6 array
@@ -136,7 +142,7 @@ int main(int argc, char* argv[])
 	
 	// Orthorhombic compliance
 	for (j=0;j<36;j++) {
-		cort[j] = cvti[j] + chti[j] - ciso[j];
+	    cort[j] = cvti[j] + chti[j] - ciso[j];
 	}
 	
 	//ORT (compliance -> stiffness)
@@ -144,27 +150,27 @@ int main(int argc, char* argv[])
 	dgetri_( &N, cort, &LDA, IPIV, WORK, &LWORK, &INFO ); // General matrix inversion
 
 
-	 if (rotate) {
-		// Bond transformation of resultant orthorhombic (Map view CCW positive w/ Phi wrt x-axis or y-axis)
-		double c=cos(Phi), s=sin(Phi), cc=cos(2*Phi), ss=sin(2*Phi);
-		bond[0]= c*c ; bond[6]= s*s ;  bond[12]= 0.0 ; bond[18]= 0.0 ; bond[24]= 0.0 ; bond[30]=-ss  ; 
-		bond[1]= s*s ; bond[7]= c*c ;  bond[13]= 0.0 ; bond[19]= 0.0 ; bond[25]= 0.0 ; bond[31]= ss  ;
-		bond[2]= 0.0 ; bond[8]= 0.0 ;  bond[14]= 1.0 ; bond[20]= 0.0 ; bond[26]= 0.0 ; bond[32]= 0.0 ; 
-		bond[3]= 0.0 ; bond[9]= 0.0 ;  bond[15]= 0.0 ; bond[21]= c   ; bond[27]= s   ; bond[33]= 0.0 ;
-		bond[4]= 0.0 ; bond[10]= 0.0 ; bond[16]= 0.0 ; bond[22]= -s  ; bond[28]= c   ; bond[34]= 0.0 ; 
-		bond[5]= ss/2; bond[11]=-ss/2; bond[17]= 0.0 ; bond[23]= 0.0 ; bond[29]= 0.0 ; bond[35]= cc  ; 
+	if (rotate) {
+	    // Bond transformation of resultant orthorhombic (Map view CCW positive w/ Phi wrt x-axis or y-axis)
+	    double c=cos(Phi), s=sin(Phi), cc=cos(2*Phi), ss=sin(2*Phi);
+	    bond[0]= c*c ; bond[6]= s*s ;  bond[12]= 0.0 ; bond[18]= 0.0 ; bond[24]= 0.0 ; bond[30]=-ss  ; 
+	    bond[1]= s*s ; bond[7]= c*c ;  bond[13]= 0.0 ; bond[19]= 0.0 ; bond[25]= 0.0 ; bond[31]= ss  ;
+	    bond[2]= 0.0 ; bond[8]= 0.0 ;  bond[14]= 1.0 ; bond[20]= 0.0 ; bond[26]= 0.0 ; bond[32]= 0.0 ; 
+	    bond[3]= 0.0 ; bond[9]= 0.0 ;  bond[15]= 0.0 ; bond[21]= c   ; bond[27]= s   ; bond[33]= 0.0 ;
+	    bond[4]= 0.0 ; bond[10]= 0.0 ; bond[16]= 0.0 ; bond[22]= -s  ; bond[28]= c   ; bond[34]= 0.0 ; 
+	    bond[5]= ss/2; bond[11]=-ss/2; bond[17]= 0.0 ; bond[23]= 0.0 ; bond[29]= 0.0 ; bond[35]= cc  ; 
 
-		// C.B^T
-		char str[2] = "nt"; double zero=0.0, one=1.0;
-		dgemm_(str,str+1,&N,&N,&N,&one,cort,&LDA,bond,&LDA,&zero,temp,&LDA);
+	    // C.B^T
+	    char str[2] = "nt"; double zero=0.0, one=1.0;
+	    dgemm_(str,str+1,&N,&N,&N,&one,cort,&LDA,bond,&LDA,&zero,temp,&LDA);
 	
-		// B(C.B^T)
-		dgemm_(str,str,&N,&N,&N,&one,bond,&LDA,temp,&LDA,&zero,cort,&LDA);
+	    // B(C.B^T)
+	    dgemm_(str,str,&N,&N,&N,&one,bond,&LDA,temp,&LDA,&zero,cort,&LDA);
 	}
 	
 	// Cast to float
 	for (j=0;j<36;j++) {
-		cortf[j] = (float) cort[j];
+	    cortf[j] = (float) cort[j];
 	}
 	
 	sf_floatwrite(cortf,1,c11o); sf_floatwrite(cortf+1,1,c12o); sf_floatwrite(cortf+2,1,c13o);
@@ -172,11 +178,11 @@ int main(int argc, char* argv[])
 	sf_floatwrite(cortf+21,1,c44o); sf_floatwrite(cortf+28,1,c55o); sf_floatwrite(cortf+35,1,c66o); 
 	
 	if (rotate) { // Monoclinic
-		sf_floatwrite(cortf+5,1,c16o); sf_floatwrite(cortf+11,1,c26o); sf_floatwrite(cortf+17,1,c36o);
-		sf_floatwrite(cortf+22,1,c45o);
+	    sf_floatwrite(cortf+5,1,c16o); sf_floatwrite(cortf+11,1,c26o); sf_floatwrite(cortf+17,1,c36o);
+	    sf_floatwrite(cortf+22,1,c45o);
 	}	
 	
-	}
+    }
 	
     exit (0);
 }

@@ -1,32 +1,73 @@
 from rsf.proj import *
 
-#Fetch('marmvel.hh','marm')
+#proj = Project()
+#prog = proj.Program('lsrtm.c')
+#prog = proj.Program('awave.c')
+#Flow('vel',None, 
+#    '''
+#    echo in=v.bin n1=200 n2=200 data_format=binary_float |
+#    sfdd form=native |
+#    sfput d1=12 d2=12 o1=0 o2=0 label1="Depth" label2="Lateral" unit1="m" unit2="m"
+#    ''')
 
-Flow('vel','marmvel.hh',
+Flow('vel1',None,
 	'''
-	dd form=native | window j1=3 j2=3 | 
-     	put label1=Depth  unit1=m label2=Lateral unit2=m
+	math output=1500 n1=50 n2=200 d1=5 d2=5 
+	label1=x1 unit1=m label2=x2 unit2=m
 	''')
-Result('vel',
+Flow('vel2',None,
 	'''
-	grey color=j mean=y title="Marmousi model" scalebar=y 
-	bartype=v barlabel="V" 	barunit="m/s"
+	math output=1600 n1=50 n2=200 d1=5 d2=5
+	label1=x1 unit1=m label2=x2 unit2=m
 	''')
+Flow('vel31',None,
+	'''
+	math output=1700 n1=50 n2=70 d1=5 d2=5
+	label1=x1 unit1=m label2=x2 unit2=m
+	''')
+Flow('vel32',None,
+	'''
+	math output=1600 n1=50 n2=60 d1=5 d2=5
+	label1=x1 unit1=m label2=x2 unit2=m
+	''')
+Flow('vel33',None,
+	'''
+	math output=1700 n1=50 n2=70 d1=5 d2=5
+	label1=x1 unit1=m label2=x2 unit2=m
+	''')
+Flow('vel3',['vel31','vel32','vel33'], 'cat axis=2 ${SOURCES[1:3]}')
+Flow('vel4',None,
+	'''
+	math output=1700 n1=50 n2=200 d1=5 d2=5
+	label1=x1 unit1=m label2=x2 unit2=m
+	''')
+Flow('vel',['vel1', 'vel2','vel3','vel4'], 'cat axis=1 ${SOURCES[1:4]}')
+Result('vel',' grey color=j mean=y scalebar=y title="velocity model" ')
 
+#generate seismogram with early arrivals (direct+diving wave) muted
 Flow('shots','vel',
-	'''
-	sfmshots csdgather=n fm=15 amp=1 dt=0.001 ns=2 ng=767 nt=3900
-	sxbeg=250 szbeg=2 jsx=250 jsz=0 gxbeg=0 gzbeg=3 jgx=1 jgz=0
-	''')
+    '''
+    sfmshots csdgather=n fm=25 amp=1 dt=0.001 ns=10 ng=200 nt=1500
+    sxbeg=5 szbeg=2 jsx=19 jsz=0 gxbeg=0 gzbeg=3 jgx=1 jgz=0 
+    mute=y vmute=1500 ntd=100
+    ''')
+
 Result('shots','grey color=g title=shot label2= unit2=')
 
-Flow('lsimage imgrtm','shots vel',
-	'''
-	sflsprtm2d vel=${SOURCES[1]} imgrtm=${TARGETS[1]} verb=y niter=5
-	''')
+#Flow('lsrtm40','shots',
+#    '''
+#    lsprtm2d vel=vel.rsf imgrtm=rtm.rsf shot_born=dat2.rsf verb=y niter=10
+#    ''')
 
-Plot('imgrtm','laplac| grey title="RTM image" ')
-Plot('lsimage','laplac| grey title="LSRTM image" ')
+Flow('lsimage imgrtm','shots vel',
+    '''
+    lsprtm2d vel=${SOURCES[1]} imgrtm=${TARGETS[1]} verb=y niter=15 testadj=0
+    ''')
+
+Plot('imgrtm','grey title="RTM" ')
+Plot('lsimage','grey title="LSRTM" ')
 Result('all','imgrtm lsimage','SideBySideAniso')
 
+
 End()
+

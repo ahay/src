@@ -2,7 +2,7 @@ import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'gpi3dzo psovc psovcp flatlinpiwrapper flatlinpiwrapper2d chaindr anovc anovcv mig2s mig2semb linpipwd2d linpipwd2dca mig2pwd'
+progs = 'gpi3dzo psovc psovcp flatlinpiwrapper flatlinpiwrapper2d chaindr anovc anovcv mig2s mig2semb linpipwd2d linpipwd2dca mig2pwd pwdtensor pwdtensorh'
 
 mpi_progs = ''
 
@@ -44,11 +44,13 @@ for prog in mains:
 ccmains = Split(ccprogs)
 subs = Split(subs)
 
-if 'c++' in env.get('API',[]):
+ccompile = 'c++' in env.get('API',[]) and not 'NO_COMPLEX' in env.get('CPPDEFINES',[])
+
+if ccompile:
     objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
 
 for prog in ccmains:
-    if 'c++' in env.get('API',[]):
+    if ccompile:
         prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
         env.Depends(prog,map (lambda x: x + '.hh', subs))
     else:

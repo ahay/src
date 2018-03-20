@@ -55,8 +55,8 @@ void sf_dtrianglen (int ider   /* direction of the derivative */,
 		    float* data   /* input/output */)
 /*< linear operator (derivative with respect to radius) >*/
 {
-    float *t1, *t2;
-    int i, irep, j, i0, i1, n1, s1;
+    float *t1=NULL, *t2=NULL;
+    int i, irep, j, i0, i1, n1=0, s1=0;
 
     ider--;
 
@@ -68,7 +68,7 @@ void sf_dtrianglen (int ider   /* direction of the derivative */,
 	t2 = sf_floatalloc(n1);
 
 	sf_deriv_init(n1,nderiv,0.);
-    }
+    } 
 
     for (i=0; i < dim; i++) {
 	if (NULL != tr[i]) {

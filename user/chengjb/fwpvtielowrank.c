@@ -324,7 +324,7 @@ void fwpvti2despectal(float *y, float *x, float *C13C44, float *kxkz, int *ijkx,
  
     //sf_warning("============= using SF_HAS_FFTW ====");
 
-    sf_complex *xx, *xin, *xout;
+    sf_complex *xin, *xout;
 
     fftwf_plan xp;
     fftwf_plan xpi;

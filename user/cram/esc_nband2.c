@@ -48,7 +48,7 @@ struct EscNBand2 {
     int              nz, nx, na; /* Dimensions of phase space */
     unsigned long    nc; /* Number of points in the band */
     int              iz; /* Current band position */
-    NBIter2        zdir; /* Direction of the band movement in z */
+    EscDirection2  zdir; /* Direction of the band movement in z */
     unsigned char ***nb; /* Values in the narrow band */
     unsigned char  **nb2; /* Pointer for the middle NB level */ 
 };
@@ -299,7 +299,7 @@ sf_esc_point2 sf_esc_nbchild2_iter_next (sf_esc_nbchild2_iter esc_citer,
 
     /* Translate from sweeping indices ia to array indices iia
        and then to global phase-space indices depending on the sweeping direction */
-    if (NB2_BACK == esc_citer->nb->zdir) { /* Moving upward */
+    if (ESC2_BACK == esc_citer->nb->zdir) { /* Moving upward */
         if (NB2_BACK == esc_citer->xdir) { /* Right->left */
             iia = esc_citer->na + esc_citer->ia;
             *ia = esc_citer->ia;
@@ -320,7 +320,7 @@ sf_esc_point2 sf_esc_nbchild2_iter_next (sf_esc_nbchild2_iter esc_citer,
 
     /* Fill in neighbor arrays */
     iiz = *iz;
-    if (NB2_FORW == esc_citer->nb->zdir) { /* Moving upward */
+    if (ESC2_FORW == esc_citer->nb->zdir) { /* Moving upward */
         for (i = 0; i < ESC2_MORDER; i++) {
             if ((iiz - i - 1) >= 0)
                zp[i] = (sf_esc_point2)&esc_citer->nb->nb[i + 1][iix][iia*sz];
