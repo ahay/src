@@ -26,8 +26,8 @@ except:
 #kls suggestions on testing:
 # I used 
 # cd $RSFSRC/book/data/eastcoast32/madagascar
-# cp /Users/karl/RSFSRC/api/python/m8r.py .
-# cp /Users/karl/RSFSRC/api/python/m8rtest .
+# cp $RSFSRC/api/python/m8r.py .
+# cp $RSFSRC/api/python/m8rtest .
 # scons U32A_04t.rsf	U32A_17t.rsf 
 # python m8r.py
 # ./m8rtest
@@ -245,7 +245,7 @@ class File(object):
             self.tag = tag
         self.filename=self.tag
         self.temp = temp
-        self.narray = None
+        self.narray = []
         for filt in Filter.plots + Filter.diagnostic:
             # run things like file.grey() or file.sfin()
             setattr(self,filt,Filter(filt,srcs=[self],run=True))
@@ -331,28 +331,30 @@ class File(object):
         'Dot product with itself'
         return self.dot(self)
     def __array__(self,context=None):
+        #sys.stderr.write('in __array__n')
         'create narray'
-        if _swig_:
-            if None == self.narray:
-                if not hasattr(self,'f'):
+        if [] == self.narray:
+            if _swig_:
+                if not hasattr(self,'file'):
                     f = c_rsf.sf_input(self.tag)
                 else:
-                    f = self.f
+                    f = self.file
                 self.narray = c_rsf.rsf_array(f)
-                if not hasattr(self,'f'):
+                if not hasattr(self,'file'):
                     c_rsf.sf_fileclose(f)
-            return self.narray
-        else:
-            # gets only the real part of complex arrays ##kls 
-            f=Input(self.filename)
-            self.narray=f.read() 
-            return self.narray
-            
+            else:
+                # gets only the real part of complex arrays ##kls 
+                f=Input(self.filename)
+                self.narray=f.read() 
+        return self.narray
+             
     def __array_wrap__(self,array,context=None):
+        sys.stderr.write('in __array_wrap__n')
         inp = Input(self) 
         inp.read(array)
         return inp
     def __getitem__(self,i):
+        #sys.stderr.write('in __getitem__n')
         array = self.__array__()
         return array[i]
     def __setitem__(self,index,value):
