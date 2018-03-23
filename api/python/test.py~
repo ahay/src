@@ -1,0 +1,16 @@
+import m8r
+spike = m8r.spike(n1=10)[0]
+spike2 = spike+spike
+spike.max()
+
+spike2.max()
+
+spike3 = spike+spike2
+
+spike2xspike2=spike2*spike2
+
+spike2xspike2.max()
+
+print spike3.dot(spike2)
+
+
