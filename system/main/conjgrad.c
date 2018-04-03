@@ -452,6 +452,7 @@ int main(int argc, char* argv[])
     fclose(xfile);
 
     unlink(R);
+    unlink(r);
     unlink(x);
     unlink(g);
     unlink(s);
