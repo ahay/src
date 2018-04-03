@@ -12,9 +12,25 @@ par = rsf.Par()
 slowness_name = par.string('slowness') # Slowness from Logs
 rhob_name = par.string('density') # Density from Logs
 
-depth = rsf.Input() # Depth from Logs
-slow = rsf.Input(slowness_name)
-rhob = rsf.Input(rhob_name)
+deptha = rsf.Input() # Depth from Logs
+slowa = rsf.Input(slowness_name)
+rhoba = rsf.Input(rhob_name)
+
+assert 'float' == deptha.type
+assert 'float' == slowa.type
+assert 'float' == rhoba.type
+
+sdepth = deptha.int("n1")
+sslow = slowa.int("n1")
+srhob = rhoba.int("n1")
+
+depth = np.zeros(sdepth,'f')
+slow = np.zeros(sdepth,'f')
+rhob = np.zeros(sdepth,'f')
+
+deptha.read(depth)
+slowa.read(slow)
+rhoba.read(rhob)
 
 ratio = par.float("ratio") # Percent of dom wavelength
 peak_f = par.float("peak_f") # Dom wavelength
@@ -24,14 +40,6 @@ depth_bkn = rsf.Output() # Output depth sampling
 vel_bkn = rsf.Output('vel_bk') # Backus Avg. velocity
 slow_bkn = rsf.Output('slow_bk') # Backus Avg. slowness
 rhob_bkn = rsf.Output('rhob_bk') # Averaged density
-
-assert 'float' == depth.type
-assert 'float' == slow.type
-assert 'float' == rhob.type
-
-sdepth = depth.int("n1")
-sslow = slow.int("n1")
-srhob = rhob.int("n1")
 
 assert sdepth == sslow
 assert sdepth == srhob
