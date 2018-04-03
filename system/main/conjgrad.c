@@ -63,8 +63,8 @@ int main(int argc, char* argv[])
     pid_t pid[6]={1,1,1,1,1,1};
     off_t nm, nd, msiz, dsiz, pos;
     size_t nbuf, mbuf, dbuf;
-    FILE *xfile, *Rfile, *gfile, *sfile, *Sfile;
-    char *x, *R, *g, *s, *S, *prog;
+    FILE *xfile, *Rfile, *gfile, *sfile, *Sfile, *rfile;
+    char *x, *R, *r, *g, *s, *S, *prog;
     sf_file mod, dat, from, mwt, x0, known;  /* input */
     sf_file to, out; /* output */
 
@@ -101,12 +101,14 @@ int main(int argc, char* argv[])
     /* number of iterations */
 
     Rfile = sf_tempfile(&R,"w+b"); 
+    rfile = sf_tempfile(&r,"w+b"); 
     xfile = sf_tempfile(&x,"w+b"); 
     gfile = sf_tempfile(&g,"w+b");
     sfile = sf_tempfile(&s,"w+b");
     Sfile = sf_tempfile(&S,"w+b");
 
     fclose(Rfile);
+    fclose(rfile);
     fclose(xfile);
     fclose(gfile);
     fclose(sfile);
@@ -247,26 +249,29 @@ int main(int argc, char* argv[])
 		   for (i=0; i < mbuf; i++) { rn += (double) buf[i] * buf[i]; }
 		   MWRITE(gfile); );
 	    
-	    sfile = fopen(s,"r+b");
+	    rfile = fopen(r,"r+b");
 
 	    if (0==iter) {
 		alpha = 0.;
 	    } else {
-		if (1 != fread(&rnp,sizeof(double),1,sfile)) sf_error("read error");
+		if (1 != fread(&rnp,sizeof(double),1,rfile)) sf_error("read error");
 
 		alpha = rn/rnp;
 
-		if (0 > fseeko(sfile,0,SEEK_SET))
+		if (0 > fseeko(rfile,0,SEEK_SET))
 		    sf_error ("seek problem");
 	    }
+
+	    fwrite(&rn,sizeof(double),1,rfile);
+	    fclose(rfile);
 	    
 	    if (sizeof(double) != write(p[4][1],&alpha,sizeof(double)))
 		sf_error("write error");
-	    
-	    fwrite(&rn,sizeof(double),1,sfile);
 
 	    if (0 > fseeko(gfile,0,SEEK_SET))
 		sf_error ("seek problem");
+
+	    sfile = fopen(s,"r+b");
 
 	    /* s = g + alpha*s */
 
@@ -284,6 +289,7 @@ int main(int argc, char* argv[])
 		   } 
 		   
 		   MWRITE(sfile); ); 
+	    fclose(sfile);
 
 	    if (0 > fseeko(gfile,0,SEEK_SET))
 		sf_error ("seek problem");
@@ -300,7 +306,6 @@ int main(int argc, char* argv[])
 		   sf_floatwrite(buf,mbuf,to); );
 	    
 	    fclose(gfile);
-	    fclose(sfile);
 
 	    sf_warning("grad=%lg",rn);
 
@@ -361,11 +366,11 @@ int main(int argc, char* argv[])
 		   DWRITE(Sfile); );
 	    fclose(Sfile);
 
-	    sfile = fopen(s,"rb");
+	    rfile = fopen(r,"rb");
 
-	    if (1 != fread(&rn,sizeof(double),1,sfile)) sf_error("read error");
+	    if (1 != fread(&rn,sizeof(double),1,rfile)) sf_error("read error");
 
-	    fclose(sfile);
+	    fclose(rfile);
 
 	    alpha = - rn/beta;
 
@@ -381,11 +386,7 @@ int main(int argc, char* argv[])
 	    if (sizeof(double) != read(p[5][0],&alpha,sizeof(double)))
 		sf_error("read error");
 
-	    sfile = fopen(s,"rb"); if (NULL == sfile) sf_error("Cannot open %s:",s);
-
-	    if (0 > fseeko(sfile,sizeof(double),SEEK_SET))
-		sf_error ("seek problem");
-
+	    sfile = fopen(s,"rb");  if (NULL == sfile) sf_error("Cannot open %s:",s);
 	    xfile = fopen(x,"r+b"); if (NULL == xfile) sf_error("Cannot open %s:",x);
 
 	    MLOOP( pos = ftello(xfile); 
