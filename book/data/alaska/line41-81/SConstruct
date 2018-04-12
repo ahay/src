@@ -33,7 +33,7 @@ pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
 if pdfread:
     Fetch('41_81_S.PDF',
           server='http://certmapper.cr.usgs.gov',
-          top='nersl/NPRA/SEISMIC/1981/41_81',
+          top='data/NPRA/SEISMIC/1981/41_81',
           dir='DOCUMENTS')
     Result('surveylog','41_81_S.PDF',
            pdfread + ' $SOURCE',stdin=0)
@@ -41,7 +41,7 @@ if pdfread:
     # download and view the observer notes:
     Fetch('41_81_O.PDF',
           server='http://certmapper.cr.usgs.gov',
-          top='nersl/NPRA/SEISMIC/1981/41_81',
+          top='data/NPRA/SEISMIC/1981/41_81',
           dir='DOCUMENTS')
     Result('observerlog','41_81_O.PDF',
            pdfread + ' $SOURCE',stdin=0)
@@ -56,7 +56,7 @@ rawsegy=['L23616','L23617','L23618','L23619','L23620']
 for file in rawsegy  :
     Fetch(file+'.SGY',
 	  server='http://certmapper.cr.usgs.gov',
-      	  top='nersl/NPRA/SEISMIC/1981/41_81',
+      	  top='data/NPRA/SEISMIC/1981/41_81',
       	  dir='DMUX')
     Flow([file, file+'.bin',  file+'.asc'],
          file+'.SGY',segyread,stdin=0)
@@ -146,7 +146,7 @@ Flow ('allshots', 'line binary_hdrfile1.dat',
 # download, convert, and view previous processing stack
 Fetch('41_81_PR.SGY',
       server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/41_81',
+      top='data/NPRA/SEISMIC/1981/41_81',
       dir='PROCESSED')
 file='checkstack'
 Flow([file, file+'.bin', file+'.asc'],
