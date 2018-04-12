@@ -14,10 +14,10 @@ from rsf.suproj import *
 # download and view the image of the previous stack:
 Fetch('41_81_IM.JPG',
       server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/41_81',
+      top='data/NPRA/SEISMIC/1981/41_81',
       dir='IMAGES')
 #THis can be done using:
-# wget http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/41_81/IMAGES/41_81_IM.JPG 
+# wget http://certmapper.cr.usgs.gov/data/NPRA/SEISMIC/1981/41_81/IMAGES/41_81_IM.JPG 
 
 oodraw = WhereIs('oodraw')
 
