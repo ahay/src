@@ -2,7 +2,16 @@ import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'gpi3dzo psovc psovcp flatlinpiwrapper flatlinpiwrapper2d chaindr anovc anovcv mig2s mig2semb linpipwd2d linpipwd2dca mig2pwd pwdtensor pwdtensorh'
+progs = '''
+	gpi3dzo psovc psovcp
+	flatlinpiwrapper flatlinpiwrapper2d chaindr
+	anovc anovcv mig2s
+	mig2semb linpipwd2d linpipwd2dca
+	mig2pwd pwdtensor pwdtensorh
+	lsmig3 linpi
+        linmig3 lspiazpwdmig3 piazpwdmig3 azpwd
+        anisodiffuse azspr
+	'''
 
 mpi_progs = ''
 
