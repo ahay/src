@@ -15,8 +15,8 @@
 //   along with this program; if not, write to the Free Software
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.hh>
-#include "../lexing/vecmatop.hh"
-#include "../lexing/serialize.hh"
+#include "vecmatop.hh"
+#include "serialize.hh"
 /* head files aumatically produced from C programs */
 extern "C"{
 #include "rtmutil.h"
