@@ -73,6 +73,31 @@ SEP converted to using \emph{GNU make} \cite{Schwab.sep.89.217}.
 
 SCons offers a comparable functionality but with a superior design...
 
+\subsection{Using SCons for compilation}
+
+SCons was designed primarily for compiling software code. An SConstruct file for compilation may look like
+
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+
+\begin{lstlisting}
+env = Environment()
+env.Append(CPPFLAGS=['-Wall','-g'])
+env.Program('hello',['hello.c', 'main.c'])
+\end{lstlisting}
+
+and produce something like
+
+\begin{verbatim}
+bash$ scons -Q
+gcc -o hello.o -c -Wall -g hello.c
+gcc -o main.o -c -Wall -g main.c
+gcc -o hello hello.o main.o
+\end{verbatim}
+to compile the hello program from the source files \texttt{hello.c} and \texttt{main.c}.
+
+Madagascar uses SCons to compile its programs from the source. The more frequent usage, however, comes from adopting SCons to manage data processing flows.
+
 \section{Managing data processing flows using \texttt{rsf.proj}}
 
 \subsection{Seismic Unix processing using  \texttt{rsf.suproj}}

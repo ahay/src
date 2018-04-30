@@ -135,9 +135,9 @@ void opendev (int argc, char* argv[])
     dev.smart_raster = true;
     dev.num_col = NCOLOR;
 
-    color_table = (float*)malloc (3*NCOLOR*sizeof (float));
-    tex_buf = (unsigned char*)malloc (TEX_SIZE*TEX_SIZE*sizeof (unsigned char));
-    ogllists = (unsigned int*)malloc (MAX_CHUNKS*sizeof (unsigned int));
+    color_table = sf_floatalloc (3*NCOLOR);
+    tex_buf = sf_ucharalloc (TEX_SIZE*TEX_SIZE);
+    ogllists = (unsigned int*) sf_alloc (MAX_CHUNKS,sizeof (unsigned int));
 
     glutInit (&argc, argv);
 
@@ -606,7 +606,7 @@ void oglraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
     stepy = (ymax - ymin + 1) / (height / (float)TEX_SIZE);
     stepx = (xmax - xmin + 1) / (width / (float)TEX_SIZE);
 
-    tex_id = (GLuint*)malloc (hnum*wnum*sizeof (GLuint));
+    tex_id = (GLuint*) sf_alloc (hnum*wnum,sizeof (GLuint));
     glGenTextures (hnum*wnum, tex_id);
 
     /* Loop over tiles and make textures */
