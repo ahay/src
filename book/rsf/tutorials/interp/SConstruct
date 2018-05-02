@@ -76,6 +76,21 @@ Result('seismic','cube',
 
 # Horizon
 
+Fetch('Penobscot_Seabed.txt','data',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials-2016/master/1604_Function_of_interpolation')
+Flow('xy','Penobscot_Seabed.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=3 n2=249572 | 
+     dd form=native type=int | window n1=2
+     ''',stdin=0)
+Flow('horizon','Penobscot_Seabed.txt xy',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=3 n2=249572 | dd form=native | 
+     window n1=1 f1=2 squeeze=n | intbin head=${SOURCES[1]} xkey=0 ykey=1 |
+     window | put label1=Inline label2=Crossline
+     ''',stdin=0)
 
+Result('horizon','grey color=gist_earth scalebar=y title=Horizon yreverse=n allpos=y bias=150 polarity=y')
 
 End()
