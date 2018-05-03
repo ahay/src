@@ -1,5 +1,14 @@
 from rsf.proj import *
 
+#################### 
+# Fetch the dataset and convert to multiple rsf files
+# check web at
+# http://energy.usgs.gov/GeochemistryGeophysics/\
+# SeismicDataProcessingInterpretation/\
+# NPRASeismicDataArchive/tabid/494/\
+# Agg2146_SelectTab/4/Default.aspx
+####################
+
 ############################
 # Data fetching, SEG-Y -> RSF
 #############################
@@ -9,7 +18,7 @@ rawsegy=['L23535','L23536','L23537']
 for file in rawsegy  :
     Fetch(file+'.SGY',
 	  server='http://certmapper.cr.usgs.gov',
-      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  top='data/NPRA/SEISMIC/1981/31_81',
       	  dir='DMUX')
     Flow([file, file+'.bin',  file+'.asc', 't'+file],
          file+'.SGY',
@@ -72,7 +81,7 @@ Result('shots',
 ###########################
 Fetch('31_81_PR.SGY',
       server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
+      top='data/NPRA/SEISMIC/1981/31_81',
       dir='PROCESSED')
 
 file='checkstack'
@@ -188,6 +197,10 @@ Result('gshots',
 ############
 
 # FFT and bias
+# *exp(-I*0.003*x2*x1)" applies delay of .003*(trace number)/(2*pi) 
+# su scripts applies sudipfilt with slopes=-.014,-.012,.004,.006 
+# sfdipfilter v1=-90 v2=-83 v3=83 v4=90 is same as 
+# sudipfilt slopes=-12,-11,11,12
 Flow('fft','gshots',
      '''
      put d2=1 o2=-47.5 | fft1 | 
