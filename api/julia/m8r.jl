@@ -442,6 +442,11 @@ function rsf_write(file::File, dat::AbstractArray, n=nothing, d=nothing,
     l = l == nothing ? ["" for i in 1:dim] : l
     u = u == nothing ? ["" for i in 1:dim] : u
     for i in 1:dim
+        typeof(n[i]) <: Integer || throw("All n must be `Integer`")
+        typeof(d[i]) <: Real    || throw("All d must be `Real`")
+        typeof(o[i]) <: Real    || throw("All o must be `Real`")
+        typeof(l[i]) <: String  || throw("All l must be `String`")
+        typeof(u[i]) <: String  || throw("All u must be `String`")
         putint(file, "n$i", n[i])
         putfloat(file, "d$i", d[i])
         putfloat(file, "o$i", o[i])
