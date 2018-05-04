@@ -87,10 +87,33 @@ Flow('xy','Penobscot_Seabed.txt',
 Flow('horizon','Penobscot_Seabed.txt xy',
      '''
      echo in=$SOURCE data_format=ascii_float n1=3 n2=249572 | dd form=native | 
-     window n1=1 f1=2 squeeze=n | intbin head=${SOURCES[1]} xkey=0 ykey=1 |
+     window n1=1 f1=2 squeeze=n | intbin head=${SOURCES[1]} xkey=0 ykey=1 xmin=1000 xmax=1600 ymin=1000 ymax=1480 nx=601 ny=481 |
      window | put label1=Inline label2=Crossline
      ''',stdin=0)
 
 Result('horizon','grey color=gist_earth scalebar=y title=Horizon yreverse=n allpos=y bias=150 polarity=y')
+
+# Extract amplitude on one line
+
+line=300-1
+
+Flow('horizon2','horizon','window n1=1 f1=%d' % line)
+Plot('horizon2',
+     '''
+     scale dscale=0.001 | window min1=1003 max1=1477 |
+     graph min2=0 max2=1 min1=1000 max1=1480 yreverse=y scalebar=y screenht=9 
+     screenwd=18 plotcol=3 plotfat=5 wanttitle=n wantaxis=n
+     ''')
+
+Plot('seismic2','cube',
+     '''
+     window n2=1 f2=%d | 
+     grey wanttitle=n scalebar=y screenht=9 screenwd=18 barlabel=Amplitude
+     ''' % line)
+
+Result('seismic2','seismic2 horizon2','Overlay')
+
+# Zoom in
+
 
 End()
