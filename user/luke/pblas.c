@@ -18,52 +18,12 @@
 */
 
 #include <rsf.h>
-#ifndef NO_BLAS
+
 /*^*/
 
-#ifdef __APPLE__
-#define VIMAGE_H
-#include <Accelerate/Accelerate.h>
-#else
-#ifdef HAVE_MKL
-#include <mkl.h>
-#else
-#include <cblas.h>
-#endif
-/*^*/
+/* usin dumb implementations */
 
-#ifdef __sgi
-/*^*/
-
-double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
-/*< x'y float -> double >*/
-{
-    int i, ix, iy;
-    double dot;
-
-    dot = 0.;
-
-    for (i=0; i < n; i++) {
-	ix = i*sx;
-	iy = i*sy;
-        dot += (double) x[ix] * y[iy];
-    }
-
-    return dot;
-}
-
-#endif
-/*^*/
-
-#endif
-/*^*/
-
-#else
-/*^*/ 
-
-/* use dumb implementations */
-
-void cblas_saxpy(int n, float a, const float *x, int sx, float *y, int sy)
+void pblas_saxpy(int n, float a, const float *x, int sx, float *y, int sy)
 /*< y += a*x >*/
 {
     int i, ix, iy;
@@ -75,7 +35,7 @@ void cblas_saxpy(int n, float a, const float *x, int sx, float *y, int sy)
     }
 }
 
-void cblas_sswap(int n, float *x, int sx, float* y, int sy) 
+void pblas_sswap(int n, float *x, int sx, float* y, int sy) 
 /*< swap x and y >*/
 {
     int i, ix, iy;
@@ -90,7 +50,7 @@ void cblas_sswap(int n, float *x, int sx, float* y, int sy)
     }
 }
 
-float cblas_sdot(int n, const float *x, int sx, const float *y, int sy)
+float pblas_sdot(int n, const float *x, int sx, const float *y, int sy)
 /*< x'y float -> complex >*/
 {
     int i, ix, iy;
@@ -108,7 +68,7 @@ float cblas_sdot(int n, const float *x, int sx, const float *y, int sy)
 }
 
 
-double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
+double pblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
 /*< x'y float -> complex >*/
 {
     int i, ix, iy;
@@ -125,7 +85,7 @@ double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
     return dot;
 }
 
-float cblas_snrm2 (int n, const float* x, int sx) 
+float pblas_snrm2 (int n, const float* x, int sx) 
 /*< sum x_i^2 >*/
 {
     int i, ix;
@@ -140,7 +100,7 @@ float cblas_snrm2 (int n, const float* x, int sx)
     return xn;
 }
 
-float cblas_scnrm2 (int n, const void* x, int sx) 
+float pblas_scnrm2 (int n, const void* x, int sx) 
 /*< sum |x_i|^2 >*/
 {
     int i, ix;
@@ -162,7 +122,7 @@ float cblas_scnrm2 (int n, const void* x, int sx)
     return xn;
 }
 
-void cblas_sscal(int n, float alpha, float *x, int sx)
+void pblas_sscal(int n, float alpha, float *x, int sx)
 /*< x = alpha*x >*/
 {
     int i, ix;
@@ -173,7 +133,7 @@ void cblas_sscal(int n, float alpha, float *x, int sx)
     }
 }
 
-void cblas_csscal(int n, float alpha, void *x, int sx)
+void pblas_csscal(int n, float alpha, void *x, int sx)
 /*< x = alpha*x >*/
 {
     int i, ix;
@@ -192,7 +152,7 @@ void cblas_csscal(int n, float alpha, void *x, int sx)
 }
 
 
-void cblas_cdotc_sub(int n, 
+void pblas_cdotc_sub(int n, 
 		     const void *x, int sx,
 		     const void *y, int sy, void *dot)
 /*< complex hermitian dot product >*/
@@ -225,5 +185,3 @@ void cblas_cdotc_sub(int n,
     *((sf_complex *) dot) = sf_cmplx(creal(prod),cimag(prod));
 }
 
-#endif
-/*^*/ 
