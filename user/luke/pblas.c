@@ -17,9 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "blas.h"
-#include "komplex.h"
-
+#include <rsf.h>
 #ifndef NO_BLAS
 /*^*/
 
