@@ -1,10 +1,8 @@
-/* Smooth division. 
+/*OpenMP Parallelized  Smooth division. 
 
-December 2015 program of the month:
-http://ahay.org/blog/2015/12/22/program-of-the-month-sfdivn/
 */
 /*
-  Copyright (C) 2006 University of Texas at Austin
+  Copyright (C) 2018 University of Texas at Austin
    
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,6 +19,13 @@ http://ahay.org/blog/2015/12/22/program-of-the-month-sfdivn/
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
+#include "ompinitialize.h"
+#include "divnp.h"
 
 int main(int argc, char* argv[])
 {
@@ -60,12 +65,19 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.0f;
     /* regularization */
 
-    sf_divn_init(dim, nd, n, rect, niter, verb);
+    int nthr;
+#ifdef _OPENMP
+    nthr = omp_get_max_threads();
+    sf_warning("Warming up the %i threads\n",nthr);
+#pragma omp parallel
+    printthreads();
+#endif
+    sf_divnp_init(dim, nd, n, rect, niter, verb);
 
     sf_floatread(num,nd,fnum);
     sf_floatread(den,nd,fden);
 
-    sf_divne (num, den, rat, eps);
+    sf_divnep (num, den, rat, eps);
 
     sf_floatwrite(rat,nd,frat);
 
