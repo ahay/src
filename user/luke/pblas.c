@@ -18,16 +18,22 @@
 */
 
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 
 /*^*/
 
-/* usin dumb implementations */
+/* using dumb implementations */
 
 void pblas_saxpy(int n, float a, const float *x, int sx, float *y, int sy)
 /*< y += a*x >*/
 {
     int i, ix, iy;
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iy)
+#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
@@ -40,7 +46,9 @@ void pblas_sswap(int n, float *x, int sx, float* y, int sy)
 {
     int i, ix, iy;
     float t;
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iy,t)
+#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
@@ -54,10 +62,11 @@ float pblas_sdot(int n, const float *x, int sx, const float *y, int sy)
 /*< x'y float -> complex >*/
 {
     int i, ix, iy;
-    float dot;
+    float dot=0;
 
-    dot = 0.;
-
+#ifdef _OPENMP
+#pragma omp parallel for  private (ix,iy) reduction(+:dot)
+#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
@@ -68,21 +77,21 @@ float pblas_sdot(int n, const float *x, int sx, const float *y, int sy)
 }
 
 
-double pblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
+float  pblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
 /*< x'y float -> complex >*/
 {
     int i, ix, iy;
-    double dot;
-
-    dot = 0.;
-
-    for (i=0; i < n; i++) {
+    double dot=0;
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iy) reduction(+:dot) 
+#endif
+   for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;
 	dot += (double) x[ix] * y[iy];
     }
-
     return dot;
+
 }
 
 float pblas_snrm2 (int n, const float* x, int sx) 
@@ -92,7 +101,9 @@ float pblas_snrm2 (int n, const float* x, int sx)
     float xn;
 
     xn = 0.0;
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix) reduction(+:xn)
+#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	xn += x[ix]*x[ix];
@@ -110,7 +121,9 @@ float pblas_scnrm2 (int n, const void* x, int sx)
     c = (const sf_complex*) x;
 
     xn = 0.0;
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix) reduction(+:xn)
+#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 #ifdef SF_HAS_COMPLEX_H
@@ -126,7 +139,9 @@ void pblas_sscal(int n, float alpha, float *x, int sx)
 /*< x = alpha*x >*/
 {
     int i, ix;
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix)
+#endif
     for (i=0; i < n; i++) {
         ix = i*sx;
 	x[ix] *= alpha;
@@ -140,7 +155,9 @@ void pblas_csscal(int n, float alpha, void *x, int sx)
     sf_complex* c;
 
     c = (sf_complex*) x;
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix)
+#endif
     for (i=0; i < n; i++) {
         ix = i*sx;
 #ifdef SF_HAS_COMPLEX_H
@@ -165,7 +182,9 @@ void pblas_cdotc_sub(int n,
     cy = (sf_complex*) y;
 
     prod = sf_dcmplx(0.,0.);
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iy,xi,yi,pi) reduction(+:prod)
+#endif
     for (i=0; i < n; i++) {
 	ix = i*sx;
 	iy = i*sy;

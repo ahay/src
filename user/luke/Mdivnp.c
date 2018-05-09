@@ -1,4 +1,4 @@
-/*OpenMP Parallelized  Smooth division. 
+/* OpenMP Parallelized  Smooth division. 
 
 */
 /*
@@ -26,6 +26,7 @@
 
 #include "ompinitialize.h"
 #include "divnp.h"
+#include <time.h>
 
 int main(int argc, char* argv[])
 {
@@ -34,7 +35,11 @@ int main(int argc, char* argv[])
     float *num, *den, *rat, eps;
     char key[6];
     sf_file fnum, fden, frat;
-
+    double td_start, td_end, td_count;
+    double t_start, t_end, t_count;
+#ifdef _OPENMP   
+    t_start = omp_get_wtime();
+#endif
     sf_init(argc,argv);
     fnum = sf_input("in");
     fden = sf_input("den");
@@ -72,14 +77,30 @@ int main(int argc, char* argv[])
 #pragma omp parallel
     printthreads();
 #endif
-    sf_divnp_init(dim, nd, n, rect, niter, verb);
 
+// initialize division
+    sf_divnp_init(dim, nd, n, rect, niter, verb);
+// read the files to divide
     sf_floatread(num,nd,fnum);
     sf_floatread(den,nd,fden);
 
+#ifdef _OPENMP    
+    td_start = omp_get_wtime();
+#endif
+
+// do the division
     sf_divnep (num, den, rat, eps);
-
+#ifdef _OPENMP
+    td_end = omp_get_wtime();
+    td_count = (td_end-td_start);
+    sf_warning("\nDivision Elapsed Time (sec) : %g",td_count);
+#endif
+// write to file
     sf_floatwrite(rat,nd,frat);
-
+#ifdef _OPENMP
+    t_end = omp_get_wtime();
+    t_count = (t_end - t_start);
+    sf_warning("\nTotal Elapsed Time (sec) : %g",t_count);
+#endif
     exit(0);
 }

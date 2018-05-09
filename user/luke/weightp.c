@@ -1,6 +1,6 @@
-/* Simple weight operator */
+/* Simple weight operator with openmp */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2018 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -18,6 +18,10 @@
 */
 
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+#include "adjnullp.h"
 /*^*/
 static float* w;
 
@@ -34,13 +38,19 @@ void sf_weightp_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
 
     if (ny!=nx) sf_error("%s: size mismatch: %d != %d",__FILE__,ny,nx);
 
-    sf_adjnull (adj, add, nx, ny, xx, yy);
+    sf_adjnullp (adj, add, nx, ny, xx, yy);
   
     if (adj) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
         for (i=0; i < nx; i++) {
 	    xx[i] += yy[i] * w[i];
 	}
     } else {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
         for (i=0; i < nx; i++) {
             yy[i] += xx[i] * w[i];
 	}
@@ -59,6 +69,9 @@ void sf_cweightp_lop (bool adj, bool add, int nx, int ny,
     sf_cadjnull (adj, add, nx, ny, xx, yy);
   
     if (adj) {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
         for (i=0; i < nx; i++) {
 #ifdef SF_HAS_COMPLEX_H
 	    xx[i] += yy[i] * w[i];
@@ -67,6 +80,9 @@ void sf_cweightp_lop (bool adj, bool add, int nx, int ny,
 #endif
         }
     } else {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
         for (i=0; i < nx; i++) {
 #ifdef SF_HAS_COMPLEX_H
 	    yy[i] += xx[i] * w[i];
@@ -82,7 +98,9 @@ void sf_weightp_apply(int nx, float *xx)
 /*< apply weighting in place >*/
 {
     int i;
-
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (i=0; i < nx; i++) {
 	xx[i] *= w[i]*w[i];
     }
@@ -93,7 +111,9 @@ void sf_cweightp_apply(int nx, sf_complex *xx)
 /*< apply weighting in place >*/
 {
     int i;
-
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for (i=0; i < nx; i++) {
 #ifdef SF_HAS_COMPLEX_H
       xx[i] *= w[i]*w[i];

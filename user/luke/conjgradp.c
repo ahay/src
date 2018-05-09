@@ -21,6 +21,7 @@
 #include <float.h>
 
 #include <rsf.h>
+#include "pblas.h"
 /*^*/
 
 static int np, nx, nr, nd;
@@ -80,14 +81,19 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
     double gn, gnp, alpha, beta, g0, dg, r0;
     float *d=NULL;
     int i, iter;
-   
     if (NULL != prec) {
 	d = sf_floatalloc(nd); 
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
 	for (i=0; i < nd; i++) {
 	    d[i] = - dat[i];
 	}
 	prec(false,false,nd,nr,d,r);
     } else {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
 	for (i=0; i < nr; i++) {
 	    r[i] = - dat[i];
 	}
@@ -102,16 +108,28 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 	    oper(false,true,nx,nr,x,r);
 	}
     } else {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+{
+#ifdef _OPENMP
+#pragma omp for
+#endif
 	for (i=0; i < np; i++) {
 	    p[i] = 0.;
 	}
+#ifdef _OPENMP
+#pragma omp for
+#endif
 	for (i=0; i < nx; i++) {
 	    x[i] = 0.;
 	}
+}// end parallel
     } 
     
     dg = g0 = gnp = 0.;
-    r0 = cblas_dsdot(nr,r,1,r,1);
+//pblas call
+    r0 = pblas_dsdot(nr,r,1,r,1);
 
     if (r0 == 0.) {
 	if (verb) sf_warning("zero residual: r0=%g",r0);
@@ -119,20 +137,29 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
     }
 
     for (iter=0; iter < niter; iter++) {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+{
+#ifdef _OPENMP
+#pragma omp for
+#endif
 	for (i=0; i < np; i++) {
 	    gp[i] = eps*p[i];
 	}
+#ifdef _OPENMP
+#pragma omp for
+#endif
 	for (i=0; i < nx; i++) {
 	    gx[i] = -eps*x[i];
 	}
-
+} // end parallel
 	if (NULL != prec) {
 	    prec(true,false,nd,nr,d,r);
 	    oper(true,true,nx,nd,gx,d);
 	} else {
 	    oper(true,true,nx,nr,gx,r);
 	}
-
 	shape(true,true,np,nx,gp,gx);
 	shape(false,false,np,nx,gp,gx);
 
@@ -142,21 +169,34 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 	} else {
 	    oper(false,false,nx,nr,gx,gr);
 	}
-
-	gn = cblas_dsdot(np,gp,1,gp,1);
+// pblas call
+	gn = pblas_dsdot(np,gp,1,gp,1);
 
 	if (iter==0) {
 	    g0 = gn;
-
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+{
+#ifdef _OPENMP
+#pragma omp for
+#endif
 	    for (i=0; i < np; i++) {
 		sp[i] = gp[i];
 	    }
+#ifdef _OPENMP
+#pragma omp for
+#endif
 	    for (i=0; i < nx; i++) {
 		sx[i] = gx[i];
 	    }
+#ifdef _OPENMP
+#pragma omp for
+#endif
 	    for (i=0; i < nr; i++) {
 		sr[i] = gr[i];
 	    }
+} // end parallel
 	} else {
 	    alpha = gn / gnp;
 	    dg = gn / g0;
@@ -169,34 +209,40 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 		break;
 	    }
 
-	    cblas_saxpy(np,alpha,sp,1,gp,1);
-	    cblas_sswap(np,sp,1,gp,1);
+// pblas calls
 
-	    cblas_saxpy(nx,alpha,sx,1,gx,1);
-	    cblas_sswap(nx,sx,1,gx,1);
+	    pblas_saxpy(np,alpha,sp,1,gp,1);
+	    pblas_sswap(np,sp,1,gp,1);
 
-	    cblas_saxpy(nr,alpha,sr,1,gr,1);
-	    cblas_sswap(nr,sr,1,gr,1);
+	    pblas_saxpy(nx,alpha,sx,1,gx,1);
+	    pblas_sswap(nx,sx,1,gx,1);
+
+	    pblas_saxpy(nr,alpha,sr,1,gr,1);
+	    pblas_sswap(nr,sr,1,gr,1);
+
 	}
 
-	beta = cblas_dsdot(nr,sr,1,sr,1) + eps*(cblas_dsdot(np,sp,1,sp,1) - cblas_dsdot(nx,sx,1,sx,1));
+// pblas calls
+	beta = pblas_dsdot(nr,sr,1,sr,1) + eps*(pblas_dsdot(np,sp,1,sp,1) - pblas_dsdot(nx,sx,1,sx,1));
 	
 	if (verb) sf_warning("iteration %d res: %f grad: %f",
-			     iter,cblas_snrm2(nr,r,1)/r0,dg);
+			     iter,pblas_snrm2(nr,r,1)/r0,dg);
 
 	alpha = - gn / beta;
-
-	cblas_saxpy(np,alpha,sp,1,p,1);
-	cblas_saxpy(nx,alpha,sx,1,x,1);
-	cblas_saxpy(nr,alpha,sr,1,r,1);
+// pblas calls
+	pblas_saxpy(np,alpha,sp,1,p,1);
+	pblas_saxpy(nx,alpha,sx,1,x,1);
+	pblas_saxpy(nr,alpha,sr,1,r,1);
 
 	gnp = gn;
+
     }
 
     if (NULL != prec) free (d);
 
 }
 
+// not parallelized
 void sf_conjgradp_adj(bool adj /* adjoint flag */,
 		     sf_operator oper  /* linear operator */, 
 		     sf_operator shape /* shaping operator */, 
