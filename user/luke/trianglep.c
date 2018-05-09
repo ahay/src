@@ -173,8 +173,12 @@ static void doubint2p (int nx, float *xx, bool der)
     float split, rem;
     float *checkpoints;
     int tot = 0;
+
+// attempted parallelization of causal integration
+// causes a segmentation fault that i am unable to trace.  using non-parallel causal int
+
 /*
- * #ifdef _OPENMP
+  #ifdef _OPENMP
 #pragma omp parallel private(myid,t)
 #endif
 {
@@ -244,7 +248,6 @@ sf_warning("A");
 	t += xx[i];
 	xx[i] = t;
     }
-//sf_warning("B");
 }
 
 static void triplep (int o, int d, int nx, int nb, float* x, const float* tmp, bool box, float wt)
