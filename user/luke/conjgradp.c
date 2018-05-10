@@ -1,6 +1,6 @@
-/* Conjugate-gradient with shaping regularization. */
+/* Conjugate-gradient with shaping regularization, OpenMP parallelism*/
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2018 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -136,6 +136,20 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 	return;
     }
 
+// timings
+double ot1, ot2, st1, st2, dto, dts;
+
+#ifdef _OPENMP
+ot1 = omp_get_wtime();
+   oper(true,true,nx,nr,gx,r);
+ot2 = omp_get_wtime();
+dto = ot2-ot1;
+st1 = omp_get_wtime();
+   shape(true,true,np,nx,gp,gx);
+st2 = omp_get_wtime();
+dts = st2-st1;
+#endif
+
     for (iter=0; iter < niter; iter++) {
 #ifdef _OPENMP
 #pragma omp parallel
@@ -207,6 +221,11 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 		    sf_warning(
 			"convergence in %d iterations, alpha=%g, gd=%g",
 			iter,alpha,dg);
+#ifdef _OPENMP
+sf_warning("One Shaping (triangle smoothing) Operation: %g \n",dts);
+sf_warning("One Weight Operation : %g \n",dto);
+
+#endif
 		break;
 	    }
 
@@ -332,6 +351,7 @@ void sf_conjgradp_adj(bool adj /* adjoint flag */,
 		    sf_warning(
 			"convergence in %d iterations, alpha=%g, gd=%g",
 			iter,alpha,dg);
+
 		break;
 	    }
 
