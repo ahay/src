@@ -41,7 +41,38 @@ void pblas_saxpy(int n, float a, const float *x, int sx, float *y, int sy)
     }
 }
 
+void pblas_saxpyA(int n, float a, const float *x, int sx, float *y, int sy)
+/*< y += a*x >*/
+{
+    int i, ix, iy;
+#ifdef _OPENMP
+#pragma omp for private(ix,iy)
+#endif
+    for (i=0; i < n; i++) {
+	ix = i*sx;
+	iy = i*sy;
+	y[iy] += a * x[ix];
+    }
+}
+
 void pblas_sswap(int n, float *x, int sx, float* y, int sy) 
+/*< swap x and y >*/
+{
+    int i, ix, iy;
+    float t;
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iy,t)
+#endif
+    for (i=0; i < n; i++) {
+	ix = i*sx;
+	iy = i*sy;
+	t = x[ix];
+	x[ix] = y[iy];
+	y[iy] = t;
+    }
+}
+
+void pblas_sswapA(int n, float *x, int sx, float* y, int sy) 
 /*< swap x and y >*/
 {
     int i, ix, iy;

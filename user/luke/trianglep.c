@@ -116,10 +116,7 @@ static void fold2p (int o, int d, int nx, int nb, int np,
     int i, j;
 
     /* copy middle */
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-{
+
 #ifdef _OPENMP
 #pragma omp for
 #endif
@@ -149,7 +146,7 @@ static void fold2p (int o, int d, int nx, int nb, int np,
 	for (i=0; i < nx && i < j; i++)
 	    x[o+(nx-1-i)*d] += tmp[j-1-i];
     }
-  } // end parallel
+
 }
     
 static void doubintp (int nx, float *xx, bool der)
@@ -302,20 +299,23 @@ static void dtriplep (int o, int d, int nx, int nb, float* x, const float* tmp, 
 static void triple2p (int o, int d, int nx, int nb, const float* x, float* tmp, bool box, float wt)
 {
     int i;
+
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp for
 #endif
     for (i=0; i < nx + 2*nb; i++) {
 	tmp[i] = 0;
     }
 
     if (box) {
-	pblas_saxpy(nx,  +wt,x+o,d,tmp+1   ,1);
-	pblas_saxpy(nx,  -wt,x+o,d,tmp+2*nb,1);
+
+	pblas_saxpyA(nx,  +wt,x+o,d,tmp+1   ,1);
+	pblas_saxpyA(nx,  -wt,x+o,d,tmp+2*nb,1);
     } else {
-	pblas_saxpy(nx,  -wt,x+o,d,tmp     ,1);
-	pblas_saxpy(nx,2.*wt,x+o,d,tmp+nb  ,1);
-	pblas_saxpy(nx,  -wt,x+o,d,tmp+2*nb,1);
+
+	pblas_saxpyA(nx,  -wt,x+o,d,tmp     ,1);
+	pblas_saxpyA(nx,2.*wt,x+o,d,tmp+nb  ,1);
+	pblas_saxpyA(nx,  -wt,x+o,d,tmp+2*nb,1);
     }
 }
 
@@ -361,9 +361,19 @@ void sf_smooth2p (sf_triangle tr  /* smoothing object */,
 		 float *x        /* data (smoothed in place) */)
 /*< apply adjoint triangle smoothing >*/
 {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+{
     triple2p (o,d,tr->nx,tr->nb,x,tr->tmp, tr->box, tr->wt);
+#ifdef _OPENMP
+#pragma omp single
+#endif
+{
     doubint2p (tr->np,tr->tmp,(bool) (tr->box || der));
+}
     fold2p (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
+}
 }
 
 void sf_dsmooth2p (sf_triangle tr  /* smoothing object */, 
