@@ -153,7 +153,7 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 	for (i=0; i < nx; i++) {
 	    gx[i] = -eps*x[i];
 	}
-} // end parallel
+}
 	if (NULL != prec) {
 	    prec(true,false,nd,nr,d,r);
 	    oper(true,true,nx,nd,gx,d);
@@ -169,6 +169,7 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 	} else {
 	    oper(false,false,nx,nr,gx,gr);
 	}
+
 // pblas call
 	gn = pblas_dsdot(np,gp,1,gp,1);
 
@@ -210,16 +211,19 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 	    }
 
 // pblas calls
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+{
+	    pblas_saxpyA(np,alpha,sp,1,gp,1);
+	    pblas_sswapA(np,sp,1,gp,1);
 
-	    pblas_saxpy(np,alpha,sp,1,gp,1);
-	    pblas_sswap(np,sp,1,gp,1);
+	    pblas_saxpyA(nx,alpha,sx,1,gx,1);
+	    pblas_sswapA(nx,sx,1,gx,1);
 
-	    pblas_saxpy(nx,alpha,sx,1,gx,1);
-	    pblas_sswap(nx,sx,1,gx,1);
-
-	    pblas_saxpy(nr,alpha,sr,1,gr,1);
-	    pblas_sswap(nr,sr,1,gr,1);
-
+	    pblas_saxpyA(nr,alpha,sr,1,gr,1);
+	    pblas_sswapA(nr,sr,1,gr,1);
+}
 	}
 
 // pblas calls
@@ -230,10 +234,14 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
 
 	alpha = - gn / beta;
 // pblas calls
-	pblas_saxpy(np,alpha,sp,1,p,1);
-	pblas_saxpy(nx,alpha,sx,1,x,1);
-	pblas_saxpy(nr,alpha,sr,1,r,1);
-
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+{
+	pblas_saxpyA(np,alpha,sp,1,p,1);
+	pblas_saxpyA(nx,alpha,sx,1,x,1);
+	pblas_saxpyA(nr,alpha,sr,1,r,1);
+}
 	gnp = gn;
 
     }

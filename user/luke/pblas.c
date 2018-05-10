@@ -78,7 +78,7 @@ void pblas_sswapA(int n, float *x, int sx, float* y, int sy)
     int i, ix, iy;
     float t;
 #ifdef _OPENMP
-#pragma omp parallel for private(ix,iy,t)
+#pragma omp for private(ix,iy,t)
 #endif
     for (i=0; i < n; i++) {
 	ix = i*sx;

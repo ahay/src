@@ -42,14 +42,14 @@ void sf_weightp_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
   
     if (adj) {
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel  for
 #endif
         for (i=0; i < nx; i++) {
 	    xx[i] += yy[i] * w[i];
 	}
     } else {
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel  for
 #endif
         for (i=0; i < nx; i++) {
             yy[i] += xx[i] * w[i];
