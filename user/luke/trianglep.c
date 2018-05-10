@@ -75,14 +75,18 @@ static void foldp (int o, int d, int nx, int nb, int np,
 
     /* copy middle */
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel
+#endif
+{
+#ifdef _OPENMP
+#pragma omp for
 #endif
     for (i=0; i < nx; i++) 
 	tmp[i+nb] = x[o+i*d];
     
     /* reflections from the right side */
 #ifdef _OPENMP
-#pragma omp parallel for private(i)
+#pragma omp for private(i)
 #endif
     for (j=nb+nx; j < np; j += nx) {
 	for (i=0; i < nx && i < np-j; i++)
@@ -94,7 +98,7 @@ static void foldp (int o, int d, int nx, int nb, int np,
     
     /* reflections from the left side */
 #ifdef _OPENMP
-#pragma omp parallel for private(i)
+#pragma omp for private(i)
 #endif
     for (j=nb; j >= 0; j -= nx) {
 	for (i=0; i < nx && i < j; i++)
@@ -103,6 +107,7 @@ static void foldp (int o, int d, int nx, int nb, int np,
 	for (i=0; i < nx && i < j; i++)
 	    tmp[j-1-i] = x[o+(nx-1-i)*d];
     }
+  }// end parallel
 }
 
 static void fold2p (int o, int d, int nx, int nb, int np, 
@@ -112,14 +117,18 @@ static void fold2p (int o, int d, int nx, int nb, int np,
 
     /* copy middle */
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel
+#endif
+{
+#ifdef _OPENMP
+#pragma omp for
 #endif
     for (i=0; i < nx; i++) 
 	x[o+i*d] = tmp[i+nb];
 
     /* reflections from the right side */
 #ifdef _OPENMP
-#pragma omp parallel for private(i)
+#pragma omp for private(i)
 #endif
     for (j=nb+nx; j < np; j += nx) {
 	for (i=0; i < nx && i < np-j; i++)
@@ -131,7 +140,7 @@ static void fold2p (int o, int d, int nx, int nb, int np,
     
     /* reflections from the left side */
 #ifdef _OPENMP
-#pragma omp parallel for private(i)
+#pragma omp for private(i)
 #endif
     for (j=nb; j >= 0; j -= nx) {
 	for (i=0; i < nx && i < j; i++)
@@ -140,6 +149,7 @@ static void fold2p (int o, int d, int nx, int nb, int np,
 	for (i=0; i < nx && i < j; i++)
 	    x[o+(nx-1-i)*d] += tmp[j-1-i];
     }
+  } // end parallel
 }
     
 static void doubintp (int nx, float *xx, bool der)
