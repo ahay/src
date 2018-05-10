@@ -1,4 +1,6 @@
 /* 3-D dip estimation by plane wave destruction with OpenMP parallelism. 
+ 
+This program still needs debugging and should not be trusted.
 
 The output is dimensionless (stepout in time measured in time samples). 
 */
