@@ -175,12 +175,13 @@ static void doubint2p (int nx, float *xx, bool der)
 {
     int i;
     float t;
-    int myid, threads, intl, e;
+/* 
+   int myid, threads, intl, e;
     int *assignments, *myrem;
     float split, rem;
     float *checkpoints;
     int tot = 0;
-
+*/
 // attempted parallelization of causal integration
 // causes a segmentation fault that i am unable to trace.  using non-parallel causal int
 

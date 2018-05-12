@@ -137,8 +137,11 @@ void sf_conjgradp(sf_operator prec  /* data preconditioning */,
     }
 
 // timings
+/*
 double ot1, ot2, st1, st2, dto, dts;
+*/
 
+/*
 #ifdef _OPENMP
 ot1 = omp_get_wtime();
    oper(true,true,nx,nr,gx,r);
@@ -149,7 +152,7 @@ st1 = omp_get_wtime();
 st2 = omp_get_wtime();
 dts = st2-st1;
 #endif
-
+*/
     for (iter=0; iter < niter; iter++) {
 #ifdef _OPENMP
 #pragma omp parallel
@@ -221,11 +224,12 @@ dts = st2-st1;
 		    sf_warning(
 			"convergence in %d iterations, alpha=%g, gd=%g",
 			iter,alpha,dg);
+/*
 #ifdef _OPENMP
 sf_warning("One Shaping (triangle smoothing) Operation: %g \n",dts);
 sf_warning("One Weight Operation : %g \n",dto);
-
 #endif
+*/
 		break;
 	    }
 

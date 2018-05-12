@@ -71,36 +71,45 @@ int main(int argc, char* argv[])
     /* regularization */
 
     int nthr;
+/*
+Initalizes threads, good for if timing, but unneded usually
 #ifdef _OPENMP
     nthr = omp_get_max_threads();
     sf_warning("Warming up the %i threads\n",nthr);
 #pragma omp parallel
     printthreads();
 #endif
-
+*/
 // initialize division
     sf_divnp_init(dim, nd, n, rect, niter, verb);
 // read the files to divide
     sf_floatread(num,nd,fnum);
     sf_floatread(den,nd,fden);
-
+/*
 #ifdef _OPENMP    
     td_start = omp_get_wtime();
 #endif
+*/
 
 // do the division
     sf_divnep (num, den, rat, eps);
+/*
 #ifdef _OPENMP
     td_end = omp_get_wtime();
     td_count = (td_end-td_start);
     sf_warning("\nDivision Elapsed Time (sec) : %g",td_count);
 #endif
+*/
 // write to file
+
     sf_floatwrite(rat,nd,frat);
+
+/*
 #ifdef _OPENMP
     t_end = omp_get_wtime();
     t_count = (t_end - t_start);
     sf_warning("\nTotal Elapsed Time (sec) : %g",t_count);
 #endif
+*/
     exit(0);
 }

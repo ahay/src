@@ -78,17 +78,19 @@ void sf_divnep (float* num, float* den,  float* rat, float eps)
 	    den[i] *= norm;
 	}
     } 
+/*
 #ifdef _OPENMP
       td_start = omp_get_wtime();
 #endif
-
+*/
       norm =  pblas_dsdot(n,den,1,den,1);
-
+/*
 #ifdef _OPENMP
       td_end = omp_get_wtime();
       td_count = (td_end - td_start);
 //      sf_warning("\nSingle Dot Product Time (sec) : %g\n",td_count);
 #endif
+*/
 
     if (norm == 0.0) {
 #ifdef _OPENMP
@@ -109,16 +111,20 @@ void sf_divnep (float* num, float* den,  float* rat, float eps)
     }   
 
     sf_weightp_init(den);
+/*
 #ifdef _OPENMP
     t_start = omp_get_wtime();
 #endif
+*/
     sf_conjgradp(NULL, sf_weightp_lop,sf_trianglenp_lop,p,rat,num,niter); 
+/*
 #ifdef _OPENMP
     t_end = omp_get_wtime();
     t_count = (t_end-t_start);
 sf_warning("\nSingle dot product time (sec) : %g\n",td_count);
 sf_warning("\nConj Grad Elapsed Time (sec): %g\n",t_count);
 #endif
+*/
 }
 
 
