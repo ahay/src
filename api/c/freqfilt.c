@@ -96,7 +96,7 @@ void sf_freqfilt(int nx, float* x)
 	tmp[iw] = 0.;
     }
 
-    kiss_fftr(forw, tmp, (kiss_fft_cpx *) cdata);
+    kiss_fftr(forw, tmp, cdata);
     for (iw=0; iw < nw; iw++) {
 	C_MUL(c,cdata[iw],shape[iw]);
 	cdata[iw]=c;
