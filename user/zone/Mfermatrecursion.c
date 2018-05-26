@@ -114,10 +114,13 @@ int main(int argc, char* argv[])
 {
 	int nx, nc, i, j, k, order;
 	float x0, dx, x, c0, dc;
-	float **rfl, **slo, **vn2, **drfl, **dslo, *t1k_1k_k, *t1k_k_k, *tk_k_k1, *tk_k_k, *dxdh, **vn2het, **t0sum;
+	float fder1, fder1b ,fder,f2der;
+	float **rfl, **dip, **curv, **slo, **vn2, **drfl, **dslo, *t1k_1k_k, *t1k_k_k, *tk_k_k1, *tk_k_k, *dxdh, **vn2het, **t0sum;
+	bool dipcurv;  
 	  
-	sf_file refl, vnmo, slow, vnmohet, t0;	
+	sf_file refl, vnmo, slow, vnmohet, t0, dipf, curvf;	
 	sf_init(argc,argv); /* initialize - always call first */
+
 	
 	/* Set input-----------------------------------------------------------------------------------------*/
 	refl = sf_input("in"); /* reflector */
@@ -137,6 +140,15 @@ int main(int argc, char* argv[])
 	vnmo = sf_input("vnmosq"); /* NMO velocity squared */
 	t0 = sf_input("t0sum"); /* Vertical one-way time */
 	
+	
+	if (!sf_getbool("dipcurv",&dipcurv)) dipcurv=false;
+    /* if get dip/curvature from separate files */
+    
+    if (dipcurv) {
+    	dipf = sf_input("dip"); /* Precomputed dip */
+		curvf = sf_input("curv"); /* Precomputed curvature */
+	}
+	
 	/* Set output 2D array reflection point----------------------------------------------------------------*/
 	vnmohet = sf_output("out"); /* Output NMO velocity squared*/
 	
@@ -148,6 +160,11 @@ int main(int argc, char* argv[])
 	
 	
 	/* Allocate memory and read input-----------------------------------------------------------------------------------------*/
+	if (dipcurv) {
+    	dip = sf_floatalloc2(nx,nc);
+		curv = sf_floatalloc2(nx,nc);
+	}
+	
 	rfl = sf_floatalloc2(nx,nc);
 	slo = sf_floatalloc2(nx,nc);
 	vn2 = sf_floatalloc2(nx,nc);
@@ -166,6 +183,11 @@ int main(int argc, char* argv[])
 	sf_floatread(slo[0],nx*nc,slow);
 	sf_floatread(vn2[0],nx*nc,vnmo);
 	sf_floatread(t0sum[0],nx*nc,t0);
+	
+	if (dipcurv) {
+    	sf_floatread(dip[0],nx*nc,dipf);
+		sf_floatread(curv[0],nx*nc,curvf);
+	}
 
 	/* Initialize interpolation------------------------------------------------------------------------*/
 	
@@ -215,15 +237,28 @@ int main(int argc, char* argv[])
 			for (j=0; j<nx; j++){
 				x = x0 + j*dx; /* Distance */
 				
-				t1k_1k_k[j] = -vn2[i+1][j] + (Fder(i+1,x)-Fder(i,x))*wder(i+1,x)/2 + (F(i+1,x)-F(i,x))*wder2(i+1,x)/6;
-				t1k_k_k[j]  =  vn2[i+1][j] - Fder2(i,x)*w(i+1,x) -  Fder(i,x)*wder(i+1,x) +  (F(i+1,x)-F(i,x))*wder2(i+1,x)/3;
+				if (dipcurv) { /* Switch to pre-computed value*/
+					fder1 =  dip[i+1][j];
+					if (i != 0) fder1b = dip[i-1][j];
+					fder = dip[i][j];
+					f2der = curv[i][j];
+
+				} else {
+					fder1 =  Fder(i+1,x);
+					if (i != 0) fder1b = Fder(i-1,x);
+					fder = Fder(i,x);
+					f2der = Fder2(i,x);
+				}
+				
+				t1k_1k_k[j] = -vn2[i+1][j] + (fder1-fder)*wder(i+1,x)/2 + (F(i+1,x)-F(i,x))*wder2(i+1,x)/6;
+				t1k_k_k[j]  =  vn2[i+1][j] - f2der*w(i+1,x) -  fder*wder(i+1,x) +  (F(i+1,x)-F(i,x))*wder2(i+1,x)/3;
 				
 				if (i == 0) {
-					tk_k_k1[j]  = -vn2[i][j]   + Fder(i,x)*wder(i,x)/2 + F(i,x)*wder2(i,x)/6;
-					tk_k_k[j]   =  vn2[i][j]   + Fder2(i,x)*w(i,x) +  Fder(i,x)*wder(i,x) +  F(i,x)*wder2(i,x)/3;
+					tk_k_k1[j]  = -vn2[i][j]   + fder*wder(i,x)/2 + F(i,x)*wder2(i,x)/6;
+					tk_k_k[j]   =  vn2[i][j]   + f2der*w(i,x) +  fder*wder(i,x) +  F(i,x)*wder2(i,x)/3;
 				} else {
-					tk_k_k1[j]  = -vn2[i][j]   + (Fder(i,x)-Fder(i-1,x))*wder(i,x)/2 + (F(i,x)-F(i-1,x))*wder2(i,x)/6;
-					tk_k_k[j]   =  vn2[i][j]   + Fder2(i,x)*w(i,x) +  Fder(i,x)*wder(i,x) +  (F(i,x)-F(i-1,x))*wder2(i,x)/3;
+					tk_k_k1[j]  = -vn2[i][j]   + (fder-fder1b)*wder(i,x)/2 + (F(i,x)-F(i-1,x))*wder2(i,x)/6;
+					tk_k_k[j]   =  vn2[i][j]   + f2der*w(i,x) +  fder*wder(i,x) +  (F(i,x)-F(i-1,x))*wder2(i,x)/3;
 				}
 
 				dxdh[j] = -tk_k_k1[j]/(t1k_1k_k[j]*dxdh[j] + t1k_k_k[j] + tk_k_k[j]);
