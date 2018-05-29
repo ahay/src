@@ -224,14 +224,14 @@ def eic3dF(img,wfl,opr,cip,custom,par):
          ''' + eicpar(par) + ' ' + custom )
          
 # EIC adjoint: opr * img = wfl
-def eic2dAold(wfl,img,opr,cip,custom,par):    
+def eic2dA(wfl,img,opr,cip,custom,par):    
     Flow(wfl,[img,opr,cip],
          '''
          eicop2d adj=y wflcausal=n oprcausal=n 
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + ' ' + custom )
 
-def eic2dA(wfl,img,opr,cip,custom,par):    
+def eic2dAold(wfl,img,opr,cip,custom,par):    
     Flow(wfl,[img,opr,cip],
          '''
          ../CODE/EICOP2D.x adj=y wflcausal=n oprcausal=n 
