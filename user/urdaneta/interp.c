@@ -20,6 +20,9 @@
 
 #include "norgen.h"
 
+//TODO - testing
+#include <stdio.h>
+
 static float ptmult (struct point A1, struct point A2);
 static struct point ptdiff(struct point A1, struct point A2);
 
@@ -120,10 +123,13 @@ void TwoD_interp (struct grid *out, int gnx, int gnz)
 * subroutine could be improve using bicubic splines or filters. >*/
 {
     int ii;
-    float ampl, time;
+    float ampl, time,dirx,dirz,srcx,srcz,invgeo;
 
     for(ii=0;ii<gnx*gnz;ii++) {
         if(out->flag[ii]==0) {
+
+
+
             if(ii%gnz==0) {
 
 		time  = out->time[ii+1-gnz] + out->time[ii+1+gnz];
@@ -133,6 +139,23 @@ void TwoD_interp (struct grid *out, int gnx, int gnz)
 		ampl += out->ampl[ii+gnz] + out->ampl[ii+1] + out->ampl[ii-gnz];
 		ampl /= 5.;
 
+		dirx  = out->dirx[ii+1-gnz] + out->dirx[ii+1+gnz];
+		dirx += out->dirx[ii+gnz] + out->dirx[ii+1] + out->dirx[ii-gnz];
+		dirx /= 5.;
+		dirz  = out->dirz[ii+1-gnz] + out->dirz[ii+1+gnz];
+		dirz += out->dirz[ii+gnz] + out->dirz[ii+1] + out->dirz[ii-gnz];
+		dirz /= 5.;
+
+		srcx  = out->srcx[ii+1-gnz] + out->srcx[ii+1+gnz];
+		srcx += out->srcx[ii+gnz] + out->srcx[ii+1] + out->srcx[ii-gnz];
+		srcx /= 5.;
+		srcz  = out->srcz[ii+1-gnz] + out->srcz[ii+1+gnz];
+		srcz += out->srcz[ii+gnz] + out->srcz[ii+1] + out->srcz[ii-gnz];
+		srcz /= 5.;
+
+		invgeo  = out->invgeo[ii+1-gnz] + out->invgeo[ii+1+gnz];
+		invgeo += out->invgeo[ii+gnz] + out->invgeo[ii+1] + out->invgeo[ii-gnz];
+		invgeo /= 5.;
             } else if(ROUND(ii/gnz)==0) {
 
 		time  = out->time[ii-1+gnz] + out->time[ii+1+gnz];
@@ -141,6 +164,23 @@ void TwoD_interp (struct grid *out, int gnx, int gnz)
 		ampl  = out->ampl[ii-1+gnz]+ out->ampl[ii+1+gnz];
 		ampl += out->ampl[ii+gnz] + out->ampl[ii+1] + out->ampl[ii-1];
 		ampl /= 5.;
+		dirx  = out->dirx[ii-1+gnz]+ out->dirx[ii+1+gnz];
+		dirx += out->dirx[ii+gnz] + out->dirx[ii+1] + out->dirx[ii-1];
+		dirx /= 5.;
+		dirz  = out->dirz[ii-1+gnz]+ out->dirz[ii+1+gnz];
+		dirz += out->dirz[ii+gnz] + out->dirz[ii+1] + out->dirz[ii-1];
+		dirz /= 5.;
+
+		srcx  = out->srcx[ii-1+gnz]+ out->srcx[ii+1+gnz];
+		srcx += out->srcx[ii+gnz] + out->srcx[ii+1] + out->srcx[ii-1];
+		srcx /= 5.;
+		srcz  = out->srcz[ii-1+gnz]+ out->srcz[ii+1+gnz];
+		srcz += out->srcz[ii+gnz] + out->srcz[ii+1] + out->srcz[ii-1];
+		srcz /= 5.;
+
+		invgeo  = out->invgeo[ii-1+gnz]+ out->invgeo[ii+1+gnz];
+		invgeo += out->invgeo[ii+gnz] + out->invgeo[ii+1] + out->invgeo[ii-1];
+		invgeo /= 5.;
 
             } else if(ii%gnz==gnz-1) {
 	
@@ -150,7 +190,22 @@ void TwoD_interp (struct grid *out, int gnx, int gnz)
 		ampl  = out->ampl[ii-1-gnz] + out->ampl[ii-1+gnz];
 		ampl += out->ampl[ii-gnz] + out->ampl[ii-1] + out->ampl[ii+gnz];
 		ampl /= 5.;
+		dirx  = out->dirx[ii-1-gnz] + out->dirx[ii-1+gnz];
+		dirx += out->dirx[ii-gnz] + out->dirx[ii-1] + out->dirx[ii+gnz];
+		dirx /= 5.;
+		dirz  = out->dirz[ii-1-gnz] + out->dirz[ii-1+gnz];
+		dirz += out->dirz[ii-gnz] + out->dirz[ii-1] + out->dirz[ii+gnz];
+		dirz /= 5.;
+		srcx  = out->srcx[ii-1-gnz] + out->srcx[ii-1+gnz];
+		srcx += out->srcx[ii-gnz] + out->srcx[ii-1] + out->srcx[ii+gnz];
+		srcx /= 5.;
+		srcz  = out->srcz[ii-1-gnz] + out->srcz[ii-1+gnz];
+		srcz += out->srcz[ii-gnz] + out->srcz[ii-1] + out->srcz[ii+gnz];
+		srcz /= 5.;
 
+		invgeo  = out->invgeo[ii-1-gnz] + out->invgeo[ii-1+gnz];
+		invgeo += out->invgeo[ii-gnz] + out->invgeo[ii-1] + out->invgeo[ii+gnz];
+		invgeo /= 5.;
             } else if(ROUND(ii/gnz)==gnx-1) {
 
 		time  = out->time[ii-1-gnz] + out->time[ii+1-gnz];
@@ -159,27 +214,73 @@ void TwoD_interp (struct grid *out, int gnx, int gnz)
 		ampl  = out->ampl[ii-1-gnz] + out->ampl[ii+1-gnz];
 		ampl += out->ampl[ii-gnz] + out->ampl[ii-1] + out->ampl[ii+1];
 		ampl /= 5.;
+		dirx  = out->dirx[ii-1-gnz] + out->dirx[ii+1-gnz];
+		dirx += out->dirx[ii-gnz] + out->dirx[ii-1] + out->dirx[ii+1];
+		dirx /= 5.;
+		dirz  = out->dirz[ii-1-gnz] + out->dirz[ii+1-gnz];
+		dirz += out->dirz[ii-gnz] + out->dirz[ii-1] + out->dirz[ii+1];
+		dirz /= 5.;
+		srcx  = out->srcx[ii-1-gnz] + out->srcx[ii+1-gnz];
+		srcx += out->srcx[ii-gnz] + out->srcx[ii-1] + out->srcx[ii+1];
+		srcx /= 5.;
+		srcz  = out->srcz[ii-1-gnz] + out->srcz[ii+1-gnz];
+		srcz += out->srcz[ii-gnz] + out->srcz[ii-1] + out->srcz[ii+1];
+		srcz /= 5.;
 
+		invgeo  = out->invgeo[ii-1-gnz] + out->invgeo[ii+1-gnz];
+		invgeo += out->invgeo[ii-gnz] + out->invgeo[ii-1] + out->invgeo[ii+1];
+		invgeo /= 5.;
             } else {
 		if(out->flag[ii-1]!=0) {
-		    time = out->time[ii-1];
+			time = out->time[ii-1];
 		    ampl = out->ampl[ii-1];
+		    dirx = out->dirx[ii-1];
+		    dirz = out->dirz[ii-1];
+		    srcx = out->srcx[ii-1];
+		    srcz = out->srcz[ii-1];
+		    invgeo = out->invgeo[ii-1];
 		} else if (out->flag[ii+1]!=0) {
-		    time = out->time[ii+1];
+			time = out->time[ii+1];
 		    ampl = out->ampl[ii+1];
+		    dirx = out->dirx[ii+1];
+		    dirz = out->dirz[ii+1];
+		    srcx = out->srcx[ii+1];
+		    srcz = out->srcz[ii+1];
+		    invgeo = out->invgeo[ii+1];
 		} else if (out->flag[ii-gnz]!=0) {
-		    time = out->time[ii-gnz];
+			time = out->time[ii-gnz];
 		    ampl = out->ampl[ii-gnz];
+		    dirx = out->dirx[ii-gnz];
+		    dirz = out->dirz[ii-gnz];
+		    srcx = out->srcx[ii-gnz];
+		    srcz = out->srcz[ii-gnz];
+		    invgeo = out->invgeo[ii-gnz];
 		} else if (out->flag[ii+gnz]!=0) {
-		    time = out->time[ii+gnz];
+			time = out->time[ii+gnz];
 		    ampl = out->ampl[ii+gnz];
+		    dirx = out->dirx[ii+gnz];
+		    dirz = out->dirz[ii+gnz];
+		    srcx = out->srcx[ii+gnz];
+		    srcz = out->srcz[ii+gnz];
+		    invgeo = out->invgeo[ii+gnz];
 		} else {
 		   time = 0.;
 		   ampl = 0.;
+		   dirx = 0.;
+		   dirz = 0.;
+		   srcx = 0.;
+		   srcz = 0.;
+		   invgeo = 0.;
 		}
             }
+
 	    out->time[ii] = time;
 	    out->ampl[ii] = ampl;
+	    out->dirx[ii] = dirx;
+	    out->dirz[ii] = dirz;
+	    out->srcx[ii] = srcx;
+	    out->srcz[ii] = srcz;
+	    out->invgeo[ii] = invgeo;
         }
     }
     return;

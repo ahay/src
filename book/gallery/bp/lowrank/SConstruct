@@ -1,0 +1,44 @@
+from rsf.proj import *
+from rsf.gallery import bp
+
+bp.getvel('bpvel')
+
+Result('bpvel',
+       '''
+       grey color=j gainpanel=a title=BPait\ Velocity\ Model
+       scalebar=y barreverse=y allpos=y 
+       screenratio=%g screenht=4 labelsz=5 titlesz=6
+       ''' % (12.0/32.0))
+bp.zodata('zodata')
+
+Result('zodata','grey title="Zero Offset" ')
+
+# Zero-offset RTM
+Flow('bpvelk','bpvel','math output=input/1000 | put d1=0.00625 d2=0.0125 d3=1 n3=1 o3=0 n4=1 d4=1 o4=0 | window j2=4 | window min2=0.05') 
+Flow('fft','bpvelk','transp | fft1 | fft3 axis=2 pad=1')
+Flow('right left','bpvelk fft',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2016 dt=0.002 
+     fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''')
+
+Flow('rtm snaps','zodata left right',
+     '''
+     put d3=0.05 o3=0 n4=1 d4=1 o4=0 n5=1 d5=1 o5=0 n6=1 d6=1 o6= |
+     spline n1=6003 d1=0.002 o1=0 |
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=1911 dz=0.00625  
+     ''')
+
+Result('rtm',
+       '''
+        
+       grey title="Post-Stack Depth Migration" unit2=km
+       ''')
+
+Plot('snaps','grey title=Snapshots gainpanel=all unit2=km',view=1)
+End()
