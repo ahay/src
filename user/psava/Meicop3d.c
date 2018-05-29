@@ -92,7 +92,6 @@ void applyScaling(float *****img,
 int main(int argc, char* argv[])
 {
     bool verb;     /* verbosity flag */
-    bool pos; /* direction of spraying */
     bool adj;      /* adjoint operator flag */
     bool wflcausal, oprcausal; /* causal wfl?, opr? */
 
@@ -135,7 +134,6 @@ int main(int argc, char* argv[])
 #endif
 
     if(! sf_getbool(    "verb",&verb    ))        verb=false; /* verbosity flag */
-    if(! sf_getbool(    "positive",&pos ))        pos=true; /* if positive sprays opr to positive shits, else, sprays to negative shifts */
     if(! sf_getbool(     "adj",&adj     ))         adj=false; /* adjoint flag */
     if(! sf_getbool("wflcausal",&wflcausal)) wflcausal=false; /* causal wfl? */
     if(! sf_getbool("oprcausal",&oprcausal)) oprcausal=false; /* causal opr? */
@@ -295,11 +293,6 @@ int main(int argc, char* argv[])
 		else             sf_seek(Fopr,(off_t)      itO *nslice,SEEK_SET);
 		sf_floatread(opr[ lht ][0][0],nz*nx*ny,Fopr);
 	    }
-            for(iht=0;iht<sf_n(aht);iht++) {
-                mctall[iht] = (mctall[iht]+1) % sf_n(aht); /* cycle iht index */
-                pctall[iht] = (pctall[iht]+1) % sf_n(aht);
-            }
-
 
 	    if(it>=0+nht && 
 	       it<nt-nht) { 
@@ -310,21 +303,16 @@ int main(int argc, char* argv[])
     shared (nc,ccin,ahx,ahy,ahz,aht,mcxall,mcyall,mczall,mctall,pcxall,pcyall,pczall,pctall)
 #endif
 		for(ic=0;ic<nc;ic++){ if(ccin[ic]) { /* sum over c only! */
-      if(pos){
-
 			EICLOOP( wfl    [mct][mcy][mcx][mcz] +=
 				 opr    [pct][pcy][pcx][pcz] *
 				 img[ic][iht][ihy][ihx][ihz]; );
-      }else{
-			EICLOOP( wfl    [pct][pcy][pcx][pcz] +=
-				 opr    [mct][mcy][mcx][mcz] *
-				 img[ic][iht][ihy][ihx][ihz]; );
-
-
-      }
 		    }
 		}
 	    }
+            for(iht=0;iht<sf_n(aht);iht++) {
+                mctall[iht] = (mctall[iht]+1) % sf_n(aht); /* cycle iht index */
+                pctall[iht] = (pctall[iht]+1) % sf_n(aht);
+            }
 
 	    if(it>=0+nht) {
 		itW = it - nht;
@@ -360,11 +348,6 @@ int main(int argc, char* argv[])
 		sf_floatread(wfl[ lht ][0][0],nz*nx*ny,Fwfl);
 	    }
 
-            for(iht=0;iht<sf_n(aht);iht++) {
-                mctall[iht] = (mctall[iht]+1) % sf_n(aht); /* cycle iht index */
-                pctall[iht] = (pctall[iht]+1) % sf_n(aht);
-            }
-
 	    if(it>=0+nht && 
 	       it<nt-nht) { 
 
@@ -374,21 +357,16 @@ int main(int argc, char* argv[])
     shared (nc,ccin,ahx,ahy,ahz,aht,mcxall,mcyall,mczall,mctall,pcxall,pcyall,pczall,pctall)
 #endif
 		for(ic=0;ic<nc;ic++){ if(ccin[ic]) { /* sum over c and t! */
-      if(pos){
-			  EICLOOP( img[ic][iht][ihy][ihx][ihz] +=
-				   opr    [pct][pcy][pcx][pcz] *
-			  	 wfl    [mct][mcy][mcx][mcz]; );
-      }else{
-  			EICLOOP( img[ic][iht][ihy][ihx][ihz] +=
-	  			 opr    [mct][mcy][mcx][mcz] *
-		  		 wfl    [pct][pcy][pcx][pcz]; );
-
-
-      }
+			EICLOOP( img[ic][iht][ihy][ihx][ihz] +=
+				 opr    [pct][pcy][pcx][pcz] *
+				 wfl    [mct][mcy][mcx][mcz]; );
 		    }
 		}
 	    }
-
+            for(iht=0;iht<sf_n(aht);iht++) {
+                mctall[iht] = (mctall[iht]+1) % sf_n(aht); /* cycle iht index */
+                pctall[iht] = (pctall[iht]+1) % sf_n(aht);
+            }
 
 	    lht=(lht+1) % sf_n(aht);
 	}
