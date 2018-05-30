@@ -230,17 +230,6 @@ def eic2dA(wfl,img,opr,cip,custom,par):
          eicop2d adj=y wflcausal=n oprcausal=n 
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + ' ' + custom )
-
-<<<<<<< HEAD
-=======
-def eic2dAold(wfl,img,opr,cip,custom,par):    
-    Flow(wfl,[img,opr,cip],
-         '''
-         ../CODE/EICOP2D.x adj=y wflcausal=n oprcausal=n 
-         opr=${SOURCES[1]} cip=${SOURCES[2]}
-         ''' + ' ' + custom )
-    
->>>>>>> 60f25ae3c8ad70e8055be4e88a961103063d0acd
 def eic3dA(wfl,img,opr,cip,custom,par):    
     Flow(wfl,[img,opr,cip],
          '''
