@@ -586,7 +586,7 @@ def inine3d(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1):
     Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
 
 def inine(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1):
-	inine2d(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1)
+	inine2d(cube,byte,custom,par,scale,ymax,ratio)
 
 # plot 3x3 matrix of plots
 def inine2d(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1):
@@ -594,7 +594,7 @@ def inine2d(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1):
 
     dy=ymax;
     dx=ymax/ratio
-        
+
     for ifrm in range(nfrm):
         tag="%d"%ifrm
         
