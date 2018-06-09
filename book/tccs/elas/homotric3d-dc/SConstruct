@@ -1,0 +1,212 @@
+# . . Set up generic project files
+from rsf.proj import *
+from rsf.recipes import fdmod,encode,wemig,stiffness
+import os
+
+def srcgen(out,par):
+    dtt=0.0001
+    fac=par['dt']/dtt
+    ntt=par['nt']*fac
+    ktt=par['kt']*fac
+
+    #i/(2*phi)=i/(2|omega|)=i/2 * (hilb) [(int)source] 
+    Flow('source1',None,
+         '''
+         spike n1=%d d1=%f k1=%d |
+         ricker1 frequency=%f
+         '''%(ntt,dtt,ktt,par['frq']))
+    Flow('realsrc','source1','math "output=0"')
+    Flow('imagsrc','source1','envelope hilb=y order=500 | halfint | halfint | math output="input/2" ')
+    
+    Flow('csource1','realsrc imagsrc','cmplx ${SOURCES[1]}')
+    Flow(out,'csource1','window j1=%d'% fac)
+
+# . . Set parameter for the modelling.  Applies for all situations.
+par = {
+    # Space parameters
+    'nx':100,  'ox':0, 'dx':0.010,  'lx':'x', 'ux':'km',
+    'ny':100,  'oy':0, 'dy':0.010,  'ly':'y', 'uy':'km',
+    'nz':100,  'oz':0, 'dz':0.010,  'lz':'z', 'uz':'km',
+    'kz':50, 'lz':100, 'kx':1, 'lx':100, 'ky':1, 'ly':100,
+
+    # Time Parameters
+    'nt':200,'ot':0, 'dt':0.001,  'lt':'t', 'ut':'s',
+    'kt':50,'frq':35,
+
+    # Modelling parameters
+    'snap':'y','jsnap':4,'nb':0, 'verb':'y',
+    'nbell':0, 'jdata':1,'ssou':'2',
+
+    # Output
+    'height':5,    
+    }
+
+# . . Initialize parameters in fdm module   
+fdmod.param(par)
+par['nframe']=10
+par['iframe']=4
+par['dabc']='n'
+
+# --------------------------------------------------------------------
+# . . Source Section
+#
+# . . Wavelet
+#fdmod.wavelet('wav_',par['frq'],par)
+Flow('wav_',None, 'spike n1=%(nt)d d1=%(dt)f k1=%(kt)d | ricker1 frequency=%(frq)f' %par)
+Flow('cwav_',None, 'spike n1=%(nt)d d1=%(dt)f k1=%(kt)d | imagsrc frequency=%(frq)f | rtoc' %par)
+#srcgen('cwav_',par)
+
+# . . 3D Elastic source
+Flow('souz','cwav_','math output=input*1')
+Flow('soux','cwav_','math output=input*1')
+Flow('souy','cwav_','math output=input*1')
+
+Flow('wave-3d',['souz','soux','souy'],
+     '''
+     cat axis=2 space=n ${SOURCES[1:3]} |
+     transp plane=23 | 
+     transp plane=14
+     ''')
+
+# . . 3D Elastic source
+Flow('souz0','wav_','math output=input*1')
+Flow('soux0','wav_','math output=input*1')
+Flow('souy0','wav_','math output=input*1')
+
+Flow('wave-3d0',['souz0','soux0','souy0'],
+     '''
+     cat axis=2 space=n ${SOURCES[1:3]} |
+     transp plane=23 | 
+     transp plane=14
+     ''')
+
+# --------------------------------------------------------------------
+# . . Coordinate Section
+# . . Locate source position
+xsou=par['ox']+(par['nx']-1)*par['dx']/2.
+ysou=par['oy']+(par['ny']-1)*par['dy']/2.
+zsou=par['oz']+40*par['dz']
+#zsou=par['oz']+(par['nz']-1)*par['dz']/2.
+
+# . . 3D Sources
+fdmod.point3d('ss-3d',xsou,ysou,zsou,par) # . . 3D  Sources
+
+# . . 3D receivers
+fdmod.horizontal3d('rr-3d',0.02,par) # . . 3D 
+
+# . . Create a 3D point location for plotting
+par['zlook'] = 0.2
+par['nzcut'] = par['nz']/2
+center=fdmod.center3d(xsou,ysou,par['zlook'],par)
+
+# --------------------------------------------------------------------
+# . . Create zero array size of 3D model
+Flow('zero-3d',None,
+     '''
+     spike nsp=1 mag=0.0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     n3=%(ny)d o3=%(oy)g d3=%(dy)g |
+     put label1=%(lz)s label2=%(lx)s label3=%(ly)s unit1=%(uz)s unit2=%(ux)s unit3=%(uy)s
+     ''' % par)
+
+Flow('box-3d',None,
+     '''
+     spike nsp=1 mag=0.3
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     n3=%(ny)d o3=%(oy)g d3=%(dy)g 
+     k1=%(kz)d l1=%(lz)d k2=%(kx)d l2=%(lx)d k3=%(ky)d l3=%(ly)d |
+     smooth rect1=4 rect2=4 rect3=4 repeat=1 |
+     put label1=%(lz)s label2=%(lx)s label3=%(ly)s unit1=%(uz)s unit2=%(ux)s unit3=%(uy)s
+     ''' % (par))
+
+scale=0.6
+m = 'TRI'
+Flow(m+'c-11','zero-3d','math output="14.9/1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-12','zero-3d','math output="6.3 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-13','zero-3d','math output="5.2 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-14','zero-3d','math output="0.7 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-15','zero-3d','math output="0.9 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-16','zero-3d','math output="-0.5/1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-22','zero-3d','math output="14.9/1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-23','zero-3d','math output="5.7 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-24','zero-3d','math output="0.8 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-25','zero-3d','math output="1.5 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-26','zero-3d','math output="-0.4/1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-33','zero-3d','math output="10.0/1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-34','zero-3d','math output="0.7 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-35','zero-3d','math output="0.8 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-36','zero-3d','math output="0.1 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-44','zero-3d','math output="3.3 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-45','zero-3d','math output="-0.1/1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-46','zero-3d','math output="0.1 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-55','zero-3d','math output="3.0 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-56','zero-3d','math output="0.2 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'c-66','zero-3d','math output="3.7 /1.395*(1-%g*((x1-0.40)*(x1-0.40)+(x2-0.50)*(x2-0.50)+(x3-0.50)*(x3-0.50)))"' %scale)
+Flow(m+'-the',m+'c-11','math output=45')
+Flow(m+'-phi',m+'c-11','math output=30')
+
+Result(m+'c-11','byte gainpanel=a bar=bar.rsf barreverse=y bias=5 allpos=y | grey3 color=j frame1=40 frame2=50 frame3=50 point1=0.5 point2=0.5 screenratio=1 scalebar=y title="Triclinic Model (C11)" label1=Z unit1=km label2=X unit2=km label3=Y unit3=km barlabel=c11 barunit="GPa" ')
+
+
+Flow('rank-p left-p right-p',[m+'c-11',m+'c-12',m+'c-13',m+'c-22',m+'c-23',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'-the',m+'-phi',m+'c-14',m+'c-15',m+'c-16',m+'c-24',m+'c-25',m+'c-26',m+'c-34',m+'c-35',m+'c-36',m+'c-45',m+'c-46',m+'c-56'],
+     '''
+     ewelr3 mode=1 jump=2
+     dt=%(dt)f eps=1e-4 npk=10 verb=%(verb)s nb=0
+     c12=${SOURCES[1]} c13=${SOURCES[2]}
+     c22=${SOURCES[3]} c23=${SOURCES[4]} c33=${SOURCES[5]} 
+     c44=${SOURCES[6]} c55=${SOURCES[7]} c66=${SOURCES[8]} 
+     tilt=n
+     theta=${SOURCES[9]} phi=${SOURCES[10]}
+     tric=y
+     c14=${SOURCES[11]} c15=${SOURCES[12]} c16=${SOURCES[13]}
+     c24=${SOURCES[14]} c25=${SOURCES[15]} c26=${SOURCES[16]}
+     c34=${SOURCES[17]} c35=${SOURCES[18]} c36=${SOURCES[19]}
+     c45=${SOURCES[20]} c46=${SOURCES[21]} c56=${SOURCES[22]}
+     left=${TARGETS[1]} right=${TARGETS[2]}
+     '''%par)
+
+Flow('rank-s left-s right-s',[m+'c-11',m+'c-12',m+'c-13',m+'c-22',m+'c-23',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'-the',m+'-phi',m+'c-14',m+'c-15',m+'c-16',m+'c-24',m+'c-25',m+'c-26',m+'c-34',m+'c-35',m+'c-36',m+'c-45',m+'c-46',m+'c-56'],
+     '''
+     ewelr3 mode=2 jump=2
+     dt=%(dt)f eps=1e-4 npk=10 verb=%(verb)s nb=0
+     c12=${SOURCES[1]} c13=${SOURCES[2]}
+     c22=${SOURCES[3]} c23=${SOURCES[4]} c33=${SOURCES[5]} 
+     c44=${SOURCES[6]} c55=${SOURCES[7]} c66=${SOURCES[8]} 
+     tilt=n
+     theta=${SOURCES[9]} phi=${SOURCES[10]}
+     tric=y
+     c14=${SOURCES[11]} c15=${SOURCES[12]} c16=${SOURCES[13]}
+     c24=${SOURCES[14]} c25=${SOURCES[15]} c26=${SOURCES[16]}
+     c34=${SOURCES[17]} c35=${SOURCES[18]} c36=${SOURCES[19]}
+     c45=${SOURCES[20]} c46=${SOURCES[21]} c56=${SOURCES[22]}
+     left=${TARGETS[1]} right=${TARGETS[2]}
+     '''%par)
+
+Flow([m+'d-lr',m+'w-lr-p',m+'w-lr-s'], ['wave-3d',m+'c-11','rank-p','left-p','right-p','rank-s','left-s','right-s','ss-3d','rr-3d'],
+     '''
+     ewedc3d 
+     back=n
+     ccc=${SOURCES[1]}
+     rkp=${SOURCES[2]}
+     ltp=${SOURCES[3]}
+     rtp=${SOURCES[4]}
+     rks=${SOURCES[5]}
+     lts=${SOURCES[6]}
+     rts=${SOURCES[7]}
+     sou=${SOURCES[8]}
+     rec=${SOURCES[9]}
+     wfp=${TARGETS[1]}
+     wfs=${TARGETS[2]}
+     jdata=%(jdata)d verb=%(verb)s free=n
+     snap=%(snap)s jsnap=%(jsnap)d
+     nb=0 nbell=%(nbell)d
+     esou=n
+     '''%par)
+
+
+Result(m+'w-lr-p','window n4=1 f5=42 n5=1 | real | byte gainpanel=a | grey3 frame1=40 frame2=50 frame3=50 point1=0.5 point2=0.5 screenratio=1 title="P-wave" label1=Z unit1=km label2=X unit2=km label3=Y unit3=km')
+Result(m+'w-lr-s','window n4=1 f5=42 n5=1 | real | byte gainpanel=a | grey3 frame1=40 frame2=50 frame3=50 point1=0.5 point2=0.5 screenratio=1 title="Coupled S-waves" label1=Z unit1=km label2=X unit2=km label3=Y unit3=km')
+
+End()
