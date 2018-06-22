@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 {
     bool transp, framenum;
     int n1, n2, n3, i1, i2, i3;
-    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, yi1, tt, wd, dx=0.0f;
+    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt, wd, dx=0.0f;
     float **x, **y, **tmp, xp[4], yp[4];    
     float ***data=NULL;
     sf_datatype type;
@@ -133,25 +133,14 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n1; i1++) {
 		xi = x[i2][i1];
 		yi = y[i2][i1];
-		yi1 = y[i2+1][i1];
 
 		if (isfinite(xi) && 
-		    isfinite(yi) && i2+1<n2) {
+		    isfinite(yi)) {
 
-		    xp[0]=xi-dx;  yp[0]=yi1;
+		    xp[0]=xi-dx;  yp[0]=0.0;
 		    xp[1]=xi-dx;  yp[1]=yi;
 		    xp[2]=xi+dx;  yp[2]=yi;
-		    xp[3]=xi+dx;  yp[3]=yi1;
-
-		    vp_ufill(xp,yp,4);
-		} 
-		if (isfinite(xi) && 
-		    isfinite(yi) && i2+1>=n2) {
-
-		    xp[0]=xi-dx;  yp[0]=0;
-		    xp[1]=xi-dx;  yp[1]=yi;
-		    xp[2]=xi+dx;  yp[2]=yi;
-		    xp[3]=xi+dx;  yp[3]=0;
+		    xp[3]=xi+dx;  yp[3]=0.0;
 
 		    vp_ufill(xp,yp,4);
 		} 
