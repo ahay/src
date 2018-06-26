@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 {
     bool transp, framenum;
     int n1, n2, n3, i1, i2, i3;
-    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt, wd, dx=0.0f;
+    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, yi1, tt, wd, dx=0.0f;
     float **x, **y, **tmp, xp[4], yp[4];    
     float ***data=NULL;
     sf_datatype type;
