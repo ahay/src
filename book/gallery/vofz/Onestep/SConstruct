@@ -1,0 +1,36 @@
+from rsf.proj import *
+from rsf.gallery import vofz
+
+vofz.get_velocity('vel')
+
+vofz.zero_offset('data0')
+Flow('real','data0','math "output=0"')
+Flow('imag','data0','envelope hilb=y order=500')
+Flow('zodata2','real imag','cmplx ${SOURCES[1]}')
+Result('zodata2','imag|window min2=2 max2=8 |grey title="Zero Offset"')
+
+Flow('x','data0','window n1=1')
+Flow('vel0','vel x','transp | remap1 pattern=${SOURCES[1]}')
+
+# Lowrank decomposition
+Flow('fft','vel0','rtoc|fft3 axis=1 pad=1| fft3 axis=2 pad=1')
+Flow('right left','vel0 fft',
+     '''
+     scale dscale=0.5 | 
+     cisolr2 seed=2013 dt=0.002 fft=${SOURCES[1]} left=${TARGETS[1]}
+     ''')
+
+# Zero-offset migration
+rtm = '''
+reverse which=1 |
+transp |
+cfftexp2 mig=y
+left=${SOURCES[1]} right=${SOURCES[2]}
+nz=501 dz=0.01 | put unit2=km
+'''
+
+Flow('mig0','zodata2 left right',rtm)
+Result('mig0','real|window min2=2 max2=8 |grey wanttitle=n') 
+#vofz.zo_image('mig0')
+
+End()

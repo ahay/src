@@ -31,6 +31,10 @@ Adapted for the EULER cluster at ETH Zuerich
 
 author: Filippo Broggini, 23 JUN 2016, ETHZ
 
+Adapted for the Piz Daint cluster at CSCS, Switzerland
+
+author: Filippo Broggini, 5 JUL 2018, ETHZ
+
 '''
 import rsf.proj, os, string, subprocess, sys
 import SCons
@@ -57,7 +61,7 @@ CLUSTER_CONFIGURED = False
 SCONSIGNS = []
 
 QDEFAULT= None
-QCOMMAND = {'slurm':'sbatch ','pbs':'qsub ','lsf':'bsub'}
+QCOMMAND = {'slurm':'sbatch ','slurmcscs':'sbatch ','pbs':'qsub ','lsf':'bsub'}
 
 NAMED = False
 
@@ -113,7 +117,7 @@ def AddOption(*args, **kw):
 def GetOption(name):
     return getattr(OptionsParser.values, name)
 
-def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content,nodetype='psava',parallel=False):
+def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content,nodetype='psava',parallel=False,cluster=None):
 #name,email,nodes,ppn,time,last,next,tasks,nodetype=None,parallel=False):
     '''
     This function creates the sumsission job for the Slurm scheduler
@@ -166,7 +170,61 @@ def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,conte
     file.write(text)
     file.close()
 
+def createSlurmfileCSCS(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content,nodetype='psava',parallel=False,cluster=None):
+#name,email,nodes,ppn,time,last,next,tasks,nodetype=None,parallel=False):
+    '''
+    This function creates the sumsission job for the Slurm scheduler
+    '''
+    lines = []
+    lines.append('#!/bin/bash')
+    lines.append('#SBATCH -J %s' % (name))
+    lines.append('#SBATCH --nodes=%d' % (nodes))
+    lines.append('#SBATCH --cpus-per-task=%d '% (ppn))
+    lines.append('#SBATCH --time=%d:00:00' % time)
+    lines.append('#SBATCH --job-name=%s' % name)
+    lines.append('#SBATCH -o %s/%s.log' % (pbs_dirt,name))
+    lines.append('#SBATCH -e %s/%s.log' % (pbs_dirt,name))
+    lines.append('#SBATCH --export=ALL')
+    lines.append('#SBATCH --ntasks-per-node=1') # 1 task per node, then it gives all cpus to task (OMP)
+    lines.append('#SBATCH --exclusive ')
+    if nodetype:
+      lines.append('#SBATCH --partition=%s'%nodetype)
+    if email:
+        lines.append('#SBATCH --mail-type=FAIL')
+        lines.append('#SBATCH --mail-type=END')
+        lines.append('#SBATCH --mail-user=%s' % email)
+    if cluster == 'pizdaintgpu':
+        lines.append('#SBATCH --ntasks-per-core=2')
+        lines.append('#SBATCH --constraint=gpu')
+    lines.append('#-----------')
+#    lines.append('export DATAPATH=%s' % rsf.path.getpath(os.getcwd()))
+    lines.append('export SCONS_OVERRIDE=1')
+    lines.append('cd %s' % os.getcwd())
+#    lines.append('echo "JOB: %s running" >> pbs/jobs.txt' % name)
 
+    if last:
+        depends = string.join(['%s' % item for item in last])
+    if parallel:
+        lines.append('hostlist -e $SLURM_JOB_NODELIST > %s/%s-nodes' % (pbs_dirt,name))
+        lines.append('mymatch %s/%s-nodes %s/%s-shell > %s/%s-app' % (pbs_dirt,name,pbs_dirt,name,pbs_dirt,name))
+        lines.append('mpirun -configfile %s/%s-app' % (pbs_dirt,name))
+    else:
+        if relaunch or run:
+          lines.append('%s' % content)
+        else:
+          lines.append('scons -f %s/SConstruct-%s' % (pbs_dirt,name))
+        #lines.append(tasks+'\n')
+
+#    lines.append('echo "JOB: %s done" >> pbs/jobs.txt' % name)
+    #lines.append('srun --ntasks-per-node=1 rm -rf  /localscratch/$USER')
+    if next == None:
+        global SCONSIGNS
+        lines.append('sfdbmerge outdb=%s %s ' % (project.path+'.sconsign.dbhash', ' '.join(SCONSIGNS)))
+
+    file = open('%s/%s' % (pbs_dirt,name),'w')
+    text = string.join(lines,'\n')
+    file.write(text)
+    file.close()
 
 def createPBSfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content,nodetype=None,parallel=False):
     '''
@@ -277,7 +335,7 @@ def createLSFfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content
     file.write(text)
     file.close()
 
-QSYS = {'slurm':createSlurmfile,'pbs':createPBSfile,'lsf':createLSFfile}
+QSYS = {'slurm':createSlurmfile,'slurmcscs':createSlurmfileCSCS,'pbs':createPBSfile,'lsf':createLSFfile}
 
 class Job:
     def __init__(self,time=0,nodes=1,ppn=0,notes=''):
@@ -302,7 +360,7 @@ class Job:
     def make(self):
         qfunction = QSYS[QDEFAULT]
         qfunction(self.name,EMAIL,self.nodes,self.ppn,
-            self.time,self.last,self.next,'\n'.join(self.tasks),self.relaunch,self.run,self.content,nodetype=NODETYPE)
+            self.time,self.last,self.next,'\n'.join(self.tasks),self.relaunch,self.run,self.content,nodetype=NODETYPE,cluster=CLUSTER)
 
     def keep(self):
         if len(self.tasks) > 0:
@@ -362,7 +420,7 @@ class Parallel(Job):
                 nodes = self.nnl
             qfunction = QSYS[QDEFAULT]
             qfunction(self.all[i],EMAIL,nodes,self.ppn,
-                self.time,self.last,next,'',False,False,'',nodetype=NODETYPE,parallel=True)
+                self.time,self.last,next,'',False,False,'',nodetype=NODETYPE,parallel=True,cluster=CLUSTER)
 
     def keep(self):
         if len(self.scripts) > 0:
@@ -711,7 +769,7 @@ def End(**kw):
                 for pbs in job.all:
                     command = QCOMMAND[QDEFAULT] # 'qsub '
                     if job.last != None:
-                        if QDEFAULT=='slurm':
+                        if QDEFAULT=='slurm' or QDEFAULT=='slurmcscs':
                           jobIdName=(':'.join(pbs_names[j-1])).replace("Submitted batch job ","")
                           command += '--dependency=afterok:%s '%jobIdName
                         elif QDEFAULT=='lsf':

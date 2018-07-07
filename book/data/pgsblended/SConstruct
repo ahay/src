@@ -1,0 +1,57 @@
+from rsf.proj import *
+
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+
+if pdfread:
+    # download and view the survey notes:
+    Fetch('2017_SeismicDeblendingSummary_Final.pdf',
+      server='https://s3.amazonaws.com',
+      top='open.source.geoscience/open_data',
+      dir='pgsblended')
+    Result('2017_SeismicDeblendingSummary_Final',
+	   '2017_SeismicDeblendingSummary_Final.pdf',
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
+
+    Fetch('2017June_Duan_etal_APractical.pdf',
+      server='https://www.pgs.com',
+      top='globalassets/technical-library',
+      dir='whitepapers-library')
+    Result('2017June_Duan_etal_APractical',
+	   '2017June_Duan_etal_APractical.pdf',
+           pdfread + ' $SOURCE',stdin=0,stdout=0)
+
+Fetch('blended_data.mat',
+      server='https://s3.amazonaws.com',
+      top='open.source.geoscience/open_data',
+      dir='pgsblended')
+Flow('blended_data.rsf','blended_data.mat',
+     'python blended_data.py')
+Result('shot128','blended_data','sfwindow min3=128 max3=128 | sfgrey')
+Result('neartrshallow','blended_data',
+	'''
+	sfwindow min2=0 max2=0 n1=400 
+	| sfpow pow1=2 
+	| sfgrey
+	''')
+Result('neartrdeep','blended_data',
+	'''
+	sfwindow min2=0 max2=0 n1=1800 
+	| sfpow pow1=2 
+	| sfgrey
+	''')
+
+Fetch('time_delay_in_ms.mat',
+      server='https://s3.amazonaws.com',
+      top='open.source.geoscience/open_data',
+      dir='pgsblended')
+Fetch('reading_blended_data.ipynb',
+      server='https://s3.amazonaws.com',
+      top='open.source.geoscience/open_data',
+      dir='pgsblended')
+
+# need to do a Flow with these files for the fetch ot activate
+#https://s3.amazonaws.com/open.source.geoscience/open_data/pgsblended/reading_blended_data.ipynb
+#https://s3.amazonaws.com/open.source.geoscience/open_data/pgsblended/time_delay_in_ms.mat
+
+End()

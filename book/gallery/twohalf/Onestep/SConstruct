@@ -1,0 +1,38 @@
+from rsf.proj import *
+
+sys.path.append('..')
+
+import twohalf
+
+# get velocity model
+twohalf.getvel('vel')
+Result('vel','grey color=j mean=y title="BP 2.5D Model" scalebar=y barreverse=y')
+
+# get data
+Fetch('thexp.rsf','bp')
+Flow('exp','thexp','dd form=native')
+Flow('real','exp','math "output=0"')
+Flow('imag','exp','envelope hilb=y order=100')
+Flow('zodata2','real imag','cmplx ${SOURCES[1]}')
+
+# lowrank decomposition
+Flow('fft','vel','transp | rtoc|fft3 axis=1 pad=1| fft3 axis=2 pad=1')
+Flow('right left','vel fft',
+     '''
+     transp | scale dscale=0.5 |
+     cisolr2 seed=2012 dt=0.001 fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''')
+
+# High-resolution zero-offset migration
+Flow('zomigt','zodata2 left right',
+     '''
+     reverse which=1 |
+     transp |
+     cfftexp2 mig=y
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=321 dz=12.5
+     ''')
+
+Result('zomigt','real|grey title="Zero-Offset Migration" unit2=km')
+
+End()
