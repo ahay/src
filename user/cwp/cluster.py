@@ -205,9 +205,9 @@ def createSlurmfileCSCS(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,c
     if last:
         depends = string.join(['%s' % item for item in last])
     if parallel:
-        lines.append('hostlist -e $SLURM_JOB_NODELIST > %s/%s-nodes' % (pbs_dirt,name))
-        lines.append('mymatch %s/%s-nodes %s/%s-shell > %s/%s-app' % (pbs_dirt,name,pbs_dirt,name,pbs_dirt,name))
-        lines.append('mpirun -configfile %s/%s-app' % (pbs_dirt,name))
+        #lines.append('hostlist -e $SLURM_JOB_NODELIST > %s/%s-nodes' % (pbs_dirt,name))
+        lines.append('multiprog_cscs.py %s/%s-shell > %s/%s-app' % (pbs_dirt,name,pbs_dirt,name))
+        lines.append('srun --wait=0 --multi-prog %s/%s-app' % (pbs_dirt,name))
     else:
         if relaunch or run:
           lines.append('%s' % content)
