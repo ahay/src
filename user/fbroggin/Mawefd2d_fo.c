@@ -435,7 +435,7 @@ shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 
 		/* Inject vertical force source */
 		#ifdef _OPENMP
-		#pragma omp master
+		#pragma omp single
 		#endif
 		{	
 			if (srctype == 2) {
@@ -480,7 +480,7 @@ shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 
 		/* Inject pressure source */
 		#ifdef _OPENMP
-		#pragma omp master
+		#pragma omp single
 		#endif
 		{	
 			if (srctype == 1) {
