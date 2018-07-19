@@ -134,12 +134,13 @@ int main(int argc, char* argv[])
 				/* Step 2: Find new model */
 				/* Loop over all parameters */
 				for(k3=0; k3 < npara; k3++) {
-						getin = 0; /* first time getting in */
-						while (newcoef[k3] > rangecoef[2*k3+1] || newcoef[k3] < rangecoef[2*k3] || getin == 0) {
-							newcoef[k3] = drangecoef[k3]*(genrand_real1()-0.5) + currentcoef[k3];
-// 							newcoef[k3] = drangecoef[k3]*(genrand_real1()-0.5) + midcoef[k3];
-							getin = 1;
-						}
+						newcoef[k3] = drangecoef[k3]*(genrand_real1()-0.5) + midcoef[k3];
+// 						getin = 0; /* first time getting in */
+// 						while (newcoef[k3] > rangecoef[2*k3+1] || newcoef[k3] < rangecoef[2*k3] || getin == 0) {
+// 							newcoef[k3] = drangecoef[k3]*(genrand_real1()-0.5) + currentcoef[k3];
+// 							getin = 1;
+// 						}
+						
 				}
 			
 				/* Step 3: Metropolis rule */
