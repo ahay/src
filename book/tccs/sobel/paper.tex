@@ -1,0 +1,290 @@
+\title{Plane-wave Sobel attribute for discontinuity enhancement in seismic images}
+\author{Mason Phillips and Sergey Fomel}
+\address{The University of Texas at Austin,\\
+John A. and Katherine G. Jackson School of Geosciences,\\ Bureau of Economic Geology,\\
+Austin, Texas, USA}
+
+\lefthead{Phillips \& Fomel}
+\righthead{Plane-wave Sobel attribute}
+
+
+\maketitle
+\begin{abstract}
+Discontinuity enhancement attributes are commonly used to facilitate the interpretation process by enhancing edges in seismic images and providing a quantitative measure of the significance of discontinuous features. 
+These attributes require careful pre-processing to maintain geologic features and suppress acquisition and processing artifacts which may be artificially detected as a geologic edge. 
+
+We propose the plane-wave Sobel attribute, a modification of the classic Sobel filter, by orienting the filter along seismic structures using plane-wave destruction and plane-wave shaping. 
+The plane-wave Sobel attribute can be applied directly to a seismic image to efficiently and effectively enhance discontinuous features, or to a coherence image to create a sharper and more detailed image.
+Two field benchmark data examples with many faults and channel features from offshore New Zealand and offshore Nova Scotia demonstrate the effectiveness of this method compared to conventional coherence attributes.
+The results are reproducible using the Madagascar software package.
+
+\end{abstract}
+
+\section{Introduction}
+One of the major challenges of interpreting seismic images is the delineation of reflection discontinuities that are related to distinct geologic features, such as faults, channels, salt boundaries, and unconformities. 
+Visually prominent reflection features often overshadow these subtle discontinuous features which are critical to understanding the structural and depositional environment of the subsurface. 
+For this reason, precise manual interpretation of these reflection discontinuities in seismic images can be tedious and time-consuming, especially when data quality is poor. 
+Discontinuity enhancement attributes are among the most widely used seismic attributes today. 
+These attributes are generally post-stack image domain calculations of the similarity or dissimilarity along a horizon or time-slice between a neighborhood of adjacent seismic traces \cite[]{barnes}. 
+Discontinuous features, such as faults, channels, salt boundaries, unconformities, mass-transport complexes, and subtle stratigraphic features can be identified as areas of low similarity. 
+Such attributes are powerful image processing tools that enable detailed interpretation of previously indistinguishable features.
+
+\cite{bahorich} proposed the first celebrated discontinuity enhancement attribute and coined the term ``coherence". 
+The attribute produces images of the normalized local cross-correlations between adjacent seismic traces and combines them to estimate coherence. 
+This algorithm provided the framework for semblance, the generalization to an arbitrary number of traces, proposed by \cite{marfurt98}. 
+Using multidimensional correlations, this approach improves vertical resolution.
+Both of these correlation-based methods can be sensitive to lateral amplitude variations, which may obscure features such as faults and channels.
+
+The local covariance matrix measures the uniformity of a seismic image in each dimension. 
+Decomposing this matrix into its eigenvectors and eigenvalues provides a quantitative measure of local variations of seismic structures. 
+\cite{gersztenkorn} propose to compute the ratio of the largest eigenvalue and the sum of all eigenvalues of the covariance matrix at each sample, highlighting areas where there is no dominant texture in the seismic image.
+This attribute is commonly called ``eigenstructure coherence" and is only sensitive to lateral changes in phase.
+A similar decomposition can be applied to the structure-tensor which measures the local covariance of the image in each dimension \cite[]{randen00,randen01,bakker}.
+Local linearity and planarity can be computed from the eigenvalues of the structure-tensor.
+\cite{wu17} proposes to modify the traditional structure-tensor decomposition by orienting the image gradient along seismic structures.
+Discontinuous features are highlighted further by smoothing along discontinuities.
+
+Information about reflection dip in seismic images allow filters to be oriented along seismic reflections.
+Variance is a simple, but effective attribute which highlights unpredictable signal associated with discontinuous features.
+The local variance calculation is oriented along structure using the eigenvectors of the structure-tensor \cite[]{randen01}.
+\cite{hale09} also orients semblance along seismic reflections using the eigenvectors of the structure-tensor, and additionally applies smoothing along directions perpendicular to the reflections to provide an enhanced image.
+\cite{karimi} uses predictive painting \cite[]{fomel10} to generate multiple predictions of local structures in seismic images.
+The difference between the predicted and real data provides an image with isolated discontinuities.
+
+To compute a discontinuity enhancement image for detection and extraction of fault surfaces, semblance can be computed along fault strike and dip orientations.
+\cite{cohen} use the normalized differential entropy attribute to enhance faults.
+Local fault planes are separated and extracted using an adaptive image-binarization-and-skeletonization algorithm.
+This method effectively extracts fault surfaces by segmenting the coherence image.
+\cite{hale13} and \cite{wu16a} propose to scan through fault strikes and dips to maximize the semblance attribute.
+Fault surfaces are constructed by picking along the ridges of the likelihood attribute.
+Additionally, images can be unfaulted by estimating fault throws using correlations of seismic reflections across fault surfaces \cite[]{wu16b}.
+
+In image analysis, the traditional Sobel filter can be used to efficiently compute an image with enhanced discontinuities \cite[]{sobel}.
+The Sobel filter is an edge detector which computes an approximation of the gradient of the image intensity function at each point by convolving the data with a zero-phase discrete differential operator and a perpendicular triangular smoothing filter.
+This 2D filter is small and integer-valued in each direction, making it computationally inexpensive to apply to images \cite[]{ogorman}.
+\cite{luo} first proposed the applications of Sobel filters to seismic images.
+Since, modifications of the Sobel filter have been proposed for edge detection in seismic images by orienting the filter along local slopes estimated by maximizing local cross-correlation and dynamically adapting the size of the filter based on local frequency content \cite[]{aqrawi11a,aqrawi11b,aqrawi14}.
+Dip-oriented Sobel filters can be applied directly to a seismic image to compute an image with enhanced edges, or to coherence images to further sharpen previously enhanced edges \cite[]{chopra14}.
+
+We propose to modify the definition of the Sobel filter to follow seismic structures. 
+We modify the Sobel filter by replacing the discrete differential operator with linear plane-wave destruction \cite[]{fomel02} and triangular smoothing with plane-wave shaping \cite[]{fomel07,swindeman,phillips}.
+This method is particularly efficient because it does not require computation of the eigenvectors of the covariance matrix or structure-tensor.
+Local slopes are instead estimated using accelerated plane-wave destruction \cite[]{apwd}.
+We further modify the Sobel filter by orienting the filter along the azimuth perpendicular to discontinuities by implementing an azimuth scanning workflow \cite[]{merzlikin}.
+\cite{urtec} demonstrate the successful application of plane-wave Sobel filtering in the data domain to highlight seismic diffractions before imaging discontinuous features.
+We test our modification on benchmark 3{D} seismic images from offshore New Zealand and Nova Scotia, Canada and compare the results with those from alternative coherence attributes.
+
+\section{Theory}
+The traditional Sobel operator approximates a smoothed gradient of the image intensity function. 
+It is defined as the convolution of an image with two 3$\times$3 filters.
+The first of these filters ($S_i$) differentiates in the inline direction and averages in the crossline direction.
+The second filter ($S_x$) differentiates in the crossline direction and averages in the inline direction.
+\begin{equation}
+S_i=\left[
+\begin{array}{rrr}
+-1 & 0 & 1 \\
+-2 & 0 & 2 \\
+-1 & 0 & 1
+\end{array}
+\right]=\left[
+\begin{array}{c}
+1 \\
+2 \\
+1
+\end{array}
+\right]\left[
+\begin{array}{ccc}
+-1 & 0 & 1
+\end{array}
+\right]
+\end{equation}
+
+\begin{equation}
+S_x=S_i^{\mathrm{T}}=\left[
+\begin{array}{rrr}
+-1 & -2 & -1 \\
+0 & 0 & 0 \\
+1 & 2 & 1
+\end{array}
+\right]
+\end{equation}
+
+In the $Z$-transform notation, filters (1) and (2) can be expressed as
+
+\begin{equation}
+\begin{array}{l}
+S_i(Z_i,Z_x)=(Z_x+2+Z_x^{-1})(Z_i-Z_i^{-1}) \\
+S_x(Z_i,Z_x)=(Z_x-Z_x^{-1})(Z_i+2+Z_i^{-1})
+\end{array}
+\end{equation}
+
+where $Z_j$ is a phase shift in the $j$ direction.
+
+The inline and crossline images are combined to approximate the magnitude of the image gradient \cite[]{chopra07} where $\mathbf{d}$ is the data and $\mathbf{S}_i$ and $\mathbf{S}_x$ are convolution operators with the filters $S_i$ and $S_x$, respectively.
+\begin{equation}
+\|\mathbf{\nabla}\mathbf{d}\|\approx \sqrt{(\mathbf{S}_i\mathbf{d})^2+(\mathbf{S}_x\mathbf{d})^2}
+\end{equation}
+
+We propose to modify the filter for application to 3D seismic images by orienting the filter along the structure of seismic reflectors.
+Local slopes of seismic reflections are estimated in the inline and crossline directions using accelerated plane-wave destruction filters \cite[]{apwd}.
+The local-plane	wave model assumes seismic traces can be effectively predicted by dynamically shifting adjacent seismic traces.
+This dynamic shift corresponds to the dip of seismic reflections.
+This model is useful for seismic data characterization and is the basis for plane-wave destruction filters.
+The local plane-wave differential equation is defined by \cite{claerbout} as
+
+\begin{equation}
+\frac{\partial u}{\partial x}+p\frac{\partial u}{\partial t} = 0 \ ,
+\end{equation}
+
+where $u$ is the seismic wavefield and $p$ is the temporally and spatially variable local slope.
+The optimal local slopes in the inline	and crossline directions can be determined by minimizing the regularized plane-wave residual \cite[]{fomel02,apwd}.
+
+We further modify the Sobel filter by replacing the derivative operation with plane-wave destruction \cite[]{fomel02} and the smoothing operation with plane-wave shaping \cite[]{fomel07,swindeman}.
+High order plane-wave destruction filters are described in the $Z$-transform notation as
+
+\begin{equation}
+\begin{array}{l}
+C_i(p_i)=B(p_i,Z_t^{-1})-Z_iB(p_i,Z_t)\\
+C_x(p_x)=B(p_x,Z_t^{-1})-Z_xB(p_x,Z_t)
+\end{array}
+\end{equation}
+
+where $C$ is the plane-wave destruction filter, $B$ is an all-pass filter, and $p_i$ and $p_x$ are the local slopes in the inline and crossline directions, respectively.
+
+Inline and crossline shaping filters are applied to the crossline and inline plane-wave destruction images, respectively.
+Thus, the plane-wave Sobel filter modifies equation (3) by effectively replacing $Z_i$ with
+\begin{equation}
+Z_i\frac{B(p_i,Z_t)}{B(p_i,Z_t^{-1})}
+\end{equation}
+and $Z_x$ with
+\begin{equation}
+Z_x\frac{B(p_x,Z_t)}{B(p_x,Z_t^{-1})} \ .
+\end{equation}
+
+This modification effectively orients the plane-wave Sobel filter along seismic reflection structures.
+
+In the conventional implementation, the inline and crossline images are combined to produce the final image (equation 4).
+We propose an alternative approach based on the efficient azimuth scanning workflow \cite[]{merzlikin}. 
+We scan through a window of azimuths and compute the $L_q$ norm of linear combinations of the inline and crossline images weighted by the sine and cosine of the azimuth $\alpha$ 
+
+\begin{equation}
+\hat{\mathbf{S}}(\alpha,p_i,p_x)=\|\mathbf{S}_i(p_i,p_x)\mathbf{d}\cos\alpha+\mathbf{S}_x(p_i,p_x)\mathbf{d}\sin\alpha\|_q
+\end{equation}
+
+where $\mathbf{S}_i(p_i,p_x)$ and $\mathbf{S}_x(p_i,p_x)$ correspond to convolution operators with the filters $S_i(p_i,p_x)$ and $S_x(p_i,p_x)$, respectively.
+The azimuth which corresponds with the discontinuous features produces the best image at each point is picked on a semblance-like panel using a regularized automatic picking algorithm \cite[]{fomel09}.
+In images with cross-cutting relationships between discontinuous geologic features, the azimuth which corresponds to the more prominent discontinuity will be preferentially selected.
+The ensemble of images is then sliced using the pick to generate the optimal image.
+This improves the resolution of discontinuous features by effectively orienting the plane-wave Sobel filter perpendicular to edges in the seismic image. 
+
+As suggested by equation (9), this workflow can be applied the seismic image $\mathbf{d}$; however, we find that the azimuth of the seismic expression of discontinuous geologic features can be estimated more accurately by applying the workflow outlined above to a coherence, semblance, or Sobel filtered image.
+In other words, we suggest to replace $\mathbf{d}$ in equation (9) with the plane-wave Sobel filter image ($(\mathbf{S}_i(p_i,p_x)\mathbf{d})^2+(\mathbf{S}_x(p_i,p_x)\mathbf{d})^2$).
+By cascading multiple iterations of the plane-wave Sobel filter, we generate a more segmented image with less noise and improved estimates of the azimuth of the discontinuous features as expressed in the seismic image.
+Instead of replacing $\mathbf{d}$ with the plane-wave Sobel filter image, we invite users to cascade their favorite coherence or semblance attributes with the plane-wave Sobel filter to further enhance discontinuous features in seismic images.
+
+\section{Example I}
+Our first example is a subset of the Parihaka seismic data (full-stack, anisotropic, Kirchhoff prestack time migrated).
+This marine 3{D} seismic volume was acquired offshore New Zealand and is available in the SEG open data repository \cite[]{parihaka}.
+
+\inputdir{pari}
+\plot{sub}{width=\columnwidth}{The Parihaka seismic data}
+
+This image contains complex geologic structures, including multiple generations of faulting, meandering channel systems, and prominent unconformities (Figure~\ref{fig:sub}).
+
+We first apply the traditional Sobel filter.
+This attribute enhances discontinuous geologic features, but also enhances dipping reflectors (Figure~\ref{fig:flat}).
+
+In order to optimally enhance discontinuous features, it is important to orient the filter along local slopes.
+We compute the structural dip in the inline (Figure~\ref{fig:idip}) and crossline (Figure~\ref{fig:xdip}) directions using accelerated plane-wave destruction \cite[]{apwd}.
+Using the local slopes, we apply structure-oriented smoothing to enhance seismic structures and attenuate noise without blurring geologic edges \cite[]{liu}.
+We subsequently apply the proposed plane-wave Sobel filter and compute the magnitude of the inline and crossline plane-wave Sobel images.
+Discontinuous geologic features, most prominently faults, channels, and unconformities, are enhanced, revealing subtle details which would be difficult to interpret from the original seismic image (Figure 3b).
+
+We compute a more segmented image by cascading another iteration of filtering to the Sobel image (Figure 3c).
+Alternatively the second iteration of Sobel filtering may be oriented not only along the dip of seismic reflections, but also the azimuth, using structural information derived from the original image (Figure 3d).
+We compute linear combinations of these inline and crossline images weighted by the cosine and sine of the azimuth.
+The local azimuth of the faults and channels corresponds to the orientation which creates the optimal image at each point.
+We find that the azimuth of the seismic expression of discontinuous geological features can be estimated more accurately by applying the azimuth scanning workflow to the Sobel filter image rather than the original seismic image.
+Faults and channels are further segmented in the cascaded image by automatically orienting the Sobel filter along geologic structures (Figure 3d).
+
+\multiplot*{2}{idip,xdip}{width=.4\columnwidth}{(a) Inline and (b) crossline reflection slopes computed using accelerated plane-wave destruction}
+%\multiplot*{4}{flat,sobel,sobel2,slices}{width=.4\columnwidth}{(a) The traditional Sobel filter, (b) proposed plane-wave Sobel filter, (c) cascaded plane-wave Sobel filter, and (d) azimuthal plane-wave Sobel filter applied to the Parihaka seismic data}
+
+\section{Example II}
+The next example is a subset of the Penobscot data used previously by \cite{kington} (Figure~\ref{fig:penobs}).
+This small marine 3{D} seismic volume was acquired offshore Nova Scotia, Canada and is available in the SEG open data repository \cite[]{penobscot}.
+
+\inputdir{penobscot}
+\plot{penobs}{width=\columnwidth}{The Penobscot seismic data}
+
+We apply cross-correlation coherence, semblance, eigenstructure coherence, and gradient-structure-tensor (GST) coherence attributes to the data and compare the results to the proposed plane-wave Sobel attributes. 
+Correlation-based coherence attributes \cite[]{bahorich} produce an image of normalized local cross-correlation between adjacent seismic traces and combines them to estimate coherence.
+This attribute is more efficient than most of the alternative coherence attributes, but lacks robustness and has poor vertical resolution (Figure~\ref{fig:coh0}).
+Semblance \cite[]{marfurt98} provides better vertical resolution by incorporating a local window of traces (Figure~\ref{fig:coh1}).
+Eigendecomposition of the local covariance matrix \cite[]{gersztenkorn} or gradient-structure-tensor \cite[]{randen00} allows information about local structures to be incorporated into the coherence calculation.
+These attributes provide significantly better vertical and lateral resolution (Figures~\ref{fig:coh2} and \ref{fig:coh}) compared to correlation-based coherence; however, calculation and decomposition of the local covariance matrix or gradient-structure-tensor introduces significant computational cost.
+Furthermore, all of these attributes contain some noise contamination in coherent sections of the image.
+
+We compare these results to the proposed plane-wave Sobel attributes.
+As expected, the filter enhances the faults and channels in the seismic image without significant noise contamination or highlighting continuous dipping reflectors (Figure 5f).
+
+As previously stated, computational efficiency is one of the key advantages of the plane-wave Sobel attribute.
+Though all of the discussed algorithms are straightforward to parallelize, we compare the attributes on a single core computer for simplicity (Table~\ref{tbl:table}). 
+We find that the plane-wave Sobel attributes significantly outperform many popular coherence attributes.
+Admittedly, commercial implementations may be more efficient than our implementation.
+
+The plane-wave Sobel attribute (Figure 5b) is capable of providing interpreters with a detailed image of seismic discontinuities in a fraction of the time of conventional coherence attributes, expediting the interpretation process.
+Computation of the cascaded Sobel attribute (Figure 5c) and azimuthal Sobel attribute (Figure 5d) may not provide significantly more value to the interpreter, as many of the same features can be interpreted from the less expensive plane-wave Sobel image; however, these attributes are significantly more segmented and may be good inputs to automatic fault plane interpretation algorithms.
+
+%\multiplot*{4}{s,sobel,sobel2,slices}{width=.4\columnwidth}{Comparison of (a) the traditional Sobel filter, (b) proposed plane-wave Sobel filter, (c) cascaded plane-wave Sobel filter, and (d) azimuthal plane-wave Sobel filter}
+\multiplot*{4}{coh0,coh1,coh2,coh}{width=.4\columnwidth}{Comparison of discontinuity enhancement attributes: (a) cross-correlation, (b) semblance, (c) eigenstructure, and (d) gradient-structure tensor}
+\tabl{table}{Comparison of the computational efficiency of the proposed plane-wave Sobel attributes and common coherence attributes.}{
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Attribute & Compute time \\
+\hline \hline
+Flat Sobel & 0.3 seconds  \\
+\hline
+Gradient structure tensor & 4 seconds \\
+\hline
+Plane-wave Sobel & 17 seconds \\
+\hline
+Cascaded Sobel & 21 seconds \\
+\hline
+Predictive & 40 seconds \\
+\hline
+Azimuthal Sobel & 3 minutes \\
+\hline
+Cross-correlation & 5 minutes \\
+\hline
+Semblance & 1 hour \\
+\hline
+Eigenstructure & 3 hours \\
+\hline
+\end{tabular}
+\end{center}
+}
+
+\section{Conclusions}
+We have modified the Sobel filter by orienting it along the dip of seismic reflections and the azimuth of discontinuous features.
+We find that the proposed plane-wave Sobel filter is a straightforward and inexpensive means for enhancing discontinuous features in 3{D} seismic images. 
+Many popular coherence attributes come with considerable computational cost because they require calculation and eigendecomposition of the local covariance matrix or structure tensor at each point in the 3{D} image.
+The significant cost of eigendecomposition can be partially alleviated in practice by parallelization.
+One of the key benefits of this method is its superior efficiency in comparison with other similar attributes.
+The main costs of this attribute are the estimation of local slopes and azimuth scanning.
+Local slopes can be estimated using accelerated plane-wave destruction.
+Azimuth scanning and picking are easy to parallelize.
+As demonstrated in this paper, the proposed plane-wave Sobel attribute can help geological interpretations of subsurface faults and channels.
+It can also be used to enhance other discontinuous or chaotic features commonly interpreted in seismic images, such as unconformities, salt boundaries, and mass transport complexes.
+
+\section{Acknowledgments}
+We thank Nova Scotia Department of Energy, Canada Nova Scotia Offshore Petroleum Board, and New Zealand Petroleum and Minerals for providing data used in this paper to the SEG open data repository.
+We thank sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support.
+We thank Xinming Wu and Ryan Swindeman for helpful comments and discussions.
+%We thank Xinming Wu, Ryan Swindeman, and three anonymous reviewers for helpful comments and discussions.
+The computational examples reported in this paper are reproducible using the Madagascar open-source software package \cite[]{fomel13}.
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{paper,SEP2}

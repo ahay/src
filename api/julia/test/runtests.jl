@@ -414,6 +414,14 @@ dat, n, d, o, l, u = sfspike(n1=4, nsp=2, k1=(1,2), mag=(1,3)) |>
 @test l == ["Time"]
 @test u == ["s"]
 
+dat, n, d, o, l, u = sfwindow([1 2; 2 3; 4 5]; n1=1) |> rsf_read
+@test [1, 2] == dat
+@test n == [2]
+@test d ≈ [1.0]
+@test o ≈ [0.0]
+@test l == [""]
+@test u == [""]
+
 println("    write")
 dat, n, d, o, l, u = rsf_write([1.1; 0; 0.5], [1 3], [.1 .2 .3], [.4 .5 .5],
                                ["a" "b" "c"], ["d" "e" "f"]) |>
@@ -456,13 +464,14 @@ dat, n, d, o, l, u = rsf_read("test_write.rsf")
 @test u == ["s"]
 run(`sfrm test_write.rsf`)
 
-dat, n, d, o, l, u = sfwindow([1 2; 2 3; 4 5]; n1=1) |> rsf_read
-@test [1, 2] == dat
-@test n == [2]
-@test d ≈ [1.0]
-@test o ≈ [0.0]
-@test l == [""]
-@test u == [""]
+dat, n, d, o, l, u = rsf_write([5 2; 3 4], d=[0.1, 0.2], o=[1,2], l=["t", "x"],
+                               u=["s", "m"]) |> rsf_read
+@test dat ≈ [5 2; 3 4]
+@test n == [2, 2]
+@test d ≈ [0.1, 0.2]
+@test o ≈ [1,2]
+@test l == ["t", "x"]
+@test u == ["s", "m"]
 
 
 println("all good!")

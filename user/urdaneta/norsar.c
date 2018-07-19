@@ -61,6 +61,7 @@ void initial (struct point pos, struct heptagon *cube, float *vel,
 * cube[].ampl		amplitude
 * cube[].x1		position of arriving ray on wavefront at time t + dt
 * cube[].cf		flag
+* cube[].srcAng		take-off angle at source
 *
 * cube is rewritten every time a wavefront is propagated.
 *
@@ -79,7 +80,8 @@ void initial (struct point pos, struct heptagon *cube, float *vel,
         phi = ii * 2. * SF_PI / nr;
         cube[ii].x0 =    pos;
         cube[ii].angle = phi;
-	cube[ii].cf = IN_BOUNDS;
+	    cube[ii].cf = IN_BOUNDS;
+        cube[ii].srcAng = phi;
     }
 
     wavefront(cube, nr, vel, dt, 1, T, lomx);
@@ -89,6 +91,10 @@ void initial (struct point pos, struct heptagon *cube, float *vel,
         cube[ii].ampl = temp;
     }
 
+    //sf_warning("Initial ampl[1] = %f - %f , %f , %f ", cube[1].ampl,
+    //			cube[0].angle,cube[1].angle,cube[2].angle);
+
+
 /* Make use of this subroutine to empty contents of output array 
    For an explanation on of this output array, look in the file
    ./gridding							*/
@@ -97,6 +103,8 @@ void initial (struct point pos, struct heptagon *cube, float *vel,
 	out->time[ii] = 0.;
 	out->flag[ii] = 0;
     }
+
+
 
     return;
 }
@@ -228,6 +236,11 @@ void amplitudes (struct heptagon *cube,int  nr)
 
 	r1 = dist(A0, A1); r2 = dist(A1, A2);
 	R1 = dist(B0, B1); R2 = dist(B1, B2);
+
+	//if(ii==0) sf_warning("Interpolated ampl[1] = %f - %f , %f , %f ", cube[1].ampl,
+	//		cube[0].angle,cube[1].angle,cube[2].angle);
+
+
 	if(R1+R2 > 0)
 	    cube[ii].ampl *= sqrt((r1+r2) / (R1+R2));
     }
@@ -246,8 +259,14 @@ void interpolation (struct heptagon *cube, int *nr, int nrmax, float DSmax)
     struct point pt0, pt1, pt2, pt3;
     float A0, A1, A2, A3, s;
     float an0, an1, an2, an3;
+
+    float sn0, sn1, sn2, sn3;
+
     int sp, nnc;
     struct heptagon temp;
+
+
+    // TODO - add the source angle interpolation in here..
 
     for(ii=0;ii<*nr;ii++) {
 
@@ -266,6 +285,9 @@ void interpolation (struct heptagon *cube, int *nr, int nrmax, float DSmax)
 	an2 = cube[(ii+1+*nr)%*nr].angle;
 	if(ii==*nr-1) an2 += 2.*SF_PI;
 	/* cf2 = cube[(ii+1+*nr)%*nr].cf; */
+	sn1 = cube[ii].srcAng;
+	sn2 = cube[(ii+1+*nr)%*nr].srcAng;
+	if(ii==*nr-1) sn2 += 2.*SF_PI;
 
 	sp=ii-1;
 	while(cube[(sp+*nr)%*nr].cf==NEWC) sp--;
@@ -274,11 +296,14 @@ void interpolation (struct heptagon *cube, int *nr, int nrmax, float DSmax)
 	    pt0 = pt1;
 	    A0 = A1;
 	    an0 = an1;
+	    sn0 = sn1;
 	} else {
 	    pt0 = cube[sp].x1;
 	    A0 = cube[sp].ampl;
 	    an0 = cube[sp].angle;
+	    sn0 = cube[sp].srcAng;
 	    if(ii==0) an0 -= 2.*SF_PI;
+	    if(ii==0) sn0 -= 2.*SF_PI;
 	}
 
 	sp=ii+2;
@@ -288,11 +313,14 @@ void interpolation (struct heptagon *cube, int *nr, int nrmax, float DSmax)
 	    pt3 = pt2;
 	    A3 = A2;	
 	    an3 = an2;
+	    sn3= sn2;
 	} else {
 	    pt3 = cube[sp].x1;
 	    A3 = cube[sp].ampl;
 	    an3 = cube[sp].angle;
+	    sn3=  cube[sp].srcAng;
 	    if(ii>=*nr-2) an3 += 2.*SF_PI;
+	    if(ii>=*nr-2) sn3 += 2.*SF_PI;
 	}
 
 	for(jj=0;jj<nnc;jj++) {	
@@ -301,6 +329,7 @@ void interpolation (struct heptagon *cube, int *nr, int nrmax, float DSmax)
 	    temp.cf = NEWC;
 /* Call interpolating subroutines to obtain ray angle, amplitude, and
    position on the wavefront, for the new points.		*/
+	    temp.srcAng = realinterp (pt0, pt1, pt2, pt3, sn0, sn1, sn2, sn3, s);
 	    temp.angle = realinterp (pt0, pt1, pt2, pt3, an0, an1, an2, an3, s);
 	    temp.ampl = realinterp (pt0, pt1, pt2, pt3, A0, A1, A2, A3, s);
 	    temp.x1 = ptinterp (pt0, pt1, pt2, pt3, s);

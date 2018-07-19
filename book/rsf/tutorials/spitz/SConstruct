@@ -11,12 +11,12 @@ Flow('noise','signal',
      'spike k1=51 mag=1 label2=Trace unit2= | trapez frequency=0,0,50,75')
 Flow('data','signal noise','add ${SOURCES[1]}')
 
-Result('band','noise','spectra all=y | graph title=Spectrum')
+Result('band','noise','spectra all=y | graph title=Spectrum label2=Amplitude')
 
 for case in Split('signal noise data'):
     title = case.capitalize()
-    Plot(case,'wiggle clip=150 poly=y yreverse=y transp=y title=%s' % title)
-    Plot('g'+case,case,'grey clip=150 color=G title=%s' % title)
+    Plot(case,'wiggle clip=1.3 poly=y yreverse=y transp=y title=%s' % title)
+    Plot('g'+case,case,'grey clip=1.3 color=G title=%s' % title)
 
 Result('data','data signal noise','SideBySideAniso')
 Result('gdata','gdata gsignal gnoise','SideBySideAniso')
@@ -36,8 +36,8 @@ Flow('noise2', 'signoi','window f3=1')
 
 for case in Split('signal2 noise2'):
     title = 'Estimated ' + case[:-1].capitalize()
-    Plot(case,'wiggle clip=150 poly=y yreverse=y transp=y title="%s"' % title)
-    Plot('g'+case,case,'grey clip=150 color=G title="%s" ' % title)
+    Plot(case,'wiggle clip=1.3 poly=y yreverse=y transp=y title="%s"' % title)
+    Plot('g'+case,case,'grey clip=1.3 color=G title="%s" ' % title)
 
 Result('signoi','data signal2 noise2','SideBySideAniso')
 Result('gsignoi','gdata gsignal2 gnoise2','SideBySideAniso')
