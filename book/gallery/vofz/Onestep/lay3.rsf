@@ -1,0 +1,17 @@
+0 3.2 3.5 3.2 5 3.7 6.5 4.2 10 4.2 in=inp3.asc data_format=ascii_float n1=2 n2=5
+2.1-git	sfdd	gallery/vofz/Onestep:	harpreet89.kaur@begws90	Mon May 28 11:08:07 2018
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+2.1-git	sfspline	gallery/vofz/Onestep:	harpreet89.kaur@begws90	Mon May 28 11:08:07 2018
+
+	o1=0
+	n2=1
+	data_format="native_float"
+	esize=4
+	in="/data/harpreet/gallery/vofz/Onestep/lay3.rsf@"
+	d1=0.001
+	n1=10001

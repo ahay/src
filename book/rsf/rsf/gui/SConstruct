@@ -6,18 +6,18 @@ Flow('pr','piece-regular.HH','dd form=native')
 Plot('pr','graph title=Signal')
 
 # Wavelet transform type
-type = ARGUMENTS.get('type','b')
+wtype = ARGUMENTS.get('type','b')
 
 # Wavelet transform
-Flow('dwt','pr','dwt type=%s' % type)
-Plot('dwt','graph title="Discrete Wavelet Transform (type=%s)" ' % type)
+Flow('dwt','pr','dwt type=%s' % wtype)
+Plot('dwt','graph title="Discrete Wavelet Transform (type=%s)" ' % wtype)
 
 # Thresholding percentile
 pclip = int(ARGUMENTS.get('pclip',50))
 
 # Thresholding and inverse transform
 Flow('inv','dwt',
-     'threshold pclip=%d | dwt type=b adj=y inv=y' % pclip)
+     'threshold pclip=%d | dwt type=%s adj=y inv=y' % (pclip,wtype))
 Plot('inv','graph title="Approximation (pclip=%d)" ' % pclip)
 
 Result('wavelet','pr dwt inv','OverUnderAniso')

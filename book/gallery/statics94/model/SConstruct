@@ -15,8 +15,8 @@ shots =[]
 tshots = []
 for s in range(8):
     sgyz = sgy[s]+'.gz'
-    Fetch(sgyz,dir='Statics_1994',
-          server='ftp://software.seg.org',top='pub/datasets/2D')
+    Fetch(sgyz,dir='bpstatics94',
+          server='https://s3.amazonaws.com',top='open.source.geoscience/open_data')
     Flow(sgy[s],sgyz,zcat + ' $SOURCE',stdin=0)
 
     shot = 'shot%d' % s

@@ -1,0 +1,272 @@
+from rsf.proj import *
+
+#################### 
+# Fetch the dataset and convert to multiple rsf files
+# check web at
+# http://energy.usgs.gov/GeochemistryGeophysics/\
+# SeismicDataProcessingInterpretation/\
+# NPRASeismicDataArchive/tabid/494/\
+# Agg2146_SelectTab/4/Default.aspx
+####################
+
+############################
+# Data fetching, SEG-Y -> RSF
+#############################
+
+rawsegy=['L23535','L23536','L23537']
+
+for file in rawsegy  :
+    Fetch(file+'.SGY',
+	  server='http://certmapper.cr.usgs.gov',
+      	  top='data/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
+for file in rawsegy  :
+    Flow([file, file+'_hdr', file+'.bin',  file+'.asc'],
+         file+'.SGY',
+         '''
+         segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+         ''')
+
+# concatinate the input files
+
+Flow('line',rawsegy,'cat axis=2 ${SOURCES[:%d]}'%len(rawsegy),stdin=0)
+
+# use python's list comprehension to make rawsegy_hdr list from the rawsegy list
+rawsegy_hdr=[file+'_hdr'  for file in rawsegy]
+print 'rawsegy_hdr=',rawsegy_hdr
+
+# concatinate the input _hdr.rsf files to make line_hdr.rsf
+numsegy=len(rawsegy)
+Flow('line_hdr',rawsegy_hdr,'sfcat axis=2 ${SOURCES[:%d]}'%numsegy, stdin=0)
+
+# make simple lists and displays before loading trace headers
+Flow('list1.txt','line_hdr','sfheaderattr | tee ${TARGETS[0]}',stdout=-1)
+
+# print selected headers on first 3000 traces.  Only fldr and tracf are non-zero
+# you can make this list with the command scons list2.su
+#kls this would be nice.  how to mimic in sftah
+if False:
+   Flow('list2','line',
+	'''
+     	suwind count=3000 
+     	| sugethw key=fldr,tracf,cdp,cdpt,offset ;
+     	echo list2 complete
+     	''',
+     	stdout=0)
+
+# display the first 3000 traces
+Result('first','line',
+     'sfwindow n2=3000 | grey pclip=90 title="First 3,000 Traces" ')
+
+Result('zoomfirst','line',
+       '''
+       window min2=1000 max2=1250 min1=0 max1=3 |
+       grey pclip=90 title="Zoom raw input"
+       ''')
+
+# make movie of the all the shots on input files
+Result('firstmovie','line',
+       '''
+       sfput n2=101 n3=68
+       | sfgrey title="raw shots" pclip=70 
+       ''')
+
+Result('firstrec24','line',
+       '''
+       window min2=2324 max2=2424 min1=0 max1=6 |
+       grey pclip=90 title="First Record"
+       ''')
+
+Flow('ntg ntg_hdr','line line_hdr',
+     '''
+     sftahsort sort="fldr tracf:48,48" input=${SOURCES[0]} \
+     | sftahgain tpow=2 \
+     | sftahagc wagc=1.00 \
+     | sftahwrite output=${TARGETS[0]} mode=seq \
+     ''',stdin=0,stdout=0)
+
+Result('ntg','ntg',
+       'sfgrey pclip=90 title=ntg')
+
+Flow('allshots.rsf allshots_hdr.rsf',
+     'line.rsf line_hdr.rsf ./sftahloadgeom.py',
+     '''
+     sftahread input=${SOURCES[0]} \
+     | ./sftahloadgeom.py \
+     | sftahwindow key=cdp min=-999998 max=999999
+     | sftahwindow key=ep min=-999998 max=999999 
+     | sftahwindow key=ep reject=149
+     | sftahwrite output=$TARGET mode=seq 
+     ''',stdin=0,stdout=0)
+
+#print summary of trace headers
+Flow('allshots_hdr.txt','allshots_hdr',
+     'sfheaderattr | tee ${TARGETS[0]}',stdout=-1)
+
+# make movie of shots after loading geometry and throwing
+# out "donot process" traces
+Result('allshots',
+       '''
+       sfput n2=96 n3=55
+       | sfgrey title="allshots" pclip=70 
+       ''')
+
+Flow('foldplot.rsf','allshots_hdr.rsf',
+     '''
+     sffold
+         verbose=1 \
+         o1=-5225 n1=96 d1=110 label1=offset \
+	 o2=101 n2=536 d2=1  label2=cdp \
+         o3=1 n3=1 d3=1 label3=trid 
+     ''')
+Result('foldplot',' sfgrey title="cdp,offset trace distribution" ')
+
+###########################
+# Previous Stack
+###########################
+Fetch('31_81_PR.SGY',
+      server='http://certmapper.cr.usgs.gov',
+      top='data/NPRA/SEISMIC/1981/31_81',
+      dir='PROCESSED')
+
+file='checkstack'
+Flow([file, file+'.bin',  file+'.asc', file+'_hdr'],
+     '31_81_PR.SGY',
+     '''
+     segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} tfile=${TARGETS[3]}
+     ''')
+
+Result('checkstack','grey title="Check Stack" pclip=90')
+Result('zoomcheckstack','checkstack',
+       '''
+       window max1=3 |
+       grey title="Zoom Check Stack" pclip=90
+       ''')
+
+# condition data with datum statics, spreading correction, AGC,
+# and apply fk velocity filtering
+Flow('shots.rsf shots_hdr.rsf','allshots.rsf allshots_hdr.rsf',
+     '''
+     sftahread input=${SOURCES[0]} 
+     | sftahstatic sign=-1 
+     | sftahwrite output=$TARGET 
+       label2=offset o2=-5225 d2=110 n2=96 
+       label3=ep     o3=100   d3=1   n3=56
+     ''',stdin=0,stdout=0)
+
+Result('shots','grey title=Shots gainpanel=all pclip=90')
+
+
+Flow('fft','shots',
+     '''
+     pow pow1=1 | 
+     mutter half=n v0=%g tp=0 |
+     shapeagc rect1=250 |
+     put d2=1 | fft1 | 
+     fft3
+     '''%(5280/0.488))
+
+Result('fft',
+       '''
+       window max1=100 |
+       math output="abs(input)" | real |
+       byte gainpanel=all allpos=y |
+       grey3 frame1=200 frame2=100 frame3=30 title="2-D Fourier"
+       flat=n point1=0.7 point2=0.7 color=j
+       ''')
+
+Flow('filt','fft','dipfilter v1=-90 v2=-83 v3=83 v4=90 pass=n')
+
+Result('filt',
+       '''
+       window max1=100 |
+       math output="abs(input)" | real |
+       byte gainpanel=all allpos=y |
+       grey3 frame1=200 frame2=100 frame3=30 title="2-D Fourier"
+       flat=n point1=0.7 point2=0.7 color=j
+       ''')
+
+Flow('dshots','filt',
+     '''
+     fft3 inv=y | 
+     fft1 inv=y | put d2=110 o2=-5225
+     ''')
+
+Flow('dshots_hdr.rsf','shots_hdr.rsf','sfcp')
+
+Result('dshots','grey title=Shots gainpanel=all pclip=90')
+
+Result('velfiltrec24','dshot',
+       '''
+       sfwindow n3=1 min3=113 max3=113 |
+       grey title="dipfilt ep=113" pclip=90
+       ''')
+
+Flow('velfiltcdpsmute velfiltcdpsmute_hdr velfilt250-251 velfilt250-251_hdr',
+     'dshots dshots_hdr',
+     '''
+     sftahsort sort="cdp:101,99999 ep"  input=${SOURCES[0]} 
+     | sftahnmo 
+       tnmo=0.00644779,0.277255,0.657,1.121,1.250,1.553,2.185,2.637,5.996 
+       vnmo=7794,7588,7838,8676,8882,9926,10558,12661,13970 
+     | sftahmute
+       xmute=-5225,-2970,-55,55,2970,5225 
+       tmute=.700,.280,.100,.100,.280,.700 
+       ntaper=24
+     | sftahnmo 
+       tnmo=0.00644779,0.277255,0.657,1.121,1.250,1.553,2.185,2.637,5.996 
+       vnmo=7794,7588,7838,8676,8882,9926,10558,12661,13970 
+       inv=y
+     | sftahwrite output=${TARGETS[0]}  output=$TARGET 
+       mode=seq
+     | sftahwindow key=cdp min=250 max=251
+     | sftahwrite output=${TARGETS[2]} mode=seq
+     ''',stdin=0,stdout=0)
+
+
+Result('velfiltcdpsmute',
+       '''
+       sfput n2=96 n3=55
+       | sfgrey title="velfilt cdps" pclip=70 
+       ''')
+
+
+Result('velfilt250-251','sfwiggle transp=y yreverse=y') 
+
+Flow('velfiltcdpsnmo velfiltcdpsnmo_hdr velfiltcdpsnmo250-251',
+     'velfiltcdpsmute velfiltcdpsmute_hdr',
+     '''
+     sftahsort sort="cdp:101,99999 ep"  input=${SOURCES[0]}
+     | sftahheadermath outputkey=sstat output='-200+861*abs(offset)/10000' 
+     | sftahheadermath outputkey=gstat output=0
+     | sftahstatic hdrs=1 sign=1
+     | sftahpef maxlag=.2 pnoise=.01 mincor=.25 maxcor=5
+     | sftahstatic hdrs=1 sign=-1
+     | sftahnmo 
+       tnmo=0.00644779,0.277255,0.657,1.121,1.250,1.553,2.185,2.637,5.996 
+       vnmo=7794,7588,7838,8676,8882,9926,10558,12661,13970 
+     | sftahmute 
+       xmute=55,2970,5225 
+       tmute=.100,.280,.700 
+       ntaper=50 
+     | sftahwrite output=${TARGETS[0]} 
+       mode=seq
+     | sftahwindow key=cdp min=250 max=251
+     | sftahwrite output=${TARGETS[2]} mode=seq       
+     ''',stdin=0,stdout=0)
+
+Result('velfiltcdpsnmo',
+       '''
+       sfwindow max1=3.000 | sfput n2=96 n3=55
+       | sfgrey title="velfiltcdpsnmo" pclip=70 
+       ''')
+Result('velfiltcdpsnmo250-251',
+       'sfwiggle transp=y yreverse=y title=velfiltcdpsnmo') 
+
+
+
+
+
+
+
+End()

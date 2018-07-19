@@ -47,8 +47,6 @@ allpass allpass_init(int nw                 /* filter size */,
 
     ap = (allpass) sf_alloc(1,sizeof(*ap));
 
-//^^^ you might need to address nz here 
-
     ap->nw = nw;
     ap->nj = nj;
     ap->nx = nx;
@@ -111,7 +109,7 @@ void allpass1 (bool left        /* left or right prediction */,
 	      
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
-		  
+		                        /*-*/
 		    yy[i] += (xx[i+is+ip] - xx[i-is]) * ap->flt[iw];
 		}
 	    }
@@ -260,6 +258,151 @@ void allpass2 (bool left        /* left or right prediction */,
 		    is = (iw-ap->nw)*ap->nj;
 		    
 		    yy[i] += (xx[i+is+ip] - xx[i-is]) * ap->flt[iw];
+		}
+	    }
+	}
+    }
+}
+
+void allpass3_init (allpass ap, allpass aq)
+/*< Initialize linear operator >*/
+{
+    ap1 = ap;
+    ap2 = aq;
+}
+
+void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
+/*< PWD as linear operator >*/
+{
+    int i, ix, iy, iz, iw, is, nx, ny, nz, nw, nj;
+
+    if (n2 != 2*n1) sf_error("%s: size mismatch: %d != 2*%d",__FILE__,n2,n1);
+
+    sf_adjnull(adj, add, n1, n2, xx, yy);
+
+    nx = ap1->nx;
+    ny = ap1->ny;
+    nz = ap1->nz;
+    nw = ap1->nw;
+    nj = ap1->nj;
+
+    if (nx*ny*nz != n1) sf_error("%s: size mismatch",__FILE__);
+    
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny-1; iy++) {
+	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
+		i = ix + nx*(iy + ny*iz);
+
+		passfilter(ap1->pp[i], ap1->flt);
+	      
+		for (iw = 0; iw <= 2*nw; iw++) {
+		    is = (iw-nw)*nj;
+	
+		    if (adj) {
+			xx[i+nx+is] += yy[i] * ap1->flt[iw];
+			xx[i-is]    -= yy[i] * ap1->flt[iw];
+		    } else {
+			yy[i] += (xx[i+nx+is] - xx[i-is]) * ap1->flt[iw];
+		    }
+		}
+	    }
+	}
+    }
+
+    nx = ap2->nx;
+    ny = ap2->ny;
+    nz = ap2->nz;
+    nw = ap2->nw;
+    nj = ap2->nj;
+
+    if (nx*ny*nz != n1) sf_error("%s: size mismatch",__FILE__);
+    
+    for (iz=0; iz < nz-1; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
+		i = ix + nx*(iy + ny*iz);
+
+		passfilter(ap2->pp[i], ap2->flt);
+		
+		for (iw = 0; iw <= 2*nw; iw++) {
+		    is = (iw-nw)*nj;
+		    
+		    if (adj) {
+			xx[i+nx*ny+is] += yy[i+n1] * ap2->flt[iw];
+			xx[i-is]       -= yy[i+n1] * ap2->flt[iw];
+		    } else {
+			yy[i+n1] += (xx[i+nx*ny+is] - xx[i-is]) * ap2->flt[iw];
+		    }
+		}
+	    }
+	}
+    }
+}
+
+void allpass32_lop (bool adj, bool add, int n1, int n2, float* xx1, float* yy1, float* xx2, float* yy2)
+/*< PWD as linear operator >*/
+{
+    int i, ix, iy, iz, iw, is, nx, ny, nz, nw, nj;
+
+    if (n2 != n1) sf_error("%s: size mismatch: %d != %d",__FILE__,n2,n1);
+
+    sf_adjnull(adj, add, n1, n2, xx1, yy1);
+
+    sf_adjnull(adj, add, n1, n2, xx2, yy2);
+
+    nx = ap1->nx;
+    ny = ap1->ny;
+    nz = ap1->nz;
+    nw = ap1->nw;
+    nj = ap1->nj;
+
+    if (nx*ny*nz != n1) sf_error("%s: size mismatch",__FILE__);
+    
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny-1; iy++) {
+	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
+		i = ix + nx*(iy + ny*iz);
+
+		passfilter(ap1->pp[i], ap1->flt);
+	      
+		for (iw = 0; iw <= 2*nw; iw++) {
+		    is = (iw-nw)*nj;
+	
+		    if (adj) {
+			xx1[i+nx+is] += yy1[i] * ap1->flt[iw];
+			xx1[i-is]    -= yy1[i] * ap1->flt[iw];
+		    } else {
+			yy1[i] += (xx1[i+nx+is] - xx1[i-is]) * ap1->flt[iw];
+		    }
+		}
+	    }
+	}
+    }
+
+    nx = ap2->nx;
+    ny = ap2->ny;
+    nz = ap2->nz;
+    nw = ap2->nw;
+    nj = ap2->nj;
+
+    if (nx*ny*nz != n1) sf_error("%s: size mismatch",__FILE__);
+    
+    for (iz=0; iz < nz-1; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
+		i = ix + nx*(iy + ny*iz);
+
+		passfilter(ap2->pp[i], ap2->flt);
+		
+		for (iw = 0; iw <= 2*nw; iw++) {
+		    is = (iw-nw)*nj;
+		    
+		    if (adj) {
+			xx2[i+nx*ny+is] += yy2[i] * ap2->flt[iw];
+			xx2[i-is]       -= yy2[i] * ap2->flt[iw];
+		    } else {
+			yy2[i] += (xx2[i+nx*ny+is] - xx2[i-is]) * ap2->flt[iw];
+		    }
 		}
 	    }
 	}

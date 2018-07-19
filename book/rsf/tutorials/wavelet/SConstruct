@@ -1,4 +1,5 @@
 from rsf.proj import *
+import math
 
 def numpy_load(target=None,source=None,env=None):
     'convert from numpy to RSF format'
@@ -69,5 +70,27 @@ Flow('auto2','auto','window n1=65 | reverse which=1 | window n1=64 | cat $SOURCE
 
 Result('auto2','ormsby auto2',
        'cat axis=2 ${SOURCES[1]} | scale axis=1 | graph title=Autocorrelation dash=1,0 label2=Amplitude')
+
+# Wavelet estimation by spectral division
+
+Flow('specrpp','rpp','spectra')
+Flow('specdiv','spec specrpp',
+     'divn rect1=10 den=${SOURCES[1]}')
+Flow('wavdiv','specdiv',
+     '''
+     rtoc | math output="input*exp(I*x1*%g)" | fft1 inv=y
+     ''' % (2*math.pi))
+Result('wavdiv','window f1=457 n1=129 | graph title="Division Wavelet" label2=Amplitude')
+
+Result('specdiv',
+       '''
+       math output="20*log(input)/log(10)" | 
+       graph label2=power unit2=db title="Division Amplitude Spectrum" 
+       min1=0 max1=250 min2=-60 max2=10
+       ''')
+
+# Create synthetic
+
+
 
 End()

@@ -11,7 +11,7 @@ rawsegy=['L23535','L23536','L23537']
 for segy in rawsegy  :
     Fetch(segy+'.SGY',
 	  server='http://certmapper.cr.usgs.gov',
-      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  top='data/NPRA/SEISMIC/1981/31_81',
       	  dir='DMUX')
     su.Flow([segy, segy+'.bin',  segy+'.asc'],
             segy+'.SGY',segyread,stdin=0)

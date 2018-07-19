@@ -17,6 +17,8 @@ To the Python package:
 
 To programs:
 
+* user/zgeng: New contributor (Zhicheng Geng)
+
 ===Bug fixes===
 
 In the reproducible documents collection:
