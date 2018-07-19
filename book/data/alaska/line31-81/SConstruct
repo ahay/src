@@ -14,10 +14,10 @@ from rsf.suproj import *
 # download and view the image of the previous stack:
 Fetch('31_81_IM.JPG',
       server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
+      top='data/NPRA/SEISMIC/1981/31_81',
       dir='IMAGES')
 #THis can be done using:
-# wget http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/IMAGES/31_81_IM.JPG 
+# wget http://certmapper.cr.usgs.gov/data/NPRA/SEISMIC/1981/31_81/IMAGES/31_81_IM.JPG 
 
 oodraw = WhereIs('oodraw')
 
@@ -32,7 +32,7 @@ if pdfread:
     # download and view the survey notes:
     Fetch('31_81_S.PDF',
       server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
+      top='data/NPRA/SEISMIC/1981/31_81',
       dir='DOCUMENTS')
     Result('surveylog','31_81_S.PDF',
            pdfread + ' $SOURCE',stdin=0)
@@ -40,7 +40,7 @@ if pdfread:
     # download and view the observer notes:
     Fetch('31_81_O.PDF',
           server='http://certmapper.cr.usgs.gov',
-          top='nersl/NPRA/SEISMIC/1981/31_81',
+          top='data/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
     Result('observerlog','31_81_O.PDF',
            pdfread + ' $SOURCE',stdin=0)
@@ -55,7 +55,7 @@ rawsegy=['L23535','L23536','L23537']
 for file in rawsegy  :
     Fetch(file+'.SGY',
 	  server='http://certmapper.cr.usgs.gov',
-      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  top='data/NPRA/SEISMIC/1981/31_81',
       	  dir='DMUX')
     Flow([file, file+'.bin',  file+'.asc'],
          file+'.SGY',segyread,stdin=0)
@@ -127,6 +127,7 @@ Flow ('binary_hdrfile1.dat','hdrfile1.txt',
 # merge the binary_header.dat into the headers of line.su
 # and throw way aux traces, noise records, and other "do not process"
 # traces.
+# f1 is a "cwp local assigment".  A header key just for seimsic unix.
 keys='ep,sx,sy,gx,gy,cdp,tracf,offset,' \
       'selev,gelev,sstat,gstat,tstat'
 
@@ -162,7 +163,7 @@ Result('allshots','allshots',
 # download, convert, and view the stack from legacy processing
 Fetch('31_81_PR.SGY',
       server='http://certmapper.cr.usgs.gov',
-      top='nersl/NPRA/SEISMIC/1981/31_81',
+      top='data/NPRA/SEISMIC/1981/31_81',
       dir='PROCESSED')
 file='checkstack'
 Flow([file, file+'.bin', file+'.asc'],

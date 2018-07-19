@@ -54,6 +54,8 @@ void trapez_init(int nfft   /* time samples */,
 	} else {
 	    shape[iw] = 0.;
 	}
+
+	shape[iw] *= dw; /* FFT normalization */
     }
 
     sf_freqfilt_init(nfft,nw);

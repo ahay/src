@@ -1507,7 +1507,6 @@ def eimage(plot,imag,custom,par):
 
     Flow([plot+'_plt',plot+'_bar'],imag,
          'scale axis=123 | byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s ' % custom)        
-
     for i in range(4):        
         Plot  (plot+str(i+1),[plot+'_plt',plot+'_bar'],
                'window n3=1 f3=%d bar=${SOURCES[1]} |'% i

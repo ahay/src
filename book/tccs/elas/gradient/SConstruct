@@ -1,0 +1,377 @@
+# . . Set up generic project files
+from rsf.proj import *
+from rsf.recipes import fdmod,encode,wemig,stiffness
+import os
+
+# . . Set parameter for the modelling.  Applies for all situations.
+par = {
+    # Space parameters
+    'nx':100,  'ox':0, 'dx':0.010,  'lx':'x', 'ux':'km',
+    'ny':100,  'oy':0, 'dy':0.010,  'ly':'y', 'uy':'km',
+    'nz':100,  'oz':0, 'dz':0.010,  'lz':'z', 'uz':'km',
+    'kz':50, 'lz':100, 'kx':1, 'lx':100, 'ky':1, 'ly':100,
+
+    # Time Parameters
+    'nt':500,'ot':0, 'dt':0.001,  'lt':'t', 'ut':'s',
+    'kt':50,'frq':35,
+
+    # Modelling parameters
+    'snap':'y','jsnap':1,'nb':30,'cb':2,'verb':'y',
+    'nbell':2, 'jdata':1,'ssou':'2',
+
+    # Output
+    'height':5,    
+    }
+
+# . . Initialize parameters in fdm module   
+fdmod.param(par)
+par['nframe']=10
+par['iframe']=4
+par['dabc']='y'
+
+# . . Thomsen parameters
+par['vp']=2
+par['vs']=1.5
+par['ro']=2000
+par['eps1']=+0.2
+par['eps2']=+0.3
+par['del1']=-0.1
+par['del2']=-0.05
+par['del3']=-0.075
+par['gam1']=+0.2
+par['gam2']=+0.5
+
+# --------------------------------------------------------------------
+# . . Coordinate Section
+# . . Locate source position
+xsou=par['ox']+(par['nx']-1)*par['dx']/2.
+ysou=par['oy']+(par['ny']-1)*par['dy']/2.
+zsou=par['oz']+40*par['dz']
+#zsou=par['oz']+(par['nz']-1)*par['dz']/2.
+
+# . . 3D Sources
+fdmod.point3d('ss-3d',xsou,ysou,zsou,par) # . . 3D  Sources
+
+# . . 3D receivers
+fdmod.horizontal3d('rr-3d',0.10,par) # . . 3D 
+
+# . . Create a 3D point location for plotting
+par['zlook'] = 0.2
+par['nzcut'] = par['nz']/2
+center=fdmod.center3d(xsou,ysou,par['zlook'],par)
+
+par['nz']=par['nz']/2
+# --------------------------------------------------------------------
+# . . Create zero array size of 3D model
+Flow('zero-3d',None,
+     '''
+     spike nsp=1 mag=0.0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     n3=%(ny)d o3=%(oy)g d3=%(dy)g |
+     put label1=Z label2=X label3=Y unit1=%(uz)s unit2=%(ux)s unit3=%(uy)s
+     ''' % par)
+
+par['nz']=par['nz']*2
+
+m = 'ORT'
+# Shoenberg and Hilbig
+c11=9.0
+c12=3.6
+c13=2.25
+c22=9.84
+c23=2.4
+c33=5.9375
+c44=2.0
+c55=1.6
+c66=2.182
+c11_t=9.0
+c12_t=3.6
+c13_t=2.25
+c22_t=9.84
+c23_t=2.4
+c33_t=5.9375
+c44_t=2.0
+c55_t=1.6
+c66_t=2.182
+
+c11_b=c11_t*1.8
+c12_b=c12_t*1.8
+c13_b=c13_t*1.8
+c22_b=c22_t*1.8
+c23_b=c23_t*1.8
+c33_b=c33_t*1.8
+c44_b=c44_t*1.8
+c55_b=c55_t*1.8
+c66_b=c66_t*1.8
+
+Flow(m+'c-11'+'-top','zero-3d','math output="%f"' % c11_t)
+Flow(m+'c-12'+'-top','zero-3d','math output="%f"' % c12_t)
+Flow(m+'c-13'+'-top','zero-3d','math output="%f"' % c13_t)
+Flow(m+'c-22'+'-top','zero-3d','math output="%f"' % c22_t)
+Flow(m+'c-23'+'-top','zero-3d','math output="%f"' % c23_t)
+Flow(m+'c-33'+'-top','zero-3d','math output="%f"' % c33_t)
+Flow(m+'c-44'+'-top','zero-3d','math output="%f"' % c44_t)
+Flow(m+'c-55'+'-top','zero-3d','math output="%f"' % c55_t)
+Flow(m+'c-66'+'-top','zero-3d','math output="%f"' % c66_t)
+Flow(m+'c-11'+'-bot','zero-3d','math output="%f"' % c11_b)
+Flow(m+'c-12'+'-bot','zero-3d','math output="%f"' % c12_b)
+Flow(m+'c-13'+'-bot','zero-3d','math output="%f"' % c13_b)
+Flow(m+'c-22'+'-bot','zero-3d','math output="%f"' % c22_b)
+Flow(m+'c-23'+'-bot','zero-3d','math output="%f"' % c23_b)
+Flow(m+'c-33'+'-bot','zero-3d','math output="%f"' % c33_b)
+Flow(m+'c-44'+'-bot','zero-3d','math output="%f"' % c44_b)
+Flow(m+'c-55'+'-bot','zero-3d','math output="%f"' % c55_b)
+Flow(m+'c-66'+'-bot','zero-3d','math output="%f"' % c66_b)
+Flow(m+'c-11',[m+'c-11'+'-top',m+'c-11'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+Flow(m+'c-12',[m+'c-12'+'-top',m+'c-12'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+Flow(m+'c-13',[m+'c-13'+'-top',m+'c-13'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+Flow(m+'c-22',[m+'c-22'+'-top',m+'c-22'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+Flow(m+'c-23',[m+'c-23'+'-top',m+'c-23'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+Flow(m+'c-33',[m+'c-33'+'-top',m+'c-33'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+Flow(m+'c-44',[m+'c-44'+'-top',m+'c-44'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+Flow(m+'c-55',[m+'c-55'+'-top',m+'c-55'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+Flow(m+'c-66',[m+'c-66'+'-top',m+'c-66'+'-bot'],'cat ${SOURCES[1]} axis=1 | smooth rect1=4 repeat=0')
+
+Flow(m+'c-3d',[m+'c-11',m+'c-22',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'c-12',m+'c-13',m+'c-23'],'cat axis=4 ${SOURCES[1:9]} | math output=input*1000')
+Flow('ro-3d',m+'c-11','math output="1000"')
+
+Flow(m+'-the',m+'c-11','math output=45')
+Flow(m+'-phi',m+'c-11','math output=30')
+
+Result(m+'c-11','byte gainpanel=a bar=bar.rsf barreverse=y bias=6 allpos=y | grey3 frame1=40 frame2=50 frame3=50 screenratio=1 scalebar=y title="Orthorhombic Model" label1=Z unit1=km label2=X unit2=km label3=Y unit3=km barlabel=c11 barunit="km\^2\_/s\^2\_" ')
+
+Flow('wav',None,'spike n1=%(nt)d d1=%(dt)f k1=%(kt)d | ricker1 frequency=%(frq)f' %par)
+Flow('cwav',None,'spike n1=%(nt)d d1=%(dt)f k1=%(kt)d | imagsrc frequency=%(frq)f | rtoc' %par)
+Flow('cwav2',None,'spike n1=%(nt)d d1=%(dt)f k1=%(kt)d | ricker1 frequency=%(frq)f | rtoc' %par)
+
+mint = 0.18
+nt0 = par['nt']
+dt0 = par['dt']
+kt0 = par['kt']
+jt0 = par['jsnap']
+for i in [1]:
+    dt = str(int(i))
+    par['dt']=dt0*i;
+    par['nt']=nt0/i;
+    par['kt']=kt0/i;
+    #par['jsnap']=jt0/i;
+    if (i==8):
+        par['nbell']=2;
+    # Source wavelet
+    wav = 'wav-'+dt
+    wav0= 'wav0-'+dt
+    cwav = 'cwav-'+dt
+    cwav2= 'cwav2-'+dt
+    cwav0= 'cwav0-'+dt
+    Flow(wav,'wav','window j1=%d' %i)
+    Flow(cwav,'cwav','window j1=%d' %i)
+    Flow(cwav2,'cwav2','window j1=%d' %i)
+    #srcgen(cwav,par)
+    Flow(wav0,wav,'math output=0')
+    Flow(cwav0,cwav,'math output=0')
+
+    sou= 'sou-'+dt
+    csou= 'csou-'+dt
+    csou2= 'csou2-'+dt
+
+    Flow(csou,[cwav,cwav0,cwav0],
+    '''
+    cat axis=2 space=n ${SOURCES[1:3]} |
+    transp plane=23 | 
+    transp plane=14
+    ''')
+
+    Flow(csou2,[cwav2,cwav0,cwav0],
+    '''
+    cat axis=2 space=n ${SOURCES[1:3]} |
+    transp plane=23 | 
+    transp plane=14
+    ''')
+
+    Flow(sou,[wav,wav0,wav0],
+    '''
+    cat axis=2 space=n ${SOURCES[1:3]} |
+    transp plane=23 | 
+    transp plane=14
+    ''')
+
+    # ------------------------------------------------------------
+    # Lowrank Decomposition - onestep with gradient
+    
+    Flow(['rank-'+dt,'left-'+dt,'right-'+dt],[m+'c-11',m+'c-12',m+'c-13',m+'c-22',m+'c-23',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'-the',m+'-phi'],
+    '''
+    ewelr3grad 
+    dt=%(dt)f eps=1e-4 npk=20 seed=2010 verb=%(verb)s nb=%(nb)d
+    c12=${SOURCES[1]} c13=${SOURCES[2]}
+    c22=${SOURCES[3]} c23=${SOURCES[4]} c33=${SOURCES[5]} 
+    c44=${SOURCES[6]} c55=${SOURCES[7]} c66=${SOURCES[8]} 
+    tilt=n
+    tric=n
+    theta=${SOURCES[9]} phi=${SOURCES[10]}
+    left=${TARGETS[1]} right=${TARGETS[2]}
+    grad=y
+    jump=4
+    mode=0
+    '''%par)
+
+    # Lowrank Elastic Modeling - onestep
+    Flow([m+'d-lr-'+dt,m+'w-lr-'+dt], [csou,m+'c-11','rank-'+dt,'left-'+dt,'right-'+dt,'ss-3d','rr-3d'],
+    '''
+    ewelr3dgrad
+    dabc=%(dabc)s cb=%(cb)g
+    back=n
+    ccc=${SOURCES[1]}
+    rnk=${SOURCES[2]}
+    lft=${SOURCES[3]}
+    rht=${SOURCES[4]}
+    sou=${SOURCES[5]}
+    rec=${SOURCES[6]}
+    wfl=${TARGETS[1]}
+    jdata=%(jdata)d verb=%(verb)s free=n
+    snap=%(snap)s jsnap=%(jsnap)d
+    nb=%(nb)d nbell=%(nbell)d
+    esou=n
+    oqz=%(oz)f oqx=%(ox)f oqy=%(oy)f
+    nqz=%(nz)f nqx=%(nx)f nqy=%(ny)f
+    '''%par)
+    
+
+    Result(m+'w-lr-'+dt,'window n4=1 min5=%f n5=1 | real | byte gainpanel=a | grey3 frame1=40 frame2=50 frame3=50 point1=0.5 point2=0.5 screenratio=1 title="Lowrank RITE with Gradient" label1=Z unit1=km label2=X unit2=km label3=Y unit3=km' %(mint) )
+
+    # ------------------------------------------------------------
+    # Lowrank Decomposition - onestep without gradient
+    
+    Flow(['rank0-'+dt,'left0-'+dt,'right0-'+dt],[m+'c-11',m+'c-12',m+'c-13',m+'c-22',m+'c-23',m+'c-33',m+'c-44',m+'c-55',m+'c-66',m+'-the',m+'-phi'],
+    '''
+    ewelr3grad dt=%(dt)f eps=1e-4 npk=20 seed=2010 verb=%(verb)s nb=%(nb)d
+    c12=${SOURCES[1]} c13=${SOURCES[2]}
+    c22=${SOURCES[3]} c23=${SOURCES[4]} c33=${SOURCES[5]} 
+    c44=${SOURCES[6]} c55=${SOURCES[7]} c66=${SOURCES[8]} 
+    tilt=n
+    tric=n
+    theta=${SOURCES[9]} phi=${SOURCES[10]}
+    left=${TARGETS[1]} right=${TARGETS[2]}
+    grad=n
+    jump=4
+    mode=0
+    '''%par)
+
+    # Lowrank Elastic Modeling - onestep
+    Flow([m+'d-lr0-'+dt,m+'w-lr0-'+dt], [csou,m+'c-11','rank0-'+dt,'left0-'+dt,'right0-'+dt,'ss-3d','rr-3d'],
+    '''
+    ewelr3dgrad
+    dabc=%(dabc)s cb=%(cb)g
+    back=n
+    ccc=${SOURCES[1]}
+    rnk=${SOURCES[2]}
+    lft=${SOURCES[3]}
+    rht=${SOURCES[4]}
+    sou=${SOURCES[5]}
+    rec=${SOURCES[6]}
+    wfl=${TARGETS[1]}
+    jdata=%(jdata)d verb=%(verb)s free=n
+    snap=%(snap)s jsnap=%(jsnap)d
+    nb=%(nb)d nbell=%(nbell)d
+    esou=n
+    oqz=%(oz)f oqx=%(ox)f oqy=%(oy)f
+    nqz=%(nz)f nqx=%(nx)f nqy=%(ny)f
+    '''%par)
+    
+
+    Result(m+'w-lr0-'+dt,'window n4=1 min5=%f n5=1 | real | byte gainpanel=a | grey3 frame1=40 frame2=50 frame3=50 point1=0.5 point2=0.5 screenratio=1 title="Lowrank RITE without Gradient" label1=Z unit1=km label2=X unit2=km label3=Y unit3=km' %(mint) )
+
+    # ------------------------------------------------------------
+    # Pseudospectral Elastic Modeling using first-order equation
+    
+    Flow([m+'d-ps-'+dt,m+'w-ps-'+dt], [sou,m+'c-3d','ro-3d','ss-3d','rr-3d'],
+    '''
+    eweks3d
+    back=n
+    kspace=y
+    ccc=${SOURCES[1]}
+    den=${SOURCES[2]}
+    sou=${SOURCES[3]}
+    rec=${SOURCES[4]}
+    wfl=${TARGETS[1]}
+    jdata=%(jdata)d verb=%(verb)s free=n ssou=%(ssou)s
+    opot=n snap=%(snap)s jsnap=%(jsnap)d
+    dabc=%(dabc)s nb=%(nb)d nbell=%(nbell)d
+    oqz=%(oz)f oqx=%(ox)f oqy=%(oy)f
+    nqz=%(nz)f nqx=%(nx)f nqy=%(ny)f
+    ''' %par)
+    
+
+    Result(m+'w-ps-'+dt,'window n4=1 min5=%f n5=1 | byte gainpanel=a | grey3 frame1=40 frame2=50 frame3=50 point1=0.5 point2=0.5 screenratio=1 title="Pseudo-spectral First-order" wanttitle=y label1=Z unit1=km label2=X unit2=km label3=Y unit3=km' %(mint))
+
+    # ------------------------------------------------------------
+    # Pseudospectral Elastic Modeling using second-order equation
+    
+    Flow([m+'d-ps2-'+dt,m+'w-ps2-'+dt], [sou,m+'c-3d','ro-3d','ss-3d','rr-3d'],
+    '''
+    eweks3dsecd
+    secd=y
+    back=n
+    kspace=y
+    ccc=${SOURCES[1]}
+    den=${SOURCES[2]}
+    sou=${SOURCES[3]}
+    rec=${SOURCES[4]}
+    wfl=${TARGETS[1]}
+    jdata=%(jdata)d verb=%(verb)s free=n ssou=%(ssou)s
+    opot=n snap=%(snap)s jsnap=%(jsnap)d
+    dabc=%(dabc)s nb=%(nb)d nbell=%(nbell)d
+    oqz=%(oz)f oqx=%(ox)f oqy=%(oy)f
+    nqz=%(nz)f nqx=%(nx)f nqy=%(ny)f
+    ''' %par)
+    
+
+    Result(m+'w-ps2-'+dt,'window n4=1 min5=%f n5=1 | byte gainpanel=a | grey3 frame1=40 frame2=50 frame3=50 point1=0.5 point2=0.5 screenratio=1 title="Pseudo-spectral Second-order" wanttitle=y label1=Z unit1=km label2=X unit2=km label3=Y unit3=km' %(mint))
+
+Flow('trace','ORTw-lr-1','window n2=1 f2=50 n3=1 f3=50 n4=1 n5=1 min5=%f | real' %mint)
+Flow('trace0','ORTw-lr0-1','window n2=1 f2=50 n3=1 f3=50 n4=1 n5=1 min5=%f | real' %mint)
+Flow('traces','trace trace0','cat ${SOURCES[1]} axis=2')
+Result('trace', 'graph max2=1.2e-4 min2=-6e-5 transp=y yreverse=y title="With Gradient" screenratio=2 plotfat=3')
+Result('trace0','graph max2=1.2e-4 min2=-6e-5 transp=y yreverse=y title="Without Gradient" screenratio=2 plotfat=3')
+Result('traces','graph max2=1.2e-4 min2=-6e-5 transp=y yreverse=y title="Trace comparison" screenratio=2 plotfat=3')
+
+Flow('trace-ps','ORTd-ps-1','window n2=1 f2=50 n3=1 j1=10 f4=99 n4=400 | sftransp | put o1=0.1 | scale dscale=1 axis=2')
+Result('trace-ps','wiggle transp=y yreverse=y plotfat=4 title="Pseudo-spectral First-order"')
+Flow('trace-ps2','ORTd-ps2-1','window n2=1 f2=50 n3=1 j1=10 f4=99 n4=400 | sftransp | put o1=0.1 | scale dscale=1 axis=2')
+Result('trace-ps2','wiggle transp=y yreverse=y plotfat=4 title="Pseudo-spectral Second-order"')
+Flow('trace-lr','ORTd-lr-1','window n2=1 f2=50 n3=1 j1=10 f4=100 n4=400 | real | sftransp | put o1=0.1 | scale dscale=1 axis=2')
+Result('trace-lr','wiggle transp=y yreverse=y plotfat=4 title="Low-rank RITE with Gradient"')
+Flow('trace-lr0','ORTd-lr0-1','window n2=1 f2=50 n3=1 j1=10 f4=100 n4=400 | real | sftransp | put o1=0.1 | scale dscale=1 axis=2')
+Result('trace-lr0','wiggle transp=y yreverse=y plotfat=4 title="Low-rank RITE without Gradient"')
+
+Plot('trace-ps ','trace-ps ','wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 dash=0 plotcol=5 title="Pseudo-spectral Overlaid" ')
+Plot('trace-ps2','trace-ps2','wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 dash=0 plotcol=6 title="Pseudo-spectral Overlaid" ')
+Result('over-ps','trace-ps trace-ps2','Overlay')
+
+Plot('trace-lr ','trace-lr ','wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 dash=0 plotcol=5 title="Lowrank RITE Overlaid" ')
+Plot('trace-lr0','trace-lr0','wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 dash=0 plotcol=6 title="Lowrank RITE Overlaid" ')
+Result('over-lr','trace-lr trace-lr0','Overlay')
+
+Plot('trace-ps-cp ','trace-ps ','wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 dash=0 plotcol=5 title="PS/LR Overlaid" ')
+Plot('trace-lr-cp ','trace-lr ','wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 dash=0 plotcol=6 title="PS/LR Overlaid" ')
+Result('over-pslr','trace-ps-cp trace-lr-cp','Overlay')
+
+Plot('inter-ps'  ,'trace-ps trace-ps2','interleave ${SOURCES[1:2]} axis=2 | wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 title="Pseudo-spectral Interleaved" ')
+Plot('inter-lr'  ,'trace-lr trace-lr0','interleave ${SOURCES[1:2]} axis=2 | wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 title="Lowrank RITE Interleaved"   ')
+Plot('inter-pslr','trace-ps trace-lr' ,'interleave ${SOURCES[1:2]} axis=2 | wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 title="PS/Lowrank RITE Interleaved"')
+
+Plot('dp' ,None,'box x0=7.7  y0=7.4 label="Direct P"    xt=1.0  yt=1.0  lab_fat=0 lab_color=7 boxit=1 size=0.25 pointer=1 x_oval=0.0 y_oval=0.0')
+Plot('ds1',None,'box x0=10.1 y0=5.5 label="Direct S"    xt=1.0  yt=1.0  lab_fat=0 lab_color=7 boxit=1 size=0.25 pointer=1 x_oval=0.0 y_oval=0.0') 
+Plot('ds2',None,'box x0=5.7  y0=5.5 label="Direct S"    xt=-1.0 yt=1.0  lab_fat=0 lab_color=7 boxit=1 size=0.25 pointer=1 x_oval=0.0 y_oval=0.0')
+Plot('rp' ,None,'box x0=8.1  y0=6.0 label="Reflected P" xt=0.0  yt=-1.0 lab_fat=0 lab_color=7 boxit=1 size=0.25 pointer=1 x_oval=0.0 y_oval=0.0') 
+Plot('rs1',None,'box x0=11.5 y0=2.2 label="Reflected S" xt=-1.4 yt=1.0  lab_fat=0 lab_color=7 boxit=1 size=0.25 pointer=1 x_oval=0.0 y_oval=0.0')
+Plot('rs2',None,'box x0=4.2  y0=2.2 label="Reflected S" xt=1.4  yt=1.0  lab_fat=0 lab_color=7 boxit=1 size=0.25 pointer=1 x_oval=0.0 y_oval=0.0')
+
+Plot('arrivals','trace-ps','wiggle transp=y yreverse=y pclip=95 label1=T unit1=s label2=X unit2=km plotfat=4 title="Modeled Data" ')
+Result('arrivals','arrivals dp ds1 ds2 rp rs1 rs2','Overlay')
+
+Result('inter-ps','inter-ps dp ds1 ds2 rp rs1 rs2','Overlay')
+Result('inter-lr','inter-lr dp ds1 ds2 rp rs1 rs2','Overlay')
+Result('inter-pslr','inter-pslr dp ds1 ds2 rp rs1 rs2','Overlay')
+
+End()

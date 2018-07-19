@@ -156,6 +156,9 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
+    bool fftexp0;
+    par.get("fftexp0",fftexp0,0); // model/mig with sffftexp0
+
     iRSF velz, velx("velx"), eta("eta"), theta("theta");
 
     int nz,nx;
@@ -174,8 +177,14 @@ int main(int argc, char** argv)
     c13.resize(m);
     c55.resize(m);
 
-    velx >> vx;
-    velz >> vz;
+    if (fftexp0 == 0) {
+      velx >> vx;
+      velz >> vz;
+    } else {
+      velz >> vx;
+      velx >> vz;
+    }
+
     eta >> q;
     theta >> t;
     

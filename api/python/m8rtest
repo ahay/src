@@ -11,6 +11,10 @@
 >>> spike = m8r.spike(n1=10)[0]
 >>> spike.mean()
 1.0
+>>> spike[0]
+1.0
+>>> spike[2]
+1.0
 >>> spike2 = spike+spike
 >>> spike2.rms()
 2.0
