@@ -1,5 +1,8 @@
-===================================================================
-Madagascar - A package for reproducible geophysical data processing
+<p align="center">
+  <img src=http://www.ahay.org//wikilocal/style/Madagascar2.png>
+</p>
+
+Madagascar: A package for reproducible geophysical data processing
 ===================================================================
 
 http://www.ahay.org
