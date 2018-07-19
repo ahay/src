@@ -2,13 +2,14 @@
   <img src=http://www.ahay.org//wikilocal/style/Madagascar2.png>
 </p>
 
-Madagascar: A package for reproducible geophysical data processing
-===================================================================
+Madagascar
+==========
+###  A package for reproducible geophysical data processing
 
 http://www.ahay.org
 
-What is Madagascar?
-===================
+## What is Madagascar?
+
 Madagascar is an open-source software package for multidimensional data
 analysis and reproducible computational experiments. Its mission is to
 provide
@@ -23,8 +24,7 @@ recorded processing histories, which become "computational recipes" to
 be verified, exchanged, and modified by users of the system.
 
 
-Design Principles
-=================
+## Design Principles
 
 * Madagascar is a modern package. Started in 2003 and publicly released in
 2006, it was developed entirely from scratch. Being a relatively new package,
@@ -65,8 +65,8 @@ share general-purpose data processing tools with scientists from other
 disciplines such as petroleum engineers working on large-scale reservoir
 simulations.
 
-Where to get more information about Madagascar
-==============================================
+## Where to get more information about Madagascar
+
 The primary source of information is the web site:
 
 http://www.ahay.org/
@@ -85,12 +85,12 @@ development blog:
 
 http://ahay.org/blog/
 
-Compiling, Building, Installing and Testing
-===========================================
+## Compiling, Building, Installing and Testing
+
 See the INSTALL.txt document for build instructions.
 
-History
-=======
+## History
+
 While being written from scratch, Madagascar borrows ideas from the
 design of SEPlib, a publicly available software package, maintained by
 Bob Clapp at the Stanford Exploration Project (SEP). Generations of
