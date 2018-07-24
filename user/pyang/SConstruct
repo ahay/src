@@ -167,7 +167,7 @@ for prog in cuda_mains:
     if CTP and NVCC:
         cfile = env.Command('CUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         cc = env.get('CC')
-        cflags = '--x=cu -O'
+        cflags = env.get('CUDAFLAGS') +' -O'
         ldflags = '-lcublas -lcufft -lcusparse'
         if string.rfind(cc,'icc') >= 0:
             cflags = cflags + ' -ccbin=%s' % cc
@@ -207,7 +207,7 @@ for prog in cuda_mpi_mains:
         prog = env.Program(prog,cfile,
                            CC=NVCC,
                            LINKFLAGS='-L'+MPI_LIB+' -lmpi',
-                           CFLAGS='-I'+MPI_INC+' --x=cu')
+                           CFLAGS='-I'+MPI_INC+ ' ' + env.get('CUDAFLAGS'))
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''

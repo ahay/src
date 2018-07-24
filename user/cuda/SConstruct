@@ -31,7 +31,7 @@ for prog in mains:
     if CTP and NVCC:
         cfile = env.Command(prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         cc = env.get('CC')
-        cflags = ['--x=cu','--x=cu -g']
+        cflags = [env.get('CUDAFLAGS'),env.get('CUDAFLAGS') +' -g']
         ldflags = ''
         if string.rfind(cc,'icc') >= 0:
             cflags[0] = cflags[0] + ' -ccbin=%s' % cc
