@@ -44,7 +44,9 @@ for src in Split('latex2wiki sftour'):
 env.Command('sfversion','version.py','cp $SOURCE $TARGET')
 env.Install(bindir,'sfversion')
 
-env.Install(bindir,'sfdoc')
+env.Command('sfdoc','sfdoc.py','echo "#!%s" > $TARGET && cat $SOURCE >> $TARGET' % sys.executable)
+binary = env.Install(bindir,'sfdoc')
+env.AddPostAction(binary,Chmod(binary,0755))
 
 SConscript(dirs='gui',name='SConscript',exports='env bindir pkgdir system user dotproj')
 
