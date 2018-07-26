@@ -157,7 +157,7 @@ int main(int argc, char** argv)
 
             /* file name for shot record */
             char sht_id_c[10];
-            itoa(sht_id,sht_id_c);
+            rtm_itoa(sht_id,sht_id_c);
             char dat_file[100];
             strcpy(dat_file,dat_dir);
             strcat(dat_file,"/shot-");
