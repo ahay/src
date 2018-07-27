@@ -14,6 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function 
+from __future__ import division
+from __future__ import absolute_import
+# this produces errors with kdmig2d.py - the first su program doc
+#from __future__ import unicode_literals
+
 import pydoc, re, sys, os, glob, signal
 import rsf.path as rsfpath
 
@@ -73,7 +79,7 @@ if __name__ == "__main__":
     print label
     ''')
     out.close()
-    os.chmod(name,0775)
+    os.chmod(name,0o775)
     return 0
 
 def getprogs(target=None,source=None,env=None):
@@ -224,9 +230,9 @@ def bigsection(title, *args):
 def multicolumn(list, format, cols=4):
     """Format a list of items into a multi-column list."""
     result = ''
-    rows = (len(list)+cols-1)/cols
+    rows = (len(list)+cols-1)//cols
     for col in range(cols):
-        result = result + '<td width="%d%%" valign=top>' % (100/cols)
+        result = result + '<td width="%d%%" valign=top>' % (100//cols)
         for i in range(rows*col, rows*col+rows):
             if i < len(list):
                 result = result + format(list[i]) + '<br>\n'
@@ -561,8 +567,10 @@ class rsfprog(object):
         pars =  self.pars.keys()
         if pars:
             contents = contents + '[PARAMETERS]\n'
-            pars.sort()
-            for par in pars:
+            #sys.stderr.write('type(pars)=%s\n'%type(pars))
+            #sys.stderr.write('pars=%s\n'%repr(pars))
+            #pars.sort()
+            for par in sorted(pars):
                 contents = contents + self.pars[par].text(par)
         filedir = os.path.split(self.file)[0]
         if filedir:
@@ -1136,12 +1144,12 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 else:
                     main.document(usedoc_max,root)
             else:
-                print '''Run %s with parameters. 
+                print ('''Run %s with parameters. 
 To obtain a selfdoc, install %s with Madagascar: http://www.ahay.org/wiki/Adding_new_programs_to_Madagascar
-                     ''' % (prog,prog)
+                       ''' % (prog,prog))
 
     except (getopt.error, BadUsage):
-        print '''sfdoc - the RSF documentation tool
+        print('''sfdoc - the RSF documentation tool
 
 %(prog)s [-u 25] <prog1> <prog2> ...
     Show documentation on programs.
@@ -1166,7 +1174,7 @@ To obtain a selfdoc, install %s with Madagascar: http://www.ahay.org/wiki/Adding
 
 %(prog)s -k <keyword>
     Search for a keyword in the description lines of all available programs.
-''' % {'prog':this}
+              ''' % {'prog':this})
 
 if __name__ == "__main__":
     junk = open('junk.py',"w")
