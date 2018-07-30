@@ -982,6 +982,7 @@ class Output(_File):
             self.tag = tag
             self.temp = False
             self.srcfile=None
+            self.headerflushed = False 
             # c function only knows about utf-8 (ascii).  translate the unicode
             self.file = c_rsf.sf_output(self.tag.encode('utf-8'))
             if src==None and first_input!=None:
