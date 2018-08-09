@@ -402,16 +402,7 @@ class File(object):
             return s
     
     def int(self,key,default=None):
-        try:
-            p = subprocess.Popen('%s %s parform=n < %s' % 
-                                 (Filter('get'),key,self),
-                                 shell=True,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 close_fds=True)
-            get = p.stdout.read()
-        except:
-            raise RuntimeError('trouble running sfget')
+        get = self.get(key)
         if get:
             val = int(get)
         elif default:
@@ -419,6 +410,28 @@ class File(object):
         else:
             val = None
         return val
+    def float(self,key,default=None):
+        get = self.get(key)
+        if get:
+            val = float(get)
+        elif default:
+            val = default
+        else:
+            val = None
+        return val
+    def get(self,key):
+        'returns a string'
+        try:
+            p = subprocess.Popen('%s %s parform=n < %s' % 
+                                 (Filter('get'),key,self),
+                                 shell=True,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 close_fds=True)
+            result = p.stdout.read()
+        except:
+            raise RuntimeError('trouble running sfget')
+        return result
     def shape(self):
         # axes are reversed for consistency with numpy
         s = []

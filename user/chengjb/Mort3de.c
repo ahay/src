@@ -39,8 +39,8 @@
 /* wavefield propagators */
 #include "fwportelastic.h"
 
-int   ny,nx,nz,ns;
-float dx,dy,dz,dt,dxm,dym;
+static int   ny,nx,nz,ns;
+static float dx,dy,dz,dt;
 
 int main(int  argc,char **argv)
 {
