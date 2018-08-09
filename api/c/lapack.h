@@ -2,7 +2,8 @@
 #define _sf_lapack_h_
 
 #ifdef __APPLE__
- 
+
+#define __VECLIB__
 #include <Accelerate/Accelerate.h>
 
 #define MKL_Complex8 __CLPK_complex 
