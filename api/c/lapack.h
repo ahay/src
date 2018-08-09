@@ -5,6 +5,7 @@
 
 #define __VECLIB__
 #include <Accelerate/Accelerate.h>
+#include <vecLib/clapack.h>
 
 #define MKL_Complex8 __CLPK_complex 
 #define MKL_Complex16 __CLPK_doublecomplex 
