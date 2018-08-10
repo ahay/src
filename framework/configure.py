@@ -974,7 +974,11 @@ def blas(context):
     context.Message("checking for BLAS ... ")
     text = '''
     #ifdef __APPLE__
+
+    #define __VECLIB__
     #include <Accelerate/Accelerate.h>
+    #include <vecLib/clapack.h>
+    
     #else
     #ifdef HAVE_MKL
     #include <mkl.h>
