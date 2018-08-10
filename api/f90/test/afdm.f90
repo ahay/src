@@ -11,6 +11,8 @@ program AFDMf90
   type(file) :: Fw,Fv,Fr,Fo  ! I/O files
   type(axa)  :: at,az,ax     ! cube axes
   integer    :: it,iz,ix     ! index variables
+  integer    :: nt,nz,nx
+  real       :: dt,dz,dx
   real       :: idx,idz,dt2
 
   real, allocatable :: vv(:,:),rr(:,:),ww(:)           ! I/O arrays
@@ -26,39 +28,51 @@ program AFDMf90
   Fo=rsf_output("out")
 
   ! Read/Write axes
-  call iaxa(Fw,at,1); call iaxa(Fv,az,1); call iaxa(Fv,ax,2)
-  call oaxa(Fo,az,1); call oaxa(Fo,ax,2); call oaxa(Fo,at,3)
+  call iaxa(Fw,at,1); nt = at%n; dt = at%d
+  call iaxa(Fv,az,1); nz = az%n; dz = az%d
+  call iaxa(Fv,ax,2); nx = ax%n; dx = ax%d
+  
+  call oaxa(Fo,az,1)
+  call oaxa(Fo,ax,2)
+  call oaxa(Fo,at,3)
 
-  dt2 =    at%d*at%d
-  idz = 1/(az%d*az%d)
-  idx = 1/(ax%d*ax%d) 
+  dt2 =    dt*dt
+  idz = 1/(dz*dz)
+  idx = 1/(dx*dx) 
 
   ! read wavelet, velocity & reflectivity
-  allocate(ww(at%n     )); ww=0.; call rsf_read(Fw,ww)
-  allocate(vv(az%n,ax%n)); vv=0.; call rsf_read(Fv,vv)
-  allocate(rr(az%n,ax%n)); rr=0.; call rsf_read(Fr,rr)
+  allocate(ww(nt));    call rsf_read(Fw,ww)
+  allocate(vv(nz,nx)); call rsf_read(Fv,vv)
+  allocate(rr(nz,nx)); call rsf_read(Fr,rr)
 
   ! allocate temporary arrays
-  allocate(um(az%n,ax%n)); um=0.
-  allocate(uo(az%n,ax%n)); uo=0.
-  allocate(up(az%n,ax%n)); up=0.
-  allocate(ud(az%n,ax%n)); ud=0.
+  allocate(um(nz,nx)); um=0.
+  allocate(uo(nz,nx)); uo=0.
+  allocate(up(nz,nx)); up=0.
+  allocate(ud(nz,nx)); ud=0.
 
   ! MAIN LOOP
-  do it=1,at%n
+  do it=1,nt
      if(verb) write (0,*) it
 
      ! 4th order laplacian
-     do iz=2,az%n-2
-        do ix=2,ax%n-2
-           ud(iz,ix) = &
-                c0* uo(iz,  ix  ) * (idx + idz)        + &
-                c1*(uo(iz  ,ix-1) + uo(iz  ,ix+1))*idx + &
-                c2*(uo(iz  ,ix-2) + uo(iz  ,ix+2))*idx + &
-                c1*(uo(iz-1,ix  ) + uo(iz+1,ix  ))*idz + &
-                c2*(uo(iz-2,ix  ) + uo(iz+2,ix  ))*idz
-        end do
-     end do
+!!$     do ix=3,nx-2
+!!$        do iz=3,nz-2
+!!$           ud(iz,ix) = &
+!!$                c0* uo(iz,  ix  ) * (idx + idz)        + &
+!!$                c1*(uo(iz  ,ix-1) + uo(iz  ,ix+1))*idx + &
+!!$                c2*(uo(iz  ,ix-2) + uo(iz  ,ix+2))*idx + &
+!!$                c1*(uo(iz-1,ix  ) + uo(iz+1,ix  ))*idz + &
+!!$                c2*(uo(iz-2,ix  ) + uo(iz+2,ix  ))*idz
+!!$        end do
+!!$     end do
+
+     ud(3:nz-2,3:nx-2) = &
+          c0* uo(3:nz-2,3:nx-2) * (idx + idz)            + &
+          c1*(uo(3:nz-2,2:nx-3) + uo(3:nz-2,4:nx-1))*idx + &
+          c2*(uo(3:nz-2,1:nx-4) + uo(3:nz-2,5:nx  ))*idx + &
+          c1*(uo(2:nz-3,3:nx-2) + uo(4:nz-1,3:nx-2))*idz + &
+          c2*(uo(1:nz-4,3:nx-2) + uo(5:nz  ,3:nx-2))*idz
 
      ! inject wavelet
      ud = ud - ww(it) * rr

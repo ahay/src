@@ -57,8 +57,8 @@ int main(int argc, char* argv[])
 	if(verb) cerr << "\b\b\b\b\b" << it;
 
 	// 4th order laplacian
-	for (int iz=2; iz<nz-2; iz++) {
-	    for (int ix=2; ix<nx-2; ix++) {
+	for (int ix=2; ix<nx-2; ix++) {
+	    for (int iz=2; iz<nz-2; iz++) {
 		ud[k(iz,ix)] = 
 		    c0* uo[ k(iz  ,ix  )] * (idx+idz) +
 		    c1*(uo[ k(iz  ,ix-1)]+uo[ k(iz  ,ix+1)]) * idx + 

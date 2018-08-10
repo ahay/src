@@ -63,8 +63,8 @@ int main(int argc, char* argv[])
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	
 	/* 4th order laplacian */
-	for (iz=2; iz<nz-2; iz++) {
-	    for (ix=2; ix<nx-2; ix++) {
+	for (ix=2; ix<nx-2; ix++) {
+	    for (iz=2; iz<nz-2; iz++) {
 		ud[ix][iz] = 
 		    c0* uo[ix  ][iz  ] * (idx+idz) + 
 		    c1*(uo[ix-1][iz  ] + uo[ix+1][iz  ])*idx +
@@ -75,22 +75,22 @@ int main(int argc, char* argv[])
 	}
 
 	/* inject wavelet */
-	for (iz=0; iz<nz; iz++) {
-	    for (ix=0; ix<nx; ix++) {
+	for (ix=0; ix<nx; ix++) {
+	    for (iz=0; iz<nz; iz++) {
 		ud[ix][iz] -= ww[it] * rr[ix][iz];
 	    }
 	}
 
 	/* scale by velocity */
-	for (iz=0; iz<nz; iz++) {
-	    for (ix=0; ix<nx; ix++) {
+	for (ix=0; ix<nx; ix++) {
+	    for (iz=0; iz<nz; iz++) {
 		ud[ix][iz] *= vv[ix][iz]*vv[ix][iz];
 	    }
 	}
 	
 	/* time step */
-	for (iz=0; iz<nz; iz++) {
-	    for (ix=0; ix<nx; ix++) {
+	for (ix=0; ix<nx; ix++) {
+	    for (iz=0; iz<nz; iz++) {
 		up[ix][iz] = 
 		    2*uo[ix][iz] 
 		    - um[ix][iz] 

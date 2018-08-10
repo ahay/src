@@ -400,7 +400,6 @@ class File(object):
                 else:
                     break
             return s
-    
     def int(self,key,default=None):
         get = self.get(key)
         if get:
@@ -608,6 +607,22 @@ class _File(File):
         elif isinstance(val,list):
             if isinstance(val[0],int):
                 c_rsf.sf_putints(self.f,key,val)
+    def axis(self,i):
+        ax = {}
+        ax['n'] = self.int("n%d"   % i)
+        ax['d'] = self.float("d%d" % i)
+        ax['o'] = self.float("o%d" % i)
+        ax['l'] = self.string("label%d" % i)
+        ax['u'] = self.string("unit%d" % i)
+        return ax
+    def putaxis(self,ax,i):
+        self.put("n%d" % i,ax['n'])
+        self.put("d%d" % i,ax['d'])
+        self.put("o%d" % i,ax['o'])
+        if ax['l']:
+            self.put("label%d" % i,ax['l'])
+        if ax['u']:
+            self.put("unit%d" % i,ax['u']) 
         
 class Input(_File):
     def __init__(self,tag='in'):

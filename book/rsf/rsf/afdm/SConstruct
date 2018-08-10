@@ -4,7 +4,7 @@ from rsf.proj import *
 
 prog = {}
 
-for lang in ('c','c++','f90'):
+for lang in ('c','c++','f90','python'):
     SConscript('../../../../api/%s/test/SConstruct' % lang)
     prog[lang] = '../../../../api/%s/test/afdm.exe' % lang
 
@@ -28,7 +28,7 @@ for lang in prog.keys():
     wave = 'wave'+lang
 
     Flow(wave,['wavelet',prog[lang],'velocity','refl'],
-        '${SOURCES[1]} vel=${SOURCES[2]} ref=${SOURCES[3]} verb=y')
+        '${SOURCES[1]} vel=${SOURCES[2]} ref=${SOURCES[3]} verb=n')
     
     # Wave movie
     Plot(wave,
@@ -40,5 +40,10 @@ for lang in prog.keys():
            window f3=-1 n3=1 |
            grey gainpanel=all screenratio=1 title="Wave (%s)"
            ''' % lang.capitalize())
+
+# C:      4.53 user 1.17 sys (5.7)
+# F90:    7.68 user 0.93 sys (8.61)
+# C++:   11.87 user 0.92 sys (12.79)
+# Python: 9.26 user 3.70 sys (12.96)
 
 End()
