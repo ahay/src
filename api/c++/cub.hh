@@ -31,12 +31,9 @@ public:
 
     sf_axis getax(int);      // get an axis from CUB
     void putax(int,sf_axis); // put an axis in   CUB
-    void setup(int,int);     // setup cube dimensions 
+    void setup(int);     // setup cube dimensions 
 
-    int   *n; // n for cube
-    float *o; // o for cube
-    float *d; // d for cube
-    int    e; // esize
+    sf_axis *ax; // different axes
     int   nd; // number of dimensions
 
     // whence SEEK_SET=0 (start of file), SEEK_CUR=1 (current location), 

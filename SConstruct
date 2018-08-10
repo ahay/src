@@ -14,7 +14,7 @@ else:
 
 if not root:
     root = sys.prefix
-    print 'Setting RSFROOT to "%s" ' % root
+    print('Setting RSFROOT to "%s" ' % root)
 
 srcdir = os.getcwd()
 bindir = os.path.join(root,'bin')
@@ -297,7 +297,7 @@ if os.path.isdir(etcdir2):
 def msgEndInstall():
     from SCons.Script import GetBuildFailures
     if not GetBuildFailures():
-        print '''
+        print('''
 ---------------------------------------------------------
 To start using madagascar, source env.sh or env.csh from:
     %s/
@@ -305,7 +305,7 @@ Local documentation center at:
     %s/
 Documentation wiki at http://www.ahay.org
 ---------------------------------------------------------
-''' % (etcdir, docdir)
+''' % (etcdir, docdir))
 
 if 'install' in COMMAND_LINE_TARGETS:
     atexit.register(msgEndInstall)

@@ -8,7 +8,6 @@ Flow('test.attr','clip.exe',
      ./$SOURCE clip=0.5 | attr
      ''',stdin=0)
 
-Program('afdm.c')
-
+End()
 
         

@@ -9,6 +9,8 @@ regularization (Xue, Zhu, and Fomel)
 
 To SCons:
 
+* Upgraded to scons-3.0.0
+
 To documentation:
 
 To APIs:
@@ -18,6 +20,7 @@ To the Python package:
 To programs:
 
 * user/zgeng: New contributor (Zhicheng Geng)
+* sfmatplotlib: plotting with matplotlib
 
 ===Bug fixes===
 

@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     CUB Fw("in", "i"); Fw.headin(); //Fw.report();
     CUB Fv("vel","i"); Fv.headin(); //Fv.report();
     CUB Fr("ref","i"); Fr.headin(); //Fr.report();
-    CUB Fo("out","o"); Fo.setup(3,Fv.esize()); 
+    CUB Fo("out","o"); Fo.setup(3); 
 
     // Read/Write axes
     sf_axis at = Fw.getax(0); int nt = sf_n(at); float dt = sf_d(at);

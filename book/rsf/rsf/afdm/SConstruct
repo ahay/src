@@ -1,0 +1,46 @@
+from rsf.proj import *
+
+# Testing finite-difference acoustic wave modeling in different languages
+
+prog = {}
+
+SConscript('../../../../api/c/test/SConstruct')
+prog['c'] = '../../../../api/c/test/afdm.exe'
+
+SConscript('../../../../api/c++/test/SConstruct')
+prog['c++'] = '../../../../api/c++/test/afdm.exe'
+
+# Create wavelet
+Flow('wavelet',None,'spike n1=1001 k1=200 d1=0.001 | ricker1 frequency=10')
+Result('wavelet','graph title=Wavelet')
+
+# Create velocity
+Flow('velocity',None,
+     '''
+    math n1=501 n2=501 d1=0.01 d2=0.01 label1=Z label2=X
+    unit1=km unit2=km output="1+0.2*x1+0.1*x2"
+    ''')
+Result('velocity','grey title="Velocity" scalebar=y color=j mean=y screenratio=1')
+
+# Place sources
+Flow('refl','velocity',
+     'spike nsp=3 k1=100,200,300 k2=100,300,200 mag=1,-1,2')
+
+for lang in prog.keys():
+    wave = 'wave'+lang
+
+    Flow(wave,['wavelet',prog[lang],'velocity','refl'],
+        '${SOURCES[1]} vel=${SOURCES[2]} ref=${SOURCES[3]} verb=y')
+    
+    # Wave movie
+    Plot(wave,
+     'window f3=100 j3=10 | grey gainpanel=all screenratio=1 title=Wave',view=1)
+
+    # Wave snapshot
+    Result(wave,
+           '''
+           window f3=-1 n3=1 |
+           grey gainpanel=all screenratio=1 title="Wave (%s)"
+           ''' % lang.capitalize())
+
+End()
