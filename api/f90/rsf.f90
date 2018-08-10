@@ -32,6 +32,8 @@ module RSF
   type, public :: axa
      integer   :: n
      real      :: o,d
+     character(len=FSTRLEN) :: l
+     character(len=FSTRLEN) :: u
   end type axa
 
   interface from_par
@@ -799,7 +801,10 @@ contains
     call from_par(FF,BB,AA%o,0.)
     write(BB,"(a,i1)" ) 'd',i
     call from_par(FF,BB,AA%d,1.)
-
+    write(BB,"(a5,i1)" ) "label",i
+    call from_par(FF,BB,AA%l,"")
+    write(BB,"(a4,i1)" ) "unit",i
+    call from_par(FF,BB,AA%u,"")
   end subroutine iaxa
 
   !------------------------------------------------------------
@@ -816,14 +821,17 @@ contains
     call to_par(FF,BB,AA%o)
     write(BB,"(a,i1)" ) 'd',i
     call to_par(FF,BB,AA%d)
-
+    write(BB,"(a5,i1)" ) "label",i
+    call to_par(FF,BB,AA%l)
+    write(BB,"(a4,i1)" ) "unit",i
+    call to_par(FF,BB,AA%u)
   end subroutine oaxa
   !------------------------------------------------------------
 
   subroutine raxa(AA)
     type(axa),  intent(in) :: AA
 
-    write(0,*) AA%n,AA%o,AA%d
+    write(0,*) AA%n,AA%o,AA%d,AA%l,AA%u
   end subroutine raxa
 
   !------------------------------------------------------------
