@@ -4,11 +4,9 @@ from rsf.proj import *
 
 prog = {}
 
-SConscript('../../../../api/c/test/SConstruct')
-prog['c'] = '../../../../api/c/test/afdm.exe'
-
-SConscript('../../../../api/c++/test/SConstruct')
-prog['c++'] = '../../../../api/c++/test/afdm.exe'
+for lang in ('c','c++','f90'):
+    SConscript('../../../../api/%s/test/SConstruct' % lang)
+    prog[lang] = '../../../../api/%s/test/afdm.exe' % lang
 
 # Create wavelet
 Flow('wavelet',None,'spike n1=1001 k1=200 d1=0.001 | ricker1 frequency=10')

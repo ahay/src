@@ -17,6 +17,6 @@ proj.Program('afdm.f90',
              LINK=proj.get('F90'),
              F90PATH=proj.get('CPPPATH'),
              LINKFLAGS=proj.get('F90FLAGS'))
-
+proj.End()
 
         
