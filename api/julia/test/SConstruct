@@ -12,6 +12,8 @@ Flow('test.attr','clip.jl',
             os.environ.get('LD_LIBRARY_PATH',libpath),
             WhereIs('julia')),stdin=0)
 
+binary = Command('afdm.exe','afdm.jl','cp $SOURCE $TARGET')
+AddPostAction(binary,Chmod(binary,0755))
 End()
 
 

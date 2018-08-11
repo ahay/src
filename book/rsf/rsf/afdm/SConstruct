@@ -4,7 +4,7 @@ from rsf.proj import *
 
 prog = {}
 
-for lang in ('c','c++','f90','python'):
+for lang in ('c','c++','f90','python','julia'):
     SConscript('../../../../api/%s/test/SConstruct' % lang)
     prog[lang] = '../../../../api/%s/test/afdm.exe' % lang
 
