@@ -1,5 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''Plot wavefields over a background image
+Common usage examples
+\t• Plot to screen using default parameters
+\t\tsfpgreywfl < wavefield.rsf bg=velocity.rsf
+\t• Save to file using custom parameters
+\t\tsfpgreywfl < wavefield.rsf bg=velocity.rsf jsnap=10 bgcmap=gray wflcmap=seismic fps=10 verb=y savefile=output.mp4
 '''
 
 # Copyright (C) 2018 Carlos Alberto da Costa Filho
@@ -51,8 +57,8 @@ def read_axis(infile, axis=1):
 
 def create_tranparent_cmap(cmap, treshold=0.01):
     '''
-    Creates a linear colormap from `color1` to `color2` in which everything
-    below a certain `treshold` is set to transparent.
+    Creates a colormap from ` cmap` in which everything below a certain
+    `treshold` is set to transparent.
 
     Parameters
     ----------
@@ -64,9 +70,7 @@ def create_tranparent_cmap(cmap, treshold=0.01):
 
     Returns
     -------
-    cmap : matplotlib.colors.LinearSegmentedColormap
-        Linear colormap from `color1` to `color2` with values lower then
-        `treshold` set to transparent.
+    cmap : matplotlib.colors.Colormap
     '''
 
     cmap = cm.get_cmap(cmap, lut=256)
@@ -93,7 +97,7 @@ if __name__ == "__main__":
         sf_error("Must have 3 axes")
     if inp.type != 'float':
         sf_error("Only supports float")
-    bgf = par.string("bg", None) # Background for animation
+    bgf = par.string("bg", None) # Background for animation. Zero if not supplied
     if bgf:
         bg  = m8r.Input(bgf)
         if bg.type != 'float':
@@ -109,9 +113,9 @@ if __name__ == "__main__":
     title = par.string("title") # Plot title
     pclip = par.float("pclip", 100)  # Clip amplitude percentage from (0-100)
     aclip = par.bool("absclip", False)  # Clipping is done for all gathers rather than per frame (y/n)
-    cbar  = par.bool("scalebar", True) # Colorbar (y/n)
+    cbar  = par.bool("scalebar", True) # Colorbar
     cbarl = par.string("barlabel") # Colorbar label
-    ttxt = par.bool("timetext", True) # Time text (y/n)
+    ttxt = par.bool("timetext", True) # Time text
     bmap = par.string("bgcmap", 'viridis') # Background colormap. See https://matplotlib.org/users/colormaps.html
     wmap = par.string("wflcmap", 'gray') # Wavefield colormap (should be sequential)
     jsnap = par.int("jsnap", 1)  # Number of timesteps at which to plot wavefield
@@ -122,7 +126,10 @@ if __name__ == "__main__":
     figy  = par.float("figy", 8) # Figure y size in inches
     xints = par.int("xints", None) # Max number of x intervals
     yints = par.int("yints", None) # Max number of y intervals
-    fps   = par.float("fps", None) # Frames per second (when saving file)
+    fps   = par.float("fps", 15) # Frames per second (when saving file)
+    spd   = par.float("speedup", 10) # Delay between frames (in milliseconds) will be speedup*dt
+    dpi   = par.float("dpi", 90) # DPI
+    fts   = par.float("fontsize", 16) # Font size
     verb  = par.bool("verb", False) # Verbosity flag
 
     # Error/bounds checking
@@ -148,7 +155,28 @@ if __name__ == "__main__":
         sf_warning("setting yints=None")
         yints = None
 
-    inp_d = inp[:]
+    # Read data
+    # inp_d = inp[:]
+    # The line above fails on some files with the following error
+    #     File "m8r.py", line 376, in __getitem__
+    #       array = self.__array__()
+    #     File "m8r.py", line 351, in __array__
+    #       self.narray = c_rsf.rsf_array(f)
+    #     SystemError: error return without exception set
+
+    # Alternative
+    read_data = False
+    for dtype in (np.float64, np.float32, np.float16):
+        try:
+            inp_d = np.zeros(shape, dtype)
+            inp.read(inp_d)
+            read_data = True
+            break
+        except TypeError:
+            pass
+    if not read_data:
+        sf_error("wavefield must be Float")
+
     if bgf:
         bg_d = bg[:].T
     else:
@@ -190,9 +218,7 @@ if __name__ == "__main__":
     uz = uz if uz else uz2
     lz = lz if lz else lz2
 
-    mpl.rcParams.update({'font.size': 16})
-    dpi = 90
-
+    mpl.rcParams.update({'font.size': fts})
     # Initialize figure and axes
     fig = plt.figure(figsize=(figx, figy), dpi=dpi)
     axi = fig.add_subplot(111, xlim=(ox, xmax), ylim=(zmax, oz))
@@ -200,16 +226,17 @@ if __name__ == "__main__":
         div = make_axes_locatable(axi)
         axc = div.new_horizontal(size="5%", pad=0.15)
         fig.add_axes(axc)
-    img_bg = axi.imshow(bg_d, aspect=aspect, extent=(ox, xmax, zmax, oz), cmap=bmap)
+    img_bg = axi.imshow(bg_d, aspect=aspect, extent=(ox, xmax, zmax, oz),
+                        cmap=bmap)
     if cbar:
         cb_bg = plt.colorbar(img_bg, cax=axc)
         cb_bg.ax.set_ylabel(cbarl) if cbarl else None
 
     # Transparent colormap
-    # cmap_t = create_tranparent_cmap('white', 'black')
     cmap_t = create_tranparent_cmap(wmap)
-    img = axi.imshow(np.zeros((nz, nx), 'f'), aspect=aspect, interpolation='lanczos',
-                     extent=(ox, xmax, zmax, oz), vmin=-pclip, vmax=pclip, cmap=cmap_t)
+    img = axi.imshow(np.zeros((nz, nx), 'f'), aspect=aspect,
+                     interpolation='lanczos', extent=(ox, xmax, zmax, oz),
+                     vmin=-pclip, vmax=pclip, cmap=cmap_t)
 
     axi.set_xlabel(r'%s (%s)' % (lx, ux)) if ux else axi.set_xlabel(r'%s' % lx)
     axi.set_ylabel(r'%s (%s)' % (lz, uz)) if uz else axi.set_ylabel(r'%s' % lz)
@@ -223,7 +250,8 @@ if __name__ == "__main__":
     # Time text box
     bbox_props = dict(boxstyle="round", fc="w", ec="0.5", alpha=0.8)
     if ttxt:
-        time_text = axi.text(0.05, 0.05, '', bbox=bbox_props, transform=axi.transAxes)
+        time_text = axi.text(0.05, 0.05, '', bbox=bbox_props,
+                             transform=axi.transAxes)
     fig.tight_layout()
 
     if verb:
@@ -266,30 +294,31 @@ if __name__ == "__main__":
             return img,
 
     anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                   frames=nt, interval=10*dt,
+                                   frames=nt, interval=spd*dt,
                                    blit=True)
 
     # Plot or save animations
     if savefile:
-        if savefile.endswith('html'):
+        if savefile.endswith('.html'):
             from IPython.display import HTML
-            html = HTML(anim.to_jshtml(fps=30)).data
+            html = HTML(anim.to_jshtml(fps=fps)).data
             with open(savefile, 'w') as f:
                 f.write(html)
-        elif savefile.endswith('gif'):
-            anim.save(savefile, writer='imagemagick')
+        elif savefile.endswith('.gif'):
+            anim.save(savefile, fps=fps, writer='imagemagick')
         else:
             anim.save(savefile, fps=fps)
-        sys.stderr.write('\b'*(len(msg)))
-        sys.stderr.flush()
-        toc = timeit.default_timer()
         if verb:
+            sys.stderr.write('\b'*(len(msg)))
+            sys.stderr.flush()
+            toc = timeit.default_timer()
             m, s = divmod(toc-tic_total, 60)
             h, m = divmod(m, 60)
             msg = "%02d:%02d:%02d" % (h, m, s)
             sf_warning("Elapsed time - %s" % msg)
     else:
         plt.show()
-        sys.stderr.write('\b'*(len(msg)))
-        sys.stderr.flush()
+        if verb:
+            sys.stderr.write('\b'*(len(msg)))
+            sys.stderr.flush()
     sys.stderr.write('')
