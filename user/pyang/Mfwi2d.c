@@ -596,10 +596,12 @@ int main(int argc, char *argv[])
 	    memset(sp1[0], 0, nz*nx*sizeof(float));
 	    for(it=0; it<nt; it++)
 	    {
+		//store boundary before absorbing for perfect reconstruction
+		rw_bndr(&bndr[it*(2*nz+nx)], sp1, nz, nx, true);
+
 		add_source(sp1, &wlt[it], &sxz[is], 1, nz, true);			
 		step_forward(sp0, sp1, sp2, vv, dtz, dtx, nz, nx);
 		ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
-		rw_bndr(&bndr[it*(2*nz+nx)], sp0, nz, nx, true);
 
 		record_seis(dcal, gxz, sp0, ng, nz);
 		cal_residuals(dcal, &dobs[it*ng], &derr[is*ng*nt+it*ng], ng);

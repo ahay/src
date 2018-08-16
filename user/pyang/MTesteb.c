@@ -324,13 +324,14 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(v0[0],nz*nx,Fw1);
 	}
 
+	//important: store boundary before absorbing
+	boundary_rw(p1, &spo[it*4*(nx+nz)], false);
+
 	add_source(sxz, p1, 1, &wlt[it], true);
 	step_forward(p0, p1);
 	apply_sponge(p0);
 	apply_sponge(p1);
 	ptr=p0; p0=p1; p1=ptr;
-
-	boundary_rw(p0, &spo[it*4*(nx+nz)], false);
     }
 
     ptr=p0; p0=p1; p1=ptr;
