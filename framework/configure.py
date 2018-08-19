@@ -2189,7 +2189,7 @@ def swig(context):
         'that cannot be built with -static-intel',
         'yellow_on_red')
     context.Message("checking for SWIG ... ")
-    if 'swig' in Environment().get('TOOLS'):
+    if 'swig' in context.env.get('TOOLS'):
         swigx = WhereIs('swig')
         context.Result(swigx)
         context.env['SWIG'] = swigx
