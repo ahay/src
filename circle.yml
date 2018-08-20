@@ -15,9 +15,9 @@ jobs:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     - run:
-      command: |
-        echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
-        echo 'export RSFFIGS="$HOME/RSFROOT/figs"' >> $BASH_ENV
+        command: |
+          echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
+          echo 'export RSFFIGS="$HOME/RSFROOT/figs"' >> $BASH_ENV
     #### Checkout
     - run: git clone https://github.com/ahay/figs.git $RSFFIGS    
     #### Compile
