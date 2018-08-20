@@ -8,10 +8,10 @@ progs = '''
 	anovc anovcv mig2s
 	mig2semb linpipwd2d linpipwd2dca
 	mig2pwd pwdtensor pwdtensorh
-	lsmig3 linpi
-        linmig3 lspiazpwdmig3 piazpwdmig3 azpwd
-        anisodiffuse azspr
-	'''
+	lsmig3 linpi pipwdmig2
+	linmig3 lspiazpwdmig3 lspiazpwdmig32 piazpwdmig3 azpwd
+	anisodiffuse azspr linmig2 pwddiffuse
+	''' 
 
 mpi_progs = ''
 
@@ -53,13 +53,11 @@ for prog in mains:
 ccmains = Split(ccprogs)
 subs = Split(subs)
 
-ccompile = 'c++' in env.get('API',[]) and not 'NO_COMPLEX' in env.get('CPPDEFINES',[])
-
-if ccompile:
+if 'c++' in env.get('API',[]):
     objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
 
 for prog in ccmains:
-    if ccompile:
+    if 'c++' in env.get('API',[]):
         prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
         env.Depends(prog,map (lambda x: x + '.hh', subs))
     else:
