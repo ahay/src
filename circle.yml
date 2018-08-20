@@ -8,14 +8,17 @@ jobs:
     environment:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
-      RSFROOT: ~/RSFROOT
-      RSFFIGS: ~/RSFROOT/figs
     docker:
     - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
       command: /sbin/init
     steps:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+    - run:
+      name: Setup Environment Variables
+      command: |
+        echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
+        echo 'export RSFFIGS="$HOME/RSFROOT/figs"' >> $BASH_ENV
     #### Checkout
     - run: git clone https://github.com/ahay/figs.git $RSFFIGS    
     #### Compile
