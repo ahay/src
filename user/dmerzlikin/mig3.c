@@ -32,7 +32,7 @@ void mig3_lop (bool adj /* adjoint flag */,
 	       float ot, float ox, float oy,
                float *trace /* zero-offset */,
                float *out /* image */,
-               float vel /* velocity */,
+               float *v /* velocity (same dimensions as the data) */,
                float rho /* phase factor */,
                char antialias /* antialiasing method */,
 	       bool doomp /* perform OpenMP optimization */,
@@ -44,7 +44,7 @@ void mig3_lop (bool adj /* adjoint flag */,
     int nn, iy, ix, iz, iyc, ixc, izc, indexc;
     int mythread, nothreads, ch=0, chomp=0, deltat, ch2=0, ch3=0, ch4=0;
     float *pp, *qq, *trace_temp;
-    float x_in, y_in, ftm, ftp, imp, xtemp, ytemp, veltemp;
+    float x_in, y_in, ftm, ftp, imp, xtemp, ytemp, veltemp, vel;
     float sq, ti, tx, tm, tp, x,y, z, t;
     float rx, ry, ft;
     int it, itp, itm, itrx, itry, index, checkomp=0;
@@ -73,11 +73,6 @@ void mig3_lop (bool adj /* adjoint flag */,
 	trace_temp[iz] = 0.;
 
     }
-    
-    veltemp = vel/2.0;
-
-    vel = 2./vel; 
-    vel *= vel;
 
     angle = fabsf(tanf(angle*SF_PI/180.0));
 
@@ -160,13 +155,8 @@ void mig3_lop (bool adj /* adjoint flag */,
 		#pragma omp parallel
 		{
 
-			mythread = 1;
-			nothreads = 1;
-
-			#ifdef _OPENMP
 			mythread = omp_get_thread_num();
     			nothreads = omp_get_num_threads();
-			#endif
 
 			#pragma omp single
 			{
@@ -194,31 +184,42 @@ void mig3_lop (bool adj /* adjoint flag */,
 
 			}/* for */
 	
-			#pragma omp for private(iy,y,ry,ix,x,rx,iz,z,t,sq,ti,tx,ft,it,tm,ftm,itm,tp,ftp,itp,imp,index,xtemp,ytemp,ch)
+			#pragma omp for private(iy,y,ry,ix,x,rx,iz,z,t,sq,ti,tx,ft,it,tm,ftm,itm,tp,ftp,itp,imp,index,xtemp,ytemp,ch,vel,veltemp)
 			for (iy=0; iy < ny; iy++) {
 	    			y = oy + iy*dy - y_in;
-	    			ry = fabsf(y*dy) * vel;
-	    			y *= y * vel;
+	    			//ry = fabsf(y*dy) * vel;
+	    			//y *= y * vel;
 
 				if (SF_ABS(iy-itry) > apt) continue;
 	    
             			for (ix=0; ix < nx; ix++) {
 					x = ox + ix*dx - x_in;
-					rx = fabsf(x*dx) * vel;
-					x *= x * vel;
-					x += y;
+					//rx = fabsf(x*dx) * vel;
+					//x *= x * vel;
+					//x += y;
 
 					if (SF_ABS(ix-itrx) > apt) continue;
 
 					for (iz=0; iz < nt; iz++) {
-		    				z = ot + iz*dt;              
+		    				z = ot + iz*dt;
+
+						veltemp = v[iy*nx*nt + ix*nt + iz]/2.0;
+						vel = 2./v[iy*nx*nt + ix*nt + iz]; 
+						vel *= vel;
+
+						ry = fabsf(y*dy) * vel;
+						//y *= y * vel;
+
+						rx = fabsf(x*dx) * vel;
+						//x *= x * vel;
+						//x += y;
 
 						xtemp = (ix - itrx)*dx;
 						ytemp = (iy - itry)*dy;
 	
 						if ((fabsf(xtemp) > angle*veltemp*z) || (fabsf(ytemp) > angle*veltemp*z)) continue;		    				
 				
-						t = z*z + x; 
+						t = z*z + x*x*vel + y*y*vel; 
 		    				if (t <= 0.) continue;
               
 		    				sq = t*t; 

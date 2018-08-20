@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     sf_file dip, azin;
     /* Kirchhoff params */
     bool verb;
-    float vel, rho;
+    float *vel, rho;
     float angle;
     int ix, ih, nh2;
     sf_file velFile, fvx, fvy, snapsf;
@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
     azin = sf_input ("az");
     fvx = sf_input("vx");
     fvy = sf_input("vy");
+    velFile = sf_input("vel");
 
     /* Get dimensions from input */
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1= in inp");
@@ -71,7 +72,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad",&nt2)) nt2=nt;
     /* output time samples */
 
-    if (!sf_getfloat("vel",&vel)) sf_error("Specify migration velocity");
+    //if (!sf_getfloat("vel",&vel)) sf_error("Specify migration velocity");
     /* migration velocity for Kirchhoff */
     
     if (NULL == (antialias = sf_getstring("antialias"))) antialias="triangle";
@@ -201,6 +202,10 @@ int main(int argc, char* argv[])
     sf_floatread(vx,n12,fvx);
     vy = sf_floatalloc(n12);
     sf_floatread(vy,n12,fvy);
+
+    /* allocating and reading velocity */
+    vel = sf_floatalloc(n12);
+    sf_floatread(vel,n12,velFile);
 
     /*piintface_init(nt,nx,ny, dt,dx,dy, ot,ox,oy, passthr, v_1,v_2,v_3,v_4,
                    eps,epst2, nt2, vel, rho, antialias[0], nw, pp1, pp2,

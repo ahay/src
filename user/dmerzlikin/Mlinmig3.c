@@ -26,13 +26,14 @@ int main(int argc, char* argv[])
     char *antialias;
     float *trace, *out, rho, angle;
     float dx, dy, ox, oy, dt,ot;
-    float vel;
+    float *vel;
     bool adj, doomp;
-    sf_file in, mig;
+    sf_file in, mig, velFile;
 
     sf_init (argc,argv);
     in = sf_input("in");
     mig = sf_output("out");
+    velFile = sf_input("vel");
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     ntr = sf_leftsize(in,1);
@@ -75,7 +76,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("angle",&angle)) angle = 90.0;
     /* angle aperture */
 
-    if (!sf_getfloat("vel",&vel)) sf_error("Need vel=");
+    //if (!sf_getfloat("vel",&vel)) sf_error("Need vel=");
     /* migration velocity */
     
     trace = sf_floatalloc(nt*nx*ny);
@@ -90,6 +91,10 @@ int main(int argc, char* argv[])
     	sf_floatread(out,nt*nx*ny,in);
 
     }
+
+    /* allocating and reading velocity */
+    vel = sf_floatalloc(nt*nx*ny);
+    sf_floatread(vel,nt*nx*ny,velFile);
 
     mig3_lop (adj,false, nt,nx,ny, dt,dx,dy, ot,ox,oy, trace, out, vel, rho, antialias[0],doomp,apt,angle);
 
