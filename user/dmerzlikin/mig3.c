@@ -154,9 +154,13 @@ void mig3_lop (bool adj /* adjoint flag */,
 
 		#pragma omp parallel
 		{
-
+#ifdef _OPENMP
 			mythread = omp_get_thread_num();
     			nothreads = omp_get_num_threads();
+#else
+			mythread = 0;
+			nothreads = 1;
+#endif
 
 			#pragma omp single
 			{

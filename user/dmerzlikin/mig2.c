@@ -14,7 +14,7 @@
   
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Foundation, Inc., 59 Temple Place, Suite 330, Bston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -191,9 +191,13 @@ void mig2_lop (bool adj /* adjoint flag */,
 
 		#pragma omp parallel
 		{
-
+#ifdef _OPENMP
 			mythread = omp_get_thread_num();
     			nothreads = omp_get_num_threads();
+#else
+			mythread = 0;
+			nothreads = 1;
+#endif			
 
 			#pragma omp single
 			{
