@@ -454,7 +454,7 @@ dat, n, d, o, l, u = rsf_read("test_write.rsf")
 @test u == ["s"]
 run(`sfrm test_write.rsf`)
 
-sfspike(;to_file="test_write.rsf", n1=1)
+sfspike(;n1=1) |> x -> rsf_write(x, "test_write.rsf")
 dat, n, d, o, l, u = rsf_read("test_write.rsf")
 @test dat ≈ [1.]
 @test n == [1]
