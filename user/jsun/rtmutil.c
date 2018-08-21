@@ -742,7 +742,7 @@ void rtm_finalize()
 {
 }
 
-void itoa(int n, char *s)
+void rtm_itoa(int n, char *s)
 /*< convert integer to char >*/
 {
     int i,j,sign;

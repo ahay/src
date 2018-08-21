@@ -4,8 +4,6 @@ import atexit, os, sys
 sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
 
-env = Environment()
-
 if os.path.isfile('config.py'):
     import config
     root = config.RSFROOT
@@ -14,7 +12,7 @@ else:
 
 if not root:
     root = sys.prefix
-    print 'Setting RSFROOT to "%s" ' % root
+    print('Setting RSFROOT to "%s" ' % root)
 
 srcdir = os.getcwd()
 bindir = os.path.join(root,'bin')
@@ -31,7 +29,8 @@ etcdir = os.path.join(shrdir, 'madagascar', 'etc')
 
 opts = configure.options('config.py')
 opts.Add('RSFROOT','RSF installation root',root)
-opts.Update(env)
+
+env = Environment(variables=opts)
 
 if not os.path.isfile('config.py'):
     conf = Configure(env,custom_tests={'CheckAll':configure.check_all})
@@ -297,7 +296,7 @@ if os.path.isdir(etcdir2):
 def msgEndInstall():
     from SCons.Script import GetBuildFailures
     if not GetBuildFailures():
-        print '''
+        print('''
 ---------------------------------------------------------
 To start using madagascar, source env.sh or env.csh from:
     %s/
@@ -305,7 +304,7 @@ Local documentation center at:
     %s/
 Documentation wiki at http://www.ahay.org
 ---------------------------------------------------------
-''' % (etcdir, docdir)
+''' % (etcdir, docdir))
 
 if 'install' in COMMAND_LINE_TARGETS:
     atexit.register(msgEndInstall)

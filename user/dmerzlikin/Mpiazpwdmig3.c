@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     /* Kirchhoff params */
     bool half, verb,normalize,debug, doomp;
     int nh, **fold, apt;
-    float vel, rho;
+    float *vel, rho;
     float angle;
     int ix, ih, nh2;
     sf_file velFile;
@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     dip = sf_input ("dip");
     azin = sf_input ("az");
+    velFile = sf_input ("vel");
 
     /* Get dimensions from input */
     if (!sf_histint(inp,"n1",&nt)) sf_error("No n1= in inp");
@@ -66,7 +67,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad",&nt2)) nt2=nt;
     /* output time samples */
 
-    if (!sf_getfloat("vel",&vel)) sf_error("Specify migration velocity");
+    //if (!sf_getfloat("vel",&vel)) sf_error("Specify migration velocity");
     /* migration velocity for Kirchhoff */
     
     if (NULL == (antialias = sf_getstring("antialias"))) antialias="triangle";
@@ -121,6 +122,10 @@ int main(int argc, char* argv[])
     sf_floatread(pp2,n12,dip);
     /* reading azimuth */
     sf_floatread(az,n12,azin);
+
+    /* reading velocity */
+    vel = sf_floatalloc(n12);
+    sf_floatread(vel,n12,velFile);
 
     piintface_init(nt,nx,ny, dt,dx,dy, ot,ox,oy, passthr, v_1,v_2,v_3,v_4,
                    eps,epst2, nt2, vel, rho, antialias[0], nw, pp1, pp2,

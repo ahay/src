@@ -186,4 +186,6 @@ void sf_copyaxis(     sf_axis AA,
 	sf_setn(AA, sf_n(BB));
 	sf_seto(AA, sf_o(BB));
 	sf_setd(AA, sf_d(BB));
+	if(NULL != BB->l) sf_setlabel(AA,BB->l);
+	if(NULL != BB->u) sf_setunit(AA,BB->u);
 }

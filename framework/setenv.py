@@ -72,6 +72,7 @@ def shell_script(target, source=None, env=None):
     shenv = {
         'RSFROOT':(rsfroot,'Madagascar installation directory'),
         'PYTHONPATH':(pypath,'Python packages'),
+        'JULIA_LOAD_PATH':(ldlibpath,'Julia API'),
         'DATAPATH':(datapath,'binary data files part of RSF datasets'),
         'LD_LIBRARY_PATH':(ldlibpath,'shared object files'),
         'MANPATH':(manpath,'manual pages'),
@@ -79,7 +80,7 @@ def shell_script(target, source=None, env=None):
         'PATH':('$RSFROOT/bin:$PATH','executables')
         }
 
-    keys = ('RSFROOT','RSFSRC','PYTHONPATH','DATAPATH',
+    keys = ('RSFROOT','RSFSRC','PYTHONPATH','JULIA_LOAD_PATH', 'DATAPATH',
             'MANPATH','LD_LIBRARY_PATH','PATH')
 
     myrc = ''
@@ -88,7 +89,7 @@ def shell_script(target, source=None, env=None):
         value = shenv[par][0]
         if par != 'RSFROOT':
             value = value.replace(rsfroot+os.sep,'$RSFROOT'+os.sep)
-        redefine =  (par == 'PYTHONPATH' or par == 'LD_LIBRARY_PATH')
+        redefine =  (par == 'PYTHONPATH' or par == 'JULIA_LOAD_PATH' or par == 'LD_LIBRARY_PATH')
 
         myrc += '\n# Path for %s\n' % comment
         if shell == 'csh':

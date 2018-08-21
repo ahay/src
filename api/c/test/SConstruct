@@ -10,5 +10,6 @@ Flow('test.attr','clip.exe',
 
 Program('afdm.c')
 
+End()
 
         

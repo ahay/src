@@ -6,7 +6,7 @@ try:
     srcroot = '../..' # cwd is RSFSRC/build/user/ivlad
     Import('env bindir libdir pkgdir')
 except:
-    print "scons command launched in the local directory"
+    print("scons command launched in the local directory")
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')
     sys.path.append(os.path.join(srcroot,'framework'))

@@ -31,7 +31,7 @@
 #endif
 
 static int nt2, nt, nx, ny, n12, nt12, apt;
-static float ot, ox, oy, dt, dx, dy, v_1, v_2, v_3, v_4, eps, epst2, passthr, vel, rho, angle;
+static float ot, ox, oy, dt, dx, dy, v_1, v_2, v_3, v_4, eps, epst2, passthr, *vel, rho, angle;
 static float *model, *datat2, *outputt2, *data, *output, *pwddata;
 static char antialias;
 static bool domod, sm, dopi, omp;
@@ -48,7 +48,7 @@ void piintface_init(int n1, int n2, int n3  /* data size */,
 		 float feps /* damper for pi */,
                  float fepst2 /* damper for t2warp */,
                  int fnt2 /* new axis length for t2warp */,
-                 float fvel /* velocity for Kirchhoff */,
+                 float *fvel /* velocity for Kirchhoff */,
                  float frho /* phase factor for Kirchhoff */,
                  char fantialias /* Kirchoff antialiasing method */,
                  int nw /* [1,2,3] accuracy order for PWD */,

@@ -49,7 +49,7 @@ if env.get('SWIG') and env.get('NUMPY'):
         pythinc.append(os.path.join(numpy_loc,'numarray','numpy'))
         pythinc.append(os.path.join(numpy_loc,'core','include'))
     except:
-        print "\n\n\tPlease install numpy\n\n"
+        print("\n\n\tPlease install numpy\n\n")
         Exit(1)
 
     import distutils.sysconfig

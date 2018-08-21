@@ -17,3 +17,4 @@ proj.Program(['matmult_test.cc',
 proj.Program(['afdm.cc','vai.cc'])
 
         
+proj.End()

@@ -66,7 +66,7 @@ if lapack:
 cctargets.build_cc(env_cc,glob_build,srcroot,bindir,libdir,pkgdir)
 
 # ------------------------ COMPILE CUDA PROGRAMS ---------------------------
-cuflags = '-gencode arch=compute_20,code=sm_20 --x=cu'
+cuflags = env.get('CUDAFLAGS')
 culinkflags = ''
 cupppath = ''
 culibpath = ''

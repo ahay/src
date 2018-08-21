@@ -974,7 +974,7 @@ def blas(context):
     context.Message("checking for BLAS ... ")
     text = '''
     #ifdef __APPLE__
-    #include <Accelerate/Accelerate.h>
+    #include <Accelerate/Accelerate.h>   
     #else
     #ifdef HAVE_MKL
     #include <mkl.h>
@@ -1219,6 +1219,7 @@ def cuda(context):
 
     path = ':'.join([os.environ['PATH'],os.path.join(CUDA_TOOLKIT_PATH,'bin')])
     nvcc = context.env.get('NVCC',WhereIs('nvcc',path))
+    cudaflags = context.env.get('CUDAFLAGS','--x=cu')
     if nvcc:
         context.Message("checking if %s works ... " % nvcc)
         # Try compiling with nvcc instead of cc
@@ -1235,7 +1236,7 @@ def cuda(context):
         libpath = context.env.get('LIBPATH')
         linkflags = context.env.get('LINKFLAGS')
         context.env['CC'] = nvcc
-        context.env['CFLAGS'] = '--x=cu'
+        context.env['CFLAGS'] = cudaflags
         context.env['LIBS'] = ['cudart']
         context.env['LIBPATH'] = filter(os.path.isdir,
                                         [os.path.join(CUDA_TOOLKIT_PATH,'lib64'),
@@ -1253,9 +1254,11 @@ def cuda(context):
     if res:
         context.Result(res)
         context.env['NVCC'] = nvcc
+        context.env['CUDAFLAGS'] = cudaflags
     else:
         context.Result(context_failure)
         context.env['NVCC'] = None
+        context.env['CUDAFLAGS'] = None
 
 pkg['fftw'] = {'fedora':'fftw-devel',
                'rhel':'fftw-devel',
@@ -2186,7 +2189,7 @@ def swig(context):
         'that cannot be built with -static-intel',
         'yellow_on_red')
     context.Message("checking for SWIG ... ")
-    if 'swig' in Environment().get('TOOLS'):
+    if 'swig' in context.env.get('TOOLS'):
         swigx = WhereIs('swig')
         context.Result(swigx)
         context.env['SWIG'] = swigx
@@ -2401,6 +2404,7 @@ def options(file):
     opts.Add('MINESJTK','Location of edu_mines_jtk.jar')
     opts.Add('CUDA_TOOLKIT_PATH','Location of CUDA toolkit')
     opts.Add('NVCC','NVIDIA C compiler')
+    opts.Add('CUDAFLAGS','NVCC flags')
     opts.Add('EPYDOC','RSF Python package HTML documentation')
     opts.Add('NUMPY','Existence of numpy package')
     opts.Add('SWIG','Location of SWIG')

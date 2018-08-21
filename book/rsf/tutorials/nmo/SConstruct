@@ -9,7 +9,7 @@ def npz2rsf(target=None,source=None,env=None):
     data = numpy.load(str(source[0]))
     rsf = m8r.Output(str(target[0]))
     dt = data['dt']
-    print dt, type(dt)
+    print(dt, type(dt))
     rsf.put("d2",float(dt))
     rsf.put("o2",0.0)
     rsf.put("label2","Time")
