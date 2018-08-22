@@ -1,4 +1,3 @@
-__precompile__()
 """
     m8r.jl
 
@@ -62,7 +61,7 @@ function __init__()
     else
         append!(argv,ARGS)
     end
-    ccall((:sf_init,"libdrsf"),Void,(Int32,Ptr{Ptr{UInt8}}),length(argv),argv)
+    ccall((:sf_init,"libdrsf"),Cvoid,(Int32,Ptr{Ptr{UInt8}}),length(argv),argv)
 end
 
 function input(tag::String; temp=false)
@@ -93,7 +92,7 @@ function esize(file::RSFFile)
 end
 
 function setformat(file::RSFFile,format::String)
-    ccall((:sf_setformat,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8}),file.rsf,format)
+    ccall((:sf_setformat,"libdrsf"),Cvoid,(Ptr{UInt8},Ptr{UInt8}),file.rsf,format)
 end
 
 function histint(file::RSFFile,name::String)
@@ -153,80 +152,80 @@ end
 
 function ucharread(arr::Array{UInt8,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_ucharread,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_ucharread,"libdrsf"),Cvoid,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function charread(arr::Array{UInt8,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_charread,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_charread,"libdrsf"),Cvoid,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function intread(arr::Array{Int32,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_intread,"libdrsf"),Void,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_intread,"libdrsf"),Cvoid,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function floatread(arr::Array{Float32,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_floatread,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_floatread,"libdrsf"),Cvoid,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function complexread(arr::Array{Complex64,1},size::Integer,file::RSFFile)
+function complexread(arr::Array{ComplexF32,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_complexread,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_complexread,"libdrsf"),Cvoid,(Ptr{ComplexF32},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function shortread(arr::Array{Int16,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_shortread,"libdrsf"),Void,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_shortread,"libdrsf"),Cvoid,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function ucharwrite(arr::Array{UInt8,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_ucharwrite,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_ucharwrite,"libdrsf"),Cvoid,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function charwrite(arr::Array{UInt8,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_charwrite,"libdrsf"),Void,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_charwrite,"libdrsf"),Cvoid,(Ptr{UInt8},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function intwrite(arr::Array{Int32,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_intwrite,"libdrsf"),Void,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_intwrite,"libdrsf"),Cvoid,(Ptr{Cint},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function floatwrite(arr::Array{Float32,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_floatwrite,"libdrsf"),Void,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_floatwrite,"libdrsf"),Cvoid,(Ptr{Cfloat},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
-function complexwrite(arr::Array{Complex64,1},size::Integer,file::RSFFile)
+function complexwrite(arr::Array{ComplexF32,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_complexwrite,"libdrsf"),Void,(Ptr{Complex64},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_complexwrite,"libdrsf"),Cvoid,(Ptr{ComplexF32},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function shortwrite(arr::Array{Int16,1},size::Integer,file::RSFFile)
     size::Csize_t = size
-    ccall((:sf_complexwrite,"libdrsf"),Void,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
+    ccall((:sf_complexwrite,"libdrsf"),Cvoid,(Ptr{Cshort},Csize_t,Ptr{UInt8}),arr,size,file.rsf)
 end
 
 function putint(file::RSFFile,name::String,val::Integer)
     val::Cint = val
-    ccall((:sf_putint,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Cint),file.rsf,name,val)
+    ccall((:sf_putint,"libdrsf"),Cvoid,(Ptr{UInt8},Ptr{UInt8},Cint),file.rsf,name,val)
 end
 
 function putfloat(file::RSFFile,name::String,val::Real)
     val::Cfloat = val
-    ccall((:sf_putfloat,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Cfloat),file.rsf,name,val)
+    ccall((:sf_putfloat,"libdrsf"),Cvoid,(Ptr{UInt8},Ptr{UInt8},Cfloat),file.rsf,name,val)
 end
 
 function putstring(file::RSFFile,name::String,val::String)
-    ccall((:sf_putstring,"libdrsf"),Void,(Ptr{UInt8},Ptr{UInt8},Ptr{UInt8}),file.rsf,name,val)
+    ccall((:sf_putstring,"libdrsf"),Cvoid,(Ptr{UInt8},Ptr{UInt8},Ptr{UInt8}),file.rsf,name,val)
 end
 
 function close(file::RSFFile)
-    ccall((:sf_fileclose,"libdrsf"), Void, (Ptr{UInt8},), file.rsf)
+    ccall((:sf_fileclose,"libdrsf"), Cvoid, (Ptr{UInt8},), file.rsf)
 end
 
 """
@@ -289,7 +288,7 @@ function rsf_read(file::RSFFile; headers_only::Bool=false)
          UInt8, # SF_CHAR
          Int32, # SF_INT
          Float32, # SF_FLOAT
-         Complex64, # SF_COMPLEX
+         ComplexF32, # SF_COMPLEX
          Int16, # SF_SHORT
          Float64, # SF_DOUBLE
          Clong, # SF_LONG (UNIX: Int, Windows: Int32)
@@ -302,10 +301,10 @@ function rsf_read(file::RSFFile; headers_only::Bool=false)
     l = String[]
     u = String[]
     for i in 1:length(n)
-        append!(d, [histfloat(file, "d"*dec(i))])
-        append!(o, [histfloat(file, "o"*dec(i))])
-        append!(l, [histstring(file, "label"*dec(i))])
-        append!(u, [histstring(file, "unit"*dec(i))])
+        append!(d, [histfloat(file, "d"*string(i))])
+        append!(o, [histfloat(file, "o"*string(i))])
+        append!(l, [histstring(file, "label"*string(i))])
+        append!(u, [histstring(file, "unit"*string(i))])
     end
 
     if headers_only
@@ -341,10 +340,10 @@ end
 rsf_read(name::String; headers_only::Bool=false) =
     rsf_read(input(name); headers_only=headers_only)
 
-function rsf_read(stdin::NTuple{2, Base.PipeEndpoint}; headers_only::Bool=false)
-    rin, win = stdin
+function rsf_read(my_stdin::NTuple{2, Base.PipeEndpoint}; headers_only::Bool=false)
+    rin, win = my_stdin
     flush(win)
-    old_stdin = STDIN
+    old_stdin = stdin
     redirect_stdin(rin)
     data = rsf_read("in"; headers_only=headers_only)
     redirect_stdin(old_stdin)
@@ -363,10 +362,6 @@ In this case, the file is temporary with name `temp_tag`.
 
 In all methods, `n`, `d`, `o`, `label`, and `unit` are optional. If given, they
 should be of type `AbstractArray`.
-
-Finally, one may write from a pipe to a file with:
-
-    rsf_write(file::String, stdin::NTuple{2, Base.PipeEndpoint})
 
 !!! warning "Writing to file handles"
 
@@ -446,7 +441,7 @@ function rsf_write(file::RSFFile, dat::AbstractArray, n=nothing, d=nothing,
     elseif eltype(dat) <: AbstractFloat
         floatwrite(Array{Float32}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: Complex
-        complexwrite(Array{Complex64}(vec(dat)), leftsize(file, 0), file)
+        complexwrite(Array{ComplexF32}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: Int16
         shortwrite(Array{Int16}(vec(dat)), leftsize(file, 0), file)
     elseif eltype(dat) <: Integer
@@ -462,7 +457,7 @@ function rsf_write(name::String, dat::AbstractArray, n=nothing, d=nothing,
     # Madagascar's output function inherits the type of the previous input.
     # Therefore, in order to have the correct output type, one must create a
     # dummy input of the correct type.
-    old_stdin = STDIN
+    old_stdin = stdin
     (rin, win) = redirect_stdin()
     spike = joinpath(RSFROOT, "bin", "sfspike")
     if eltype(dat) <: Int16
@@ -477,7 +472,7 @@ function rsf_write(name::String, dat::AbstractArray, n=nothing, d=nothing,
     else
         pipe = `$spike n1=1 out=stdout`
     end
-    Base.wait(spawn(pipeline(pipe, stdout=win)))
+    Base.wait(run(pipeline(pipe, stdout=win), wait=false))
     redirect_stdin(old_stdin)
     rsf_read((rin, win))
 
@@ -496,7 +491,7 @@ rsf_write(dat::AbstractArray; n=nothing, d=nothing, o=nothing, l=nothing,
 function rsf_write(file::RSFFile, tag::String)
     sfmv = joinpath(m8r.RSFROOT, "bin", "sfmv")
     fname = String[file.tag, tag]
-    Base.wait(spawn(`$sfmv $fname`))
+    run(`$sfmv $fname`)
 end
 function rsf_write(tag::String, file::RSFFile)
     return rsf_write(file, tag)
@@ -518,7 +513,7 @@ end
 function delete_rsf(tag::String)
     sfrm = joinpath(m8r.RSFROOT, "bin", "sfrm")
     fname = String[tag]
-    return spawn(`$sfrm $fname`)
+    return run(`$sfrm $fname`, wait=false)
 end
 
 function temporary_rsf()
@@ -534,7 +529,6 @@ end
 if RSFROOT ≠ nothing
     progs = filter(x -> startswith(x, "sf"),
                    readdir(joinpath(RSFROOT, "bin")))
-    #progs = ["sfwindow", "sfspike"]
     for (F, S) = [ (Symbol(p), p) for p in progs ]
         @eval export $F
         @eval begin
@@ -542,13 +536,13 @@ if RSFROOT ≠ nothing
             manfile = joinpath(m8r.RSFROOT, "share", "man", "man1",
                                progname*".1")
             if isfile(manfile)
-                old_stdout = STDOUT
+                old_stdout = stdout
                 (rout, wout) = redirect_stdout()
-                run(pipeline(`man $manfile`, stdout=wout, stdin=DevNull,
-                             stderr=DevNull))
+                run(pipeline(`man $manfile`, stdout=wout, stdin=devnull,
+                             stderr=devnull))
                 Base.close(wout)
-                manpage = convert(String, readavailable(rout))
-                manpage = replace(manpage, "\n", "\n\t")
+                manpage = String(readavailable(rout))
+                manpage = replace(manpage, "\n" => "\n\t")
                 manpage = "\n# RSF Documentation\n"*manpage
                 Base.close(rout)
                 redirect_stdout(old_stdout)
@@ -572,7 +566,7 @@ $manpage"""
                     args = process_args(;kwargs...)
                     progpath = joinpath(RSFROOT, "bin", $S)
                     pipe = `$progpath $args`
-                    Base.wait(spawn(pipeline(pipe, stdout=out_tag)))
+                    run(pipeline(pipe, stdout=out_tag))
                     return input(out_tag; temp=true)
                 end
         end
@@ -581,7 +575,7 @@ $manpage"""
             args = process_args(;kwargs...)
             progpath = joinpath(RSFROOT, "bin", $S)
             pipe = `$progpath $args`
-            Base.wait(spawn(pipeline(pipe, stdin=in_file.tag, stdout=out_tag)))
+            run(pipeline(pipe, stdin=in_file.tag, stdout=out_tag))
             if in_file.temp
                 delete_rsf(in_file.tag)
             end
