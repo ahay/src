@@ -76,10 +76,10 @@ Flow('vel','gg',
 # plot velocity
 Plot('vel',
      '''
-     grey title="" pclip=100 color=G
+     grey title="" pclip=100 color=g
      screenratio=%(ratio)g mean=y %(labelattr)s
      '''%par)
-Result('vel','grey title="" color=G pclip=100 screenratio=%(ratio)g mean=y %(labelattr)s'%par)
+Result('vel','grey title="" color=g pclip=100 screenratio=%(ratio)g mean=y %(labelattr)s'%par)
 # ------------------------------------------------------------
 
 # make eikonal traveltimes
