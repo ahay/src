@@ -475,7 +475,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 		    step_forward(sp0, sp1, vv, false);
 		    add_source(&sxz[is], sp1, 1, &wlt[it], false);
 		    ptr=sp0; sp0=sp1; sp1=ptr;
-		}else rw_snapshot(sp0,it,true); 
+		}else rw_snapshot(sp1,it,true); 
 	    }
 	}else{/* Born modeling/demigration: dd=L mm */	
 	    //==========================================================
