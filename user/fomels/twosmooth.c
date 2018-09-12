@@ -20,18 +20,20 @@
 #include <rsf.h>
 
 static sf_triangle *tr;
-static int n;
+static int n, ns;
 static float *tmp;
 
 void twosmooth_init(int n1, int n2   /* data size */,
-		    int nb1, int nb2 /* smoothing radius */)
+		    int nb1, int nb2 /* smoothing radius */,
+		    int skip /* skip dimensions */)
 /*< initialize >*/
 {
     tr = (sf_triangle*) sf_alloc(2,sizeof(sf_triangle));
     tr[0] = (nb1 > 1)? sf_triangle_init (nb1,n1,false): NULL;
-    tr[1] = (nb1 > 1)? sf_triangle_init (nb2,n2,false): NULL;
+    tr[1] = (nb2 > 1)? sf_triangle_init (nb2,n2,false): NULL;
     n = n1;
-    tmp = sf_floatalloc(n1+n2);
+    ns = skip;
+    tmp = sf_floatalloc(ns+n1+n2);
 }
 
 void twosmooth_close (void)
@@ -60,8 +62,8 @@ void twosmooth_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	}
     }
 
-    if (NULL != tr[0]) sf_smooth2 (tr[0], 0, 1, false, tmp);
-    if (NULL != tr[1]) sf_smooth2 (tr[1], 0, 1, false, tmp+n);
+    if (NULL != tr[0]) sf_smooth2 (tr[0], 0, 1, false, tmp+ns);
+    if (NULL != tr[1]) sf_smooth2 (tr[1], 0, 1, false, tmp+ns+n);
 	
     if (adj) {
 	for (i=0; i < nx; i++) {

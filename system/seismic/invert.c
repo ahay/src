@@ -19,9 +19,9 @@
 
 #include <rsf.h>
 
-void invert(sf_operator oper /* linear operator */, 
+void invert(sf_operator oper /* linear operator */,
+	    sf_operator prec /* preconditioning */,
 	    int niter        /* number of iterations */,
-	    int miter        /* memory */, 
 	    int nx, int ny   /* model and data size */,
 	    float *x         /* model */,
             float *x0        /* inital model */, 
@@ -32,10 +32,14 @@ void invert(sf_operator oper /* linear operator */,
     int iy, iter;
     float norm;
 
-    sf_cdstep_init();
-    sf_solver(oper,sf_cdstep,nx,ny,x,y,niter,
-	      "x0",x0,"nmem",0,"nfreq",miter,"err",error,"verb",true,"end");
-    sf_cdstep_close();
+    if (NULL != prec) {
+	sf_solver_prec(oper,sf_cgstep,prec,nx,nx,ny,x,y,niter,0.0f,
+		  "x0",x0,"err",error,"verb",true,"end");
+    } else {
+	sf_solver(oper,sf_cgstep,nx,ny,x,y,niter,
+		  "x0",x0,"err",error,"verb",true,"end");
+    }
+    sf_cgstep_close();
 
     norm = 0.;
     for (iy=0; iy < ny; iy++) {

@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
-    
+
     if (!sf_getbool("adj",&adj)) adj=true;
     /* yes: migration, no: modeling */
     if (!sf_getbool("hd",&hd)) hd=true;

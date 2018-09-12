@@ -14,8 +14,7 @@ mffit mig3 miss3 nconv nnint nnshape nsmooth nsmooth1 ocparcel
 octentwt ofilp ofsemb ortho patch pchain pchain1 phaserot pick pick2
 pick3 plane poly polyfit regr rdiv rect1 reshape riesz rsin sc
 seislet1 semblance semblancew shape shapeagc shapefill shearer shift1
-similarity similarity2 simenv smoothderw smoothreg smspray stream
-streamiss taupfit tfchain thin timecont timefreq tomo tree trace2
+similarity similarity2 simenv smoothderw smoothreg smspray stfchain stfchain2 stream streamiss taupfit tfchain thin timecont timefreq tomo tree trace2
 tristack tristack2 twofreq2 upgrad var2 velcon velinv vidattr vipmig0
 vofzperm warp1 warpadd warpscan zero zmarch ztrace
 '''
@@ -128,7 +127,7 @@ for conv in ('byte2tif','tif2byte'):
     if root:
         env.Install(bindir,prog)
 
-for prog in Split('agrid burg cburg chebyshev cosft3 fchain grid1 nsmooth1 pcg smspray spray'):
+for prog in Split('agrid burg cburg chebyshev cosft3 fchain grid1 nsmooth1 pcg sfchain smspray spray'):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)

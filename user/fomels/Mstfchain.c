@@ -1,4 +1,4 @@
-/* Find a chain of Fourier weighting and scaling */
+/* Find a symmetric chain of Fourier weighting and scaling */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,7 +19,7 @@
 
 #include <rsf.h>
 
-#include "fchain.h"
+#include "sfchain.h"
 #include "twosmooth.h"
 
 int main(int argc, char* argv[])
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 
     nw = kiss_fft_next_fast_size((n+1)/2)+1;
 
-    n2 = n+nw;
+    n2 = 3*n+nw;
     sf_putint(fwht,"n1",nw);
 
     w = sf_floatalloc(n2);
@@ -48,26 +48,29 @@ int main(int argc, char* argv[])
 
     x = sf_floatalloc(n);
     y = sf_floatalloc(n);
-    r = sf_floatalloc(n);
+    r = sf_floatalloc(3*n);
 
     if (!sf_getint("rect",&rect)) rect=1;
     /* smoothing in time */
     if (!sf_getint("frect",&frect)) frect=1;
     /* smoothing in frequency */
 
-    twosmooth_init(n,nw,rect,frect,0);
+    twosmooth_init(n,nw,rect,frect,2*n);
 
     sf_floatread(x,n,src);
     sf_floatread(y,n,tgt);
 
-    fchain_init(n,nw,w,w+n,x);
+    sfchain_init(n,nw,w+2*n,w+3*n,w,w+n,x);
 
-    sf_conjgrad_init(n2, n2, n, n, 1., 1.e-6, true, false);
+    sf_conjgrad_init(n2, n2, 3*n, 3*n, 1., 1.e-6, true, false);
 
     p = sf_floatalloc(n2);
 
     /* initialize */
-    for (i=0; i < n2; i++) {
+    for (i=0; i < 2*n; i++) {
+	w[i] = 0.0f;
+    }
+    for (i=2*n; i < n2; i++) {
 	w[i] = 1.0f;
     }
 
@@ -77,24 +80,20 @@ int main(int argc, char* argv[])
     /* number of linear iterations */
 
     for (iter=0; iter < niter; iter++) {
-	fchain_apply(r);
+	sfchain_res(y,r);
 	
-	for (i=0; i < n; i++) {
-	    r[i] = y[i] - r[i];
-	}
-	
-	sf_conjgrad(NULL, fchain_lop,twosmooth_lop,p,dw,r,liter);
+	sf_conjgrad(NULL, sfchain_lop,twosmooth_lop,p,dw,r,liter);
 	
 	for (i=0; i < n2; i++) {
 	    w[i] += dw[i];
 	}
     }
 
-    sf_floatwrite(w,n,wht);
-    sf_floatwrite(w+n,nw,fwht);
+    sf_floatwrite(w+2*n,n,wht);
+    sf_floatwrite(w+3*n,nw,fwht);
     
-    fchain_apply(r);
-    sf_floatwrite(r,n,mch);
+    sfchain_apply(y);
+    sf_floatwrite(y,n,mch);
 
     exit(0);
 }
