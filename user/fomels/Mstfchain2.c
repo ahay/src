@@ -1,4 +1,4 @@
-/* Find a chain of Fourier weighting and scaling */
+/* Find a symmetric chain of Fourier weighting and scaling */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,12 +19,13 @@
 
 #include <rsf.h>
 
-#include "fchain.h"
-#include "twosmooth.h"
+#include "sfchain2.h"
+#include "twosmooth2.h"
 
 int main(int argc, char* argv[])
 {
-    int i, n, nw, n2, rect, frect, iter, niter, liter;
+    int i, n, nw, n2, iter, niter, liter, nt, nx;
+    int rect1, rect2, frect1, frect2; 
     float *w, *dw, *x, *y, *r, *p;
     sf_file wht, fwht, src, tgt, mch;
 
@@ -36,11 +37,13 @@ int main(int argc, char* argv[])
     fwht = sf_output("fweight");
     mch = sf_output("match");
 
-    if (!sf_histint(src,"n1",&n)) sf_error("No n1= in input");
+    if (!sf_histint(src,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histint(src,"n2",&nx)) sf_error("No n2= in input");
+    n = nt*nx;
 
-    nw = kiss_fft_next_fast_size((n+1)/2)+1;
+    nw = kiss_fft_next_fast_size((nt+1)/2)+1;
 
-    n2 = n+nw;
+    n2 = 3*n+nw*nx;
     sf_putint(fwht,"n1",nw);
 
     w = sf_floatalloc(n2);
@@ -48,26 +51,34 @@ int main(int argc, char* argv[])
 
     x = sf_floatalloc(n);
     y = sf_floatalloc(n);
-    r = sf_floatalloc(n);
+    r = sf_floatalloc(3*n);
 
-    if (!sf_getint("rect",&rect)) rect=1;
+    if (!sf_getint("rect1",&rect1)) rect1=1;
+    if (!sf_getint("rect2",&rect2)) rect2=1;
     /* smoothing in time */
-    if (!sf_getint("frect",&frect)) frect=1;
+    if (!sf_getint("frect1",&frect1)) frect1=1;
+    if (!sf_getint("frect2",&frect2)) frect2=1;
     /* smoothing in frequency */
 
-    twosmooth_init(n,nw,rect,frect,0);
+    twosmooth2_init(n,nw*nx,nt,nw,
+		    rect1,rect2,
+		    frect1,frect2,
+		    2*n);
 
     sf_floatread(x,n,src);
     sf_floatread(y,n,tgt);
 
-    fchain_init(n,nw,w,w+n,x);
+    sfchain2_init(nt,nx,nw,w+2*n,w+3*n,w,w+n,x);
 
-    sf_conjgrad_init(n2, n2, n, n, 1., 1.e-6, true, false);
+    sf_conjgrad_init(n2, n2, 3*n, 3*n, 1., 1.e-6, true, false);
 
     p = sf_floatalloc(n2);
 
     /* initialize */
-    for (i=0; i < n2; i++) {
+    for (i=0; i < 2*n; i++) {
+	w[i] = 0.0f;
+    }
+    for (i=2*n; i < n2; i++) {
 	w[i] = 1.0f;
     }
 
@@ -77,24 +88,24 @@ int main(int argc, char* argv[])
     /* number of linear iterations */
 
     for (iter=0; iter < niter; iter++) {
-	fchain_apply(r);
+	sf_warning("Start %d",iter);
 	
-	for (i=0; i < n; i++) {
-	    r[i] = y[i] - r[i];
-	}
+	sfchain2_res(y,r);
+
+	sf_warning("Residual %d",iter);
 	
-	sf_conjgrad(NULL, fchain_lop,twosmooth_lop,p,dw,r,liter);
+	sf_conjgrad(NULL, sfchain2_lop,twosmooth2_lop,p,dw,r,liter);
 	
 	for (i=0; i < n2; i++) {
 	    w[i] += dw[i];
 	}
     }
 
-    sf_floatwrite(w,n,wht);
-    sf_floatwrite(w+n,nw,fwht);
+    sf_floatwrite(w+2*n,n,wht);
+    sf_floatwrite(w+3*n,nw*nx,fwht);
     
-    fchain_apply(r);
-    sf_floatwrite(r,n,mch);
+    sfchain2_apply(y);
+    sf_floatwrite(y,n,mch);
 
     exit(0);
 }

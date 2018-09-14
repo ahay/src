@@ -27,14 +27,14 @@
 #endif
 
 static int nt, nx, ny, n12, apt;
-static float ot, ox, oy, dt, dx, dy, vel, rho, angle;
+static float ot, ox, oy, dt, dx, dy, *vel, rho, angle;
 static char antialias;
 static bool omp;
 
 void testmig3_init(int n1, int n2, int n3  /* data size */, 
 		 float d1, float d2, float d3 /* sampling */,
                  float o1, float o2, float o3 /* origins */,
-                 float fvel /* velocity for Kirchhoff */,
+                 float *fvel /* velocity for Kirchhoff */,
                  float frho /* phase factor for Kirchhoff */,
                  char fantialias /* Kirchoff antialiasing method */,
 	         bool fomp /* OpenMP */,

@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-using Base.Test
+using Test
 
 Base.append!(ARGS, ["int1=1", "float1=1e-99", "str1=ḉ", "bool1=n"])
 
@@ -79,12 +79,12 @@ m8r.ucharwrite(UInt8[1; 2], m8r.leftsize(out, 0), out)
 @test m8r.histstring(out, "unit2") == "µm"
 m8r.close(out)
 
-stdout = STDOUT
+old_stdout = stdout
 (rout, wout) = redirect_stdout()
 run(pipeline(`sfdisfil`, stdin="test_out_uchar.rsf", stdout=wout))
-data = convert(String, readavailable(rout))
+data = String(readavailable(rout))
 close(rout)
-redirect_stdout(stdout)
+redirect_stdout(old_stdout)
 @test data == "   0:    1    2 \n"
 run(`sfrm test_out_uchar.rsf`)
 
@@ -133,12 +133,12 @@ m8r.charwrite(UInt8[1; 2], m8r.leftsize(out, 0), out)
 @test m8r.histstring(out, "unit2") == "µm"
 m8r.close(out)
 
-stdout = STDOUT
+old_stdout = stdout
 (rout, wout) = redirect_stdout()
 run(pipeline(`sfdisfil`, stdin="test_out_char.rsf", stdout=wout))
-data = convert(String, readavailable(rout))
+data = String(readavailable(rout))
 close(rout)
-redirect_stdout(stdout)
+redirect_stdout(old_stdout)
 @test data == "   0:    1    2 \n"
 run(`sfrm test_out_char.rsf`)
 
@@ -196,12 +196,12 @@ m8r.intwrite(Int32[1; 2], Int32[m8r.leftsize(out, 0)][], out)
 @test m8r.histstring(out, "unit2") == "µm"
 m8r.close(out)
 
-stdout = STDOUT
+old_stdout = stdout
 (rout, wout) = redirect_stdout()
 run(pipeline(`sfdisfil`, stdin="test_out_int.rsf", stdout=wout))
-data = convert(String, readavailable(rout))
+data = String(readavailable(rout))
 close(rout)
-redirect_stdout(stdout)
+redirect_stdout(old_stdout)
 @test data == "   0:    1    2 \n"
 run(`sfrm test_out_int.rsf`)
 
@@ -256,12 +256,12 @@ m8r.floatwrite(Float32[1.5; 2.5], Int32[m8r.leftsize(out, 0)][], out)
 @test m8r.histstring(out, "unit2") == "µm"
 m8r.close(out)
 
-stdout = STDOUT
+old_stdout = stdout
 (rout, wout) = redirect_stdout()
 run(pipeline(`sfdisfil`, stdin="test_out_float.rsf", stdout=wout))
-data = convert(String, readavailable(rout))
+data = String(readavailable(rout))
 close(rout)
-redirect_stdout(stdout)
+redirect_stdout(old_stdout)
 @test data == "   0:           1.5          2.5\n"
 run(`sfrm test_out_float.rsf`)
 
@@ -276,7 +276,7 @@ inp = m8r.input("test_inp_complex.rsf")
 @test m8r.size(inp) == (2, 3)
 @test m8r.gettype(inp) == 5
 dat, = rsf_read(inp)
-@test dat == Complex64[1+im im im; im 4+im 2+im]
+@test dat == ComplexF32[1+im im im; im 4+im 2+im]
 
 @test m8r.histint(inp, "n1") == 2
 @test m8r.histint(inp, "n2") == 3
@@ -305,7 +305,7 @@ m8r.putstring(out, "label2", "é")
 m8r.putstring(out, "unit1", "普通话")
 m8r.putstring(out, "unit2", "µm")
 
-m8r.complexwrite(Complex64[0.5+im; 2+im], Int32[m8r.leftsize(out, 0)][], out)
+m8r.complexwrite(ComplexF32[0.5+im; 2+im], Int32[m8r.leftsize(out, 0)][], out)
 
 @test m8r.histint(out, "n1") == 1
 @test m8r.histint(out, "n2") == 2
@@ -319,12 +319,12 @@ m8r.complexwrite(Complex64[0.5+im; 2+im], Int32[m8r.leftsize(out, 0)][], out)
 @test m8r.histstring(out, "unit2") == "µm"
 m8r.close(out)
 
-stdout = STDOUT
+old_stdout = stdout
 (rout, wout) = redirect_stdout()
 run(pipeline(`sfdisfil`, stdin="test_out_complex.rsf", stdout=wout))
-data = convert(String, readavailable(rout))
+data = String(readavailable(rout))
 close(rout)
-redirect_stdout(stdout)
+redirect_stdout(old_stdout)
 @test data == "   0:        0.5,         1i         2,         1i\n"
 run(`sfrm test_out_complex.rsf`)
 
@@ -381,12 +381,12 @@ m8r.shortwrite(Int16[5; 2], Int32[m8r.leftsize(out, 0)][], out)
 @test m8r.histstring(out, "unit2") == "µm"
 m8r.close(out)
 
-stdout = STDOUT
+old_stdout = stdout
 (rout, wout) = redirect_stdout()
 run(pipeline(`sfdisfil`, stdin="test_out_short.rsf", stdout=wout))
-data = convert(String, readavailable(rout))
+data = String(readavailable(rout))
 close(rout)
-redirect_stdout(stdout)
+redirect_stdout(old_stdout)
 @test data == "   0:    5    2 \n"
 run(`sfrm test_out_short.rsf`)
 
@@ -454,7 +454,7 @@ dat, n, d, o, l, u = rsf_read("test_write.rsf")
 @test u == ["s"]
 run(`sfrm test_write.rsf`)
 
-sfspike(;to_file="test_write.rsf", n1=1)
+sfspike(;n1=1) |> x -> rsf_write(x, "test_write.rsf")
 dat, n, d, o, l, u = rsf_read("test_write.rsf")
 @test dat ≈ [1.]
 @test n == [1]

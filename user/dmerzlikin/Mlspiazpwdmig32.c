@@ -1,8 +1,8 @@
-/* Least-Squares 3D Path-Summation Integral, Azimuthal Plane-Wave Destruction and Kirchhoff Modeling/Migration Chain of Operators*/
+/* Least-Squares 3D Path-Summation Integral, Azimuthal Plane-Wave Destruction and Kirchhoff Modeling/Migration Chain of Operators. Shaping is pwddiffuse*/
 #include <rsf.h>
 #include <math.h>
-#include "testmig3.h"
-#include "anisodiffuse.h"
+#include "piintface.h"
+#include "pwddiffuse.h"
 #include "thr.h"
 #ifdef _OPENMP
 #include <omp.h>
@@ -10,22 +10,21 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nt2, nx,ny, i1, i2, i3, n12,nt12, i, j, initer, oniter, niter, repeat, dsnaps;
+    int nt, nt2, nx, ny, n12, i, j, initer, oniter, niter, repeat, dsnaps;
     bool adj, sm, domod, dopi, doanisodiff, dothr, thrflag, doomp, snaps, ch=false;
-    float dt, dt2, dx,dy, ot, ot2, ox,oy, epst2;
+    float dt, dx,dy, ot, ox,oy, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr, thr;
     float *data, *modl, *modl0;
     sf_file inp, out;
     /* PWD parameters */
     int nw, nj1, nj2, apt;
-    float *pp1, *pp2, *az;
+    float *pp1, *pp2, *ipp1, *ipp2, *az;
     float anisoeps, *vx, *vy;
-    sf_file dip, azin;
+    sf_file dip, azin, dipImage;
     /* Kirchhoff params */
     bool verb;
     float *vel, rho;
     float angle;
-    int ix, ih, nh2;
     sf_file velFile, fvx, fvy, snapsf;
     float elapsed, tstart, tend;
     char *antialias;
@@ -36,6 +35,7 @@ int main(int argc, char* argv[])
     inp = sf_input("in");
     out = sf_output("out");
     dip = sf_input ("dip");
+    dipImage = sf_input ("dipim");
     azin = sf_input ("az");
     fvx = sf_input("vx");
     fvy = sf_input("vy");
@@ -185,6 +185,8 @@ int main(int argc, char* argv[])
     /* allocate space for dip */
     pp1 = sf_floatalloc(n12);
     pp2 = sf_floatalloc(n12);
+    ipp1 = sf_floatalloc(n12);
+    ipp2 = sf_floatalloc(n12);
     /* allocate space for azimuth */
     az = sf_floatalloc(n12);
 
@@ -194,6 +196,10 @@ int main(int argc, char* argv[])
     sf_floatread(pp1,n12,dip);
     /* reading xline dip */
     sf_floatread(pp2,n12,dip);
+    /* reading iline dip image domain */
+    sf_floatread(ipp1,n12,dipImage);
+    /* reading xline dip image domain*/
+    sf_floatread(ipp2,n12,dipImage);
     /* reading azimuth */
     sf_floatread(az,n12,azin);
 
@@ -203,39 +209,32 @@ int main(int argc, char* argv[])
     vy = sf_floatalloc(n12);
     sf_floatread(vy,n12,fvy);
 
-    /* allocating and reading velocity */
+    /* read velocity */
     vel = sf_floatalloc(n12);
     sf_floatread(vel,n12,velFile);
 
-    /*piintface_init(nt,nx,ny, dt,dx,dy, ot,ox,oy, passthr, v_1,v_2,v_3,v_4,
+    piintface_init(nt,nx,ny, dt,dx,dy, ot,ox,oy, passthr, v_1,v_2,v_3,v_4,
                    eps,epst2, nt2, vel, rho, antialias[0], nw, pp1, pp2,
-		   az, nj1, nj2, domod, sm, dopi, doomp, apt, angle); */
+		   az, nj1, nj2, domod, sm, dopi, doomp, apt, angle);
 
     /* outer iterations loop */
     for (j=0; j<oniter; j++){
 
 	if (j == 0) {
 
-		testmig3_init(nt,nx,ny, dt,dx,dy, ot,ox,oy, vel, rho, antialias[0],
-				doomp, apt, angle);
-
-		sf_solver(testmig3_lop /* chain of operators loop */,
+		sf_solver(piintface_lop /* chain of operators loop */,
 		      sf_cgstep /* conjugate gradients step */,
 		      n12,n12 /* model and data sizes */,
 	              modl /* inverted model */,
 		      data /* fitted data */,
 		      initer /* number of iterations */,
-		      //"x0", modl0 /* starting model */,
 		      "verb",true,"end");
 
 		sf_cgstep_close();
 
 	} else {
 
-		testmig3_init(nt,nx,ny, dt,dx,dy, ot,ox,oy, vel, rho, antialias[0],
-				doomp, apt, angle);
-
-		sf_solver(testmig3_lop /* chain of operators loop */,
+		sf_solver(piintface_lop /* chain of operators loop */,
 		      sf_cgstep /* conjugate gradients step */,
 		      n12,n12 /* model and data sizes */,
 	              modl /* inverted model */,
@@ -248,26 +247,7 @@ int main(int argc, char* argv[])
 
 	}
 
-	for (i3=0; i3<ny; i3++){
-
-		for (i2=0; i2<nx; i2++){
-		
-			for (i1=0; i1<nt; i1++){
-
-				//if (i1*dt<0.1) modl[i3*nx*nt + i2*nt + i1] = 0.0;	
-
-				if ( ((i1*dt<0.1) && (fabsf(modl[i3*nx*nt + i2*nt + i1]) > 0.01)) && !ch){
-					sf_warning("modl[i3*nx*nt + i2*nt + i1]=%f;",modl[i3*nx*nt + i2*nt + i1]);
-					ch = true;
-				}
-
-			}/* nt */
-
-		}/* nx */
-	
-	}/* ny */
-
-	/* Writing out snapshot */
+	/* Writing out snapshots */
 	if ((snaps) && (0==j%dsnaps) && (snapsf != NULL)){
 
 		sf_floatwrite(modl,n12,snapsf);
@@ -290,32 +270,44 @@ int main(int argc, char* argv[])
 	/* Anisotropic diffusion regularization */
 	if (doanisodiff){
 		
-		anisodiffuse_init(nt,nx,ny /* data size */, 
-		      vx,vy /* parallel to edges vector components */,
-		      niter /* number of iterations */,
-		      repeat /* number of smoothing iterations */,
-		      anisoeps /* regularization */);
+		//anisodiffuse_init(nt,nx,ny /* data size */, 
+		//      vx,vy /* parallel to edges vector components */,
+		//      niter /* number of iterations */,
+		//      repeat /* number of smoothing iterations */,
+		//      anisoeps /* regularization */);
 
-		anisodiffuse_lop(n12,n12,modl,modl0);
+		pwddiffuse_init(nt,nx,ny /* data size */,
+		 		ipp1,ipp2 /* inline and crossline dips in the image domain */, 
+		 		nw,nj1,nj2 /* PWD parameters: I leave them the same as for the data domain (piintface.c) */,
+		 		vx,vy /* parallel to edges vector components */,
+		 		niter /* number of iterations */,
+		 		repeat /* number of smoothing iterations */,
+		 		anisoeps /* regularization */);
+
+		//anisodiffuse_lop(n12,n12,modl,modl0);
+
+		pwddiffuse_lop(n12,n12,modl,modl0);
 
 	} else {
 
-	/* modl0 = AnisoDIFF( THR(modl) ); Copying to the starting model*/
-	for (i=0; i<n12; i++){
+		/* modl0 = AnisoDIFF( THR(modl) ); Copying to the starting model*/
+		for (i=0; i<n12; i++){
 
-		modl0[i] = modl[i];	
+			modl0[i] = modl[i];	
 
-		modl[i] = 0.0;
+			modl[i] = 0.0;
 
-	}}
+		}
+
+	}
 
     }/* outer */
 
     sf_floatwrite(modl0,n12,out);
 
-    //piintface_close();
+    piintface_close();
 
-    anisodiffuse_close();
+    pwddiffuse_close();
 
     exit(0);
 

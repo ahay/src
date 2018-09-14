@@ -1,44 +1,44 @@
 # ------------------------------------------------------------
 # strings
 
-a='StPetersburg'
+a='Golden'
 len(a)
 a[0]
-a[4:7]
+a[0:4]
 
-b=a+' '+'workshop'
+b = a + ' ' + 'workshop'
 print b
 
-c=b+2014
-c=b+' '+str(2014)
+c = b + 2018
+c = b + ' '+str(2018)
 print c
 
 # ------------------------------------------------------------
 # lists
 
-d = ['StPetersburg', 'workshop']
+d = ['Golden', 'workshop']
 len(d)
 print d[0]
 print d[1]
 
-d.append('2014')
+d.append('2018')
 print d
 
 # ------------------------------------------------------------
 # tuple = a sequence of immutable Python objects. 
-t = ('StPetersburg', 'workshop')
+t = ('Golden', 'workshop')
 
-t = t + (2014,)
+t = t + (2018,)
 print t
 
 # ------------------------------------------------------------
 # dictionaries
 
-e={'what':'workshop','where':'StPetersburg','when':2014}
+e = {'what':'workshop','where':'Golden','when':2018}
 print e
 print e['where']+' '+e['what']+' '+str(e['when'])
 
-f=dict(what='workshop',where='Melbourne',when=2013)
+f = dict(what='workshop',where='Melbourne',when=2013)
 print f
 print f['where']+' '+f['what']+' '+str(f['when'])
 
@@ -76,12 +76,12 @@ except:
 # functions
 
 def m8rschool(year):
-    workshops=dict(StPetersburg=2014,Melbourne=2013)
+    workshops = dict(Golden=2018,Melbourne=2013)
     for key in workshops.keys():
         if workshops[key]==year:
             return key            
 
-print m8rschool(2014)
+print m8rschool(2018)
 
 
 def increment(a,b=5):
@@ -90,5 +90,5 @@ def increment(a,b=5):
 # ------------------------------------------------------------
 # modules
 import math
-x=math.sqrt(increment(4))
+x = math.sqrt(increment(4))
 print x

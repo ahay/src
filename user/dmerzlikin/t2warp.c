@@ -62,7 +62,7 @@ void t2warp(bool adj, bool add, int nx, int ny, float *x, float *y)
 {
     int i3;
 
-    if (nx != n3*n1 || ny != n3*n2) sf_error("%s: wrong dicmensions",__FILE__);
+    if (nx != n3*n1 || ny != n3*n2) sf_error("%s: fwd adj=%d wrong dimensions",__FILE__,adj);
 
     for (i3=0; i3 < n3; i3++) {
 	if (adj) {
@@ -71,6 +71,7 @@ void t2warp(bool adj, bool add, int nx, int ny, float *x, float *y)
 	    sf_stretch4_invert (add,mo,y+i3*n2,x+i3*n1);
 	}
     }
+
 }
 
 void t2warp_inv(bool adj, bool add, int nx, int ny, float *x, float *y)
@@ -78,7 +79,7 @@ void t2warp_inv(bool adj, bool add, int nx, int ny, float *x, float *y)
 {
     int i3;
 
-    if (nx != n3*n2 || ny != n3*n1) sf_error("%s: wrong dicmensions",__FILE__);
+    if (nx != n3*n2 || ny != n3*n1) sf_error("%s: inv adj=%d wrong dimensions",__FILE__,adj);
 
     for (i3=0; i3 < n3; i3++) {
 	if (adj) {

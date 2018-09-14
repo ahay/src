@@ -1,4 +1,4 @@
-/* 3-D Kirchhoff time migration with antialiasing with adjoint flag. */
+/* 2-D Kirchhoff time migration with antialiasing with adjoint flag. */
 /*
   Copyright (C) 2007 University of Texas at Austin
   
@@ -18,22 +18,22 @@
 */
 #include <rsf.h>
 
-#include "mig3.h" 
+#include "mig2.h" 
 
 int main(int argc, char* argv[])
 {
-    int nt, nx, ny, n1, ntr, apt;
+    int nt, nx, ny, n1, ntr, apt, i;
     char *antialias;
     float *trace, *out, rho, angle;
     float dx, dy, ox, oy, dt,ot;
     float *vel;
-    bool adj, doomp;
-    sf_file in, mig, velFile;
+    bool adj, doomp, ps, hd, dd;
+    sf_file in, mig, fvel;
 
     sf_init (argc,argv);
     in = sf_input("in");
     mig = sf_output("out");
-    velFile = sf_input("vel");
+    fvel = sf_input("vel");
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     ntr = sf_leftsize(in,1);
@@ -46,12 +46,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dx)) sf_error("Need d2=");// sf_putfloat(mig,"d2",dx);
     if (!sf_histfloat(in,"o2",&ox)) sf_error("Need o2=");// sf_putfloat(mig,"o2",ox);
 
-    if (!sf_histint(in,"n3",&ny))   sf_error("Need n3=");// sf_putint(mig,"n3",ny);
-    /* new crossline dimension size */
-    if (!sf_histfloat(in,"d3",&dy)) sf_error("Need d3=");// sf_putfloat(mig,"d3",dy);
-    if (!sf_histfloat(in,"o3",&oy)) sf_error("Need o3=");// sf_putfloat(mig,"o3",oy);
-
-    if (ntr != nx*ny) sf_error("Dimensions are inconsistent");
+    if (ntr != nx) sf_error("Dimensions are inconsistent");
 
     //if (!sf_getint("n1",&n1))   sf_error("Need n1="); sf_putint(mig,"n1",n1);
     //n1 = nt;
@@ -60,7 +55,10 @@ int main(int argc, char* argv[])
     if (!sf_getbool("adj",&adj)) adj=true;
     /* adjoint flag */
 
-    if (!sf_getbool("doomp",&doomp)) doomp=false;
+    if (!sf_getbool("ps",&ps)) ps=true;
+    /* spherical divergence */
+
+    if (!sf_getbool("doomp",&doomp)) doomp=true;
     /* perform OpenMP optimization */
 
     if (NULL == (antialias = sf_getstring("antialias"))) antialias="triangle";
@@ -70,41 +68,61 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("rho",&rho)) rho = 1.-1./nt;
     /* Leaky integration constant */
 
+    if (!sf_getbool("hd",&hd)) hd=true;
+    /* half derivative */
+
     if (!sf_getint("apt",&apt)) apt = nx;
     /* integral aperture */
 
     if (!sf_getfloat("angle",&angle)) angle = 90.0;
     /* angle aperture */
 
-    //if (!sf_getfloat("vel",&vel)) sf_error("Need vel=");
+    if (!sf_getbool("dd",&dd)) dd = true;
+    /* differentiation in the data domain */
+    
     /* migration velocity */
     
-    trace = sf_floatalloc(nt*nx*ny);
-    out = sf_floatalloc(nt*nx*ny);
+    trace = sf_floatalloc(nt*nx);
+    out = sf_floatalloc(nt*nx);
 
     if (adj) {
 
-    	sf_floatread(trace,nt*nx*ny,in);
+    	sf_floatread(trace,nt*nx,in);
 
     } else {
 
-    	sf_floatread(out,nt*nx*ny,in);
+    	sf_floatread(out,nt*nx,in);
 
     }
 
-    /* allocating and reading velocity */
-    vel = sf_floatalloc(nt*nx*ny);
-    sf_floatread(vel,nt*nx*ny,velFile);
+    vel = sf_floatalloc(nt*nx);
+    sf_floatread(vel,nt*nx,fvel);
 
-    mig3_lop (adj,false, nt,nx,ny, dt,dx,dy, ot,ox,oy, trace, out, vel, rho, antialias[0],doomp,apt,angle);
+    //sf_warning("be4 mig2_lop");
+
+    mig2_lop (adj,false, nt,nx, dt,dx, ot,ox, trace, out, vel, rho, hd, antialias[0],doomp,apt,angle,ps,dd);
+
+    //sf_warning("4ter mig2_lop");
 
     if (adj == true){
 
-    	sf_floatwrite(out,nt*nx*ny,mig);
+	/*for (i=0; i<nt*nx; i++){
+
+		out[i] = trace[i];
+
+	}*/ 
+
+    	sf_floatwrite(out,nt*nx,mig);
  
    } else { 
 
-   	sf_floatwrite(trace,nt*nx*ny,mig);
+	/*for (i=0; i<nt*nx; i++){
+
+		trace[i] = out[i];
+
+	}*/ 
+
+   	sf_floatwrite(trace,nt*nx,mig);
 
    }     
 
