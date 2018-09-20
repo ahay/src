@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfclip2', 'sflapfill', 'sfgrey', 'sfigrad', 'sftransp', 'sfadd', 'sfcat', 'sfput', 'sfmul', 'sfstack', 'sfdiv', 'sfscale', 'sfgraph', 'sfwilson', 'sfhelicon', 'sfspike', 'sfwindow']
+data=['https://raw.githubusercontent.com/agile-geoscience/notebooks/master/data/st-helens_after.txt']
+size=  614375428
