@@ -23,6 +23,20 @@ static float slow_median(int n, float* list)
     return list[n/2];
 }
 
+static float mean(int n, float *a)
+{
+    int i;
+    float t;
+
+    t=0.;
+    for (i=0; i < n; i++) {
+	t += a[i];
+    }
+    t /= n;
+    
+    return t;
+}
+
 int main(int argc, char* argv[]) 
 {
     int w1, w2, nw, s1,s2, j1,j2, i1,i2,i3, n1,n2,n3;
@@ -81,8 +95,10 @@ int main(int argc, char* argv[])
 			    slow_median(nw,win[0]);
 			break;
 		    case 'm': /* mean */
+			signal[i2][i1] = mean(nw,win[0]);
+			break;
 		    default:
-			/* !!! ADD CODE !!! */
+			sf_error("Unknown method \"%s\"",how);
 			break;
 		}
 	    }
