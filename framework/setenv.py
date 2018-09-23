@@ -39,7 +39,7 @@ def get_local_site_pkgs(root=None, verb=False):
         local_site_pkgs = os.path.join(root,'lib')
 
     if verb:
-        print local_site_pkgs
+        print(local_site_pkgs)
         return 0 # UNIX success
     else:
         return local_site_pkgs
