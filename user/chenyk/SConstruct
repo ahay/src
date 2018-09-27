@@ -81,7 +81,7 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    prog = env.Program(prog,[x + '.c' for x in sources])
     if root:
         env.Install(bindir,prog)
 
@@ -94,7 +94,7 @@ ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
     if 'c++' in env.get('API',[]):
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources),
+        prog = env.Program(prog,[x + '.cc' for x in sources],
                            LIBS=[dynpre+'rsf++']+libs)
         if root:
             install = env.Install(bindir,prog)
@@ -127,17 +127,17 @@ for prog in mpimains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     if lapack:	
-    	if mpicc and mpilib:
-           env.Prepend(CPPPATH=[mpicpp],
+        if mpicc and mpilib:
+            env.Prepend(CPPPATH=[mpicpp],
                     LIBPATH=[mpilib],
                     LIBS='')
-           prog = env.Program(prog,
-                           map(lambda x: x + '.c',sources),
-                           CC=mpicc,LIBS=[libs,'X11'])
-    	else:
-	   prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+            prog = env.Program(prog,
+                    [x + '.c' for x in sources],
+                    CC=mpicc,LIBS=[libs,'X11'])
+        else:
+            prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
         if root:
-           env.Install(bindir,prog)
+            env.Install(bindir,prog)
 
 ######################################################################
 # compiling CUDA programs
@@ -179,7 +179,7 @@ for prog in tmains:
     	if prog=='clapack':
            sources.append('solver')
     	bldutil.depends(env,sources,'Test'+prog)
-    	sources = map(lambda x: x + '.o',sources)
+    	sources = [x + '.o' for x in sources]
     	env.Object('Test' + prog + '.c')
     	prog=env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
 
@@ -201,9 +201,9 @@ if root:
 	user = os.path.basename(os.getcwd())
 	main = 'sf%s.py' % user
 	
-	docs += map(lambda prog: env.Doc(prog,'M' + prog),mains)  + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) + \
-		map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+	docs += [env.Doc(prog,'M' + prog) for prog in mains]  + \
+           [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in ccmains] + \
+		[env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains]
 	env.Depends(docs,'#/framework/rsf/doc.py')	
 	doc = env.RSF_Docmerge(main,docs)
 	env.Install(pkgdir,doc)

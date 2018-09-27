@@ -31,7 +31,7 @@ src = Glob('[a-z]*.c')
 
 sse = None
 #sse = env.get('SSE')
-if string.rfind(env.get('CC'),'icc') >= 0:
+if env.get('CC').rfind('icc') >= 0:
     env.Append(CCFLAGS=['-restrict','-wd188'])
 threads = env.get('PTHREADS')
 if threads:
@@ -66,7 +66,7 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    prog = env.Program(prog,[x + '.c' for x in sources])
     if root:
         env.Install(bindir,prog)
 
@@ -77,7 +77,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = [env.Doc(prog,'M' + prog) for prog in mains]
     env.Depends(docs,'#/framework/rsf/doc.py')
 
     doc = env.RSF_Docmerge(main,docs)

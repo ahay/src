@@ -59,7 +59,7 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     env.StaticObject('M'+prog+'.c')
-    prog = env.Program(prog,map(lambda x: x + '.o',sources))
+    prog = env.Program(prog,[x + '.o' for x in sources])
     if root:
         env.Install(bindir,prog)
 
@@ -69,13 +69,13 @@ if mpicc and fftw:
         sources = ['M' + prog]
         bldutil.depends(env,sources,'M'+prog)
         env.StaticObject('M'+prog+'.c',CC=mpicc)
-    	prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc)
+        prog = env.Program(prog,[x + '.o' for x in sources],CC=mpicc)
         if root:
             env.Install(bindir,prog)
 else:
     place += mpi_progs
     for prog in mpi_mains:
-	prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+        prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
         if root:
             env.Install(bindir,prog)
 
@@ -87,8 +87,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),
-               mains+mpi_mains+Split(place))
+    docs = [env.Doc(prog,'M' + prog) for prog in mains+mpi_mains+Split(place)]
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

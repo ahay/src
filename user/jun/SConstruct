@@ -29,7 +29,7 @@ for prog in mains:
 
     if 'f90' in api and F90:
         bldutil.depends90(env,sources,'M'+prog)
-        prog = env.Program(prog,map(lambda x: x + '.f90',sources))
+        prog = env.Program(prog,[x + '.f90' for x in sources])
     else:
         prog = env.RSF_Place('sf'+prog,None,var='F90')
         
@@ -43,7 +43,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90',SCANNERS=[]),mains)
+    docs = [env.Doc(prog,'M'+prog+'.f90',lang='f90',SCANNERS=[]) for prog in mains]
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

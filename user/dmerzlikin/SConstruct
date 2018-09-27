@@ -46,7 +46,7 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends (env, sources, 'M'+prog)
-    prog = env.Program (prog, map (lambda x: x + '.c',sources))
+    prog = env.Program (prog, [x + '.c' for x in sources])
     if root:
         env.Install (bindir, prog)
 
@@ -54,12 +54,12 @@ ccmains = Split(ccprogs)
 subs = Split(subs)
 
 if 'c++' in env.get('API',[]):
-    objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
+    objs = [env.StaticObject(x+'.cc') for x in subs]
 
 for prog in ccmains:
     if 'c++' in env.get('API',[]):
         prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
-        env.Depends(prog,map (lambda x: x + '.hh', subs))
+        env.Depends(prog,[x + '.hh' for x in subs])
     else:
         prog = env.RSF_Place ('sf' + prog, None, var='API', package='c++')
     if root:
@@ -69,7 +69,7 @@ for prog in ccmains:
 for prog in Split('t2warp'):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
-    sources = map(lambda x: x + '.o',sources)
+    sources = [x + '.o' for x in sources]
     env.Object('Test' + prog + '.c')
     env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')     
 
@@ -80,8 +80,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog, lang='c'),ccmains)
+    docs = [env.Doc(prog,'M' + prog) for prog in mains] + \
+           [env.Doc(prog,'M%s.cc' % prog, lang='c') for prog in ccmains]
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

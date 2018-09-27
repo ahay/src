@@ -32,7 +32,7 @@ env.Prepend(CPPPATH=['../../include'],
                   env.get('DYNLIB','')+'rsf'])
 
 # a bug in Apple's gcc
-if string.rfind(env.get('CC'),'gcc') >= 0 and env['PLATFORM'] == 'darwin':
+if env.get('CC').rfind('gcc') >= 0 and env['PLATFORM'] == 'darwin':
     env.Append(CPPDEFINES=['_FORTIFY_SOURCE=0'])
     
 if sparsepath and sparselibs:
@@ -52,7 +52,7 @@ for prog in mains:
     bldutil.depends(env,sources,'M'+prog)
 
     if sparsepath and sparselibs:
-        prog = env.Program(prog,map(lambda x: x + '.c',sources))
+        prog = env.Program(prog,[x + '.c' for x in sources])
         env.Depends(prog,hdr)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='SPARSELIBS',
@@ -68,7 +68,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = [env.Doc(prog,'M' + prog) for prog in mains]
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
