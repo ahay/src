@@ -20,19 +20,11 @@ from __future__ import unicode_literals
 
 import sys, os, glob, string, re, types
 
-try: # The subprocess module was introduced in Python 2.4
-    import subprocess
-    have_subprocess=True
-    def getstatusoutput(command):
-        process = subprocess.Popen(command,shell=True,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        out, _ = process.communicate()
-        return (process.returncode, out.rstrip())
-except: # Python < 2.4
-    import commands
-    have_subprocess=False
-        
+if sys.version_info[0] >= 3:
+    from subprocess import getstatusoutput
+else:
+    from commands import getstatusoutput
+
 import SCons
 
 from SCons.Script import *
@@ -268,10 +260,7 @@ def cc(context):
         if not res:
             context.env['CFLAGS'] = oldflag
         # large file support
-        if have_subprocess:
-            (status,lfs) = getstatusoutput('getconf LFS_CFLAGS')
-        else:
-            (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
+        (status,lfs) = getstatusoutput('getconf LFS_CFLAGS')
         if not status and lfs:
             oldflag = context.env.get('CFLAGS')
             context.Message("checking if gcc accepts '%s' ... " % lfs)
