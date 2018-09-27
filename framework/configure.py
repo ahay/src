@@ -25,6 +25,12 @@ if sys.version_info[0] >= 3:
 else:
     from commands import getstatusoutput
 
+try: # The subprocess module was introduced in Python 2.4
+    import subprocess
+    have_subprocess=True
+except: # Python < 2.4
+    import commands
+        have_subprocess=False
 import SCons
 
 from SCons.Script import *
