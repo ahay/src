@@ -30,7 +30,7 @@ try: # The subprocess module was introduced in Python 2.4
     have_subprocess=True
 except: # Python < 2.4
     import commands
-        have_subprocess=False
+    have_subprocess=False
 import SCons
 
 from SCons.Script import *
