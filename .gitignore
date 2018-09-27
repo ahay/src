@@ -10,3 +10,5 @@ Makefile
 *.pyc
 *.rsf
 *.ltx
+*.vpl
+*.~
