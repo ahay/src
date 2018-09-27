@@ -15,27 +15,30 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-import os, stat, sys, types, copy, re, string, urllib, ftplib, socket
+from __future__ import division, absolute_import, print_function
+import os, stat, sys, types, copy, re, string, ftplib, socket
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
+if sys.version_info[0] >= 3:
+    import urllib.request as urllib_request
+    from urllib.parse import urlparse
+    from urllib.error import URLError
+else:
+    import urllib2 as urllib_request
+    from urlparse import urlparse
+    from urllib2 import URLError
 
-from SCons.Script import *
 # The following adds all SCons SConscript API to the globals of this module.
+version = list(map(int,SCons.__version__.split('.')[:3]))
+from SCons.Script import *
 """
-mystring=SCons.__version__
-version = list(map(int,mystring.split('.')[:3]))
 if version[0] >= 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
-
 else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 """
+
 SCons.Defaults.DefaultEnvironment(tools = [])
 
 ##############################################################################
@@ -179,13 +182,7 @@ def retrieve(target=None,source=None,env=None):
                 else:
                     localfile=file
                 try:
-                    # the nect try is because urlretrieve moved when python
-                    # changed from version 2 to 3.
-		    try:
-		        urllib.urlretrieve(rdir,localfile)
-                    except:
-                        urllib.request.urlretrieve(rdir,localfile)
-
+                    urllib_request.urlretrieve(rdir,localfile)
                     if not os.stat(localfile)[6]:
                         print('Could not download file "%s" ' % localfile)
                         os.unlink(localfile)
