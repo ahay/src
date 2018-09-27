@@ -23,16 +23,22 @@ import sys, os, glob, string, re, types
 try: # The subprocess module was introduced in Python 2.4
     import subprocess
     have_subprocess=True
+    def getstatusoutput(command):
+        process = subprocess.Popen(command,shell=True,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        out, _ = process.communicate()
+        return (process.returncode, out.rstrip())
 except: # Python < 2.4
     import commands
     have_subprocess=False
-    
+        
 import SCons
 
 from SCons.Script import *
+version = map(int,SCons.__version__.split('.')[:3])
 # The following adds all SCons SConscript API to the globals of this module.
 """
-version = map(int,str. string.split(SCons.__version__,'.')[:3])
 if version[0] >= 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
 
 else:  # old style
@@ -262,7 +268,10 @@ def cc(context):
         if not res:
             context.env['CFLAGS'] = oldflag
         # large file support
-        (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
+        if have_subprocess:
+            (status,lfs) = getstatusoutput('getconf LFS_CFLAGS')
+        else:
+            (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
         if not status and lfs:
             oldflag = context.env.get('CFLAGS')
             context.Message("checking if gcc accepts '%s' ... " % lfs)
@@ -2314,8 +2323,10 @@ def set_options(env,my_opts=None):
 def options(file):
     #global version
 
-    opts=Options(file)
-
+    if version[0] < 3:
+        opts=Options(file)
+    else:
+        opts=Variables(file)
 
     # Switch pattern below to a single opts.AddVariables() call after Linux
     # distros that came with SCons 1.2 or older stop being supported

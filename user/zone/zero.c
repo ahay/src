@@ -1,5 +1,4 @@
 #include <rsf.h>
-#include "_cjb.h"
 
 void zero1int(int *p, int n1)
 /*< free a 1-d array of int >*/
