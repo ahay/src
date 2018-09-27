@@ -22,7 +22,7 @@ for sub in trip:
     env.InstallAs(os.path.join('.',py),
                   os.path.join('../..',sub,'main',py))
 
-env.Command('prog.py',map(lambda x: 'sf'+x+'.py',dirs),
+env.Command('prog.py',['sf'+x+'.py' for x in dirs],
             action=Action(rsf.doc.getprogs))
 env.Depends('prog.py',['vpplot.py','doc.py'])
 
@@ -46,7 +46,7 @@ env.Install(bindir,'sfversion')
 
 env.Command('sfdoc','sfdoc.py','echo "#!%s" > $TARGET && cat $SOURCE >> $TARGET' % sys.executable)
 binary = env.Install(bindir,'sfdoc')
-env.AddPostAction(binary,Chmod(binary,0755))
+env.AddPostAction(binary,Chmod(binary,0o755))
 
 SConscript(dirs='gui',name='SConscript',exports='env bindir pkgdir system user dotproj')
 

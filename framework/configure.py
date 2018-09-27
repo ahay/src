@@ -294,7 +294,7 @@ def cc(context):
                                               '/sw/lib')
     # Solaris
     elif plat['OS'] == 'sunos':
-        context.env['CFLAGS'] = string.replace(context.env.get('CFLAGS',''),
+        context.env['CFLAGS'] = context.env.get('CFLAGS','').replace(
                                                '-O2','-xO2')
 
 pkg['ar']={'fedora':'binutils'}
