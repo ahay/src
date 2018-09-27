@@ -40,9 +40,9 @@ for prog in mains:
              '%s/libdrsfplot.dylib %s' % \
                  (WhereIs('install_name_tool'),libdir,install[0]))
          
-         if prog in alias.keys():
+         if prog in list(alias.keys()):
              for al in Split(alias[prog]):
-                 copy = string.replace(str(main[0]),prog,al)
+                 copy = str(main[0]).replace(prog,al)
                  env.InstallAs(os.path.join(bindir,copy),main[0])
                  doc = os.path.splitext(copy)[0]
                  docalias[doc] = 'sf'+prog
@@ -53,7 +53,7 @@ for prog in mains:
 if root:
     main = 'sfplot.py'
 
-    docs = map(env.Doc,mains)
+    docs = list(map(env.Doc,mains))
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs,alias=docalias)
 
