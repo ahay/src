@@ -14,6 +14,10 @@ if not root:
     root = sys.prefix
     print('Setting RSFROOT to "%s" ' % root)
 
+# define cmp function for python 3
+def cmp(a, b):
+    return (a > b) - (a < b)
+
 srcdir = os.getcwd()
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
@@ -84,35 +88,34 @@ env.Append(BUILDERS={'RSF_Include':bldutil.Header,
 # FRAMEWORK BUILD
 ##########################################################################
 
-system = filter(lambda x: x[0] != '.', os.listdir('system'))
+system = [x for x in os.listdir('system') if x[0] != '.']
 if os.path.isdir('user'):
-    user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
+    user = [x for x in os.listdir('user') if x[0] != '.' and x != 'nobody']
     # Avoid crashing when user places some files in RSFSRC/user
-    user = filter(lambda x: os.path.isdir(os.path.join('user',x)), user)
+    user = [x for x in user if os.path.isdir(os.path.join('user',x))]
     # Avoid crashing when user places directories in RSFSRC/user
-    user = filter(lambda x: os.path.isfile(os.path.join('user',x,'SConstruct')), 
-        user)
+    user = [x for x in user if os.path.isfile(os.path.join('user',x,'SConstruct'))]
 else:
     user = []
 
 trip = []
 if os.path.isdir('trip'):
     tripdirs = ('iwave','rvl','iwave++')
-    for dir in map(lambda x: os.path.join('trip',x), tripdirs):
+    for dir in [os.path.join('trip',x) for x in tripdirs]:
         subpath = os.path.join(dir,'hsubpath')
         if os.path.exists(subpath):
             f = open(subpath,'r')
             dirs = (f.read().strip('\n')).split(':')
             f.close() 
 
-            dirs = filter(lambda x: os.path.isdir(os.path.join(dir,x,'main')), dirs)
-            trip.extend(map(lambda x: os.path.join(dir,x), dirs))
+            dirs = [x for x in dirs if os.path.isdir(os.path.join(dir,x,'main'))]
+            trip.extend([os.path.join(dir,x) for x in dirs])
 
 dotproj = Glob('book/[a-z]*/[a-z]*/[a-z]*/.rsfproj')
 
 frame_exports = 'env bindir libdir pkgdir shrdir srcdir system user trip dotproj'
 
-for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
+for dir in [os.path.join('framework',x) for x in Split('rsf doc ptools')]:
     build = os.path.join('build',dir)
     if configure.version[0] > 1:
         VariantDir(build,dir)
@@ -121,7 +124,7 @@ for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     SConscript(dirs=build,name='SConscript',exports=frame_exports)
     Default(build)
 
-for dir in map(lambda x: os.path.join('book',x),Split('Recipes gallery')):
+for dir in [os.path.join('book',x) for x in Split('Recipes gallery')]:
     build = os.path.join('build',dir)
     if configure.version[0] > 1:
         VariantDir(build,dir)
@@ -142,7 +145,7 @@ api.insert(2,'julia')
 
 Default('build/include')
 Default('build/lib')
-for dir in map(lambda x: os.path.join('api',x), api):
+for dir in [os.path.join('api',x) for x in api]:
     build = os.path.join('build',dir)
     if configure.version[0] > 1:
         VariantDir(build,dir)
@@ -159,7 +162,7 @@ for dir in map(lambda x: os.path.join('api',x), api):
 # SYSTEM BUILD
 ##########################################################################
 
-for dir in map(lambda x: os.path.join('system',x), system):
+for dir in [os.path.join('system',x) for x in system]:
     build = os.path.join('build',dir)
     if configure.version[0] > 1:
         VariantDir(build,dir)
@@ -174,7 +177,7 @@ for dir in map(lambda x: os.path.join('system',x), system):
 ##########################################################################
 
 if os.path.isdir('user'):
-    for dir in map(lambda x: os.path.join('user',x), user):
+    for dir in [os.path.join('user',x) for x in user]:
         if os.path.isfile(os.path.join(dir, 'SConstruct')):
             build = os.path.join('build',dir)
             if configure.version[0] > 1:
@@ -192,7 +195,7 @@ if os.path.isdir('user'):
 
 if os.path.isdir('plot'):
     pdirs = ('lib','main','test','plplot')
-    for dir in map(lambda x: os.path.join('plot',x), pdirs):
+    for dir in [os.path.join('plot',x) for x in pdirs]:
         build = os.path.join('build',dir)
         if configure.version[0] > 1:
             VariantDir(build,dir)
@@ -213,7 +216,7 @@ if os.path.isdir('plot'):
 
 if os.path.isdir('pens'):
     pdirs = ('fonts','include','utilities','genlib','main','docs','scripts')
-    for dir in map(lambda x: os.path.join('pens',x), pdirs):
+    for dir in [os.path.join('pens',x) for x in pdirs]:
         build = os.path.join('build',dir)
         if configure.version[0] > 1:
             VariantDir(build,dir)
@@ -237,7 +240,7 @@ if os.path.isdir('pens'):
 
 if os.path.isdir('su'):
     sudirs = ('lib','main','plot')
-    for dir in map(lambda x: os.path.join('su',x), sudirs):
+    for dir in [os.path.join('su',x) for x in sudirs]:
         build = os.path.join('build',dir)
         if configure.version[0] > 1:
             VariantDir(build,dir)
@@ -258,7 +261,7 @@ if os.path.isdir('su'):
 if os.path.isdir('trip'):
 
     tripdirs = ('iwave','rvl','iwave++')
-    for dir in map(lambda x: os.path.join('trip',x), tripdirs):
+    for dir in [os.path.join('trip',x) for x in tripdirs]:
         try:
             subpathfile = os.path.join(dir,'hsubpath')
             f = open(subpathfile,'r')

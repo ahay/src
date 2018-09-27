@@ -34,7 +34,7 @@ except: # Python < 2.4
 import SCons
 
 from SCons.Script import *
-version = map(int,SCons.__version__.split('.')[:3])
+version = list(map(int,SCons.__version__.split('.')[:3]))
 # The following adds all SCons SConscript API to the globals of this module.
 """
 if version[0] >= 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
@@ -51,7 +51,7 @@ unix_failure = 1
 def path_get(context,name,new=None):
     'get a path list'
     path = context.env.get(name,[])
-    if type(path) is not types.ListType:
+    if type(path) is not list:
         path = path.split(',')
     if new:
         path.append(new)
@@ -92,8 +92,8 @@ pkg = {}
 def need_pkg(pkgtype,fatal=True):
     global pkg, plat
     pkgnm = 'unknown'
-    if pkg.has_key(pkgtype):
-        if pkg[pkgtype].has_key(plat['distro']):
+    if pkgtype in pkg:
+        if plat['distro'] in pkg[pkgtype]:
             pkgnm = pkg[pkgtype].get(plat['distro'])
             if fatal:
                 stderr_write('Needed package: ' + pkgnm,'yellow_on_red')
@@ -215,7 +215,7 @@ def identify_platform(context):
             plat['arch'] = '32bit'
     context.Result('%(OS)s [%(distro)s]' % plat)
     # keep TACC-specific environment
-    for env in os.environ.keys():
+    for env in list(os.environ.keys()):
         if 'TACC_' == env[:5]:
             context.env.Append(ENV={env:os.environ[env]})
 
@@ -240,9 +240,9 @@ def cc(context):
     return 0;
     }\n'''
 
-    if string.rfind(CC,'icc') >= 0:
+    if CC.rfind('icc') >= 0:
         intel(context)
-    elif string.rfind(CC,'gcc') >= 0:
+    elif CC.rfind('gcc') >= 0:
         gcc(context)
 
     context.Message("checking if %s works ... " % CC)
@@ -250,8 +250,8 @@ def cc(context):
     context.Result(res)
     if not res:
         need_pkg('libc')
-    if string.rfind(CC,'gcc') >= 0 and \
-           string.rfind(CC,'pgcc') < 0:
+    if CC.rfind('gcc') >= 0 and \
+           CC.rfind('pgcc') < 0:
         oldflag = context.env.get('CFLAGS')
         for flag in ('-x c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
@@ -377,7 +377,7 @@ def c99(context):
 # MKL library
 def mkl(context):
     CC = context.env.get('CC')
-    if string.rfind(CC,'icc') < 0:
+    if CC.rfind('icc') < 0:
         return # only relevant for icc
     context.Message("checking for MKL ... ")
     text = '''
@@ -485,9 +485,7 @@ def x11(context):
     oldpath = path_get(context,'CPPPATH')
 
     res = None
-    for path in filter(lambda x:
-                       os.path.isfile(os.path.join(x,'X11/Xaw/Label.h')),
-                       INC+xinc):
+    for path in [x for x in INC+xinc if os.path.isfile(os.path.join(x,'X11/Xaw/Label.h'))]:
         context.env['CPPPATH'] = oldpath + [path,]
         res = context.TryCompile(text,'.c')
 
@@ -1250,9 +1248,9 @@ def cuda(context):
         context.env['CC'] = nvcc
         context.env['CFLAGS'] = cudaflags
         context.env['LIBS'] = ['cudart']
-        context.env['LIBPATH'] = filter(os.path.isdir,
+        context.env['LIBPATH'] = list(filter(os.path.isdir,
                                         [os.path.join(CUDA_TOOLKIT_PATH,'lib64'),
-                                        os.path.join(CUDA_TOOLKIT_PATH,'lib')])
+                                        os.path.join(CUDA_TOOLKIT_PATH,'lib')]))
         context.env['LINKFLAGS'] = ''
         res = context.TryLink(text,'.c')
         context.env['CC'] = cc
@@ -1535,7 +1533,7 @@ def psp(context):
             psplibs += normallib.findall(lib)
         else:
             pspextra.append(lib)
-    context.env['LIBS'] = oldlibs+psplibs + map(File,pspextra)
+    context.env['LIBS'] = oldlibs+psplibs + list(map(File,pspextra))
 
     text = '''
     #include "psp.hpp"
@@ -1699,7 +1697,7 @@ def pfft(context):
 def ncpus():
     'Detects number of CPUs'
     if plat['OS'] in ('linux','posix'):
-        if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):
+        if "SC_NPROCESSORS_ONLN" in os.sysconf_names:
             nr_cpus = os.sysconf("SC_NPROCESSORS_ONLN")
             if type(nr_cpus) is int:
                 if nr_cpus > 0:
@@ -1723,10 +1721,10 @@ def omp(context):
     flags = context.env.get('CFLAGS','')
     ccflags =  context.env.get('CXXFLAGS','')
     lflags = context.env.get('LINKFLAGS','')
-    pgcc =  (string.rfind(CC,'pgcc') >= 0)
-    gcc = (string.rfind(CC,'gcc') >= 0)
-    icc = (string.rfind(CC,'icc') >= 0)
-    clang = (string.rfind(CC,'clang') >= 0)
+    pgcc =  (CC.rfind('pgcc') >= 0)
+    gcc = (CC.rfind('gcc') >= 0)
+    icc = (CC.rfind('icc') >= 0)
+    clang = (CC.rfind('clang') >= 0)
     if pgcc:
         CFLAGS = flags + ' -mp'
         CXXFLAGS = ccflags + ' -mp'
@@ -1782,9 +1780,9 @@ def omp(context):
 
     F90   = context.env.get('F90','gfortran')
     f90flags = context.env.get('F90FLAGS','')
-    pgf90 = (string.rfind(F90,'pgf90') >= 0)
-    gfortran = (string.rfind(F90,'gfortran') >= 0) or (string.rfind(F90,'gfc') >= 0)
-    ifort = (string.rfind(F90,'ifort') >= 0)
+    pgf90 = (F90.rfind('pgf90') >= 0)
+    gfortran = (F90.rfind('gfortran') >= 0) or (F90.rfind('gfc') >= 0)
+    ifort = (F90.rfind('ifort') >= 0)
     if pgf90:
         F90FLAGS = f90flags + ' -mp'
     elif gfortran:
@@ -1818,9 +1816,9 @@ def pthreads(context):
     flags = context.env.get('LINKFLAGS','')
     LIBS  = path_get(context,'LIBS')
     CC    = context.env.get('CC','gcc')
-    pgcc =  (string.rfind(CC,'pgcc') >= 0)
-    gcc = (string.rfind(CC,'gcc') >= 0)
-    icc = (string.rfind(CC,'icc') >= 0)
+    pgcc =  (CC.rfind('pgcc') >= 0)
+    gcc = (CC.rfind('gcc') >= 0)
+    icc = (CC.rfind('icc') >= 0)
     if icc or pgcc:
         LIBS.append('pthread')
     elif gcc and not plat['OS'] in ['darwin','cygwin','sunos']:
@@ -1877,7 +1875,7 @@ def sse(context):
 
 def api_options(context):
     context.Message("checking API options ... ")
-    api = map(string.lower,path_get(context,'API'))
+    api = [x.lower() for x in path_get(context,'API')]
 
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
                          'f90', 'python', 'matlab', 'octave', 'java']
@@ -1898,7 +1896,7 @@ def api_options(context):
     # api = list(set(api))
     api_dict = {}
     for i in api: api_dict[i] = 0
-    api = api_dict.keys()
+    api = list(api_dict.keys())
 
     # Improve output readability
     if api == ['']:
@@ -2274,17 +2272,15 @@ def java(context):
 
 def gcc(context):
     '''Handle dynamic gcc libraries.'''
-    libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
-    libs = filter (lambda x: re.search('gcc',x) and os.path.isdir(x),
-                   libdirs)
-    context.env.Append(ENV={'LD_LIBRARY_PATH':string.join(libs,':')})
+    libdirs = os.environ.get('LD_LIBRARY_PATH','').split(':')
+    libs = [x for x in libdirs if re.search('gcc',x) and os.path.isdir(x)]
+    context.env.Append(ENV={'LD_LIBRARY_PATH':':'.join(':')})
 
 def intel(context):
     '''Trying to fix weird intel setup.'''
-    libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
-    libs = filter (lambda x: re.search('intel',x) and os.path.isdir(x),
-                   libdirs)
-    context.env.Append(ENV={'LD_LIBRARY_PATH':string.join(libs,':')})
+    libdirs = os.environ.get('LD_LIBRARY_PATH','').split(':')
+    libs = [x for x in libdirs if re.search('intel',x) and os.path.isdir(x)]
+    context.env.Append(ENV={'LD_LIBRARY_PATH':':'.join(':')})
     for key in ('INTEL_FLEXLM_LICENSE','INTEL_LICENSE_FILE','IA32ROOT'):
         license = os.environ.get(key)
         if license:
@@ -2311,7 +2307,7 @@ def set_options(env,my_opts=None):
     opts = options(config)
 
     if my_opts:
-        for opt in my_opts.keys():
+        for opt in list(my_opts.keys()):
             opts.Add(opt,my_opts[opt])
     opts.Update(env)
 
