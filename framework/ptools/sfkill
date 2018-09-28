@@ -3,7 +3,7 @@
 
 import sys, os, string, commands, pwd, types
 
-cluster = string.split(os.environ.get('RSF_CLUSTER','localhost 1'))
+cluster = os.environ.get('RSF_CLUSTER','localhost 1').split()
 (statmyname,myname) = commands.getstatusoutput('whoami')
 argcommand = raw_input("Process to kill : ")
 print '\n'

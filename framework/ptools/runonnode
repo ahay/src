@@ -22,11 +22,11 @@ fcntl.lockf(hosts_fd,fcntl.LOCK_EX)
 
 # get notrunning node, mark it running
 hosts_txt=hosts_fd.readlines()
-numnodes=int(string.split(hosts_txt[0])[1])
+numnodes=int(hosts_txt[0].split()[1])
 
 idle_node=-1
 for node in range(numnodes):
-    if(string.split(hosts_txt[2+node])[1]=='notrunning'):
+    if(hosts_txt[2+node].split()[1]=='notrunning'):
         idle_node=node
         break
 
@@ -37,8 +37,8 @@ if(idle_node==-1):
     sys.stderr.write("runonnode: numnodes=%d\n"%numnodes);
     sys.exit(1)
     
-host=string.split(hosts_txt[2+idle_node])[0]
-hosts_txt[2+idle_node]=string.ljust(host,40)+string.ljust("running",10)+"\n"
+host=hosts_txt[2+idle_node].split()[0]
+hosts_txt[2+idle_node]=host.ljust(40)+"running".ljust(10)+"\n"
 
 hosts_fd.seek(0)   
 for line in hosts_txt:
@@ -50,7 +50,7 @@ fcntl.lockf(hosts_fd,fcntl.LOCK_UN)
 
 # make a string that contains all the args that appear after runonnode.py
 # attempt to make hosts.txt a parameter makes pscons do unnessary reruns 
-command=string.join(sys.argv[1:])     # was command=string.join(sys.argv[2:])
+command=' '.join(sys.argv[1:])     # was command=string.join(sys.argv[2:])
 
 task="ssh "+host+' \"'+command+' \"'
 
@@ -65,7 +65,7 @@ retcode = os.system(task)
 fcntl.lockf(hosts_fd,fcntl.LOCK_EX)
 hosts_fd.seek(0)   
 hosts_txt=hosts_fd.readlines()
-hosts_txt[2+idle_node]=string.ljust(host,40)+string.ljust("notrunning",10)+"\n"
+hosts_txt[2+idle_node]=host.ljust(40)+"notrunning".ljust(10)+"\n"
 hosts_fd.seek(0)   
 for line in hosts_txt:
     hosts_fd.write(line)

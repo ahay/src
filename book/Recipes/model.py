@@ -94,7 +94,7 @@ def wfom(wom,wfldp,wflds,velo,vmean,name1,name2,axis,custom,par):
 #    if(not par.has_key('wweight')): par['wweight']=10
 #    if(not par.has_key('wclip')):   par['wclip']=1.0
 
-    print par['wweight']
+    print(par['wweight'])
 
     for mode in [wfldp,wflds]:
         Flow(mode+'t',mode,'scale axis=123 |scale rscale=5')

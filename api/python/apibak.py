@@ -55,7 +55,7 @@ class Par:
 
     def __get(self, key, default):
         """Obtains value of argument from dictionary"""
-        if self.__args.has_key(key):
+        if key in self.__args:
             return self.__args[key]
         elif str(default):
             return default

@@ -76,7 +76,7 @@ def getversion(target=None,source=None,env=None):
     out.write('label="%s"\n\n' % label)
     out.write('''
 if __name__ == "__main__":
-    print label
+    print(label)
     ''')
     out.close()
     os.chmod(name,0o775)
@@ -483,7 +483,7 @@ class rsfprog(object):
     def man(self,dir,usedoc_max,rsfroot,name=None):
         if not name:
             name = self.name
-        file = open (os.path.join(dir,name + '.1'),'w')
+        file = open (os.path.join(dir,name + '.1'),'w', encoding='utf-8')
         contents = '.TH %s 1  ' % name
         if have_datetime_module:
             day = datetime.datetime.now()
@@ -557,7 +557,7 @@ class rsfprog(object):
         if not name:
             name = self.name
         if dir:
-            file = open (os.path.join(dir,name + '.txt'),'w')
+            file = open (os.path.join(dir,name + '.txt'),'w', encoding='utf-8')
         contents = 'Program %s | %s\n' % (name,self.desc)
         if self.snps:
             contents = contents + '[SYNOPSIS]\n%s\n' % self.snps
@@ -672,7 +672,7 @@ DocCmd: %s
                         ''' % (book,proj,proj)
                 usedoc += bigsection(book.upper(),'#000000','#ffd8c8',bookdoc)
             contents += bigsection('Used In','#ffffff', '#eeaa77',usedoc)
-        hfile.write(page(self.name,contents))
+        hfile.write(page(self.name,contents.encode('utf-8')))
         hfile.close()
 
 comment = None
@@ -732,7 +732,7 @@ def html(dir,known_version):
         names.sort()
         content = content + bigsection(dir,'#ffffff', '#ee77aa',
                                        multicolumn(names,link))
-    file.write(page('all programs',content))
+    file.write(page('all programs',content.encode('utf-8')))
     file.close()
 
 def text(dir,name):

@@ -31,7 +31,7 @@ def convert(vpl,png,**kw):
     fail = os.system(command)
     os.unlink(eps)
     if fail:
-        raise RuntimeError, 'cannot run "%s" ' % pstoimg
+        raise RuntimeError('cannot run "%s" ' % pstoimg)
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
@@ -40,11 +40,11 @@ if __name__ == "__main__":
     prog = sys.argv.pop(0)
     
     if argc < 2:
-        print '''
+        print('''
         Usage: %s [options] file.vpl [file.png]
         Converts vplot to PNG.
         [options] are passed to pspen.
-        ''' % prog
+        ''' % prog)
         sys.exit(2)
 
     png = sys.argv.pop()

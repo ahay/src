@@ -55,15 +55,15 @@ def convert(vplot,eps,
     else:           ybbp = ybmax
 
     # Compute bounding box
-    bm = map(lambda x: float(x)-space,[xbbm,ybbm])
-    bp = map(lambda x: float(x)+space,[xbbp,ybbp])
+    bm = [float(x)-space for x in [xbbm,ybbm]]
+    bp = [float(x)+space for x in [xbbp,ybbp]]
     
-    bbm = map(lambda x: x*ppi,bm)
-    bbp = map(lambda x: x*ppi,bp)
+    bbm = [x*ppi for x in bm]
+    bbp = [x*ppi for x in bp]
 
     # Round to integer
-    ibbm = map(int,bbm)
-    ibbp = map(lambda x: int(x)+1,bbp)
+    ibbm = list(map(int,bbm))
+    ibbp = [int(x)+1 for x in bbp]
     
     out = open(eps,"w")
     out.write("%!PS-Adobe-2.0 EPSF-2.0\n")
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     prog = sys.argv.pop(0)
     
     if argc < 2:
-        print '''
+        print('''
 Usage:
 %s [xbmin= xbmax= ybmin= ybmax=] [cropshift=n] [options] file.vpl [file.eps]
 
@@ -114,7 +114,7 @@ Converts vplot to encapsulated postscript.
 [xbmin= xbmax= ybmin= ybmax=] overrides the default bounding box.
 [cropshift=y] applies PS translate for every page (except for the first one)
 [options] are passed to pspen.
-        ''' % prog
+        ''' % prog)
         sys.exit(2)
 
     eps = sys.argv.pop()
@@ -145,5 +145,5 @@ Converts vplot to encapsulated postscript.
                     xbmin=xbmin, xbmax=xbmax, ybmin=ybmin, ybmax=ybmax,
                     cropshift=crshift)
     except:
-        print 'Failed to convert %s to %s' % (vpl,eps)
+        print('Failed to convert %s to %s' % (vpl,eps))
         sys.exit(1)

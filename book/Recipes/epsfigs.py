@@ -5,15 +5,15 @@ def Convert(src,clr):
    
    if os.path.isfile(src) and src[-4:]=='.vpl':
       trg = src[:-3]+'eps'
-      print 'Converting Fig/%s to Fig/%s.eps...' %(src2,src2[:-4]),
+      print('Converting Fig/%s to Fig/%s.eps...' %(src2,src2[:-4]), end=' ')
                       
       fail = os.system( 'vpconvert %s color=%s %s\n'%(src,clr,trg) )
       if fail:
-         print '\nFailed to convert "%s" to eps!\n' %src2 
+         print('\nFailed to convert "%s" to eps!\n' %src2) 
          sys.exit(1)
-      print ' Done.'
+      print(' Done.')
    else:
-      print 'File "Fig/%s" not found' %src2
+      print('File "Fig/%s" not found' %src2)
 
 
 

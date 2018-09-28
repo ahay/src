@@ -85,13 +85,13 @@ def echo(target,source,env):
     if obj:
         trg = open(str(target[0]),'w')
         if type(obj) is list:
-            obj = string.join(obj)
+            obj = ' '.join(obj)
         trg.write(obj+'\n')
         trg.close()
     err = env.get('err','')
     if err:
         if type(err) is list:
-            err = string.join(err)
+            err = ' '.join(err)
         sys.stderr.write(err+'\n')
     return 0
 
@@ -526,7 +526,7 @@ class Project(Environment):
         # May need to do it remotely
         if remote:
             command = re.sub('"','\\"',command)
-            command = string.join(['$( ssh',node,'$) \"cd ',self.cwd,';',command,'\"'])
+            command = ' '.join(['$( ssh',node,'$) \"cd ',self.cwd,';',command,'\"'])
 
         targets = []
         for file in tfiles:

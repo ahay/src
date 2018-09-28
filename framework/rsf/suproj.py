@@ -1,15 +1,15 @@
 ##   Copyright (C) 2004 University of Texas at Austin
-##  
+##
 ##   This program is free software; you can redistribute it and/or modify
 ##   it under the terms of the GNU General Public License as published by
 ##   the Free Software Foundation; either version 2 of the License, or
 ##   (at your option) any later version.
-##  
+##
 ##   This program is distributed in the hope that it will be useful,
 ##   but WITHOUT ANY WARRANTY; without even the implied warranty of
 ##   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ##   GNU General Public License for more details.
-##  
+##
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,7 +25,7 @@ bindir = os.path.join(topdir,'bin')
 try:
     suprogs = os.listdir(bindir)
 except:
-    print()    
+    print()
     sys.stderr.write("It looks like SU is not installed.\n")
     sys.stderr.write("exception from suprogs=listdir(bindir) (bindir=%s)\n"%
                      bindir)
@@ -38,7 +38,7 @@ suplots = ['plot']
 for prog in suprogs:
     if prog[0] == 'x' and 'ps'+prog[1:] in suprogs:
         suplots.append(prog[1:])
-re_plots = re.compile(r'\b(su|s|)(?:x|ps)?(%s)\b' % string.join(suplots,'|'))
+re_plots = re.compile(r'\b(su|s|)(?:x|ps)?(%s)\b' % '|'.join(suplots))
 
 class SUProject(rsf.proj.Project):
     def __init__(self,**kw):
@@ -57,12 +57,12 @@ class SUProject(rsf.proj.Project):
             source = target
         if flow == 'Merge':
             if not type(source) is list:
-                sources = string.split(source)
+                sources = source.split()
                 source = [x+pssuffix for x in sources]
             self.Command(target+pssuffix,source,
                          '%s %s > $TARGET' % \
                          (os.path.join(bindir,'psmerge'),
-                          string.join([' in=${SOURCES[%d]}' % x for x in range(len(source))])))
+                          ' '.join([' in=${SOURCES[%d]}' % x for x in range(len(source))])))
         else:
             # X output
             xflow  = re_plots.sub('\\1x\\2',flow)
@@ -88,7 +88,7 @@ class SUProject(rsf.proj.Project):
         self.InstallAs(locked,target2+pssuffix)
         self.Alias(target + '.lock',locked)
         self.lock.append(locked)
-        
+
         test = self.Test('.test_'+target,target2+pssuffix,
                          figdir=self.figs,bindir=self.bindir)
         self.test.append(test)
