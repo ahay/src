@@ -128,7 +128,7 @@ def latexscan(node,env,path):
         return []
     contents = node.get_contents()
     inputs = list(filter(os.path.isfile,
-                    [x+('.tex','')[os.path.isfile(x)] for x in linput.findall(contents)]))
+                    [x+('.tex','')[os.path.isfile(x)] for x in linput.findall(contents.decode('utf-8'))]))
     inputs.append(top[:-4]+'.tex')
     resdir = env.get('resdir','Fig')
     inputdir = env.get('inputdir','.')
@@ -205,7 +205,7 @@ def latexscan(node,env,path):
 
         inp.close()
     bibs = []
-    for bib in isbib.findall(contents):
+    for bib in isbib.findall(contents.decode('utf-8')):
         for file in bib.split(','):
             file = file+'.bib'
             if os.path.isfile(file):
@@ -279,18 +279,18 @@ def latex_emit(target=None, source=None, env=None):
     if isbib.search(contents.decode('utf-8')):
         target.append(stem+'.bbl')
         target.append(stem+'.blg')
-    if hastoc.search(contents):
+    if hastoc.search(contents.decode('utf-8')):
         target.append(stem+'.toc')
-    if beamer.search(contents):
+    if beamer.search(contents.decode('utf-8')):
         target.append(stem+'.nav')
         target.append(stem+'.out')
         target.append(stem+'.snm')
-    if cwpslides.search(contents):
+    if cwpslides.search(contents.decode('utf-8')):
         target.append(stem+'.nav')
         target.append(stem+'.out')
         target.append(stem+'.snm')
         target.append(stem+'.toc')
-    if makeind.search(contents):
+    if makeind.search(contents.decode('utf-8')):
         target.append(stem+'.idx')
     return target, source
 
