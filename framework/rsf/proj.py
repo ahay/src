@@ -1,4 +1,3 @@
-
 # Copyright (C) 2004 University of Texas at Austin
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,12 +21,8 @@ import SCons
 
 if sys.version_info[0] >= 3:
     import urllib.request as urllib_request
-    from urllib.parse import urlparse
-    from urllib.error import URLError
 else:
-    import urllib2 as urllib_request
-    from urlparse import urlparse
-    from urllib2 import URLError
+    import urllib as urllib_request
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = list(map(int,SCons.__version__.split('.')[:3]))

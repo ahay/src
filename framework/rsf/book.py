@@ -18,7 +18,7 @@ import os, string, re, glob, time, types, sys
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
-version = map(int,string.split(SCons.__version__,'.')[:3])
+version = list(map(int,string.split(SCons.__version__,'.')[:3]))
 if version[0] >= 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
     from SCons.Script import *
 else:
@@ -104,7 +104,7 @@ def get_authors(source,default):
         tag = paper_tag(str(src))
         author = get_author(src,default,tag)
         if author:
-            print "%s: '%s'" % (tag[1],author)
+            print("%s: '%s'" % (tag[1],author))
             for person in re.split(r'\s*(?:[\,]|[\,]?\s*\band\b)\s*',author):
                 names = string.split(person)
                 if names:
@@ -113,7 +113,7 @@ def get_authors(source,default):
                         last = names.pop() # last name
                         person = string.join((person,last),'~')
                         authors[person]=last.capitalize()
-    all = map(lambda k: (authors[k],k),authors.keys())
+    all = [(authors[k],k) for k in list(authors.keys())]
     all.sort()
     return all
 
@@ -121,15 +121,15 @@ def list_authors(all):
     lastone = all.pop()
     if len(all) == 0:
         author = lastone[1]
-        print "The author is " + author
+        print("The author is " + author)
     elif len(all) == 1:
         firstone = all.pop()
         author = '%s and %s' % (firstone[1],lastone[1])
-        print "The authors are " + author
+        print("The authors are " + author)
     else:                
-        author = string.join(map(lambda k: k[1],all),', ')
+        author = string.join([k[1] for k in all],', ')
         author = '%s, and %s' % (author,lastone[1])
-        print "The authors are " + author
+        print("The authors are " + author)
     return author
     
 
@@ -161,21 +161,21 @@ def report_toc(target=None,source=None,env=None):
         if not book:
             author = get_author(src,authors,tag)
         title = get_title(src,titles,tag)
-        if sections.has_key(tag[1]):
+        if tag[1] in sections:
             toc.write('\n\\geosection*{%s}\n' % sections[tag[1]])
         if author and title:
             toc.write('\TOCentry[%s]{%s}{\pageref{%s.start}}\n' %
                       (author,title,tag[1]))
         else:
-            print "Could not find author or title"
+            print("Could not find author or title")
     toc.write('\n\\geosection*{\ }\n')
     year = get_year(env.get('year'))
     misc['pub.tex'] = '%s article published or in press, %s' % (group,year),
     misc['spons.tex'] = '%s sponsors for %s' % (group,year)
-    map(lambda x:
+    list(map(lambda x:
         toc.write('\TOCentry{%s}{\pageref{%s.start}}\n' %
                   (misc[x],os.path.splitext(x)[0])),
-        filter(os.path.isfile,misc.keys()))
+        list(filter(os.path.isfile,list(misc.keys())))))
     toc.write('\n\\cleardoublepage\n')
     toc.close()
     return 0
@@ -263,8 +263,8 @@ def thesis_intro(target=None,source=None,env=None):
         if univ == 'UT':
             super = env.get('supervisor')
             if super:
-                if type(super) is types.ListType:
-                    print super
+                if type(super) is list:
+                    print(super)
                     intro.write('\\supervisor[%s]{%s}\n' % (super[0],super[1]))
                 else:
                     intro.write('\\supervisor{%s}\n' % super)
@@ -296,11 +296,11 @@ def thesis_intro(target=None,source=None,env=None):
             intro.write(dedication.join(['\\begin{dedication}\n',
                                          '\n\\end{dedication}\n']))
         if os.path.isfile('ack.tex'):
-            print "Found ack.tex"
+            print("Found ack.tex")
             intro.write('\\input{ack}\n'.join(['\\begin{acknowledgments}\n',
                                                '\\end{acknowledgments}\n']))
         if os.path.isfile('abs.tex'):
-            print "Found abs.tex"
+            print("Found abs.tex")
             intro.write('\\utabstract\n\\indent\n\\input{abs}\n')
 
         intro.write('\\tableofcontents\n\\listoftables\n\\listoffigures\n')   
@@ -308,7 +308,7 @@ def thesis_intro(target=None,source=None,env=None):
         for pref in prefs:
             tex = pref+'.tex'
             if os.path.isfile(tex): # input if file exists
-                print "Found %s" % tex
+                print("Found %s" % tex)
                 intro.write('\\input{%s}\n' % pref)
         intro.write('\\afterpreface\n')
     intro.close()
@@ -335,9 +335,9 @@ def report_bio(target=None,source=None,env=None):
                 thisbio.close()
                 bio.write('}\n')
             else:
-                print 'No picture file for ' + name
+                print('No picture file for ' + name)
         else:
-            print 'No biography file for ' + name
+            print('No biography file for ' + name)
     bio.write('\\end{bios}\n')
     bio.close()
     return 0
@@ -345,7 +345,7 @@ def report_bio(target=None,source=None,env=None):
 def include(file,sep=''):
     tex = file+'.tex'
     if os.path.isfile(tex):
-        print "Found %s" % tex
+        print("Found %s" % tex)
         return '\\include{%s}\t%s\t\\newpage\n' % (file,sep)
     else:
         return ''
@@ -355,7 +355,7 @@ def report_all(target=None,source=None,env=None):
     all = open(str(target[0]),'w')
     grp = env.get('group',full.get(group))
     rep = env.get('report',report)
-    map(all.write,
+    list(map(all.write,
         ['%% This file is automatically generated, DO NOT EDIT\n\n',
          '\\renewcommand{\\REPORT}{%s}\n' % rep,
          '\\renewcommand{\\GROUP}{%s}\n' % grp,
@@ -370,7 +370,7 @@ def report_all(target=None,source=None,env=None):
          '\\pagenumbering{arabic}\n',
          '\\setcounter{page}{1}\n',
          '\\GEOheader{\\GROUP, \\REPORT, \\today}\n'
-         ])
+         ]))
     all.write('%% start of paper list\n')
     resdirs = env.get('resdirs',{})
     for src in source:
@@ -382,22 +382,22 @@ def report_all(target=None,source=None,env=None):
         all.write('\\GEOpaper{%s}{%s}\t\\include{%s}\n' % (tag[0],tag[1],stem))
         all.write('\\cleardoublepage\n')
     all.write('%% end of paper list\n')
-    for tex in misc.keys():
+    for tex in list(misc.keys()):
         all.write(include(os.path.splitext(tex)[0]))
     
     index = env.get('index')
     if index:
-        map(all.write,
+        list(map(all.write,
             ['\\cleardoublepage\n',
              '\\addcontentsline{toc}{chapter}{Index}\n',
              '\\index{index}\n',
-             '\\printindex\n'])
+             '\\printindex\n']))
     biblio = env.get('biblio')
     if biblio:
         all.write('\\cleardoublepage\n\\addcontentsline{toc}{chapter}{Bibliography}\n\\bibliographystyle{seg}\n\\bibliography{%s}\n'
                   % biblio)
     if os.path.isfile('vita.tex'):
-        print "Found vita.tex"
+        print("Found vita.tex")
         all.write('\\begin{vita}\n\\input{./vita}\n\\end{vita}\n')
     all.close()
     return 0
@@ -410,7 +410,7 @@ def parts(target=None,source=None,env=None):
     grp = env.get('group',full.get(group))
     rep = env.get('report',report)
 
-    map(all.write,
+    list(map(all.write,
         ['%% This file is automatically generated, DO NOT EDIT\n\n',
          '\\renewcommand{\\REPORT}{%s}\n' % rep,
          '\\renewcommand{\\GROUP}{%s}\n' % grp,
@@ -425,7 +425,7 @@ def parts(target=None,source=None,env=None):
          '\\pagenumbering{arabic}\n',
          '\\setcounter{page}{1}\n',
          '\\GEOheader{\\GROUP, \\REPORT, \\today}\n'
-         ])
+         ]))
     all.write('%% start of paper list\n')
     resdirs = env.get('resdirs',{})
 
@@ -456,7 +456,7 @@ def parts(target=None,source=None,env=None):
 # ------------------------------------------------------------
 
 def tour(target=None,source=None,env=None):
-    dirs = map(os.path.dirname,map(str,source))
+    dirs = list(map(os.path.dirname,list(map(str,source))))
     command = env.get('command')
     rsf.sftour.tour(dirs,command,0)
     return 0
@@ -472,7 +472,7 @@ def Sections(report):
 
 class RSFReport(Environment):
     def __init__(self,**kw):
-        apply(Environment.__init__,(self,),kw)
+        Environment.__init__(*(self,), **kw)
         rsf.conf.set_options(self)
         
         self.Append(BUILDERS={'Tour':Tour})
@@ -493,10 +493,10 @@ class RSFReport(Environment):
     def Papers(self,papers,**kw):
         self.collection = 1
         # get list of papers
-        if type(papers[0]) is types.TupleType:
+        if type(papers[0]) is tuple:
             sections = Sections(papers)
             kw.update({'sections':sections})
-            papers = Split(string.join(map(lambda x: x[1],papers)))
+            papers = Split(string.join([x[1] for x in papers]))
         for i in range(len(papers)):
             paper = papers[i]
             if paper[-4:] != '.tex':
@@ -506,15 +506,15 @@ class RSFReport(Environment):
         # make table of contents
         kw.update({'action':Action(report_toc),
                    'varlist':['year','sections','authors','titles']})
-        apply(self.Command,('toc.tex',papers),kw)
+        self.Command(*('toc.tex',papers), **kw)
         rsf.tex.Paper('toc',lclass='georeport',scons=0)
-        map(lambda tex: self.Depends('toc.tex',tex),
-            filter(os.path.isfile,misc.keys()))
+        list(map(lambda tex: self.Depends('toc.tex',tex),
+            list(filter(os.path.isfile,list(misc.keys())))))
         # make title page
         kw.update({'action':Action(report_tpg),
                    'varlist':['group','title1','authors','title2','line',
                               'fig','year','copyr']})
-        apply(self.Command,('tpg.tex',papers),kw)
+        self.Command(*('tpg.tex',papers), **kw)
         rsf.tex.Paper('tpg',lclass='georeport',scons=0)
         # make biographies
         bios = kw.get('bios')
@@ -532,13 +532,13 @@ class RSFReport(Environment):
             kw.update({'action':Action(report_bio),
                        'varlist':['bios'],
                        'bios':biofiles})
-            apply(self.Command,('bio.tex',papers),kw)
+            self.Command(*('bio.tex',papers), **kw)
             self.Depends('bio.tex','tpg.tex')
             rsf.tex.Paper('bio',lclass='georeport',scons=0)
         # make report
         kw.update({'action':Action(report_all),'varlist':['group','resdirs']})
         self.papers = papers
-        apply(self.Command,('book.tex',papers),kw)
+        self.Command(*('book.tex',papers), **kw)
         self.Depends('book.tex','toc.tex')
         self.Depends('book.tex','tpg.tex')
         if biofiles:
@@ -548,9 +548,8 @@ class RSFReport(Environment):
             if self.paper:
                 comm = 'scons -Q ' + target
             else:
-                comm = map(lambda x: 'scons -Q %s.%s' % \
-                           (os.path.splitext(os.path.basename(x))[0],target),
-                           papers)
+                comm = ['scons -Q %s.%s' % \
+                           (os.path.splitext(os.path.basename(x))[0],target) for x in papers]
             self.Tour(target+'s',papers,command=comm)
     def Thesis(self,chapters,**kw):
         # get list of chapters
@@ -562,13 +561,13 @@ class RSFReport(Environment):
         # make title page
         kw.update({'action':Action(thesis_tpg),
                    'varlist':['author','title','year','univ','address']})
-        apply(self.Command,('tpg.tex',None),kw)
+        self.Command(*('tpg.tex',None), **kw)
         rsf.tex.Paper('tpg',lclass='stanford-thesis',scons=0)
         # make introductory materials
         kw.update({'action':Action(thesis_intro),
                    'varlist':['supervisor','committee','master',
                               'univ','degrees','dedication']})
-        apply(self.Command,('intro.tex',None),kw)
+        self.Command(*('intro.tex',None), **kw)
         rsf.tex.Paper('intro',lclass='stanford-thesis',scons=0)
         for pref in prefs:
             tex = pref+'.tex'
@@ -578,7 +577,7 @@ class RSFReport(Environment):
         kw.update({'action':Action(report_all),
                    'varlist':['group','resdirs','biblio','report']})
         self.papers = chapters
-        apply(self.Command,('book.tex',chapters),kw)
+        self.Command(*('book.tex',chapters), **kw)
         self.Depends('book.tex','tpg.tex')
         self.Depends('book.tex','intro.tex')
         for target in ('html','pdf','install'):	
@@ -596,17 +595,17 @@ class RSFReport(Environment):
         kw.update({'action':Action(report_toc),
                    'varlist':['year','sections','book'],
                    'book':1})
-        apply(self.Command,('toc.tex',chapters),kw)
+        self.Command(*('toc.tex',chapters), **kw)
         rsf.tex.Paper('toc',lclass='georeport',scons=0)
         # make title page
         kw.update({'action':Action(book_tpg),
                    'varlist':['author','title','fig']})
-        apply(self.Command,('tpg.tex',None),kw)
+        self.Command(*('tpg.tex',None), **kw)
         rsf.tex.Paper('tpg',lclass='georeport',options='book',scons=0)
         # make book
         kw.update({'action':Action(report_all),'varlist':['index']})
         self.papers = chapters
-        apply(self.Command,('book.tex',chapters),kw)
+        self.Command(*('book.tex',chapters), **kw)
         self.Depends('book.tex','tpg.tex')
         self.Depends('book.tex','intro.tex')
         for target in ('html','pdf','install'):	
@@ -616,11 +615,11 @@ class RSFReport(Environment):
     # ------------------------------------------------------------
     def PartBook(self,chapters,**kw):
         self.collection = 1 # for now
-        print "BOOK"
+        print("BOOK")
 
         # make title page
         kw.update({'action':Action(book_tpg),'varlist':['author','title']})
-        apply(self.Command,('tpg.tex',None),kw)
+        self.Command(*('tpg.tex',None), **kw)
         rsf.tex.Paper('tpg',lclass='georeport',options='book',scons=0)
 
         # ------------------------------------------------------------
@@ -657,7 +656,7 @@ class RSFReport(Environment):
 
     def End(self,lclass='georeport',**kw):
         kw.update({'lclass':lclass})
-        apply(rsf.tex.Paper,('book',),kw)
+        rsf.tex.Paper(*('book',), **kw)
         self.Alias('pdf','book.pdf')
         self.Depends('book.pdf','pdfs')
         self.Depends('book.pdf',self.papers)
@@ -684,15 +683,15 @@ class RSFReport(Environment):
 # Default report
 book = RSFReport()
 def Papers(papers=glob.glob('[a-z]*/paper.tex'),**kw):
-    return apply(book.Papers,(papers,),kw)
+    return book.Papers(*(papers,), **kw)
 def Thesis(chapters=glob.glob('[a-z]*/paper.tex'),**kw):
-    return apply(book.Thesis,(chapters,),kw)
+    return book.Thesis(*(chapters,), **kw)
 def Book(chapters=glob.glob('[a-z]*/paper.tex'),**kw):
-    return apply(book.Book,(chapters,),kw)
+    return book.Book(*(chapters,), **kw)
 def PartBook(chapters=glob.glob('[a-z]*/paper.tex'),**kw):
-    return apply(book.PartBook,(chapters,),kw)
+    return book.PartBook(*(chapters,), **kw)
 def End(lclass='georeport',**kw):
-    return apply(book.End,(lclass,),kw)
+    return book.End(*(lclass,), **kw)
 
 
 

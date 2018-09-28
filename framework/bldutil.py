@@ -203,7 +203,10 @@ def depends(env,list,file):
     last = filename.rfind('build/')
     if last >= 0:
         filename = filename[:last] + filename[last+6:]
-    fd = open(filename,'r')
+    if sys.version_info[0] >= 3:
+        fd = open(filename,'r', encoding="latin1")
+    else:
+        fd = open(filename,'r')
     for line in fd.readlines():
         for inc in __include.findall(line):
             if inc not in list and inc[0] != '_':

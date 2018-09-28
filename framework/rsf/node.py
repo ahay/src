@@ -111,7 +111,7 @@ class Hosts(object):
         if host != 'localhost':
             command = 'ssh %s \"%s\" ' % (host,command)
 
-        print command
+        print(command)
         retcode = os.system(command)
         
         self.nodes.append(host)

@@ -15,7 +15,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, re, glob, string, types, pwd, shutil
-import cStringIO, token, tokenize, cgi, sys, keyword
+import io, token, tokenize, cgi, sys, keyword
 
 import rsf.conf, rsf.path, rsf.latex2wiki
 import rsf.doc
@@ -24,7 +24,7 @@ import rsf.prog
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
-version = map(int,string.split(SCons.__version__,'.')[:3])
+version = list(map(int,string.split(SCons.__version__,'.')[:3]))
 if version[0] >= 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
     from SCons.Script import *
 else:
@@ -127,9 +127,8 @@ def latexscan(node,env,path):
     if top[-4:] != '.ltx':
         return []
     contents = node.get_contents()
-    inputs = filter(os.path.isfile,
-                    map(lambda x: x+('.tex','')[os.path.isfile(x)],
-                        linput.findall(contents)))
+    inputs = list(filter(os.path.isfile,
+                    [x+('.tex','')[os.path.isfile(x)] for x in linput.findall(contents)]))
     inputs.append(top[:-4]+'.tex')
     resdir = env.get('resdir','Fig')
     inputdir = env.get('inputdir','.')
@@ -243,7 +242,7 @@ def latify(target=None,source=None,env=None):
     else:
         notendfloat=True
     if use:
-         if type(use) is not types.ListType:
+         if type(use) is not list:
               use = use.split(',')
          for package in use:
               options = re.match(r'(\[[^\]]*\])\s*(\S+)',package)
@@ -301,8 +300,8 @@ def latex2dvi(target=None,source=None,env=None):
     dvi = str(target[0])
     stem = suffix.sub('',dvi)   
     if not latex:
-        print '\n\tLaTeX is missing. ' \
-            'Please install a TeX package (teTeX or TeX Live)\n'
+        print('\n\tLaTeX is missing. ' \
+            'Please install a TeX package (teTeX or TeX Live)\n')
         return 1
     run = string.join([latex,tex],' ')
     # First latex run
@@ -313,7 +312,7 @@ def latex2dvi(target=None,source=None,env=None):
     for line in aux.readlines():
         if re.search("bibdata",line):
             if not bibtex:
-                print '\n\tBibTeX is missing.' 
+                print('\n\tBibTeX is missing.') 
                 return 1
             os.system(' '.join([bibtex,stem]))
             os.system(run)
@@ -328,7 +327,7 @@ def latex2dvi(target=None,source=None,env=None):
     idx = stem + '.idx'
     if os.path.isfile(idx):
         if not makeindex:
-            print '\n\tMakeIndex is missing.' 
+            print('\n\tMakeIndex is missing.') 
             return 1
         os.system(' '.join([makeindex,idx]))
         os.system(run)
@@ -544,7 +543,7 @@ def colorize(target=None,source=None,env=None):
      margin-left: 2em;
      margin-right: 2em; }
      ''' % py)
-     for style in _styles.keys():
+     for style in list(_styles.keys()):
           out.write('.%s { color: %s; }\n' % (_styles[style],_colors[style])) 
      out.write('''</style>
      </head>
@@ -571,10 +570,12 @@ def colorize(target=None,source=None,env=None):
 
      # parse the source and write it
      _pos = 0
-     text = cStringIO.StringIO(raw)
+     text = io.StringIO(raw)
      out.write('<pre><font face="Lucida,Courier New">')
 
-     def call(toktype, toktext, (srow,scol), (erow,ecol), line):
+     def call(toktype, toktext, xxx_todo_changeme, xxx_todo_changeme1, line):
+          (srow,scol) = xxx_todo_changeme
+          (erow,ecol) = xxx_todo_changeme1
           global _pos
           
           # calculate new positions
@@ -601,7 +602,7 @@ def colorize(target=None,source=None,env=None):
                toktype = token.OP
           elif toktype == token.NAME and keyword.iskeyword(toktext):
                toktype = _KEYWORD
-          elif toktype == token.NAME and toktext in _colors.keys():
+          elif toktype == token.NAME and toktext in list(_colors.keys()):
                toktype = toktext
                
           style = _styles.get(toktype, _styles[_TEXT])
@@ -613,7 +614,7 @@ def colorize(target=None,source=None,env=None):
 
      try:
           tokenize.tokenize(text.readline, call)
-     except tokenize.TokenError, ex:
+     except tokenize.TokenError as ex:
           msg = ex[0]
           line = ex[1][0]
           out.write("<h3>ERROR: %s</h3>%s\n" % (msg, raw[lines[line]:]))
@@ -628,7 +629,7 @@ def colorize(target=None,source=None,env=None):
          progs = sout.read()
          sout.close()
 
-         exec progs in locals()
+         exec(progs, locals())
 
          if uses:
              out.write('</div><p><div class="progs">')
@@ -659,11 +660,11 @@ def eps2png(target=None,source=None,env=None):
     command =  'PAPERSIZE=ledger %s %s -out %s' \
               + ' -type %s -interlaced -antialias -crop a %s'
     if not pstoimg:
-        print '\n\t"pstoimg" is missing. ' \
-            'Please install latex2html.\n'
+        print('\n\t"pstoimg" is missing. ' \
+            'Please install latex2html.\n')
         return 1
     command = command % (pstoimg,eps,png,itype,option)
-    print command
+    print(command)
     os.system(command)
     return 0
 
@@ -685,7 +686,7 @@ def eps2pdf(target=None,source=None,env=None):
     command = "LD_LIBRARY_PATH=%s %s %s --hires %s" % \
               (os.environ.get('LD_LIBRARY_PATH',''),gs_options,epstopdf,eps)
     
-    print command
+    print(command)
     os.system(command)
     return 0
 
@@ -719,7 +720,7 @@ def dummy(target=None,source=None,env=None):
 def pylab(target=None,source=None,env=None):
     global epstopdf
     pycomm = open(str(source[0]),'r').read()
-    exec pycomm in locals()
+    exec(pycomm, locals())
     os.system('%s junk_py.eps -o=%s' % (epstopdf,target[0]))
     os.unlink('junk_py.eps')
     return 0
@@ -837,7 +838,7 @@ Color = Builder(action = Action(colorize),suffix='.html')
 class TeXPaper(Environment):
     def __init__(self,**kw):
         kw.update({'tools':[]})
-        apply(Environment.__init__,(self,),kw)
+        Environment.__init__(*(self,), **kw)
         rsf.conf.set_options(self)
 #        sourceforge = 'http://sourceforge.net/p/rsf/code/HEAD/tree/trunk'
         github = 'https://github.com/ahay/src/blob/master/'
@@ -856,7 +857,7 @@ class TeXPaper(Environment):
                               'Figs':Figs})
         path = {'darwin': ['/sw/bin','/opt/local/bin'],
                 'irix': ['/usr/freeware/bin']}
-        for plat in path.keys():
+        for plat in list(path.keys()):
             if sys.platform[:len(plat)] == plat:
                 for pathdir in filter(os.path.isdir,path[plat]):                
                     self['ENV']['PATH'] = ':'.join([pathdir,
@@ -949,7 +950,7 @@ class TeXPaper(Environment):
                                       r'%s/%s/\2%s' % (pdir,resdir,pssuffix),
                                       fig)
 
-        for fig in eps.keys():
+        for fig in list(eps.keys()):
             ps = eps[fig]
             resdir2 = os.path.join(self.docdir,os.path.dirname(ps))
             if fig[-3:] == vpsuffix[-3:]:
@@ -1116,7 +1117,7 @@ class TeXPaper(Environment):
         if source == '':
             source = paper
         if os.path.isfile(source+'.tex'):
-            apply(self.Paper,(paper,source),kw)
+            self.Paper(*(paper,source), **kw)
             self.Alias('pdf',paper+'.pdf')
             self.Alias('wiki',paper+'.wiki')
             self.Alias('read',paper+'.read')
@@ -1128,13 +1129,13 @@ class TeXPaper(Environment):
 
 default = TeXPaper()
 def Dir(**kw):
-     return apply(default.Dir,[],kw)
+     return default.Dir(*[], **kw)
 def Paper(paper,source='',**kw):
-    return apply(default.Paper,(paper,source),kw)
+    return default.Paper(*(paper,source), **kw)
 def Command2(target,source,command):
     return default.Command(target,source,command)
 def End(paper='paper',source='',**kw):
-    return apply(default.End,(paper,source),kw)
+    return default.End(*(paper,source), **kw)
 def Depends2(target,source):
     return default.Depends(target,source)
 

@@ -71,11 +71,11 @@ def sconsign(env):
     'SConsign database file'
 
     try: 	 
-        import dbhash 	 
+        import dbm.bsd 	 
         env.SConsignFile(env.path+ '.sconsign.dbhash',dbhash)	 
     except: 	 
         try: 	 
-            import gdbm 	 
+            import dbm.gnu 	 
             env.SConsignFile(env.path+ '.sconsign.gdbm',gdbm)
         except:
             env.SConsignFile(env.path+ '.sconsign')

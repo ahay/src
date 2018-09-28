@@ -49,7 +49,7 @@ def tour(dirs=[],comm='',verbose=1):
 
     cwd = os.getcwd()
     for subdir in dirs:
-        if type(comm) is types.ListType:
+        if type(comm) is list:
             mycomm = comm.pop(0)
         else:
             mycomm = comm
@@ -75,13 +75,13 @@ if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
     # because this script has users that do not have RSF
     if len(sys.argv) < 2:
-        print '''
+        print('''
         Usage: %s [-q] command
         visits lower-case subdirectories and executes command
         -q     quiet (suppress stdout)
 
         The '%%' character is replaced with the current directory
-        ''' % sys.argv[0]
+        ''' % sys.argv[0])
         sys.exit(0)
 
     ########
@@ -94,8 +94,7 @@ if __name__ == "__main__":
         verbose = 1
 
     comm = string.join(sys.argv,' ')
-    dirs = filter(lambda x: x[-5:] != '_html',
-                  filter(os.path.isdir,glob.glob('[a-z]*')))
+    dirs = [x for x in list(filter(os.path.isdir,glob.glob('[a-z]*'))) if x[-5:] != '_html']
 
     tour(sorted(dirs),comm,verbose)
     sys.exit(0)

@@ -25,7 +25,7 @@ bindir = os.path.join(topdir,'bin')
 try:
     suprogs = os.listdir(bindir)
 except:
-    print    
+    print()    
     sys.stderr.write("It looks like SU is not installed.\n")
     sys.stderr.write("exception from suprogs=listdir(bindir) (bindir=%s)\n"%
                      bindir)
@@ -42,7 +42,7 @@ re_plots = re.compile(r'\b(su|s|)(?:x|ps)?(%s)\b' % string.join(suplots,'|'))
 
 class SUProject(rsf.proj.Project):
     def __init__(self,**kw):
-        apply(rsf.proj.Project.__init__,(self,),kw)
+        rsf.proj.Project.__init__(*(self,), **kw)
         self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + bindir
         self['ENV']['CWPROOT'] = topdir
         self.plots = []
@@ -50,35 +50,34 @@ class SUProject(rsf.proj.Project):
         self.bindir = bindir
     def Flow(self,target,source,flow,suffix=susuffix,src_suffix=susuffix,**kw):
         kw.update({'rsfflow':0,'suffix': suffix,'src_suffix':src_suffix})
-        return apply(rsf.proj.Project.Flow,(self,target,source,flow),kw)
+        return rsf.proj.Project.Flow(*(self,target,source,flow), **kw)
     def Plot(self,target,source,flow=None,**kw):
         if not flow: # two arguments
             flow = source
             source = target
         if flow == 'Merge':
-            if not type(source) is types.ListType:
+            if not type(source) is list:
                 sources = string.split(source)
-                source = map(lambda x: x+pssuffix,sources)
+                source = [x+pssuffix for x in sources]
             self.Command(target+pssuffix,source,
                          '%s %s > $TARGET' % \
                          (os.path.join(bindir,'psmerge'),
-                          string.join(map (lambda x: ' in=${SOURCES[%d]}' % x,
-                                           range(len(source))))))
+                          string.join([' in=${SOURCES[%d]}' % x for x in range(len(source))])))
         else:
             # X output
             xflow  = re_plots.sub('\\1x\\2',flow)
             kw.update({'suffix':'.x11','stdout':-1})
-            apply(self.Flow,(target,source,xflow),kw)
+            self.Flow(*(target,source,xflow), **kw)
             # Postscript output
             psflow = re_plots.sub('\\1ps\\2',flow)
             kw.update({'suffix': pssuffix,'stdout':1})
-            apply(self.Flow,(target,source,psflow),kw)
+            self.Flow(*(target,source,psflow), **kw)
     def Result(self,target,source,flow=None,**kw):
         if not flow: # two arguments
             flow = source
             source = target
         target2 = os.path.join(self.resdir,target)
-        apply(self.Plot,(target2,source,flow),kw)
+        self.Plot(*(target2,source,flow), **kw)
         self.Default (target2+pssuffix)
         if flow != 'Merge':
             self.Alias(target+'.view',target2+'.x11')
@@ -102,7 +101,7 @@ class SUProject(rsf.proj.Project):
             self.Alias('lock',self.lock+['.suproj'])
             self.Alias('test',self.test)
         if self.views:
-            self.Alias('view',map(lambda x: x+'.view',self.views))
+            self.Alias('view',[x+'.view' for x in self.views])
         else:
             self.Command('view',None,'echo "There is nothing to view" ')
 
@@ -113,12 +112,12 @@ def little_endian():
 # Default project
 project = SUProject()
 def Flow(target,source,flow,**kw):
-    return apply(project.Flow,(target,source,flow),kw)
+    return project.Flow(*(target,source,flow), **kw)
 def Plot(target,source,flow=None,**kw):
-    return apply(project.Plot,(target,source,flow),kw)
+    return project.Plot(*(target,source,flow), **kw)
 def Result(target,source,flow=None,**kw):
-    return apply(project.Result,(target,source,flow),kw)
+    return project.Result(*(target,source,flow), **kw)
 def Fetch(file,dir,private=0,server='ftp://ftp.cwp.mines.edu/pub',**kw):
-    return apply(project.Fetch,(file,dir,private,server),kw)
+    return project.Fetch(*(file,dir,private,server), **kw)
 def End():
     return project.End()
