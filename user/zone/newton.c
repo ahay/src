@@ -82,14 +82,14 @@ float newton(func1 function /*f(x)*/,
 			
 	h=f/fp;
 		
-	if (isnan(fp) || !isfinite(fp) || isnan(f) || !isfinite(f)) { /*If the derivative and/or function values are '0' or 'infinity', we will reduce the size of increment*/
+	if (isnan(fp) != 0 || isinf(fp) != 0 || isnan(f) != 0 || isinf(f) != 0) { /*If the derivative and/or function values are '0' or 'infinity', we will reduce the size of increment*/
 	    xtem = x_back; /*Go back to the previous step*/
 	    f = function(xtem); /*Generate f of the previous step again*/
 	    fp = derivative(xtem); /*Generate fp of the previous step again*/
 	    h = f/fp; /*Generate the increment value of the previous step*/
 	    htem = sqrt(-1); /*Set the initial value of htem to get into the for loop*/
 		
-	    for (check = 0; isnan(htem) || !isfinite(htem); check++) { 
+	    for (check = 0; isnan(htem) != 0 || isinf(htem)!= 0;check++) { 
 			if (check == 10) break;
 			h *= 0.5; /*Reduce the size of increment by half each loop*/
 			xtem -= h; /*Calculate x with the new increment*/
