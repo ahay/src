@@ -30,7 +30,7 @@ env = Environment(variables = vars,
 		  AR={'AR' : '${AR}'})
 Help(vars.GenerateHelpText(env))
 
-print thisname
+print(thisname)
 
 testflag='no'
 docflag='no'

@@ -36,7 +36,7 @@ for prog in mains:
     if xinc and xlib:
         sources = ['X' + prog]
         bldutil.depends(env,sources,'X'+prog)
-        main = env.Program(prog,map(lambda x: x + '.c',sources))
+        main = env.Program(prog,[x + '.c' for x in sources])
     else:
         main = env.RSF_Place('sf'+prog,None,var='XINC and XLIBPATH')
         
@@ -50,7 +50,7 @@ if root:
     main = 'sfsuplot.py'
 
     if xinc and xlib:
-        docs = map(lambda prog: env.Doc(prog,'X' + prog),mains)
+        docs = [env.Doc(prog,'X' + prog) for prog in mains]
         env.Depends(docs,'#/framework/rsf/doc.py')
     else:
         docs = []

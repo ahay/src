@@ -33,7 +33,7 @@ for prog in mains:
 if root:    
     main = 'sfsumain.py'
     
-    docs = map(lambda prog: env.Doc(prog),mains)
+    docs = [env.Doc(prog) for prog in mains]
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
 

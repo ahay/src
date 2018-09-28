@@ -87,11 +87,11 @@ for n in deplist:
     if os.path.exists(testlibdir):
         liblist.append(testlib)
         # Madagascar branch
-	if root:
-            libdirlist.append(testbuildpath + '/lib')
+    if root:
+        libdirlist.append(testbuildpath + '/lib')
         # Standalone branch
-        else:
-            libdirlist.append(testpath + '/lib')
+    else:
+        libdirlist.append(testpath + '/lib')
 
 # add other possibly nonstandard sources of headers
 # it is ALWAYS PRESUMED that header files live in final leaves
