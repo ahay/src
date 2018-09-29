@@ -5,6 +5,7 @@
 # write code in myproj to build hosts.txt
 # run test on stampede
 
+from __future__ import print_function, division, absolute_import
 import fcntl, os, string, sys
 
 hosts_file='hosts.txt'  #sys.argv[1] attempt to make this a parm makes pscons rerun
@@ -54,7 +55,7 @@ command=' '.join(sys.argv[1:])     # was command=string.join(sys.argv[2:])
 
 task="ssh "+host+' \"'+command+' \"'
 
-print "runonnode: start command on %s"%host
+print("runonnode: start command on %s"%host)
 #print "task=",task
 
 os.system("date")
@@ -76,6 +77,6 @@ fcntl.lockf(hosts_fd,fcntl.LOCK_UN)
 hosts_fd.close()
 
 if retcode != 0:
-    print "runonnode: exit code %d on %s" % (retcode,host)
+    print("runonnode: exit code %d on %s" % (retcode,host))
 sys.exit(retcode)
 

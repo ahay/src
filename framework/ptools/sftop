@@ -1,24 +1,30 @@
 #!/usr/bin/env python
-import sys, os, string, commands, pwd
+from __future__ import print_function, division, absolute_import
+import sys, os, string, pwd
+
+if sys.version_info[0] >= 3:
+    from subprocess import getstatusoutput
+else:
+    from commands import getstatusoutput
 
 cluster = os.environ.get('RSF_CLUSTER','localhost 1').split()
 
 for node in cluster[::2]:
     if node == 'localhost':
-        (stat,top) = commands.getstatusoutput('ps aux')
+        (stat,top) = getstatusoutput('ps aux')
     else:
-        (stat,top) = commands.getstatusoutput("ssh %s 'ps aux' " % node)
+        (stat,top) = getstatusoutput("ssh %s 'ps aux' " % node)
     if not stat:
-        print '\n[%s]\n' % node
+        print('\n[%s]\n' % node)
         jobs = top.split('\n')
-        print jobs[0]
+        print(jobs[0])
         for job in jobs[1:]:
             fields = job.split()
             if fields[0] != 'root' \
                    and fields[0] != 'nobody' \
                    and float(fields[2]) > 0.0 \
                    and fields[-1] != 'ps aux':
-                print job
+                print(job)
 
 sys.exit(0)
 

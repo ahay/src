@@ -36,7 +36,7 @@ def convert(infile,outfile,args=''):
     lines = stats.readlines()
     stats.close()
 
-    stat = string.split(lines[0])
+    stat = lines[0].split()
 
     # find the number of frames
     retot = re.compile('Total\s+(\d+)')
@@ -94,7 +94,7 @@ def convert(infile,outfile,args=''):
             # combine frames into an animated gif (requires gifsicle)
             gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
             run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),
-                                             string.join(gifs),outfile)
+                                             ' '.join(gifs),outfile)
             os.system (run)
             list(map(os.unlink,gifs))
     else:

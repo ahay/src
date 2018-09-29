@@ -21,9 +21,10 @@
 # write code in myproj to build hosts.txt
 # run test on stampede
 
+from __future__ import print_function, division, absolute_import
 import os, sys, random
 
-def cpus(): 
+def cpus():
     '''
     Returns the number of CPUs in the system
     '''
@@ -31,10 +32,10 @@ def cpus():
         # Tested on CentOS, Fedora and Cygwin 1.7
         import multiprocessing # module added in Python 2.6
         return multiprocessing.cpu_count()
-    except: 
-        # Thanks to Lawrence Oluyede on python-list 
+    except:
+        # Thanks to Lawrence Oluyede on python-list
         num = 0
-        
+
         if sys.platform == 'win32':
             try:
                 num = int(os.environ['NUMBER_OF_PROCESSORS'])
@@ -48,12 +49,12 @@ def cpus():
         else:
             # A better way: parse /proc/cpuinfo for physical CPUs
             # rather than virtual CPUs from hyperthreading
-            
+
             try:
                 num = os.sysconf('SC_NPROCESSORS_ONLN')
             except (ValueError, OSError, AttributeError):
                 pass
-            
+
         if num >= 1:
             return num
         else:
@@ -62,7 +63,7 @@ def cpus():
 class Hosts(object):
     def __init__(self):
         'initialize list of nodes'
-        
+
         # RSF_CLUSTER method
         #print "get RSF_CLUSTER in node.py"
         cluster = os.environ.get('RSF_CLUSTER')
@@ -77,7 +78,7 @@ class Hosts(object):
                 cluster = os.environ.get('RSF_CLUSTER')
                 #print "new cluster=",cluster
         #print "test2 cluster"
-        if not cluster:        
+        if not cluster:
             cluster = 'localhost %d' % cpus()
         #print "cluster=",cluster
         hosts = cluster.split()
@@ -103,7 +104,7 @@ class Hosts(object):
         if not self.nodes: # empty list
             sys.stderr.write('No available nodes.\n')
             return -1
-            
+
         host = self.nodes.pop()
 
         command = env.get('command')
@@ -113,7 +114,7 @@ class Hosts(object):
 
         print(command)
         retcode = os.system(command)
-        
+
         self.nodes.append(host)
         return retcode
 

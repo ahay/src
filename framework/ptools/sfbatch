@@ -16,6 +16,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function, division, absolute_import
 import os, sys, time
 
 required_pars=dict(
@@ -37,18 +38,18 @@ optional_pars=dict(
 
 if len(sys.argv) < 2:
     # selfdoc
-    print '''
+    print('''
     Usage: %s [batchfile=parfile] [key=value] 
     
     The parfile can contain Python-syntax key=value entries
-    for the following keys:''' % sys.argv[0]
-    for key in required_pars.keys():
-        print '    %s= %s# %s' % (key,' ' * (7-len(key)), required_pars[key])
-    print '''
+    for the following keys:''' % sys.argv[0])
+    for key in list(required_pars.keys()):
+        print('    %s= %s# %s' % (key,' ' * (7-len(key)), required_pars[key]))
+    print('''
 
-    The following keys are optional:'''
-    for key in optional_pars.keys():
-        print '    %s= %s# %s' % (key,' ' * (7-len(key)), optional_pars[key])
+    The following keys are optional:''')
+    for key in list(optional_pars.keys()):
+        print('    %s= %s# %s' % (key,' ' * (7-len(key)), optional_pars[key]))
     sys.exit(1)
 
 # Read the default parameter file from ~/.batch
@@ -62,12 +63,12 @@ if os.path.isfile(parfile):
         pars = pfile.read()
         pfile.close()
     except:
-        print '''
+        print('''
         Could not read batchfile "%s".
-        ''' % parfile
+        ''' % parfile)
         sys.exit(2)
 
-    exec pars in locals()
+    exec(pars, locals())
 
 # Get a parameter file from the command line
 parfile = None
@@ -84,17 +85,17 @@ if parfile:
         pars = pfile.read()
         pfile.close()
     except:
-        print '''
+        print('''
         Could not read batchfile "%s".
-        ''' % parfile
+        ''' % parfile)
         sys.exit(2)
 
-    exec pars in locals()
+    exec(pars, locals())
 
 cwd = os.getcwd()
 dirname = os.path.split(os.path.dirname(cwd))[1]
 
-for key in required_pars.keys()+optional_pars.keys():
+for key in list(required_pars.keys())+list(optional_pars.keys()):
     # look for the key on the command line
     klen=len(key)+1
     for arg in sys.argv[1:]:
@@ -102,17 +103,17 @@ for key in required_pars.keys()+optional_pars.keys():
             locals()[key] = arg[klen:]
             sys.argv.remove(arg)
 
-for key in required_pars.keys():
+for key in list(required_pars.keys()):
     # check if the required key is specified
-    if not locals().has_key(key):
-        print '''
+    if key not in locals():
+        print('''
         %s: need %s= parameter.
-        ''' % (sys.argv[0],key) 
+        ''' % (sys.argv[0],key)) 
         sys.exit(3)
 
-for key in optional_pars.keys():
+for key in list(optional_pars.keys()):
     # check if the required key is specified
-    if not locals().has_key(key):
+    if key not in locals():
         # set default values
         if key=='modules':
             modules = ''
@@ -198,19 +199,19 @@ elif batch == 'sge':
     f.write('echo $JOB_ID > ' + jobid + '\n')
     f.close()
 else:
-    print '''
+    print('''
     Unknown batch system "%s".
-    ''' % batch
+    ''' % batch)
     sys.exit(4)
 
 submit = ' '.join([submit,jobfile])
-print submit
+print(submit)
 
 if os.path.isfile(jobid):
     os.unlink(jobid)
     
 if os.system(submit):
-    print 'Failed to submit a job.'
+    print('Failed to submit a job.')
     sys.exit(5)
 
 while not os.path.isfile(jobid):

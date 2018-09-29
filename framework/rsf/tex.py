@@ -14,6 +14,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function, division, absolute_import
 import os, re, glob, string, types, pwd, shutil
 import io, token, tokenize, cgi, sys, keyword
 
@@ -442,7 +443,7 @@ def pstexpen(target=None,source=None,env=None):
             return 1
     else:
         try:
-            import vpconvert
+            import rsf.vpconvert as vpconvert
             options = 'color=n fat=1 fatmult=1.5 invras=y'
             name = os.path.splitext(os.path.basename(eps))[0]
             if 'ALL' in colorfigs or name in colorfigs:
