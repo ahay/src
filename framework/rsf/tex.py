@@ -335,7 +335,10 @@ def latex2dvi(target=None,source=None,env=None):
     # Check if rerun is needed
     for i in range(3): # repeat 3 times at most
         done = 1
-        log = open(stem + '.log',"r")
+        if sys.version_info[0] >= 3:
+            log = open(stem + '.log',"r",encoding='latin1')
+        else:
+            log = open(stem + '.log',"r")
         for line in log.readlines():
             if rerun.search(line):
                 done = 0
