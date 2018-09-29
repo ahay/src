@@ -274,7 +274,7 @@ edge = Split('''
 
 Flow('square0.asc',None,
      'echo %s n1=2 n2=%d data_format=ascii_float in=$TARGET' %
-     (string.join(square),len(square)/2))
+     (' '.join(square),len(square)/2))
 Flow('square','square0.asc square1',
      'dd form=native | cat axis=2 ${SOURCES[1]} | pad n1=3')
 
@@ -288,7 +288,7 @@ Plot('sqe0',
      ''')
 
 Flow('sqe.asc',None,'echo %s n1=2 n2=%d data_format=ascii_int in=$TARGET' %
-     (string.join(edge),len(edge)/2))
+     (' '.join(edge),len(edge)/2))
 Flow('sqe1','square sqe.asc',
      '''
      tri2reg n1=10 n2=10 o1=0 o2=0 d1=0.1 d2=0.1

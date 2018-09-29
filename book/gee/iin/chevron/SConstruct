@@ -7,7 +7,7 @@ def read_chevron(target=None,source=None,env=None):
     n2=0
     for line in inp.readlines():
         n2=n2+1
-        out.write(string.join(line.split()[2:],' ')+'\n')
+        out.write(' '.join(line.split()[2:])+'\n')
     out.write("n1=3 n2=%d esize=0 in=%s data_format=ascii_float\n" %
               (n2,file))
     out.close()

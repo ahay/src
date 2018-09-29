@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os, string, glob, shutil
 import rsf.sftour
 import rsf.doc
@@ -91,7 +92,7 @@ def publicproj(project):
     # OK if no PRIVATE data
     g = {}
     l = {}
-    execfile('.rsfproj',g,l)
+    exec(compile(open('.rsfproj').read(), '.rsfproj', 'exec'),g,l)
     if 'PRIVATE' in l['data'] or 'LOCAL' in l['data']:
         print('%s: Private or local data' % project)
         return False
@@ -119,19 +120,18 @@ def progtest(target=None,source=None,env=None):
     return 0
 
 def www(target=None,source=None,env=None):
-    rsf.sftour.tour(map(str,source),'scons -Q www')
+    rsf.sftour.tour(list(map(str,source)),'scons -Q www')
     return 0
 
 env = Environment()
 env.Command('www',Split(reports),Action(www))
 
-for prog in rsf.doc.progs.keys():
+for prog in list(rsf.doc.progs.keys()):
     uses = rsf.doc.progs[prog].uses
     projects = []
-    for book in uses.keys():
-        for chapter in uses[book].keys():
-            projects.extend(map(lambda x: os.path.join(book,chapter,x),
-                                uses[book][chapter]))
+    for book in list(uses.keys()):
+        for chapter in list(uses[book].keys()):
+            projects.extend([os.path.join(book,chapter,x) for x in uses[book][chapter]])
     env.Command(prog+'.test',None,
                 Action(progtest,varlist=['projects']),projects=projects)
     env.Alias('test',prog+'.test')

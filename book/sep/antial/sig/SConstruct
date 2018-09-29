@@ -66,7 +66,7 @@ Flow('kaa','mka',
      window
      ''')
 
-for plot in plots.keys():
+for plot in list(plots.keys()):
     Plot(plot+'w',plot,
          '''
          window n1=100 n2=100 f1=50 f2=50 |

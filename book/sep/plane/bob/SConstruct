@@ -8,14 +8,14 @@ Flow('bob.asc','lag',
      stdin=0)
 Flow('bob','bob.asc','dd form=native')
 
-lag = [1,2] + range(98,103) + range(198,203)
+lag = [1,2] + list(range(98,103)) + list(range(198,203))
 ns = len(lag)
 
 Flow('slag.asc',None,
      '''
      echo %s n1=%d n=100,100 in=$TARGET
      data_format=ascii_int
-     ''' % (string.join(map(str,lag),' '),ns))
+     ''' % (' '.join(map(str,lag)),ns))
 Flow('slag','slag.asc','dd form=native')
 
 t=1
@@ -31,7 +31,7 @@ Flow('ss.asc','slag',
      '''
      echo %s n1=%d lag=$SOURCE in=$TARGET
      data_format=ascii_float a0=%g
-     ''' % (string.join(map(str,s),' '),ns,s0))
+     ''' % (' '.join(map(str,s)),ns,s0))
 Flow('ss','ss.asc','dd form=native')
     
 Flow('filt ss0 flag0 flag','ss',

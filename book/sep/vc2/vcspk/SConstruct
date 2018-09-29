@@ -11,7 +11,7 @@ Flow('pkx','spk','cosft sign2=1')
 dv = {'p': 0.5,
       'm': -0.3}
 
-for c in dv.keys():
+for c in list(dv.keys()):
     pl = 'pl'+c
     Flow(pl,'pkx',
          '''

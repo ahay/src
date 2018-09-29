@@ -9,11 +9,11 @@ n1 = len(lag)
 
 Flow('waves_lag0.asc',None,
      "echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET" %
-     (string.join(map (str, lag),' '),n1))
+     (' '.join(map (str, lag)),n1))
 Flow('waves_lag','waves_lag0.asc','dd form=native')
 Flow('waves0.asc','waves_lag',
      '''echo %s a0=1 n1=%d data_format=ascii_float in=$TARGET
-     lag=$SOURCE''' % (string.join(map (str, flt),' '),n1),
+     lag=$SOURCE''' % (' '.join(map (str, flt)),n1),
      stdin=0)
 Flow('waves','waves0.asc','dd form=native')
 

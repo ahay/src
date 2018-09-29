@@ -6,11 +6,11 @@ n1 = len(lag)
 
 Flow('lag.asc',None,
      'echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET' %
-     (string.join(map (str, lag),' '),n1))
+     (' '.join(map (str, lag)),n1))
 Flow('lag','lag.asc','dd form=native')
 Flow('flt.asc','lag',
      '''echo %s a0=1 n1=%d data_format=ascii_float in=$TARGET
-     lag=$SOURCE''' % (string.join(map (str, flt),' '),n1),stdin=0)
+     lag=$SOURCE''' % (' '.join(map (str, flt)),n1),stdin=0)
 Flow('flt','flt.asc','dd form=native')
 
 Flow('spike3',None,'spike n1=30 n2=30 nsp=2 k1=4,10 k2=10,4 mag=1,-1')

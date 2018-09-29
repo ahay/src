@@ -41,11 +41,11 @@ for filt in filters.keys():
     n1 = len(lag)
     Flow(flag+'0.asc',None,
          "echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET" %
-         (string.join(map (str, lag),' '),n1))
+         (' '.join(map (str, lag)),n1))
     Flow(flag,flag+'0.asc','dd form=native')
     Flow(filt+'0.asc',flag,
          '''echo %s a0=%g n1=%d data_format=ascii_float in=$TARGET
-         lag=$SOURCE''' % (string.join(map (str, flt),' '),a0,n1),
+         lag=$SOURCE''' % (' '.join(map (str, flt)),a0,n1),
          stdin=0)
     Flow(filt,filt+'0.asc','dd form=native')
 

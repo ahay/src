@@ -48,7 +48,7 @@ vp1 = dict(thin=3.0, brine=2.5, gas=2.5)
 vs1 = dict(thin=1.2, brine=1.0, gas=0.5)
 vs2 = dict(thin=0.66,brine=0.66,gas=1.1)
 
-for case in vp1.keys():
+for case in list(vp1.keys()):
     Flow(case,None,
          '''
          zoeppritz na=30 a0=0 da=1 vp1=%g vp2=1.65 vs1=%g vs2=%g rho1=1.7 rho2=1.6

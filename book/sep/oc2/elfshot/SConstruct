@@ -76,7 +76,7 @@ title = {
     'simp': '(shot1+shot3)/2',
     'diff0': 'error: (shot1+shot3)/2 - shot2'}
 
-for file in title.keys():
+for file in list(title.keys()):
     Plot(file,
          '''
          grey clip=11033 label1=time label2=offset crowd1=0.85

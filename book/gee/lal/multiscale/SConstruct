@@ -21,7 +21,7 @@ Flow('hole','make','hole')
 
 outs = []
 for jump in ([1],[1,4]):
-    jumps = string.join(map(str,jump),',')
+    jumps = ','.join(map(str,jump))
     pef = 'pef' + jumps
     lag = 'lag' + jumps
     Flow([pef,lag],'hole',

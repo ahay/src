@@ -15,9 +15,9 @@ def synth(n1=75,n2=5,static=2,jump=4,step=[-4,2,1],amp=[1.,-1.,0.7]):
     return '''
     spike n1=%d n2=%d d1=1 d2=1 nsp=%d k1=%s k2=%s mag=%s
     ''' % (n1,n2,len(k1),
-           string.join(k1,','),
-           string.join(k2,','),
-           string.join(mag,','))
+           ','.join(k1),
+           ','.join(k2),
+           ','.join(mag))
 
 dots = '''
 dots dots=0 constsep=1 connect=1 pclip=100
