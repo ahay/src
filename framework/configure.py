@@ -1395,10 +1395,10 @@ pkg['petsc'] = {'ubuntu':'petsc-dev',
 
 def petsc(context):
     petscdir = context.env.get('PETSCDIR',os.environ.get('PETSC_DIR'))
-
-    if not petscdir:
-        return
     testdir = os.path.join(os.getcwd(),'user/petsc')
+
+    if not petscdir or not os.path.isdir(testdir):
+        return
 
     # Run make in order to catch PETSc compilation options
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
@@ -1472,6 +1472,9 @@ def petsc(context):
 def psp(context):
     pspdir = context.env.get('PSPDIR',os.environ.get('PSP_DIR','/usr/local'))
     testdir = os.path.join(os.getcwd(),'user/poulsonj')
+
+    if not os.path.isdir(testdir):
+        return
 
     # Run make in order to catch PSP compilation options
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
