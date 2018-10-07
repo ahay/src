@@ -525,7 +525,7 @@ class _File(File):
                 quit()
         if self.type=='float':
             self.datatype=np.float32
-        elif self.type==complex:
+        elif self.type=='complex':
             self.datatype=np.complex64
         elif self.type=='int':
             self.datatype=np.int32
