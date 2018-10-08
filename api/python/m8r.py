@@ -512,7 +512,7 @@ class _File(File):
                 else:
                     sys.stderr.write('error reading from input file.\n')
                     sys.stderr.write('data_format=%s\n'%data_format)
-                    sys.stderr.write('filename=%s.\n',self.filename)
+                    sys.stderr.write('filename=%s.\n'%self.filename)
                     sys.stderr.write('data_format must be native_float, '+
                                      'native_complex or native_int\n')
                     sys.stderr.write('error - exiting program\n')
@@ -520,19 +520,19 @@ class _File(File):
             except:
                 sys.stderr.write('error reading from input file.\n')
                 sys.stderr.write('data_format is not defined\n')
-                sys.stderr.write('filename=%s.\n',self.filename)
+                sys.stderr.write('filename=%s.\n'%self.filename)
                 sys.stderr.write('error - exiting program\n')
                 quit()
         if self.type=='float':
             self.datatype=np.float32
-        elif self.type==complex:
+        elif self.type=='complex':
             self.datatype=np.complex64
         elif self.type=='int':
             self.datatype=np.int32
         else:
             sys.stderr.write('error reading from input file.\n')
             sys.stderr.write('self.type=%s\n'%self.type)
-            sys.stderr.write('filename=%s.\n',self.filename)
+            sys.stderr.write('filename=%s.\n'%self.filename)
             sys.stderr.write('self.type must be native_float, '+
                              'native_complex or native_int\n')
             sys.stderr.write('error - exiting program\n')
