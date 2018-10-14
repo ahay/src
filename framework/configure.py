@@ -13,24 +13,36 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import sys, os, glob, string, re, commands, types
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import sys, os, glob, string, re, types
+
+if sys.version_info[0] >= 3:
+    from subprocess import getstatusoutput
+else:
+    from commands import getstatusoutput
 
 try: # The subprocess module was introduced in Python 2.4
     import subprocess
     have_subprocess=True
 except: # Python < 2.4
+    import commands
     have_subprocess=False
-
 import SCons
 
+from SCons.Script import *
+version = map(int,SCons.__version__.split('.')[:3])
 # The following adds all SCons SConscript API to the globals of this module.
-version = map(int,string.split(SCons.__version__,'.')[:3])
+"""
 if version[0] >= 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
-    from SCons.Script import *
+
 else:  # old style
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
-
+"""
 # CONSTANTS -- DO NOT CHANGE
 context_success = 1
 context_failure = 0
@@ -184,13 +196,13 @@ def identify_platform(context):
             if name[:2] == '10':
                 plat['distro'] = '10' # Solaris 10
         elif plat['OS'] == 'darwin':
-             plat['distro'] = uname()[2]
-             plat['cpu'] = uname()[5] # i386 / powerpc
+            plat['distro'] = uname()[2]
+            plat['cpu'] = uname()[5] # i386 / powerpc
         elif plat['OS'] == 'irix':
-             plat['distro'] = uname()[2]
+            plat['distro'] = uname()[2]
         elif plat['OS'] in ('hp-ux', 'hpux'):
-             plat['OS'] = 'hpux'
-             plat['distro'] = uname()[2].split('.')[-2]
+            plat['OS'] = 'hpux'
+            plat['distro'] = uname()[2].split('.')[-2]
         del uname, dist
     except: # "platform" not installed. Python < 2.3
         # For each OS with Python < 2.3, should use specific
@@ -254,7 +266,7 @@ def cc(context):
         if not res:
             context.env['CFLAGS'] = oldflag
         # large file support
-        (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
+        (status,lfs) = getstatusoutput('getconf LFS_CFLAGS')
         if not status and lfs:
             oldflag = context.env.get('CFLAGS')
             context.Message("checking if gcc accepts '%s' ... " % lfs)
@@ -570,7 +582,7 @@ def ppm(context):
     if plat['OS'] == 'darwin':
         ppmpath = context.env.get('PPMPATH','/opt/local/include/netpbm')
     else:
-    	ppmpath = context.env.get('PPMPATH','/usr/include/netpbm')
+        ppmpath = context.env.get('PPMPATH','/usr/include/netpbm')
     if os.path.isfile(os.path.join(ppmpath,'ppm.h')):
         context.env['CPPPATH'] = oldpath + [ppmpath]
     else:
@@ -974,7 +986,7 @@ def blas(context):
     context.Message("checking for BLAS ... ")
     text = '''
     #ifdef __APPLE__
-    #include <Accelerate/Accelerate.h>   
+    #include <Accelerate/Accelerate.h>
     #else
     #ifdef HAVE_MKL
     #include <mkl.h>
@@ -1029,16 +1041,16 @@ def blas(context):
                 LIBS.append('tatlas')
                 res = context.TryLink(text,'.c')
                 if res:
-                   context.Result(res)
-                   context.env['LIBS'] = LIBS
-                   context.env['BLAS'] = 'tatlas'
-                else: 
-                   context.Result(context_failure)
-                   context.env['CPPDEFINES'] = \
-                      path_get(context,'CPPDEFINES','NO_BLAS')
-                   LIBS.pop()
-                   context.env['BLAS'] = None
-                   need_pkg('blas', fatal=False)
+                    context.Result(res)
+                    context.env['LIBS'] = LIBS
+                    context.env['BLAS'] = 'tatlas'
+                else:
+                    context.Result(context_failure)
+                    context.env['CPPDEFINES'] = \
+                       path_get(context,'CPPDEFINES','NO_BLAS')
+                    LIBS.pop()
+                    context.env['BLAS'] = None
+                    need_pkg('blas', fatal=False)
 
 pkg['lapack'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
                  'rhel':'blas-devel + atlas-devel'}
@@ -1088,13 +1100,13 @@ def lapack(context):
                 LIBS.append('tatlas')
                 res = context.TryLink(text,'.c')
                 if res:
-                   context.Result(res)
-                   context.env['LAPACK'] = ['tatlas']
+                    context.Result(res)
+                    context.env['LAPACK'] = ['tatlas']
                 else:
-                   context.Result(context_failure)
-                   context.env['LAPACK'] = None
-                   need_pkg('lapack', fatal=False)
-                   LIBS.pop()
+                    context.Result(context_failure)
+                    context.env['LAPACK'] = None
+                    need_pkg('lapack', fatal=False)
+                    LIBS.pop()
 
 pkg['mpi'] = {'fedora':'openmpi + openmpi-devel + openmpi-libs',
               'ubuntu':'libopenmpi-dev',
@@ -1124,13 +1136,13 @@ def mpi(context):
         context.env.Append(ENV={'MPICH_CC':cc,'MPICH_CLINKER':cc})
         res = context.TryLink(text,'.c')
         context.env['CC'] = cc
-	if res:
-	        context.Result(res)
-        	context.env['MPICC'] = mpicc
+        if res:
+            context.Result(res)
+            context.env['MPICC'] = mpicc
         else: # failed to compile
-                context.Result(context_failure)
-        	need_pkg('mpi', fatal=False)
-        	context.env['MPICC'] = None
+            context.Result(context_failure)
+            need_pkg('mpi', fatal=False)
+            context.env['MPICC'] = None
     else: # mpicc not found
         context.Result(context_failure)
         need_pkg('mpi', fatal=False)
@@ -1155,13 +1167,13 @@ def mpi(context):
         context.env.Append(ENV={'MPICH_CXX':cxx})
         res = context.TryLink(text,'.cc')
         context.env['CXX'] = cxx
-	if res:
-	        context.Result(res)
-        	context.env['MPICXX'] = mpicxx
+        if res:
+            context.Result(res)
+            context.env['MPICXX'] = mpicxx
         else: # failed to compile
-                context.Result(context_failure)
-        	need_pkg('mpi', fatal=False)
-        	context.env['MPICXX'] = None
+            context.Result(context_failure)
+            need_pkg('mpi', fatal=False)
+            context.env['MPICXX'] = None
     else: # mpicxx not found
         context.Result(context_failure)
         need_pkg('mpi', fatal=False)
@@ -1383,10 +1395,10 @@ pkg['petsc'] = {'ubuntu':'petsc-dev',
 
 def petsc(context):
     petscdir = context.env.get('PETSCDIR',os.environ.get('PETSC_DIR'))
-
-    if not petscdir:
-        return
     testdir = os.path.join(os.getcwd(),'user/petsc')
+
+    if not petscdir or not os.path.isdir(testdir):
+        return
 
     # Run make in order to catch PETSc compilation options
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
@@ -1460,6 +1472,9 @@ def petsc(context):
 def psp(context):
     pspdir = context.env.get('PSPDIR',os.environ.get('PSP_DIR','/usr/local'))
     testdir = os.path.join(os.getcwd(),'user/poulsonj')
+
+    if not os.path.isdir(testdir):
+        return
 
     # Run make in order to catch PSP compilation options
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
@@ -2304,9 +2319,9 @@ def set_options(env,my_opts=None):
     opts.Update(env)
 
 def options(file):
-    global version
+    #global version
 
-    if version[0] < 1 or (version[0] == 1 and version[1] < 2):
+    if version[0] < 3:
         opts=Options(file)
     else:
         opts=Variables(file)
@@ -2411,4 +2426,3 @@ def options(file):
     opts.Add('PFFT','The PFFT library')
 
     return opts
-

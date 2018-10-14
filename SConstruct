@@ -4,6 +4,8 @@ import atexit, os, sys
 sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
 
+env = Environment()
+
 if os.path.isfile('config.py'):
     import config
     root = config.RSFROOT
@@ -29,8 +31,7 @@ etcdir = os.path.join(shrdir, 'madagascar', 'etc')
 
 opts = configure.options('config.py')
 opts.Add('RSFROOT','RSF installation root',root)
-
-env = Environment(variables=opts)
+opts.Update(env)
 
 if not os.path.isfile('config.py'):
     conf = Configure(env,custom_tests={'CheckAll':configure.check_all})

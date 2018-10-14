@@ -15,17 +15,25 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, stat, sys, types, copy, re, string, urllib, ftplib, socket
+from __future__ import division, absolute_import, print_function
+import os, stat, sys, types, copy, re, string, ftplib, socket
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
+if sys.version_info[0] >= 3:
+    import urllib.request as urllib_request
+else:
+    import urllib as urllib_request
+
 # The following adds all SCons SConscript API to the globals of this module.
-version = map(int,string.split(SCons.__version__,'.')[:3])
+version = list(map(int,SCons.__version__.split('.')[:3]))
+from SCons.Script import *
+"""
 if version[0] >= 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
-    from SCons.Script import *
 else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+"""
 
 SCons.Defaults.DefaultEnvironment(tools = [])
 
@@ -48,8 +56,8 @@ libs = os.environ.get('LIBS',"")
 resdir = None
 
 def set_dir(dir='Fig'):
-     global resdir
-     resdir = dir
+    global resdir
+    resdir = dir
 
 set_dir()
 
@@ -61,29 +69,29 @@ def test(target=None,source=None,env=None):
     src = str(source[0])
     figdir = env.get('figdir')
     bindir = env.get('bindir')
-    
+
     locked = re.sub('.*\/([^\/]+)\/([^\/]+)\/([^\/]+)\/Fig\/',
                     figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
-    print "Comparing %s and %s" % (locked,src)
+    print("Comparing %s and %s" % (locked,src))
     if os.path.isfile(locked):
         diff = os.system(' '.join([os.path.join(bindir,sfprefix+'vplotdiff'),
                                    locked,src]))
         return diff
     else:
-        print 'No locked file "%s" ' % locked
+        print('No locked file "%s" ' % locked)
         return 0
 
 def echo(target,source,env):
     obj = env.get('out','')
     if obj:
         trg = open(str(target[0]),'w')
-        if type(obj) is types.ListType:
+        if type(obj) is list:
             obj = string.join(obj)
         trg.write(obj+'\n')
         trg.close()
     err = env.get('err','')
     if err:
-        if type(err) is types.ListType:
+        if type(err) is list:
             err = string.join(err)
         sys.stderr.write(err+'\n')
     return 0
@@ -117,17 +125,16 @@ def retrieve(target=None,source=None,env=None):
         password = private['password']
         server = private['server']
         if not server:
-            print 'Cannot access proprietary data server' 
+            print('Cannot access proprietary data server')
             return 7
         try:
             session = ftplib.FTP(server,login,password)
             session.cwd(folder)
         except:
-            print 'Could not establish connection with "%s/%s" ' % (server,
-                                                                    folder)
+            print('Could not establish connection with "%s/%s" ' % (server,
+                                                                    folder))
             return 3
-        for file in filter(lambda x: not os.path.abspath(x).startswith(env.path), 
-                           map(str,target)):
+        for file in [x for x in map(str,target) if not os.path.abspath(x).startswith(env.path)]:
             remote = os.path.basename(file)
             if usedatapath:
                 localfile=env.path+remote
@@ -139,10 +146,10 @@ def retrieve(target=None,source=None,env=None):
                                    lambda x: download.write(x))
                 download.close()
             except:
-                print 'Could not download file "%s" ' % file
+                print('Could not download file "%s" ' % file)
                 return 1
             if not os.stat(localfile)[6]: # if zero size file
-                print 'Could not download file "%s" ' % file
+                print('Could not download file "%s" ' % file)
                 os.unlink(localfile)
                 return 4
             if usedatapath:
@@ -154,31 +161,30 @@ def retrieve(target=None,source=None,env=None):
         server = env.get('server')
         if server == 'local':
             for file in map(str,target):
-                remote = os.path.basename(file)  
+                remote = os.path.basename(file)
                 remote = os.path.join(folder,remote)
                 try:
                     os.symlink(remote,file)
                 except:
-                    print 'Could not link file "%s" ' % remote
+                    print('Could not link file "%s" ' % remote)
                     os.unlink(file)
                     return 6
         else:
-            for file in filter(lambda x: not os.path.abspath(x).startswith(env.path),
-                               map(str,target)):
-                remote = os.path.basename(file)  
+            for file in [x for x in map(str,target) if not os.path.abspath(x).startswith(env.path)]:
+                remote = os.path.basename(file)
                 rdir =  '/'.join([server,folder,remote])
                 if usedatapath:
                     localfile=env.path+remote
                 else:
                     localfile=file
                 try:
-                    urllib.urlretrieve(rdir,localfile)
+                    urllib_request.urlretrieve(rdir,localfile)
                     if not os.stat(localfile)[6]:
-                        print 'Could not download file "%s" ' % localfile
+                        print('Could not download file "%s" ' % localfile)
                         os.unlink(localfile)
                         return 2
                 except:
-                    print 'Could not download "%s" from "%s" ' % (localfile,rdir)
+                    print('Could not download "%s" from "%s" ' % (localfile,rdir))
                     return 5
                 if usedatapath:
                     if os.path.isfile(file):
@@ -218,7 +224,7 @@ keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','USER','WORK', 'SCRATCH',
 #############################################################################
 class Project(Environment):
     def __init__(self,**kw):
-        apply(Environment.__init__,(self,),kw)
+        Environment.__init__(*(self,), **kw)
         #        self.EnsureSConsVersion(0,96)
         opts = {
             'TIMER':'Whether to time execution',
@@ -236,9 +242,9 @@ class Project(Environment):
         self.pspen = os.path.join(self.bindir,'pspen')
         self.vppen = os.path.join(self.bindir,'vppen')
 #        self.runonnode = os.path.join(self.bindir,'runonnode')
-        
+
         self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','madagascar','figs'))
-        
+
         cwd = os.getcwd()
         self.cwd = cwd
 
@@ -261,7 +267,7 @@ class Project(Environment):
         self.hostname = socket.gethostname()
 
         # Keep environmental variables needed for SLURM
-        for env in os.environ.keys():
+        for env in list(os.environ.keys()):
             if 'SLURM_' == env[:6] or 'TACC_' == env[:5] or '_ModuleTable' == env[:12]:
                 self.Append(ENV={env:os.environ[env]})
 
@@ -290,7 +296,7 @@ class Project(Environment):
                     LIBS=[libs],
                     PROGSUFFIX=exe)
         self.Prepend(LIBS=[self.get('DYNLIB','')+'rsf'])
-        
+
         minesjtk = self.get('MINESJTK',None)
         usejava = self.get('JAVA_HOME',None)
         if not usejava: usejava = self.get('JAVA_SDK',None)
@@ -299,24 +305,24 @@ class Project(Environment):
             classpath.append(os.path.join(libdir,'rsf.jar'))
             userclasspath = os.environ.get('CLASSPATH',None)
             if userclasspath: classpath.append(userclasspath)
-            if minesjtk: 
-                classpath.append(minesjtk) 
+            if minesjtk:
+                classpath.append(minesjtk)
                 self.Append(JAVACLASSPATH=':'.join(classpath))
             classpath.append('.')
             self.Append(ENV={'CLASSPATH':':'.join(classpath)})
-           
+
         path = {'darwin': '/opt/local/bin',
                 'irix': '/usr/freeware/bin',
                 'cygwin': '/usr/X11R6/bin:/usr/lib/lapack'}
-        for plat in path.keys():
-            if sys.platform[:len(plat)] == plat:           
+        for plat in list(path.keys()):
+            if sys.platform[:len(plat)] == plat:
                 self['ENV']['PATH'] = ':'.join([path[plat],
                                                 self['ENV']['PATH']])
         pythonpath = os.path.join(sys.prefix,'bin')
         if os.path.isdir(pythonpath):
             self['ENV']['PATH'] = ':'.join([pythonpath,
                                             self['ENV']['PATH']])
-        
+
         if sys.platform[:6] == 'cygwin':
             self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
 
@@ -344,11 +350,11 @@ class Project(Environment):
         self.environ = self.get('ENVIRON','')
 
         self.batch = self.get('BATCH')
-        
+
         self.jobs = GetOption('num_jobs') # getting information from scons -j
-        
+
         cluster = self.get('CLUSTER',os.environ.get('RSF_CLUSTER','localhost 1'))
-        hosts = string.split(cluster)
+        hosts = cluster.split()
         self.nodes = []
         for i in range(1,len(hosts),2):
             nh = int(hosts[i])
@@ -359,15 +365,15 @@ class Project(Environment):
         # self.jobs is the number of jobs
         # self.ip is the current CPU
 
-        for key in self['ENV'].keys():
+        for key in list(self['ENV'].keys()):
             self.environ = self.environ + " %s='%s'" %(key,self['ENV'][key])
 
     def __Split(self,split,reduction,
                 sfiles,tfiles,flow,stdout,stdin,jobmult,suffix,prefix,src_suffix):
         '''Split jobs for pscons'''
-        
+
         if self.jobs < split[1]:
-            jobs = self.jobs*jobmult            
+            jobs = self.jobs*jobmult
             w = int(1+float(split[1])/jobs) # length of one chunk
         else:
             jobs = split[1]
@@ -393,8 +399,8 @@ class Project(Environment):
                 if 0 == j and stdin and \
                         flow.rfind('$SOURCE') < 0 and \
                         flow.rfind('${SOURCES[0]}') < 0:
-                    # For the first input (if stdin), use windowing 
-                    # to avoid creation of a chunk file 
+                    # For the first input (if stdin), use windowing
+                    # to avoid creation of a chunk file
                     par_sfiles[j] = sfiles[j]
                     cflow = '''
                     window n%d=%d f%d=%d squeeze=n icpu=%d ncpu=%d |
@@ -422,7 +428,7 @@ class Project(Environment):
             if i >= self.jobs:
                 par_sfiles0.append (tfile + '__' + str(i % self.jobs))
 
-            # operation on one chunk    
+            # operation on one chunk
             self.Flow(par_tfiles,par_sfiles0,cflow,
                       stdout,stdin,1,
                       suffix,prefix,src_suffix)
@@ -439,18 +445,18 @@ class Project(Environment):
              workdir=None,wall=''):
 
         if not flow:
-            return None     
+            return None
 
-        if type(target) is types.ListType:
+        if type(target) is list:
             tfiles = target
         else:
-            tfiles = string.split(target)
+            tfiles = target.split()
 
         if source:
-            if type(source) is types.ListType:
+            if type(source) is list:
                 sfiles = source
             else:
-                sfiles = string.split(source)
+                sfiles = source.split()
         else:
             sfiles = []
 
@@ -463,14 +469,14 @@ class Project(Environment):
             if len(split) < 2:
                 split.append(1)
             if len(split) < 3:
-                split.append(range(len(sfiles)))
+                split.append(list(range(len(sfiles))))
 
             if reduce.find('axis=') < 0:
                 reduction = '%s axis=%d' % (reduce,split[0])
             else:
                 reduction = reduce
 
-            if split[1] == 'omp' or split[1] == 'mpi': 
+            if split[1] == 'omp' or split[1] == 'mpi':
                 splitpar = 'split=%d ' % split[0]
                 if reduce == 'add':
                     splitpar += ' join=0'
@@ -478,7 +484,7 @@ class Project(Environment):
                     join = re.search('cat\s+axis=(\d)',reduce)
                     if join:
                         splitpar += ' join=%s' % join.group(1)
-                flow = '|'.join(map(lambda x: ' '.join([split[1],splitpar,x]),flow.split('|')))
+                flow = '|'.join([' '.join([split[1],splitpar,x]) for x in flow.split('|')])
                 for k in split[2]:
                     # par=${SOURCES[k]} -> _par=${SOURCES[k]}
                     flow = re.sub(r'(\S+=\${SOURCES\[%d\]})' % k,'_\\1',flow)
@@ -486,7 +492,7 @@ class Project(Environment):
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
                              sfiles,tfiles,flow,stdout,stdin,
-                             jobmult,suffix,prefix,src_suffix)               
+                             jobmult,suffix,prefix,src_suffix)
                 return
 
         sources = []
@@ -512,7 +518,7 @@ class Project(Environment):
             remote = '%s $( %s $)' % (WhereIs('env'),self.environ)
         else:
             remote = ''
-            
+
         command = rsf.flow.Flow(sources,flow,self.bindir,rsfflow,
                                 self.checkpar,self.coms,prefix,self.progsuffix,
                                 remote,stdout,stdin,self.timer,mpirun,workdir,
@@ -522,7 +528,7 @@ class Project(Environment):
         if remote:
             command = re.sub('"','\\"',command)
             command = string.join(['$( ssh',node,'$) \"cd ',self.cwd,';',command,'\"'])
-        
+
         targets = []
         for file in tfiles:
             if (not re.search(suffix + '$',file)) and ('.' not in file):
@@ -534,50 +540,50 @@ class Project(Environment):
             command = re.sub(r'\$\{(SOURCES|TARGETS)(\[[^\]]+\])\}',r'${\1\2.abspath}',command)
 
         flow = self.Command(targets,sources,command)
-            
+
         if workdir:
-             Clean(flow,workdir)
- 
+            Clean(flow,workdir)
+
         if suffix == sfsuffix:
-            binaries = map(lambda x, self=self: self.path + x + '@',
-                           filter(lambda x, suffix=suffix:
-                                      x[-len(suffix):] == suffix,targets))
+            binaries = list(map(lambda x, self=self: self.path + x + '@',
+                           list(filter(lambda x, suffix=suffix:
+                                      x[-len(suffix):] == suffix,targets))))
             if binaries:
                 Clean(flow,binaries)
 
         self.Default(flow)
         return flow
-        
+
     def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,
               view=None,**kw):
         if not flow: # two arguments
             flow = source
             source = target
         if 'Annotate'==flow:
-            if not type(source) is types.ListType:
-                source = string.split(source)
+            if not type(source) is list:
+                source = source.split()
             flow = os.path.join(self.bindir,'vpannotate') + \
               ' text=${SOURCES[1]} batch=y ${SOURCES[0]} $TARGET'
             kw.update({'src_suffix':vpsuffix,'stdin':0,'stdout':-1})
-        elif combine.has_key(flow):
-            if not type(source) is types.ListType:
-                source = string.split(source)
-            flow = apply(combine[flow],[self.vppen,len(source)])
+        elif flow in combine:
+            if not type(source) is list:
+                source = source.split()
+            flow = combine[flow](*[self.vppen,len(source)])
             if vppen:
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
         if view:
             flow = flow + ' | %s pixmaps=y' % self.sfpen
             kw.update({'stdout':-1})
-        kw.update({'suffix':suffix})        
-        return apply(self.Flow,(target,source,flow),kw)
+        kw.update({'suffix':suffix})
+        return self.Flow(*(target,source,flow), **kw)
     def Result(self,target,source,flow=None,suffix=vpsuffix,**kw):
         if not flow: # two arguments
             flow = source
             source = target
         target2 = os.path.join(self.resdir,target)
         kw.update({'suffix':suffix})
-        plot = apply(self.Plot,(target2,source,flow),kw)
+        plot = self.Plot(*(target2,source,flow), **kw)
         target2 = target2 + suffix
         view = self.Command(target + '.view',plot,self.sfpen + " $SOURCES",
                             src_suffix=vpsuffix)
@@ -616,7 +622,7 @@ class Project(Environment):
         infofile = str(target[0])
         info = open(infofile,'w')
         info.write('uses=' + str(self.coms) + '\n')
-        info.write('data=' + str(self.data) + '\n')        
+        info.write('data=' + str(self.data) + '\n')
         info.close()
         sizes = os.path.join(self.get('RSFROOT',rsf.prog.RSFROOT),'bin','sfsizes')
         su = env.get('su',0)
@@ -629,8 +635,8 @@ class Project(Environment):
         elif server=='local':
             self.data.append('LOCAL')
         else:
-            if not type(files) is types.ListType:
-                files = string.split(files)
+            if not type(files) is list:
+                files = files.split()
             for fil in files:
                 if server != dataserver:
                     if top:
@@ -649,20 +655,20 @@ class Project(Environment):
 project = Project()
 
 def Flow(target,source,flow,**kw):
-    return apply(project.Flow,(target,source,flow),kw)
+    return project.Flow(*(target,source,flow), **kw)
 def Plot (target,source,flow=None,**kw):
-    return apply(project.Plot,(target,source,flow),kw)
+    return project.Plot(*(target,source,flow), **kw)
 def Result(target,source,flow=None,**kw):
-    return apply(project.Result,(target,source,flow),kw)
+    return project.Result(*(target,source,flow), **kw)
 def Fetch(file,dir,private=0,**kw):
-    return apply(project.Fetch,(file,dir,private),kw)
+    return project.Fetch(*(file,dir,private), **kw)
 def End(**kw):
-    return apply(project.End,[],kw)
+    return project.End(*[], **kw)
 def Program(*arg,**kw):
-    return apply(project.Program,arg,kw)
+    return project.Program(*arg, **kw)
 def Get(name):
     return project['ENV'].get(name)
 
 if __name__ == "__main__":
-     import pydoc
-     pydoc.help(Project)
+    import pydoc
+    pydoc.help(Project)

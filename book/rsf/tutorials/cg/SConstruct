@@ -1,0 +1,25 @@
+from rsf.proj import *
+
+Flow('imp1',None,'spike n1=10  mag=%g' % (2550 * 2650))
+Flow('imp2',None,'spike n1=5   mag=%g' % (2700 * 2750))
+Flow('imp3',None,'spike n1=12  mag=%g' % (2400 * 2450))
+Flow('imp4',None,'spike n1=8   mag=%g' % (2800 * 3000))
+Flow('imp5',None,'spike n1=16  mag=%g' % (2550 * 2650))
+Flow('imp','imp1 imp2 imp3 imp4 imp5','cat axis=1 ${SOURCES[1:5]}')
+Result('imp','graph title=Impedance')
+
+Flow('ref','imp','ai2refl')
+Result('ref','dots title=Reflectivity')
+
+Flow('wavelet',None,
+     '''
+     spike n1=51 k1=26 | 
+     ricker1 freq=0.2 | 
+     window f1=15 n1=21 
+     ''')
+Result('wavelet','dots title=Wavelet dots=0 connect=1 label1=')
+
+Flow('data','ref','ricker1 freq=0.2')
+Result('data','graph title=Data')
+
+End()

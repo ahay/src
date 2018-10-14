@@ -24,15 +24,17 @@
 #include <rsf.h>
 
 #include "kirchnew.h"
+#include "tfweight.h"
 #include "invert.h"
 
 int main(int argc, char* argv[])
 {
-    int n12, n1, n2, n3, i3, sw, niter;
+    int n12, n1, n2, n3, i3, sw, nw, niter;
     bool hd, ps;
-    float *data, *modl, *modl0, *vrms, *error=NULL, o1,d1,o2,d2;
+    float *data, *modl, *modl0, *vrms, *error=NULL, *ww, *ff;
+    float o1,d1,o2,d2;
     char *errfile;
-    sf_file in, out, vel, in0, err=NULL;
+    sf_file in, out, vel, in0, err=NULL, fwght, wght;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -41,6 +43,25 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
+
+    if (NULL != sf_getstring("fweight")) {
+	fwght = sf_input("fweight");
+	nw = kiss_fft_next_fast_size((n1+1)/2)+1;
+	ff = sf_floatalloc(nw*n2);
+	sf_floatread(ff,nw*n2,fwght);
+	sf_fileclose(fwght);
+
+	wght = sf_input("weight");
+	ww = sf_floatalloc(n1*n2);
+	sf_floatread(ww,n1*n2,wght);
+	sf_fileclose(wght);
+	   
+	tfweight_init(n1,nw,n2,ww,ff);
+    } else {
+	fwght = NULL;
+	wght = NULL;
+    }
+    
 
     if (!sf_getbool("hd",&hd)) hd=true;
     /* if y, apply half-derivative filter */
@@ -95,7 +116,12 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread (data,n12,in);
 
-	invert(kirchnew_lop,niter,niter,n12,n12,modl,modl0,data,error);
+	if (NULL != fwght) {
+	    invert(kirchnew_lop,tfweight_lop,
+		   niter,n12,n12,modl,modl0,data,error);
+	} else {
+	    invert(kirchnew_lop,NULL,niter,n12,n12,modl,modl0,data,error);
+	}
 
 	sf_floatwrite (modl,n12,out);
 	if (NULL != err) sf_floatwrite(error,niter,err);

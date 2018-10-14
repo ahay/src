@@ -39,7 +39,7 @@ def get_local_site_pkgs(root=None, verb=False):
         local_site_pkgs = os.path.join(root,'lib')
 
     if verb:
-        print local_site_pkgs
+        print(local_site_pkgs)
         return 0 # UNIX success
     else:
         return local_site_pkgs
@@ -98,15 +98,21 @@ def shell_script(target, source=None, env=None):
             else:
                 if redefine:
                     myrc += 'if ($?%s) then\n' % par
-                    myrc += 'setenv %s %s:${%s}\n' % (par,value,par)
+                    if par.startswith('JULIA'):
+                        myrc += 'setenv %s %s:${%s}:\n' % (par,value,par)
+                    else:
+                        myrc += 'setenv %s %s:${%s}\n' % (par,value,par)
                     myrc += 'else\n'
-                myrc += 'setenv %s %s\n' % (par,value)
+                myrc += 'setenv %s %s:\n' % (par,value)
                 if redefine:
                     myrc += 'endif\n'              
         else:
             if redefine:
                 myrc += 'if [ -n "$%s" ]; then\n' % par
-                myrc += 'export %s=%s:${%s}\n' % (par,value,par)
+                if par.startswith('JULIA'):
+                    myrc += 'export %s=%s:${%s}:\n' % (par,value,par)
+                else:
+                    myrc += 'export %s=%s:${%s}\n' % (par,value,par)
                 myrc += 'else\n'
             if par == 'MANPATH':
                 myrc += 'unset MANPATH\n' # necessary for recent bash shells
