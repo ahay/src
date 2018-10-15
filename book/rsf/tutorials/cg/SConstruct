@@ -22,4 +22,6 @@ Result('wavelet','dots title=Wavelet dots=0 connect=1 label1=')
 Flow('data','ref','ricker1 freq=0.2')
 Result('data','graph title=Data')
 
+Plot('ref','bargraph wanttitle=n')
+
 End()

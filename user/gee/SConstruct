@@ -3,14 +3,14 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-afac ahelicon ahpef autocorr burstnoise cconv conflict conv convf
-cpef1 cube decon deburst despike despike2 despike3 factorn factorm
-frame frog hconv heat3 helicon hmiss hole hpef hshape idempatch
-imospray invbin invbin1 invrec1 kolmog levint light lint1 lopef
-losignoi lpef make maskinv misif miss miss1 msmiss mspef nhelicon npef
-parcel pefdeburst pfactor2 proj tspline qdome randline sigmoid signoi
-splinebank splineplane streamh streamissh synmarine syntop tentwt
-ungrad velcon3 wavemovie wilson xtomo
+afac ahelicon ahpef autocorr burstnoise cconv ckolmog conflict conv
+convf cpef1 cube decon deburst despike despike2 despike3 factorn
+factorm frame frog hconv heat3 helicon hmiss hole hpef hshape
+idempatch imospray invbin invbin1 invrec1 kolmog levint light lint1
+lopef losignoi lpef make maskinv misif miss miss1 msmiss mspef
+nhelicon npef parcel pefdeburst pfactor2 proj tspline qdome randline
+sigmoid signoi splinebank splineplane streamh streamissh synmarine
+syntop tentwt ungrad velcon3 wavemovie wilson xtomo
 '''
 
 try:  # distributed version
