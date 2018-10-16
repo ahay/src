@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfcat', 'sfgraph', 'sfai2refl', 'sfdots', 'sfricker1', 'sfwindow', 'sfscale', 'sfbargraph', 'sfdottest', 'sfconjgrad']
+data=[]
+size=       2736
