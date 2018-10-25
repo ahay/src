@@ -5,8 +5,9 @@
 \begin{abstract}
   This homework has four parts. 
   \begin{enumerate}
-  \item Theoretical questions related to interpolation and iterative inversion.
-  \item Data interpolation after coordinate transformation.
+  \item Theoretical questions related to iterative inversion.
+  \item Attenuation of surface-wave noise in 
+        seismic data using match filtering.
   \item Irregular data interpolation contest.
   \item Analyzing your own data.
   \end{enumerate}
@@ -39,72 +40,39 @@ mathematical derivations that you perform.
 
 \begin{enumerate}
 
-\item The parabolic B-spline $\beta_2(x)$ is a function defined as
- \begin{equation}
-   \label{eq:b3} 
-   \beta_2(x) = \int\limits_{-\infty}^{\infty} \beta_1(t)\,\beta_0(x-t)\,d t\;,
-\end{equation}
-where
-\begin{equation}
-   \label{eq:b1}
-   \beta_0(x) = \left\{\begin{array}{lcl} 1 & \quad\mbox{for}\quad & |x| \le 1/2 \\
-       0 &\quad \mbox{for}\quad& |x| > 1/2\end{array}\right.
- \end{equation}
-and
-\begin{equation}
-  \label{eq:b2} 
-   \beta_1(x) = \int\limits_{-\infty}^{\infty} \beta_0(t)\,\beta_0(x-t)\,d t\;
-   = \left\{\begin{array}{lcl} 1-|x| &\quad \mbox{for}\quad& |x| \le 1 \\
-       0 & \quad \mbox{for}\quad&  |x| > 1\end{array}\right.
-\end{equation}
-
-\begin{enumerate}
-\item Find an explicit expression for $\beta_2(x)$.
-\item Show that decomposing a continuous data function $d(x)$ into the convolution basis 
-  with parabolic B-spines
-  \begin{equation}
-    \label{eq:basis} 
-    d(x) = \sum\limits_k c_k\,\beta_2(x-k)
-  \end{equation}
-  leads to an interpolation filter of the form
-  \begin{equation}
-    \label{eq:bz}
-    Z^{\sigma} \approx B_2(Z) = \frac{a_0(\sigma)\,Z^{-1} + a_1(\sigma) + a_2(\sigma)\,Z}{b_0\,Z^{-1} + b_1 + b_2\,Z}\;.
-  \end{equation}
-  Define $a_0(\sigma)$, $a_1(\sigma)$, $a_2(\sigma)$, $b_0$, $b_1$, and $b_2$.
-\end{enumerate}
-
 \item The following algorithm finds a solution to
   the least-squares optimization problem $\min
   |\mathbf{F}\,\mathbf{m} - \mathbf{d}|^2$, where $\mathbf{d}$ is
   data, $\mathbf{m}$ is the model we want to estimate, and
   $\mathbf{F}$ is a linear operator that connects them.
 
+\newpage
+
  \begin{algorithm}{Conjugate gradients}{\mathbf{F},\mathbf{d},N}
   \mathbf{m \= 0} \\
   \mathbf{r \= - d} \\
   \begin{FOR}{n \= 1, 2, \ldots, N} \\
-    \mathbf{g}_m \= \mathbf{F}^T\,\mathbf{r} \\
-    \mathbf{g}_r \= \mathbf{F}\,\mathbf{g}_m \\
-    \rho \= \mathbf{g}_m^T\,\mathbf{g}_m \\
+    \mathbf{g} \= \mathbf{F}^T\,\mathbf{r} \\
+    \mathbf{G} \= \mathbf{F}\,\mathbf{g} \\
+    \rho \= \mathbf{g}^T\,\mathbf{g} \\
     \begin{IF}{n = 1} 
       \beta \= 0 
       \ELSE 
       \beta \= \rho/\hat{\rho} 
     \end{IF} \\
     \left[\begin{array}{l}
-        \mathbf{s}_m \\
-        \mathbf{s}_r
+        \mathbf{s} \\
+        \mathbf{S}
       \end{array}\right] \= 
     \left[\begin{array}{l}
-        \mathbf{g}_m \\
-        \mathbf{g}_r
+        \mathbf{g} \\
+        \mathbf{G}
       \end{array}\right] + \beta\,
     \left[\begin{array}{l}
-        \mathbf{s}_m \\
-        \mathbf{s}_r
+        \mathbf{s} \\
+        \mathbf{S}
       \end{array}\right] \\
-    \alpha \= - \rho/(\mathbf{s}_r^T\,\mathbf{s}_r) \\
+    \alpha \= - \rho/(\mathbf{S}^T\,\mathbf{S}) \\
     \left[\begin{array}{l}
         \mathbf{m} \\
         \mathbf{r}
@@ -114,8 +82,8 @@ and
         \mathbf{r}
       \end{array}\right] + \alpha\,
     \left[\begin{array}{l}
-        \mathbf{s}_m \\
-        \mathbf{s}_r
+        \mathbf{s} \\
+        \mathbf{S}
       \end{array}\right] \\
     \hat{\rho} \= \rho
   \end{FOR} \\        
@@ -124,7 +92,7 @@ and
 
 \begin{enumerate}
 \item  In applications, it is often advantageous to apply model
-    re-parametrization or \emph{preconditioning}. Suppose that,
+    re-parameterization or \emph{preconditioning}. Suppose that,
   instead of solving for $\mathbf{m}$ directly, you first solve for
   $\mathbf{x}$ such that $\mathbf{m} = \mathbf{P}\,\mathbf{x}$. Show
   how to incorporate the linear preconditioning operator $\mathbf{P}$
@@ -134,91 +102,90 @@ and
 \label{eq:msol}
 \mathbf{m}_N = \sum\limits_{n=1}^{N} \frac{\mathbf{s}_n\,\mathbf{s}_n^T}{\mathbf{s}_n^T\,\mathbf{F}^T\,\mathbf{F}\,\mathbf{s}_n}\,\mathbf{F}^T\,\mathbf{d}\;,
 \end{equation}
-where $\mathbf{s}_n$ is the model step at $n$-th iteration.
+where $\mathbf{s}_n$ is the model step $\mathbf{s}$ at $n$-th iteration.
 
+\end{enumerate}
+
+\item If the model shaping operator $\mathbf{S}_m$ admits a
+symmetric splitting $\mathbf{S}_m=\mathbf{H}_m\,\mathbf{H}_m^T$ with square and invertible
+$\mathbf{H}_m$, the model shaping equation can be rewritten in a symmetric form
+\begin{equation}
+\label{eq:mshape}
+\left[\mathbf{I} + \mathbf{S}_m\,(\mathbf{B\,F - I})\right]^{-1}\,\mathbf{S}_m\,\mathbf{B\,d} 
+= \mathbf{H}_m\,\left[\mathbf{I} + \mathbf{H}_m^T\,(\mathbf{B\,F - I})\,\mathbf{H}_m\right]^{-1}\,\mathbf{H}_m^T\,\mathbf{B\,d}\;.
+\end{equation}
+\begin{enumerate}
+\item Prove equation~(\ref{eq:mshape}).
+\item Assuming a symmetric splitting for the data shaping operator $\mathbf{S}_d=\mathbf{H}_d^T\,\mathbf{H}_d$, find a symmetric form of the data shaping equation
+\begin{equation}
+\label{eq:dshape}
+\mathbf{B}\,\left[\mathbf{I} + \mathbf{S}_d\,(\mathbf{F\,B - I})\right]^{-1}\, \mathbf{S}_d\,\mathbf{d} = \hfill \ 
+\end{equation}
 \end{enumerate}
 
 \end{enumerate}
 
-\section{Interpolation after coordinate transformation}
-\inputdir{rotate}
+\section{Match Filtering for Attenuation of Surface Seismic Waves}
+\inputdir{match}
 
-In this exercise, we will use a slice out of a 3-D CT-scan of a
-carbonate rock sample, shown in
-Figure~\ref{fig:circle}\footnote{Courtesy of Jim Jennings
-  (currently at Shell.)}. Notice microfracture channels.
+\sideplot{data}{width=\textwidth}{Seismic shot record from sand dunes in the Middle East. The data are contaminated by ground roll propagating in the sand.}
 
-\multiplot{2}{circle,rotate}{width=0.45\textwidth}{Slice of a CT-scan
-  of a carbonate rock sample. (a) Original. (b) After clockwise rotation
-  by $90^{\circ}$.}
+Figure~\ref{fig:data} shows a section out of a seismic shot record
+collected over sand dunes in the Middle East. The data are
+contaminated by ground roll propagating in the sand. A major data
+analysis task is to separate the signal (reflection waves) from the
+noise (surface waves).
 
-The goal of the exercise is to apply a coordinate transformation to
-the original data. A particular transformation that we will study is
-coordinate rotation. Figure~\ref{fig:rotate} shows the original slice
-rotated by 90 degrees. A 90-degree rotation in this case amounts to
-simple transpose. However, rotation by a different angle requires
-interpolation from the original grid to the modified grid.
+\plot{spec0}{width=0.8\textwidth}{Data spectrum. Solid line -- original data. Dashed line -- initial noise model and signal model.}
 
-The task of coordinate rotation is accomplished by the C program
-\texttt{rotate.c}. Two different methods are implemented: 
-nearest-neighbor interpolation and bilinear interpolation.
+A quick look at the data spectrum (Figure~\ref{fig:spec0}) shows that the
+noise is mostly concentrated at low frequencies. We can use this fact
+to create a noise model by low-pass filtering.
 
-To test the accuracy of different methods, we can rotate the original
-data in small increments and then compare the result of rotating to
-$360^{\circ}$ with the original data. Figure~\ref{fig:nearest,linear}
-compares the error of the nearest-neighbor and bilinear interpolations
-after rotating the original slice in increments of $20^{\circ}$. The
-accuracy is comparatively low for small discontinuous features like
-microfracture channels.
+\plot{noise0}{width=\textwidth}{(a) Noise model created by low-pass filtering of the original data. (b) Result of subtraction of the noise model from the data.}
 
-To improve the accuracy further, we need to employ a longer
-filter. One popular choice is \emph{cubic convolution} interpolation,
-invented by Robert Keys (a geophysicist, currently at ConocoPhillips).
-The cubic convolution filter can be expressed as the
-filter \cite[]{keys}
-\begin{eqnarray}
-\nonumber
-Z^{\sigma} \approx C(Z) & = & -\frac{\sigma\,(1-\sigma)^2}{2}\,Z^{-1} + 
-\frac{(1-\sigma)\,(2 + 2\,\sigma - 3 \sigma^2)}{2} + \\
-&  & \frac{\sigma\,(1 + 4\,\sigma - 3\,\sigma^2)}{2}\,Z - \frac{(1-\sigma)\,\sigma^2}{2}\,Z^2\;.
-\label{eq:cubic}
-\end{eqnarray}
-and is designed to approximate the ideal sinc-function interpolator.
-
-\multiplot{2}{nearest,linear}{width=0.45\textwidth}{Error of different
-  interpolation methods computed after full circle rotation in
-  increments of 20 degrees. (a) Nearest-neighbor interpolation. (b)
-  Bi-linear interpolation.}
+Figure~\ref{fig:noise0} shows the noise model from low-pass filtering
+and inner muting and the result of subtracting this model from the
+data. Our next task is to match the model to the true noise by solving
+the least-squares optimization problem
+\begin{equation}
+\label{eq:ls}
+\min \|\mathbf{N}\,\mathbf{f} - \mathbf{d}\|^2\;,
+\end{equation}
+where $\mathbf{d}$ is the data, $\mathbf{f}$ is a \emph{matching filter}, and
+$\mathbf{N}$ represents convolution of the noise model
+$\mathbf{n}_0$ with the filter. After minimization, $\mathbf{n} =
+\mathbf{N}\,\mathbf{f}$ becomes the new noise model, and
+$\mathbf{d}-\mathbf{n}$ becomes the estimated signal. Match filtering
+is implemented in program \texttt{match.c}. Some parts of this program
+are left out for you to fill.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=rotate/rotate.c]{rotate/rotate.c}
-
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=rotate/SConstruct]{rotate/SConstruct}
+\lstinputlisting[frame=single,title=match/match.c]{match/match.c}
 
 Your task:
 \begin{enumerate}
-\item Change directory to \texttt{hw4/rotate}
+\item Change directory to \texttt{hw6/match}
 \item Run 
 \begin{verbatim}
 scons view
 \end{verbatim}
 to reproduce the figures on your screen.
-\item Additionally, you can run
+\item Modify the \texttt{match.c} file to fill in missing parts.
+\item Test your modifications by running the dot product test.
 \begin{verbatim}
-scons nearest.vpl
+scons dot.test
 \end{verbatim}
-and
-\begin{verbatim}
-scons linear.vpl
-\end{verbatim}
-to see movies of incremental slice rotation with different methods.
-\item Modify the \texttt{rotate.c} program and the \texttt{SConstruct} file to implement 
-the cubic convolution interpolation and to compare 
-its results with the two other methods.
-\item \textbf{EXTRA CREDIT} for implementing an interpolation algorithm, which 
-is more accurate than cubic convolution.
+Repeating this several times, make sure that the numbers in the test match.
+\item  Modify the \texttt{SConstruct} file to display the results of match filtering
+and include them in your assignment.
+\item \textbf{EXTRA CREDIT} for improving the results by finding either better parameters or a better algorithm. 
 \end{enumerate}
+
+%\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/SConstruct]{match/SConstruct}
 
 \section{Spatial interpolation contest}
 \inputdir{invint}
@@ -336,7 +303,7 @@ in Figure~\ref{fig:inter1-100-pred}.
 
 For the shaping regularization approach, we are going to try the simple iteration
 \begin{equation}
-\label{eq:mshape}
+\label{eq:mshape1}
 \mathbf{m}_{n+1} = \mathbf{S}_m\left[\mathbf{m}_{n} + \tilde{\mathbf{m}} -  \mathbf{B\,F\,m}_n\right]\;,
 \end{equation}
 where the forward operator $\mathbf{F}$ is bilinear interpolation, the
@@ -370,7 +337,7 @@ to reproduce the figures on your screen.
 the number of conjugate-gradient iterations needed for the gradient regularization method to achieve a result 
  comparable with the preconditioning method.
 \item Find out 
-the number of iterations~(\ref{eq:mshape}) needed for the shaping regularization method to achieve a result 
+the number of iterations~(\ref{eq:mshape1}) needed for the shaping regularization method to achieve a result 
  comparable with the preconditioning method.
 \end{enumerate}
 \item What can you conclude about the four methods used in this comparison?
@@ -389,14 +356,14 @@ program but you can use only the 100 original data points as input.
 
 \section{Your own data}
 
-Your final task is to apply one of the data analysis techniques of the
-previous sections (data interpolation by coordinate transformation or
-scattered data gridding) to your own data:
+Your final task is to apply one of the data analysis techniques to your own data.
 \begin{enumerate}
 \item Select a dataset suitable for this application.
-\item Apply one of the algorithms of the previous two sections and choose appropriate parameters.
-\item Include the results in your homework.
+\item Apply one of the algorithms of either this homework or the previous homework and choose appropriate parameters.
+\item Attach the results.
 \end{enumerate}
+
+\newpage
 
 \section{Completing the assignment}
 
