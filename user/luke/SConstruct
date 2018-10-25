@@ -7,7 +7,7 @@ import bldutil
 #'''
 
 progs = '''
-dagap3  dagap3e  dagap3a dagapex angmig2 angmigM covariance2d divnp 
+dagap3  dagap3e  dagap3a dagapex angmig2 angmigM covariance2d divnp ovczop
 '''
 ccprogs = '''
 '''
