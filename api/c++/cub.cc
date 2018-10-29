@@ -56,17 +56,20 @@ void CUB::headin()
     // loop over dimensions
     // read axes
     for(int id=0;id<nd;id++) {
-	ax[id] = sf_iaxa(file_,id+1);
+        ax[id] = sf_iaxa(file_,id+1);
     }
+    // find esize
+    e = sf_esize(file_);
 }
 //------------------------------------------------------------
-void CUB::setup(int kd)
+void CUB::setup(int kd, int esize)
 {
     nd=kd;
     ax =  (sf_axis*) sf_alloc(nd,sizeof(sf_axis));
     for (int id=0;id<nd;id++) {
-	ax[id] = sf_maxa(0,0.0f,0.0f);
+        ax[id] = sf_maxa(0,0.0f,0.0f);
     }
+    e = esize;
 }
 //------------------------------------------------------------
 void CUB::clone(CUB c)
@@ -76,8 +79,10 @@ void CUB::clone(CUB c)
     // loop over dimensions
     // copy axes
     for (int id=0;id<nd;id++) {
-	sf_copyaxis(ax[id],c.ax[id]);
+        sf_copyaxis(ax[id],c.ax[id]);
     }
+    // copy esize
+    e = c.e;
 }
 //------------------------------------------------------------
 void CUB::headou()
@@ -85,14 +90,17 @@ void CUB::headou()
     // loop over dimensions
     // write axes
     for(int id=0;id<nd;id++) {
-	sf_oaxa(file_,ax[id],id+1);
+        sf_oaxa(file_,ax[id],id+1);
     }
+    // write esize
+    sf_putint(file_, "esize",e);
 }
 //------------------------------------------------------------
 void CUB::report()
 {
     std::cerr << " REPORT " << endl;
     std::cerr << "nd=" << nd << endl;
+    std::cerr << "esize=" << e << endl;
     for(int id=0;id<nd;id++) {
 	sf_raxa(ax[id]);
     }
@@ -105,6 +113,11 @@ int CUB::size()
 	nn*=sf_n(ax[id]);
     }
     return(nn);
+}
+//------------------------------------------------------------
+int CUB::esize()
+{
+    return(e);
 }
 
 //------------------------------------------------------------
