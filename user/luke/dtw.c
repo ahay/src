@@ -1,23 +1,29 @@
 /* One Dimensional Dynamic Time Warping underlying programs*/
+/*^*/
 #include <rsf.h>
 
-/* reverses the second axis of an array */
-void dtw_reverse_array(float* array, float* reverse, int n2, int n1){
+void dtw_reverse_array(float* array, float* reverse, int n2, int n1)
+/*< reverses the second axis of an array >*/
+{
 	for (int i = 0 ; i < n2 ; i++){
 		for (int j = 0 ; j < n1 ; j++){
 			reverse[(n2-i-1)*n1 + j] = array[i*n1 + j] ;
 		}
 	}
 }
-/* adds two arrays */
-void dtw_two_sided_smoothing_sum( float* ef, float* er, float* e, float* etilde, int n){
+
+void dtw_two_sided_smoothing_sum( float* ef, float* er, float* e, float* etilde, int n)
+/*< adds two arrays >*/
+{
 	for (int i = 0 ; i < n ; i ++){
 		if (ef[i] < 0 || er[i] < 0 || e[i] < 0) etilde[i] = -1;
 		else etilde[i] = ef[i] + er[i] - e[i];
 	}
 }
-/* finds pointwise alignment errors for shifts between min and max */
-void dtw_alignment_errors( float* match, float* ref, float* mismatch, int n1, int maxshift , float ex){
+
+void dtw_alignment_errors( float* match, float* ref, float* mismatch, int n1, int maxshift, float ex)
+/*< finds pointwise alignment errors for shifts between min and max >*/
+{
 	int j2;
 	/* loop through samples in reference trace*/
 	for (int i = 0 ; i < n1 ; i++){
@@ -34,8 +40,10 @@ void dtw_alignment_errors( float* match, float* ref, float* mismatch, int n1, in
 	}
 	return;
 }
-/* finds the minimum non-null value if one exists */
-float dtw_posmin(float a, float b){
+
+float dtw_posmin(float a, float b)
+/*< finds the minimum non-null value if one exists >*/
+{
 	if( a >=0 && b >= 0){
 		if ( a < b) return a;
 		else return b;
@@ -47,8 +55,10 @@ float dtw_posmin(float a, float b){
 		}
 	}
 }
-/* sums up bounded strains */
-float dtw_strain_accumulator(float* accumulate, float* mismatch, int i, int l, int s, int maxshift){
+
+float dtw_strain_accumulator(float* accumulate, float* mismatch, int i, int l, int s, int maxshift)
+/*< sums up bounded strains >*/
+{
     /* initialize */
     float accum ;
 	if ( i-s > 0) accum	= accumulate[ (i-s)*(2*maxshift+1) + l];
@@ -59,8 +69,10 @@ float dtw_strain_accumulator(float* accumulate, float* mismatch, int i, int l, i
 	}
 	return accum;
 }
-/* finds the minimum of 3 errors, checks for null values */
-float dtw_acumin( float* accumulate, float* mismatch, int i, int l, int n1, int maxshift, int sb){
+
+float dtw_acumin( float* accumulate, float* mismatch, int i, int l, int n1, int maxshift, int sb)
+/*< finds the minimum of 3 errors, checks for null values >*/
+{
 	/* read in the comparison values if in bounds */
 	float first ;
 	if (l-1 >=0){
@@ -79,8 +91,10 @@ float dtw_acumin( float* accumulate, float* mismatch, int i, int l, int n1, int 
 	/* find the smallest non-null value */
 	return dtw_posmin( first, dtw_posmin( second, third)) ;
 }
-/* backtrack to determine the shifts */
-void dtw_backtrack( float* accumulate, float* mismatch, int* shifts, int n1, int maxshift, float str){
+
+void dtw_backtrack( float* accumulate, float* mismatch, int* shifts, int n1, int maxshift, float str)
+/*< backtrack to determine the shifts >*/
+{
 	int sb = (int)(1/str);
 	/* determine initial shifts */
 	int  u = 0;
@@ -141,8 +155,10 @@ void dtw_backtrack( float* accumulate, float* mismatch, int* shifts, int n1, int
 	}
 	
 }
-/* spread the accumulation back over null values */
-void dtw_spread_over_nulls( float* accumulate, int n1, int maxshift){
+
+void dtw_spread_over_nulls( float* accumulate, int n1, int maxshift)
+/*< spread the accumulation back over null values >*/
+{
 	for ( int i = 0; i < maxshift ; i++){
 		for (int l = 0 ; l < maxshift - i; l++){
 			/* beginning of signal */
@@ -154,8 +170,10 @@ void dtw_spread_over_nulls( float* accumulate, int n1, int maxshift){
 		}
 	}
 }
-/* accumulates errors over trajectories */
-void dtw_accumulate_errors( float* mismatch, float* accumulate, int n1, int maxshift, float str){
+
+void dtw_accumulate_errors( float* mismatch, float* accumulate, int n1, int maxshift, float str)
+/*< accumulates errors over trajectories >*/
+{
     /* strain bound */
 	int sb = (int)(1/str);
 	/* initialize with first step */
@@ -185,8 +203,10 @@ void dtw_accumulate_errors( float* mismatch, float* accumulate, int n1, int maxs
 	}
 	return;
 }
-/* apply known integer shifts to matching trace */
-void dtw_apply_shifts( float* match, int* shifts, float* warped, int n){
+
+void dtw_apply_shifts( float* match, int* shifts, float* warped, int n)
+/*< apply known integer shifts to matching trace >*/
+{
 	for (int i = 0 ; i < n ; i++){
 		/* make sure shifts in bounds */
 		if (i + shifts[ i] < 0){
@@ -203,21 +223,37 @@ void dtw_apply_shifts( float* match, int* shifts, float* warped, int n){
 	}
 	return;
 }
-/* set lag pannel parameters  */
+
 void dtw_set_file_params(sf_file _file, int n1, float d1, float o1,
     const char* label1, const char* unit1,
     int n2, float d2, float o2,
-	const char* label2, const char* unit2){
+	const char* label2, const char* unit2)
+/*< set output parameters >*/	
+{
+		if ((n1     =! NULL))   sf_putint   (_file,"n1",n1);
+		if ((d1     =! NULL))	sf_putfloat (_file,"d1",d1);
+		if ((o1     =! NULL))	sf_putfloat (_file,"o1",o1);
+		if ((NULL != label1))   sf_putstring(_file,"label1", label1);
+		if ((NULL != unit1))    sf_putstring(_file, "unit1",  unit1);
+		if ((n2     =! NULL))   sf_putint   (_file,"n2",n2);
+		if ((d2     =! NULL))	sf_putfloat (_file,"d2",d2);
+		if ((o2     =! NULL))	sf_putfloat (_file,"o2",o2);
+		if ((NULL != label2))   sf_putstring(_file,"label2", label2);
+		if ((NULL != unit2))	sf_putstring(_file, "unit2",  unit2);
+	return;
+}
+
+
+void dtw_set_file_params_(sf_file _file, int n1, float d1, float o1,
+    int n2, float d2, float o2)
+/*< set lag pannel parameters, no putting of strings to avoid pathological segfaults >*/	
+{
 	/* set output parameters */
-	sf_putint(_file,"n1",n1);
-	sf_putfloat(_file,"d1",d1);
-	sf_putfloat(_file,"o1",o1);
-    sf_putstring(_file,"label1", label1);
-	sf_putstring(_file, "unit1",  unit1);
-	sf_putint(_file,"n2",n2);
-	sf_putfloat(_file,"d2",d2 );
-	sf_putfloat(_file,"o2", o2);
-    sf_putstring(_file,"label2", label2);
-	sf_putstring(_file,"unit2", unit2);
+		sf_putint   (_file,"n1",n1);
+		sf_putfloat (_file,"d1",d1);
+		sf_putfloat (_file,"o1",o1);
+		sf_putint   (_file,"n2",n2);
+		sf_putfloat (_file,"d2",d2);
+		sf_putfloat (_file,"o2",o2);
 	return;
 }
