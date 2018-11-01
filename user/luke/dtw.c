@@ -224,6 +224,42 @@ void dtw_apply_shifts( float* match, int* shifts, float* warped, int n)
 	return;
 }
 
+void dtw_copy(float* array, float val, int n)
+/*< copies float vals into array >*/
+{
+	for (int i = 0 ; i < n ; i++){
+		array[i] = val;
+	}
+	return;
+}
+
+void dtw_acopy(float* array, float* vals, int n)
+/*< copies vals into array, both size n >*/
+{
+	for (int i = 0 ; i < n ; i++){
+		array[i] = vals[i];
+	}
+	return;
+}
+
+void dtw_aadd(float* array, float* vals, int n)
+/*< adds vals plus array, both size n >*/
+{
+	for (int i = 0 ; i < n ; i++){
+		array[i] += vals[i];
+	}
+	return;
+}
+
+void dtw_mul(float* array, float val, int n)
+/*< scales array by float vals >*/
+{
+	for (int i = 0 ; i < n ; i++){
+		array[i] += val;
+	}
+	return;
+}
+
 void dtw_set_file_params(sf_file _file, int n1, float d1, float o1,
     const char* label1, const char* unit1,
     int n2, float d2, float o2,
@@ -244,16 +280,4 @@ void dtw_set_file_params(sf_file _file, int n1, float d1, float o1,
 }
 
 
-void dtw_set_file_params_(sf_file _file, int n1, float d1, float o1,
-    int n2, float d2, float o2)
-/*< set lag pannel parameters, no putting of strings to avoid pathological segfaults >*/	
-{
-	/* set output parameters */
-		sf_putint   (_file,"n1",n1);
-		sf_putfloat (_file,"d1",d1);
-		sf_putfloat (_file,"o1",o1);
-		sf_putint   (_file,"n2",n2);
-		sf_putfloat (_file,"d2",d2);
-		sf_putfloat (_file,"o2",o2);
-	return;
-}
+
