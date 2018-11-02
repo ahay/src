@@ -12,7 +12,6 @@ jobs:
     - image: circleci/python:3.6.4
       command: /sbin/init
     - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-      command: /sbin/init
     steps:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
