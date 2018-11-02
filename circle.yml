@@ -9,7 +9,8 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
-    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
+    ## Try python3
+    - image: circleci/python:3.6-stretch
       command: /sbin/init
     steps:
     - checkout
