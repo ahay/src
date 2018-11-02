@@ -31,7 +31,7 @@ for plot in Split(plots):
 	if plot in ['reflexpt','reflkine']:
 		env.Object(plot+'.o','reflector.c',
 			   CPPDEFINES=env.get('CPPDEFINES',[]) +
-			   [string.upper(plot)])
+			   [plot.upper()])
 		prog = env.Program(plot+'.o')
 	else:
 		prog = env.Program(plot+'.c')
@@ -50,7 +50,7 @@ for plot in Split(plots):
 if root:
 	main = 'vpplot.py'
     
-	docs = map(lambda prog: env.Doc(prog,rsfprefix='vp'),mains)
+	docs = [env.Doc(prog,rsfprefix='vp') for prog in mains]
 	docalias = {'vpreflexpt':'vpreflector',
 		    'vpreflkine':'vpreflector'}
 	env.Depends(docs,'#/framework/rsf/doc.py')

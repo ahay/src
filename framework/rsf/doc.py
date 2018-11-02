@@ -14,12 +14,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from __future__ import print_function 
-from __future__ import division
-from __future__ import absolute_import
+
+
+
 # this produces errors with kdmig2d.py - the first su program doc
 #from __future__ import unicode_literals
 
+from __future__ import division, absolute_import, print_function
 import pydoc, re, sys, os, glob, signal
 import rsf.path as rsfpath
 
@@ -36,7 +37,7 @@ data = {}
 # m8r wiki page, with fallback info in a config file
 
 docprogs = '''
-add attr awefd2d cat cmplx conjgrad cp csv2rsf cut dd disfil dottest get 
+add attr awefd2d cat cmplx conjgrad cp csv2rsf cut dd disfil dottest get
 headerattr headercut headermath headersort headerwindow in interleave mask math
 pad pick prep4plot put real remap1 reverse rm rotate rtoc scale segyread
 segywrite spike spray srmig3 stack stretch transp window sizes figlist booklist
@@ -65,8 +66,7 @@ def syswait(comm):
         os._exit(0)
 
 def subdirs():
-    return filter(lambda x: x[-5:] != '_html',
-                  filter(os.path.isdir,glob.glob('[a-z]*')))
+    return [x for x in list(filter(os.path.isdir,glob.glob('[a-z]*'))) if x[-5:] != '_html']
 
 def getversion(target=None,source=None,env=None):
     label = env.get('version')
@@ -76,7 +76,7 @@ def getversion(target=None,source=None,env=None):
     out.write('label="%s"\n\n' % label)
     out.write('''
 if __name__ == "__main__":
-    print label
+    print(label)
     ''')
     out.close()
     os.chmod(name,0o775)
@@ -97,7 +97,7 @@ except:
     pass
 
 RSFROOT="%s"
-    
+
 def selfdoc():
     'Display man page'
     prognm = os.path.basename(sys.argv[0])
@@ -124,18 +124,18 @@ def use(target=None,source=None,env=None):
         try:
             glo = {}
             loc = {}
-            execfile(dotproj,glo,loc)
+            exec(compile(open(dotproj).read(), dotproj, 'exec'),glo,loc)
         except:
             sys.stderr.write('problem with %s' % dotproj)
             continue
-        
+
         dirname = os.path.dirname(dotproj)
         dirname,project = os.path.split(dirname)
         dirname,chapter = os.path.split(dirname)
         dirname,book    = os.path.split(dirname)
 
         for prog in loc['uses']:
-            out.write('rsf.doc.progs["%s"].use("%s","%s","%s")\n' % 
+            out.write('rsf.doc.progs["%s"].use("%s","%s","%s")\n' %
                       (prog,book,chapter,project))
         out.write('\n')
     out.close()
@@ -155,11 +155,11 @@ def selfdoc(target=None,source=None,env=None):
 
 def bold(text):
     """Format a string in bold by overstriking."""
-    return ''.join(map(lambda ch: ch + "\b" + ch, text))
+    return ''.join([ch + "\b" + ch for ch in text])
 
 def underline(text):
     """Format a string in underline by overstriking."""
-    return ''.join(map(lambda ch: ch + "\b_", text))
+    return ''.join([ch + "\b_" for ch in text])
 
 def underline_match(text):
     """Underline a matching expression"""
@@ -173,8 +173,7 @@ def replace(text, *pairs):
     return text
 
 def section(head,body):
-    text = "\n".join(map(lambda line: "\t" + line,
-                         body.split("\n")))
+    text = "\n".join(["\t" + line for line in body.split("\n")])
     return bold(head.upper()) + "\n" + text + "\n"
 
 def page(title, contents):
@@ -225,7 +224,7 @@ def html_section(title, fgcol, bgcol, contents, width=6,
 def bigsection(title, *args):
     """Format a section with a big heading."""
     title = '<big><strong>%s</strong></big>' % title
-    return apply(html_section,(title,)+args)
+    return html_section(*(title,)+args)
 
 def multicolumn(list, format, cols=4):
     """Format a list of items into a multi-column list."""
@@ -363,9 +362,9 @@ class rsfdata(object):
         self.name = name
         self.uses = {}
     def use (self,book,chapter,project):
-        if not self.uses.has_key(book):
+        if book not in self.uses:
             self.uses[book]={}
-        if not self.uses[book].has_key(chapter):
+        if chapter not in self.uses[book]:
             self.uses[book][chapter] = []
         self.uses[book][chapter].append(project)
 
@@ -407,9 +406,9 @@ class rsfprog(object):
     def par (self,name,par):
         self.pars[name] = par
     def use (self,book,chapter,project):
-        if not self.uses.has_key(book):
+        if book not in self.uses:
             self.uses[book]={}
-        if not self.uses[book].has_key(chapter):
+        if chapter not in self.uses[book]:
             self.uses[book][chapter] = []
         self.uses[book][chapter].append(project)
     def docstring(self,usedoc_max,rsfroot):
@@ -421,7 +420,7 @@ class rsfprog(object):
         if self.cmts:
             cmts = re.sub(r'http://[\S]+',underline_match,self.cmts)
             doc = doc + section('comments',cmts)
-        pars =  self.pars.keys()
+        pars =  list(self.pars.keys())
         if pars:
             pars.sort()
             pardoc = ''
@@ -430,13 +429,13 @@ class rsfprog(object):
             doc = doc + section('parameters',pardoc.rstrip())
         if self.also:
             doc = doc + section('see also',self.also)
-        books = self.uses.keys()
+        books = list(self.uses.keys())
         if books:
             usedoc = ''
             usedoc_i = 0
             books.sort()
             for book in books:
-                chapters = self.uses[book].keys()
+                chapters = list(self.uses[book].keys())
                 chapters.sort()
                 for chapter in chapters:
                     for project in self.uses[book][chapter]:
@@ -446,7 +445,7 @@ class rsfprog(object):
             if usedoc:
                 if usedoc_i > usedoc_max:
                     usedoc += '%d more examples listed in:\n' % \
-                              (usedoc_i - usedoc_max) 
+                              (usedoc_i - usedoc_max)
                     usedoc += '%s/share/doc/madagascar/html/%s.html\n'%\
                               (rsfroot,self.name)
             doc = doc + section('used in',usedoc.rstrip())
@@ -473,7 +472,7 @@ class rsfprog(object):
             cmts =self.cmts.replace('\n','<br>')
             cmts = re.sub(r'(?:\s*<br>)+$','',cmts)
             contents = contents + '|-\n|  colspan="4" | %s\n' % cmts
-        pars =  self.pars.keys()
+        pars =  list(self.pars.keys())
         if pars:
             pars.sort()
             for par in pars:
@@ -484,7 +483,10 @@ class rsfprog(object):
     def man(self,dir,usedoc_max,rsfroot,name=None):
         if not name:
             name = self.name
-        file = open (os.path.join(dir,name + '.1'),'w')
+        if sys.version_info[0] >= 3:
+            file = open (os.path.join(dir,name + '.1'),'w', encoding='utf-8')
+        else:
+            file = open (os.path.join(dir,name + '.1'),'w')
         contents = '.TH %s 1  ' % name
         if have_datetime_module:
             day = datetime.datetime.now()
@@ -497,19 +499,19 @@ class rsfprog(object):
             contents = contents + '.SH SYNOPSIS\n.B %s\n' % self.snps
         if self.cmts:
             contents = contents + '.SH COMMENTS\n%s\n' % self.cmts
-        pars =  self.pars.keys()
+        pars =  list(self.pars.keys())
         if pars:
             contents += '.SH PARAMETERS\n.PD 0\n'
             pars.sort()
             for par in pars:
                 contents += self.pars[par].man(par)
-        books = self.uses.keys()
+        books = list(self.uses.keys())
         if books:
             usedoc = ''
             usedoc_i = 0
             books.sort()
             for book in books:
-                chapters = self.uses[book].keys()
+                chapters = list(self.uses[book].keys())
                 chapters.sort()
                 for chapter in chapters:
                     for project in self.uses[book][chapter]:
@@ -543,7 +545,7 @@ class rsfprog(object):
         if self.cmts:
             contents = contents + '\\begin{verbatim}%s\\end{verbatim}\n' % \
                        self.cmts
-        pars =  self.pars.keys()
+        pars =  list(self.pars.keys())
         if pars:
             pars.sort()
             contents = contents + '\\par\\noindent\n' + \
@@ -558,13 +560,16 @@ class rsfprog(object):
         if not name:
             name = self.name
         if dir:
-            file = open (os.path.join(dir,name + '.txt'),'w')
+            if sys.version_info[0] >= 3:
+                file = open (os.path.join(dir,name + '.txt'),'w', encoding='utf-8')
+            else:
+                file = open (os.path.join(dir,name + '.txt'),'w')
         contents = 'Program %s | %s\n' % (name,self.desc)
         if self.snps:
             contents = contents + '[SYNOPSIS]\n%s\n' % self.snps
         if self.cmts:
             contents = contents + '[COMMENTS]\n%s\n' % self.cmts
-        pars =  self.pars.keys()
+        pars =  list(self.pars.keys())
         if pars:
             contents = contents + '[PARAMETERS]\n'
             #sys.stderr.write('type(pars)=%s\n'%type(pars))
@@ -598,7 +603,7 @@ DocCmd: %s
                     filename = tokens[tokens.index(cue)+1]
                     data, ext  = filename.split('.')
                 except:
-                    continue                
+                    continue
                 if data in ['in','out']:
                     data = '(no hint on content)'
                 else:
@@ -609,7 +614,7 @@ DocCmd: %s
                     line = 'Port:   stdout %s w req \t%s standard output %s\n' % (ext,ext.upper(),data)
                 contents = contents + line
         """TO DO: process comments."""
-        pars =  self.pars.keys()
+        pars =  list(self.pars.keys())
         ParamLines = ''
         if pars:
             pars.sort()
@@ -643,7 +648,7 @@ DocCmd: %s
         if self.cmts:
             cmts = re.sub(r'(http://[\S]+)',r'<a href="\1">\1</a>',self.cmts)
             contents += cmts.replace('\n','<br>\n')
-        pars =  self.pars.keys()
+        pars =  list(self.pars.keys())
         if pars:
             pars.sort()
             pardoc = ''
@@ -657,13 +662,13 @@ DocCmd: %s
                 else:
                     bgcol = '#ffc8d8'
             contents += bigsection('Parameters','#ffffff', '#ee77aa',pardoc)
-        books = self.uses.keys()
+        books = list(self.uses.keys())
         if books:
             usedoc = ''
             books.sort()
             for book in books:
                 bookdoc = ''
-                chapters = self.uses[book].keys()
+                chapters = list(self.uses[book].keys())
                 chapters.sort()
                 for chapter in chapters:
                     for project in self.uses[book][chapter]:
@@ -673,7 +678,10 @@ DocCmd: %s
                         ''' % (book,proj,proj)
                 usedoc += bigsection(book.upper(),'#000000','#ffd8c8',bookdoc)
             contents += bigsection('Used In','#ffffff', '#eeaa77',usedoc)
-        hfile.write(page(self.name,contents))
+        if sys.version_info[0] >= 3:
+            hfile.write(page(self.name,contents.encode('utf-8')))
+        else:
+            hfile.write(page(self.name,contents))
         hfile.close()
 
 comment = None
@@ -699,7 +707,7 @@ def html(dir,known_version):
     file = open (os.path.join(dir,'index.html'),'w')
     name = '<big><big><strong>Madagascar Programs</strong></big></big>'
     content = heading(name,'#ffffff','#7799ee')
-        
+
     if known_version[-4:] == '-svn' or known_version == '':
         # Read subversion version number, if possible
         proc = os.popen('svn stat -v SConstruct 2>/dev/null')
@@ -713,7 +721,7 @@ def html(dir,known_version):
                 pass
 
     rev_add2content = 'version ' + known_version
-            
+
     if have_datetime_module or know_revnr:
         content += 'Generated'
         if have_datetime_module:
@@ -721,19 +729,19 @@ def html(dir,known_version):
         if rev_add2content != '':
             content += ' from ' + rev_add2content
     dirs = {}
-    for prog in progs.keys():
+    for prog in list(progs.keys()):
         dir = os.path.dirname(progs[prog].file)
-        if not dirs.has_key(dir):
+        if dir not in dirs:
             dirs[dir] = []
         dirs[dir].append(prog)
-    keys = dirs.keys()
+    keys = list(dirs.keys())
     keys.sort()
     for dir in keys:
         names = dirs[dir]
         names.sort()
         content = content + bigsection(dir,'#ffffff', '#ee77aa',
                                        multicolumn(names,link))
-    file.write(page('all programs',content))
+    file.write(page('all programs',content.encode('utf-8')))
     file.close()
 
 def text(dir,name):
@@ -742,12 +750,12 @@ def text(dir,name):
     file = open (os.path.join(dir,name),'w')
     file.write('Madagascar Programs\n')
     dirs = {}
-    for prog in progs.keys():
+    for prog in list(progs.keys()):
         dir = os.path.dirname(progs[prog].file)
-        if not dirs.has_key(dir):
+        if dir not in dirs:
             dirs[dir] = []
         dirs[dir].append(prog)
-    keys = dirs.keys()
+    keys = list(dirs.keys())
     keys.sort()
     for dir in keys:
         names = dirs[dir]
@@ -898,7 +906,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     if first:
         tops = first.group('comment').split("\n")
         desc = tops.pop(0).lstrip()
-        first = '\n'.join(map(lambda x: x.lstrip(chars[lang]),tops))
+        first = '\n'.join([x.lstrip(chars[lang]) for x in tops])
     else:
         desc = None
     prog = rsfprog(name,source,desc)
@@ -918,7 +926,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
         else:
             filename = par[0]
             io = par[1]
-            tag = par[2]            
+            tag = par[2]
         if valid.get(filename,1):
             iotype = {'i':'input','o':'output'}[io[0].lower()]
             if tag == 'in' or (not tag and iotype == 'input'):
@@ -1087,7 +1095,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
             elif opt == '-k':
                 val = val.lower()
                 doc = ''
-                for prog in progs.keys():
+                for prog in list(progs.keys()):
                     desc = progs[prog].desc
                     if re.search(val,desc.lower()):
                         doc = doc + "%s: %s\n" % (bold(prog),desc)
@@ -1097,25 +1105,25 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
         if not args:
             if typ == 'w':
                 html(dir,ver)
-                for prog in progs.keys():
+                for prog in list(progs.keys()):
                     main = progs.get(prog)
                     if main:
                         main.html(dir,rep)
             elif typ == 't':
                 text(dir,'INDEX.txt')
-                for prog in progs.keys():
+                for prog in list(progs.keys()):
                     main = progs.get(prog)
                     if main:
                         main.text(dir)
             elif typ == 's':
                 spec(dir,'extend.spec')
-                for prog in progs.keys():
+                for prog in list(progs.keys()):
                     main = progs.get(prog)
                     if main:
                         main.spec(dir)
             elif typ == 'g':
                 text(dir,'index.man')
-                for prog in progs.keys():
+                for prog in list(progs.keys()):
                     main = progs.get(prog)
                     if main:
                         main.man(dir,usedoc_max,root)
@@ -1144,7 +1152,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 else:
                     main.document(usedoc_max,root)
             else:
-                print ('''Run %s with parameters. 
+                print ('''Run %s with parameters.
 To obtain a selfdoc, install %s with Madagascar: http://www.ahay.org/wiki/Adding_new_programs_to_Madagascar
                        ''' % (prog,prog))
 

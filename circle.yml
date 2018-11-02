@@ -1,16 +1,21 @@
 ## Customize the test machine
 version: 2
+workflows:
+  version: 2
+  test:
+    jobs:
+      - python36
+      - python27
 jobs:
-  build:
+  python36: &test-template
+    docker:
+    - image: circleci/python:3.6.4
     working_directory: ~/ahay/src
-    parallelism: 1
+    #parallelism: 1
     shell: /bin/bash --login
     environment:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
-    docker:
-    - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-      command: /sbin/init
     steps:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
@@ -33,7 +38,7 @@ jobs:
     - store_artifacts:
         path: /tmp/circleci-test-results
 
-
-
-
-    
+  python27:
+    <<: *test-template
+    docker:
+    - image: circleci/python:2.7-jessie

@@ -6,7 +6,7 @@ n = len(inp)
 Flow('inp.asc',None,
      '''
      echo %s n1=%d data_format=ascii_float in=$TARGET
-     ''' %  (string.join(map(str,inp),' '),n))
+     ''' %  (' '.join(map(str,inp)),n))
 Flow('inp0','inp.asc','dd form=native')
 Flow('zero','inp0','math output=0')
 Flow('inp','zero inp0',
@@ -26,7 +26,7 @@ for t in range(nt):
     Flow(tens+'.asc',None,
          '''
          echo %s a0=%g n1=2 data_format=ascii_float in=$TARGET
-         ''' % (string.join(map(str,s),' '),s0))
+         ''' % (' '.join(map(str,s)),s0))
     Flow(tens,tens+'.asc','dd form=native | wilson niter=100')
     Flow('o'+tens,tens,
          '''
@@ -44,13 +44,13 @@ Result('otens',imps,
        '''
        cat axis=2 ${SOURCES[1:%d]} |
        dots labels=%s dots=2 connect=0 gaineach=0 
-       ''' % (nt,string.join(map(lambda x: 'tension=%g' % x,tension),':')))
+       ''' % (nt,':'.join(['tension=%g' % x for x in tension])))
 
 Result('int',ints+['inp'],
        '''
        cat axis=2 ${SOURCES[1:%d]} |
        dots labels=%s dots=2 connect=0 gaineach=0 
        ''' % (nt+1,
-              string.join(map(lambda x: 'tension=%g' % x,tension),':')+':given'))
+              ':'.join(['tension=%g' % x for x in tension])+':given'))
  
 End()

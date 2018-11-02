@@ -43,7 +43,7 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog) # Compile
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    prog = env.Program(prog,[x + '.c' for x in sources])
     if root:
         env.Install(bindir,prog)
 
@@ -59,7 +59,7 @@ if root: # no compilation, just rename
     for prog in pymains:
         binary = os.path.join(bindir,'sf'+prog+exe)
         env.InstallAs(binary,'M'+prog+'.py')
-        env.AddPostAction(binary,Chmod(str(binary),0755))
+        env.AddPostAction(binary,Chmod(str(binary),0o755))
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -68,8 +68,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+    docs = [env.Doc(prog,'M' + prog) for prog in mains] + \
+           [env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains]
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

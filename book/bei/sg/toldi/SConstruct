@@ -18,7 +18,7 @@ Flow('cmp','dynamics.H',
      ''')
 
 near = [0,5,9]
-far = map(lambda x: 27-x,near)
+far = [27-x for x in near]
 
 for f2 in near+far:
     win = 'win%d' % f2
@@ -27,7 +27,7 @@ for f2 in near+far:
 for case in range(2):
     plot = 'case%d' % case
     Plot(plot,
-         'win%d win%d win%d' % map(tuple,[near,far])[case],
+         'win%d win%d win%d' % list(map(tuple,[near,far]))[case],
          '''
          cat axis=2 ${SOURCES[1:3]} |
          wiggle wanttitle=n plotcol=%d zplot=.4

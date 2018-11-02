@@ -2,17 +2,17 @@
 
 ##   Copyright (C) 1987 The Board of Trustees of Stanford University
 ##   Copyright (C) 2004 University of Texas at Austin
-##  
+##
 ##   This program is free software; you can redistribute it and/or modify
 ##   it under the terms of the GNU General Public License as published by
 ##   the Free Software Foundation; either version 2 of the License, or
 ##   (at your option) any later version.
-##  
+##
 ##   This program is distributed in the hope that it will be useful,
 ##   but WITHOUT ANY WARRANTY; without even the implied warranty of
 ##   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ##   GNU General Public License for more details.
-##  
+##
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,13 +30,13 @@ def convert(infile,outfile,args=''):
     bindir = os.path.join(rsf.prog.RSFROOT,'bin')
     vppen  = os.path.join(bindir,'vppen') + ' ' + args
     ppmpen = os.path.join(bindir,'ppmpen')
-    
+
     # Use vppen to find out how big and where on the page the plot is.
     stats = os.popen(vppen + ' size=a stat=l < %s' % infile)
     lines = stats.readlines()
     stats.close()
 
-    stat = string.split(lines[0])
+    stat = lines[0].split()
 
     # find the number of frames
     retot = re.compile('Total\s+(\d+)')
@@ -47,8 +47,11 @@ def convert(infile,outfile,args=''):
         frames = 1
 
     if frames > 1:
-        import commands
-        which_gifsicle = commands.getoutput('which gifsicle')
+        if sys.version_info[0] >= 3:
+            from subprocess import getoutput
+        else:
+            from commands import getoutput
+        which_gifsicle = getoutput('which gifsicle')
         if which_gifsicle[:18] == 'which: no gifsicle':
             sys.stderr.write('Missing program: gifsicle\n')
             sys.exit(1)
@@ -91,9 +94,9 @@ def convert(infile,outfile,args=''):
             # combine frames into an animated gif (requires gifsicle)
             gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
             run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),
-                                             string.join(gifs),outfile)
+                                             ' '.join(gifs),outfile)
             os.system (run)
-            map(os.unlink,gifs)
+            list(map(os.unlink,gifs))
     else:
         shutil.move(gifs[0],outfile)
 
@@ -103,7 +106,7 @@ if __name__ == "__main__":
     argc = len(sys.argv)
 
     if argc < 2:
-        print '''
+        print('''
         vplot2gif myplot.vpl [myplot.gif]
 
         Convert Vplot format to GIF format at 75 dots per inch, ideal
@@ -129,14 +132,14 @@ if __name__ == "__main__":
 
         If the output file is a directory, the individual frames are
         not combined into an animation.
-        '''
+        ''')
 
         sys.exit(1)
 
     infile = sys.argv[1]
 
     if not os.path.isfile(infile):
-        print "\"%s\" is not a file" % infile
+        print("\"%s\" is not a file" % infile)
         sys.exit(1)
 
     if argc < 3:

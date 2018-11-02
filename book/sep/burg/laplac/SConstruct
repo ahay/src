@@ -21,7 +21,7 @@ filter = {
     24 -56 -176 -56 24
     -1  24   14  24 -1'''}
     
-for f in filter.keys():    
+for f in list(filter.keys()):    
     Flow(f+'.asc','lag',
      '''
      echo  %s lag=$SOURCE a0=342
@@ -32,15 +32,15 @@ for f in filter.keys():
     Flow(f+'2',['spik',f],'helicon filt=${SOURCES[1]} adj=y')
     Flow(f+'imp',[f+'1',f+'2'],'add ${SOURCES[1]}')
 
-lag = range(1,13)+range(85,113)+range(185,203)
+lag = list(range(1,13))+list(range(85,113))+list(range(185,203))
 Flow('lag2.asc',None,
      '''
      echo %s n1=%d n=100,100
      data_format=ascii_int
      in=$TARGET
-     ''' % (string.join(map(str,lag),' '),len(lag)))
+     ''' % (' '.join(list(map(str,lag))),len(lag)))
 
-for asc in ['lag','lag2']+filter.keys():
+for asc in ['lag','lag2']+list(filter.keys()):
     Flow(asc,asc+'.asc','dd form=native')
 
 Flow('fact flag','thin lag2','wilson lagin=${SOURCES[1]} lagout=${TARGETS[1]}')

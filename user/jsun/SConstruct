@@ -75,7 +75,7 @@ mains = Split(progs+' '+libprop)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    prog = env.Program(prog,[x + '.c' for x in sources])
     if root:
         env.Install(bindir,prog)
 
@@ -87,7 +87,7 @@ for prog in mpi_mains:
         env.StaticObject('M'+prog+'.c',CC=mpicc)
         #for distributed FFTW3
         #prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc,LIBS=env.get('LIBS')+['fftw3f_mpi'])
-        prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc)
+        prog = env.Program(prog,[x + '.o' for x in sources],CC=mpicc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     if root:
@@ -123,7 +123,7 @@ for prog in mpicxx_mains:
     sources = ['M' + prog] + Split(xxsubs)
     if FindFile('revolve.c','.') and mpicxx:
         env.StaticObject('M'+prog+'.cc',CXX=mpicxx)
-        prog = env.Program(prog,map(lambda x: x + '.o',sources),CXX=mpicxx)
+        prog = env.Program(prog,[x + '.o' for x in sources],CXX=mpicxx)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='MPICXX',package='mpi')
     if root:
@@ -134,7 +134,7 @@ for prog in Split('cmatmult2'):
     if prog=='cmatmult2':
         sources.append('cgmres')
     bldutil.depends(env,sources,prog)
-    sources = map(lambda x: x + '.o',sources)
+    sources = [x + '.o' for x in sources]
     env.Object('Test' + prog + '.c')
     env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
 
@@ -148,7 +148,7 @@ if root: # no compilation, just rename
     for prog in pymains:
         binary = os.path.join(bindir,'sf'+prog+exe)
         env.InstallAs(binary,'M'+prog+'.py')
-        env.AddPostAction(binary,Chmod(str(binary),0755))
+        env.AddPostAction(binary,Chmod(str(binary),0o755))
     for mod in Split(pymods):
         env.Install(pkgdir,mod+'.py')
 
@@ -160,9 +160,9 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) +  \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains+mpicxx_mains) 
+    docs = [env.Doc(prog,'M' + prog) for prog in mains+mpi_mains] +  \
+           [env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains] + \
+           [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in ccmains+mpicxx_mains] 
           
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)

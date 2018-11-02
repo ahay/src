@@ -40,7 +40,7 @@ titles = {'kaa':'Kirchhoff',
           'stv':'Stolt -> Velocity Continuation'}
 
 Flow('spec','mod','spectra all=y | scale axis=1')
-for case in titles.keys():
+for case in list(titles.keys()):
     Flow('spec'+case,case,'spectra all=y | scale axis=1')
     Plot(case,'grey title="%s" ' % titles[case])
     Plot('spec'+case,['spec'+case,'spec'],

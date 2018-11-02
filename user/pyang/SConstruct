@@ -112,7 +112,7 @@ for prog in cmains+cmains_fftw:
     bldutil.depends(env,sources,'M'+prog)
     if fftw or prog in cmains:
         env.StaticObject('M'+prog+'.c')
-        prog = env.Program(prog,map(lambda x: x + '.o',sources))
+        prog = env.Program(prog,[x + '.o' for x in sources])
     else:
         prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw')
     if root:
@@ -136,7 +136,7 @@ ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
     if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+        prog = env.Program(prog,[x + '.cc' for x in sources])
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
@@ -150,9 +150,9 @@ for prog in mpi_cmains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     if mpicc:
-    	prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
+    	prog = env.Program(prog,[x + '.c' for x in sources],CC=mpicc)
     else:
-	prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+        prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     if root:
         env.Install(bindir,prog)
 
@@ -231,7 +231,7 @@ for prog in f90_mains:
     sources = ['M' + prog]
     if 'f90' in api and F90:
         bldutil.depends90(env,sources,'M'+prog)
-        prog = env.Program(prog,map(lambda x: x + '.f90',sources),
+        prog = env.Program(prog,[x + '.f90' for x in sources],
                            LINK=env.get('F90'))
     else:
         prog = env.RSF_Place('sf'+prog,None,var='F90')        
@@ -257,11 +257,11 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),cmains+cmains_fftw+mpi_cmains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) +\
-	   map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains + cuda_mpi_mains)+ \
-	   map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),f90_mains)+\
-	   map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+    docs = [env.Doc(prog,'M' + prog) for prog in cmains+cmains_fftw+mpi_cmains] + \
+           [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in ccmains] +\
+	   [env.Doc(prog,'M' + prog+'.cu') for prog in cuda_mains + cuda_mpi_mains]+ \
+	   [env.Doc(prog,'M'+prog+'.f90',lang='f90') for prog in f90_mains]+\
+	   [env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains]
     env.Depends(docs,'#/framework/rsf/doc.py')	
 
     doc = env.RSF_Docmerge(main,docs)

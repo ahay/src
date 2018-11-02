@@ -19,7 +19,10 @@ nt = int(1.75/dt+1.5)
 # anisotropy for picking
 an = 1000
 
-under = string.maketrans('_','-')
+if sys.version_info[0] >= 3:
+    under = str.maketrans('_','-')
+else:
+    under = string.maketrans('_','-')
 for c in range(4):
     case = ('time1','time2','time2_over','time2_over_compaction')[c]
     src = 'vel_%s.rsf' % case

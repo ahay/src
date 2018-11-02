@@ -33,6 +33,11 @@ except: # Use distributed version
 
 import rsf.api as rsf
 
+if sys.version_info[0] >= 3:
+    from subprocess import getoutput
+else:
+    from commands import getoutput
+
 try:
     import subprocess
     have_subprocess=True
@@ -56,11 +61,11 @@ hr = '#' + 79 * '-'
 
 def pp(call_list, inp=None, out=None):
     'Print a pipe command. Output can be fed to ivlad.exe'
-    # Example: 
+    # Example:
     # ivlad.pp([sf.rtoc(exe='p'),
     #           sf.real(exe='p'),
     #           sf.get(par='n1',exe='p')],
-    #          'junk.rsf','file.asc') 
+    #          'junk.rsf','file.asc')
     # Outputs:
     # '<junk.rsf sfrtoc | sfreal | sfget parform=n n1'
 
@@ -123,7 +128,7 @@ def run(main_func, cpar=[], nminarg=None, nmaxarg=None):
         show_man_and_out(q == None)
     try:
         status = main_func(par) # run the program
-    except m8rex.Error, e:
+    except m8rex.Error as e:
         msg(e.msg, True)
         status = unix_error
 
@@ -198,7 +203,7 @@ def get1st(file, type='float'):
     if type == 'float':
         return float(out_str)
     elif type == 'int':
-        return int(out_str)        
+        return int(out_str)
 
 ################################################################################
 
@@ -254,7 +259,7 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
     cmdlist = [prog]
     if arg != None:
         cmdlist += mklist(arg)
-      
+
     # Build command string for printing or Python < 2.4
     if verb or not have_subprocess:
         cmd = cat_cmd(cmdlist, stdin)
@@ -275,7 +280,7 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
             raise m8rex.FailedExtCall(cat_cmd(cmdlist, stdin))
     else: # no subprocess module present
         try:
-            output = commands.getoutput(cmd)
+            output = getoutput(cmd)
         except:
             raise m8rex.FailedExtCall(cmd)
 
@@ -401,7 +406,7 @@ def isvalid(f,chk4nan=False):
 
     sfin = 'sfin info='
     com_out = getout('sfin',['info=n', f])
-    
+
     if com_out[:6] == 'sfin: ':
         is_rsf_ok = False
 
@@ -471,12 +476,12 @@ def isvalid(f,chk4nan=False):
 
 def list_invalid_rsf_files(dirname, flist, chk4nan=False):
     'Not recursive. Returns list of (file,msg) tuples.'
-    
+
     chk_dir_rx(dirname)
 
     invalid_files = []
 
-    rsf_files = filter(lambda x:os.path.splitext(x)[1]==ext, flist)
+    rsf_files = [x for x in flist if os.path.splitext(x)[1]==ext]
     rsf_files.sort()
 
     for f in rsf_files:
@@ -491,12 +496,12 @@ def list_invalid_rsf_files(dirname, flist, chk4nan=False):
 
 def list_valid_rsf_files(dirname, flist, chk4nan=False):
     'Not recursive'
-    
+
     chk_dir_rx(dirname)
 
     valid_files = []
 
-    rsf_files = filter(lambda x:os.path.splitext(x)[1]==ext, flist)
+    rsf_files = [x for x in flist if os.path.splitext(x)[1]==ext]
     rsf_files.sort()
 
     for f in rsf_files:
@@ -516,9 +521,9 @@ def msg(message, verb=True):
         if verb == 0:
             verb = False
         elif verb > 0:
-            verb = True    
+            verb = True
 
-    if verb:    
+    if verb:
         sys.stderr.write(str(message) + os.linesep)
 
 ################################################################################
@@ -529,18 +534,18 @@ def stdout_is_pipe():
     try:
         pos = sys.stdout.tell() # pos is offset in file
         return False # I am writing to a file
-    except: 
+    except:
         return True
 
 ################################################################################
 
 def trunc_or_append(n, ilist, append_val=None, verb=False):
     'Make a list be n elements regardless if it is longer or shorter'
-    
-    assert type(ilist) == list 
+
+    assert type(ilist) == list
 
     ndiff = n - len(ilist)
-    
+
     if ndiff < 0:
         msg('Truncated %d elements' % ndiff, verb)
         return ilist[:n]
@@ -562,13 +567,13 @@ def gen_random_str(strlen):
 ################################################################################
 
 def get_stdout_nm():
-    'Find the name of the file that the stdout stream is writing to'    
+    'Find the name of the file that the stdout stream is writing to'
     # The kernel of this function initially provided by Jeff Godwin
 
     found_stdout = False
 
     for f in os.listdir('.'):
-        # Comparing the unique file ID stored by the OS for the file stream 
+        # Comparing the unique file ID stored by the OS for the file stream
         # stdout with the known entries in the file table:
         if os.fstat(1)[1] == os.stat(f)[1]:
             found_stdout = True
@@ -618,7 +623,7 @@ def chk_param_limit(parval, parnm, limval=0, comp='>'):
        (comp == '<=' and parval >  limval) or \
        (comp == '<'  and parval >= limval):
         raise m8rex.ParBeyondLimit(parnm,limval,comp)
-        
+
 ################################################################################
 
 def valswitch(var,val1,val2):

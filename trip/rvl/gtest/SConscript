@@ -109,9 +109,9 @@ for n in extlibs:
     libpath=os.path.abspath(os.path.expandvars(n))
     liblist.append(os.path.basename(libpath))
     libdirlist.append(os.path.dirname(libpath))
-    print 'libpath  = ' + libpath
-    print 'basename = ' + os.path.basename(libpath)
-    print 'dirname  = ' + os.path.dirname(libpath)
+    print('libpath  = ' + libpath)
+    print('basename = ' + os.path.basename(libpath))
+    print('dirname  = ' + os.path.dirname(libpath))
 
 # finish with -lm - always!
 liblist.append('-lm')

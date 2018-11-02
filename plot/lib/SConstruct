@@ -22,7 +22,7 @@ dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
 ##############################################################################
 # INCLUDES
 ##############################################################################
-includes = map(lambda x: x+'.h',psrc)
+includes = [x+'.h' for x in psrc]
 
 objects = []
 dobjects = []

@@ -1,11 +1,12 @@
 from rsf.proj import *
 import math, string, random
+from builtins import range
 
 random.seed(2004)
 
 # no random.shuffle in Python 1.5.2
 def shuffle(x):
-    for i in xrange(len(x)-1, 0, -1):
+    for i in range(len(x)-1, 0, -1):
         # pick an element in x[:i+1] with which to exchange x[i]
         j = int(random.random() * (i+1))
         x[i], x[j] = x[j], x[i]
@@ -44,7 +45,7 @@ for case in range(len(combs)):
     name = 'comb%d' % case
     Flow(name,None,
          'spike n1=%d o1=0 d1=1 nsp=%d k1=%s' %
-         (n1,len(comb),string.join(map(str,comb),',')))
+         (n1,len(comb),','.join(map(str,comb))))
     signals.append(name)
     labels = labels + ':cmb%d' % (case+1)
 
@@ -79,16 +80,16 @@ Result('autocor','sig auto','SideBySideAniso',vppen='yscale=0.85')
 Result('spectra','auto spec','SideBySideAniso',vppen='yscale=0.85')
 
 nsig = len(signals)
-rand = range(nsig)
+rand = list(range(nsig))
 
 shuffle(rand)
 Flow('head1.asc',None,
      'echo %s n1=%d esize=0 data_format=ascii_float in=$TARGET' %
-     (string.join(map(str,rand)),nsig))
+     (' '.join(map(str,rand)),nsig))
 shuffle(rand)
 Flow('head2.asc',None,
      'echo %s n1=%d esize=0 data_format=ascii_float in=$TARGET' %
-     (string.join(map(str,rand)),nsig))
+     (' '.join(map(str,rand)),nsig))
 
 Plot('randauto',
      'auto head2.asc','headersort head=${SOURCES[1]} |' + \

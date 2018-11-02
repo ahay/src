@@ -36,8 +36,7 @@ if not repository:
     
     repository = 'https://github.com/ahay/src/blob/'+repository 
 
-docs = map(lambda x: os.path.join('..','rsf',x),
-           Split('sfdoc doc.py prog.py use.py'))
+docs = [os.path.join('..','rsf',x) for x in Split('sfdoc doc.py prog.py use.py')]
 python = sys.executable
 
 env.Command(htm,docs,

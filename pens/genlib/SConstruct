@@ -20,8 +20,8 @@ except: # local version
 
 env.Prepend(CPPPATH=['../../include'])
 
-sources  = map(lambda x: x+'.c',Split(src))
-includes = map(lambda x: x+'.h',Split(src))
+sources  = [x+'.c' for x in Split(src)]
+includes = [x+'.h' for x in Split(src)]
 
 objects = []
 for source in Split(src):

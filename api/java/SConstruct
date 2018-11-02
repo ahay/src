@@ -17,7 +17,7 @@ jdk = env.get('JAVA_HOME')
 if not jdk: jdk = env.get('JAVA_SDK')
 
 if not jdk:
-    print 'Please set the JAVA_HOME or JAVA_SDK environmental variable'
+    print('Please set the JAVA_HOME or JAVA_SDK environmental variable')
     Exit(1)
     
 minesjtk = env.get('MINESJTK')
@@ -66,19 +66,19 @@ if 'java' in env.get('API',[]) and jdk:
                               LIBPATH='../../lib',
                               LDMODULESUFFIX=outsuffix,
                               FRAMEWORKSFLAGS='-flat_namespace -undefined suppress')
-    javafiles = map(lambda x: x+ '.java',files)
+    javafiles = [x+ '.java' for x in files]
     env.Depends(java,javafiles)    
-    env.Clean(wrap,map(lambda x: x+'.java',gen))
+    env.Clean(wrap,[x+'.java' for x in gen])
 
     if minesjtk:
-        env.Java('.',map(lambda x: os.path.join('old',x)+'.java',oldfiles),
+        env.Java('.',[os.path.join('old',x)+'.java' for x in oldfiles],
                  JAVACLASSPATH=[pwd,minesjtk],JAVACFLAGS='')
     
     # This is really ugly, but its the only command that works...  The
     # Java builder does not work because it scans for the existence of
     # the SWIG generated files prior to them actually being built.
-    sources = ' '.join(map(lambda x: os.path.join(pwd,x)+ '.java',files+gen))
-    classfiles = env.Command(map(lambda x: 'rsf/'+x+'.class',files), 
+    sources = ' '.join([os.path.join(pwd,x)+ '.java' for x in files+gen])
+    classfiles = env.Command(['rsf/'+x+'.class' for x in files], 
                              javafiles+wrap,
                              '${JAVAC}  -cp %s -d %s %s' % (pwd,pwd,sources))
     env.Jar('rsf.jar','rsf',JARCHDIR=pwd)

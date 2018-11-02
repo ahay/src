@@ -33,7 +33,7 @@ mains = Split(waves+other)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    prog = env.Program(prog,[x + '.c' for x in sources])
     if root:
         env.Install(bindir,prog)
 
@@ -51,8 +51,7 @@ if root:
                 ''')
 
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),
-               Split(other)+['wavedoc'])    
+    docs = [env.Doc(prog,'M' + prog) for prog in Split(other)+['wavedoc']]    
     env.Depends(docs,'#/framework/rsf/doc.py')
 
     alias = {}

@@ -41,7 +41,7 @@ dbmerge
 
 if glob_build:
     binary = env.Install(bindir,'cscons')
-    env.AddPostAction(binary,Chmod(binary,0755))
+    env.AddPostAction(binary,Chmod(binary,0o755))
 
     env.Install(pkgdir,'cluster.py')
 

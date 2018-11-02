@@ -22,7 +22,7 @@ smoo =  {'sigmoid':3,  'conflict':1,  'dgulf':4, 'yc27':3}
 pclip = {'sigmoid':100,'conflict':100,'dgulf':96,'yc27':99.5}
 rect  = {'sigmoid':3,  'conflict':5,  'dgulf':10,'yc27':3}
 
-for case in order.keys():
+for case in list(order.keys()):
     dip = case + '-dip'
     pwd = case + '-pwd'
     txr = case + '-txr'

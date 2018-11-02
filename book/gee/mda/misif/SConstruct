@@ -6,7 +6,7 @@ input = [0,0,0,0,0.5,0,1,0.5,1,0,0,0,0,0,0]
 
 def filter(filt):
     return ('echo %s in=$TARGET n1=%d esize=0 data_format=ascii_float' %
-            (string.join(map(str,filt),' '),len(filt)))
+            (' '.join(map(str,filt)),len(filt)))
 
 Flow('man0',None,filter(input))
 Flow('man','man0','dd form=native')

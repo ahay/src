@@ -57,20 +57,20 @@ def getpar(ipar, idn):
 
 def checkpar(par):
     if par['cursht'] > par['shtend'] or par['cursht'] < par['shtbgn'] :
-        print " >>>> current source error cursht=%d " %(par['cursht']) 
+        print(" >>>> current source error cursht=%d " %(par['cursht'])) 
         sys.exit()
     
     if par['curxbgn'] < 0 or par['curxend'] > par['lnx'] :
-        print " >>>> curxbgn error: curxbgn=%d, curxend=%d" %(par['curxbgn'],  par['curxend']) 
+        print(" >>>> curxbgn error: curxbgn=%d, curxend=%d" %(par['curxbgn'],  par['curxend'])) 
         sys.exit()
     
 def printpar(par):
-    keylist = par.keys()
+    keylist = list(par.keys())
     keylist.sort()
-    print "{"
+    print("{")
     for key in keylist:
-        print '  {0:<10}'.format(key)+":  %s" %par[key];
-    print "}"
+        print('  {0:<10}'.format(key)+":  %s" %par[key]);
+    print("}")
            
 # --------------------------------------------------------------------------     
 def splitmodel(Fout, Fin, par):

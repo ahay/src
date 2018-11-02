@@ -23,9 +23,9 @@ for i2 in range(1,1+n2):
 Flow('spitz',None,
      'spike n1=%d n2=%d nsp=%d k1=%s k2=%s mag=%s' %
      (n1,n2,len(k1),
-      string.join(map(str,k1),','),
-      string.join(map(str,k2),','),
-      string.join(map(str,mag),',')))
+      ','.join(map(str,k1)),
+      ','.join(map(str,k2)),
+      ','.join(map(str,mag))))
 Flow('super','spitz f','conv filt=${SOURCES[1]} | window f1=20')
 
 Plot('grey','super',

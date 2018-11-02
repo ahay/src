@@ -16,7 +16,7 @@ for par in pars:
 
 zcat = WhereIs('gzcat') or WhereIs('zcat')
 
-Flow(sgy.values(),tgz,
+Flow(list(sgy.values()),tgz,
      zcat + ' $SOURCE | tar -xvf -',stdin=0,stdout=-1)
 
 def getmod(par):
@@ -40,7 +40,7 @@ def getmod(par):
              math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
              ''')
     else:
-        print 'Unknown parameter', par
+        print('Unknown parameter', par)
         sys.exit(0)
 
 # Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/Anisotropic_FD_Model_Shots_part1.sgy.gz

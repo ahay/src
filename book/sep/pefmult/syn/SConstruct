@@ -38,7 +38,7 @@ Flow('back','tx inv','headersort head=${SOURCES[1]}')
 Flow('dif','ncmp back','add scale=1,-1 ${SOURCES[1]}')
 
 title = dict(ncmp='Input CMP',back='CMP (2-D)',dif='Difference (2-D)')
-for case in title.keys():
+for case in list(title.keys()):
     Plot(case,'grey clip=1 labelsz=12 titlesz=12 title="%s" ' % title[case])
 Result('syn-tx','ncmp back dif','SideBySideAniso')
 

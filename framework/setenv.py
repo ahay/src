@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function, division, absolute_import
 import os, sys, distutils.sysconfig
 
 ################################################################################
@@ -26,12 +27,12 @@ def get_local_site_pkgs(root=None, verb=False):
     central_site_pkgs = distutils.sysconfig.get_python_lib()
 
     # This is actually platform dependent (Mac vs. Linux), because Python is not
-    # as cross-platform as it should be. When we need to install in a 
+    # as cross-platform as it should be. When we need to install in a
     # canonical location on Mac, platform detection will be included
     prefix = distutils.sysconfig.PREFIX
-    
+
     if root == None:
-        root = os.environ.get('RSFROOT', prefix) 
+        root = os.environ.get('RSFROOT', prefix)
 
     if central_site_pkgs[:len(prefix)] == prefix:
         local_site_pkgs = central_site_pkgs.replace(prefix,root,1)
@@ -46,7 +47,7 @@ def get_local_site_pkgs(root=None, verb=False):
 
 ################################################################################
 
-def shell_script(target, source=None, env=None): 
+def shell_script(target, source=None, env=None):
     'Write the environment setup script'
     # Needs this specific interface because it will be called by a SCons Command
     # in RSFSRC/SConstruct
@@ -54,16 +55,16 @@ def shell_script(target, source=None, env=None):
     import configure
     import imp
     config = imp.load_source('config', 'config.py')
-    
-    shell = env['shell']
-    rsfroot = config.RSFROOT 
 
-    pypath = get_local_site_pkgs(rsfroot)     
+    shell = env['shell']
+    rsfroot = config.RSFROOT
+
+    pypath = get_local_site_pkgs(rsfroot)
     datapath = os.environ.get('DATAPATH','/var/tmp')
     if datapath[-1] != os.sep:  datapath += os.sep
 
     ldlibpath = os.path.join(rsfroot,'lib')
-    
+
     manpath = '`manpath`:$RSFROOT/share/man'
 
     shrc = open(str(target[0]), 'w')
@@ -105,7 +106,7 @@ def shell_script(target, source=None, env=None):
                     myrc += 'else\n'
                 myrc += 'setenv %s %s:\n' % (par,value)
                 if redefine:
-                    myrc += 'endif\n'              
+                    myrc += 'endif\n'
         else:
             if redefine:
                 myrc += 'if [ -n "$%s" ]; then\n' % par
@@ -118,8 +119,8 @@ def shell_script(target, source=None, env=None):
                 myrc += 'unset MANPATH\n' # necessary for recent bash shells
             myrc += 'export %s=%s\n' % (par,value)
             if redefine:
-                myrc += 'fi\n' 
-    
+                myrc += 'fi\n'
+
     shrc.write(myrc)
     shrc.close()
     return 0
@@ -128,7 +129,7 @@ def shell_script(target, source=None, env=None):
 
 def get_pkgdir(root=None):
     'Return directory of the RSF Python package'
-    
+
     return os.path.join(get_local_site_pkgs(root),'rsf')
 
 ################################################################################

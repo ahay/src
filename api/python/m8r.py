@@ -97,7 +97,10 @@ if _swig_:
             func = getattr(c_rsf,'sf_get'+type)
             def _get(key,default=None):
                 # c function only knows utf-8 (ascii).  translate the unicode
-                get,par = func(key.encode('utf-8'))
+                if sys.version_info[0] >= 3:
+                    get,par = func(key)
+                else:
+                    get,par = func(key.encode('utf-8'))
                 if get:
                     return par
                 elif default != None:
@@ -118,7 +121,10 @@ if _swig_:
             return _gets
         def string(self,key,default=None):
             # c function only knows utf-8 (ascii).  translate the unicode
-            par = c_rsf.sf_getstring(key.encode('utf-8'))
+            if sys.version_info[0] >= 3:
+                par = c_rsf.sf_getstring(key)
+            else:
+                par = c_rsf.sf_getstring(key.encode('utf-8'))
             if par:
                 return par
             elif default:
@@ -634,7 +640,10 @@ class Input(_File):
                 #self.copy = True
             else:
                 # c function only knows utf-8 (ascii).  translate the unicode
-                self.file = c_rsf.sf_input(tag.encode('utf-8'))
+                if sys.version_info[0] >= 3:
+                    self.file = c_rsf.sf_input(tag)
+                else:
+                    self.file = c_rsf.sf_input(tag.encode('utf-8'))
                 _File.__init__(self,tag)
                 #self.copy = False
         else:
@@ -971,7 +980,10 @@ class Input(_File):
     def int(self, nm):
         if _swig_:
             # c function only knows about utf-8 (ascii).  translate the unicode
-            get,par = c_rsf.sf_histint(self.file,nm.encode('utf-8'))
+            if sys.version_info[0] >= 3:
+                get,par = c_rsf.sf_histint(self.file,nm)
+            else:
+                get,par = c_rsf.sf_histint(self.file,nm.encode('utf-8'))
             if get:
                 return par
             else:
@@ -987,7 +999,10 @@ class Input(_File):
     def float(self, nm):
         if _swig_:
             # c function only knows about utf-8 (ascii).  translate the unicode
-            get,par = c_rsf.sf_histfloat(self.file,nm.encode('utf-8'))
+            if sys.version_info[0] >= 3:
+                get,par = c_rsf.sf_histfloat(self.file,nm)
+            else:
+                get,par = c_rsf.sf_histfloat(self.file,nm.encode('utf-8'))
             if get:
                 return par
             else:
@@ -1012,7 +1027,10 @@ class Output(_File):
             self.srcfile=None
             self.headerflushed = False
             # c function only knows about utf-8 (ascii).  translate the unicode
-            self.file = c_rsf.sf_output(self.tag.encode('utf-8'))
+            if sys.version_info[0] >= 3:
+                self.file = c_rsf.sf_output(self.tag)
+            else:
+                self.file = c_rsf.sf_output(self.tag.encode('utf-8'))
             if src==None and first_input!=None:
                 #sys.stderr.write("set src=first_input\n")
                 src=first_input
@@ -1113,15 +1131,27 @@ class Output(_File):
         if _swig_:
             # c function only knows utf-8 (ascii).  translate the unicode
             if isinstance(val,int):
-                c_rsf.sf_putint(self.file,key.encode('utf-8'),val)
+                if sys.version_info[0] >= 3:
+                    c_rsf.sf_putint(self.file,key,val)
+                else:
+                    c_rsf.sf_putint(self.file,key.encode('utf-8'),val)
             elif isinstance(val,float):
-                c_rsf.sf_putfloat(self.file,key.encode('utf-8'),val)
+                if sys.version_info[0] >= 3:
+                    c_rsf.sf_putfloat(self.file,key,val)
+                else:
+                    c_rsf.sf_putfloat(self.file,key.encode('utf-8'),val)
             elif isinstance(val,str):
-                c_rsf.sf_putstring(self.file,key.encode('utf-8'),
-                                             val.encode('utf-8'))
+                if sys.version_info[0] >= 3:
+                    c_rsf.sf_putstring(self.file,key,val)
+                else:
+                    c_rsf.sf_putstring(self.file,key.encode('utf-8'),
+                                                 val.encode('utf-8'))
             elif isinstance(val,list):
                 if isinstance(val[0],int):
-                    c_rsf.sf_putints(self.file,key.encode('utf-8'),val)
+                    if sys.version_info[0] >= 3:
+                        c_rsf.sf_putints(self.file,key,val)
+                    else:
+                        c_rsf.sf_putints(self.file,key.encode('utf-8'),val)
         else:
             # repr make string representation of an object
             if isinstance(val,str):

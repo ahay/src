@@ -1,4 +1,3 @@
-
 # Copyright (C) 2004 University of Texas at Austin
 #
 # This program is free software; you can redistribute it and/or modify
@@ -86,13 +85,13 @@ def echo(target,source,env):
     if obj:
         trg = open(str(target[0]),'w')
         if type(obj) is list:
-            obj = string.join(obj)
+            obj = ' '.join(obj)
         trg.write(obj+'\n')
         trg.close()
     err = env.get('err','')
     if err:
         if type(err) is list:
-            err = string.join(err)
+            err = ' '.join(err)
         sys.stderr.write(err+'\n')
     return 0
 
@@ -103,7 +102,7 @@ def retrieve_emit(target=None, source=None, env=None):
         usedatapath = False
     server = env.get('server')
     if usedatapath and server != 'local':
-        for file in map(str,target):
+        for file in list(map(str,target)):
             localfile=env.path+os.path.basename(file)
             target.append(localfile)
     return target, source
@@ -134,7 +133,7 @@ def retrieve(target=None,source=None,env=None):
             print('Could not establish connection with "%s/%s" ' % (server,
                                                                     folder))
             return 3
-        for file in [x for x in map(str,target) if not os.path.abspath(x).startswith(env.path)]:
+        for file in [x for x in list(map(str,target)) if not os.path.abspath(x).startswith(env.path)]:
             remote = os.path.basename(file)
             if usedatapath:
                 localfile=env.path+remote
@@ -160,7 +159,7 @@ def retrieve(target=None,source=None,env=None):
     else:
         server = env.get('server')
         if server == 'local':
-            for file in map(str,target):
+            for file in list(map(str,target)):
                 remote = os.path.basename(file)
                 remote = os.path.join(folder,remote)
                 try:
@@ -170,7 +169,7 @@ def retrieve(target=None,source=None,env=None):
                     os.unlink(file)
                     return 6
         else:
-            for file in [x for x in map(str,target) if not os.path.abspath(x).startswith(env.path)]:
+            for file in [x for x in list(map(str,target)) if not os.path.abspath(x).startswith(env.path)]:
                 remote = os.path.basename(file)
                 rdir =  '/'.join([server,folder,remote])
                 if usedatapath:
@@ -528,7 +527,7 @@ class Project(Environment):
         # May need to do it remotely
         if remote:
             command = re.sub('"','\\"',command)
-            command = string.join(['$( ssh',node,'$) \"cd ',self.cwd,';',command,'\"'])
+            command = ' '.join(['$( ssh',node,'$) \"cd ',self.cwd,';',command,'\"'])
 
         targets = []
         for file in tfiles:

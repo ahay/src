@@ -1,4 +1,7 @@
 # determine path to here, package name
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 import os
 
 buildpath = (os.popen('pwd').read()).strip('\n')
@@ -87,11 +90,11 @@ for n in deplist:
     if os.path.exists(testlibdir):
         liblist.append(testlib)
         # Madagascar branch
-	if root:
-            libdirlist.append(testbuildpath + '/lib')
+    if root:
+        libdirlist.append(testbuildpath + '/lib')
         # Standalone branch
-        else:
-            libdirlist.append(testpath + '/lib')
+    else:
+        libdirlist.append(testpath + '/lib')
 
 # add other possibly nonstandard sources of headers
 # it is ALWAYS PRESUMED that header files live in final leaves

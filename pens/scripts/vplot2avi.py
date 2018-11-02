@@ -32,13 +32,13 @@ if __name__ == "__main__":
     argc = len(sys.argv)
 
     if argc < 2:
-        print "No input"
+        print("No input")
         sys.exit(1)
 
     infile = sys.argv[1]
 
     if not os.path.isfile(infile):
-        print "\"%s\" is not a file" % infile
+        print("\"%s\" is not a file" % infile)
         sys.exit(1)
 
     if argc < 3:

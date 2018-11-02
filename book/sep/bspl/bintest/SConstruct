@@ -15,7 +15,7 @@ for f in (2,4):
     Flow(flt+'.asc',None,
          '''
          echo %s a0=%.4f n1=%d data_format=ascii_float in=$TARGET 
-         ''' % (string.join(map(str,spl[1:]),' '),spl[0]+eps,ns))
+         ''' % (' '.join(map(str,spl[1:])),spl[0]+eps,ns))
     Flow([flt,'lag-'+flt],flt+'.asc',
          '''
          dd form=native | 

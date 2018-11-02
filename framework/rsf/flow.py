@@ -80,7 +80,7 @@ def Flow(sources,flow,bindir,rsfflow=1,
                         rsfprog2 = command2
                     else:
                         rsfprog2 = prefix + command2            
-                    if rsf.doc.progs.has_key(rsfprog2):
+                    if rsfprog2 in rsf.doc.progs:
                         command2 = os.path.join(bindir,rsfprog2+progsuffix) 
                         sources.append(command2)
                         if rsfprog2 not in coms:

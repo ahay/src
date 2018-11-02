@@ -70,7 +70,7 @@ if fftw:
     
 # files with FFTW dependence
 fftwfiles = 'seplowrank decomplowrank spectramultipy sepdivcurl fwpvtielowrank fwpvtielowrank.double'
-fftws = map(lambda x: File(x+'.c'),Split(fftwfiles))
+fftws = [File(x+'.c') for x in Split(fftwfiles)]
 
 lapack = env.get('LAPACK')
 
@@ -89,7 +89,7 @@ for prog in mains:
     if (fftw or not prog in Split('tti2delrseparation vti2delrseparation')) \
         and (lapack or not prog in Split('ort3dhomodevK')):
         env.StaticObject('M'+prog+'.c')
-        prog = env.Program (prog, map (lambda x: x + '.c',sources))
+        prog = env.Program (prog, [x + '.c' for x in sources])
     else:
         prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw-devel')
     if root:
@@ -130,7 +130,7 @@ for prog in ccmains:
     tti2devectorlrsvdkspace_double_stiffness
     '''))
     if cancompile:
-        prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, 
+        prog = env.Program(prog, [x + '.cc' for x in sources]+objs, 
                            LIBS=libsxx)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
@@ -145,7 +145,7 @@ if fftw:
         sources = ['T'+prog]
         bldutil.depends(env,sources,'T'+prog)     
         env.StaticObject('T'+prog+'.c')
-        prog = env.Program(prog,map(lambda x: x + '.o',sources),PROGPREFIX='T',PROGSUFFIX='.x')
+        prog = env.Program(prog,[x + '.o' for x in sources],PROGPREFIX='T',PROGSUFFIX='.x')
         
 ######################################################################
 # SELF-DOCUMENTATION
@@ -154,8 +154,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) 
+    docs = [env.Doc(prog,'M' + prog) for prog in mains] +  \
+           [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in ccmains] 
     env.Depends(docs,'#/framework/rsf/doc.py')	
 
     doc = env.RSF_Docmerge(main,docs)

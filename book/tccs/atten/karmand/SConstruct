@@ -29,7 +29,7 @@ dfiles = {'A':'07-23-36-10.txt',
           'D':'04-13-36-10.txt'
           }
 
-Fetch(dfiles.values(),'apache',private)
+Fetch(list(dfiles.values()),'apache',private)
 
 # Grids 1-D and data type
 pgrids = {'A':{'nx':7033, 'ny':8, 'ox':155.875, 'dx':0.125},
@@ -115,7 +115,7 @@ fcbpms = {
           }
 
 
-for soniclog in fcbpms.keys():
+for soniclog in list(fcbpms.keys()):
 
     well = soniclog[0]
     tsonic = soniclog[1]

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
 import fdmod,pplot
@@ -6,11 +7,11 @@ import fdmod,pplot
 # acoustic wave-equation modeling
 #def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
 #    par['fdcustom'] = custom
-#    
+#
 #    Flow( [odat,owfl],[idat,velo,dens,sou,rec,'../code/AWEfd.x'],
 #         '''
 #         ../code/AWEfd.x
-#         ompchunk=%(ompchunk)d 
+#         ompchunk=%(ompchunk)d
 #         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
 #         vel=${SOURCES[1]}
 #         den=${SOURCES[2]}
@@ -26,11 +27,11 @@ import fdmod,pplot
 #    par['fdcustom'] = custom
 #
 #    print par['fdcustom']
-#    
+#
 #    Flow( [odat,owfl],[idat,cccc,dens,sou,rec,'../code/EWEfd.x'],
 #         '''
 #         ../code/EWEfd.x
-#         ompchunk=%(ompchunk)d 
+#         ompchunk=%(ompchunk)d
 #         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
 #         ccc=${SOURCES[1]}
 #         den=${SOURCES[2]}
@@ -44,7 +45,7 @@ import fdmod,pplot
 # heat equation modeling
 #def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
 #    par['fdcustom'] = custom
-#    
+#
 #    Flow( [dat,wfl],[wav,con,sou,rec,'../code/HDEfd.x'],
 #          '''
 #          ../code/HDEfd.x
@@ -88,16 +89,16 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
     nqx=%(nqx)d oqx=%(oqx)g
     jsnap=%(jdata)d jdata=%(jdata)d
     ''' % par + ' '
-    
+
     # source wavefield (z,x,t)
     fdmod.awefd(sout,swfl,sdat,velo,dens,sacq,iacq,custom+iwindow,par)
-    
+
     # receiver wavefield (z,x,t)
     tdat = imag+'_tds'
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
     fdmod.awefd(rout,twfl,tdat,velo,dens,racq,iacq,custom+iwindow,par)
     Flow(rwfl,twfl,'reverse which=4 opt=i verb=y')
-    
+
     # conventional (cross-correlation zero-lag) imaging condition
     Flow(imag,[swfl,rwfl],'xcor2d uu=${SOURCES[1]} axis=3 verb=y nbuf=100')
 
@@ -120,7 +121,7 @@ def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
 
     # source wavefield (z,x,t)
     fdmod.ewefd(sout,swfl,sdat,cccc,dens,sacq,iacq," ssou=y opot=n" + custom+iwindow,par)
-    
+
     # receiver wavefield (z,x,t)
     tdat = imag+'_tds'
     Flow(tdat,rdat,'reverse which=4 opt=i verb=y')
@@ -132,8 +133,8 @@ def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
     Flow(swfl+'2',swfl,'window n2=1 f2=1')
 
     Flow(rwfl+'1',twfl,'window n2=1 f2=0 | reverse which=4 opt=i verb=y')
-    Flow(rwfl+'2',twfl,'window n2=1 f2=1 | reverse which=4 opt=i verb=y')    
-    
+    Flow(rwfl+'2',twfl,'window n2=1 f2=1 | reverse which=4 opt=i verb=y')
+
     # conventional (cross-correlation zero-lag) imaging condition
     for     i in ('1','2'):
         for j in ('1','2'):
@@ -153,12 +154,12 @@ def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
 #
 #    sout = imag+'_ds' #   source data (not the input sdat!)
 #    rout = imag+'_dr' # receiver data (not the input rdat!)
-#    
+#
 #    Flow(qs+'1',sout,'window n2=1 f2=0 min3=0.1 max3=0.4 | transp plane=12 memsize=500 |'+ xzcoord(par) + '| transp plane=23 memsize=500')
 #    Flow(qs+'2',sout,'window n2=1 f2=1 min3=0.1 max3=0.4 | transp plane=12 memsize=500 |'+ xzcoord(par) + '| transp plane=23 memsize=500')
 #    Flow(qr+'1',rout,'window n2=1 f2=0 min3=0.1 max3=0.4 | transp plane=12 memsize=500 |'+ xzcoord(par) + '| transp plane=23 memsize=500')
 #    Flow(qr+'2',rout,'window n2=1 f2=1 min3=0.1 max3=0.4 | transp plane=12 memsize=500 |'+ xzcoord(par) + '| transp plane=23 memsize=500')
-# 
+#
 #    for     i in ('1','2'):
 #        for j in ('1','2'):
 #            Flow(isic+i+j,[qs+i,qr+j],
@@ -188,7 +189,7 @@ def emovie(wfld,custom,axis,par):
     Flow(wfld+'all',[wfld+'1',wfld+'2'],
          'cat axis=%d space=n ${SOURCES[1:2]}' % axis)
 
-    if(axis==1):        
+    if(axis==1):
         height=2*par['height']
         if(height>10): height=10
         ratio =2*par['ratio']
@@ -196,7 +197,7 @@ def emovie(wfld,custom,axis,par):
         height=par['height']
         if(height>10): height=10
         ratio =0.5*par['ratio']
-    
+
     Result(wfld,wfld+'all',
            '''
            grey title="" wantaxis=y screenratio=%f screenht=%f
@@ -207,16 +208,16 @@ def emovie(wfld,custom,axis,par):
 # ------------------------------------------------------------
 # plot elastic image
 def eimage(plot,imag,clip,par):
-    print clip
+    print(clip)
     title=['pp','ps','sp','ss']
     for i in range(4):
         if(i!=0):
             flag=' wantaxis2=n'
         else:
             flag=' wantaxis2=y'
-        
+
         Flow([plot+'_plt'+str(i),plot+'_bar'+str(i)],imag,
-         'scale axis=123 | byte bar=${TARGETS[1]} gainpanel=a pclip=%g'%clip[i])        
+         'scale axis=123 | byte bar=${TARGETS[1]} gainpanel=a pclip=%g'%clip[i])
 
         Plot(plot+str(i),[plot+'_plt'+str(i),plot+'_bar'+str(i)],
              'window n3=1 f3=%d bar=${SOURCES[1]} |'% i
@@ -235,10 +236,10 @@ def edata(plot,data,custom,par):
     for i in range(2):
         Plot(  plot+str(i+1),[plot+'_plt',plot+'_bar'],
                'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
-               +fdmod.dgrey('pclip=98 %s' %custom,par))        
+               +fdmod.dgrey('pclip=98 %s' %custom,par))
         Result(plot+str(i+1),[plot+'_plt',plot+'_bar'],
                'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
-               +fdmod.dgrey('pclip=98 %s' %custom,par))   
+               +fdmod.dgrey('pclip=98 %s' %custom,par))
 
 # ------------------------------------------------------------
 # plot elastic wavelet
@@ -249,7 +250,7 @@ def ewavelet(wavelet,custom,par):
              'window n2=1 f2=%d | transp | window |'%i +
              fdmod.waveplot('%d'%i,par))
     Result(wavelet,[wavelet+'1',wavelet+'2'],'Movie')
-        
+
 # ------------------------------------------------------------
 def wcompare(plot,us,ur,iz,par):
 
@@ -259,7 +260,7 @@ def wcompare(plot,us,ur,iz,par):
                  'window n2=1 f2=%d j3=10 | transp |' % i
                  + xzcoord(par)
                  + '| window n2=1 f2=%d' % iz)
-            
+
         Flow(u+'all',[plot+'_'+u+'1',plot+'_'+u+'2'],
              'cat axis=2 space=n ${SOURCES[0:2]}', stdin=0)
         Plot(u+'all',fdmod.dgrey('max2=%g' % (2*par['xmax']) ,par))
@@ -292,9 +293,9 @@ def hssk2ang():
 def laps(ii,us,ur,nhz,nhx,nht,custom,par):
     Flow(ii,[us,ur],
          '''
-         laps verb=y 
+         laps verb=y
          ur=${SOURCES[1]}
          nhz=%d nhx=%d nht=%d
          %s
          ''' % (nhz,nhx,nht,custom))
-    
+

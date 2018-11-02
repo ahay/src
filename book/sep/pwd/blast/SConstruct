@@ -39,7 +39,7 @@ for case in ['data','miss','miss-rand']:
     Plot(case+'top',plots[0:4],'SideBySideAniso')
     Plot(case+'mid',plots[4:8],'SideBySideAniso')
     Plot(case+'bot',plots[8:12],'SideBySideAniso')
-    Plot(case,map(lambda x: case+x,['top','mid','bot']),'OverUnderAniso')
+    Plot(case,[case+x for x in ['top','mid','bot']],'OverUnderAniso')
 Result('passfill','data miss','SideBySideAniso')
 
 

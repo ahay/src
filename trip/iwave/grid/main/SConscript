@@ -73,8 +73,8 @@ if root:
     main = 'sf%s.py' % libname
     main = main.replace('++','pp')
     
-    cdocs = map(lambda prog: env.Doc(prog, '%s.c' % prog, lang='c'), cprogs)
-    ccdocs = map(lambda prog: env.Doc(prog, '%s.cc' % prog, lang='c++'), ccprogs)
+    cdocs = [env.Doc(prog, '%s.c' % prog, lang='c') for prog in cprogs]
+    ccdocs = [env.Doc(prog, '%s.cc' % prog, lang='c++') for prog in ccprogs]
     env.Depends(cdocs,'#/framework/rsf/doc.py')
     env.Depends(ccdocs,'#/framework/rsf/doc.py')
 

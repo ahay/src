@@ -120,7 +120,7 @@ for hnux in ('M025','025','05'):
 
     else:
         
-        raise RuntimeError, "Unknown value"
+        raise RuntimeError("Unknown value")
 
         
     # Variance of Gaussian white noise

@@ -13,7 +13,7 @@ for i2 in range(n):
 
 Flow('top',None,
      'spike n2=%d d2=0.01 nsp=%d k2=%s k1=33 n1=64 label1=" " label2=" " ' %
-     (n,len(spike),string.join(map(str,spike),',')))
+     (n,len(spike),','.join(map(str,spike))))
 Plot('top','grey pclip=100 wanttitle=n')
 
 Flow('bot','top',

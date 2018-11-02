@@ -23,7 +23,7 @@ plotnderiv2='''graph  min2=0.0 max2=%g unit1=\'cycles/sample\'
 #
 # sfderiv tests
 #
-orders=range(0,11,2)
+orders=list(range(0,11,2))
 for order in orders:
   Plot('spectra-deriv-1-%02d'%order,'spike',
     '''
@@ -39,7 +39,7 @@ for order in orders:
 #
 # sfnderiv tests
 #
-orders2=range(3,25,4)
+orders2=list(range(3,25,4))
 for order in orders2:
   Plot('spectra-nderiv-1-%02d'%order,'spike',
     '''
@@ -58,10 +58,10 @@ Plot('ideal-2','spike',spectra+'math output="(x1*2*%g)^2"|'%pi
                        +plotderiv2+' title=""')
 
 # collect results
-sp1  = map(lambda x: 'spectra-deriv-1-%02d'%x,orders)
-sp2  = map(lambda x: 'spectra-deriv-2-%02d'%x,orders)
-spn1 = map(lambda x: 'spectra-nderiv-1-%02d'%x,orders2)
-spn2 = map(lambda x: 'spectra-nderiv-2-%02d'%x,orders2)
+sp1  = ['spectra-deriv-1-%02d'%x for x in orders]
+sp2  = ['spectra-deriv-2-%02d'%x for x in orders]
+spn1 = ['spectra-nderiv-1-%02d'%x for x in orders2]
+spn2 = ['spectra-nderiv-2-%02d'%x for x in orders2]
 
 
 Result('all-deriv-1',sp1+['ideal-1'],'Overlay')
