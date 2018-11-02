@@ -4,10 +4,10 @@ workflows:
   version: 2
   test:
     jobs:
-      - test-3.6
-      - test-2.7
+      - python36
+      - python27
 jobs:
-  test-3.6: &test-template
+  python36: &test-template
     docker:
     - image: circleci/python:3.6.4
     working_directory: ~/ahay/src
@@ -38,7 +38,7 @@ jobs:
     - store_artifacts:
         path: /tmp/circleci-test-results
 
-  test-2.7:
+  python27:
     <<: *test-template
     docker:
     - image: circleci/python:2.7-jessie
