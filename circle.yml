@@ -10,7 +10,7 @@ jobs:
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     docker:
     ## Try python3
-    - image: circleci/python:3.6-stretch
+    - image: circleci/python:3.6.4
       command: /sbin/init
     steps:
     - checkout
