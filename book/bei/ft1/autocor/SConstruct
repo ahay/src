@@ -1,6 +1,9 @@
 from rsf.proj import *
 import math, string, random
-from builtins import range
+try:
+    from builtins import range
+except:
+    from __builtin__ import range
 
 random.seed(2004)
 
