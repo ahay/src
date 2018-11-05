@@ -11,8 +11,8 @@ jobs:
     docker:
     - image: circleci/python:3.6
     working_directory: ~/ahay/src
-    #parallelism: 1
-    shell: /bin/bash --login
+    parallelism: 1
+    #shell: /bin/bash --login
     environment:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
@@ -21,11 +21,13 @@ jobs:
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     #### Install LAPACK BlAS
     - run: 
+        name: Install Packages
         command: |
           sudo apt-get install python-pip
           sudo pip install numpy scipy
           sudo apt-get install libblas-dev liblapack-dev swig
     - run:
+        name: Setup Environment Variables
         command: |
           echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
           echo 'export RSFFIGS="$HOME/RSFROOT/figs"' >> $BASH_ENV
