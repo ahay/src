@@ -2,7 +2,7 @@
 version: 2
 workflows:
   version: 2
-  test:
+  build:
     jobs:
       - python36
       - python27
@@ -19,7 +19,7 @@ jobs:
     steps:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    #### Install LAPACK BlAS
+
     - run: 
         name: Install Packages
         command: |
@@ -33,18 +33,26 @@ jobs:
           echo 'export RSFFIGS="$HOME/RSFROOT/figs"' >> $BASH_ENV
     #### Checkout
     - run: git clone https://github.com/ahay/figs.git $RSFFIGS    
-    #### Compile
-    - run: ./configure && make install && source env.sh
-    #### Test
-    - run: source env.sh && cd book && scons test
+
+    - run: 
+        name: Compile
+        command: |
+          ./configure 
+          make install 
+          source env.sh
+
+    - run: 
+        name: Test
+        command: |
+          source env.sh 
+          cd book 
+          scons test
     # Save test results
     - store_test_results:
         path: /tmp/circleci-test-results
     # Save artifacts
     - store_artifacts:
         path: /tmp/circleci-artifacts
-    - store_artifacts:
-        path: /tmp/circleci-test-results
 
   python27:
     <<: *test-template
