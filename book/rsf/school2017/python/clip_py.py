@@ -2,7 +2,10 @@
 
 import numpy
 import rsf.api as rsf
-from builtins import range
+try:
+    from builtins import range
+except:
+    from __builtins__ import range
 
 # input and output files
 par = rsf.Par()
