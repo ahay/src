@@ -5,7 +5,7 @@ import rsf.api as rsf
 try:
     from builtins import range
 except:
-    from __builtins__ import range
+    from __builtin__ import range
 
 # input and output files
 par = rsf.Par()
