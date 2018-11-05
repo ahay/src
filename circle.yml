@@ -47,4 +47,4 @@ jobs:
   python27:
     <<: *test-template
     docker:
-    - image: circleci/python:2.7-jessie
+    - image: circleci/python:2.7
