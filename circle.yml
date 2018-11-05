@@ -19,6 +19,8 @@ jobs:
     steps:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+    #### Install LAPACK BlAS
+    - run: apt-get install libblas-dev liblapack-dev
     - run:
         command: |
           echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
