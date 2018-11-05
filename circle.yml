@@ -20,7 +20,11 @@ jobs:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     #### Install LAPACK BlAS
-    - run: sudo apt-get install libblas-dev liblapack-dev
+    - run: 
+        command: |
+          sudo apt-get install python-pip
+          sudo pip install numpy scipy
+          sudo apt-get install libblas-dev liblapack-dev
     - run:
         command: |
           echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
