@@ -10,7 +10,10 @@ So, it computes first, second, n derivative along axis 1,2 or 3.
 
 import rsf.api as rsf
 import numpy as np
-from builtins import range
+try:
+    from builtins import range
+except:
+    from __builtin__ import range
 
 
 def Fornberg_filter(Nlength,order):
