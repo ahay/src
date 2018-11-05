@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 '''Plot wavefields over a background image
 Common usage examples
-\t• Plot to screen using default parameters
+\t* Plot to screen using default parameters
 \t\tsfpgreywfl < wavefield.rsf bg=velocity.rsf
-\t• Save to file using custom parameters
+\t* Save to file using custom parameters
 \t\tsfpgreywfl < wavefield.rsf bg=velocity.rsf jsnap=10 bgcmap=gray wflcmap=seismic fps=10 verb=y savefile=output.mp4
 '''
 

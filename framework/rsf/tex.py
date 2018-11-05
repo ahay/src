@@ -574,7 +574,7 @@ def colorize(target=None,source=None,env=None):
 
      # parse the source and write it
      _pos = 0
-     text = io.StringIO(raw)
+     text = io.StringIO(unicode(raw))
      out.write('<pre><font face="Lucida,Courier New">')
 
      def call(toktype, toktext, xxx_todo_changeme, xxx_todo_changeme1, line):
