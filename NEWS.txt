@@ -17,6 +17,8 @@ To APIs:
 
 To the Python package:
 
+* Partial upgrade for compatibility with Python 3
+
 To programs:
 
 * user/zgeng: New contributor (Zhicheng Geng)
