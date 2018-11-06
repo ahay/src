@@ -556,8 +556,11 @@ class _File(File):
             self.f.close()
     def __del__(self):
         # check if user call to flush or close already cleaned up
-        if not self.f.closed:
-            self.close()
+        if _swig_:
+            c_rsf.sf_fileclose(self.file)
+        else:
+            if not self.f.closed:
+                self.close()
         File.close(self) # this removes file if it is temporary
 
     def settype(self,type):

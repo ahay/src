@@ -6,6 +6,7 @@ workflows:
     jobs:
       - python36
       - python27
+
 jobs:
   python36: &test-template
     docker:
@@ -18,6 +19,7 @@ jobs:
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     steps:
     - checkout
+
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
 
     - run: 
@@ -26,13 +28,17 @@ jobs:
           sudo apt-get install python-pip
           sudo pip install numpy scipy
           sudo apt-get install libblas-dev liblapack-dev swig
+
     - run:
         name: Setup Environment Variables
         command: |
           echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
           echo 'export RSFFIGS="$HOME/RSFROOT/figs"' >> $BASH_ENV
-    #### Checkout
-    - run: git clone https://github.com/ahay/figs.git $RSFFIGS    
+    
+    - run: 
+        name: Checkout figs
+        command : |
+          git clone https://github.com/ahay/figs.git $RSFFIGS    
 
     - run: 
         name: Compile
