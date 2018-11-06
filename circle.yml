@@ -9,7 +9,7 @@ workflows:
 jobs:
   python36: &test-template
     docker:
-    - image: circleci/python:3.6.4
+    - image: circleci/python:3.6
     working_directory: ~/ahay/src
     #parallelism: 1
     shell: /bin/bash --login
@@ -19,6 +19,12 @@ jobs:
     steps:
     - checkout
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+    #### Install LAPACK BlAS
+    - run: 
+        command: |
+          sudo apt-get install python-pip
+          sudo pip install numpy scipy
+          sudo apt-get install libblas-dev liblapack-dev swig
     - run:
         command: |
           echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
@@ -41,4 +47,4 @@ jobs:
   python27:
     <<: *test-template
     docker:
-    - image: circleci/python:2.7-jessie
+    - image: circleci/python:2.7

@@ -91,6 +91,18 @@ Result('specdiv',
 
 # Create synthetic
 
+Flow('frpp','rpp','fft1')
+Flow('synth','specdiv frpp',
+     'rtoc | math freq=${SOURCES[1]} output="-input*freq" | fft1 inv=1')
+Result('synth','window max1=1.5 | graph title="Synthetic" ')
+
+Plot('wrpp','rpp','window min1=0.75 max1=1.5 | graph transp=y yreverse=y title=Reflectivity')
+Plot('wsynth','synth','window min1=0.75 max1=1.5 | spray axis=2 n=4 | wiggle poly=y transp=y yreverse=y title=Synthetic')
+Plot('wseis','seismic','window min1=0.75 max1=1.5 | spray axis=2 n=4 | wiggle poly=y transp=y yreverse=y title=Data')
+
+Result('compare','wrpp wsynth wseis','SideBySideAniso',vppen='txscale=1.5')
+
+# Plot two wavelets
 
 
 End()
