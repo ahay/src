@@ -4,7 +4,7 @@
 #include <valarray>
 #include <iostream>
 #include <complex>
-#include <rsf.h>
+#include <rsf.hh>
 using namespace std;
 
 class CUB {
