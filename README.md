@@ -3,9 +3,8 @@
 </p>
 
 Madagascar
-
-[![CircleCI](https://circleci.com/gh/ahay/src.svg?style=svg)](https://circleci.com/gh/ahay/src)
 ==========
+[![CircleCI](https://circleci.com/gh/ahay/src.svg?style=svg)](https://circleci.com/gh/ahay/src)
 ###  A package for reproducible geophysical data processing
 
 http://www.ahay.org
