@@ -51,6 +51,22 @@ RUN cd ~/madagascar-core-2.0 \
  && ./configure \
  && make install
 
+# install latex
+RUN apt-get update && apt-get install -y \
+        texlive-latex-recommended \
+		texlive-latex-extra \
+		texlive-fonts-recommended \
+		texlive-bibtex-extra \
+		texlive-lang-english \
+		texlive-generic-extra \
+		biber \
+        --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/*
+
+# install segtex
+RUN git clone https://github.com/SEGTeX/texmf $HOME/texmf \
+ && texhash
+
 RUN echo 'export RSFROOT="$HOME/RSFROOT"'                   >> $HOME/.bashrc \
  && echo 'source $RSFROOT/share/madagascar/etc/env.sh'      >> $HOME/.bashrc
 
