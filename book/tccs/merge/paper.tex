@@ -1,0 +1,277 @@
+\title{Matching and merging high-resolution and legacy seismic images}
+\author{Sarah Greer and Sergey Fomel}
+
+\lefthead{Greer \& Fomel}
+\righthead{Matching and merging seismic images}
+\footer{TCCS-14}
+\maketitle
+
+\begin{abstract}
+When multiple seismic surveys are acquired over the same area using different technologies that produce data with different frequency content, it may be beneficial to combine these data to produce a broader bandwidth volume.
+In this paper, we propose a workflow for matching and blending seismic images obtained from shallow high-resolution seismic surveys and conventional surveys conducted over the same area.
+The workflow consists of three distinct steps:
+(a) balancing the amplitudes and frequency content of the two images by non-stationary smoothing of the high-resolution image;
+(b) estimating and removing variable time shifts between the two images; and
+(c) blending the two images together by least-squares inversion.
+The proposed workflow is applied successfully to images from the Gulf of Mexico.
+
+\end{abstract}
+
+\section{Introduction}
+
+Modern high-resolution seismic acquisition systems, such as P-cable \cite[]{pcable,tip}, can produce detailed images of the subsurface at shallow depths.
+These images often need to be compared with those previously produced using legacy images from conventional seismic acquisition.
+In comparison with high-resolution images, conventional images have generally lower frequency content and correspondingly lower resolution, but better signal content at greater depth.
+In order to reconcile the differences between the two types of images, they need to be properly matched.
+
+Analogous problems occur when interpreting images from multicomponent seismic acquisition.
+In particular, single-component PP and converted PS images often exhibit significantly different frequency content and need to be balanced for accurate registration \cite[]{hardage,SEG-2003-07810784,warp}.
+
+When multiple data sets are acquired over the same area using different technologies, it is likely that these data sets contain signal content from different frequency bands, which correspondingly contain unique information about the subsurface.
+In order to utilize all available information, it may be beneficial to produce a consolidated broad bandwidth volume that combines these data sets.
+Many previous methods of seismic data merging have been developed for the purpose of increasing the spatial coverage of the merged volume by combining data from partially overlapping areas.
+As a result, both the initial and resultant merged images poses similar signal characteristics, most notably spectral content \cite[]{kavery,gabor,supermerge}.
+However, previously \cite{freqmerge} were successful in applying a frequency domain merge to two separate seismic volumes over the same area to broaden the effective bandwidth.
+
+In this paper, we consider the problem of matching seismic images obtained in the same area with different resolution.
+Using techniques borrowed from multicomponent image processing \cite[]{warp}, we propose a multistep approach.
+First, we balance the two images in amplitude and frequency content.
+As a result, the resolution of the high-resolution image is temporarily degraded to match the resolution of the legacy data.
+Next, we measure shifts between images using local similarity scanning \cite[]{attr,timelapse}.
+Finally, when the images are aligned and matched, we create a blended image using least-squares inversion in the time domain.
+The blended image has a wider frequency bandwidth than the two initial images, along with coherent signal content with depth from the legacy image and detailed shallow coverage from the high-resolution image.
+
+We test the proposed approach using data from the Gulf of Mexico.
+A 2D image is used to illustrate the method, followed by an example applied to 3D data.
+
+
+\inputdir{apache}
+
+\multiplot{3}{legacy,hires,merge2-reverse}{width=0.45\columnwidth}{The initial legacy (a) and high-resolution (b) images.
+The merged image (c) is the final product of the proposed workflow: the combination of both the legacy and high-resolution images.}
+
+\section{Method}
+
+The initial legacy and high-resolution example images are shown in Figure~\ref{fig:legacy,hires,merge2-reverse}.
+They both underwent standard marine processing flows, and are assumed to be optimally processed.
+The images show similar structures, particularly at shallow depths, but with strikingly different resolution.
+The main difference comes from the broader frequency bandwidth of the high-resolution image in comparison with that of the legacy image.
+Therefore, our first step in comparing the two images is balancing their spectral content.
+
+\subsection{Balancing spectral content}
+
+Analyzing the spectra of the legacy and high-resolution images, as seen in Figure \ref{fig:nspectra}, it is clear that the high-resolution image has a wider range of frequencies with a higher dominant frequency than the legacy image.
+In order to match these images, our first step is to balance their spectral content.
+We can achieve this by attenuating the high frequencies of the high-resolution image to match the lower frequency content of the legacy image.
+One approach to frequency balancing is to apply a stationary bandpass filter to the high-resolution image.
+However, this does not take into account local frequency variations in each image caused by seismic wave attenuation.
+A more effective method, which accounts for temporally and spatially variable frequency content that is present in most seismic data, is to apply a non-stationary filter using frequency information from both images.
+To accomplish this, we use a simple triangle smoothing operator with an adjustable radius.
+Here, the radius at each point is the number of seconds that that specific data point gets averaged over in a triangle weight in the temporal direction.
+We specifically look at local frequency \cite[]{attr}, which is a time-dependent frequency attribute, and can be thought of as a smoothed estimate of instantaneous frequency \cite[]{white}.
+For the procedure described in this paper, local frequency is a better-suited attribute than instantaneous frequency.
+Local frequency allows the comparison of frequency content in a local region of samples, as opposed to instantaneous frequency, which allows for a point by point comparison of frequency values between images.
+Since the corresponding reflections between images may not be precisely aligned in time at this stage in the method, using the local frequency attribute to balance frequency content between images would allow for more accurate frequency balancing than instantaneous frequency.
+
+\multiplot{2}{nspectra,hires-smooth-spec}{width=0.68\columnwidth}{Spectra for the entire image display of the legacy (red) and high-resolution (blue) images before (a) and after (b) spectral balancing.}
+
+The justification for triangle smoothing is that it is a simple approximation to Gaussian smoothing. The frequency response of the triangle smoothing filter \cite[]{pvi} is
+\begin{equation}
+\label{eq:Tf}
+T(f) = \mathrm{sinc}^2\left(\frac{2\pi f \Delta t}{2}\right) \approx 1-\frac{(2\pi f)^2(\Delta t)^2}{12}\;.
+\end{equation}
+This frequency response resembles that of a Gaussian:
+\begin{equation}
+\label{eq:gaussian}
+G(f) = e^{-\alpha f^2} \approx 1 - \alpha f^2\;.
+\end{equation}
+If the signals' spectra can be represented by Ricker wavelets,
+\begin{equation}
+\label{eq:Sn}
+S_{n}(f) = A_{n} \left(\frac{f}{f_{n}}\right)^2e^{-\left(\frac{f}{f_{n}}\right)^{2}}\,
+\end{equation}
+where, in image $n$, $S_n$ is the frequency spectrum, $f_n$ is the peak frequency, and $A_n$ is the amplitude, Gaussian smoothing can transform the signal to a different dominant frequency.
+
+Because we are smoothing the high-resolution image to match it with the legacy image, we can relate the high-resolution frequencies, $S_h$, to the legacy frequencies, $S_l$, such that
+\begin{equation}
+\label{eq:smooth}
+S_{l}(f)=A e^{-\alpha f^2}\,S_h(f)
+\end{equation}
+where $A=A_l/A_h$,
+\begin{equation}
+\label{eq:alpha}
+\alpha = \frac{1}{f_l^2}-\frac{1}{f_h^2} \;,
+\end{equation}
+and the subscripts $l$ and $h$ correspond to the legacy and high-resolution images, respectively.
+
+Combining equations~(\ref{eq:Tf}), (\ref{eq:gaussian}), and (\ref{eq:alpha}) leads to the specification of the triangle smoothing radius as
+\begin{equation}
+\label{eq:radius}
+\Delta t \approx \frac{1}{2\pi}\sqrt{12\left(\frac{1}{f_{l}^{2}}-\frac{1}{f_{h}^{2}}\right)}\;.
+\end{equation}
+Here, $\Delta t$ is the radius of smoothing, measured in seconds, applied to the high-resolution image to match the frequency content with the legacy image at each sample.
+The calculated smoothing radius for this data set is shown in Figure \ref{fig:rect}.
+
+\plot{rect}{width=0.75\columnwidth}{Calculated spatially and temporally variable smoothing radius. This represents the number of seconds in the temporal direction that the high-resolution image gets averaged over in a triangle weight to balance local frequency content with the legacy image at each sample.}
+
+We measure local frequencies in both images and apply smoothing specified by equation~(\ref{eq:radius}) to the high-resolution image.
+Since this is only an approximation of what the smoothing radius should be under ideal conditions, we adjust the constant $12$ in the equation to achieve a better match.
+In this example, this effectively reduces the difference between the spectral content of the images, as shown in Figure \ref{fig:hires-smooth-spec}.
+Figure \ref{fig:freqdif,freqdif-filt} shows the difference in local frequencies before and after smoothing. After smoothing, the frequency difference is minimized.
+
+This method works well for simple data sets with overlapping frequency content. However, more complicated data sets, as seen in the next example, may require additional steps for successful frequency balancing.
+
+In addition to frequency balancing, we initially attempted accounting for wavelet phase differences between data sets at this step.
+However, we saw this had a negligible impact on the final result, so we decided not to include it in this method.
+
+\multiplot{2}{freqdif,freqdif-filt}{width=0.65\columnwidth}{Difference in local frequencies between the legacy and high-resolution images before (a) and after (b) balancing their frequency content by non-stationary smoothing.}
+
+\subsection{Measuring time shifts}
+
+After balancing the spectral content, we attempt to account for possible time shifts of the high-resolution image relative to the legacy image, which can be caused by changes in acquisition and processing parameters.
+We measure this shift using local similarity scanning \cite[]{attr, timelapse}.
+In this method, we detect the relative time shift by first calculating the local similarity at different time shifts of the high-resolution image relative to the legacy image \cite[]{timelapse}.
+From this, the trend of the highest similarity is picked and represents the relative time shift between the two images.
+
+Next, we apply the estimated time shift to the original high-resolution image---the frequency content is only degraded for the purpose of finding the time shift that best aligns the signal content between the two images.
+The differences between the two images before and after the time shift correction are shown in Figure \ref{fig:diff0,diff1}, and demonstrate a noticeably better match resulting from the time shift.
+
+\multiplot{2}{diff0,diff1}{width=0.6\columnwidth}{Difference between the legacy and smoothed high-resolution images before (a) and after (b) aligning the data sets. Before accounting for time shifts, much of the signal content did not align in time, so coherent reflections were subtracted out. After accounting for time shifts, the reflections are more aligned, so much of the subtracted information is noise.}
+
+\subsection{Creating the blended image}
+
+Since the high-resolution and legacy images contain information about the same subsurface, we can attempt to create an optimal image of this area by blending the two images together to combine the strengths of each while minimizing their weaknesses.
+We can achieve this by imposing two conditions.
+First, the blended image should match the high-resolution image, particularly in the shallow part.
+Second, after smoothing with the non-stationary smoothing operator, the blended image should match the legacy image.
+We combine the two conditions together in the least-squares system
+\begin{equation}
+\label{eq:ls}
+\left[\begin{array}{c} \mathbf{W_h} \\
+        \mathbf{W_lS} \end{array}\right]\,\mathbf{b} \approx \left[\begin{array}{c} \mathbf{W_h\,h} \\
+        \mathbf{l} \end{array}\right]\;,
+\end{equation}
+where $\mathbf{h}$ denotes the high-resolution image, $\mathbf{l}$ is the legacy image, $\mathbf{b}$ is the desired blended image, $\mathbf{W_h}$ and $\mathbf{W_l}$ are the diagonal weighting matrices for the high-resolution and legacy images, respectively, and $\mathbf{S}$ is the non-stationary smoothing specified by equation (\ref{eq:radius}).
+The formal solution of the least-squares problem~(\ref{eq:ls}) is
+
+\begin{eqnarray}
+\mathbf{b} & = & \left(\mathbf{W_h}^2 + \mathbf{S}^T\mathbf{W_l}^2\mathbf{S}\right)^{-1}\,\left(\mathbf{W_h}^2\,\mathbf{h}+\mathbf{S}^T\,\mathbf{W_l}\mathbf{l}\right)\;.
+\label{eq:inv}
+\end{eqnarray}
+
+Alternatively, equation (\ref{eq:inv}) can be rearranged as
+\begin{eqnarray}
+\nonumber
+        \mathbf{b} & = & \left(\mathbf{W_h}^2 + \mathbf{S}^T\mathbf{W_l}^2\mathbf{S}\right)^{-1}\,\left(\mathbf{W_h}^2\,\mathbf{h}+\mathbf{S}^T\mathbf{W_l}^2\mathbf{S}\mathbf{h}-\mathbf{S}^T\mathbf{W_l}^2\mathbf{S}\mathbf{h}+\mathbf{S}^T\,\mathbf{W_l}\mathbf{l}\right) \\
+\nonumber
+        & = & \left(\mathbf{W_h}^2 + \mathbf{S}^T\mathbf{W_l}^2\mathbf{S}\right)^{-1}\,\left(\left(\mathbf{W_h}^2\,+\mathbf{S}^T\mathbf{W_l}^2\mathbf{S}\right)\mathbf{h} + \mathbf{S}^T\mathbf{W_l}\left(\mathbf{l}-\mathbf{W_l}\mathbf{S}\mathbf{h}\right)\right) \\
+& = & \mathbf{h} +  \left(\mathbf{W_h}^2 + \mathbf{S}^T\mathbf{W_l}^2\mathbf{S}\right)^{-1}\,
+\mathbf{S}^T\,\mathbf{W_l}\left(\mathbf{l - W_l S h}\right)\;,
+\label{eq:inv2}
+\end{eqnarray}
+which makes it evident that the merged image is simply the high-resolution image with some changes.
+
+The weights, $\mathbf{W_h}$ and $\mathbf{W_l}$, are applied to the images to bring out the desired qualities from each image.
+For example, since we prefer the high-resolution image in the shallow section, we weight it stronger there and gradually taper the weight to preference the legacy image with depth.
+In addition, we estimate the legacy weight, $\mathbf{W_l}$, to balance the legacy images's amplitudes with respect to the high-resolution image.
+The specific values we used for the weights are shown in Figure \ref{fig:hweight,lweight-reverse}.
+
+\multiplot{2}{hweight,lweight-reverse}{width=0.65\columnwidth}{The weights for the high-resolution (a) and legacy (b) images for the least-squares merge. The high-resolution weight is strongly weighted in the shallow part and blends to favor the legacy image with depth. The legacy weight is selected to boost the legacy image's amplitudes to match that of the high-resolution image.}
+
+\plot{nspectra22-reverse}{width=0.90\columnwidth}{The spectra of the entire image display of the legacy (red dashed), high-resolution (blue dotted), and merged (magenta solid) images for the first data set.}
+
+We implement the inversion in equation~(\ref{eq:inv2}) iteratively using the method of conjugate gradients \cite[]{conjgrad}.
+The resultant blended image, shown in Figure~\ref{fig:merge2-reverse}, retains the higher frequencies from the high-resolution image while incorporating the lower frequencies from the legacy image (Figure~\ref{fig:nspectra22-reverse}).
+The broader frequency bandwidth corresponds to an increase in resolution and leads to a more detailed and interpretable image.
+As a result, the blended image resembles the high-resolution image but has a marked decrease in noise and extended coverage with depth.
+
+Although the method presented in this paper is applied to post-stack images, the general method is likely flexible enough to be extended to pre-stack data.
+Applications of matching legacy and high-resolution seismic data are also seen in time-lapse image registration, where the accurate interpretation of 4D time-lapse data heavily depends on dataset alignment and uniform processing \cite[]{nonuniform}.
+The method from this paper could also be used in 4D time-lapse processing; particularly the steps involving frequency balancing and accounting for time shifts.
+
+\section{P-cable Example}
+\inputdir{pcable}
+Our second example refers to data from the inner shelf of the Gulf of Mexico, just off of San Luis Pass, Texas \cite[]{data}.
+The high-resolution P-cable data set was acquired from a shallow marine environment in the Gulf of Mexico.
+The area of interest for this survey was the near subsurface, and a high frequency source was used which allows for exceptional resolution in the shallow section, at the expense of less coherent signal information at depth caused by attenuation \cite[]{tip}.
+In addition, very little low-frequency information is present in the P-cable data because of the high-frequency source used, which makes balancing spectral content particularly difficult.
+The other image comes from legacy data coverage over the same area, which has better signal continuity at depth than the high-resolution P-cable data.
+This is apparent by looking at the first few hundred milliseconds of data for both data sets (Figure \ref{fig:window1,window2}).
+
+\multiplot{2}{window1,window2}{width=0.75\columnwidth}{The first 600 ms of data from a sample line from the legacy, high-resolution, and merged image (a). The same images with depth for the legacy, high-resolution, and merged images (b). The merged image resembles the high-resolution image in the shallow parts and incorporates the more coherent lower frequency information from the legacy image with depth.}
+
+Due to the nature of acquisition, the high resolution image has very dense spatial coverage, providing detailed time slices of the near subsurface \cite[]{tip}.
+The legacy image has lower spatial resolution.
+As a result, when matching the high-resolution and legacy images spatially, the high spatial resolution of the high-resolution image must be degraded to match that of the legacy image.
+We rebinned the legacy and high-resolution images to align them spatially for comparison (Figure \ref{fig:legacy4,hires4,merge3}).
+We chose to spatially down-sample the high-resolution image to match the legacy image as opposed to interpolating the legacy image to the high-resolution image's spatial grid to prevent potentially introducing inaccurate data in the merged image.
+
+There is a definite separation in frequency content when comparing the legacy and high-resolution images (Figure \ref{fig:nspectra2}).
+Because there is not much overlap in frequency bandwidth, balancing their spectral content is challenging.
+In addition, a primary assumption made in deriving the theoretical smoothing radius (equation \ref{eq:radius}) is that the signal is modeled by a summation of Ricker wavelets, which may not be a correct assumption.
+As a result, additional steps must be taken beyond applying the smoothing specified by equation~(\ref{eq:radius}) to ensure matching frequency content.
+
+We first apply a low-cut filter to the legacy data to remove the low frequency information that is simply not present in the high-resolution image.
+Next, we adjust the non-stationary smoothing radius using a simple iterative algorithm \cite[]{locfreq}.
+
+The main premise behind the algorithm comes from the fact that, in general, the greater the smoothing radius at a specified point, the more high frequencies are attenuated by smoothing.
+We choose an initial guess of the non-stationary smoothing radius before applying corrections based on two primary assumptions:
+\begin{enumerate}
+\item The smoothing radius is too \emph{small} at a specified point if, after smoothing, the high-resolution image has \emph{higher} local frequency than the legacy image.
+        Thus, the smoothing radius must be \emph{increased} at that point.
+\item The smoothing radius is too \emph{large} at a specified point if, after smoothing, the high-resolution image has \emph{lower} local frequency than the legacy image.
+        Thus, the smoothing radius must be \emph{decreased} at that point.
+\end{enumerate}
+
+We apply these assumptions using a line-search method:
+    \begin{equation}
+        \label{eq:linesearch}
+        \mathbf{R}^{(i+1)} = \mathbf{R}^{(i)}+ \alpha \mathbf{r}^{(i)},
+    \end{equation}
+where $\mathbf{R}^{(i)}$ is the smoothing radius at the $i$th iteration, $\alpha$ is a scalar constant that can be thought of as the step length, and $\mathbf{r}^{(i)}$ is the residual at the $i$th iteration, which can be thought of as the search direction, and is defined as
+    \begin{equation}
+        \label{eq:residual}
+        \mathbf{r} = \mathbf{F}[\mathbf{S}_{\mathbf{R}} \mathbf{d}_h] - \mathbf{F}[\mathbf{d}_l]\;,
+    \end{equation}
+where $\mathbf{S}_\mathbf{R}$ is the non-stationary smoothing operator of smoothing radius $\mathbf{R}$, $\mathbf{d}_h$ is the high-resolution image, $\mathbf{d}_l$ is the legacy image, and $\mathbf{F}$ is the local frequency operator.
+It can be noted that when equation (\ref{eq:residual}) is positive, the high-resolution image still has a higher local frequency value at that specific point than the legacy image, thus the high-resolution image is under-smoothed and the smoothing radius should be increased at that point.
+This follows the form of the first assumption.
+The second assumption is used when equation (\ref{eq:residual}) is negative.
+When equation (\ref{eq:residual}) is zero, the correct radius has been found and no further corrections are made.
+Thus, it is justifiable to set the search direction from equation (\ref{eq:ls}) equal to the residual.
+
+Using this method, we can continually adjust the smoothing radius until we achieve the desired result of balancing the local frequency content between the two images.
+In practice, this method produces an acceptable solution in approximately 5 iterations and exhibits sublinear convergence.
+We smooth the high-resolution image with the radius this method produces to balance local frequency content between the two images.
+
+After this, we use the low-cut filtered legacy and smoothed high-resolution images to find estimated time shifts we need to apply to the high-resolution image to align the reflections with the legacy image.
+Then, we apply this estimated time shift to the original high-resolution image and blend it with the original legacy image as specified by equations~(\ref{eq:ls}) and (\ref{eq:inv2}).
+
+The resultant merged image is shown in Figure \ref{fig:merge3}.
+The frequency content of the merged image is shown in Figure \ref{fig:nspectra2}.
+Here, the merged image spans the frequency bandwidth of the two initial images, thus producing a high resolution volume including optimal signal characteristics from the two initial images.
+
+\plot{nspectra2}{width=0.90\columnwidth}{The spectral content of the entire image display of the legacy (red dashed), high-resolution (blue dotted), and resultant merged (magenta solid) images for the second data set.}
+
+\inputdir{pcable2}
+
+\multiplot{3}{legacy4,hires4,merge3}{width=0.45\columnwidth}{The legacy (a), high-resolution (b), and resultant merged (c) images of the second data set.}
+
+\section{Conclusions}
+
+We have proposed an approach to matching seismic images of different resolutions.
+Our first step is non-stationary smoothing of the high-resolution image to match the spectral content and amplitudes of the legacy image.
+Next, we estimate the relative time shifts using local similarity scanning.
+After matching the two images, we create a blended image by least-squares inversion, which effectively combines the best features of the two images: the broader frequency bandwidth of the high-resolution image with the reflection continuity and deeper coverage of the legacy image.
+The final result is an interpretable blended image.
+We have shown example applications of the proposed method to high-resolution and legacy images from the Gulf of Mexico.
+
+\section{Acknowledgments}
+
+We thank Michael DeAngelo, August Lau, Tip Meckel, and Chuan Yin for useful discussions and Apache and Fieldwood for providing the data used in the first example.
+We also thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for their financial support.
+
+%\onecolumn
+
+\bibliographystyle{seg}
+\bibliography{SEG,merge}

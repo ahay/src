@@ -1,0 +1,556 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+data = {'legacy':'i455_legacy3d_pstm_4ms.sgy',  	  
+        'hires':'i455_sc2dpoststkmig_1ms.sgy'}
+
+for key in data.keys():
+    Fetch(data[key],'apache',server)
+
+    # Convert from SEGY format to Madgascar RSF format
+    Flow([key,'t'+key,key+'.asc',key+'.bin'],data[key],
+             '''
+             segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} |
+             put label2=Cross-line o2=3205 d2=1 
+             ''')
+
+    # Display
+    Result(key,
+           '''
+           grey color=seismic title="%s Image" 
+           ''' % key.capitalize())
+
+    # Look at spectra
+    spectrum = key + '-spec'
+    Flow(spectrum,key,'spectra all=y')
+    Result(spectrum,'graph title="%s Spectrum" ' % key.capitalize())
+
+Result('hires2',
+       '''
+       grey color=seismic title="Hires Image" 
+       ''')
+
+# Sample both at 2 ms
+Flow('hires2','hires','bandpass fhi=250 | window j1=2')
+Flow('legacy2','legacy','spline n1=2001 d1=0.002 o1=0')
+Flow('legacy4','legacy','spline n1=4001 d1=0.001 o1=0')
+
+for key in data.keys():
+    spectrum = key + '-spec2'
+    Flow(spectrum,key+'2','spectra all=y')
+
+Result('spectra','hires-spec2 legacy-spec2',
+       'cat axis=2 ${SOURCES[1]} | graph title=Spectra')
+
+Result('nspectra','hires-spec2 legacy-spec2',
+       '''
+       cat axis=2 ${SOURCES[1]} | scale axis=1 | window max1=120 | 
+       graph title="Normalized Spectra" label2="Amplitude"
+       ''')
+
+
+
+
+# BANDPASS FILTERING
+# Filter frequencies (Filter low at 15 and high at 50)
+lof = 18 	# other value: 21
+hif = 38	# other value: 35
+
+Flow('hires3', 'hires2', 'bandpass fhi='+str(hif)+' flo='+str(lof))
+Flow('legacy3', 'legacy2', 'bandpass fhi='+str(hif)+' flo='+str(lof))	# Is this too small of a frequency range?
+
+for key in data.keys():
+    filtspec = key + '-spec3'
+    Flow(filtspec, key+'3', 'spectra all=y')
+
+Result('filtnspectra','hires-spec3 legacy-spec3', 
+       '''
+       cat axis=2 ${SOURCES[1]} | scale axis=1 |
+       graph title="Filtered Normalized Spectra"
+       ''')
+
+Result('hires3', 'grey color=seismic title="Inline hires filtered, 455 Dataset"')
+Result('legacy3', 'grey color=seismic title="Inline legacy filtered, 455 Dataset"')
+
+
+# SMOOTHING APPLIED TO HIRES
+# Measure local frequency
+for key in data.keys():
+    freq = key+'-freq'
+    Flow(freq,key,'iphase order=10 rect1=%d rect2=80 hertz=y complex=y | put label=Frequency unit=Hz' % (40,160)[key=='hires'])
+    Result(freq,'grey mean=y color=j scalebar=y title="%s Local Frequency" minval=10 maxval=75' % key.capitalize()) #clip=35 bias=35
+
+# Difference in local frequencies
+Flow('freqdif','legacy-freq hires-freq','remap1 n1=4001 d1=0.001 o1=0 | add scale=-1,1 ${SOURCES[1]}')
+
+Result('freqdif','grey allpos=y color=j scalebar=y minval=0 maxval=40 clip=40 mean=y title="Difference in Local Frequencies" ')
+
+# Try stationary smoothing
+for rect in (5,10,15,20):
+    smooth = 'smooth%d' % rect
+    Flow(smooth,'hires','smooth rect1=%d | bandpass fhi=250 | window j1=2 | spectra all=y' % rect)
+    Result(smooth,[smooth,'legacy-spec2'],'cat axis=2 ${SOURCES[1]} | scale axis=1 | window max1=125 | graph title="rect=%d" ' % rect)
+
+# Nonstationary smoothing applied to hires to match with legacy
+
+from math import pi
+
+scale=6.75 # theoretically should be 12
+
+Flow('rect','legacy-freq hires-freq',
+     'remap1 n1=4001 d1=0.001 o1=0 | math f1=${SOURCES[1]} output="sqrt(%g*(1/(input*input)-1/(f1*f1)))/%g" ' % (scale,2*pi*0.001))
+
+Result('rect','grey color=j mean=y title="Smoothing Radius" scalebar=y barlabel=Radius barunit=samples')
+
+Flow('hires-smooth','hires rect','nsmooth1 rect=${SOURCES[1]} | window j1=4')
+Flow('hires-smooth-spec','hires-smooth','spectra all=y')
+Result('hires-smooth-spec','hires-smooth-spec legacy-spec','cat axis=2 ${SOURCES[1]} | scale axis=1 | window max1=120 | graph title="Normalized Spectra after Smoothing" label2="Amplitude"')
+Result('hires-smooth', 'grey color=seismic title="Hires Smooth"')
+
+# Difference in local frequencies with nonstationary smoothing applied to hires 
+Flow('hires-smooth-freq','hires-smooth','iphase order=10 rect1=40 rect2=80 hertz=y complex=y | put label=Frequency unit=Hz')
+Result('hires-smooth-freq','grey mean=y color=j scalebar=y title="Hires Local Frequency Smoothed" ')
+
+Flow('freqdif-filt','legacy-freq hires-smooth-freq','add scale=-1,1 ${SOURCES[1]}')
+
+Result('freqdif-filt','grey allpos=y color=j scalebar=y minval=0 maxval=40 clip=40 mean=y title="Difference after Smoothing" ')
+
+
+
+
+# BALANCE AMPLITUDES
+Flow('hires-balanced','hires-smooth legacy','abalance other=${SOURCES[1]} rect1=80 rect2=160')
+
+Flow('hires-balanced-reverse','hires-smooth legacy','abalance other=${SOURCES[1]} rect1=80 rect2=160 reverse=n')
+
+
+# SELECT FIRST TRACE
+# First trace = cross-line 3700
+for case in ('legacy','hires-balanced','hires-balanced-reverse'):
+    trace = case + '-trace'
+    Flow(trace,case,'window n2=1 min2=3700')
+
+# take the difference
+Flow('trace-diff','legacy-trace hires-balanced-trace','add ${SOURCES[1]} scale=1,-1')
+
+Flow('trace-diff-reverse','legacy-trace hires-balanced-reverse-trace','add ${SOURCES[1]} scale=1,-1')
+
+Result('traces','legacy-trace hires-balanced-trace trace-diff',
+       'cat axis=2 ${SOURCES[1:3]} | dots gaineach=n labels=Legacy:Hires:Difference yreverse=y')
+
+Result('traces-reverse','legacy-trace hires-balanced-reverse-trace trace-diff-reverse',
+       'cat axis=2 ${SOURCES[1:3]} | dots gaineach=n labels=Legacy:Hires:Difference yreverse=y')
+
+Result('traces-reverse-diff','trace-diff trace-diff-reverse',
+       'cat axis=2 ${SOURCES[1]} | dots gaineach=n labels=reverse=y:reverse=n yreverse=y')
+
+
+
+# BALANCE PHASE OF FIRST TRACE
+rotates = []
+for angle in range(-180,181,5):
+    rotate = 'legacy-rotate%d' % angle
+    Flow(rotate,'legacy-trace','envelope hilb=y phase=%d' % angle)
+    rotates.append(rotate)
+
+Flow('rotates',rotates,'cat axis=2 ${SOURCES[1:%d]} | put o2=-180 d2=5' % len(rotates))
+
+Flow('phasematch','hires-balanced-trace rotates',
+     '''
+     spray axis=2 n=73 o=-180 d=5 label=Angle unit=degree | 
+     similarity other=${SOURCES[1]} rect1=160
+     ''')
+
+Plot('phasematch','grey color=j allpos=y title="Phase Similarity" ')
+
+Flow('phasepick','phasematch','pick rect1=20 vel0=0')
+
+Plot('phasepick','graph plotcol=7 yreverse=y transp=y min2=-180 max2=180 pad=n wanttitle=n wantaxis=n')
+
+Result('phasematch','phasematch phasepick','Overlay')
+
+Flow('phaseslice','rotates phasepick','slice pick=${SOURCES[1]}') 
+
+Flow('phase-diff','phaseslice hires-balanced-trace','add ${SOURCES[1]} scale=1,-1') 
+
+Result('phase-traces','phaseslice hires-balanced-trace phase-diff',
+       'cat axis=2 ${SOURCES[1:3]} | dots labels=Legacy:Hires:Difference yreverse=y')
+
+
+
+
+# TIME SHIFT OF FIRST TRACE
+# Scanning different time shifts
+Flow('warpscan','hires-balanced-trace legacy-trace',
+     '''
+     warpscan shift=y ng=101 g0=-0.05 dg=0.001 
+     other=${SOURCES[1]} rect1=20
+     ''')
+
+Flow('warppick','warpscan',
+     'scale axis=2 | pick rect1=10 vel0=0.02 an=0.1')
+
+Plot('warpscan',
+     '''
+     grey allpos=y color=j title="Shift Scan" 
+     label2=Shift unit2=s
+     ''')
+
+# This is what was removed
+Plot('warppick',
+     '''
+     graph plotfat=3 plotcol=7 wanttitle=n wantaxis=n
+     min2=-0.05 max2=0.05 pad=n yreverse=y transp=y
+     ''')
+
+Result('warpscan','warpscan warppick','Overlay')
+
+# Apply picked shift
+Flow('warp','hires-balanced-trace legacy-trace warppick',
+     'warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+
+Flow('warp-diff','legacy-trace warp','add ${SOURCES[1]} scale=1,-1')
+
+Result('wtraces','legacy-trace warp warp-diff',
+       'cat axis=2 ${SOURCES[1:3]} | dots gaineach=n labels=Legacy:Warped:Difference yreverse=y')
+
+
+
+
+# TIME SHIFT OF PHASE ADJUSTED FIRST TRACE
+Flow('warpscanr','hires-balanced-trace phaseslice',
+     '''
+     warpscan shift=y ng=101 g0=-0.05 dg=0.001 
+     other=${SOURCES[1]} rect1=20
+     ''')
+
+Flow('warppickr','warpscanr',
+     'scale axis=2 | pick rect1=10 vel0=0.02 an=0.1')
+
+Plot('warpscanr',
+       '''
+       grey allpos=y color=j title="Shift Scan" 
+       label2=Shift unit2=s
+       ''')
+
+# This is what was removed 
+Plot('warppickr',
+     '''
+     graph plotfat=3 plotcol=7 wanttitle=n wantaxis=n
+     min2=-0.05 max2=0.05 pad=n yreverse=y transp=y
+     ''')
+
+Result('warpscanr','warpscanr warppickr','Overlay')
+
+# Apply picked shift
+Flow('warpr','hires-balanced-trace phaseslice warppickr',
+     'warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+
+Flow('warp-diffr','phaseslice warpr','add ${SOURCES[1]} scale=1,-1')
+
+Result('phase-wtraces','phaseslice warpr warp-diffr',
+       'cat axis=2 ${SOURCES[1:3]} | dots gaineach=n labels=Legacy:Warped:Difference yreverse=y')
+
+
+
+
+# SELECT SECOND TRACE
+# Second trace = cross-line 4700
+for case in ('legacy','hires-balanced'):
+    trace = case + '-trace2'
+    Flow(trace,case,'window n2=1 min2=4700')
+
+# take the difference
+Flow('trace-diff2','legacy-trace2 hires-balanced-trace2','add ${SOURCES[1]} scale=1,-1')
+
+Result('traces2','legacy-trace2 hires-balanced-trace2 trace-diff2',
+       'cat axis=2 ${SOURCES[1:3]} | dots gaineach=n labels=Legacy:Hires:Difference yreverse=y')
+
+
+
+
+# BALANCE PHASE OF SECOND TRACE
+rotates2 = []
+for angle in range(-180,181,5):
+    rotate = 'legacy-rotate%d-2' % angle
+    Flow(rotate,'legacy-trace2','envelope hilb=y phase=%d' % angle)
+    rotates2.append(rotate)
+
+Flow('rotates2',rotates2,'cat axis=2 ${SOURCES[1:%d]} | put o2=-180 d2=5' % len(rotates))
+
+Flow('phasematch2','hires-balanced-trace2 rotates2',
+     '''
+     spray axis=2 n=73 o=-180 d=5 label=Angle unit=degree | 
+     similarity other=${SOURCES[1]} rect1=160
+     ''')
+
+Plot('phasematch2','grey color=j allpos=y title="Phase Similarity" ')
+
+Flow('phasepick2','phasematch2','pick rect1=20 vel0=0')
+
+Plot('phasepick2','graph plotcol=7 yreverse=y transp=y min2=-180 max2=180 pad=n wanttitle=n wantaxis=n')
+
+Result('phasematch2','phasematch2 phasepick2','Overlay')
+
+Flow('phaseslice2','rotates2 phasepick2','slice pick=${SOURCES[1]}') 
+
+Flow('phase-diff2','phaseslice2 hires-balanced-trace2','add ${SOURCES[1]} scale=1,-1') 
+
+Result('phase-traces2','phaseslice2 hires-balanced-trace2 phase-diff2',
+       'cat axis=2 ${SOURCES[1:3]} | dots labels=Legacy:Hires:Difference yreverse=y')
+
+
+
+
+# TIME SHIFT OF SECOND TRACE
+# Scanning different time shifts
+Flow('warpscan2','hires-balanced-trace2 legacy-trace2',
+     '''
+     warpscan shift=y ng=101 g0=-0.05 dg=0.001 
+     other=${SOURCES[1]} rect1=20
+     ''')
+
+Flow('warppick2','warpscan2',
+     'scale axis=2 | pick rect1=10 vel0=0.04 an=0.1')
+
+Plot('warpscan2',
+     '''
+     grey allpos=y color=j title="Shift Scan" 
+     label2=Shift unit2=s
+     ''')
+
+# This is what was removed
+Plot('warppick2',
+     '''
+     graph plotfat=3 plotcol=7 wanttitle=n wantaxis=n
+     min2=-0.05 max2=0.05 pad=n yreverse=y transp=y
+     ''')
+
+Result('warpscan2','warpscan2 warppick2','Overlay')
+
+# Apply picked shift
+Flow('warp2','hires-balanced-trace2 legacy-trace warppick2',
+     'warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+
+Flow('warp-diff2','legacy-trace2 warp2','add ${SOURCES[1]} scale=1,-1')
+
+Result('wtraces2','legacy-trace2 warp2 warp-diff2',
+       'cat axis=2 ${SOURCES[1:3]} | dots gaineach=n labels=Legacy:Warped:Difference yreverse=y')
+
+
+
+
+# TIME SHIFT OF PHASE ADJUSTED SECOND TRACE
+Flow('warpscanr2','hires-balanced-trace2 phaseslice2',
+     '''
+     warpscan shift=y ng=101 g0=-0.05 dg=0.001 
+     other=${SOURCES[1]} rect1=20
+     ''')
+
+Flow('warppickr2','warpscanr2',
+     'scale axis=2 | pick rect1=10 vel0=0.02 an=0.1')
+
+Plot('warpscanr2',
+       '''
+       grey allpos=y color=j title="Shift Scan" 
+       label2=Shift unit2=s
+       ''')
+
+# This is what was removed 
+Plot('warppickr2',
+     '''
+     graph plotfat=3 plotcol=7 wanttitle=n wantaxis=n
+     min2=-0.05 max2=0.05 pad=n yreverse=y transp=y
+     ''')
+
+Result('warpscanr2','warpscanr2 warppickr2','Overlay')
+
+# Apply picked shift
+Flow('warpr2','hires-balanced-trace2 phaseslice2 warppickr2',
+     'warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+
+Flow('warp-diffr2','phaseslice2 warpr2','add ${SOURCES[1]} scale=1,-1')
+
+Result('phase-wtraces2','phaseslice2 warpr2 warp-diffr2',
+       'cat axis=2 ${SOURCES[1:3]} | dots gaineach=n labels=Legacy:Warped:Difference yreverse=y')
+
+
+
+
+# RUN WARPSCAN ON THE WHOLE IMAGE
+Flow('warpscan3','hires-balanced legacy',
+     '''
+     warpscan shift=y ng=51 g0=0 dg=0.001 
+     other=${SOURCES[1]} rect1=20 rect3=40
+     ''')
+
+#Result('warpscan3','byte gainpanel=all allpos=y bar=bar.rsf | transp plane=23 | grey3 color=j flat=n frame1=500 frame2=1000 frame3=25 title="Local Similarity Scan" label3="Time Shift" unit3=s scalebar=y barlabel=Similarity') 
+Result('warpscan3','byte gainpanel=all allpos=y bar=bar.rsf | transp plane=23 | grey3 color=j frame1=500 frame2=1000 frame3=25 title="Local Similarity Scan" label3="Time Shift" unit3=s scalebar=y barlabel=Similarity') 
+
+Flow('warppick3','warpscan3',
+     'scale axis=2 | pick rect1=10 rect2=20 vel0=0.02 an=0.1')
+
+Result('warppick3','grey color=j allpos=y title="Estimated Time Shift" scalebar=y barlabel=Time barunit=s')
+
+Flow('diff0','hires-balanced legacy','add scale=1,-1 ${SOURCES[1]}')
+
+# Apply picked shift
+Flow('warp3','hires-balanced legacy warppick3',
+     'warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+
+Flow('diff1','warp3 legacy','add scale=1,-1 ${SOURCES[1]}')
+
+#for case in ('diff0','diff1'):
+    #Result(case,'window max1=2 | grey title=%c clip=36.5' % ('ab'[case=='diff1']))
+Result('diff0','window max1=2 | grey title="Difference before warping" clip=36.5')
+Result('diff1','window max1=2 | grey title="Difference after warping" clip=36.5')
+
+
+
+
+# SHIFT WITHOUT BALANCING AMPLITUDES
+Flow('warp-hires','warppick3','remap1 n1=4001 d1=0.001 o1=0')
+
+Flow('hires-warp','hires warp-hires',
+     'warp1 other=${SOURCES[0]} warpin=${SOURCES[1]} nliter=0')
+
+Flow('hires-warp-freq','hires-warp','iphase order=10 rect1=160 rect2=80 hertz=y complex=y | put label=Frequency unit=Hz')
+
+Result('hires-warp-freq','grey mean=y color=j scalebar=y title="Warped Hires Local Frequency" ')
+
+Flow('rect2','legacy-freq hires-warp-freq',
+     'remap1 n1=4001 d1=0.001 o1=0 | math f1=${SOURCES[1]} output="sqrt(%g*(1/(input*input)-1/(f1*f1)))/%g" ' % (scale,2*pi*0.001))
+
+Result('rect2','grey color=j mean=y title="Smoothing Radius" scalebar=y barlabel=Radius barunit=samples')
+
+Flow('hires-warp-smooth','hires-warp rect2','nsmooth1 rect=${SOURCES[1]}')
+
+
+
+
+# CREATE THE MERGED IMAGE
+Flow('hires-warp-balance lweight','hires-warp-smooth legacy4','abalance weight=${TARGETS[1]} other=${SOURCES[1]} rect1=320 rect2=160')
+
+Flow('hires-warp-balance-reverse lweight-reverse','hires-warp-smooth legacy4','abalance weight=${TARGETS[1]} other=${SOURCES[1]} rect1=320 rect2=160 reverse=n')
+
+Result('lweight', 'window min1=0.25 | grey color=j scalebar=y title="Legacy Weight" mean=y')
+
+Result('lweight-reverse', 'window min1=0.25 | grey color=j scalebar=y title="Legacy Weight" mean=y')
+
+
+Flow('lweight2','lweight','cut max1=0.25 | clip2 lower=0 | scale dscale=0.5')
+
+Flow('hires-warp-diff','hires-warp-balance legacy4',
+     'add ${SOURCES[1]} scale=-1,1 | pad beg3=1')
+
+Flow('hires-warp-diff-reverse','hires-warp-balance-reverse legacy4',
+     'add ${SOURCES[1]} scale=-1,1 | pad beg3=1')
+
+# Possible functions to model the weight after
+f1 = "8*exp(-(x1^2*10))"
+f2 = "(-(x1-3)^3+1)/10"
+f3 = "5*erfc(x1)"		# f3 works the best
+f4 = "5*exp(-(x1^2))"
+
+# fix top to be hires
+Flow('weight2','lweight','math output=1 | cut min1=0.25 | smooth rect1=50 repeat=4 | add $SOURCE')
+
+Flow('weight3','hires-warp weight2','math output=1 | cut min1=0.25 | add ${SOURCES[1]}')
+
+#Flow('weight4','lweight','math output=\"'+f3+'\"')
+Flow('weight5','lweight','math output=\"'+f3+'\"| cut max1=0.25')
+Flow('hweight','lweight weight5','math output=5 | cut min1=0.25 | add ${SOURCES[1]} | scale dscale=1')
+#Flow('weight6','lweight','math output 100 | cut max1=0.25')
+#Flow('hweight','lweight, weight6','math output=5 | cut min1=0.25 | add ${SOURCES[1]} | add add=1')
+#Flow('weight4','lweight','math output=0.01')
+Result('hweight', 'grey color=j scalebar=y title="Hires Weight"')
+Result('lweight2', 'grey color=j scalebar=y title="Legacy Weight" mean=y')
+Flow('lweight3', 'hweight', 'math output=1')
+
+# right-hand side
+Flow('hires-legacy','hires-warp legacy4 hweight','mul ${SOURCES[2]} | cat axis=3 ${SOURCES[1]}')
+
+Flow('merge','hires-legacy legacy4 rect2 hweight lweight3',
+     '''
+     conjgrad legacy rect=${SOURCES[2]} hweight=${SOURCES[3]} lweight=${SOURCES[4]} niter=20 mod=${SOURCES[1]}
+     ''')
+
+Result('merge','grey color=seismic title="Merged Image" ') 
+
+Flow('merge3','hires-warp-diff hires-warp rect2 hweight lweight',
+     '''
+     conjgrad legacy rect=${SOURCES[2]} hweight=${SOURCES[3]} lweight=${SOURCES[4]} niter=20 mod=${SOURCES[1]} | add ${SOURCES[1]}
+     ''')
+
+Result('merge3','grey color=seismic title="Merged Image" ')
+
+Flow('merge1','hires-warp-diff hires-warp rect2 hweight lweight2',
+     '''
+     conjgrad legacy rect=${SOURCES[2]} hweight=${SOURCES[3]} lweight=${SOURCES[4]} niter=20 mod=${SOURCES[1]}
+     ''')
+
+Flow('hweight-reverse','hweight','cp') # 'math output=1')
+
+Flow('merge1-reverse','hires-warp-diff-reverse hires-warp rect2 hweight-reverse lweight-reverse',
+     '''
+     conjgrad legacy rect=${SOURCES[2]} hweight=${SOURCES[3]} lweight=${SOURCES[4]} niter=20 mod=${SOURCES[1]}
+     ''')
+
+Flow('merge2','hires-warp merge1','add ${SOURCES[1]}')
+
+Flow('merge2-reverse','hires-warp merge1-reverse','add ${SOURCES[1]}')
+
+Result('merge1','grey color=seismic title="Difference between Merged and Hires" clip=3.7011') 
+
+Result('merge2','grey color=seismic title="Merged Image" ') 
+
+# Difference between high-resolution and merged image
+Result('merge1-reverse','bandpass fhi=250 | window j1=3 |grey color=seismic title="Difference between Merged and Hires" clip=3.7011') 
+
+# Final merged image
+Result('merge2-reverse','bandpass fhi=250 | window j1=3 |grey color=seismic title="Merged Image" ') 
+
+
+# Display the spectra
+Flow('hires-smooth4','hires-smooth','spline n1=4001 d1=0.001 o1=0')
+Flow('merge-spec4','merge','spectra all=y')
+Flow('legacy4-spec4','legacy4','spectra all=y')
+Flow('hires-spec4','hires-warp','spectra all=y')
+Result('nspectra2','legacy4-spec4 hires-spec4 merge-spec4',
+       '''
+       cat axis=2 ${SOURCES[1]} ${SOURCES[2]} | window max1=120 | scale axis=1 | 
+       graph title="Normalized Spectra" label2="Amplitude"
+       ''')
+
+Flow('merge2-spec4','merge2','spectra all=y')
+
+Flow('merge2-spec4-reverse','merge2-reverse','spectra all=y')
+
+Result('nspectra22b','hires-spec4 merge2-spec4',
+       '''
+       cat axis=2 ${SOURCES[1]} | window max1=120 |  
+       graph title="Spectra" dash=1,0
+       ''')
+
+Result('nspectra22','legacy4-spec4 hires-spec4 merge2-spec4',
+       '''
+       cat axis=2 ${SOURCES[1]} ${SOURCES[2]} | window max1=120 | scale axis=1 | 
+       graph title="Normalized Spectra" dash=2,1,0
+       ''')
+
+Result('nspectra22b-reverse','hires-spec4 merge2-spec4-reverse',
+       '''
+       cat axis=2 ${SOURCES[1]} | window max1=120 |  
+       graph title="Spectra" dash=1,0
+       ''')
+
+# Final Spectra
+Result('nspectra22-reverse','hires-spec4 legacy4-spec4 merge2-spec4-reverse',
+       '''
+       cat axis=2 ${SOURCES[1]} ${SOURCES[2]} | window max1=120 | scale axis=1 | 
+       graph title="Normalized Spectra " dash=2,1,0 label2="Amplitude"
+       ''')
+       #graph title="Normalized Spectra " dash=2,1,0 label2="Amplitude"
+       #graph title="Normalized Spectra " label2="Amplitude"
+
+End()

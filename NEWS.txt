@@ -23,6 +23,7 @@ To programs:
 
 * user/zgeng: New contributor (Zhicheng Geng)
 * sfmatplotlib: plotting with matplotlib
+* user/sgreer: New contributor (Sarah Greer)
 
 ===Bug fixes===
 

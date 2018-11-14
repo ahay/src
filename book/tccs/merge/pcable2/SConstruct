@@ -1,0 +1,392 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+from rsf.recipes.radius import radius
+
+data = {'legacy':'TxLa_merge_PSTM_enhanced_subset1.sgy',
+        'hires':'pcable_tpdcn_mig_subset1.sgy'}
+  
+for key in data.keys():
+    Fetch(data[key],'gom',server)
+
+    # Convert from SEGY format to Madgascar RSF format
+    Flow([key,'t'+key,key+'.asc',key+'.bin'],data[key],
+         '''
+         segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
+         ''')
+    Result(key+'3',key,'intbin xk=iline yk=xline | put label2=Inline label3=Crossline | byte gainpanel=all | grey3 frame1=500 frame2=200 frame3=200 title=%s' % key.capitalize())
+
+Flow('legacy2','legacy','intbin xk=iline yk=xline | put label2=Inline label3=Crossline | byte gainpanel=all ' )
+Result('legacy','legacy2','grey3 frame1=150 frame2=20 frame3=20 title="Legacy"' )
+
+Flow('hires2','hires','intbin xk=iline yk=xline | put label2=Inline label3=Crossline | byte gainpanel=all ')
+Result('hires','hires2','grey3 frame1=500 frame2=200 frame3=200 title="Hires"' )
+
+
+min1=36935190/1000
+max1=37188381/1000
+min2=325465425/1000
+max2=325648750/1000
+
+# Legacy
+Flow('lbin3','tlegacy','intbin3 head=$SOURCE')
+Flow('lcdpx','lbin3','headermath output=cdpx/1000-%d | window n2=1 | dd type=float'%min1)
+Flow('lcdpy','lbin3','headermath output=cdpy/1000-%d | window n2=1 | dd type=float'%min2)
+Flow('lcdp','lcdpx lcdpy','cmplx ${SOURCES[1]}')
+Result('lcdp','graph title="CDP" min1=%d max1=%d min2=%d max2=%d plotcol=6 plotfat=2 dash=2' %(-5, 255, -1, 185))
+#Result('lcdp','graph title="CDP" label1=x label2=y plotcol=6 dash=2')
+
+# Hires
+Flow('hbin3','thires','intbin3 head=$SOURCE')
+Flow('hcdpx','hbin3','headermath output=cdpx/1000-%d | window n2=1 | dd type=float'%min1)
+Flow('hcdpy','hbin3','headermath output=cdpy/1000-%d | window n2=1 | dd type=float'%min2)
+Flow('hcdp','hcdpx hcdpy','cmplx ${SOURCES[1]}')
+Result('hcdp','graph title="CDP" label1=x label2=y unit1=kft unit2=kft min1=%d max1=%d min2=%d max2=%d plotcol=5 plotfat=2 dash=2' %(-5, 255, -1, 185))
+#Result('hcdp','graph title="CDP" label1=x label2=y plotcol=5 dash=2')
+
+Result('cdp','Fig/lcdp Fig/hcdp','Overlay')
+
+
+
+### ORIGINAL COORDS
+
+min12=36268165 
+max12=37822678 
+min22=325028650 
+max22=326036875 
+
+# Legacy
+Flow('lcdpx2','lbin3','headermath output=cdpx | window n2=1 | dd type=float')
+Flow('lcdpy2','lbin3','headermath output=cdpy | window n2=1 | dd type=float')
+Flow('lcdp2','lcdpx2 lcdpy2','cmplx ${SOURCES[1]}')
+Result('lcdp2','graph title="CDP" label1=x label2=y unit1=kft unit2=kft min1=%d max1=%d min2=%d max2=%d plotcol=6 plotfat=2 dash=2' %(min12, max12, min22, max22))
+
+# Hires
+Flow('hcdpx2','hbin3','headermath output=cdpx | window n2=1 | dd type=float')
+Flow('hcdpy2','hbin3','headermath output=cdpy | window n2=1 | dd type=float')
+Flow('hcdp2','hcdpx2 hcdpy2','cmplx ${SOURCES[1]}')
+Result('hcdp2','graph title="CDP" label1=x label2=y unit1=kft unit2=kft min1=%d max1=%d min2=%d max2=%d plotcol=5 plotfat=2 dash=2' %(min12, max12, min22, max22))
+
+Result('cdp2','Fig/lcdp2 Fig/hcdp2','Overlay')
+
+
+#####
+
+
+from math import cos, sin, radians, pi
+
+a=111.9
+a2=-2.95 #for lined up legacy to hires
+cs=cos(radians(a))
+sn=sin(radians(a))
+cs2=cos(radians(a2))
+sn2=sin(radians(a2))
+ox=36976140
+oy=325545425
+
+# Rotate them both a degrees around (ox, oy)
+Flow('tlegacyr','tlegacy','dd type=float | headermath key=unass1 output="(cdpx-%f)*(%f)+(cdpy-%f)*(%f)+%f" | headermath key=unass2 output="-(cdpx-%f)*(%f)+(cdpy-%f)*(%f)+%f" | dd type=int'%(ox, cs, oy, sn, ox, ox, sn, oy, cs, oy))
+Flow('thiresr','thires','dd type=float | headermath key=unass1 output="(cdpx-%f)*(%f)+(cdpy-%f)*(%f)+%f" | headermath key=unass2 output="-(cdpx-%f)*(%f)+(cdpy-%f)*(%f)+%f" | dd type=int'%(ox, cs, oy, sn, ox, ox, sn, oy, cs, oy))
+
+# Rotate them as legacy
+Flow('tlegacyr2','tlegacy','dd type=float | headermath key=unass1 output="(cdpx-%f)*(%f)+(cdpy-%f)*(%f)+%f" | headermath key=unass2 output="-(cdpx-%f)*(%f)+(cdpy-%f)*(%f)+%f" | dd type=int'%(ox, cs2, oy, sn2, ox, ox, sn2, oy, cs2, oy))
+Flow('thiresr2','thires','dd type=float | headermath key=unass1 output="(cdpx-%f)*(%f)+(cdpy-%f)*(%f)+%f" | headermath key=unass2 output="-(cdpx-%f)*(%f)+(cdpy-%f)*(%f)+%f" | dd type=int'%(ox, cs2, oy, sn2, ox, ox, sn2, oy, cs2, oy))
+
+# Legacy rotated: View new lcdpx and lcdpy
+Flow('lbinr2','tlegacyr2','dd type=int | intbin3 head=$SOURCE')
+Flow('lcdpxr2','lbinr2','headermath output=unass1 | window n2=1 | dd type=float')
+Flow('lcdpyr2','lbinr2','headermath output=unass2 | window n2=1 | dd type=float')
+Flow('lcdpr2','lcdpxr2 lcdpyr2','cmplx ${SOURCES[1]}')
+
+# Legacy rotated: View new hcdpx and hcdpy
+Flow('hbinr2','thiresr2','intbin3 head=$SOURCE')
+Flow('hcdpxr2','hbinr2','headermath output=unass1 | window n2=1 | dd type=float')
+Flow('hcdpyr2','hbinr2','headermath output=unass2 | window n2=1 | dd type=float')
+Flow('hcdpr2','hcdpxr2 hcdpyr2','cmplx ${SOURCES[1]}')
+
+# View new lcdpx and lcdpy
+Flow('lbinr','tlegacyr','dd type=int | intbin3 head=$SOURCE')
+Flow('lcdpxr','lbinr','headermath output=unass1 | window n2=1 | dd type=float')
+Flow('lcdpyr','lbinr','headermath output=unass2 | window n2=1 | dd type=float')
+Flow('lcdpr','lcdpxr lcdpyr','cmplx ${SOURCES[1]}')
+
+# View new hcdpx and hcdpy
+Flow('hbinr','thiresr','intbin3 head=$SOURCE')
+Flow('hcdpxr','hbinr','headermath output=unass1 | window n2=1 | dd type=float')
+Flow('hcdpyr','hbinr','headermath output=unass2 | window n2=1 | dd type=float')
+Flow('hcdpr','hcdpxr hcdpyr','cmplx ${SOURCES[1]}')
+
+# Display values
+min12=36826024
+max12=37083984
+min22=325314688
+max22=325608608
+
+# for legacy
+min13=36938656
+max13=37183520
+min23=325475808
+max23=325646976
+
+Result('hcdpr','graph title="CDP rotated" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min12, max12, min22, max22))
+Result('lcdpr','graph title="CDP rotated" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min12, max12, min22, max22))
+Result('cdpr','Fig/lcdpr Fig/hcdpr','Overlay')
+# legacy rotated results
+Result('hcdpr2','graph title="CDP rotated" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min13, max13, min23, max23))
+Result('lcdpr2','graph title="CDP rotated" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min13, max13, min23, max23))
+Result('cdpr2','Fig/lcdpr2 Fig/hcdpr2','Overlay')
+
+# Mask values
+min13=36915196
+max13=36993752
+min23=325348256
+max23=325576544
+
+# Display masked legacy
+Flow('lmaskx','tlegacyr','headermath output=unass1 | mask min=%d max=%d | dd type=float | put d1=1 d2=1 o1=0 o2=0' %(min13, max13))
+Flow('lmasky','tlegacyr','headermath output=unass2 | mask min=%d max=%d | dd type=float | put d1=1 d2=1 o1=0 o2=0' %(min23, max23))
+Flow('lmask','lmaskx lmasky','math y=${SOURCES[1]} output="input*y" | dd type=int')
+Flow('tlegacymask','tlegacyr lmask','headercut mask=${SOURCES[1]} | dd type=int') 
+
+Flow('lbin3mask','tlegacymask','intbin3 head=$SOURCE')
+Flow('lcdpxmask','lbin3mask','headermath output=unass1 | window n2=1 | dd type=float')
+Flow('lcdpymask','lbin3mask','headermath output=unass2 | window n2=1 | dd type=float')
+Flow('lcdpmask','lcdpxmask lcdpymask','cmplx ${SOURCES[1]}')
+Result('lcdpmask','graph title="Legacy" label1=x label2=y min1=%d max1=%d min2=%d max2=%d dash=2' %(min12, max12, min22, max22))
+Result('cdpmask','Fig/lcdpmask Fig/hcdpr','Overlay')
+
+# Windowed legacy data
+Flow('legacymask','legacy lmask','headercut mask=${SOURCES[1]} | intbin xk=iline yk=xline | put label2=Inline label3=Crossline')
+Result('legacymask','byte gainpanel=all | grey3 frame1=150 frame2=20 frame3=20 title=Legacy')
+
+#nx=35
+#ny=30
+nx=65
+ny=60
+#nx=57
+#ny=52
+
+Flow('tlegacyrf','tlegacyr','dd type=float')
+Flow('bin-legacy legacyfold','legacy tlegacyrf','transp | bin head=${SOURCES[1]} interp=2 fold=${TARGETS[1]} xkey=89 ykey=90 xmin=%d xmax=%d ymin=%d ymax=%d nx=%d ny=%d' %(min13, max13, min23, max23, nx, ny))
+Result('legacyfold','grey color=j title="Legacy Fold" scalebar=y')
+Result('bin-legacy','transp plane=13| put label2=cdpy label1=Time unit1=s unit2=ft unit3=ft label3=cdpx | byte gainpanel=all | grey3 frame1=150 frame2=26 frame3=125 title=Legacy')
+
+Flow('thiresrf','thiresr','dd type=float')
+Flow('bin-hires hiresfold','hires thiresrf','transp | bin head=${SOURCES[1]} interp=2 fold=${TARGETS[1]} xkey=89 ykey=90 xmin=%d xmax=%d ymin=%d ymax=%d nx=%d ny=%d' %(min13, max13, min23, max23, nx, ny))
+Result('hiresfold','grey color=j title="Hires Fold" scalebar=y')
+Result('bin-hires','transp plane=13| put label2=cdpy label1=time unit1=s unit2=ft unit3=ft label3=cdpx | byte gainpanel=all | grey3 frame1=500 frame2=26 frame3=125 title=Hires')
+
+
+Flow('legacytr','bin-legacy','transp plane=31 | put label3=cdpx label2=cdpy unit3=ft unit2=ft')
+Result('legacytr','byte gainpanel=all |  window max1=2 |grey3 frame3=20 frame2=15 frame1=125 title=Legacy')
+Flow('hirestr','bin-hires','transp plane=31 | put label3=cdpx label2=cdpy unit3=ft unit2=ft')
+Result('hirestr','byte gainpanel=all | grey3 frame3=20 frame2=15 frame1=1000 title=Hires')
+
+# window out min and max for hires
+Flow('legacy4','legacytr','spline d1=0.0005 n1=3999 o1=0 ')
+
+Result('legacy4','put o1=0 o2=0 o3=0 d2=.386929 unit2= d3=.122744 unit3= | byte gainpanel=all | grey3 title=Legacy frame1=1500 frame2=10 frame3=30')
+Result('hires4','put o1=0 o2=0 o3=0 d2=.386929 unit2= d3=.122744 unit3= | byte gainpanel=all | grey3 title="High resolution" frame1=1500 frame2=10 frame3=30')
+Flow('hires4','hirestr','spline d1=0.0005 n1=3999 o1=0 ')
+
+# Look at spectra
+Flow('legacy-spec','legacy4','spectra all=y | put label2=Amplitude unit2= ')
+Result('legacy-spec','graph title="Legacy Spectrum"')
+Flow('hires-spec','hires4','spectra all=y | put label2=Amplitude unit2= ')
+Result('hires-spec','graph title="Hires Spectrum"')
+
+Result('spectra','hires-spec legacy-spec','cat axis=2 ${SOURCES[1]} | graph title=Spectra label2=Amplitude')
+Result('nspectra','hires-spec legacy-spec','cat axis=2 ${SOURCES[1]} | scale axis=1 | window max1=300 | graph title="Normalized Spectra"')
+
+# Measure Local Frequency
+Flow('legacy-freq','legacy4','iphase order=10 rect1=40 rect2=6 rect3=3 hertz=y complex=y | put label=Frequency unit=Hz')
+Flow('hires-freq','hires4','iphase order=10 rect1=40 rect2=6 rect3=3 hertz=y complex=y | put label=Frequency unit=Hz')
+Result('legacy-freq','grey mean=y color=j scalebar=y title="Legacy Local Frequency"')
+Result('hires-freq','grey mean=y color=j scalebar=y title="Hires Local Frequency"')
+
+Flow('freqdif','legacy-freq hires-freq','add scale=-1,1 ${SOURCES[1]}')
+Result('freqdif','byte gainpanel=all bar=bar.rsf allpos=y | grey3 frame1=400 frame2=40 frame3=30 allpos=y color=j scalebar=y mean=y title="Difference in Local Frequenies"')
+
+flol = 25
+fhil = 125
+Flow('legacyfilt','legacy4','bandpass flo=%d '%(flol))
+Flow('hiresfilt','hires4','bandpass fhi=%d '%(fhil))
+Flow('legacyfilt-spec','legacyfilt','spectra all=y')
+
+Flow('hiresagc','hires4','shapeagc rect1=1000 rect2=5 rect3=3')
+Result('hiresagc','grey title="Hires AGC"')
+Flow('hiresagc-spec','hiresagc','spectra all=y')
+
+# blue = legacy yellow = hires
+Result('filtnspectra','hiresagc-spec legacyfilt-spec legacy-spec hires-spec',
+       '''
+       cat axis=2 ${SOURCES[1]} ${SOURCES[2]} | scale axis=1 | window max1=180 | 
+       graph title="Filtered Normalized Spectra" label2="Amplitude" unit2=""
+       ''')
+Result('legacyfilt', 'byte gainpanel=all | grey3 frame1=400 frame2=40 frame3=30 title="legacyfilt"')
+
+# Measure Local Frequency
+Flow('legacyfilt-freq','legacyfilt','iphase order=10 rect1=40 rect2=6 rect3=3 hertz=y complex=y | put label=Frequency unit=Hz')
+Flow('hiresagc-freq','hiresagc','iphase order=10 rect1=40 rect2=6 rect3=3 hertz=y complex=y | put label=Frequency unit=Hz')
+Result('legacyfilt-freq','grey mean=y color=j scalebar=y title="Legacy Local Frequency"')
+Result('hiresagc-freq','grey mean=y color=j scalebar=y title="Hires Local Frequency"')
+
+
+Flow('freqdif2','legacyfilt-freq hires-freq','add scale=-1,1 ${SOURCES[1]}')
+Result('freqdif2','byte gainpanel=all bar=bar.rsf allpos=y | grey3 frame1=400 frame2=40 frame3=30 allpos=y color=j scalebar=y mean=y title="Difference in Local Frequenies"')
+
+# Nonstationary smoothing applied to hires to match with legacy
+scale=12
+
+corrections=2
+radius('hiresfilt','legacyfilt', corrections, [0.13,0.2,0.3,0.5,0.5], bias=0, clip=65, rect1=80, rect2=16, rect3=16, minval=0, maxval=65 )
+
+Flow('rect','legacyfilt-freq hiresagc-freq','math f1=${SOURCES[1]} output="sqrt(%g*(1/(input*input)-1/(f1*f1)))/%g"' %(scale,2*pi*0.001))
+Result('rect','byte gainpanel=all bar=bar.rsf allpos=y | grey3 color=j frame1=400 frame2=40 frame3=30 mean=y title="Smoothing Radius" scalebar=y barlabel=Radius barunit=samples')
+
+Flow('hires-smooth','hiresagc rect','nsmooth1 rect=${SOURCES[1]}')
+Flow('hires-smooth-spec','hires-smooth','spectra all=y')
+Result('hires-smooth-spec','hires-smooth-spec legacy-spec',
+       '''
+       cat axis=2 ${SOURCES[1]} | scale axis=1 | window max1=180 |
+       graph title="Normalized Spectra after Smoothing 1" label2="Amplitude"
+       ''')
+Result('hires-smooth', 'grey title="Hires Smooth"')
+
+# Difference in local frequencies with nonstationary smoothing applied to hires 
+Flow('hires-smooth-freq','hires-smooth','iphase order=10 rect1=40 rect2=6 rect3=3 hertz=y complex=y | put label=Frequency unit=Hz ')
+Result('hires-smooth-freq','byte gainpanel=all bar=bar.rsf allpos=y | grey3 mean=y color=j scalebar=y title="Hires Local Frequency Smoothed" frame1=500 frame2=10 frame3=10 ')
+Flow('freqdif-filt','legacyfilt-freq hires-smooth-freq','add scale=-1,1 ${SOURCES[1]}')
+Result('freqdif-filt','byte gainpanel=all bar=bar.rsf allpos=y | grey3 frame1=400 frame2=40 frame3=30 allpos=y color=j scalebar=y mean=y title="Difference in Local Frequenies"')
+
+# Warpscan 
+# Balance Amplitues
+
+hs = 'high-smooth%i'%corrections
+
+Flow('hires-balanced','%s hires-smooth legacyfilt'%hs,'abalance other=${SOURCES[1]} rect1=100 rect2=30 rect3=10') 
+Result('hires-balanced','grey title="Hires balanced"')
+Flow('hires-despike','hires-balanced','despike2 wide1=2')
+Result('hires-despike','byte gainpanel=all | grey3 frame1=400 frame2=40 frame3=30 title="Hires balanced"')
+
+
+Flow('warpscan3','hires-despike legacyfilt',
+     '''
+     warpscan shift=y ng=56 g0=-0.05 dg=0.001 
+     other=${SOURCES[1]} rect1=100 rect2=10 rect3=10 rect4=10 
+     ''')
+
+Result('warpscan3','''byte gainpanel=all allpos=y bar=bar.rsf | transp plane=23 |
+       grey3 color=j frame1=500 frame2=40 frame3=30 title="Local Similarity Scan"
+       label3="Time Shift" unit3=s scalebar=y barlabel=Similarity''') 
+
+
+Flow('warppick3','warpscan3',
+     'scale axis=2 | pick rect1=20 rect2=40 rect3=20 vel0=-0.0 an=0.08')
+
+Result('warppick3','grey color=j allpos=y title="Estimated Time Shift" scalebar=y barlabel=Time barunit=s clip=0.015 bias=-0.01')
+
+Flow('diff0','hires-despike legacyfilt','add scale=1,-1 ${SOURCES[1]}')
+
+# Apply picked shift
+Flow('warp3','hires-despike legacyfilt warppick3',
+     'warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+
+Flow('diff1','warp3 legacyfilt','add scale=1,-1 ${SOURCES[1]}')
+
+Result('diff0','grey clip=6606.94 title="Difference before warping"')
+Result('diff1','grey clip=7072.5 title="Difference after warping"')
+
+Flow('diff2','diff0 diff1','add scale=1,-1 ${SOURCES[1]}')
+Result('diff2','grey title="Difference before and after warping"')
+
+# SHIFT WITHOUT BALANCING AMPLITUDES
+Flow('hires-warp','hires4 warppick3',
+     'warp1 other=${SOURCES[0]} warpin=${SOURCES[1]} nliter=0')
+     
+Result('hires-warp', 'grey title="Hires Warped Image"')
+
+Flow('hires-warp-freq','hires-warp','iphase order=10 rect1=80 rect2=16 rect3=8 hertz=y complex=y | put label=Frequency unit=Hz')
+
+Result('hires-warp-freq','byte gainpanel=all allpos=y bar=bar.rsf | grey3 mean=y color=j scalebar=y title="Warped Hires Local Frequency" frame1=500 frame2=10 frame3=30')
+
+### second
+Flow('hires-warpfilt','hires-warp','bandpass fhi=%d '%(fhil))
+radius('hires-warpfilt','legacyfilt', corrections, [0.13,0.2,0.3,0.5,0.5], bias=0, clip=65, rect1=80, rect2=16, rect3=16, minval=0, maxval=65, ind='warp')
+
+rt = 'rect%i'%corrections
+rect_warp = "rect%i%s"%(corrections,'warp')
+# smoothed warped hires
+Flow('hires-warp-smooth','hires-warp %s'%rect_warp,'nsmooth1 rect=${SOURCES[1]}')
+Flow('hires-smooth-spec2','hires-warp-smooth','spectra all=y')
+Result('hires-warp-smooth', 'grey title="Hires Smooth"')
+
+# CREATE THE BLENDED IMAGE
+Flow('hires-warp-balance-reverse lweight-reverse2','hires-warp-smooth legacy4','abalance weight=${TARGETS[1]} other=${SOURCES[1]} rect1=320 rect2=160 rect3=30 reverse=n')
+
+Flow('lweight-reverse3','lweight-reverse2','math output=500 | cut min1=0.25 ')
+Result('lweight-reverse3', 'grey color=j scalebar=y title="Legacy Weight" mean=y')
+Flow('lweight-reverse4','lweight-reverse2','cut max1=0.25 ')
+Result('lweight-reverse4', 'grey color=j scalebar=y title="Legacy Weight" mean=y')
+Flow('lweight-reverse','lweight-reverse3 lweight-reverse4','math fourth=${SOURCES[1]} output=input+fourth')
+
+Result('lweight-reverse', 'grey color=j scalebar=y title="Legacy Weight" mean=y')
+
+Flow('hires-warp-diff-reverse','hires-warp-balance-reverse legacy4',
+     'add ${SOURCES[1]} scale=-1,1 | pad beg4=1')
+
+
+f = "erfc(x1)"  
+
+# weight for merge2-reverse
+Flow('weight5','lweight-reverse','math output="%s"| cut max1=0.25 | scale dscale=10' % f)
+Flow('hweight','lweight-reverse weight5','math output=100 | cut min1=0.25 | add ${SOURCES[1]} | scale dscale=100')
+Result('hweight', 'byte gainpanel=all bar=bar.rsf allpos=y | grey3 color=j scalebar=y title="Hires Weight" mean=y frame1=600 frame2=10 frame3=30')
+
+Flow('merge1-reverse','hires-warp-diff-reverse hires-warp %s hweight lweight-reverse' % rect_warp,
+     '''
+     conjgrad legacy rect=${SOURCES[2]} hweight=${SOURCES[3]} 
+     lweight=${SOURCES[4]} niter=20 mod=${SOURCES[1]}
+     ''')
+
+# Difference between high-resolution and merged image
+Result('merge1-reverse','bandpass fhi=250 | window j1=3 |grey title="Difference between Merged and Hires" clip=3.7011') 
+# Final merged image
+Flow('merge','hires-warp merge1-reverse','add ${SOURCES[1]}')
+Result('merge','grey title="Merged" ')
+
+# 0.125s - 0.45s. reappears at 0.625s - 1.15s
+#Result('merge3','merge','byte gainpanel=all | grey3 title="Merged" frame1=1500 frame2=10 frame3=30 ')
+#Result('merge3','merge','byte gainpanel=all | grey3 title="Merged" frame1=1500 frame2=40 frame3=40 ')
+#Result('merge3','merge','put o1=0 o2=0 o3=0 d2=.386929 unit2=kft d3=.122744 unit3=kft | byte gainpanel=all | grey3 title="Merged" frame1=1500 frame2=10 frame3=30')
+Result('merge3','merge','put o1=0 o2=0 o3=0 d2=.386929 unit2= d3=.122744 unit3= | byte gainpanel=all | grey3 title="Merged" frame1=1500 frame2=10 frame3=30')
+
+Result('merge-cut','merge','window min1=0.5 max1=1.0 | grey title="Merged"')
+Result('hires-cut','hires4','window min1=0.5 max1=1.0 | grey title="Hires"')
+Result('legacy-cut','legacy4','window min1=0.5 max1=1.0 | grey title="Hires"')
+Result('merge4','merge','transp plane=13 |  grey title="Merged" frame1=1500 frame2=10 frame3=30 clip=3.7011')
+
+Result('hires-despike4','hires-despike','transp plane=13 |  grey title="Hires" frame1=1500 frame2=10 frame3=30 ')
+Result('legacy-filt4','legacyfilt','transp plane=13 |  grey title="Legacy" frame1=1500 frame2=10 frame3=30 ')
+
+# Display the spectra
+Flow('legacy4-spec4','legacy4','spectra all=y')
+Flow('hires-spec4','hires-warp','spectra all=y')
+Flow('merge-spec4','merge','spectra all=y')
+
+# merge Final Spectra
+# nspectra22-reverse
+Result('nspectra2','legacy4-spec4 hires-spec4 merge-spec4',
+       '''
+       cat axis=2 ${SOURCES[1]} ${SOURCES[2]} | window max1=600 | 
+       scale axis=1 | graph title="Spectra " 
+       label2="Amplitude" unit2=""
+       ''')
+
+Result('nspectra3','legacy4-spec4 hires-spec4 merge-spec4',
+       '''
+       cat axis=2 ${SOURCES[1]} ${SOURCES[2]} | window max1=300 | 
+       scale axis=1 | graph title="Spectra " 
+       label2="Amplitude" unit2="" dash=2,1,0
+       ''')
+
+End()

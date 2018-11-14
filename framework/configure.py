@@ -2317,10 +2317,10 @@ def set_options(env,my_opts=None):
 def options(file):
     #global version
 
-    if version[0] < 3:
-        opts=Options(file)
-    else:
+    if version[0] > 2 or (version[0] == 2 and version[1] > 4):
         opts=Variables(file)
+    else:
+        opts=Options(file)
 
     # Switch pattern below to a single opts.AddVariables() call after Linux
     # distros that came with SCons 1.2 or older stop being supported

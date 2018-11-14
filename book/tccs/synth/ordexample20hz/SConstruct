@@ -193,20 +193,20 @@ Flow('dipX','dip','window f4=1')
 Flow('dip_bar','dip','bar')
 Plot('dipI','dipI dip_bar',
      '''
-     byte|
+     window j1=2 | byte|
      grey3 scalebar=y bar=${SOURCES[1]}
      title="Inline Dip" color=j
      frame1=%i frame2=%i frame3=%i
      point2=%g
-     '''%(frame1t,frame2,frame3,volpt2))
+     '''%(frame1t/2,frame2,frame3,volpt2))
 Plot('dipX','dipX dip_bar',
      '''
-     byte|
+     window j1=2 | byte|
      grey3 scalebar=y bar=${SOURCES[1]}
      title="Crossline Dip" color=j
      frame1=%i frame2=%i frame3=%i
      point2=%g
-     '''%(frame1t,frame2,frame3,volpt2))
+     '''%(frame1t/2,frame2,frame3,volpt2))
 Plot('dips','dipI dipX','SideBySideIso')
 Result('dips','dipI dipX','SideBySideIso')
 #Spray for enhanced reflections
