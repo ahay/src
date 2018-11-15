@@ -4,7 +4,7 @@
 #include <valarray>
 #include <iostream>
 #include <complex>
-#include <rsf.h>
+#include <rsf.hh>
 using namespace std;
 
 class CUB {
@@ -31,10 +31,11 @@ public:
 
     sf_axis getax(int);      // get an axis from CUB
     void putax(int,sf_axis); // put an axis in   CUB
-    void setup(int);     // setup cube dimensions 
+    void setup(int kd, int esize=4);     // setup cube dimensions 
 
     sf_axis *ax; // different axes
     int   nd; // number of dimensions
+    int   e;  // esize 
 
     // whence SEEK_SET=0 (start of file), SEEK_CUR=1 (current location), 
     // SEEK_END=2
