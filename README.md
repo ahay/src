@@ -4,6 +4,7 @@
 
 Madagascar
 ==========
+[![CircleCI](https://circleci.com/gh/ahay/src.svg?style=shield)](https://circleci.com/gh/ahay/src)
 ###  A package for reproducible geophysical data processing
 
 http://www.ahay.org
