@@ -6,6 +6,10 @@ To the reproducible documents collection:
 
 * tccs/fwiseislet: Full-waveform inversion using seislet
 regularization (Xue, Zhu, and Fomel)
+* tccs/merge: Matching and merging high-resolution and legacy seismic
+  images (Greer and Fomel)
+* tccs/sobel: Plane-wave Sobel attribute for discontinuity enhancement
+  in seismic images (Phillips and Fomel)
 
 To SCons:
 

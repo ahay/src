@@ -12,13 +12,13 @@ for key in data.keys():
          '''
          segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
          ''')
-    Result(key+'3',key,'intbin xk=iline yk=xline | put label2=Inline label3=Crossline | byte gainpanel=all | grey3 frame1=500 frame2=200 frame3=200 title=%s' % key.capitalize())
+    Plot(key+'3',key,'intbin xk=iline yk=xline | put label2=Inline label3=Crossline | byte gainpanel=all | grey3 frame1=500 frame2=200 frame3=200 title=%s' % key.capitalize())
 
 Flow('legacy2','legacy','intbin xk=iline yk=xline | put label2=Inline label3=Crossline | byte gainpanel=all ' )
-Result('legacy','legacy2','grey3 frame1=500 frame2=200 frame3=200 title="Legacy"' )
+Plot('legacy','legacy2','grey3 frame1=500 frame2=200 frame3=200 title="Legacy"' )
 
 Flow('hires2','hires','intbin xk=iline yk=xline | put label2=Inline label3=Crossline | byte gainpanel=all ')
-#Result('hires','hires2','grey3 frame1=500 frame2=200 frame3=200 title="Hires"')
+Plot('hires','hires2','grey3 frame1=500 frame2=200 frame3=200 title="Hires"')
 
 # Legacy
 Flow('lbin3','tlegacy','intbin3 head=$SOURCE')
@@ -188,8 +188,8 @@ Flow('lcdpxmask','lbin3mask','headermath output=unass1 | window n2=1')
 Flow('lcdpymask','lbin3mask','headermath output=unass2 | window n2=1')
 
 # New windowed lcdpx and lcdpy
-Result('lcdpxmask',
-       '''
+Plot('lcdpxmask',
+     '''
        dd type=float | scale dscale=0.01 | 
        grey color=j mean=y scalebar=y 
        minval=367905.66 maxval=370908.52 bias=369407.09 clip=1501.43
@@ -197,8 +197,8 @@ Result('lcdpxmask',
        title="Legacy CDPX"
        ''')
 
-Result('lcdpymask',
-       '''
+Plot('lcdpymask',
+     '''
        dd type=float | scale dscale=0.01 | 
        grey color=j mean=y scalebar=y 
        minval=3247577.60 maxval=3262259.52 bias=3254918.56 clip=7340.96
@@ -211,7 +211,7 @@ Flow('lcdpyfmask','lcdpymask','dd type=float | scale dscale=0.01')
 Flow('lcdpmask','lcdpxfmask lcdpyfmask','cmplx ${SOURCES[1]}')
 
 # Maxed legacy
-Result('lcdpmask','graph title="Legacy" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min12, max12, min22, max22))
+#Result('lcdpmask','graph title="Legacy" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min12, max12, min22, max22))
 
 # min and max values for zoomed version
 mmin1=367800.00
@@ -219,11 +219,11 @@ mmax1=mmin1+300
 mmin2=3253000
 mmax2=mmin2+300
 
-Result('lcdpmaskzoom','lcdpmask','graph title="Legacy" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=%f max1=%f min2=%f max2=%f symbol=x' %(mmin1, mmax1, mmin2, mmax2))
+#Result('lcdpmaskzoom','lcdpmask','graph title="Legacy" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=%f max1=%f min2=%f max2=%f symbol=x' %(mmin1, mmax1, mmin2, mmax2))
 Result('hcdpmaskzoom','hcdpr','graph title="Hire" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=%f max1=%f min2=%f max2=%f symbol=*' %(mmin1, mmax1, mmin2, mmax2))
 
 Result('cdprmask','Fig/lcdpmask Fig/hcdpr','Overlay')
-Result('cdpwindowzoom','Fig/hcdpmaskzoom Fig/lcdpmaskzoom','Overlay')
+#Result('cdpwindowzoom','Fig/hcdpmaskzoom Fig/lcdpmaskzoom','Overlay')
 
 
 # Windowed legacy data
@@ -236,7 +236,7 @@ Result('legacy5','byte gainpanel=all | grey3 frame1=500 frame2=200 frame3=200 ti
 Flow('bin-legacy','legacy tlegacyr','transp | bin head=${SOURCES[1]} xkey=89 ykey=90 xmin=36790556 xmax=37090852 ymin=324757760 ymax=326225952 nx=67 ny=327') 
 Result('bin-legacy','transp | put label2=cdpx label1=cdpy unit1=ft unit2=ft | byte gainpanel=all | window max3=3 | grey3 frame1=35 frame2=26 frame3=125 title=Legacy')
 Flow('bin-hires','hires thiresr','transp | bin head=${SOURCES[1]} xkey=89 ykey=90 xmin=36790556 xmax=37090852 ymin=324757760 ymax=326225952 nx=67 ny=327') 
-Result('bin-hires','transp | put label2=cdpx label1=cdpy unit1=ft unit2=ft | byte gainpanel=all | window max3=3 | grey3 frame1=35 frame2=26 frame3=1000 title=Hires')
+#Result('bin-hires','transp | put label2=cdpx label1=cdpy unit1=ft unit2=ft | byte gainpanel=all | window max3=3 | grey3 frame1=35 frame2=26 frame3=1000 title=Hires')
 
 # transpose back
 Flow('legacytr','bin-legacy','transp plane=31 | put label3=cdpx label2=cdpy unit3=ft unit2=ft')

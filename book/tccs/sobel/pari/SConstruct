@@ -81,53 +81,37 @@ n1 = 208
 na = 45
 picks = []
 slices = []
-if os.path.isfile("slices.rsf") == False :
-    if os.path.isfile("slice-*.rsf") == False :
-        for i in range(n1):
-            isobelt = 'isobelt-%d' % i
-            xsobelt = 'xsobelt-%d' % i
-            Flow(isobelt,'isobel2','window f1=%d n1=1' % i )
-            Flow(xsobelt,'xsobel2','window f1=%d n1=1' % i )
-            asobels = []
-            for j in range(0,360,8):
-                a = j*pi/180
-                asobel = 'asobel-%d-%d' % (i,j)
-                Flow(asobel,[isobelt,xsobelt],'math x=${SOURCES[1]} output="abs(input*cos(%f)+x*sin(%f))"' % (a,a) )
-                asobels.append(asobel)
+for i in range(n1):
+    isobelt = 'isobelt-%d' % i
+    xsobelt = 'xsobelt-%d' % i
+    Flow(isobelt,'isobel2','window f1=%d n1=1' % i )
+    Flow(xsobelt,'xsobel2','window f1=%d n1=1' % i )
+    asobels = []
+    for j in range(0,360,8):
+        a = j*pi/180
+        asobel = 'asobel-%d-%d' % (i,j)
+        Flow(asobel,[isobelt,xsobelt],'math x=${SOURCES[1]} output="abs(input*cos(%f)+x*sin(%f))"' % (a,a) )
+        asobels.append(asobel)
 
-            asobelt = 'asobel-%d' % i 
-            Flow(asobelt,asobels,'cat ${SOURCES[1:%d]} axis=3 | put d3=8 o3=0 | scale axis=3 | transp plane=23' % na )
-	    env.AddPostAction(asobelt+'.rsf','/bin/bash ./ignore.sh %s' % (asobelt) )
+    asobelt = 'asobel-%d' % i 
+    Flow(asobelt,asobels,'cat ${SOURCES[1:%d]} axis=3 | put d3=8 o3=0 | scale axis=3 | transp plane=23' % na )
+#    env.AddPostAction(asobelt+'.rsf','/bin/bash ./ignore.sh %s' % (asobelt) )
 
-            ################
-            pick = 'pick-%d' % i
-            Flow(pick,asobelt,'pick vel0=180 rect1=20 rect2=20 an=1')
-            picks.append(pick)
+    ################
+    pick = 'pick-%d' % i
+    Flow(pick,asobelt,'pick vel0=180 rect1=20 rect2=20 an=1')
+    picks.append(pick)
 
-            slice = 'slice-%d' % i
-            Flow(slice,[asobelt,pick],'slice pick=${SOURCES[1]}')
-            slices.append(slice)
+    slice = 'slice-%d' % i
+    Flow(slice,[asobelt,pick],'slice pick=${SOURCES[1]}')
+    slices.append(slice)
 
-        Flow('picks',picks,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
-        Result('picks','byte bar=bar.rsf gainpanel=all bias=180 | grey3 color=j scalebar=y frame1=104 frame2=200 frame3=100 flat=y point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=Azimuth barlabel=Azimuth')
-	env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh isobelt')
-	env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh xsobelt')
-	env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh asobel')
-	env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh pick')
+Flow('picks',picks,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
+Result('picks','byte bar=bar.rsf gainpanel=all bias=180 | grey3 color=j scalebar=y frame1=104 frame2=200 frame3=100 flat=y point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=Azimuth barlabel=Azimuth')
 
-        Flow('slices',slices,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
-        #Result('slices','clip clip=.02 value=1 | '+white3)
-        Result('slices',white3 % '"Azimuthal Sobel"')
-	env.AddPostAction('slices.rsf','/bin/bash ./ignore.sh slice')
-    else:
-        Flow('picks',picks,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
-        Result('picks','byte bar=bar.rsf gainpanel=all bias=180 | grey3 color=j scalebar=y frame1=104 frame2=200 frame3=100 flat=y point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=Azimuth barlabel=Azimuth')
-        env.AddPostAction('picks.rsf','/bin/bash ./ignore.sh pick')
-
-        Flow('slices',slices,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
-        Result('slices',white3 % '"Azimuthal Sobel"')
-        env.AddPostAction('slices.rsf','/bin/bash ./ignore.sh slice')
-
+Flow('slices',slices,'cat ${SOURCES[1:%d]} axis=3 | transp plane=23 | transp' % n1 )
+#Result('slices','clip clip=.02 value=1 | '+white3)
+Result('slices',white3 % '"Azimuthal Sobel"')
 
 Flow('az','slices picks','mul ${SOURCES[1]}')
 Result('az','byte bar=bar.rsf gainpanel=all bias=180 minval=90 maxval=270 | grey3 color=j scalebar=y frame1=104 frame2=200 frame3=100 flat=y point1=.3 label1=Time label2=IL label3=XL unit1=s unit2= unit3= title=Azimuth barlabel=Azimuth')

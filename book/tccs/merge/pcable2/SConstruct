@@ -49,6 +49,7 @@ Result('cdp','Fig/lcdp Fig/hcdp','Overlay')
 
 ### ORIGINAL COORDS
 
+
 min12=36268165 
 max12=37822678 
 min22=325028650 
@@ -151,7 +152,7 @@ Flow('lbin3mask','tlegacymask','intbin3 head=$SOURCE')
 Flow('lcdpxmask','lbin3mask','headermath output=unass1 | window n2=1 | dd type=float')
 Flow('lcdpymask','lbin3mask','headermath output=unass2 | window n2=1 | dd type=float')
 Flow('lcdpmask','lcdpxmask lcdpymask','cmplx ${SOURCES[1]}')
-Result('lcdpmask','graph title="Legacy" label1=x label2=y min1=%d max1=%d min2=%d max2=%d dash=2' %(min12, max12, min22, max22))
+#Result('lcdpmask','graph title="Legacy" label1=x label2=y min1=%d max1=%d min2=%d max2=%d dash=2' %(min12, max12, min22, max22))
 Result('cdpmask','Fig/lcdpmask Fig/hcdpr','Overlay')
 
 # Windowed legacy data
@@ -275,9 +276,9 @@ Flow('warpscan3','hires-despike legacyfilt',
      other=${SOURCES[1]} rect1=100 rect2=10 rect3=10 rect4=10 
      ''')
 
-Result('warpscan3','''byte gainpanel=all allpos=y bar=bar.rsf | transp plane=23 |
-       grey3 color=j frame1=500 frame2=40 frame3=30 title="Local Similarity Scan"
-       label3="Time Shift" unit3=s scalebar=y barlabel=Similarity''') 
+#Result('warpscan3','''byte gainpanel=all allpos=y bar=bar.rsf | transp plane=23 |
+#       grey3 color=j frame1=500 frame2=40 frame3=30 title="Local Similarity Scan"
+#       label3="Time Shift" unit3=s scalebar=y barlabel=Similarity''') 
 
 
 Flow('warppick3','warpscan3',

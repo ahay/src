@@ -1,3 +1,5 @@
+\published{Geophysics, 82, WB63-WB69, (2017)}
+
 \title{Plane-wave Sobel attribute for discontinuity enhancement in seismic images}
 \author{Mason Phillips and Sergey Fomel}
 \address{The University of Texas at Austin,\\
@@ -207,8 +209,8 @@ The local azimuth of the faults and channels corresponds to the orientation whic
 We find that the azimuth of the seismic expression of discontinuous geological features can be estimated more accurately by applying the azimuth scanning workflow to the Sobel filter image rather than the original seismic image.
 Faults and channels are further segmented in the cascaded image by automatically orienting the Sobel filter along geologic structures (Figure 3d).
 
-\multiplot*{2}{idip,xdip}{width=.4\columnwidth}{(a) Inline and (b) crossline reflection slopes computed using accelerated plane-wave destruction}
-%\multiplot*{4}{flat,sobel,sobel2,slices}{width=.4\columnwidth}{(a) The traditional Sobel filter, (b) proposed plane-wave Sobel filter, (c) cascaded plane-wave Sobel filter, and (d) azimuthal plane-wave Sobel filter applied to the Parihaka seismic data}
+\multiplot{2}{idip,xdip}{width=.4\columnwidth}{(a) Inline and (b) crossline reflection slopes computed using accelerated plane-wave destruction}
+\multiplot{4}{flat,sobel,sobel2,slices}{width=.4\columnwidth}{(a) The traditional Sobel filter, (b) proposed plane-wave Sobel filter, (c) cascaded plane-wave Sobel filter, and (d) azimuthal plane-wave Sobel filter applied to the Parihaka seismic data}
 
 \section{Example II}
 The next example is a subset of the Penobscot data used previously by \cite{kington} (Figure~\ref{fig:penobs}).
@@ -236,8 +238,8 @@ Admittedly, commercial implementations may be more efficient than our implementa
 The plane-wave Sobel attribute (Figure 5b) is capable of providing interpreters with a detailed image of seismic discontinuities in a fraction of the time of conventional coherence attributes, expediting the interpretation process.
 Computation of the cascaded Sobel attribute (Figure 5c) and azimuthal Sobel attribute (Figure 5d) may not provide significantly more value to the interpreter, as many of the same features can be interpreted from the less expensive plane-wave Sobel image; however, these attributes are significantly more segmented and may be good inputs to automatic fault plane interpretation algorithms.
 
-%\multiplot*{4}{s,sobel,sobel2,slices}{width=.4\columnwidth}{Comparison of (a) the traditional Sobel filter, (b) proposed plane-wave Sobel filter, (c) cascaded plane-wave Sobel filter, and (d) azimuthal plane-wave Sobel filter}
-\multiplot*{4}{coh0,coh1,coh2,coh}{width=.4\columnwidth}{Comparison of discontinuity enhancement attributes: (a) cross-correlation, (b) semblance, (c) eigenstructure, and (d) gradient-structure tensor}
+\multiplot{4}{s,sobel,sobel2,slices}{width=.4\columnwidth}{Comparison of (a) the traditional Sobel filter, (b) proposed plane-wave Sobel filter, (c) cascaded plane-wave Sobel filter, and (d) azimuthal plane-wave Sobel filter}
+\multiplot{4}{coh0,coh1,coh2,coh}{width=.4\columnwidth}{Comparison of discontinuity enhancement attributes: (a) cross-correlation, (b) semblance, (c) eigenstructure, and (d) gradient-structure tensor}
 \tabl{table}{Comparison of the computational efficiency of the proposed plane-wave Sobel attributes and common coherence attributes.}{
 \begin{center}
 \begin{tabular}{|c|c|}
@@ -285,6 +287,6 @@ We thank Xinming Wu and Ryan Swindeman for helpful comments and discussions.
 %We thank Xinming Wu, Ryan Swindeman, and three anonymous reviewers for helpful comments and discussions.
 The computational examples reported in this paper are reproducible using the Madagascar open-source software package \cite[]{fomel13}.
 
-\onecolumn
+%\onecolumn
 \bibliographystyle{seg}
 \bibliography{paper,SEP2}

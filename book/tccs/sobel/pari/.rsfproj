@@ -1,3 +1,3 @@
-uses=['sfsegyread', 'sfintbin', 'sfput', 'sfwindow', 'sfbyte', 'sfgrey3', 'sfgrad3', 'sfsmooth', 'sfmath', 'sffdip', 'sftransp', 'sfpwspray2', 'sfmedian', 'sfpwd', 'sfpwsmooth', 'sfmul']
+uses=['sfsegyread', 'sfintbin', 'sfput', 'sfwindow', 'sfbyte', 'sfgrey3', 'sfgrad3', 'sfsmooth', 'sfmath', 'sffdip', 'sftransp', 'sfpwspray2', 'sfmedian', 'sfpwd', 'sfpwsmooth', 'sfcat', 'sfscale', 'sfpick', 'sfslice', 'sfmul']
 data=['https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_full_angle.sgy']
-size= 71851260428
+size= 24829084544
