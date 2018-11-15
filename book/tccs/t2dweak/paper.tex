@@ -1,0 +1,293 @@
+\published{Geophysics, 83, S227–S235, (2018)}
+
+\title{Fast time-to-depth conversion and interval velocity estimation in the case of weak lateral variations}
+\author{Yanadet Sripanich and Sergey Fomel}
+
+\address{
+Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924
+}
+\maketitle
+
+\righthead{Time to depth with weak variations}
+\lefthead{Sripanich \& Fomel}
+\footer{TCCS-14}
+
+\begin{abstract}
+\new{Time-domain processing has a long history in seismic imaging and has always been a powerful workhorse that is routinely utilized. It generally leads to an expeditious construction of the subsurface velocity model in time, which can later be expressed in the Cartesian depth coordinates via a subsequent time-to-depth conversion. The conventional practice of such conversion is done using Dix inversion, which is exact in the case of laterally homogeneous media. For other media with lateral heterogeneity, the time-to-depth conversion involves solving a more complex system of partial differential equations (PDEs). In this study,} we propose an efficient \new{alternative} for time-to-depth conversion and interval velocity estimation \old{in}\new{based on} the assumption of weak lateral velocity variations. By considering only first-order perturbative effects from lateral variations, the exact system of \old{partial differential equations (PDEs)}\new{PDEs} required to accomplish the exact conversion reduces to a simpler system that can be solved efficiently in a layer-stripping (downward-stepping) fashion. Numerical synthetic and field data examples show that the proposed method can achieve reasonable accuracy and is significantly more efficient than previously proposed method with a speedup by an order of magnitude.
+\end{abstract}
+
+\section{Introduction}
+Time-domain imaging is an efficient technique routinely applied to seismic data processing. It constitutes prestack time migration and may also include operations such as normal and dip moveout analysis, and stacking \cite[]{yilmaz}. It can also be alternatively formulated based on the method of wave equation migration in time-domain coordinates \cite[]{fomelwaveeqtime}. Because time-domain imaging operates in the time coordinates, it provides both efficiency and convenience. \old{However,}The price paid for this simplicity\new{, however,} includes placing resultant images in distorted coordinates and limited applicability in structurally complex areas. Nevertheless, time-domain imaging is still a reliable and cost-effective tool for many other areas including unconventional reservoirs on land \cite[]{fomelrecenttime}.
+
+Conventional time-to-depth conversion involves an application of Dix inversion, which is strictly valid only in laterally homogeneous models. The effects from lateral velocity variations can cause unstable inversion and produce inaccurate results \cite[]{lynnclaerbout,black,plume,blias2009stacking,zonebeyond1d}. \cite{cam2007} and \cite{cam2008} showed that converting seismic images from the distorted time coordinates to the Cartesian depth coordinates in the presence of lateral velocity variations amounts to solving an inverse problem specified by a system of partial differential equations (PDEs) that describes the kinematics and geometrical spreading of image rays \cite[]{hubralimageray}. Solving this system involves finding an accurate interval velocity and coordinates maps from the time domain to the depth domain. \old{A schematic showing two general paths adopted in previous works are shown in Figure~\ref{fig:t2d}}\new{Figure~\ref{fig:t2dnew} shows a schematic of two general paths adopted in previous works}. The first approach begins with the estimation of interval velocity still expressed in the time domain from image ray tracing followed by a time-to-depth conversion using a Dijkstra-like solver \cite[]{cam2007,cam2008,cam2009}. The second approach combines the two steps together and proceeds by propagating an image wavefront \cite[]{cam2007,valente}. An extension of the problem along 2D profiles to 3D was discussed by \cite{iversentygel}. \new{For the third approach,} \cite{siweit2d} proposed to formulate this inversion in a non-linear iterative optimization framework supplied with regularization for better handling of its ill-posedness. This method allows for a global update of the estimated interval velocity at each iteration, which is generally preferable to solutions from time-stepping along the image rays in other known methods.
+
+\inputdir{.}
+\plot{t2dnew}{width=0.8\textwidth}{A schematic illustrating the general approaches to time-to-depth conversion and interval velocity estimation.}
+
+In this paper, we consider the case of mild lateral variations and propose to approximate the original system of PDEs to limit our consideration to their first-order perturbative effects. This linearization leads to a notable simplification and a higher efficiency, while still correcting the conventional Dix inversion for lateral variations. The result from this approach can be used as an initial velocity model for the subsequent optimization for a faster convergence.
+
+\section{Theory}
+The time-domain coordinates  $(x_0,t_0)$ used in time migration are related to the Cartesian depth coordinates $(x,z)$ through the knowledge of image rays (Figure~\ref{fig:imageray}), which have orthogonal slowness vector to the surface \cite[]{hubralimageray}. For each subsurface location $(x,z)$, an image ray travels through the medium and emerges at  $(x_0, 0)$ with traveltime $t_0$. The forward maps $x_0(x,z)$ and $t_0(x,z)$ can be obtained with the knowledge of the interval velocity $v(x,z)$. We can also define the inverse maps $x(x_0,t_0)$ and $z(x_0,t_0)$ for the time-to-depth conversion process. Similar description of coordinates relation also holds in 3D.
+
+\plot{imageray}{width=0.8\textwidth}{The relationship between time-domain coordinates and the Cartesian depth coordinates. An example image ray with slowness vector normal to the surface travels from the source $x_s$ into the subsurface. Every point along this ray is mapped to the same distance location $x_s$ in the time coordinates with different corresponding traveltime $t_s$ . }
+
+In time domain, one operates with the time-migration velocity $v_m(x_0,t_0)$ estimated from migration velocity analysis \cite[]{yilmaz,fomelvelcon2,fomelvelcon1}. In a laterally homogeneous medium, $v_m$ corresponds theoretically to the RMS velocity:
+\begin{equation}
+w_m(t_0) = \frac{1}{t_0}\int_0^{t_0} w\big(z(t)\big) dt~,
+\end{equation}
+where we denote $w=v^2$ throughout the text. The inverse process to recover interval velocity $v(z)$ can be done through the Dix inversion \cite[]{dix}:
+\begin{equation}
+\label{eq:dix}
+w_d(t_0) = \frac{d}{dt_0} \big(t_0 w_m(t_0)\big)~,
+\end{equation}
+\new{where the subscript $d$ is used to denote the Dix-inverted parameter}. A simple conversion from $w_d(t_0)$ to $w(z)$ reduces then to a straightforward integration over time to obtain a $z(t_0)$ map.
+
+\new{On the other hand,} in the case of laterally heterogeneous media, \cite{cam2007} proved that the Dix-inverted velocity can be related to the true interval velocity by the geometrical spreading $Q(x_0,t_0)$ of the image rays traced telescopically from the surface as follows:
+\begin{equation}
+\label{eq:eq1}
+w_d(x_0,t_0) = \frac{w\big(x(x_0,t_0),z(x_0,t_0)\big)}{Q^2(x_0,t_0)}~,
+\end{equation}
+where the geometrical spreading $Q$ satisfies,
+\begin{equation}
+\label{eq:geomet}
+\nabla x_0 \cdot \nabla x_0 = \frac{1}{Q^2}~.
+\end{equation}
+\new{Combining equations~\ref{eq:eq1} and \ref{eq:geomet} gives
+\begin{equation}
+\label{eq:eq1-1}
+\nabla x_0 (x,z) \cdot \nabla x_0 (x,z) = \frac{w_d(x_0(x,z),t_0(x,z))}{w(x,z)}
+\end{equation}
+}
+To solve for the interval velocity, two additional equations are needed \cite[]{cam2007,siweit2d}:
+\begin{eqnarray}
+\label{eq:eq2}
+\nabla x_0 (x,z)\cdot \nabla t_0 (x,z)& = & 0~, \\
+\label{eq:eq3}
+\nabla t_0 (x,z) \cdot \nabla t_0 (x,z)& = & \frac{1}{w(x,z)}~.
+\end{eqnarray}
+Equation~\ref{eq:eq2} indicates that $x_0$ is constant along each image ray, and equation~\ref{eq:eq3} denotes the eikonal equation of image ray propagation. Equations~\ref{eq:eq1-1}-\ref{eq:eq3} amount to a system of PDEs that can be solved for the interval velocity $v(x,z)$ as well as the maps $x(x_0,t_0)$ and $z(x_0,t_0)$ needed for the time-to-depth conversion process.
+
+\subsection{Taking weak lateral variations into account}
+
+Instead of attempting to solve equations~\ref{eq:eq1-1}-\ref{eq:eq3} directly, we assume that the lateral variations are mild and the parameters can be approximated with respect to the laterally homogeneous background up to the first-order linearization as follows:
+\begin{eqnarray}
+\label{eq:cond1}
+w (x,z) & \approx & w_r(z) + \Delta w(x,z)~,\\
+\label{eq:cond2}
+x_0 (x,z) & \approx & x + \Delta x_0(x,z)~,\\
+\label{eq:cond3}
+t_0 (x,z)& \approx & \int_0^z \frac{1}{\sqrt{w_r(z)}} dz  + \Delta t_0(x,z)~.
+\end{eqnarray}
+\old{where $w_r(z)$ is velocity squared of the reference laterally homogeneous background.}\new{The first terms on the right-hand side of equations~\ref{eq:cond1}-\ref{eq:cond3} correspond to the correct values of the velocity squared $w_r$, $x_0$, and $t_0$ for the reference laterally homogeneous background}. \new{Our objective is to seek for $\Delta w$, $\Delta x_0$, and $\Delta t_0$ that quantify the first-order effects from lateral heterogenity and satisfy the system of PDEs in equations~\ref{eq:eq1-1}-\ref{eq:eq3}.} Substituting equations~\ref{eq:cond1}-\ref{eq:cond3} into\old{the system of PDEs given by} equations~\ref{eq:eq1-1}-\ref{eq:eq3} and restrict our consideration only up to the first-order perturbations, we can derive
+\begin{eqnarray}
+\label{eq:eq1weak}
+w_d (x,z) & = & w_r (z) \left(1+ 2\frac{\partial \Delta x_0 }{\partial x}(x,z) \right) + \Delta w(x,z)~,\\
+\label{eq:eq2weak}
+\frac{\partial \Delta t_0 }{\partial x}(x,z) & = & -\frac{1}{\sqrt{w_r(z)}} \left(\frac{\partial \Delta x_0 }{\partial z}(x,z)\right)~,\\
+\label{eq:eq3weak}
+\Delta w(x,z) & = & -2 w_r(z)\sqrt{w_r(z)} \left(\frac{\partial \Delta t_0 }{\partial z}(x,z)\right)~,
+\end{eqnarray}
+which is a considerably simpler system to solve than the original one. However, implementing the proposed system requires the knowledge of $w_d (x,z)$, which is unavailable from migration velocity analysis because the Dix velocity squared $w_d (x_0,t_0)$ is still expressed in the time domain. In the same spirit as before, we propose to consider instead a linearized approximation given by,
+\new{
+\begin{eqnarray}
+\nonumber
+w_d (x_0(x,z),t_0(x,z)) & = & w_d \left(x + \Delta x_0,\int_0^z \frac{1}{\sqrt{w_r}}~ dz  + \Delta t_0 \right)~,\\
+\nonumber
+& \approx & w_d\left(x,\int_0^z \frac{1}{\sqrt{w_r}}~ dz\right) + \Delta x_0(x,z)\left(\frac{\partial w_d}{\partial x_0}(x_0(x,z),t_0(x,z)) \right) + \\
+&& \Delta t_0(x,z)\left(\frac{\partial w_d}{\partial t_0}(x_0(x,z),t_0(x,z)) \right)~.
+\end{eqnarray}
+Following the similar procedure and retaining only the first-order terms, we can approximate $\frac{\partial w_d}{\partial x_0}(x_0(x,z),t_0(x,z))$ and $\frac{\partial w_d}{\partial t_0}(x_0(x,z),t_0(x,z))$, which results in
+\begin{equation}
+\label{eq:dixestimate}
+w_d (x,z) \approx w_{dr}(x,z) + \Delta x_0 (x,z) \left(\frac{\partial w_d}{\partial x_0}(x,z)\right) +  \Delta t_0 (x,z)\left(\frac{\partial w_d}{\partial t_0}(x,z) \right)~,
+\end{equation}
+}
+where the reference $w_{dr}(x,z)$ denotes the $w_d (x_0,t_0)$ converted to depth based on the laterally homogeneous background \new{assumption}, and the two derivatives are evaluated first in the original $(x_0,t_0)$ coordinates followed by similar conversion. Substituting equation~\ref{eq:dixestimate} into equation~\ref{eq:eq1weak} leads to the following first-order linear system:
+\begin{equation}
+\label{eq:t2dweak}
+\frac{\partial \mathbf{u} }{\partial z} = \mathbf{A} \frac{\partial \mathbf{u} }{\partial x} -\frac{1}{2 w_r\sqrt{w_r}}\left(\mathbf{B} \mathbf{u} + \mathbf{f}\right)~,
+\end{equation}
+where $\mathbf{u} = [\Delta t_0, \Delta x_0]^T$,
+\begin{eqnarray}
+\mathbf{A} & = & 	\begin{bmatrix}
+					0 & 1/\sqrt{w_r} \\
+					-\sqrt{w_r} & 0
+					\end{bmatrix}~, \\
+\mathbf{B} & = &  	\begin{bmatrix}
+					\frac{\partial w_d}{\partial t_0}& \frac{\partial w_d}{\partial x_0} \\
+					0 & 0
+					\end{bmatrix}~, \\
+\mathbf{f} & = & 	\begin{bmatrix}
+					w_{dr}-w_r \\
+					0
+					\end{bmatrix}~.
+\end{eqnarray}
+Equation~\ref{eq:t2dweak} can be solved by stepping in the depth $z$ direction given the following initial conditions at the surface \new{$z=0$}:
+\begin{equation}
+\label{eq:initcond}
+\Delta t_0(x,0) = 0 \quad\mbox{and}\quad \Delta x_0(x,0) = 0~.
+\end{equation}
+In our numerical experiments, \old{we evaluate $\frac{\partial \mathbf{u}}{\partial x}$ term using a derivative filter followed by smoothing to enhance stability and avoid numerical artifacts.}\new{we adopt the following procedure to solve system \ref{eq:t2dweak}:
+\begin{enumerate}
+	\item Provided the $w_d(x_0,t_0)$ from migration velocity analysis, we compute the $\frac{\partial w_d}{\partial x_0}$ and $\frac{\partial w_d}{\partial t_0}$ using smooth differentiation.
+	\item Convert the velocity and both derivatives to depth based on the assumption of laterally homogeneous media to obtain $w_{dr}(x,z)$, $\frac{\partial w_d}{\partial x_0}(x,z)$, and $\frac{\partial w_d}{\partial t_0}(x,z)$.
+	\item Choose a reference laterally homogeneous background $w_r(z)$ from $w_{dr}(x,z)$.
+	\item Given the initial condition \ref{eq:initcond} on $\mathbf{u}$ and other known parameters from the previous steps, we compute $\frac{\partial \mathbf{u} }{\partial x}$ for the topmost layer using a derivative filter followed by smoothing which helps alleviate the effects from sharp contrasts and their corresponding numerical artifacts that may get carried on to the next depth step.
+	\item We make a step in depth based on
+	\begin{equation}
+	   \frac{\partial \mathbf{u} }{\partial z} \approx \frac{\mathbf{u}_{k+1}-\mathbf{u}_{k}}{\Delta z}~,
+	\end{equation}
+	where $\Delta z$ represents the depth increment of the model, the current layer is denoted by $k$ and the next layer is denoted by $k+1$.
+	\item Repeat steps 4 and 5 for the next layer til the final layer.
+	\item Compute $\Delta w$ from the estimated $\mathbf{u}$ using equation~\ref{eq:eq3weak}.
+\end{enumerate}
+}
+%\plot{input-slow}{width=0.45\textwidth}{The three inputs of the proposed time-to-depth conversion method (equation~\ref{eq:t2dweak}) for the the constant horizontal slowness-squared gradient model. The last input is $w_r(z)$, which is taken to be the constant velocity from the central trace of $w_{dr}(x,z)$ (top) in this case.}
+
+\section{Examples}
+\inputdir{slow}
+\subsection{Linear sloth model}
+
+We first test the proposed method using a synthetic model with known analytical time-to-depth conversion solutions. In this model, the exact velocity squared is given by
+\begin{equation}
+\label{eq:model1}
+w(x,z) = \frac{1}{1-q_x x}~,
+\end{equation}
+where \old{$q_x = 0.035$}\new{$q_x=0.052$}, which gives a maximum of \old{14}\new{25}$\%$ changes in lateral velocity along the 7 $km$ lateral extent of the model. The analytical solutions to time-to-depth conversion in this particular type of model were presented by \cite{siweit2d}. Figure~\ref{fig:model-slow} shows the true interval velocity of the model (equation~\ref{eq:model1}), and the analytical $x_0$ and $t_0$ overlaid by the contours indicating image rays and propagating image wavefront. Other inputs for the proposed conversion method are shown in Figure~\ref{fig:input-slow}. We choose the reference $w_r(z)$ background to be the central trace of the reference $w_{dr}(x,z)$, which is constant in this case.\old{Figure shows the analytical values of the three quantities--- $\Delta x_0$, $\Delta t_0$, and $\Delta w$.} The estimated results are shown in Figure~\ref{fig:estcompare-slow} and \old{appear to be in close agreement with the analytical solutions}\new{their corresponding errors in comparison with the analytical values are shown in Figure~\ref{fig:errcompare-slow}}. \new{The errors appear to be generally small indicating a good accuracy for all estimated parameters but increase closer to the edges of the model, which are further away from the chosen reference $w_r(z)$.}
+
+\plot{model-slow}{width=0.9\textwidth}{The true velocity squared (top) of the linear sloth model (equation~\ref{eq:model1}). Analytical $x_0$ (middle) is overlaid by image rays. Analytical $t_0$ (bottom) is overlaid by contours showing propagating image wavefront.}
+\plot{input-slow}{width=0.9\textwidth}{ Inputs of the proposed time-to-depth conversion for the linear gradient model. The last input \old{is $w_r(z)$, which}\new{$w_r(z)$ (not shown here)} is taken to be the central trace of $w_{dr}(x,z)$ (top) in this case.}
+\plot{estcompare-slow}{width=0.9\textwidth}{The estimated values of $\Delta x_0$, $\Delta t_0$, $\Delta w$ in the linear sloth model (equation~\ref{eq:model1}).}
+\plot{errcompare-slow}{width=0.9\textwidth}{\new{The errors of the estimated values of $\Delta x_0$, $\Delta t_0$, $\Delta w$ in comparison with the true values in the linear sloth model (equation~\ref{eq:model1}). The errors are small for all estimated parameters indicating a good accuracy of the proposed method.}}
+
+\new{\subsection{Linear gradient model}}
+\inputdir{grad}
+\new{
+We further test the proposed method with another synthetic model that contains stronger velocity variations in both vertical and horizontal directions. In this model, the exact velocity is given by
+\begin{equation}
+\label{eq:model2}
+v (z,x) = v_0 + g_z z + g_x x\;,
+\end{equation}
+where $v_0 = 2$ $km/s$, $g_z = 0.6$ $1/s$, and $g_x=0.15$ $1/s$. These parameters give 33--50$\%$ changes in horizontal velocity and a maximum of 60$\%$ change in vertical velocity. The analytical solutions to time-to-depth conversion in this particular type of model were given by \cite[]{siweit2d}:
+\begin{eqnarray}
+\label{eq:x0grad}
+x_0 (z,x) & = & x + \frac{\sqrt{(v_0+g_x x)^2 + g_x^2 z^2} - (v_0 + g_x x)}{g_x}~, \\
+\label{eq:t0grad}
+t_0 (z,x) & = & \frac{1}{g} \mathrm{arccosh} \left[ \frac{g^2 \left( \sqrt{(v_0+g_x x)^2 + g_x^2 z^2} + g_z z \right) - v g_z^2}{v g_x^2} \right]~,
+\end{eqnarray}
+where $g = \sqrt{g_z^2 + g_x^2}$ denotes the magnitude of the total gradient. It follows from equations~\ref{eq:x0grad} and \ref{eq:t0grad} that $|\nabla x_0|=1$, $|\nabla t_0|=1/v$, and $\nabla x_0 \cdot \nabla t_0 = 1$, which indicate that the geometrical spreading of image rays in this model is equal to one and the Dix velocity is equal to the interval velocity expressed in the time-domain coordinates $x_0$ and $t_0$ (equation~\ref{eq:eq1}). Nonetheless, the image rays still bend laterally because $g_x \ne 0$ and will lead to distorted time-domain coordinates. The migration velocity squared $w_m$ and its Dix-inverted counterpart $w_d$ can also be derived analytically and are given by \cite[]{siweit2d}:
+\begin{eqnarray}
+\label{eq:wmgrad}
+w_m (t_0,x_0) & = & \left(\frac{(v_0 + g_x x_0)^2}{t_0 \left( g \coth (g t_0) - g_z \right)} \right)^2~, \\
+\label{eq:wdgrad}
+w_d (t_0,x_0) & = & \left(\frac{(v_0 + g_x x_0) g}{g \coth (g t_0) - g_z \sinh (g t_0)}\right)^2~.
+\end{eqnarray}}
+
+\new{Figure~\ref{fig:model-grad} shows the true interval velocity of the model (equation~\ref{eq:model2}), and the analytical $x_0$ and $t_0$ overlaid by the contours that show image rays and propagating image wavefront. Figure~\ref{fig:input-grad} shows other inputs for the proposed conversion method. Again, we arbitrarily choose the reference $w_r(z)$ background to be the central trace of the reference $w_{dr}(x,z)$. Figure~\ref{fig:estcompare-grad} shows the final estimated values of the three quantities--- $\Delta x_0$, $\Delta t_0$, and $\Delta w$. Their corresponding errors are shown in Figure~\ref{fig:errcompare-grad} suggesting a reasonable accuracy of the proposed method when the true velocity is close to the reference $w_{r}(z)$ in the middle of the model. Higher errors are observed as the velocity difference becomes larger closer to the side and bottom edges.
+}
+
+\plot{model-grad}{width=0.9\textwidth}{\new{The true velocity squared (top) of the linear gradient model (equation~\ref{eq:model2}). Analytical $x_0$ (middle) is overlaid by image rays. Analytical $t_0$ (bottom) is overlaid by contours showing propagating image wavefront.}}
+\plot{input-grad}{width=0.9\textwidth}{\new{Inputs of the proposed time-to-depth conversion for the linear gradient model. The last input $w_r(z)$ (not shown here) is taken to be the central trace of $w_{dr}(x,z)$ (top) in this case.}}
+\plot{estcompare-grad}{width=0.9\textwidth}{\new{The estimated values of $\Delta x_0$, $\Delta t_0$, $\Delta w$ in the linear gradient model (equation~\ref{eq:model2}).}}
+\plot{errcompare-grad}{width=0.9\textwidth}{\new{The errors of the estimated values of $\Delta x_0$, $\Delta t_0$, $\Delta w$ in comparison with the true values in the linear gradient model (equation~\ref{eq:model2}). The errors are small for all estimated parameters except  in the vicinity of the side and bottom edges of the model, which could be attributed to the growing difference between the true value of $w(x,z)$ in that region and the reference $w_r(z)$ in the middle of the model.}}
+
+
+%and can be specify as follows:
+%\begin{eqnarray}
+%x_0 (x,z) & = & \frac{2x + q_x z^2}{1+2q_x x + \alpha}~,\\
+%t_0 (x,z) & = & \frac{\sqrt{2}z\big[ 2-4q_x x + \alpha\big]}{3\big[1-2q_x x + \alpha\big]^{1/2}}~,
+%\end{eqnarray}
+%where $\alpha = \left[(1-2q_x x)^2 - 4 q^2_x z^2\right]^{1/2} $.
+
+\inputdir{alaska}
+\subsection{Land field data example}
+
+To first test the proposed method with real data, we adopt a land dataset provided by the National Petroleum Reserve Alaska (NPRA) \cite[]{dataalaska}. We particularly use the data from line 31--81 from the acquisition season of 1981. Despite the long maximum recording time of 6 $s$ of this dataset, it only contains small-offset information with the maximum offset of 5.225 $kft$, which leads to a high uncertainty in semblance-based velocity analysis.
+
+We first pre-processed the dataset to correct for uneven recording topography, groundroll attenuation, and surface-consistent amplitudes. We subsequently obtain migration velocity using Fowler's DMO \cite[]{fowlerdmo} to perform velocity analysis along with DMO simultaneously. The resultant picked migration velocity is shown in Figure~\ref{fig:vpickdmo} with the maximum lateral velocity variation of approximately 16$\%$. Figure~\ref{fig:input-alaska} shows the inputs for the proposed time-to-depth conversion method: Dix-inverted migration velocity squared $w_{dr}(x,z)$ and its gradients evaluated in the time-domain coordinates followed by similar Dix conversion. The output interval velocity squared and its difference from the original Dix-inverted velocity squared are shown in Figure~\ref{fig:finalvcompare-alaska}. This difference is required to honor lateral variation in the migration velocity field.
+
+\plot{vpickdmo}{width=0.9\textwidth}{Picked migration velocity from Fowler's DMO for the Alaskan dataset. One can observe a lateral variation of velocity across the extent of the model.}
+\plot{input-alaska}{width=0.9\textwidth}{The inputs of the proposed conversion method for the Alaskan field data example: Dix-inverted velocity squared $w_{dr}$ and its gradients.}
+\plot{finalvcompare-alaska}{width=0.9\textwidth}{The estimated interval $w(x,z)$ from the proposed method (top) and the difference between the Dix-inverted migration velocity and the estimated velocity using the proposed method (bottom) for the Alaskan field data example.}
+
+
+\inputdir{field}
+\subsection{Marine field data example}
+
+For the final example, we adopt a field data example from the Gulf of Mexico \cite[]{bei} used previously by \cite{siweit2d} to additionally test the proposed method and compare its performance with previous methods. In this dataset, the maximum recording time is 4 $s$ with the maximum offset of 3.48 $km$. We estimate the initial $w_{dr}(x,z)$ automatically using the method of velocity continuation \cite[]{fomelvelcon1} followed by 1D Dix inversion to depth. We use the central trace of $w_{dr}(x,z)$ as the reference $w_r(z)$ model and the remaining inputs to the proposed method are shown in Figure~\ref{fig:input-field}.
+
+A comparison of the final estimated interval velocity from the proposed method and the optimization-based method \cite[]{siweit2d} is shown in Figure~\ref{fig:finalvcompare} with a good general agreement despite using only about one-tenth of the computational time. Due to the availability of larger-offset data, we compare the the final seismic image after the proposed time-to-depth conversion process and that from prestack Kirchhoff depth migration (PSDM) using the estimated interval $w(x,z) = w_r(z) + \Delta w (x,z)$ in Figure~\ref{fig:finalcompare}. The results are comparable verifying the effectiveness of the proposed method. We further investigate the common-image gathers (CIGs) generated from PSDM based on the conventional Dix velocity squared $w_{dr}(x,z)$ and the estimated $w(x,z)$. We observe a noticeable improvement in the flatness of the CIGs from the estimated $w(x,z)$ especially in the deeper sections, where the effects from lateral variations become more prominent (Figure~\ref{fig:cig}). The results from this example are comparable with those of \cite{siweit2d} but achieved with approximately one-tenth of the cost. They further attest the validity of the proposed method.
+
+\plot{input-field}{width=0.9\textwidth}{The inputs of the proposed conversion method for the GOM field data example: Dix velocity squared $w_{dr}$ and its gradients.}
+\plot{finalvcompare}{width=0.9\textwidth}{The difference between the estimated velocity squared using the proposed method and the Dix-inverted velocity squared (top). A comparison of the estimated interval $w(x,z)$ from the proposed method (middle) and from the optimization approach (bottom) for the GOM field data example.}
+\plot{finalcompare}{width=\textwidth}{A comparison of the final converted seismic images from the proposed time-to-depth conversion method (left) and from the PSDM using the estimated interval velocity for the GOM field data example.}
+\plot{cig}{width=\textwidth}{A comparison of CIGs generated from PSDM at 8 $km$ and 11.25 $km$ using the conventional Dix-inverted velocity and the estimated interval velocity from the proposed method. In deeper sections, where there is prominent lateral variations, we can observe an improvement in flatness of the CIGs from the estimated $w(x,z)$.}
+
+\section{Discussion}
+
+%We emphasize that further analysis of the Alaskan dataset is hampered by the fact that only small-offset data is available. Therefore, seeking a similar confirmation from the flatness of CIGs as in the GOM example is implausible. However, the results from this example help emphasize the importance of the lateral variation in the migration velocity field that should be honored in the time-to-depth conversion and the interval velocity estimation process.
+\new{In this study, we restrict our consideration to mild heterogeneity and only focus on the first-order perturbative effects from lateral velocity variations. The higher-order terms are important for the consideration of stronger variations. Furthermore, we emphasize that the proposed method utilize a laterally homogeneous background model $w_r(z)$ as the reference. The update from lateral heterogeneity comes entirely from the estimated first-order change $\Delta w (x,z)$. When the considered medium deviates significantly from such assumption, for example, in the linear gradient model (equation~\ref{eq:model2}), the proposed method will produce erroneous results and regular Dix-inverted velocity may represent a more feasible option.}
+
+\new{An important underlying assumption of the proposed method involves well-behaved image rays with the absence of caustics, which in turn imposes the limits on the size and the degree of velocity variation in the model. Dividing the original model into several depth intervals to ensure an agreement with such assumption is a possible alternative \cite[]{siweit2d}.}
+
+\new{Another possible issue to the proposed method concerns the direction of traveling image rays. Our algorithm assumes that the rays can only enter from the surface (in-flow boundary) and exit the model at the side edges or at the bottom edge. However, it is possible that parts of the model require in-flow image rays from the side edges (Figures~\ref{fig:model-slow} and \ref{fig:model-grad}). We avoid this complication by limiting our consideration of the results to the windowed part within the coverage of image rays.}
+
+\new{Numerical implementation of the proposed algorithm involves taking derivatives in steps 4 and 7. To mitigate the effects of possible sharp contrasts, we propose applying a smoothing filter. This is particularly important because the numerical artifacts will get accumulated to the later depth as the algorithm proceeds. We employ iterations of triangle smoothing when generating shown numerical examples.}
+
+\new{The proposed method can be extended to 3D in a straightforward manner. The lateral coordinates $x_0$ and $x$ become vectors $\mathbf{x_0}=(x_0,y_0)$ and $\mathbf{x}=(x,y)$ for consideration of displacements in both in-line and cross-line directions. The geometrical spreading of an image ray becomes a matrix $\mathbf{Q}$. Following the similar procedure as described in this paper, an efficient framework for 3D time-to-depth conversion and interval velocity estimation can be developed.}
+
+Conventionally, time-migration process \old{implements}\new{relies} on a hyperbolic summation curve, which is only approximately correct in general anisotropic media with lateral heterogeneity \cite[]{black,alkatiprocessing,yilmaz}. As proposed by \cite{cam2007} and \old{implemented}\new{employed} in this study, additional consideration of the geometrical spreading of image rays can help \old{mitigating}\new{mitigate} the possible errors from the hyperbolic assumption and \old{increasing}\new{increase} the range of applicability of time migration in laterally heterogeneous media. Recent studies by \cite{delltt} \new{on the general expression of diffraction traveltime in anisotropic media} and \cite{zonebeyond1d} \new{on the influence of lateral heterogeneity on the Taylor coefficients of the traveltime expansion} shed some light on how the complexities from lateral heterogeneity and anisotropy can influence seismic traveltimes \new{beyond the hyperbolic assumption} and represent a further step forward towards the goal of making \old{time migration}\new{time-domain imaging} more accurate and versatile.
+
+\new{Lastly, we point out that \cite{spacetau} proposed a notable alternative approach to handle the effects of lateral heterogeneity and anisotropy in time-domain processing by recasting the problem in terms of vertical traveltime. This method allows for an application of the Dix inversion in laterally factorized media, where the the ratio between the NMO velocity and the vertical velocity of P waves remains relatively constant, at the expense of increased computational cost.}
+
+\section{Conclusions}
+Using linearization, we reformulate the system of PDEs for the time-to-depth conversion and interval velocity estimation process to a simpler system appropriate for handling weak lateral variations. The new system can be solved in a downward continuation fashion with a significantly improved computational efficiency. \old{In practice, we observe a speedup by a factor of 10}. Our numerical examples show that the proposed method produces accurate results that honor the effects of lateral heterogeneity \new{with a speedup by an order of magnitude}. Therefore, the results of the proposed method can be used to correct the conventional Dix conversion and to produce a starting velocity model for more accurate velocity-estimation methods.
+
+\section{Acknowledgements}
+\new{We appreciate the helpful comments of the associated editor, Tariq Alkhalifah, and two anonymous reviewers.} We are grateful to the sponsors of the Texas Consortium for Computational Seismology (TCCS). The first author was additionally supported by the Statoil Fellows Program at the University of Texas at Austin. We thank Karl Schleicher for help in processing the Alaskan dataset.
+
+
+%\section{Derivatives in a one-layered model}
+%We first differentiate equation~\ref{eq:owtime} and subsequently expand the result into a series with respect to $\epsilon$ up to the first order. Evaluating at $h=0$ and $\sigma_R=z(0)=z_0$, and replacing the multiplication of $\epsilon \hat{(\cdot)}^{(n)} $ with $(\cdot)^{(n)}$, we arrive at
+%\begin{eqnarray}
+%\nonumber
+%\left.\frac{\partial^2 t}{\partial h^2}\right \rvert_{h=0} & \approx & w(a_{iR}) \left[\frac{1}{z_0} +\left.\frac{d^2 F_r}{d h^2}\right\rvert_{h=0} \right] \\
+%&&  + \frac{1}{z_0}\sum^N_{i=0} a_{iR} \left.\frac{\partial w}{\partial a_i}\right\rvert_{a_{iR}} ~ , \\
+%\nonumber
+%\left.\frac{\partial^4 t}{\partial h^4}\right \rvert_{h=0} & \approx & w(a_{iR})\left[-\frac{3}{z^3_0}- \left.\frac{6}{z^2_0} \frac{d^2 F_r}{d h^2}\right\rvert_{h=0} + \left.\frac{d^4 F_r}{d h^4}\right\rvert_{h=0} \right] \\
+%&&  + \frac{3}{z_0^3}\sum^N_{i=0} \left(\left.\frac{\partial w}{\partial a_i}\right\rvert_{a_{iR}}\right)\left(\left.\frac{d a}{d \sigma}\right\rvert_{\sigma_R} - \frac{a_{iR}}{z_0}\right)~.
+%\end{eqnarray}
+%If we assume that the medium parameters only vary in the lateral direction, we have from chain rule that
+%\begin{equation}
+%\label{eq:da}
+%\left.\frac{d a}{d \sigma}\right\rvert_{\sigma_R} = \left.\left(\frac{d a}{d h}\middle/\frac{d \sigma}{d h} \right) \right\rvert_{h=0}~.
+%\end{equation}
+%To the first-order of $\epsilon$, equation~\ref{eq:da} becomes
+%\begin{equation}
+%\label{eq:da}
+%\left.\frac{d a}{d \sigma}\right\rvert_{\sigma_R} \approx \left.\left(\frac{d a}{d h}\middle/\frac{d F_r}{d h} \right) \right\rvert_{h=0}~.
+%\end{equation}
+
+%\section{Derivatives in a multi-layered model}
+
+%\section{Numerical examples}
+
+%%%\section{Discussion}
+%%The results of this study can serve as a basis to derive expressions for Dix-type inversion for layered anisotropic media with weak lateral heterogeneity.
+
+%% All of these changes will affect the ray direction as the second order but the quantity integrated along the ray (traveltime) as the first order. We are only interested in the latter and therefore, our assumption of straight raypath is correct.
+
+
+
+%\append{Traveltime derivatives beyond {NIP} theorem}
+%In this appendix, we reproduce the derivations by cite{fomelnonhyper} that relate the derivatives of two-way moveout traveltime at zero offset to those of the one-way traveltime from normal-incidence ray.
+
+%\newpage
+%\onecolumn
+\bibliographystyle{seg}
+\bibliography{timemig}
+

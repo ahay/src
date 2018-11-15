@@ -10,6 +10,9 @@ regularization (Xue, Zhu, and Fomel)
   images (Greer and Fomel)
 * tccs/sobel: Plane-wave Sobel attribute for discontinuity enhancement
   in seismic images (Phillips and Fomel)
+* tccs/t2dweak: Fast time-to-depth conversion and interval velocity
+  estimation in the case of weak lateral variations (Sripanich and
+  Fomel)
 
 To SCons:
 

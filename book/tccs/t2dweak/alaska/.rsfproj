@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfcat', 'sfheadermath', 'sfmask', 'sfadd', 'sfheaderwindow', 'sfput', 'sfwindow', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfdd', 'sfgraph', 'sftransp', 'sflinear', 'sfmath', 'sfinttest1', 'sfscale', 'sfdatstretch', 'sfpow', 'sfmutter', 'sfshapeagc', 'sffft1', 'sffft3', 'sfreal', 'sfdipfilter', 'sfomp', 'sfdiv', 'sfmul', 'sfstack', 'sfsmooth', 'sfsc', 'sfspray', 'sfshot2cmp', 'sfvscan', 'sfpick', 'sfnmo', 'sfdespike2', 'sfstacks', 'sfcostaper', 'sfpad', 'sfcosft', 'sfcut', 'sfiwarp', 'sfenvelope', 'sfslice', 'sfagc', 'sfdix', 'sftime2depth', 'sfsmoothder', 'sftime2depthweak', 'sfcausint', 'sfinttest2', 'sfspline', 'sfeikods', 'sfkirmigsr']
+data=['data/alaska/L23535.SGY', 'data/alaska/L23536.SGY', 'data/alaska/L23537.SGY']
+size= 37941640948

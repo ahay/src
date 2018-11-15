@@ -1,0 +1,682 @@
+from rsf.proj import *
+
+# Download data files
+
+rawsegy=['L23535','L23536','L23537']
+
+for file in rawsegy  :
+    Fetch(file+'.SGY',
+          server='http://certmapper.cr.usgs.gov',
+          top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
+    
+    # Convert from SEGY to RSF
+    Flow([file, file+'.bin',  file+'.asc', 't'+file],
+         file+'.SGY',
+         '''
+         segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]} 
+         tfile=${TARGETS[3]}
+         ''')
+
+# concatinate the input files
+
+Flow('line',rawsegy,'cat axis=2 ${SOURCES[1:3]}')
+Flow('tline',map(lambda x: 't'+x,rawsegy),
+     'cat axis=2 ${SOURCES[1:3]}')
+
+# Convert to shots, remove misfired shot
+Flow('shotmask','tline',
+     '''
+     headermath output=fldr | mask min=157 max=157 |
+     add add=-1 | add scale=-1
+     ''')
+
+Flow('shots','line shotmask',
+     '''
+     headerwindow mask=${SOURCES[1]} |
+     put n2=101 n3=67   |
+     window n2=96 f3=10 n3=56 |
+     put 
+     o3=44     d3=0.44 label3=Shot   unit3=kft
+     o2=-5.225 d2=0.11 label2=Offset unit2=kft
+     ''')
+
+Flow('tshots','tline shotmask',
+     '''
+     headerwindow mask=${SOURCES[1]} |
+     put n2=101 n3=67   |
+     window n2=96 f3=10 n3=56 |
+     put 
+     o3=44     d3=0.44 label3=Shot   unit3=kft
+     o2=-5.225 d2=0.11 label2=Offset unit2=kft
+     ''')
+
+Plot('shots','grey title=Shots gainpanel=all pclip=90',view=0)
+
+def plotshots(title):
+    return '''
+    byte gainpanel=all pclip=90 |
+    grey3 frame1=1000 frame2=55 frame3=30 title="%s"
+    flat=n point1=0.7 point2=0.7
+    ''' % title
+
+def plotshotspow(title):
+    return '''
+    pow pow1=1.5 | byte gainpanel=all pclip=90 |
+    grey3 frame1=1000 frame2=55 frame3=30 title="%s"
+    flat=n point1=0.7 point2=0.7
+    ''' % title
+
+Result('shots',plotshots('Shots'))
+
+#############################################################
+# Apply elevation statics
+Flow('spelev.asc',None,
+     '''
+     echo
+88	80.5
+89	80.7
+90	80.5
+91	81.2
+92	81.6
+93	82.4
+94	84.2
+95	83.7
+96	84
+97	84.1
+98	87.8
+99	92.6
+100	99.8
+106	100.6
+113	103.6
+118	95.5
+124	98.4
+130	96.5
+136	111.1
+142	109
+149	120.5
+155	115.1
+156	112.8
+157	115.3
+158	113.4
+159	113.5
+160	113.3
+161	106.7
+163	108.2
+164	108.2
+165	108.2
+166	108.1
+167	80.1
+     n1=2 in=$TARGET data_format=ascii_float n1=2 n2=33 
+     ''')
+Flow('spelev','spelev.asc','dd form=native')
+Plot('spelev',
+     '''
+     dd type=complex |
+     window |
+     graph wanttitle=n wantaxis=n symbol=o plotcol=5
+     min2=75 max2=125 min1=85 max1=172
+     ''')
+
+Flow('elev','spelev',
+     'transp | linear o1=85 d1=1 n1=88 rect=2 niter=100')
+Plot('elev',
+     '''
+     graph title=Elevation 
+     label1=Shot label2=Elevation unit2=ft
+     min2=75 max2=125 min1=85 max1=172
+     ''')
+Result('elev','elev spelev','Overlay')
+
+# Shot elevation 
+Flow('spoint','shots',
+     '''
+     window n1=1 | 
+     math output="(x2-44)/0.44+111" | put n1=5376 n2=1
+     ''') 
+Flow('selev','elev spoint',
+     'inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+Result('selev',
+       '''
+       window n1=56 j1=96 | 
+       put o1=44 d1=0.44 label1=Shot unit1=kft | 
+       graph title="Shot Elevation" label2=Elevation unit2=ft
+       ''')
+
+# Observer log says shot holes 82.5 ft before spn 123, 
+# then changes to 67.5 ft.
+Flow('sdepth','spoint',
+     '''
+     mask max=123 | dd type=float |
+     math output="82.5*input+67.5*(1-input)" 
+     ''')
+
+# Receiver elevation
+Flow('gpoint','shots spoint',
+     '''
+     window n1=1 | 
+     math output="(x1+x2-44)/0.44+111" | put n1=5376 n2=1
+     ''') 
+Flow('gelev','elev gpoint',
+     'inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+
+vnear = 10000 # replacement velocity (ft/s)
+
+# Elevation statics
+Flow('estat','selev sdepth gelev',
+     '''
+     add scale=1,-1,1 ${SOURCES[1:3]} | scale dscale=%g | 
+     put n1=96 n2=56 o2=44 d2=0.44 
+     label2=Shot unit2=kft label1=Offset unit1=kft
+     ''' % (1.0/vnear))
+Result('estat',
+       '''
+       grey color=j mean=y scalebar=y barlabel=Time barunit=s 
+       title="Elevation Statics" 
+       ''')
+
+Flow('eshots','shots estat','datstretch datum=${SOURCES[1]}')
+
+Result('eshots',plotshots('Shots After Elevation Statics'))
+
+#############################################################
+# Gain, mute, and groundroll attenuation
+
+Flow('gshots gain','eshots',
+     '''
+     pow pow1=1 | put d3= |
+     mutter half=n v0=10 tp=0 | put d3=0.44 |
+     shapeagc rect1=250 gain=${TARGETS[1]}
+     ''')
+
+Result('gshots',plotshots('Shots After Gain and Mute'))
+
+# Dip filter
+# Select one shot
+
+Flow('shot','gshots','window n3=1 f3=23')
+Plot('shot','grey title="Selected Shot" clip=2')
+
+# Fourier transform
+Flow('fft','shot','fft1 | fft3')
+Plot('fft',
+       '''
+       window max1=100 | math output="abs(input)" | real | 
+       grey allpos=y title="Fourier Transform" 
+       ''')
+       
+
+Plot('shotori','shot','grey')
+Plot('shotfilt','fft','dipfilter v1=0.000001 v2=0.001 v3=10 v4=11  pass=n | fft3 inv=y | fft1 inv=y | grey')
+Result('shotcp','shotori shotfilt','SideBySideAniso')
+
+# Apply to all shots
+Flow('ffts','gshots','fft1 | fft3')
+Flow('fshots','ffts',
+     '''
+     dipfilter v1=0.000001 v2=0.001 v3=10 v4=11  pass=n | fft3 inv=y | fft1 inv=y
+     ''', split=[3,'omp'])
+
+Result('fshots',
+       plotshots('Shots After Ground-Roll Atenuation'))
+
+# Reverse gain
+Flow('rshots','fshots gain',
+     '''
+     div ${SOURCES[1]} | pow pow1=-1 | put d3= |
+     mutter half=n v0=10 tp=0 | put d3=0.44 
+     ''')
+
+Result('rshots',plotshots('Shots After Reversed Gain'))
+
+#############################################################
+# Surface-consistent amplitude correction
+
+# Average trace amplitude
+Flow('arms','rshots',
+     'mul $SOURCE | stack axis=1 | math output="log(input)" ')
+
+# Remove long-period offset term
+Flow('arms2','arms','smooth rect1=5 | add scale=-1,1 $SOURCE')
+Result('arms2','grey title=Log-Amplitude clip=1.13')
+
+# Integer indices for different terms
+Flow('ishot','arms2','math output="(x2-44)/0.44" ')
+Flow('ioffset','arms2','math output="(x1+5.225)/0.11" ')
+Flow('ireceiver','arms2','math output="(x1+x2-44+5.225)/0.11" ')
+Flow('icmp','arms2','math output="(x1/2+x2-44+5.225/2)*2/0.11" ')
+
+nx = 96 # number of offsets
+ns = 56 # number of shots
+nt = nx*ns # number of traces
+
+Flow('index','ishot ioffset ireceiver icmp',
+     '''
+     cat axis=3 ${SOURCES[1:4]} | dd type=int | 
+     put n1=%d n2=4 n3=1
+     ''' % nt)
+
+Flow('arms1','arms2','put n2=1 n1=%d' % nt)
+
+# Surface-consistent decomposition
+Flow('i1 i2 i3 i4 scarms','arms1 index',
+     '''
+     sc index=${SOURCES[1]} out2=${TARGETS[1]} out3=${TARGETS[2]} out4=${TARGETS[3]} pred=${TARGETS[4]} 
+     niter=50
+     ''')
+     
+# Apply to all traces
+
+Flow('ampl','scarms',
+     '''
+     math output="exp(-input/2)" | 
+     spray axis=1 n=3000 d=0.002 o=0 |
+     put 
+     n3=56 o3=44     d3=0.44 label3=Shot   unit3=kft
+     n2=96 o2=-5.225 d2=0.11 label2=Offset unit2=kft
+     ''')
+Flow('ashots','rshots ampl','mul ${SOURCES[1]}')
+Flow('maskbadshot','ashots',
+     'mul $SOURCE | window n1=1500 f1=1499 | stack axis=1 | mask min=1e-20 max=3e11 | spray axis=1 n=3000 d=0.002 o=0 | dd type=float')
+Flow('ashotscut','ashots maskbadshot',''' mul ${SOURCES[1]} ''')
+
+Result('ashots',plotshotspow('Shots After Surface-Consistent'))
+Result('ashotscut',plotshotspow('Shots After Surface-Consistent with mask'))
+
+#############################################################
+# Velocity analysis
+
+Flow('cmps mask','ashots',
+     'shot2cmp half=n mask=${TARGETS[1]} | pow pow1=2')
+     
+# Window bad traces
+Flow('maskbad','cmps',
+     'mul $SOURCE | stack axis=1 | mask min=1e-20 max=1e14')
+
+Flow('mask1','mask maskbad',' mul ${SOURCES[1]} | spray axis=1 n=1')
+
+Flow('vscans','cmps mask1',
+     '''
+     vscan semblance=y half=n nv=151 v0=7 dv=0.1 
+     mask=${SOURCES[1]}
+     ''',split=[3,'omp'])
+Flow('vpicks','vscans','pick rect1=100 rect2=20')
+
+Result('vpicks',
+       '''
+       grey color=j scalebar=y barreverse=y mean=y 
+       title="Picked NMO Velocity" 
+       ''')
+
+
+Flow('vscansmute','vscans','mutter inner=y t0=1.5 x0=7 v0=6')
+Flow('vpicksmute','vscansmute','pick rect1=100 rect2=20')
+Result('vpicksmute',
+       '''
+       grey color=j scalebar=y barreverse=y mean=y 
+       title="Picked NMO Velocity with muting" 
+       ''')
+
+
+Flow('maskall','mask maskbad',' mul ${SOURCES[1]} | spray axis=1 n=3000 d=0.002 o=0 | dd type=float')
+Flow('cmpscut','cmps maskall',''' mul ${SOURCES[1]} ''')
+
+Plot('cmpscut',
+       '''
+       byte gainpanel=all pclip=95 | transp plane=23 memsize=5000 |
+       grey3 frame1=500 frame2=100 point1=0.8 point2=0.8
+       title="CMPs" movie=3
+       label3=Velocity unit3=kft/s
+       ''',view=1)
+
+Flow('nmos','cmpscut vpicks','nmo velocity=${SOURCES[1]} half=n')
+Plot('nmos','''pow pow1=1.5 | transp plane=23 | byte gainpanel=all pclip=90 | 
+	grey3 title="Shots After NMO" frame1=1000 frame2=1 frame3=6 movie=2
+    flat=y point1=0.7 point2=0.7 ''',view=1)
+
+Flow('nmosmute','cmpscut vpicksmute','nmo velocity=${SOURCES[1]} half=n')
+Plot('nmosmute','''pow pow1=1.5 | transp plane=23 | byte gainpanel=all pclip=90 | 
+	grey3 title="Shots After NMO" frame1=1000 frame2=1 frame3=6 movie=2
+    flat=y point1=0.7 point2=0.7 ''',view=1)
+
+
+Flow('stack0','nmos','stack')
+Plot('stack0','grey title="First Stack" labelsz=8 titlesz=10 titlefat=2 labelfat=2 screenratio=0.8 screenht=9')
+Flow('stack1','stack0','despike2 wide2=10 ')
+Plot('stack1','grey title="Median-Filtered Stack" labelsz=8 titlesz=10 titlefat=2 labelfat=2 screenratio=0.8 screenht=9')
+
+Flow('stack0mute','nmosmute','stack')
+Plot('stack0mute','grey title="First Stack Muted" labelsz=8 titlesz=10 titlefat=2 labelfat=2 screenratio=0.8 screenht=9')
+Flow('stack1mute','stack0mute','despike2 wide2=10 ')
+Plot('stack1mute','grey title="Median-Filtered Stack Muted" labelsz=8 titlesz=10 titlefat=2 labelfat=2 screenratio=0.8 screenht=9')
+
+#############################################################
+# DMO
+
+# NMO stack with an ensemble of constant velocities
+Flow('stacks','cmpscut',
+     '''
+     stacks half=n v0=7 nv=151 dv=0.1
+     ''',split=[3,'omp'])
+
+# Taper midpoint
+Flow('stackst','stacks','costaper nw3=100')
+
+Result('stacks','stackst',
+       '''
+       byte gainpanel=all pclip=95| transp plane=23 memsize=5000 |
+       grey3 frame1=1000 frame2=200 frame3=50 point1=0.8 point2=0.8
+       title="Constant-Velocity Stacks" label3=Velocity unit3=kft/s 
+       ''')
+
+Flow('cosft','stackst','pad n3=2401 | cosft sign1=1 sign3=1')
+
+# Transpose f-v-k to v-f-k (Fowler operates on velocity) #
+Flow('transp','cosft','transp',split=[3,'omp']) 
+
+# Fowler DMO: mapping velocities
+Flow('map','transp',
+     '''
+     math output="x1/sqrt(1+0.25*x3*x3*x1*x1/(x2*x2))" | 
+     cut n2=1
+     ''')
+     
+Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp',
+     split=[3,'omp'])
+
+Flow('dmo','fowler','cosft sign1=-1 sign3=-1 | window n3=543')
+
+Result('dmo',
+       '''
+       byte gainpanel=all pclip=95 | transp plane=23 memsize=5000 |
+       grey3 frame1=500 frame2=100 frame3=30 point1=0.8 point2=0.8
+       title="Constant-Velocity DMO Stacks" 
+       label3=Velocity unit3=kft/s
+       ''')
+
+# Compute envelope for picking
+Flow('envelope','dmo','despike2 wide2=10 | envelope | scale axis=2',split=[3,'omp'])
+
+# Pick velocity
+Flow('vpickdmo','envelope','pick rect1=300 rect2=75 vel0=8')
+
+Result('vpickdmo',
+       '''
+       math output="input^2" | window f2=20 n2=500 | grey color=j scalebar=y mean=y 
+       title="Migration velocity from Fowler's DMO" barlabel="v\^2\_" barunit="kft/s"
+       labelsz=10 titlesz=12 titlefat=6 labelfat=6 screenratio=0.5
+       ''')
+       
+Flow('slice','dmo vpickdmo','slice pick=${SOURCES[1]} | agc rect1=200 rect2=30 | despike2 wide2=10 ')
+Plot('slice','grey title="Alaska DMO Stack" labelsz=10 titlesz=12 titlefat=6 labelfat=6 ')
+Result('slice','Overlay')
+
+
+#############################################################
+# t2dconversion
+
+# convert vnmo to dix
+Flow('dix','vpickdmo',
+     '''
+     dix rect1=200 rect2=40 | put d3=1 o3=0
+     ''')
+
+# convert Dix to depth
+Flow('dixdepth','dix',
+     '''
+     time2depth velocity=$SOURCE intime=y twoway=y nz=869 dz=0.04
+     put label1=Depth unit1=kft 
+     ''')
+
+# Reference 1D model in (z,x) from the central trace of Dix velocity 
+# velocity model
+Flow('vz','dixdepth','window n2=1 f2=271 | spray axis=2 n=543 o=41.3875 d=0.055')
+
+
+# Derivatives of Dix velocity squared
+Flow('dv2dt0','dix','math output="input^2" | smoothder')
+Flow('dv2dx0','dix','math output="input^2" | transp | smoothder | transp')
+Flow('beta','dv2dt0 dix',
+     '''
+     time2depth velocity=${SOURCES[1]} intime=y twoway=y nz=869 dz=0.04 | 
+     put label1=Depth unit1=kft
+     ''')
+Flow('alpha','dv2dx0 dix',
+     '''
+     time2depth velocity=${SOURCES[1]} intime=y twoway=y nz=869 dz=0.04 | 
+     put label1=Depth unit1=kft
+     ''')
+Plot('alpha',
+     '''
+     window max1=20 f2=20 n2=500 | grey color=j scalebar=y title="dw\_d\^/dx\_0" pclip=100
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6
+     screenratio=0.75 screenht=9  barlabel="dw\_d\^/dx\_0\^" barunit="kft/s\^2"
+     ''')
+Plot('beta',
+     '''
+     window max1=20 f2=20 n2=500 | grey color=j scalebar=y title="dw\_d\^/dt\_0" pclip=100
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6 allpos=y
+     screenratio=0.75 screenht=9  barlabel="dw\_d\^/dt\_0\^" barunit="kft\^2\_/s\^3"
+     ''')
+
+     
+# Reference velocity squared
+Flow('refdix','dixdepth','math output="input^2" | put label1=Depth unit1=kft')
+Flow('refvz','vz','math output="input^2" ')
+
+Plot('refdix',
+     '''
+     window max1=20 f2=20 n2=500 | grey color=j scalebar=y title="Ref w\_dr\^(x,z)" 
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6 allpos=y bias=64 clip=216 minval=64 maxval=280
+     screenratio=0.75 screenht=9 barlabel="v\^2" barunit="kft\^2\_/s\^2"
+     ''')
+Plot('refvz',
+     '''
+     grey color=j scalebar=y title="Ref w\_r\^(z)" 
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6 allpos=y bias=55
+     screenratio=0.75 screenht=9 barlabel="v\^2" barunit="kft\^2\_/s\^2"
+     ''')
+
+Result('input-alaska','refdix alpha beta','OverUnderAniso')
+
+
+ # Remap models for FD stability
+for i in ['refdix','refvz','alpha','beta']:
+	Flow(i+'_remap',i,'window')
+
+# Find differential ########################################################################################
+Flow('depth dx0 dt0 dv','refdix_remap refvz_remap alpha_remap beta_remap',
+	'''
+	time2depthweak zsubsample=30 nsmooth=200 smoothlen=50
+	velocity=$SOURCE refvelocity=${SOURCES[1]} dvdx0=${SOURCES[2]} dvdt0=${SOURCES[3]}
+	outdx0=${TARGETS[1]} outdt0=${TARGETS[2]} outdv=${TARGETS[3]}
+	''')
+
+# Compare result ###########
+Flow('finalv','refvz dv','math est=${SOURCES[1]} output="sqrt(input+est)" | put d3=1 o3=0 ')
+
+Plot('dixdepth',
+     '''
+     grey color=j scalebar=y title=" v\_dr\^(x,z)" 
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6  
+     label1=Depth unit1=kft label2=Distance unit2=kft barunit=kft/s bias=8 clip=12 minval=8 maxval=20
+     allpos=y screenratio=0.75 screenht=9  barlabel="v" barunit="kft/s"
+     ''')
+Plot('finalv',
+     '''
+     window max1=20 f2=20 n2=500 |
+     grey color=j scalebar=y title=" Estimated interval v(x,z)" allpos=y
+     label1=Depth unit1=kft label2=Distance unit2=kft barunit=kft/s bias=8.5 clip=8 minval=8 maxval=16.5
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6 barlabel="v" barunit="kft/s"
+     ''')
+
+Flow('diff','finalv dixdepth','math est=${SOURCES[1]} output="input-est" | put d3=1 o3=0 ')
+Plot('diff',
+     '''
+     window max1=20 f2=20 n2=500 | grey color=j scalebar=y title=" Estimated interval velocity v(x,z) - v\_dr\^(x,z) " allpos=y
+     label1=Depth unit1=kft label2=Distance unit2=kft barunit=kft/s bias=-0.05 clip=0.95 minval=-0.05 maxval=0.9
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6  barlabel="v" barunit="kft/s"
+     ''')
+
+Flow('reft0','refvz','math output="2*1/sqrt(input)*0.04" | causint') # two-way
+Flow('finalt0','reft0 dt0','math dt=${SOURCES[1]} output="input+dt"')
+
+Flow('refx0','refvz','math output="x2"')
+Flow('finalx0','refx0 dx0','math dx=${SOURCES[1]} output="input+dx" ')
+
+Flow('finalcoord','finalt0 finalx0',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     transp plane=23 | transp plane=12 
+     ''')
+
+Flow('finalmapd','slice finalcoord','inttest2 interp=spline nw=8 coord=${SOURCES[1]} | window min2=45 max2=70')
+
+Plot('finalmapd',
+     '''
+      agc rect1=200 | grey title="Time -> Depth (Proposed)"
+     label1=Depth unit1=kft label2=Distance unit2=kft
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''')      #labelsz=8 titlesz=10 titlefat=2 labelfat=2 screenratio=0.5 screenht=7.3 labelsz=10 titlesz=12 titlefat=6 labelfat=6 screenratio=0.75 screenht=9.5
+
+Result('finalvcompare-alaska','finalv diff','OverUnderAniso')
+Result('finalcompare-alaska','finalmapd dmigfinalv','OverUnderAniso')
+
+
+# Depth migration ###################################################################################
+Flow('flatvz','refvz','math output="sqrt(input)"| window | put d3=1 o3=0')
+
+#Flow('shotcut','cmpscut','cmp2shot positive=n | put o1=0 d2=0.067 o2=0.264')
+
+Flow('ys',None,'math n1=56 o1=44 d1=0.44 output=x1')
+Flow('zs','ys','math output=0')
+Flow('sht','zs ys','cat axis=2 ${SOURCES[1]} ${SOURCES[0]} | transp')
+
+Flow('yr',None,'math n1=316 o1=38.775 d1=0.11 output=x1')
+Flow('zr','yr','math output=0')
+Flow('rcv','zr yr','cat axis=2 ${SOURCES[1]} ${SOURCES[0]} | transp')
+
+for modl in ('flatvz','dixdepth','finalv'): # v(z), dix v(x,z), proposed
+	Flow('l'+modl,modl,'window n2=1 f2=0 | spray axis=2 n=49 d=0.055 o=38.7475')
+	Flow('r'+modl,modl,'window n2=1 f2=542 | spray axis=2 n=42 d=0.055 o=71.1975')
+	Flow('p'+modl,['l'+modl,modl,'r'+modl],
+	    '''
+	    cat axis=2 ${SOURCES[1]} ${SOURCES[2]} |
+	    transp plane=12 | spline o1=38.7475 d1=0.011 n1=3170 | transp plane=12 | transp plane=34
+	    ''')
+	# eikonal
+	Flow([modl+'times',modl+'tdls',modl+'tdss'],['p'+modl,'sht'],
+	    '''
+	    eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} b1=2 b2=2 |
+	    put o4=44 d4=0.44 | window
+	    ''')
+	Flow([modl+'timer',modl+'tdlr',modl+'tdsr'],['p'+modl,'rcv'],
+	    '''
+	    eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} b1=2 b2=2 |
+	    put o4=38.775 d4=0.11 | window
+	    ''')
+
+	# Kirchhoff with surface offset CIG
+	Flow('dmig'+modl,['ashotscut',modl+'times',modl+'tdss',modl+'timer',modl+'tdsr'],
+	    '''
+	    kirmigsr aperture=5 antialias=1 cig=y
+	    stable=${SOURCES[1]} sderiv=${SOURCES[2]}
+	    rtable=${SOURCES[3]} rderiv=${SOURCES[4]}
+	    ''')
+
+	Plot('dmig'+modl,
+	    '''
+	    window j2=5 | stack axis=3 norm=n | window min2=45 max2=70| 
+	    agc rect1=200 | grey title="Prestack Kirchhoff Depth Migration"
+	    label1=Depth unit1=km label2=Distance unit2=km
+	    labelsz=10 titlesz=12 titlefat=6 labelfat=6
+	    ''')
+#	# zoom
+#	if modl=='dixdepth':
+#	    title='with w\_dr\^(x,z)'
+#	else:
+#	    title='with w\_r\^(z) + \F10 D\F3 w'
+
+#	Plot('dmig'+modl+'0','dmig'+modl,
+#	    '''
+#	    stack axis=3 norm=n | window min1=2 max1=3.9 min2=10 max2=13 |
+#	    agc rect1=200 | grey title="PSDM %s"
+#	    label1=Depth unit1=km label2=Distance unit2=km
+#	    labelsz=7 titlesz=9 titlefat=4 labelfat=4 screenht=9 screenratio=0.55
+#	    ''' % title)
+	# CIGs
+#	if modl=='dixdepth':
+#	    title='w\_dr\^(x,z)'
+#	else:
+#	    title='w\_r\^(z) + \F10 D\F3 w'
+
+#	Plot('cig1'+modl,'dmig'+modl, # all
+#	    '''
+#	    window n2=1 min2=48 | pow pow1=2 | 
+#	    grey title="%s" pclip=90
+#	    label1=Depth unit1=kft label2=Offset unit2=kft
+#	    labelsz=18 titlesz=20 titlefat=12 labelfat=10
+#	    screenht=35 screenratio=2.5
+#	    ''' % (title+' at 45 kft'))
+#	Plot('cig1'+modl,'dmig'+modl, # cut
+#	    '''
+#	    window n2=1 min2=8 | window min1=3 max1=3.9 |
+#	    grey title="%s" pclip=90 screenht=35 screenratio=2.5
+#	    label1=Depth unit1=km label2=Offset unit2=km
+#	    labelsz=18 titlesz=20 titlefat=12 labelfat=10
+#	    ''' % (title+' at 8km'))
+#	Plot('cig2'+modl,'dmig'+modl,
+#	    '''
+#	    window n2=1 min2=62 | pow pow1=2 | 
+#	    grey title="%s" pclip=90
+#	    label1=Depth unit1=kft label2=Offset unit2=kft
+#	    labelsz=18 titlesz=20 titlefat=12 labelfat=10
+#	    screenht=35 screenratio=2.5
+#	    ''' % (title+' at 63 kft'))
+#	Plot('cig2'+modl,'dmig'+modl, screenht=35 screenratio=2.5
+#	    '''
+#	    window n2=1 min2=11.25| window min1=3 max1=3.9 |
+#	    grey title="%s" pclip=90 screenht=35 screenratio=2.5
+#	    label1=Depth unit1=km label2=Offset unit2=km
+#	    labelsz=18 titlesz=20 titlefat=12 labelfat=10
+#	    ''' % (title+' at 11.25km')) # screenht=35
+ 
+ # overlay CIGs with reference lines
+#Plot('cigref1dixdepth','dmigfinalv',
+#    '''
+#    window n2=1 min2=45 | math output=x1 |
+#    contour nc=2 c=9,18.1 wanttitle=n wantaxis=n
+#    plotcol=3 plotfat=20 dash=9 screenht=35 screenratio=2.5
+#    ''')
+#Plot('cig1init','cig1dixdepth cigref1dixdepth','Overlay')
+#Plot('cigref1finalv','dmigfinalv',
+#    '''
+#    window n2=1 min2=45 | math output=x1 |
+#    contour nc=2 c=9,18.3 wanttitle=n wantaxis=n
+#    plotcol=3 plotfat=20 dash=9 screenht=35 screenratio=2.5
+#    ''')
+#Plot('cig1invert','cig1finalv cigref1finalv','Overlay')
+
+#Plot('cigref2dixdepth','dmigfinalv',
+#    '''
+#    window n2=1 min2=63 | math output=x1 |
+#     contour nc=2 c=9.7,16.8 wanttitle=n wantaxis=n
+#    plotcol=3 plotfat=20 dash=9 screenht=35 screenratio=2.5
+#    ''')
+#Plot('cig2init','cig2dixdepth cigref2dixdepth','Overlay')
+#Plot('cigref2finalv','dmigfinalv',
+#    '''
+#    window n2=1 min2=63 | math output=x1 |
+#     contour nc=2 c=11.8,16.8 wanttitle=n wantaxis=n
+#    plotcol=3 plotfat=20 dash=9 screenht=35 screenratio=2.5
+#    ''')
+#Plot('cig2invert','cig2finalv cigref2finalv','Overlay')
+
+## Result('dmig','mapd dmiginv','OverUnderAniso')
+## Result('ddmig0','dmiginit0 dmiginv0','OverUnderIso')
+#Result('dmig','finalmapd dmigfinalv','OverUnderAniso')
+#Result('cig','cig1init cig1invert cig2init cig2invert','SideBySideIso')
+#Result('cig1','cig1init cig1invert','SideBySideAniso')
+#Result('cig2','cig2init cig2invert','SideBySideAniso')
+
+End()
