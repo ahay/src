@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """
 NAME
-	ooio
+        ooio
 DESCRIPTION
-	Object-Oriented I/O
+        Object-Oriented I/O
 SOURCE
-	user/ivlad/ooio.py
+        user/ivlad/ooio.py
 """
 # Copyright (C) 2010 Ioan Vlad
 #
@@ -55,9 +55,9 @@ class BaseFile:
 
     def print_self(self, varname):
         attribs = self.__dict__
-        akeys = list(attribs.keys())
+        akeys = attribs.keys()
         akeys.sort()
-        max_nm_len = max(list(map(len,akeys)))
+        max_nm_len = max(map(len,akeys))
         ivlad.msg(ivlad.hr)
         ivlad.msg(varname + ': instance of ' + self.__class__.__name__)
         indent = '  '
@@ -67,7 +67,7 @@ class BaseFile:
             line_to_print = indent + key + spc + dots_to_print * '.' + spc
             if key in self.bny_attribs:
                 line_to_print += '<' + str(len(attribs[key])) + \
-        	                    ' binary bytes, not printed>'
+                    ' binary bytes, not printed>'
             else:
                 val = attribs[key]
                 if type(val) == list and len(val) == 1:
@@ -109,7 +109,7 @@ class File(BaseFile):
         if intent == 'in':
             self.sz = os.path.getsize(self.full_nm)
         elif intent == 'out':
-            self.sz = None
+            self.sz = None 
 
     def open_new(self):
         # Opening is not done automatically upon init because we need to
@@ -117,8 +117,8 @@ class File(BaseFile):
         if self.writing_to_stdout:
             self.handle = sys.stdout
         else:
-            self.handle = open(self.full_nm, 'w', encoding='utf-8')
-
+            self.handle = open(self.full_nm, 'wb')
+            
     def close(self):
         if not self.writing_to_stdout: # stdout does not need to be closed
             self.handle.close()
@@ -131,7 +131,7 @@ class MetaFile(BaseFile):
 
     def __init__(self, intent, fmt, valid_ext):
         BaseFile.__init__(self, intent)
-        self.total_sz = None # Total size in bytes for all files
+        self.total_sz = None # Total size in bytes for all files 
         self.all_exist = None # Whether all files listed exist
         self.open_files  = {}
         assert type(fmt) == str
@@ -142,7 +142,7 @@ class MetaFile(BaseFile):
             self.valid_ext = valid_ext
 
     def close_all(self):
-        for filenm in list(self.open_files.keys()):
+        for filenm in self.open_files.keys():
             open_files[filenm].close()
 
 ################################################################################
@@ -190,7 +190,7 @@ class RSFheader(File):
         to_print += item + '='
         # To do: properly handle comments containing newline characters
         # i.e. replace '\n' with '\n# '
-        if type(val) in (str, str):
+        if type(val) == str:
             if newline in val: # multiline string
                 quot="'''"
                 if quot in val:
@@ -292,7 +292,7 @@ class RSFfile(MetaFile):
         'Writes everything in the header, opens data file for writing'
         all_ax_dict = {}
         for i in range(self.ndim):
-            for k in list(self.ax[i].keys()):
+            for k in self.ax[i].keys():
                 all_ax_dict[k+str(i+1)] = self.ax[i][k]
         self.hdr.write_dict(all_ax_dict)
         if self.writing_to_stdout_pipe:
@@ -300,14 +300,14 @@ class RSFfile(MetaFile):
         elif not self.writing_to_stdout:
             self.hdr.close()
             del self.open_files[self.hdr.full_nm]
-        self.dat.open_new()
+        self.dat.open_new() 
         self.hdr_flushed = True
 
     def set_ndim(self, ndim):
         if ndim > 0 and ndim < self.ndim_max:
             self.ndim = ndim
 
-    def __init__(self, hdr_nm, par, ndim, intent, dtype='float',
+    def __init__(self, hdr_nm, par, ndim, intent, dtype='float', 
                                                             dpath_suffix=''):
         MetaFile.__init__(self, intent, fmt='RSF', valid_ext = '.rsf')
         self.set_defaults_and_constants()
@@ -327,12 +327,12 @@ class RSFfile(MetaFile):
 
         # Note to self: add a parent_file argument
         # When parent_file is a RSF file, history should be copied
-	    # When parent file is a non-RSF file, just the name should be kept
+           # When parent file is a non-RSF file, just the name should be kept
 
     def __list2dict(self, ilist, dictkey):
         if ilist != None:
-            ilist_tmp = ivlad.trunc_or_append(self.ndim, ilist,
-                                              self.defaults[dictkey])
+            ilist_tmp = ivlad.trunc_or_append(self.ndim, ilist, 
+                                              self.defaults[dictkey])       
             for i in range(self.ndim):
                 self.ax[i][dictkey] = ilist_tmp[i]
 
@@ -347,8 +347,5 @@ class RSFfile(MetaFile):
     def write(self,val):
         if not self.hdr_flushed:
             self.flush_hdr()
-        if sys.version_info[0] >= 3:
-            self.dat.handle.write(struct.pack(ivlad.fmt[self.dtype],val).decode('latin1'))
-        else:
-            self.dat.handle.write(struct.pack(ivlad.fmt[self.dtype],val))
 
+        self.dat.handle.write(bytes(struct.pack(ivlad.fmt[self.dtype],val)))
