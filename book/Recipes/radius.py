@@ -63,7 +63,7 @@ def radius(high, low,               # initial high-resolution and legacy images
     freqdif_init = n('freqdif-init')
 
     Flow(freqdif_init,[low_freq, high_freq],freqdif)
-    Result(freqdif_init,freqdifplot3(''))
+    Plot(freqdif_init,freqdifplot3(''))
 
     # initial smoothing radius
     rect = n('rect0')
@@ -74,7 +74,7 @@ def radius(high, low,               # initial high-resolution and legacy images
     else:
         Flow(rect,low_freq,'math output=%f'%initial)
 
-    Result(rect,rectplot("Smoothing Radius 0"))
+    Plot(rect,rectplot("Smoothing Radius 0"))
 
     high_smooth = n('high-smooth0')
     Flow(high_smooth,[high,rect],smooth)
@@ -109,7 +109,7 @@ def radius(high, low,               # initial high-resolution and legacy images
         fdfj = n('freqdif-filt%i'%j)
 
         Flow(rect,[rectj,fdfj],'radius freq=${SOURCES[1]} c=%f'%c[j])
-        Result(rect,rectplot("Smoothing Radius %d")%i)
+        Plot(rect,rectplot("Smoothing Radius %d")%i)
         
         hs = n('high-smooth%i'%i)
         hss = n('high-smooth-spec%i'%i)
@@ -117,14 +117,14 @@ def radius(high, low,               # initial high-resolution and legacy images
         fdf = n('freqdif-filt%i'%i)
 
         Flow(hs,[high,rect],smooth)
-        Result(hs, seisplot('%s Smooth %d'%(titlehigh,i)))
+        Plot(hs, seisplot('%s Smooth %d'%(titlehigh,i)))
 
         Flow(hss,hs,'spectra all=y')
-        Result(hss,[hss,low_spec],specplot)
+        Plot(hss,[hss,low_spec],specplot)
         
         Flow(hsf,hs,locfreq)
-        Result(hsf,locfreqplot('%s Local Frequency Smoothed %d'%(titlehigh,i)))
+        Plot(hsf,locfreqplot('%s Local Frequency Smoothed %d'%(titlehigh,i)))
 
         Flow(fdf,[low_freq, hsf],freqdif)
-        Result(fdf,freqdifplot(str(i)))
+        Plot(fdf,freqdifplot(str(i)))
         

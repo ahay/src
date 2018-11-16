@@ -189,4 +189,36 @@ for case in ('theta','tdxn0','nstd'):
 
 Result('bin',bins,'SideBySideIso')
 
+#identify and remove all white objects smaller than a specific size
+
+lbls = []
+bins = []
+for case in ('theta','tdxn0','nstd'):
+    lbl = case + '-lbl'
+    Flow(lbl,case+'-bin','dd type=float | byte pclip=100 allpos=y clip=1 | label')
+    Plot(lbl,'dd type=float | grey allpos=y pclip=100 color=j wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    lbls.append(lbl)
+
+    msks = []
+    for label in range(60):
+        msk = lbl + '-msk%d' % label
+        Flow(msk+'in',lbl,'mask min=%d max=%d' % (label,label))
+        Flow(msk,msk+'in',
+             '''
+             dd type=float | 
+             stack norm=n axis=2 | stack norm=n axis=1 | 
+             spray axis=1 n=%d | spray axis=2 n=%d |
+             mask min=%d | mul ${SOURCE}
+             ''' % ((81,73)[case=='nstd'],(81,73)[case=='nstd'],75))
+        msks.append(msk)
+    msk = case + '-msk'
+    Flow(msk,msks+[case+'-bin'],'add ${SOURCES[1:60]} | mul ${SOURCES[60]}')
+    Plot(msk,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    bins.append(msk)
+             
+Result('lbl',lbls,'SideBySideIso')
+Result('msk',bins,'SideBySideIso')
+
+# morphological closing (a dilation followed by an erosion)
+
 End()
