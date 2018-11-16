@@ -1,0 +1,8 @@
+language: c
+
+sudo: false
+
+before_install:
+  - sudo apt-get update
+
+script: ./configure && make install && source env.sh && cd book && scons test
