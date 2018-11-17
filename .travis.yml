@@ -2,7 +2,38 @@ language: c
 
 sudo: false
 
-before_install:
-  - sudo apt-get update
+addons:
+  apt:
+    packages:
+      - libxaw7-dev
+      - freeglut3-dev
+      - libnetpbm10-dev
+      - libgd-dev
+      - libplplot-dev
+      - libavcodec-dev
+      - libblas-dev
+      - swig
+      - libopenmpi-dev
+      - libfftw3-dev
+      - libsuitesparse-dev
 
-script: ./configure && make install && source env.sh && cd book && scons test
+env:
+  - RSFROOT=$TRAVIS_BUILD_DIR/RSFROOT
+
+matrix:
+  include:
+    - env: PYTHON_VERSION=2.7 
+      dist: xenial
+    - env: PYTHON_VERSION=3.6
+      dist: xenial
+
+# Install madagascar
+install:
+  - ./configure
+  - make install
+
+# Test
+script: 
+  - source env.sh 
+  - cd book 
+  - scons test

@@ -4,13 +4,19 @@ from __future__ import division
 from __future__ import absolute_import
 import os
 
+
+def rreplace(s, old, new, occurrence):
+    li = s.rsplit(old, occurrence)
+    return new.join(li)
+
 buildpath = (os.popen('pwd').read()).strip('\n')
 buildname = os.path.basename(buildpath)
 
 try:  # madagascar version
     Import('env root pkgdir libdir bindir')
-    thispath = buildpath.replace('build/','')
-    thisname = buildname.replace('build/','')
+    # replace the last occurrence
+    thispath = rreplace(buildpath,'build/','',1)
+    thisname = rreplace(buildname,'build/','',1)
     testflag = 'no'
     docflag  = 'no'
 except: # autonomous version
