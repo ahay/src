@@ -104,7 +104,7 @@ struct sf_File {
 /*@null@*/ static sf_file *infiles = NULL;
 static size_t nfile=0, ifile=0;
 static const int tabsize=10;
-/*@null@*/ static char *aformat = NULL;
+/*@null@*/ static char *aformat = NULL, *eformat = NULL;
 static size_t aline=8;
 static bool error=true;
 
@@ -1037,7 +1037,8 @@ void sf_putline (sf_file file, const char* line)
 }
 
 void sf_setaformat (const char* format /* number format (.i.e "%5g") */, 
-		    int line /* numbers in line */ )
+		    int line /* numbers in line */,
+		    bool strip /* strip last character */)
 /*< Set format for ascii output >*/
 {
     size_t len;
@@ -1047,8 +1048,16 @@ void sf_setaformat (const char* format /* number format (.i.e "%5g") */,
 	len = strlen(format)+1;
 	aformat = sf_charalloc(len);
 	memcpy(aformat,format,len);
+	if (strip) {
+	    eformat = sf_charalloc(len-1);
+	    memcpy(eformat,format,len-1);
+	    eformat[len-2]='\0';
+	} else {
+	    eformat = aformat;
+	}
     } else {
 	aformat = NULL;
+	eformat = NULL;
     }
     aline = (size_t) line;
 }
@@ -1065,7 +1074,7 @@ void sf_complexwrite (sf_complex* arr, size_t size, sf_file file)
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
 		nbuf = (aline < left)? aline: left;
-		for (i=size-left; i < size-left+nbuf; i++) {
+		for (i=size-left; i < size-left+nbuf-1; i++) {
 		    c = arr[i];
 		    if (EOF==fprintf(file->stream,
 				     (NULL != aformat)? 
@@ -1073,6 +1082,12 @@ void sf_complexwrite (sf_complex* arr, size_t size, sf_file file)
 				     crealf(c),cimagf(c)))
 			sf_error ("%s: trouble writing ascii",__FILE__);
 		}
+		c = arr[i];
+		if (EOF==fprintf(file->stream,
+				 (NULL != eformat)? 
+				 eformat:"%g %gi ",
+				 crealf(c),cimagf(c)))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
 		if (EOF==fprintf(file->stream,"\n"))
 		    sf_error ("%s: trouble writing ascii",__FILE__);
 	    }
@@ -1315,12 +1330,16 @@ void sf_intwrite (int* arr, size_t size, sf_file file)
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
 		nbuf = (aline < left)? aline: left;
-		for (i=size-left; i < size-left+nbuf; i++) {
+		for (i=size-left; i < size-left+nbuf-1; i++) {
 		    if (EOF==fprintf(file->stream,
 				     (NULL != aformat)? aformat:"%d ",
 				     arr[i]))
 			sf_error ("%s: trouble writing ascii",__FILE__);
 		}
+		if (EOF==fprintf(file->stream,
+				 (NULL != eformat)? eformat:"%d ",
+				 arr[i]))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
 		if (EOF==fprintf(file->stream,"\n"))
 		    sf_error ("%s: trouble writing ascii",__FILE__);
 	    }
@@ -1465,12 +1484,16 @@ void sf_shortwrite (short* arr, size_t size, sf_file file)
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
 		nbuf = (aline < left)? aline: left;
-		for (i=size-left; i < size-left+nbuf; i++) {
+		for (i=size-left; i < size-left+nbuf-1; i++) {
 		    if (EOF==fprintf(file->stream,
 				     (NULL != aformat)? aformat:"%d ",
 				     arr[i]))
 			sf_error ("%s: trouble writing ascii",__FILE__);
 		}
+		if (EOF==fprintf(file->stream,
+				 (NULL != eformat)? eformat:"%d ",
+				 arr[i]))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
 		if (EOF==fprintf(file->stream,"\n"))
 		    sf_error ("%s: trouble writing ascii",__FILE__);
 	    }
@@ -1506,12 +1529,16 @@ void sf_floatwrite (float* arr, size_t size, sf_file file)
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
 		nbuf = (aline < left)? aline: left;
-		for (i=size-left; i < size-left+nbuf; i++) {
+		for (i=size-left; i < size-left+nbuf-1; i++) {
 		    if (EOF==fprintf(file->stream,
 				     (NULL != aformat)? aformat:"%g ",
 				     arr[i]))
 			sf_error ("%s: trouble writing ascii",__FILE__);
 		}
+		if (EOF==fprintf(file->stream,
+				 (NULL != eformat)? eformat:"%g ",
+				 arr[i]))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
 		if (EOF==fprintf(file->stream,"\n"))
 		    sf_error ("%s: trouble writing ascii",__FILE__);
 	    }
