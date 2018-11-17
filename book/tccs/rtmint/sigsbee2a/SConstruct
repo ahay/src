@@ -1,0 +1,191 @@
+from rsf.proj import *
+
+# Download stratigraphy velocity
+vel_name='sigsbee2a_stratigraphy.sgy'
+#Fetch(vel_name,'sigsbee')
+
+Flow('vel vtfile',vel_name,
+		'''
+		segyread tfile=${TARGETS[1]} endian=y |
+		put o1=0 d1=.00762 label1=Depth unit1=km
+		o2=3.048 d2=.00762 label2=Distance unit2=km |
+		scale rscale=0.0003048 
+		''')
+Result('sig-vel','vel',
+		'''
+		grey color=j scalebar=y allpos=y screenratio=.375
+		barreverse=y wheretitle=t wanttitle=n title="Velocity"
+		labelsz=10 titlesz=10 barlabel=Velocity barunit=km/s
+		''')
+Flow('vel2','vel','window j1=2 j2=2')
+
+# Download migration velocity
+vmig='sigsbee2a_migration_velocity.sgy'
+#Fetch(vmig,'sigsbee')
+
+Flow('vmig tvmig',[vmig],
+		'''
+		segyread tfile=${TARGETS[1]} endian=y |
+		put o1=0 d1=0.00762 label1=Depth unit1=km
+		o2=3.055 d2=0.01143 label2=Distance unit2=km |
+		scale rscale=0.0003048 |
+		math output="1./input" |
+		transp |
+		remap1 n1=3201 o1=3.048 d1=0.00762|
+		transp |
+		math output="1./input" |
+		window f1=1 |pad2 top=1
+		''')
+Result('sig-vmig','vmig',
+		'''
+		grey color=j scalebar=y allpos=y screenratio=.375
+		barreverse=y wheretitle=t wanttitle=n title="Velocity"
+		labelsz=10 titlesz=10 barlabel=Velocity barunit=km/s
+		''')
+Flow('vmig2','vmig','window j1=2 j2=2')
+
+# Source
+dt=0.002
+nt=5501
+ddt=0.0004
+factor=dt/ddt
+nnt=(nt-1)*factor+1
+frequency=20
+
+Flow('source',None,
+    '''
+	spike n1=%d d1=%g k1=%d |
+	ricker1 frequency=%g |
+	scale rscale=100
+	''' %(nnt, ddt, 1.0/frequency/ddt+20, frequency))
+Flow('real','source','math output=0.')
+Flow('imag','source','envelope hilb=y |halfint |halfint |math output="input/2."')
+Flow('csource','real imag','cmplx ${SOURCES[1]} |window j1=%d' %factor )
+Result('csource','imag |graph max1=1. color=j label2="Amplitude" label1="Time" title="Source Wavelet"')
+
+# Geometry parameters
+velnx=1601
+velnz=601
+nr=1401
+ds=5
+pad=700
+botpad=60
+ns=321
+nb=60
+par=0.01
+
+# Pad stratigraphy velocity
+Flow('padvel','vel2','pad2 left=%d right=%d bottom=%d' %(pad,pad,botpad))
+
+## Lowrank decomposition
+#vpf='./vel/vel'
+#fftf='./fft/fft'
+#matf='./mat/'
+#for i in range(ns):
+#	vp=vpf+'%d' %(i+1)
+#	fft=fftf+'%d' %(i+1)
+#	left=matf+'left%d' %(i+1)
+#	right=matf+'right%d' %(i+1)
+#	Flow(vp,'padvel',
+#			'''
+#			window f2=%d n2=%d |
+#			pad2 top=%d bottom=%d left=%d right=%d
+#			''' %(i*ds, nr, nb, nb, nb, nb))
+#	Flow(fft,vp,'rtoc |fft3 axis=1 pad=1 |fft3 axis=2 pad=1')
+#
+#	Flow([right,left],[vp,fft],
+#			'''
+#			zisolr2abc seed=2013 dt=%g eps=1e-5 fft=${SOURCES[1]} left=${TARGETS[1]}
+#			nbt=%d nbb=%d nbl=%d nbr=%d ct=%g cb=%g cl=%g cr=%g abc=1
+#			''' %(dt,nb,nb,nb,nb,par,par,par,par))
+
+# Pad migration velocity
+Flow('padvmig','vmig2','pad2 left=%d right=%d bottom=%d' %(pad,pad,botpad))
+
+## Lowrank decomposition
+#vpf='./vel2/vel'
+#fftf='./fft2/fft'
+#matf='./mat2/'
+#for i in range(ns):
+#	vp=vpf+'%d' %(i+1)
+#	fft=fftf+'%d' %(i+1)
+#	left=matf+'left%d' %(i+1)
+#	right=matf+'right%d' %(i+1)
+#	Flow(vp,'padvmig',
+#			'''
+#			window f2=%d n2=%d |
+#			pad2 top=%d bottom=%d left=%d right=%d
+#			''' %(i*ds, nr, nb, nb, nb, nb))
+#	Flow(fft,vp,'rtoc |fft3 axis=1 pad=1 |fft3 axis=2 pad=1')
+#
+#	Flow([right,left],[vp,fft],
+#			'''
+#			zisolr2abc seed=2013 dt=%g eps=1e-5 fft=${SOURCES[1]} left=${TARGETS[1]}
+#			nbt=%d nbb=%d nbl=%d nbr=%d ct=%g cb=%g cl=%g cr=%g abc=1
+#			''' %(dt,nb,nb,nb,nb,par,par,par,par))
+#
+# Modeling
+# ########
+# ibrun tacc_affinity /work/02805/xue0810/lonestar/RSFSRC/user/zhiguang/sfmpilrmodel --input=csource.rsf --output=data.rsf Fpadvel=padvel.rsf nb=60 ns=356 ds=0.06858 s0=3.048 rnx=1001 nr=1001 ndr=1 nr0=0 gpz=3 spx=500 spz=3
+#Flow('rdata','data','real')
+#Result('rdata','window j3=10 |grey title= ')
+
+# RTM
+# ############
+# export OMP_NUM_THREADS=24
+# ibrun tacc_affinity /work/02805/xue0810/lonestar/RSFSRC/user/zhiguang/sfmpilrrtm_ts --input=data.rsf --output=img1.rsf Fimg2=img2.rsf Fsrc=csource.rsf Fpadvel=padvmig.rsf verb=n taper=0 scalet=2 nb=60 nds=3 gpz=3 spx=500 spz=3 rnx=1001 ntau=201 dtau=0.004 tau0=-0.4 path1='./mat2/left' path2='./mat2/right'
+
+Flow('imgl','img1','bandpass flo=5 ')
+Result('sig-cube','imgl',
+    '''
+	pow pow1=2.5|
+	byte gainpanel=a |
+	window f2=700 n2=1601 |
+	grey3 flat=n frame1=220 frame2=1000 frame3=100
+	screenratio=0.375 screenht=10 point1=0.8 point2=0.72
+	labelsz=8 title= label3="Time Shift" pclip=93
+	''')
+
+# Traditional RTM
+Flow('sig-img','imgl',
+		'''
+		window n3=1 f3=100 |
+		pow pow1=2.|
+		window f2=700 n2=1601 
+		''')
+Result('sig-img','grey screenratio=.375 wanttitle=n labelsz=10 titlesz=10 pclip=95')
+
+# Tau=-0.1
+Flow('sig-imgn','imgl',
+		'''
+		window n3=1 f3=75 |
+		pow pow1=2.|
+		window f2=700 n2=1601 
+		''')
+Result('sig-imgn','grey screenratio=.375 wanttitle=n labelsz=10 titlesz=10 pclip=95')
+
+# Tau=0.1
+Flow('sig-imgp','imgl',
+		'''
+		window n3=1 f3=125 |
+		pow pow1=2.|
+		window f2=700 n2=1601 
+		''')
+Result('sig-imgp','grey screenratio=.375 wanttitle=n labelsz=10 titlesz=10 pclip=95')
+
+# Gathers before correction
+x1=4
+x2=7
+x3=10
+x4=13
+Flow('gather1b','imgl','window n2=1 min2=%g | pow pow1=1.5' %x1)
+Flow('gather2b','imgl','window n2=1 min2=%g | pow pow1=1.5' %x2)
+Flow('gather3b','imgl','window n2=1 min2=%g | pow pow1=1.5' %x3)
+Flow('gather4b','imgl','window n2=1 min2=%g | pow pow1=1.5' %x4)
+Result('gather1b','grey label2="Time Shift" screenratio=2 labelsz=5 title= pclip=97')
+Result('gather2b','grey label2="Time Shift" screenratio=2 labelsz=5 title= pclip=97')
+Result('gather3b','grey label2="Time Shift" screenratio=2 labelsz=5 title= pclip=97')
+Result('gather4b','grey label2="Time Shift" screenratio=2 labelsz=5 title= pclip=97')
+#Result('gatherb','Fig/gather1b Fig/gather2b Fig/gather3b Fig/gather4b','SideBySideAniso')
+
+End()

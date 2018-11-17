@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 {
     off_t size;
     size_t nin, nout, bufsiz, ein, eout;
-    int line, n1, i, j, *ibuf;
+    int line, n1, i, j, *ibuf, strip;
     sf_file in, out;
     char *form, *type, *format, *bufin, *bufout;
     sf_datatype itype, otype;
@@ -59,8 +59,10 @@ int main(int argc, char *argv[])
 		if (!sf_getint("line",&line)) line=8;
 		/* Number of numbers per line (for conversion to ASCII) */
 		format = sf_getstring("format");
-		/* Element format (for conversion to ASCII) */ 
-		sf_setaformat(format,line);
+		/* Element format (for conversion to ASCII) */
+		if (!sf_getint("strip",&strip)) strip=0;
+		/* If strip characters from format at the end of the line */
+		sf_setaformat(format,line,strip);
 		break;
 	    case 'n':
 		sf_setform(out,SF_NATIVE);

@@ -330,7 +330,7 @@ parameter) to distinguish between different data types:
 \texttt{esize=4} corresponds to floating point data, while
 \texttt{esize=8} corresponds to complex data. The typical type
 handling mechanism in RSF is different: 
-data types are determined from the value of the <tt>data_format</tt> parameter.
+data types are determined from the value of the <tt>data\_format</tt> parameter.
 \item The default data form in SEPlib programs is
 typically XDR and not native as it is in RSF. 
 \item It is possible to pipe the
@@ -510,6 +510,40 @@ bash$ sfdisfil > file.asc col=3 format="%3.1f " number=n < file.rsf
 bash$ cat file.asc
 1.0 1.5 3.0
 4.8 9.1 7.3
+\end{verbatim}
+
+\subsection{Reading and writing CSV files}
+
+CSV (Comma-separated values) is a particular example of an ASCII
+format, where values on different rows are separated by commas or
+other symbols. To convert from CSV to RSF, you can use the
+\texttt{sfcsv2rsf} utility.
+
+For example, let us take an ASCII file with numbers separated by commas
+\begin{verbatim}
+bash$ cat file.csv
+1.0,1.5,3.0
+4.8,9.1,7.3
+\end{verbatim}
+Converting it to RSF:
+\begin{verbatim}
+bash$ sfcsv2rsf < file.csv > file.rsf
+bash$ sfin file.rsf
+file.rsf:
+    in="/tmp/file.rsf@"
+    esize=4 type=float form=native 
+    n1=3           d1=1           o1=0          label1="unknown" unit1="unknown" 
+    n2=2           d2=1           o2=0          label2="unknown" unit2="unknown" 
+	6 elements 24 bytes
+\end{verbatim}
+
+To convert from RSF to CSV, we can use formatting parameters in \texttt{sfdd}:
+\begin{verbatim}
+bash$ sfdd form=ascii --out=file.csv \
+line=3 strip=1 format="%3.1f," < file.rsf > /dev/null
+bash$ cat file.csv
+1.0,1.5,3.0
+4.8,9.1,7.3
 \end{verbatim}
 
 \subsection{Reading LAS files}
