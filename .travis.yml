@@ -13,21 +13,25 @@ addons:
       - libavcodec-dev
       - libblas-dev
       - swig
+      - python-numpy
       - libopenmpi-dev
       - libfftw3-dev
       - libsuitesparse-dev
 
 matrix:
   include:
-    - env: PYTHON_VERSION=2.7 RSFROOT=$TRAVIS_BUILD_DIR/RSFROOT
+    - env: PYTHON_VERSION=2.7 RSFROOT=$HOME/RSFROOT RSFFIGS=$HOME/RSFROOT/figs
       dist: xenial
-    - env: PYTHON_VERSION=3.6 RSFROOT=$TRAVIS_BUILD_DIR/RSFROOT
+    - env: PYTHON_VERSION=3.6 RSFROOT=$HOME/RSFROOT RSFFIGS=$HOME/RSFROOT/figs
       dist: xenial
 
 # Install madagascar
 install:
   - ./configure
   - make install
+
+before_script:
+  - git clone https://github.com/ahay/figs.git $RSFFIGS
 
 # Test
 script: 
