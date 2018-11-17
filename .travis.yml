@@ -30,3 +30,5 @@ script:
   - source env.sh 
   - cd book 
   - scons test
+
+#TODO: upload artifacts
