@@ -5,18 +5,10 @@ sudo: false
 addons:
   apt:
     packages:
-      - libxaw7-dev
-      - freeglut3-dev
-      - libnetpbm10-dev
-      - libgd-dev
-      - libplplot-dev
-      - libavcodec-dev
       - libblas-dev
+      - liblapack-dev
       - swig
       - python-numpy
-      - libopenmpi-dev
-      - libfftw3-dev
-      - libsuitesparse-dev
 
 matrix:
   include:
