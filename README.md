@@ -4,8 +4,8 @@
 
 Madagascar
 ==========
-[![CircleCI](https://img.shields.io/circleci/project/github/ahay/src/master.svg?label=Circle%20CI)](https://circleci.com/gh/ahay/src.svg?style=svg)
-[![TravisCI](https://img.shields.io/travis/com/ahay/src.svg?label=Travis%20CI)](https://travis-ci.com/ahay/src.svg?branch=master)
+[![CircleCI](https://img.shields.io/circleci/project/github/ahay/src/master.svg?label=Circle%20CI)](https://circleci.com/gh/ahay/src)
+[![TravisCI](https://img.shields.io/travis/com/ahay/src.svg?label=Travis%20CI)](https://travis-ci.com/ahay/src)
 ###  A package for reproducible geophysical data processing
 
 http://www.ahay.org
