@@ -13,6 +13,9 @@ regularization (Xue, Zhu, and Fomel)
 * tccs/t2dweak: Fast time-to-depth conversion and interval velocity
   estimation in the case of weak lateral variations (Sripanich and
   Fomel)
+* tccs/elas: Recursive integral time extrapolation of elastic waves
+  using low-rank symbol approximation (Sun, Fomel, Sripanich, and
+  Fowler)
 
 To SCons:
 
@@ -31,6 +34,7 @@ To programs:
 * user/zgeng: New contributor (Zhicheng Geng)
 * sfmatplotlib: plotting with matplotlib
 * user/sgreer: New contributor (Sarah Greer)
+* strip= parameter in sfdd
 
 ===Bug fixes===
 
