@@ -707,7 +707,7 @@ def dummy(target=None,source=None,env=None):
      for src in source:
          fig = str(src)
          plt = os.path.splitext(os.path.basename(fig))[0]
-         plt2 = plt.replace(plt,'_','\_')
+         plt2 = plt.replace('_','\_')
          fdir = os.path.split(os.path.split(fig)[0])[0]
          if fdir != dirold:
              tex.write('\n\\section{%s}\n' % fdir)

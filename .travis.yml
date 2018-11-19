@@ -1,0 +1,34 @@
+language: c
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - libblas-dev
+      - liblapack-dev
+      - swig
+      - python-numpy
+
+matrix:
+  include:
+    - env: PYTHON_VERSION=2.7 RSFROOT=$HOME/RSFROOT RSFFIGS=$HOME/RSFROOT/figs
+      dist: xenial
+    - env: PYTHON_VERSION=3.6 RSFROOT=$HOME/RSFROOT RSFFIGS=$HOME/RSFROOT/figs
+      dist: xenial
+
+# Install madagascar
+install:
+  - ./configure
+  - make install
+
+before_script:
+  - git clone https://github.com/ahay/figs.git $RSFFIGS
+
+# Test
+script: 
+  - source env.sh 
+  - cd book 
+  - scons test
+
+#TODO: upload artifacts
