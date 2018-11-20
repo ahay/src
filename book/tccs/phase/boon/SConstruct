@@ -109,10 +109,10 @@ Result('bfoc',
 # Pick a trend (nonstationary phase rotation)
 Flow('bpik','bfoc','scale axis=3 | pick rect1=50 rect2=100 vel0=90 gate=100')
 
-Result('bpik','window | grey color=j scalebar=y title="Phase Rotation" unit2=')
+Result('bpik','grey color=j scalebar=y title="Phase Rotation" unit2=')
 Plot('bpik-win','bpik',
      '''
-     window n3=25 min1=0.5 max1=1.5 | math output="90-input" |
+     window n2=25 min1=0.5 max1=1.5 | math output="90-input" |
      grey color=j scalebar=y title="Estimated Phase" 
      ''')
 

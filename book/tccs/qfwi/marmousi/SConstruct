@@ -1,0 +1,269 @@
+from rsf.proj import *
+
+# Preparation
+##########################
+# Marmousi velocity
+min2=3.2
+max2=8.2
+max1=1.8
+Flow('vel1','vel.hh',
+    '''
+	dd form=native |
+	scale rscale=0.001 |
+	put label1=Depth label2=Distance unit1=km unit2=km d1=0.01 d2=0.01 |
+	window min2=%g max2=%g max1=%g|
+	pad2 top=20 |put o1=0 o2=0 |sfclip2 upper=4 
+	'''%(min2,max2,max1) )
+Result('vel1','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+
+# Quality factor 
+Flow('waterq1','vel1','window n1=20 |math output=100')
+Flow('q1','marmousi-q.rsf waterq1',
+    '''
+	transp |
+	put label1=Depth label2=Distance unit1=km unit2=km d1=0.01 d2=0.01 |
+	math output="input-9." |clip2 lower=20.1 |
+	window min2=%g max2=%g max1=%g|
+	cat axis=1 ${SOURCES[1]} order=2,1 o=0 |
+	put o1=0 o2=0 |smooth rect1=2 rect2=2 repeat=2 
+	''' %(min2,max2,max1))
+Result('q1','grey bias=0. labelsz=10 labelfat=3 clip=100 allpos=y maxval=100 color=j scalebar=y barreverse=y barlabel=Q barunit= title="" screenratio=0.5')
+
+# Subsampling for efficiency
+Flow('vel','vel.hh',
+    '''
+	dd form=native |
+	scale rscale=0.001 |
+	put label1=Depth label2=Distance unit1=km unit2=km d1=0.01 d2=0.01 |
+	window min2=%g max2=%g max1=%g| window j1=2 j2=2 |
+	pad2 top=10 |put o1=0 o2=0 |sfclip2 upper=4 
+	'''%(min2,max2,max1) )
+
+Flow('waterq','vel','window n1=10 |math output=100')
+Flow('q','marmousi-q.rsf waterq',
+    '''
+	transp |
+	put label1=Depth label2=Distance unit1=km unit2=km d1=0.01 d2=0.01 |
+	math output="input-9." |clip2 lower=20.1 |
+	window min2=%g max2=%g max1=%g| window j1=2 j2=2 |
+	cat axis=1 ${SOURCES[1]} order=2,1 o=0 |
+	put o1=0 o2=0 |smooth rect1=2 rect2=2 repeat=2 
+	''' %(min2,max2,max1))
+
+# Water layer
+Flow('water','vel','window n1=10')
+
+# Initial parameters
+Flow('vel0','vel water','smooth rect1=20 rect2=25 repeat=3 |window f1=10 |cat ${SOURCES[1]} axis=1 order=2,1 o=0')
+Result('vel0','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+
+# Wavelet
+Flow('wavelet',None,
+		'''
+		spike nsp=1 n1=1101 d1=0.002 o1=0 k1=150 |
+		ricker1 frequency=10 | math output="input*100"
+		''')
+Result('wavelet','window n1=400 |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+Result('spectra','wavelet','spectra |window n1=200 |graph title="Spectra" unit1=Hz label1=Frequency label2= unit2=')
+
+  # wavelet for low-rank wave propagation
+Flow('real','wavelet','math output=0')
+Flow('imag','wavelet','envelope hilb=y |halfint |halfint |math output="input/2"')
+Flow('csource','real imag','cmplx ${SOURCES[1]}')
+Result('csource','imag |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+
+ # three frequency bands
+Flow('imag5','imag','bandpass fhi=5 flo=2')
+Flow('csource5','real imag5','cmplx ${SOURCES[1]}')
+Result('csource5','imag |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+
+Flow('imag9','imag','bandpass fhi=9 flo=2')
+Flow('csource9','real imag9','cmplx ${SOURCES[1]}')
+Result('csource9','imag |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+
+Flow('imag15','imag','bandpass fhi=15 flo=2')
+Flow('csource15','real imag15','cmplx ${SOURCES[1]}')
+Result('csource15','imag |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+
+# Lowrank decomposition
+nb=50
+ct=0.008
+Flow('velp','vel','pad2 top=%d bottom=%d left=%d right=%d' %(nb, nb, nb, nb))
+Flow('qp','q','pad2 top=%d bottom=%d left=%d right=%d' %(nb, nb, nb, nb))
+Flow('fft','velp','rtoc |fft3 axis=1 pad=1 |fft3 axis=2 pad=1')
+Flow('right left','velp fft qp',
+    '''
+	zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500
+	fft=${SOURCES[1]} q=${SOURCES[2]}
+	left=${TARGETS[1]} mode=0 rev=n sign=0
+	nbt=%d nbb=%d nbl=%d nbr=%d
+	ct=%g cb=%g cl=%g cr=%g abc=1
+	''' %(nb, nb, nb, nb, ct, ct, ct, ct))
+
+# Check results
+##########################
+# Data
+Result('data5','real |grey title=')
+Result('data9','real |grey title=')
+Result('data15','real |grey title=')
+
+# Inversion result
+Result('arrow1',None,'box  screenratio=0.5 x0=8.5 y0=3.5 xt=-0.5 yt=0.5 length=0.4 label= boxit=n pscale=0.8')
+Result('arrow11',None,'box screenratio=0.5 x0=8.5 y0=3.5 xt=-0.5 yt=0.5 length=0.7 label= boxit=n pscale=0.3')
+Result('arrow2',None,'box  screenratio=0.5 x0=12  y0=3.5 xt=0.5  yt=0.5 length=0.4 label= boxit=n pscale=0.8')
+Result('arrow22',None,'box screenratio=0.5 x0=12  y0=3.5 xt=0.5  yt=0.5 length=0.7 label= boxit=n pscale=0.3')
+Result('1vel20','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+Result('2vel20','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+Result('3vel20-a','3vel20','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+Result('3vel20','Fig/3vel20-a Fig/arrow11 Fig/arrow1 Fig/arrow22 Fig/arrow2', 'Overlay')
+
+Result('1cvel20','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+Result('2cvel20','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+Result('3cvel20-a','3cvel20','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+Result('3cvel20','Fig/3cvel20-a Fig/arrow11 Fig/arrow1 Fig/arrow22 Fig/arrow2', 'Overlay')
+
+# Convergence curve
+ref1=1
+ref2=ref1
+ref3=ref1
+ # FWI without Q-compensation
+misfit=[]
+misfit.append('1misfit0')
+for i in range(20):
+    fit='1misfit%d' %(i+1)
+    misfit.append(fit)
+    #vel='1vel%d' %(i+1)
+    #Plot(vel,'grey bias=2.5 color=j scalebar=y barreverse=y barlabel=Velocity barunit=km/s title="" screenratio=0.5')
+#Flow('misfit1n',misfit,'cat ${SOURCES[1:%d]} |window |math output="input/%f" |put o1=0 d1=1' %(len(misfit),ref1))
+
+misfit=[]
+misfit.append('2misfit0')
+for i in range(20):
+    fit='2misfit%d' %(i+1)
+    misfit.append(fit)
+#Flow('misfit2n',misfit,'cat ${SOURCES[1:%d]} |window |math output="input/%f" |put o1=0 d1=1' %(len(misfit),ref2))
+
+misfit=[]
+misfit.append('3misfit0')
+for i in range(20):
+    fit='3misfit%d' %(i+1)
+    misfit.append(fit)
+#Flow('misfit3n',misfit,'cat ${SOURCES[1:%d]} |window |math output="input/%f" |put o1=0 d1=1' %(len(misfit),ref3))
+
+Flow('misfitsn','misfit1n misfit2n misfit3n','cat axis=1 ${SOURCES[1:3]}')
+Result('misfitsn','graph labelsz=10 plotfat=5 label2="L2-norm Data Misfit" unit2= label1=Iterations unit1= title= screenratio=0.3 wherexlabel=top min2=0 max2=4000')
+
+ # FWI with Q-compensation
+misfit=[]
+misfit.append('1cmisfit0')
+for i in range(20):
+    fit='1cmisfit%d' %(i+1)
+    misfit.append(fit)
+#Flow('misfit1c',misfit,'cat ${SOURCES[1:%d]} |window |math output="input/%f" |put o1=0 d1=1' %(len(misfit),ref1))
+
+misfit=[]
+misfit.append('2cmisfit0')
+for i in range(20):
+    fit='2cmisfit%d' %(i+1)
+    misfit.append(fit)
+#Flow('misfit2c',misfit,'cat ${SOURCES[1:%d]} |window |math output="input/%f" |put o1=0 d1=1' %(len(misfit),ref2))
+
+misfit=[]
+misfit.append('3cmisfit0')
+for i in range(20):
+    fit='3cmisfit%d' %(i+1)
+    misfit.append(fit)
+#Flow('misfit3c',misfit,'cat ${SOURCES[1:%d]} |window |math output="input/%f" |put o1=0 d1=1' %(len(misfit),ref3))
+
+Flow('misfitsc','misfit1c misfit2c misfit3c','cat axis=1 ${SOURCES[1:3]}')
+Result('misfitsc','graph labelsz=10 plotfat=5 label2="L2-norm Data Misfit" unit2= label1=Iterations unit1= title= screenratio=0.3 wherexlabel=top min2=0 max2=4000')
+
+ # comparisons
+Result('misfit1s','misfit1c misfit1n','cat axis=2 ${SOURCES[1:2]} |graph dash=0,1 plotfat=5 labelsz=10 labelfat=3 label2="Data Misfit" unit2= label1=Iterations unit1= title= screenratio=0.5 wherexlabel=top min2=0 max2=4000')
+Result('misfit2s','misfit2c misfit2n','cat axis=2 ${SOURCES[1:2]} |graph dash=0,1 plotfat=5 labelsz=10 labelfat=3 label2="Data Misfit" unit2= label1=Iterations unit1= title= screenratio=0.5 wherexlabel=top min2=0 max2=4000')
+Result('misfit3s','misfit3c misfit3n','cat axis=2 ${SOURCES[1:2]} |graph dash=0,1 plotfat=5 labelsz=10 labelfat=3 label2="Data Misfit" unit2= label1=Iterations unit1= title= screenratio=0.5 wherexlabel=top min2=0 max2=4000')
+Result('misfits','misfitsc misfitsn','cat axis=2 ${SOURCES[1:2]} |graph dash=0,1 labelsz=10 plotfat=5 label2="L2-norm Data Misfit" unit2= label1=Iterations unit1= title= screenratio=0.3 wherexlabel=top min2=0 max2=4000')
+
+# Compare gradients and wavefields
+####################################
+# Compare gradients with and without compensation (take 2vel5 as an example)
+Flow('vel0p','2vel5','pad2 top=%d bottom=%d left=%d right=%d' %(nb, nb, nb, nb))
+Flow('right0 left0','vel0p fft qp',
+    '''
+	zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500
+	fft=${SOURCES[1]} q=${SOURCES[2]}
+	left=${TARGETS[1]} mode=0 rev=n sign=0
+	nbt=%d nbb=%d nbl=%d nbr=%d
+	ct=%g cb=%g cl=%g cr=%g abc=1
+	''' %(nb, nb, nb, nb, ct, ct, ct, ct))
+Flow('rightb0 leftb0','vel0p fft qp',
+    '''
+	zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500
+	fft=${SOURCES[1]} q=${SOURCES[2]}
+	left=${TARGETS[1]} mode=0 rev=n sign=0
+	nbt=%d nbb=%d nbl=%d nbr=%d
+	ct=%g cb=%g cl=%g cr=%g abc=1
+	compen=y vmax=4.0 cutoff=90 taper=0.5
+	''' %(nb, nb, nb, nb, ct, ct, ct, ct))
+
+Result('grad1','smooth rect1=3 rect2=3 |cut n1=10 |grey labelsz=10 labelfat=3 title= color=j mean=y scalebar=n screenratio=0.5')
+Result('grad2','smooth rect1=3 rect2=3 |cut n1=10 |grey labelsz=10 labelfat=3 title= color=j mean=y scalebar=n screenratio=0.5')
+
+Result('snap11','wav11','real |put o1=0 d1=0.02 o2=0 d2=0.02 label1=Depth unit1=km unit2=km label2=Depth o3=0. d3=0.1 label3=Time unit3=s|window n3=1 f3=10 |grey labelsz=10 labelfat=3 title= scalebar=n screenratio=0.5')
+Result('snap21','wav21','real |put o1=0 d1=0.02 o2=0 d2=0.02 label1=Depth unit1=km unit2=km label2=Depth o3=0. d3=0.1 label3=Time unit3=s|window n3=1 f3=10 |grey labelsz=10 labelfat=3 title= scalebar=n screenratio=0.5')
+
+Result('snap12','wav12','real |put o1=0 d1=0.02 o2=0 d2=0.02 label1=Depth unit1=km unit2=km label2=Depth o3=2.2 d3=-0.1 label3=Time unit3=s|window n3=1 f3=12 |grey labelsz=10 labelfat=3 title= scalebar=n screenratio=0.5')
+Result('snap22','wav22','real |put o1=0 d1=0.02 o2=0 d2=0.02 label1=Depth unit1=km unit2=km label2=Depth o3=2.2 d3=-0.1 label3=Time unit3=s|window n3=1 f3=12 |grey labelsz=10 labelfat=3 title= scalebar=n screenratio=0.5')
+
+# Check low-rank forward operator
+####################################
+# source wavelets (half-integration for 2D green function 45 degree phase rotation)
+Flow('srcfd',None,
+		'''
+		spike nsp=1 n1=2201 d1=0.001 o1=0 k1=300 |
+		ricker1 frequency=10 | halfint inv=y |math output="input*100*1233.6845"
+		''') 
+Result('srcfd','window n1=400 |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+Result('specfd','srcfd','spectra |window max1=30 |graph title="Spectra" unit1=Hz label1=Frequency label2= unit2=')
+
+Flow('srclr',None,
+		'''
+		spike nsp=1 n1=2201 d1=0.001 o1=0 k1=300 |
+		imagsrc frequency=10 | halfint inv=y |math output="input*100" |rtoc
+		''')
+Result('srclr','real |window n1=400 |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+Result('speclr','srclr','real |spectra |window max1=30 |graph title="Spectra" unit1=Hz label1=Frequency label2= unit2=')
+
+# models
+nb=100
+ct=0.004
+Flow('velp1','vel1','pad2 top=%d bottom=%d left=%d right=%d' %(nb, nb, nb, nb))
+Flow('fft1','velp1','rtoc |fft3 axis=1 pad=1 |fft3 axis=2 pad=1')
+
+Flow('qa','q1','math output=10000')
+Flow('tau','q1','math output=0')
+Flow('qap','qa','pad2 top=%d bottom=%d left=%d right=%d' %(nb, nb, nb, nb))
+Flow('righta lefta','velp1 fft1 qap',
+		'''
+		zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.001 w0=1500
+		fft=${SOURCES[1]} q=${SOURCES[2]}
+		left=${TARGETS[1]} mode=0 rev=n sign=0
+		nbt=%d nbb=%d nbl=%d nbr=%d
+		ct=%g cb=%g cl=%g cr=%g abc=1
+		''' %(nb, nb, nb, nb, ct, ct, ct, ct))
+# FD vs. LR
+Result('datafd','window n3=1 f3=13 |grey title= labelsz=10 labelfat=3 scalebar=y clip=0.0022416 maxval=0.023 minval=-0.013 screenratio=1.2')
+Result('datalr','real |window n3=1 f3=13 |grey title= labelsz=10 labelfat=3 scalebar=y clip=0.0022416 maxval=0.023 minval=-0.013 screenratio=1.2')
+Result('comp','datalr datafd','real |cat axis=4 ${SOURCES[1]} |window n3=1 f3=13 n2=1 f2=200 |graph title= screenratio=3 transp=y yreverse=y label2=Amplitude unit2= label1=Time unit1=s plotfat=4 dash=0,1 labelsz=10 wherexlabel=top whereylabel=right')
+#sfpen Fig/datafd.vpl Fig/datalr.vpl Fig/comp.vpl
+
+# Dot-product test results
+####################################
+# Adjoint test
+# L[m]*d=(-0.140567,-0.00578582)
+#L'[d]*m=(-0.140561,-0.00578517)
+
+# L[m]*d=(-138.75,-183.031)
+#L'[d]*m=(-138.75,-183.027)
+
+End()

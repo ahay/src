@@ -1,4 +1,4 @@
-/* Nonstationary Prony by chain of PEFs - linear operator */
+/* Chain of PWDs - linear operator */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,58 +19,61 @@
 
 #include <rsf.h>
 
-#include "pchain.h"
-#include "csmooth1.h"
+#include "pwdchain.h"
+#include "smooth1.h"
 
 int main(int argc, char* argv[])
 {
     bool adj;
-    int n, nc, n2, n1;
-    sf_complex *xn, *x1, *dx, *r;
-    sf_file inp, out, pef, sig;
+    int m1, m2, n, nc, n2, n1;
+    float *xn, *x1, *dx, *r;
+    sf_file inp, out, dip, sig;
 
     sf_init(argc,argv);
     inp = sf_input("in");
-    pef = sf_input("pef");
+    dip = sf_input("dip");
     sig = sf_input("sig");
     out = sf_output("out");
 
-    if (SF_COMPLEX != sf_gettype(inp)) sf_error("Need complex input");
-    if (!sf_histint(pef,"n1",&n))  sf_error("No n1= in pef");
-    if (!sf_histint(pef,"n2",&n2)) sf_error("No n2= in pef");
+    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+    if (!sf_histint(dip,"n1",&m1)) sf_error("No n1= in dip");
+    if (!sf_histint(dip,"n2",&m2)) sf_error("No n2= in dip");
+    if (!sf_histint(dip,"n3",&n2)) sf_error("No n3= in dip");
+
+    n = m1*m2;
 
     nc = (n2+1)/2;
-    n2 *= n;
+    n2 *= n; 
     n1 = (n2+n)/2;
 
     sf_warning("nc=%d n=%d",nc,n);
-
-    x1 = sf_complexalloc(n);
-    sf_complexread(x1,n,sig);
-
-    xn = sf_complexalloc(n2);
-    sf_complexread(xn,n2,pef);
-
-    pchain_init(n,nc,x1,xn,xn+n*nc);
     
-    dx = sf_complexalloc(n2);
-    r =  sf_complexalloc(n1);
+    x1 = sf_floatalloc(n);
+    sf_floatread(x1,n,sig);
+
+    xn = sf_floatalloc(n2);
+    sf_floatread(xn,n2,dip);
+
+    pwdchain_init(m1,m2,1,nc,x1,xn,xn+n*nc);
+    
+    dx = sf_floatalloc(n2);
+    r =  sf_floatalloc(n1);
 
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
 
     if (adj) {
-	sf_complexread(r,n1,inp);
+	sf_floatread(r,n1,inp);
     } else {
-	sf_complexread(dx,n2,inp);
+	sf_floatread(dx,n2,inp);
     } 
 
-    pchain_lop(adj,false,n2,n1,dx,r);
+    pwdchain_lop(adj,false,n2,n1,dx,r);
 
     if (adj) {
-	sf_complexwrite(dx,n2,out);
+	sf_floatwrite(dx,n2,out);
     } else {
-	sf_complexwrite(r,n1,out);
+	sf_floatwrite(r,n1,out);
     } 
 
     exit(0);

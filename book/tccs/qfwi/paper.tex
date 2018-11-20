@@ -1,0 +1,386 @@
+\title{Accelerating full waveform inversion with attenuation compensation}
+\author{Zhiguang Xue, Junzhe Sun, Sergey Fomel, Tieyuan Zhu}
+\maketitle
+
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, Texas, USA \\
+\footnotemark[2]Department of Geosciences and Institute of Natural Gas Research \\
+The Pennsylvania State University \\
+University Park, Pennsylvania, USA
+}
+
+% \footnote{Parts of this paper were presented at 2016 SEG Annual Meeting}
+
+\lefthead{Xue et al.}
+\righthead{Q-compensated FWI}
+\footer{TCCS-14}
+
+\begin{abstract}
+	The calculation of the gradient in full waveform inversion (FWI) usually involves crosscorrelating the forward-propagated source wavefield and the back-propagated data residual wavefield at each time step.
+	In the real Earth, propagating waves are typically attenuated due to the viscoelasticity, which results in an attenuated gradient for FWI.
+	Replacing the attenuated true gradient with a Q-compensated gradient can accelerate the convergence rate of the inversion process.
+	We propose to use phase-dispersion and amplitude-loss decoupled constant-Q wave equation to formulate a visco-acoustic FWI,
+	and use this wave equation to generate a Q-compensated gradient, which recovers amplitudes while preserving the correct kinematics.
+	We construct an exact adjoint operator in a discretized form using the low-rank wave extrapolation technique,
+	and implement the gradient compensation by reversing the sign of the amplitude-loss term in both forward and adjoint operators.
+	This leads to a Q-dependent gradient preconditioning method.
+	Using numerical tests with synthetic data, we demonstrate that the proposed visco-acoustic FWI using constant-Q wave equation is capable of producing high-quality velocity models,
+	and the proposed Q-compensated gradient accelerates its convergence rate.
+\end{abstract}
+
+\section{Introduction}
+
+Full waveform inversion (FWI) is a data-fitting procedure used to construct high-resolution quantitative subsurface models by exploiting full information in the observed data and has been extensively developed in recent years \cite[]{virieux09}.
+To solve FWI in the framework of local optimization approach, a model update needs to be computed at each iterative step
+and each model update involves calculating the gradient of the misfit function with respect to model parameters \cite[]{tarantola05}.
+Due to the non-linearity of FWI in practice, FWI may converge slowly and cause the algorithm to get trapped in a local minimum.
+To accelerate the convergence rate of FWI, one can calculate a more accurate model update by applying an approximate Hessian inverse to its gradient \cite[]{ma12,qin15,hou16}.
+Another more common approach is to precondition the gradient,
+for instance, using the energy of source wavefield to normalize the gradient \cite[]{gauthier86},
+weighting the gradient by depth-dependent functions \cite[]{shipp02,wang09},
+or smoothing/filtering the gradient in spatial frequency or other transform domains \cite[]{guitton12,xue17}.
+Since seismic waves propagating in visco-acoustic media are attenuated,
+a natural gradient preconditioning approach is to compensate for the energy loss caused by attenuation.
+Here, we limit our focus on intrinsic attenuation, although seismic scattering attenuation caused by heterogeneity also complicate amplitude analysis \cite[]{browaeys09}.
+
+The classic approach of superposition of several standard linear solids (SLS) has been widely used in the time domain finite-difference method
+to approximate the constant-Q seismic wave propagation for a specific frequency band \cite[]{robertsson94}.
+However, compensating Q-effects with SLSs is challenging, because reversing the sign of memory variables that account for attenuation does not correctly compensate for the phase \cite[]{zhu14c,guo15,zhu16}.
+To overcome this issue, a better choice is to compensate for amplitude loss by using a modified wave equation,
+which has separate control over amplitude loss and phase dispersion effects \cite[]{zhu14}.
+This idea has been applied previously in reverse-time migration (RTM) to get more balanced illumination in seismic images \cite[]{zhang10,suh12,bai13,zhu14b,sun15,zhu17},
+but its application to velocity model building remains to be investigated.
+
+In this paper, the visco-acoustic wave equation proposed by \cite{zhu14} is adopted to formulate a preconditioned approach to Q-compensated FWI.
+This equation involves fractional Laplacians and has seperate control over phase dispersion and amplitude loss effects.
+In this way, compensating for the amplitude loss while preserving the correct kinematics can be done by reversing the sign of the amplitude-loss factor and keeping the sign of the dispersion factor unchanged \cite[]{zhu16}.
+This property was used recently by \cite{sun16b} to accelerate the convergence rate of least-squares RTM.
+We use it in this paper to accelerate the convergence rate of FWI.
+In the following, we first present the theory related to the forward operator, adjoint operator, FWI gradient and Q-compensated gradient.
+Then we demonstrate the effectiveness of our preconditioning strategy for FWI using a synthetic example.
+
+\section{Theory}
+
+\subsection{Forward operator}
+
+To describe the intrinsic attenuation behavior in subsurface media, we choose the constant-Q model \cite[]{kjartansson79} that is mathematically simple and is widely used to applications in exploration seismology.
+Based on this model, \cite{zhu14} proposed a constant-Q visco-acoustic wave equation with decoupled attenuation effects, as follows:
+\begin{eqnarray}
+	\label{eq:forward}
+	\frac{1}{c^2} \frac{\partial^2 P}{\partial t^2} & = & \nabla^2 P \nonumber \\
+													& + & \beta_1 \{\eta(-\nabla^2)^{\gamma+1}-\nabla^2 \}P \nonumber \\
+													& + & \beta_2 \{\tau \frac{\partial}{\partial t} (-\nabla^2)^{\gamma+1/2} \}P \; ,
+\end{eqnarray}
+where
+\begin{eqnarray}
+	\label{eq:parameter}
+	\label{eq:gamma}
+	\gamma(\mathbf{x}) & = & \arctan(1/Q(\mathbf{x}))/\pi \; , \\
+	c^2(\mathbf{x}) & = & c_0^2 (\mathbf{x}) \cos^2(\pi \gamma(\mathbf{x})/2) \; , \\
+	\eta(\mathbf{x}) &  = & -c_0^{2\gamma(\mathbf{x})} \omega_0^{-2\gamma(\mathbf{x})}\cos(\pi \gamma(\mathbf{x})) \; , \\
+	\tau(\mathbf{x}) &  = & -c_0^{2\gamma(\mathbf{x})-1} \omega_0^{-2\gamma(\mathbf{x})}\sin(\pi \gamma(\mathbf{x})) \; .
+\end{eqnarray}
+
+$P(\mathbf{x}, t)$ indicates the pressure wavefield, $Q(\mathbf{x})$ is the quality factor, and $c_0(\mathbf{x})$ stands for the acoustic velocity model defined at a reference frequency $\omega_0$.
+Note that $\gamma(\mathbf{x})$ defined in equation~\ref{eq:gamma} ranges from $0$ to $1/2$ and is a dimensionless parameter.
+The term starting with $\beta_1$ parameter in equation~\ref{eq:forward} characterizes the velocity dispersion,
+and the term starting with $\beta_2$ describes the amplitude loss.
+Thus, $\beta_1$ and $\beta_2$ take values of $\pm1$ and
+act like on/off switches to control phase dispersion and amplitude loss effects, respectively.
+
+Equation~\ref{eq:forward} involves fractional Laplacians and has separate controls over phase-dispersion and amplitude-loss, which is a big advantage as opposed to other formulations of visco-acoustic wave equation.
+As shown by \cite{zhu14}, this equation is also valid for very low Q values, such as 10-20.
+In our numerical example, we set the reference frequency $\omega_0$ to be very high and assume that the intrinsic attenuation will delay the propagation of seismic wave.
+
+Setting both $\beta_1$ and $\beta_2$ to one, equation~\ref{eq:forward} leads to the following visco-acoustic dispersion relation with fractional
+powers of the wavenumber:
+\begin{equation}
+	\label{eq:relation}
+	\frac{\omega^2}{c^2}=-\eta|\mathbf{k}|^{2\gamma+2} -i\omega\tau|\mathbf{k}|^{2\gamma+1} \; ,
+\end{equation}
+from which we can solve for the angular frequency $\omega$ as follows \cite[]{sun15}:
+\begin{equation}
+	\label{eq:omega}
+	\omega=\frac{-ip_1 +p_2}{2} \; ,
+\end{equation}
+where
+\begin{eqnarray}
+	\label{eq:p1}
+	p_1 & = & \tau c^2 |\mathbf{k}|^{2\gamma+1} \; , \\
+	\label{eq:p2}
+	p_2 & = & \sqrt{-\tau^2 c^4 |\mathbf{k}|^{4\gamma+2} - 4\eta c^2 |\mathbf{k}|^{2\gamma+2}} \; .
+\end{eqnarray}
+Because the first term under the square root in $p_2$ does not affect the amplitude of wave propagation and only has a relatively small effect on the phase due to the small value of $\tau$ \cite[]{sun15},
+equation~\ref{eq:p2} can be approximated as
+\begin{equation}
+	\label{eq:p22}
+	p_2 \approx \sqrt{- 4\eta} c |\mathbf{k}|^{\gamma+1} \; .
+\end{equation}
+
+In heterogeneous media, the form of $\omega$ in equation~\ref{eq:omega} can be used to define the phase shift symbol $\varphi$ \cite[]{zhang09}.
+With the use of one-step extrapolation method, the pressure wavefield $P(\mathbf{x}, t)$ becomes complex, and satisfies the following
+first-order partial differential equation:
+\begin{equation}
+	\label{eq:first-order}
+	\left( \frac{\partial}{\partial t} + i\varphi \right)P(\mathbf{x}, t) = 0 \; ,
+\end{equation}
+which can be solved using the following mixed-domain time marching operator \cite[]{sun16}:
+\begin{equation}
+	\label{eq:march}
+	P(\mathbf{x},t+\Delta t) = \int \widehat{P}(\mathbf{k},t) e^{i \phi_1(\mathbf{x},\mathbf{k},\Delta t)} d\mathbf{k} \; ,
+\end{equation}
+where $\widehat{P}$ is the spatial Fourier transform of $P$ and the phase function $\phi_1(\mathbf{x},\mathbf{k},\Delta t)$ is defined as
+\begin{equation}
+	\label{eq:phase}
+	\phi_1(\mathbf{x},\mathbf{k},\Delta t) = \mathbf{x} \cdot \mathbf{k}+\varphi \Delta t=\mathbf{x} \cdot \mathbf{k}+\frac{-ip_1 +p_2}{2} \Delta t \; .
+\end{equation}
+
+To implement the wave propagation numerically, we employ the low-rank approximation method of \cite{fomel13} to decompose the wave extrapolation matrix
+$e^{i [\phi_1(\mathbf{x},\mathbf{k},\Delta t)-\mathbf{x} \cdot \mathbf{k}]}$ into the following separated representation by selecting a set of $N$
+representative spatial locations and $M$ representative wavenumbers:
+\begin{equation}
+	\label{lowrank}
+	e^{i [\phi_1(\mathbf{x},\mathbf{k},\Delta t)-\mathbf{x} \cdot \mathbf{k}]} \approx \sum_{m=1}^{M}\sum_{n=1}^{N} W(\mathbf{x},\mathbf{k}_m) a_{mn} W(\mathbf{x}_n,\mathbf{k}) \;.
+\end{equation}
+The computation of $P(\mathbf{x},t+\Delta t)$ then becomes
+\begin{equation}
+	\label{eq:fmarch}
+	P(\mathbf{x},t+\Delta t) \approx \sum_{m=1}^{M}  W(\mathbf{x},\mathbf{k}_m) \left\{\sum_{n=1}^{N}a_{mn} \left[ \int e^{i\mathbf{x} \cdot \mathbf{k}} W(\mathbf{x}_n,\mathbf{k}) P(\mathbf{k},t) d\mathbf{k} \right]\right\} \; ,
+\end{equation}
+whose computational cost equals that of applying $N$ inverse fast Fourier transforms per time step, where $N$ is the approximation rank.
+We can rewrite equation~\ref{eq:fmarch} in an algebraically compact form as
+\begin{equation}
+	\label{eq:compact}
+	P(\mathbf{x},t+\Delta t) = \mathbf{A} \; P(\mathbf{x},t) \; .
+\end{equation}
+Correspondingly, the full forward modeling process incorporating the source term $f(\mathbf{x},t)$ can be expressed as:
+\begin{equation}
+	\label{eq:matrix1}
+	\left[ \begin{array}{ccccc}
+			\mathbf{I}  &  &  &  & \\
+			-\mathbf{A} & \mathbf{I} & & &\\
+						& -\mathbf{A} & \mathbf{I} & & \\
+			   & & \ddots & \ddots & \\
+			   & & & -\mathbf{A} & \mathbf{I}
+	\end{array} \right]
+	\left[ \begin{array}{c}
+			P(\mathbf{x}, \;\;\; 0) \\
+			P(\mathbf{x}, \;\; \Delta t) \\
+			P(\mathbf{x}, 2\Delta t) \\
+			\vdots \\
+			P(\mathbf{x}, n\Delta t)
+	\end{array} \right]
+	=
+	\left[ \begin{array}{c}
+			f(\mathbf{x}, \; \; \; 0) \\
+			f(\mathbf{x}, \; \; \Delta t) \\
+			f(\mathbf{x}, 2\Delta t) \\
+			\vdots \\
+			f(\mathbf{x}, n\Delta t)
+	\end{array} \right] \; .
+\end{equation}
+The absorbing boundary condition is used to get rid of boundary effects during wave propagation, and it has been intrinsically defined in the wave propagation matrix \cite[]{sun16}.
+
+\subsection{Adjoint operator}
+
+Based on equation~\ref{eq:matrix1}, the adjoint operator (conjugate transpose) can be formulated as
+\begin{equation}
+	\label{eq:matrix2}
+	\left[ \begin{array}{ccccc}
+			\mathbf{I}  & -\mathbf{A}^* &  &  & \\
+						& \mathbf{I} & -\mathbf{A}^* & &\\
+						& & \mathbf{I} & \ddots & \\
+						& & & \ddots & -\mathbf{A}^* \\
+			   & & & & \mathbf{I}
+	\end{array} \right]
+	\left[ \begin{array}{c}
+			\widetilde{P}(\mathbf{x}, \;\;\; 0) \\
+			\widetilde{P}(\mathbf{x}, \;\; \Delta t) \\
+			\widetilde{P}(\mathbf{x}, 2\Delta t) \\
+			\vdots \\
+			\widetilde{P}(\mathbf{x}, n\Delta t)
+	\end{array} \right]
+	=
+	\left[ \begin{array}{c}
+			\widetilde{f}(\mathbf{x}, \; \; \; 0) \\
+			\widetilde{f}(\mathbf{x}, \; \; \Delta t) \\
+			\widetilde{f}(\mathbf{x}, 2\Delta t) \\
+			\vdots \\
+			\widetilde{f}(\mathbf{x}, n\Delta t)
+	\end{array} \right] \; ,
+\end{equation}
+where $*$ denotes the complex conjugate transpose of a matrix.
+The adjoint wavefield can be recursively calculated with the following backward time marching scheme \cite[]{sun16b} :
+\begin{equation}
+	\label{eq:compact2}
+	\widetilde{P}(\mathbf{x},t) = \mathbf{A}^* \; \widetilde{P}(\mathbf{x},t + \Delta t) + \widetilde{f}(\mathbf{x},t+\Delta t)\; .
+\end{equation}
+The operator $\mathbf{A}^*$ carries out the following calculation:
+\begin{equation}
+	\label{eq:bmarch}
+	\widetilde{P}(\mathbf{k},t)  \approx  \sum_{n=1}^{N}  W^*(\mathbf{x}_n,\mathbf{k}) \left\{\sum_{m=1}^{M}a_{mn} \left[ \int e^{-i\mathbf{x} \cdot \mathbf{k}} W^*(\mathbf{x},\mathbf{k}_m) \widetilde{P}(\mathbf{x},t+\Delta t) d\mathbf{x} \right]\right\} \; .
+\end{equation}
+Equation~\ref{eq:fmarch} and~\ref{eq:bmarch} differ from each other in the multiplication order of low-rank decomposed small matrices.
+In addition, the low-rank matrices used in equation~\ref{eq:bmarch} are the complex conjugate transpose of the ones in equation~\ref{eq:fmarch}.
+The relative error of the dot-product tests using our implementation of the forward and adjoint operators is about 1e-6.
+
+\subsection{FWI gradient}
+
+The least-squares objective function of standard FWI can be written as
+\begin{equation}
+	\label{eq:objective}
+	J(c_0)=\frac{1}{2} || d_{obs}-d_{syn}(c_0)||_2^2 \; ,
+\end{equation}
+where $d_{obs}$ is the observed waveform data and $d_{syn}$ is the synthetic data.
+
+According to the adjoint-state method \cite[]{tarantola05,plessix06}, the FWI gradient can be expressed as
+\begin{equation}
+	\label{eq:gradient}
+	g(\mathbf{x})=\sum_{t} P(\mathbf{x},t) \cdot \frac{\partial\mathbf{F}}{\partial c_0} \cdot \widetilde{P}(\mathbf{x},t) \; ,
+\end{equation}
+where the state variable $P(\mathbf{x},t)$ can be obtained by solving equation~\ref{eq:matrix1},
+the adjoint variable $\widetilde{P}(\mathbf{x},t)$ is calculated by solving equation~\ref{eq:matrix2}
+with data residual as the source term $\widetilde{f}(\mathbf{x}, t)$,
+and $\mathbf{F}$ is the forward operator, whose discretized form can be expressed as the square matrix in equation~\ref{eq:matrix1}.
+Using equations~\ref{eq:omega} and~\ref{eq:first-order}, $\mathbf{F}$ can also be expressed as:
+\begin{equation}
+	\label{eq:F}
+	\mathbf{F}=\left( \frac{\partial}{\partial t} + i\varphi \right)=\left( \frac{\partial}{\partial t} + \frac{p_1 + ip_2}{2} \right)\; .
+\end{equation}
+With the definitions of $p_1$ and $p_2$ in equation~\ref{eq:p1} and~\ref{eq:p22}, respectively, we can derive the gradient of $\mathbf{F}$ with respect to
+velocity $c_0$ as follows:
+\begin{eqnarray}
+	\label{eq:partial}
+	\frac{\partial\mathbf{F}}{\partial c_0} & = & -\frac{2\gamma+1}{2} c_0^{2\gamma} \omega_0^{-2\gamma} \sin(\pi \gamma) \cos^2 (\frac{\pi\gamma}{2}) |\mathbf{k}|^{2\gamma+1} \nonumber \\
+											& + & i(\gamma+1)c_0^{\gamma} \omega_0^{-\gamma} \sqrt{\cos(\pi\gamma)} \cos(\frac{\pi\gamma}{2}) |\mathbf{k}|^{\gamma+1} \; ,
+\end{eqnarray}
+which is a function of $\mathbf{x}$, and can be substituted into equation~\ref{eq:gradient} to calculate the velocity gradient.
+
+\subsection{Q-compensated gradient}
+
+The gradient construction in FWI requires both the forward-propagated source wavefield and the backward-propagated data residual wavefield.
+Without compensation, the source wavefield will be attenuated, and the data residual wavefield will be attenuated once again,
+which means that the crosscorrelation of source wavefield and data residual wavefield will suffer from the intrinsic attenuation along the entire wave propagation path twice.
+
+To compensate for attenuation, we can simply set $\beta_2$ in equation~\ref{eq:forward} to be $-1$ and keep $\beta_1$ unchanged.
+In this way, the amplitude can be amplified based on the Q model and the dispersion effects will be counteracted \cite[]{zhu14b}.
+Thus, the attenuation-compensated constant-Q wave equation corresponds to the following dispersion relation:
+\begin{equation}
+	\label{eq:relation2}
+	\frac{\omega^2}{c^2}=-\eta|\mathbf{k}|^{2\gamma+2} + i\omega\tau|\mathbf{k}|^{2\gamma+1} \; ,
+\end{equation}
+which defines a new phase function \cite[]{sun15}
+\begin{equation}
+	\label{eq:phase2}
+	\phi_2(\mathbf{x},\mathbf{k},\Delta t) = \mathbf{x} \cdot \mathbf{k}+\frac{ip_1 +p_2}{2} \Delta t \; .
+\end{equation}
+$\phi_2(\mathbf{x},\mathbf{k},\Delta t)$ is simply the complex conjugate of $\phi_1(\mathbf{x},\mathbf{k},\Delta t)$.
+For consistency with the gradient amplitude in acoustic media, we need to use $\phi_2(\mathbf{x},\mathbf{k},\Delta t)$ to compute both the
+source wavefield and data residual wavefield.
+While the wavefield for calculating the data residual is attenuated along the whole propagation path,
+the source and data residual wavefields for calculating the velocity gradient are both compensated to accumulate correct compensation factor along the entire propagation path.
+This resembles the Q-compensated RTM.
+When the crosscorrelation imaging condition is applied, attenuation compensation should be applied to both forward and backward wave propagations;
+when the deconvolution imaging condition is used, attenuation compensation should be just applied to backward wave propagation \cite[]{zhu16}.
+
+\section{Numerical Example}
+\inputdir{marmousi}
+
+We use a portion of a modified Marmousi velocity model (Figure~\ref{fig:vel1}) and a built Q model (Figure~\ref{fig:q1}) to test the Q-compensated FWI.
+The models include a water layer from the surface down to 200 m.
+Figure~\ref{fig:vel0} shows the initial velocity model, which is obtained by using a Gaussian function to convolve the original velocity model with a radius of 450 m, but keeping the water layer unchanged.
+A fixed-spread acquisition survey is generated, which consists of 26 shots spaced every 200 m.
+The source wavelet for generating the synthetic data is a Ricker wavelet centered at 10 Hz.
+The record length of the synthetic data is 2.2 s with a time step of 2 ms.
+To test the forward operator used in FWI, we compare the acoustic shot record generated by finite difference method and the shot record generated by our
+visco-acoustic low-rank one-step operator with Q=10000.
+The comparison in Figure~\ref{fig:datalr,datafd,comp} demonstrates that low-rank one-step operator can simulate the same shot record even though it is based on a different formulation of seismic wave equation.
+
+\multiplot{3}{vel1,q1,vel0}{width=0.5\textwidth}{Target and initial models. (a) A portion of a modified Marmousi velocity model that includes a water layer from the surface down to 200 m;
+(b) a Q model obtained from the velocity model and including two gas channels; (c) initial velocity model.}
+\multiplot{3}{datalr,datafd,comp}{height=0.4\textwidth}{Test low-rank one-step forward operator used in FWI. (a) Lowrank one-step shot record; (b) finite-difference shot record; (c) single trace comparison.}
+
+We perform two FWI experiments: one using the conventional velocity gradient and the other one using the proposed Q-compensated gradient.
+The multi-scale technique \cite[]{bunks95} is used to avoid the cycle-skipping problem.
+The seismic data are filtered into three frequency groups of increasing frequency content: 2-5 Hz, 2-9 Hz and 2-15 Hz.
+The optimization method is nonlinear conjugate gradients.
+We performed 20 iterations for each of the frequency groups successively.
+Without Q-compensation, both source and data residual wavefields get attenuated.
+Figure~\ref{fig:snap11,snap21,snap12,snap22,grad1,grad2} shows the (source and data residual) wavefield snapshot and the corresponding gradient comparisons without and with Q-compensation.
+These wavefields have the same traveltime of 1 s and are extracted from the same iteration of FWI.
+It is apparent that the wavefields with Q-compensation have a larger amplitude, especially for the deeper part,
+where the accumulated attenuation effects are stronger.
+With the compensated wavefields, we can construct a Q-compensated gradient,
+which has the same phase as the compensation-free gradient, but a Q-dependent amplitude recovery.
+
+\multiplot{6}{snap11,snap21,snap12,snap22,grad1,grad2}{width=0.47\textwidth}{Wavefield snapshots at traveltime 1 s, and the corresponding gradients.
+	Source wavefield (a) without and (b) with Q-compensation;
+	data residual wavefield (c) without and (d) with Q-compensation;
+	gradient (e) without and (f) with Q-compensation.
+}
+
+Figure~\ref{fig:1vel20,1cvel20,2vel20,2cvel20,3vel20,3cvel20} shows the FWI results after the inversions with and without Q-compensation for the three frequency groups.
+Comparing Figures~\ref{fig:1vel20} and~\ref{fig:1cvel20}, we observe the obvious improvement in the central and deep parts of the velocity model brought by the Q-compensated gradient.
+This phenomenon is easy to understand.
+As indicated by Figure~\ref{fig:snap11,snap21,snap12,snap22,grad1,grad2}, Q-compensated gradient has a larger amplitude, especially for the deep part.
+In the subsequent two stages, Q-compensated FWI keeps recovering more accurate velocity models at the cost of the same iteration numbers.
+Figures~\ref{fig:3vel20} and~\ref{fig:3cvel20} show the final inverted velocities without and with using Q-compensated gradient.
+The rock cap (indicated by arrows) in the velocity obtained by Q-compensated FWI has a larger value, and is closer to the true model.
+%The rock cap (the discontinuous cap of the low velocity layer at the bottom) in the velocity obtained by Q-compensated FWI has a larger value, and is closer to the true model.
+Figure~\ref{fig:misfits} shows the data misfit convergence comparison of FWI with and without Q-compensation at the three stages.
+At the initial several iterations of the first stage, Q-compensated FWI has a faster convergence rate, and then keeps the smaller misfit as the iterations continue.
+Comparing the misfit difference through the three stages, we can find that the relative misfit difference becomes bigger as the data frequencies increase.
+This implies that attenuation effect is more obvious for high frequencies, and therefore Q-compensated gradient can play a more significant role for high-frequency data inversion.
+
+%Comparing Figures~\ref{fig:1vel20} and~\ref{fig:1cvel20}, we observe a small improvement in the central part of the velocity model brought by the Q-compensated gradient.
+%This phenomenon is easy to understand.
+%Low-frequency data are insensitive to attenuation, so the choice of Q-compensated versus compensation-free gradient and even the choice
+%of acoustic versus viscoacoustic FWI is not very significant when only very low frequencies are used.
+%However, as the frequency increases, the amplitude loss caused by Q becomes larger, and the Q-compensated gradient starts to play a more significant role.
+%Figures~\ref{fig:3vel20} and~\ref{fig:3cvel20} show the final inverted velocities with and without using Q-compensated gradient.
+%The Q-compensated gradient allows FWI to converge to a more accurate velocity model.
+%The rock cap in the velocity obtained by Q-compensated FWI has a larger value, and is closer to the true model.
+%The conclusions we draw from Figure~\ref{fig:1vel20,1cvel20,2vel20,2cvel20,3vel20,3cvel20} can be verified by
+%the comparison of data misfit convergence curves shown in Figure~\ref{fig:misfits}.
+%During the inversion of the first frequency group, the two methods have almost the same convergence rate.
+%However, Q-compensated FWI has a faster convergence rate in the subsequent two stages, where FWI begins to use higher-frequency data to invert for deeper structures.
+%
+\multiplot{6}{1vel20,1cvel20,2vel20,2cvel20,3vel20,3cvel20}{width=0.47\textwidth}{The multi-scale FWI results.
+	20 iteration results of 2-5 Hz data (a) without and (b) with Q-compensation;
+	20 iteration results of 2-9 Hz data (c) without and (d) with Q-compensation;
+	20 iteration results of 2-15 Hz data (e) without and (f) with Q-compensation.
+}
+\plot{misfits}{width=0.9\textwidth}{Data misfit convergence curves of the multi-scale FWI (2-5, 2-9 and 2-15 Hz) without (red dashed line) and with (blue solid line) Q-compensation.}
+
+\section{Discussion}
+We use the proposed method of preconditioning to accelerate the convergence rate of time-domain FWI for velocity reconstruction.
+The synthetic example shows that the Q-compensated gradient can effectively accelerate the rate of convergence,
+although the low-frequency components of seismic data, that are less sensitive to attenuation, are mainly utilized in FWI.
+Previous studies about time-domain FWI in the presence of attenuation have shown that considering attenuation as a smooth background modeling parameter can significantly improve the velocity reconstruction \cite[]{kurzmann13,bai14}.
+Compared to those studies, our method not only incorporates the attenuation effects in the wave simulation process but aims to construct an amplitude-compensated and phase-preserved gradient based on the attenuation model.
+Similarly, the attenuation model used in this study is assumed to be known and it is not an inversion parameter.
+FWI inversion strategies for simultaneous and hierarchical velocity and attenuation inversion have been investigated by \cite{kamei13}.
+\cite{yang16} provided a theoretical review on the formulation of 3D visco-elastic multiparameter FWI.
+\cite{qu17} implemented viscoacoustic anisotropic FWI and tested their method's sensitivity to velocity, Q and anisotropic parameters.
+A background Q model can be estimated using either data-domain or image-domain tomographic techniques \cite[]{brzostowski92,quan97,hu11,zhou11,valenciano12,shen14,shen15b,shen15a,dutta16}.
+
+\section{Conclusions}
+We have implemented a visco-acoustic FWI using phase and amplitude decoupled constant-Q wave equation.
+By reversing the sign of amplitude-loss term in this equation, we have constructed the Q-compensated gradient, which has the correct phase information and a Q-dependent amplitude recovery.
+Low-rank wave extrapolation technique is used to formulate the exact adjoint operator in the construction of FWI gradient.
+Our testing results show that the FWI convergence rate can be notably accelerated by the Q-compensated gradient, which helps to rapidly construct the deep structures of velocity model.
+
+\section{Acknowledgments}
+We thank the assistant editor D. Draganov, the associate editor, J. Hou and one anonymous reviewer for providing valuable suggestions.
+We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support.
+Z. Xue and J. Sun were additionally supported by the Statoil Fellows Program at the University of Texas at Austion.
+We also thank the Texas Advanced Computing Center (TACC) for providing the computational resources used in this study.
+All computations presented in this paper are reproducible using the Madagascar software package \cite[]{fomel13b}.
+
+%\onecolumn
+\bibliographystyle{seg}
+\bibliography{paper}

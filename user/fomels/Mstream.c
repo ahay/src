@@ -20,10 +20,10 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv, adj, linear, kn, box;
-    int n1, n2, na, i1, i2, ia, ja, *mask;
+    bool inv, adj, linear, kn;
+    int n1, n2, na, i1, i2, ia, *mask;
     float dd, da, dn, rn, eps;
-    float *d, *a, *r, *d2, *r2, **aa;
+    float *d, *a, *r, *d2, *r2;
     sf_file inp, pef, out, pat, known;
 
     sf_init(argc,argv);
@@ -51,15 +51,6 @@ int main(int argc, char* argv[])
     d = sf_floatalloc(n1);
     r = sf_floatalloc(n1);
     a = sf_floatalloc(na);
-    
-    if (!sf_getbool("box",&box)) box=false;
-    /* box prediction */
-
-    if (box) {
-	aa =  sf_floatalloc2(na,na);
-    } else {
-	aa = NULL;
-    }
 
     linear = (NULL != sf_getstring("pattern"));
     /* pattern data (for linear operator) */
@@ -130,14 +121,6 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	if (NULL != aa) {
-	    for (ia=0; ia < na; ia++) {
-		for (ja=0; ja < na; ja++) {
-		    aa[ia][ja] = 0.0f;
-		}
-	    }
-	}
-
 	if (NULL != pef) {
 	    for (ia=0; ia < na; ia++) {
 		sf_floatwrite(a,na,pef);
@@ -174,25 +157,6 @@ int main(int argc, char* argv[])
 		    for (ia=0; ia < na; ia++) {
 			r2[i1] += a[ia]*d2[i1-1-ia];
 		    }
-		}
-	    }
-
-	    if (NULL != aa) {
-		for (ja=0; ja < na; ja++) {
-		    /* save the first element to later subtract it */
-		    aa[na-1][ja] = aa[0][ja];
-		}
-		for (ia=0; ia < na-1; ia++) {
-		    /* shift elements */
-		    for (ja=0; ja < na; ja++) {
-			aa[ia][ja] = aa[ia+1][ja];
-		    }
-		}
-		for (ja=0; ja < na; ja++) {
-		    /* save the new filter, update average */
-		    da = (a[ja] + rn*d[i1-1-ja] - aa[na-1][ja])/na;
-		    aa[na-1][ja] = a[ja];
-		    a[ja] += da;
 		}
 	    }
 
