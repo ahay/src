@@ -150,6 +150,87 @@ int main(int argc, char* argv[])
     }
 
     for (iter=0; iter < niter; iter++) {
+	if (0 == iter) { 
+	    for (i=0; i < 3; i++) { /* fork three children */
+		if ((pid[i] = fork()) < 0) sf_error("fork error:");
+		if (0 == pid[i]) break;
+	    }
+
+
+	    if (0 == pid[0]) {
+		/* feed x0 to p[2] */
+
+		xfile = fopen(x,"wb");
+
+		if (NULL == x0) {
+		    for (i=0; i < nbuf; i++) { buf[i] = 0.0f; }
+		} else {
+		    close(p[2][0]);
+		    close(STDOUT_FILENO);
+		    DUP(p[2][1]);
+		    
+		    to = sf_output("out");
+		}
+		
+		MLOOP( if (NULL != x0) {
+			sf_floatread(buf,mbuf,x0);
+			sf_floatwrite(buf,mbuf,to);
+		       }
+		       MWRITE(xfile); );
+		
+		fclose(xfile);
+
+		_exit(6);
+	    }
+	    
+	    if (0==pid[1] && NULL != x0) {
+		/* reads from p[2], runs the forward, and writes to p[3] */
+
+		close(p[2][1]);
+		close(STDIN_FILENO);
+		DUP(p[2][0]);
+		
+		close(p[3][0]);
+		close(STDOUT_FILENO);
+		DUP(p[3][1]);
+		
+		argv[argc-1][4]='0';
+		execvp(argv[0],argv);
+		
+		_exit(7);
+	    }
+	    
+	    if (0 == pid[2]) {
+		/* reads residual from p[3] */
+
+		if (NULL != x0) {
+		    close(p[3][1]);
+		    close(STDIN_FILENO);
+		    DUP(p[3][0]);
+		    from = sf_input("in");
+		}
+
+		Rfile = fopen(R,"wb");
+		DLOOP( sf_floatread(buf,dbuf,dat); 		       
+		       if (NULL != x0) {
+			   sf_floatread(buf2,dbuf,from);
+			   for (i=0; i < dbuf; i++) { buf[i] = buf2[i]-buf[i]; }
+		       } else {
+			   for (i=0; i < dbuf; i++) { buf[i] = -buf[i]; }
+		       }
+		       DWRITE (Rfile); );
+		fclose(Rfile);
+
+		_exit(8);
+	    }
+
+	    /* parent waits */
+	    for (i=0; i < 3; i++) { 
+		if (0 == pid[i]) sf_error("A child alive");
+		waitpid(pid[i],&status,0);
+	    }
+	}
+
 	for (i=0; i < 6; i++) { /* fork six children */
 	    if ((pid[i] = fork()) < 0) sf_error("fork error:");
 	    if (0 == pid[i]) break;
@@ -163,27 +244,8 @@ int main(int argc, char* argv[])
 
 	    to = sf_output("out");
 
-	    if (0 == iter) {
-		xfile = fopen(x,"wb");
-
-		if (NULL == x0) {
-		    for (i=0; i < nbuf; i++) { buf[i] = 0.0f; }
-		}
-		
-		MLOOP( if (NULL != x0) sf_floatread(buf,mbuf,x0);
-		       MWRITE(xfile); );
-		
-		fclose(xfile);
-
-		Rfile = fopen(R,"wb");
-		DLOOP( sf_floatread(buf,dbuf,dat); 
-		       for (i=0; i < dbuf; i++) { buf[i] = -buf[i]; }
-		       sf_floatwrite(buf,dbuf,to);
-		       DWRITE (Rfile); );
-	    } else {
-		Rfile = fopen(R,"rb");
-		DLOOP( DREAD(Rfile); sf_floatwrite(buf,dbuf,to); );
-	    }
+	    Rfile = fopen(R,"rb");
+	    DLOOP( DREAD(Rfile); sf_floatwrite(buf,dbuf,to); );
 	    fclose(Rfile);
 	    
 	    sf_warning("iter %d of %d",iter+1,niter);
