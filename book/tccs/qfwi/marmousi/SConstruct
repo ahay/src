@@ -6,6 +6,7 @@ from rsf.proj import *
 min2=3.2
 max2=8.2
 max1=1.8
+Fetch('vel.hh','marm')
 Flow('vel1','vel.hh',
     '''
 	dd form=native |
@@ -18,6 +19,7 @@ Result('vel1','grey bias=2.5 labelsz=10 labelfat=3 color=j scalebar=y barreverse
 
 # Quality factor 
 Flow('waterq1','vel1','window n1=20 |math output=100')
+Fetch('marmousi-q.rsf','marm')
 Flow('q1','marmousi-q.rsf waterq1',
     '''
 	transp |
@@ -103,6 +105,14 @@ Flow('right left','velp fft qp',
 # Check results
 ##########################
 # Data
+
+Flow('data5 wav','vel csource5 left right',
+     '''
+     mpifwigradlr verb=y Fdat=${TARGETS[0]} Fvel=${SOURCES[0]} Fsrc=${SOURCES[1]} 
+     Fleft=${SOURCES[2]} Fright=${SOURCES[3]} function=1 ns=26 ds=0.2 s0=0. nb=50 w0=1500 scalet=1 
+     Fwav=${TARGETS[1]}
+     ''',stdin=0,stdout=-1)
+
 Result('data5','real |grey title=')
 Result('data9','real |grey title=')
 Result('data15','real |grey title=')
