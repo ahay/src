@@ -1,3 +1,6 @@
+'''                                           
+selfdoc for m8r0?                                     
+'''
 ##   Copyright (C) 2010 University of Texas at Austin
 ##
 ##   This program is free software; you can redistribute it and/or modify
@@ -17,6 +20,9 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 from __future__ import unicode_literals
+'''
+   how do you wrote selfdoc for m8r?
+'''
 
 import os, sys, tempfile, re, subprocess, urllib
 
@@ -55,7 +61,7 @@ except:
 #  Karl
 #_swig_ = False   #kls allow temporary test of with old major path in the code
 #sys.stderr.write('reset _swig_=%s\n'%repr(_swig_))
-
+sys.stderr.write('local copy\n')   
 first_input=None
 
 import rsf.doc
@@ -635,6 +641,10 @@ class _File(File):
 
 class Input(_File):
     def __init__(self,tag='in'):
+        '''
+        Open an rsf file for reading.  This creartes the dictionary of meta data
+        from the input file headers (aka history).
+        '''
         global first_input
         if _swig_:
             if isinstance(tag,File):
@@ -803,6 +813,24 @@ class Input(_File):
                 pos += 1
 
     def read(self,data=[],shape=None,datatype=None):
+        '''
+        The read function will read an input file into an array and return the 
+        array.  The best way to call the function is with no parameters to read the 
+        whole file into memory.  The datatype is defined by the input file to be float,
+        integer, or conplex.  If you want to read part of the file, specify the shape.  
+        Example to read the whole file:
+            input_rsf=m8r.Input("myfile.rsf")
+            myndarray=input_rsf.read()
+        Example to read one trace:
+            n1=input_rsf("n1")
+            mytrace=input_rsf(shape=(n1))
+        Example to read a 2d slice:
+            n1=input_rsf("n1")
+            n2=input_rsf("n2")
+            mytrace=input_rsf(shape=(n2,n1))
+        To be backward conpatible you can create an array and pass it as.  This will
+        define the number of entries you want to read and the dataformat. 
+        '''
         if data == []:
             if shape==None:
                 shape=self.shape()
@@ -838,14 +866,28 @@ class Input(_File):
         return data
 
     def gettrace(self):
+        '''
+        Read one trace from the file.
+        '''
         datacount=self.shape()[-1]
         return self.read(shape=(datacount))
 
     def getalldata(self):
+        '''
+        read all the input data into memory.  This is the same as read().
+        '''
         return self.read()
 
     def get_tah(self):
-
+        '''
+        read one trace and header.  Usually sftahread or sftahsort is used
+        to read a trace from obe rsf file and trace header from another rsf file
+        and concatinate them and write them to standard output.  Later programs 
+        can then read trace_and_header data (tah).  gettah returns three objects.
+        A boolean that is Ture is end-of-file was encounterred, the trace, and the 
+        trace header.  If end of file is encounterred the traces and header will be
+        null
+        '''
         if _swig_:
             type_input_record='tah '.encode('utf-8')
             bytesread=c_rsf.sf_try_charread2(type_input_record,4,self.file)
@@ -866,7 +908,7 @@ class Input(_File):
             fromfilearray=np.fromfile(self.f,dtype=np.int32,count=1);
         if fromfilearray.size != 1:
             return (True, None, None)
-        input_record_length=fromfilearray[0];
+        input_record_length=fromfilearray[0]
 
         n1_traces=self.int('n1_traces')
 
@@ -941,6 +983,9 @@ class Input(_File):
         return (False,trace,header)
 
     def get_segy_keyindx(self,keyname):
+        '''
+        return the index of a segy header keyname.  
+        '''
         standard_segy_key=['tracl', 'tracr', 'fldr', 'tracf', 'ep',
                            'cdp', 'cdpt', 'trid', 'nvs', 'nhs',
                            'duse', 'offset', 'gelev', 'selev', 'sdepth',
@@ -971,6 +1016,9 @@ class Input(_File):
         return keyindx
 
     def string(self, nm):
+        '''
+        look up nm from the rsf file header (aka history) and return the string value
+        '''
         if _swig_:
            # c function only knows about utf-8 (ascii).  translate the unicode
            return c_rsf.sf_histstring(self.file,nm.encode('utf-8'))
@@ -981,6 +1029,9 @@ class Input(_File):
                 return None
 
     def int(self, nm):
+        '''
+        look up nm from the rsf file header (aka history) and return the integer value
+        '''
         if _swig_:
             # c function only knows about utf-8 (ascii).  translate the unicode
             if sys.version_info[0] >= 3:
@@ -1000,6 +1051,9 @@ class Input(_File):
 
 
     def float(self, nm):
+        '''
+        look up nm from the input file header (aka history) and return the floating point value 
+        '''
         if _swig_:
             # c function only knows about utf-8 (ascii).  translate the unicode
             if sys.version_info[0] >= 3:
@@ -1017,6 +1071,9 @@ class Input(_File):
                 return None
 
     def close(self):
+        '''
+           close the file.
+        '''
         # kls
         #if not self.copy:
         #    c_rsf.sf_fileclose(self.f)
