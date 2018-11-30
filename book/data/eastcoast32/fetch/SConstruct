@@ -1,4 +1,4 @@
-from rsf.suproj import * 
+from rsf.proj import * 
 
 # 11/01/2017 discoverred USGS moved the data.  It is all still available
 
