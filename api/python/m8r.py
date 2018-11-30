@@ -61,7 +61,7 @@ except:
 #  Karl
 #_swig_ = False   #kls allow temporary test of with old major path in the code
 #sys.stderr.write('reset _swig_=%s\n'%repr(_swig_))
-sys.stderr.write('local copy\n')   
+#sys.stderr.write('local copy m8r.py\n')   
 first_input=None
 
 import rsf.doc
@@ -1264,24 +1264,24 @@ class Output(_File):
         else:
             if not self.headerflushed:
                 if trace.dtype==np.float32:
-                    self.put('data_format','native_float')
+                    self.put('data_format','native_float'.encode('utf-8'))
                 if trace.dtype==np.complex64:
                     sys.stderr.write('error: python Output.put_tah does\n')
                     sys.stderr.write('       support complex traces\n')
                     # if you want to add this fix esize below
                     quit()
-                    self.put('data_format','native_complex')
+                    self.put('data_format','native_complex'.encode('utf-8'))
                 if trace.dtype==np.int32:
-                    self.put('data_format','native_int')
+                    self.put('data_format','native_int'.encode('utf-8'))
 
                 if header.dtype==np.float32:
-                    self.put('header_format','native_float')
+                    self.put('header_format','native_float'.encode('utf-8'))
                 if header.dtype==np.complex64:
                     sys.stderr.write('error: cannot use complex headrs\n')
                     quit()
-                    self.put('header_format','native_complex')
+                    self.put('header_format','native_complex'.encode('utf-8'))
                 if header.dtype==np.int32:
-                    self.put('header_format','native_int')
+                    self.put('header_format','native_int'.encode('utf-8'))
                 self.flushheader(first_input)
             # check array data type matches file data_format
             #temp=np.array([116,  97, 104,  32], dtype=np.int8)
