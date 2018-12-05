@@ -17,6 +17,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function
 import os, sys
 import numpy, m8r
 from las import LASReader
@@ -55,7 +56,7 @@ Check the output using sfheaderattr < file.rsf segy=n
     '''
 
     if len(sys.argv) < 2:
-       print usage
+       print(usage)
        sys.exit(1)
     
     lasfile = sys.argv[1]
