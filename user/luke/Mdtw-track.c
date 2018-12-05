@@ -9,13 +9,13 @@
 
 int main (int argc, char* argv[])
 {
-	/* declare files */
-    sf_file _in, _out;
+	/* declare in file */
+    sf_file _in;
 	/* initialize rsf */
     sf_init (argc,argv);
 	/* get files from inputs */
     _in = sf_input("in");
-    _out = sf_output("out");
+
 	
 	int n1, n2, maxshift;
 	float d1, d2, o1, o2, str;
@@ -59,6 +59,7 @@ int main (int argc, char* argv[])
 		shifts_out[i] = (float)shifts[i];
 		}
 	/* define output file parameters */ 
+	sf_file _out = sf_output("out");
 	sf_putint   (_out,"n1",n2);
 	sf_putfloat (_out,"d1",d2);
 	sf_putfloat (_out,"o1",o2);
