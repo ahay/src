@@ -26,6 +26,7 @@ def las2rsf(lasf,rsff):
     las = LASReader(lasf)
     rsf = m8r.Output(rsff)
     data = las.data2d
+    data = data.astype('float32')
     shape = data.shape
     rsf.put('n1',shape[1])
     rsf.put('n2',shape[0])
@@ -39,11 +40,17 @@ def las2rsf(lasf,rsff):
         rsf.put(key,name)
         item = las.curves.items[name]
         rsf.put(key+'_units',item.units)
-        desc = ' '.join(item.descr.translate(None,'"').split()[1:])
+        if sys.version_info[0] >= 3:
+            desc = ' '.join(item.descr.translate(str.maketrans('','','"')).split()[1:])
+        else:
+            desc = ' '.join(item.descr.translate(None,'"').split()[1:])
         rsf.put(name,desc)
     for name in las.well.names:
         item = las.well.items[name]
-        desc = item.data.translate(None,'"')
+        if sys.version_info[0] >= 3:
+            desc = item.data.translate(str.maketrans('','','"'))
+        else:
+            desc = item.data.translate(None,'"')
         rsf.put(name,desc)
     rsf.write(data)
     rsf.close()
