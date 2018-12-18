@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-easypath reorder seisletrgt
+easypath reorder seisletrgt shifts2
 '''
 
 ccprogs = ''
