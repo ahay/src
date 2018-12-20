@@ -23,7 +23,7 @@
 static int delete_element(int *arr, int n, int x)
 /* delete a given element x from an array */
 {
-    int i=0;
+    int i=0, j;
     while (i < n) {
         for (i = 0; i < n; i++)
             if (arr[i] == x)
@@ -31,7 +31,7 @@ static int delete_element(int *arr, int n, int x)
 
         if (i < n) {
             n = n - 1;
-            for (int j = i; j < n; j++)
+            for (j = i; j < n; j++)
                 arr[j] = arr[j+1];
         }
     }
@@ -41,7 +41,8 @@ static int delete_element(int *arr, int n, int x)
 static int delete_elements(int *arr1, int n1, int *arr2, int n2)
 /* delete several elements in arr2 from arr1 */
 {
-    for (int i = 0; i < n2; i++)
+    int i;
+    for (i = 0; i < n2; i++)
         n1 = delete_element(arr1, n1, arr2[i]);
 
     return n1;
@@ -78,7 +79,8 @@ static int find_union(int *array1, int n1, int *array2, int n2, int **union_arra
 static void clip(int *arr1, int n, int low, int high)
 /* find values which are out of range and set them as 0 */
 {
-    for (int i = 0; i < n; i++) {
+    int i;
+    for (i = 0; i < n; i++) {
         if (arr1[i] < low)
             arr1[i] = 0;
         else if (arr1[i] > high)
@@ -97,9 +99,10 @@ static int find_neighbours(int *indexes,           /* one set of indexes */
     int num_neighbours = 0; // return value
     int length;             // the number of neighbours of one index
     int *a;                 // temporary arrary to store the neighbours of one index
+    int i;
 
     // get union of neighbours of each index and put it to neighbours array
-    for (int i = 0; i < num_indexes; i++) {
+    for (i = 0; i < num_indexes; i++) {
         if (indexes[i]%n1 == 0) { // top boundary
 
             length = 5;
@@ -153,8 +156,8 @@ static int find_neighbours(int *indexes,           /* one set of indexes */
 static void find_indexes(int *arr1, int n1, int x, int *indexes)
 /* find all indexes belonging to xth index set */
 {
-    int j = 0;
-    for (int i = 0; i < n1; i++) {
+    int i, j = 0;
+    for (i = 0; i < n1; i++) {
         if (arr1[i] == x)
             indexes[j++] = i+1;
     }
@@ -163,7 +166,8 @@ static void find_indexes(int *arr1, int n1, int x, int *indexes)
 static void used_neighbours(int *arr1, int n1, int *a1)
 /* find indexes of used neighbours and set them as 0 */
 {
-    for (int i = 0; i < n1; i++) {
+    int i;
+    for (i = 0; i < n1; i++) {
         if (a1[arr1[i]-1] != 0)
             arr1[i] = 0;
     }
@@ -172,9 +176,9 @@ static void used_neighbours(int *arr1, int n1, int *a1)
 static int find_left_indexes(int *arr1, int n1, int **left)
 /* find indexes haven't been selected */
 {
-    int j = 0;
+    int i, j = 0;
     int *arr2 = sf_intalloc(n1);
-    for (int i = 0; i < n1; i++) {
+    for (i = 0; i < n1; i++) {
         if (arr1[i] == 0)
             arr2[j++] = i+1;
     }
@@ -198,9 +202,10 @@ static int find_left_indexes(int *arr1, int n1, int **left)
 static float corr_coeff(float *arr1, float *arr2, int nt)
 /* compute the correlation coefficient of two traces */
 {
+    int i;
     float simi, square_sum1=0., square_sum2=0., multi_sum=0.;
 
-    for (int i = 0; i < nt; i++) {
+    for (i = 0; i < nt; i++) {
         square_sum1 += arr1[i]*arr1[i];
         square_sum2 += arr2[i]*arr2[i];
         multi_sum   += arr1[i]*arr2[i];
@@ -213,8 +218,9 @@ static float corr_coeff(float *arr1, float *arr2, int nt)
 static float* diff(float **arr1, int x, int *arr2, int *arr3, int n3, int nt)
 /* compute the ute difference between one value and an array */
 {
+    int i;
     float *arr4 = sf_floatalloc(n3);
-    for (int i = 0; i < n3; i++) 
+    for (i = 0; i < n3; i++) 
         arr4[i] = corr_coeff(arr1[x-1], arr1[arr2[arr3[i]-1]-1], nt);
 
     return arr4;
@@ -224,8 +230,8 @@ static int find_max(float *arr, int n1)
 /* find the location of the maximum in an array */
 {
     float max = arr[0];
-    int loc_max = 0;
-    for (int i = 0; i < n1; i++) {
+    int i, loc_max = 0;
+    for (i = 0; i < n1; i++) {
         if (arr[i] > max) {
             max = arr[i];
             loc_max = i;
@@ -241,6 +247,7 @@ int *pathway(float **data,      /* data array */
             int n1, int n2      /* size of the index sets */)
 /*< find the path for the seislet transform >*/
 {
+    int i, j, loc_max;
     int iterations = 1;
     int num_neighbours;
     int *neighbours;
@@ -257,22 +264,22 @@ int *pathway(float **data,      /* data array */
     int indexes[num_indexes];
 
     /* initialize */
-    for (int i = 0; i < n1*n2; i++)
+    for (i = 0; i < n1*n2; i++)
         path[i] = 0;
-    for (int i = 0; i < n1*n2; i++)
+    for (i = 0; i < n1*n2; i++)
         index_sets_new[i] = 0;
 
     /* always start from the first index */
     path[0] = 1;
 
 
-    for (int i = 0; i < n1*n2-1; i++) {
+    for (i = 0; i < n1*n2-1; i++) {
         
         /* find all indexes belonging to path[i]th index set */
         find_indexes(index_sets, n1*n2, path[i], indexes);
 
         /* connect two neighbour indexes sets together */
-        for (int j = 0; j < num_indexes; j++)
+        for (j = 0; j < num_indexes; j++)
             index_sets_new[indexes[j]-1] = floor(i/2)+1;
 
         /* find neighbours around all indexes */
@@ -292,7 +299,7 @@ int *pathway(float **data,      /* data array */
         diff_temp = diff(data, path[i], index_sets, neighbours, num_neighbours, nt);
 
         /* get the index of the maximum */
-        int loc_max = find_max(diff_temp, num_neighbours);
+        loc_max = find_max(diff_temp, num_neighbours);
 
         /* find the index corresponding to the maximum and store the data value */
         path[i+1] = index_sets[neighbours[loc_max]-1];
@@ -300,7 +307,7 @@ int *pathway(float **data,      /* data array */
 
     /* find indexes belonging to the last index set */
     find_indexes(index_sets, n1*n2, path[n1*n2-1], indexes);
-    for (int j = 0; j < num_indexes; j++)
+    for (j = 0; j < num_indexes; j++)
         index_sets_new[indexes[j]-1] = floor((n-1)/2)+1;
 
     return path;
@@ -314,15 +321,16 @@ float **reorder(float **data,   /* data array */
                bool inv         /* inverse transform */)
 /*< reorder the data according to the path vector >*/
 {
+    int i;
     float **data_new     = sf_floatalloc2(nt, n1*n2);   // new data array corresponding to the path 
 
     if (inv) {
-        for (int i = 0; i < n1*n2; i++)
-            for (int j = 0; j < nt; j++)
+        for (i = 0; i < n1*n2; i++)
+            for (j = 0; j < nt; j++)
                 data_new[path[i]-1][j] = data[i][j];
     } else {
-        for (int i = 0; i < n1*n2; i++) 
-            for (int j = 0; j < nt; j++)
+        for (i = 0; i < n1*n2; i++) 
+            for (j = 0; j < nt; j++)
                 data_new[i][j] = data[path[i]-1][j];
     }
 
