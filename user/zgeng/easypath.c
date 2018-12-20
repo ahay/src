@@ -321,7 +321,7 @@ float **reorder(float **data,   /* data array */
                bool inv         /* inverse transform */)
 /*< reorder the data according to the path vector >*/
 {
-    int i;
+    int i, j;
     float **data_new     = sf_floatalloc2(nt, n1*n2);   // new data array corresponding to the path 
 
     if (inv) {
