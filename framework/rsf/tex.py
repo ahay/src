@@ -359,8 +359,12 @@ def listoffigs(target=None,source=None,env=None):
     stem = suffix.sub('',pdf)
 
     try:
-        lof = open(stem+'.lof')
-        log = open(stem+'.log')
+        if sys.version_info[0] >= 3:
+            lof = open(stem+'.lof',encoding='latin1')
+            log = open(stem+'.log',encoding='latin1')
+        else:
+            lof = open(stem+'.lof')
+            log = open(stem+'.log')
     except:
         return target, source
 
