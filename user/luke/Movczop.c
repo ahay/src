@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     bool verb;
     int nx,nv,np,nw, ix,iv,ip,iw;
     float v0,v2,v,dv, dx,dp,dw, x0,p0,w0, x,p,w;
-    sf_complex *ctrace, *ctrace2, shift;
+    sf_complex *ctrace, *ctrace2, shift, *ctrace2a;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -76,8 +76,8 @@ int main(int argc, char* argv[])
     dw *= 2.*SF_PI;
     w0 *= 2.*SF_PI;
 
-    ctrace  = sf_complexalloc(nw);
-    ctrace2 = sf_complexalloc(nw);
+    ctrace   = sf_complexalloc(nw);
+    ctrace2  = sf_complexalloc(nw*nv);
 
     for (ip=0; ip < np; ip++) {
 	if (verb) sf_warning("slope %d of %d;", ip+1,np);
@@ -87,13 +87,12 @@ int main(int argc, char* argv[])
 	    x = x0+ix*dx; 
 	    
 	    sf_complexread(ctrace,nw,in);
- 
+#ifdef _OPENMP
+#pragma omp parallel for private(iw,w,shift,v,v2,iv)
+#endif		
 	    for (iv=0; iv < nv; iv++) {
 		v = v0 + (iv+1)*dv;
 		v2 = ((v0*v0) - (v*v)); 
-#ifdef _OPENMP
-#pragma omp parallel for private(iw,w,shift)
-#endif		
 		for (iw=0; iw < nw; iw++) {
 		    w = w0+iw*dw;
 		    w = - 0.25f * 0.25f * v2 * p * (p * w + 2.0f * x);
@@ -101,14 +100,13 @@ int main(int argc, char* argv[])
 		    shift = sf_cmplx(cosf(w),sinf(w));
 		    
 #ifdef SF_HAS_COMPLEX_H
-		    ctrace2[iw] = ctrace[iw] * shift;
+		    ctrace2[iw+iv*nw] = ctrace[iw] * shift;
 #else
-		    ctrace2[iw] = sf_cmul(ctrace[iw],shift);
+		    ctrace2[iw+iv*nw] = sf_cmul(ctrace[iw],shift);
 #endif
-		} /* w */
-
-		sf_complexwrite(ctrace2,nw,out);
+		    } /* w */
 	    } /* v */
+		sf_complexwrite(ctrace2,nw*nv,out);
  	} /* x */
     } /* p */
     if (verb) sf_warning(".");
