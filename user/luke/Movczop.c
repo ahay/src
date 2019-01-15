@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     bool verb;
     int nx,nv,np,nw, ix,iv,ip,iw;
     float v0,v2,v,dv, dx,dp,dw, x0,p0,w0, x,p,w;
-    sf_complex *ctrace, *ctrace2, shift, *ctrace2a;
+    sf_complex *ctrace, *ctrace2, shift;
     sf_file in, out;
 
     sf_init (argc,argv);
