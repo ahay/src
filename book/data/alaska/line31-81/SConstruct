@@ -13,13 +13,13 @@ from rsf.suproj import *
 # first download the display of the previous stack
 # download and view the image of the previous stack:
 Fetch('31_81_IM.JPG',
-      server='http://certmapper.cr.usgs.gov',
-      top='data/NPRA/SEISMIC/1981/31_81',
-      dir='IMAGES')
-#THis can be done using:
-# wget http://certmapper.cr.usgs.gov/data/NPRA/SEISMIC/1981/31_81/IMAGES/31_81_IM.JPG 
+      server='http://s3.amazonaws.com',
+      top='open.source.geoscience/open_data/alaska',
+      dir='line31-81')
+#This can be done using:
+# wget https://s3.amazonaws.com/open.source.geoscience/open_data/alaska/line31-81/31_81_IM.JPG
 
-oodraw = WhereIs('oodraw')
+oodraw = WhereIs('oodraw') or WhereIs('open')
 
 if oodraw:
     Result('prevstack','31_81_IM.JPG',
@@ -31,17 +31,17 @@ pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
 if pdfread:
     # download and view the survey notes:
     Fetch('31_81_S.PDF',
-      server='http://certmapper.cr.usgs.gov',
-      top='data/NPRA/SEISMIC/1981/31_81',
-      dir='DOCUMENTS')
+      server='http://s3.amazonaws.com',
+      top='open.source.geoscience/open_data/alaska',
+      dir='line31-81')
     Result('surveylog','31_81_S.PDF',
            pdfread + ' $SOURCE',stdin=0)
     
     # download and view the observer notes:
     Fetch('31_81_O.PDF',
-          server='http://certmapper.cr.usgs.gov',
-          top='data/NPRA/SEISMIC/1981/31_81',
-          dir='DOCUMENTS')
+          server='http://s3.amazonaws.com',
+          top='open.source.geoscience/open_data/alaska',
+          dir='line31-81')
     Result('observerlog','31_81_O.PDF',
            pdfread + ' $SOURCE',stdin=0)
 
@@ -54,9 +54,9 @@ segyclean
 rawsegy=['L23535','L23536','L23537']
 for file in rawsegy  :
     Fetch(file+'.SGY',
-	  server='http://certmapper.cr.usgs.gov',
-      	  top='data/NPRA/SEISMIC/1981/31_81',
-      	  dir='DMUX')
+         server='http://s3.amazonaws.com',
+         top='open.source.geoscience/open_data/alaska',
+         dir='line31-81')
     Flow([file, file+'.bin',  file+'.asc'],
          file+'.SGY',segyread,stdin=0)
 
@@ -162,9 +162,9 @@ Result('allshots','allshots',
 
 # download, convert, and view the stack from legacy processing
 Fetch('31_81_PR.SGY',
-      server='http://certmapper.cr.usgs.gov',
-      top='data/NPRA/SEISMIC/1981/31_81',
-      dir='PROCESSED')
+      server='http://s3.amazonaws.com',
+      top='open.source.geoscience/open_data/alaska',
+      dir='line31-81')
 file='checkstack'
 Flow([file, file+'.bin', file+'.asc'],
      '31_81_PR.SGY',segyread,
