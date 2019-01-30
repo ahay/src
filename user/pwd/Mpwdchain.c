@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&m1)) sf_error("No n1= in input");
-    if (!sf_histint(inp,"n1",&m2)) sf_error("No n2= in input");
+    if (!sf_histint(inp,"n2",&m2)) sf_error("No n2= in input");
     n = m1*m2;
     nt = sf_leftsize(inp,2);
 
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 	
-	sf_cconjgrad_init(n2, n2, n*nc, n*nc, 1., 1.e-6, verb, false);
+	sf_conjgrad_init(n2, n2, n*nc, n*nc, 1., 1.e-6, verb, false);
 
 	for (iter=0; iter < niter; iter++) {
 	    pwdchain_apply(y1,r);

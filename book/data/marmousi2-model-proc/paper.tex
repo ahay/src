@@ -2,7 +2,7 @@
 \righthead{Marmoisi2}
 \footer{Modeling and Processing with Madagascar}
 
-\title{2D Modeling and Basic Processing with Madagascar}   
+\title{2D modeling and basic processing with Madagascar}   
 \author{Pongthep Thongsang, Lian Jiang, Hao Li, and Karl Schleicher}
 
 \email{k\_schleicher@hotmail.com}
@@ -21,8 +21,8 @@ This document demonstrates finite difference modeling and simple processing
 using the Madagascar software package.  The paper uses this simple processing 
 sequence to teach the basics of Madagascar. 
 
-The segy file of the Marmousi2 model is downloaded from the Internet and used
-to create a few synthetic shotpoints.  Geometry is computed and loaded in the
+The SEGY file of the Marmousi2 model is downloaded from the Internet and used
+to create a few synthetic shots.  Geometry is computed and loaded in the
 trace headers.   Simple processing including amplitude correction, CMP
 sorting, velocity conversions, NMO correction, stack, Kirchhoff migration, and
 least squares Kirchhoff migration are applied.  Displays of each processing
@@ -30,7 +30,7 @@ stage are created.  The full processing sequence takes less that 6 minutes on
 a 2013 MacBook Pro computer. 
 
 This processing sequence was developed at the 2017 Seismic Working Workshop - 
-Reproducible Tutorials in Houston.  Processing can be reproduced using an 
+Reproducible Tutorials in Houston.  All processing can be reproduced using an 
 SConstruct file.
 
 \end{abstract}
@@ -48,14 +48,15 @@ reproduced using an SConstruct file listed in the appendix or by using the file:
 in the Madagascar distribution.
 
 \section{Download, Reformat, Smooth, and Display the Marmousi2 Velocity Model}
-We use the p-wave velocity field from the Marmousi2 model described by Irons 
-\cite[]{irons}.  Figure \ref{fig:vp} shows the part of the model used in this 
+We use the p-wave velocity field from the Marmousi2 model described by  
+\cite{irons}.  Figure \ref{fig:vp} shows the part of the model used in this 
 paper.  Figures \ref{fig:vpforward} and \ref{fig:vpmigration} show the model 
 smoothed for modeling and processing (NMO and migration). 
 
 These figures can be created with the command:
-
+\begin{verbatim}
 scons vp.view vpforward.view vpmigration.view
+\end{verbatim}
 
 \inputdir{model-proc}
 \plot{vp}{width=\textwidth}{A portion of Marmousi2 velocity used in this paper.}
@@ -64,16 +65,18 @@ scons vp.view vpforward.view vpmigration.view
 
 \section{Finite Difference Model Shotpoints, Model and subtract the direct arrivals}
 
-The wave equation program sfmodeling2d \cite[]{Yang} is used to create 10 
-synthetic shot records using the slightly smoothed Marmousi model.   One 
-synthetic shotpoint is show in Figure \ref{fig:shot2500}. Sfmodeling2d was also
-run with a constant velocity to model the direct arrivals.  The direct arrivals
-were subtracted from the synthetic and shown in Figure 
+The wave equation program \texttt{sfmodeling2d} \cite[]{Yang} is used
+to create 10 synthetic shot records using the slightly smoothed
+Marmousi model.  One synthetic shotpoint is shown in
+Figure \ref{fig:shot2500}. We also ran \texttt{sfmodeling2d} with a
+constant velocity to model the direct arrivals.  The direct arrivals
+were subtracted from the synthetic and shown in Figure
 \ref{fig:mutearr2500} 
 
 These figures and some others can be created with the command:
-
+\begin{verbatim}
 scons shots.view shot2500.view mutearr.view mutearr2500.view
+\end{verbatim}
 
 \plot{shot2500}{width=\textwidth}{Shotpoint at x=2500 computed with acoustic 
 finite difference.}
@@ -96,21 +99,23 @@ removing the 250 ms delay in the modeling Ricker wavelet, NMO and stack,
 (Figure \ref{fig:stack}).
 
 This processing can be run with the command:
-
+\begin{verbatim}
 scons stack.view 
+\end{verbatim}
 
 \plot{stack}{width=\textwidth}{CDP stack of 10 shotpoints.}
 
 \section{Post stack Kirchhoff Migration and Least Squares Kirchhoff Migration}
 
-The stack and RMS velocity were input to sfkirchnew to apply Post stack
+The stack and RMS velocity were input to sfkirchnew to apply post-stack
 Kirchhoff migration (Figure \ref{fig:ktmig}).  Least squares Kirchhoff 
-migration was computed using the sfkirchinvs program (Figure 
+migration was computed using the \texttt{sfkirchinvs} program (Figure 
 \ref{fig:invsparse}).  
 
 These processing can be reproduced with the command:
-
+\begin{verbatim}
 scons ktmig.view invsparse.view
+\end{verbatim}
 
 \plot{ktmig}{width=\textwidth}{Post stack Kirchhoff migration.}
 \plot{invsparse}{width=\textwidth}{Least squares Kirchhoff migration.}
@@ -121,17 +126,18 @@ Reproducible Tutorials in Houston \cite[]{schleicher}.  This working workshop
 was supported by Wavelets (The University of Houston student SEG chapter), 
 The Bureau of Economic Geology at the University of Texas, and SEG.
 
-We thank Allied Geophysical Laboratories (AGL) for creating and sharing the 
-Marmousi2 model and synthetic data.  http://www.agl.uh.edu/
+We thank Allied Geophysical Laboratories (AGL)\footnote{\url{http://www.agl.uh.edu/}} for creating and sharing the 
+Marmousi2 model and synthetic data \cite[]{SEG-2002-19791982}.  
 
-\newpage
+\appendix
 \section{Appendix}
 
-The file \emph{\$RSFSRC/book/data/marmousi2-model-proc/model-proc/SConstruct} 
-is an scons script that applies the processing described in this paper.  The 
-contents of the file is listed below.
+The file \texttt{\$RSFSRC/book/data/marmousi2-model-proc/model-proc/SConstruct} 
+is a script that applies the processing described in this paper.  The 
+contents of the file are listed below.
 
 \tiny
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{model-proc/SConstruct}
 \normalsize
 

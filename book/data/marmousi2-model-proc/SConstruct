@@ -1,3 +1,4 @@
 from rsf.tex import *
 
-End(options='segabs',use='hyperref,listings')
+End(options='reproduce',use='hyperref,listings',
+    color='vp vpforward vpmigration')

@@ -1,4 +1,4 @@
-/* Chain of PWDs - linear operator */
+/* Chain of PWDs */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,65 +24,49 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj;
-    int m1, m2, n, nc, n2, n1;
-    float *xn, *x1, *dx, *r;
-    sf_file inp, out, dip, sig;
+    int m1, m2, i, n, nc, n2, n1;
+    float *xn, *x1, *x2, *r;
+    sf_file inp, out, sig;
 
     sf_init(argc,argv);
     inp = sf_input("in");
-    dip = sf_input("dip");
     sig = sf_input("sig");
     out = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
-    if (!sf_histint(dip,"n1",&m1)) sf_error("No n1= in dip");
-    if (!sf_histint(dip,"n2",&m2)) sf_error("No n2= in dip");
-    if (!sf_histint(dip,"n3",&n2)) sf_error("No n3= in dip");
+    if (!sf_histint(inp,"n1",&m1)) sf_error("No n1= in dip");
+    if (!sf_histint(inp,"n2",&m2)) sf_error("No n2= in dip");
+    if (!sf_histint(inp,"n3",&n2)) sf_error("No n3= in dip");
 
     n = m1*m2;
 
     nc = (n2+1)/2;
 
-    if (!sf_getbool("adj",&adj)) adj=false;
-    /* adjoint flag */
-
-    if (adj) {
-	sf_putint(out,"n3",n2);
-    } else {
-	sf_putint(out,"n3",nc);
-    }
-
+    sf_putint(out,"n3",nc);
+ 
     n2 *= n; 
     n1 = (n2+n)/2;
 
- 
     sf_warning("nc=%d n=%d",nc,n);
     
     x1 = sf_floatalloc(n);
     sf_floatread(x1,n,sig);
 
+    x2 = sf_floatalloc(n);
+    for (i=0; i < n; i++) {
+	x2[i] = 0.0f;
+    }
+	
     xn = sf_floatalloc(n2);
-    sf_floatread(xn,n2,dip);
+    sf_floatread(xn,n2,inp);
 
     pwdchain_init(m1,m2,1,nc,x1,xn,xn+n*nc);
-    
-    dx = sf_floatalloc(n2);
+ 
     r =  sf_floatalloc(n1);
+ 
+    pwdchain_apply(x2,r);
 
-    if (adj) {
-	sf_floatread(r,n1,inp);
-    } else {
-	sf_floatread(dx,n2,inp);
-    } 
-
-    pwdchain_lop(adj,false,n2,n1,dx,r);
-
-    if (adj) {
-	sf_floatwrite(dx,n2,out);
-    } else {
-	sf_floatwrite(r,n1,out);
-    } 
-
+    sf_floatwrite(r,n1,out);
+ 
     exit(0);
 }
