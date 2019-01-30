@@ -43,7 +43,7 @@ techniques.  The computation runs quickly which makes it easy to
 modify the SConstruct files and run new experiments.  Processing can be 
 reproduced using an SConstruct file listed in the appendix or by using the file:
 
- \$RSFSRC/book/data/mourmousi2-model-proc/model-proc/SConstruct 
+ \$RSFSRC/book/data/mourmousi2mp/modelproc/SConstruct 
 
 in the Madagascar distribution.
 
@@ -58,7 +58,7 @@ These figures can be created with the command:
 scons vp.view vpforward.view vpmigration.view
 \end{verbatim}
 
-\inputdir{model-proc}
+\inputdir{modelproc}
 \plot{vp}{width=\textwidth}{A portion of Marmousi2 velocity used in this paper.}
 \plot{vpforward}{width=\textwidth}{The velocity smoothed for modeling.}
 \plot{vpmigration}{width=\textwidth}{The interval velocity smoothed for NMO and migration. }
@@ -132,13 +132,13 @@ Marmousi2 model and synthetic data \cite[]{SEG-2002-19791982}.
 \appendix
 \section{Appendix}
 
-The file \texttt{\$RSFSRC/book/data/marmousi2-model-proc/model-proc/SConstruct} 
+The file \texttt{\$RSFSRC/book/data/marmousi2mp/modelproc/SConstruct} 
 is a script that applies the processing described in this paper.  The 
 contents of the file are listed below.
 
 \tiny
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single]{model-proc/SConstruct}
+\lstinputlisting[frame=single]{modelproc/SConstruct}
 \normalsize
 
 \bibliographystyle{seg}

@@ -16,6 +16,8 @@ regularization (Xue, Zhu, and Fomel)
 * tccs/elas: Recursive integral time extrapolation of elastic waves
   using low-rank symbol approximation (Sun, Fomel, Sripanich, and
   Fowler)
+* data/marmousi2mp: 2D modeling and basic processing with Madagascar
+  (Thongsang, Jiang, Li, and Schleicher}
 
 To SCons:
 
