@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
 	if (!sf_histfloat(_in,"o1",&o1))   sf_error("No o1=");
     /* maximum shift */
     /* Get smoothing radius */
-    if (!sf_getint("maxshift",&maxshift))   sf_error("Need maxshift=");
+    if (!sf_getint("maxshift",&maxshift))   maxshift=20;
     /* maximum shift */
     if (!sf_getfloat("exp",&ex))   ex = 2;
     /* error exponent (g-f)^exp */
