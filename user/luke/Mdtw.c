@@ -19,7 +19,7 @@ int main (int argc, char* argv[])
     _ref  = sf_input ("ref");
 	/* reference trace */ 
     _out = sf_output("out");
-	int n1, maxshift;
+	int n1, maxshift, i;
 	float d1, o1, ex, str;
     /* Get sampling info */
     if (!sf_histint  (_in,"n1",&n1))   sf_error("No n1=");
@@ -125,7 +125,7 @@ int main (int argc, char* argv[])
     if ( NULL != sf_getstring("shifts") ) {
 		/* output integer shifts as floats */
 		shifts_out = sf_floatalloc(n1);
-		for (int i = 0 ; i < n1 ; i ++){
+		for ( i = 0 ; i < n1 ; i ++ ){
 			shifts_out[i] = (float)shifts[i];
 		}
 	/* accumulation errors from forward and backtracking */ 
