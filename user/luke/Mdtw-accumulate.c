@@ -48,13 +48,6 @@ int main (int argc, char* argv[])
 	float* accumulate = sf_floatalloc(n1*n2);
 	/* initialize the accumulation array, wit zeros if directional 
 	   and with the negative errors if symmetric */
-	if (dir == 0){
-		dtw_acopy(accumulate,mismatch,n1*n2) ;
-		dtw_mul(accumulate,-1., n1*n2) ;
-	} else { 
-		/* set to sero */
-		dtw_copy(accumulate,0.,n1*n2);
-	}
 	float* accumulate_f ;
 	/* see if we are accumulating forward */
 		if (dir >= 0){ 
@@ -62,10 +55,6 @@ int main (int argc, char* argv[])
 			accumulate_f = sf_floatalloc(n1*n2);
 			/* accumulate forward errors */
 			dtw_accumulate_errors( mismatch, accumulate_f, n2, maxshift, str);
-			/* add the accumulation errors to the output array */
-			dtw_aadd( accumulate, accumulate_f, n1*n2) ;
-			/* free intermediate arrays */
-			free ( accumulate_f );
 		}
 
 	/* declare array for backward error accumulation */
@@ -86,14 +75,28 @@ int main (int argc, char* argv[])
 		dtw_accumulate_errors( mismatch_r, accumulate_b, n2, maxshift, str);
 		/* blip the backward errors */
 		dtw_reverse_array(accumulate_b,accumulate_br, n2, n1);
-		/* add the backward accumulation to the output array */
-		dtw_aadd( accumulate, accumulate_br, n1*n2) ;
 		/* free intermediate arrays */
 		free ( accumulate_b );
 		free ( mismatch_r   );
-		free ( accumulate_br);
 	}
-
+	/* send things to the write array */
+	if (dir == 0){
+		/* symmetric */
+		dtw_two_sided_smoothing_sum(accumulate_f, accumulate_br, mismatch, accumulate,n1*n2);
+		free( accumulate_f );
+		free( accumulate_br);
+	}else{
+	    if (dir < 0){
+			/* backwards */
+		    dtw_acopy(accumulate,accumulate_br,n1*n2);
+		    free(accumulate_br);
+	    } else{
+	    	/* forwards */
+			dtw_acopy(accumulate,accumulate_f,n1*n2);
+			free( accumulate_f ) ;
+	    }
+	}
+	
 	/* write the accumulated error to output */
     sf_floatwrite(accumulate,n1*n2,_out);
 	/* deallocate arrays */

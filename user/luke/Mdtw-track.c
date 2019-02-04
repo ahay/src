@@ -41,7 +41,7 @@ int main (int argc, char* argv[])
 	/* read the accumulation array from input */
 	sf_floatread(accumulate,n1*n2,_in);
 	/* allocate shifts array */
-	int* shifts = sf_intalloc(n1);
+	int* shifts = sf_intalloc(n2);
 	/* mismatch file used in backtracking if strain less than 1 */
 	sf_file _miss;
 	float* mismatch = sf_floatalloc(n1*n2);
