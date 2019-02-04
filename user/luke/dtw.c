@@ -5,8 +5,9 @@
 
 void dtw_reverse_array(float* array, float* reverse, int n2, int n1){
 	/*< reverses the second axis of an array >*/
-	for (int i = 0 ; i < n2 ; i++){
-		for (int j = 0 ; j < n1 ; j++){
+	int i, j;
+	for (i = 0 ; i < n2 ; i++){
+		for ( j = 0 ; j < n1 ; j++){
 			reverse[(n2-i-1)*n1 + j] = array[i*n1 + j] ;
 		}
 	}
@@ -15,7 +16,8 @@ void dtw_reverse_array(float* array, float* reverse, int n2, int n1){
 
 void dtw_two_sided_smoothing_sum( float* ef, float* er, float* e, float* etilde, int n){
 	/*< adds two arrays >*/
-	for (int i = 0 ; i < n ; i ++){
+	int i;
+	for ( i = 0 ; i < n ; i ++){
 		if (ef[i] < 0 || er[i] < 0 || e[i] < 0) etilde[i] = -1;
 		else etilde[i] = ef[i] + er[i] - e[i];
 	}
@@ -24,11 +26,11 @@ void dtw_two_sided_smoothing_sum( float* ef, float* er, float* e, float* etilde,
 
 void dtw_alignment_errors( float* match, float* ref, float* mismatch, int n1, int maxshift , float ex){
 	/*< finds pointwise alignment errors for shifts between min and max >*/
-	int j2;
+	int j2, i, j;
 	/* loop through samples in reference trace*/
-	for (int i = 0 ; i < n1 ; i++){
+	for ( i = 0 ; i < n1 ; i++){
 		/* loop through permissible shifts */
-		for (int j = 0 ; j < 2 * maxshift + 1 ; j++){
+		for ( j = 0 ; j < 2 * maxshift + 1 ; j++){
 			j2 = i + ( j - maxshift );
 			/* if in bounds write difference */
 			if (j2 >= 0 && j2 < n1){ 
@@ -59,9 +61,10 @@ float dtw_strain_accumulator(float* accumulate, float* mismatch, int i, int l, i
 	/*< sums up bounded strains >*/
     /* initialize */
     float accum ;
+	int j;
 	if ( i-s > 0) accum	= accumulate[ (i-s)*(2*maxshift+1) + l];
 	else accum = 0;
-	for (int j = 0 ; j < s ; j++){
+	for ( j = 0 ; j < s ; j++){
 		if ( (i-j)*(2*maxshift+1) + l < 0 ) break ;
 		if ( mismatch[(i-j)*(2*maxshift+1) + l] < 0) return mismatch[(i-j)*(2*maxshift+1) + l];
 		accum += mismatch[(i-j)*(2*maxshift+1) + l];
@@ -96,9 +99,10 @@ void dtw_backtrack( float* accumulate, float* mismatch, int* shifts, int n1, int
 	/* determine initial shifts */
 	int  u = 0;
 	int du = 0;
+	int l, s, i;
 	float holder = 0;
 	float test;
-	for (int l = 1; l < 2*maxshift+1 ; l++){
+	for ( l = 1; l < 2*maxshift+1 ; l++){
 		if ( accumulate [ (n1-1)*(2*maxshift+1) + l] < 0) continue;
 		if ( accumulate [ (n1-1)*(2*maxshift+1) + l] < accumulate [ (n1-1)*(2*maxshift+1) + u]){
 			u = l;
@@ -107,7 +111,7 @@ void dtw_backtrack( float* accumulate, float* mismatch, int* shifts, int n1, int
 	/* write initial shift */
 	shifts [ n1-1] = u - maxshift;	
 	/* do initial shifts until we attain our strian bound */
-	for (int s = 1 ; s < sb ; s++){
+	for ( s = 1 ; s < sb ; s++){
 		u = shifts [n1-s];
 		du = 0;
 		/* holder = accumulate[ (n1-s-1)*(2*maxshift+1) + u + maxshift]; */
@@ -129,7 +133,7 @@ void dtw_backtrack( float* accumulate, float* mismatch, int* shifts, int n1, int
 		shifts[ n1-s-1] = u+du;
 	}
 	/* loop backward through remaining time samples */
-	for (int i = n1-sb-1 ; i >= 0 ; i--){
+	for ( i = n1-sb-1 ; i >= 0 ; i--){
 		u  = shifts[ i + 1 ];
 		du = 0;
 		holder = dtw_strain_accumulator(accumulate, mismatch, i, u + maxshift, sb, maxshift);
@@ -156,8 +160,9 @@ void dtw_backtrack( float* accumulate, float* mismatch, int* shifts, int n1, int
 
 void dtw_spread_over_nulls( float* accumulate, int n1, int maxshift){
 	/*< spread the accumulation back over null values >*/
-	for ( int i = 0; i < maxshift ; i++){
-		for (int l = 0 ; l < maxshift - i; l++){
+	int i, l;
+	for (  i = 0; i < maxshift ; i++){
+		for ( l = 0 ; l < maxshift - i; l++){
 			/* beginning of signal */
 			accumulate[i*(2*maxshift+1)+l] = 
 				accumulate[(maxshift-l)*(2*maxshift+1)+l] ;
@@ -173,16 +178,17 @@ void dtw_accumulate_errors( float* mismatch, float* accumulate, int n1, int maxs
 	/*< accumulates errors over trajectories >*/
     /* strain bound */
 	int sb = (int)(1/str);
+	int s, l, i;
 	/* initialize with first step */
-	for (int s = 0 ; s < sb ; s++){
-		for (int l = 0 ; l < 2*maxshift+1 ; l++){
+	for ( s = 0 ; s < sb ; s++){
+		for ( l = 0 ; l < 2*maxshift+1 ; l++){
 			accumulate[s*(2*maxshift+1) + l] = dtw_strain_accumulator(accumulate, mismatch, s, l, s, maxshift);
 		}
 	}
 	/* loop through rest of time indeces*/
-	for (int i = sb ; i < n1 ; i++){
+	for ( i = sb ; i < n1 ; i++){
 		/* loop through lags */
-		for (int l = 0 ; l < 2*maxshift+1 ; l++){
+		for ( l = 0 ; l < 2*maxshift+1 ; l++){
 			/* check to see if index makes sense, negative means null */
 			if ( mismatch[ i*(2*maxshift+1) + l] < 0){
 				accumulate[ i*(2*maxshift+1) + l ] = -1;
@@ -203,7 +209,8 @@ void dtw_accumulate_errors( float* mismatch, float* accumulate, int n1, int maxs
 
 void dtw_apply_shifts( float* match, int* shifts, float* warped, int n){
 	/*< apply known integer shifts to matching trace >*/
-	for (int i = 0 ; i < n ; i++){
+	int i;
+	for ( i = 0 ; i < n ; i++){
 		/* make sure shifts in bounds */
 		if (i + shifts[ i] < 0){
 			warped [ i] = match [ 0];
@@ -223,7 +230,8 @@ void dtw_apply_shifts( float* match, int* shifts, float* warped, int n){
 void dtw_copy(float* array, float val, int n)
 /*< copies float vals into array >*/
 {
-	for (int i = 0 ; i < n ; i++){
+	int i;
+	for ( i = 0 ; i < n ; i++){
 		array[i] = val;
 	}
 	return;
@@ -232,7 +240,8 @@ void dtw_copy(float* array, float val, int n)
 void dtw_acopy(float* array, float* vals, int n)
 /*< copies vals into array, both size n >*/
 {
-	for (int i = 0 ; i < n ; i++){
+	int i;
+	for ( i = 0 ; i < n ; i++){
 		array[i] = vals[i];
 	}
 	return;
@@ -241,7 +250,8 @@ void dtw_acopy(float* array, float* vals, int n)
 void dtw_aadd(float* array, float* vals, int n)
 /*< adds vals plus array, both size n >*/
 {
-	for (int i = 0 ; i < n ; i++){
+	int i;
+	for ( i = 0 ; i < n ; i++){
 		array[i] += vals[i];
 	}
 	return;
@@ -250,7 +260,8 @@ void dtw_aadd(float* array, float* vals, int n)
 void dtw_mul(float* array, float val, int n)
 /*< scales array by float vals >*/
 {
-	for (int i = 0 ; i < n ; i++){
+	int i;
+	for ( i = 0 ; i < n ; i++){
 		array[i] += val;
 	}
 	return;
