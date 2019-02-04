@@ -286,5 +286,40 @@ void dtw_set_file_params(sf_file _file, int n1, float d1, float o1,
 	return;
 }
 
-
-
+void dtw_find_shifts(int* shifts, float* ref, float* match, 
+    int n1, int maxshift, float str, float ex)
+/*< integrated program to calculate shifts in one go, good for parallelization takes already allocated shifts with int(n1) as input>*/
+{
+	float* mismatch = sf_floatalloc(n1*(2*maxshift+1));
+	/* determine the best shifts using dynamic warping */
+	dtw_alignment_errors( match, ref, mismatch, n1, maxshift, ex);
+	/* spread values over nulls */
+	dtw_spread_over_nulls( mismatch, n1, maxshift);
+	/* declare array for forward error accumulation */
+	float* accumulate_f = sf_floatalloc(n1*(2*maxshift+1));
+	/* accumulate forward errors */
+	dtw_accumulate_errors( mismatch, accumulate_f, n1, maxshift, str);
+	/* declare array for backward error accumulation */
+	float* accumulate_b = sf_floatalloc(n1*(2*maxshift+1));
+	/* reverse mismatch */
+	float* mismatch_r = sf_floatalloc(n1*(2*maxshift+1));
+	dtw_reverse_array(mismatch, mismatch_r, n1, (2*maxshift+1));
+	/* accumulate backward errors */
+	dtw_accumulate_errors( mismatch_r, accumulate_b, n1, maxshift, str);
+	free (   mismatch_r);
+	/* flip them */
+	float* accumulate_br = sf_floatalloc(n1*(2*maxshift+1));
+	dtw_reverse_array(accumulate_b,accumulate_br, n1, (2*maxshift+1));
+	free ( accumulate_b) ;
+	/* sum the errors */
+	float* accumulate = sf_floatalloc(n1*(2*maxshift+1));
+	dtw_two_sided_smoothing_sum(accumulate_f, accumulate_br, mismatch, accumulate,n1*(2*maxshift+1));
+	free ( accumulate_f) ;
+	free ( accumulate_br);
+	/* backtrack to find integer shifts */
+	dtw_backtrack( accumulate, mismatch, shifts, n1, maxshift, str);	
+	/* remove unneded arrays */
+	free ( accumulate );
+	free ( mismatch );
+    return;
+}
