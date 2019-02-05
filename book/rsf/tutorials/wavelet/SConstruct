@@ -12,6 +12,7 @@ def numpy_load(target=None,source=None,env=None):
     rsf.put("label1","Time")
     rsf.put("unit1","s")
     rsf.write(data)
+    rsf.close()
     return 0
 
 for case in ('rpp','seismic'):
