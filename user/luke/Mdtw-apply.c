@@ -18,7 +18,7 @@ int main (int argc, char* argv[])
     _shifts  = sf_input ("shifts");
 	/* reference trace */ 
     _out = sf_output("out");
-	int n1;
+	int n1, i;
 	float d1, o1;
     /* Get sampling info */
     if (!sf_histint  (_in,"n1",&n1))   sf_error("No n1=");
@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
 	/* convert shifts to integer */
 	int* shifts = sf_intalloc(n1);
 	/* convert float shifts to integer */
-	for (int i = 0 ; i < n1 ; i++){
+	for ( i = 0 ; i < n1 ; i++){
 		shifts[i] = (int)shifts_f[i];
 	}
 	/* allocate array for warped trace */

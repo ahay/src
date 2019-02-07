@@ -19,7 +19,7 @@ int main (int argc, char* argv[])
     _ref  = sf_input ("ref");
 	/* reference trace */ 
     _out = sf_output("out");
-	int n1, maxshift;
+	int n1, maxshift, i;
 	float d1, o1, ex, str;
     /* Get sampling info */
     if (!sf_histint  (_in,"n1",&n1))   sf_error("No n1=");
@@ -27,7 +27,10 @@ int main (int argc, char* argv[])
 	if (!sf_histfloat(_in,"o1",&o1))   sf_error("No o1=");
     /* maximum shift */
     /* Get smoothing radius */
-    if (!sf_getint("maxshift",&maxshift))   sf_error("Need maxshift=");
+    if (!sf_getint("maxshift",&maxshift)){   
+		sf_warning("maxshift set to 20");
+		maxshift=20;
+	}
     /* maximum shift */
     if (!sf_getfloat("exp",&ex))   ex = 2;
     /* error exponent (g-f)^exp */
@@ -125,7 +128,7 @@ int main (int argc, char* argv[])
     if ( NULL != sf_getstring("shifts") ) {
 		/* output integer shifts as floats */
 		shifts_out = sf_floatalloc(n1);
-		for (int i = 0 ; i < n1 ; i ++){
+		for ( i = 0 ; i < n1 ; i ++ ){
 			shifts_out[i] = (float)shifts[i];
 		}
 	/* accumulation errors from forward and backtracking */ 

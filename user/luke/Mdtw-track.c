@@ -17,7 +17,7 @@ int main (int argc, char* argv[])
     _in = sf_input("in");
 
 	
-	int n1, n2, maxshift;
+	int n1, n2, maxshift, i;
 	float d1, d2, o1, o2, str;
     /* Get sampling info */
     if (!sf_histint  (_in,"n1",&n1))   sf_error("No n1=");
@@ -55,7 +55,7 @@ int main (int argc, char* argv[])
 	dtw_backtrack( accumulate, mismatch, shifts, n2, maxshift, str);
 	/* convert the integer shifts to float for output */
 	float* shifts_out = sf_floatalloc(n2);
-    for (int i = 0 ; i < n2 ; i ++){
+    for ( i = 0 ; i < n2 ; i ++){
 		shifts_out[i] = (float)shifts[i];
 		}
 	/* define output file parameters */ 
