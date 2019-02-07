@@ -13,13 +13,7 @@ int main (int argc, char* argv[])
 	_in = sf_input("in");
 	/* flattened gather file */ 
     _out = sf_output("out");
-	/* shifts switch */
-	int sh = 0; 
-    if ( NULL != sf_getstring("shifts") ) {
-	/* accumulation errors from forward and backtracking */ 
-	    _shifts = sf_output ("shifts");
-		sh = 1;
-	}
+
 
 	/* declare sampling variables */
 	int   n1, n2, n3;
@@ -40,7 +34,25 @@ int main (int argc, char* argv[])
     if (!sf_histint  (_in,"n3",&n3))   sf_error("No n3=");
     if (!sf_histfloat(_in,"d3",&d3))   sf_error("No d3=");
 	if (!sf_histfloat(_in,"o3",&o3))   sf_error("No o3=");	
-	
+
+
+	/* shifts switch */
+	int sh = 0; 
+    if ( NULL != sf_getstring("shifts") ) {
+	/* output gather flattening shifts */ 
+	    _shifts = sf_output ("shifts");
+		sh = 1;
+	/* format shifts file */
+	sf_putint   (_shifts,"n1",n1); 
+	sf_putfloat (_shifts,"d1",d1);
+	sf_putfloat (_shifts,"o1",o1);
+	sf_putint   (_shifts,"n2",n2);
+	sf_putfloat (_shifts,"d2",d2);
+	sf_putfloat (_shifts,"o2",o2);
+	sf_putint   (_shifts,"n3",n3);
+	sf_putfloat (_shifts,"d3",d3);
+	sf_putfloat (_shifts,"o3",o3);
+	}	
 	/* get dtw parameters */
 	
 	float ex;
@@ -58,9 +70,10 @@ int main (int argc, char* argv[])
 		str = 1.0;
 	}
 	int maxshift;
-    if (!sf_getint("maxshift",&maxshift)){   
+    if (!sf_getint("maxshift",&maxshift)){ maxshift=20;
+    /* maximum shift */
 		sf_warning("maxshift set to 20");
-		maxshift=20;
+
 	}
 	
 	int ig, ng, io, no;
@@ -121,16 +134,7 @@ int main (int argc, char* argv[])
 	free ( gather_shifts );
 	free ( warped_gather );
 	
-	/* write the header information to shifts file if needed */
-	sf_putint   (_shifts,"n1",n1); 
-	sf_putfloat (_shifts,"d1",d1);
-	sf_putfloat (_shifts,"o1",o1);
-	sf_putint   (_shifts,"n2",n2);
-	sf_putfloat (_shifts,"d2",d2);
-	sf_putfloat (_shifts,"o2",o2);
-	sf_putint   (_shifts,"n3",n3);
-	sf_putfloat (_shifts,"d3",d3);
-	sf_putfloat (_shifts,"o3",o3);
+
 	
 	/* exit program */
 	exit (0);
