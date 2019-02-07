@@ -237,6 +237,7 @@ void dtw_copy(float* array, float val, int n)
 	return;
 }
 
+
 void dtw_acopy(float* array, float* vals, int n)
 /*< copies vals into array, both size n >*/
 {
@@ -322,4 +323,63 @@ void dtw_find_shifts(int* shifts, float* ref, float* match,
 	free ( accumulate );
 	free ( mismatch );
     return;
+}
+
+void dtw_norm_stack(float* gather, float* stack, int n1, int n2)
+/*< normalized stacking >*/
+{
+	/* clear out stack array */
+    dtw_copy( stack, 0., n1);
+	/* loop indexes */
+	int i1, i2;
+	/* fold array */
+	int*    fold = sf_intalloc(n1);
+	/* loop through */
+	for ( i2 = 0 ; i2 < n2 ; i2++ ){
+		for ( i1 = 0 ; i1 < n1 ; i1++ ){
+			if ( gather[ i2*n1 + i1 ] == 0) continue ; 
+			stack[ i1] += gather [ i2*n1 +i1 ];
+			fold [ i1] += 1;
+		}
+	}
+	/* normalize by fold */
+	for ( i1 = 0 ; i1 < n1 ; i1++ ){
+		if ( fold[ i1] == 0 ) { stack [ i1] = 0.; }
+		else { stack [ i1 ] = stack [ i1 ] / ( (int) fold[ i1 ] ); }
+	}
+	free(fold);
+	return;
+}
+
+void dtw_get_column( float* array, float* column, int i, int n )
+/*< grab ith column from an array with height n>*/	
+{
+	
+	int j;
+	for ( j =  0 ; j < n ; j++ ){
+		column [ j ] = array [ j + i*n ];
+	}
+	return;
+}
+
+float* dtw_int_to_float( int* intarray, int n)
+/*< write an int array to a float array >*/
+{
+	float* floatarray = sf_floatalloc(n);
+	int i;
+	for ( i = 0 ; i < n ; i++){
+		floatarray[ i] = (float)intarray[ i];
+	}
+	return floatarray;
+}
+
+void dtw_put_column( float* array, float* column, int i, int n )
+/*< put ith column into an array with height n>*/	
+{
+	
+	int j;
+	for ( j =  0 ; j < n ; j++ ){
+		array [ j + i*n ] = column [ j ] ;
+	}
+	return;
 }
