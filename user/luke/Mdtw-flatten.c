@@ -1,6 +1,4 @@
-/* flattens a gather or similar object to its stack using dtw, 
-   optionally writes out shifts, 
-   currently set up for (time,gather,space) for 2d imaging
+/* flattens a gather or similar object to its stack using dtw, optionally writes out shifts, currently set up for (time,gather,space) for 2d imaging
 */
 #include <rsf.h>
 #include "dtw.h"
