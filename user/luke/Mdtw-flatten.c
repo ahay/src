@@ -106,6 +106,7 @@ int main (int argc, char* argv[])
 		dtw_copy( warped_gather, 0., n1*no);
 		/* zero out gather shifts */
 		dtw_copy( gather_shifts, 0., n1*no);
+
 		for ( io = 0 ; io < no ; io++){
 			dtw_get_column( gather, match, io, n1);
 		    /* determine shifts */
@@ -116,7 +117,7 @@ int main (int argc, char* argv[])
 			dtw_put_column( gather_shifts, dtw_int_to_float( tr_shifts, n1), io, n1 ) ;
 			/* write warped trace to gather array */
 			dtw_put_column( warped_gather, warped, io, n1 )	;
-	    }
+	        }
 		/* write out warped_gather */
 		sf_floatwrite(warped_gather,n1*no,_out);
 		/* write out shifts if desired */
