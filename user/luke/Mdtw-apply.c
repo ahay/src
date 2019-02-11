@@ -24,26 +24,50 @@ int main (int argc, char* argv[])
     if (!sf_histint  (_in,"n1",&n1))   sf_error("No n1=");
     if (!sf_histfloat(_in,"d1",&d1))   sf_error("No d1=");
 	if (!sf_histfloat(_in,"o1",&o1))   sf_error("No o1=");
+	
+	/* see if the matching object is higher dimensional */
+	int n2, n3;
+	if (!sf_histint  (_in,"n2",&n2)) n2 = 1; 
+	if (!sf_histint  (_in,"n3",&n3)) n3 = 1;
+	int nmid = n2*n3;
+	
+	/* are the shifts also higher dimensional or compatable? */
+	int multishft = 1;
+	int sn1, sn2, sn3;
+    if (!sf_histint  (_shifts,"n1",&sn1))   sf_error("No n1= in shifts");
+	if ( sn1 != n1 ) sf_error("shifts have different n1 than input");
+    if (!sf_histint  (_shifts,"n2",&sn2))   sn2 = 1;
+    if (!sf_histint  (_shifts,"n3",&sn3))   sn3 = 1;
+	/* are we just using one shift ?*/
+	if (sn2*sn3 != nmid) multishft = 0;
+	
+	int i2, i3;
     /* allocate input matching trace array */
     float* match  = sf_floatalloc(n1);
+    /* allocate array for warped trace */
+    float* warped = sf_floatalloc(n1);
+    /* convert shifts to integer */
+    int* shifts = sf_intalloc(n1);
+    /* allocate secondary input reference shifts array*/
+    float* shifts_f    = sf_floatalloc(n1);
+	
 	/* and read from file */
-	sf_floatread(match,n1,_in);
-	/* allocate secondary input reference shifts array*/
-	float* shifts_f    = sf_floatalloc(n1);
-	/* and read from file */
-    sf_floatread( shifts_f, n1, _shifts);
-	/* convert shifts to integer */
-	int* shifts = sf_intalloc(n1);
-	/* convert float shifts to integer */
-	for ( i = 0 ; i < n1 ; i++){
-		shifts[i] = (int)shifts_f[i];
+	for (i3 = 0; i3 < n3 ; i3++){
+		for ( i2 = 0; i2< n2 ; i2++){
+			/* read shifts if applicable */
+			if ( multishft == 1 || i2+i3 == 0) sf_floatread(match,n1,_in);
+	        /* and read from file */
+            sf_floatread( shifts_f, n1, _shifts);
+	        /* convert float shifts to integer */
+	        for ( i = 0 ; i < n1 ; i++){
+		        shifts[i] = (int)shifts_f[i];
+	        }
+            /* apply shifts to the matching signal */
+	        dtw_apply_shifts( match, shifts, warped, n1);
+	        /* write the warped array to output */
+            sf_floatwrite(warped,n1,_out);
+		}
 	}
-	/* allocate array for warped trace */
-	float* warped = sf_floatalloc(n1);
-    /* apply shifts to the matching signal */
-	dtw_apply_shifts( match, shifts, warped, n1);
-	/* write the warped array to output */
-    sf_floatwrite(warped,n1,_out);
 	/* deallocate  arrays */
 	free (   match     );
 	free (   warped    );
