@@ -47,7 +47,7 @@ int main (int argc, char* argv[])
 		str1 = 1.0;
 	}
     if (!sf_getfloat("strain2",&str2))   str2 = 1.0;
-    /* maximum strain in second axis, if greatrer than 1 no strain limit */
+    /* maximum strain in second axis, if > 1 no strain limit */
 
 	/* build N array for transpose operations */
 	int ndim = 3;
