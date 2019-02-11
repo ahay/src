@@ -134,6 +134,7 @@ int main (int argc, char* argv[])
 	/* are we writing out the accumulation errors? */
 	sf_file _accum;
     if ( NULL != sf_getstring("accum") ) {
+		/* optional output for accumulation errors */
 		_accum = sf_output("accum");
 		/* set parameters */
     	sf_putint   (_accum,"n1",N[0]); 
@@ -163,6 +164,7 @@ int main (int argc, char* argv[])
 	/* and the switch */
 	int shswitch ;
     if ( NULL != sf_getstring("shifts") ) {
+		/* optional output for shifts */
 		_shifts = sf_output("shifts");
 		/* set parameters */
     	sf_putint   (_shifts,"n1",N[1]); 
