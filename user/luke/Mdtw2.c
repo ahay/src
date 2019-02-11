@@ -101,6 +101,8 @@ int main (int argc, char* argv[])
 
     /* backup mismatch for backtracking */
 	float* bu_mismatch = sf_floatalloc(fullsize);
+	/* do we need to do the mismatch backup initially? */
+	if (S[1] > 1) dtw_acopy(bu_mismatch, mismatch, fullsize);
 	
     for ( ismth = 0; ismth < 2*nalter ; ismth ++){
     	/* loop through midpoints */
