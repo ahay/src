@@ -17,7 +17,8 @@ regularization (Xue, Zhu, and Fomel)
   using low-rank symbol approximation (Sun, Fomel, Sripanich, and
   Fowler)
 * data/marmousi2mp: 2D modeling and basic processing with Madagascar
-  (Thongsang, Jiang, Li, and Schleicher}
+  (Thongsang, Jiang, Li, and Schleicher)
+* tccs/eseis: EMD-seislet transform (Chen and Fomel)
 
 To SCons:
 
