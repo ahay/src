@@ -65,8 +65,12 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("strain",&str))   str = 1.0;
     /* maximum strain */
 	if (str > 1){ 
-		sf_warning("Program not set up for du/dt > 1, changing to str = 1");
+		sf_warning("Program not set up for du/dt > 1, changing to strain = 1");
 		str = 1.0;
+	}
+	if ((int)((float)n1/10) < (int)(1/str) || str == 0){
+		str = (1/((float)n1/10));
+		sf_warning("Strain too small! Changing to strain = %g",str);
 	}
 	int maxshift;
     if (!sf_getint("maxshift",&maxshift)){ maxshift=20;
@@ -80,15 +84,19 @@ int main (int argc, char* argv[])
 	ng = n3;
 	/* number of offsets in gather */
 	no = n2;
-	
-
+	/* declare null value */
+    float nullval = -9999;
 	
 	/* declare gather input array */
 	float* gather = sf_floatalloc(n1*no);
+	/* declare nulled gather array */
+	float* ngather = sf_floatalloc(n1*no);
 	/* declare stack it will be matched to */
 	float* stack  = sf_floatalloc(n1);
 	/* declare matching trace */
 	float* match  = sf_floatalloc(n1);
+	/* declare match trace for nulls */
+	float* nmatch  = sf_floatalloc(n1);
 	/* declare shifts array */
 	int*  tr_shifts = sf_intalloc(n1);
 	/* declare gather shifts */
@@ -102,13 +110,18 @@ int main (int argc, char* argv[])
 	for ( ig = 0; ig < ng ; ig++ ){
 		/* read input gather */
 		sf_floatread(gather,n1*no,_in);
+		/* write null values */
+		ngather = dtw_write_gather_nullvals(gather, n1, no, nullval);
 		/* create stack for reference */
-		dtw_norm_stack(gather,stack,n1,no);
+		dtw_norm_stack(ngather,stack,n1,no,nullval);
+		/* and free */
+
 		/* zero out warped gather */
 		dtw_copy( warped_gather, 0., n1*no);
 		/* zero out gather shifts */
 		dtw_copy( gather_shifts, 0., n1*no);
 		for ( io = 0 ; io < no ; io++){
+			/* get traces */
 			dtw_get_column( gather, match, io, n1);
 		    /* determine shifts */
 		    dtw_find_shifts( tr_shifts, stack, match, n1, maxshift, str, ex);
@@ -116,7 +129,6 @@ int main (int argc, char* argv[])
 			dtw_apply_shifts( match, tr_shifts, warped, n1);
 			/* write trace shifts to gather shifts array */
 			dtw_put_column( gather_shifts, dtw_int_to_float( tr_shifts, n1), io, n1 ) ; 
-
 			/* write warped trace to gather array */
 			dtw_put_column( warped_gather, warped, io, n1 )	; 
 	    }
@@ -130,13 +142,14 @@ int main (int argc, char* argv[])
 	
 	/* free arrays */
 	free (  gather       );
+	free (  ngather      );
 	free (  stack        );
 	free (  match        );
+	free (  nmatch       );
 	free (  tr_shifts    );
 	free (  warped       );
 	free ( gather_shifts );
 	free ( warped_gather );
-	
 
 	
 	/* exit program */
