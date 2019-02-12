@@ -28,12 +28,13 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(_in,"d2",&d2))   sf_error("No d2=");
 	if (!sf_histfloat(_in,"o2",&o2))   sf_error("No o2=");
     /* maximum shift */
-    /* Get smoothing radius */
-    if (!sf_getint("maxshift",&maxshift)){   
+
+    if (!sf_getint("maxshift",&maxshift)){ 
+		/* maximum shift to be tested */  
 		sf_warning("maxshift set to 20");
 		maxshift=20;
 	}
-    /* maximum shift */
+
     if (!sf_getfloat("exp",&ex))   ex = 2;
     /* error exponent (g-f)^exp */
 	if (ex < 1){ 
@@ -61,9 +62,12 @@ int main (int argc, char* argv[])
 	S[0] = str1;
 	S[1] = str2;
 	
-	/* number of alternations for smoothin */
-	int nalter = 2;
-	
+
+	int nalter;
+    if (!sf_getint("nalter",&nalter)) nalter=2;
+		/* number of horizontal and vertical smoothings */ 
+
+	/* number of alternations for smoothing */	
 	int fullsize = (int)dtw_size(N,ndim);
 	int imgsize  = fullsize/N[0];
     /* allocate input matching image array */
@@ -111,13 +115,13 @@ int main (int argc, char* argv[])
 			mismatchtr = _dtw_get_column( mismatch, i2, N[0]*N[1]) ;
 			/* accumulate error */
 	        mismatchtr = dtw_symmetric_accumulation(mismatchtr, N[1], maxshift, S[0]);
-			/* subtract minimum error accumulation value */
-			mismatchtr = dtw_subtract_minimum( mismatchtr, N[1]*N[0]);
 			/* put back in array */
 	    	dtw_put_column( mismatch, mismatchtr, i2, N[0]*N[1] );
 	   	}
 		/* determine if we are doing multiple smoothings */
 		if (S[1] > 1) break;
+		/* subtract minimum error accumulation value */
+		mismatch = dtw_subtract_minimum( mismatch, fullsize);
 		/* do we need to backup ?*/
 		if ( ismth == 2*nalter - 2){
 			dtw_acopy(bu_mismatch, mismatch, fullsize);

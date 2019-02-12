@@ -1,5 +1,5 @@
 /* 
-   program applies integer shifts (stored as floats!) to warp a matching trace 
+   program applies integer shifts (stored as floats!) to warp a matching trace.  Can match 1d shifts to a 1,2, or 3d volume , or 2d shifts to a 2, or 3 d volume, or 3d shifts to a 3d volume 
 */
 
 #include <rsf.h>
@@ -32,14 +32,15 @@ int main (int argc, char* argv[])
 	int nmid = n2*n3;
 	
 	/* are the shifts also higher dimensional or compatable? */
-	int multishft = 1;
+	int multishft = 0;
 	int sn1, sn2, sn3;
     if (!sf_histint  (_shifts,"n1",&sn1))   sf_error("No n1= in shifts");
 	if ( sn1 != n1 ) sf_error("shifts have different n1 than input");
     if (!sf_histint  (_shifts,"n2",&sn2))   sn2 = 1;
     if (!sf_histint  (_shifts,"n3",&sn3))   sn3 = 1;
 	/* are we just using one shift ?*/
-	if (sn2*sn3 != nmid) multishft = 0;
+	if (sn3 == n3) multishft += 1;
+	if (sn2 == n2) multishft += 2;
 	
 	int i2, i3;
     /* allocate input matching trace array */
@@ -49,19 +50,41 @@ int main (int argc, char* argv[])
     /* convert shifts to integer */
     int* shifts = sf_intalloc(n1);
     /* allocate secondary input reference shifts array*/
-    float* shifts_f    = sf_floatalloc(n1);
-	
-	/* and read from file */
+    float* shifts_f     = sf_floatalloc(n1);
+	/* optional 2d shifts array */
+	float* large_shifts ;
+	/* and read from file if needed */
+	if (multishft == 2){
+		large_shifts = sf_floatalloc(n1*n2);
+		/* case of 2d shifts for 3d volume */
+		sf_floatread( large_shifts, n1*n2, _shifts);	
+	}
+	if (multishft == 0){
+		/* case of only first axis matching */
+		sf_floatread( shifts_f, n1, _shifts);
+        /* convert float shifts to integer */
+        for ( i = 0 ; i < n1 ; i++){
+	        shifts[i] = (int)shifts_f[i];
+        }
+	}
 	for (i3 = 0; i3 < n3 ; i3++){
 		for ( i2 = 0; i2< n2 ; i2++){
 			/* read shifts if applicable */
-			if ( multishft == 1 || i2+i3 == 0) sf_floatread( shifts_f, n1, _shifts);
+			if ( multishft >= 2 ){
+			    if ( multishft == 3 ) {
+				    /* everything matching */
+				    sf_floatread( shifts_f, n1, _shifts);
+			    } else {
+			    	/* pull this shift from 2d shift array */
+					shifts_f = _dtw_get_column( large_shifts, i2, n1 );
+			    }
+	            /* convert float shifts to integer */
+	            for ( i = 0 ; i < n1 ; i++){
+		            shifts[i] = (int)shifts_f[i];
+	            }
+		    }
 	        /* and read from file */
             sf_floatread(match,n1,_in);
-	        /* convert float shifts to integer */
-	        for ( i = 0 ; i < n1 ; i++){
-		        shifts[i] = (int)shifts_f[i];
-	        }
             /* apply shifts to the matching signal */
 	        dtw_apply_shifts( match, shifts, warped, n1);
 	        /* write the warped array to output */
@@ -73,6 +96,9 @@ int main (int argc, char* argv[])
 	free (   warped    );
 	free (   shifts_f  );
 	free (   shifts    );
+	if (multishft == 2){
+		free (large_shifts);
+	}
 
     /* exit program */
     exit (0);
