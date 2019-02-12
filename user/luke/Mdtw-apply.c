@@ -55,9 +55,9 @@ int main (int argc, char* argv[])
 	for (i3 = 0; i3 < n3 ; i3++){
 		for ( i2 = 0; i2< n2 ; i2++){
 			/* read shifts if applicable */
-			if ( multishft == 1 || i2+i3 == 0) sf_floatread(match,n1,_in);
+			if ( multishft == 1 || i2+i3 == 0) sf_floatread( shifts_f, n1, _shifts);
 	        /* and read from file */
-            sf_floatread( shifts_f, n1, _shifts);
+            sf_floatread(match,n1,_in);
 	        /* convert float shifts to integer */
 	        for ( i = 0 ; i < n1 ; i++){
 		        shifts[i] = (int)shifts_f[i];
