@@ -197,11 +197,11 @@ int* conv_doughnut_wrap( int* Ind, int* N, int ndim)
 	for ( i = 0 ; i < ndim ; i++ ){
 		if ( Ind[ i] < 0 ){ 
 			/* too low */
-			IndW[ i] = Ind[ i] + N[ i];
+			IndW[ i] = Ind[ i] + N[ i] ;
 		}else{
-			if ( Ind[ i] >= N[ i]){
+			if ( Ind[ i] > N[ i] - 1){
 				/* too high */
-				IndW[ i] = Ind[ i] - N[ i];
+				IndW[ i] = Ind[ i] - N[ i] ;
 			}else{
 				/* Goldilox */
 				IndW[ i] = Ind[ i];
@@ -260,7 +260,7 @@ float conv_array_doughnut_interpolator( int* Ind1, float* Rem, float* array, int
 		/* check to see if inbounds, if not, doughnut wrap */
 		Ind3 = conv_doughnut_wrap( Ind2, N, ndim);
 		/* unwrap to determine array position */
-		indx = conv_wrap( Ind2, N, ndim);
+		indx = conv_wrap( Ind3, N, ndim);
 		/* read that value from array, add weighted value to interpolation */
 		interp += array[ indx] * conv_interpolation_weights( NInd, Rem, ndim);
 	}
@@ -307,8 +307,10 @@ float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* 
 	int* NInd = sf_intalloc( ndim);
 	/* offset index array */
 	int* Ind2 = sf_intalloc( ndim);
+	/* doughnut wrapped index */
+	int* Ind3 = sf_intalloc( ndim);
 	/* how many nodes are we dealing with ? */
-	long nnodes = (long)conv_int_exponent(2,ndim);
+	long nnodes = conv_arraysize( Nnode, ndim);
 	/* looping index for nodes, using long for consistency with unwrapping programs */
 	long nindx ;
 	/* index for array position */
@@ -319,8 +321,10 @@ float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* 
 		NInd = conv_unwrap( nindx, Nnode, ndim);
 		/* add that to the current index */
 		Ind2 = conv_int_array_add( Ind1, NInd, ndim);
+		/* doughnut wrap */
+		Ind3 = conv_doughnut_wrap( Ind2, N, ndim);
 		/* unwrap to determine array position */
-		indx = conv_wrap( Ind2, N, ndim);
+		indx = conv_wrap( Ind3, N, ndim);
 		/* read that value from array, add weighted value to interpolation */
 		arrayout[ indx] += interp * conv_interpolation_weights( NInd, Rem, ndim);
 	}
@@ -328,7 +332,7 @@ float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* 
 }
 
 float* conv_translate(float* arrayin, float* X, int* N, float* D, float* O, int ndim)
-	/*< returns a translated version of the array by vector X >*/	
+	/*< returns a translated version of the array by vector X.  this doesn't wrap >*/	
 {
 	/* looping index */
 	long indx ; 
@@ -362,10 +366,6 @@ float* conv_translate(float* arrayin, float* X, int* N, float* D, float* O, int 
 float* conv_translate_wrap(float* arrayin, float* X, int* N, float* D, float* O, int ndim, bool adj)
 	/*< returns a translated version of the array by vector X, with doughnut wrapping so an adjoint >*/	
 {
-	/* if adjoint, reverse translation */
-	if (adj){
-		X = conv_scale_float_array(X,-1.,ndim);
-	}
 	/* looping index */
 	long indx ; 
 	/* position index */
@@ -386,46 +386,16 @@ float* conv_translate_wrap(float* arrayin, float* X, int* N, float* D, float* O,
 		Ind1 = conv_unwrap( indx, N, ndim);
 		/* Translate by X */
 		Ind2 = conv_int_array_add( Ind1, TInd, ndim);
-		/* interpolate */
-	    arrayout[ indx] = conv_array_doughnut_interpolator( Ind2, TRem, arrayin, N, ndim ); 
+		/* write to output array */
+		if (!adj){
+			/* as interpolation */
+			arrayout[ indx] = conv_array_doughnut_interpolator( Ind2, TRem, arrayin, N, ndim );
+		}else{
+			/* as adjoint interpoloation */
+			arrayout = conv_array_adj_interpolator( Ind2, TRem, arrayin[ indx], arrayout, N, ndim );
+		} 
 	}
 	/* return translated array */
 	return arrayout;
 }
 
-
-float* conv_translate_adj_interp(float* arrayin, float* X, int* N, float* D, float* O, int ndim, bool adj)
-	/*< returns a translated version of the array by vector X, with adjoint interpolation >*/	
-{
-	/* looping index */
-	long indx ; 
-	/* position index */
-	int* Ind1 = sf_intalloc(ndim);
-	/* translated position index */
-	int* Ind2 = sf_intalloc(ndim);
-	/* determine translation array */
-	int* TInd = conv_coordinates_to_index( conv_float_array_subtract( O, X, ndim), D, O, ndim);
-	/* and remainder of translation for interpolation */
-	float* TRem = conv_index_coords_remainder( TInd, conv_float_array_subtract( O, X, ndim), D, O, ndim);
-	/* determine number of elements in array */
-	long nelements = conv_arraysize(N,ndim);
-	/* initialize output array */
-	float* arrayout = sf_floatalloc(nelements);
-	/* loop through output array */
-	for (indx = 0 ; indx < nelements ; indx++){
-		/* determine where we are */
-		Ind1 = conv_unwrap( indx, N, ndim);
-		/* Translate by X */
-		Ind2 = conv_int_array_add( Ind1, TInd, ndim);
-		/* check to see if we are in bounds */
-		if ( conv_in_bounds(  Ind2, N, ndim ) > 0 ) continue ; 
-		if(!adj){
-			/* interpolate */
-			 arrayout[ indx] = conv_array_interpolator( Ind2, TRem, arrayin, N, ndim ); }
-		else{
-			/* adjoint interpolation */ 
-			arrayout = conv_array_adj_interpolator( Ind2, TRem, arrayin[ indx], arrayout, N, ndim ); }
-	}
-	/* return translated array */
-	return arrayout;
-}
