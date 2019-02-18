@@ -331,6 +331,23 @@ float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* 
 	return arrayout;
 }
 
+float* conv_get_translations(long indx, float* trans, int* N, int ndim)
+	/*< get local translation array >*/
+{
+	/* local translation array */
+	float* X = sf_floatalloc(ndim);
+	/* looping index */
+	int i;
+	/* how many elements in domain */
+	long nelements = conv_arraysize(N,ndim);
+	/* loop through */
+	for ( i = 0 ; i < ndim ; i++ ){
+		/* get coordinate */
+		X[ i] = trans[ ((long)i) * nelements + indx];
+	}
+	return X;
+}
+
 float* conv_translate(float* arrayin, float* X, int* N, float* D, float* O, int ndim)
 	/*< returns a translated version of the array by vector X.  this doesn't wrap >*/	
 {
@@ -388,6 +405,51 @@ float* conv_translate_wrap(float* arrayin, float* X, int* N, float* D, float* O,
 		Ind2 = conv_int_array_add( Ind1, TInd, ndim);
 		/* write to output array */
 		if (!adj){
+			/* as interpolation */
+			arrayout[ indx] = conv_array_doughnut_interpolator( Ind2, TRem, arrayin, N, ndim );
+		}else{
+			/* as adjoint interpoloation */
+			arrayout = conv_array_adj_interpolator( Ind2, TRem, arrayin[ indx], arrayout, N, ndim );
+		} 
+	}
+	/* return translated array */
+	return arrayout;
+}
+
+float* conv_var_translate_wrap(float* arrayin, float* trans, int* N, float* D, float* O, int ndim, bool adj)
+	/*< returns a translated version of the array by variable translation, with doughnut wrapping so an adjoint >*/	
+{
+	/* looping index */
+	long indx ; 
+	/* position index */
+	int* Ind1 = sf_intalloc(ndim);
+	/* translated position index */
+	int* Ind2 = sf_intalloc(ndim);
+	/*  translation array */
+	int* TInd;
+	/* and translation remainder */
+	float* TRem;
+	/* determine number of elements in array */
+	long nelements = conv_arraysize(N,ndim);
+	/* initialize output array */
+	float* arrayout = sf_floatalloc(nelements);
+	/* local translation array */
+	float* X = sf_floatalloc(ndim);
+	/* loop through input array, this is different from the constant case */
+	for (indx = 0 ; indx < nelements ; indx++){
+		/* read translation, which is in coordinates of input array */
+		/* because we set this up looping in the input coordiantes, we need to reverse X */
+		X = conv_get_translations(indx, trans, N, ndim);		
+		/* convert to translation index */
+		TInd = conv_coordinates_to_index( conv_float_array_subtract( O, X, ndim), D, O, ndim);
+		/* get remainder */
+		TRem = conv_index_coords_remainder( TInd, conv_float_array_subtract( O, X, ndim), D, O, ndim);
+		/* determine where we are */
+		Ind1 = conv_unwrap( indx, N, ndim);
+		/* Translate by X */
+		Ind2 = conv_int_array_add( Ind1, TInd, ndim);
+		/* write to output array */
+		if ( !adj ){
 			/* as interpolation */
 			arrayout[ indx] = conv_array_doughnut_interpolator( Ind2, TRem, arrayin, N, ndim );
 		}else{

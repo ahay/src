@@ -32,17 +32,6 @@ int main (int argc, char* argv[])
 	if (!sf_getbool("adj",&adj)) adj=false;
 	/*if y reverse translation, if n, translation */
 	
-	float x1, x2;
-    if (!sf_getfloat("x1",&x1))   x1 = 0.;
-	/* translation in first dimension */
-	if (!sf_getfloat("x2",&x2))   x2 = 0.;
-	/* translation in second dimension */
-	
-	/* make translation array */
-	float* X = sf_floatalloc(ndim);
-	X[0] = x1;
-	X[1] = x2;
-	
 	/* make N array */
 	int* N = sf_intalloc(ndim);
 	N[0] = n1;
@@ -58,12 +47,54 @@ int main (int argc, char* argv[])
 	O[0] = o1;
 	O[1] = o2;
 	
+	/* variable translation */
+	sf_file _trans;
+	/* translations array */
+	float* trans;
+	/* fixed translations */
+	float x1, x2;
+	/*  translation array */
+	float* X;
+
+	/* translations boolean */
+	bool fixed;
+	if ( NULL != sf_getstring("trans") ) { 
+		fixed = false;
+		_trans = sf_input("trans");
+		/* variable translations file with same sampling as input, added ndim dimension */
+		trans = sf_floatalloc( ((long)ndim) * conv_arraysize(N,ndim));
+		/* read array */
+		sf_floatread(trans, ((long)ndim) * conv_arraysize(N,ndim), _trans);
+	} else {
+		fixed = true;
+		/* fixed translation */
+	    if (!sf_getfloat("x1",&x1))   x1 = 0.;
+		/* fixed translation in first dimension */
+		if (!sf_getfloat("x2",&x2))   x2 = 0.;
+		/* fixed translation in second dimension */
+		
+		/* allocate fixed translation array */
+		X = sf_floatalloc(ndim);
+		X[0] = x1;
+		X[1] = x2;
+	}
+	
 	/* declare input array */
-	float* arrayin = sf_floatalloc(conv_arraysize(N,ndim));
+	float* arrayin  = sf_floatalloc(conv_arraysize(N,ndim));
+	/* and output array */
+	float* arrayout = sf_floatalloc(conv_arraysize(N,ndim));
 	/* read from file */
 	sf_floatread(arrayin,conv_arraysize(N,ndim),_in);
 	/* translate input */
-	float* arrayout = conv_translate_wrap(arrayin, X, N, D, O, ndim, adj);
+	if (fixed){
+		/* translate by fixed coordinates */
+		arrayout = conv_translate_wrap(arrayin, X, N, D, O, ndim, adj);
+	} else {
+		/* translate by variable coordinates */
+		arrayout = conv_var_translate_wrap(arrayin, trans, N, D, O, ndim, adj);
+		/* free translation array */
+		free(trans);
+	}
 	/* write translated array to file */
 	sf_floatwrite(arrayout,conv_arraysize(N,ndim),_out);
 	
