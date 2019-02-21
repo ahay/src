@@ -74,7 +74,7 @@ int main (int argc, char* argv[])
 	/* read convoluton kernel */
 	sf_floatread(kernel,conv_arraysize(NK,ndim),_ker);
 	/* convolve by kernel */
-	conv_convolve_ker( arrayin, N, kernel, NK, ndim, adj);
+	arrayout = conv_convolve_ker( arrayin, N, kernel, NK, ndim, adj);
 	/* write translated array to file */
 	sf_floatwrite(arrayout,conv_arraysize(N,ndim),_out);
 	
