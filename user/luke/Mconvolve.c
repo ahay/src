@@ -55,8 +55,8 @@ int main (int argc, char* argv[])
 	sf_file _ker = sf_input("ker");
 	/* get kernel dimensions */
 	int nk1, nk2;
-    if (!sf_histint  (_in,"n1",&nk1))   sf_error("No n1= in kernel ");
-    if (!sf_histint  (_in,"n2",&nk2))   sf_error("No n2= in kernel");
+    if (!sf_histint  (_ker,"n1",&nk1))   sf_error("No n1= in kernel ");
+    if (!sf_histint  (_ker,"n2",&nk2))   sf_error("No n2= in kernel");
 
 	int* NK = sf_intalloc(ndim);
 	/* copy kernel size to array */
