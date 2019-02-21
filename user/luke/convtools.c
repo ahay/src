@@ -251,10 +251,16 @@ float conv_array_doughnut_interpolator( int* Ind1, float* Rem, float* array, int
 	long nindx ;
 	/* index for array position */
 	long indx ;
+	/* interpolation weights */
+	float weight;
 	/* loop through node points for interpolation */
 	for ( nindx = 0 ; nindx < nnodes ; nindx++ ){
 		/* get where we are */
 		NInd = conv_unwrap( nindx, Nnode, ndim);
+		/* get interpolation weight */
+		weight = conv_interpolation_weights( NInd, Rem, ndim);
+		/* continue if zero */
+		if ( weight == 0. ) continue;
 		/* add that to the current index */
 		Ind2 = conv_int_array_add( Ind1, NInd, ndim);
 		/* check to see if inbounds, if not, doughnut wrap */
@@ -262,7 +268,7 @@ float conv_array_doughnut_interpolator( int* Ind1, float* Rem, float* array, int
 		/* unwrap to determine array position */
 		indx = conv_wrap( Ind3, N, ndim);
 		/* read that value from array, add weighted value to interpolation */
-		interp += array[ indx] * conv_interpolation_weights( NInd, Rem, ndim);
+		interp += array[ indx] * weight;
 	}
 	return interp;
 }
@@ -315,10 +321,15 @@ float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* 
 	long nindx ;
 	/* index for array position */
 	long indx ;
+	/* interpolation weights */
+	float weight;
 	/* loop through node points for interpolation */
 	for ( nindx = 0 ; nindx < nnodes ; nindx++ ){
 		/* get where we are */
 		NInd = conv_unwrap( nindx, Nnode, ndim);
+		/* get interpolation weight, if zero continue */
+		weight = conv_interpolation_weights( NInd, Rem, ndim);
+		if ( weight == 0. ) continue;
 		/* add that to the current index */
 		Ind2 = conv_int_array_add( Ind1, NInd, ndim);
 		/* doughnut wrap */
@@ -326,7 +337,7 @@ float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* 
 		/* unwrap to determine array position */
 		indx = conv_wrap( Ind3, N, ndim);
 		/* read that value from array, add weighted value to interpolation */
-		arrayout[ indx] += interp * conv_interpolation_weights( NInd, Rem, ndim);
+		arrayout[ indx] += interp * weight;
 	}
 	return arrayout;
 }
@@ -504,6 +515,8 @@ float* conv_convolve_ker(float* arrayin, int* N, float* kernel, int* Nk, int ndi
 		AInd = conv_unwrap( indxA, N, ndim);
 		/* loop through kernel */
 		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
+			/* check to see if kernel nonzero */
+			if ( kernel[ indxK] == 0 ) continue ;
 			/* determine position in Kernel */
 			KInd = conv_ker_shift( conv_unwrap( indxK, Nk, ndim), Nk, ndim );
 			/* shift Array Index by Kernel Position */
