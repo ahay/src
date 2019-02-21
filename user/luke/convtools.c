@@ -465,9 +465,9 @@ float* conv_var_translate_wrap(float* arrayin, float* trans, int* N, float* D, f
 	/* translated position index */
 	int* Ind2 = sf_intalloc(ndim);
 	/*  translation array */
-	int* TInd;
+	int* TInd = sf_intalloc(ndim);
 	/* and translation remainder */
-	float* TRem;
+	float* TRem = sf_floatalloc(ndim);
 	/* determine number of elements in array */
 	long nelements = conv_arraysize(N,ndim);
 	/* initialize output array */
