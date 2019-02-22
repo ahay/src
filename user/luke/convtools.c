@@ -476,8 +476,7 @@ float* conv_var_translate_wrap(float* arrayin, float* trans, int* N, float* D, f
 	float* X = sf_floatalloc(ndim);
 	/* loop through input array, this is different from the constant case */
 	for (indx = 0 ; indx < nelements ; indx++){
-		/* read translation, which is in coordinates of input array */
-		/* because we set this up looping in the input coordiantes, we need to reverse X */
+		/* read translation */
 		X = conv_get_translations(indx, trans, N, ndim);		
 		/* convert to translation index */
 		TInd = conv_coordinates_to_index( conv_float_array_subtract( O, X, ndim), D, O, ndim);
@@ -573,4 +572,131 @@ float* conv_convolve_ker(float* arrayin, int* N, float* kernel, int* Nk, int ndi
 	return arrayout;
 }
 
+float* conv_convolve_ker_translate( float* arrayin, float* X, int* N, float* D, float* O, float* kernel, int* Nk, int ndim, bool adj)
+	/*< translates by a fixed amount and convolves with a kernel >*/
+{
+	/* looping index in array */
+	long indxA ; 
+	/* looping index in kernel */
+	long indxK ;
+	/* position index */
+	int* AInd1 = sf_intalloc(ndim);
+	/* translated position index */
+	int* AInd2 = sf_intalloc(ndim);
+	/* determine translation array */
+	int* TInd = conv_coordinates_to_index( conv_float_array_subtract( O, X, ndim), D, O, ndim);
+	/* and remainder of translation for interpolation */
+	float* TRem = conv_index_coords_remainder( TInd, conv_float_array_subtract( O, X, ndim), D, O, ndim);
+	/* index corresponding to position on kernel */
+	int* KInd = sf_intalloc(ndim);
+	/* array index shifted by kernel */
+	int* AKInd = sf_intalloc(ndim);
+	/* determine number of elements in array */
+	long nelements = conv_arraysize(N,ndim);
+	/* determine number of elements in kernel */
+	long kelements = conv_arraysize(Nk,ndim);
+	/* initialize output array */
+	float* arrayout = sf_floatalloc(nelements);
+	/* loop through output array */
+	for( indxA = 0 ; indxA < nelements ; indxA++){
+		/* get position index*/
+		AInd1 = conv_unwrap( indxA, N, ndim);
+		/* Translate by X */
+		AInd2 = conv_int_array_add( AInd1, TInd, ndim);
+		/* loop through kernel */
+		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
+			/* check to see if kernel nonzero */
+			if ( kernel[ indxK] == 0 ) continue ;
+			/* determine position in Kernel */
+			KInd = conv_ker_shift( conv_unwrap( indxK, Nk, ndim), Nk, ndim );
+			/* shift Array Index by Kernel Position */
+			AKInd = conv_int_array_add( AInd2, KInd, ndim);
+			if ( !adj ){
+				/* as interpolation */
+				arrayout[ indxA] += kernel[ indxK] * conv_array_doughnut_interpolator( AKInd, TRem, arrayin, N, ndim );
+			}else{
+				/* as adjoint interpoloation */
+				arrayout = conv_array_adj_interpolator( AKInd, TRem, arrayin[ indxA]*kernel[ indxK], arrayout, N, ndim );
+			} 			
+		}	
+	}	
+	/* free unneeded arrays */
+	free (AInd1);
+	free (AInd2);
+	free ( TInd);
+	free ( TRem);
+	free ( KInd);
+	free (AKInd);
+	
+	return arrayout;
+}
 
+
+float* conv_convolve_ker_var_translate( float* arrayin, float* trans, int* N, float* D, float* O, 
+    float* kernel, int* Nk, int ndim, bool adj)
+	/*< translates by a variable amount and convolves with a kernel >*/
+{
+	/* looping index through output array*/
+	long indxA ;
+	/* looping index through kernel */
+	long indxK ;  
+	/* position index */
+	int* AInd1 = sf_intalloc(ndim);
+	/* translated position index */
+	int* AInd2 = sf_intalloc(ndim);
+	/*  translation array */
+	int* TInd = sf_intalloc(ndim);
+	/* and translation remainder */
+	float* TRem = sf_floatalloc(ndim);
+	/* kernel index */
+	int* KInd = sf_intalloc(ndim);
+	/* array index shifted by kernel */
+	int* AKInd = sf_intalloc(ndim);
+	/* determine number of elements in array */
+	long nelements = conv_arraysize( N,ndim);
+	/* and in the kernel */
+	long kelements = conv_arraysize(Nk,ndim);
+	/* initialize output array */
+	float* arrayout = sf_floatalloc(nelements);
+	/* local translation array */
+	float* X = sf_floatalloc(ndim);
+	/* loop through output array */
+	for( indxA = 0 ; indxA < nelements ; indxA++){
+		/* read translation */
+		X = conv_get_translations(indxA, trans, N, ndim);		
+		/* convert to translation index */
+		TInd = conv_coordinates_to_index( conv_float_array_subtract( O, X, ndim), D, O, ndim);
+		/* get remainder */
+		TRem = conv_index_coords_remainder( TInd, conv_float_array_subtract( O, X, ndim), D, O, ndim);		
+		/* get position index*/
+		AInd1 = conv_unwrap( indxA, N, ndim);
+		/* Translate by X */
+		AInd2 = conv_int_array_add( AInd1, TInd, ndim);
+		/* loop through kernel */
+		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
+			/* check to see if kernel nonzero */
+			if ( kernel[ indxK] == 0 ) continue ;
+			/* determine position in Kernel */
+			KInd = conv_ker_shift( conv_unwrap( indxK, Nk, ndim), Nk, ndim );
+			/* shift Array Index by Kernel Position */
+			AKInd = conv_int_array_add( AInd2, KInd, ndim);
+			if ( !adj ){
+				/* as interpolation */
+				arrayout[ indxA] += kernel[ indxK] * conv_array_doughnut_interpolator( AKInd, TRem, arrayin, N, ndim );
+			}else{
+				/* as adjoint interpoloation */
+				arrayout = conv_array_adj_interpolator( AKInd, TRem, arrayin[ indxA]*kernel[ indxK], arrayout, N, ndim );
+			} 			
+		}	
+	}		
+	/* free unneeded arrays */
+	free (AInd1);
+	free (AInd2);
+	free ( TInd);
+	free ( TRem);
+	free ( KInd);
+	free (   X );
+	free (AKInd);
+	
+	return arrayout;
+}
