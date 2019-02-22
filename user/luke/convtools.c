@@ -270,7 +270,7 @@ float conv_array_doughnut_interpolator( int* Ind1, float* Rem, float* array, int
 		/* read that value from array, add weighted value to interpolation */
 		interp += array[ indx] * weight;
 	}
-	/* free unneded arrays */
+	/* free unneeded arrays */
 	free (Nnode);
 	free (NInd);
 	free (Ind2);
@@ -307,7 +307,7 @@ float conv_array_interpolator( int* Ind1, float* Rem, float* array, int* N, int 
 		/* read that value from array, add weighted value to interpolation */
 		interp += array[ indx] * conv_interpolation_weights( NInd, Rem, ndim);
 	}
-	/* free unneded arrays */
+	/* free unneeded arrays */
 	free (Nnode);
 	free (NInd);
 	free (Ind2);
@@ -349,7 +349,7 @@ float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* 
 		/* read that value from array, add weighted value to interpolation */
 		arrayout[ indx] += interp * weight;
 	}
-	/* free unneded arrays */
+	/* free unneeded arrays */
 	free (Nnode);
 	free (NInd);
 	free (Ind2);
@@ -403,7 +403,7 @@ float* conv_translate(float* arrayin, float* X, int* N, float* D, float* O, int 
 		/* interpolate, dont need += because looping through index */
 		arrayout[ indx] = conv_array_interpolator( Ind2, TRem, arrayin, N, ndim );
 	}
-	/* free unneded arrays */
+	/* free unneeded arrays */
 	free (Ind1);
 	free (Ind2);
 	free (TInd);
@@ -445,7 +445,7 @@ float* conv_translate_wrap(float* arrayin, float* X, int* N, float* D, float* O,
 			arrayout = conv_array_adj_interpolator( Ind2, TRem, arrayin[ indx], arrayout, N, ndim );
 		} 
 	}
-	/* free unneded arrays */
+	/* free unneeded arrays */
 	free (Ind1);
 	free (Ind2);
 	free (TInd);
@@ -496,7 +496,7 @@ float* conv_var_translate_wrap(float* arrayin, float* trans, int* N, float* D, f
 			arrayout = conv_array_adj_interpolator( Ind2, TRem, arrayin[ indx], arrayout, N, ndim );
 		} 
 	}
-	/* free unneded arrays */
+	/* free unneeded arrays */
 	free (Ind1);
 	free (Ind2);
 	free (TInd);
@@ -564,7 +564,7 @@ float* conv_convolve_ker(float* arrayin, int* N, float* kernel, int* Nk, int ndi
 			} 			
 		}	
 	}
-	/* free unneded arrays */
+	/* free unneeded arrays */
 	free (AInd);
 	free (KInd);
 	free (AKInd);
@@ -572,4 +572,5 @@ float* conv_convolve_ker(float* arrayin, int* N, float* kernel, int* Nk, int ndi
 	/* return finished product */
 	return arrayout;
 }
+
 

@@ -82,6 +82,10 @@ int main (int argc, char* argv[])
 	free ( arrayin );
 	free ( arrayout);
 	free ( kernel );
+	free (O);
+	free (D);
+	free (N);
+	free (NK);
     /* exit program */
     exit (0);
 }
