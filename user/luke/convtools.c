@@ -854,9 +854,11 @@ float* conv_convolve_ker_var_translate_omp( float *arrayin, float *trans, int *N
 			}else{
 				/* as adjoint interpoloation */
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical 
 #endif
-				arrayout = conv_array_adj_interpolator( AKInd, TRem, arrayin[ indxA]*kernel[ indxK], arrayout, N, ndim );
+{				arrayout = conv_array_adj_interpolator( AKInd, TRem, arrayin[ indxA]*kernel[ indxK], arrayout, N, ndim );}
+				
+			
 			} 			
 		}	
 	}		
