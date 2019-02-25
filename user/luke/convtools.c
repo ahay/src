@@ -2,9 +2,6 @@
 /*^*/
 #include <rsf.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 int conv_in_bounds( int *Ind, int *N, int ndim )
 	/*< determines if an index is in bounds, return 0 if in bounds, 1 if out of bounds >*/
@@ -777,99 +774,3 @@ float* conv_convolve_ker_var_translate( float *arrayin, float *trans, int *N, fl
 	return arrayout;
 }
 
-
-float* conv_convolve_ker_var_translate_omp( float *arrayin, float *trans, int *N, float *D, float *O, 
-    float *kernel, int *Nk, int ndim, bool adj)
-	/*< translates by a variable amount and convolves with a kernel >*/
-{
-	/* looping index through output array*/
-	long indxA ;
-	/* looping index through kernel */
-	long indxK ;  
-	/* position index */
-	int* AInd1 = sf_intalloc(ndim);
-	/* translated position index */
-	int* AInd2 = sf_intalloc(ndim);
-	/* translation array precursor */
-	float* TIndpre = sf_floatalloc(ndim);
-	/*  translation array */
-	int* TInd = sf_intalloc(ndim);
-	/* and translation remainder */
-	float* TRem = sf_floatalloc(ndim);
-	/* kernel index prior to shifting */
-	int* KIndpre = sf_intalloc(ndim);
-	/* kernel index */
-	int* KInd = sf_intalloc(ndim);
-	/* array index shifted by kernel */
-	int* AKInd = sf_intalloc(ndim);
-	/* determine number of elements in array */
-	long nelements = conv_arraysize( N,ndim);
-	/* and in the kernel */
-	long kelements = conv_arraysize(Nk,ndim);
-	/* initialize output array */
-	float* arrayout = sf_floatalloc(nelements);
-	/* local translation array */
-	float* X = sf_floatalloc(ndim);
-	/* loop through output array */
-#ifdef _OPENMP
-#pragma omp parallel for private(indxA, X, TIndpre, TInd, TRem, AInd1, AInd2, indxK, KIndpre, KInd, AKInd)
-#endif
-	for( indxA = 0 ; indxA < nelements ; indxA++){
-		/* read translation */
-		free (X);
-		X = conv_get_translations(indxA, trans, N, ndim);	
-		/* get precursor for translation index */
-		free (TIndpre);
-		TIndpre = conv_float_array_subtract( O, X, ndim);
-		/* convert to translation index */
-		free (TInd);
-		TInd = conv_coordinates_to_index( TIndpre, D, O, ndim);
-		/* get remainder */
-		free (TRem);
-		TRem = conv_index_coords_remainder( TInd, TIndpre, D, O, ndim);		
-		/* get position index*/
-		free (AInd1);
-		AInd1 = conv_unwrap( indxA, N, ndim);
-		/* Translate by X */
-		free (AInd2);
-		AInd2 = conv_int_array_add( AInd1, TInd, ndim);
-		/* loop through kernel */
-		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
-			/* check to see if kernel nonzero */
-			if ( kernel[ indxK] == 0 ) continue ;
-			/* determine position in Kernel */
-			free (KIndpre);
-			KIndpre = conv_unwrap( indxK, Nk, ndim);
-			/* shift to center */
-			free (KInd);
-			KInd = conv_ker_shift( KIndpre, Nk, ndim );
-			/* shift Array Index by Kernel Position */
-			free (AKInd);
-			AKInd = conv_int_array_add( AInd2, KInd, ndim);
-
-
-			if ( !adj ){
-				/* as interpolation */
-				arrayout[ indxA] += kernel[ indxK] * conv_array_doughnut_interpolator( AKInd, TRem, arrayin, N, ndim );
-			}else{
-				/* as adjoint interpoloation */
-#ifdef _OPENMP
-#pragma omp critical 
-#endif
-{				arrayout = conv_array_adj_interpolator( AKInd, TRem, arrayin[ indxA]*kernel[ indxK], arrayout, N, ndim );}
-				
-			
-			} 			
-		}	
-	}		
-	/* free unneeded arrays */
-	free (AInd1);
-	free (AInd2);
-	free ( TInd);
-	free ( TRem);
-	free ( KInd);
-	free (   X );
-	free (AKInd);
-	
-	return arrayout;
-}

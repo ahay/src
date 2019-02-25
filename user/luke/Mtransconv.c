@@ -130,7 +130,7 @@ int main (int argc, char* argv[])
 			free (X);
 		} else {
 			/* variable translation convolution */
-			arrayout = conv_convolve_ker_var_translate_omp( arrayin, trans, N, D, O, kernel, NK, ndim, adj);
+			arrayout = conv_convolve_ker_var_translate( arrayin, trans, N, D, O, kernel, NK, ndim, adj);
 			/* free translation array */
 			free ( trans);
 			/* close input file for translation */
