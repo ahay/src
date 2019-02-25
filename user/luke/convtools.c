@@ -2,7 +2,7 @@
 /*^*/
 #include <rsf.h>
 
-int conv_in_bounds( int* Ind, int* N, int ndim )
+int conv_in_bounds( int *Ind, int *N, int ndim )
 	/*< determines if an index is in bounds, return 0 if in bounds, 1 if out of bounds >*/
 {
 	/* looping index */
@@ -33,7 +33,7 @@ int conv_int_exponent(int j, int n)
 	return out;
 }
 
-float* conv_scale_float_array( float* arrayin, float scale, int n)
+float* conv_scale_float_array( float *arrayin, float scale, int n)
 	/*< scales ar array of size n >*/
 {
 	/* declare array */
@@ -46,7 +46,7 @@ float* conv_scale_float_array( float* arrayin, float scale, int n)
 	return arrayout;
 }
 
-float* conv_float_array_subtract( float* A, float* B, int ndim)
+float* conv_float_array_subtract( float *A, float *B, int ndim)
 	/*< outputs C = A - B for float arrays A, B >*/
 {
 	/* declare C */
@@ -59,7 +59,7 @@ float* conv_float_array_subtract( float* A, float* B, int ndim)
 	return C;
 }
 
-float* conv_float_array_add( float* A, float* B, int ndim)
+float* conv_float_array_add( float *A, float *B, int ndim)
 	/*< outputs C = A + B for float arrays A, B >*/
 {
 	/* declare C */
@@ -72,7 +72,7 @@ float* conv_float_array_add( float* A, float* B, int ndim)
 	return C;
 }
 
-int* conv_int_array_add( int* A, int* B, int ndim)
+int* conv_int_array_add( int *A, int *B, int ndim)
 	/*< outputs C = A + B for int arrays A, B >*/
 {
 	/* declare C */
@@ -85,7 +85,7 @@ int* conv_int_array_add( int* A, int* B, int ndim)
 	return C;
 }
 
-long conv_arraysize(int* N, int ndim)
+long conv_arraysize(int *N, int ndim)
 	/*< returns the size of the array by unwrapping N >*/
 {
 	/* initialize */
@@ -100,7 +100,7 @@ long conv_arraysize(int* N, int ndim)
 }
 
 
-int* conv_unwrap(long indx, int* N, int ndim)
+int* conv_unwrap(long indx, int *N, int ndim)
 	/*< unwraps index into coordinates >*/
 {
     int* Ind = sf_intalloc(ndim);
@@ -114,7 +114,7 @@ int* conv_unwrap(long indx, int* N, int ndim)
 	return Ind;
 }
 
-long conv_wrap(int* Ind, int* N, int ndim)
+long conv_wrap(int *Ind, int *N, int ndim)
 /*< wraps input coordinates back into index >*/
 {
 	long indx = 0;
@@ -126,7 +126,7 @@ long conv_wrap(int* Ind, int* N, int ndim)
 	return indx;
 }
 
-float* conv_index_to_coordinates(int* Ind, float* D, float* O, int ndim)
+float* conv_index_to_coordinates(int *Ind, float *D, float *O, int ndim)
 	/*< transforms an index location to a coordinate >*/
 {
 	/* allocate coordinate array */
@@ -141,7 +141,7 @@ float* conv_index_to_coordinates(int* Ind, float* D, float* O, int ndim)
 
 
 
-int* conv_coordinates_to_index( float* Coord, float* D, float* O, int ndim)
+int* conv_coordinates_to_index( float *Coord, float *D, float *O, int ndim)
 	/*< converts coordinate array to nearest index rounding down >*/
 {
 	/* declare index array */
@@ -155,7 +155,7 @@ int* conv_coordinates_to_index( float* Coord, float* D, float* O, int ndim)
 	return Ind;
 }
 
-float* conv_index_coords_remainder( int* Ind, float* Coord, float* D, float* O, int ndim)
+float* conv_index_coords_remainder( int *Ind, float *Coord, float *D, float *O, int ndim)
 	/*< finds the interpolation proportion remainder between the index and the coordinate >*/
 {
 	/* declare remainder array */
@@ -186,7 +186,7 @@ int* conv_Nnode(int ndim)
 	return Nnode;
 }
 
-int* conv_doughnut_wrap( int* Ind, int* N, int ndim)
+int* conv_doughnut_wrap( int *Ind, int *N, int ndim)
 	/*< checks to see if index is out of bounds.  If it is, performs doughnut wrapping >*/
 {
 	/* wrapped index */
@@ -221,7 +221,7 @@ int* conv_doughnut_wrap( int* Ind, int* N, int ndim)
 	return IndW ;
 }
 
-float conv_interpolation_weights( int* NInd, float* Rem, int ndim)
+float conv_interpolation_weights( int *NInd, float *Rem, int ndim)
 	/*< returns interpolation weights for Node Index and Remainder >*/
 {
 	/* intialize the weight */
@@ -241,7 +241,7 @@ float conv_interpolation_weights( int* NInd, float* Rem, int ndim)
 	return weight;
 }
 
-float conv_array_doughnut_interpolator( int* Ind1, float* Rem, float* array, int* N, int ndim )
+float conv_array_doughnut_interpolator( int *Ind1, float *Rem, float *array, int *N, int ndim )
 	/*< interpolates between elements of array >*/
 {
 	/* value to be interpolated */
@@ -288,7 +288,7 @@ float conv_array_doughnut_interpolator( int* Ind1, float* Rem, float* array, int
 	return interp;
 }
 
-float conv_array_interpolator( int* Ind1, float* Rem, float* array, int* N, int ndim )
+float conv_array_interpolator( int *Ind1, float *Rem, float *array, int *N, int ndim )
 	/*< interpolates between elements of array >*/
 {
 	/* value to be interpolated */
@@ -323,7 +323,7 @@ float conv_array_interpolator( int* Ind1, float* Rem, float* array, int* N, int 
 	return interp;
 }
 
-float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* arrayout, int* N, int ndim )
+float* conv_array_adj_interpolator( int *Ind1, float *Rem, float interp, float *arrayout, int *N, int ndim )
 	/*< adjoint interpolates between elements of array >*/
 {
 	/* create N array for nodes */
@@ -367,7 +367,7 @@ float* conv_array_adj_interpolator( int* Ind1, float* Rem, float interp, float* 
 	return arrayout;
 }
 
-float* conv_get_translations(long indx, float* trans, int* N, int ndim)
+float* conv_get_translations(long indx, float *trans, int *N, int ndim)
 	/*< get local translation array >*/
 {
 	/* local translation array */
@@ -384,7 +384,7 @@ float* conv_get_translations(long indx, float* trans, int* N, int ndim)
 	return X;
 }
 
-float* conv_translate(float* arrayin, float* X, int* N, float* D, float* O, int ndim)
+float* conv_translate(float *arrayin, float *X, int *N, float *D, float *O, int ndim)
 	/*< returns a translated version of the array by vector X.  this doesn't wrap >*/	
 {
 	/* looping index */
@@ -422,7 +422,7 @@ float* conv_translate(float* arrayin, float* X, int* N, float* D, float* O, int 
 	return arrayout;
 }
 
-float* conv_translate_wrap(float* arrayin, float* X, int* N, float* D, float* O, int ndim, bool adj)
+float* conv_translate_wrap(float *arrayin, float *X, int *N, float *D, float *O, int ndim, bool adj)
 	/*< returns a translated version of the array by vector X, with doughnut wrapping so an adjoint >*/	
 {
 	/* looping index */
@@ -464,7 +464,7 @@ float* conv_translate_wrap(float* arrayin, float* X, int* N, float* D, float* O,
 	return arrayout;
 }
 
-float* conv_var_translate_wrap(float* arrayin, float* trans, int* N, float* D, float* O, int ndim, bool adj)
+float* conv_var_translate_wrap(float *arrayin, float *trans, int *N, float *D, float *O, int ndim, bool adj)
 	/*< returns a translated version of the array by variable translation, with doughnut wrapping so an adjoint >*/	
 {
 	/* looping index */
@@ -514,7 +514,7 @@ float* conv_var_translate_wrap(float* arrayin, float* trans, int* N, float* D, f
 	return arrayout;
 }
 
-int* conv_ker_shift(int* Kin, int* Nk, int ndim )
+int* conv_ker_shift(int *Kin, int *Nk, int ndim )
 	/*< shifts the kernel index so it is centered about zero >*/
 {
 	/* allocate output kernel */
@@ -528,7 +528,7 @@ int* conv_ker_shift(int* Kin, int* Nk, int ndim )
 }
 
 
-float* conv_convolve_ker(float* arrayin, int* N, float* kernel, int* Nk, int ndim, bool adj)
+float* conv_convolve_ker(float *arrayin, int *N, float *kernel, int *Nk, int ndim, bool adj)
 	/*< convolves the input array with a kernel with odd number of elements in each dimension.  Assumes sampling in the two is the same, as well as their dimensionality >*/
 {
 	/* determine number of elements in array */
@@ -581,7 +581,7 @@ float* conv_convolve_ker(float* arrayin, int* N, float* kernel, int* Nk, int ndi
 	return arrayout;
 }
 
-float* conv_convolve_ker_translate( float* arrayin, float* X, int* N, float* D, float* O, float* kernel, int* Nk, int ndim, bool adj)
+float* conv_convolve_ker_translate( float *arrayin, float *X, int *N, float *D, float *O, float *kernel, int *Nk, int ndim, bool adj)
 	/*< translates by a fixed amount and convolves with a kernel >*/
 {
 	/* looping index in array */
@@ -641,8 +641,8 @@ float* conv_convolve_ker_translate( float* arrayin, float* X, int* N, float* D, 
 }
 
 
-float* conv_convolve_ker_var_translate( float* arrayin, float* trans, int* N, float* D, float* O, 
-    float* kernel, int* Nk, int ndim, bool adj)
+float* conv_convolve_ker_var_translate( float *arrayin, float *trans, int *N, float *D, float *O, 
+    float *kernel, int *Nk, int ndim, bool adj)
 	/*< translates by a variable amount and convolves with a kernel >*/
 {
 	/* looping index through output array*/
