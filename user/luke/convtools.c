@@ -778,7 +778,7 @@ float* conv_convolve_ker_var_translate( float *arrayin, float *trans, int *N, fl
 }
 
 
-float* conv_convolve_ker_var_translate_omp( float *arrayin, float *trans, int *No, float *D, float *O, 
+float* conv_convolve_ker_var_translate_omp( float *arrayin, float *trans, int *N, float *D, float *O, 
     float *kernel, int *Nk, int ndim, bool adj)
 	/*< translates by a variable amount and convolves with a kernel >*/
 {
