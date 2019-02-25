@@ -778,7 +778,7 @@ float* conv_convolve_ker_var_translate( float *arrayin, float *trans, int *N, fl
 }
 
 
-float* conv_convolve_ker_var_translate_omp( float *arrayin, float *trans, int *N, float *D, float *O, 
+float* conv_convolve_ker_var_translate_omp( float *arrayin, float *trans, int *No, float *D, float *O, 
     float *kernel, int *Nk, int ndim, bool adj)
 	/*< translates by a variable amount and convolves with a kernel >*/
 {
@@ -812,7 +812,7 @@ float* conv_convolve_ker_var_translate_omp( float *arrayin, float *trans, int *N
 	float* X = sf_floatalloc(ndim);
 	/* loop through output array */
 #ifdef _OPENMP
-#pragma omp parallel for private(indxA, X, TIndpre, TInd, TRem, AInd1, AInd2, indxK, KIndpre, KInd, AKInd) reduction(+:arrayout)
+#pragma omp parallel for private(indxA, X, TIndpre, TInd, TRem, AInd1, AInd2, indxK, KIndpre, KInd, AKInd)
 #endif
 	for( indxA = 0 ; indxA < nelements ; indxA++){
 		/* read translation */
@@ -846,11 +846,16 @@ float* conv_convolve_ker_var_translate_omp( float *arrayin, float *trans, int *N
 			/* shift Array Index by Kernel Position */
 			free (AKInd);
 			AKInd = conv_int_array_add( AInd2, KInd, ndim);
+
+
 			if ( !adj ){
 				/* as interpolation */
 				arrayout[ indxA] += kernel[ indxK] * conv_array_doughnut_interpolator( AKInd, TRem, arrayin, N, ndim );
 			}else{
 				/* as adjoint interpoloation */
+#ifdef _OPENMP
+#pragma omp critical
+#endif
 				arrayout = conv_array_adj_interpolator( AKInd, TRem, arrayin[ indxA]*kernel[ indxK], arrayout, N, ndim );
 			} 			
 		}	
