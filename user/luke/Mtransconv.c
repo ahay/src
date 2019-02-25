@@ -133,11 +133,15 @@ int main (int argc, char* argv[])
 			arrayout = conv_convolve_ker_var_translate( arrayin, trans, N, D, O, kernel, NK, ndim, adj);
 			/* free translation array */
 			free ( trans);
+			/* close input file for translation */
+			sf_fileclose(_trans);
 		}
 		/* free kernel array */
 		free (kernel);
 		/* and its dimensions */
 		free (NK);
+		/* and close the file */
+		sf_fileclose(_ker);
 	}else{
 	    /* translate input, no convolution */
 	    if (fixed){
@@ -150,11 +154,16 @@ int main (int argc, char* argv[])
 		    arrayout = conv_var_translate_wrap(arrayin, trans, N, D, O, ndim, adj);
 		    /* free translation array */
 		    free(trans);
+			/* close input file for translation */
+			sf_fileclose(_trans);
 	    }
     }
 	/* write translated array to file */
 	sf_floatwrite(arrayout,conv_arraysize(N,ndim),_out);
-	
+	/* close output file */
+	sf_fileclose(_out);
+	/* close input file */
+	sf_fileclose(_in);
 	/* free the substantial arrays*/
 	free ( arrayin );
 	free ( arrayout);

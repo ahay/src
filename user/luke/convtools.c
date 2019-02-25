@@ -193,15 +193,24 @@ int* conv_doughnut_wrap( int* Ind, int* N, int ndim)
 	int* IndW = sf_intalloc(ndim);
 	/* looping index */
 	int i ;
+	/* how many wraps off are we?*/
+	int wraps;
 	/* loop through dimensions */
 	for ( i = 0 ; i < ndim ; i++ ){
 		if ( Ind[ i] < 0 ){ 
-			/* too low */
-			IndW[ i] = Ind[ i] + N[ i] ;
+			/* too low */ 
+			/* how far too low */
+			wraps = -1*Ind[ i] / N[ i] + 1;
+			/* correct */
+			IndW[ i] = Ind[ i] +  wraps * N[ i] ;
+
 		}else{
 			if ( Ind[ i] > N[ i] - 1){
 				/* too high */
-				IndW[ i] = Ind[ i] - N[ i] ;
+				/* how far too low */
+				wraps = Ind[ i] / N[ i] ;
+				/* correct */
+				IndW[ i] = Ind[ i] -  wraps * N[ i] ;
 			}else{
 				/* Goldilox */
 				IndW[ i] = Ind[ i];

@@ -77,7 +77,11 @@ int main (int argc, char* argv[])
 	arrayout = conv_convolve_ker( arrayin, N, kernel, NK, ndim, adj);
 	/* write translated array to file */
 	sf_floatwrite(arrayout,conv_arraysize(N,ndim),_out);
-	
+	/* close the output file */
+	sf_fileclose(_out);
+	/* close the input files */
+	sf_fileclose(_in);
+	sf_fileclose(_ker);
 	/* free the substantial arrays*/
 	free ( arrayin );
 	free ( arrayout);
