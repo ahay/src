@@ -160,14 +160,21 @@ float* conv_index_coords_remainder( int *Ind, float *Coord, float *D, float *O, 
 {
 	/* declare remainder array */
 	float* Rem = sf_floatalloc(ndim);
+	/* declare converted coord array */
+    float* CoordC = sf_floatalloc(ndim);
+	/* get converted coordinates */
+	free (CoordC);
+	CoordC = conv_index_to_coordinates( Ind, D, O, ndim);
 	/* declare looping index */
 	int i ; 
     /* find coordinate for index, subtract from coordinate */
-	float* Diff = conv_float_array_subtract( Coord, conv_index_to_coordinates( Ind, D, O, ndim), ndim);
+	float* Diff = conv_float_array_subtract( Coord, CoordC, ndim);
 	/* divide the difference by the increment */
 	for ( i = 0 ; i < ndim ; i++){
 		Rem [ i] = Diff[ i]/D[ i];
 	}
+	free (Diff);
+	free (CoordC);
 	return Rem ;
 }
 
@@ -265,14 +272,17 @@ float conv_array_doughnut_interpolator( int *Ind1, float *Rem, float *array, int
 	/* loop through node points for interpolation */
 	for ( nindx = 0 ; nindx < nnodes ; nindx++ ){
 		/* get where we are */
+		free (NInd);
 		NInd = conv_unwrap( nindx, Nnode, ndim);
 		/* get interpolation weight */
 		weight = conv_interpolation_weights( NInd, Rem, ndim);
 		/* continue if zero */
 		if ( weight == 0. ) continue;
 		/* add that to the current index */
+		free (Ind2);
 		Ind2 = conv_int_array_add( Ind1, NInd, ndim);
 		/* check to see if inbounds, if not, doughnut wrap */
+		free (Ind3);
 		Ind3 = conv_doughnut_wrap( Ind2, N, ndim);
 		/* unwrap to determine array position */
 		indx = conv_wrap( Ind3, N, ndim);
@@ -308,8 +318,10 @@ float conv_array_interpolator( int *Ind1, float *Rem, float *array, int *N, int 
 	/* loop through node points for interpolation */
 	for ( nindx = 0 ; nindx < nnodes ; nindx++ ){
 		/* get where we are */
+		free (NInd);
 		NInd = conv_unwrap( nindx, Nnode, ndim);
 		/* add that to the current index */
+		free (Ind2);
 		Ind2 = conv_int_array_add( Ind1, NInd, ndim);
 		/* unwrap to determine array position */
 		indx = conv_wrap( Ind2, N, ndim);
@@ -345,13 +357,16 @@ float* conv_array_adj_interpolator( int *Ind1, float *Rem, float interp, float *
 	/* loop through node points for interpolation */
 	for ( nindx = 0 ; nindx < nnodes ; nindx++ ){
 		/* get where we are */
+		free ( NInd);
 		NInd = conv_unwrap( nindx, Nnode, ndim);
 		/* get interpolation weight, if zero continue */
 		weight = conv_interpolation_weights( NInd, Rem, ndim);
 		if ( weight == 0. ) continue;
 		/* add that to the current index */
+		free (Ind2);
 		Ind2 = conv_int_array_add( Ind1, NInd, ndim);
 		/* doughnut wrap */
+		free (Ind3);
 		Ind3 = conv_doughnut_wrap( Ind2, N, ndim);
 		/* unwrap to determine array position */
 		indx = conv_wrap( Ind3, N, ndim);
@@ -404,8 +419,10 @@ float* conv_translate(float *arrayin, float *X, int *N, float *D, float *O, int 
 	/* loop through output array */
 	for (indx = 0 ; indx < nelements ; indx++){
 		/* determine where we are */
+		free (Ind1);
 		Ind1 = conv_unwrap( indx, N, ndim);
 		/* Translate by X */
+		free (Ind2);
 		Ind2 = conv_int_array_add( Ind1, TInd, ndim);
 		/* check to see if we are in bounds */
 		if ( conv_in_bounds( Ind2, N, ndim ) > 0 ) continue ; 
@@ -442,8 +459,10 @@ float* conv_translate_wrap(float *arrayin, float *X, int *N, float *D, float *O,
 	/* loop through output array */
 	for (indx = 0 ; indx < nelements ; indx++){
 		/* determine where we are */
+		free (Ind1);
 		Ind1 = conv_unwrap( indx, N, ndim);
 		/* Translate by X */
+		free (Ind2);
 		Ind2 = conv_int_array_add( Ind1, TInd, ndim);
 		/* write to output array */
 		if (!adj){
@@ -473,6 +492,8 @@ float* conv_var_translate_wrap(float *arrayin, float *trans, int *N, float *D, f
 	int* Ind1 = sf_intalloc(ndim);
 	/* translated position index */
 	int* Ind2 = sf_intalloc(ndim);
+	/* translation array precursor */
+	float* TIndpre = sf_floatalloc(ndim);
 	/*  translation array */
 	int* TInd = sf_intalloc(ndim);
 	/* and translation remainder */
@@ -486,14 +507,22 @@ float* conv_var_translate_wrap(float *arrayin, float *trans, int *N, float *D, f
 	/* loop through input array, this is different from the constant case */
 	for (indx = 0 ; indx < nelements ; indx++){
 		/* read translation */
-		X = conv_get_translations(indx, trans, N, ndim);		
+		free (X);
+		X = conv_get_translations(indx, trans, N, ndim);	
+		/* get translation precursor */
+		free (TIndpre);
+		TIndpre = conv_float_array_subtract( O, X, ndim);
 		/* convert to translation index */
-		TInd = conv_coordinates_to_index( conv_float_array_subtract( O, X, ndim), D, O, ndim);
+		free (TInd);
+		TInd = conv_coordinates_to_index( TIndpre, D, O, ndim);
 		/* get remainder */
-		TRem = conv_index_coords_remainder( TInd, conv_float_array_subtract( O, X, ndim), D, O, ndim);
+		free (TRem);
+		TRem = conv_index_coords_remainder( TInd, TIndpre, D, O, ndim);
 		/* determine where we are */
+		free (Ind1);
 		Ind1 = conv_unwrap( indx, N, ndim);
 		/* Translate by X */
+		free (Ind2);
 		Ind2 = conv_int_array_add( Ind1, TInd, ndim);
 		/* write to output array */
 		if ( !adj ){
@@ -543,6 +572,8 @@ float* conv_convolve_ker(float *arrayin, int *N, float *kernel, int *Nk, int ndi
 	long indxK;
 	/* coordinates corresponding to index on output array*/
 	int* AInd = sf_intalloc(ndim);
+	/* index for kernel before shifting */
+	int* KIndpre = sf_intalloc(ndim);
 	/* index corresponding to position on kernel */
 	int* KInd = sf_intalloc(ndim);
 	/* array index shifted by kernel */
@@ -554,14 +585,20 @@ float* conv_convolve_ker(float *arrayin, int *N, float *kernel, int *Nk, int ndi
 	/* loop through output array */
 	for( indxA = 0 ; indxA < nelements ; indxA++){
 		/* get position index*/
+		free (AInd);
 		AInd = conv_unwrap( indxA, N, ndim);
 		/* loop through kernel */
 		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
 			/* check to see if kernel nonzero */
 			if ( kernel[ indxK] == 0 ) continue ;
 			/* determine position in Kernel */
-			KInd = conv_ker_shift( conv_unwrap( indxK, Nk, ndim), Nk, ndim );
+			free (KIndpre);
+			KIndpre = conv_unwrap( indxK, Nk, ndim);
+			/* shift to center */
+			free (KInd);
+			KInd = conv_ker_shift( KIndpre, Nk, ndim );
 			/* shift Array Index by Kernel Position */
+			free (AKInd);
 			AKInd = conv_int_array_add( AInd, KInd, ndim);
 			if ( !adj ){
 				/* as interpolation */
@@ -596,6 +633,8 @@ float* conv_convolve_ker_translate( float *arrayin, float *X, int *N, float *D, 
 	int* TInd = conv_coordinates_to_index( conv_float_array_subtract( O, X, ndim), D, O, ndim);
 	/* and remainder of translation for interpolation */
 	float* TRem = conv_index_coords_remainder( TInd, conv_float_array_subtract( O, X, ndim), D, O, ndim);
+	/* index in kernel prior to shifting */
+	int* KIndpre;
 	/* index corresponding to position on kernel */
 	int* KInd = sf_intalloc(ndim);
 	/* array index shifted by kernel */
@@ -609,16 +648,23 @@ float* conv_convolve_ker_translate( float *arrayin, float *X, int *N, float *D, 
 	/* loop through output array */
 	for( indxA = 0 ; indxA < nelements ; indxA++){
 		/* get position index*/
+		free (AInd1);
 		AInd1 = conv_unwrap( indxA, N, ndim);
 		/* Translate by X */
+		free (AInd2);
 		AInd2 = conv_int_array_add( AInd1, TInd, ndim);
 		/* loop through kernel */
 		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
 			/* check to see if kernel nonzero */
 			if ( kernel[ indxK] == 0 ) continue ;
 			/* determine position in Kernel */
-			KInd = conv_ker_shift( conv_unwrap( indxK, Nk, ndim), Nk, ndim );
+			free (KIndpre);
+			KIndpre = conv_unwrap( indxK, Nk, ndim);
+			/* shift to center */
+			free (KInd);
+			KInd = conv_ker_shift( KIndpre, Nk, ndim );
 			/* shift Array Index by Kernel Position */
+			free (AKInd);
 			AKInd = conv_int_array_add( AInd2, KInd, ndim);
 			if ( !adj ){
 				/* as interpolation */
@@ -653,10 +699,14 @@ float* conv_convolve_ker_var_translate( float *arrayin, float *trans, int *N, fl
 	int* AInd1 = sf_intalloc(ndim);
 	/* translated position index */
 	int* AInd2 = sf_intalloc(ndim);
+	/* translation array precursor */
+	float* TIndpre = sf_floatalloc(ndim);
 	/*  translation array */
 	int* TInd = sf_intalloc(ndim);
 	/* and translation remainder */
 	float* TRem = sf_floatalloc(ndim);
+	/* kernel index prior to shifting */
+	int* KIndpre = sf_intalloc(ndim);
 	/* kernel index */
 	int* KInd = sf_intalloc(ndim);
 	/* array index shifted by kernel */
@@ -672,22 +722,35 @@ float* conv_convolve_ker_var_translate( float *arrayin, float *trans, int *N, fl
 	/* loop through output array */
 	for( indxA = 0 ; indxA < nelements ; indxA++){
 		/* read translation */
-		X = conv_get_translations(indxA, trans, N, ndim);		
+		free (X);
+		X = conv_get_translations(indxA, trans, N, ndim);	
+		/* get precursor for translation index */
+		free (TIndpre);
+		TIndpre = conv_float_array_subtract( O, X, ndim);
 		/* convert to translation index */
-		TInd = conv_coordinates_to_index( conv_float_array_subtract( O, X, ndim), D, O, ndim);
+		free (TInd);
+		TInd = conv_coordinates_to_index( TIndpre, D, O, ndim);
 		/* get remainder */
-		TRem = conv_index_coords_remainder( TInd, conv_float_array_subtract( O, X, ndim), D, O, ndim);		
+		free (TRem);
+		TRem = conv_index_coords_remainder( TInd, TIndpre, D, O, ndim);		
 		/* get position index*/
+		free (AInd1);
 		AInd1 = conv_unwrap( indxA, N, ndim);
 		/* Translate by X */
+		free (AInd2);
 		AInd2 = conv_int_array_add( AInd1, TInd, ndim);
 		/* loop through kernel */
 		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
 			/* check to see if kernel nonzero */
 			if ( kernel[ indxK] == 0 ) continue ;
 			/* determine position in Kernel */
-			KInd = conv_ker_shift( conv_unwrap( indxK, Nk, ndim), Nk, ndim );
+			free (KIndpre);
+			KIndpre = conv_unwrap( indxK, Nk, ndim);
+			/* shift to center */
+			free (KInd);
+			KInd = conv_ker_shift( KIndpre, Nk, ndim );
 			/* shift Array Index by Kernel Position */
+			free (AKInd);
 			AKInd = conv_int_array_add( AInd2, KInd, ndim);
 			if ( !adj ){
 				/* as interpolation */
