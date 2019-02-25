@@ -2,6 +2,16 @@
 /*^*/
 #include <rsf.h>
 
+void conv_clear_array( float* array, long n)
+	/*< clears out a float array with zeros >*/
+{
+	/* looping index */
+	long i;
+	for (i = 0; i < n; i++)
+		array[ i] = 0.;
+	return;
+}
+
 
 int conv_in_bounds( int *Ind, int *N, int ndim )
 	/*< determines if an index is in bounds, return 0 if in bounds, 1 if out of bounds >*/
@@ -774,3 +784,60 @@ float* conv_convolve_ker_var_translate( float *arrayin, float *trans, int *N, fl
 	return arrayout;
 }
 
+
+void conv_convolve_find_ker(float *arrayin, int *N, float *kernel, float *arrayout, int *Nk, int ndim, bool adj)
+	/*< solving for a convolutional kernel >*/
+{
+	/* determine number of elements in array */
+	long nelements = conv_arraysize( N,ndim);
+	/* determine number of elements in kernel */
+	long kelements = conv_arraysize(Nk,ndim);
+	/* index for looping through outptut array */
+	long indxA;
+	/* index for looping through kernel */
+	long indxK;
+	/* coordinates corresponding to index on output array*/
+	int* AInd = sf_intalloc(ndim);
+	/* index for kernel before shifting */
+	int* KIndpre = sf_intalloc(ndim);
+	/* index corresponding to position on kernel */
+	int* KInd = sf_intalloc(ndim);
+	/* array index shifted by kernel */
+	int* AKInd = sf_intalloc(ndim);
+	/* we are doing integer shifts, so TRem is always zero*/
+	float* TRem = sf_floatalloc(ndim);
+	/* set to zero */
+	TRem = conv_scale_float_array( TRem, 0. , ndim);
+	/* loop through output array */
+	for( indxA = 0 ; indxA < nelements ; indxA++){
+		/* get position index*/
+		free (AInd);
+		AInd = conv_unwrap( indxA, N, ndim);
+		/* loop through kernel */
+		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
+			/* determine position in Kernel */
+			free (KIndpre);
+			KIndpre = conv_unwrap( indxK, Nk, ndim);
+			/* shift to center */
+			free (KInd);
+			KInd = conv_ker_shift( KIndpre, Nk, ndim );
+			/* shift Array Index by Kernel Position */
+			free (AKInd);
+			AKInd = conv_int_array_add( AInd, KInd, ndim);
+			if ( !adj ){
+				/* as interpolation */
+				arrayout[ indxA] += kernel[ indxK] * conv_array_doughnut_interpolator( AKInd, TRem, arrayin, N, ndim );
+			}else{
+				/* as adjoint interpoloation */
+				kernel[ indxK] += arrayout[ indxA] * conv_array_doughnut_interpolator( AKInd, TRem, arrayin, N, ndim );
+			} 			
+		}	
+	}
+	/* free unneeded arrays */
+	free (AInd);
+	free (KInd);
+	free (AKInd);
+	free (TRem);
+	/* its over */
+	return ;
+}
