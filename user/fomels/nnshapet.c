@@ -23,14 +23,14 @@
 static bool sym;
 static int nd,nt, n1, n2, n12, n123;
 static float o1,d1, o2,d2;
-static float **d, *m, *fold, *bin, *zero;
+static float **d, **w, *m, *fold, *bin, *zero, eps;
 static sf_triangle tr1, tr2, tr3;
 static sf_upgrad upg;
 
 void nnshapet_init(bool sym1, int nd1, int nt1, int n11, int n21, 
 		  float o11, float o21, float d11, float d21,
 		  int rect1, int rect2, int rect3, int nw, int order,
-		  float **xy)
+		   float **xy, float **weight, float eps)
 /*< initialize >*/
 {
     int i, id, n[2], *pp;
@@ -60,6 +60,7 @@ void nnshapet_init(bool sym1, int nd1, int nt1, int n11, int n21,
 
     d = sf_floatalloc2(nd,nt);
     m = sf_floatalloc(n123);
+    w = weight;
 
     fold = sf_floatalloc(n12);
     bin = sf_floatalloc(n12);
@@ -150,25 +151,35 @@ void nnshapet_smooth(float *modl)
 void nnshapet_back(float **data, float *modl)
 /*< backward operator (voronoi diagrams) >*/
 {
-    int i, it;
+    int i, it, id;
     
     for (it=0; it < nt; it++) {
-       sf_int2_lop (true,false,n12,nd,bin,data[it]);
-       for (i=0; i < n12; i++) {
-	   /* normalize by the fold */
-	   if (fold[i] > FLT_EPSILON) bin[i] /=fold[i];	
-       }
-       sf_upgrad_solve(upg,zero,modl+it*n12,bin);
-   } 
+	if (NULL != w) {
+	    for (id=0; id < nd; id++) {
+		data[it][id] *= w[it][id]/(w[it][id]*w[it][id]+eps);
+	    }
+	}
+	sf_int2_lop (true,false,n12,nd,bin,data[it]);
+	for (i=0; i < n12; i++) {
+	    /* normalize by the fold */
+	    if (fold[i] > FLT_EPSILON) bin[i] /=fold[i];	
+	}
+	sf_upgrad_solve(upg,zero,modl+it*n12,bin);
+    } 
 }
 
 void nnshapet_forw(const float *modl, float **data)
 /*< forward operator (grid interpolation) >*/
 {
-    int it;
+    int it, id;
 
     for (it=0; it < nt; it++) {
        sf_int2_lop (false,false,n12,nd,(float*) (modl+it*n12),data[it]);
+       if (NULL != w) {
+	   for (id=0; id < nd; id++) {
+	       data[it][id] *= w[it][id];
+	   }
+       }
     }
 }
 

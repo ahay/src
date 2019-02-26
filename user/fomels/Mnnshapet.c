@@ -24,9 +24,9 @@ int main(int argc, char* argv[])
 {
     bool sym;
     float o1,d1, o2,d2, tol, t0,dt;
-    int nd, n1, n2, n12, niter, nmem, rect1, rect2, rect3, nw, nt;
-    float **xy, *z, *m, **d;
-    sf_file in, out, coord, pattern;
+    int nd, n1, n2, n12, niter, nmem, rect1, rect2, rect3, nw, nt, it;
+    float **xy, *z, *m, **d, **w, eps;
+    sf_file in, out, coord, pattern, weight;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -78,6 +78,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&nmem)) nmem=niter;
     /* GMRES memory */
 
+    if (!sf_getfloat("eps",&eps)) eps=1.0e-6;
+    /* division parameter */
+
     xy = sf_floatalloc2(2,nd);
     sf_floatread(xy[0],nd*2,coord);
 
@@ -94,15 +97,28 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("tol",&tol)) tol=1e-3;
     /* tolerance for stopping iteration */
     
-    nnshapet_init(sym,nd,nt, n1,n2, o1,o2, d1,d2, 
-		 rect1,rect2,rect3, nw, 2, xy);
-    sf_gmres_init(n12,nmem); 
- 
     z = sf_floatalloc (n12);
     m = sf_floatalloc (n12);
     d = sf_floatalloc2(nd,nt);
 
     sf_floatread(d[0],nd*nt,in);
+
+    if (NULL != sf_getstring("weight")) {
+	weight = sf_input("weight");
+	w = sf_floatalloc2(nd,nt);
+	sf_floatread(w[0],nd*nt,weight);
+	sf_fileclose(weight);
+
+	for (it = 0; it < nd*nt; it++) {
+	    d[0][it] *= w[0][it];
+	}
+    } else {
+	w = NULL;
+    }
+ 
+    nnshapet_init(sym,nd,nt, n1,n2, o1,o2, d1,d2, 
+		  rect1,rect2,rect3, nw, 2, xy, w, eps);
+    sf_gmres_init(n12,nmem); 
  
     /* make right-hand side */
     nnshapet_back(d,z);
