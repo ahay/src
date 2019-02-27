@@ -638,17 +638,11 @@ def colorize(target=None,source=None,env=None):
 
      if os.path.isfile(info):
 
-         # Python 2
-         try:
-             execfile(info, locals())
-             print('test')
-         # Python 3
-         except:
-             sout = open(info)
-             progs = sout.read()
-             sout.close()
+         sout = open(info)
+         progs = sout.read()
+         sout.close()
 
-             exec(progs, locals())
+         eval(compile(progs, '<string>', 'exec'), locals())
 
          if locals()['uses']:
              out.write('</div><p><div class="progs">')
