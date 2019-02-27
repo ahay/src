@@ -578,7 +578,7 @@ def colorize(target=None,source=None,env=None):
 
      # parse the source and write it
      _pos = 0
-     text = io.StringIO(unicode(raw))
+     text = io.StringIO(str(raw))
      out.write('<pre><font face="Lucida,Courier New">')
 
      def call(toktype, toktext, xxx_todo_changeme, xxx_todo_changeme1, line):
@@ -593,8 +593,8 @@ def colorize(target=None,source=None,env=None):
 
           # handle newlines
           if toktype in [token.NEWLINE, tokenize.NL]:
-               out.write("\n")
-               return
+              out.write("\n")
+              return
 
           # send the original whitespace, if needed
           if newpos > oldpos:
@@ -602,8 +602,8 @@ def colorize(target=None,source=None,env=None):
 
           # skip indenting tokens
           if toktype in [token.INDENT, token.DEDENT]:
-               _pos = newpos
-               return
+              _pos = newpos
+              return
 
           # map token type to a color group
           if token.LPAR <= toktype and toktype <= token.OP:
@@ -621,7 +621,8 @@ def colorize(target=None,source=None,env=None):
           out.write('</span>')
 
      try:
-          tokenize.tokenize(text.readline, call)
+         for tokens in tokenize.generate_tokens(text.readline):
+             call(tokens[0], tokens[1], tokens[2], tokens[3], tokens[4])
      except tokenize.TokenError as ex:
           msg = ex[0]
           line = ex[1][0]
@@ -633,23 +634,30 @@ def colorize(target=None,source=None,env=None):
      info = str(source[1])
 
      if os.path.isfile(info):
-         sout = open(info)
-         progs = sout.read()
-         sout.close()
+
+         # Python 2
+         try:
+             execfile(info, locals())
+             print('test')
+         # Python 3
+         except:
+             sout = open(info)
+             progs = sout.read()
+             sout.close()
 
          exec(progs, locals())
 
-         if uses:
+         if locals()['uses']:
              out.write('</div><p><div class="progs">')
-             out.write(rsf.doc.multicolumn(uses,_proglink))
+             out.write(rsf.doc.multicolumn(locals()['uses'],_proglink))
 
-         if data:
-             while 'PRIVATE' in data:
-                 data.remove('PRIVATE')
-             while 'LOCAL' in data:
-                 data.remove('LOCAL')
+         if locals()['data']:
+             while 'PRIVATE' in locals()['data']:
+                 locals()['data'].remove('PRIVATE')
+             while 'LOCAL' in locals()['data']:
+                 locals()['data'].remove('LOCAL')
              out.write('</div><p><div class="dsets">')
-             out.write(rsf.doc.multicolumn(data,_datalink))
+             out.write(rsf.doc.multicolumn(locals()['data'],_datalink))
 
      out.write('''
      </div>
