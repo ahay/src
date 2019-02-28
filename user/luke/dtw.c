@@ -334,6 +334,35 @@ float* dtw_symmetric_accumulation(float* mismatch, int n1, int maxshift, float s
 	return accumulate;
 }
 
+void dtw_symmetric_accumulation_v(float* accumulate, float* mismatch, int n1, int maxshift, float str)
+	/*< performs symmetric smoothing accumulation given an input mismatch array, assumes we have already spread over nulls >*/
+{
+	float* accumulate_f = sf_floatalloc(n1*(2*maxshift+1));
+	/* accumulate forward errors */
+	dtw_accumulate_errors( mismatch, accumulate_f, n1, maxshift, str);
+	/* declare array for backward error accumulation */
+	float* accumulate_b = sf_floatalloc(n1*(2*maxshift+1));
+	/* reverse mismatch */
+	float* mismatch_r = sf_floatalloc(n1*(2*maxshift+1));
+	dtw_reverse_array(mismatch, mismatch_r, n1, (2*maxshift+1));
+	/* accumulate backward errors */
+	dtw_accumulate_errors( mismatch_r, accumulate_b, n1, maxshift, str);
+	free (   mismatch_r);
+	/* flip them */
+	float* accumulate_br = sf_floatalloc(n1*(2*maxshift+1));
+	dtw_reverse_array(accumulate_b,accumulate_br, n1, (2*maxshift+1));
+	free ( accumulate_b) ;
+	/* zero out accumulation array */
+	dtw_copy(accumulate, 0, n1*(2*maxshift+1));
+	/* sum the errors */
+	dtw_two_sided_smoothing_sum(accumulate_f, accumulate_br, mismatch, accumulate,n1*(2*maxshift+1));
+	free ( accumulate_f) ;
+	free ( accumulate_br);
+	
+	return;
+}
+
+
 void dtw_find_shifts(int* shifts, float* ref, float* match, 
     int n1, int maxshift, float str, float ex)
 /*< integrated program to calculate shifts in one go, good for parallelization takes already allocated shifts with int(n1) as input>*/
@@ -413,6 +442,24 @@ float* dtw_subtract_minimum(float* array, int n)
 		arrout[ i] = array[ i] - minval;
 	}
 	return arrout;
+}
+
+void dtw_subtract_minimum_v(float* arrout, float* array, int n)
+	/*<find minimum value of float array and subract it >*/
+{
+	int i;
+	float minval = SF_FLOAT;
+	/* find minimum */
+	for ( i = 0 ; i < n ; i++ ){
+		if (array[ i] < minval){
+			minval = array[ i];
+		}
+	}
+	/* subtract minimum */
+	for ( i = 0 ; i < n ; i++){
+		arrout[ i] = array[ i] - minval;
+	}
+	return ;
 }
 
 void dtw_norm_stack(float* gather, float* stack, int n1, int n2, float nullval)
@@ -541,6 +588,23 @@ int* dtw_swaperoo(int* In, int t1, int t2, int ndim)
 	return Out;
 }
 
+
+void dtw_swaperoo_v(int* Out, int* In, int t1, int t2, int ndim)
+	/*< swaps the t1 and t2 of In >*/
+{
+	int i ;
+	/* initialize */
+	for (i = 0 ; i < ndim ; i++){
+		Out [ i] = In [ i];
+	}
+	/* CHANGE PLACES! */
+	int holdr1 = Out [ t1 - 1];
+	int holdr2 = Out [ t2 - 1];
+	Out [ t2 - 1 ] = holdr1;
+	Out [ t1 - 1 ] = holdr2;
+	return ;
+}
+
 float* dtw_swaperoof(float* In, int t1, int t2, int ndim)
 	/*< swaps the t1 and t2 of In for floats >*/
 {
@@ -558,6 +622,22 @@ float* dtw_swaperoof(float* In, int t1, int t2, int ndim)
 	return Out;
 }
 
+void dtw_swaperoof_v(float* Out, float* In, int t1, int t2, int ndim)
+	/*< swaps the t1 and t2 of In for floats >*/
+{
+	int i ;
+	/* initialize */
+	for (i = 0 ; i < ndim ; i++){
+		Out [ i] = In [ i];
+	}
+	/* CHANGE PLACES! */
+	float holdr1 = Out [ t1 - 1];
+	float holdr2 = Out [ t2 - 1];
+	Out [ t2 - 1 ] = holdr1;
+	Out [ t1 - 1 ] = holdr2;
+	return ;
+}
+
 float* dtw_transp( float* arr, int t1, int t2, int* Nin, int ndim)
 	/*< follows madagascar convention for transp plane=t1t2 >*/
 {
@@ -571,4 +651,28 @@ float* dtw_transp( float* arr, int t1, int t2, int* Nin, int ndim)
 		arrT[ dtw_wrap(dtw_swaperoo(dtw_unwrap(i, Nin, ndim),t1,t2,ndim),Nout,ndim)] = arr [ i];
 	}
 	return arrT;
+	free (Nout);
+}
+
+void dtw_transp_v(float* arrT, float* arr, int t1, int t2, int* Nin, int ndim)
+	/*< follows madagascar convention for transp plane=t1t2 >*/
+{
+	/* determine N of output array */
+	int* Nout = dtw_swaperoo( Nin, t1, t2, ndim);
+	/* index */
+	int* Ind;
+	/* loop through array elements and transpose */
+	long i;
+	for (i = 0 ; i < dtw_size(Nin,ndim); i++){
+		/* find index */
+		Ind = dtw_unwrap(i, Nin, ndim);
+		/* swap */
+		dtw_swaperoo_v(Ind,Ind,t1,t2,ndim);
+		arrT[ dtw_wrap(Ind,Nout,ndim)] = arr [ i];
+		/* remove dynamic array */
+		free ( Ind);
+	}
+	/* free dynamic array */
+	free (Nout);
+	return;
 }
