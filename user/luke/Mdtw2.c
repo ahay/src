@@ -96,10 +96,11 @@ int main (int argc, char* argv[])
 		dtw_spread_over_nulls( mismatchtr, N[1], maxshift);
 		/* write to global mismatch array */
         dtw_put_column( mismatch, mismatchtr, i2, N[0]*N[1] );
+		/* free dynamically allocated arrays */
+		free( mismatchtr);
+		free( reftr);
+		free( matchtr);
 	}
-	free (mismatchtr) ;
-	free (reftr);
-	free (matchtr);
     /* perform accumulation */
 	int ismth;
 
@@ -114,25 +115,26 @@ int main (int argc, char* argv[])
 		    /* get mismatch */
 			mismatchtr = _dtw_get_column( mismatch, i2, N[0]*N[1]) ;
 			/* accumulate error */
-	        mismatchtr = dtw_symmetric_accumulation(mismatchtr, N[1], maxshift, S[0]);
+			dtw_symmetric_accumulation_v( mismatchtr, mismatchtr, N[1], maxshift, S[0]);
 			/* put back in array */
 	    	dtw_put_column( mismatch, mismatchtr, i2, N[0]*N[1] );
+			/* free dynamically allocated array */
+			free (mismatchtr);
 	   	}
 		/* determine if we are doing multiple smoothings */
 		if (S[1] > 1) break;
 		/* subtract minimum error accumulation value */
-		mismatch = dtw_subtract_minimum( mismatch, fullsize);
+		dtw_subtract_minimum_v(mismatch, mismatch, fullsize);
 		/* do we need to backup ?*/
 		if ( ismth == 2*nalter - 2){
 			dtw_acopy(bu_mismatch, mismatch, fullsize);
 		}
 	   	/* transpose */
-    	mismatch = dtw_transp( mismatch, 2, 3, N, ndim);
+    	dtw_transp_v(mismatch, mismatch, 2, 3, N, ndim);
 	   	/* switch N */
-	   	N = dtw_swaperoo(N, 2, 3, ndim);
+	   	dtw_swaperoo_v(N, N, 2, 3, ndim);
 		/* switch S */
-		S = dtw_swaperoof(S, 1, 2, ndim-1);
-	   	free (mismatchtr);
+		dtw_swaperoof_v(S, S, 1, 2, ndim-1);
 	}
 	
 	/* are we writing out the accumulation errors? */
@@ -179,6 +181,9 @@ int main (int argc, char* argv[])
 	    sf_putfloat (_shifts,"o2",o2);
 		shswitch = 1;
 	}	
+	/* array for float shifts */
+	float* flshfts ;
+	
 	for ( i2 = 0 ; i2 < imgsize/N[1] ; i2++ ){
 	    /* get mismatch */
 		acumtr     = _dtw_get_column(    mismatch, i2, N[0]*N[1]) ;
@@ -193,8 +198,15 @@ int main (int argc, char* argv[])
 	    sf_floatwrite(warped,N[1],_out);
 		/* writing shifts?*/
 		if (shswitch == 1){
-		    sf_floatwrite(dtw_int_to_float( shifts, N[1]),N[1],_shifts);
+			flshfts = dtw_int_to_float( shifts, N[1]);
+		    sf_floatwrite(flshfts,N[1],_shifts);
+			/* free dynamic array */
+			free (flshfts);
 	    }
+		/* free dynamically allocated arrays */
+		free (acumtr);
+		free (mismatchtr);
+		free (matchtr);
 	}
 	
     /* free up arrays */	
@@ -202,8 +214,6 @@ int main (int argc, char* argv[])
 	free ( bu_mismatch);
 	free ( shifts );
 	free ( warped );
-	free ( matchtr );
-	free ( acumtr );
 	free ( ref );
 	free ( match );
 

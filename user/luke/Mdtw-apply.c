@@ -76,6 +76,7 @@ int main (int argc, char* argv[])
 				    sf_floatread( shifts_f, n1, _shifts);
 			    } else {
 			    	/* pull this shift from 2d shift array */
+					free (shifts_f);
 					shifts_f = _dtw_get_column( large_shifts, i2, n1 );
 			    }
 	            /* convert float shifts to integer */

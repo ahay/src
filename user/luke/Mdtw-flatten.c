@@ -111,6 +111,7 @@ int main (int argc, char* argv[])
 		/* read input gather */
 		sf_floatread(gather,n1*no,_in);
 		/* write null values */
+		free (ngather);
 		ngather = dtw_write_gather_nullvals(gather, n1, no, nullval);
 		/* create stack for reference */
 		dtw_norm_stack(ngather,stack,n1,no,nullval);
