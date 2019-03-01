@@ -21,6 +21,8 @@ int main (int argc, char* argv[])
 	float d1, d2, o1, o2;
 	/* adjoint flag */
 	bool adj;
+	/* wrapping flag */
+	bool wrap;
     /* Get sampling info */
     if (!sf_histint  (_in,"n1",&n1))   sf_error("No n1=");
     if (!sf_histfloat(_in,"d1",&d1))   sf_error("No d1=");
@@ -30,8 +32,9 @@ int main (int argc, char* argv[])
 	if (!sf_histfloat(_in,"o2",&o2))   sf_error("No o2=");
 	
 	if (!sf_getbool("adj",&adj)) adj=false;
-	/*if y reverse translation, if n, translation */
-	
+	/*if y adjoint convolution, if n, convolution */
+	if (!sf_getbool("wrap",&wrap)) wrap=false;
+	/* if y, perform doughnut wrapping.  if n, no wrapping */
 	/* make N array */
 	int* N = sf_intalloc(ndim);
 	N[0] = n1;
@@ -73,8 +76,10 @@ int main (int argc, char* argv[])
 	float* kernel = sf_floatalloc(conv_arraysize(NK,ndim));
 	/* read convoluton kernel */
 	sf_floatread(kernel,conv_arraysize(NK,ndim),_ker);
-	/* convolve by kernel */
-	arrayout = conv_convolve_ker( arrayin, N, kernel, NK, ndim, adj);
+	/* convolve by kernel, either with or without wrapping */
+	if (wrap) { arrayout = conv_convolve_ker( arrayin, N, kernel, NK, ndim, adj); }
+	else { arrayout = conv_convolve_ker_nowrap( arrayin, N, kernel, NK, ndim, adj) }
+	
 	/* write translated array to file */
 	sf_floatwrite(arrayout,conv_arraysize(N,ndim),_out);
 	/* close the output file */

@@ -26,6 +26,19 @@ int conv_in_bounds( int *Ind, int *N, int ndim )
 	return 0;
 }
 
+int conv_in_bounds_no_interp( int *Ind, int *N, int ndim )
+	/*< determines if an index is in bounds, return 0 if in bounds, 1 if out of bounds, this time going all the way to the edge>*/
+{
+	/* looping index */
+	int i;
+	/* loop through to see if we go out of bounds */
+	for ( i = 0 ; i < ndim ; i++ ){
+		if ( Ind[ i] < 0 ) return 1;
+		if ( Ind[ i] > N[ i] - 1 ) return 1;
+	}
+	return 0;
+}
+
 int conv_int_exponent(int j, int n)
 	/*< returns j^n for integers j, n >= 0 >*/
 {
@@ -840,4 +853,68 @@ void conv_convolve_find_ker(float *arrayin, int *N, float *kernel, float *arrayo
 	free (TRem);
 	/* its over */
 	return ;
+}
+
+
+float* conv_convolve_ker_nowrap(float *arrayin, int *N, float *kernel, int *Nk, int ndim, bool adj)
+	/*< convolves the input array with a kernel with odd number of elements in each dimension.  Assumes sampling in the two is the same, as well as their dimensionality no interpolation here, no wrapping>*/
+{
+	/* determine number of elements in array */
+	long nelements = conv_arraysize( N,ndim);
+	/* determine number of elements in kernel */
+	long kelements = conv_arraysize(Nk,ndim);
+	/* allocate output array */
+	float* arrayout = sf_floatalloc(nelements);
+	/* index for looping through outptut array */
+	long indxA;
+	/* index for looping through kernel */
+	long indxK;
+	/* coordinates corresponding to index on output array*/
+	int* AInd = sf_intalloc(ndim);
+	/* index for kernel before shifting */
+	int* KIndpre = sf_intalloc(ndim);
+	/* index corresponding to position on kernel */
+	int* KInd = sf_intalloc(ndim);
+	/* array index shifted by kernel */
+	int* AKInd = sf_intalloc(ndim);
+	/* we are doing integer shifts, so TRem is always zero*/
+	float* TRem = sf_floatalloc(ndim);
+	/* set to zero */
+	TRem = conv_scale_float_array( TRem, 0. , ndim);
+	/* loop through output array */
+	for( indxA = 0 ; indxA < nelements ; indxA++){
+		/* get position index*/
+		free (AInd);
+		AInd = conv_unwrap( indxA, N, ndim);
+		/* loop through kernel */
+		for ( indxK = 0 ; indxK < kelements ; indxK++ ){
+			/* check to see if kernel nonzero */
+			if ( kernel[ indxK] == 0 ) continue ;
+			/* determine position in Kernel */
+			free (KIndpre);
+			KIndpre = conv_unwrap( indxK, Nk, ndim);
+			/* shift to center */
+			free (KInd);
+			KInd = conv_ker_shift( KIndpre, Nk, ndim );
+			/* shift Array Index by Kernel Position */
+			free (AKInd);
+			AKInd = conv_int_array_add( AInd, KInd, ndim);
+			/* check to see if in bounds */
+			if (conv_in_bounds_no_interp( AKInd, N, ndim ) > 0 ) continue;
+			if ( !adj ){
+				/* write to looping index */
+				arrayout[ indxA] += kernel[ indxK] * arrayin[ AKInd];
+			}else{
+				/* write to offset index */
+				arrayout [ AKInd] += kernel[ indxK] * arrayin[ AInd];
+			} 			
+		}	
+	}
+	/* free unneeded arrays */
+	free (AInd);
+	free (KInd);
+	free (AKInd);
+	free (TRem);
+	/* return finished product */
+	return arrayout;
 }
