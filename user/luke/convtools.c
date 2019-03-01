@@ -1,8 +1,9 @@
 /* tools for convolutions */
 /*^*/
 #include <rsf.h>
+#include <math.h>
 
-void conv_clear_array( float* array, long n)
+void conv_clear_array( float *array, long n)
 	/*< clears out a float array with zeros >*/
 {
 	/* looping index */
@@ -11,6 +12,21 @@ void conv_clear_array( float* array, long n)
 		array[ i] = 0.;
 	return;
 }
+
+float conv_dotproduct(float *A, float *B, long n)
+	/*< take the cannonical inner product between vectors A, B in Rn >*/
+{
+	/* looping index */
+	long i;
+	/* dot product */
+	double dot = 0;
+	/* loop through */
+	for ( i = 0 ; i < n ; i++ ){
+		dot += ((long)A[i])*((long)B[i]);
+	}
+	return (float) dot;
+}
+
 
 
 int conv_in_bounds( int *Ind, int *N, int ndim )
@@ -68,6 +84,35 @@ float* conv_scale_float_array( float *arrayin, float scale, int n)
 		arrayout[ i] = scale * arrayin[ i];
 	}
 	return arrayout;
+}
+
+void conv_scale_float_array_v( float *arrayin, float *arrayout, float scale, long n)
+	/*< scales ar array of size n, in void form  >*/
+{
+	/* looping index */
+	long i;
+	for ( i = 0 ; i < n ; i++){
+		/* scale */
+		arrayout[ i] = scale * arrayin[ i];
+	}
+	/* done */
+	return ;
+}
+
+
+void conv_normalize(float* arrayin, float* arrayout, long n, float val)
+	/*< normalize vector arrayin so it has magnintude of val >*/
+{
+	/* find the magnitude of the array */
+	float mag = sqrtf(conv_dotproduct(arrayin, arrayin, n));
+	/* scale by 1/magnitude */
+	float scale = 0.;
+	/* avoid division by zero */
+	if ( mag != 0.){ scale = 1./mag;}
+	/* scale */
+	conv_scale_float_array_v( arrayin, arrayout, scale, n);
+	/* we're done here */
+	return;
 }
 
 float* conv_float_array_subtract( float *A, float *B, int ndim)
