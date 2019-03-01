@@ -78,7 +78,7 @@ int main (int argc, char* argv[])
 	sf_floatread(kernel,conv_arraysize(NK,ndim),_ker);
 	/* convolve by kernel, either with or without wrapping */
 	if (wrap) { arrayout = conv_convolve_ker( arrayin, N, kernel, NK, ndim, adj); }
-	else { arrayout = conv_convolve_ker_nowrap( arrayin, N, kernel, NK, ndim, adj) }
+	else { arrayout = conv_convolve_ker_nowrap( arrayin, N, kernel, NK, ndim, adj); }
 	
 	/* write translated array to file */
 	sf_floatwrite(arrayout,conv_arraysize(N,ndim),_out);

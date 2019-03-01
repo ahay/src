@@ -15,8 +15,14 @@ int main (int argc, char* argv[])
     sf_init (argc,argv);
 	/* adjoint flag */
 	bool adj;
+	/* wrapping flag */
+	bool wrap;
+	
 	if (!sf_getbool("adj",&adj)) adj=false;
 	/*if n takes kernel and outputs function, if y takes function and outputs kernel */
+	
+	if (!sf_getbool("wrap",&wrap)) wrap=false;
+	/* if y, perform doughnut wrapping.  if n, no wrapping */
 	
 	/* get files from inputs */
     _in = sf_input("in");
@@ -130,7 +136,9 @@ int main (int argc, char* argv[])
 		if (adj) sf_floatread(function,conv_arraysize(N,ndim-1),_in);
 		/* read match */
 		sf_floatread(match,conv_arraysize(N,ndim-1),_match);
-		conv_convolve_find_ker(match, N, kernel, function, Nk, ndim-1, adj)	;
+		/* are we wrapping ? */
+		if (wrap) { conv_convolve_find_ker(match, N, kernel, function, Nk, ndim-1, adj)	;}
+		else { conv_convolve_find_ker_nowrap(match, N, kernel, function, Nk, ndim-1, adj);	;}
 		/* write function if appropriate */
 		if (!adj) sf_floatwrite(function,conv_arraysize(N,ndim-1),_out);
 		/* zero out array */
