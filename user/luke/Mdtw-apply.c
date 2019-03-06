@@ -29,7 +29,6 @@ int main (int argc, char* argv[])
 	int n2, n3;
 	if (!sf_histint  (_in,"n2",&n2)) n2 = 1; 
 	if (!sf_histint  (_in,"n3",&n3)) n3 = 1;
-	int nmid = n2*n3;
 	
 	/* are the shifts also higher dimensional or compatable? */
 	int multishft = 0;
