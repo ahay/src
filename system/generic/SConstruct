@@ -2,10 +2,10 @@ import os, sys, re, string, types
 sys.path.append('../../framework')
 import bldutil
 
-progs = ''' 
+progs = '''
 agc aliasp bandpass bin bin1 boxsmooth canny causint clip clip2
 cmatmult cmatmult2 cosft costaper deriv dipfilter dsmooth dwt enoint2
-equal extract fern fft1 fft3 grad2 grad3 heat histogram igrad intshow
+equal expl1 expl2 extract fern fft1 fft3 grad2 grad3 heat histogram igrad intshow
 inttest1 inttest2 impl1 impl2 impl3 iwarp jacobi jacobi2 lapfill
 laplac laplac3d linear linefit logwarp lorenz lpad mandelbrot match
 matmult max1 miss2 monof monof2 mutter noise otsu polymask postfilter2

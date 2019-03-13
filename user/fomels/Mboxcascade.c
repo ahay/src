@@ -43,14 +43,15 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,inp);
 	for (i=1; i < n; i++) {
-	    r = -2*cosf(2*SF_PI*i/n);
-	    trace2[0] = r*trace[0]+trace[1];
+	    r = 2*sinf(SF_PI*i/n);
+	    r = 1/(r*r);
+	    trace2[0] = (1-2*r)*trace[0]+r*(trace[0]+trace[1]);
 	    for (i1=1; i1 < n1-1; i1++) {
-		trace2[i1] = r*trace[i1]+trace[i1-1]+trace[i1+1];
+		trace2[i1] = (1-2*r)*trace[i1]+r*(trace[i1-1]+trace[i1+1]);
 	    }
-	    trace2[n1-1] = r*trace[n1-1]+trace[n1-2];
+	    trace2[n1-1] = (1-2*r)*trace[n1-1]+r*(trace[n1-2]+trace[n1-1]);
 	    for (i1=0; i1 < n1; i1++) {
-		trace[i1] = (i < n-1)? trace2[i1]: trace2[i1]/(n*n);
+		trace[i1] = trace2[i1];
 	    }
 	    if (i==m) break;	
 	}
