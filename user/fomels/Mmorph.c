@@ -71,39 +71,36 @@ int main (int argc, char* argv[])
 	}  /* ends loop over j */
     }  /* ends loop over i */
 
-    if ('o' == what[0] || 'c' == what[0]) {
-	for(i2=1; i2 < n2-1; i2++){
-	    for(i1=1; i1 < n1-1; i1++){
-		switch (what[0]) {
-		    case 'o':
-			a = 0;
-			for(j2=i2-1; j2<=i2+1; j2++){
-			    for(j1=i1-1; j1<=i1+1; j1++){
-				if(img2[j2][j1] > a)
-				    a = img2[j2][j1];
-			    }  
+    for(i2=1; i2 < n2-1; i2++){
+	for(i1=1; i1 < n1-1; i1++){
+	    switch (what[0]) {
+		case 'o':
+		    a = 0;
+		    for(j2=i2-1; j2<=i2+1; j2++){
+			for(j1=i1-1; j1<=i1+1; j1++){
+			    if(img2[j2][j1] > a)
+				a = img2[j2][j1];
 			}  
-			break;
-		    case 'c':
-			a = 1;
-			for(j2=i2-1; j2<=i2+1; j2++){
-			    for(j1=i1-1; j1<=i1+1; j1++){
-				if(img2[j2][j1] < a)
-				    a = img2[j2][j1];
-			    }  
+		    }  
+		    break;
+		case 'c':
+		    a = 1;
+		    for(j2=i2-1; j2<=i2+1; j2++){
+			for(j1=i1-1; j1<=i1+1; j1++){
+			    if(img2[j2][j1] < a)
+				a = img2[j2][j1];
 			}  
-			break;
-		    default:
-			a = img2[i2][i1];
-			break;
-		}
-		img1[i2][i1] = a;
+		    }  
+		    break;
+		default:
+		    a = img2[i2][i1];
+		    break;
 	    }
+	    img1[i2][i1] = a;
 	}
-	sf_intwrite(img1[0],n1*n2,out);
-    } else {
-	sf_intwrite(img2[0],n1*n2,out);
     }
+
+    sf_intwrite(img1[0],n1*n2,out);
 
     exit(0);
 }
