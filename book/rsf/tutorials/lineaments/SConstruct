@@ -193,12 +193,15 @@ Result('bin',bins,'SideBySideIso')
 
 lbls = []
 bins = []
+clss = []
 for case in ('theta','tdxn0','nstd'):
+    # Label
     lbl = case + '-lbl'
     Flow(lbl,case+'-bin','dd type=float | byte pclip=100 allpos=y clip=1 | label')
     Plot(lbl,'dd type=float | grey allpos=y pclip=100 color=j wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
     lbls.append(lbl)
 
+    # Remove small regions 
     msks = []
     for label in range(60):
         msk = lbl + '-msk%d' % label
@@ -215,9 +218,16 @@ for case in ('theta','tdxn0','nstd'):
     Flow(msk,msks+[case+'-bin'],'add ${SOURCES[1:60]} | mul ${SOURCES[60]}')
     Plot(msk,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
     bins.append(msk)
+    
+    # Morphological closing
+    cls = case + '-cls'
+    Flow(cls,msk,'morph what=closing')
+    Plot(cls,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    clss.append(cls)
              
 Result('lbl',lbls,'SideBySideIso')
 Result('msk',bins,'SideBySideIso')
+Result('cls',clss,'SideBySideIso')
 
 # morphological closing (a dilation followed by an erosion)
 
