@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
 {
     bool transp, framenum;
     int n1, n2, n3, i1, i2, i3;
-    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, yi1, tt, wd, dx=0.0f;
-    float **x, **y, **tmp, xp[4], yp[4];    
+    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, wd, dx=0.0f;
+    float **x, **y, xp[4], yp[4];    
     float ***data=NULL;
     sf_datatype type;
     sf_file in; 
@@ -116,12 +116,6 @@ int main(int argc, char* argv[])
 			 transp,false,false,true);
 	vp_frame_init(in,"blt",false);
 
-	if (transp) {
-	    tmp=x; x=y; y=tmp;
-	    tt=max1; max1=max2; max2=tt;
-	    tt=min1; min1=min2; min2=tt;
-	}
-
 	if (i3 > 0) vp_erase();
 
 	if (framenum) vp_framenum(o3+i3*d3);
@@ -133,25 +127,25 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n1; i1++) {
 		xi = x[i2][i1];
 		yi = y[i2][i1];
-		yi1 = y[i2+1][i1];
 
 		if (isfinite(xi) && 
 		    isfinite(yi)) {
 
-		    xp[0]=xi-dx;  yp[0]=0;
-		    xp[1]=xi-dx;  yp[1]=yi;
-		    xp[2]=xi+dx;  yp[2]=yi;
-		    xp[3]=xi+dx;  yp[3]=0;
+		    if (transp) {
+			xp[0]=0;   yp[0]=xi-dx;
+			xp[1]=0;   yp[1]=xi+dx;
+			xp[2]=yi;  yp[2]=xi+dx;
+			xp[3]=yi;  yp[3]=xi-dx;
+		    } else {
+			xp[0]=xi-dx;  yp[0]=0;
+			xp[1]=xi-dx;  yp[1]=yi;
+			xp[2]=xi+dx;  yp[2]=yi;
+			xp[3]=xi+dx;  yp[3]=0;
+		    } 
 
 		    vp_ufill(xp,yp,4);
 		} 
 	    }
-	}
-	
-	if (transp) {
-	    tmp=x; x=y; y=tmp;
-	    tt=max1; max1=max2; max2=tt;
-	    tt=min1; min1=min2; min2=tt;
 	}
     } 
    

@@ -74,7 +74,7 @@ int main (int argc, char* argv[])
     for(i2=1; i2 < n2-1; i2++){
 	for(i1=1; i1 < n1-1; i1++){
 	    switch (what[0]) {
-		case 'o':
+		case 'o': /* opening */
 		    a = 0;
 		    for(j2=i2-1; j2<=i2+1; j2++){
 			for(j1=i1-1; j1<=i1+1; j1++){
@@ -83,7 +83,7 @@ int main (int argc, char* argv[])
 			}  
 		    }  
 		    break;
-		case 'c':
+		case 'c': /* closing */
 		    a = 1;
 		    for(j2=i2-1; j2<=i2+1; j2++){
 			for(j1=i1-1; j1<=i1+1; j1++){
