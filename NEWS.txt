@@ -38,6 +38,7 @@ To programs:
 * sfmatplotlib: plotting with matplotlib
 * user/sgreer: New contributor (Sarah Greer)
 * strip= parameter in sfdd
+* sfbargraph: bar plot
 
 ===Bug fixes===
 
