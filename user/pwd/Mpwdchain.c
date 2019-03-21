@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     bool verb;
     int i, ic, m1, m2, n, nc, n2, iter, niter, liter, rect1, rect2, it, nt, nw;
-    float *xn, *x1, *y1, *dx, *r, *p;
+    float *xn, *x1, *y1, *dx, *r, *p, lam;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -70,6 +70,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("rect2",&rect2)) rect2=1;
     /* smoothing radius */
 
+     if (!sf_getfloat("lambda",&lam)) lam=1.0f;
+    /* scaling */
+
     smooth1_init(m1,m2,nc,rect1,rect2);
 
     for (it=0; it < nt; it++) {
@@ -88,8 +91,9 @@ int main(int argc, char* argv[])
 	    }
 	} else {
 	    for (ic=0; ic < nc; ic++) {
+		sf_warning("dip %1d = %g",ic+1, -nw + 2.0*nw*ic/(nc-1));
 		for (i=0; i < n; i++) {
-		    xn[ic*n+i] =  -nw + 2*nw*ic/(nc-1);
+		    xn[ic*n+i] =  -nw + 2.0*nw*ic/(nc-1);
 		    /* distribute from -nw to nw */
 		}
 	    }
@@ -100,7 +104,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 	
-	sf_conjgrad_init(n2, n2, n*nc, n*nc, 1., 1.e-6, verb, false);
+	sf_conjgrad_init(n2, n2, n*nc, n*nc, lam, 1.e-6, verb, false);
 
 	for (iter=0; iter < niter; iter++) {
 	    pwdchain_apply(y1,r);

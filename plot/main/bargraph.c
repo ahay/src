@@ -30,16 +30,15 @@ Run "sfdoc stdplot" for more parameters.
 #include <rsf.h>
 #include <rsfplot.h>
 
-static int n;
 static float *t, pclip;
-static void getminmax(const float* f, float* min, float* max);
+static void getminmax(int n, const float* f, float* min, float* max);
 
 int main(int argc, char* argv[])
 {
-    bool transp, framenum;
-    int n1, n2, n3, i1, i2, i3;
-    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, wd, dx=0.0f;
-    float **x, **y, xp[4], yp[4];    
+    bool transp, framenum, stack;
+    int n1, n2, n3, i1, i2, i3, n;
+    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, fi, wd, dx=0.0f;
+    float **x, **y, *s, xp[4], yp[4];    
     float ***data=NULL;
     sf_datatype type;
     sf_file in; 
@@ -68,6 +67,15 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("width",&wd)) wd=0.8; /* bar width */
     wd *= 0.5;
+
+    if (!sf_getbool("stack",&stack)) stack = true;
+    /* if stack bars on top */
+
+    if (stack) {
+	s = sf_floatalloc(n1);
+    } else {
+	s = NULL;
+    }
 
     type = sf_gettype(in);
     switch (type) {
@@ -103,14 +111,27 @@ int main(int argc, char* argv[])
 		    y[i2][i1] = data[i2][i1][1];
 		}
 	    }
-	    getminmax(x[0],&min1,&max1);
+	    getminmax(n,x[0],&min1,&max1);
 	    dx = wd*(max1-min1)/(n1-1);
 	} else {
 	    sf_floatread(y[0],n,in);
 	    min1=o1;
 	    max1=o1+(n1-1)*d1;
 	}
-	getminmax(y[0],&min2,&max2);
+
+	if (stack) {
+	    for (i1=0; i1 < n1; i1++) {
+		s[i1] = 0.0f;
+	    }
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    s[i1] += y[i2][i1];
+		}
+	    }
+	    getminmax(n1,s,&min2,&max2);
+	} else {	    
+	    getminmax(n,y[0],&min2,&max2);
+	}
 	
 	vp_stdplot_init (min1, max1, min2, max2,
 			 transp,false,false,true);
@@ -121,26 +142,40 @@ int main(int argc, char* argv[])
 	if (framenum) vp_framenum(o3+i3*d3);
 	vp_frame();
 
+	if (stack) {
+	    for (i1=0; i1 < n1; i1++) {
+		s[i1] = 0.0f;
+	    }
+	}
+
 	for (i2=0; i2 < n2; i2++) {
 	    vp_plot_set (i2);
 
 	    for (i1=0; i1 < n1; i1++) {
 		xi = x[i2][i1];
-		yi = y[i2][i1];
+
+		if (stack) {
+		    fi = s[i1];
+		    s[i1] += y[i2][i1];
+		    yi = s[i1];
+		} else {
+		    fi = 0.0f;
+		    yi = y[i2][i1];
+		}
 
 		if (isfinite(xi) && 
 		    isfinite(yi)) {
 
 		    if (transp) {
-			xp[0]=0;   yp[0]=xi-dx;
-			xp[1]=0;   yp[1]=xi+dx;
-			xp[2]=yi;  yp[2]=xi+dx;
-			xp[3]=yi;  yp[3]=xi-dx;
+			xp[0]=fi; yp[0]=xi-dx;
+			xp[1]=fi; yp[1]=xi+dx;
+			xp[2]=yi; yp[2]=xi+dx;
+			xp[3]=yi; yp[3]=xi-dx;
 		    } else {
-			xp[0]=xi-dx;  yp[0]=0;
-			xp[1]=xi-dx;  yp[1]=yi;
-			xp[2]=xi+dx;  yp[2]=yi;
-			xp[3]=xi+dx;  yp[3]=0;
+			xp[0]=xi-dx; yp[0]=fi;
+			xp[1]=xi-dx; yp[1]=yi;
+			xp[2]=xi+dx; yp[2]=yi;
+			xp[3]=xi+dx; yp[3]=fi;
 		    } 
 
 		    vp_ufill(xp,yp,4);
@@ -153,7 +188,7 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-static void getminmax(const float* f, float* min, float* max)
+static void getminmax(int n, const float* f, float* min, float* max)
 {
     int i, m, nc;
     float fmin, fmax, fi, fbig, fsml, fdif;
