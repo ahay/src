@@ -341,7 +341,32 @@ void path_resample_arrays( float* C ,float* A, float* B, int nnew_knots, int ndi
 	return;
 }
 
-void path_deriv(float* dA, float* A, int n1, int n2, float d1, int dorder, bool scale)
+void path_one_dim_smooth(float* Smooth, float* In, int order, long n)
+	/*< one dimensional smoothing >*/
+{
+	/* looping index */
+	long i, counter, io, this;
+	float holder;
+	for ( i = 0 ; i < n ; i++){
+		counter = 0;
+		holder = 0;
+		for ( io = -1*order; io <= order ; io++){
+			this = io + i;
+			if ( this < 0 || this > n ) continue;
+			holder += In[this];
+			counter +=1;
+		}
+		if (counter > 0){
+			Smooth[ i] = holder / (float)counter;
+		}else{
+			Smooth[i] = 0.;
+		}
+	}
+	return;
+}
+
+
+void path_deriv(float* dA, float* A, int n1, int n2, float d1, int dorder, int slen, int nsmooth, bool scale)
 	/*< calculate derivative of array A in first direction >*/
 {
 	/* initiate derivative */
@@ -361,6 +386,10 @@ void path_deriv(float* dA, float* A, int n1, int n2, float d1, int dorder, bool 
 			for (i1=0; i1 < n1; i1++) {
 				der[i1] /= d1;
 			}
+		}
+		/* smoothing */
+		for ( i1 = 0 ; i1 < nsmooth ; i1++){
+			path_one_dim_smooth(der, der, slen, n1);
 		}
 		/* put derivative in array */
 		path_put_column(dA,der,i2, n1);
@@ -635,7 +664,7 @@ void path_grad_s1(float* G,float* dS, int* N, float* D, float* O, float* R, floa
 	return;
 }
 
-void path_gradient(float* Sfunc,float* dSfunc, int* N, float* D, float* O, int dorder, int ndim, bool scale)
+void path_gradient(float* Sfunc,float* dSfunc, int* N, float* D, float* O, int dorder, int slen, int nsmooth, int ndim, bool scale)
 	/*< get gradient >*/
 {
 	long panelsize = path_size(N,ndim);
@@ -671,7 +700,7 @@ void path_gradient(float* Sfunc,float* dSfunc, int* N, float* D, float* O, int d
 		   path_swaperoof(Dt, Dt, t11, t22, ndim);
 	   }
 	   */
-	   	path_deriv(dSt,St,Nt[0],panelsize/Nt[0],Dt[0],dorder, scale);
+	   	path_deriv(dSt,St,Nt[0],panelsize/Nt[0],Dt[0],dorder, slen, nsmooth, scale);
 		/* and go back */
 /*	   if (ndim > 2){
 		   t11 = 2;
@@ -872,10 +901,10 @@ void path_tau_type_to_tau_loc( float* TauL, float* Tau_pL, float* Tau_mL, float 
 			vimax = path_make_vimax(V0, V1, V2);
 			vimin = path_make_vimin(V0, V1, V2);
 			if ( type == 3 ){
-				path_combine(TauL, Tau_pL, vimin, Tau_mL, vimax, ndim);
+				path_combine(TauL, Tau_mL, vimin, Tau_pL, vimax, ndim);
 			} else{
 				if ( type == 4 ){
-					path_combine(TauL, Tau_pL, vimax, Tau_mL, vimin, ndim);
+					path_combine(TauL, Tau_mL, vimax, Tau_pL, vimin, ndim);
 				} else {
 					sf_error("Invalid Tau Type during Runtime");
 				}
@@ -1021,11 +1050,12 @@ void path_orthagonalize_array(float* Orth, float* G, float* Tau, int knots, int 
 	return;
 }
 
-void path_enforce_smoothness(float* R, int order, int knots, int ndim)
+void path_enforce_smoothness1(float* R, int order, int knots, int ndim)
 	/*< enforces smoothness constraint on R , not currently functioning properly>*/
 {
 	/* loopoing index */
-	int ik, io, this, counter, lorder;
+	int ik, io, this, lorder;
+	float weight ;
 	/* local arrays */
 	float* PullX = sf_floatalloc(ndim);
 	float* PuttX = sf_floatalloc(ndim);
@@ -1044,22 +1074,29 @@ void path_enforce_smoothness(float* R, int order, int knots, int ndim)
 		/* zero out avg */
 		path_scale(PuttX,PuttX,0,ndim);
 		/* initialize counter */
-		counter = 0 ;
+		weight = 0 ;
 		for ( io = -1*lorder; io <= lorder ; io++){
+			if (io == 0 ) continue;
 			this = io + ik;
 			/* make sure this operation makes sense */
 			if ( this < 0 || this > knots) continue;
 			/* pull column */
 			path_get_column(R,PullX,this,ndim);
 			/* add to avg */
-			path_combine(PuttX,PuttX,1,PullX,1,ndim);
+			path_combine(PuttX,PuttX,1,PullX,-1./path_abs((float)io),ndim);
 			/* increment counter */
-			counter += 1;
+			weight += 1/path_abs((float)io);
 		}
+		
 		/* scale by how many arrays we considered */
-		if (counter > 0 ){
-			path_scale(PuttX,PuttX,1/((float)(counter)),ndim);
-		} 
+		path_get_column(R,PullX,ik,ndim);
+		if (weight > 0 ){
+			path_combine(PuttX,PuttX,1,PullX,-1*weight,ndim);
+//			path_combine(PuttX,PuttX,1,PullX,1,ndim);
+		} else{
+			path_scale(PuttX, PullX, 1.0, ndim);
+			sf_warning("PuttX1 %g PuttX2 %g X1 %g X2 %g",PuttX[0],PuttX[1],PullX[0],PullX[1]);
+		}
 		/* put it back */
 		path_put_column( R, PuttX, ik, ndim);
 	}
@@ -1130,6 +1167,35 @@ void path_enforce_function( float* R, float eps, int knots, int ndim)
 	free(X1);
 	return;
 }
+
+void path_unkink_force( float* Unkink, float* Tau_p, float* Tau_m, int nknots, int ndim)
+	/*< a force that resists bends in the chain >*/
+{
+	/* looping index */
+	int ik;
+	/* local array */
+	float* Tau_pL = sf_floatalloc(ndim);
+	float* Tau_mL = sf_floatalloc(ndim);
+	float* Tau_dif = sf_floatalloc(ndim);
+	float* Unkink_L = sf_floatalloc(ndim);
+	/* zero out unkink */
+	path_scale (Unkink, Unkink, 0.,nknots*ndim);
+	/* loop through knots */
+	for ( ik = 1 ; ik < nknots-1 ; ik++){
+		/* get columns */
+		path_get_column( Tau_p, Tau_pL, ik, ndim);
+		path_get_column( Tau_m, Tau_mL, ik, ndim);
+		path_combine( Tau_dif, Tau_pL, 1, Tau_mL, -1, ndim);
+		path_put_column( Unkink, Tau_dif, ik, ndim);
+	}
+	/* free arrays */
+	free( Tau_pL);
+	free( Tau_mL);
+	free( Unkink_L);
+	
+	return;
+}
+
 
 void path_attractive_force(float* Attract, float* G, float* Tau_p, float* Tau_m, int nknots, int ndim)
 	/*< create the attractive force felt by the path >*/
@@ -1258,3 +1324,4 @@ void path_spring_force( float* Spring, float* Tau, float* Tau_p, float* Tau_m, i
 	free(Spr_L);
 	return;
 }
+

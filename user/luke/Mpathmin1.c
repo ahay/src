@@ -29,8 +29,15 @@ int main (int argc, char* argv[])
 	if (!sf_histfloat(_in,"o2",&o2))   sf_error("No o2=");
 	
 	float k;
-	if (!sf_getfloat("k",&k))   k = d1/d2;
-	/* stiffness */
+	float k2;
+	if (!sf_getfloat("k",&k))   k = 1;
+	/* stiffness relative to attraction*/
+	
+	float kink;
+	float kink2;
+	if (!sf_getfloat("kink",&kink)) kink=1;
+	/* resistance to kinks  */
+
 	
 	float lr;
 	if (!sf_getfloat("lr",&lr))   lr = .3;
@@ -89,19 +96,33 @@ int main (int argc, char* argv[])
 	O[0] = o1;
 	O[1] = o2;
 	
-	/* derivative order */
-	int dorder = 6;
+	/* general purpose dimension index */
 	int id;
+	
+	int dorder ;
+	if (!sf_getint("dorder",&dorder)) dorder=6;
+	/* derivative order */
+
+
+	int slen;
+	if (!sf_getint("srad",&slen)) slen=2;
+	/* smoothing radius for gradient */
+	
+	int nsmooth;
+	if (!sf_getint("nsmooth",&nsmooth)) nsmooth=1;
+	/* number of gradient smoothings  */
 	
 	/* minimal spacing between knots */
 //	float eps = (D[0]*(float)(N[0]-1) + O[0])/ knots / 4;
 	
 	/* order of smoothness we will enforce */
-	int sorder = 1;
+//	int sorder = 1;
 	/* orth size */
 	float orthnorm;
 	/* spring size */
 	float sprnorm;
+	/* kink size */
+	float kinknorm;
 	/* size of a selection panel */
 	long panelsize = path_size(N,ndim);
 	/* allocate S */
@@ -115,7 +136,7 @@ int main (int argc, char* argv[])
 	bool scale = true;
 //	bool gradcalc = true ;
 //	while (gradcalc){
-		path_gradient( Sfunc, dSfunc,  N, D, O, dorder, ndim, scale);
+		path_gradient( Sfunc, dSfunc,  N, D, O, dorder, slen, nsmooth, ndim, scale);
 //		/* check to see if NaN */
 //		if ( (float)path_norm(dSfunc, panelsize*ndim) == (float)path_norm(dSfunc, panelsize*ndim) ){
 //			gradcalc = false;
@@ -139,6 +160,8 @@ int main (int argc, char* argv[])
 	float* Force   = sf_floatalloc(knots*ndim);
 	/* orth force */
 	float* Orth    = sf_floatalloc(knots*ndim);
+	/* unkinking force */
+	float* Unkink  = sf_floatalloc(knots*ndim);
 	/* spring force */
 	float* Spring  = sf_floatalloc(knots*ndim);
 	/* spring force scaled by k*/
@@ -218,15 +241,22 @@ int main (int argc, char* argv[])
 //		sf_warning(" k %g",k);
 		/* create spring force */
 		path_spring_force( Spring, Tau, Tau_p, Tau_m, knots, ndim);
+		/* unkinking force */
+		path_unkink_force( Unkink, Tau_p, Tau_m, knots, ndim);
 		sprnorm = path_norm(Spring, ndim*knots);
+		kinknorm = path_norm(Unkink, ndim*knots);
 		if (sprnorm > 0){
-			k = orthnorm/sprnorm;
+			k2 = k*orthnorm/sprnorm;
 		} else {
-			k = 0;
+			k2 = 0;
 		}
-//		sf_warning(" k %g",k);
-		/* scale by k */
-		path_scale(SpringK, Spring, k, knots*ndim);
+		if ( kinknorm > 0){
+			kink2 = kink * k2;
+		}
+//				sf_warning(" k %g",k2);
+
+		/* combine, scale by k */
+		path_combine(SpringK, Spring, k2, Unkink, kink2, knots*ndim);
 		//int i = 70;
 		//		sf_warning("Sp1 %g Sp2 %g Or1 %g Or 2 %g",SpringK[i*ndim],SpringK[i*ndim+1],Orth[i*ndim],Orth[i*ndim+1]);
 		/* combine forces into change of gradient */
@@ -253,9 +283,10 @@ int main (int argc, char* argv[])
 		R [ (knots-1)*(ndim)] = O[ 0] + D[ 0]*( (float) N[ 0] -1 );
 		/* make sure we are in bounds */
 //		path_enforce_function( R, eps, knots, ndim);
+//		path_enforce_smoothness(R, sorder, knots, ndim);
 		path_enforce_boundaries( R, knots, N, D, O, ndim);
 		/* enforce smoothness */
-//		path_enforce_smoothness(R, sorder, knots, ndim);
+
 
 	}
 
