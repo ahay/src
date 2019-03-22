@@ -37,7 +37,6 @@ int main (int argc, char* argv[])
 	float kink2;
 	if (!sf_getfloat("kink",&kink)) kink=1;
 	/* resistance to kinks  */
-
 	
 	float lr;
 	if (!sf_getfloat("lr",&lr))   lr = .3;
@@ -51,8 +50,6 @@ int main (int argc, char* argv[])
 		lr = 1;
 	}
 
-	
-	
 	float g;
 	if (!sf_getfloat("g",&g))   g = .1;
 	/* scaling the gradient by how much */	
@@ -96,8 +93,15 @@ int main (int argc, char* argv[])
 	O[0] = o1;
 	O[1] = o2;
 	
+	
+	float aniso1;
+	if (!sf_getfloat("aniso1",&aniso1)) aniso1=D[1]/D[0];
+	/* aniso of 2nd axis relative to first   */
+	
 	/* general purpose dimension index */
 	int id;
+	/* and knots */
+	int ik;
 	
 	int dorder ;
 	if (!sf_getint("dorder",&dorder)) dorder=6;
@@ -208,6 +212,11 @@ int main (int argc, char* argv[])
 			sf_warning("Tau %g %g",Tau[i*2],Tau[i*2+1]);
 		}
 		*/
+		/* apply anisotropy */
+		for ( ik = 0 ; ik < knots ; ik++ ){
+			Tau_p[ik*ndim +1 ] *= aniso1;
+			Tau_m[ik*ndim +1 ] *= aniso1;
+		}
 		/* get the attractive force */
 		path_attractive_force( Attract, G, Tau_p, Tau_m, knots, ndim);
 		/* get the repulsive force */
