@@ -10,15 +10,15 @@ dpeiko eikonal eikonalvti eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3
 fftone ffttest fftwave1 fftwave2 fftwave3 findmin2 focus fpow freqest
 gaussmooth gbeamform imray interf interp2 interpt iphase kdsort kdtree
 kron label legacy lfftexp0 llpf localskew locov lpf lrmig0 lsfit max2
-median mffit mig3 miss3 nconv nnint nnshape nnshapet nsmooth nsmooth1
-ocparcel octentwt ofilp ofsemb ortho patch pchain pchain1 phaserot
-pick pick2 pick3 plane poly polyfit regr rdiv rect1 reshape riesz rsin
-sc seislet1 semblance semblancew shape shapeagc shapefill shearer
-shift1 similarity similarity2 simenv smoothderw smoothreg smspray
-stfchain stfchain2 stream streamiss taupfit tfchain thin timecont
-timefreq tomo tree trace2 tristack tristack2 twofreq2 upgrad var2
-velcon velinv vidattr vipmig0 vofzperm warp1 warpadd warpscan zero
-zmarch ztrace
+median mffit mig3 miss3 morph nconv nnint nnshape nnshapet nsmooth
+nsmooth1 ocparcel octentwt ofilp ofsemb ortho patch pchain pchain1
+phaserot pick pick2 pick3 plane poly polyfit regr rdiv rect1 reshape
+riesz rsin sc seislet1 semblance semblancew shape shapeagc shapefill
+shearer shift1 similarity similarity2 simenv smoothderw smoothreg
+smspray stfchain stfchain2 stream streamiss taupfit tfchain thin
+timecont timefreq tomo tree trace2 tricascade tristack tristack2
+twofreq2 upgrad var2 velcon velinv vidattr vipmig0 vofzperm warp1
+warpadd warpscan zero zmarch ztrace
 '''
 
 ccprogs = 'anisolr2 isolr2 isolr3 lrvc0 permlr1 permlr2 permlr3'
