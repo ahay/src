@@ -1146,7 +1146,7 @@ void path_enforce_boundaries( float* R, int nknots, int* N, float* D, float* O, 
 }
 
 void path_enforce_function( float* R, float eps, int knots, int ndim)
-	/* enforce requirement that R(t) */
+	/*< enforce requirement that R(t) >*/
 {
 	/* looping index */
 	int ik;
@@ -1324,4 +1324,53 @@ void path_spring_force( float* Spring, float* Tau, float* Tau_p, float* Tau_m, i
 	free(Spr_L);
 	return;
 }
+
+
+void path_reinterpolate1(float* Interpolated, float* R, int* N, float* D, float* O, int nknots, int ndim)
+	/*< interpolates our path knots to the sampling rate >*/
+{
+	/* looping index */
+	int i1;
+	/* local arrays, first and second knot */
+	float* R0 = sf_floatalloc(ndim);
+	float* R1 = sf_floatalloc(ndim);
+	/* zero out interpolated array */
+	path_scale(Interpolated,Interpolated,0.,N[0]);
+	
+	float x1, rx1dst;
+	/* which knot are we on?*/
+	int knot = 0;
+	/* get initial knots */
+	path_get_column(R,R0,knot,ndim);
+	path_get_column(R,R1,knot+1,ndim);
+	rx1dst = R1[0] - R0[0];
+	/* set first point */
+	/* loop through samples */
+	for (i1 = 0 ; i1 < N[0] ; i1++ ){
+		/* where are we ?*/
+		x1 = ((float)i1) * D[0] + O[0];
+		/* do we need new knots ?*/
+		if ( x1 > R1[0] ){
+			/* get next knot */
+			knot += 1;
+			path_get_column(R,R0,knot,ndim);
+			if (knot+1 < nknots){ 
+				path_get_column(R,R1,knot+1,ndim);
+			}else{ break; }
+			if ( x1 > R1[0]){
+				i1 -= 1;
+				continue;
+			}
+			/* distance between x components */
+			rx1dst = R1[0] - R0[0];
+		}
+		/* interpolate */
+		Interpolated [ i1] = ((x1-R0[0]) * R1[1] + (R1[0]-x1)* R0[1])/rx1dst;
+	}
+	/* free arrays */
+	free ( R0);
+	free ( R1);
+	return;
+}
+	
 

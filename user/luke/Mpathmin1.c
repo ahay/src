@@ -63,14 +63,24 @@ int main (int argc, char* argv[])
 	if (!sf_getint("niter",&niter))   niter = 10;
 	
 	/* initialize output */
-	sf_putint   (_out,"n1",ndim); 
+	/* for writing out knots */
+/*	sf_putint   (_out,"n1",ndim); 
 	sf_putfloat (_out,"d1",1);
 	sf_putfloat (_out,"o1",0);	
 	sf_putint   (_out,"n2",knots); 
 	sf_putfloat (_out,"d2",1.);
-	sf_putfloat (_out,"o2",0.);	
-/*	
+	sf_putfloat (_out,"o2",0.);
+	*/
+	/* for writing out interpolated result */
 	sf_putint   (_out,"n1",n1); 
+    sf_putfloat (_out,"d1",d1);
+    sf_putfloat (_out,"o1",o1);	
+	sf_putint   (_out,"n2",1 ); 
+	sf_putfloat (_out,"d2",1.);
+	sf_putfloat (_out,"o2",0.);
+	
+	/* for writing out gradient */
+/*	sf_putint   (_out,"n1",n1); 
     sf_putfloat (_out,"d1",d1);
     sf_putfloat (_out,"o1",o1);	
 	sf_putint   (_out,"n2",n2); 
@@ -116,11 +126,6 @@ int main (int argc, char* argv[])
 	if (!sf_getint("nsmooth",&nsmooth)) nsmooth=1;
 	/* number of gradient smoothings  */
 	
-	/* minimal spacing between knots */
-//	float eps = (D[0]*(float)(N[0]-1) + O[0])/ knots / 4;
-	
-	/* order of smoothness we will enforce */
-//	int sorder = 1;
 	/* orth size */
 	float orthnorm;
 	/* spring size */
@@ -136,16 +141,9 @@ int main (int argc, char* argv[])
 	/* read S from file */
 	sf_floatread(Sfunc,panelsize,_in);
 	/* compute gradient */
-	/* dont scale */
+	/* scaling by 1/D[i]? */
 	bool scale = true;
-//	bool gradcalc = true ;
-//	while (gradcalc){
-		path_gradient( Sfunc, dSfunc,  N, D, O, dorder, slen, nsmooth, ndim, scale);
-//		/* check to see if NaN */
-//		if ( (float)path_norm(dSfunc, panelsize*ndim) == (float)path_norm(dSfunc, panelsize*ndim) ){
-//			gradcalc = false;
-//		}
-//	}
+	path_gradient( Sfunc, dSfunc,  N, D, O, dorder, slen, nsmooth, ndim, scale);
 	/* generate initial path */
 	float* R = sf_floatalloc(knots*ndim);
 	/* take first guess */
@@ -192,26 +190,14 @@ int main (int argc, char* argv[])
 	int iter ;
 
 	for ( iter = 0 ; iter < niter ; iter++ ){
-//		sf_warning("Iteration %i of %i",iter+1,niter);
 		/* evaluate potential at knot points */
 		path_evaluate_potental(V, R, knots, Sfunc, N, D, O, ndim);
 		/* evaluate gradient at knot points */
 		path_evaluate_gradient(G, R, knots, dSfunc, N, D, O, ndim);
-//		for ( int i = 0 ; i < knots ; i++ ){
-//			sf_warning("Knot %i X1 %g X2 %g",i,R[i*ndim],R[i*ndim+1]);
-//			sf_warning("V %g G1 %g G2 %g",V[i],G[i*ndim],G[i*ndim+1]);
-		
-//		}
 		/* get tau plus and tau minus (un-normalized), precursor to actual tau */
 		path_create_tau_plus_minus(Tau_p, Tau_m, R, knots, ndim); // this is where a problem is!!!!!!!!!!!!
 		/* combine data into tangent curve Tau */
 		path_create_tau_stable( Tau, Tau_p, Tau_m, V, knots, ndim);
-/*		for (int i = 0 ; i < knots ; i++){
-			sf_warning("Taup %g %g",Tau_p[i*2],Tau_p[i*2+1]);
-			sf_warning("Taum %g %g",Tau_m[i*2],Tau_m[i*2+1]);
-			sf_warning("Tau %g %g",Tau[i*2],Tau[i*2+1]);
-		}
-		*/
 		/* apply anisotropy */
 		for ( ik = 0 ; ik < knots ; ik++ ){
 			Tau_p[ik*ndim +1 ] *= aniso1;
@@ -230,24 +216,8 @@ int main (int argc, char* argv[])
 			Orth[ id] = 0.;
 			Orth[ (knots-1)*ndim +id ] = 0.;
 		}
-/*		for (int i = 0 ; i < knots ; i++){
-							sf_warning("%i At %g %g",i,Attract[i*2],Attract[i*2+1]);
-												sf_warning("%i Re %g %g",i,Repulse[i*2],Repulse[i*2+1]);
-																	sf_warning("%i F %g %g",i,Force[i*2],Force[i*2+1]);
-					sf_warning("%i Orth %g %g",i,Orth[i*2],Orth[i*2+1]);
-							    sf_warning("%i R %g %g",i,R[2*i],R[2*i+1]);
-				}
-*/	
+		/* calculate size of orthagonal force */
 		orthnorm = path_norm(Orth, ndim*knots);
-/*		if ( knots > 2){
-			k = orthnorm/((float)knots-2)*path_norm(Tau_p,knots*ndim);
-			sf_warning("%g",k);
-		} else {
-			k = 0;
-		}
-		*/
-		
-//		sf_warning(" k %g",k);
 		/* create spring force */
 		path_spring_force( Spring, Tau, Tau_p, Tau_m, knots, ndim);
 		/* unkinking force */
@@ -262,12 +232,8 @@ int main (int argc, char* argv[])
 		if ( kinknorm > 0){
 			kink2 = kink * k2;
 		}
-//				sf_warning(" k %g",k2);
-
 		/* combine, scale by k */
 		path_combine(SpringK, Spring, k2, Unkink, kink2, knots*ndim);
-		//int i = 70;
-		//		sf_warning("Sp1 %g Sp2 %g Or1 %g Or 2 %g",SpringK[i*ndim],SpringK[i*ndim+1],Orth[i*ndim],Orth[i*ndim+1]);
 		/* combine forces into change of gradient */
 		path_combine( Change, SpringK, 1, Orth, 1, knots*ndim);
 		/* enforce edges */
@@ -279,32 +245,29 @@ int main (int argc, char* argv[])
 		path_scale(UpdateG, Update, g, knots*ndim);
 		/* and now lets change our knots */
 		path_combine( R, R, 1., UpdateG, 1, knots*ndim);
-/*		for (int i = 0 ; i < knots ; i++ ){
-			sf_warning("%i Spring %g %g",i,Spring[2*i],Spring[2*i+1]);
-			sf_warning("%i Change %g %g",i,Change[2*i],Change[2*i+1]);
-			sf_warning("%i Update %g %g",i,Update[2*i],Update[2*i+1]);
-			sf_warning("%i UpdateG %g %g",i,UpdateG[2*i],UpdateG[2*i+1]);
-		    sf_warning("%i R %g %g",i,R[2*i],R[2*i+1]);
-		}
-		*/
+
 		/* keep the end points on the edge */
 		R [ 0] = O[ 0];
 		R [ (knots-1)*(ndim)] = O[ 0] + D[ 0]*( (float) N[ 0] -1 );
 		/* make sure we are in bounds */
-//		path_enforce_function( R, eps, knots, ndim);
-//		path_enforce_smoothness(R, sorder, knots, ndim);
 		path_enforce_boundaries( R, knots, N, D, O, ndim);
-		/* enforce smoothness */
-
-
 	}
-
+	/* enforce function before we interpolate */
+	path_enforce_function( R, D[0], knots, ndim);
+ //   path_enforce_boundaries( R, knots, N, D, O, ndim);
+	float* Interpolated = sf_floatalloc(N[0]);
+	/* and interpolate */
+	path_reinterpolate1(Interpolated, R, N, D, O, knots, ndim);
+	/* write interpolated to disk */
+	sf_floatwrite(Interpolated,N[0],_out);
+	
 	/* write out result */
-	sf_floatwrite(R,knots*ndim,_out);
+//	sf_floatwrite(R,knots*ndim,_out);
 	//		sf_floatwrite(dSfunc,panelsize*ndim,_out);
 	/* close file */
 	sf_fileclose(_out);
 	/* free arrays */
+	free (Interpolated);
 	free (Tau);
 	free (Tau_p);
 	free (Tau_m);
