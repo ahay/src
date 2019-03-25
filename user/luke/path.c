@@ -736,6 +736,8 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 	float* R0  = sf_floatalloc(ndim);
 	float* R1  = sf_floatalloc(ndim);
 	float* R2  = sf_floatalloc(ndim);
+	float d1;
+	float d2;
 	/* zero out tau */
 	path_scale( Tau_plus, Tau_plus, 0, nknots*ndim);
 	path_scale( Tau_minus, Tau_minus, 0, nknots*ndim);
@@ -753,7 +755,16 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 		if ( i > 0) {
 			path_get_column(R, R0, i-1, ndim);
 		} else {
-			path_scale(R0, R0, 0, ndim);
+			/* extrapolate */
+			/* really R3 */
+			path_get_column(R, R0, i+2, ndim);
+			/* difference */
+			path_combine(R0, R2, -1, R0, 1, ndim);
+			/* distances */
+			d2 = path_distance(R0,R2,ndim);
+			d1 = path_distance(R1,R2,ndim);
+			/* project backward */
+			path_combine(R0, R0, -(d1+d2)/d2, R2, 1, ndim);
 		}		
 		/* subtract */
 		path_combine(Tau_mL, R0, -1.0, R1, 1.0, ndim);
@@ -1095,7 +1106,6 @@ void path_enforce_smoothness1(float* R, int order, int knots, int ndim)
 //			path_combine(PuttX,PuttX,1,PullX,1,ndim);
 		} else{
 			path_scale(PuttX, PullX, 1.0, ndim);
-			sf_warning("PuttX1 %g PuttX2 %g X1 %g X2 %g",PuttX[0],PuttX[1],PullX[0],PullX[1]);
 		}
 		/* put it back */
 		path_put_column( R, PuttX, ik, ndim);
@@ -1145,6 +1155,58 @@ void path_enforce_boundaries( float* R, int nknots, int* N, float* D, float* O, 
 	return;
 }
 
+void path_enforce_boundaries_change( float* R, float* Change, float damp, int nknots, int* N, float* D, float* O, int ndim)
+	/*< makes sure the R stays in bounds, reflects the change component and dampens >*/
+{
+	/* looping index */
+	int ik ;
+	/* dimension index */
+	int id ;
+	/* do we need to put it back ? */
+	bool writeswitch = false;
+	/* local array */
+	float* X = sf_floatalloc(ndim);
+	/* local change array */
+	float* ChLoc = sf_floatalloc(ndim);
+	/* create max array */
+	float* M = sf_floatalloc(ndim);
+	path_make_max( M, N, D, O, ndim);
+	for ( ik = 0 ; ik < nknots ; ik++ ){
+		/* get coordinate */
+		path_get_column(R, X, ik, ndim);
+		/* and get the change */
+		path_get_column(Change,ChLoc,ik,ndim);
+		/* check to see if in bounds */
+		for ( id = 0 ; id < ndim ; id++ ){
+			/* are we too low? */
+			if ( X[id] < O[ id]){
+				writeswitch = true;
+				/* force to edge */
+				X[id] = O[id];
+				/* reflect and dampen change */
+				ChLoc[id] = -1*damp*ChLoc[id];
+			}
+			/* are we too high ? */
+			if ( X[id] > M[id]){
+				writeswitch = true;
+				/* force to edge */
+				X[id] = M[id];
+				/* reflect and dampen change */
+				ChLoc[ id] = -1*damp*ChLoc[id];
+			}
+		}
+		/* if we changed the array, put the column back */
+		if (writeswitch){
+			path_put_column( R, X, ik, ndim);
+			path_put_column( Change, ChLoc, ik, ndim);
+		}
+	}
+	free (X);
+	free (M);
+	free (ChLoc);
+	return;
+}
+
 void path_enforce_function( float* R, float eps, int knots, int ndim)
 	/*< enforce requirement that R(t) >*/
 {
@@ -1181,7 +1243,7 @@ void path_unkink_force( float* Unkink, float* Tau_p, float* Tau_m, int nknots, i
 	/* zero out unkink */
 	path_scale (Unkink, Unkink, 0.,nknots*ndim);
 	/* loop through knots */
-	for ( ik = 1 ; ik < nknots-1 ; ik++){
+	for ( ik = 0 ; ik < nknots ; ik++){
 		/* get columns */
 		path_get_column( Tau_p, Tau_pL, ik, ndim);
 		path_get_column( Tau_m, Tau_mL, ik, ndim);
