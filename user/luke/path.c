@@ -738,6 +738,8 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 	float* R2  = sf_floatalloc(ndim);
 	float d1;
 	float d2;
+	float* D2 = sf_floatalloc(ndim);
+	bool last = false;
 	/* zero out tau */
 	path_scale( Tau_plus, Tau_plus, 0, nknots*ndim);
 	path_scale( Tau_minus, Tau_minus, 0, nknots*ndim);
@@ -749,8 +751,12 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 		if ( i < nknots - 1) {
 			path_get_column(R, R2, i+1, ndim);
 		} else {
+			/* avoid pulling a null */
 			path_scale(R2, R2, 0, ndim);
+			last = true;
 		}
+		/* subtract */
+
 		/* previous */
 		if ( i > 0) {
 			path_get_column(R, R0, i-1, ndim);
@@ -760,15 +766,41 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 			path_get_column(R, R0, i+2, ndim);
 			/* difference */
 			path_combine(R0, R2, -1, R0, 1, ndim);
+			/* get the other tau for 2nd deriv */
+			path_combine(Tau_pL, R1, -1.0, R2, 1.0, ndim);
 			/* distances */
-			d2 = path_distance(R0,R2,ndim);
-			d1 = path_distance(R1,R2,ndim);
+			d2 = path_norm(R0,ndim);
+			d1 = path_norm(Tau_pL,ndim);
+			/* second derivative */
+			path_combine(D2, R0, 2*d2/(d2+d1), Tau_pL, -2*d1/(d2+d1), ndim);
+			/* apply */
+			path_combine(R0, R0, 1, D2, (d2*d2+d1*d1)/(d1*d1), ndim);
 			/* project backward */
-			path_combine(R0, R0, -(d1+d2)/d2, R2, 1, ndim);
+			path_combine(R0, R0, -(d1+d2)/d1, R2, 1, ndim);
 		}		
+		/* worry about the last index */
+		if ( last ){
+			/* extrapolate */
+			/* really R-1 */
+			path_get_column(R, R2, i-2, ndim);
+			/* difference */
+			path_combine(R2, R2, -1, R0, 1, ndim);
+			/* get the other tau for 2nd deriv */
+			path_combine(Tau_mL, R0, -1.0, R1, 1.0, ndim);
+			/* distances */
+			d2 = path_norm(R2,ndim);
+			d1 = path_norm(Tau_mL,ndim);
+			/* second derivative */
+			path_combine(D2, R2, 2*d2/(d2+d1), Tau_mL, -2*d1/(d2+d1), ndim);
+			/* apply */
+			path_combine(R2, R2, 1, D2, (d2*d2+d1*d1)/(d1*d1), ndim);
+			/* project forward */
+			path_combine(R2, R2, (d1+d2)/d1, R1, 1, ndim);			
+		}
 		/* subtract */
-		path_combine(Tau_mL, R0, -1.0, R1, 1.0, ndim);
 		path_combine(Tau_pL, R1, -1.0, R2, 1.0, ndim);
+		path_combine(Tau_mL, R0, -1.0, R1, 1.0, ndim);
+
 		/* put column back */
 		path_put_column(Tau_plus,Tau_pL,i,ndim);
 		path_put_column( Tau_minus, Tau_mL, i, ndim);
@@ -779,6 +811,7 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 		free ( R0);
 		free ( R1);
 		free ( R2);
+		free (D2);
 	return;
 }
 
