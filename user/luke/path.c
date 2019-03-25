@@ -772,9 +772,9 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 			d2 = path_norm(R0,ndim);
 			d1 = path_norm(Tau_pL,ndim);
 			/* second derivative */
-			path_combine(D2, R0, 2*d2/(d2+d1), Tau_pL, -2*d1/(d2+d1), ndim);
+			path_combine(D2, R0, d2/(d2+d1), Tau_pL, -d1/(d2+d1), ndim);
 			/* apply */
-			path_combine(R0, R0, 1, D2, (d2*d2+d1*d1)/(d1*d1), ndim);
+			path_combine(R0, R0, 1, D2, (d2*d2+d1*d1), ndim);
 			/* project backward */
 			path_combine(R0, R0, -(d1+d2)/d1, R2, 1, ndim);
 		}		
@@ -791,9 +791,10 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 			d2 = path_norm(R2,ndim);
 			d1 = path_norm(Tau_mL,ndim);
 			/* second derivative */
-			path_combine(D2, R2, 2*d2/(d2+d1), Tau_mL, -2*d1/(d2+d1), ndim);
+			path_combine(D2, R2, d2/(d2+d1), Tau_mL, -d1/(d2+d1), ndim);
 			/* apply */
-			path_combine(R2, R2, 1, D2, (d2*d2+d1*d1)/(d1*d1), ndim);
+			sf_warning("d1 %g d2 %g",d1,d2);
+			path_combine(R2, R2, 1, D2, (d2*d2+d1*d1), ndim);
 			/* project forward */
 			path_combine(R2, R2, (d1+d2)/d1, R1, 1, ndim);			
 		}
