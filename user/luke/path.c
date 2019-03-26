@@ -428,6 +428,30 @@ void path_first_guess1(float* Ro, int knots, int* N, float* D, float* O, int ndi
 	return;
 }
 
+void path_write_constant_array(float* A, float a, long n)
+	/*< write a constant float uniformly to array >*/
+{
+	/* looping index */
+	long i;
+	for ( i = 0 ; i < n ; i++ ){
+		A[i] = a;
+	}
+	return;
+}
+
+void path_first_update1(float* Update, float val, int nknots, int ndim)
+	/*< generate first update >*/
+{
+	/* start by writing value */
+	path_write_constant_array( Update, val, nknots*ndim);
+	/* loop through indexes */
+	int ik;
+	for ( ik = 0 ; ik < nknots ; ik++ ){
+		Update[ik*ndim] = 0;
+	}
+	return;
+}
+
 void path_path_derivative(float* dR, float* R,int knots, int ndim)
 /*< calculeate dRi = Ri - R(i-1) >*/
 {
@@ -793,7 +817,6 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 			/* second derivative */
 			path_combine(D2, R2, d2/(d2+d1), Tau_mL, -d1/(d2+d1), ndim);
 			/* apply */
-			sf_warning("d1 %g d2 %g",d1,d2);
 			path_combine(R2, R2, 1, D2, (d2*d2+d1*d1), ndim);
 			/* project forward */
 			path_combine(R2, R2, (d1+d2)/d1, R1, 1, ndim);			

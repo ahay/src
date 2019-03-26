@@ -1,6 +1,8 @@
 /* One dimensional path minimization for optimization input file has first coordinate parameter, second coordinate time */
 
 #include <rsf.h>
+#include <stdlib.h>
+#include <time.h>
 #include "path.h"
 
 int main (int argc, char* argv[])
@@ -91,6 +93,10 @@ int main (int argc, char* argv[])
 	float damp;
 	if (!sf_getfloat("damp",&damp))   damp = .5;
 	/* if the path goes out of bounds, we reflect and dampen the rate of change by this much */	
+	
+	float shove;
+	if (!sf_getfloat("shove",&shove))   shove = 1000;
+	/* size of initial random lateral shove */	
 			
 	/* allocate sampling arrays */
 	int* N = sf_intalloc(ndim);
@@ -181,13 +187,19 @@ int main (int argc, char* argv[])
 	/* tau plus */
 	float* Tau_p = sf_floatalloc(knots*ndim);
 	/* tau minus */
-	float* Tau_m = sf_floatalloc(knots*ndim);	
+	float* Tau_m = sf_floatalloc(knots*ndim);
+	/* seed random number generator */
+	srand(time(0)*time(0));	
+	float randum ;
 	/* loop through midpoins */
 	int imid, iter;
 	for ( imid = 0 ; imid < nmid ; imid ++ ){
 		sf_warning("Learning path %i of %i;",imid+1,nmid);
 		/* get intial guess for R */
 		path_first_guess1(R, knots, N, D, O, ndim);
+		/* make first update Vector*/
+		randum = ((float)rand()/(.5*(float)RAND_MAX)-1)*shove;
+		path_first_update1(Update,randum,knots,ndim);
 		/* make sure we are in bounds */
 		path_enforce_boundaries( R, knots, N, D, O, ndim);	
 		/* zero out S */
@@ -214,8 +226,6 @@ int main (int argc, char* argv[])
 		path_scale(SpringK, SpringK, 0., knots*ndim);
 		/* zero out Change */
 		path_scale(Change, Change, 0., knots*ndim);
-		/* zero out Update  */
-		path_scale(Update, Update, 0., knots*ndim);
 		/* zero out G  */
 		path_scale(UpdateG, UpdateG, 0., knots*ndim);
 		/* zero out interpolated path */
@@ -224,12 +234,13 @@ int main (int argc, char* argv[])
 		sf_floatread(Sfunc,panelsize,_in);
 		/* compute gradient */
 		path_gradient( Sfunc, dSfunc,  N, D, O, dorder, slen, nsmooth, ndim, scale);
+		/* evaluate potential at knot points */
+		path_evaluate_potental(V, R, knots, Sfunc, N, D, O, ndim);
+		/* evaluate gradient at knot points */
+		path_evaluate_gradient(G, R, knots, dSfunc, N, D, O, ndim);
+		
 		/* iterate to learn path */
 		for ( iter = 0 ; iter < niter ; iter++ ){
-			/* evaluate potential at knot points */
-			path_evaluate_potental(V, R, knots, Sfunc, N, D, O, ndim);
-			/* evaluate gradient at knot points */
-			path_evaluate_gradient(G, R, knots, dSfunc, N, D, O, ndim);
 			/* get tau plus and tau minus (un-normalized), precursor to actual tau */
 			path_create_tau_plus_minus(Tau_p, Tau_m, R, knots, ndim); 
 			/* combine data into tangent curve Tau */
@@ -286,8 +297,7 @@ int main (int argc, char* argv[])
 			R [ 0] = O[ 0];
 			R [ (knots-1)*(ndim)] = O[ 0] + D[ 0]*( (float) N[ 0] -1 );
 			/* make sure we are in bounds, reflect and dampen the update if at edge */
-			path_enforce_boundaries_change( R, Update, damp, knots, N, D, O, ndim);
-		
+			path_enforce_boundaries_change( R, Update, damp, knots, N, D, O, ndim);	
 			/* determine if we are terminating because of convergence */
 			update_size = path_norm(Update,knots*ndim);
 			change_size = path_norm(Change,knots*ndim);
@@ -296,6 +306,10 @@ int main (int argc, char* argv[])
 				sf_warning("Path %i learned in %i iterations",imid+1,iter+1);
 				break;
 			}
+			/* evaluate potential at knot points */
+			path_evaluate_potental(V, R, knots, Sfunc, N, D, O, ndim);
+			/* evaluate gradient at knot points */
+			path_evaluate_gradient(G, R, knots, dSfunc, N, D, O, ndim);
 		}
 		/* enforce function before we interpolate */
 		path_enforce_function( R, D[0], knots, ndim);
