@@ -12,12 +12,11 @@ from rsf.proj import *
 #   residual static (surface consistant)
 #   stack with mute
 
-#SConscript('../fetch/SConstruct')
+SConscript('../fetch/SConstruct')
 # SCsontript will always rerun oher directory, I think because env changes.
 # perhaps scons sees PWD or DATAPATH has changed.  This works:
-import os
-os.system('cd ../fetch; scons')
-
+#import os
+#os.system('cd ../fetch; scons')
 
 Flow(['rawshot.rsf','rawshot_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],

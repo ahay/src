@@ -23,7 +23,7 @@
 
 int main(int argc, char *argv[])
 {
-    int n1, n2, n3;
+    int n1, n2, n3, i;
     int num_samples;                // number of data samples
     int *indexes, *path_array;
     float **data;
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     indexes = sf_intalloc(n2*n3);
 
     /* set indexes for each traces */
-    for (int i = 0; i < n2*n3; i++)
+    for (i = 0; i < n2*n3; i++)
         indexes[i] = i+1;
 
     /* read 3-D data */

@@ -15,7 +15,7 @@ def Grey2(data1,data2,other):
 def Grey3(data1,clip,other): 
 	Result(data1,'byte clip=%g allpos=y |grey3 point1=0.8 point2=0.8 flat=n label2=Trace unit2= label1=Frequency unit1="Hz" label3=IMF unit3= title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 wherexlabel=t wheretitle=b color=g bartype=v clip=0.5 %s'%(clip,other))
 
-
+Fetch('hyper0.rsf','yangkang')
 Flow('hyper-clean','hyper0','window f2=12 n2=64 | put o2=1 | scale axis=2')
 
 Flow('hyper','hyper0','window f2=12 n2=64 | put o2=1 | scale axis=2 | noise var=0 seed=201415')
@@ -27,7 +27,7 @@ Grey('demo','title="Data"')
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Eseis'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

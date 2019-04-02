@@ -12,6 +12,7 @@ def numpy_load(target=None,source=None,env=None):
     rsf.put("label1","Time")
     rsf.put("unit1","s")
     rsf.write(data)
+    rsf.close()
     return 0
 
 for case in ('rpp','seismic'):
@@ -63,6 +64,9 @@ Flow('ormsby',None,
      ''')
 Result('ormsby','graph title="Ormsby wavelet" label2=Amplitude')
 
+Flow('formsby','ormsby',
+     'pad n1=1024 beg1=460 | fft1 | real | put fft_o1=0')
+
 # Compare with autocorrelation
 
 Flow('auto','seismic','fft1 | math output="input*conj(input)" | fft1 inv=y')
@@ -80,7 +84,7 @@ Flow('wavdiv','specdiv',
      '''
      rtoc | math output="input*exp(I*x1*%g)" | fft1 inv=y
      ''' % (2*math.pi))
-Result('wavdiv','window f1=457 n1=129 | graph title="Division Wavelet" label2=Amplitude')
+Result('wavdiv','window f1=460 n1=129 | graph title="Division Wavelet" label2=Amplitude')
 
 Result('specdiv',
        '''
@@ -89,20 +93,34 @@ Result('specdiv',
        min1=0 max1=250 min2=-60 max2=10
        ''')
 
+Result('wavelet','wavdiv ormsby',
+       '''
+       window f1=460 n1=129 | cat axis=2 ${SOURCES[1]} | graph title=Wavelet label2=Amplitude
+       ''')
+
 # Create synthetic
 
 Flow('frpp','rpp','fft1')
-Flow('synth','specdiv frpp',
-     'rtoc | math freq=${SOURCES[1]} output="-input*freq" | fft1 inv=1')
-Result('synth','window max1=1.5 | graph title="Synthetic" ')
+Plot('wrpp','rpp','window min1=0.75 max1=1.5 | graph transp=y yreverse=y title=Reflectivity plotcol=1')
+Plot('wseis','seismic',
+     '''
+     window min1=0.75 max1=1.5 | spray axis=2 n=4 | 
+     wiggle poly=y transp=y yreverse=y title=Data plotcol=1
+     ''')
 
-Plot('wrpp','rpp','window min1=0.75 max1=1.5 | graph transp=y yreverse=y title=Reflectivity')
-Plot('wsynth','synth','window min1=0.75 max1=1.5 | spray axis=2 n=4 | wiggle poly=y transp=y yreverse=y title=Synthetic')
-Plot('wseis','seismic','window min1=0.75 max1=1.5 | spray axis=2 n=4 | wiggle poly=y transp=y yreverse=y title=Data')
+for case in range(2):
+    wavelet = ('formsby','specdiv')[case]
 
-Result('compare','wrpp wsynth wseis','SideBySideAniso',vppen='txscale=1.5')
+    synth = 'synth%d' % case
+    Flow(synth,[wavelet,'frpp'],
+         'rtoc | math freq=${SOURCES[1]} output="-input*freq" | fft1 inv=1')
+    Result(synth,'window max1=1.5 | graph title="Synthetic" ')
 
-# Plot two wavelets
-
+    Plot('w'+synth,synth,
+         '''
+         window min1=0.75 max1=1.5 | spray axis=2 n=4 | 
+         wiggle poly=y transp=y yreverse=y title=Synthetic plotcol=1
+         ''')
+    Result('w'+synth,['wrpp','w'+synth,'wseis'],'SideBySideAniso',vppen='txscale=1.5')
 
 End()

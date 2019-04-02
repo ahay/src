@@ -20,6 +20,7 @@ Delete them all with shell constructs like: rm -f `sfinvalid dir=.`'''
 
 # This program is dependent on the output of sfin and sfattr
 
+from __future__ import print_function
 import os, sys
 
 try: # Give precedence to local version
@@ -54,7 +55,7 @@ def main(par):
         myline = entry[0]
         if verb:
             myline += ': ' + entry[1]
-        print myline # This program's stdout is a list of files. Do not use msg
+        print(myline)# This program's stdout is a list of files. Do not use msg
 
     return ivlad.unix_success
 

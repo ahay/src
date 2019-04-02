@@ -1,0 +1,588 @@
+\published{Geophysics, 83, F41-F48, (2018)}
+
+\title{Streaming orthogonal prediction filter in $t$-$x$ domain for random noise attenuation}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{GEO-2017-0322}
+
+\address{
+\footnotemark[1] College of Geo-exploration Science and Technology,\\
+Jilin University, Changchun, China \\
+\footnotemark[2] Formerly College of Geo-exploration Science and Technology,\\
+Jilin University, Changchun, China; \\
+presently China Railway Design Corporation, Tianjin, China}
+
+\author{Yang Liu\footnotemark[1], Bingxiu Li\footnotemark[2]}
+
+\footer{GEO-2017-0322}
+\lefthead{Liu and Li}
+\righthead{$t$-$x$ SOPF}
+
+\maketitle
+
+\begin{abstract}
+In seismic exploration there are many sources of random noise, for
+example, scattering from a complex surface. Prediction filters (PFs)
+have been widely used for random noise attenuation, but these
+typically assume that the seismic signal is stationary. Seismic
+signals are fundamentally nonstationary. Stationary PFs fail in the
+presence of nonstationary events, even if the data are cut into
+overlapping windows ("patching"). We propose an adaptive PF method
+based on streaming and orthogonalization for random noise attenuation
+in the $t$-$x$ domain. Instead of using patching or regularization,
+the streaming orthogonal prediction filter (SOPF) takes full advantage
+of the streaming method, which generates the signal value as each new
+noisy data value arrives. The streaming signal-and-noise
+orthogonalization further improves the signal recovery ability of the
+SOPF. The streaming characteristic makes the proposed method faster
+than iterative approaches. In comparison with $f$-$x$ deconvolution
+and $f$-$x$ regularized nonstationary autoregression (RNA), we tested
+the feasibility of the proposed method in attenuating random noise on
+two synthetic datasets. Field data examples confirmed that the $t$-$x$
+SOPF had a reasonable denoising ability in practice.
+\end{abstract}
+
+\section{introduction}
+Random noise in seismic data comes from many sources, such as wind
+motion and poorly planted geophones. Prediction filters (PFs) have
+been applied in seismic data processing for decades, and have proved
+their effectiveness for random noise attenuation. The PF has different
+coefficients from prediction-error filters (PEFs), which include extra
+causal time-prediction coefficients. The different prediction
+filtering methods, varying from $f$-$x$ deconvolution
+\cite[]{Canales84} to $t$-$x$ prediction filters
+\cite[]{Claerbout92,Abma95}, play an important role in random noise
+attenuation. However, seismic signals are fundamentally nonstationary,
+and stationary PFs/PEFs still fail in the presence of nonstationary
+events even if filtering can be done either by ``patching'' or
+breaking data into overlapping windows. Different regularization
+methods \cite[]{Crawley99,Curry03,Fomel09,Liu13,Liu15} help PFs/PEFs
+estimate the nonstationary coefficients corresponding to the
+underdetermined autoregression problems.
+
+Most of the nonstationary PFs/PEFs use iterative or recursive
+approaches to calculate their coefficients. This leads to high
+computational costs, especially in the storage
+of variable coefficients \cite[]{Ruan15}. Recently, a streaming PEF
+\cite[]{Fomel16} was proposed to solve this problem. 
+This method updates the PEF coefficients incrementally as new data
+arrive. This method reduces the computational 
+cost of the streaming PEF to a single convolution. Moreover, the exact
+inversion of the streaming PEF makes missing data interpolation
+straightforward.
+
+In this paper, we propose an adaptive PF method based on streaming and
+orthogonalization \cite[]{Chen15} to attenuate random noise in
+nonstationary seismic data. The proposed method is able to
+characterize the nonstationarity on both time and space axes. The
+streaming element makes the proposed method a convenient and fast
+denoising approach. The application of orthogonalization further
+strengthens its ability in random noise attenuation. Numerical tests
+using synthetic and field data demonstrate the effectiveness of the
+proposed SOPF method.
+
+\section{theory}
+In the $t$-$x$ domain, seismic data always display native
+nonstationarity. However, one can assume that the new prediction
+filter $\mathbf{a}$ stays close to the previous filter on time axis
+$\bar{\mathbf{a}}_t$ and the previous filter on space axis
+$\bar{\mathbf{a}}_x$. The autoregression equation of the $t$-$x$
+streaming PF can be written in a shortened block-matrix notation
+\cite[]{Fomel16} as
+\begin{equation}
+  \label{eq:a}
+\left[ \begin{array}{c}
+\mathbf{d}^T\\
+\lambda_t \mathbf{I}\\
+\lambda_x \mathbf{I}
+\end{array}\right]
+\mathbf{a} \approx
+\left[ \begin{array}{c}
+-d(t,x)\\
+\lambda_t \mathbf{\bar{a}}_t\\
+\lambda_x \mathbf{\bar{a}}_x
+\end{array}\right],
+\end{equation}
+where $\mathbf{I}$ is the identity matrix and $d(t,x)$ is the given
+data sample at the point $(t,x)$. $\lambda_t$ and $\lambda_x$
+are the scale parameters controlling the filter variability on the two
+axes.
+
+Consider a 2D noncausal prediction filter with 20 prediction
+coefficients $a_{i,j}$:
+\begin{equation}
+  \label{eq:b}
+\begin{array}{ccccc}
+a_{-2,-2}(t,x) & a_{-2,-1}(t,x) & \cdot & a_{-2,1}(t,x) & a_{-2,2}(t,x)\\
+a_{-1,-2}(t,x) & a_{-1,-1}(t,x) & \cdot & a_{-1,1}(t,x) & a_{-1,2}(t,x)\\
+a_{0,-2}(t,x) & a_{0,-1}(t,x) & 1(t,x) & a_{0,1}(t,x) & a_{0,2}(t,x),\\
+a_{1,-2}(t,x) & a_{1,-1}(t,x) & \cdot & a_{1,1}(t,x) & a_{1,2}(t,x)\\
+a_{2,-2}(t,x) & a_{2,-1}(t,x) & \cdot & a_{2,1}(t,x) & a_{2,2}(t,x)
+\end{array}
+\end{equation}
+where ``$\cdot$'' denotes zero, and the data vector $\mathbf{d}$ and
+the filter vector $\mathbf{a}$ in equation~\ref{eq:a} are shown as
+follows:
+\begin{equation}
+  \label{eq:c}
+\mathbf{d}=\left[ \begin{array}{c}
+d_{-M,-N}(t,x)\\
+d_{-M+1,-N}(t,x)\\
+\ldots\\
+d_{M-1,N}(t,x)\\
+d_{M,N}(t,x)
+\end{array}\right],
+\mathbf{a}=\left[ \begin{array}{c}
+a_{-M,-N}(t,x)\\
+a_{-M+1,-N}(t,x)\\
+\ldots\\
+a_{M-1,N}(t,x)\\
+a_{M,N}(t,x)
+\end{array}\right],
+\end{equation}
+where $d_{i,j}(t,x)$ represents the translation of $d(t,x)$ in both
+time and space directions with time shift $i$ and space shift
+$j$. $2M+1$ and $2N$ are the temporal and spatial lengths of the
+prediction filter, e.g., $M$=2 and $N$=2 in
+equation~\ref{eq:b}.
+
+The least-squares solution of equation~\ref{eq:a} is
+\begin{equation}
+  \label{eq:d}
+\mathbf{a}=(\mathbf{d}\mathbf{d}^T+\lambda^2\mathbf{I})^{-1}(-d(t,x)
+\mathbf{d}+\lambda^2\mathbf{\bar{a}}),
+\end{equation}
+where 
+\begin{equation}
+  \label{eq:e}
+\lambda^2=\lambda_t^2+\lambda_x^2,
+\quad\mathbf{\bar{a}}=\frac{\lambda_t^2\mathbf{\bar{a}}_t+
+\lambda_x^2\mathbf{\bar{a}}_x}{\lambda_t^2+\lambda_x^2}.
+\end{equation}
+
+\cite{Fomel16} propose the Sherman-Morrison formula to directly
+transform the inverse matrix in equation~\ref{eq:d} without
+iterations. The Sherman-Morrison formula is an analytic method for
+solving the inverse of a special matrix \cite[]{Hager89}. If both
+matrices $\mathbf{A}$ and
+$\mathbf{I}-\mathbf{V}\mathbf{A}^{-1}\mathbf{U}$ are invertible, then
+$\mathbf{A}-\mathbf{U}\mathbf{V}$ is invertible and
+\begin{equation}
+  \label{eq:sherman-morrison}
+(\mathbf{A}-\mathbf{U}\mathbf{V})^{-1}=\mathbf{A}^{-1}+
+\mathbf{A}^{-1}\mathbf{U}(\mathbf{I}-
+\mathbf{V}\mathbf{A}^{-1}\mathbf{U})^{-1}\mathbf{V}\mathbf{A}^{-1}.
+\end{equation}
+In the special case where matrix $\mathbf{U}$ is a column vector
+$\mathbf{u}$ and matrix $\mathbf{V}$ is a row vector $\mathbf{v}$,
+equation~\ref{eq:sherman-morrison} can be rewritten as
+\begin{equation}
+  \label{eq:sherman-morrison1}
+(\mathbf{A}-\mathbf{u}\mathbf{v})^{-1}=\mathbf{A}^{-1}+
+\mathbf{A}^{-1}\mathbf{u}(1-
+\mathbf{v}\mathbf{A}^{-1}\mathbf{u})^{-1}\mathbf{v}\mathbf{A}^{-1}.
+\end{equation}
+The direct derivation of the Sherman-Morrison formula
+(equation~\ref{eq:sherman-morrison1}) is described in Appendix A.
+
+Applying the Sherman-Morrison formula to
+equation~\ref{eq:d}, the $t$-$x$ streaming PF coefficients and
+prediction error can be calculated as
+\begin{equation}
+  \label{eq:f}
+\mathbf{a}=\mathbf{\bar{a}}-\left(\frac{d(t,x)+\mathbf{d}^T\mathbf{\bar{a}}}
+{\lambda^2+\mathbf{d}^T\mathbf{d}}\right)\mathbf{d},
+\end{equation}
+and
+\begin{equation}
+  \label{eq:g}
+r(t,x)=\frac{\lambda^2(d(t,x)+\mathbf{d}^T\mathbf{\bar{a}})}
+{\lambda^2+\mathbf{d}^T\mathbf{d}}.
+\end{equation}
+
+For seismic random noise attenuation, we assume the residual of
+prediction filtering $r(t,x)$ is the random noise at the point
+$(t,x)$. For calculating 2D $t$-$x$ streaming PFs, we need to store
+one previous time-neighboring PF, $\mathbf{\bar{a}}_t$, and
+one previous space-neighboring PF,
+$\mathbf{\bar{a}}_x$, both $\mathbf{\bar{a}}_t$ and
+$\mathbf{\bar{a}}_x$ will be used when the stream arrives at its
+adjacency.
+
+One can compare a streaming PF with a stationary
+PF. The autoregression equation for a traditional PF takes the
+following form:
+\begin{equation}
+  \label{eq:h}
+d(t,x)+\sum_{j=-N,j\neq0}^{j=N}\sum_{i=-M}^{i=M}a_{i,j}d_{i,j}(t,x) \approx 0.
+\end{equation}
+
+The least-squares solution of equation~\ref{eq:h} at each point $(t,x)$ is
+\begin{equation}
+  \label{eq:i}
+\mathbf{a}=-d(t,x)(\mathbf{d}\mathbf{d}^T)^{-1}\mathbf{d}.
+\end{equation}
+
+The matrix in equation~\ref{eq:i} is similar to that in
+equation~\ref{eq:d}. The comparison of equation~\ref{eq:d} and
+equation~\ref{eq:i} indicates that the results of the streaming PFs
+become gradually more accurate as the scale parameter $\lambda$
+decreases. However, according to equation~\ref{eq:g}, a small
+$\lambda$ may cause the residual $r(t,x)$ to also be small, which
+means that there is too much noise in the signal section. To solve
+this problem, we use a two-step strategy. First, we
+choose a relatively large $\lambda$ to get a large residual
+$r(t,x)$. The first step amounts to an ``over-filtering'', which
+generates an approximately ``clean'' signal. Next, the
+signal leakage in the noise section can be extracted by applying
+signal-and-noise orthogonalization.
+
+We derive the definition of the streaming orthogonalization
+weight (SOW) from the global orthogonalization weight (GOW)
+\cite[]{Chen15}. Assume that the leaking signal $\mathbf{s}_1$ has a
+linear correlation with the estimated signal section $\mathbf{s}_0$ in
+the first step,
+\begin{equation}
+  \label{eq:j}
+\mathbf{s}_1=\omega\mathbf{s}_0,
+\end{equation}
+where $\omega$ is the GOW. The ideal signal $\mathbf{s}$ and noise
+$\mathbf{n}$ can then be estimated by
+\begin{equation}
+  \label{eq:k}
+\mathbf{s}=\mathbf{s}_0+\omega\mathbf{s}_0,
+\end{equation}
+\begin{equation}
+  \label{eq:l}
+\mathbf{n}=\mathbf{n}_0-\omega\mathbf{s}_0.
+\end{equation}
+Under the assumption that the noise $\mathbf{n}$ is orthogonal
+to the signal $\mathbf{s}$, 
+\begin{equation} \label{eq:m}
+\mathbf{n}^T\mathbf{s}=0.
+\end{equation}
+
+Substituting equation~\ref{eq:k} and \ref{eq:l} into
+equation~\ref{eq:m}, one can get the GOW
+ as \begin{equation} \label{eq:n}
+\omega=\frac{\mathbf{n}_0^T\mathbf{s}_0}{\mathbf{s}_0^T\mathbf{s}_0}.
+\end{equation}
+
+To get the orthogonalization weight for each data value, one
+possible definition of the SOW is:
+ \begin{equation}
+  \label{eq:o}
+\omega(t,x)=\frac{s(t,x)n(t,x)}{s(t,x)^2}=\frac{n(t,x)}{s(t,x)},
+\end{equation}
+where $\omega(t,x)$ is the SOW for the data point $d(t,x)$. $s(t,x)$
+and $n(t,x)$ represent the signal and noise values at the point
+$(t,x)$, respectively. In the SOPF, $s(t,x)$ and $n(t,x)$
+correspond to the predictable part $\mathbf{d}^T\mathbf{a}$ and the
+prediction residual $r(t,x)$ produced in the first step. Direct
+point-by-point division of the values may produce 
+unstable values. One common method to solve this problem is the
+iterative least-squares method
+\cite[]{Chen15}. Here, we propose a streaming method to calculate the SOW.
+
+Suppose that the SOW gets updated with each new data point
+$d(t,x)$. The new SOW, $\omega$, should stay close to the previous
+time-neighboring SOW $\bar{\omega}_t$ and the previous
+space-neighboring SOW $\bar{\omega}_x$. Equation~\ref{eq:o} can be
+rewritten as
+\begin{equation}
+  \label{eq:p}
+\left[ \begin{array}{c}
+s(t,x)\\
+\gamma_t\\
+\gamma_x
+\end{array}\right]
+\omega \approx
+\left[ \begin{array}{c}
+n(t,x)\\
+\gamma_t\bar{\omega}_t\\
+\gamma_x\bar{\omega}_x
+\end{array}\right],
+\end{equation}
+where $\gamma_t$ and $\gamma_x$ are the scale parameters controlling
+the variability on the two axes.
+
+The least-squares solution of equation~\ref{eq:p} is
+ \begin{equation}
+  \label{eq:q}
+\omega=\frac{s(t,x)n(t,x)+\gamma^2\bar{\omega}}{s(t,x)^2+\gamma^2},
+\end{equation}
+where 
+\begin{equation}
+  \label{eq:r}
+\gamma^2=\gamma_t^2+\gamma_x^2,
+\quad\bar{\omega}=\frac{\gamma_t^2\bar{\omega}_t+\gamma_x^2\bar{\omega}_x}
+{\gamma_t^2+\gamma_x^2}.
+\end{equation}
+
+Applying equation~\ref{eq:k}, one can get the denoised data value
+$\hat{s}(t,x)$ after the SOPF
+\begin{equation}
+  \label{eq:s}
+\hat{s}(t,x)=s(t,x)+\frac{s(t,x)r(t,x)+\gamma^2\bar{\omega}}
+{s(t,x)^2+\gamma^2}s(t,x),
+\end{equation}
+where $s(t,x)$ and $r(t,x)$ are the predictable signals and the
+prediction residuals calculated in the first step.
+
+We implement the two-step strategy within the streaming
+method and obtain the denoised data value as each
+new noisy data value arrives. Table 1 compares the computational cost
+between $f$-$x$ deconvolution, $f$-$x$ regularized 
+nonstationary autoregression (RNA) \cite[]{Liu12}, and the proposed
+method. In general, the cost of SOPF is minimal.
+
+\tabl{table}{Rough cost comparison between
+ $f$-$x$ deconvolution, $f$-$x$ RNA, and $t$-$x$ SOPF. $N_a$ is the
+filter size, $N_f$ is the frequency size of the data in frequency
+domain, $N_x$ is the spatial size of the data, $N_t$ is the temporal
+size of the data, and $N_{iter}$ is the number of iterations.}
+{ \begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+Method & Filter storage & Cost \\
+\hline
+$f$-$x$ deconvolution & $O(N_a)$ & $O(N_a N_f N_x N_{iter})$ \\
+\hline
+$f$-$x$ RNA & $O(N_a N_f N_x)$ & $O(N_a N_f N_x N_{iter})$ \\
+\hline
+$t$-$x$ SOPF & $O(N_a N_t)$ & $O(N_a N_t N_x)$ \\
+\hline
+\end{tabular}
+  \end{center}
+}
+
+\section{Synthetic data tests}
+For comparison, we use $f$-$x$ deconvolution, $f$-$x$ RNA, and $t$-$x$
+SOPF to deal with random noise in two synthetic examples and one field
+dataset.
+
+\subsection{Curved model}
+We use a synthetic example (Figure~\ref{fig:s,n}a) created by Raymond
+Abma \cite[]{Liu11} to test the effectiveness of the proposed method
+in handling the nonstationarity. Figure~\ref{fig:s,n}b
+show data with uniformly distributed random
+noise. Figures~\ref{fig:fxs,fxn}a and
+\ref{fig:fxs,fxn}b show the denoised result and the noise 
+removed using $f$-$x$ deconvolution, respectively. The data
+are divided into five patches with 40\% overlap along the space
+axis. The $f$-$x$ deconvolution creates artificial events and passes
+quite a lot of random noise. Nonstationary $f$-$x$ RNA performs
+better. We set the filter length of the $f$-$x$ RNA as 8 samples and
+the smoothing-radius size
+as 20 samples (in frequency) $\times$
+10-sample in space). Figure~\ref{fig:rna1,rnan1}a shows that
+the $f$-$x$ RNA passes less random noise than the $f$-$x$
+deconvolution. However, some artificial events still exist in the
+denoised result and there is signal energy leakage in the noise
+section (Figure~\ref{fig:rna1,rnan1}b). Figure~\ref{fig:h2c,r2} is the
+result of processing by the $t$-$x$ space-noncausal SOPF. The filter
+size is 7-sample (time) $\times$ 8-sample (space). The four scale
+parameters are 0.1 ($\lambda_t$), 0.08 ($\lambda_x$), 0.03
+($\gamma_t$), and 0.05 ($\gamma_x$),
+respectively. Figure~\ref{fig:h2c,r2}a shows that the SOPF also
+introduces a few artifacts, but the artifacts follow a random
+distribution. Meanwhile, the difference (Figure~\ref{fig:h2c,r2}b)
+between Figure~\ref{fig:s,n}b and Figure~\ref{fig:h2c,r2}a indicates
+that the SOPF preserves signal better than the $f$-$x$ RNA.
+
+\inputdir{curvedmodel}
+ \multiplot{2}{s,n}{width=0.9\columnwidth}{Curved model (a) and noisy
+                    data (b).}
+ \multiplot{2}{fxs,fxn}{width=0.9\columnwidth}{Denoised
+                    result (a) and noise removed (b) by the $f$-$x$ 
+                    deconvolution with patching.}
+ \multiplot{2}{rna1,rnan1}{width=0.9\columnwidth}{Denoised
+                    result by the nonstationary $f$-$x$ RNA (a) and 
+                    noise removed by the nonstationary $f$-$x$ RNA (b).}
+ \multiplot{2}{h2c,r2}{width=0.9\columnwidth}{Denoised result by the 
+                    $t$-$x$ SOPF (a) and noise removed by the $t$-$x$ 
+                    SOPF (b).}
+
+\subsection{Shot gather}
+The second synthetic model was created by Guochang Liu
+\cite[]{Liu12}. The shot gather (Figure~\ref{fig:gpara,gnpara}a) has
+four hyperbolic events and 501 traces. Figure~\ref{fig:gpara,gnpara}b
+is the noisy data containing random noise. The denoised result from
+the $f$-$x$ deconvolution (Figure~\ref{fig:gfx,gfxn2}a) still contains
+lots of random noise. There is also signal leakage in the removed
+noise (Figure~\ref{fig:gfx,gfxn2}b). For $f$-$x$ RNA, we set the
+filter length as 10 samples and the smoothing radius
+as 3 samples (in frequency)
+$\times$ 20 samples (in
+space). Figure~\ref{fig:grna,grnan2}b shows that $f$-$x$ RNA
+has a good denoising performance in the shot gather test. However, it
+creates some artificial events with weak energy, which are parallel
+with the events (Figure~\ref{fig:grna,grnan2}a). As for the $t$-$x$
+space-noncausal SOPF, the filter size is 11
+samples (in time) $\times$ 6 samples
+(in space) and the scale parameters are 2.0 ($\lambda_t$), 0.8
+($\lambda_x$), 0.4 ($\gamma_t$), and 1.0 ($\gamma_x$),
+respectively. The comparison of Figure~\ref{fig:grna,grnan2}a
+and \ref{fig:gh2,gr2}a illustrates that the SOPF has similar signal
+preservation ability to $f$-$x$ RNA. Careful
+examination indicates that the shaping regularization
+\cite[]{Fomel07} in the $f$-$x$ RNA has a more powerful smoothing
+effect than the streaming method. Figures~\ref{fig:grna,grnan2}b and
+\ref{fig:gh2,gr2}b show that the SOPF also 
+eliminates equivalent random noise compared with the $f$-$x$
+RNA. However, the proposed method is still removing some signal along
+with the noise; we can preserve more signal by selecting smaller
+values for $\lambda$ in equation~\ref{eq:g}. Users can therefore
+decide whether to choose more noise attenuation or more signal
+preservation to meet their data processing objectives. The
+computational cost of the SOPF is much less than that of $f$-$x$ RNA
+because no iteration is used in the proposed method. For further
+illustrating how filtering methods change the amplitudes of the
+original signal, we calculate the differences between the clean data
+(Figure~\ref{fig:gpara,gnpara}a) and the denoised results by the
+nonstationary $f$-$x$ RNA (Figure~\ref{fig:grna,grnan2}a) or 
+$t$-$x$ SOPF (Figure~\ref{fig:gh2,gr2}a). The
+results are shown in Figure~\ref{fig:diff1,diff2}. The comparison
+shows the proposed method provides more reasonable signal preservation
+than the nonstationary $f$-$x$ RNA.
+
+\inputdir{model}
+\multiplot{2}{gpara,gnpara}{width=0.46\columnwidth}{Shot gather (a) and 
+                 noisy data (b).}
+\multiplot{2}{gfx,gfxn2}{width=0.46\columnwidth}{Denoised result by the 
+                 $f$-$x$ deconvolution (a) and noise removed by the $f$-$x$
+                 deconvolution (b).}
+\multiplot{2}{grna,grnan2}{width=0.46\columnwidth}{Denoised result by the 
+                 $f$-$x$ RNA (a) and noise removed by the $f$-$x$ RNA (b).}
+\multiplot{2}{gh2,gr2}{width=0.46\columnwidth}{Denoised result by the 
+                 $t$-$x$ SOPF (a) and noise removed by the $t$-$x$ SOPF (b).}
+\multiplot{2}{diff1,diff2}{width=0.46\columnwidth}{Comparison 
+                    of the difference between
+                    Figure~\ref{fig:gpara,gnpara}a and the
+                    corresponding denoised result using two different
+                    methods, the nonstationary $f$-$x$ RNA
+                    (Figure~\ref{fig:grna,grnan2}a) (a) and the
+                    $t$-$x$ SOPF (Figure~\ref{fig:gh2,gr2}a) (b).}
+
+\section{Field data test}
+For the field data test, we use a time-migrated dataset from
+\cite{Liu13}. The input data shown in Figure~\ref{fig:data} has 310
+traces and 700 samples in the time direction with a
+sampling interval of 1 $ms$. Noise is mainly strong random noise
+caused by the surface conditions. Figure~\ref{fig:fx,fxn}a and
+\ref{fig:fx,fxn}b are the denoised signal and the noise removed by the
+$f$-$x$ deconvolution, respectively. These show that many signal
+events remain in the noise section. For further comparison, we apply
+$f$-$x$ RNA to remove random noise (Figure~\ref{fig:rna,rnan}a). The
+filter length of the $f$-$x$ RNA is 12 samples and smoothing radius
+size is 3 samples (in frequency)
+$\times$ 20 samples (in
+space). Figure~\ref{fig:rna,rnan}b indicates that while the
+$f$-$x$ RNA has fewer signal events in the noise section than the
+$f$-$x$ deconvolution but some weak events still
+remain. Figure~\ref{fig:d2,r2}a shows that the proposed $t$-$x$
+space noncausal SOPF method can produce 
+reasonable results, in which the continuity of events and geological
+structure are enhanced. The filter size of the SOPF
+is 6 samples (in time)
+$\times$ 10 samples (in space) and the scale
+parameters are 100.0 ($\lambda_t$), 1.0 ($\lambda_x$), 1.0
+($\gamma_t$), and 10.0 ($\gamma_x$), respectively. Compared with
+Figure~\ref{fig:rna,rnan}b, the difference (Figure~\ref{fig:d2,r2}b)
+between Figure~\ref{fig:data} and Figure~\ref{fig:d2,r2}a contains no
+obvious events, and the computational speed of the $t$-$x$ SOPF is
+faster than the iterative $f$-$x$ RNA methods. If one chooses smaller
+values for $\lambda$ in equation~\ref{eq:g}, the noise component
+that is parallel to the signal may be partly kept, 
+however, it reduces the damage to the signal.
+
+\inputdir{data2}
+\plot{data}{width=0.46\columnwidth}{Field data.}
+\multiplot{2}{fx,fxn}{width=0.46\columnwidth}{Denoised result by the $f$-$x$ 
+              deconvolution (a) and noise removed by the $f$-$x$
+              deconvolution (b).}
+\multiplot{2}{rna,rnan}{width=0.46\columnwidth}{Denoised result by the $f$-$x$ 
+              RNA (a) and noise removed by the $f$-$x$ RNA (b).}
+\multiplot{2}{d2,r2}{width=0.46\columnwidth}{Denoised result by the 
+              $t$-$x$ SOPF (a) and noise removed by the $t$-$x$ SOPF (b).}
+
+
+\section{Conclusions}
+We introduce a fast approach to adaptive PF for random noise
+attenuation in the $t$-$x$ domain. Our approach uses neighboring
+similarity of PF to handle time-space variations in nonstationary
+seismic data, which is based on elementary algebraic operations and a
+streaming method instead of an iterative strategy. Compared with
+$f$-$x$ deconvolution and $f$-$x$ RNA methods, $t$-$x$ SOPF can
+capture a reasonably detailed signal while
+avoiding artifacts that occur in the frequency-domain
+method. Moreover, the $t$-$x$ SOPF is superior in terms of its
+computational costs. Experiments with synthetic examples and field
+data demonstrate that the proposed method is effective at attenuating
+the random noise in nonstationary seismic data even in the presence of
+curved and conflicting events.
+
+\section{Acknowledgments}
+The authors are grateful to Sergey Fomel for inspiring
+discussions. We thank the associate editor, Joseph Dellinger, and
+four anonymous reviewers for helpful suggestions, which improved the
+quality of the paper. This work is supported by National Natural
+Science Foundation of China (Grant No. 41774127 and 41522404) and
+National Key Research and Development Program of China (Grant
+No. 2016YFC0600505). All results are reproducible in the Madagascar
+open-source software environment \cite[]{m8r}.
+
+\appendix
+\section{Appendix A: Direct derivation of the Sherman-Morrison Formula}
+
+The Sherman-Morrison formula can be derived directly
+by solving the linear problem as
+ \begin{equation}
+  \label{eq:appendix1}
+(\mathbf{A}-\mathbf{u}\mathbf{v})\mathbf{x}=\mathbf{b},
+\end{equation}
+where $\mathbf{u}$ is a column vector and $\mathbf{v}$ is a row
+vector. Assuming $\mathbf{A}^{-1}$ is already
+known, we pre-multiply equation~\ref{eq:appendix1} by
+$\mathbf{A}^{-1}$ and denote $\mathbf{A}^{-1}\mathbf{u}=\mathbf{z}$
+and $\mathbf{A}^{-1}\mathbf{b}=\mathbf{y}$ to give
+\begin{equation}
+\label{eq:appendix2}
+\mathbf{x}-\mathbf{z}\mathbf{v}\mathbf{x}=\mathbf{y}.
+\end{equation}
+Because $\mathbf{v}\mathbf{x}$ is a scalar quantity, we can denote
+it as $\alpha$. To find $\alpha$, we pre-multiply the
+equation~\ref{eq:appendix2} by $\mathbf{v}$ to give
+\begin{equation}
+\label{eq:appendix3}
+\alpha-\mathbf{v}\mathbf{z}\alpha=\mathbf{v}\mathbf{y}.
+\end{equation}
+Since $\mathbf{v}\mathbf{z}$ and $\mathbf{v}\mathbf{y}$ in the
+equation~\ref{eq:appendix3} are scalars, one can easily solve for $\alpha$
+to get
+\begin{equation}
+\label{eq:appendix4}
+\alpha=\frac{\mathbf{v}\mathbf{y}}{1-\mathbf{v}\mathbf{z}}.
+\end{equation}
+Thus the solution can be written as
+\begin{eqnarray}
+\label{eq:appendix5}
+\mathbf{x}&=&\mathbf{y}+\alpha\mathbf{z} \\
+          &=&\mathbf{A}^{-1}\mathbf{b}+\mathbf{A}^{-1}\mathbf{u}
+              (1-\mathbf{v}\mathbf{A}^{-1}\mathbf{u})^{-1}
+               \mathbf{v}\mathbf{A}^{-1}\mathbf{b} \\
+          &=&[\mathbf{A}^{-1}+\mathbf{A}^{-1}\mathbf{u}
+              (1-\mathbf{v}\mathbf{A}^{-1}\mathbf{u})^{-1}
+               \mathbf{v}\mathbf{A}^{-1}]\mathbf{b}.
+\end{eqnarray}
+We then obtain the Sherman-Morrison formula
+\begin{equation}
+  \label{eq:appendix6}
+(\mathbf{A}-\mathbf{u}\mathbf{v})^{-1}=\mathbf{A}^{-1}+
+\mathbf{A}^{-1}\mathbf{u}(1-
+\mathbf{v}\mathbf{A}^{-1}\mathbf{u})^{-1}\mathbf{v}\mathbf{A}^{-1}.
+\end{equation}
+
+\bibliographystyle{seg}
+\bibliography{SEG,paper}

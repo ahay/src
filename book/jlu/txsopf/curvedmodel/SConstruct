@@ -1,0 +1,165 @@
+import os
+#os.environ['SFPENOPTS'] = 'bgcolor=w'
+from rsf.proj import *
+
+###################
+# Curved model test
+###################
+tgz = 'SOPF.tar.gz'
+data ='input.curve.segy'
+#path = os.path.join('SOPF','examples','model1',files)
+
+Fetch(tgz,
+      server='https://software.seg.org',
+      top='2018',
+      dir='0006')
+
+Flow(data,tgz,
+     '''
+     zcat $SOURCE | 
+     tar -xvf - --strip-components 3 SOPF/examples/model1/$TARGET
+     ''',stdin=0,stdout=-1)
+
+###################
+#  Convert SEG-Y format to RSF format
+###################
+
+Flow('curve hcurve bcurve',data,
+     '''
+     segyread tape=$SOURCE read=d hfile=${TARGETS[1]} bfile=${TARGETS[2]}
+     ''',stdin=0)
+Flow('curve2','curve','window min1=1.2 max1=2 | bandpass fhi=60')
+
+############
+# Interpolation with adaptive PEF
+############
+Flow('cpad cmask','curve2','lpad jump=4 mask=${TARGETS[1]}')
+Flow('cdmask','cpad','math output=1.')
+Flow('capef','cpad cdmask',
+     '''
+     apef a=20,3 jump=4 rect1=20 rect2=3 niter=200 verb=y
+     maskin=${SOURCES[1]}
+     ''')
+Flow('cacov','cpad capef cmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Result('s','cacov',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position title=""
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02 
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+
+############
+# Add random noise
+############
+Flow('n','cacov',
+     '''
+     noise rep=n type=n seed=20106 range=0.0234818 |
+     smooth rect1=3
+     ''')
+Result('n',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position wanttitle=n
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.01
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+
+############
+# FXdecon with patching (40% overlap)
+############
+Flow('patch','n','patch w=401,80')
+Flow('wpatch','patch','window')
+fxds = []
+mpas = []
+for nw in range(0,5):
+    data = 'data%d' % nw
+    fxd  = 'fx%d'   % nw
+    Flow(data,'wpatch','window n3=1 f3=%d' % nw)
+    Flow(fxd,data,'fxdecon lenf=4 n2w=10')
+    fxds.append(fxd)
+
+    lom = 'lom%d' %nw
+    lag = 'lag%d' %nw
+    mpa = 'mpa%d' %nw
+    Flow([lom, lag],data,'lpef niter=100 a=5,5 lag=${TARGETS[1]}')
+    Flow(mpa,[data,lom],'helicon filt=${SOURCES[1]}')
+    mpas.append(mpa)
+Flow('fxs',fxds,
+     '''
+     cat ${SOURCES[1:%d]} axis=3 | transp plane=34 |
+     patch inv=y weight=y
+     ''' % len(fxds))
+Result('fxs',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position
+       title=""
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02 
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+Flow('fxn','n fxs','add scale=1,-1 ${SOURCES[1]}')
+Result('fxn',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position
+       title=""
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.01 
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+############
+# fx RNA
+############
+Flow('fx','n','fft1 | transp plaen=12 memsize=1000')
+na = 4
+n1=240
+shifts = []
+for s in range(1,na):
+    shift = 'shift-%d' % s
+    Flow(shift,'fx','window f1=%d | pad end1=%d' % (s,s))
+    shifts.append(shift)
+
+    shift = 'shift%d' % s
+    Flow(shift,'fx',' pad beg1=%d | window n1=%d' % (s,n1))
+    shifts.append(shift)
+Flow('shift',shifts,'cat axis=3 ${SOURCES[1:%d]} | put o1=0' % len(shifts))
+
+Flow('pef pre','shift fx',
+     'clpf match=${SOURCES[1]} rect2=20 rect1=10 niter=30 pred=${TARGETS[1]}')
+
+Flow('rna1','pre','transp plane=12 memszie=1000 | fft1 inv=y')
+Result('rna1',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position title=""
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+
+Flow('rnan1','n rna1','add scale=1,-1 ${SOURCES[1]}')
+Result('rnan1',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position title=""
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.01 
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+############
+# tx SOPF
+############
+# Step1: tx streaming PF
+Flow('txr','n','txspf a=7,4 lambda1=0.1 lambda2=0.08')
+Flow('tx','n txr','math ref=${SOURCES[1]} output="input-ref"')
+
+# Step2: streaming orthogonalization 
+Flow('r2 h2c','tx txr',
+     'txsorth gamma1=0.03 gamma2=0.05 noise=${SOURCES[1]} sig2=${TARGETS[1]}')
+Result('r2',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position title=""
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.01
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+Result('h2c',
+       '''
+       grey yreverse=y transp=y poly=y label2=Position title=""
+       screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02 
+       labelfat=2 font=2 titlefat=2 unit2=km
+       ''')
+
+End()

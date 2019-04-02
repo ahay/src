@@ -43,9 +43,20 @@ int main(int argc, char* argv[])
     n = m1*m2;
 
     nc = (n2+1)/2;
+
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
+    if (adj) {
+	sf_putint(out,"n3",n2);
+    } else {
+	sf_putint(out,"n3",nc);
+    }
+
     n2 *= n; 
     n1 = (n2+n)/2;
 
+ 
     sf_warning("nc=%d n=%d",nc,n);
     
     x1 = sf_floatalloc(n);
@@ -58,9 +69,6 @@ int main(int argc, char* argv[])
     
     dx = sf_floatalloc(n2);
     r =  sf_floatalloc(n1);
-
-    if (!sf_getbool("adj",&adj)) adj=false;
-    /* adjoint flag */
 
     if (adj) {
 	sf_floatread(r,n1,inp);

@@ -137,5 +137,21 @@ Result('plane2',
        label1=' ' label2=' ' label3=' ' wanttitle=n
        ''')
 
+Flow('plane3','spike3 one3 two3',
+     '''
+     smooth rect1=3 |
+     pwcascade rect=21 dip=${SOURCES[1]} |
+     transp plane=23 |
+     pwcascade rect=11 dip=${SOURCES[2]} |
+     transp plane=23
+     ''')
+
+Result('plane3',
+       '''byte allpos=y gainpanel=all |
+       grey3 flat=n screenratio=1 frame1=20 frame2=20 frame3=20
+       point1=0.6 point2=0.6
+       label1=' ' label2=' ' label3=' ' wanttitle=n
+       ''')
+
 ###########################################################################
 End()

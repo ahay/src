@@ -34,7 +34,26 @@ Result('mona2',
        color=b screenratio=1 wantaxis=n
        ''')
 
+Flow('xmona2','mona',
+     '''
+     expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 |
+     expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 |
+     expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11
+     ''')
+
+Result('xmona2',
+       '''
+       grey transp=n allpos=y title="Smoothed"
+       color=b screenratio=1 wantaxis=n
+       ''')
+
 Result('edge2','mona2',
+       '''
+       canny | dd type=float | 
+       grey allpos=y title="Edge Detector" transp=n screenratio=1 wantaxis=n
+       ''')
+
+Result('xedge2','xmona2',
        '''
        canny | dd type=float | 
        grey allpos=y title="Edge Detector" transp=n screenratio=1 wantaxis=n

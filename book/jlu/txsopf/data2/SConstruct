@@ -1,0 +1,102 @@
+import os
+#os.environ['SFPENOPTS'] = 'bgcolor=w'
+from rsf.proj import *
+
+###################
+# Field data test
+###################
+tgz = 'SOPF.tar.gz'
+data ='slice.segy'
+
+Fetch(tgz,
+      server='https://software.seg.org',
+      top='2018',
+      dir='0006')
+
+Flow(data,tgz,
+     '''
+     zcat $SOURCE | 
+     tar -xvf - --strip-components 3 SOPF/examples/field/$TARGET
+     ''',stdin=0,stdout=-1)
+
+Flow('data',data,'segyread read=d | put d2=0.03')
+Result('data',
+       '''
+       grey wanttitle=n label2=Distance clip=1. font=2 label1="Time"
+       unit1="s" unit2="km" labelfat=2 font=2 titlefat=2
+       ''')
+
+############
+# tx SOPF
+############     
+# Step 1: tx streaming PF
+Flow('txr','data','txspf a=6,5 lambda1=100 lambda2=1')
+Flow('tx','data txr','math ref=${SOURCES[1]} output="input-ref"')
+
+# Step 2: streaming orthogonalization
+Flow('r2 d2','tx txr',
+     'txsorth gamma1=1 gamma2=10 noise=${SOURCES[1]} sig2=${TARGETS[1]}')
+Result('d2',
+       '''
+       grey wanttitle=n label2=Distance clip=1. font=2 label1="Time"
+       unit1="s" unit2="km" labelfat=2 font=2 titlefat=2
+       ''')
+Result('r2',
+       '''
+       grey wanttitle=n label2=Distance clip=1. font=2 label1="Time"
+       unit1="s" unit2="km" labelfat=2 font=2 titlefat=2
+       ''')
+############            
+# Fxdecon
+############     
+Flow('fx','data','fxdecon lenf=4 n2w=20')
+Result('fx',
+       '''
+       grey wanttitle=n label2=Distance clip=1. font=2 label1="Time"
+       unit1="s" unit2="km" labelfat=2 font=2 titlefat=2
+       ''')
+Flow('fxn','data fx','math ref=${SOURCES[1]} output="input-ref"')
+Result('fxn',
+       '''
+       grey wanttitle=n label2=Distance clip=1. font=2 label1="Time"
+       unit1="s" unit2="km" labelfat=2 font=2 titlefat=2
+       ''')
+
+############       
+# fx RNA
+############
+nx=310
+Flow('nft','data','fft1')
+nshifts = []
+for s in range(1,6):
+
+    nshift = 'nshift-%d' % s
+    Flow(nshift,'nft','window f2=%d | pad end2=%d' % (s,s))
+    nshifts.append(nshift)
+
+    nshift = 'nshift+%d' % s
+    Flow(nshift,'nft','window n2=%d | pad beg2=%d ' % (nx-s,s))
+    nshifts.append(nshift)
+
+Flow('nshifts',nshifts,
+     'cat ${SOURCES[1:%d]} axis=3 | put o2=0' % len(nshifts))
+Flow('nflt npref','nshifts nft',
+     '''
+     clpf match=${SOURCES[1]} pred=${TARGETS[1]}
+     rect2=20 rect1=3 niter=10 verb=y
+     ''')
+
+Flow('rna','npref','fft1 inv=y')
+Result('rna',
+       '''
+       grey wanttitle=n label2=Distance clip=1. font=2 label1="Time"
+       unit1="s" unit2="km" labelfat=2 font=2 titlefat=2
+       ''')
+Flow('rnan','data rna','math x=${SOURCES[1]} output="x-input"')
+Result('rnan',
+       '''
+       grey wanttitle=n label2=Distance clip=1. font=2 label1="Time"
+       unit1="s" unit2="km" labelfat=2 font=2 titlefat=2
+       ''')
+
+End ()

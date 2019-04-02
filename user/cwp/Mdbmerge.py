@@ -8,6 +8,7 @@ args:
 
     strings - names of the databases to merge together
 '''
+from __future__ import print_function
 
 try:
     import dbhash, pickle
@@ -15,7 +16,7 @@ except:
     raise Exception('must have dbhash module installed... see python docs')
 
 
-import sys, os 
+import sys, os
 sys.stdout = sys.__stderr__
 
 outname = None
@@ -26,10 +27,10 @@ for arg in sys.argv[1:]:
     else:
         if os.path.exists(arg):
             dbs.append(arg)
-            print 'FOUND: %s' % arg
+            print('FOUND: %s' % arg)
         else:
-            print 'WARNING: %s was specified but not found' % arg
-        
+            print('WARNING: %s was specified but not found' % arg)
+
 if not outname:
     raise Exception('must specify outdb=filename')
 
@@ -38,22 +39,22 @@ ndb = dbhash.open(outname,'n')
 
 outerdb = {}
 for db in dbs:
-    print 'Merging... %s' % db
+    print('Merging... %s' % db)
     opendb = dbhash.open(db,'r')
     keys = opendb.keys()
     for key in keys:
-        print '...Key: %s' % key
+        print('...Key: %s' % key)
         outerdb.setdefault(key,{})
         objects = pickle.loads(opendb[key])
         for obj in objects.keys():
-            print '......Subkey: %s' % obj
+            print('......Subkey: %s' % obj)
             if outerdb[key].has_key(obj):
-                print 'WARNING: key collision: %s dbase key: %s ' % (db,obj)
+                print('WARNING: key collision: %s dbase key: %s ' % (db,obj))
             else:
                 outerdb[key][obj] = objects[obj]
     opendb.close()
 
-print 'Writing out database...'
+print('Writing out database...')
 for key in outerdb.keys():
     ndb[key] = pickle.dumps(outerdb[key],0)
 

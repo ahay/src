@@ -1,0 +1,3 @@
+uses=['sfgrey', 'sfput', 'sffft1', 'sffft3', 'sftransp', 'sfdwt', 'sfdip', 'sfseislet', 'sfthreshold1', 'sfadd', 'sfcut', 'sfspike', 'sfwindow', 'sfbyte', 'sfgrey3', 'sfenvelope', 'sfcmplx', 'sfcpef', 'sfroots', 'sffreqlet', 'sfcat', 'sfmath', 'sfreal', 'sfsort', 'sfpad', 'sfscale', 'sfgraph', 'sfbox', 'sfwiggle', 'sffxdecon', 'sfdd']
+data=['data/yangkang/real.rsf']
+size=  105553476

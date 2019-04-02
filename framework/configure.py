@@ -283,15 +283,19 @@ def cc(context):
 #        context.env['CPPDEFINES'] = path_get(context,'CPPDEFINES',
 #                                            '__ACCELERATE__')
         if os.path.isdir('/opt'):   # paths for MacPorts
-            context.env['CPPPATH'] = path_get(context,'CPPPATH',
-                                              '/opt/local/include')
-            context.env['LIBPATH'] = path_get(context,'LIBPATH',
-                                              '/opt/local/lib')
+            if os.path.isdir('/opt/local/include'):
+                context.env['CPPPATH'] = path_get(context,'CPPPATH',
+                                                  '/opt/local/include')
+            if os.path.isdir('/opt/local/lib'):
+                context.env['LIBPATH'] = path_get(context,'LIBPATH',
+                                                  '/opt/local/lib')
         if os.path.isdir('/sw'):    # paths for Fink
-            context.env['CPPPATH'] = path_get(context,'CPPPATH',
-                                              '/sw/include')
-            context.env['LIBPATH'] = path_get(context,'LIBPATH',
-                                              '/sw/lib')
+            if os.path.isdir('/sw/include'):
+                context.env['CPPPATH'] = path_get(context,'CPPPATH',
+                                                  '/sw/include')
+            if os.path.isdir('/sw/lib'):
+                context.env['LIBPATH'] = path_get(context,'LIBPATH',
+                                                  '/sw/lib')
     # Solaris
     elif plat['OS'] == 'sunos':
         context.env['CFLAGS'] = context.env.get('CFLAGS','').replace(

@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "matrixops_2D.h"
-#include "gendix.h"
 
 
 void gendix(float **inverted, float **eff, float *twtime, int nlayer) {

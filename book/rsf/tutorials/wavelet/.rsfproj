@@ -1,0 +1,3 @@
+uses=['sfwindow', 'sfgraph', 'sfspectra', 'sfmath', 'sfdd', 'sfspike', 'sftrapez', 'sfpad', 'sffft1', 'sfreal', 'sfput', 'sfreverse', 'sfcat', 'sfscale', 'sfdivn', 'sfrtoc', 'sfspray', 'sfwiggle']
+data=['https://raw.githubusercontent.com/seg/tutorials-2016/master/1606_Wavelet_estimation/rpp.npy', 'https://raw.githubusercontent.com/seg/tutorials-2016/master/1606_Wavelet_estimation/seismic.npy']
+size=      41772

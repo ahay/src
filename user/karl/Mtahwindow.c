@@ -70,6 +70,7 @@ PARAMETERS
    06/10/2016 Karl Schleicher change time window parameter to tmax
 */
 #include <string.h>
+#include <limits.h>
 #include <rsf.h>
 #include <rsfsegy.h>
 
@@ -94,13 +95,23 @@ int main(int argc, char* argv[])
   float* intrace=NULL;
   int ns_out;
   int indx_ns; /*trace header index of ns key */
-  
+  char* keyname;
+  int indx_key; /*trace header index of key identified by user's key parm */
+  int key_min; /*minimum for header 'user key parameter to output */
+  int key_max; /*maximum for header 'user key parameter to output' */
+  int keyvalue; /* value of the header key on this trace */
+  int *reject=NULL; /*list of bad user key headers*/
+  char** list_of_strings;
+  int numreject;
+  int ireject;
+  bool rejecttrace;
+
   /*****************************/
   /* initialize verbose switch */
   /*****************************/
   sf_init (argc,argv);
 
-  if(!sf_getint("verbose",&verbose))verbose=1;
+  if(!sf_getint("verbose",&verbose))verbose=0;
       /* \n
      flag to control amount of print
      0 terse, 1 informative, 2 chatty, 3 debug
@@ -138,10 +149,10 @@ int main(int argc, char* argv[])
   if(verbose>0)fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
   intrace= sf_floatalloc(n1_traces);
 
+  /* read and parse the user parameters */
   if(verbose>0)fprintf(stderr,"get the parameter tmax\n");
   if(!sf_getfloat("tmax",&tmax))tmax=(n1_traces-1)*d1+o1;
   /* maximum time in seconds to limit the output trace */
-
   ns_out=(tmax-o1)/d1+1.5;
   if(verbose>1){
     fprintf(stderr,"ns_out=%d, tmax=%f, o1=%f, d1=%f\n",ns_out, tmax, o1, d1);
@@ -154,6 +165,25 @@ int main(int argc, char* argv[])
     sf_error("input trace length is shorter than ns_out");
   }
   
+  if(verbose>0)fprintf(stderr,"get the parameter reject\n");
+  numreject=0;
+  list_of_strings=sf_getnstring("reject",&numreject);
+  if(numreject>0){
+    reject=sf_intalloc(numreject);
+    sf_getints("reject",reject,numreject);
+  }
+  if (verbose>1){
+    for (ireject=0; ireject<numreject; ireject++){
+      fprintf(stderr,"reject[%d]=%d\n",ireject,reject[ireject]);
+    }
+  }
+
+  if(verbose>0)fprintf(stderr,"get the parameters min, max, key\n");
+  if(!sf_getint("min",&key_min))key_min=INT_MIN;
+  if(!sf_getint("max",&key_max))key_max=INT_MAX;
+  keyname=sf_getstring("key");
+  fprintf(stderr,"key=%s\n",keyname);
+
   /**********************************************************/
   /* end code block for standard tah Trace And Header setup */
   /* continue with any sf_puthist this tah program calls to */
@@ -171,6 +201,8 @@ int main(int argc, char* argv[])
 
   /* segy_init gets the list header keys required by segykey function  */
   segy_init(n1_headers,in);
+  if(keyname!=NULL)indx_key=segykey(keyname);
+  if(verbose>0)fprintf(stderr,"indx_key=%d\n",indx_key);
   /* kls upgrade this code to select based on trace header.
      loop for (i=0; i < n1_headers; i++) {
        look for segykeyword(i) in the input user parameters.  Count 
@@ -200,18 +232,43 @@ int main(int argc, char* argv[])
     /********************/
     /* process the tah. */
     /********************/
-    /* this program prints selected header keys */
-    
-    if(verbose>2)fprintf(stderr,"ns_out=%d,indx_ns=%d\n",ns_out,indx_ns);
-    if(typehead == SF_INT){
-      iheader[indx_ns]=ns_out;
-    } else {
-      fheader[indx_ns]=(float)ns_out;
+    rejecttrace=false;
+    /* this program rejects traces if header key is not in range 
+       [key_min,key_max] or is trase is in the reject list */
+    if(keyname!=NULL){
+      if(typehead == SF_INT){
+	keyvalue=iheader[indx_key];
+      } else {
+	keyvalue=fheader[indx_key];
+      }
+      if(keyvalue<key_min || keyvalue>key_max)rejecttrace=true;
+      
+      for (ireject=0; ireject<numreject; ireject++){
+	if(keyvalue==reject[ireject]){
+	  rejecttrace=true;
+	  break;
+	}
+      }
     }
-    /***************************/
-    /* write trace and headers */
-    /***************************/
-    put_tah(intrace, fheader, ns_out, n1_headers, out);
+    if(verbose>1){
+      fprintf(stderr,"keyvalue=%d,key_min=%d,key_max=%d,",
+	              keyvalue   ,key_min   ,key_max);
+      if(rejecttrace)fprintf(stderr,"rejecttrace=true\n");
+      else fprintf(stderr,"rejecttrace=false\n");
+    }
+
+    if(!rejecttrace){
+      if(verbose>2)fprintf(stderr,"ns_out=%d,indx_ns=%d\n",ns_out,indx_ns);
+      if(typehead == SF_INT){
+	iheader[indx_ns]=ns_out;
+      } else {
+	fheader[indx_ns]=(float)ns_out;
+      }
+      /***************************/
+      /* write trace and headers */
+      /***************************/
+      put_tah(intrace, fheader, ns_out, n1_headers, out);
+    }
   }
 
   exit(0);
