@@ -27,12 +27,18 @@ int main(int argc, char* argv[])
     bool verb;
     int i, ic, m1, m2, n, nc, n2, iter, niter, liter, rect1, rect2, it, nt, nw;
     float *xn, *x1, *y1, *dx, *r, *p, lam;
-    sf_file inp, out, dip;
+    sf_file inp, out, dip, dipin;
 
     sf_init(argc,argv);
     inp = sf_input("in");
     dip = sf_output("dip");
     out = sf_output("out");
+
+    if (NULL != sf_getstring("dipin")) {
+	dipin = sf_input("dipin");
+    } else {
+	dipin = NULL;
+    }
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&m1)) sf_error("No n1= in input");
@@ -84,20 +90,24 @@ int main(int argc, char* argv[])
 	    y1[i] = 0.0f;
 	}
 	
-
-	if (1==nc) {
-	    for (i=0; i < n; i++) {
-		xn[i] = 0.0f;
-	    }
+	if (NULL != dipin) {
+	    sf_floatread(xn,n*nc,dipin);
 	} else {
-	    for (ic=0; ic < nc; ic++) {
-		sf_warning("dip %1d = %g",ic+1, -nw + 2.0*nw*ic/(nc-1));
+	    if (1==nc) {
 		for (i=0; i < n; i++) {
-		    xn[ic*n+i] =  -nw + 2.0*nw*ic/(nc-1);
-		    /* distribute from -nw to nw */
+		    xn[i] = 0.0f;
+		}
+	    } else {
+		for (ic=0; ic < nc; ic++) {
+		    sf_warning("dip %1d = %g",ic+1, -nw + 2.0*nw*ic/(nc-1));
+		    for (i=0; i < n; i++) {
+			xn[ic*n+i] =  -nw + 2.0*nw*ic/(nc-1);
+			/* distribute from -nw to nw */
+		    }
 		}
 	    }
 	}
+	    
 	for (ic=0; ic < nc-1; ic++) {
 	    for (i=0; i < n; i++) {
 		xn[(nc+ic)*n+i] = 0.0f; 
