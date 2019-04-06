@@ -1,0 +1,18 @@
+from rsf.proj import *
+import math
+
+f = 261.63 # frequency
+
+Flow('sin',None,
+     '''
+     math n1=2501 d1=0.0001 label1=Time unit1=s 
+     output="sin(%g * x1)"
+     ''' % (2*math.pi*f))
+Result('sin','graph title=Sine')
+
+
+Result('sin80','sin','window n1=80 | graph title=Sine symbol=o grid=y')
+
+# three sine curves
+
+End()
