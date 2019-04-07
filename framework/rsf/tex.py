@@ -323,6 +323,11 @@ def latex2dvi(target=None,source=None,env=None):
             os.system(run)
             os.system(run)
             break
+        elif re.search("toc.aux",line): 
+            # to get correct page numbers
+            os.system(run)
+            os.system(run)
+            break
     aux.close()
     # Check if makeindex is needed
     idx = stem + '.idx'

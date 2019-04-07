@@ -534,6 +534,10 @@ class Project(Environment):
             if (not re.search(suffix + '$',file)) and ('.' not in file):
                 file = file + suffix
             targets.append(file)
+        if re.search('/',targets[0]):
+            subdir = os.path.dirname(os.path.join(self.path,targets[0]))
+            rsf.path.mkdir(subdir)
+            command = command + ' --out=%s' % os.path.join(self.path,'${TARGET}@')
 
         if workdir:
             command = re.sub(r'\$(SOURCE|TARGET)',r'${\1.abspath}',command)

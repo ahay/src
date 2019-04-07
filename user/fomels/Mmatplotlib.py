@@ -46,17 +46,27 @@ for a in sys.argv[2:]:
 # read data
 inp  = m8r.Input()
 n1 = inp.int("n1")
+d1 = inp.float("d1")
+o1 = inp.float("o1")
 n2 = inp.size(1)
 
-data = numpy.zeros([n2,n1],'f')
+data = numpy.zeros([n1,n2],'f')
 inp.read(data)
 inp.close()
+
+x1 = numpy.transpose(numpy.tile(numpy.arange(o1, o1+n1*d1, d1,dtype='f'),(n2,1)))
 
 # recognize the plotting type
 if plot == 'imshow':
     plt.imshow.__call__(data,**args)
 elif plot == 'plot':
-    plt.plot.__call__(data,**args)
+    plt.plot.__call__(x1,data,**args)
+elif plot == 'semilogx':
+    plt.semilogx.__call__(x1,data,**args)
+elif plot == 'semilogy':
+    plt.semilogy.__call__(x1,data,**args)
+elif plot == 'loglog':
+    plt.loglog.__call__(x1,data,**args)
 else:
     sys.stderr.write('Unrecognized plotting function "%s" \n\n' % plot)
     sys.exit(2)

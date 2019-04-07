@@ -194,6 +194,7 @@ Result('bin',bins,'SideBySideIso')
 lbls = []
 bins = []
 clss = []
+skts = []
 for case in ('theta','tdxn0','nstd'):
     # Label
     lbl = case + '-lbl'
@@ -224,11 +225,18 @@ for case in ('theta','tdxn0','nstd'):
     Flow(cls,msk,'morph what=closing')
     Plot(cls,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
     clss.append(cls)
+
+    # Morphological skeleton
+    skt = case + '-skt'
+    Flow(skt,cls,'morph what=skeleton')
+    Plot(skt,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    skts.append(skt)
              
 Result('lbl',lbls,'SideBySideIso')
 Result('msk',bins,'SideBySideIso')
 Result('cls',clss,'SideBySideIso')
+Result('skt',skts,'SideBySideIso')
 
-# morphological closing (a dilation followed by an erosion)
+# process using thresholding
 
 End()
