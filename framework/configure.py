@@ -1337,7 +1337,7 @@ def fftw(context):
             context.env['LIBS'] = LIBS
         else:
             context.env['DFFTW'] = None
-        LIBS.pop()
+            LIBS.pop()
 
     context.Message("checking if FFTW supports threads ... ")
 
