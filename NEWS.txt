@@ -21,6 +21,9 @@ To the reproducible documents collection:
 * tccs/eseis: EMD-seislet transform (Chen and Fomel)
 * jlu/txsopf: Streaming orthogonal prediction filter in $t$-$x$ domain
   for random noise attenuation (Liu and Li)
+* jlu/gvdseisint: Seismic data interpolation using generalised
+  velocity‐dependent seislet transform (Liu, Zhang, and Liu)
+
 
 To SCons:
 
