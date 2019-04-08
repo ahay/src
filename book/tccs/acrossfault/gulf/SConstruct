@@ -1,0 +1,94 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+# Example for area partition method
+###################################
+cut=351
+nc=4
+set1=148
+set2=192
+set3=248
+set4=290
+sr=1.
+sr2=0.5
+lsz=8
+
+def plotold():
+    return'''
+	grey title= screenratio=%g labelsz=%d labelfat=3 wantaxis=y
+	''' %(sr,lsz)
+
+def plotnew():
+    return'''
+	grey title= screenratio=%g labelsz=%d labelfat=3
+	'''%(sr,lsz)
+
+def plotpp():
+    return'''
+	grey title= bias=%g screenratio=%g color=j scalebar=n barreverse=y labelsz=%d labelfat=3 scalebar=y
+	''' %(cut/2,sr,lsz)
+
+Fetch('seis_all.HH','zhiguang',server)
+Flow('seis_all','seis_all.HH','dd form=native')
+Fetch('seiss_all.HH','zhiguang',server)
+Flow('seiss_all','seiss_all.HH','dd form=native')
+Fetch('slip1_all.HH','zhiguang',server)
+Flow('slip1_all','slip1_all.HH','dd form=native')
+
+Flow('seis','seis_all','window n1=%d |put label2=Distance unit1=Sample label1=Depth unit2=Sample' %cut)
+Flow('seiss','seiss_all','window n1=%d |put label2=Distance unit1=Sample label1=Depth unit2=Sample|cut n1=70' %cut)
+Flow('slip1','slip1_all','window n1=%d' %cut)
+Result('seis',plotold())
+Result('seiss',plotold())
+Result('slip1','clip2 upper=20 lower=0 |grey title= screenratio=%g color=j bias=10 scalebar=y' %sr)
+
+# standard predictive painting
+Flow('dip','seiss','dip order=2 rect1=5 rect2=3')
+Result('dip',plotold()+' color=j')
+
+Flow('paint','dip','pwpaint order=2')
+Result('paint',plotpp())
+
+Plot('paint','contour nc=%d c=%d,%d,%d,%d screenratio=%g plotfat=5 plotcol=1 wanttitle=n wantaxis=n' %(nc,set1,set2,set3,set4,sr))
+Plot('seis',plotold())
+Result('pick','seis paint','Overlay')
+
+# area partition 
+Flow('seis2 mask bound','seiss slip1','padfault slip=${SOURCES[1]} mask=${TARGETS[1]} bound=${TARGETS[2]} conf=0')
+Result('mask',plotold())
+Result('seis2',plotnew())
+
+# local similarity
+niter=100
+ng=101
+dg=1
+g0=-50
+rect1=5
+rect2=1
+Flow('trace1','bound','window n2=6')
+Flow('trace2','bound','window f2=6')
+Flow('scan','trace1 trace2','warpscan other=${SOURCES[1]} shift=y niter=%d ng=%d dg=%g g0=%g rect1=%d rect2=%d' %(niter,ng,dg,g0,rect1,rect2))
+Plot('scan','window n3=1 f3=2 | grey wanttitle=n allpos=y color=j')
+Flow('shift','scan','pick vel0=0 smooth=n rect1=5')
+Plot('shift','window n2=1 f2=2 | graph transp=y min2=%g max2=%g yreverse=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n pad=n' %(g0,g0+ng-1))
+Result('shift','scan shift','Overlay')
+
+Flow('dip2','seis2','dip order=2 rect1=5 rect2=4')
+Result('dip2',plotnew()+' color=j')
+
+# new predictive painting
+Flow('paint2 dip3 ppbig','seiss slip1 dip2 shift','padfault extend=n slip=${SOURCES[1]} dip=${SOURCES[2]} shift=${SOURCES[3]} newdip=${TARGETS[1]} ppbig=${TARGETS[2]} conf=0')
+Result('dip3',plotnew()+' color=j scalebar=y')
+Result('ppbig',plotpp()+' screenratio=%g' %sr2)
+Result('paint2',plotpp())
+
+Plot('paint2','contour nc=%d c=%d,%d,%d,%d screenratio=%g plotfat=5 plotcol=1 wanttitle=n wantaxis=n' %(nc,set1,set2,set3,set4,sr))
+Result('pick2','seis paint2','Overlay')
+
+# flattening
+Flow('flat','seis paint','iwarp warp=${SOURCES[1]}')
+Result('flat',plotold())
+Flow('flat2','seis paint2','iwarp warp=${SOURCES[1]}')
+Result('flat2',plotold())
+
+End()

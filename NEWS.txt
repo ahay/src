@@ -23,6 +23,7 @@ To the reproducible documents collection:
   for random noise attenuation (Liu and Li)
 * jlu/gvdseisint: Seismic data interpolation using generalised
   velocity‐dependent seislet transform (Liu, Zhang, and Liu)
+* tccs/acrossfault: Predictive painting across faults (Xue, Wu, and Fomel)
 
 
 To SCons:
