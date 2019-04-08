@@ -1334,6 +1334,7 @@ def fftw(context):
         res = context.TryLink(text,'.c')
         if res:
             context.env['DFFTW'] = fftw
+            context.env['LIBS'] = LIBS
         else:
             context.env['DFFTW'] = None
         LIBS.pop()
