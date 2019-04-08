@@ -2,10 +2,10 @@
 
 ===Additions and enhancements===
 
-To the reproducible documents collection: 
+To the reproducible documents collection:
 
 * tccs/fwiseislet: Full-waveform inversion using seislet
-regularization (Xue, Zhu, and Fomel)
+  regularization (Xue, Zhu, and Fomel)
 * tccs/merge: Matching and merging high-resolution and legacy seismic
   images (Greer and Fomel)
 * tccs/sobel: Plane-wave Sobel attribute for discontinuity enhancement
@@ -19,6 +19,11 @@ regularization (Xue, Zhu, and Fomel)
 * data/marmousi2mp: 2D modeling and basic processing with Madagascar
   (Thongsang, Jiang, Li, and Schleicher)
 * tccs/eseis: EMD-seislet transform (Chen and Fomel)
+* jlu/txsopf: Streaming orthogonal prediction filter in $t$-$x$ domain
+  for random noise attenuation (Liu and Li)
+* jlu/gvdseisint: Seismic data interpolation using generalised
+  velocity‐dependent seislet transform (Liu, Zhang, and Liu)
+
 
 To SCons:
 
@@ -88,7 +93,7 @@ To the reproducible documents collection:
 * tccs/svmf: Deblending using a space-varying median filter (Chen)
 * tccs/shemd: Random noise attenuation by a selective hybrid approach
   using f-x empirical mode decomposition (Chen, Gan, Liu, Yuan,
-  Zhang, and JIn) 
+  Zhang, and JIn)
 * tccs/orthogroll: Ground-roll noise attenuation using a simple and
   effective approach based on local bandlimited orthogonalization
   (Chen, Jiao, Ma, Chen, Zhou, and Gan)
@@ -242,7 +247,7 @@ To APIs:
 
 To the Python package:
 
-* sfbatch: script for submitting jobs to a cluster queue system 
+* sfbatch: script for submitting jobs to a cluster queue system
 * Changed MPIRUN from a command-line option to a configure option
 * Updated sunrpc configuration for the current version of Cygwin on Windows
 * vpannotate: interactive wrapper for annotations with sfbox
@@ -251,8 +256,8 @@ To programs:
 
 * Added new color schemes (color= in sfgrey): lb (Light-Bartlein),
   gist_earth, spectral, seismic, owb (orange-white-black),  rwb
-  (red-white-black), izoaz (isoluminant for azimuth data), 
-  montag (spectral lightness rainbow) 
+  (red-white-black), izoaz (isoluminant for azimuth data),
+  montag (spectral lightness rainbow)
 * sfipick: example Tkinter script for interactive picking
 * sfvelan: interactive velocity picking using matplotlib
 * Added x0= and mwt= parameters in sfconjgrad
@@ -362,7 +367,7 @@ To APIs:
 To the Python package:
 
 * fftw (if present) is included in core libraries during compilation
-* Cygwin no longer provides libtirpc, removed it from configure 
+* Cygwin no longer provides libtirpc, removed it from configure
 * Added support to tikz figures in reproducible documents
 * Replaced -nojvm with -nodesktop for Matlab-generated figures
 * Added workdir= paremeter to Flow
@@ -407,7 +412,7 @@ In the Python package:
 
 In programs:
 
-* sfbyte: "clip" determination when the first plane is zero 
+* sfbyte: "clip" determination when the first plane is zero
 * Fixed size definitions in sfinttest1
 * Fixed off-by-one bug in sfrickerfit
 * Avoid cropping of images by vplot2eps
@@ -497,7 +502,7 @@ To programs:
 * Moved iwave, rvl, and iwav++ to trip
 * sfheadermath works with integer input
 * user/zedong: new contributor (Zedong Wu)
-* add Misolr25.cc which is double precision version using lowrank 
+* add Misolr25.cc which is double precision version using lowrank
 * sfsegyheader: round-up for "delrt" and "dt" was fixed (aklokov)
 
 ===Bug fixes===
@@ -552,7 +557,7 @@ To the reproducible documents collection:
   coordinate system (Rickett and Guitton)
 
 To SCons:
-* Support for XQuartz on Macs - looking in /opt/X11 directories 
+* Support for XQuartz on Macs - looking in /opt/X11 directories
 * np= parameter in Flow() for mpi programs
 * sfdocs generated for all "pens" in pens/main
 * pre-compilation of modules in book/Recipes
@@ -612,7 +617,7 @@ In the Python package:
 In programs:
 
 * Fixed size limitation in sfclip2
-* Added x0 and y0 in sfstolt 
+* Added x0 and y0 in sfstolt
 * Fixed installing the plplot driver with .driver_info extension
 
 In the build system:
@@ -630,7 +635,7 @@ In the build system:
 To the reproducible documents collection:
 
 * jsg/reversible: A reversible transform for seismic data processing
-  (Burnett and Ferguson) 
+  (Burnett and Ferguson)
 * sep/pyramid: The pyramid transform and its application to
   signal/noise separation (Sun and Ronen)
 * jsg/ffd: Fourier finite-difference wave propagation (Song and Fomel)
@@ -700,7 +705,7 @@ In APIs:
 
 In the Python package:
 * Hires Bounding Box detection in Mathematica plots
-* Location of config.py in configure.py 
+* Location of config.py in configure.py
 * Prevent segfault when the input file is closed prematurely.
 
 In programs:
@@ -710,12 +715,12 @@ In programs:
 * Fixed sfmath crash when datapath was specified
 * Fixed handling of infinite values in sfgraph
 * Fixed handling of different output size in sfiwarp
-* Fixed sftransp off-core I/O bug 
+* Fixed sftransp off-core I/O bug
 
 In the build system:
 * Fixed bug that resulted in BLAS/ATLAS-based programs to not install in Fedora
 * Eliminated hardcoded paths that made it impossible to package m8r
-* Workaround for SCons bug #1488 
+* Workaround for SCons bug #1488
 * Fixed MacPorts and Fink path detection for compilers other than gcc
   on Mac
 * Fixed bug preventing spaces in ./configure arguments
@@ -731,7 +736,7 @@ In the build system:
 To the reproducible documents collection:
 
 * swag/anisogath: Angle gathers in wave-equation imaging for
-  transversely isotropic media (Alkhalifah and Fomel) 
+  transversely isotropic media (Alkhalifah and Fomel)
 * jsg/agath: Theory of 3-D angle gathers in wave-equation seismic
   imaging (Fomel)
 * cwp/pept2011MicroearthquakeMonitoring: Micro-earthquake monitoring
@@ -810,8 +815,8 @@ In the build system:
 ===Additions and enhancements===
 
 To the reproducible documents collection:
-* rsf/bash: Vladimir Bashkardin's presentation at Houston-2010 
-* rsf/programming: Jeff Godwin's presentation at Houston-2010 
+* rsf/bash: Vladimir Bashkardin's presentation at Houston-2010
+* rsf/programming: Jeff Godwin's presentation at Houston-2010
 * rsf/usp: Yang Liu's presentation at Houston-2010
 * \published{} macro added to all published papers
 * sep/fractal: Modeling 3-D anisotropic fractal media (Chemingui)
@@ -823,7 +828,7 @@ To the reproducible documents collection:
 * cwp/geo2009TTIModeSeparation: Elastic wave-mode separation for TTI media (Yan and Sava)
 * jsg/flat: Predictive painting of 3-D seismic volumes (Fomel)
 * jsg/oc3: OC-seislet: seislet transform construction with differential offset continuation (Liu and Fomel)
-* sep/lines: Random lines in a plane (Claerbout) 
+* sep/lines: Random lines in a plane (Claerbout)
 * hansung/cgg: Conjugate guided gradient (CGG) method for robust inversion and its application to velocity-stack inversion (Ji)
 * sep/texture: Texture synthesis and prediction error filtering (Brown)
 * Grave directory for papers that are no longer reproducible
@@ -875,7 +880,7 @@ In documentation:
 * Update of html/txt/spec documentation and man pages triggered by changes in programs or examples through dependence on use.py
 * Show y and n for boolean parameters in F90 programs, instead of .true./.false.
 * Show y and n for boolean params in some Python programs instead of True/False
-    (fix for some cases in which existing mechanism did not work) 
+    (fix for some cases in which existing mechanism did not work)
 
 In APIs:
 * Appropriate flags for compilation on OpenSolaris
