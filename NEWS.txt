@@ -24,6 +24,8 @@ To the reproducible documents collection:
 * jlu/gvdseisint: Seismic data interpolation using generalised
   velocity‐dependent seislet transform (Liu, Zhang, and Liu)
 * tccs/acrossfault: Predictive painting across faults (Xue, Wu, and Fomel)
+* tccs/sparse: Least-squares path-summation diffraction imaging
+  using sparsity constraints (Merzlikin, Fomel, and Sen)
 
 
 To SCons:

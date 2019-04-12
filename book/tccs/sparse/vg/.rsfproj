@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfintbin', 'sfwindow', 'sfpow', 'sfbandpass', 'sfput', 'sfheadermath', 'sfdd', 'sfscale', 'sfmul', 'sfstack', 'sfmask', 'sfspray', 'sfomp', 'sfstacks', 'sfcostaper', 'sfpad', 'sfcosft', 'sftransp', 'sfmath', 'sfcut', 'sfiwarp', 'sfenvelope', 'sfpick', 'sfslice', 'sfgrey', 'sfgraph', 'sfcat', 'sffdip', 'sfpwd', 'sflinmig2', 'sflinpipwd2d', 'sfpipwdmig2', 'sfadd', 'sfconjgrad', 'sfthr', 'sfpwspray', 'sfrcat', 'sfortho', 'sfsimilarity', 'sfsmooth']
+data=['data/viking/paracdp.segy']
+size= 17029362444
