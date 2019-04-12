@@ -26,6 +26,8 @@ To the reproducible documents collection:
 * tccs/acrossfault: Predictive painting across faults (Xue, Wu, and Fomel)
 * tccs/sparse: Least-squares path-summation diffraction imaging
   using sparsity constraints (Merzlikin, Fomel, and Sen)
+* tccs/gmresq: Q-compensated least-squares reverse time migration
+  using low-rank one-step wave extrapolation (Sun, Fomel, Zhu, and Hu)
 
 
 To SCons:
