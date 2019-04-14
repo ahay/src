@@ -299,7 +299,10 @@ class LASReader(object):
         opened_here = False
         if isinstance(f, str):
             opened_here = True
-            f = open(f, 'r')
+            if sys.version_info[0] >= 3:
+                f = open(f, 'r', encoding='utf-8')
+            else:
+                f = open(f, 'r')
 
         self.wrap = False
 
