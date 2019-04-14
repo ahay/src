@@ -56,7 +56,7 @@ minnum = minsamp
 if ( (minsamp-num) < 0 ):
     minnum = num
 
-log_e = np.empty(sdepth)
+log_e = np.zeros(sdepth)
 log_e[(minnum-num):minsamp] = minval
 log_e[maxsamp:(maxnum+num)] = maxval
 log_e[minsamp:maxsamp] = log[minsamp:maxsamp]
