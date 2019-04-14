@@ -93,7 +93,7 @@ Result('shifted-matched', 'synth-model synth-shifted shifted-matched', 'SideBySi
 
 ## Add Noise to data
 
-Flow('rp-noise', 'rp-model', 'noise range=0.05')
+Flow('rp-noise', 'rp-model', 'noise range=0.05 seed=2019')
 Flow('synth-noise', 'rp-noise', 'ricker1 frequency=30')
 
 Plot('rp-noise',
