@@ -239,11 +239,7 @@ void oglbuildmenu (void)
     glutAddMenuEntry (stretchy ? "Rigid" : "Stretchy", MENU_STRETCHY);
     glutAddMenuEntry ("Full Screen", MENU_FULLSCREEN);
     glutAddMenuEntry ("Quit", MENU_QUIT);
-#ifdef __APPLE__
-    glutAttachMenu (GLUT_LEFT_BUTTON); /* for single-button Macs */
-#else
     glutAttachMenu (GLUT_RIGHT_BUTTON);
-#endif
 }
 
 void oglreset (void)
