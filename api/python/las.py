@@ -23,6 +23,7 @@ import re
 import keyword
 
 import numpy as np
+import sys
 
 
 def isidentifier(s):
