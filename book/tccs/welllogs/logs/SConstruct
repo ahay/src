@@ -1,0 +1,1970 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+import math
+import numpy as np
+
+file='filt_mig'
+
+# Import Original Seismic Volume
+
+Fetch('filt_mig.sgy','teapot',server='http://s3.amazonaws.com',top='')
+Fetch('rmotc.tar','teapot',server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
+
+Flow([file,file+'_hdr',file+'.asc',file+'.bin'],file+'.sgy',
+      '''
+      segyread 
+         tfile=${TARGETS[1]} 
+	 hfile=${TARGETS[2]} 
+	 bfile=${TARGETS[3]}
+         key1=iline1 key2=xline1 iline1=180 xline1=184
+      ''')
+
+Flow([file+'mapped',file+'mapped_hdr'],[file,file+'_hdr'],
+     '''
+	    tahread
+              verbose=1
+	      input=${SOURCES[0]}
+	      headers=${SOURCES[1]}          
+	   |  tahwrite
+              verbose=1
+	      label2="xline1" o2=1 n2=188 d2=1
+	      label3="iline1" o3=1 n3=345 d3=1
+	      output=${TARGETS[0]}
+	      outheaders=${TARGETS[1]}
+     ''',
+     stdin=0,stdout=0)
+
+
+# Create mask over the upper portion of data - we don't want to tie to noise
+
+Flow('filtmigz', file+'mapped', 'window max1=0.3 | math output="input*0"') #0.4
+Flow('filtmigo', file+'mapped', 'window min1=0.302 max1=1.5 | math output="(input+50)/(input+50)"')
+Flow('datmask', 'filtmigz filtmigo', 'cat axis=1 ${SOURCES[1]}')
+
+Flow('filtmig2z', file+'mapped', 'window max1=0.3 | math output="input*0"')
+Flow('filtmig2o', file+'mapped', 'window min1=0.302 max1=1.5 | math output="(input+50)/(input+50)"')
+Flow('datmask2', 'filtmig2z filtmig2o', 'cat axis=1 ${SOURCES[1]}') #0.3
+
+# Subsmaple data (memory problem) - estimate phase rotation needed for each trace (stack localskew in time to get one phase per trace)
+
+Flow('filtmig', file+'mapped', 'window max1=1.5')
+Flow('filtmiga', file+'mapped', 'window max1=1.5 max2=60')
+Flow('filtmigb', file+'mapped', 'window max1=1.5 min2=61 max2=188')
+
+Flow('sqr0a','filtmiga',
+     '''
+     localskew verb=n rect=500 a0=-90 da=2 na=181
+     ''',split=[3,345],reduce='cat axis=4')
+
+Flow('mpik0a','sqr0a',
+     '''
+      pick < ${SOURCES[0]} rect1=50 rect2=30 rect3=30 vel0=45 | add add=90 > ${TARGETS[0]}
+      ''',stdin=1,stdout=-1)
+
+Flow('sqr0b','filtmigb',
+     '''
+     localskew verb=n rect=500 a0=-90 da=2 na=181
+     ''',split=[3,345],reduce='cat axis=4')
+
+Flow('mpik0b','sqr0b',
+     '''
+      pick < ${SOURCES[0]} rect1=50 rect2=30 rect3=30 vel0=45 | add add=90 > ${TARGETS[0]}
+      ''',stdin=1,stdout=-1)
+
+
+Flow('mpik0', 'mpik0a mpik0b', 'cat ${SOURCES[1]} axis=2')
+Flow('filtmigr',['filtmig', 'mpik0'],'phaserot phase=${SOURCES[1]}')
+
+
+Flow('filtmigra', 'filtmigr', 'window max2=60')
+Flow('filtmigrb', 'filtmigr', 'window min2=61 max2=188')
+
+Flow('sqr1a','filtmigra',
+     '''
+     localskew verb=n rect=400 a0=-90 da=2 na=181
+     ''',split=[3,345],reduce='cat axis=4')
+
+Flow('mpik1a','sqr1a',
+     '''
+      pick < ${SOURCES[0]} rect1=50 rect2=20 rect3=20 vel0=90 gate=50 | add add=-90 > ${TARGETS[0]}
+      ''',stdin=1,stdout=-1)
+
+Flow('sqr1b','filtmigrb',
+     '''
+     localskew verb=n rect=400 a0=-90 da=2 na=181
+     ''',split=[3,345],reduce='cat axis=4')
+
+Flow('mpik1b','sqr1b',
+     '''
+      pick < ${SOURCES[0]} rect1=50 rect2=20 rect3=20 vel0=90 gate=50 | add add=-90 > ${TARGETS[0]}
+      ''',stdin=1,stdout=-1)
+
+Flow('mpik1', 'mpik1a mpik1b', 'cat ${SOURCES[1]} axis=2')
+Flow('filtmigr2',['filtmigr', 'mpik1'],'phaserot phase=${SOURCES[1]}')
+
+
+
+
+Flow('filtmigr2a', 'filtmigr2', 'window max2=60')
+Flow('filtmigr2b', 'filtmigr2', 'window min2=61 max2=188')
+
+Flow('sqr2a','filtmigr2a',
+     '''
+     localskew verb=n rect=300 a0=-90 da=2 na=181
+     ''',split=[3,345],reduce='cat axis=4')
+
+Flow('mpik2a','sqr2a',
+     '''
+      pick < ${SOURCES[0]} rect1=50 rect2=10 rect3=10 vel0=90 gate=100 | add add=-90 > ${TARGETS[0]}
+      ''',stdin=1,stdout=-1)
+
+Flow('sqr2b','filtmigr2b',
+     '''
+     localskew verb=n rect=300 a0=-90 da=2 na=181
+     ''',split=[3,345],reduce='cat axis=4')
+
+Flow('mpik2b','sqr2b',
+     '''
+      pick < ${SOURCES[0]} rect1=50 rect2=10 rect3=10 vel0=90 gate=100 | add add=-90 > ${TARGETS[0]}
+      ''',stdin=1,stdout=-1)
+
+Flow('mpik2', 'mpik2a mpik2b', 'cat ${SOURCES[1]} axis=2')
+Flow('filtmigr3',['filtmigr2', 'mpik2'],'phaserot phase=${SOURCES[1]}')
+
+# Log Data and XY Conversion to IL/XL
+# Number of wells
+num = 26
+
+# Well X/Y Locations
+well_x = [807354.2,793725.5,800882.1,802299.3,802051.7,804919.7,799280,799920.9,805323.6,800686.3,801150.4,803443.8,794091.1,801652.8,792654.3,800350.2,798492.7,803670.8,799474.3,800470.8,797548.9,793597.7,803439.4,803070.2,799070.6,795387]
+well_y = [955352,972426.3,961020.7,955423.6,952172.4,940475.9,955867.7,953364.9,958213.4,964919.8,956070.6,952529.4,965517.2,959461,967057.7,952685.3,967123.5,956620.6,964098.1,954483,968535.1,969666.7,950558.1,955096.8,962686.7,963273.9]
+
+# Wyoming East Central 4902
+# NAD27
+# Origin (Seismic Dataset)
+x0 = 788937
+y0 = 938846
+
+# IL/XL Spacing and Survey Bearing (degrees E of N) - N2/N3
+deli = 110
+bear = 88.64
+
+well_xl = []
+well_il = []
+
+for i in range(num):
+    well_xl.append(round((math.sin(math.radians(bear))*((well_y[i] - y0)*math.tan(math.radians(90-bear)) + well_x[i] -x0))/110))
+    well_il.append(round((well_y[i] - y0 - (well_x[i] - x0)*math.tan(math.radians(90-bear)))*math.cos(math.radians(90-bear))/110))
+
+
+# Get Seismic Trace from phase corrected data
+
+Flow('latmask', 'filtmigr3', 'math output="abs(input)" | stack axis=1 norm=n | mask min=0.5 | sfdd type=float')
+Flow('vertmask', 'latmask', 'spray axis=1 n=751 d=0.002 o=0')
+
+for i in range(num):
+    Flow('trace'+str(i),'filtmigr3 datmask',
+	 '''
+         math a1=${SOURCES[1]} output="input*a1" | window f2=%d n2=1 f3=%d n3=1
+         ''' %(well_xl[i], well_il[i]))
+
+for i in range(num):
+    Flow('ortrace'+str(i),'filtmigr3 datmask2',
+	 '''
+         math a1=${SOURCES[1]} output="input*a1" | window f2=%d n2=1 f3=%d n3=1
+         ''' %(well_xl[i], well_il[i]))
+
+
+# Generate dip volumes
+Flow('dipct','filtmigr3','dip rect1=3 rect2=3 rect3=3 order=4')
+Flow('dipc1','dipct','window n4=1')
+Flow('dipc2','dipct','window f4=1')
+
+# Import Log data
+
+for well in Split(
+'''
+49025109020000_13345_00011H307856
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4],'add mode=a ${SOURCES[1:3]}')
+    Flow(well,[well+'i',mask1],'headerwindow mask=${SOURCES[1]} | put key3=ILD key12=CAL key13=GR key5=DT')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025107090000_13345_00001H238176
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask6,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5,mask6],'add mode=a ${SOURCES[1:5]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key4=CAL key5=RHOB key2=GR key12=DT key3=NPHI key10=ILD')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025109200000_281757
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALR segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key3=DT key6=GR key7=CAL key13=RHOB key14=NPHI')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025110490000_13344_00004H308969
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=CALR segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4],'add mode=a ${SOURCES[1:3]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key5=RHOB key7=GR key9=CAL key14=DT')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025106100000_13345_00010H306588
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask6,well+'i','headermath output=DT segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5,mask6],'add mode=a ${SOURCES[1:5]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=NPHI key3=GR key4=CAL key6=RHOB key8=ILD key11=DT')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025110120000_13345_00014H308193
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=CAL key6=NPHI key7=GR key11=RILD key15=DT')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025107450000_13344_00008H309374
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key4=ILD key7=NPHI key8=CAL key9=GR key10=RHOB')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025108070000_283140
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=CAL key3=GR key4=RHOB key6=NPHI key8=ILD')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025110700000_281715
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=CALR segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4],'add mode=a ${SOURCES[1:3]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key3=DT key6=CAL key8=GR key10=ILD')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025107690000_281738
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key5=ILD key8=CAL key9=GR key11=NPHI key12=RHOB')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025107260000_283219
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key5=ILD key7=CAL key8=GR key10=RHOB key12=NPHI')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025107290000_288079
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key6=ILD key7=CAL key8=GR key11=RHOB key12=NPHI')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025109720000_272058
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask1'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALR segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key4=RHOB key5=GR key9=RILD key11=CAL key12=DT')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025109370000_276945
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask6,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5,mask6],'add mode=a ${SOURCES[1:5]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=NPHI key5=RHOB key6=CAL key7=GR key10=RILD key14=DT')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025102650000_276960
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key3=RHOB key4=CAL key5=NPHI key6=GR key8=ILD')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025108310000_275636
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask6,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5,mask6],'add mode=a ${SOURCES[1:5]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=DT key4=GR key8=RILD key10=NPHI key11=RHOB key14=CAL')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025109650000_280900
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=CALR segy=n | mask min=-1000')
+    Flow(mask6,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5,mask6],'add mode=a ${SOURCES[1:5]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=RHOB key5=NPHI key7=GR key8=CAL key9=RILD key13=DT')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025109730000_281350
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask6,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5,mask6],'add mode=a ${SOURCES[1:5]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=DT key4=GR key6=RILD key10=CAL key11=NPHI key12=RHOB')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025109660000_292021
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=CALR segy=n | mask min=-1000')
+    Flow(mask6,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5,mask6],'add mode=a ${SOURCES[1:5]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=DT key4=GR key6=CAL key9=RILD key11=RHOB key14=NPHI')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025105980000_282179
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key3=ILD key6=NPHI key7=GR key8=CAL key9=RHOB')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025109060000_283718
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    mask6 = well+'-mask6'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=CALR segy=n | mask min=-1000')
+    Flow(mask6,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5,mask6],'add mode=a ${SOURCES[1:5]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=RHOB key5=NPHI key6=GR key7=CAL key9=RILD key13=DT')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025109710000_284938
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=DT segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=RILD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALR segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRR segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=RHOB key6=DT key8=GR key10=CAL key12=RILD')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025106090000_283436
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key3=ILD key6=CAL key7=GR key8=RHOB key10=NPHI')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+
+for well in Split(
+'''
+49025108910000_278949
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key2=GR key3=NPHI key4=CAL key5=RHOB key10=ILD')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025108970000_283454
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    mask5 = well+'-mask5'
+    Flow(mask1,well+'i','headermath output=RHOB segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask5,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4,mask5],'add mode=a ${SOURCES[1:4]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key3=ILD key7=GR key8=CAL key9=RHOB key12=NPHI')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+for well in Split(
+'''
+49025102700000_283481
+'''):
+    las = well + '.LAS'
+    tarlas = os.path.join('DataSets','Well\\ Log','CD\\ Files','LAS_log_files','Deeper_LAS_files',las)
+    Flow(las,'rmotc.tar','tar -xvf $SOURCE %s && /bin/mv %s $TARGET' % (tarlas,tarlas),stdin=0,stdout=-1)
+    Flow(well+'i',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+    mask1 = well+'-mask1'
+    mask2 = well+'-mask2'
+    mask3 = well+'-mask3'
+    mask4 = well+'-mask4'
+    Flow(mask1,well+'i','headermath output=ILD segy=n | mask min=-1000')
+    Flow(mask2,well+'i','headermath output=NPHI segy=n | mask min=-1000')
+    Flow(mask3,well+'i','headermath output=CALD segy=n | mask min=-1000')
+    Flow(mask4,well+'i','headermath output=GRD segy=n | mask min=-1000')
+    mask = well+'-mask'
+    Flow(mask,[mask1,mask2,mask3,mask4],'add mode=a ${SOURCES[1:3]}')
+    Flow(well,[well+'i',mask],'headerwindow mask=${SOURCES[1]} | put key6=ILD key7=GR key8=CAL key9=NPHI')
+    Flow(well+'.depth',well,'get n2 parform=n')
+
+
+####################################################################################################
+####################### Split Log data into DT and RHOB .rsf files #################################
+####################################################################################################
+
+deepest = Split(
+'''
+49025109020000_13345_00011H307856
+49025107090000_13345_00001H238176
+49025109200000_281757
+49025110490000_13344_00004H308969
+49025106100000_13345_00010H306588
+49025110120000_13345_00014H308193
+49025107450000_13344_00008H309374
+49025108070000_283140
+49025110700000_281715
+49025107690000_281738
+49025107260000_283219
+49025107290000_288079
+49025109720000_272058
+49025109370000_276945
+49025102650000_276960
+49025108310000_275636
+49025109650000_280900
+49025109730000_281350
+49025109660000_292021
+49025105980000_282179
+49025109060000_283718
+49025109710000_284938
+49025106090000_283436
+49025108910000_278949
+49025108970000_283454
+49025102700000_283481
+''')
+
+# Convert las to rsf - if log is absent create blank rsf file
+
+nDT = [6,7,9,10,11,14,19,22,23,24,25]
+nRHOB = [0,5,8,25]
+nILD = [2,3,5,12,13,15,16,17,18,20,21]
+nRILD = [0,1,2,3,4,6,7,8,9,10,11,14,19,22,23,24,25]
+nNPHI = [0,3,8,12,21]
+
+for well in range(num):
+    d = str(well)
+    for attr in ('DEPT','DT','RHOB','CAL','GR','ILD','RILD','NPHI'):
+    	if (attr == 'DEPT'):
+    	    wellattr = '%s%d' % (attr,well)
+    	    Flow(wellattr,deepest[well],'headermath output=%s segy=n | window | clip2 lower=0' % attr)
+    	if (attr == 'DT'):
+    	    n = 0
+    	    for i in range(11):
+                if (well == nDT[i]):
+                    n = 1
+                    break
+    	    if (n != 1):
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,deepest[well],'headermath output=%s segy=n | window | clip2 lower=0' % attr)
+    	    else:
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,'DEPT'+d,'math output=input*0')
+    	if (attr == 'RHOB'):
+    	    n = 0
+    	    for i in range(4):
+                if (well == nRHOB[i]):
+                    n = 1
+                    break
+    	    if (n != 1):
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,deepest[well],'headermath output=%s segy=n | window | clip2 lower=0' % attr)
+    	    else:
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,'DEPT'+d,'math output=input*0')
+    	if (attr == 'CAL'):
+    	    wellattr = '%s%d' % (attr,well)
+    	    Flow(wellattr,deepest[well],'headermath output=%s segy=n | window | clip2 lower=0' % attr)
+    	if (attr == 'GR'):
+            wellattr = '%s%d' % (attr,well)
+            Flow(wellattr,deepest[well],'headermath output=%s segy=n | window | clip2 lower=0' % attr)
+    	if (attr == 'ILD'):
+    	    n = 0
+    	    for i in range(11):
+                if (well == nILD[i]):
+                    n = 1
+                    break
+    	    if (n != 1):
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,deepest[well],'headermath output=%s segy=n | window | clip2 lower=0' % attr)
+    	    else:
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,'DEPT'+d,'math output=input*0')
+    	if (attr == 'RILD'):
+    	    n = 0
+    	    for i in range(17):
+                if (well == nRILD[i]):
+                    n = 1
+                    break
+    	    if (n != 1):
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,deepest[well],'headermath output=%s segy=n | window | clip2 lower=0' % attr)
+    	    else:
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,'DEPT'+d,'math output=input*0')
+    	if (attr == 'NPHI'):
+    	    n = 0
+    	    for i in range(5):
+    	        if (well == nNPHI[i]):
+                    n = 1
+                    break
+    	    if (n != 1):
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,deepest[well],'headermath output=%s segy=n | window | clip2 lower=0' % attr)
+    	    else:
+                wellattr = '%s%d' % (attr,well)
+                Flow(wellattr,'DEPT'+d,'math output=input*0')
+
+
+####################################################################################################
+############################# Estimate Shifts to align logs using GR0 ##############################
+####################################################################################################
+
+
+for well in range(num):
+
+    tops = [0, -675, -450, -585, -695, 622, -184, -307, -282, -478, -494, -508, -352, -485, -924, -423, -538, -509, -402, -428, -531, -604, -443, -543, -494, -1120]
+    an = [1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+
+    d = str(well)
+
+    Flow(['GRc'+d, 'DEPTc'+d, 'DTc'+d, 'RHOBc'+d, 'RILDc'+d, 'CALc'+d, 'NPHIc'+d, 'ILDc'+d], ['GR'+d, 'DEPT'+d, 'DT'+d, 'RHOB'+d, 'RILD'+d, 'CAL'+d, 'NPHI'+d, 'ILD'+d],
+    	 'sbslice depth=${SOURCES[1]} log1=${SOURCES[2]} log2=${SOURCES[3]} log3=${SOURCES[4]} log4=${SOURCES[5]} log5=${SOURCES[6]} log6=${SOURCES[7]} depth_c=${TARGETS[1]} log1_c=${TARGETS[2]} log2_c=${TARGETS[3]} log3_c=${TARGETS[4]} log4_c=${TARGETS[5]} log5_c=${TARGETS[6]} log6_c=${TARGETS[7]}')
+
+    Flow('GRt'+d, 'GRc'+d, 'interp | despike wide=55')
+    Flow('GRte'+d, 'GRt'+d, 'extend val=6000 switch=0')
+
+    Flow('DTte'+d, 'DTc'+d, 'extend val=6000 switch=0 | despike wide=11')
+    Flow('RHOBte'+d, 'RHOBc'+d, 'extend val=6000 switch=0 | despike wide=11')
+    Flow('RILDte'+d, 'RILDc'+d, 'extend val=6000 switch=0 | despike wide=11')
+    Flow('CALte'+d, 'CALc'+d, 'extend val=6000 switch=0')
+    Flow('NPHIte'+d, 'NPHIc'+d, 'extend val=6000 switch=0')
+    Flow('ILDte'+d, 'ILDc'+d, 'extend val=6000 switch=0 | despike wide=11')
+
+    ## Local Similarity Tie
+    if(well != 0):
+        g0 = tops[well] - 300 # starting change
+        g1 = tops[well] + 300  # last change
+        ng = 501   # number of changes to scan
+        dg = (g1-g0)/(ng-1)
+        niter = 100 # maximum number of iterations
+
+        # Scan shifts computing local similarity
+        Flow('scan10-'+d, ['GRte'+d, 'GRte0'],
+ 	     '''
+         warpscan other=${SOURCES[1]} niter=%d accuracy=4
+         ng=%d g0=%g dg=%g rect1=300 rect2=30 shift=y sign=y | mutter t0=%g slope0=0 | mutter t0=%g slope0=0 inner=y | math output="1-input" | clip clip=0.6 value=0 | math output="0.6*(1-input)"
+             ''' % (niter,ng,g0,dg,(2800-g1),(8700-g0)))
+        Flow('spick10-'+d,'scan10-'+d,'pick vel0=%d rect1=50 an=%d norm=n' % (tops[well], an[well])) # was 2 / 50
+
+    	# Apply the stretch
+        Flow('GRtes-'+d,['GRte'+d, 'GRte0', 'spick10-'+d],
+             '''
+             warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+             verb=1 nliter=0 
+             ''')
+
+        g0 = -150 # starting change
+        g1 =  150  # last change
+        ng = 451   # number of changes to scan
+        dg = (g1-g0)/(ng-1)
+        niter = 100 # maximum number of iterations
+
+    	# Scan shifts computing local similarity
+        Flow('scan20-'+d, ['GRtes-'+d, 'GRte0'],
+     	     '''
+             warpscan other=${SOURCES[1]} niter=%d accuracy=4
+             ng=%d g0=%g dg=%g rect1=150 rect2=15 shift=y sign=y | mutter t0=%g slope0=0 | mutter t0=%g slope0=0 inner=y | math output="1-input" | clip clip=0.6 value=0 | math output="0.6*(1-input)"
+             ''' % (niter,ng,g0,dg,(2800-tops[well]-300),(8700-tops[well]+300))) #was 100 10     (2900-tops[well]-300),(8600-tops[well]+300)
+        Flow('spick20-'+d,'scan20-'+d,'pick vel0=0 rect1=25 an=2 norm=n') # was 20
+
+    	# Apply the stretch
+        Flow('GRtes2-'+d,['GRtes-'+d, 'GRte0', 'spick20-'+d],
+             '''
+             warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+             verb=1 nliter=0 
+             ''')
+	
+        for attr in ('DT','RHOB','CAL','ILD','RILD','NPHI'):
+            attrn = '%s' % (attr)
+            Flow(attrn+'tes-'+d,[attrn+'te'+d, attrn+'te0', 'spick10-'+d],
+     	         '''
+    	         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	         verb=1 nliter=0 
+     	         ''')
+            Flow(attrn+'tes2-'+d,[attrn+'tes-'+d, attrn+'te0', 'spick20-'+d],
+     	         '''
+    	         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	         verb=1 nliter=0 
+     	         ''')
+
+
+#################################################################################################
+######################### Apply shifts to all logs and export data ##############################
+#################################################################################################
+
+        for attr in ('DT','RHOB','CAL','ILD','RILD','NPHI','GR'):
+            attrn = '%s' % (attr)
+            Flow([attrn+d+'.txt'], [attrn+'tes2-'+d], 'sfdisfil col=1 format="%13.4g" number=n')
+
+        Flow('spick10n-'+d, ['spick10-'+d], 'math output="-1*input"')
+        Flow('spick20n-'+d, ['spick20-'+d], 'math output="-1*input"')
+
+    if(well == 0):
+        for attr in ('DT','RHOB','CAL','ILD','RILD','NPHI','GR'):
+            attrn = '%s' % (attr)
+            Flow([attrn+d+'.txt'], [attrn+'te'+d], 'sfdisfil col=1 format="%13.4g" number=n')
+
+
+####################################################################################################
+########################## Sean recode matlab scripts to python for rep ############################
+####################################################################################################
+
+## Bring in new logs
+
+    for attr in ('DT', 'RHOB'):
+        attrn = '%s' % (attr)
+        inpu = './logs_old/'+attrn+d+'f.txt'
+        Flow([attrn+'f'+d], None,
+	        '''
+	        echo in=%s n1=24375 d1=0.5 o1=35.5 n2=1 d2=1 o2=1 data_format=ascii_float | dd form=native
+	        ''' % (inpu) )
+        
+        Flow([attrn+'fe'+d], [attrn+'f'+d], 'extend switch=1')
+
+## Reverse the stretches
+
+    if(well != 0):
+        attrn = '%s' % ('GR')
+        Flow([attrn+'fes-'+d],[attrn+'tes2-'+d, attrn+'te0', 'spick20n-'+d],
+             '''
+     	     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	     verb=1 nliter=0 
+     	     ''')
+        Flow([attrn+'fes2-'+d],[attrn+'fes-'+d, attrn+'te0', 'spick10n-'+d],
+             '''
+     	     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	     verb=1 nliter=0 
+     	     ''')
+
+## Estimate residual stretch
+
+        tops = [0, -675, -450, -585, -695, 622, -184, -307, -282, -478, -494, -508, -352, -485, -924, -423, -538, -509, -402, -428, -531, -604, -443, -543, -494, 700]
+
+        g0 = -350 # starting change
+        g1 =  350  # last change
+        ng = 801   # number of changes to scan
+        dg = (g1-g0)/(ng-1)
+        niter = 100 # maximum number of iterations
+
+    	# Scan shifts computing local similarity
+        Flow('scan1f-'+d, [attrn+'fes2-'+d, 'GRte'+d],
+     	     '''
+             warpscan other=${SOURCES[1]} niter=%d accuracy=4
+             ng=%d g0=%g dg=%g rect1=300 rect2=20 shift=y sign=y | mutter t0=%g slope0=0 | mutter t0=%g slope0=0 inner=y | math output="1-input" | clip clip=0.4 value=0 | math output="0.6*(1-input)"
+             ''' % (niter,ng,g0,dg,(2900-tops[well]-300),(8500-tops[well]+300))) # 
+
+        Flow('spick1f-'+d,'scan1f-'+d,'pick vel0=0 rect1=40 an=2 norm=y')
+
+   	# Apply the stretch
+        Flow([attrn+'fes3-'+d],[attrn+'fes2-'+d, 'GRte'+d, 'spick1f-'+d],
+             '''
+             warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+             verb=1 nliter=0 
+             ''')
+	
+        tops = [9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 9000, 8000]
+
+        g0 = -200 # starting change 200
+        g1 =  200  # last change 200
+        ng = 601   # number of changes to scan
+        dg = (g1-g0)/(ng-1)
+        niter = 100 # maximum number of iterations
+
+    	# Scan shifts computing local similarity
+        Flow('scan2f-'+d, [attrn+'fes3-'+d, 'GRte'+d],
+     	     '''
+             warpscan other=${SOURCES[1]} niter=%d accuracy=4
+             ng=%d g0=%g dg=%g rect1=125 rect2=20 shift=y sign=y | mutter t0=%g slope0=0 | mutter t0=%g slope0=0 inner=y | math output="1-input" | clip clip=0.4 value=0 | math output="(1-input)"
+             ''' % (niter,ng,g0,dg,(3000),(tops[well]))) #0.4
+
+        Flow('spick2f-'+d,'scan2f-'+d,'pick vel0=0 rect1=20 an=1 norm=y')
+ 
+   	# Apply the stretch
+        Flow([attrn+'fes4-'+d],[attrn+'fes3-'+d, 'GRte'+d, 'spick2f-'+d],
+             '''
+             warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+             verb=1 nliter=0 
+             ''')
+        
+####################################################################################################
+################################ Apply residual stretch to realign #################################
+####################################################################################################
+
+        for attr in ('DT', 'RHOB'):
+            attrn = '%s' % (attr)
+            Flow([attrn+'fes-'+d],[attrn+'fe'+d, attrn+'te0', 'spick20n-'+d],
+                 '''
+     	         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	         verb=1 nliter=0 
+     	         ''')
+            Flow([attrn+'fes2-'+d],[attrn+'fes-'+d, attrn+'te0', 'spick10n-'+d],
+                 '''
+     	         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	         verb=1 nliter=0 
+     	         ''')
+            Flow([attrn+'fes3a-'+d],[attrn+'fes2-'+d, attrn+'te'+d, 'spick1f-'+d],
+                 '''
+                 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+                 verb=1 nliter=0 
+                 ''')
+            Flow([attrn+'fes3-'+d],[attrn+'fes3a-'+d, attrn+'te'+d, 'spick2f-'+d],
+                 '''
+                 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+                 verb=1 nliter=0 
+                 ''')
+
+    else:
+        for attr in ('DT', 'RHOB'):
+            attrn = '%s' % (attr)
+            Flow(attrn+'fes3-'+d, attrn+'fe'+d, 'math output="input"')
+
+    for attr in ('DT', 'RHOB'):
+        attrn = '%s' % (attr)
+
+        if (well != 0):
+            Flow(attrn+'pn'+d, [attrn+'fes3-'+d], 'extend val=6000 switch=2')
+            Flow(attrn+'pn2-'+d, ['GR'+d, attrn+'pn'+d], 'realign log1=${SOURCES[1]}')
+            Flow(attrn+'p'+d, [attrn+'pn2-'+d, attrn+d], 'extend switch=3 reflog=${SOURCES[1]}')
+        
+        else:
+            Flow(attrn+'pn2-'+d, attrn+'fes3-'+d, 'extend val=6000 switch=2')
+            Flow(attrn+'p'+d, [attrn+'pn2-'+d, attrn+d], 'extend switch=3 reflog=${SOURCES[1]}')
+
+####################################################################################################
+################################ Generate Synthetic for each log ###################################
+####################################################################################################
+
+    Flow('DTpc'+d, 'DTp'+d, 'sbclip1 clip=45 value=0')
+    Flow('DTpi'+d, 'DTpc'+d, 'interp | math output="input*3.28084"')
+
+    Flow(['DEPTb-'+d,'VELb-'+d,'RHOBcb-'+d,'DTb-'+d],['DEPT'+d,'DTpi'+d,'RHOBp'+d],
+         '''
+         backusave slowness=${SOURCES[1]} density=${SOURCES[2]} ratio=%g peak_f=%g depthsample=%g vel_bk=${TARGETS[1]} rhob_bk=${TARGETS[2]}
+                          slow_bk=${TARGETS[3]}
+         ''' %(0.15, 35, 0.3048*0.5)) # 0.15 35
+
+    Flow('DTbi'+d, 'DTb-'+d, 'extend switch=1 | math output="input*1000000"') # Added 'extend here when using sf python scripts 3/16
+    Flow('RHOBb-'+d, 'RHOBcb-'+d, 'extend switch=1') # Added 'extend here when using sf python scripts 3/16
+
+    Flow('DTmask'+d, 'DTbi'+d, 'logzero | mask min=20 max=20000 | dd type=float')
+    Flow('RHOBmask'+d, 'RHOBb-'+d, 'logzero | mask min=0.6 max=20000 | dd type=float')
+    Flow('mask'+d, ['DTmask'+d, 'RHOBmask'+d], 'math a1=${SOURCES[1]} output="input*a1"')
+
+    Flow('zzp'+d, ['DTbi'+d, 'RHOBb-'+d], 'math a1=${SOURCES[1]} output="1000000000*a1/(input)"') #imp = kg/(m*m*s)
+
+    Flow('refp'+d, ['zzp'+d, 'mask'+d], 'ai2refl | math a1=${SOURCES[1]} output="input*a1"') # clip clip=0.5 value=0')
+
+    Flow('tdr'+d,'DTbi'+d,'causint | math output="(%g)*input"' % (2*0.5*0.3048/1000000))
+
+    Flow('maxtdr-'+d, 'tdr'+d, 'stack max=y axis=1 | math output="input/(%g) + 1.0"' %(0.002))
+    Flow(['max1tdr-'+d+'.par'],'maxtdr-'+d,'disfil number=n format="n1=%g"')
+
+    Flow('rt-'+d,['refp'+d, 'tdr'+d, 'max1tdr-'+d+'.par'],' iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s' % (0.002))
+
+    Flow('dt-'+d,['DTbi'+d, 'tdr'+d, 'max1tdr-'+d+'.par'],' iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s' % (0.002))
+    Flow('rhob-'+d,['RHOBb-'+d, 'tdr'+d, 'max1tdr-'+d+'.par'],' iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s' % (0.002))
+
+    Flow('wavelet200', None, 
+         '''
+         echo n1=100 data_format=ascii_float in=stat_wave_1345_1188_550_800.txt |
+     	 put d1=0.002 o1=-0.1 |
+     	 math output='input/4.46423'
+     	 ''')
+
+    Flow('rtmask-'+d, 'rt-'+d, 'math output="abs(input)" | mask min=0.000000000000001 | sfdd type=float')
+
+    Flow('synth-'+d,['rt-'+d, 'wavelet200', 'rtmask-'+d],'convolve2 flt=${SOURCES[1]} | math a1=${SOURCES[2]} output="input*a1"')
+
+
+    # Build hard constraints - w3
+    dat = [0.9,  0.72, 0.78, 0.78, 0.25, 0.70, 0.70, 0.63, 0.75, 0.63, 0.72, 0.59, 0.53, 0.54, 0.55, 0.60, 0.67, 0.5, 0.68,  0.53,  0.45, 0.55,  0.4,  0.5 , 0.54, 0.51]
+    ref = [1.05, 0.9,  0.93, 0.93, 0.9,  0.73, 0.9,  0.88, 0.88, 0.9,  0.85, 0.83, 0.7,  0.7,  0.7 , 0.84, 0.84, 0.64, 0.84, 0.65,  0.66, 0.70,  0.62, 0.64, 0.68, 0.64]
+
+    
+    Flow('traceEn'+d, 'ortrace'+d, 'energy wind=100')
+    Flow('traceCon-'+d, 'traceEn'+d, 'sbclip1 clip=0.3 value=0.01')
+    Flow('synthEn1-'+d, 'synth-'+d, 'energy wind=100')
+    Flow('synthCon-'+d,'synthEn1-'+d, 'sbclip1 clip=0.3 value=0.01')
+
+
+    # Tie Estimated Synthetic to Seismic
+
+    g0=0.1 # starting change
+    g1=-0.8  # last change
+    ng=551   # number of changes to scan
+    dg = (g1-g0)/(ng-1)
+    niter = 100 # maximum number of iterations
+
+    Flow('locksynth-'+d, None, 'spike o1=%g n1=%g d1=%g | constraint value=%g wind=5 | spray axis=1 n=751 d=0.002 o=0' %(g0, ng, dg, dat[well]-ref[well]))
+    Flow('locktrace-'+d, 'traceEn'+d, 'constraint value=%g wind=5 | spray axis=2 n=%g d=%g o=%g' %(ref[well], ng, dg, g0))
+
+    # Scan shifts computing local similarity
+    Flow('scan1-'+d, ['synth-'+d, 'trace'+d, 'traceCon-'+d, 'synthCon-'+d, 'locksynth-'+d, 'locktrace-'+d],
+         '''
+     	 warpscanw other=${SOURCES[1]} niter=%d sign=y
+     	 ng=%d g0=%g dg=%g rect1=1000 rect2=20 shift=y ren=1 renergy=${SOURCES[2]} den=1 denergy=${SOURCES[3]} | math a1=${SOURCES[4]} a2=${SOURCES[5]} output="input + 0.75*a1*a2" | window min2=%g max2=%g | sfclip2 lower=0
+     	 ''' % (niter,ng,g0,dg,(g0-0.05),(g1+0.05))) #12
+
+    Flow('spick1-'+d,'scan1-'+d,'pick vel0=%g rect1=1000' %(dat[well]-ref[well]))
+
+    # Apply the stretch
+    Flow('synthw1-'+d,['synth-'+d, 'trace'+d, 'spick1-'+d],
+         '''
+     	 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	 verb=1 nliter=0 
+     	 ''')
+
+    Flow('drift1-'+d,['spick1-'+d, 'tdr'+d],
+         '''
+         iwarp warp=${SOURCES[1]} inv=n d1=0.5 | put label1=Depth unit1=m
+         ''')
+
+    Flow('tdr1-'+d, ['drift1-'+d,'tdr'+d], 'replace num=200 loc=250 | math a1=${SOURCES[1]} output="a1-input"')
+
+# Update Velocity log with new tdr
+
+    Flow(['tdr1a-'+d, 'DTbi1-'+d], ['DTbi'+d, 'tdr1-'+d], 'tdr stretch=1 ms=1 dels=%g tdrNew=${SOURCES[1]} sonicFo=${TARGETS[1]}' %(0.5*0.3048))
+    Flow('zzp1-'+d, ['DTbi1-'+d, 'RHOBb-'+d], 'math a1=${SOURCES[1]} output="1000000000*a1/(input)"') #imp = kg/(m*m*s)
+    Flow('refp1-'+d, ['zzp1-'+d, 'mask'+d], 'ai2refl | math a1=${SOURCES[1]} output="input*a1"')
+
+    Flow('maxtdr1-'+d, 'tdr1a-'+d, 'stack max=y axis=1 | math output="input/(%g) + 1.0"' %(0.002))
+    Flow(['max1tdr1-'+d+'.par'],'maxtdr1-'+d,'disfil number=n format="n1=%g"')
+
+    Flow('rt2-'+d,['refp1-'+d, 'tdr1a-'+d, 'max1tdr1-'+d+'.par'],' iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s' % (0.002))
+
+    Flow('rtmask2-'+d, 'rt2-'+d, 'math output="abs(input)" | mask min=0.000000000000001 | sfdd type=float')
+    
+    Flow('synth2-'+d,['rt2-'+d, 'wavelet200', 'rtmask2-'+d],'convolve2 flt=${SOURCES[1]} | math a1=${SOURCES[2]} output="input*a1"')
+
+
+
+    Flow('traceCon2-'+d, 'traceEn'+d, 'sbclip1 clip=0.2 value=0.01')
+    Flow('synthEn2-'+d, 'synth2-'+d, 'energy wind=100')
+    Flow('synthCon2-'+d,'synthEn2-'+d, 'sbclip1 clip=0.2 value=0.01')
+
+
+    # Tie Estimated Synthetic to Seismic - Testing
+
+    g0=0.15 # starting change
+    g1=-0.15  # last change
+    ng=301   # number of changes to scan
+    dg = (g1-g0)/(ng-1)
+    niter = 100 # maximum number of iterations
+
+    Flow('locksynth2-'+d, None, 'spike o1=%g n1=%g d1=%g | constraint value=%g wind=5 | spray axis=1 n=751 d=0.002 o=0' %(g0, ng, dg, 0))
+    Flow('locktrace2-'+d, 'traceEn'+d, 'constraint value=%g wind=5 | spray axis=2 n=%g d=%g o=%g' %(ref[well], ng, dg, g0))
+
+    # Scan shifts computing local similarity
+    Flow('scan2-'+d, ['synth2-'+d, 'trace'+d, 'traceCon2-'+d, 'synthCon2-'+d, 'locksynth2-'+d, 'locktrace2-'+d],
+         '''
+     	 warpscanw other=${SOURCES[1]} niter=%d sign=y
+     	 ng=%d g0=%g dg=%g rect1=100 rect2=15 shift=y ren=1 renergy=${SOURCES[2]} den=1 denergy=${SOURCES[3]} | math a1=${SOURCES[4]} a2=${SOURCES[5]} output="input + 0.5*a1*a2" | window min2=%g max2=%g | sfclip2 lower=0
+     	 ''' % (niter,ng,g0,dg,(g0-0.02),(g1+0.02))) # 100 / 15
+    Flow('spick2-'+d,'scan2-'+d,'pick rect1=80 vel0=0 norm=y') #40
+
+    # Apply the stretch
+    Flow('synthw2-'+d,['synth2-'+d, 'trace'+d, 'spick2-'+d],
+         '''
+     	 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	 verb=1 nliter=0 
+     	 ''')
+
+    Flow('drift2-'+d,['spick2-'+d, 'tdr1-'+d],
+         '''
+         replace num=100 loc=101 | iwarp warp=${SOURCES[1]} inv=n d1=0.5 | put label1=Depth unit1=m
+         ''')
+
+    Flow('tdr2-'+d, ['drift2-'+d,'tdr1-'+d], 'replace num=200 loc=250 | math a1=${SOURCES[1]} output="a1-input"')
+
+# Update Velocity log with new tdr
+
+    Flow(['tdr2a-'+d, 'DTbi2-'+d], ['DTbi1-'+d, 'tdr2-'+d], 'tdr stretch=1 ms=1 dels=%g tdrNew=${SOURCES[1]} sonicFo=${TARGETS[1]}' %(0.5*0.3048))
+    Flow('zzp2-'+d, ['DTbi2-'+d, 'RHOBb-'+d], 'math a1=${SOURCES[1]} output="1000000000*a1/(input)"') #imp = kg/(m*m*s)
+    Flow('refp2-'+d, ['zzp2-'+d, 'mask'+d], 'ai2refl | math a1=${SOURCES[1]} output="input*a1"')
+
+    Flow('maxtdr2-'+d, 'tdr2a-'+d, 'stack max=y axis=1 | math output="input/(%g) + 1.0"' %(0.002))
+    Flow(['max1tdr2-'+d+'.par'],'maxtdr2-'+d,'disfil number=n format="n1=%g"')
+
+    Flow('rt3-'+d,['refp2-'+d, 'tdr2a-'+d, 'max1tdr2-'+d+'.par'],' iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s' % (0.002))
+
+    Flow('rtmask3-'+d, 'rt3-'+d, 'math output="abs(input)" | mask min=0.000000000000001 | sfdd type=float')
+
+    Flow('synth3-'+d,['rt3-'+d, 'wavelet200', 'rtmask3-'+d],'convolve2 flt=${SOURCES[1]} | math a1=${SOURCES[2]} output="input*a1"')
+
+
+    Flow('traceCon3-'+d, 'traceEn'+d, 'sbclip1 clip=0.1 value=0.01')
+    Flow('synthEn3-'+d, 'synth3-'+d, 'energy wind=100')
+    Flow('synthCon3-'+d,'synthEn3-'+d, 'sbclip1 clip=0.1 value=0.01')
+
+
+    # Tie Estimated Synthetic to Seismic
+
+    g0=0.07 # starting change
+    g1=-0.07  # last change
+    ng=301   # number of changes to scan
+    dg = (g1-g0)/(ng-1)
+    niter = 100 # maximum number of iterations
+
+    Flow('locksynth3-'+d, None, 'spike o1=%g n1=%g d1=%g | constraint value=%g wind=5 | spray axis=1 n=751 d=0.002 o=0' %(g0, ng, dg, 0))
+    Flow('locktrace3-'+d, 'traceEn'+d, 'constraint value=%g wind=5 | spray axis=2 n=%g d=%g o=%g' %(ref[well], ng, dg, g0))
+
+    # Scan shifts computing local similarity
+    Flow('scan3-'+d, ['synth3-'+d, 'trace'+d, 'traceCon3-'+d, 'synthCon3-'+d, 'locksynth3-'+d, 'locktrace3-'+d],
+         '''
+     	 warpscanw other=${SOURCES[1]} niter=%d sign=y
+     	 ng=%d g0=%g dg=%g rect1=60 rect2=8 shift=y ren=1 renergy=${SOURCES[2]} den=1 denergy=${SOURCES[3]} | math a1=${SOURCES[4]} a2=${SOURCES[5]} output="input + 0.5*a1*a2" | window min2=%g max2=%g | sfclip2 lower=0
+     	 ''' % (niter,ng,g0,dg,(g0-0.02),(g1+0.02))) # 40 / 4 | mutter t0=0.35 slope0=0
+
+    Flow('spick3-'+d,'scan3-'+d,'pick vel0=0.02 rect1=70 norm=y') # 0.025
+
+    # Apply the stretch
+    Flow('synthw3-'+d,['synth3-'+d, 'trace'+d, 'spick3-'+d],
+         '''
+     	 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	 verb=1 nliter=0 
+     	 ''')
+
+
+    Flow('drift3-'+d,['spick3-'+d, 'tdr2-'+d],
+         '''
+         replace num=100 loc=101 | iwarp warp=${SOURCES[1]} inv=n d1=0.5 | put label1=Depth unit1=m
+         ''')
+
+    Flow('tdr3-'+d, ['drift3-'+d,'tdr2-'+d], 'replace num=200 loc=250 | math a1=${SOURCES[1]} output="a1-input"')
+
+# Update Velocity log with new tdr
+
+    Flow(['tdr3a-'+d, 'DTbi3-'+d], ['DTbi2-'+d, 'tdr3-'+d], 'tdr stretch=1 ms=1 dels=%g tdrNew=${SOURCES[1]} sonicFo=${TARGETS[1]}' %(0.5*0.3048))
+    Flow('zzp3-'+d, ['DTbi3-'+d, 'RHOBb-'+d], 'math a1=${SOURCES[1]} output="1000000000*a1/(input)"') #imp = kg/(m*m*s)
+    Flow('refp3-'+d, ['zzp3-'+d, 'mask'+d], 'ai2refl | math a1=${SOURCES[1]} output="input*a1"')
+
+    Flow('maxtdr3-'+d, 'tdr3a-'+d, 'stack max=y axis=1 | math output="input/(%g) + 1.0"' %(0.002))
+    Flow(['max1tdr3-'+d+'.par'],'maxtdr3-'+d,'disfil number=n format="n1=%g"')
+
+    Flow('rt4-'+d,['refp3-'+d, 'tdr3a-'+d, 'max1tdr3-'+d+'.par'],' iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s' % (0.002))
+
+    Flow('rtmask4-'+d, 'rt4-'+d, 'math output="abs(input)" | mask min=0.000000000000001 | sfdd type=float')
+
+    Flow('synth4-'+d,['rt4-'+d, 'wavelet200', 'rtmask4-'+d],'convolve2 flt=${SOURCES[1]} | math a1=${SOURCES[2]} output="input*a1"')
+
+    Flow('synthEn4-'+d, 'synth4-'+d, 'energy wind=100')
+    Flow('synthEn4b-'+d, 'synthEn4-'+d, 'sbclip1 clip=0.05 value=0.01')
+    Flow('traceEn4-'+d, 'traceEn'+d, 'sbclip1 clip=0.05 value=0.01') #0.15
+
+
+    # Tie Estimated Synthetic to Seismic
+
+    g0=0.05 # starting change
+    g1=-0.05  # last change
+    ng=301   # number of changes to scan
+    dg = (g1-g0)/(ng-1)
+    niter = 100 # maximum number of iterations
+
+
+    # Scan shifts computing local similarity
+    Flow('scan4-'+d, ['synth4-'+d, 'ortrace'+d, 'traceEn4-'+d, 'synthEn4b-'+d],
+         '''
+     	 warpscanw other=${SOURCES[1]} niter=%d sign=y
+     	 ng=%d g0=%g dg=%g rect1=40 rect2=6 shift=y ren=1 renergy=${SOURCES[2]} den=0 denergy=${SOURCES[3]} | window min2=%g max2=%g | sfclip2 lower=0 | sfmath output="input"
+     	 ''' % (niter,ng,g0,dg,(g0-0.02),(g1+0.02))) # 40 / 4 | mutter t0=0.35 slope0=0
+
+    Flow('spick4-'+d,'scan4-'+d,'pick vel0=0.0 rect1=60 norm=y') # 0.025
+
+    # Apply the stretch
+    Flow('synthw4-'+d,['synth4-'+d, 'trace'+d, 'spick4-'+d],
+         '''
+     	 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	 verb=1 nliter=0 
+     	 ''')
+
+    Flow('drift4-'+d,['spick4-'+d, 'tdr3-'+d],
+         '''
+         replace num=100 loc=101 | iwarp warp=${SOURCES[1]} inv=n d1=0.5 | put label1=Depth unit1=m
+         ''')
+
+    Flow('tdr4-'+d, ['drift4-'+d,'tdr3-'+d], 'replace num=200 loc=250 | math a1=${SOURCES[1]} output="a1-input"')
+
+# Update Velocity log with new tdr
+
+    Flow(['tdr4a-'+d, 'DTbi4-'+d], ['DTbi3-'+d, 'tdr4-'+d], 'tdr stretch=1 ms=1 dels=%g tdrNew=${SOURCES[1]} sonicFo=${TARGETS[1]}' %(0.5*0.3048))
+    Flow('zzp4-'+d, ['DTbi4-'+d, 'RHOBb-'+d], 'math a1=${SOURCES[1]} output="1000000000*a1/(input)"') #imp = kg/(m*m*s)
+    Flow('refp4-'+d, ['zzp4-'+d, 'mask'+d], 'ai2refl | math a1=${SOURCES[1]} output="input*a1"')
+
+    Flow('maxtdr4-'+d, 'tdr4a-'+d, 'stack max=y axis=1 | math output="input/(%g) + 1.0"' %(0.002))
+    Flow(['max1tdr4-'+d+'.par'],'maxtdr4-'+d,'disfil number=n format="n1=%g"')
+
+    Flow('rt5-'+d,['refp4-'+d, 'tdr4a-'+d, 'max1tdr4-'+d+'.par'],' iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s' % (0.002))
+
+    Flow('rtmask5-'+d, 'rt5-'+d, 'math output="abs(input)" | mask min=0.000000000000001 | sfdd type=float')
+    
+    Flow('synth5-'+d,['rt5-'+d, 'wavelet200'],'convolve2 flt=${SOURCES[1]}')
+    
+    Flow('maskwt'+d,['mask'+d, 'tdr4a-'+d, 'max1tdr4-'+d+'.par', 'rtmask5-'+d],
+         '''
+         iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s | math a1=${SOURCES[3]} output="input*a1" | pad n1=751
+         '''% (0.002))
+
+    Flow('DTtp-'+d,['DTpi'+d, 'tdr4a-'+d, 'max1tdr4-'+d+'.par'],'iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s | pad n1=751' % (0.002))
+    Flow('DTt-'+d, 'DTtp-'+d,'extend1 num=40 ')
+
+    Flow('DTbit4p-'+d,['DTbi4-'+d, 'tdr4a-'+d, 'max1tdr4-'+d+'.par'],'iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s | pad n1=751' % (0.002))
+    Flow('DTbit4-'+d, 'DTbit4p-'+d,'extend1 num=40 ')
+
+    Flow('RHOBtp-'+d,['RHOBp'+d, 'tdr4a-'+d, 'max1tdr4-'+d+'.par'],'iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s | pad n1=751' % (0.002))
+    Flow('RHOBt-'+d, 'RHOBtp-'+d,'extend1 num=40 ')
+
+    Flow('masktp'+d, 'maskwt'+d,
+         '''
+         mask min=0.99 | dd type=float | deriv | math a1=${SOURCES[0]} output="500000*abs(input) + 100*a1" | mask min=99 max=101 | dd type=float
+         ''')
+    Flow('maskt'+d, 'masktp'+d,
+         '''
+         extend1 num=15
+         ''')
+
+## Generate Mistie for each well
+
+    Flow('mistie-'+d,['spick2-'+d, 'spick3-'+d, 'spick4-'+d],
+         '''
+         add < ${SOURCES[0]} ${SOURCES[1:2]} | replace num=10 loc=11
+         ''')
+
+####################################################################################################
+############################# Generate property volumes for each well ##############################
+####################################################################################################
+    Flow('wtime-'+d,'latmask',
+         '''
+         math output="1000000*(1-input) + 0.01*input" |
+         put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1 |
+         eikonal vel=n zshot=%g yshot=%g
+         ''' %(well_xl[well], well_il[well]))
+
+    # Density
+    Flow('spickr'+d,['dipct', 'RHOBt-'+d, 'wtime-'+d],'pwpaint2 order=3 seed=${SOURCES[1]} cost=${SOURCES[2]} eps=0.04')
+
+    # Velocity
+    Flow('spickv'+d,['dipct', 'DTt-'+d, 'wtime-'+d],'pwpaint2 order=3 seed=${SOURCES[1]} cost=${SOURCES[2]} eps=0.04')
+    #Flow('spickv'+d,['dipct', 'DTbit4-'+d, 'wtime-'+d],'pwpaint2 order=3 seed=${SOURCES[1]} cost=${SOURCES[2]} eps=0.04')
+
+    # Mask
+    Flow('spickmw'+d,['dipct', 'maskt'+d, 'wtime-'+d],
+         '''
+         pwpaint2 order=3 seed=${SOURCES[1]} cost=${SOURCES[2]} eps=0.3 | mask min=0.999 | dd type=float
+         ''')
+    Flow('spickm-'+d, 'spickmw'+d,
+         '''
+         deriv | math a1=${SOURCES[0]} output="5000000*abs(input) + 10*a1" | mask min=9.9999 max=10.0001 | dd type=float
+         ''')
+
+    # Generate radial basis function volume
+    Flow('rbf-'+d,'filtmigr3 latmask',
+         '''
+         mqrbf xl=%g il=%g eps=%g boundary=1 other=${SOURCES[1]}
+         ''' %(well_xl[well], well_il[well], 0.08))
+
+    Flow('RHOBcube'+d, ['spickr'+d, 'spickm-'+d, 'rbf-'+d],
+         '''
+ 	 math a1=${SOURCES[1]} a2=${SOURCES[2]} output="input*a1*a2"
+	 ''')
+
+    Flow('DTcube'+d, ['spickv'+d, 'spickm-'+d, 'rbf-'+d],
+         '''
+	 math a1=${SOURCES[1]} a2=${SOURCES[2]} output="input*a1*a2"
+	 ''')
+
+    Flow('rbfm-'+d, ['spickm-'+d, 'rbf-'+d],
+         '''
+	 math a1=${SOURCES[1]} output="input*a1"
+	 ''')
+    
+    # Generate mistie volume
+    Flow('spickmis'+d,['dipct', 'mistie-'+d, 'wtime-'+d],'pwpaint2 order=3 seed=${SOURCES[1]} cost=${SOURCES[2]} eps=0.04')
+    Flow('MIScube'+d, ['spickmis'+d, 'spickm-'+d, 'rbf-'+d],
+         '''
+	 math a1=${SOURCES[1]} a2=${SOURCES[2]} output="input*a1*a2"
+	 ''')
+
+####################################################################################################
+################################## Combine all property volumes ####################################
+####################################################################################################
+Flow('RHOBcube', 'RHOBcube0 RHOBcube1 RHOBcube2 RHOBcube3 RHOBcube4 RHOBcube5 RHOBcube6 RHOBcube7 RHOBcube8 RHOBcube9 RHOBcube10 RHOBcube11 RHOBcube12 RHOBcube13 RHOBcube14 RHOBcube15 RHOBcube16 RHOBcube17 RHOBcube18 RHOBcube19 RHOBcube20 RHOBcube21 RHOBcube22 RHOBcube23 RHOBcube24 RHOBcube25',
+     '''
+     add < ${SOURCES[0]} ${SOURCES[1:25]} > ${TARGETS[0]}
+     ''',stdin=1,stdout=-1)
+
+Flow('DTcube', 'DTcube0 DTcube1 DTcube2 DTcube3 DTcube4 DTcube5 DTcube6 DTcube7 DTcube8 DTcube9 DTcube10 DTcube11 DTcube12 DTcube13 DTcube14 DTcube15 DTcube16 DTcube17 DTcube18 DTcube19 DTcube20 DTcube21 DTcube22 DTcube23 DTcube24 DTcube25',
+     '''
+     add < ${SOURCES[0]} ${SOURCES[1:25]} > ${TARGETS[0]}
+     ''',stdin=1,stdout=-1)
+
+Flow('MIScube', 'MIScube0 MIScube1 MIScube2 MIScube3 MIScube4 MIScube5 MIScube6 MIScube7 MIScube8 MIScube9 MIScube10 MIScube11 MIScube12 MIScube13 MIScube14 MIScube15 MIScube16 MIScube17 MIScube18 MIScube19 MIScube20 MIScube21 MIScube22 MIScube23 MIScube24 MIScube25',
+     '''
+     add < ${SOURCES[0]} ${SOURCES[1:25]} > ${TARGETS[0]}
+     ''',stdin=1,stdout=-1)
+
+Flow('RBFcube', 'rbfm-0 rbfm-1 rbfm-2 rbfm-3 rbfm-4 rbfm-5 rbfm-6 rbfm-7 rbfm-8 rbfm-9 rbfm-10 rbfm-11 rbfm-12 rbfm-13 rbfm-14 rbfm-15 rbfm-16 rbfm-17 rbfm-18 rbfm-19 rbfm-20 rbfm-21 rbfm-22 rbfm-23 rbfm-24 rbfm-25',
+     '''
+     add < ${SOURCES[0]} ${SOURCES[1:25]} > ${TARGETS[0]}
+     ''',stdin=1,stdout=-1)
+
+Flow('RBFcube2', 'RBFcube',
+     '''
+     mask min=0.000001 | dd type=float | math output="1-input"
+     ''')
+Flow('RHOBvol', ['RHOBcube','RBFcube', 'RBFcube2'], 'math a1=${SOURCES[1]} a2=${SOURCES[2]} output="input/(a1+a2)"')
+Flow('DTvol', ['DTcube','RBFcube', 'RBFcube2', 'vertmask'], 'math a1=${SOURCES[1]} a2=${SOURCES[2]} a3=${SOURCES[3]} output="input*a3/(a1+a2)"')
+Flow('MISvol', ['MIScube','RBFcube', 'RBFcube2', 'vertmask'], 'math a1=${SOURCES[1]} a2=${SOURCES[2]} a3=${SOURCES[3]} output="input*a3/(a1+a2)"')
+
+
+####################################################################################################
+####################################### Blind Well Test ############################################
+####################################################################################################
+
+
+for well in range(num):
+    d=str(well)
+
+    Flow('bwtDT'+d, ['DTcube','DTcube'+d], 'math a1=${SOURCES[1]} output=input-a1')
+    Flow('bwtrbf'+d, ['RBFcube','rbfm-'+d], 'math a1=${SOURCES[1]} output=input-a1')
+    Flow('rbfN'+d, 'bwtrbf'+d,
+         '''
+     	 mask min=0.000001 | dd type=float | math output="1-input"
+     	 ''')
+    Flow('bwtDTN'+d, ['bwtDT'+d,'bwtrbf'+d, 'rbfN'+d], 'math a1=${SOURCES[1]} a2=${SOURCES[2]} output="input/(a1+a2)"')
+
+    Flow('DTN'+d,'bwtDTN'+d,
+         '''
+	 window f2=%d n2=1 f3=%d n3=1
+     	 ''' %(well_xl[well], well_il[well]))
+
+
+####################################################################################################
+###################################### Plotting Base Map ###########################################
+####################################################################################################
+
+for i in range(num):
+    count = str(i)
+    if (i==0) :
+        Flow('spike'+count, None, 
+             '''
+             spike d1=1 o1=1 n1=345 k1=%g l1=%g mag=%g
+             ''' %(well_il[i], well_il[i], well_xl[i]))
+        Plot('spike'+count,
+             '''
+             graph symbol='*' symbolsz=23 min2=7 max2=188 wantaxis1=n wantaxis2=n yreverse=n wanttitle=n label1="Crossline Number" label2="Inline Number" plotcol=4 unit1="" unit2="" transp=y plotfat=3
+             ''')
+    else:
+        Flow('spike'+count, None, 
+             '''
+             spike d1=1 o1=1 n1=345 k1=%g l1=%g mag=%g
+             ''' %(well_il[i], well_il[i], well_xl[i]))
+        Plot('spike'+count,
+             '''
+             graph symbol='*' symbolsz=23 min2=6 max2=188 wantaxis1=n wantaxis2=n yreverse=n wanttitle=n label1="Crossline Number" label2="Inline Number" plotcol=1 unit1="" unit2="" transp=y plotfat=3
+             ''')
+
+Flow('seis_n1_350','filtmigr3','window f1=360 n1=1')
+Plot('seis_n1_350',
+     '''
+     grey color=i label1="Crossline Number" label2="Inline Number" title="Seismic Amplitudes" min1=7 max1=188 unit1="" unit2="" transp=n yreverse=n
+     ''')
+
+Result('basemap', ['seis_n1_350', 'spike0', 'spike1', 'spike2', 'spike3', 'spike4', 'spike5', 'spike6', 'spike7', 'spike8', 'spike9', 'spike10', 'spike11', 'spike12', 'spike13', 'spike14', 'spike15', 'spike16', 'spike17', 'spike18', 'spike19', 'spike20', 'spike21', 'spike22', 'spike23', 'spike24', 'spike25'], 'Overlay')
+
+
+t  = 0.72
+xl = 114
+il = 200
+Result('seismic', 'filtmigr3',
+       '''
+       byte gainpanel=all bar=sbar.rsf mean=0 minval=-5 maxval=5 |
+       grey3 frame1=%g frame2=%g frame3=%g color=i scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Seismic Data" barlabel="Amplitude"
+       ''' %(t/0.002, xl, il))
+Result('dipc1', 'dipc1',
+       '''
+       byte gainpanel=all bar=1bar.rsf mean=0 minval=-5 maxval=5 |
+       grey3 frame1=%g frame2=%g frame3=%g color=j scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Inline Dip" barlabel="Time Dip"
+       ''' %(t/0.002, xl, il))
+Result('dipc2', 'dipc2',
+       '''
+       byte gainpanel=all bar=2bar.rsf mean=0 minval=-5 maxval=5 |
+       grey3 frame1=%g frame2=%g frame3=%g color=j scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Crossline Dip" barlabel="Time Dip"
+       ''' %(t/0.002, xl, il))
+Result('DTvol', 'DTvol',
+       '''
+       math output="input*0.3048" | byte gainpanel=all bar=3bar.rsf bias=80 minval=50 maxval=120 clip=40 |
+       grey3 frame1=%g frame2=%g frame3=%g color=j scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Interpolated Sonic" barlabel="Sonic (us/ft)"
+       ''' %(t/0.002, xl, il))
+Result('RHOBvol', 'RHOBvol',
+       '''
+       byte gainpanel=all bar=3bar.rsf bias=2.5 minval=2 maxval=3 clip=0.5 |
+       grey3 frame1=%g frame2=%g frame3=%g color=j scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Interpolated Density" barlabel="Density (gcc)"
+       ''' %(t/0.002, xl, il))
+Result('MISvol', 'MISvol',
+       '''
+       byte gainpanel=all bar=3bar.rsf bias=0 minval=-0.03 maxval=0.03 |
+       grey3 frame1=%g frame2=%g frame3=%g color=j scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Interpolated Mistie" barlabel="Mistie (s)"
+       ''' %(t/0.002, xl, il))
+
+#### Generate figures for paper
+
+Plot('GR0', 'GR0', 
+	   	    'despike wide=55 | graph transp=y yreverse=y plotcol=5 min1=1000 max1=6200 min2=0 max2=200 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="GR" unit2="API" title="" screenht=12')
+Plot('GR2', 'GR2', 
+	   	   'despike wide=55 | graph transp=y yreverse=y plotcol=7 min1=1000 max1=6200 min2=0 max2=200 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="GR" unit2="API" title="" screenht=12')
+
+Result('GR0and2', ['GR0', 'GR2'], 'Overlay')
+
+Plot('DT0i', 'DT0',
+	   	    'despike wide=11 | graph transp=y yreverse=y plotcol=5 min1=1000 max1=6200 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+Plot('DT2i', 'DT2',
+	   	   'despike wide=11 | graph transp=y yreverse=y plotcol=7 min1=1000 max1=6200 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+
+Result('DT0and2', ['DT0i', 'DT2i'], 'Overlay')
+
+
+Plot('GRte0', 'GRte0', 
+	   	    'graph transp=y yreverse=y plotcol=5 min1=4000 max1=9200 min2=0 max2=200 screenratio=2.5 labelsz=4 titlesz=5 label1="Relative Geologic Depth" unit1=ft label2="GR" unit2="API" title="" screenht=12')
+Plot('GRte2', 'GRtes2-2', 
+	   	   'graph transp=y yreverse=y plotcol=7 min1=4000 max1=9200 min2=0 max2=200 screenratio=2.5 labelsz=4 titlesz=5 label1="Relative Geologic Depth" unit1=ft label2="GR" unit2="API" title="" screenht=12')
+
+Result('GR2shift0', ['GRte0', 'GRte2'], 'Overlay')
+
+Plot('DT0a', 'DTte0',
+	   	    'graph transp=y yreverse=y plotcol=5 min1=4000 max1=9200 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="Relative Geologic Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+Plot('DTte2', 'DTtes2-2',
+	   	   'graph transp=y yreverse=y plotcol=7 min1=4000 max1=9200 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="Relative Geologic Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+
+Result('DT2shift0', ['DT0a', 'DTte2'], 'Overlay')
+
+
+
+Plot('DTp2', 'DTp2', 
+	   	   'graph transp=y yreverse=y plotcol=4 min1=1000 max1=6000 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+Plot('DT2', 'DT2', 
+	   	   'graph transp=y yreverse=y plotcol=7 min1=1000 max1=6000 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+Result('DTp2a', ['DT2', 'DTp2'], 'Overlay')
+
+Plot('RHOBp2', 'RHOBp2', 
+	   	   'graph transp=y yreverse=y plotcol=4 min1=1000 max1=6000 min2=1 max2=3.5 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Density" unit2="gcc" title="" screenht=12')
+Plot('RHOB2', 'RHOB2', 
+	   	   'graph transp=y yreverse=y plotcol=7 min1=1000 max1=6000 min2=1 max2=3.5 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Density" unit2="gcc" title="" screenht=12')
+Result('RHOBp2a', ['RHOB2', 'RHOBp2'], 'Overlay')
+
+Result('CAL2', 'CAL2', 
+	   	   'graph transp=y yreverse=y plotcol=7 min1=1000 max1=6000 min2=6 max2=16 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Caliper" unit2="in" title="" screenht=12')
+
+Result('wavelet200',
+       '''
+       wiggle min1=-0.12 max1=0.12 min2=-0.5 max2=1 title="Wavelet"
+       label1=Time unit1=s label2=Amplitude labelsz=10 titlesz=12 grid=n plotcol=7 axisfat=3 plotfat=3 labelfat=3 titlefat=3
+       ''')
+
+
+Flow('synth-p3', 'synth-3', 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+Plot('synth-p3',
+     '''
+     wiggle min1=0 max1=1.5 min2=-0.0008 max2=0.0026 poly=y yreverse=y title="" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=3 pclip=98 wantaxis2=n screenratio=2.5 screenht=12
+     ''')
+Flow('synth-5p3', 'synth5-3', 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+Plot('synth-5p3',
+     '''
+     wiggle min1=0 max1=1.5 min2=-0.0017 max2=0.0017 poly=y yreverse=y title="" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=5 pclip=98 wantaxis2=n screenratio=2.5 screenht=12
+     ''')
+Flow('ortracep3', 'ortrace3', 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+Plot('ortracep3',
+     '''
+     wiggle min1=0 max1=1.5 min2=-0.0026 max2=0.0008 poly=y yreverse=y title="Well Tie Example 1" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=7 pclip=98 wantaxis2=n screenratio=2.5 screenht=12
+     ''')
+Result('synth-p3',['synth-p3', 'synth-5p3', 'ortracep3'],'Overlay')
+
+"""
+Flow('synth-p2', 'synth-2', 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+Plot('synth-p2',
+     '''
+     wiggle min1=0 max1=1.5 min2=-0.0008 max2=0.0026 poly=y yreverse=y title="" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=3 pclip=98 wantaxis2=n screenratio=2.5 screenht=12
+     ''')
+Flow('synth-5p2', 'synth5-2', 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+Plot('synth-5p2',
+     '''
+     wiggle min1=0 max1=1.5 min2=-0.0017 max2=0.0017 poly=y yreverse=y title="" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=5 pclip=98 wantaxis2=n screenratio=2.5 screenht=12
+     ''')
+Flow('ortracep2', 'ortrace2', 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+Plot('ortracep2',
+     '''
+     wiggle min1=0 max1=1.5 min2=-0.0026 max2=0.0008 poly=y yreverse=y title="Well Tie Example 1" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=7 pclip=98 wantaxis2=n screenratio=2.5 screenht=12
+     ''')
+Result('synth-p2',['synth-p2', 'synth-5p2', 'ortracep2'],'Overlay')
+"""
+
+Flow('inline3','filtmigr3 datmask2',
+     '''
+     math a1=${SOURCES[1]} output="-1*input*a1" | window f2=%d n2=1
+     ''' %(well_xl[3]))
+Plot('inline3','grey title="Seismic Crossline" min1=0.3 max1=1.2 min2=1 max2=345 label2="Inline Number"')
+
+Flow('ipos',None,'spike n1=1 mag=%d' %(345 + 1 - well_il[3]))
+Plot('itrace','synth5-3 ipos',
+     '''
+     wiggle transp=y yreverse=y wanttitle=n wantaxis=n plotcol=5
+     xpos=${SOURCES[1]} xmin=345 xmax=1 poly=y zplot=4 min1=0.3 max1=1.2
+     ''')
+Result('inline3','inline3 itrace','Overlay')
+Result('inline3a','inline3','Overlay')
+
+"""
+Flow('xline3',[data, 'datmask2'],
+     '''
+     math a1=${SOURCES[1]} output="-1*input*a1" | window f3=%d n3=1
+     ''' %(well_il[3]))
+Plot('xline3','grey title=Seismic min1=0.3 max1=1.2 min2=1 max2=188')
+Flow('xpos',None,'spike n1=1 mag=%d' %(188 + 1 - well_xl[3]))
+Plot('xtrace','synth5-3 xpos',
+     '''
+     wiggle transp=y yreverse=y wanttitle=n wantaxis=n plotcol=5
+     xpos=${SOURCES[1]} xmin=188 xmax=1 poly=y zplot=4 min1=0.3 max1=1.2
+     ''')
+Result('xline3','xline3 xtrace','Overlay')
+"""
+
+Flow(['tdr3f', 'DTpi3f'], ['DTbi3', 'tdr4-3'], 'tdr stretch=1 ms=1 dels=%g tdrNew=${SOURCES[1]} sonicFo=${TARGETS[1]}' %(0.5*0.3048))
+
+Plot('tdr3',
+     '''
+     graph min1=0 max1=6000 min2=0 max2=1.4 poly=y yreverse=y title="" transp=y yreverse=y
+     label1="True Depth" unit1=ft labelsz=4 titlesz=5 grid=n plotcol=3 pclip=98 label2=Time unit2=s screenratio=2.5 screenht=12 d1num=0.2 n1tic=8 o1num=0 plotfat=5
+     ''')
+Plot('tdr4-3',
+     '''
+     graph min1=0 max1=6000 min2=0 max2=1.4 poly=y yreverse=y title="" transp=y yreverse=y
+     label1="True Depth" unit1=ft labelsz=4 titlesz=5 grid=n plotcol=5 pclip=98 wantaxis2=n screenratio=2.5 screenht=12 d1num=0.2 n1tic=8 o1num= 0 plotfat=5
+     ''')
+Result('tdr3',['tdr3','tdr4-3'],'Overlay')
+
+
+Plot('DTbi3',
+     '''
+     math output="input*0.3048" | graph min1=0 max1=6000 min2=40 max2=120 poly=y yreverse=y title="" transp=y yreverse=y
+     label1="True Depth" unit1=ft labelsz=4 titlesz=5 grid=n plotcol=3 pclip=98 label2=Sonic unit2=us/ft screenratio=2.5 screenht=12 plotfat=2
+     ''')
+Plot('DTpi3f',
+     '''
+     math output="input*0.3048" | graph min1=0 max1=6000 min2=40 max2=120 poly=y yreverse=y title="" transp=y yreverse=y
+     label1="True Depth" unit1=ft labelsz=4 titlesz=5 grid=n plotcol=5 pclip=98 wantaxis2=n screenratio=2.5 screenht=12 plotfat=2
+     ''')
+Plot('DTpi3',
+     '''
+     math output="input*0.3048" | graph min1=0 max1=6000 min2=40 max2=120 poly=y yreverse=y title="" transp=y yreverse=y
+     label1="True Depth" unit1=ft labelsz=4 titlesz=5 grid=n plotcol=7 pclip=98 wantaxis2=n screenratio=2.5 screenht=12 plotfat=3
+     ''')
+Result('DTpi3',['DTpi3','DTbi3','DTpi3f'],'Overlay')
+
+Plot('realDT3', ['DTt-3', 'maskt3'],
+     '''
+     math a1=${SOURCES[1]} output="input*a1*0.3048" | graph min2=40 max2=120 poly=y yreverse=y title="" transp=y yreverse=y
+     label1=Time unit1=s label2=Sonic unit2=us/ft labelsz=4 titlesz=5 grid=n plotcol=7 clip=7 plotfat=1 screenratio=2.5
+     ''')
+Plot('DTN3', ['DTN3', 'maskt3'],
+     '''
+     math a1=${SOURCES[1]} output="input*a1*0.3048" | graph min2=40 max2=120 poly=y yreverse=y title="Blind Well Test 1" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=7 clip=7 plotcol=3 plotfat=2 screenratio=2.5 label2="" unit2=""
+     ''')
+Result('bwtDT3', ['realDT3','DTN3'], 'Overlay')
+
+Plot('realDT6', ['DTt-6', 'maskt6'],
+     '''
+     math a1=${SOURCES[1]} output="input*a1*0.3048" | graph min2=40 max2=120 poly=y yreverse=y title="" transp=y yreverse=y
+     label1=Time unit1=s label2=Sonic unit2=us/ft labelsz=4 titlesz=5 grid=n plotcol=7 clip=7 plotfat=1 screenratio=2.5
+     ''')
+Plot('DTN6', ['DTN6', 'maskt6'],
+     '''
+     math a1=${SOURCES[1]} output="input*a1*0.3048" | graph min2=40 max2=120 poly=y yreverse=y title="Blind Well Test 2" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=7 clip=7 plotcol=3 plotfat=2 screenratio=2.5 label2="" unit2=""
+     ''')
+Result('bwtDT6', ['realDT6','DTN6'], 'Overlay')
+
+
+####################################################################################################
+########################################## All well BWT ############################################
+####################################################################################################
+Flow('line', None, 'spike d1=1 k1=0 l1=200 mag=1 o1=0 n1=201')
+Flow('xy', 'line', 'math output=x1')
+Plot('xy', 'xy', 'graph wanttitle=n label1= label2= min1=0 max1=200 min2=0 max2=200 screenratio=1 screenht=6 d1num=20 plotcol=7 plotfat=4 wantaxis=n')
+
+for well in range(num):
+    d = str(well)
+    Flow('DTrealm-'+d, ['DTt-'+d, 'maskt'+d], 'math a1=${SOURCES[1]} output="input*a1*0.3048"')
+    Flow('DTNm-'+d, ['DTN'+d, 'maskt'+d], 'math a1=${SOURCES[1]} output="input*a1*0.3048"')
+
+    if (well == 0):
+       Plot('xbwt-DT'+d, ['DTrealm-'+d, 'DTNm-'+d],
+            'cmplx ${SOURCES[1]} | graph symbol="." wanttitle=n label1="Real Sonic" label2="Estimated Sonic" unit1="us/ft" unit2="us/ft" labelsz=8 min1=30 max1=160 min2=30 max2=160 screenratio=1 screenht=6 labelsz=4 d1num=20')
+    else:
+       Plot('xbwt-DT'+d, ['DTrealm-'+d, 'DTNm-'+d],
+            'cmplx ${SOURCES[1]} | graph symbol="." wanttitle=n label1="" label2="" unit1="" unit2="" labelsz=8 min1=30 max1=160 min2=30 max2=160 screenratio=1 screenht=6 labelsz=4 d1num=20 wantaxis2=n wantaxis1=n')
+
+Result('xbwt-DT',['xbwt-DT0','xbwt-DT1','xbwt-DT2','xbwt-DT3','xbwt-DT4','xbwt-DT5','xbwt-DT6','xbwt-DT7','xbwt-DT8','xbwt-DT9','xbwt-DT10', 'xbwt-DT11','xbwt-DT12','xbwt-DT13','xbwt-DT14','xbwt-DT15','xbwt-DT16','xbwt-DT17','xbwt-DT18','xbwt-DT19','xbwt-DT20','xbwt-DT21','xbwt-DT22','xbwt-DT23','xbwt-DT24','xbwt-DT25','xy'],'Overlay')
+
+####################################################################################################
+####################################### Log Estimation BWT #########################################
+####################################################################################################
+
+
+q = [0,2] 
+for well in range(2):
+    d = str(q[well])
+
+    for attr in ('DT', 'RHOB'):
+        attrn = '%s' % (attr)
+        inpu = './logs_w0/'+attrn+d+'f.txt'
+        
+        Flow([attrn+'0f'+d], None,
+	        '''
+	        echo in=%s n1=24375 d1=0.5 o1=35.5 n2=1 d2=1 o2=1 data_format=ascii_float | dd form=native
+	        ''' % (inpu) )
+
+        Flow([attrn+'0fe'+d], [attrn+'0f'+d], 'extend switch=1')
+
+## Reverthe stretches
+
+        if(q[well] != 0):
+            Flow([attrn+'0fes-'+d],[attrn+'0fe'+d, attrn+'te0', 'spick20n-'+d],
+                 '''
+     	         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	         verb=1 nliter=0 
+     	         ''')
+            Flow([attrn+'0fes2-'+d],[attrn+'0fes-'+d, attrn+'te0', 'spick10n-'+d],
+                 '''
+     	         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     	         verb=1 nliter=0 
+     	         ''')
+            Flow([attrn+'0fes3a-'+d],[attrn+'0fes2-'+d, attrn+'te'+d, 'spick1f-'+d],
+                 '''
+                 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+                 verb=1 nliter=0 
+                 ''')
+            Flow([attrn+'0fes3-'+d],[attrn+'0fes3a-'+d, attrn+'te'+d, 'spick2f-'+d],
+                 '''
+                 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+                 verb=1 nliter=0 
+                 ''')
+
+        else:
+            Flow(attrn+'0fes3-'+d, attrn+'0fe'+d, 'math output="input"')
+
+        if (q[well] != 0):
+            Flow(attrn+'0pn'+d, [attrn+'0fes3-'+d], 'extend val=6000 switch=2')
+            Flow(attrn+'0pn2-'+d, ['GR'+d, attrn+'0pn'+d], 'realign log1=${SOURCES[1]}')
+            Flow(attrn+'0p'+d, [attrn+'0pn2-'+d, attrn+d], 'extend switch=3 reflog=${SOURCES[1]}')
+        
+        else:
+            Flow(attrn+'0pn2-'+d, attrn+'0fes3-'+d, 'extend val=6000 switch=2')
+            Flow(attrn+'0p'+d, [attrn+'0pn2-'+d, attrn+d], 'extend switch=3 reflog=${SOURCES[1]}')
+
+
+        Plot(attrn+'01p'+d, attrn+'0p'+d, 
+			      'graph transp=y yreverse=y plotcol=4 min1=2000 max1=3600 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+        Plot(attrn+'1p'+d, attrn+d, 
+			      'graph transp=y yreverse=y plotcol=7 min1=2000 max1=3600 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+        Result(attrn+'01p'+d, [attrn+'01p'+d, attrn+'1p'+d], 'Overlay')
+
+        Plot(attrn+'02p'+d, attrn+'0p'+d,
+			       'graph transp=y yreverse=y plotcol=4 min1=3800 max1=5400 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+        Plot(attrn+'2p'+d, attrn+d,
+			      'graph transp=y yreverse=y plotcol=7 min1=3800 max1=5400 min2=40 max2=120 screenratio=2.5 labelsz=4 titlesz=5 label1="True Depth" unit1=ft label2="Sonic" unit2="us/ft" title="" screenht=12')
+        Result(attrn+'02p'+d, [attrn+'02p'+d, attrn+'2p'+d], 'Overlay')
+
+    Plot('xplot-DT'+d, ['DT'+d, 'DT0p'+d],
+          'cmplx ${SOURCES[1]} | graph symbol="." wanttitle=n label1="Real Sonic" label2="Estimated Sonic" unit1="us/ft" unit2="us/ft" labelsz=8 min1=30 max1=160 min2=30 max2=160 screenratio=1 screenht=6 labelsz=4 d1num=20')
+    Result('xplot-DT'+d,['xplot-DT'+d, 'xy'],'Overlay')
+
+
+####################################################################################################
+##################################### Log Estimation Gardner #######################################
+####################################################################################################
+
+# Gardner's constants change with each strat interval
+inpu = './logs_gard/DT2gard.txt'
+
+Flow('DTgard2f', None,
+     '''
+     echo in=%s n1=24375 d1=0.5 o1=35.5 n2=1 d2=1 o2=1 data_format=ascii_float | dd form=native
+     ''' % (inpu) )
+
+Flow('DTgard2fe', 'DTgard2f', 'extend switch=1')
+Flow('DTgard0fes-2',['DTgard2fe', 'DTte0', 'spick20n-2'],
+     '''
+     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     verb=1 nliter=0 
+     ''')
+Flow('DTgard0fes2-2',['DTgard0fes-2', 'DTte0', 'spick10n-2'],
+     '''
+     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     verb=1 nliter=0 
+     ''')
+Flow('DTgard0fes3a-2',['DTgard0fes2-2', 'DTte2', 'spick1f-2'],
+     '''
+     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     verb=1 nliter=0 
+     ''')
+Flow('DTgard0fes3-2',['DTgard0fes3a-2', 'DTte2', 'spick2f-2'],
+     '''
+     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     verb=1 nliter=0 
+     ''')
+Flow('DTgard0pn2','DTgard0fes3-2', 'extend val=6000 switch=2')
+Flow('DTgard0pn2-2', ['GR2', 'DTgard0pn2'], 'realign log1=${SOURCES[1]}')
+Flow('DTgard0p2', ['DTgard0pn2-2', 'DT2'], 'extend switch=3 reflog=${SOURCES[1]}')
+
+
+
+#Flow('DTgard2', 'RHOB2', 'mask min=-1 max=1 | dd type=float | math a1=${SOURCES[0]} output="(1-input)*(1000000/360)/((a1 + input)^(4))"') Constant gard parameters
+
+Plot('xplot-DT2gard', ['DT2', 'DTgard0p2'],
+     'cmplx ${SOURCES[1]} | graph symbol="." wanttitle=n label1="Real Sonic" label2="Reverse Gardner Sonic" unit1="us/ft" unit2="us/ft" labelsz=8 min1=30 max1=160 min2=30 max2=160 screenratio=1 screenht=6 labelsz=4 d1num=20')
+Result('xplot-DT2gard',['xplot-DT2gard', 'xy'],'Overlay')
+
+
+
+# Figures for news letter Spring 2018
+
+Result('DTvol-news', 'DTvol',
+       '''
+       window min1=0.4 max1=1.0 min2=55 max2=170 min3=50 max3=320 | math output="input*0.3048" | byte gainpanel=all bar=3bar.rsf bias=75 minval=50 maxval=110 clip=35 |
+       grey3 frame1=%g frame2=%g frame3=%g color=j scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Interpolated sonic" barlabel="Sonic (us/ft)"
+       ''' %((t-0.4)/0.002, xl-55, il-50))
+
+Result('RHOBvol-news', 'RHOBvol',
+       '''
+       window min1=0.4 max1=1.0 min2=55 max2=170 min3=50 max3=320 | byte gainpanel=all bar=3bar.rsf bias=2.5 minval=2.2 maxval=2.8 clip=0.2 |
+       grey3 frame1=%g frame2=%g frame3=%g color=j scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Interpolated density" barlabel="Density (gcc)"
+       ''' %((t-0.4)/0.002, xl-55, il-50))
+
+Result('seis-news', 'filtmigr3',
+       '''
+       window min1=0.4 max1=1.0 min2=55 max2=170 min3=50 max3=320 | byte gainpanel=all bar=3bar.rsf |
+       grey3 frame1=%g frame2=%g frame3=%g color=i scalebar=y label1="Time" unit1=s label2="Xline" label3="Inline" title="Seismic Data" barlabel="Amplitude"
+       ''' %((t-0.4)/0.002, xl-55, il-50))
+
+Plot('realDT3n', ['DTt-3', 'maskt3'],
+     '''
+     math a1=${SOURCES[1]} output="input*a1*0.3048" | graph min2=40 max2=120 poly=y yreverse=y title="" transp=y yreverse=y
+     label1=Time unit1=s label2=Sonic unit2=us/ft labelsz=4 titlesz=5 grid=n plotcol=7 clip=7 plotfat=1 screenratio=2. min1=0.1 max1=1.1 
+     ''')
+Plot('DTN3n', ['DTN3', 'maskt3'],
+     '''
+     math a1=${SOURCES[1]} output="input*a1*0.3048" | graph min2=40 max2=120 poly=y yreverse=y title="Blind well test" transp=y yreverse=y
+     label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=7 clip=7 plotcol=3 plotfat=2 screenratio=2. label2="" unit2="" min1=0.1 max1=1.1 
+     ''')
+Result('bwtDT3-news', ['realDT3n','DTN3n'], 'Overlay')
+
+End()

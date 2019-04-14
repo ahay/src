@@ -1,0 +1,146 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+import math
+
+## Generate Model
+
+Flow('ro1', None, 'math n1=1 output=2.00 | dd type=float | spray axis=1 d=0.002 n=50 o=0')
+Flow('ro2', None, 'math n1=1 output=3.00 | dd type=float | spray axis=1 d=0.002 n=50 o=0')
+Flow('ro3', None, 'math n1=1 output=3.50 | dd type=float | spray axis=1 d=0.002 n=50 o=0')
+
+Flow('vp1', None, 'math n1=1 output=3.00 | dd type=float | spray axis=1 d=0.002 n=50 o=0')
+Flow('vp2', None, 'math n1=1 output=4.00 | dd type=float | spray axis=1 d=0.002 n=50 o=0')
+Flow('vp3', None, 'math n1=1 output=5.00 | dd type=float | spray axis=1 d=0.002 n=50 o=0')
+
+Flow('rho-model', 'ro1 ro2 ro3 ro3 ro3 ro2', 'cat o=0 axis=1 ${SOURCES[1:5]}')
+Flow('vp-model', 'vp1 vp2 vp3 vp2 vp3 vp3', 'cat o=0 axis=1 ${SOURCES[1:5]}')
+
+Flow('imp-model', 'vp-model rho-model', 'math a1=${SOURCES[1]} output="input*a1"')
+Flow('rp-model', 'imp-model', 'ai2refl')
+Flow('synth-model', 'rp-model', 'ricker1 frequency=30')
+
+Plot('rho-model',
+     '''
+     graph min1=0 max1=0.5 min2=1.5 max2=4 yreverse=y title="Density Model" transp=y label1="Sample" label2="Density" unit2="gcc" labelsz=14 titlesz=16 screenht=10
+     ''')
+Plot('vp-model',
+     '''
+     graph min1=0 max1=0.5 min2=2.5 max2=5.5 yreverse=y title="Velocity Model" transp=y label1="Sample" label2="Velocity" unit2="m/s" labelsz=14 titlesz=16 screenht=10
+     ''')
+Plot('imp-model',
+     '''
+     graph min1=0 max1=0.5 min2=5.5 max2=18 yreverse=y title="Impedance" transp=y label1="Sample" label2="Accoustic Impedance" unit2="AI" labelsz=14 titlesz=16 screenht=10
+     ''')
+Plot('rp-model',
+     '''
+     graph min1=0 max1=0.5 min2=-0.2 max2=0.5 yreverse=y title="Reflectivity Model" transp=y label1="Time" label2="" unit1=s labelsz=14 titlesz=16 screenht=10 plotfat=10
+     ''')
+Plot('synth-model',
+     '''
+     graph min1=0 max1=0.5 min2=-0.06 max2=0.06 yreverse=y title="Synthetic Model" transp=y label1="Time" unit1=s labelsz=14 titlesz=16 wantaxis2=n screenht=10 plotfat=10
+     ''')
+
+Result('modela', 'rho-model vp-model imp-model rp-model synth-model', 'SideBySideAniso')
+Result('modelb', 'rp-model synth-model', 'SideBySideAniso')
+
+
+## Shift Model for LS
+
+Flow('synth-shifted', 'synth-model', 'pad beg1=20 | put n1=250 o1=0')
+Plot('synth-shifted',
+     '''
+     graph min1=0 max1=0.5 min2=-0.06 max2=0.06 yreverse=y title="Shifted Synthetic Model" transp=y label1="Time" unit1=s labelsz=14 titlesz=16 wantaxis2=n screenht=10 plotfat=10
+     ''')
+
+Result('synth-shifted', 'synth-model synth-shifted', 'SideBySideAniso')
+
+
+## Local Similarity Match
+
+g0=-.1 # starting change
+g1=.1  # last change
+ng=51   # number of changes to scan
+dg = (g1-g0)/(ng-1)
+niter = 100 # maximum number of iterations
+
+# Scan shifts computing local similarity
+Flow('scan', 'synth-shifted synth-model',
+     '''
+     warpscan other=${SOURCES[1]} niter=%d sign=y
+     ng=%d g0=%g dg=%g rect1=10 rect2=5 shift=y
+     ''' % (niter,ng,g0,dg))
+
+Flow('spick','scan','pick vel0=%g rect1=20 rect2=20' % (0))
+
+Plot('scan','grey allpos=y color=j title="Shift Scan - Initial" label2="Relative Time Shift" unit2=s label1="Time" unit1=s')
+Plot('spick','graph pad=n min2=%g max2=%g plotcol=0 plotfat=5 transp=y yreverse=y wantaxis=n wanttitle=n plotfat=10' % (g0,g1))
+
+Result('scan','scan spick','Overlay')
+
+Flow('shifted-matched','synth-shifted synth-model spick',
+     '''
+     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     verb=1 nliter=0 
+     ''')
+
+Plot('shifted-matched',
+     '''
+     graph min1=0 max1=0.5 min2=-0.06 max2=0.06 yreverse=y title="Matched Synthetic Model" transp=y label1="Time" unit1=s labelsz=14 titlesz=16 wantaxis2=n screenht=10 plotfat=10
+     ''')
+
+Result('shifted-matched', 'synth-model synth-shifted shifted-matched', 'SideBySideAniso')
+
+
+## Add Noise to data
+
+Flow('rp-noise', 'rp-model', 'noise range=0.05')
+Flow('synth-noise', 'rp-noise', 'ricker1 frequency=30')
+
+Plot('rp-noise',
+     '''
+     graph min1=0 max1=0.5 min2=-0.2 max2=0.5 yreverse=y title="Noisey Reflectivity Model" transp=y label1="Time" unit1=s label2="Reflectivity" labelsz=14 titlesz=16 screenht=10
+     ''')
+Plot('synth-noise',
+     '''
+     graph min1=0 max1=0.5 min2=-0.06 max2=0.06 yreverse=y title="Noisey Synthetic Model" transp=y label1="Time" unit1=s labelsz=14 titlesz=16 wantaxis2=n screenht=10 plotfat=10
+     ''')
+
+
+## Local Similarity Match
+
+g0=-.1 # starting change
+g1=.1  # last change
+ng=51   # number of changes to scan
+dg = (g1-g0)/(ng-1)
+niter = 100 # maximum number of iterations
+
+# Scan shifts computing local similarity
+Flow('scan-noise', 'synth-shifted synth-noise',
+     '''
+     warpscan other=${SOURCES[1]} niter=%d sign=y
+     ng=%d g0=%g dg=%g rect1=10 rect2=5 shift=y
+     ''' % (niter,ng,g0,dg))
+
+Flow('spick-noise','scan-noise','pick vel0=%g rect1=20 rect2=20' % (0))
+
+Plot('scan-noise','grey allpos=y color=j title="Shift Scan - Initial" label2="Relative Time Shift" unit2=s label1="Time" unit1=s')
+Plot('spick-noise','graph pad=n min2=%g max2=%g plotcol=0 plotfat=5 transp=y yreverse=y wantaxis=n wanttitle=n plotfat=10' % (g0,g1))
+
+Result('scan-noise','scan-noise spick-noise','Overlay')
+
+Flow('noise-matched','synth-shifted synth-noise spick-noise',
+     '''
+     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+     verb=1 nliter=0 
+     ''')
+
+Plot('noise-matched',
+     '''
+     graph min1=0 max1=0.5 min2=-0.06 max2=0.06 yreverse=y title="Matched Synthetic Model" transp=y label1="Time" unit1=s labelsz=14 titlesz=16 wantaxis2=n screenht=10 plotfat=10
+     ''')
+
+Result('noise-matched', 'synth-noise synth-shifted shifted-matched', 'SideBySideAniso')
+
+
+
+End()
