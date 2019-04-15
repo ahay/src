@@ -71,7 +71,7 @@ def paper_tag(paper):
 def get_author(source,default,tag):
     author = default.get(tag[1])
     if not author:
-        paper = source.get_contents()
+        paper = source.get_contents().decode('utf-8')
         # remove comments
         paper = re.sub(r'[%][^\n]+','',paper)
         author = re_author.search(paper)
