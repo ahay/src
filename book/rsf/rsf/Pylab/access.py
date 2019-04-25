@@ -1,4 +1,5 @@
 from pylab import *
+switch_backend('agg')
 
 labels = '''
 google.com

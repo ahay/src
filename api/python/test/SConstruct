@@ -7,7 +7,7 @@ Flow('test.attr','clip.py',
      ./$SOURCE clip=0.5 | attr
      ''',stdin=0)
 binary = Command('afdm.exe','afdm.py','cp $SOURCE $TARGET')
-AddPostAction(binary,Chmod(str(binary),0o755))
+AddPostAction(binary,Chmod(binary,0o755))
 
 End() 
 

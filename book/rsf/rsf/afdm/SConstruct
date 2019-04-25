@@ -5,8 +5,9 @@ from rsf.proj import *
 prog = {}
 
 for lang in ('c','c++','f90','python','julia'):
-    SConscript('../../../../api/%s/test/SConstruct' % lang)
-    prog[lang] = '../../../../api/%s/test/afdm.exe' % lang
+    if lang != 'julia' or WhereIs('julia'):   
+        SConscript('../../../../api/%s/test/SConstruct' % lang)
+        prog[lang] = '../../../../api/%s/test/afdm.exe' % lang
 
 # Create wavelet
 Flow('wavelet',None,'spike n1=1001 k1=200 d1=0.001 | ricker1 frequency=10')
