@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 'C-Wave Backus Averaging (See Marion et al., 1994)'
 
+from __future__ import division
+
 import sys
 import numpy as np
 import rsf.api as rsf
@@ -97,16 +99,16 @@ for i in range(sdepth):
     if(depthf[i] == maxval):
         maxi = i
 
-for i in range(mini+(N/2),maxi-(N/2)):
+for i in range(mini+int(N/2),maxi-int(N/2)):
     mask2[i] = 1
 
 pave = np.zeros(sdepth)
 term = np.zeros(sdepth)
 
-for i in range((N/2),sdepth-(N/2)):
-    for j in range((i-(N/2)),i+(N/2)-1):
+for i in range(int(N/2),sdepth-int(N/2)):
+    for j in range((i-int(N/2)),i+int(N/2)-1):
         pave[i] = pave[i] + fk*rhob[j]
-    for j in range((i-(N/2)),i+(N/2)-1):
+    for j in range((i-int(N/2)),i+int(N/2)-1):
         if ((rhob[j] > 0) & (vel[j] > 0)):
                 term[i] = term[i] + fk*(1/(rhob[j]*vel[j]*vel[j]))
 

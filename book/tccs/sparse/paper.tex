@@ -1,0 +1,616 @@
+\published{}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\title{Least-squares path-summation diffraction imaging using sparsity constraints}
+
+\author{Dmitrii Merzlikin\footnotemark[1], 
+	Sergey Fomel\footnotemark[1],
+        Mrinal K. Sen\footnotemark[2]}
+\maketitle
+
+\address{
+\footnotemark[1] Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, Texas 78713-8924, USA \\
+\footnotemark[2] Institute for Geophysics \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+J.J. Pickle Research Campus, Bldg. 196 \\
+10100 Burnet Road (R2200)\\
+Austin, Texas 78758-4445, USA \\
+}
+
+\ms{GEO-2018-0609.R1}
+
+\lefthead{Merzlikin et al.}
+\righthead{Least-squares path summation}
+
+\begin{abstract}
+Diffraction imaging aims to emphasize small-scale subsurface heterogeneities such as faults,
+pinch-outs, fracture swarms, channels, etc. and can help
+seismic reservoir characterization. The key step in diffraction imaging workflows is based on the separation procedure
+suppressing higher-energy reflections and emphasizing diffractions, after which
+diffractions can be imaged independently. Separation results often contain crosstalk between reflections and diffractions
+and are prone to noise.
+We propose an inversion scheme to reduce the crosstalk and denoise diffractions. The scheme
+decomposes an input full wavefield into three components: reflections, diffractions and noise.
+We construct the inverted forward modeling operator
+as the chain of three operators: Kirchhoff modeling, plane wave destruction and
+path-summation integral filter. Both reflections and diffractions have the same modeling operator. Separation of the components
+is done by shaping regularization. We impose sparsity constraints to extract diffractions,
+enforce smoothing along dominant local event slopes to restore reflections and
+suppress the crosstalk between the components by local signal-and-noise orthogonalization. 
+Synthetic and field data examples confirm the effectivness of the proposed method. 
+\end{abstract}
+
+\section{Introduction}
+Diffraction imaging aims to emphasize small-scale subsurface heterogeneities such as faults,
+pinch-outs, fracture swarms, channels and other small features and can play an important role
+in seismic reservoir characterization \cite[]{landa2012seismic}. Reflections and diffractions
+coexist on seismic records, however the latter typically have significantly lower energy than the
+former \cite[]{klem-musatov94}. Moreover, most of the conventional
+seismic data processing is tuned to imaging and enhancing reflected waves, whereas diffractions on seismic images are being partially suppressed
+\cite[]{kozlov04}. Therefore, reflection and diffraction separation procedure 
+is a key step in diffraction imaging workflows \cite[]{harlan84,khaidukov04,fomel07}.
+
+Diffraction
+imaging methods can be classified based on the separation technique being employed.
+Methods based on optimal stacking of diffracted energy and suppression
+of reflections are described by \cite{kanasewich88,landa98,berkovitch09,dell11,tsingas11,rad14}.
+Wavefield separation methods aim to decompose conventional full-wavefield seismic records into different
+components representing reflections and diffractions \cite[]{harlan84,papziner98,taner06,fomel07,reshef09,klokov12,
+tyiasning2016comparison,merzlikin2017unconventional,merzlikin2017diffraction,klokov2017integrated}.
+\cite{kozlov04,moser08,koren2011full,klokov2013selecting,mihai15} modify the Kirchhoff migration
+kernel to eliminate specular energy coming from the first Fresnel zone and image diffractions only.
+
+Seismic waves diffract on heterogeneities with a size of a wavelength, whereas reflected energy is
+associated with larger objects in the subsurface corresponding to the size of the first Fresnel zone
+\cite[]{moser08}.
+Therefore, separating diffractions and imaging them independently can produce
+an image with a higher spatial resolution than that of the conventional migration.
+On the other hand, this resolution is limited by using conventional migration operators, which are tailored
+for reflection processing, in diffraction imaging workflows.
+To improve diffraction imaging resolution, \cite{music} propose to use singular value decomposition
+of the data in windows along the Kirchhoff diffraction-stacking aperture.
+This approach significantly improves resolution of diffraction images but requires a
+significant computational effort.
+\cite{huang14} propose to use resonant multiples to improve resolution of diffraction images. Their method
+requires nonlinear least-squares reverse time migration (RTM) or full wave inversion (FWI)
+updates of the background reflectivity after each iteration to account for the contribution of multiples.
+
+Robust diffraction separation from noise and reflections while accounting for the crosstalk between them is of utmost importance for a resolution increase, which cannot be accomplished without
+enhancing subtle features with magnitudes close to the noise level. The problem of diffraction and noise separation
+was first addressed by \cite{harlan84}.
+\cite{klokov2010separation,klokov10b,klokov2012diffraction,burnett15}
+enhance diffractions' signal-to-noise ratio
+in the dip-angle gathers' domain. 
+
+Least-squares migration \cite[]{Nemeth99,ronen2000least} can produce higher resolution than conventional migration
+algorithms and suppress artifacts intrinsic to the latter. Effectively an operator for diffraction imaging 
+can be constructed in an iterative fashion using least-squares migration framework. A priori knowledge about the signature
+of a scatterer's response to a seismic wavefield can be incorporated into the inversion in the form of regularization and allow
+for diffraction separation from noise and reflections. \cite{merzlikin2016least} perform least-squares migration chained with
+plane wave destruction (PWD) \cite[]{fomel02,fomel07} and path-summation integral filtering while enforcing sparsity
+in a diffraction model. \cite{yu2016sparse} utilize common-offset Kirchhoff least-squares migration with a sparse model regularization to emphasize diffractions.
+\cite{yu2017seismic} extract diffractions based on plane wave destruction and dictionary learning for sparse representation.
+\cite{yu2016separation} use two separate modeling operators for diffractions and reflections and impose a sparsity constraint on diffractions.
+\cite{decker2017enhancing} denoise diffractions by weighting the model with semblance estimated
+in dip-angle gather domain (DAG) in least-squares migration.
+
+In this paper, we propose a workflow to decompose the input seismic data into reflections, diffractions and noise.
+To restore both reflections and diffractions simultaneously
+we extend the least-squares migration workflow presented by \cite{merzlikin2016least}, in which the inverted forward modeling operator is the chain of
+Kirchhoff modeling, plane wave destruction and path-summation integral filter operators.
+The proposed chain of operators allows for proper incorporation of diffraction component into the inversion as opposed
+to the conventional least-squares migration dominated by
+stronger reflections \cite[]{merzlikin2016least}.
+Incorporation of reflection model space into the inversion reduces the crosstalk between reflections and diffractions. Both reflections
+and diffractions are modeled using the same forward modeling operator.
+Separation into the components is accomplished by shaping regularization
+\cite[]{fomel2007shaping,fomel2008nonlinear} and by local signal-and-noise orthogonalization
+\cite[]{chen2015random}. Following \cite{merzlikin2016least} diffractions are penalized by sparsity constraints allowing to distinguish them from noise. Reflections
+are forced to be smooth along the dominant local slopes in the image domain. Local signal-and-noise orthogonalization is
+applied additionally to further minimize the leakage of reflections
+into the diffraction image domain: local similarity \cite[]{fomel2007local} is computed between two models and events following reflected energy pattern are removed from the diffraction image. 
+Although we develop and illustrate the efficiency of the method for the zero-offset time-migration case, all the developments
+can be extended to depth and pre-stack domains.
+
+We start with a theory section describing all the components of the workflow. We describe the
+workflow and then demonstrate its efficiency on synthetic and data examples and discuss its comparative advantages and
+disadvantages. 
+
+\section{Method}
+
+We start with a brief review of the path-summation imaging framework.
+Then we give a formulation of the least-squares inverse problem for diffraction imaging. We then proceed with a description
+of an optimization strategy and introduce a regularization framework.
+
+\subsection{Analytical path-summation migration}
+
+\cite{landa06} present a path-integral imaging approach, which
+does not require knowledge of a velocity distribution in the subsurface.
+\cite{burnett11} adopt this approach and employ the principle of
+diffraction apex stationarity under migration velocity perturbation \cite[]{novais06} to evaluate
+the diffraction path-summation migration integral\footnote{We use a term ``path-summation migration integral" to highlight that
+the weighting scheme described further is not associated with ``probabilities" of corresponding images
+being stacked, which is the case for ``path-integral imaging" concept \cite[]{landa06}.} through stacking of constant migration
+velocity images. The images are generated by velocity continuation (VC) 
+technique, which corresponds to the following transformation in the Fourier domain \cite[]{fomel_2003a}:
+\begin{equation}
+\label{eq:vc}
+\tilde{P}(\Omega,k,v) = \hat{P}_0 (\Omega,k)\,e^{\frac{-i k^2 v^2 }{16\Omega}}\;,
+\end{equation}
+where $v$ is VC velocity, $\Omega$ is the Fourier dual of $\sigma$ (time axis after the transform $\sigma=t^2$), $k$ is the wavenumber; $\hat{P}_0 (\Omega,k)$ 
+is input stacked and not migrated data, which corresponds to $v=0$ and
+$\tilde{P}(\Omega,k,v)$ is a constant velocity image.
+
+In our previous work \cite[]{merzlikin17}, we derived analytical formulae
+for path-summation integral evaluation based on the continuity of VC transformation with respect
+to velocity: stacking of constant migration velocity images
+is replaced by a direct integral expression. Analytical formulae
+allow us to treat path-summation imaging workflow as a simple
+filter in the frequency-wavenumber domain. Here, we extend Gaussian weighting path-summation migration scheme
+\cite[]{merzlikin17} to account for variable velocity in the subsurface:
+we design a weighting function, which has a flat region in the middle and has a
+Gaussian decay for the tail-elimination region as opposed
+to a curve with one most probable velocity value in regular
+Gaussian weighting path-summation integral. The following expression describes path-summation integral with Gaussian tapering:
+\begin{align}
+\label{eq:gpi_flat_int}
+&\hat{I}(\Omega,k,v_a,v_b,\beta)\ =\ \hat{P}_0(\Omega,k)\ \Big( \int^{v_a}_{v_1} e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{a} - v)^2} dv\ +\\ \nonumber
+&+\ \int^{v_b}_{v_a}e^{\frac{-i k^2 v^2}{16\Omega}} dv\ +\ \int^{v_2}_{v_b} e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{b} - v)^2} dv\ \Big),
+\end{align}
+where $v_a$ and $v_b$ correspond to the lowest and to the highest constant migration
+velocities in the image set being stacked or, precisely speaking, integrated; $v_1$ and $v_2$ are
+tail cut-off velocities, which correspond to the slope decay parameter $\beta$. Expression ~\ref{eq:gpi_flat_int} 
+corresponds to the sum of three path-summation integrals: two Gaussian weighting scheme path-summation integrals (the first and
+the last terms) and unweighted path-summation integral (the middle term).
+Each term has an analytical expression.
+Gaussian weighting scheme path-summation integrals can be computed as \cite[]{merzlikin17}:
+\begin{align}
+\label{eq:gpi_filt}
+&\int^{v_a}_{v_1}\ e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{a} - v)^2} dv\ = \\ \nonumber
+&=\ \frac{\sqrt{\pi}\ e^{-(\beta v_{a}^2 + \frac{\beta^2 v_{a}^2}{\gamma(\Omega,k,\beta)^2})}}{ 2\gamma(\Omega,k,\beta) }\ \mbox{erfi}\big( \gamma(\Omega,k,\beta) v + \frac{\beta v_{a}}{\gamma(\Omega,k,\beta)} \big) \bigg|_{v_1}^{v_a}, 
+\end{align}
+where $\gamma(\Omega,k,\beta)=i\sqrt{ik^2/16\Omega + \beta}$. To compute the last summation term,
+which corresponds to the right taper slope, we
+replace $v_a$ with $v_2$ and $v_1$ with $v_b$. The middle term can be evaluated as:
+\begin{align}
+\label{eq:upi_filt}
+&\int^{v_b}_{v_a}e^{\frac{-i k^2 v^2}{16\Omega}} dv\ =\\ \nonumber
+&=\ e^{i\frac{5\pi}{4}}\ \frac{2\sqrt{\Omega \pi}}{k}\ \mbox{erfi}\big(e^{i\frac{3\pi}{4}}\ \frac{k\ v}{4\sqrt{\Omega}}\big) \bigg|_{v_a}^{v_b}. 
+\end{align}
+Thus, Gaussian-tapering path-summation integral can be evaluated analytically with a cost equal to that of only two FFTs.
+
+\subsection{Objective function}
+
+Seismic imaging can be formulated as an optimization problem \cite[]{Nemeth99,ronen2000least}:
+\begin{equation}
+\label{eq:general}
+J(\mathbf{m}) = \big|\big|\mathbf{d} - \mathbf{L}\mathbf{m}\big|\big|_{2}^{2},
+\end{equation}
+where $\mathbf{L}$ corresponds to the modeling operator, $\mathbf{d}$ corresponds to seismic data,
+$\mathbf{m}$ is an image of the subsurface containing both reflections and diffractions. In this work we
+use Kirchhoff modeling and migration as forward ($\mathbf{L}$) and adjoint ($\mathbf{L}^T$) operators correspondingly. To image reflections and diffractions
+as separate components of a wavefield we propose the following objective function: 
+\begin{equation}
+\label{eq:chain2d}
+J(\mathbf{m}_r,\mathbf{m}_d) = \Bigg|\Bigg| \mathbf{PD}_{data} \mathbf{d} - \bigg[ \mathbf{P}\mathbf{D}_{data}\mathbf{L}\ \ \mathbf{P}\mathbf{D}_{data} \mathbf{L} \bigg] \begin{bmatrix} \mathbf{m}_r\\ \mathbf{m}_d \end{bmatrix} \Bigg|\Bigg|_{2}^{2}.
+\end{equation}
+Here, $\mathbf{L}$ is forward Kirchhoff modeling operator, $\mathbf{m}_d$
+and $\mathbf{m}_r$ are diffraction and reflection images (models) respectively, $\mathbf{P}$ stands for analytical path-summation migration
+operator computed from equation~\ref{eq:gpi_flat_int} ($\mathbf{P}$ corresponds to $\hat{I}(\Omega,k,v_a,v_b,\beta)$ including forward Fourier, inverse
+Fourier and $\sigma=t^2$ transforms), $\mathbf{D}_{data}$ is a plane-wave
+destruction filter applied in the data domain.
+To penalize the objective function and perform reflection/diffraction separation the shaping regularization operator $\mathbf{R}_{\mathbf{S}_{\sigma},\mathbf{T}_{\lambda}}(\mathbf{m}_r,\mathbf{m}_d)$ is designed (see the ``Regularization'' subsection for details).
+
+Rather than fitting seismic
+data $\mathbf{d}$ as in equation~\ref{eq:general}, we search for models
+minimizing a misfit weighted by path-summation migration operator.
+Path-summation operator {$\mathbf{P}$} preceded by plane-wave destruction filter applied in the data domain ($\mathbf{D}_{data}$) for reflection energy
+elimination can be treated as diffraction probability at a certain location. Therefore,
+model fitting becomes constrained to those samples, in which diffractions are most probable. The terms of the misfit
+in equation~\ref{eq:chain2d} can be rearranged to stress the misfit weighting by diffraction probability ($\mathbf{P}\mathbf{D}_{data}$):
+\begin{equation}
+\label{eq:chain2}
+J(\mathbf{m}_r,\mathbf{m}_d) = \Bigg|\Bigg| \mathbf{PD}_{data}\big( \mathbf{d} - \bigg[ \mathbf{L}\ \ \mathbf{L} \bigg] \begin{bmatrix} \mathbf{m}_r\\ \mathbf{m}_d \end{bmatrix} \big) \Bigg|\Bigg|_{2}^{2}\ +\ \mathbf{R}_{\mathbf{S}_{\sigma},\mathbf{T}_{\lambda}}(\mathbf{m}_r,\mathbf{m}_d).
+\end{equation}
+
+Incorporation of PWD ($\mathbf{D}_{data}$) as a misfit weight into the inversion (equation~\ref{eq:chain2d}) puts some of the reflected energy in the null space.  PWD is a crucial part of the inversion.
+By weighting the residual with path-summation integral and PWD we guide the inversion to extract diffractions from the full wavefield, which is predominated by reflections.
+To restore reflections from the null space and account for their leakage to the diffraction image domain PWD can be disabled and another inversion cascade can be run:
+\begin{equation}
+\label{eq:chainnopwd}
+J(\mathbf{m}_r,\mathbf{m}_d) = \Bigg|\Bigg| \mathbf{P} \mathbf{d} - \bigg[ \mathbf{P}\mathbf{L}\ \ \mathbf{P}\mathbf{L} \bigg] \begin{bmatrix} \mathbf{m}_r\\ \mathbf{m}_d \end{bmatrix} \Bigg|\Bigg|_{2}^{2}\ +\ \mathbf{R}_{\mathbf{S}_{\sigma},\mathbf{T}_{\lambda},\mathbf{O}_{\mathbf{m}_r}}(\mathbf{m}_r,\mathbf{m}_d),
+\end{equation}
+where $\mathbf{R}_{\mathbf{S}_{\sigma},\mathbf{T}_{\lambda},\mathbf{O}_{\mathbf{m}_r}}(\mathbf{m}_r,\mathbf{m}_d)$ is the shaping regularization operator designed to
+perform reflection/diffraction separation after PWD operator ($\mathbf{D}_{data}$) deactivation (see ``Regularization'' subsection for details).
+
+Path-summation integral acts as a dip filter suppressing events with high wavenumbers \cite[]{merzlikin17}. High wavenumbers can be restored by running the third cascade of the inversion with path-summation integral filter disabled:
+\begin{equation}
+\label{eq:chainnopwdnopi}
+J(\mathbf{m}_r^w,\mathbf{m}_d^w) = \Bigg|\Bigg| \mathbf{d} - \bigg[ \mathbf{L}\ \ \mathbf{L} \bigg] \begin{bmatrix} \mathbf{m}_r^w\\ \mathbf{m}_d^w \end{bmatrix} \Bigg|\Bigg|_{2}^{2}\ +\ \mathbf{R}_{\mathbf{S}_{\sigma},\mathbf{T}_{\lambda},\mathbf{O}_{\mathbf{m}_r}}(\mathbf{m}_r^w,\mathbf{m}_d^w).
+\end{equation}
+A practical alternative is to restore high wavenumbers separately for reflections and diffractions. Once reflection $\mathbf{m}_r$ and
+diffraction $\mathbf{m}_d$ components are restored (after the second inversion cascade~\ref{eq:chainnopwd}), they can be used as starting models in the following inversions for wavenumber restoration:
+\begin{equation}
+\label{eq:restorerefl}
+J(\mathbf{m}_r^{w}) = \| \mathbf{d} - \mathbf{L} \mathbf{m}_r^{w} \|_{2}^{2}\ +\ \mathbf{R}_{\mathbf{S}_{\sigma}}(\mathbf{m}_r^{w}),
+\end{equation}
+where $\mathbf{m}_r^{w}$ are reflections with high wavenumbers restored, which are initialized with $\mathbf{m}_r^{w}=\mathbf{m}_r$ at the iteration zero. High wavenumbers
+in diffractions $\mathbf{m}_d^{w}$ can be restored as
+\begin{equation}
+\label{eq:restorediffr}
+J(\mathbf{m}_d^{w}) = \| \mathbf{d} - \mathbf{m}_r^{w} - \mathbf{L} \mathbf{m}_d^{w} \|_{2}^{2}\ +\ \mathbf{R}_{\mathbf{T}_{\lambda}}(\mathbf{m}_d^{w}).
+\end{equation}
+
+Reflections restored by equation~\ref{eq:restorerefl} ($\mathbf{m}_r^{w}$) are subtracted from the full wavefield data $\mathbf{d}$ to allow
+for diffraction-only restoration $\mathbf{m}_d^w$. No interference is expected between reflections $\mathbf{m}_r^{w}$ and diffractions $\mathbf{m}_d^w$
+provided accurate starting models from the previous inversions (equations~\ref{eq:chain2d} and~\ref{eq:chainnopwd}).
+
+Instead of implementing 
+$\mathbf{R}_{\mathbf{S}_{\sigma},\mathbf{T}_{\lambda}}(\mathbf{m}_r,\mathbf{m}_d)$,
+$\mathbf{R}_{\mathbf{S}_{\sigma},\mathbf{T}_{\lambda},\mathbf{O}_{\mathbf{m}_r}}(\mathbf{m}_r,\mathbf{m}_d)$,
+$\mathbf{R}_{\mathbf{S}_{\sigma}}(\mathbf{m}_r^{w})$ and \-
+$\mathbf{R}_{\mathbf{T}_{\lambda}}(\mathbf{m}_d^{w})$
+as penalty terms for reflections and diffractions correspondingly, the problem is
+reformulated in the shaping framework (see ``Regularization'' subsection for details). 
+
+\subsection{Optimization strategy}
+
+To solve the optimization problem in equations~\ref{eq:chain2d},~\ref{eq:chainnopwd},~\ref{eq:chainnopwdnopi}
+we employ a conjugate-gradients scheme:
+\begin{equation}
+\label{eq:itthr1}
+\begin{bmatrix} \mathbf{m}_{r}^{n+1} \\ \mathbf{m}_{d}^{n+1}\end{bmatrix}\ =\ \begin{bmatrix} \mathbf{m}_{r}^{n} \\ \mathbf{m}_{d}^{n}\end{bmatrix}\ +\ \alpha_{n}
+\begin{bmatrix} \mathbf{s}_{r}^{n}\\ \mathbf{s}_{d}^{n}  \end{bmatrix},\ \begin{bmatrix} \mathbf{s}_{r}^{n}\\ \mathbf{s}_{d}^{n}  \end{bmatrix}=-\nabla J(\mathbf{m}_{r}^{n},\mathbf{m}_{d}^{n})\ +\ \beta_{n}
+\begin{bmatrix}\mathbf{s}_{r}^{n-1}\\ \mathbf{s}_{d}^{n-1} \end{bmatrix},
+\end{equation}
+where $-\nabla J(\mathbf{m}_{r}^{n},\mathbf{m}_{d}^{n})$ is the gradient at iteration $n$, $[\mathbf{s}_{r}^{n}, \mathbf{s}_{d}^{n}]^T$ is a conjugate direction, which has two components 
+to update both of the models, scalar $\alpha_{n}$ can be obtained by perfoming a line search, and $\beta_n$ is designed
+to guarantee that $[\mathbf{s}_{r}^{n}, \mathbf{s}_{d}^{n}]^T$ and $[\mathbf{s}_{r}^{n-1}, \mathbf{s}_{d}^{n-1}]^T$ are conjugate.
+
+It is important to highlight that the same operator is used to update both images of reflections $\mathbf{m}_r$ and
+diffractions $\mathbf{m}_d$. The implication of this strategy is that without regularization same updates are attributed to both models. For simplicity, consider conjugate direction $\mathbf{s}^{n}$ at the zero iteration $n=0$. It has the form of $\mathbf{s}^{n=0}=[\mathbf{L}^T\mathbf{D}_{data}^T\mathbf{P}^T\mathbf{r},\ \mathbf{L}^T\mathbf{D}_{data}^T\mathbf{P}^T\mathbf{r}]^T$
+(PWD ($\mathbf{D}_{data}$) and path-summation integral ($\mathbf{P}$) are disabled for objective functions in equations~\ref{eq:chainnopwd},~\ref{eq:chainnopwdnopi} correspondingly), where
+$\mathbf{r}$ corresponds to the residual between the observed data $\mathbf{d}$ and the data modeled from the initial guess model
+$[\mathbf{m}_{r}^{init},\ \mathbf{m}_{d}^{init}]^T$ (initialized by zeroes for the first inversion (equation~\ref{eq:chain2d})
+and by the output of the first inversion (equation~\ref{eq:chain2d}) for optimization of the objective function in equation~\ref{eq:chainnopwd}).
+The conjugate direction $\mathbf{s}^{n=0}$ is equal to the negative gradient of the objective function $-\nabla J(\mathbf{m}_{r}^{init},\mathbf{m}_{d}^{init})$.
+It is obvious that the residual $\mathbf{r}$ in the conjugate direction $\mathbf{s}^{n=0}$ is mapped to reflection and diffraction image using the same operator - the
+adjoint of the ``chain''. The same is true for all of the iterations. In this case, previous directions
+$\mathbf{s}^{n-1} = [\mathbf{s}_r^{n-1},\ \mathbf{s}_d^{n-1}]^T$, which are also the same for both models, participate in the update. To perform reflection and diffraction
+separation regularization is required. 
+
+\subsection{Regularization}
+We follow the shaping regularization approach \cite[]{fomel2007shaping} to constrain the models. 
+After several iterations of the conjugate
+gradient algorithm (denoted by $n$), output of which is denoted by $[\mathbf{m}_r^{n+1},\mathbf{m}_d^{n+1}]^T$,
+shaping operators are applied to the models as follows:
+\begin{equation}
+\label{eq:itthr2}
+\begin{bmatrix}\mathbf{m}_{r}^{k} \\ \mathbf{m}_d^k\end{bmatrix}\ \leftarrow\ \begin{bmatrix} \mathbf{S}_{\sigma}[\mathbf{m}_{r}^{n+1}] \\ \mathbf{T}_{\lambda}[\mathbf{m}_{d}^{n+1}]\end{bmatrix},
+\end{equation}
+where $\mathbf{T}_{\lambda}$ is a thresholding operator with a threshold level $\lambda$ and $\mathbf{S}_{\sigma}$ is smoothing
+along dominant local slopes with a radius $\sigma$. Smoothing and thresholding correspond to external iterations of the
+optimization scheme (denoted by $k$), result of which is denoted by $[\mathbf{m}_r^k,\mathbf{m}_d^k]^T$.
+Shaped models are then input to the next
+cascade of internal iterations by conjugate gradients as a new starting model. Therefore, internal iterations minimize the misfit
+term of the equation~\ref{eq:chain2d} and
+regularization in the form of shaping (equation~\ref{eq:itthr2}) corresponds to external iterations.
+For
+wavenumber restoration inversions (equations~\ref{eq:restorerefl} and~\ref{eq:restorediffr}) shaping operators should be applied separately: thresholding for diffraction restoration, and smoothing
+along dominant local slopes for reflections.
+
+As soon as PWD is removed from the misfit term in the second inversion cascade (equation~\ref{eq:chainnopwd}) the residual gets dominated by reflections.
+Thus, before disabling PWD we need to make sure that the majority of the diffracted energy has been extracted by the first inversion (equation~\ref{eq:chain2d}).
+Because of the high energy of reflections, the sparsity constraints
+alone
+can be insufficient to remove reflected component leaked to the diffraction image after disabling PWD.
+Reflection removal will require higher threshold levels leading to diffraction supression.
+
+To address this issue signal and noise orthogonalization workflow is employed \cite[]{chen2015random}. We follow the approach and measure the similarity between the update to diffractivity $\mathbf{s}_{d}^{n}$ and reflectivity obtained on the previous external iteration $\mathbf{m}_r^{k-1}$. Events in the diffraction image update $\mathbf{s}_{d}^{n}$ caused by reflection energy leakage have high similarity to reflectivity. Based on the local similarity estimate \cite[]{fomel2007local} orthogonalization operator
+is formed $\mathbf{O}_{\mathbf{m}_r^{k-1}}$. It is then applied to the
+update of the diffractions $\mathbf{O}_{\mathbf{m}_r^{k-1}}(\mathbf{s}_{d}^{n})$ removing
+reflected energy with high similarity to reflectivity as noise. This procedure can be treated as additional regularization allowing for component separation
+in the second cascade of the inversions with PWD disabled (equation~\ref{eq:chainnopwd}). Orthogonalization can also be applied to the diffractivity 
+model itself rather than to its update. Although both ways are mathematically equivalent to each other in the examples shown below update orthogonalization 
+demonstrates better reflection crosstalk supression.
+After update orthogonalization, sparsity constraints prove to be efficient to denoise diffractions and suppress the remaining crosstalk, major part
+of which has been eliminated in the update.
+
+\subsection{Workflow}
+
+The workflow we propose to decompose the input data into reflections, diffractions and noise is outlined
+in the flowchart (Figure~\ref{fig:scheme-4-lsq}) and is as follows:
+
+\begin{enumerate}
+\item run the first inversion (equation~\ref{eq:chain2d});
+\item run the second inversion (equation~\ref{eq:chainnopwd}) and use the output from the first
+inversion cascade as the starting model;
+\item restore high wavenumbers in reflections (equation~\ref{eq:restorerefl}); use the output of the second inversion as the starting model;
+\item restore high wavenumbers in diffractions (equation~\ref{eq:restorediffr}); use the output of the second inversion as the starting model for
+diffractivity; use reflectivity from the third step to subtract it from the data.
+\end{enumerate}
+
+For shaping regularization of reflections ($\mathbf{S}_{\sigma})$ dominant local slopes should be estimated in the image domain (conventional
+Kirchhoff migration image should suffice). For PWD filter ($\mathbf{D}_{data}$) dominant local slopes
+should be estimated in the data domain (zero-offset or stacked section). Both slopes should be precomputed before the inversion.
+
+\inputdir{schem}
+\plot{scheme-4-lsq}{width=0.8\columnwidth}{Flowchart illustrating the workflow for reflection, diffraction and noise separation. Internal iterations correspond
+to ``Conjugate Gradients'' minimizing the misfit term. External iterations correspond to ``Shaping Regularization'' performing
+reflection/diffraction separation. First,
+the objective function given by the equation~\ref{eq:chain2d} is minimized (``First Inversion'' in the chart).
+The data to be matched in the ``First Inversion'' is filtered with PWD followed
+by path-summation integral filter. The output from the ``First Inversion'' is input to the ``Second Inversion'' cascade
+(equation~\ref{eq:chainnopwd}). Orthogonalization of updates to reflections and to diffractions is introduced. The data to be input to the ``Second Inversion'' is
+filtered with path-summation integral filter. PWD is disabled. Estimated reflectivity is then input to high-wavenumber restoration inversion denoted by
+``Restore Reflections' Wavenumbers". Reflections
+with high-wavenumbers restored and diffractions from the second inversion are then input to the ``final'' inversion restoring high-wavenumbers in diffractions.
+The data to be matched by the last two inversions is zero-offset data $\mathbf{d}$ with no PWD or path-summation integral filter applied.}
+
+
+\section{Synthetic data example}
+
+\inputdir{sparse-experim-shaping}
+
+We use the following synthetic to test the proposed chain-inversion
+approach. Figure~\ref{fig:diffr-irefl-n} shows a zero-offset modeling result in a
+medium with a constant vertical gradient of velocity. The starting velocity at the surface corresponds to
+$3\ km/s$. The section contains reflections with various dips, several layers of sparse diffractions and an area,
+in which the density of scatterers is increased (towards the right edge of the synthetic).
+Random noise with a 30\% magnitude of that of the diffractions and filtered to the signal frequency band is
+added to the section.  
+
+\plot{diffr-irefl-n}{width=0.65\columnwidth}{Modeled synthetic zero-offset section with reflections, diffractions and noise.}
+
+First, we illustrate the advantage of misfit minimization with a diffraction probability weight using
+the same synthetic (Figure~\ref{fig:diffr-irefl-n}) but with no reflections (Figure~\ref{fig:diffr-n})
+in order to compare its performance with least-squares Kirchhoff migration. Reflection/diffraction separation is
+considered further. Figure~\ref{fig:lsq-mig2} shows the result of least-squares Kirchhoff migration (equation~\ref{eq:general}) with no regularization. Noise leakage into
+the diffraction image domain can be easily noticed. The result of path-summation migration applied to the zero-offset synthetic data (Figure~\ref{fig:diffr-n})
+is shown in Figure~\ref{fig:idpi-mig2-n}. Path-summation migration image can provide us
+with a probability of a scatterer at a certain sample location. We employ this information by weighting the misfit term in the
+equation~\ref{eq:general} by the path-summation migration operator ($\| \mathbf{P} \big( \mathbf{d} - \mathbf{Lm} \big) \|_{2}^{2}$), which forces the misfit minimization only at probable diffraction
+locations. No PWD ($\mathbf{D}_{data}$) is required to emphasize diffractions since there are no reflections.
+Since the input contains diffractions only we need only one model for diffractions $\mathbf{m}$. No reflection model is considered.
+Figure~\ref{fig:lsq-pi} shows the result of least-squares Kirchhoff migration with a misfit
+weighted by path-summation integral filter. No regularization has been applied. It can be seen 
+that weighted minimization reduces high frequency artifacts. Path-summation integral operator emphasizes 
+diffraction apexes remaining stationary under migration velocity perturbation. It acts as a low-frequency 
+filter guiding the inversion towards probable scatterers locations. Indeed, lower frequency content is noticeable
+and diffractions are more visible on the result of weighted minimization (Figure~\ref{fig:lsq-pi}) than on the ``conventional" least-squares Kirchhoff migration image
+(Figure~\ref{fig:lsq-mig2}). Incorporation of sparsity constraints will remove high
+frequency artifacts from the least-squares Kirchhoff migration image and will reduce the area
+corresponding to a diffraction location in a weighted minimization result. Here, regularization is disabled to show the effectiveness
+of path-summation operator misfit weighting and avert the subjective choice of a regularization parameter, which will influence the results
+and make their unbiased comparison harder.   
+
+\multiplot{2}{diffr-n,idpi-mig2-n}{width=0.65\columnwidth}{(a) Diffraction and noise components of the synthetic shown in Figure~\ref{fig:diffr-irefl-n};
+(b) path-summation migration applied to zero-offset synthetic with no
+reflections (Figure~\ref{fig:diffr-n}).}
+
+\multiplot{2}{lsq-mig2,lsq-pi}{width=0.65\columnwidth}{Imaging of diffractions with noise (Figure~\ref{fig:diffr-n}) using (a) least-squares Kirchhoff migration;
+(b) least-squares Kirchhoff migration weighted by diffraction probability (see text for details);
+no regularization applied. Both images are generated with the same number of iterations.}
+
+We then apply the proposed workflow to the synthetic containing all the components with regularization enabled. First, we 
+estimate slopes of the dominant events, which are associated with reflections, in the data and image domains. We then generate
+the data for the first inversion cascade (Figure~\ref{fig:pi-w-pwd-s}): zero-offset section (Figure~\ref{fig:diffr-irefl-n}) is weighted 
+by PWD ($\mathbf{D}_{data}$) and path-summation integral filter ($\mathbf{P}$). We run $100$ outer iterations and $5$ inner iterations. 
+Convergence curves are shown in Figure~\ref{fig:convergence-synth}. 
+The results of the first inversion are shown in Figure~\ref{fig:pi-w-pwd-s,refly-w-pwd-s,diffry-w-pwd-s}. 
+Although subtle reflection remainders are present (e.g. $0.9-1.0\ [s]$ TWTT (two-way travel time) and $6.0-6.5\ [km]$ distance) the majority of diffracted energy has been extracted with high accuracy.
+
+\multiplot{3}{pi-w-pwd-s,refly-w-pwd-s,diffry-w-pwd-s}{width=0.65\columnwidth}{(a) Zero-offset section weighted by 
+path-summation integral operator ($\mathbf{P}$) and PWD ($\mathbf{D}_{data}$) - data to be fit by the first inversion (equation~\ref{eq:chain2d});
+reflectivity (b) and diffractivity (c) restored.}
+
+\plot{convergence-synth}{width=0.8\columnwidth}{Convergence of the inversion with PWD (equation~\ref{eq:chain2d}): left - residual in the data space; right - difference between consecutive models.}
+
+To reduce these remainders and restore reflections trapped in the null space of the ``chain" of operators we run the second inversion
+cascade with no PWD. First, we generate the data to be fit (Figure~\ref{fig:pi-n-pwd-s}): PWD is disabled and
+only path-summation integral operator is used to weight the misfit. The result of the first inversion cascade (Figure~\ref{fig:pi-w-pwd-s,refly-w-pwd-s,diffry-w-pwd-s})
+is used as the starting model for the second inversion. We run $10$ outer iterations and $5$ inner to restore reflections and reduce the reflection-diffraction crosstalk. Orthogonalization
+is required. Figure~\ref{fig:update-b4-diffr-synth,update-a4-diffr-synth} shows the updates to reflections and diffractions after the first external iteration
+of the second inversion (equation~\ref{eq:chainnopwd}). Orthogonalization is applied to remove reflections from the diffraction image update: it can be seen that reflections
+in the update are significantly stronger than diffractions and are hard to suppress with thresholding only. Orthogonalization significantly reduces the energy of reflections
+and diffraction-related update becomes more visible (Figure~\ref{fig:update-a4-diffr-synth}). The orthogonalized update is then added to diffraction model followed by shaping regularization.
+Reflection and diffraction images shown in Figure~\ref{fig:pi-n-pwd-s,refly-n-pwd-s,diffry-n-pwd-s} are generated.
+Reflections are recovered from the null space introduced by PWD. Crosstalk is reduced (Figure~\ref{fig:diffry-n-pwd-s}: e.g. $0.9-1.0\ [s]$ TWTT and $6.0-6.5\ [km]$ distance).
+Different choice of regularization parameters including the balance between the numbers of internal and external iterations in the first and
+second inversions can be tweaked to improve the results even more.   
+
+\multiplot{3}{pi-n-pwd-s,refly-n-pwd-s,diffry-n-pwd-s}{width=0.65\columnwidth}{(a) Zero-offset section weighted by 
+path-summation integral operator ($\mathbf{P}$) - data to be fit by the second inversion (equation~\ref{eq:chainnopwd}); (b)
+reflectivity and (c) diffractivity restored. PWD ($\mathbf{D}_{data}$) is disabled.}
+
+\multiplot{2}{update-b4-diffr-synth,update-a4-diffr-synth}{width=0.65\columnwidth}{Updates to the model: (a) update to diffractions before orthogonalization
+(equation~\ref{eq:itthr1}; reflections have the same update); (b) update to diffractions after orthogonalization: reflections are suppressed and
+diffraction-related update is more visible.}
+
+We then run the inversions (equations~\ref{eq:restorerefl} and~\ref{eq:restorediffr}) to restore high wavenumbers with PWD and path-summation integral operators disabled. For diffraction-only
+recovery (equation~\ref{eq:restorediffr}) besides using the starting model from the second inversion as an additional regularization the model 
+is masked by the locations of the diffractors. This mask can easily be created from the diffraction image generated as the output of the
+second inversion cascade (Figure~\ref{fig:diffry-n-pwd-s}). Figure~\ref{fig:rs-s,t-rs,ds-s,t-ds,n-s,t-n} show reflection and diffraction 
+components restored by the inversions, which were generated by applying Kirchhoff forward modeling operator to reflectivity and
+diffractivity output by wavenumber restoration inversions (equations~\ref{eq:restorerefl} and~\ref{eq:restorediffr}). We then subtract
+recovered reflections and diffractions from the input data to generate the noise estimate. Noise and diffractions are plotted with the same
+gain. 
+Although the noise section contains some diffracted energy, the approach is highly effective. We then compare the results with the true components used to generate the synthetic.
+High correlation between the restored and the ``true" components of the synthetic also supports high accuracy of the workflow.
+Signal and noise orthogonalization helps to account for amplitude differences between ``true" and restored diffractions (Figure~\ref{fig:ds-s} and~\ref{fig:t-ds}):
+although high restoration quality is achieved subtle amplitude differences can be noticed. Since diffraction shapes are restored 
+this energy can be brought from the noise section back to the diffraction image domain by measuring the similarity between the corresponding components.
+
+Simultaneous inversion for both reflections and diffractions allows to account for the crosstalk between the components and thus
+improves the confidence of scatterer position identification. We proceed with the workflow application to the field data example. 
+
+\multiplot{6}{rs-s,t-rs,ds-s,t-ds,n-s,t-n}{width=0.44\columnwidth}{
+(a) Restored reflections,
+(b) true reflections,
+(c) restored diffractions,
+(d) true diffractions,
+(e) restored noise,
+(f) true noise}
+
+\section{Field data example}
+
+\inputdir{vg}
+
+We apply the proposed approach to the Viking Graben dataset \cite[]{keys1998comparison}.
+\cite{klokov2012diffraction} previously performed diffraction imaging of the Viking Graben dataset using Hybrid Radon transform
+in the dip-angle common image gathers' domain. \cite{gonzalez2016migration} perform diffraction-based depth velocity analysis on the dataset.
+
+Figure~\ref{fig:dmo-w} illustrates the zero-offset section.
+It can be noticed that gradually dipping continuous
+reflections are interrupted by faults encoded
+in the diffracted wavefield. Additional diffractions are associated with rough reflector surfaces. 
+Diffractions exhibit significantly lower
+amplitudes than reflections, and a separation procedure aimed to emphasize diffractions must be applied before proceeding along the workflow. 
+We separated diffractions (Figure~\ref{fig:pwd-w}) from reflections using PWD filter \cite[]{fomel07} and
+first imaged them using conventional post-stack Kirchhoff time migration (Figure~\ref{fig:conv-image-pwd}).
+Shallow high-diffractivity layer can be noticed in the upper part of the image. 
+Fault surfaces and
+diffractivity associated with reflector roughness stand out in comparison with
+conventional migration image shown in Figure~\ref{fig:image-fw}. 
+However, because of the overlap of diffraction responses 
+and the presence of noise, the parts of the image between faults are hard to interpret.
+
+\multiplot{2}{dmo-w,pwd-w}{width=0.65\columnwidth}{(a) Dip-moveout (DMO) stack;
+(b) plane-wave destruction filter (PWD, $\mathbf{D}_{data}$) applied to (a): diffractions stand out.}
+
+\multiplot{2}{image-fw,conv-image-pwd}{width=0.65\columnwidth}{Conventional Kirchhoff migration applied to DMO and
+PWD stacks (Figures~\ref{fig:dmo-w} and~\ref{fig:pwd-w})}
+
+We apply the ``chain" of operators inversion approach to improve diffraction signal-to-noise ratio
+and increase the diffraction image reliability.
+First, we prepare the data to be fit by the inversion (equation~\ref{eq:chain2d}). The zero-offset section after application
+of 
+PWD in the data domain ($\mathbf{D}_{data}$) followed by path-summation integral filter ($\mathbf{P}$)
+is shown in Figure~\ref{fig:pi-pwd}. These are the data to be fit, which
+can be treated as diffraction probability. Slope values required for PWD in the data domain ($\mathbf{D}_{data}$)
+and for shaping regularization in the model space ($\mathbf{S}_{\sigma}$) are estimated using zero-offset section (Figure~\ref{fig:dmo-w}) and conventional Kirchhoff
+migration image (Figure~\ref{fig:image-fw}) correspondingly. We run $10$ outer iterations and $5$ inner to restore reflectivity
+and diffractivity shown in Figure~\ref{fig:pi-pwd,reflectivity-with-pwd,diffractivity-with-pwd}. It can be seen that
+diffractions are significantly more highlighted than in the Kirchhoff migration image of the section after PWD (Figure~\ref{fig:conv-image-pwd}) and appear to be denoised.
+At the same time, crosstalk between reflections and diffractions is strong and a lot of strong reflection energy is in the null space of the operator. For instance,
+compare reflectivity restored (Figure~\ref{fig:reflectivity-with-pwd}) with conventional Kirchhoff image (Figure~\ref{fig:image-fw}) at small TWTT, e.g. $0.5-0.6\ [s]$.
+For reflection-diffraction crosstalk, for instance, refer to the fragment delimited by $1.75-2.0\ [s]$ TWTT and $19.5-20.0\ [km]$ distance. Continuous layering
+associated with reflections leaks to the diffraction image domain and overlaps with discontinuities along the faults. Events with similar 
+behavior correspond to
+unconformities at around $2\ [s]$ TWTT between $18-19\ [km]$ distance.
+
+\multiplot{3}{pi-pwd,reflectivity-with-pwd,diffractivity-with-pwd}{width=0.65\columnwidth}{(a) DMO section (Figure~\ref{fig:dmo-w}) weighted by 
+path-summation integral operator ($\mathbf{P}$) and PWD ($\mathbf{D}_{data}$) - data to be fit by the first inversion (equation~\ref{eq:chain2d});
+reflectivity (b) and diffractivity (c) restored.}
+
+To address the null space and crosstalk problems we generate the data for the second inversion (equation~\ref{eq:chainnopwd}), invert for reflections and diffractions
+(we run $50$ outer iterations and $5$ inner) and produce the models shown in Figure~\ref{fig:pi-no-pwd,reflectivity-no-pwd,diffractivity-no-pwd}.
+Orthogonalization of the diffraction update is shown in Figure~\ref{fig:update-b4-refl,update-a4-diffr}. Convergence curves are shown in Figure~\ref{fig:convergence}.
+It can be seen that reflections are recovered from the null space (refer to the shallow events) and crosstalk between diffractions and
+reflections has also been reduced. In particular continuous layering events delimited by $1.75-2.0\ [s]$ TWTT and $19.5-20.0\ [km]$ distance
+and around $2\ [s]$ TWTT between $18-19\ [km]$ distance are suppressed. There is still a remainder
+of events with elongated shapes in diffraction image (Figure~\ref{fig:diffractivity-no-pwd}). These events can be connected with rough surface features,
+which are too irregular to be described by the chosen smoothing radius in shaping regularization penalizing reflections. 
+Less aggressive smoothing and more detailed dip field in the model space should allow moving these events back to the reflection image domain.
+Stronger thresholding can also help. 
+
+\multiplot{3}{pi-no-pwd,reflectivity-no-pwd,diffractivity-no-pwd}{width=0.65\columnwidth}{(a) DMO section (Figure~\ref{fig:dmo-w}) weighted by 
+path-summation integral operator ($\mathbf{P}$) - data to be fit by the second inversion (equation~\ref{eq:chainnopwd});
+reflectivity (b) and diffractivity (c) restored. PWD ($\mathbf{D}_{data}$) is disabled.}
+
+\multiplot{2}{update-b4-refl,update-a4-diffr}{width=0.65\columnwidth}{Updates to the model: (a) update to diffractions before orthogonalization
+(equation~\ref{eq:itthr1}; reflections have the same update); (b) update to diffractions after orthogonalization: reflections are suppressed and
+diffraction-related update is more visible.}
+
+\plot{convergence}{width=0.8\columnwidth}{Convergence of the inversion with no PWD (equation~\ref{eq:chainnopwd}): left - residual in the data space; right - difference between consecutive models.}
+
+Finally we restore high wavenumbers and model reflections (Figure~\ref{fig:reflections-restored}) and diffractions (Figure~\ref{fig:diffraction-restored}).
+As in the synthetic data example, diffractions in wavenumber restoration inversion are additionally penalized by the locations' mask determined from the output
+of the second inversion cascade (Figure~\ref{fig:diffractivity-no-pwd}).
+We then subtract their sum from the zero-offset DMO section (Figure~\ref{fig:dmo-w}) and arrive at the following noise estimate (Figure~\ref{fig:noise-restored-orthogon}).
+Noise section is plotted with the same gain as the ``restored" diffractions. Signal and noise orthogonalization \cite[]{chen2015random} is applied to account for aperture difference between
+observed (Figure~\ref{fig:pwd-w}) and restored diffractions (Figure~\ref{fig:diffraction-restored}) (for instance, often only a single diffraction flank
+can be observed in the data leading to spuriously high difference or the ``noise estimate'')
+and to bring back some of the energy accidentally leaked to the noise domain (Figure~\ref{fig:noise-restored-orthogon}). Some residuals can be noticed in the lower part of the noise section,
+which can have a signature intermediate between reflections and diffractions, were not attributed to either. Upper part
+of the noise section exhibits low magnitude residuals stating high accuracy
+of the method. Besides that, restored diffractions (Figure~\ref{fig:diffraction-restored})
+exhibit high correlation with PWD section (Figure~\ref{fig:pwd-w}) also supporting high efficiency of the method. 
+
+\multiplot{3}{reflections-restored,diffraction-restored,noise-restored-orthogon}{width=0.65\columnwidth}{(a) ``Restored" reflections; (b) ``restored"
+diffractions; (c) ``restored" noise - (a) and (b) subtracted from the DMO section (Figure~\ref{fig:dmo-w}).}
+
+Overall impression of the image shown in Figure~\ref{fig:diffractivity-no-pwd} can be contradictory because of the continuity loss. However,
+diffractions have spiky and intermittent distribution, which correlates well with the faults and other discontinuities observed in the conventional image (Figure~\ref{fig:image-fw}).
+To highlight this statement we overlay the conventional image (Figure~\ref{fig:image-fw}) with estimated diffractivity (Figure~\ref{fig:combined}).
+High correlation between continuous layering interruptions and diffractions can be observed (e.g. $1.75-2.0\ [s]$ TWTT and $19.5-20.0\ [km]$).
+Moreover, smaller scale faults, which are not evident from the ``conventional" image, are highlighted and denoised with the help of the approach
+proposed. For instance, refer to the fragment delimited by $0.75-1\ [s]$ TWTT and $17-17.2\ [km]$ distance. Some faults are not pronounced
+in the diffraction image. On the other hand, the approach allows increasing the confidence of the diffractions present in the image and distinguishing 
+them from noise. In other words, even though some events might be lost, we can be confident in the events that were successfully imaged.
+
+\plot{combined}{width=0.99\columnwidth}{Diffractivity estimated overlaid on top of the conventional image (Figure~\ref{fig:image-fw}).}
+
+\section{Discussion}
+
+We have proposed a workflow to decompose full waveform input data into reflections, diffractions and noise by using three cascades of inversions.
+We also want to highlight regularization through orthogonalization as a novel tool to aid the inversion, in which multiple models are estimated with a single modeling operator. Its ability to track down the leakage of the events from one model space to another appears to be crucial for the second cascade of the inversions. Orthogonalization, combined with shaping regularizations, allows for efficient reflection, diffraction and noise separation.
+
+Shaping regularization allows for a flexible
+model constraints since models
+for reflections and diffractions are conditioned independently.
+For instance, if the regularization terms 
+were incorporated as penalty terms in the objective functions (equations~\ref{eq:chain2d},~\ref{eq:chainnopwd} and~\ref{eq:chainnopwdnopi}),
+finding the trade-off between weights for all the terms would be challenging:
+the two terms would conflict with each other leading to stronger interference between model spaces. 
+
+It should be mentioned that the workflow presented here targets diffraction phenomenon in 2D rather than in 3D. In particular, in the case of three dimensions, sparsity constraints can be inadequate for edge diffractions regularization. The latter features are continuous along the edges and act as reflections but at the same time have a diffractive component in the direction perpendicular to the edge \cite[]{moser2011edge}. To properly regularize edge diffractions sparsity constraints should be accompanied by anisotropic smoothing operator enforcing continuity along the edges \cite[]{merzlikin2018least}. At the same time, PWD robustly serving the purpose of diffraction extraction in 2D, in 3D should be replaced by AzPWD - workflow properly addressing hybrid signature of edge diffractions \cite[]{merzlikin2016diffraction,merzlikin2017diffraction}. These are the modifications, which have to be incorporated into the workflow presented in this paper in order for it to be extended to 3D. At the same time, all the necessary modifications have already been derived and, thus, support the applicability of the reflection-diffraction crosstalk minimization approach presented in this paper in three dimensions.
+
+Finally, the proposed approach (except for analytical time domain path-summation migration describing diffraction probability)
+is compatible with any migration algorithms operating in pre-stack, post-stack, depth and time domains.
+In pre-stack domain the PWD filter can be implemented using common-offset sorting of input data.
+Regularizations are performed in the image domain and, thus, are not
+dependent on a particular migration algorithm.
+Analytical expressions exist for path-summation imaging in pre-stack
+time-migration domain \cite[]{merzlikin17}, however, path-summation integral migration in the depth domain remains challenging \cite[]{landa06} and, thus, limits the applicability of the approach presented here. The possible workaround is to incorporate probability weights favouring diffractions \cite[]{merzlikin2017dps} into path-summation integral expression and utilize importance sampling strategies for computational load reduction associated with the absence of analytical expressions of path-integral evaluation in the depth domain. 
+
+\section{Conclusions}
+
+We have developed an approach to decomposing input data into reflection, diffraction and noise components. The inverted forward modeling operator corresponds
+to the chain of Kirchhoff modeling, plane wave destruction (PWD) and path-summation integral migration operators. The chain of these operators
+accounts for the contribution of diffractions to the optimization, and
+guides inversion towards probable diffraction locations. Reflection model is estimated simultaneously.
+Separation into different components in iterative inversion is achieved
+by regularization: reflections are forced to be smooth along the dominant local slopes in the image domain, while diffractions are penalized by the sparsity constraints. 
+Additional shaping regularization based on local signal-and-noise orthogonalization removes continuous events from diffractivity updates
+and reduces the crosstalk between the components during
+iterations.
+Incorporation of a reflection model into the inversion
+allows for reflected energy withdrawal from the diffraction image domain and
+increases the reliability of diffraction images.
+
+Numerical experiments with synthetic data emulating high interference between reflections and diffractions demonstrates high effectiveness of the approach.
+A field data example confirms 
+the robust separation of the components by the proposed approach. 
+
+The workflow has a high computational efficiency. Shaping regularization allows for fast convergence whereas the cost of the forward modeling operator
+at each iteration is predominated by Kirchhoff migration. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Acknowledgments}
+
+We thank Evgeny Landa, Luke Decker, Reetam Biswas and Junzhe Sun for stimulating discussions
+and TCCS (Texas Consortium for Computational Seismology) sponsors for financial support.
+We also thank two anonymous reviewers for their valuable feedback.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,sources}

@@ -71,7 +71,7 @@ def paper_tag(paper):
 def get_author(source,default,tag):
     author = default.get(tag[1])
     if not author:
-        paper = source.get_contents()
+        paper = source.get_contents().decode('utf-8')
         # remove comments
         paper = re.sub(r'[%][^\n]+','',paper)
         author = re_author.search(paper)
@@ -91,7 +91,7 @@ def get_author(source,default,tag):
 def get_title(source,default,tag):
     title = default.get(tag[1])
     if not title:
-        paper = source.get_contents()
+        paper = source.get_contents().decode('utf-8')
         # remove comments
         paper = re.sub(r'[%][^\n]+','',paper)
         title = re_title.search(paper)
@@ -156,7 +156,7 @@ def report_toc(target=None,source=None,env=None):
         author = '\ '
     for src in source:
         tag = paper_tag(str(src))
-        paper = src.get_contents()
+        paper = src.get_contents().decode('utf-8')
         # remove comments
         paper = re.sub(r'[%][^\n]+','',paper)
         if not book:

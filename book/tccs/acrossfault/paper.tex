@@ -1,0 +1,243 @@
+\published{Interpretation, 6, No. 2, T449-T455, (2018)}
+\title{Predictive painting across faults}
+\author{Zhiguang Xue,
+        Xinming Wu, and 
+        Sergey Fomel }
+\maketitle
+
+\address{
+Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, Texas, USA 
+}
+
+\lefthead{Xue, Wu \& Fomel}
+\righthead{Predictive painting across faults}
+
+\begin{abstract}
+	Predictive painting can effectively spread information in 3D volumes following the local structures (dips) of seismic events.
+	However, it has troubles spreading information across faults with significant displacement.
+	To address this problem, we propose to incorporate fault slip information into predictive painting to correctly spread information across faults.
+	The fault slip is obtained by using a local similarity scan to measure local shifts of the different sides of a fault.
+	We propose three different methods to utilize the fault slip information: 1) area partition method, which uses fault slip to correct the painting result after predictive painting in each divided area;
+	2) fault-zone replacement method, which replaces fault zones with smooth transitions calculated with the fault slip information to avoid sharp jumps;
+	and 3) unfaulting method, where we use the fault slip information to unfault the volume, perform predictive painting in the unfaulted domain, and then map the painting result back to the original space.
+	The proposed methods are tested in application of predictive painting to horizon picking. 
+	Numerical examples demonstrate that predictive painting after incorporating fault slip information can correctly spread information across faults, which makes the proposed three approaches of utilizing fault slip information effective and applicable.
+\end{abstract}
+
+\section{Introduction}
+
+Spreading some specific information following the local structures accurately and efficiently is important in many geophysical applications, such as seismic flattening \cite[]{lomask03,parks10,wu15a,wu15b} and horizon picking in seismic interpretation, structure oriented interpolation \cite[]{swindeman15}, smoothing and denoising.
+The predictive painting method, proposed by \cite{fomel10b}, is a numerical algorithm that can spread information from a seed trace to its neighbors recursively following local dips with superior computational performance.
+Predictive painting has been used in different applications.
+For examples, \cite{fomel10b} used it to flatten seismic common-midpoint gathers, and to pick horizons in 3D image volumes.
+\cite{liu10} applied it to generate an extended dimension of seismic images to realize structure-oriented smoothing operator for removing non-conforming noise.
+\cite{casasanta11} used it for CMP $\tau-p$ moveout correction and for the estimation of interval VTI parameters.
+\cite{karimi15}, \cite{zhang16}, and \cite{shi17} used it for image-guided well log interpolation.
+
+All these applications are based on the assumption that the local dip estimation required by predictive painting is correct.
+However, when the spreading space contains faults, accurate dip estimation can be challenging due to the existence of conflicting dips.
+Even when the estimated dip on both sides of the fault is correct, it may not characterize the correct displacement across the fault.
+We propose to incorporate fault slip information to predictive painting to make it spread information across faults correctly.
+Fault slip can be estimated by correlating seismic reflectors on the opposite sides of a fault.
+\cite{aurnhammer05} and \cite{liang10} proposed windowed cross-correlation methods.
+\cite{hale13} and \cite{wu16} used a dynamic warping method that obviates correlation windows.
+In this paper, the fault slip is estimated by using a local similarity scan \cite[]{fomel07b,fomel09b}. 
+Local similarity scan method can estimate a relative time (or depth) shift map between two images, 
+which is similar to that of dynamic warping method 
+and is more accurate than that of windowed crosscorrelation method when the local shifts vary rapidly \cite[]{hale13}.
+Compared with dynamic warping, local similarity scan has the advantage of using normalized amplitudes and picking a regularized path with sub-pixel accuracy.
+
+We propose three methods of utilizing the fault slip information in predictive painting:
+area partition, fault-zone replacement and unfaulting methods.
+The general idea of unfaulting is not new \cite[]{wei05,luo13,wu16}.
+We implement unfaulting of the seismic image by solving a regularized inverse problem using shaping regularization, 
+which can help to get the desired result faster \cite[]{fomel07}. 
+In the following, we first briefly review the theory of predictive painting and describe the proposed methods.
+Then we apply predictive painting to horizon picking, and use several 2D benchmark examples to test the performance of these methods.
+
+\section{Theory}
+\subsection{Brief review of predictive painting}
+
+Predictive painting spreads information from a seed trace to its neighbors recursively by following the local dip \cite[]{fomel10b}. 
+The spreading or ``painting'' process can be implemented using plane-wave construction filter \cite[]{fomel06}.
+The mathematical basis of this filter is a differential equation for local plane waves \cite[]{claerbout92},
+\begin{equation}
+\label{eq:pde}
+\frac{\partial P}{\partial x} + \sigma \frac{\partial P}{\partial t} =0 \;,
+\end{equation}
+where $P(t,x)$ is the wavefield and $\sigma$ is the local slope.
+In the case of a constant slope, equation~\ref{eq:pde} has the simple general solution
+\begin{equation}
+\label{eq:solution}
+P(t,x)=f(t-\sigma x) \; ,
+\end{equation}
+where $f(t)$ is an arbitrary waveform.
+Equation~\ref{eq:solution} is nothing more than a mathematical description of a plane wave.
+Assuming that the slope $\sigma(t,x)$ varies in time and space, we can design a local operator to propagate trace $\mathbf{s}_i$ to trace $\mathbf{s}_j$, and describe such prediction as $\mathbf{A}_{i,j}$.
+If $\mathbf{s}_r$ is a reference trace, spreading its information to a distant neighbor $\mathbf{s}_k$ (for example $k>r$) can be accomplished by simple recursion: 
+\begin{equation}
+\label{eq:recursion}
+\mathbf{s}_k = \mathbf{A}_{k-1,k} \cdots \mathbf{A}_{r+1,r+2} \mathbf{A}_{r,r+1} \mathbf{s}_r \; .
+\end{equation}
+The recursive operator in Equation~\ref{eq:recursion} is referred to as \emph{predictive painting} \cite[]{fomel10b}.
+
+\subsection{Application limitation with faults}
+
+The accuracy of predictive painting depends on the accuracy of dip estimation \cite[]{fomel02}.
+However, local dip attribute may not characterize the fault displacement correctly.
+For example, Figure~\ref{fig:syn} shows a synthetic 2D image which contains a fault with a constant slope 1, 
+but the local fault slip is nonstationary changing from -10 to 10 samples.
+To estimate the local fault slip, we extract the traces in the opposite sides of the fault (as indicated by the dashed lines in Figure~\ref{fig:syn}) and use local similarity scan \cite[]{fomel07b} to measure the local shifts.
+Local similarity scan involves two steps: scanning and picking. 
+Figure~\ref{fig:pick} shows the similarity scan and the black curve on it represents the picked local fault throw, which is the vertical component of the fault slip.
+The curve is picked by regarding the local similarity as a velocity field and then solving Eikonal equation twice with a source on the top and bottom boundaries, respectively \cite[]{fomel09c}.
+The picked local fault slip matches the theoretical value (a sine function), and we can utilize it in the application of predictive painting.
+
+\inputdir{synth}
+\multiplot{2}{syn,pick}{width=0.45\textwidth}{(a) A 2D synthetic image containing a fault which has the constant slope 1 but nonstationary fault slips; (b) fault throw (the vertical component of slip) measured using local similarity scan.}
+
+\section{Methods}
+Next, we describle three methods of incorporating fault slip information into predictive painting for crossing through faults accurately.
+
+\subsection{Area partition method}
+
+This method consists of three steps:
+\begin{enumerate}
+	\item Divide original volume into $n+1$ small volumes based on fault surfaces assuming the fault number is $n$;
+	\item Pad all the small volumes with zero slope (horizontally) to make them only contain complete traces;
+	\item Do the following iterations: perform predictive painting in the first small volume, then use the fault slip information of the first fault to correct the painting result, repeat these two steps until the predictive painting is complete in the last small volume.
+\end{enumerate}
+The area partition method is based on two observations: 1) predictive painting treats a whole trace as the basic unit and
+2) predictive painting with zero slope does not change the spreading information.
+This method adopts the divide and conquer strategy and depends on the explicit area partition, so it is simple to implement as long as the original image is easily divisible.
+
+\subsection{Fault-zone replacement method}
+
+To remove the effect of faults, we can also replace fault zones with smooth transitions, and then the original image becomes an image without faults.
+The smooth transition is designed with the fault slip information, and the width of fault zone can be chosen based on the magnitude of the fault slip.
+When the fault slip is large, it is easier to avoid aliasing in the smooth transition zone by selecting a wider fault zone.
+
+If the width of a fault zone is $N$ samples, we can extract two traces at $-N/2$ samples (left side) and $N/2$ samples (right side) of the fault, and then do linear interpolation to generate the traces from $-N/2+1$ to $N/2-1$ as the transition zone.
+Note that the linear interpolation can not be done horizontally if the fault slip is not zero.
+It has to be along the slip vector direction.
+A simple way to follow such direction is to do linear interpolation through predictive painting and set the dip to be fault throw (the vertical component of slip) divided by $N-1$.
+Specifically, the fault transition would be distance-weighted sum of the predictive painting results of the two selected traces.
+This method is also simple to implement, but if the faults are close to each other, an appropriate fault zone width may be hard to choose.
+
+\subsection{Unfaulting method}
+
+Similar to fault zone replacement, we can also undo faulting in a seismic image to align seismic reflectors across faults.
+Following the theory part of the unfaulting method in \cite{wu16}, we solve a similar regularized linear equation to get the shift vector $\mathbf s (\mathbf x)$ where $\mathbf s \equiv (s_1, s_2, s_3)$ and coordinates $\mathbf x \equiv (x_1, x_2, x_3)$ (1, 2 and 3 are indices representing different spatial dimensions).
+Shift vector $\mathbf s (\mathbf x)$ means that we can unfault the image if the sample at $\mathbf x$ moves to $\mathbf x+\mathbf s(\mathbf x)$.
+
+If $\mathbf x_a$ is a left point of a fault, we can use local similarity to estimate its fault slip vector $\mathbf t(\mathbf x_a)$, which can provide us with a simple linear equation:
+\begin{equation}
+	\label{eq:slip}
+	\mathbf s(\mathbf x_a + \mathbf t(\mathbf x_a)) - \mathbf s(\mathbf x_a) = \mathbf t(\mathbf x_a) \; .
+\end{equation}
+This is the linear equation only applying to those samples alongside faults.
+For other samples away from faults, we expect unfaulting shifts to vary slowly and continuously along structural directions.
+This constraint can be added to the inverse problem by using a gradient operator as a regularization term \cite[]{wu16} or by using a structure-oriented smoothing operator as a shaping operator in the framework of shaping regularization \cite[]{fomel07}.
+We choose the latter, and solve for the shift vector $\mathbf s (\mathbf x)$ using the method previously utilized by \cite{xue16}.
+
+After we get the shift vector $\mathbf s (\mathbf x)$, we unfault the original image $f(\mathbf x)$ to a fault-free image $\tilde{f} (\mathbf x)$ by doing an inverse interpolation:
+\begin{equation}
+	\label{eq:inverse}
+	\tilde{f} (\mathbf x + \mathbf s (\mathbf x)) = f(\mathbf x) \; .
+\end{equation}
+Then we can estimate dip from the new image and perform predictive painting to get a painting result $\tilde{p} (\mathbf x)$,
+which can be converted to the painting result $p(\mathbf x)$ of the original image $f(\mathbf x)$ by doing a forward interpolation:
+\begin{equation}
+	\label{eq:forward}
+	p(\mathbf x) = \tilde{p} (\mathbf x + \mathbf s (\mathbf x)) \; .
+\end{equation}
+
+\section{Examples}
+
+In this section, we use three 2D examples to verify the effectiveness of the proposed three methods.
+We test an application of predictive painting for horizon picking on all the 2D images. 
+In this application, the depth coordinate is regarded as the reference trace being spread recursively from left to right.
+The spreading result is referred to as relative geologic time \cite[]{stark04}, and each contour of it represents a horizon.
+All the images contain several faults, and we want to correctly pick several horizons using our methods of predictive painting across faults.
+The fault maps in all the examples are estimated using the method proposed by \cite{wu16a}.
+
+\inputdir{gulf}
+\multiplot*{6}{seis,mask,seis2,dip3,paint2,pick2}{width=0.3\textwidth}{A 2D example for area partition method.
+(a) Original image; (b) fault mask; (c) new image after area partition and padding with zero slope;
+(d) dip of the new image (dip around vertical boundaries is set to be zero); (e) final predictive painting result (displayed on the original grid mesh); (f) several automatically picked horizons.}
+
+\inputdir{louis2d}
+\multiplot*{6}{lseis,lmask,lseis2,ldip2,lpaint2,lpick2}{width=0.3\textwidth}{A 2D example for fault-zone replacement method.
+(a) Original image; (b) fault mask; (c) new image after replacing fault zones with smooth transitions;
+(d) dip of the new image; (e) predictive painting using dip in Figure~\ref{fig:ldip2}; (f) several automatically picked horizons.}
+
+\inputdir{clyde}
+\multiplot*{8}{cseis,cmask,cshiftx,cshiftz,cseis22,cpaint2,cpaint3,cpick3}{width=0.3\textwidth}{A 2D example for unfaulting method.
+	(a) Original image; (b) fault mask; (c) the horizontal component of the shift vector; 
+	(d) the vertical component of the shift vector; (e) new image after undoing faulting of the original image;
+	(f) predictive painting of the unfaulted image; (g) predictive painting of the original image, obtained by faulting the result in Figure~\ref{fig:cpaint2}; 
+(h) several automatically picked horizons.}
+
+\subsection{Example for area partition method}
+
+Figure~\ref{fig:seis,mask,seis2,dip3,paint2,pick2} shows the example for area partition method.
+A 2D post-stack seismic image from a historic Gulf of Mexico dataset \cite[]{claerbout06} is shown in Figure~\ref{fig:seis}.
+As shown by the fault mask (Figure~\ref{fig:mask}), the image contains 6 faults.
+We extract the left and right traces of the 6 faults, and use local similarity scan to estimate their fault slips.
+Then based on the 6 faults, we divide the image into 7 small parts and pad all the small parts horizontally to make each of them a rectangle.
+The new combined image is shown in Figure~\ref{fig:seis2}.
+It has a larger horizontal dimension and contains 6 vertical boundaries, which are the locations where we would serially correct the results of predictive painting in the small padded areas.
+Figure~\ref{fig:dip3} shows the dip estimated from the new image, and the dip around the boundaries has been set to be zero.
+With this dip, we perform predictive painting and simultaneously correct the painting result at each boundary.
+The predictive painting result only corresponding to the original image is recorded, which is shown in Figure~\ref{fig:paint2},
+where we can observe abrupt value changes alongside the faults. 
+The picked horizons as indicated by the yellow lines in Figure~\ref{fig:pick2} follow the true horizons accurately.
+
+\subsection{Example for fault-zone replacement method}
+
+Figure~\ref{fig:lseis,lmask,lseis2,ldip2,lpaint2,lpick2} shows the example for fault-zone replacement method, and it has the same layout as Figure~\ref{fig:seis,mask,seis2,dip3,paint2,pick2}.
+Figure~\ref{fig:lseis} shows the original image and it contains three faults (Figure~\ref{fig:lmask}).
+Because the fault slip of the three faults is not very large, we set the fault zone width to be 17 samples for all the faults.
+The new image after fault zone replacement with smooth transitions is shown in Figure~\ref{fig:lseis2}, and the two sides of the faults have been smoothly bridged.
+The dip of the new image is shown in Figure~\ref{fig:ldip2}, from which we can easily detect the fault zones: three narrow bands.
+Figure~\ref{fig:lpaint2} shows the predictive painting result and it contains smoothly varying bands instead of sharp cliffs,
+which are also implied by the yellow curves in Figure~\ref{fig:lpick2}.
+When the horizon curves cross through the faults, they jump slowly from one side to the other side.
+
+\subsection{Example for unfaulting method}
+
+Figure~\ref{fig:cseis,cmask,cshiftx,cshiftz,cseis22,cpaint2,cpaint3,cpick3} shows the example for unfaulting method.
+The image (Figure~\ref{fig:cseis}) contains 6 faults, and the fault slip of the second and last faults is relatively large. 
+We first solve a regularized inverse problem based on equation~\ref{eq:slip} using shaping regularization to obtain the shift vector (Figures~\ref{fig:cshiftx} and~\ref{fig:cshiftz}), and then unfault the original image to an image shown in Figure~\ref{fig:cseis22}.
+After unfaulting, the seismic events have been aligned across faults.
+Then we estimate dip from the new image and carry out predictive painting to get the result shown in Figure~\ref{fig:cpaint2}.
+To get the predictive painting result of the original image, we interpolate the result in Figure~\ref{fig:cpaint2} back to the original coordinates, and get the result in Figure~\ref{fig:cpaint3},
+where the sharp changes caused by fault displacements can be clearly observed.
+Figure~\ref{fig:cpick3} shows the several picked horizons overlaid on the original image.
+The consistency between the yellow curves and the true horizons verifies the effectiveness of the unfaulting method.
+
+\section{Conclusions}
+
+We propose to incorporate fault slip information into predictive painting to help it spread information across faults correctly.
+Three methods of processing the fault slip information have been presented, and the numerical tests have verified their effectiveness.
+We use the application of automatic horizon picking to test the proposed methods in the examples.
+Both the area partition and the fault-zone replacement methods are efficient and easy to implement.
+However, the former requires dividing the 2D section or 3D volume into small parts, which may be challenging for complicated fault structures, and the latter needs to select an appropriate fault zone width to avoid aliasing issues, which may be difficult for images with dense fault distributions.
+In these two cases, we suggest to use the more powerful unfaulting method.
+The unfaulting method can work well in complex faulting scenarios, such as horsts and grabens.
+When unfaulting the image with intersecting faults, it is necessary to move both fault blocks and faults themselves \cite[]{wu16}.
+Compared to the first two methods, unfaulting method has a much higher computational cost.
+A 3D extension of the three methods is straightforward, once the fault curves are replaced by fault hyper-surfaces.
+
+\section{Acknowledgments}
+We thank the associate editor G. Dutta and three anonymous reviewers for providing valuable suggestions.
+We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support.
+The first author was additionally supported by the Statoil Fellows Program at The University of Texas at Austin.
+All computations presented in this paper are reproducible using the Madagascar software package \cite[]{fomel13b}.
+
+\bibliographystyle{seg}
+\bibliography{paper}

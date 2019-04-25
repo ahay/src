@@ -1,0 +1,96 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+# Example for zone-fault replacement method
+############################################
+cut=651
+nc=5
+set0=105
+set1=203
+set2=342
+set3=474
+set4=571
+sr=1.
+lsz=8
+
+def plotimage():
+    return'''
+	grey title= screenratio=%g labelsz=%d labelfat=3 unit1=Sample unit2=Sample
+	'''%(sr,lsz)
+def plotpp():
+    return'''
+	grey title= bias=%g screenratio=%g color=j scalebar=n barreverse=y labelsz=%d labelfat=3 unit1=Sample unit2=Sample scalebar=y
+	''' %(cut/2,sr,lsz)
+
+
+Fetch('lseis.HH','zhiguang',server)
+Flow('lseis','lseis.HH','dd form=native')
+Fetch('lseiss.HH','zhiguang',server)
+Flow('lseiss','lseiss.HH','dd form=native')
+Fetch('lslip1.HH','zhiguang',server)
+Flow('lslip1','lslip1.HH','dd form=native')
+
+Result('lseis',plotimage())
+Result('lseiss',plotimage())
+Result('lslip1','clip2 upper=40 lower=0 |grey title= screenratio=%g color=j bias=15 scalebar=y' %sr)
+
+# standard predictive painting
+Flow('ldip','lseiss','dip order=1 rect1=7 rect2=7')
+Result('ldip',plotimage()+' color=j')
+
+Flow('lpaint','ldip','pwpaint order=1')
+Result('lpaint',plotpp())
+
+Plot('lpaint','contour nc=%d c=%g,%g,%g,%g,%g screenratio=%g plotfat=5 plotcol=1 wanttitle=n wantaxis=n' %(nc,set0,set1,set2,set3,set4,sr))
+Plot('lseis',plotimage())
+Result('lpick','lseis lpaint','Overlay')
+
+# mask operator
+Flow('lbound lmask','lseiss lslip1','brfault replace=n slip=${SOURCES[1]} mask=${TARGETS[1]} width=17')
+Result('lmask','smooth rect2=2 |'+plotimage())
+
+# local similarity
+niter=100
+ng=101
+dg=1
+g0=-50
+rect1=5
+rect2=1
+number=2
+Flow('trace1','lbound','window n2=3')
+Flow('trace2','lbound','window f2=3')
+
+Flow('scan1','trace1 trace2','warpscan other=${SOURCES[1]} shift=y niter=%d ng=%d dg=%g g0=%g rect1=%d rect2=%d' %(niter,ng,dg,g0,rect1,rect2))
+Plot('scan1','window n3=1 f3=%d | grey wanttitle=n allpos=y color=j' %number)
+Flow('lshift1','scan1','pick vel0=0 smooth=n |math output="-input"')
+Plot('lshift1','window n2=1 f2=%d |math output="-input" | graph transp=y min2=%g max2=%g yreverse=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n pad=n' %(number,g0,g0+ng-1))
+Result('lshift1','scan1 lshift1','Overlay')
+
+Flow('scan2','trace2 trace1','warpscan other=${SOURCES[1]} shift=y niter=%d ng=%d dg=%g g0=%g rect1=%d rect2=%d' %(niter,ng,dg,g0,rect1,rect2))
+Plot('scan2','window n3=1 f3=%d | grey wanttitle=n allpos=y color=j' %number)
+Flow('lshift2','scan2','pick vel0=0 smooth=n')
+Plot('lshift2','window n2=1 f2=%d | graph transp=y min2=%g max2=%g yreverse=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n pad=n' %(number,g0,g0+ng-1))
+Result('lshift2','scan2 lshift2','Overlay')
+
+Flow('lshift','lshift2 lshift1','cat axis=2 ${SOURCES[1]} |put o2=0')
+
+# new predictive painting
+Flow('lseis2','lseiss lslip1 lshift','brfault replace=y slip=${SOURCES[1]} shift=${SOURCES[2]} width=17')
+Result('lseis2',plotimage())
+
+Flow('ldip2','lseis2','dip order=2 rect1=4 rect2=4')
+Result('ldip2',plotimage()+' color=j scalebar=y')
+
+Flow('lpaint2','ldip2','pwpaint order=2 eps=0.5')
+Result('lpaint2',plotpp())
+
+Plot('lpaint2','contour nc=%d c=%g,%g,%g,%g,%g screenratio=%g plotfat=5 plotcol=1 wanttitle=n wantaxis=n' %(nc,set0,set1,set2,set3,set4,sr))
+Result('lpick2','lseis lpaint2','Overlay')
+
+# Flattening
+Flow('lflat','lseis lpaint','iwarp warp=${SOURCES[1]}')
+Result('lflat',plotimage())
+Flow('lflat2','lseis lpaint2','iwarp warp=${SOURCES[1]}')
+Result('lflat2',plotimage())
+
+End()
