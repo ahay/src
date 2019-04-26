@@ -32,6 +32,8 @@ plot = sys.argv[1]
 
 # default picture format
 pformat = 'png'
+grid = False
+title= ''
 
 # build parameter dictionary
 args = {}
@@ -40,6 +42,11 @@ for a in sys.argv[2:]:
     val =  a.replace(key+'=','')
     if key == 'format':
         pformat = val
+    elif key == 'grid':
+        if val == '1' or val[0] == 'y' or val[0] == 'Y':
+            grid = True
+    elif key == 'title':
+        title = val
     else:
         args[key] = val
 
@@ -49,6 +56,7 @@ n1 = inp.int("n1")
 d1 = inp.float("d1")
 o1 = inp.float("o1")
 n2 = inp.size(1)
+
 
 data = numpy.zeros([n1,n2],'f')
 inp.read(data)
@@ -70,6 +78,11 @@ elif plot == 'loglog':
 else:
     sys.stderr.write('Unrecognized plotting function "%s" \n\n' % plot)
     sys.exit(2)
+
+if grid:
+    plt.grid()
+if title:
+    plt.title(title)
 
 # check if standard output
 if sys.stdout.isatty():
