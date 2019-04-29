@@ -115,22 +115,35 @@ Result('seismic2','seismic2 horizon2','Overlay')
 
 # Zoom in
 
-Flow('horizon2-zoom','horizon2','window n1=150')
+Flow('horizon2-zoom','horizon2','window n1=150 | scale dscale=0.001')
 Plot('horizon2-zoom',
      '''
-     scale dscale=0.001 | window min1=1003 |
+     window min1=1003 |
      graph min2=0.1 max2=0.3 min1=1000 max1=1151 yreverse=y scalebar=y screenht=9 
      screenwd=18 plotcol=3 plotfat=10 wanttitle=n wantaxis=n
      ''')
 
-Plot('seismic2-zoom','cube',
+Flow('seismic2-zoom','cube','window n2=1 f2=%d n3=150 min1=0.1 max1=0.3' % line)
+Plot('seismic2-zoom',
      '''
-     window n2=1 f2=%d n3=150 min1=0.1 max1=0.3 | 
      grey wanttitle=n scalebar=y screenht=9 screenwd=18 barlabel=Amplitude
-     ''' % line)
+     ''')
 
 Result('seismic2-zoom','seismic2-zoom horizon2-zoom','Overlay')
 
 # Extract amplitude
+
+Flow('coord-zoom','horizon2-zoom','transp')
+Flow('ampl-zoom','seismic2-zoom coord-zoom',
+     '''
+     inttest1 coord=${SOURCES[1]} same=n interp=spline nw=4 | window
+     ''')
+Result('ampl-zoom',
+       '''
+       window min1=1003 | 
+       graph title="Extracted Amplitude" unit1= unit2= label2=Amplitude
+       ''')
+
+# Amplitude of entire horizon
 
 End()
