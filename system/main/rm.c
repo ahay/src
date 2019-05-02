@@ -39,6 +39,7 @@ int main (int argc, char *argv[])
     for (i=1; i < argc; i++) {
 	arg = argv[i];
 	if ('-' == arg[0]) { /* it is an option */
+	    if ('-' == arg[1]) continue;
 	    if (NULL != strchr(arg,'f')) force = true;
 	    if (NULL != strchr(arg,'v')) verb = true;
 	    if (NULL != strchr(arg,'i')) inquire = true;
