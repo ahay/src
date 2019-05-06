@@ -39,11 +39,11 @@ To solve the problem of slow convergence of LSRTM in viscoacoustic media, we pro
 We first briefly review the basic theory of lowrank one-step wave extrapolation in visco\-acoustic media, and derive its adjoint operator for applications to RTM and LSRTM. 
 
 A constant-$Q$ model \cite[]{kja79} describes an attenuating medium whose \new{quality factor $Q$ is constant in frequency (but may vary in space), indicating that the} attenuation coefficient is linear in frequency. \cite{zhu14a} derived the following approximate constant-$Q$ wave equation with decoupled fractional Laplacians for modeling and imaging in viscoacoustic media:
-\begin{eqnarray}
+\begin{equation}
   \label{eq:frac1}
  \frac{1}{c^2}\frac{\partial^2 P}{\partial t^2} = \nabla^2 P + \beta_1 \{ \eta (-\nabla^2)^{\gamma+1} - \nabla^2 \} P 
  + \beta_2 \tau \frac{\partial}{\partial t}(-\nabla^2)^{\gamma+1/2} P \;, 
-\end{eqnarray}
+\end{equation}
 where
 \begin{eqnarray}
 \eta(\mathbf{x}) &=& -c_0^{2\gamma(\mathbf{x})}\omega_0^{-2\gamma(\mathbf{x})}\cos(\pi \gamma(\mathbf{x})) \;, \\ 
@@ -55,8 +55,8 @@ Here $\gamma$ is a dimensionless parameter that ranges between $0$ to $1/2$. $P(
 
 Setting both $\beta_1$ and $\beta_2$ to one, equation~\ref{eq:frac1} leads to the viscoacoustic dispersion relation with fractional powers of the wave number:
 \begin{equation}
-  \label{eq:dispfrac1}
-  \frac{\omega^2}{c^2} = -\eta |\mathbf{k}|^{2\gamma +2} - i \omega\tau |\mathbf{k}|^{2\gamma +1} \;, 
+    {\frac{\omega^2}{c^2}} = {-\eta |\mathbf{k}|^{2\gamma +2} - i \omega\tau |\mathbf{k}|^{2\gamma +1}} \;, 
+   \label{eq:dispfrac1}
 \end{equation}
 Solving for $\omega$ in equation~\ref{eq:dispfrac1} yields:
 \begin{equation}
@@ -93,16 +93,16 @@ The FIOs introduced in equations~\ref{eq:exp} and ~\ref{eq:expadj} can be effici
 \subsection{Viscoacoustic RTM and RTDM}
 
 To obtain a seismic image with an attenuated record from the $i$-th shot $d_i(\mathbf{x}_r,t)$, where $\mathbf{x}_r$ denotes the receiver location, viscoacoustic RTM can be carried out in the following three steps:
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item Forward propagate the source wavefield $S_i(\mathbf{x},t)$ by solving
   \begin{equation}
+      {\frac{1}{c^2}}\,{\frac{\partial^2 S_i(\mathbf{x},t)}{\partial t^2}} - \eta \mathbf{L} S_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t}\mathbf{H} S_i(\mathbf{x},t) = \delta(\mathbf{x}-\mathbf{x}_i) f(t) \; .
   \label{eq:for}
-    \frac{1}{c^2}\frac{\partial^2 S_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} S_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t}\mathbf{H} S_i(\mathbf{x},t) = \delta(\mathbf{x}-\mathbf{x}_i) f(t) \; .
   \end{equation}
   \item Backward propagate the receiver wavefield $R_i(\mathbf{x},t)$ by injecting the observed seismic record as the boundary condition $R_i(\mathbf{x}_r,t) = d_i(\mathbf{x}_r,t)$ and solving
   \begin{equation}
-  \label{eq:back}
-    \frac{1}{c^2}\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} R_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = 0 \;.
+      {\frac{1}{c^2}}\,{\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2}} - \eta \mathbf{L} R_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = 0 \;.
+  \label{eq:back} 
   \end{equation}
   \item Apply the cross-correlation imaging condition \cite[]{iei}:
   \begin{equation}
@@ -113,12 +113,12 @@ To obtain a seismic image with an attenuated record from the $i$-th shot $d_i(\m
 \end{enumerate}
 
 Reverse-time demigration (RTDM) in viscoacoustic media can be formulated as the adjoint of the RTM process:
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item Calculate the source wavefield $S_i(\mathbf{x},t)$ in the background velocity model in \new{the} same manner as RTM by solving equation~\ref{eq:for}.
   \item Generate the receiver wavefield $R_i(\mathbf{x},t)$ by using the stacked image $I(\mathbf{x})$ as a secondary source and solving:
   \begin{equation}
-    \label{eq:back2}
-    \frac{1}{c^2}\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} R_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = I(\mathbf{x})S_i(\mathbf{x},t) \; .
+      {\frac{1}{c^2}}\,{\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2}} - \eta \mathbf{L} R_i(\mathbf{x},t) - \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = I(\mathbf{x})S_i(\mathbf{x},t) \; .
+  \label{eq:back2}
   \end{equation}
   \item Extract the predicted seismic record (denoted by the hat) at receiver locations $\mathbf{x}_r$:
   \begin{equation}
@@ -145,16 +145,16 @@ The square matrix $\mathbf{A}^* \, \mathbf{A}$ is known as the wave-equation Hes
 \subsection{$Q$-compensated LSRTM using the GMRES method}
 
 To compensate for attenuation in seismic images, \cite{zhu14b} and \cite{me15a} proposed the $Q$-compensated RTM ($Q$-RTM). $Q$-RTM in general can be formulated as follows:
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item Forward propagate the source wavefield $S_i(\mathbf{x},t)$ with $Q$-compensation by solving:
   \begin{equation}
+      {\frac{1}{c^2}}\,{\frac{\partial^2 S_i(\mathbf{x},t)}{\partial t^2}} - \eta \mathbf{L} S_i(\mathbf{x},t) + \tau \frac{\partial}{\partial t}\mathbf{H} S_i(\mathbf{x},t) = \delta(\mathbf{x}-\mathbf{x}_i) f(t) \; .
   \label{eq:Qfor}
-    \frac{1}{c^2}\frac{\partial^2 S_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} S_i(\mathbf{x},t) + \tau \frac{\partial}{\partial t}\mathbf{H} S_i(\mathbf{x},t) = \delta(\mathbf{x}-\mathbf{x}_i) f(t) \; .
   \end{equation}
   \item Backward propagate the receiver wavefield $R_i(\mathbf{x},t)$ with $Q$-compensation by solving:
   \begin{equation}
+      {\frac{1}{c^2}}\,{\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2}} - \eta \mathbf{L} R_i(\mathbf{x},t) + \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = 0 \;,
   \label{eq:Qback}
-    \frac{1}{c^2}\frac{\partial^2 R_i(\mathbf{x},t)}{\partial t^2} - \eta \mathbf{L} R_i(\mathbf{x},t) + \tau \frac{\partial}{\partial t} \mathbf{H} R_i(\mathbf{x},t) = 0 \;,
   \end{equation}
   with the boundary condition: $R_i(\mathbf{x}_r,t) = d_i(\mathbf{x}_r,t)$.
   \item Apply the imaging condition (equation~\ref{eq:ccr}).
@@ -194,6 +194,8 @@ Instead of looking for the preconditioner $\mathbf{P}$, we simply replace $\math
 \multiplot{3}{img-v-5,img-v-15,img-v-30}{width=0.45\textwidth}{The results of the LSRTM with Laplacian filter through iterations. (a) after $5$ iterations; (b) after $15$ iterations; (c) after $30$ iterations. \label{fig:imgvls}}
 \multiplot{3}{img-c-5,img-c-15,img-c-30}{width=0.45\textwidth}{The result of the proposed $Q$-LSRTM through iterations. (a) after $5$ iterations; (b) after $15$ iterations; (c) after $30$ iterations. \label{fig:imgcls}}
 \multiplot{3}{compare-n,compare-v,compare-c}{width=0.28\textwidth}{Image traces extracted at $X=2500\;m$ from the $30$th iteration results (represented by the blue dashed line) compared with the true model (red solid line). (a) LSRTM; (b) LSRTM with the Laplacian filter; (c) $Q$-LSRTM. \label{fig:compare}}
+
+\inputdir{.}
 \plot{conv}{width=0.8\textwidth}{Convergence curves calculated by the $L_2$ norm of model misfit. The dot-dashed line corresponds to the original LSRTM, the dashed line corresponds to LSRTM with a Laplacian filter and the solid line corresponds to the proposed $Q$-LSRTM.}
 
 
@@ -203,8 +205,8 @@ To test the convergence rate of $Q$-LSRTM, we use a portion of \new{the} BP 2004
 
 To measure the convergence rate, we calculate the model residual as the $L_2$ norm of the misfit between the model calculated at each iteration $\mathbf{m}_k$ and the true model $\mathbf{m}^*$, normalized by the $L_2$ norm of the true model:
 \begin{equation}
-  \label{eq:res}
-  r = \frac{\|\mathbf{m}_k - \mathbf{m}^* \|^2_2}{\|\mathbf{m}^*\|^2_2} \; .
+    r = {\frac{\|\mathbf{m}_k - \mathbf{m}^* \|^2_2}{\|\mathbf{m}^*\|^2_2}} \; .
+    \label{eq:res}
 \end{equation}
 Figure~\ref{fig:conv} shows the comparison of convergence rates. With the help of a Laplacian filter, LSRTM is able to achieve a slightly faster convergence rate at early iterations than the original LSRTM. The proposed $Q$-LSRTM, on the other hand, converges significantly faster than the other two methods. \new{Convergence is achieved by $Q$-LSRTM within approximately $50$ iterations, while the other two methods have not converged even after $100$ iterations.} The fast convergence is an important property, because for large-scale 3D seismic imaging problems only a few iterations can be afforded in practice.
 
