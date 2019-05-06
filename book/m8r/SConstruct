@@ -1,7 +1,26 @@
-from rsf.tex import *
+from rsf.book import *
 
-End(lclass='georeport',options='book',use='hyperref',
+chapters = Split('''
+intro
+shell
+format
+scons
+api
+parallel
+latex
+''')
+
+Book(title='Madagascar: \\ Open-Source Software for Geophysical Data Analysis',
+     author='Sergey Fomel',
+     chapters=chapters)
+
+End(options='book',
     include=r'''
+\newlength{\boxwidth}
+\setlength{\boxwidth}{\textwidth}
+\addtolength{\boxwidth}{-20pt} 
+\setlength{\fboxsep}{10pt}
+\newcommand{\boxit}[1]{\noindent\fbox{\parbox{\boxwidth}{#1}}}
 \newcommand{\RSF}{../../..}
 \lstdefinelanguage{julia}%
   {morekeywords={abstract,break,case,catch,const,continue,do,else,elseif,%
@@ -10,13 +29,10 @@ End(lclass='georeport',options='book',use='hyperref',
       using,while},%
    sensitive=true,%
    alsoother={$},%
+   morecomment=[l]\#,%
    morecomment=[n]{\#=}{=\#},%
-%   morestring=[s]{"""}{"""},%
-%   morestring=[s]{r"}{"},%
-%   morestring=[s]{b"}{"},%
-%   morestring=[s]{v"}{"},%
-%   morestring=[s]{raw"}{"},%
-%   morestring=[s]{L"}{"},%
+%   morestring=[s]{"}{"},%
+   morestring=[m]{'}{'},%
 }[keywords,comments,strings]%
 %\lstset{%
 %    language         = Julia,
@@ -26,6 +42,6 @@ End(lclass='georeport',options='book',use='hyperref',
 %    commentstyle     = \color{ForestGreen},
 %    showstringspaces = false,
     %}
-    ''')
-
-
+''',
+    use='amsmath,hyperref,listings,fancybox,color',
+    )
