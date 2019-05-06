@@ -1,3 +1,3 @@
 from rsf.tex import *
 
-End(options='', color='ALL', hires='ALL', use='enumitem')
+End(options='', color='ALL', hires='ALL', use='enumitem,color')
