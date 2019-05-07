@@ -10,7 +10,7 @@ progs = '''
 	mig2pwd pwdtensor pwdtensorh
 	lsmig3 linpi pipwdmig2
 	linmig3 lspiazpwdmig3 lspiazpwdmig32 piazpwdmig3 azpwd
-	anisodiffuse azspr linmig2 pwddiffuse
+	anisodiffuse azspr linmig2 pwddiffuse mute
 	''' 
 
 mpi_progs = ''

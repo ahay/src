@@ -156,20 +156,18 @@ cut = (750*0.0125)
 
 # lets divide dataset in two parts
 
-mute = Program('mute.c')
-
 Flow('envelope_left','envelope','window max3=%g'%cut)
 
 Flow('envelope_right','envelope','window min3=%g'%(cut+0.0125))
 
-Flow('env_left','envelope_left %s' % mute[0],
+Flow('env_left','envelope_left',
      '''
-     ./${SOURCES[1]} t1=1.3 v1=3.5
+     mute t1=1.3 v1=3.5
      ''',
      split=[3,'omp'])
-Flow('env_right','envelope_right %s' % mute[0],
+Flow('env_right','envelope_right',
      '''
-     ./${SOURCES[1]} t1=1.3 v1=3.0
+     mute t1=1.3 v1=3.0
      ''',
      split=[3,'omp'])
 

@@ -1,4 +1,4 @@
-\published{}
+\published{Geophysics, 84, S187–S200, (2019)}
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
 \title{Least-squares path-summation diffraction imaging using sparsity constraints}
@@ -157,11 +157,11 @@ we design a weighting function, which has a flat region in the middle and has a
 Gaussian decay for the tail-elimination region as opposed
 to a curve with one most probable velocity value in regular
 Gaussian weighting path-summation integral. The following expression describes path-summation integral with Gaussian tapering:
-\begin{align}
+\begin{equation}
 \label{eq:gpi_flat_int}
-&\hat{I}(\Omega,k,v_a,v_b,\beta)\ =\ \hat{P}_0(\Omega,k)\ \Big( \int^{v_a}_{v_1} e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{a} - v)^2} dv\ +\\ \nonumber
-&+\ \int^{v_b}_{v_a}e^{\frac{-i k^2 v^2}{16\Omega}} dv\ +\ \int^{v_2}_{v_b} e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{b} - v)^2} dv\ \Big),
-\end{align}
+\hat{I}(\Omega,k,v_a,v_b,\beta)\ =\ \hat{P}_0(\Omega,k)\ \Big( \int^{v_a}_{v_1} e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{a} - v)^2} dv\ 
+    +\ \int^{v_b}_{v_a}e^{\frac{-i k^2 v^2}{16\Omega}} dv\ +\ \int^{v_2}_{v_b} e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{b} - v)^2} dv\ \Big),
+\end{equation}
 where $v_a$ and $v_b$ correspond to the lowest and to the highest constant migration
 velocities in the image set being stacked or, precisely speaking, integrated; $v_1$ and $v_2$ are
 tail cut-off velocities, which correspond to the slope decay parameter $\beta$. Expression ~\ref{eq:gpi_flat_int} 
@@ -169,19 +169,19 @@ corresponds to the sum of three path-summation integrals: two Gaussian weighting
 the last terms) and unweighted path-summation integral (the middle term).
 Each term has an analytical expression.
 Gaussian weighting scheme path-summation integrals can be computed as \cite[]{merzlikin17}:
-\begin{align}
+\begin{equation}
 \label{eq:gpi_filt}
-&\int^{v_a}_{v_1}\ e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{a} - v)^2} dv\ = \\ \nonumber
-&=\ \frac{\sqrt{\pi}\ e^{-(\beta v_{a}^2 + \frac{\beta^2 v_{a}^2}{\gamma(\Omega,k,\beta)^2})}}{ 2\gamma(\Omega,k,\beta) }\ \mbox{erfi}\big( \gamma(\Omega,k,\beta) v + \frac{\beta v_{a}}{\gamma(\Omega,k,\beta)} \big) \bigg|_{v_1}^{v_a}, 
-\end{align}
+\int^{v_a}_{v_1}\ e^{\frac{-i k^2 v^2}{16\Omega} - \beta(v_{a} - v)^2} dv\ =
+\frac{\sqrt{\pi}\ e^{-(\beta v_{a}^2 + \frac{\beta^2 v_{a}^2}{\gamma(\Omega,k,\beta)^2})}}{ 2\gamma(\Omega,k,\beta) }\ \mbox{erfi}\big( \gamma(\Omega,k,\beta) v + \frac{\beta v_{a}}{\gamma(\Omega,k,\beta)} \big) \bigg|_{v_1}^{v_a}, 
+\end{equation}
 where $\gamma(\Omega,k,\beta)=i\sqrt{ik^2/16\Omega + \beta}$. To compute the last summation term,
 which corresponds to the right taper slope, we
 replace $v_a$ with $v_2$ and $v_1$ with $v_b$. The middle term can be evaluated as:
-\begin{align}
+\begin{equation}
 \label{eq:upi_filt}
-&\int^{v_b}_{v_a}e^{\frac{-i k^2 v^2}{16\Omega}} dv\ =\\ \nonumber
-&=\ e^{i\frac{5\pi}{4}}\ \frac{2\sqrt{\Omega \pi}}{k}\ \mbox{erfi}\big(e^{i\frac{3\pi}{4}}\ \frac{k\ v}{4\sqrt{\Omega}}\big) \bigg|_{v_a}^{v_b}. 
-\end{align}
+\int^{v_b}_{v_a}e^{\frac{-i k^2 v^2}{16\Omega}} dv\ =\
+e^{i\frac{5\pi}{4}}\ \frac{2\sqrt{\Omega \pi}}{k}\ \mbox{erfi}\big(e^{i\frac{3\pi}{4}}\ \frac{k\ v}{4\sqrt{\Omega}}\big) \bigg|_{v_a}^{v_b}. 
+\end{equation}
 Thus, Gaussian-tapering path-summation integral can be evaluated analytically with a cost equal to that of only two FFTs.
 
 \subsection{Objective function}
@@ -339,7 +339,7 @@ For shaping regularization of reflections ($\mathbf{S}_{\sigma})$ dominant local
 Kirchhoff migration image should suffice). For PWD filter ($\mathbf{D}_{data}$) dominant local slopes
 should be estimated in the data domain (zero-offset or stacked section). Both slopes should be precomputed before the inversion.
 
-\inputdir{schem}
+\inputdir{.}
 \plot{scheme-4-lsq}{width=0.8\columnwidth}{Flowchart illustrating the workflow for reflection, diffraction and noise separation. Internal iterations correspond
 to ``Conjugate Gradients'' minimizing the misfit term. External iterations correspond to ``Shaping Regularization'' performing
 reflection/diffraction separation. First,
