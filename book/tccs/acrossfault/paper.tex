@@ -166,17 +166,17 @@ All the images contain several faults, and we want to correctly pick several hor
 The fault maps in all the examples are estimated using the method proposed by \cite{wu16a}.
 
 \inputdir{gulf}
-\multiplot*{6}{seis,mask,seis2,dip3,paint2,pick2}{width=0.3\textwidth}{A 2D example for area partition method.
+\multiplot{6}{seis,mask,seis2,dip3,paint2,pick2}{width=0.3\textwidth}{A 2D example for area partition method.
 (a) Original image; (b) fault mask; (c) new image after area partition and padding with zero slope;
 (d) dip of the new image (dip around vertical boundaries is set to be zero); (e) final predictive painting result (displayed on the original grid mesh); (f) several automatically picked horizons.}
 
 \inputdir{louis2d}
-\multiplot*{6}{lseis,lmask,lseis2,ldip2,lpaint2,lpick2}{width=0.3\textwidth}{A 2D example for fault-zone replacement method.
+\multiplot{6}{lseis,lmask,lseis2,ldip2,lpaint2,lpick2}{width=0.3\textwidth}{A 2D example for fault-zone replacement method.
 (a) Original image; (b) fault mask; (c) new image after replacing fault zones with smooth transitions;
 (d) dip of the new image; (e) predictive painting using dip in Figure~\ref{fig:ldip2}; (f) several automatically picked horizons.}
 
 \inputdir{clyde}
-\multiplot*{8}{cseis,cmask,cshiftx,cshiftz,cseis22,cpaint2,cpaint3,cpick3}{width=0.3\textwidth}{A 2D example for unfaulting method.
+\multiplot{8}{cseis,cmask,cshiftx,cshiftz,cseis22,cpaint2,cpaint3,cpick3}{width=0.3\textwidth}{A 2D example for unfaulting method.
 	(a) Original image; (b) fault mask; (c) the horizontal component of the shift vector; 
 	(d) the vertical component of the shift vector; (e) new image after undoing faulting of the original image;
 	(f) predictive painting of the unfaulted image; (g) predictive painting of the original image, obtained by faulting the result in Figure~\ref{fig:cpaint2}; 
