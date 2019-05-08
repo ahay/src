@@ -9,6 +9,9 @@ file='filt_mig'
 
 Fetch('filt_mig.sgy','teapot',server='http://s3.amazonaws.com',top='')
 Fetch('rmotc.tar','teapot',server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
+Fetch('logs.tar.gz','teapot',server)
+Flow('dummy','logs.tar.gz','tar -xzf $SOURCE',stdin=0,stdout=-1)
+
 
 Flow([file,file+'_hdr',file+'.asc',file+'.bin'],file+'.sgy',
       '''
