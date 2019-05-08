@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(lclass='geophysics',options='reproduce',use='hyperref,listings,moreverb', color='ALL')
