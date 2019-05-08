@@ -1,6 +1,0 @@
-The SConstruct file is designed to be like the one from the alaska scripts
-
-I find it runs very slowly.  I think that is because it needs to pass over the
-input files to figure out what needs to be created.  Does scons use some kind of
-checksum instead of file dates?
-
