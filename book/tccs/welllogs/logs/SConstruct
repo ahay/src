@@ -9,8 +9,8 @@ file='filt_mig'
 
 Fetch('filt_mig.sgy','teapot',server='http://s3.amazonaws.com',top='')
 Fetch('rmotc.tar','teapot',server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
-Fetch('logs.tar.gz','teapot',server)
-Flow('dummy','logs.tar.gz','tar -xzf $SOURCE',stdin=0,stdout=-1)
+#Fetch('logs.tar.gz','teapot',server)
+#Flow('dummy','logs.tar.gz','tar -xzf $SOURCE',stdin=0,stdout=-1)
 
 
 Flow([file,file+'_hdr',file+'.asc',file+'.bin'],file+'.sgy',
@@ -1901,7 +1901,7 @@ for well in range(2):
 inpu = 'DT2gard.txt'
 Fetch(inpu,'teapot')
 
-Flow('DTgard2f', None,
+Flow('DTgard2f', inpu,
      '''
      echo in=%s n1=24375 d1=0.5 o1=35.5 n2=1 d2=1 o2=1 data_format=ascii_float | dd form=native
      ''' % (inpu) )
