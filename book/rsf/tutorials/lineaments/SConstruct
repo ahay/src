@@ -239,4 +239,39 @@ Result('skt',skts,'SideBySideIso')
 
 # process using thresholding
 
+thr = 0.27*255
+Flow('thre','thdr','byte pclip=100 allpos=y | dd type=float | mask min=%g' % thr)
+Result('thre','dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    
+# Label
+Flow('tlbl','thre','dd type=float | byte pclip=100 allpos=y clip=1 | label')
+Result('tlbl',
+       'dd type=float | grey allpos=y pclip=100 color=j wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+
+# Remove small regions 
+msks = []
+for label in range(60):
+    msk = 'tlbl-msk%d' % label
+    Flow(msk+'in','tlbl','mask min=%d max=%d' % (label,label))
+    Flow(msk,msk+'in',
+         '''
+         dd type=float | 
+         stack norm=n axis=2 | stack norm=n axis=1 | 
+         spray axis=1 n=%d | spray axis=2 n=%d |
+         mask min=%d | mul ${SOURCE}
+         ''' % (81,81,75))
+    msks.append(msk)
+Flow('tmsk',msks+['thre'],'add ${SOURCES[1:60]} | mul ${SOURCES[60]}')
+Result('tmsk','dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    
+# Morphological closing
+Flow('tcls','tmsk','morph what=closing')
+Result('tcls','dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+
+# Morphological skeleton
+Flow('tskt','tcls','morph what=skeleton')
+Result('tskt','dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+
+# Part 3 - make a lineament collocation map
+
 End()

@@ -1016,8 +1016,9 @@ for well in range(num):
 
     for attr in ('DT', 'RHOB'):
         attrn = '%s' % (attr)
-        inpu = './logs_old/'+attrn+d+'f.txt'
-        Flow([attrn+'f'+d], None,
+        inpu = 'o'+attrn+d+'f.txt'
+        Fetch(inpu,'teapot')
+        Flow([attrn+'f'+d], inpu,
 	        '''
 	        echo in=%s n1=24375 d1=0.5 o1=35.5 n2=1 d2=1 o2=1 data_format=ascii_float | dd form=native
 	        ''' % (inpu) )
@@ -1825,9 +1826,10 @@ for well in range(2):
 
     for attr in ('DT', 'RHOB'):
         attrn = '%s' % (attr)
-        inpu = './logs_w0/'+attrn+d+'f.txt'
+        inpu = attrn+d+'f.txt'
+        Fetch(inpu,'teapot')
         
-        Flow([attrn+'0f'+d], None,
+        Flow([attrn+'0f'+d], inpu,
 	        '''
 	        echo in=%s n1=24375 d1=0.5 o1=35.5 n2=1 d2=1 o2=1 data_format=ascii_float | dd form=native
 	        ''' % (inpu) )
@@ -1893,7 +1895,8 @@ for well in range(2):
 ####################################################################################################
 
 # Gardner's constants change with each strat interval
-inpu = './logs_gard/DT2gard.txt'
+inpu = 'DT2gard.txt'
+Fetch(inpu,'teapot')
 
 Flow('DTgard2f', None,
      '''

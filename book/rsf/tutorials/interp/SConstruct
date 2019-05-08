@@ -88,10 +88,10 @@ Flow('horizon','Penobscot_Seabed.txt xy',
      '''
      echo in=$SOURCE data_format=ascii_float n1=3 n2=249572 | dd form=native | 
      window n1=1 f1=2 squeeze=n | intbin head=${SOURCES[1]} xkey=0 ykey=1 xmin=1000 xmax=1600 ymin=1000 ymax=1480 nx=601 ny=481 |
-     window | put label1=Inline label2=Crossline
+     window |  scale dscale=0.001 | put label1=Inline label2=Crossline
      ''',stdin=0)
 
-Result('horizon','grey color=gist_earth scalebar=y title=Horizon yreverse=n allpos=y bias=150 polarity=y')
+Result('horizon','grey color=gist_earth scalebar=y title=Horizon yreverse=n allpos=y bias=0.015 polarity=y')
 
 # Extract amplitude on one line
 
@@ -100,7 +100,7 @@ line=300-1
 Flow('horizon2','horizon','window n1=1 f1=%d' % line)
 Plot('horizon2',
      '''
-     scale dscale=0.001 | window min1=1003 max1=1477 |
+     window min1=1003 max1=1477 |
      graph min2=0 max2=1 min1=1000 max1=1480 yreverse=y scalebar=y screenht=9 
      screenwd=18 plotcol=3 plotfat=5 wanttitle=n wantaxis=n
      ''')
@@ -115,7 +115,7 @@ Result('seismic2','seismic2 horizon2','Overlay')
 
 # Zoom in
 
-Flow('horizon2-zoom','horizon2','window n1=150 | scale dscale=0.001')
+Flow('horizon2-zoom','horizon2','window n1=150')
 Plot('horizon2-zoom',
      '''
      window min1=1003 |
@@ -145,5 +145,14 @@ Result('ampl-zoom',
        ''')
 
 # Amplitude of entire horizon
+
+Flow('coord','horizon','spray axis=1 n=1')
+Flow('ampl','cube coord',
+     '''
+     inttest1 coord=${SOURCES[1]} same=n interp=spline nw=4 | window
+     ''')
+Result('ampl','grey title=Amplitude unit1= yreverse=n polarity=y allpos=y')
+
+# Compare different methods
 
 End()
