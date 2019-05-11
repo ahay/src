@@ -1,0 +1,3 @@
+uses=['sfheadermath', 'sfcat', 'sfintbin', 'sfwindow', 'sfpow', 'sfbandpass', 'sfput', 'sfbyte', 'sftransp', 'sfgrey3', 'sfmath', 'sfremap1', 'sfeikods', 'sfgrey', 'sfomp', 'sfkirmigsr']
+data=['LOCAL', 'LOCAL']
+size= 15091542168
