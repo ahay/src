@@ -1348,7 +1348,10 @@ def Fetch(directory,filename,server=dataserver,top='data'):
         try:
             urllib.urlretrieve(rdir,filename)
         except:
-            print ('Could not retrieve file "%s" from "%s"' % (filename,rdir))
+            try:
+                urllib.request.urlretrieve(rdir,filename)
+            except:
+                print ('Could not retrieve file "%s" from "%s"' % (filename,rdir))
 
 class Filter(object):
     'Madagascar filter'
