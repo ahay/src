@@ -3,12 +3,6 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-aimplfd1
-aimplfd2
-heatgmres1
-petscawefd2d
-rtmgeompetsc
-wavegeompetsc
 '''
 
 try:  # distributed version

@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-cameron2d ve2d spiral
+cameron2d spiral ve2d
 '''
 
 try:  # distributed version

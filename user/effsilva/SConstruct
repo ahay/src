@@ -3,7 +3,6 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-khshot
 '''
 
 try:  # distributed version

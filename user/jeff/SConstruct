@@ -19,28 +19,11 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-norm2
-reciprocity
-axplusy
-adjgradient2d
-adjgradient2d_coupled
-wem2d_iso
-modelcreate
-ewefd2d_omp
-ewefd3d_omp 
+ewefd2d_omp ewefd3d_omp modelcreate wexmig wexmva wexwfl
 '''
 
 # F90 mains
 targets.f90 = '''
-stf2telewfld
-rfspecdiv
-tracealign
-rfccp
-MCCCnew
-rwe2d
-telemig2d
-rec2ps
-backus 
 '''
 
 if env.get('OMP'):

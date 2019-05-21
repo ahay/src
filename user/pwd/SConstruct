@@ -3,13 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-beamform dealias dealias2 dijkstra dip dip2 diplet dips dixshape
-explanesignoi expsignoi fdip mdip odip2 ofpwd ofpwd2 opwd2 planemis2
-planemis3 planereg2 planereg3 planesignoi pmshape2 predict pwcascade pwcoh pwd
-pwd1 pwdchain pwdchain1 pwdchain2 pwdix pwdsigk pwsmooth pwsmooth2
-pwpaint pwpaint2 pwspray2 pwspray3 pwdsmooth2 pwpaint3 pwspray pwstack
-seisigk seislet shapesigk shplanemis2 shplanemis3 timeshift trismooth2
-twodip2 distpaint distpaint3D
+dealias dijkstra dip dip2 diplet dixshape explanesignoi expsignoi 
+fdip planemis2 planemis3 planesignoi pmshape2 predict pwcoh pwd 
+pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwsmooth pwspray 
+pwspray2 pwspray3 seisigk seislet trismooth2 twodip2
 '''
 
 try:  # distributed version
@@ -85,16 +82,6 @@ for prog in mains:
             '%s -change build/api/c/libdrsf.dylib '
             '%s/libdrsf.dylib %s' % \
                 (WhereIs('install_name_tool'),libdir,install[0]))
-
-for prog in Split(
-    '''
-    allp3 gauss2 matmult predict predict2 pwdsl pwsmooth pwsmooth2 pwsmooth3 pwspray trisl
-    '''):
-    sources = ['Test' + prog,prog]
-    bldutil.depends(env,sources,prog)
-    sources = [x + '.o' for x in sources]
-    env.Object('Test' + prog + '.c')
-    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
 
 ######################################################################
 # SELF-DOCUMENTATION

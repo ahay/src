@@ -2,7 +2,7 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = ''' rickerfit rickback
+progs = ''' rickerfit
 '''
 
 try:  # distributed version
