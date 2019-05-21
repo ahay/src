@@ -17,10 +17,6 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-avvvdwe2d
-avvvdwe3d
-bvvvdwe2d
-bvvvdwe3d
 '''
 # isoela2d bvvvdweps2d
 

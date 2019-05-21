@@ -3,16 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-beamsteer bmcgauss
-catan2 comblist
-cplxatt cplxcoh cplxcor cplxloc
-differr gsray
-karman karmans karman2 
-mcbmcgauss
-pde2dadp
-radonslope2 tan2dang
-velmap velsteer 
-sqsanaly
+karman
 '''
 
 # zoimg3

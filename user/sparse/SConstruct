@@ -3,10 +3,6 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-helmlu helmmig helmrhs
-iwioper iwiiter iwioper0 iwiiter0 
-iwinlcg iwilbfgs 
-iwigrad
 '''
 # iwinlcg0 
 
@@ -19,7 +15,6 @@ except: # local version
     SConscript('../pwd/SConstruct')
 
 src = Glob('[a-z]*.c')
-src.remove(File('lbfgs.c'))
 
 hdr = Glob('_*.h')
 

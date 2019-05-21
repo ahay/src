@@ -3,24 +3,18 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-aastack agmig ai2refl avo beamspray cascade c2r cell2 cell3 cgscan
-cmp2shot constfdmig2 cos2ang depth2time diffoc diffraction dimag dmo
-dsr dsr2 envelope fincon findmo finstack fkamo fkdmo fkgdmo fold
-fourvc fourvc0 fourvc2 fowler fowler1 fowler2 freqint freqlet gazdag
-gdmo halfint headerattr headermath hwt2d hwtex infill inmo inmo3
-inmo3gma intbin intbin3 isin2ang itaupmo itaupmo2 itaupmo3 itxmo
-itxmo3 iwarp2 iwarp3 kirchinv kirchnew kirmod kirmod3 lineiko
-linsincos migsteep3 modrefl modrefl2 modrefl3 moveout nmo nmo3
-nmo3_ort nmodips nmov nmow nmow_adj nmo3gma_adj ovc ovcco ovczo oway1
-pmig pnmo pnmo3d pp2psang pp2psang2 pp2pstsic preconstkirch prestolt
-ptaupmo3 ptaupmo ptaupmoVTI pveltran map2coh pveltranVTI pveltran3
-pyramid radial radial2 radon randrefl rays2 rays2a rays3 refer refl2ai
-ricker ricker1 ricker2 rweab rwesrmig rwezomig s2ofz s2ofz2 segyheader
-segyread segywrite shifts shoot2 shot2cmp shotconstkirch shotholes
-shotprop simivscan sin slant srmva srseidel srsyn sstep2
-stacks stolt stolt2 stoltstretch stretch stripes tan2ang taupmo
-time2depth tlagtoang2d tshift txpscan txpnmo vczo vczo2 vczo3 velmod
-veltran voft vofz vscan xlagtoang2d zoeppritz zomig zomva
+aastack agmig ai2refl c2r cascade cgscan cmp2shot constfdmig2 
+depth2time diffoc diffraction dmo dsr envelope fincon findmo finstack 
+fkamo fkdmo fold fourvc fourvc2 freqlet gazdag halfint headerattr 
+headermath hwt2d hwtex infill inmo inmo3 intbin intbin3 itaupmo iwarp2 
+iwarp3 kirchinv kirchnew kirmod kirmod3 lineiko map2coh migsteep3 
+modrefl modrefl2 moveout nmo nmo3_ort nmow_adj ovczo pmig pnmo pnmo3d 
+preconstkirch ptaupmo ptaupmoVTI pveltran pveltranVTI pyramid radial 
+radial2 radon rays2 rays2a refer ricker ricker1 ricker2 rweab rwezomig 
+segyheader segyread segywrite shot2cmp shotholes shotprop simivscan 
+slant srmva srseidel srsyn stacks stolt stolt2 stoltstretch stretch 
+stripes tan2ang taupmo time2depth tshift vczo vczo2 vczo3 velmod veltran 
+voft vscan xlagtoang2d zoeppritz zomig zomva
 '''
 
 libsrc = 'segy'

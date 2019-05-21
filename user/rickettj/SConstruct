@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-corral sensitivity pmod
+corral pmod sensitivity
 '''
 
 try:  # distributed version

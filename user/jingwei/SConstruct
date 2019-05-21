@@ -4,12 +4,11 @@ import bldutil
 
 # C++ programs
 progs = '''
-radon2 radon3 radon32 apradon2 radon34 diradon2 diiradon2 adiradon2 diradon32 diradon3 diradon34 sum sum3 sthres rankonetest svdtest samplowmat
+adiradon2 diiradon2 diradon2 diradon32 radon2 radon32 radon34 sum
 '''
 
 # C++ programs calling subC programs
 sprogs = '''
-pseudo adjtest adjtest1 samptest sampmat invtest invtest1 pseudolrexp samptestlrexp
 '''
 
 # subC++ programs
