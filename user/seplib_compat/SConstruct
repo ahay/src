@@ -11,6 +11,6 @@ except:
 
 if glob_build:
     targets = bldutil.UserSconsTargets()
-    targets.py = 'sepcmplx2rsf'
+    targets.py = ''
     targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
     #env.Install(incdir,'SEPlib_to_m8r_Makefile')

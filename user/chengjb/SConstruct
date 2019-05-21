@@ -3,23 +3,20 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-datasucjb2rsf2d kine2dvti ort3dhomodevcK ort3dhomodevK
-ort3dpseudophomo tti2desep tti2dpseudop tti3de twolayer2dti
-twolayer3dti vti2desep vti2dpseudop vti2dpseudop1 vti2dpseudopfvs0
-vti2dpseudosv
-vti3de
-vti3dpseudosh vti3dpseudosv
-twolayer3dort resamp ort3de tti2de
+datasucjb2rsf2d kine2dvti ort3de ort3dhomodevK ort3dhomodevcK 
+ort3dpseudophomo resamp tti2de tti2desep tti2dpseudop tti3de 
+twolayer2dti twolayer3dort twolayer3dti vti2desep vti2dpseudop 
+vti2dpseudop1 vti2dpseudopfvs0 vti2dpseudosv vti3de vti3dpseudosh 
+vti3dpseudosv
 '''
 
 ccprogs = '''
-tti2delrdecomp tti2delrdecomp2p tti2delrsep tti2delrsep2p
-tti2dpseudoplrsep tti3delrsepP tti3delrsepSH tti3delrsepSV
-vti3delrsepP vti3delrsepSH vti3delrsepSV
-tti2dpseudosvlrsep
-tti2delr tti2dekspacelr tti2dekspacelrsource tti2devectorlrsvd tti2delrdec
-tti2devectorlrsvd_double tti2devectorlrsvdkspace_double
-tti2devectorlrsvdkspace_double_stiffness ort3devectorlrkspace_double
+ort3devectorlrkspace_double tti2dekspacelr tti2dekspacelrsource 
+tti2delr tti2delrdec tti2delrdecomp tti2delrdecomp2p tti2delrsep 
+tti2delrsep2p tti2devectorlrsvd tti2devectorlrsvd_double 
+tti2devectorlrsvdkspace_double tti2devectorlrsvdkspace_double_stiffness 
+tti2dpseudoplrsep tti2dpseudosvlrsep tti3delrsepP tti3delrsepSH 
+tti3delrsepSV vti3delrsepP vti3delrsepSH vti3delrsepSV
 '''
 
 pyprogs ='''

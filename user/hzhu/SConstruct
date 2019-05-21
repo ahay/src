@@ -3,13 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-helm2D_forward
-helm2D_bornsyn
-helm2D_genshot
-helm2D_genrec
-helm2D_rtm
-helm2D_lsm
-helm2D_fwi
+helm2D_forward helm2D_genrec helm2D_genshot
 '''
 # fwiobj fwiupdate fwidir fwigrad iwinlcg0 
 

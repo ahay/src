@@ -3,20 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-apef apef2 apefsignoi atm1 atm2 bilstack c1coh difference doeps domf
-dominantf donf dowmf duffing duffing1 duffing2 duwt dwt2 dwt97 epsf
-fagrad fbpick findwellcoord fkoclet fkoclet3 fourbreg2 fourmis2
-freqreg freshape geoconvert gravcon groll hv2d judgechaos initial
-instattr instsnr intbin4 internalmult kuwahara localsnr locorr lpad2
-lpf2 lpfdenoise1 lpfdenoise2 lrmf ltft lum lum2 lumsmoother
-lumsharpener matchoper mean mf mig2 miss4 miss43 mkcmp mlm mtm mtres
-mlwm multiple mvo mvo1 nmradon nmult nonloc oclet oshift1 pick31
-pseudoprim pwcsemb pwd2 pwsfault pwsfault3 pwsmooth3 radonoper
-reversval rtft saltpepper sclet seisavf seisbreg2 seishrink seismis2
-seispocs seisreg2 seisxwell sharpsimi snr sphase st stft sv2d svd
-svddenoise swell testapef testcasoper testmatch threshold2 threshold3
-tslread tvmf txrna txrna2 txrna3 txspf txsorth v2d variogram
-variogram2 vconvert virtualdata wavemis2 winscan wmf zcwt
+apef difference domf fkoclet fourmis2 freshape gravcon lpfdenoise2 
+ltft lum mf mig2 miss4 miss43 mtm mvo pick31 saltpepper 
+seisbreg2 st stft sv2d svd threshold2 tvmf txrna2 txrna3 txsorth txspf 
+v2d
 '''
 
 try:  # distributed version

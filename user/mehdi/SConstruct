@@ -3,7 +3,6 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-R2to3 TTinv converted Azsort thickat
 '''
 
 try:  # distributed version

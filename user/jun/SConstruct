@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-velxf velinvww
+velinvww velxf
 '''
 
 try:  # distributed version

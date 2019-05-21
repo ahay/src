@@ -3,13 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-kirmig kirmig0 drayinte 
-testanal gradient cconst cgconst
-fatomo fatomoomp mkrcv cpxeikonal
-drays dsreiko dsrtomo eikods tinterp
-tdconvert irays t2diter kirdat0 kirdat
-kirmigsr kirdatsr ftoper dsreiko0
-iwipert dsrtomo0 
+dsreiko dsreiko0 dsrtomo eikods fatomoomp ftoper irays kirdatsr kirmig0 
+kirmigsr mkrcv t2diter tdconvert tinterp
 '''
 
 # freqmig0

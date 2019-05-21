@@ -3,7 +3,6 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-vr vrtest vr3d
 '''
 
 

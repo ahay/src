@@ -6,16 +6,15 @@ import bldutil
 ######################################################################
 # 1. C main programs
 progs = '''
-cohn checkptdemo fwi2d fbrec2d istseislet lsrtm2d lsprtm2d 
-mythresh mshots mcaseislet modeling2d mysnr
-pocsseislet rtm2d rtmadcig rtmodcig rtmva2d
-Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
-viscoa2d viscoe2d excitationic
+Testaniso Testeb Testelastic2d Testfd2d Testfd3d Testspml checkptdemo 
+excitationic fbrec2d fwi2d istseislet 
+lsprtm2d lsrtm2d mcaseislet modeling2d mshots mysnr 
+rtm2d rtmadcig rtmva2d viscoa2d viscoe2d
 '''
 # lsprtm2d
 progs_fftw='''
-dlct fpocs2d fpocs3d istinterp lsinterp2d istpad 
-pocs3d pocs ps2d mwni2d  myradon2
+dlct fpocs2d fpocs3d lsinterp2d 
+pocs ps2d mwni2d  myradon2
 '''
 #
 
@@ -27,19 +26,17 @@ ccprogs = '''
 ######################################################################
 # 3. MPI main programs
 mpi_cprogs = '''
-mpifwi
 '''
 
 ######################################################################
 # 4. CUDA main programs
 cuda_progs = '''
-fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d 
+fbrec genshots gpufd3d gpufwi gpurtm
 '''
 
 ######################################################################
 # 5. CUDA+MPI main programs
 cuda_mpi_progs = '''
-mpigpufwi
 '''
 
 ######################################################################
