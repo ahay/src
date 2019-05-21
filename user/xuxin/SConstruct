@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-integral1 pseudodepth zomiso zomvti
+integral1 
 '''
 
 mpi_progs = '''
@@ -54,10 +54,12 @@ elif root:
         env.Install(bindir,prog)
 
 mains = Split(progs)
+print(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     env.StaticObject('M'+prog+'.c')
+    print(prog)
     prog = env.Program(prog,[x + '.o' for x in sources])
     if root:
         env.Install(bindir,prog)
