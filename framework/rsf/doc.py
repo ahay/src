@@ -1128,7 +1128,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                     if main:
                         main.man(dir,usedoc_max,root)
             else:
-                raise BadUsage
+                raise SyntaxError
 
         for prog in args:
             if prog == 'vppen' or \
@@ -1156,7 +1156,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 To obtain a selfdoc, install %s with Madagascar: http://www.ahay.org/wiki/Adding_new_programs_to_Madagascar
                        ''' % (prog,prog))
 
-    except (getopt.error, BadUsage):
+    except (getopt.error, SyntaxError):
         print('''sfdoc - the RSF documentation tool
 
 %(prog)s [-u 25] <prog1> <prog2> ...

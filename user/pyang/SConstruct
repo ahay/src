@@ -169,7 +169,7 @@ for prog in cuda_mains:
         cc = env.get('CC')
         cflags = env.get('CUDAFLAGS') +' -O'
         ldflags = '-lcublas -lcufft -lcusparse'
-        if string.rfind(cc,'icc') >= 0:
+        if str.rfind(cc,'icc') >= 0:
             cflags = cflags + ' -ccbin=%s' % cc
             ldflags = '-ccbin=%s' % cc
         prog = env.Program(prog,cfile,
