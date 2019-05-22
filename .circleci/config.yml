@@ -27,7 +27,7 @@ jobs:
         command: |
           sudo apt-get install python-pip
           sudo pip install numpy scipy
-          sudo apt-get install libblas-dev liblapack-dev swig
+          sudo apt-get install libblas-dev liblapack-dev libfftw3-dev swig
 
     - run:
         name: Setup Environment Variables

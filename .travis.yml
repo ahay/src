@@ -8,6 +8,7 @@ addons:
     packages:
       - libblas-dev
       - liblapack-dev
+      - libfftw3-dev
       - swig
       - python-numpy
 
