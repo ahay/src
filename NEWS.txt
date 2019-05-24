@@ -34,7 +34,7 @@ To the reproducible documents collection:
 
 To SCons:
 
-* Upgraded to scons-3.0.0
+* Upgraded to scons-3.0.5
 
 To documentation:
 
