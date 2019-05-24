@@ -1,5 +1,5 @@
-'''                                           
-selfdoc for m8r0?                                     
+'''
+selfdoc for m8r0?
 '''
 ##   Copyright (C) 2010 University of Texas at Austin
 ##
@@ -61,7 +61,7 @@ except:
 #  Karl
 #_swig_ = False   #kls allow temporary test of with old major path in the code
 #sys.stderr.write('reset _swig_=%s\n'%repr(_swig_))
-#sys.stderr.write('local copy m8r.py\n')   
+#sys.stderr.write('local copy m8r.py\n')
 first_input=None
 
 import rsf.doc
@@ -815,10 +815,10 @@ class Input(_File):
 
     def read(self,data=[],shape=None,datatype=None):
         '''
-        The read function will read an input file into an array and return the 
-        array.  The best way to call the function is with no parameters to read the 
+        The read function will read an input file into an array and return the
+        array.  The best way to call the function is with no parameters to read the
         whole file into memory.  The datatype is defined by the input file to be float,
-        integer, or conplex.  If you want to read part of the file, specify the shape.  
+        integer, or conplex.  If you want to read part of the file, specify the shape.
         Example to read the whole file:
             input_rsf=m8r.Input("myfile.rsf")
             myndarray=input_rsf.read()
@@ -830,7 +830,7 @@ class Input(_File):
             n2=input_rsf("n2")
             mytrace=input_rsf(shape=(n2,n1))
         To be backward conpatible you can create an array and pass it as.  This will
-        define the number of entries you want to read and the dataformat. 
+        define the number of entries you want to read and the dataformat.
         '''
         if data == []:
             if shape==None:
@@ -883,9 +883,9 @@ class Input(_File):
         '''
         read one trace and header.  Usually sftahread or sftahsort is used
         to read a trace from obe rsf file and trace header from another rsf file
-        and concatinate them and write them to standard output.  Later programs 
+        and concatinate them and write them to standard output.  Later programs
         can then read trace_and_header data (tah).  gettah returns three objects.
-        A boolean that is Ture is end-of-file was encounterred, the trace, and the 
+        A boolean that is Ture is end-of-file was encounterred, the trace, and the
         trace header.  If end of file is encounterred the traces and header will be
         null
         '''
@@ -985,7 +985,7 @@ class Input(_File):
 
     def get_segy_keyindx(self,keyname):
         '''
-        return the index of a segy header keyname.  
+        return the index of a segy header keyname.
         '''
         standard_segy_key=['tracl', 'tracr', 'fldr', 'tracf', 'ep',
                            'cdp', 'cdpt', 'trid', 'nvs', 'nhs',
@@ -1053,7 +1053,7 @@ class Input(_File):
 
     def float(self, nm):
         '''
-        look up nm from the input file header (aka history) and return the floating point value 
+        look up nm from the input file header (aka history) and return the floating point value
         '''
         if _swig_:
             # c function only knows about utf-8 (ascii).  translate the unicode
