@@ -32,7 +32,7 @@ for prog in mains:
         cc = env.get('CC')
         cflags = [env.get('CUDAFLAGS'),env.get('CUDAFLAGS') +' -g']
         ldflags = ''
-        if string.rfind(cc,'icc') >= 0:
+        if str.rfind(cc,'icc') >= 0:
             cflags[0] = cflags[0] + ' -ccbin=%s' % cc
             cflags[1] = cflags[1] + ' -ccbin=%s' % cc
             ldflags = '-ccbin=%s' % cc

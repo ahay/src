@@ -55,7 +55,7 @@ for prog in cuda_mains:
         cc = env.get('CC')
         cflags = '-prec-div=true ' + env.get('CUDAFLAGS')
         ldflags = ''
-        if string.rfind(cc,'icc') >= 0:
+        if str.rfind(cc,'icc') >= 0:
             cflags = cflags + ' -ccbin=%s' % cc
             ldflags = '-ccbin=%s' % cc
         prog = env.Program(cfile,
