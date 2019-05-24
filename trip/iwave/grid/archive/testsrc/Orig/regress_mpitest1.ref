@@ -1,5 +1,0 @@
-MPIGRIDPP Unit Test 1
-create MPIGridSpace, construct Vector in space
-assign to perm old file=testdata.rsf
-all data samples in file = 17.0, compute max and min
-mpitest1 result: max=17 min=17

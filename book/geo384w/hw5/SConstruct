@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(use='hyperref,listings',color='image0 vel model')
