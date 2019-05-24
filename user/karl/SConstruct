@@ -14,13 +14,12 @@ except:
     SConscript(os.path.join(RSFSRC,'system/seismic/SConstruct'))
 
 progs = ''' 
-karlpocs tahagc tahgain tahgethw tahheadermath tahmakeskey tahmute tahnmo tahpef tahread tahscdecon tahscscale tahsort tahstack tahstatic tahwindow tahwrite
+karlpocs 
 '''
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],
             LIBPATH=[RSFSRC+'/lib'],
-            LIBS=[env.get('DYNLIB','')+'rsfsegy',
-                  env.get('DYNLIB','')+'su',
+            LIBS=[env.get('DYNLIB','')+'su',
                   env.get('DYNLIB','')+'rsf'])
 # fftw settings
 fftw = env.get('FFTW')
