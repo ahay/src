@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfnmostretch', 'sfgrey', 'sfput', 'sfstack', 'sfdots', 'vpnmotraj', 'sfmath', 'sfaastack', 'sfscale', 'sfmerge']
-data=[]
-size=     311360
