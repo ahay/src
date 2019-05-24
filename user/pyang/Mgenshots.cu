@@ -121,15 +121,15 @@ int main(int argc, char *argv[])
     // Print out specs of the main GPU
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, 0);
-    // sf_warning("\n GPU0:\t%s\t%d.%d:", deviceProp.name, deviceProp.major, deviceProp.minor);
-    // sf_warning("\t%lu GB:\t total Global memory (gmem)", deviceProp.totalGlobalMem / 1024 / 1024 / 1000);
-    // sf_warning("\t%lu MB:\t total Constant memory (cmem)", deviceProp.totalConstMem / 1024);
-    // sf_warning("\t%lu MB:\t total Shared memory per block (smem)", deviceProp.sharedMemPerBlock / 1024);
-    // sf_warning("\t%d:\t total threads per block", deviceProp.maxThreadsPerBlock);
-    // sf_warning("\t%d:\t total registers per block", deviceProp.regsPerBlock);
-    // sf_warning("\t%d:\t warp size", deviceProp.warpSize);
-    // sf_warning("\t%d x %d x %d:\t max dims of block", deviceProp.maxThreadsDim[0], deviceProp.maxThreadsDim[1], deviceProp.maxThreadsDim[2]);
-    // sf_warning("\t%d x %d x %d:\t max dims of grid", deviceProp.maxGridSize[0], deviceProp.maxGridSize[1], deviceProp.maxGridSize[2]);
+    sf_warning("\n GPU0:\t%s\t%d.%d:", deviceProp.name, deviceProp.major, deviceProp.minor);
+    sf_warning("\t%lu GB:\t total Global memory (gmem)", deviceProp.totalGlobalMem / 1024 / 1024 / 1000);
+    sf_warning("\t%lu MB:\t total Constant memory (cmem)", deviceProp.totalConstMem / 1024);
+    sf_warning("\t%lu MB:\t total Shared memory per block (smem)", deviceProp.sharedMemPerBlock / 1024);
+    sf_warning("\t%d:\t total threads per block", deviceProp.maxThreadsPerBlock);
+    sf_warning("\t%d:\t total registers per block", deviceProp.regsPerBlock);
+    sf_warning("\t%d:\t warp size", deviceProp.warpSize);
+    sf_warning("\t%d x %d x %d:\t max dims of block", deviceProp.maxThreadsDim[0], deviceProp.maxThreadsDim[1], deviceProp.maxThreadsDim[2]);
+    sf_warning("\t%d x %d x %d:\t max dims of grid", deviceProp.maxGridSize[0], deviceProp.maxGridSize[1], deviceProp.maxGridSize[2]);
 
     /* initialize Madagascar */
     sf_init(argc,argv);

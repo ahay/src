@@ -40,14 +40,12 @@
   [6] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
   Developer Technology 2.4 (2007).
 */
-#include <stdio.h>
 
 __global__ void cuda_set_sg(int *sxz, int sxbeg, int szbeg, int jsx, int jsz, int ns, int nz)
 /*< set the positions of sources/geophones >*/
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
 	if (id<ns) sxz[id]=(szbeg+id*jsz)+nz*(sxbeg+id*jsx);
-	//printf("fjdk sxz[id] = %d \n", sxz[id]);
 	__syncthreads();
 }
 
@@ -67,10 +65,8 @@ __global__ void cuda_add_source(float *p, float *source, int *sxz, int ns, bool 
 /*< add==true, add (inject) the source; add==false, subtract the source >*/
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
-	//printf("id = %d \n", id);
 	if (id<ns)
 	{
-		//printf("fjdk sxz[id] = %d \n", sxz[id]);
 		if (add)	p[sxz[id]]+=source[id];
 		else 		p[sxz[id]]-=source[id];
 	}
