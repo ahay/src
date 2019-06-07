@@ -155,4 +155,21 @@ Result('ampl','grey title=Amplitude unit1= yreverse=n polarity=y allpos=y')
 
 # Compare different methods
 
+methods = {'spl': 'interp=spline nw=4',
+           'near': 'interp=lag nw=1',
+           'lin': 'interp=lag nw=2'}
+for m in methods.keys():
+    Flow(m,'seismic2-zoom coord-zoom',
+         '''
+         inttest1 coord=${SOURCES[1]} same=n %s | window
+         ''' % methods[m])
+Result('methods','spl lin near',
+       '''
+       cat axis=2 ${SOURCES[1:3]} | window min1=1003 | 
+       graph title="Extracted Amplitude" unit1= unit2= label2=Amplitude
+       dash=0,1,2
+       ''')
+
+# Timeslice half-way through the data
+
 End()

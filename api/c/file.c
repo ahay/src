@@ -274,10 +274,14 @@ sf_file sf_output (/*@null@*/ const char* tag)
         free(file);
 	sf_error ("%s: pipe problem:",__FILE__);
     }
- 
-    dataname = sf_getstring("out");
-    if (NULL == dataname)
-	dataname = sf_getstring("--out");
+
+    if (stdout == file->stream) {
+	dataname = sf_getstring("out");
+	if (NULL == dataname)
+	    dataname = sf_getstring("--out");
+    } else {
+	dataname = NULL;
+    }
 	
     if (file->pipe) {
 	file->dataname = sf_charalloc (7);
@@ -1038,7 +1042,7 @@ void sf_putline (sf_file file, const char* line)
 
 void sf_setaformat (const char* format /* number format (.i.e "%5g") */, 
 		    int line /* numbers in line */,
-		    bool strip /* strip last character */)
+		    int strip /* strip last characters */)
 /*< Set format for ascii output >*/
 {
     size_t len;
@@ -1049,9 +1053,9 @@ void sf_setaformat (const char* format /* number format (.i.e "%5g") */,
 	aformat = sf_charalloc(len);
 	memcpy(aformat,format,len);
 	if (strip) {
-	    eformat = sf_charalloc(len-1);
-	    memcpy(eformat,format,len-1);
-	    eformat[len-2]='\0';
+	    eformat = sf_charalloc(len-strip);
+	    memcpy(eformat,format,len-strip);
+	    eformat[len-strip-1]='\0';
 	} else {
 	    eformat = aformat;
 	}

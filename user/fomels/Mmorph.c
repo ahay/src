@@ -34,6 +34,7 @@ int main (int argc, char* argv[])
     if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
 
     if (NULL == (what = sf_getstring("what"))) what="none";
+    /* what operation to perform (dilation,closing,erosion,opening,skeleton) */
 
     img1 = sf_intalloc2(n1,n2);
     img2 = sf_intalloc2(n1,n2);
