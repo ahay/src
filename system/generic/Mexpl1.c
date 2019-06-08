@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, i2, rect;
+    int n1, n2, i2, rect, ic, nc;
     float pclip, *dat=NULL;
     sf_file in=NULL, out=NULL;
 
@@ -34,6 +34,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
+    if (!sf_getint("cycle",&nc)) sf_error("Need cycle=");
+    /* number of cycles */
     if (!sf_getint("rect1",&rect)) sf_error("Need rect1=");
     /* smoothing radius */
     if (!sf_getfloat("pclip",&pclip)) pclip=50.;
@@ -45,7 +47,9 @@ int main(int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread (dat,n1,in);
-	expl1_apply (dat);
+	for (ic=0; ic < nc; ic++) {
+	    expl1_apply (dat);
+	}
 	sf_floatwrite (dat,n1,out);
     }
 
