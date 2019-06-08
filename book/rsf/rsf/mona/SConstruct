@@ -34,13 +34,7 @@ Result('mona2',
        color=b screenratio=1 wantaxis=n
        ''')
 
-Flow('xmona2','mona',
-     '''
-     expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 |
-     expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 |
-     expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11 | expl2 rect=11
-     ''')
-
+Flow('xmona2','mona','expl2 rect=11 cycle=24')
 Result('xmona2',
        '''
        grey transp=n allpos=y title="Smoothed"

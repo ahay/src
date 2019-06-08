@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
-    if (!sf_getint("cycle",&nc)) sf_error("Need cycle=");
+    if (!sf_getint("cycle",&nc)) nc=1;
     /* number of cycles */
     if (!sf_getint("rect1",&rect)) sf_error("Need rect1=");
     /* smoothing radius */

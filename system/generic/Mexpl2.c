@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n12, n3, i3, rect;
+    int n1, n2, n12, n3, i3, rect, ic, nc;
     float pclip, **dat;
     sf_file in, out;
 
@@ -36,6 +36,8 @@ int main(int argc, char* argv[])
     n3 = sf_leftsize(in,2);
     n12 = n1*n2;
 
+    if (!sf_getint("cycle",&nc)) nc=1;
+    /* number of cycles */
     if (!sf_getint("rect",&rect)) sf_error("Need rect=");
     /* vertical smoothing */
     if (!sf_getfloat("pclip",&pclip)) pclip=50.;
@@ -49,9 +51,9 @@ int main(int argc, char* argv[])
 	sf_warning("slice %d of %d;",i3,n3);
 
 	sf_floatread (dat[0],n12,in);
-	
-	expl2_apply (dat);
-	
+	for (ic=0; ic < nc; ic++) {
+	    expl2_apply (dat);
+	}
 	sf_floatwrite (dat[0],n12,out);
     }
     sf_warning(".");

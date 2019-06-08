@@ -77,7 +77,7 @@ Flow('smoothed','noisy','smooth rect1=4 rect2=4')
 Flow('diffused','noisy','impl2 rect1=10 rect2=10 tau=1')
 
 # Fast explicit diffusion
-Flow('diffused2','noisy','expl2 rect=5 | expl2 rect=5 | expl2 rect=5 | expl2 rect=5')
+Flow('diffused2','noisy','expl2 rect=5 cycle=4')
 
 # Median filter
 Flow('median','noisy','despike2 wide1=10 wide2=10')
