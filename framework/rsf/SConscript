@@ -36,10 +36,11 @@ env.Depends('version.py','doc.py')
 for src in Split('path doc flow proj prog tex book suproj conf use version node'):
     bldutil.py_install(src, env, pkgdir)
 
-for src in Split('latex2wiki sftour'):
+for src in Split('latex2wiki sftour scons2jupyter'):
     bldutil.py_install(src, env, pkgdir)
     env.Command(src,src+'.py','cp $SOURCE $TARGET')
-    env.Install(bindir,src)
+    binary = env.Install(bindir,src)
+    env.AddPostAction(binary,Chmod(binary,0o755))
 
 env.Command('sfversion','version.py','cp $SOURCE $TARGET')
 env.Install(bindir,'sfversion')

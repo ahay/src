@@ -77,6 +77,7 @@ SF_EOL=0o14
 SF_EOT=0o04
 
 def view(name):
+    'for use in Jupyter notebooks'
     try:
         from IPython.display import Image
         png = name+'.png'
