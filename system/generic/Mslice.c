@@ -1,6 +1,9 @@
 /* Extract a slice using picked surface (usually from a stack or a semblance).
 
 See also: sfpick.
+
+June 2019 program of the month:
+http://ahay.org/blog/2019/06/12/program-of-the-month-sfslice/
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

@@ -1,7 +1,7 @@
 /* 3-D zero-offset modeling/migration with extended SSF 
 
-June 2019 program of the month:
-http://ahay.org/blog/2019/06/06/program-of-the-month-sfzomig3/
+May 2019 program of the month:
+http://ahay.org/blog/2019/05/06/program-of-the-month-sfzomig3/
 */
 
 /*
