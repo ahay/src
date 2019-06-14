@@ -50,6 +50,8 @@ def parse(sconstruct):
                 block += line.rstrip()
                 scons[fig] = block
                 block = ''
+            else:
+                block += line
             continue
         
         if re.search('from rsf.proj import \*\s*',line):
