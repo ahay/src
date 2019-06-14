@@ -34,8 +34,9 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int strlen, status, argc, i, ndim, odim, Odim;
-    const int *dim=NULL;
+    int strlen, status, argc, i, odim, Odim;
+    mwSize ndim;
+    const mwSize *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
     char *strtag=NULL, **argv, *filename=NULL;
     double *dr=NULL, *di=NULL;

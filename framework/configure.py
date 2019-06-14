@@ -213,7 +213,7 @@ def identify_platform(context):
             plat['arch'] = '64bit'
         elif plat_nm == 'i686':
             plat['arch'] = '32bit'
-    context.Result('%(OS)s [%(distro)s]' % plat)
+    context.Result(str('%(OS)s [%(distro)s]' % plat))
     # keep TACC-specific environment
     for env in list(os.environ.keys()):
         if 'TACC_' == env[:5]:
@@ -494,7 +494,7 @@ def x11(context):
         res = context.TryCompile(text,'.c')
 
         if res:
-            context.Result(path)
+            context.Result(str(path))
             context.env['XINC'] = [path,]
             break
 
@@ -525,7 +525,7 @@ def x11(context):
         res = context.TryLink(text,'.c')
 
         if res:
-            context.Result(path)
+            context.Result(str(path))
             context.env['XLIBPATH'] = [path,]
             context.env['XLIBS'] = XLIBS
             break
@@ -566,7 +566,7 @@ def sfpen(context):
         stderr_write('sfpen (for displaying .vpl images) will not be built.',
                      'bold')
     else:
-        context.Result(sfpen)
+        context.Result(str(sfpen))
         context.env['SFPEN'] = sfpen
 
 pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
@@ -2116,7 +2116,7 @@ def matlab(context):
     context.Message("checking for Matlab ... ")
     matlab = context.env.get('MATLAB',WhereIs('matlab'))
     if matlab:
-        context.Result(matlab)
+        context.Result(str(matlab))
         RSFROOT_lib = os.path.join(context.env.get('RSFROOT'),'lib')
         MATLABPATH = os.environ.get('MATLABPATH')
         if MATLABPATH:
@@ -2138,7 +2138,7 @@ def matlab(context):
                               os.path.dirname(
                                   os.path.realpath(matlab)),'mex'))
     if os.path.isfile(mex):
-        context.Result(mex)
+        context.Result(str(mex))
         context.env['MEX'] = mex
         if plat['OS'] == 'darwin':
             maci64 = os.environ.get('MACI64',0)
@@ -2209,7 +2209,7 @@ def swig(context):
     context.Message("checking for SWIG ... ")
     if 'swig' in context.env.get('TOOLS'):
         swigx = WhereIs('swig')
-        context.Result(swigx)
+        context.Result(str(swigx))
         context.env['SWIG'] = swigx
     else:
         context.Result(context_failure)
