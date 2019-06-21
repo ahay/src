@@ -26,7 +26,7 @@ int main (int argc, char *argv[])
     int n123, niter, order, nj1,nj2, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[3], nr, ir; 
     float p0, *u, *p, pmin, pmax, eps;
-    bool verb, **mm;
+    bool verb, **mm, drift;
     sf_file in, out, mask, idip0;
 
     sf_init(argc,argv);
@@ -64,6 +64,9 @@ int main (int argc, char *argv[])
     /* accuracy order */
     if (!sf_getint("nj1",&nj1)) nj1=1;
     /* antialiasing */
+
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -118,7 +121,7 @@ int main (int argc, char *argv[])
 	}
 	
 	/* estimate t-x dip */
-	dip3(false, 1, niter, order, nj1, u, p, mm[0], pmin, pmax);
+	dip3(false, 1, niter, order, nj1, drift, u, p, mm[0], pmin, pmax);
 	
 	/* write t-x dip */
 	sf_floatwrite(p,n123,out);

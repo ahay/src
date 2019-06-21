@@ -27,7 +27,7 @@ http://ahay.org/blog/2013/02/09/program-of-the-month-sfpwd/
 
 int main (int argc, char *argv[])
 {
-    bool both;
+    bool both, drift;
     int ir, nr, n1,n2,n3,n4, m1, m2, m3, n12, n123, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
@@ -82,6 +82,9 @@ int main (int argc, char *argv[])
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* cross-line aliasing */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     for (ir=0; ir < nr; ir++) {
 
 	if (1 != n4) { /* in-line */
@@ -96,7 +99,7 @@ int main (int argc, char *argv[])
 		/* read t-x dip */
 		sf_floatread(p,n12,dip);
 		
-		ap = allpass_init (nw,nj1,n1,n2,1,p);
+		ap = allpass_init (nw,nj1,n1,n2,1,drift,p);
 		
 		/* apply */
 		allpass1(false, false, ap, u1, u2);
@@ -123,7 +126,7 @@ int main (int argc, char *argv[])
 	    /* read t-y dip */
 	    sf_floatread(p,n123,dip);
 	    
-	    ap = allpass_init(nw,nj2,n1,n2,n3,p);
+	    ap = allpass_init(nw,nj2,n1,n2,n3,drift,p);
 	    
 	    /* apply */
 	    allpass2(false, false, ap, u1, u2);
@@ -148,7 +151,7 @@ int main (int argc, char *argv[])
 		/* read t-x dip */
 		sf_floatread(p,n12,dip);
 		
-		ap = allpass_init (nw,nj1,n1,n2,1,p);
+		ap = allpass_init (nw,nj1,n1,n2,1,drift,p);
 		
 		/* apply */
 		allpass1(true, false, ap, u1, u2);
@@ -174,7 +177,7 @@ int main (int argc, char *argv[])
 	    /* read t-y dip */
 	    sf_floatread(p,n123,dip);
 	    
-	    ap = allpass_init(nw,nj2,n1,n2,n3,p);
+	    ap = allpass_init(nw,nj2,n1,n2,n3,drift,p);
 	    
 	    /* apply */
 	    allpass2(true, false, ap, u1, u2);

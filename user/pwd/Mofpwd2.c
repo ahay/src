@@ -23,6 +23,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool drift;
     int i1, i2, n1, n2, np, ip, nq, iq, nw, nj, n12;
     float p0, dp, p, q0, dq, q, **pp, **qq, *xx, *yy, **obj;
     sf_file in, of;
@@ -64,6 +65,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("nj",&nj)) nj=1;
     /* antialiasing */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     xx = sf_floatalloc(n12);
     yy = sf_floatalloc(n12);
     pp = sf_floatalloc2(n1,n2);
@@ -71,7 +75,7 @@ int main(int argc, char* argv[])
     obj = sf_floatalloc2(np,nq);
 
     sf_floatread (xx,n12,in);
-    twoplane2_init (nw,nj,nj,n1,n2,pp,qq);
+    twoplane2_init (nw,nj,nj,n1,n2,drift,pp,qq);
 
     for (iq=0; iq < nq; iq++) {
         q = q0 + iq*dq;

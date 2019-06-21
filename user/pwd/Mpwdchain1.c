@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj;
+    bool adj, drift;
     int m1, m2, n, nc, n2, n1;
     float *xn, *x1, *dx, *r;
     sf_file inp, out, dip, sig;
@@ -47,6 +47,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     if (adj) {
 	sf_putint(out,"n3",n2);
     } else {
@@ -65,7 +68,7 @@ int main(int argc, char* argv[])
     xn = sf_floatalloc(n2);
     sf_floatread(xn,n2,dip);
 
-    pwdchain_init(m1,m2,1,nc,x1,xn,xn+n*nc);
+    pwdchain_init(m1,m2,1,nc,drift,x1,xn,xn+n*nc);
     
     dx = sf_floatalloc(n2);
     r =  sf_floatalloc(n1);

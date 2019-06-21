@@ -32,15 +32,17 @@ typedef struct Allpass2 *allpas2;
 
 struct Allpass2 {
     int nx, ny, nw, nj;
+    bool drift;
     float *flt, **pp;
 };
 
 static allpas2 ap2;
 
 allpas2 allpass2_init(int nw         /* filter order */, 
-		       int nj         /* filter step */, 
-		       int nx, int ny /* data size */, 
-		       float **pp     /* dip [ny][nx] */) 
+		      int nj         /* filter step */, 
+		      int nx, int ny /* data size */, 
+		      bool drift     /* shit filter */,
+		      float **pp     /* dip [ny][nx] */) 
 /*< Initialize >*/
 {
     allpas2 ap;
@@ -51,6 +53,7 @@ allpas2 allpass2_init(int nw         /* filter order */,
     ap->nj = nj;
     ap->nx = nx;
     ap->ny = ny;
+    ap->drift = drift;
     ap->pp = pp;
 
     ap->flt = sf_floatalloc(2*nw+1);
@@ -76,7 +79,7 @@ void allpass22_init (allpas2 ap1)
 void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 /*< PWD as linear operator >*/
 {
-    int i, ix, iy, iw, is, nx, ny;
+    int i, ix, iy, iw, is, nx, ny, id;
 
     sf_adjnull(adj,add,n1,n2,xx,yy);
   
@@ -85,17 +88,36 @@ void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 
     for (iy=0; iy < ny-1; iy++) {
 	for (ix = ap2->nw*ap2->nj; ix < nx-ap2->nw*ap2->nj; ix++) {
-	    passfilter(ap2->pp[iy][ix], ap2->flt);
 	    i = ix + iy*nx;
-	      
-	    for (iw = 0; iw <= 2*ap2->nw; iw++) {
-		is = (iw-ap2->nw)*ap2->nj;
-		  
-		if (adj) {
-		    xx[i+is+nx] += yy[i]*ap2->flt[iw];
-		    xx[i-is]    -= yy[i]*ap2->flt[iw];
-		} else {
-		    yy[i] += (xx[i+is+nx] - xx[i-is]) * ap2->flt[iw];
+
+	    if (ap2->drift) {
+		id = SF_NINT(ap2->pp[iy][ix]);
+		if (ix+id < 0 || ix+id >= nx) continue;
+
+		passfilter(ap2->pp[iy][ix]-id, ap2->flt);		
+		
+		for (iw = 0; iw <= 2*ap2->nw; iw++) {
+		    is = (iw-ap2->nw)*ap2->nj;
+		    
+		    if (adj) {
+			xx[i+is+nx] += yy[i+id]*ap2->flt[iw];
+			xx[i-is]    -= yy[i+id]*ap2->flt[iw];
+		    } else {
+			yy[i+id] += (xx[i+is+nx] - xx[i-is]) * ap2->flt[iw];
+		    }
+		}
+	    } else {
+		passfilter(ap2->pp[iy][ix], ap2->flt);
+		
+		for (iw = 0; iw <= 2*ap2->nw; iw++) {
+		    is = (iw-ap2->nw)*ap2->nj;
+		    
+		    if (adj) {
+			xx[i+is+nx] += yy[i]*ap2->flt[iw];
+			xx[i-is]    -= yy[i]*ap2->flt[iw];
+		    } else {
+			yy[i] += (xx[i+is+nx] - xx[i-is]) * ap2->flt[iw];
+		    }
 		}
 	    }
 	}
@@ -108,7 +130,7 @@ void allpass21 (bool der          /* derivative flag */,
 		float** yy        /* output */)
 /*< plane-wave destruction >*/
 {
-    int ix, iy, iw, is;
+    int ix, iy, iw, is, id;
 
     for (iy=0; iy < ap->ny; iy++) {
 	for (ix=0; ix < ap->nx; ix++) {
@@ -118,17 +140,35 @@ void allpass21 (bool der          /* derivative flag */,
   
     for (iy=0; iy < ap->ny-1; iy++) {
 	for (ix = ap->nw*ap->nj; ix < ap->nx-ap->nw*ap->nj; ix++) {
-	    if (der) {
-		aderfilter(ap->pp[iy][ix], ap->flt);
+	    if (ap->drift) {
+		id = SF_NINT(ap->pp[iy][ix]);
+		if (ix+id < 0 || ix+id >= ap->nx) continue;
+
+		if (der) {
+		    aderfilter(ap->pp[iy][ix]-id, ap->flt);
+		} else {
+		    passfilter(ap->pp[iy][ix]-id, ap->flt);
+		}
+		
+		for (iw = 0; iw <= 2*ap->nw; iw++) {
+		    is = (iw-ap->nw)*ap->nj;
+		    
+		    yy[iy][ix+id] += (xx[iy+1][ix+is] - 
+				      xx[iy  ][ix-is]) * ap->flt[iw];
+		}
 	    } else {
-		passfilter(ap->pp[iy][ix], ap->flt);
-	    }
-	      
-	    for (iw = 0; iw <= 2*ap->nw; iw++) {
-		is = (iw-ap->nw)*ap->nj;
-		  
-		yy[iy][ix] += (xx[iy+1][ix+is] - 
-			       xx[iy  ][ix-is]) * ap->flt[iw];
+		if (der) {
+		    aderfilter(ap->pp[iy][ix], ap->flt);
+		} else {
+		    passfilter(ap->pp[iy][ix], ap->flt);
+		}
+		
+		for (iw = 0; iw <= 2*ap->nw; iw++) {
+		    is = (iw-ap->nw)*ap->nj;
+		    
+		    yy[iy][ix] += (xx[iy+1][ix+is] - 
+				   xx[iy  ][ix-is]) * ap->flt[iw];
+		}
 	    }
 	}
     }

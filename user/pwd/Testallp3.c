@@ -7,6 +7,7 @@
 int main(void) {
     double dot1[2], dot2[2];
     float *p, *q;
+    bool drift = false;
     int n1=10, n2=10, n3=10, nw=1, nj=1; 
     int i, n;
 
@@ -19,8 +20,8 @@ int main(void) {
 	q[i]=0.7;
     }
 
-    allpass3_init (allpass_init(nw,nj,n1,n2,n3,p),
-		   allpass_init(nw,nj,n1,n2,n3,q));
+    allpass3_init (allpass_init(nw,nj,n1,n2,n3,drift,p),
+		   allpass_init(nw,nj,n1,n2,n3,drift,q));
 
     sf_dot_test(allpass3_lop, n, 2*n, dot1, dot2);
 

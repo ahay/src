@@ -27,7 +27,8 @@ static allpass *ap;
 void pwdchain_init(int n1,
 		   int n2     /* data size */, 
 		   int nw     /* filter order */,
-		   int nc1    /* number of chain elements */,		   
+		   int nc1    /* number of chain elements */,	
+		   bool drift /* if shift filter */,
 		   float *x1  /* [n] input */,
 		   float *pn1 /* [n*nc] dips */,
 		   float *xn1 /* [n*(nc-1)] layers */)
@@ -45,7 +46,7 @@ void pwdchain_init(int n1,
 
     ap = (allpass*) sf_alloc(nc,sizeof(*ap));
     for (ic=0; ic < nc; ic++) {
-	ap[ic] = allpass_init (nw,1,n1,n2,1,pn+ic*n);
+	ap[ic] = allpass_init (nw,1,n1,n2,1,drift,pn+ic*n);
     }
 }
 

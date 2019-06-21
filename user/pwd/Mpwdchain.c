@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb;
+    bool verb, drift;
     int i, ic, m1, m2, n, nc, n2, iter, niter, liter, rect1, rect2, it, nt, nw;
     float *xn, *x1, *y1, *dx, *r, *p, lam;
     sf_file inp, out, dip, dipin;
@@ -62,7 +62,10 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("order",&nw)) nw=1; /* PWD order */
 
-    pwdchain_init(m1,m2,nw,nc,x1,xn,xn+n*nc);
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
+    pwdchain_init(m1,m2,nw,nc,drift,x1,xn,xn+n*nc);
     r = sf_floatalloc(n*nc);
 
     if (!sf_getbool("verb",&verb)) verb=(bool) (1 == nt);

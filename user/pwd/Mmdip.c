@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
     int n[SF_MAX_DIM], rect[3], rect2;
     int n3, i3, i1, n1, i2, n2, jt, j2, it, nt, is; 
     float p0, *u, *p, *u2, *p2, pmin, pmax, eps;
-    bool verb, **mm, *m2;
+    bool verb, **mm, *m2, drift;
     sf_file in, out, mask, idip0;
 
     sf_init(argc,argv);
@@ -80,6 +80,9 @@ int main (int argc, char *argv[])
     /* accuracy order */
     if (!sf_getint("nj1",&nj1)) nj1=1;
     /* antialiasing */
+
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -154,7 +157,7 @@ int main (int argc, char *argv[])
 
 	    /* Either scale the order or scale nj1 */
 
-	    dip3(false, 1, niter, is*order, nj1, u2, p2, m2, is*pmin, is*pmax);
+	    dip3(false, 1, niter, is*order, nj1, drift, u2, p2, m2, is*pmin, is*pmax);
 	    dip3_close();
 
 	    /* scale dip */

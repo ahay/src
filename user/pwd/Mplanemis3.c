@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int i, niter, nw, n1, n2, n3, n123, nj1, nj2, seed, i4, n4;
     float *mm, *dd, *pp, *qq, a, var;
-    bool *known, verb;
+    bool *known, verb, drift;
     sf_file in, out, dip, mask;
 
     sf_init (argc,argv);
@@ -51,6 +51,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* antialiasing */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
     
@@ -75,8 +78,8 @@ int main(int argc, char* argv[])
 	mask = NULL;
     }
 
-    allpass3_init(allpass_init(nw, nj1, n1,n2,n3, pp),
-		  allpass_init(nw, nj2, n1,n2,n3, qq));
+    allpass3_init(allpass_init(nw, nj1, n1,n2,n3, drift, pp),
+		  allpass_init(nw, nj2, n1,n2,n3, drift, qq));
 
     for (i4=0; i4 < n4; i4++) {
 	sf_warning("slice %d of %d",i4+1,n4);

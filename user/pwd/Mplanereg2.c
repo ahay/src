@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     int niter, nw, n1, np, i3, n3, nt, nd, nm, interp;
     float *mm, *dd, **pp, **qq, *offset, x0, dx, eps;
     char *header;
-    bool verb;
+    bool verb, drift;
     sf_file in, out, dip, head;
 
     sf_init (argc,argv);
@@ -79,6 +79,9 @@ int main(int argc, char* argv[])
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     int1_init (offset, x0,dx,nm, nt, sf_spline_int, interp, nd);
 
     if (!sf_getbool("verb",&verb)) verb = false;
@@ -98,9 +101,9 @@ int main(int argc, char* argv[])
     dd = sf_floatalloc(nt*nd);
 
     if (NULL != qq) {
-	twoplane2_init(nw, 1,1, nt,nm, pp, qq);
+	twoplane2_init(nw, 1,1, nt,nm, drift, pp, qq);
     } else {
-	allpass22_init(allpass2_init(nw, 1, nt,nm, pp));
+	allpass22_init(allpass2_init(nw, 1, nt,nm, drift, pp));
     }
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;

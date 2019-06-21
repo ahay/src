@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
     int ir, nr, n1,n2,n3, m1, m2, m3, n12, nw, nj1, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
-    bool verb;
+    bool verb, drift;
     allpass ap;
 
     sf_init(argc,argv);
@@ -58,6 +58,9 @@ int main (int argc, char *argv[])
     if (!sf_getint("nj1",&nj1)) nj1=1;
     /* aliasing */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     n3 = 1;
 
     for (ir=0; ir < nr; ir++) {
@@ -73,7 +76,7 @@ int main (int argc, char *argv[])
 	    /* read t-x dip */
 	    sf_floatread(p,n12,dip);
 	    
-	    ap = allpass_init (nw,nj1,n1,n2,1,p);
+	    ap = allpass_init (nw,nj1,n1,n2,1,drift,p);
 	    
 	    /* apply */
 	    allpass1(false, false, ap, u1, u2);

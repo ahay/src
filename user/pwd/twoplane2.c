@@ -30,13 +30,14 @@ static float *tmp1, *tmp2;
 void twoplane2_init (int nw_in            /* filter size */, 
 		     int nj1, int nj2     /* dealising stretch */, 
 		     int nx_in, int ny_in /* data size */,
+		     bool drift           /* if shift filter */,
 		     float **pp           /* first slope */, 
 		     float **qq           /* second slope */)
 /*< initialize >*/
 {
     nw = nw_in; nx = nx_in; ny = ny_in;
-    p = allpass2_init(nw, nj1, nx, ny, pp);
-    q = allpass2_init(nw, nj2, nx, ny, qq);
+    p = allpass2_init(nw, nj1, nx, ny, drift, pp);
+    q = allpass2_init(nw, nj2, nx, ny, drift, qq);
 
     nw *= 2*(nj1 > nj2? nj1: nj2);
     

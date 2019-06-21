@@ -34,7 +34,7 @@ int main (int argc, char *argv[])
     float p0, q0, *u, *p, *pi=NULL, *qi=NULL;
     float pmin, pmax, qmin, qmax, eps;
     char key[4];
-    bool verb, both, **mm;
+    bool verb, both, **mm, drift;
     sf_file in, out, mask, idip0, xdip0;
 
     sf_init(argc,argv);
@@ -100,6 +100,9 @@ int main (int argc, char *argv[])
     /* in-line antialiasing */
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* cross-line antialiasing */
+
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -173,7 +176,7 @@ int main (int argc, char *argv[])
 	    }
 	    
 	    /* estimate t-x dip */
-	    dip3(false, 1, niter, order, nj1, u, p, mm[0], pmin, pmax);
+	    dip3(false, 1, niter, order, nj1, drift, u, p, mm[0], pmin, pmax);
 	    
 	    /* write t-x dip */
 	    sf_floatwrite(p,n123,out);
@@ -197,7 +200,7 @@ int main (int argc, char *argv[])
 	    }	
 	    
 	    /* estimate t-y dip */
-	    dip3(false, 2, niter, order, nj2, u, p, mm[1], qmin, qmax);
+	    dip3(false, 2, niter, order, nj2, drift, u, p, mm[1], qmin, qmax);
 	    
 	    /* write t-y dip */
 	    sf_floatwrite(p,n123,out);
@@ -218,7 +221,7 @@ int main (int argc, char *argv[])
 	    }
 	    
 	    /* estimate t-x dip */
-	    dip3(true, 1, niter, order, nj1, u, p, mm[2], -pmax, -pmin);
+	    dip3(true, 1, niter, order, nj1, drift, u, p, mm[2], -pmax, -pmin);
 	    
 	    /* write t-x dip */
 	    sf_floatwrite(p,n123,out);
@@ -237,7 +240,7 @@ int main (int argc, char *argv[])
 	    }	
 	    
 	    /* estimate t-y dip */
-	    dip3(true, 2, niter, order, nj2, u, p, mm[3], -qmax, -qmin);
+	    dip3(true, 2, niter, order, nj2, drift, u, p, mm[3], -qmax, -qmin);
 	    
 	    /* write t-y dip */
 	    sf_floatwrite(p,n123,out);

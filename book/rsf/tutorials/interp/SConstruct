@@ -172,4 +172,21 @@ Result('methods','spl lin near',
 
 # Timeslice half-way through the data
 
+Flow('half',None,'math n1=1 output=%g' % (124.5*0.004))
+Flow('seismic2','cube','window n2=1 f2=%d n3=150' % line)
+
+for m in methods.keys():
+    Flow(m+'-half','seismic2 half',
+         '''
+         inttest1 coord=${SOURCES[1]} same=y %s | window
+         ''' % methods[m])
+Result('half','spl-half lin-half near-half',
+       '''
+       cat axis=2 ${SOURCES[1:3]} | window min1=1003 | 
+       graph title="Extracted Amplitude" unit1= unit2= label2=Amplitude
+       dash=0,1,2
+       ''')
+
+# Amplitudes along a deviated well-bore
+
 End()

@@ -34,6 +34,7 @@ void explanesignoi_init (int m1,int m2 /* data size */,
 			 int nw        /* dip filter order */, 
 			 int nj1       /* dip filter step for noise */, 
 			 int nj2       /* dip filter step for signal */, 
+			 bool drift    /* if shift filter */,
 			 float **nn    /* noise dip [m1*m2] */, 
 			 float **ss    /* signal dip [m1*m2] */)
 /*< initialize >*/
@@ -48,8 +49,8 @@ void explanesignoi_init (int m1,int m2 /* data size */,
     c = aa[2];
     d = aa[3];
 
-    noi = allpass2_init(nw,nj1,n1,n2,nn);
-    sig = allpass2_init(nw,nj2,n1,n2,nn);
+    noi = allpass2_init(nw,nj1,n1,n2,drift,nn);
+    sig = allpass2_init(nw,nj2,n1,n2,drift,nn);
 
     tmp = sf_floatalloc(n12);
     tmp2 = sf_floatalloc(n12);

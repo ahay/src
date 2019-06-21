@@ -14,7 +14,7 @@ int main (int argc, char *argv[])
 {
     int n1,n2, n12, n3, niter, nw, nj1, nj2, i, i3;
     float eps, lam, p0, q0, *u, **p;
-    bool verb, sign, gauss, both, *m;
+    bool verb, sign, gauss, both, *m, drift;
     sf_file in, out, mask, dip1, dip2;
 
     sf_init(argc,argv);
@@ -47,6 +47,9 @@ int main (int argc, char *argv[])
     /* antialiasing for first dip */
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* antialiasing for second dip */
+
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -125,9 +128,9 @@ int main (int argc, char *argv[])
 
 	/* estimate dip */
 	if (both) {
-	    twodip2(niter, nw, nj1, nj2, verb, u, p, m);
+	    twodip2(niter, nw, nj1, nj2, drift, verb, u, p, m);
 	} else {
-	    otherdip2(niter, nw, nj1, nj2, verb, u, p, m);
+	    otherdip2(niter, nw, nj1, nj2, drift, verb, u, p, m);
 	}
 
 	/* write dips */

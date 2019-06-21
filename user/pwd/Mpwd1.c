@@ -23,7 +23,7 @@
 
 int main (int argc, char *argv[])
 {
-    bool left;
+    bool left, drift;
     int ir, nr, n1,n2,n3, m1, m2, m3, n12, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
@@ -60,6 +60,9 @@ int main (int argc, char *argv[])
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* cross-line aliasing */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     for (ir=0; ir < nr; ir++) {
 	u1 = sf_floatalloc(n12);
 	u2 = sf_floatalloc(n12);
@@ -72,7 +75,7 @@ int main (int argc, char *argv[])
 	    /* read t-x dip */
 	    sf_floatread(p,n12,dip);
 		
-	    ap = allpass_init (nw,nj1,n1,n2,1,p);
+	    ap = allpass_init (nw,nj1,n1,n2,1,drift,p);
 		
 	    /* apply */
 	    if (left) {

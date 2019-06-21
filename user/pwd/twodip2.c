@@ -81,7 +81,8 @@ void twodip2_close(void)
 
 void twodip2(int niter        /* number of iterations */, 
 	     int nw           /* filter order */, 
-	     int nj1, int nj2 /* dealisianing stretch */, 
+	     int nj1, int nj2 /* dealisianing stretch */,
+	     bool drift       /* if shift filter */,
 	     bool verb        /* verbosity flag */, 
 	     float *u         /* input data */, 
 	     float** pq       /* output slopes */, 
@@ -92,8 +93,8 @@ void twodip2(int niter        /* number of iterations */,
     float mean, usum, psum, qsum, ui, dpi, pi, lam, usum2;
     allpass ap, aq;
  
-    ap = allpass_init (nw,nj1,n1,n2,1,pq[0]);
-    aq = allpass_init (nw,nj2,n1,n2,1,pq[1]);
+    ap = allpass_init (nw,nj1,n1,n2,1,drift,pq[0]);
+    aq = allpass_init (nw,nj2,n1,n2,1,drift,pq[1]);
     skip = nj1>nj2? 2*nw*nj1 : 2*nw*nj2;
 
     allpass1 (false, false, ap, u, u3);
@@ -182,6 +183,7 @@ void twodip2(int niter        /* number of iterations */,
 void otherdip2(int niter        /* number of iterations */, 
 	       int nw           /* filter order */, 
 	       int nj1, int nj2 /* dealising stretch */, 
+	       bool drift       /* if shift filter */,
 	       bool verb        /* verbosity flag */, 
 	       float *u         /* input data */, 
 	       float** pq       /* output slope */, 
@@ -192,8 +194,8 @@ void otherdip2(int niter        /* number of iterations */,
     float mean, usum, psum, ui, dpi, pi, lam, usum2;
     allpass ap, aq;
  
-    ap = allpass_init (nw,nj1,n1,n2,1,pq[0]);
-    aq = allpass_init (nw,nj2,n1,n2,1,pq[1]);
+    ap = allpass_init (nw,nj1,n1,n2,1,drift,pq[0]);
+    aq = allpass_init (nw,nj2,n1,n2,1,drift,pq[1]);
     skip = nj1>nj2? 2*nw*nj1 : 2*nw*nj2;
 
     allpass1 (false, false, ap, u, u3);

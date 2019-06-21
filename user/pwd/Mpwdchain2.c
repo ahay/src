@@ -24,6 +24,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool drift;
     int m1, m2, i, n, nc, n2, n1;
     float *xn, *x1, *x2, *r;
     sf_file inp, out, sig;
@@ -37,6 +38,9 @@ int main(int argc, char* argv[])
     if (!sf_histint(inp,"n1",&m1)) sf_error("No n1= in dip");
     if (!sf_histint(inp,"n2",&m2)) sf_error("No n2= in dip");
     if (!sf_histint(inp,"n3",&n2)) sf_error("No n3= in dip");
+
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
 
     n = m1*m2;
 
@@ -60,7 +64,7 @@ int main(int argc, char* argv[])
     xn = sf_floatalloc(n2);
     sf_floatread(xn,n2,inp);
 
-    pwdchain_init(m1,m2,1,nc,x1,xn,xn+n*nc);
+    pwdchain_init(m1,m2,1,nc,drift,x1,xn,xn+n*nc);
  
     r =  sf_floatalloc(n1);
  
