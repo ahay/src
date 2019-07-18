@@ -30,6 +30,8 @@ To the reproducible documents collection:
   using low-rank one-step wave extrapolation (Sun, Fomel, Zhu, and Hu)
 * tccs/welllogs: Missing log data interpolation and semiautomatic seismic
   well ties using data matching techniques (Bader, Wu, and Fomel)
+* tccs/fraclapl: Viscoacoustic modeling and imaging using low-rank
+  approximation (Sun, Zhu, and Fomel)
 
 
 To SCons:
@@ -95,8 +97,6 @@ To the reproducible documents collection:
   on shaping regularization (Chen)
 * lju/vdseislet: Signal and noise separation in prestack seismic data
   using velocity-dependent seislet transform (Liu, Fomel, and Liu)
-* tccs/fraclapl: Viscoacoustic modeling and imaging using low-rank
-  approximation (Sun, Zhu, and Fomel)
 * tccs/svmf: Deblending using a space-varying median filter (Chen)
 * tccs/shemd: Random noise attenuation by a selective hybrid approach
   using f-x empirical mode decomposition (Chen, Gan, Liu, Yuan,

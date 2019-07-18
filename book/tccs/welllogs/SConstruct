@@ -1,3 +1,3 @@
 from rsf.tex import*
 
-End(use='amsmath,color,listings,float,multirow,multicol,enumitem,graphicx,pdflscape,afterpage,soul',color='ALL',hires='ALL')
+End(use='amsmath,listings,float,multirow,multicol,enumitem,graphicx,pdflscape,afterpage,soul',color='ALL',hires='ALL')
