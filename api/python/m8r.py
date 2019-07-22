@@ -739,17 +739,17 @@ class Input(_File):
                 if data_format=='native_float':
                     self.type='float'
                     self.form='native'
-                    esize=4
+                    self.esize=4
                     self.datatype=np.float32
                 elif data_format=='native_complex':
                     self.type='complex'
                     self.form='native'
-                    esize=8
+                    self.esize=8
                     self.datatype=np.complex64
                 elif data_format=='native_int':
                     self.type='int'
                     self.form='native'
-                    esize=4
+                    self.esize=4
                     self.datatype=np.int32
                 else:
                     sys.stderr.write('error reading from input file.\n')
@@ -858,9 +858,9 @@ class Input(_File):
             #data[:]=np.frombuffer(self.f,dtype=self.datatype,count=datacount)
 
             if hasattr(self.f,'buffer'):
-               buf = self.f.buffer.read(datacount*4)
+               buf = self.f.buffer.read(datacount*self.esize)
             else:
-               buf = self.f.read(datacount*4)
+               buf = self.f.read(datacount*self.esize)
             data[:] = np.frombuffer(buf, dtype=self.datatype)
 
             data=data.reshape(shape)
