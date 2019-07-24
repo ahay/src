@@ -48,6 +48,7 @@ rsf/tutorials/petro1
 slim/geo2008NewInsightsPareto/geop
 slim/geo2008NewInsightsPareto/pareto
 slim/slimUserManual/sffdct
+tccs/atten/karman1
 tccs/diffr/chan3d
 tccs/diffr/gom
 tccs/avo/avo2
@@ -62,6 +63,7 @@ tccs/shemd/hyperoil
 tccs/shemd/synth1
 tccs/shemd/fxemddemo
 tccs/shemd/fxmssademo
+tccs/timelapse/timelapse
 xjtu/primer/testelastic2d
 '''
 
