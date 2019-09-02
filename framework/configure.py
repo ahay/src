@@ -737,7 +737,7 @@ def plplot(context):
     pladv (0);
     return 0;
     }\n'''
-    plplot = context.env.get('PLPLOT','plplotd')
+    plplot = context.env.get('PLPLOT','plplot')
     LIBS.append(plplot)
     LIBS.append('ltdl')
     res = context.TryLink(text,'.c')

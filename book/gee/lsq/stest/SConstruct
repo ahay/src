@@ -31,6 +31,9 @@ Flow('x0',None,'spike n1=4')
 
 Flow('x','y mat x0',
      'conjgrad matmult mat=${SOURCES[1]} mod=${SOURCES[2]} niter=6')
+
+Flow('x2','y mat x0',
+     'conjgrad matmult mat=${SOURCES[1]} mod0=${SOURCES[2]} niter=6')
      
 Result('x','graph symbol=* wanttitle=n wantaxis1=n symbolsz=10')
 

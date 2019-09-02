@@ -92,7 +92,8 @@ void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 
 	    if (ap2->drift) {
 		id = SF_NINT(ap2->pp[iy][ix]);
-		if (ix+id < 0 || ix+id >= nx) continue;
+		if (ix-ap2->nw*ap2->nj-id < 0 || 
+		    ix+ap2->nw*ap2->nj-id >= nx) continue;
 
 		passfilter(ap2->pp[iy][ix]-id, ap2->flt);		
 		
@@ -100,10 +101,10 @@ void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 		    is = (iw-ap2->nw)*ap2->nj;
 		    
 		    if (adj) {
-			xx[i+is+nx] += yy[i+id]*ap2->flt[iw];
-			xx[i-is]    -= yy[i+id]*ap2->flt[iw];
+			xx[i+is+nx] += yy[i]*ap2->flt[iw];
+			xx[i-is-id] -= yy[i]*ap2->flt[iw];
 		    } else {
-			yy[i+id] += (xx[i+is+nx] - xx[i-is]) * ap2->flt[iw];
+			yy[i] += (xx[i+is+nx] - xx[i-is-id]) * ap2->flt[iw];
 		    }
 		}
 	    } else {
@@ -142,7 +143,8 @@ void allpass21 (bool der          /* derivative flag */,
 	for (ix = ap->nw*ap->nj; ix < ap->nx-ap->nw*ap->nj; ix++) {
 	    if (ap->drift) {
 		id = SF_NINT(ap->pp[iy][ix]);
-		if (ix+id < 0 || ix+id >= ap->nx) continue;
+		if (ix-ap->nw*ap->nj-id < 0 || 
+		    ix+ap->nw*ap->nj-id >= ap->nx) continue;
 
 		if (der) {
 		    aderfilter(ap->pp[iy][ix]-id, ap->flt);
@@ -153,8 +155,8 @@ void allpass21 (bool der          /* derivative flag */,
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
 		    
-		    yy[iy][ix+id] += (xx[iy+1][ix+is] - 
-				      xx[iy  ][ix-is]) * ap->flt[iw];
+		    yy[iy][ix] += (xx[iy+1][ix+is] - 
+				   xx[iy  ][ix-is-id]) * ap->flt[iw];
 		}
 	    } else {
 		if (der) {

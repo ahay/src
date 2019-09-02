@@ -74,7 +74,12 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
 
     dat = sf_input("in");
-    mod = sf_input("mod");
+
+    if (NULL != sf_getstring("mod0")) {
+	mod = sf_input("mod0");
+    } else {
+	mod = sf_input("mod");
+    }
 
     if (SF_FLOAT != sf_gettype(mod) ||
 	SF_FLOAT != sf_gettype(dat)) 
@@ -139,8 +144,8 @@ int main(int argc, char* argv[])
 	mask = NULL;
     }
 
-    if (NULL != sf_getstring("x0")) {
-	x0 = sf_input("x0"); /* initial model */
+    if (NULL != sf_getstring("mod0")) {
+	x0 = sf_input("mod0"); /* initial model */
     } else {
 	x0 = NULL;
     }
