@@ -189,4 +189,35 @@ Result('half','spl-half lin-half near-half',
 
 # Amplitudes along a deviated well-bore
 
+Flow('trajectory.txt',None,
+     '''echo   
+     0   0    0
+     0   0 -100
+     0   0 -200
+     5   0 -300
+    10  10 -400
+    20  20 -500
+    40  80 -650
+   160 160 -700
+   600 400 -800
+  1500 960 -800
+     n1=3 n2=10 data_format=ascii_int 
+     in=$TARGET
+     ''')
+Flow('trajectory','trajectory.txt',
+     'dd form=native type=float | transp')
+
+# Shift the 'well' to its tophole location.
+Flow('txy','trajectory','window n2=2 | add add=3000')
+Flow('trajectory2','trajectory txy',
+     '''
+     window f2=2 | 
+     cat ${SOURCES[1]} axis=2 order=2,1 |
+     spline n1=1000 o1=0 d1=0.01
+     ''')
+
+# Fit the spline and fetch 400 points.
+#knees, _ = splprep(trajectory.T, s=3.0, k=3)
+#spline = splev(np.linspace(0, 1, 1000), knees)
+
 End()
