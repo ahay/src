@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfricker1', 'sfmath', 'sfgrey', 'sfwindow', 'sfsegyread', 'sfput']
+data=['https://s3.amazonaws.com/open.source.geoscience/open_data/hessvti/timodel_vp.segy.gz', 'https://s3.amazonaws.com/open.source.geoscience/open_data/hessvti/timodel_epsilon.segy.gz']
+size=   55731652
