@@ -1,4 +1,8 @@
-/* Local prediction filter (n-dimensional). */
+/* Local prediction filter (n-dimensional). 
+
+July 2019 program of the month:
+http://ahay.org/blog/2019/07/09/program-of-the-month-sflpf/
+*/
 /*
   Copyright (C) 2006 University of Texas at Austin
    
