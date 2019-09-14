@@ -300,4 +300,22 @@ Result('col',
 
 # collocation map with a mask applied so as to display lineaments only where at least two methods collocate.
 
+Flow('col2','col','mask min=2 | mul $SOURCE')
+
+Result('col2','col',
+       '''
+       dd type=float | 
+       grey allpos=y pclip=100 wanttitle=n screenratio=1  
+       scalebar=y color=hot wantaxis=n transp=n bias=1
+       ''')
+
+# display the collocated edges superimposed on the TDXN 
+
+Result('edge','col2 tdxn',
+        '''
+        dd type=float | add ${SOURCES[1]} |
+        grey title="TDXN" color=BC clip=1.58 
+        screenratio=1 allpos=y transp=n 
+        ''')
+
 End()
