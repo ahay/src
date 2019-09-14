@@ -291,4 +291,13 @@ Flow('col',fats,'add ${SOURCES[1:3]}')
 
 # color map
 
+Result('col',
+       '''
+       dd type=float | 
+       grey allpos=y pclip=100 wanttitle=n screenratio=1  
+       scalebar=y color=hot wantaxis=n transp=n
+       ''')
+
+# collocation map with a mask applied so as to display lineaments only where at least two methods collocate.
+
 End()
