@@ -34,6 +34,7 @@ nonreproducible = '''
 data/teapotdome/fetch
 data/teapotdome/scdecon
 data/teapotdome/vels
+gee/pch/patch
 geo391/hw2/sorting
 rsf/bash/mpi
 rsf/bash/plot
@@ -45,6 +46,7 @@ rsf/school2012/plot
 rsf/school2015/matlab
 rsf/tutorials/colormaps
 rsf/tutorials/petro1
+rsf/tutorials/spitz
 slim/geo2008NewInsightsPareto/geop
 slim/geo2008NewInsightsPareto/pareto
 slim/slimUserManual/sffdct

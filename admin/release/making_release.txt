@@ -1,12 +1,12 @@
 1. Creating a branch
 
-svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-2.0 -m 'new release'
+svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-3.0 -m 'new release'
 
 2. Check out the branch
 
-svn co https://github.com/ahay/src/branches/madagascar-2.0
+svn co https://github.com/ahay/src/branches/madagascar-3.0
 
-3. cd madagascar-2.0
+3. cd madagascar-3.0
 
 4. Edit VERSION.txt to remove -git
 
@@ -14,7 +14,7 @@ svn co https://github.com/ahay/src/branches/madagascar-2.0
 
 svn delete book/Grave and user/nobody
 
-6. Make sure the book directory structure is consistent 
+6. Make sure the book directory structure is consistent
 
 cd book
 ls */*/*/*/SConstruct
@@ -33,8 +33,8 @@ for dir in glob.glob('*/*/[a-z]*/'):
 
 8. Compile
 
-cd madagascar-2.0
-export RSFROOT=$HOME/mad20
+cd madagascar-3.0
+export RSFROOT=$HOME/mad30
 
 remove instances of previous RSFROOT from PATH and PYTHONPATH
 
@@ -42,7 +42,7 @@ remove instances of previous RSFROOT from PATH and PYTHONPATH
 make install
 source env.sh
 
-9. Remove programs without examples 
+9. Remove programs without examples
 
 python admin/cleanup.py > list.txt
 
@@ -90,11 +90,11 @@ Try running sfdoc
 
 15. Create a branch of the core
 
-svn copy  https://github.com/ahay/src/branches/madagascar-2.0 https://github.com/ahay/src/branches/madagascar-core-2.0 -m 'new core release'
+svn copy  https://github.com/ahay/src/branches/madagascar-3.0 https://github.com/ahay/src/branches/madagascar-core-3.0 -m 'new core release'
 
-svn co https://github.com/ahay/src/branches/madagascar-core-2.0
+svn co https://github.com/ahay/src/branches/madagascar-core-3.0
 
-cd madagascar-core-1.7
+cd madagascar-core-3.0
 
 16. Clean core
 
@@ -107,19 +107,19 @@ python admin/cleanup.py > list.txt
 
 17. Make framework
 
-cd madagascar-1.7/build/framework
+cd madagascar-3.0/build/framework
 
 cp ../../framework/setup.py .
 
 python setup.py sdist
 
-cp dist/dist/madagascar-framework-1.7-1.tar.gz ~
+cp dist/madagascar-framework-3.0.tar.gz ~
 
 18. tar and upload to sourceforge.net
 
 19. Announce on the blog
 
-20. Edit $RSFSRC/VERSION.txt to 1.8-svn
+20. Edit $RSFSRC/VERSION.txt to 3.0-svn
 
 21. Edit $RSFSRC/NEWS.txt to record the time of the release. Add
 release notes to http://www.ahay.org/wiki/Release_Notes
