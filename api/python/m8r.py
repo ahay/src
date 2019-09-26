@@ -1021,8 +1021,11 @@ class Input(_File):
         look up nm from the rsf file header (aka history) and return the string value
         '''
         if _swig_:
-           # c function only knows about utf-8 (ascii).  translate the unicode
-           return c_rsf.sf_histstring(self.file,nm.encode('utf-8'))
+            if sys.version_info[0] >= 3:
+                return c_rsf.sf_histstring(self.file,nm)
+            # c function only knows about utf-8 (ascii).  translate the unicode
+            else:
+                return c_rsf.sf_histstring(self.file,nm.encode('utf-8'))
         else:
             try:
                 return self.vd[nm]
