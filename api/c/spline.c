@@ -186,4 +186,39 @@ void sf_spline2 (sf_bands slv1, sf_bands slv2,
     }
 }
 
-/* 	$Id$	 */
+void sf_spline3 (sf_bands slv1, sf_bands slv2, sf_bands slv3, 
+		 int n1, int n2, int n3, float*** dat, float* tmp2, float* tmp3)
+/*< 3-D spline pre-filtering >*/
+{
+    int i1, i2, i3;
+
+    for (i3 = 0; i3 < n3; i3++) {
+	for (i2 = 0; i2 < n2; i2++) {
+	    sf_banded_solve (slv1, dat[i3][i2]);
+	}
+    }
+
+    for (i3 = 0; i3 < n3; i3++) {
+	for (i1 = 0; i1 < n1; i1++) {
+	    for (i2 = 0; i2 < n2; i2++) {
+		tmp2[i2] = dat[i3][i2][i1];
+	    }
+	    sf_banded_solve (slv2, tmp2);
+	    for (i2 = 0; i2 < n2; i2++) {
+		dat[i3][i2][i1] = tmp2[i2];
+	    }
+	}
+    }
+
+    for (i2 = 0; i2 < n2; i2++) {
+	for (i1 = 0; i1 < n1; i1++) {
+	    for (i3 = 0; i3 < n3; i3++) {
+		tmp3[i3] = dat[i3][i2][i1];
+	    }
+	    sf_banded_solve (slv3, tmp3);
+	    for (i3 = 0; i3 < n3; i3++) {
+		dat[i3][i2][i1] = tmp3[i3];
+	    }
+	}
+    }
+}

@@ -216,8 +216,17 @@ Flow('trajectory2','trajectory txy',
      spline n1=1000 o1=0 d1=0.01
      ''')
 
-# Fit the spline and fetch 400 points.
-#knees, _ = splprep(trajectory.T, s=3.0, k=3)
-#spline = splev(np.linspace(0, 1, 1000), knees)
+Flow('x2','trajectory2','window n2=1 f2=0')
+Flow('y2','trajectory2','window n2=1 f2=1')
+Flow('z2','trajectory2','window n2=1 f2=2')
+
+Plot('xy','x2 y2','cmplx ${SOURCES[1]} | graph title=XY')
+Plot('xz','x2 z2','cmplx ${SOURCES[1]} | graph title=XZ')
+Plot('yz','y2 z2','cmplx ${SOURCES[1]} | graph title=YZ')
+Result('trajectory','xy xz yz','SideBySideAniso')
+
+Flow('cubet','cube','transp plane=13 memsize=1000 | put o1=0 d1=25 o2=0 d2=12.5 o3=0 d3=-4')
+
+# inttest3d
 
 End()
