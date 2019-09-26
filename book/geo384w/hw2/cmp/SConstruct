@@ -1,0 +1,137 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+# Program compilation
+#####################
+
+proj = Project()
+
+# COMMENT THE NEXT LINE FOR FORTRAN OR PYTHON
+prog = proj.Program('traveltime.c')
+
+# UNCOMMENT BELOW IF YOU WANT TO USE FORTRAN
+#prog = proj.Program('traveltime.f90',
+#                   F90PATH=os.path.join(RSFROOT,'include'),
+#                   LIBS=['rsff90']+proj.get('LIBS'))
+
+# UNCOMMENT BELOW IF YOU WANT TO USE PYTHON
+#prog = proj.Command('traveltime.exe','traveltime.py',
+#                    'cp $SOURCE $TARGET')
+#AddPostAction(prog,Chmod(prog,0o755))
+
+exe = str(prog[0])
+
+# Donwload data
+Fetch('midpts.hh','midpts')
+
+# Select a CMP gather, mute
+Flow('cmp','midpts.hh',
+     '''
+     window n3=1 | dd form=native | 
+     mutter half=n v0=1.5 |
+     put label1=Time unit1=s label2=Offset unit2=km
+     ''')
+Plot('cmp','grey title="Common Midpoint Gather" ')
+
+# Velocity scan
+Flow('vscan','cmp',
+     'vscan half=n v0=1.4 nv=111 dv=0.01 semblance=y')
+Plot('vscan','grey color=j allpos=y title="Semblance Scan" ')
+
+##############################
+grad = 0.25 # Velocity gradient
+##############################
+
+cmps = []
+for iv in range(21):
+    vmax = 1.5+0.2*grad*iv
+
+    # Interval velocity
+    vint = 'vint%d' % iv
+
+    Flow(vint,None,
+         '''
+         math n1=1000 d1=0.004 
+         label1=Time unit1=s 
+         output="1.5+%g*x1" | clip clip=%g 
+         ''' % (grad,vmax))
+    Plot(vint,
+         '''
+         graph yreverse=y transp=y pad=n plotfat=15 
+         title="Interval Velocity" min2=1.4 max2=%g 
+         wheretitle=b wherexlabel=t
+         label2=Velocity unit2=km/s 
+         ''' % (1.6+4*grad))
+
+    # Traveltimes
+    time = 'time%d' % iv
+    Flow(time,[vint,exe],
+         '''
+         ./${SOURCES[1]} nr=5 r=285,509,648,728,906
+         nh=24 dh=0.134 h0=0.264 type=hyperbolic
+         ''')
+    Plot(time+'g',time,
+         '''
+         graph yreverse=y pad=n min2=0 max2=3.996
+         wantaxis=n wanttitle=n plotfat=10
+         ''')
+    Plot(time,['cmp',time+'g'],'Overlay')
+
+    # RMS velocity
+    vrms = 'vrms%d' % iv
+
+    Flow(vrms,vint,
+         '''
+         add mode=p $SOURCE | causint | 
+         math output="sqrt(input*0.004/(x1+0.004))" 
+         ''')
+    Plot(vrms+'w',vrms,
+         '''
+         graph yreverse=y transp=y pad=n 
+         wanttitle=n wantaxis=n min2=1.4 max2=2.5 
+         plotcol=7 plotfat=15
+         ''')
+    Plot(vrms+'b',vrms,
+         '''
+         graph yreverse=y transp=y pad=n 
+         wanttitle=n wantaxis=n min2=1.4 max2=2.5 
+         plotcol=0 plotfat=3
+         ''')
+    Plot(vrms,['vscan',vrms+'w',vrms+'b'],'Overlay')
+
+    # Normal moveout
+    nmo = 'nmo%d' % iv
+
+    Flow(nmo,['cmp',vrms],'nmo velocity=${SOURCES[1]} half=n')
+    Plot(nmo,
+         '''
+         grey title="Normal Moveout"
+         grid2=y gridcol=6 gridfat=10
+         ''')
+
+    # Display it together
+    allp = 'cmp%d' % iv
+    Plot(allp,[time,vint,vrms,nmo],
+         'SideBySideAniso',vppen='txscale=1.5')
+
+    cmps.append(allp)
+Plot('cmps',cmps,'Movie',view=1)
+
+###############################
+frame = 15
+###############################
+Result('cmp','cmp%d' % frame,'Overlay')
+
+Flow('time',['vint%d' % frame,exe],
+     '''
+     ./${SOURCES[1]} nr=1 r=500
+     nh=1001 dh=0.01 h0=0 type=hyperbolic
+     ''')
+Result('time',
+       '''
+       graph title=Traveltime
+       label2=Time unit2=s yreverse=y
+       label1=Offset unit1=km
+       ''')
+
+End()
