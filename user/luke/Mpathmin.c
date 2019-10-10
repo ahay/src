@@ -84,7 +84,7 @@ int main (int argc, char* argv[])
 
 	float g;
 	if (!sf_getfloat("g",&g))   g = .1;
-	/* scaling the gradient by how much */	
+	/* scaling the gradient for updating the path by how much before applying? */	
 	
 	int knots;
     if (!sf_getint("knots",&knots))   knots = 11;
@@ -122,18 +122,18 @@ int main (int argc, char* argv[])
 	if (!sf_getfloat("aniso1",&aniso1)) aniso1=D[1]/D[0];
 	/* anisotropy of 2nd axis relative to first   */
 	
-	/* input panel gradient calculation parameters */
+	/* input panel gradient (dS) calculation parameters */
 	int dorder ;
 	if (!sf_getint("dorder",&dorder)) dorder=6;
-	/* derivative order (stencil size) for gradient calculation*/
+	/* derivative order (stencil size) for gradient (dS) calculation*/
 
 	int slen;
 	if (!sf_getint("srad",&slen)) slen=2;
-	/* smoothing radius for gradient */
+	/* smoothing radius for input panel gradient (dS)*/
 	
 	int nsmooth;
 	if (!sf_getint("nsmooth",&nsmooth)) nsmooth=1;
-	/* number of gradient smoothings  */
+	/* number of input panel gradient (dS) smoothings  */
 	
 	/* termination information */
 	float update_size, change_size, termU, termC;
@@ -266,7 +266,8 @@ int main (int argc, char* argv[])
 			/* get the attractive force pulling knots together trying to minimize path cost 
 			   by "pulling" the path into lows of S along gradient */
 			path_attractive_force( Attract, G, Tau_p, Tau_m, knots, ndim);
-			/* get the repulsive force trying to keep the integral over path length smaller */
+			/* get the repulsive force resisting path deviation by trying to keep the 
+			   integral over path length smaller */
 			path_repulsive_force( Repulse, V, Tau_p, Tau_m, knots, ndim);
 			/* combine forces */
 			path_combine( Force, Attract, -1, Repulse, 1, knots*ndim);
