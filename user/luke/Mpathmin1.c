@@ -62,6 +62,10 @@ int main (int argc, char* argv[])
 	int niter ; 
 	if (!sf_getint("niter",&niter))   niter = 10;
 	
+	float damp;
+	if (!sf_getfloat("damp",&damp))   damp = .5;
+	/* if the path goes out of bounds, we reflect and dampen the rate of change by this much */	
+	
 	/* initialize output */
 	/* for writing out knots */
 /*	sf_putint   (_out,"n1",ndim); 
@@ -125,6 +129,16 @@ int main (int argc, char* argv[])
 	int nsmooth;
 	if (!sf_getint("nsmooth",&nsmooth)) nsmooth=1;
 	/* number of gradient smoothings  */
+	
+	/* termination information */
+	float update_size, change_size, termU, termC;
+	
+	float eps;
+	if (!sf_getfloat("eps",&eps)) eps=0.;
+	/* if the change and gradient are simultaneously lower than this, terminate  early */
+	/* set both termination parameters to epsilon */
+	termU = eps;
+	termC = eps;
 	
 	/* orth size */
 	float orthnorm;
@@ -250,11 +264,22 @@ int main (int argc, char* argv[])
 		R [ 0] = O[ 0];
 		R [ (knots-1)*(ndim)] = O[ 0] + D[ 0]*( (float) N[ 0] -1 );
 		/* make sure we are in bounds */
-		path_enforce_boundaries( R, knots, N, D, O, ndim);
+//		path_enforce_boundaries( R, knots, N, D, O, ndim);
+		/* make sure we are in bounds, reflect and dampen the update if at edge */
+		path_enforce_boundaries_change( R, Update, damp, knots, N, D, O, ndim);
+		
+		/* determine if we are terminating because of convergence */
+		update_size = path_norm(Update,knots*ndim);
+		change_size = path_norm(Change,knots*ndim);
+		if ( update_size < termU && change_size < termC ){
+			/* terminate */
+			sf_warning("Path learned in %i iterations",iter+1);
+			break;
+		}
 	}
 	/* enforce function before we interpolate */
 	path_enforce_function( R, D[0], knots, ndim);
- //   path_enforce_boundaries( R, knots, N, D, O, ndim);
+//   path_enforce_boundaries( R, knots, N, D, O, ndim);
 	float* Interpolated = sf_floatalloc(N[0]);
 	/* and interpolate */
 	path_reinterpolate1(Interpolated, R, N, D, O, knots, ndim);

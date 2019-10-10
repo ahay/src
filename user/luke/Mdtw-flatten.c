@@ -88,23 +88,23 @@ int main (int argc, char* argv[])
     float nullval = -9999;
 	
 	/* declare gather input array */
-	float* gather = sf_floatalloc(n1*no);
+	float* gather = malloc(sizeof(float)*n1*no);
 	/* declare nulled gather array */
-	float* ngather = sf_floatalloc(n1*no);
+	float* ngather = malloc(sizeof(float)*n1*no);
 	/* declare stack it will be matched to */
-	float* stack  = sf_floatalloc(n1);
+	float* stack  = malloc(sizeof(float)*n1);
 	/* declare matching trace */
-	float* match  = sf_floatalloc(n1);
+	float* match  = malloc(sizeof(float)*n1);
 	/* declare match trace for nulls */
-	float* nmatch  = sf_floatalloc(n1);
+	float* nmatch  = malloc(sizeof(float)*n1);
 	/* declare shifts array */
-	int*  tr_shifts = sf_intalloc(n1);
+	int*  tr_shifts = malloc(sizeof(int)*n1);
 	/* declare gather shifts */
-	float* gather_shifts = sf_floatalloc(n1*no);
+	float* gather_shifts = malloc(sizeof(float)*n1*no);
 	/* declare warped trace array */
-	float* warped = sf_floatalloc(n1);
+	float* warped = malloc(sizeof(float)*n1);
 	/* warped gather array */
-	float* warped_gather = sf_floatalloc(n1*no);
+	float* warped_gather = malloc(sizeof(float)*n1*no);
 
 	/* loop through gathers g for gather, o for offsets*/
 	for ( ig = 0; ig < ng ; ig++ ){

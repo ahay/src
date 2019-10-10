@@ -700,9 +700,6 @@ void path_gradient(float* Sfunc,float* dSfunc, int* N, float* D, float* O, int d
 	float* Dt = sf_floatalloc(ndim);
 
 	int dim, t1, t2;
-/*	
-	int t11, t22;
-	*/
 	for ( dim = 0 ; dim < ndim ; dim++){
 		if ( dim > 0){
 		   t1 = 1;
@@ -716,23 +713,7 @@ void path_gradient(float* Sfunc,float* dSfunc, int* N, float* D, float* O, int d
 		   path_copy_i(Nt,N,ndim);
 		   path_scale(Dt, D, 1, ndim);
 	   }
-/*	   if (ndim > 2){
-		   t11 = 2;
-		   t22 = ndim ;
-		   path_transp(St, St, t11, t11, Nt, ndim);
-		   path_swaperoo(Nt, Nt, t11, t22, ndim);
-		   path_swaperoof(Dt, Dt, t11, t22, ndim);
-	   }
-	   */
 	   	path_deriv(dSt,St,Nt[0],panelsize/Nt[0],Dt[0],dorder, slen, nsmooth, scale);
-		/* and go back */
-/*	   if (ndim > 2){
-		   t11 = 2;
-		   t22 = ndim;
-		   path_transp(dSt, dSt, t11, t22, Nt, ndim);
-		   path_swaperoo(Nt, Nt, t11, t22, ndim);
-	   }
-		*/
 	   if ( dim > 0){
 	       path_transp(dS, dSt, t1, t2, Nt, ndim);
 	   } else {
@@ -768,7 +749,7 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 	path_scale( Tau_plus, Tau_plus, 0, nknots*ndim);
 	path_scale( Tau_minus, Tau_minus, 0, nknots*ndim);
 	for ( i = 0 ; i < nknots ; i++ ){
-		/* get comuns */
+		/* get columns */
 		/* centered */
 		path_get_column(R, R1, i, ndim);
 		/* next */
@@ -779,8 +760,6 @@ void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int
 			path_scale(R2, R2, 0, ndim);
 			last = true;
 		}
-		/* subtract */
-
 		/* previous */
 		if ( i > 0) {
 			path_get_column(R, R0, i-1, ndim);
@@ -1021,33 +1000,6 @@ void path_create_tau_stable( float* Tau, float* Tau_p, float* Tau_m, float* V, i
 	return;
 }
 
-void path_create_tau(float* Tau, float* dR, int nknots, int ndim)
-	/*<create the Tau approximation by averaging dR around point, this version is less stable>*/
-{
-	/* looping index */
-	int i;
-	/* local arrays */
-	float* TauL = sf_floatalloc(ndim);
-	float* dRo  = sf_floatalloc(ndim);
-	float* dRf  = sf_floatalloc(ndim);
-	/* zero out tau */
-	path_scale( Tau, Tau, 0, nknots*ndim);
-	for ( i = 1 ; i < nknots ; i++ ){
-		/* get comuns */
-		path_get_column(dR, dRo, i, ndim);
-		path_get_column(dR, dRf, i+1, ndim);
-		/* average */
-		path_combine(TauL, dRo, 0.5, dRf, 0.5, ndim);
-		/* put column back */
-		path_put_column(Tau,TauL,i,ndim);
-	}
-	/* free arrays */
-    	free (TauL);
-		free ( dRo);
-		free (dRf);
-	return;
-}
-
 void path_create_tau_repulse(float* Tau, float* Spring, float* dR, int nknots, int ndim)
 	/*<create the Tau approximation by averaging dR around point, also calculates precursor to spring force>*/
 {
@@ -1118,59 +1070,6 @@ void path_orthagonalize_array(float* Orth, float* G, float* Tau, int knots, int 
 	return;
 }
 
-void path_enforce_smoothness1(float* R, int order, int knots, int ndim)
-	/*< enforces smoothness constraint on R , not currently functioning properly>*/
-{
-	/* loopoing index */
-	int ik, io, this, lorder;
-	float weight ;
-	/* local arrays */
-	float* PullX = sf_floatalloc(ndim);
-	float* PuttX = sf_floatalloc(ndim);
-	/* loop through */
-	for ( ik = 0 ; ik < knots ; ik++){
-		/* make sure we will be symmetric with our order */
-		lorder = 0;
-		for ( io = 0; io <= lorder ; io++){
-			this = io + ik;
-			if ( this > knots) continue;
-			this = ik - io;
-			if ( this < 0 ) continue;
-			/* increment because we are OK! */
-			lorder += 1;
-		}
-		/* zero out avg */
-		path_scale(PuttX,PuttX,0,ndim);
-		/* initialize counter */
-		weight = 0 ;
-		for ( io = -1*lorder; io <= lorder ; io++){
-			if (io == 0 ) continue;
-			this = io + ik;
-			/* make sure this operation makes sense */
-			if ( this < 0 || this > knots) continue;
-			/* pull column */
-			path_get_column(R,PullX,this,ndim);
-			/* add to avg */
-			path_combine(PuttX,PuttX,1,PullX,-1./path_abs((float)io),ndim);
-			/* increment counter */
-			weight += 1/path_abs((float)io);
-		}
-		
-		/* scale by how many arrays we considered */
-		path_get_column(R,PullX,ik,ndim);
-		if (weight > 0 ){
-			path_combine(PuttX,PuttX,1,PullX,-1*weight,ndim);
-//			path_combine(PuttX,PuttX,1,PullX,1,ndim);
-		} else{
-			path_scale(PuttX, PullX, 1.0, ndim);
-		}
-		/* put it back */
-		path_put_column( R, PuttX, ik, ndim);
-	}
-	free( PullX);
-	free( PuttX);
-	return;
-}
 
 void path_enforce_boundaries( float* R, int nknots, int* N, float* D, float* O, int ndim)
 	/*< makes sure the R stays in bounds >*/
@@ -1265,7 +1164,7 @@ void path_enforce_boundaries_change( float* R, float* Change, float damp, int nk
 }
 
 void path_enforce_function( float* R, float eps, int knots, int ndim)
-	/*< enforce requirement that R(t) >*/
+	/*< enforce requirement that R(t) is a function>*/
 {
 	/* looping index */
 	int ik;
