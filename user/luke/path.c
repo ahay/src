@@ -35,7 +35,6 @@ long path_size(int* N, int ndim)
 	return sz;
 }
 
-
 void path_unwrap(int* Ind, long indx, int* N, int ndim)
 	/*< unwraps index into coordinates >*/
 {
@@ -48,7 +47,6 @@ void path_unwrap(int* Ind, long indx, int* N, int ndim)
 	}
 	return;
 }
-
 
 long path_wrap(int* Ind, int* N, int ndim)
 /*< wraps input coordinates back into index >*/
@@ -78,7 +76,6 @@ void path_swaperoof(float* Out, float* In, int t1, int t2, int ndim)
 	return ;
 }
 
-
 void path_swaperoo(int* Out, int* In, int t1, int t2, int ndim)
 	/*< swaps the t1 and t2 of Int arrays for indicies >*/
 {
@@ -94,7 +91,6 @@ void path_swaperoo(int* Out, int* In, int t1, int t2, int ndim)
 	Out [ t1 - 1 ] = holdr2;
 	return ;
 }
-
 
 void path_transp(float* arrT, float* arr, int t1, int t2, int* Nin, int ndim)
 	/*< follows madagascar convention for transp plane=t1t2 >*/
@@ -119,7 +115,6 @@ void path_transp(float* arrT, float* arr, int t1, int t2, int* Nin, int ndim)
 	free (Ind);
 	return;
 }
-
 
 void path_combine(float* C, float* A, float a, float* B, float b, long n)
 	/*< C = aA + bB >*/
@@ -365,7 +360,6 @@ void path_one_dim_smooth(float* Smooth, float* In, int order, long n)
 	return;
 }
 
-
 void path_deriv(float* dA, float* A, int n1, int n2, float d1, int dorder, int slen, int nsmooth, bool scale)
 	/*< calculate derivative of array A in first direction >*/
 {
@@ -478,8 +472,6 @@ void path_index_to_coordinates(float* Coord, int *Ind, float *D, float *O, int n
 	return ;
 }
 
-
-
 void path_coordinates_to_index(int* Ind, float *Coord, float *D, float *O, int ndim)
 	/*< converts coordinate array to nearest index rounding down >*/
 {
@@ -511,8 +503,6 @@ void path_index_coords_remainder(float* Rem, int *Ind, float *Coord, float *D, f
 	free (Diff);
 	free (CoordC);
 }
-
-
 
 void path_Nnode(int* Nnode, int ndim)
 	/*< returns a N array for the nodes where each n is 2 >*/
@@ -728,7 +718,6 @@ void path_gradient(float* Sfunc,float* dSfunc, int* N, float* D, float* O, int d
 	free (St);
 	free (dS);
 }
-
 
 void path_create_tau_plus_minus(float* Tau_plus, float* Tau_minus, float* R, int nknots, int ndim)
 	/*<create the Tau approximation by averaging dR around point>*/
@@ -1031,8 +1020,7 @@ void path_create_tau_repulse(float* Tau, float* Spring, float* dR, int nknots, i
 		/* apply it to normalized path vector */
 		path_scale(SprL,TauN,dist,ndim);
 		/* put in array */
-		path_put_column(Spring,SprL,i,ndim);
-		
+		path_put_column(Spring,SprL,i,ndim);	
 	}
 	/* free arrays */
     	free (TauL);
@@ -1062,14 +1050,12 @@ void path_orthagonalize_array(float* Orth, float* G, float* Tau, int knots, int 
 		/* put it in Orth */
 		path_put_column(Orth,Orthloc,ik,ndim);
 	}
-
 	free(Gloc);
 	free(Orthloc);
 	free(Tauloc);
 	
 	return;
 }
-
 
 void path_enforce_boundaries( float* R, int nknots, int* N, float* D, float* O, int ndim)
 	/*< makes sure the R stays in bounds >*/
@@ -1214,7 +1200,6 @@ void path_unkink_force( float* Unkink, float* Tau_p, float* Tau_m, int nknots, i
 	return;
 }
 
-
 void path_attractive_force(float* Attract, float* G, float* Tau_p, float* Tau_m, int nknots, int ndim)
 	/*< create the attractive force felt by the path >*/
 {
@@ -1343,7 +1328,6 @@ void path_spring_force( float* Spring, float* Tau, float* Tau_p, float* Tau_m, i
 	return;
 }
 
-
 void path_reinterpolate1(float* Interpolated, float* R, int* N, float* D, float* O, int nknots, int ndim)
 	/*< interpolates our path knots to the sampling rate >*/
 {
@@ -1390,5 +1374,3 @@ void path_reinterpolate1(float* Interpolated, float* R, int* N, float* D, float*
 	free ( R1);
 	return;
 }
-	
-
