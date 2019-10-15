@@ -35,8 +35,7 @@ int main (int argc, char* argv[]){
 	if (!sf_histfloat(_in,"o1",&o1))   sf_error("No o1=");
     if (!sf_histfloat(_in,"d2",&d2))   sf_error("No d2=");
 	if (!sf_histfloat(_in,"o2",&o2))   sf_error("No o2=");
-	/* shift dimensions in output (2 dim panel -> 1 dim path)*/
-	sf_unshiftdim(_in,_out,2);	
+	
 	/* label info */
     if (NULL != (label = sf_histstring(_in,"label2")))
 		sf_putstring(_out,"label",label);
@@ -78,6 +77,19 @@ int main (int argc, char* argv[]){
 	float shove;
 	if (!sf_getfloat("shove",&shove))   shove = 1000;
 	/* size of initial random lateral shove */	
+	
+	bool movieMaking = true;
+	int movinc;
+	if (!sf_getint("movie",&movinc)) {movinc = niter; movieMaking=false;}
+	/* are we making a movie of the output? if so, we output a frame every this many steps*/
+	if (!movieMaking){
+		/* shift dimensions in output (2 dim panel -> 1 dim path)*/
+		sf_unshiftdim(_in,_out,2);
+	} else {
+		sf_putint   (_out,"n2",niter/movinc+1); 
+		sf_putfloat (_out,"o2",0.);  
+		sf_putfloat (_out,"d2",(float)movinc);
+	}
 		
 	/* allocate sampling arrays, only using ndim=2 for 2d picking panels here*/
 	/* number of samples per dimension*/
@@ -218,7 +230,6 @@ int main (int argc, char* argv[]){
 		path_evaluate_potental(V, R, knots, Sfunc, N, D, O, ndim);
 		/* evaluate gradient of S at knot points */
 		path_evaluate_gradient(G, R, knots, dSfunc, N, D, O, ndim);
-		
 		/* iterate to learn path */
 		for ( iter = 0 ; iter < niter ; iter++ ){
 			/* get tau plus and tau minus (un-normalized), 
@@ -272,9 +283,18 @@ int main (int argc, char* argv[]){
 			Change[(knots-1)*ndim] = 0;
 			/* update the gradient of how R evolves with this iteration's calculated change */
 			/* scaled by the learning rate */
-			path_combine( Update, Update, 1-lr, Change, lr, knots*ndim);
+			/* dampen force with iterations */
+			float dampscl = 1.0;
+			if (iter > niter/2){
+				dampscl = 2*(float)(niter-iter)/(float)niter;
+				dampscl *= dampscl;
+				dampscl *= dampscl;
+			}
+			path_combine( Update, Update, 1.-lr, Change, lr, knots*ndim);
+			path_scale(Update,Update, dampscl,knots*ndim);
 			/* scale update by g before applying it to the knots */
 			path_scale(UpdateG, Update, g, knots*ndim);
+			path_scale(UpdateG,UpdateG,dampscl,knots*ndim);
 			/* and now lets change our knots */
 			path_combine( R, R, 1., UpdateG, 1, knots*ndim);
 			/* keep the end points on the edge */
@@ -285,15 +305,26 @@ int main (int argc, char* argv[]){
 			/* determine if we are terminating because of convergence */
 			update_size = path_norm(Update,knots*ndim);
 			change_size = path_norm(Change,knots*ndim);
-			if ( update_size < termU && change_size < termC ){
+			if ( update_size < termU && change_size < termC && !movieMaking ){
 				/* terminate */
 				sf_warning("Path %i learned in %i iterations",imid+1,iter+1);
 				break;
 			}
+			if (movieMaking && (iter % movinc == 0) ){
+				path_enforce_function( R, D[0], knots, ndim);
+				/* make sure we are in bounds, reflect and dampen the update if at edge */
+				path_enforce_boundaries_change( R, Update, damp, knots, N, D, O, ndim);	
+				/* and interpolate */
+				path_reinterpolate1(Interpolated, R, N, D, O, knots, ndim);
+				/* write interpolated to disk */
+				sf_floatwrite(Interpolated,N[0],_out);
+			}
+
 			/* evaluate potential at knot points */
 			path_evaluate_potental(V, R, knots, Sfunc, N, D, O, ndim);
 			/* evaluate gradient at knot points */
 			path_evaluate_gradient(G, R, knots, dSfunc, N, D, O, ndim);
+
 		}
 		/* enforce that the path must be function of t before we interpolate */
 		path_enforce_function( R, D[0], knots, ndim);
@@ -302,6 +333,7 @@ int main (int argc, char* argv[]){
 		/* write interpolated to disk */
 		sf_floatwrite(Interpolated,N[0],_out);
 	}
+
 	/* close file */
 	sf_fileclose(_out);
 	/* free arrays */
