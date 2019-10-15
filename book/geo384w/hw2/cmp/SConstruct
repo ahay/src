@@ -37,36 +37,6 @@ Plot('cmp','grey title="Common Midpoint Gather" ')
 Flow('vscan','cmp',
      'vscan half=n v0=1.4 nv=111 dv=0.01 semblance=y')
 Plot('vscan','grey color=j allpos=y title="Semblance Scan" ')
-Flow('top-mut','vscan','math output=1 | pad beg1=20 | mutter t0=0 x0=1.4 inner=y v0=1|  math output="10*input*x2*x2"')
-Flow('bot-mut','vscan','math output=1 |pad beg1=20 | mutter t0=0 x0=1.4 inner=n v0=0.4 | math output="10*input*(3-x2)*(3-x2)"')
-Flow('vscan-mn','vscan top-mut bot-mut',
-   '''
-   scale dscale=10 | pad beg1=20 | math output="10*exp(-1*input*input)"| cut max1=0.2 |add ${SOURCES[1]} | add ${SOURCES[2]}
-   ''')
-Flow('vscan-pk','vscan-mn',
-    '''
-    pathmin   
-    k=10 g=.001 knots=501 lr=.1 niter=5000 aniso=.001
-    srad=3 nsmooth=1 kink=1 eps=.01 damp=.75 
-    ''')
-#    math output="input"
-o1 = .2
-o2 =1.4+0.01
-l1 = 0.004*900
-l2 = 0.01 * 109
-
-Plot('vscan-pk',
-   '''
-   graph transp=y min2=%g max2=%g max1=%g min1=%g 
-   label2= unit2= n2tic=0 n1tic=0 title= scalebar=y plotfat=8 plotcol=4 dash=1 barlabel="Objective Function Value"
-   '''%(o2,o2+l2,o1,o1+l1))
-Plot('vscan-mn','vscan-mn',' grey color=j title= allpos=y min1=%g max1=%g min2=%g max2=%g '%(o1,o1+l1,o2,o2+l2))
-Plot('vscan-s','vscan',
-   ''' 
-   grey color=j title="Path Through Objective Function" 
-   allpos=y min1=%g max1=%g min2=%g max2=%g  scalebar=y barlabel="Objective Function Value"
-   '''%(o1,o1+l1,o2,o2+l2))
-Result('outs','vscan-s vscan-pk ','Overlay')
 
 ##############################
 grad = 0.25 # Velocity gradient
