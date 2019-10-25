@@ -45,8 +45,6 @@ int main(int argc, char* argv[])
 
     sf_warning("nc=%d n=%d",nc,n);
 
-    xn = sf_complexalloc(n2);
-    
     x1 = sf_complexalloc(n);
     sf_complexread(x1,n,sig);
 

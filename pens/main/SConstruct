@@ -23,7 +23,7 @@ env.Prepend(CPPPATH=['../../include'],
 
 env['PROGPREFIX'] = ''
 
-sources = map(lambda x: x+'vplot',Split(src))
+sources = [x+'vplot' for x in Split(src)]
 
 objects = []
 for source in sources:
@@ -154,9 +154,9 @@ if gd:
     
     if ffmpeg:
         ffmpegpath = env.get('FFMPEGPATH',[])
-        if type(ffmpegpath) is not types.ListType:
+        if type(ffmpegpath) is not list:
             ffmpegpath = Split(ffmpegpath)
-        if type(ffmpeg) is not types.ListType:
+        if type(ffmpeg) is not list:
             ffmpeg = Split(ffmpeg)
         path += ffmpegpath
         defines += ['FFMPEG']
@@ -215,10 +215,10 @@ env.RSF_Include('oglpen',prefix='ogl_')
 env.Ignore('oglpen.h','oglpen.h')
 
 if ogl or oglflags:
-    if type(ogl) is not types.ListType:
+    if type(ogl) is not list:
         ogl = Split(ogl)
     if oglflags:
-        if type(oglflags) is not types.ListType:
+        if type(oglflags) is not list:
             oglflags = Split(oglflags)
     obj = env.StaticObject('oglpen.c',
                            CPPPATH=[oglpath]+env.get('CPPPATH',[]))
@@ -275,7 +275,7 @@ if root:
 if root:    
     main = 'sfpens.py'
 
-    pens = map(lambda x: x+ 'pen',Split(pens))
+    pens = [x+ 'pen' for x in Split(pens)]
 
     for pen in pens:
         env.Command('M'+pen+'.c',[pen+'.c','init_vplot.c'],
@@ -284,7 +284,7 @@ if root:
             env.Command('Msfpen.c',[pen+'.c','init_vplot.c'],
                     'cat $SOURCES > $TARGET')
     
-    docs = map(lambda prog: env.Doc(prog,'M'+prog,strip=1),pens)
+    docs = [env.Doc(prog,'M'+prog,strip=1) for prog in pens]
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs,alias=docalias)
 

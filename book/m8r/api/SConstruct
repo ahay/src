@@ -10,10 +10,13 @@ End(lclass='georeport',options='book',use='hyperref',
       using,while},%
    sensitive=true,%
    alsoother={$},%
-   morecomment=[l]\#,%
    morecomment=[n]{\#=}{=\#},%
-   morestring=[s]{"}{"},%
-   morestring=[m]{'}{'},%
+%   morestring=[s]{"""}{"""},%
+%   morestring=[s]{r"}{"},%
+%   morestring=[s]{b"}{"},%
+%   morestring=[s]{v"}{"},%
+%   morestring=[s]{raw"}{"},%
+%   morestring=[s]{L"}{"},%
 }[keywords,comments,strings]%
 %\lstset{%
 %    language         = Julia,

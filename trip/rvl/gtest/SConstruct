@@ -58,7 +58,7 @@ configfile = os.path.abspath(os.path.expandvars(configopt))
 
 addconfig = len(configopt) > 0 and os.path.exists(configfile)
 if len(configopt) > 0 and not addconfig:
-    print '>>> WARNING: config file '+ configfile + ' not found'
+    print('>>> WARNING: config file '+ configfile + ' not found')
 
 # determine subpackages
 sublist=[]
@@ -98,12 +98,12 @@ Help(vars.GenerateHelpText(env))
 # if configuring, do it in root in any case, but only if it's not already here!
 if addconfig:
    if configfile != thispath + '/config.py':
-       print '>>> installing config file in ' + thispath
+       print('>>> installing config file in ' + thispath)
        shutil.copyfile(configfile, thispath+'/config.py')
 
 # scrub option - only here
 if doscrub == 'yes':
-    print scrublist
+    print(scrublist)
     os.system('/bin/rm -f '+ scrublist)
 
 else: 
@@ -117,7 +117,7 @@ else:
         if os.path.exists(installdir):
             # install root SCONSTRUCT if subproject   
 	    if os.path.exists(subpath):
-                print '>>> installing SConstruct files in ' + subpath
+                print('>>> installing SConstruct files in ' + subpath)
                 if n != 'root':
                     shutil.copyfile(installdir+'/SConstruct', subpath+'/SConstruct')
                 # install SConscript in any case
@@ -134,7 +134,7 @@ else:
 
         elif douninstall == 'yes':
             if os.path.exists(subpath):
-	        print '>>> removing SConstruct files in ' + subpath
+	        print('>>> removing SConstruct files in ' + subpath)
     	        if n != 'root' and os.path.exists(subpath+'/SConstruct'):
                     os.remove(subpath+'/SConstruct')
                 if os.path.exists(subpath+'/SConscript'):
@@ -151,7 +151,7 @@ else:
         elif addconfig:
 	    if os.path.exists(subpath):
 	        if thispath != subpath:
-                    print '>>> installing config file in ' + subpath
+                    print('>>> installing config file in ' + subpath)
 	            shutil.copyfile(configfile, subpath+'/config.py')
 
         else:

@@ -29,7 +29,7 @@ If n3=1 in the output, outputs both signal and noise. Otherwise, only signal.
 {
     int i, n1, n2, n12, nj1, nj2, niter, nw, n3, i3;
     float eps, *d, *s, *nd, **nn, **ss;
-    bool verb;
+    bool verb, drift;
     sf_file in, out, ndip, sdip;
 
     sf_init (argc,argv);
@@ -60,6 +60,9 @@ If n3=1 in the output, outputs both signal and noise. Otherwise, only signal.
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* antialiasing for signal dip */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
@@ -73,14 +76,14 @@ If n3=1 in the output, outputs both signal and noise. Otherwise, only signal.
 	nd[n12+i] = 0.;
     }
 
-    planesignoi_init (nw, nj1,nj2, n1,n2, nn, ss, eps);
+    planesignoi_init (nw, nj1,nj2, n1,n2, drift, nn, ss, eps);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread (d,n12,in);
 	sf_floatread (nn[0],n12,ndip);
 	sf_floatread (ss[0],n12,sdip);
 
-	allpass22_init(allpass2_init(nw,nj1,n1,n2,nn));
+	allpass22_init(allpass2_init(nw,nj1,n1,n2,drift,nn));
 	allpass21_lop (false,false,n12,n12,d,nd);
 	
 

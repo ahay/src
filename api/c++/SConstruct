@@ -22,9 +22,9 @@ dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
 dlibs = ['drsf']+env.get('LIBS',[])
 
 if 'c++' in env.get('API',[]):
-    ccfiles = map(lambda x: x+'.cc',sources)
-    hhfiles = map(lambda x: x+'.hh',sources)
-    dobjects = map(env.SharedObject,ccfiles)
+    ccfiles = [x+'.cc' for x in sources]
+    hhfiles = [x+'.hh' for x in sources]
+    dobjects = list(map(env.SharedObject,ccfiles))
 
     lib = env.StaticLibrary('rsf++',ccfiles,CCFLAGS='')
     env.Install('../../lib',lib)

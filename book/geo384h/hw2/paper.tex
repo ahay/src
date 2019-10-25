@@ -6,7 +6,6 @@
   This homework has four parts. 
   \begin{enumerate}
   \item Theoretical and programming questions related to data attributes and digital convolution.  
-  \item Measuring the performance of sorting algorithms.
   \item Analyzing a digital elevation map by applying a running average filter.
   \item Analyzing a digital elevation map by applying derivative filters.
   \end{enumerate}
@@ -21,9 +20,6 @@ Completing the computational part of this homework assignment requires
 \item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
 \url{http://www.ahay.org/wiki/SEGTeX}
 \end{itemize}
-To do the assignment on your personal computer, you need to install
-the required environments. Please ask for help if you don't know where
-to start.
 
 The homework code is available from the \texttt{Madagascar} repository
 by running
@@ -51,15 +47,6 @@ the data values $a_n$ are independent and identically distributed with
 a zero-mean Gaussian distribution: $E[a_n]=0$, $E[a_n^2]=\sigma^2$,
 $E[a_n^4]=3\,\sigma^4$. Find the mathematical expectation of
 $\phi[\mathbf{a}]$.
-
-\item You are given a table of numbers $x_1, x_2, \ldots, x_N$ and $y_1, y_2, \ldots, y_N$ and 
-want to fit a parabolic model $y(x) = a + b\,x + c\,x^2$ to them.
-
-\begin{enumerate}
-\item Using the method of least squares, find a set of liner equations
-  for coefficients $a$, $b$, and $c$ for the case $N > 3$.
-\item Using the method of least squares, find $a$, $b$, and $c$ for the case of $N=2$.
-\end{enumerate}
 
 \item The matrix in equation~(\ref{eq:conv}) represents a convolution operator with zero boundary conditions.
 \begin{equation}
@@ -98,62 +85,6 @@ The operator is implemented in the C code below.
 \end{enumerate}
 
 \end{enumerate}
-
-\section{Sorting algorithms}
-\inputdir{sorting}
-
-\begin{enumerate}          
-\item Change directory to \texttt{hw2/sorting}.
-\item Run
-\begin{verbatim}
-scons movie.vpl
-\end{verbatim}
-and observe a movie illustrating a slow sorting algorithm. The
-algorithm is implemented in the \texttt{slow\_sort} function in the
-file \texttt{sorting.c}.
-
-\item Run
-\begin{verbatim}
-scons view
-\end{verbatim}
-to compute the cost of slow sorting experimentally. The output is
-shown in Figure~\ref{fig:cost}.
-
-\sideplot{cost}{width=\textwidth}{Experimental cost of slow sorting. 
-The logarithm of the cost is shown against the logarithm of the data size.}
-
-If we approximate the cost as $P(N)=C\,N^\epsilon$, what is the
-experimental value of $\epsilon$ observed in the picture?
-
-\item Open the file \texttt{sorting.c} in a text editor and edit it to 
-fix the specified line in the \texttt{quick\_sort} function.
-
-\item Open the file \texttt{SConstruct} in a text editor and uncomment 
-      the specified line.
-
-\item Rerun
-\begin{verbatim}
-scons movie.vpl
-\end{verbatim}
-to observe a change in the sorting movie. Debug your changes to the
-program if necessary.
-
-\item Run
-\begin{verbatim}
-scons view
-\end{verbatim}
-to observe the change in the algorithm cost. What is the new
-experimental value of $\epsilon$?
-
-\item \textbf{EXTRA CREDIT} for improving the speed of the 
-\texttt{quick\_sort} algorithm further.
-\end{enumerate}
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=sorting/sorting.c]{sorting/sorting.c}
-
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=sorting/SConstruct]{sorting/SConstruct}
 
 \section{Running median and running mean filters}
 \inputdir{running}

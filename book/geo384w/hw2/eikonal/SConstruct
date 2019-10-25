@@ -7,13 +7,19 @@ import math
 
 proj = Project()
 
-# To do the coding assignment in Fortran,
-# comment the next line and uncomment the lines below
+# COMMENT THE NEXT LINE FOR FORTRAN OR PYTHON
 prog = proj.Program('analytical.c')
 
+# UNCOMMENT BELOW IF YOU WANT TO USE FORTRAN
 #prog = proj.Program('analytical.f90',
 #                   F90PATH=os.path.join(RSFROOT,'include'),
 #                   LIBS=['rsff90']+proj.get('LIBS'))
+
+
+# UNCOMMENT BELOW IF YOU WANT TO USE PYTHON
+# prog = proj.Command('analytical.exe','analytical.py',
+#                    'cp $SOURCE $TARGET')
+#AddPostAction(prog,Chmod(prog,0o755))
 
 exe = str(prog[0])
 

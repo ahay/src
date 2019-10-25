@@ -62,7 +62,7 @@ def end_list(s):
     item = item[:-1] # remove last char
     if not item:
         el = "\n"
-	
+
 def start_doc(s):
     global bdoc;
     bdoc = 1
@@ -88,7 +88,7 @@ def line_math():
     else:
         in_math = 1
         return r"<math>\1</math>"
-    
+
 def start_verbatim(s):
     global verbatim_mode
     verbatim_mode = 1
@@ -107,7 +107,7 @@ def cite(s):
     fullref = s.group(1)
     keys = s.group(2)
     gref = []
-    for key in string.split(keys,','):
+    for key in keys.split(','):
         lref = refs.get(key)
         if lref:
             gref.append(lref)
@@ -120,9 +120,9 @@ def refer():
         if fullref:
             list.append('%s<ref>%s</ref>' % lref)
         else:
-            (name,year) = string.split(lref[0],', ')
+            (name,year) = lref[0].split(', ')
             list.append('%s<ref>%s</ref>' % (year,lref[1]))
-    lrefs = '(%s)' % string.join(list,';')
+    lrefs = '(%s)' % ';'.join(list)
     if fullref:
         return lrefs
     else:
@@ -133,7 +133,7 @@ def input_file(s):
     name = s.group(1)
     try:
         inp = open(name+'.wiki','r')
-        insert = string.join(inp.readlines(),'')
+        insert = ''.join(inp.readlines())
         inp.clos()
     except:
         inp = '[name]'
@@ -169,9 +169,9 @@ def putcode():
 def getcode(s):
     global code
     options = s.group(1)
-    name = string.replace(s.group(2),'\\RSF',os.environ.get('RSFSRC'))
+    name = s.group(2).replace('\\RSF',os.environ.get('RSFSRC'))
     line = {'first':1,'last':9999}
-    for mark in line.keys():
+    for mark in list(line.keys()):
         if options:
             match = re.search('%sline=(\d+)' % mark,options)
             if match:
@@ -306,7 +306,7 @@ tr_list2 = [
     ]
 
 # precompile regular expressions
-reg = map(lambda x: (re.compile(x[0]),x[1],x[2]),tr_list2)
+reg = [(re.compile(x[0]),x[1],x[2]) for x in tr_list2]
 
 bibitem = re.compile(r'\\bibitem\[([^\]]+)\]{([^}]+)}\s*\n(.+)$',re.DOTALL)
 it_in = re.compile(r'{\\it in}')
@@ -317,7 +317,7 @@ tilde = re.compile(r'[~]')
 def parse_bbl(bbl):
     "Parse a bbl file extracting a reference dictionary"
     global refs
-    for par in string.split(string.join(bbl.readlines(),''),'\n\n'):
+    for par in ''.join(bbl.readlines()).split('\n\n'):
         ref = bibitem.match(par)
         if ref:
             short = ref.group(1)
@@ -330,29 +330,29 @@ def parse_bbl(bbl):
             llong = bf.sub("'''\\1'''",llong)
             llong = tilde.sub(' ',llong)
             llong = blank.sub('',llong)
-            
+
             refs[key] = (short,llong)
-        
+
 def convert(in_stream,out_stream):
     "Convert LaTeX to MediaWiki"
     global reg, math_mode, in_math
     for i in in_stream.readlines():
-	mystr = i
+        mystr = i
 
-	for r in reg:
+        for r in reg:
             s = r[0].search(mystr)
             if s:
                 r[2](s)
             if r[1]:
                 mysub = r[1]()
             else:
-                mysub = ""                
+                mysub = ""
             mystr = r[0].sub(mysub, mystr)
             if in_math:
                 in_math = 0
                 break
 
-	if bdoc:
+        if bdoc:
             out_stream.write(mystr)
 
 if __name__ == "__main__":
@@ -365,5 +365,5 @@ if __name__ == "__main__":
             bbl.close()
         except:
             pass
-    
+
     convert(sys.stdin,sys.stdout)

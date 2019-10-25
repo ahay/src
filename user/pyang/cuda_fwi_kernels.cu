@@ -40,11 +40,13 @@
   [6] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
   Developer Technology 2.4 (2007).
 */
+
 __global__ void cuda_set_sg(int *sxz, int sxbeg, int szbeg, int jsx, int jsz, int ns, int nz)
 /*< set the positions of sources/geophones >*/
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
 	if (id<ns) sxz[id]=(szbeg+id*jsz)+nz*(sxbeg+id*jsx);
+	__syncthreads();
 }
 
 __global__ void cuda_ricker_wavelet(float *wlt, float amp, float fm, float dt, int nt)
@@ -67,7 +69,8 @@ __global__ void cuda_add_source(float *p, float *source, int *sxz, int ns, bool 
 	{
 		if (add)	p[sxz[id]]+=source[id];
 		else 		p[sxz[id]]-=source[id];
-	}	
+	}
+	__syncthreads();	
 }
 
 __global__ void cuda_record(float*p, float *seis, int *gxz, int ng)
@@ -75,6 +78,7 @@ __global__ void cuda_record(float*p, float *seis, int *gxz, int ng)
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
 	if (id<ng) seis[id]=p[gxz[id]];
+	__syncthreads();
 }
 
 __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, float dtx, int nz, int nx)

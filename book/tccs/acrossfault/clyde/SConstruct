@@ -1,0 +1,130 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+# Example for unfaulting method
+###############################
+cut=400
+nc=5
+set1=30
+set2=94
+set3=180
+set4=260
+set5=362
+sr=1.
+lsz=8
+
+def plotold():
+    return'''
+	grey title= screenratio=%g labelsz=%d labelfat=3
+	''' %(sr,lsz)
+
+def plotnew():
+    return'''
+	grey title= screenratio=%g labelsz=%d labelfat=3
+	''' %(sr,lsz)
+
+def plotpp():
+    return'''
+	grey title= bias=%g screenratio=%g color=j scalebar=n barreverse=y labelsz=%d labelfat=3 scalebar=y
+	''' %(cut/2,sr,lsz)
+
+Fetch('cseis.HH','zhiguang',server)
+Flow('cseis','cseis.HH','dd form=native')
+Fetch('cseiss.HH','zhiguang',server)
+Flow('cseiss','cseiss.HH','dd form=native')
+Fetch('cslip.HH','zhiguang',server)
+Flow('cslip','cslip.HH','dd form=native')
+
+Result('cseis',plotold())
+Result('cseiss',plotold())
+Result('cslip','clip2 lower=-100 |grey title= screenratio=%g color=j bias=-50 scalebar=y' %sr)
+
+# standard predictive painting
+Flow('cdip','cseiss','dip order=2 rect1=5 rect2=5')
+Result('cdip',plotold()+' color=j scalebar=y')
+
+Flow('cpaint','cdip','pwpaint order=2 eps=0.1')
+Result('cpaint',plotpp())
+
+Plot('cpaint','contour nc=%d c=%d,%d,%d,%d,%d screenratio=%g plotfat=5 plotcol=1 wanttitle=n wantaxis=n' %(nc,set1,set2,set3,set4,set5,sr))
+Plot('cseis',plotold())
+Result('cpick','cseis cpaint','Overlay')
+
+# fault map 
+Flow('cbound cmask','cseiss cslip','unfault slip=${SOURCES[1]} mask=${TARGETS[1]} off=3')
+Result('cmask','smooth rect2=2|'+plotold())
+
+# local similarity
+niter=50
+ng=51
+dg=1
+g0=-50
+rect1=3
+rect2=1
+number=0
+Flow('ctrace1','cbound','window n2=6')
+Flow('ctrace2','cbound','window f2=6')
+Flow('cscan','ctrace2 ctrace1','warpscan other=${SOURCES[1]} shift=y niter=%d ng=%d dg=%g g0=%g rect1=%d rect2=%d |window n1=400' %(niter,ng,dg,g0,rect1,rect2))
+Plot('cscan','window n3=1 f3=%d | grey wanttitle=n allpos=y color=j' %number)
+Flow('cshift','cscan','pick vel0=0 smooth=n an=0.5')
+Plot('cshift','window n2=1 f2=%d | graph transp=y min2=%g max2=%g yreverse=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n pad=n' %(number,g0,g0+ng-1))
+Result('cshift','cscan cshift','Overlay')
+
+Flow('cshift0','cscan','window n3=1 f3=0 |pick vel0=0 an=0.5')
+Flow('cshift1','cscan','window n3=1 f3=1 |pick vel0=0 an=0.1')
+Flow('cshift2','cscan','window n3=1 f3=2 n1=350|pick vel0=0 an=0.5 |pad n1=400')
+Flow('cshift3','cscan','window n3=1 f3=3 n1=250|pick vel0=0 an=0.5 |pad n1=400')
+Flow('cshift4','cscan','window n3=1 f3=4 n1=305|pick vel0=0 an=0.5 |pad n1=400')
+Flow('cshift5','cscan','window n3=1 f3=5 n1=250|pick vel0=0 an=0.5 |pad n1=400')
+Flow('cshifts','cshift0 cshift1 cshift2 cshift3 cshift4 cshift5','cat axis=2 ${SOURCES[1:6]}')
+
+# dip without effect of fault
+Flow('cmask2','cmask','smooth rect2=3|mask max=1e-6 |dd type=float')
+Result('cmask2',plotold()+' color=j scalebar=y')
+Flow('cdip2','cseiss cmask2','dip order=2 rect1=3 rect2=3 mask=${SOURCES[1]}')
+Result('cdip2',plotold()+' color=j scalebar=y')
+
+# estimate unfaulting shift
+Flow('csxz','cseiss cslip cshifts cdip2',
+    '''
+	unfault inv=y slip=${SOURCES[1]} shift=${SOURCES[2]} dip=${SOURCES[3]} niter=15 lam=1. off=3
+	''')
+Result('cshiftx','csxz','window n3=1 |'+plotnew()+' color=j scalebar=y barreverse=y bias=0 gainpanel=a')
+Result('cshiftz','csxz','window f3=1 |'+plotnew()+' color=j scalebar=y barreverse=y bias=0 gainpanel=a')
+
+# unfaulting
+Flow('csx','csxz','window n3=1 |math output="x2+input"')
+Flow('csz','csxz','window f3=1 |math output="x1+input"')
+Result('csx',plotpp())
+Result('csz',plotpp())
+Flow('csxz2','csz csx','cat ${SOURCES[1]} axis=3')
+
+Flow('cseis2','cseiss csxz2','iwarp2 warp=${SOURCES[1]} inv=y eps=1.')
+Flow('cseis22','cseis csxz2','iwarp2 warp=${SOURCES[1]} inv=y eps=1.')
+Result('cseis2',plotold())
+Result('cseis22',plotold())
+
+# new predictive painting
+Flow('cmask3','cmask','smooth rect2=4 |mask max=1e-6 |dd type=float')
+Result('cmask3',plotold()+' color=j scalebar=y')
+Flow('cdip3','cseis2 cmask3','dip order=2 rect1=5 rect2=5 mask=${SOURCES[1]}')
+Result('cdip3',plotold()+' color=j')
+Flow('cpaint2','cdip3','pwpaint order=2 eps=1.')
+Result('cpaint2',plotpp())
+
+Plot('cpaint2','contour nc=%d c=%d,%d,%d,%d,%d screenratio=%g plotfat=5 plotcol=1 wanttitle=n wantaxis=n' %(nc,set1,set2,set3,set4,set5,sr))
+Result('cpick2','Fig/cseis2 cpaint2','Overlay')
+
+# faulting
+Flow('cpaint3','cpaint2 csxz2','iwarp2 warp=${SOURCES[1]} inv=n eps=0.1')
+Result('cpaint3',plotpp())
+Plot('cpaint3','contour nc=%d c=%d,%d,%d,%d,%d screenratio=%g plotfat=5 plotcol=1 wanttitle=n wantaxis=n' %(nc,set1,set2,set3,set4,set5,sr))
+Result('cpick3','cseis cpaint3','Overlay')
+
+# flattening
+Flow('cflat','cseis cpaint','iwarp warp=${SOURCES[1]}')
+Result('cflat',plotold())
+Flow('cflat2','cseis cpaint3','iwarp warp=${SOURCES[1]}')
+Result('cflat2',plotold())
+
+End()

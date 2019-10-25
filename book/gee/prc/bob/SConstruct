@@ -29,7 +29,7 @@ def graph(title):
     title="%s"
     ''' % title
 
-Flow('rms','scan','pick rect1=50 | window')
+Flow('rms','scan','pick rect1=50 back=y | window')
 Plot('rms',graph(' ') + ' pad=y plotcol=3 plotfat=10 wantaxis=n' + win)
 
 Flow('piks','scan','picks nt=8281 dt=100000')

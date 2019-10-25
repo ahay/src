@@ -20,11 +20,15 @@ Completing the computational part of this homework assignment requires
 \end{itemize}
 
 You are welcome to do the assignment on your personal computer by
-installing the required environments. In this case, you can obtain this
-homework assignment from the \texttt{Madagascar} repository by running
+installing the required environments. In this case, you can obtain all
+homework assignments from the \texttt{Madagascar} repository by running
 \begin{verbatim}
-svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo384w/hw2
+svn co https://github.com/ahay/src/trunk/book/geo384w/hw2
 \end{verbatim}
+
+
+You can also do this assignment in the computer lab at the Department
+of Geological Sciences (JGB 3.216B).
 
 \section{Theoretical part}
 
@@ -49,7 +53,8 @@ constant gradient of velocity
   {V(\mathbf{x_0})+\mathbf{G} \cdot (\mathbf{x}-\mathbf{x_0})}\;.
   \label{eq:v}
 \end{equation}
-Recall the ray tracing system from Homework 1
+It is convenient to change the parameterization of the ray tracing
+system, with parameter $\xi$ defined by equation~(\ref{eq:plin}) below:
 \begin{eqnarray}
   \label{eq:plin}
   \frac{d\,\mathbf{p}}{d\,\xi} & = & -\nabla V\;, \\
@@ -170,11 +175,11 @@ by expanding
   traveltime. The exact traveltime is given by the parametric equations
   \begin{eqnarray}
 \label{eq:xofp}
-h & = & \int\limits_0^{z_0} \frac{p\,V(z)\,dz}{\sqrt{1-p^2 V^2(z)}}\;, \\
+h(p) & = & \int\limits_0^{z_0} \frac{p\,V(z)\,dz}{\sqrt{1-p^2 V^2(z)}}\;, \\
 \label{eq:tofp}
-T & = & \int\limits_0^{z_0} \frac{dz}{V(z)\,\sqrt{1-p^2 V^2(z)}}\;.
+T(p) & = & \int\limits_0^{z_0} \frac{dz}{V(z)\,\sqrt{1-p^2 V^2(z)}}\;.
 \end{eqnarray}
-\item Let $\tau = T-p\,h$. Show that $\tau$ can be approximated to the same accuracy by
+\item Let $\tau = T-p\,h$. Show that the function $\tau(p)$ can be approximated to the same accuracy by
 \begin{equation}
     \label{eq:tauofp}
     \tau(p) \approx \displaystyle \tau_0\,\left(1-\frac{1}{S_{\tau}}\right) + 
@@ -260,6 +265,9 @@ Instead of an analytical solution for a constant
 \lstset{language=fortran,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{eikonal/analytical.f90}
 
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{eikonal/analytical.py}
+
 \section{Computational part 2}
 \inputdir{cmp}
 
@@ -343,7 +351,9 @@ p_{n+1} = p_n - \frac{h(p_n)-h}{h'(p_n)}\;.
 \lstset{language=fortran,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{cmp/traveltime.f90}
 
-\newpage
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{cmp/traveltime.py}
+
 
 \section{Completing the assignment}
 

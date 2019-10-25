@@ -55,7 +55,7 @@ if lapack:
     if not isinstance(lapack,bool):
         env.Append(LIBS=lapack)
 
-    ccfiles = map(lambda x: x+'.cc',Split(subs))
+    ccfiles = [x+'.cc' for x in Split(subs)]
 
     lib = env.StaticLibrary('bfio',ccfiles,CCFLAGS='')
     env.Install('../../lib',lib)
@@ -90,7 +90,7 @@ cmains = Split(cprogs)
 for prog in cmains:
     sources = ['M' + prog]
     bldutil.depends (env, sources, 'M'+prog)
-    prog = env.Program (prog, map (lambda x: x + '.c',sources))
+    prog = env.Program (prog, [x + '.c' for x in sources])
     if root:
         env.Install (bindir, prog)
 
@@ -101,9 +101,9 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),cmains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog, lang='c++'),mains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog, lang='c++'),smains)
+    docs = [env.Doc(prog,'M' + prog) for prog in cmains] + \
+           [env.Doc(prog,'M%s.cc' % prog, lang='c++') for prog in mains] + \
+           [env.Doc(prog,'M%s.cc' % prog, lang='c++') for prog in smains]
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

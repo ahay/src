@@ -74,48 +74,12 @@ for prec in (0,1):
 Result('lseabeam','linterp0 linterp1','SideBySideAniso')
 
 # Random realization of white noise
-seed = 112014  # CHANGE ME!!!
+seed = 112018  # CHANGE ME!!!
 
 Flow('white','bin',
      '''
      noise rep=y seed=%d var=0.02
      ''' % seed)
-
-# Covariance estimation by FFT
-
-import rsf.recipes.spatial_stats as stats
-
-par = dict(val='bin',ind='msk', 
-           nx=160,ny=160,nz=1,
-           dx=0.00337373,
-           dy=0.00338847,
-           dz=1)
-
-rules = {}
-stats.covariance(par,rules)
-for case in rules.keys():
-    Flow(case,rules[case][0],rules[case][1])
-
-Flow('fcov','bin_cov',
-     '''
-     window n1=160 n2=160 |
-     fft1 | fft3 axis=2 | 
-     math output="abs(input)" 
-     ''')
-Flow('rand2','white fcov',
-     '''
-     fft1 | fft3 axis=2 |
-     math fcov=${SOURCES[1]} output="input*fcov" |
-     fft3 axis=2 inv=y | fft1 inv=y
-     ''')
-Plot('rand2',grey('FFT Pattern'))
-
-Flow('frand2','rand2','spectra2')
-Plot('frand2',sgrey('FFT Spectrum'))
-
-Result('rand2','rand2 frand2','SideBySideAniso')
-
-# Covariance estimation by PEF
 
 # Estimate PEF
 Flow('pef lag','bin msk',

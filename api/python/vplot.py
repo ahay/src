@@ -50,7 +50,7 @@ class Vplot(object):
         # create arrays
         x = c_vplot.new_floatp(np)
         y = c_vplot.new_floatp(np)
-	for i in range(np):
+        for i in range(np):
             c_vplot.floatp_setitem(x,i,xp[i])
             c_vplot.floatp_setitem(y,i,yp[i])
         # pass to upline

@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfricker1', 'sfput', 'sfwindow', 'sfmath', 'sfdatstretch', 'sfadd', 'sfgrey', 'sfnoise', 'sftxspf', 'sftxsorth', 'sffxdecon', 'sffft1', 'sfpad', 'sfcat', 'sfclpf']
+data=[]
+size=   44861544

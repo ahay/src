@@ -1,8 +1,8 @@
 from rsf.tex import *
 
 Paper('tour',use='listings,color,hyperref')
-Paper('format',use='hyperref')
-Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
+#Paper('format',use='hyperref')
+#Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 #Paper('adding',options='short',use='hyperref')
 
@@ -279,36 +279,36 @@ Paper('longbeach',
   }}{} 
     ''')
 
-Paper('slides',lclass='beamer',use='',
-      options='16pt',
-      include=r'''
-      \mode<presentation>{\usetheme{Boadilla}}
-      \usepackage{color}
-      \usepackage{listings}
-      \usepackage{amsmath}
-      \usepackage{amssymb}
-      \usepackage{amsbsy}
-      \usepackage{latexsym}
-      \usepackage[absolute,overlay]{textpos}
-      \AtBeginSection[]{
-          \begin{frame}
-              \frametitle{Outline}
-              \tableofcontents[currentsection,currentsubsection]
-          \end{frame}
-      }
-      \definecolor{lightgray}{gray}{.95}
-      \lstset{
-          basicstyle=\scriptsize\ttfamily,
-          backgroundcolor=\color{lightgray},
-          numbers=none,
-          showstringspace=false,
-          tabsize=2,
-          showtabs=false,
-          breaklines=true,
-          language=,
-      }
-      \newcommand{\sh}[1]{\textcolor{red}{\texttt{#1}}}
-      ''')
+#Paper('slides',lclass='beamer',use='',
+#      options='16pt',
+#      include=r'''
+#      \mode<presentation>{\usetheme{Boadilla}}
+#      \usepackage{color}
+#      \usepackage{listings}
+#      \usepackage{amsmath}
+#      \usepackage{amssymb}
+#      \usepackage{amsbsy}
+#      \usepackage{latexsym}
+#      \usepackage[absolute,overlay]{textpos}
+#      \AtBeginSection[]{
+#          \begin{frame}
+#              \frametitle{Outline}
+#              \tableofcontents[currentsection,currentsubsection]
+#          \end{frame}
+#      }
+#      \definecolor{lightgray}{gray}{.95}
+#      \lstset{
+#          basicstyle=\scriptsize\ttfamily,
+#          backgroundcolor=\color{lightgray},
+#          numbers=none,
+#          showstringspace=false,
+#          tabsize=2,
+#          showtabs=false,
+#          breaklines=true,
+#          language=,
+#      }
+#      \newcommand{\sh}[1]{\textcolor{red}{\texttt{#1}}}
+#      ''')
 
 # speaker's handout
 #Paper('handout',lclass='beamer',use='',

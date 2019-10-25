@@ -6,7 +6,7 @@ Flow('cdp','midpts.hh','window n3=1 j1=2 | dd form=native')
 Flow('mutter','cdp','mutter half=n v0=1.4') 
 
 Flow('vscan','mutter','vscan half=n v0=1.3 nv=81 dv=0.02 semblance=y')
-Flow('vrms','vscan','pick rect1=50')
+Flow('vrms','vscan','pick rect1=50 back=y')
 
 cases = ['cdp','mutter']
 nmos = []

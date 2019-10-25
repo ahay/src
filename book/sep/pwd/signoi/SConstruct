@@ -42,6 +42,7 @@ Flow('data','make rnoiz','add ${SOURCES[1]}')
 Plot('rnoiz','data',plot('signal+noise'))
 
 smooth = 'trismooth2 dip=${SOURCES[1]} rect1=3 rect2=20 | window'
+smooth = 'smooth rect1=3 | pwspray reduce=triangle ns=20 dip=${SOURCES[1]}'
 
 Flow('rnoiz1','rnoiz pq1',smooth)
 Flow('rnoiz2','rnoiz pq2',smooth)

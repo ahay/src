@@ -1,0 +1,123 @@
+from rsf.proj import *
+import math
+
+# First a simple sinusoid
+
+f0 = 1/(2*math.pi)
+
+Flow('trace',None,
+     '''
+     math n1=128 d1=1 o1=1 type=complex 
+     output="exp(I*%g*x1)" 
+     ''' % (2*math.pi*f0))
+Result('trace',
+       'real | dots label1=Sample unit1= title="Synthetic Sinusoidal Signal"')
+
+# Theoretical root
+Flow('theor',None,'math n1=1 type=complex output="exp(-I*%g)" ' %  (2*math.pi*f0))
+
+# Find root from data
+Flow('troots','trace','cpef nf=2 | roots')
+
+# Usual 1-D seislet
+Flow('seis1','trace troots','freqlet freq=${SOURCES[1]} type=haar')
+Result('seis1','real | dots title="1-D Stationary Seislet" ')
+
+# Frequency
+Flow('freq','trace','real | math output=%g' % (2*math.pi*f0))
+
+# Non-stationary 1-D seislet
+Flow('seis2','trace freq','seislet1 freq=${SOURCES[1]} adj=y inv=y unit=y type=bi')
+
+Result('seis2','real | dots title="1-D Nonstationary Seislet" ')
+
+# Inverse transform
+
+Flow('trace2','seis2 freq','seislet1 freq=${SOURCES[1]} adj=n inv=y unit=y type=haar')
+
+Result('trace2',
+       'real | dots label1=Sample unit1= title="Inverse Transform"')
+
+Result('non-comp1','Fig/trace.vpl Fig/seis1.vpl Fig/seis2.vpl','OverUnderAniso')
+
+
+
+# Now make the frequency variable
+Flow('vfreq','trace','real | math output="%g-%g*x1"' % (2*math.pi*f0,0.004))
+
+Result('vfreq','graph label2=Frequency wanttitle=n')
+
+# Chirp signal
+
+Flow('chirp','vfreq',
+     '''
+     causint | rtoc | math output="exp(I*input)" 
+     ''')
+
+Result('chirp',
+       'real | dots label1="." unit1= title="Chirp Signal" gaineach=n titlesz=12 labelsz=10 screenratio=0.7 ')
+
+# Non-stationary 1-D seislet
+Flow('chirp-seis','chirp vfreq','seislet1 freq=${SOURCES[1]} adj=y inv=y unit=y type=bi')
+Result('chirp-seis','real | dots title="1-D Nonstationary Seislet" ')
+
+Flow('chirp-seis-h','chirp vfreq','seislet1 freq=${SOURCES[1]} adj=y inv=y unit=y type=h')
+Result('chirp-seis-h','real | dots title="1-D Nonstationary Seislet" ')
+
+# Inverse transform
+
+Flow('chirp2','chirp-seis vfreq','seislet1 freq=${SOURCES[1]} adj=n inv=y unit=y type=haar')
+
+Result('chirp2',
+       'real | dots label1=Sample unit1= title="Inverse Transform"')
+
+# Try to compress chirp with a stationary transform
+
+Flow('chirp-seis1','chirp freq','seislet1 freq=${SOURCES[1]} adj=y inv=y unit=y type=li')
+
+Result('chirp-seis1','real | dots label1= unit1= gaineach=n title="1-D Stationary Seislet" gaineach=n titlesz=12 labelsz=10 screenratio=0.7')
+
+# Estimate variable frequency by a non-stationary adaptive PEF
+
+Flow('shift','chirp','shift1 ns=1')
+Flow('cpef','shift chirp','clpf match=${SOURCES[1]} rect1=20')
+Flow('pfreq','cpef','math output="arg(input)" | real')
+
+Result('pfreq','pfreq vfreq','cat axis=2 ${SOURCES[1]} | graph dash=1,0 label2=Frequency wanttitle=n')
+
+# Try to compress chirp with PEF-estimated frequency
+
+Flow('chirp-seis2','chirp pfreq','seislet1 freq=${SOURCES[1]} adj=y inv=y unit=y type=bi')
+Result('chirp-seis2','real | dots label1= unit1= gaineach=n titlesz=12 labelsz=10 screenratio=0.7 title="1-D Non-stationary Seislet" ')
+
+Flow('chirp-dwt','chirp','real | dwt type=li')
+Result('chirp-dwt','dots title="1-D Wavelet Transform" label1= unit1= gaineach=n titlesz=12 labelsz=10 screenratio=0.7 ')
+
+Flow('chirp-seis2-h','chirp pfreq','seislet1 freq=${SOURCES[1]} adj=n inv=y unit=y type=h')
+Result('chirp-seis2-h','real | dots title="1-D Seislet Transform (PEF)" ')
+
+
+
+Flow('non-comp2','chirp-seis2 chirp-seis1 chirp','cat axis=2 ${SOURCES[1:3]} | real')
+#Result('non-comp2','dots labels="Non-stationary:Stationary:Chirp"')
+Result('non-comp2','Fig/chirp.vpl Fig/chirp-dwt.vpl Fig/chirp-seis1.vpl Fig/chirp-seis2.vpl','OverUnderAniso',vppen='txscale=1.5')
+
+Flow('chirp-r','chirp','real')
+Flow('chirp-r-hilb','chirp-r','envelope hilb=y')
+Flow('chirp-c','chirp-r chirp-r-hilb','cmplx ${SOURCES[1]}')
+
+Flow('shift-c','chirp-c','shift1 ns=1')
+Flow('cpef-c','shift-c chirp-c','clpf match=${SOURCES[1]} rect1=20')
+Flow('pfreq-c','cpef-c','math output="arg(input)" | real')
+
+Flow('chirp-seis2-c','chirp-c pfreq-c','seislet1 freq=${SOURCES[1]} adj=y inv=y unit=y type=b')
+Result('chirp-seis2-c','real | dots title="1-D Seislet Transform (PEF)" ')
+
+
+
+
+
+
+
+
+End()

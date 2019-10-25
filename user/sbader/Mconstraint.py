@@ -5,6 +5,7 @@ Hard constraint 2D map
 For use with LSIM if a specific alignment location is desired.
 Use with reference and real datasets and scale LSIM scan by output
 '''
+from __future__ import division
 
 import sys
 import numpy as np
@@ -36,8 +37,8 @@ loc = (num-so)/sd
 
 if ( (loc < sdepth-window) &(loc > (window-1)) ):
     for i in range(window):
-        out[loc-i] = 1
-        out[loc+i] = 1
+        out[int(loc-i)] = 1
+        out[int(loc+i)] = 1
 
 logref_co = rsf.Output()
 

@@ -2,17 +2,17 @@
 '''GUI for vpconvert'''
 
 ##   Copyright (C) 2012 University of Texas at Austin
-##  
+##
 ##   This program is free software; you can redistribute it and/or modify
 ##   it under the terms of the GNU General Public License as published by
 ##   the Free Software Foundation; either version 2 of the License, or
 ##   (at your option) any later version.
-##  
+##
 ##   This program is distributed in the hope that it will be useful,
 ##   but WITHOUT ANY WARRANTY; without even the implied warranty of
 ##   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ##   GNU General Public License for more details.
-##  
+##
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -20,13 +20,18 @@
 import sys, os
 
 try:
-    import Tkinter as tk
-    from tkFileDialog import askopenfilename
-    from tkMessageBox import showerror, showinfo
+    if sys.version_info[0] >= 3:
+        import tkinter as tk
+        from tkinter.filedialog import askopenfilename
+        from tkinter.messagebox import showerror, showinfo
+    else:
+        import Tkinter as tk
+        from tkFileDialog import askopenfilename
+        from tkMessageBox import showerror, showinfo
 except:
     sys.stderr.write('Please install Tkinter!\n\n')
     sys.exit(1)
-      
+
 import rsf.vpconvert as vpconvert
 
 def select_file(entry):
@@ -45,11 +50,10 @@ def convert(vpl,format,opts,pars):
         return
 
     new = '.'.join([os.path.splitext(vpl)[0],format.lower()])
-    opts = ' '.join(map(lambda x: '='.join([x, str(pars[x].get())]), 
-                        pars.keys())) + ' ' + opts
-    
+    opts = ' '.join(['='.join([x, str(pars[x].get())]) for x in list(pars.keys())]) + ' ' + opts
+
     fail = vpconvert.convert(vpl,new,format,None,opts,False)
-    
+
     run = "%s to %s using \"%s\"" % (vpl,new,opts)
     if fail:
         showerror("Could not convert",run)
@@ -78,7 +82,7 @@ def main():
     frame = tk.Frame(root)
     tk.Label(frame, text="Format:").pack(side=tk.LEFT)
     subframe = tk.Frame(frame)
-    formats = vpconvert.pens.keys()
+    formats = list(vpconvert.pens.keys())
     formats.sort()
     nf = len(formats)
     for i in range(nf):
@@ -96,7 +100,7 @@ def main():
 
 
     frame = tk.Frame(root)
-    
+
     tk.Label(frame, text="Fat:").pack(side=tk.LEFT)
     scale = tk.Scale(frame,orient=tk.HORIZONTAL,variable=fat,from_=1,to=10,length=330)
     scale.pack(side=tk.LEFT)

@@ -96,8 +96,8 @@ Result('fme',['vel','fme'],'Overlay')
 Flow('hwt','vel',
      '''
      hwt2d xsou=%(xsou)g zsou=%(zsou)g
-     nt=1000 ot=0   dt=0.01
-     ng=1801 og=-90 dg=0.1
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
      '''%par)
 
 # plot rays and wavefronts

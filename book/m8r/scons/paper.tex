@@ -71,11 +71,18 @@ choice for handling processing flows was an old dialect of
 \cite[]{Nichols.sep.61.341,Claerbout.sep.67.145,Claerbout.sep.73.451,Claerbout.sep.77.427}. Later
 SEP converted to using \emph{GNU make} \cite{Schwab.sep.89.217}.
 
-SCons offers a comparable functionality but with a superior design...
+SCons offers a comparable functionality but with a superior design
+\cite[]{dubois,scons,ieee}.  The SCons initial design won the Software
+Carpentry competition sponsored by Los Alamos National Laboratory in
+2000 in the category of ``a dependency management tool to replace
+make''.  SCons is implemented as a Python script, its "configuration
+files" (\texttt{SConstruct} files) are also Python scripts. Madagascar
+uses SCons to compile software, to manage data processing flowing, and
+to assemble reproducible documents.
 
 \subsection{Using SCons for compilation}
 
-SCons was designed primarily for compiling software code. An SConstruct file for compilation may look like
+SCons was designed primarily for compiling software code. An \texttt{SConstruct} file for compilation may look like
 
 \definecolor{frame}{rgb}{0.905,0.905,0.905}
 \lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
@@ -99,6 +106,66 @@ to compile the hello program from the source files \texttt{hello.c} and \texttt{
 Madagascar uses SCons to compile its programs from the source. The more frequent usage, however, comes from adopting SCons to manage data processing flows.
 
 \section{Managing data processing flows using \texttt{rsf.proj}}
+
+The \texttt{rsf.proj} module provides SCons rules for Madagascar data processing workflows. An example \texttt{SConstruct} file is shown below and can be found in \href{http://ahay.org/RSF/book/bei/sg/denmark.html}{bei/sg/denmark} directory under \texttt{\$RSFSRC/book}.
+
+\begin{lstlisting}
+from rsf.proj import *
+
+Fetch('wz.35.H','wz')
+
+Flow('wind','wz.35.H',
+     'dd form=native | window n1=400 j1=2 | smooth rect1=3')
+Plot('wind','pow pow1=2 | grey')
+
+Flow('mute','wind','mutter v0=0.31 half=n')
+Plot('mute','pow pow1=2 | grey')
+
+Result('denmark','wind mute','SideBySideAniso')
+
+End()
+\end{lstlisting}
+
+Note that \texttt{SConstruct} by itself does not do any job other than setting rules for building different targets. The targets get built when one executes \texttt{scons} on the command line. Running \texttt{scons} produces
+
+\begin{verbatim}
+bash$ scons
+scons: Reading SConscript files ...
+scons: done reading SConscript files.
+scons: Building targets ...
+retrieve(["wz.35.H"], [])
+< wz.35.H /RSF/bin/sfdd form=native | /RSF/bin/sfwindow n1=400 j1=2 | \
+/RSF/bin/sfsmooth rect1=3 > wind.rsf
+< wind.rsf /RSF/bin/sfpow pow1=2 | /RSF/bin/sfgrey > wind.vpl
+< wind.rsf /RSF/bin/sfmutter v0=0.31 half=n > mute.rsf
+< mute.rsf /RSF/bin/sfpow pow1=2 | /RSF/bin/sfgrey > mute.vpl
+/RSF/bin/vppen yscale=2 vpstyle=n gridnum=2,1 wind.vpl mute.vpl > Fig/denmark.vpl
+scons: done building targets.
+\end{verbatim}
+
+Obviously, one could also run similar commands with a shell script. What makes SCons convenient is the way it behaves when we make changes in the input files or in the script. Let us change, for example, the mute velocity parameter in the second \texttt{Flow} command. You can do that with an editor or on the command line as
+
+\begin{verbatim}
+bash$ sed -i s/v0=0.31/v0=0.32/ SConstruct
+\end{verbatim}
+
+Now let us run \texttt{scons} again
+
+\begin{verbatim}
+bash$ scons -Q
+< wind.rsf /RSF/bin/sfmutter v0=0.32 half=n > mute.rsf
+< mute.rsf /RSF/bin/sfpow pow1=2 | /home/fomels/RSF/bin/sfgrey > mute.vpl
+/RSF/bin/vppen yscale=2 vpstyle=n gridnum=2,1 wind.vpl mute.vpl > Fig/denmark.vpl
+\end{verbatim}
+
+We can see that \texttt{scons} executes only the parts of the data
+processing flow that were affected by the change. By keeping track of
+dependencies, SCons makes it easier to modify existing workflows
+without the need to rerun everything after each change.
+
+\subsection{SConstruct commands}
+
+\subsubsection{Fetch(file[s],directory,[options])}
 
 \subsection{Seismic Unix processing using  \texttt{rsf.suproj}}
 

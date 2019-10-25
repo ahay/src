@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     int n3, i3, interp, nt, id, nd;
     float *mm, *dd, *pp, *qq, **xy, x0, dx, y0, dy, eps, *hdr;
     char *header;
-    bool verb;
+    bool verb, drift;
     sf_file in, out, dip, head;
 
     sf_init (argc,argv);
@@ -111,6 +111,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* antialiasing */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
@@ -122,8 +125,8 @@ int main(int argc, char* argv[])
     mm = sf_floatalloc(n123);
     dd = sf_floatalloc(nt*nd);
 
-    allpass3_init(allpass_init(nw, nj1, nt,nx,ny, pp),
-		  allpass_init(nw, nj2, nt,nx,ny, qq));
+    allpass3_init(allpass_init(nw, nj1, nt,nx,ny, drift, pp),
+		  allpass_init(nw, nj2, nt,nx,ny, drift, qq));
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(pp,n123,dip);

@@ -14,7 +14,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','') + 'rsf'])
 
-if 'f90' in env.get('API',[]) and env.has_key('F90'):
+if 'f90' in env.get('API',[]) and 'F90' in env:
     F90 = env.get('F90')
     F90base =  os.path.basename(F90)
     env.Append(CPPDEFINES=['$CFORTRAN90'])

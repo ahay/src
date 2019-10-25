@@ -25,7 +25,7 @@ You are welcome to do the assignment on your personal computer by
 installing the required environments. In this case, you can obtain all
 homework assignments from the \texttt{Madagascar} repository by running
 \begin{verbatim}
-svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo384w/hw1
+svn co https://github.com/ahay/src/trunk/book/geo384w/hw1 
 \end{verbatim}
 
 You can also do this assignment in the computer lab at the Department
@@ -42,30 +42,31 @@ derivations that you perform.
   variable continuously increasing along a ray. There are other
   variables that can play a similar role.
   \begin{enumerate}
-  \item Transform the isotropic ray tracing system
+\item Transform the isotropic ray tracing system
     \begin{eqnarray}
-      \label{eq:psigma}
-      \frac{d \mathbf{p}}{d \sigma} & = & S(\mathbf{x})\,\nabla S \\
       \label{eq:xsigma}
       \frac{d \mathbf{x}}{d \sigma} & = & \mathbf{p} \\
+      \label{eq:psigma}
+      \frac{d \mathbf{p}}{d \sigma} & = & S(\mathbf{x})\,\nabla S \\
       \label{eq:tsigma}
       \frac{d T}{d \sigma} & = & S^2(\mathbf{x})
     \end{eqnarray}
-    into an equivalent system that uses $\xi$ instead of
-    $\sigma$, where $\xi$ is constrained by equation~(\ref{eq:pxi}):
+    into an equivalent system that uses $\lambda$ instead of
+    $\sigma$, where $\lambda$ represents the length of the ray trajectory:
     \begin{eqnarray} 
-      \label{eq:pxi}
-      \frac{d \mathbf{p}}{d \xi} & = & \frac{\nabla S}{S^2(\mathbf{x})} \\
-      \label{eq:xxi}
-      \frac{d \mathbf{x}}{d \xi} & = & \\ 
-      \label{eq:txi}
-      \frac{d T}{d \xi} & = & 
+      \label{eq:xlambda}
+      \frac{d \mathbf{x}}{d \lambda} & = & \\
+      \label{eq:plambda}
+      \frac{d \mathbf{p}}{d \lambda} & = & \\ 
+      \label{eq:tlambda}
+      \frac{d T}{d \lambda} & = & S(\mathbf{x})\;.
     \end{eqnarray}
-What are the physical units of $\xi$?      
-  \item Suppose you are given $T(\mathbf{x})$ -- the traveltime from
+    Remember to check physical dimensions.
+ \item Suppose you are given $T(\mathbf{x})$ -- the traveltime from
   the source to all points $\mathbf{x}$ in the domain of
-  interest. Your task is to find $\xi(\mathbf{x})$ for all $\mathbf{x}$. Derive a first-order partial
-  differential equation that connects $\nabla \xi$ and $\nabla T$.
+  interest. Your task is to find $\lambda(\mathbf{x})$ - the length of
+  the ray trajectory at all $\mathbf{x}$. Derive a first-order partial
+  differential equation that connects $\nabla \lambda$ and $\nabla T$.
   \end{enumerate}
 
 \item The so-called ``parabolic'' or $15^{\circ}$ eikonal
@@ -93,12 +94,12 @@ What are the physical units of $\xi$?
     where $p_1$ represents $\partial T/\partial x_1$ and 
     $p_2$ represents $\partial T/\partial x_2$.
    
-   \item Assuming constant slowness $S(\mathbf{x}) \equiv S_0$, solve
+   \item Assuming a constant slowness $S(\mathbf{x}) \equiv S_0$, solve
     the ray tracing system for a point source at the origin
     $\{x_1,x_2\} = \{0,0\}$.
 
    \item Using the ray tracing solution, find the shape of the
-    wavefronts defined by equation~(\ref{eq:pareik} in the case of a
+    wavefronts defined by equation~(\ref{eq:pareik}) in the case of a
     constant slowness.
 
    \item The isotropic eikonal equation
@@ -110,8 +111,8 @@ What are the physical units of $\xi$?
     describes wavefronts of the wave equation
     \begin{equation}
       \label{eq:isowave}
-      S^2(\mathbf{x})\,\frac{\partial^2 P}{\partial t^2} =
-      \nabla^2 P + \cdots
+      \nabla^2 P  = S^2(\mathbf{x})\,\frac{\partial^2 P}{\partial t^2} 
+      + \cdots
     \end{equation}
     with omitted possible first- and zero-order terms. 
     What wave equation corresponds to equation~(\ref{eq:pareik})?
@@ -135,7 +136,7 @@ simple wave propagation experiments. (b) Wave snapshot with overlaid
 first-arrival wavefront.}
 
 \begin{enumerate}
-\item Change directory to \verb#geo384w/hw1/wave#
+\item Change directory to \texttt{hw1/wave}.
 \item Run
 \begin{verbatim}
 scons model.view
@@ -203,6 +204,9 @@ where $\mathbf{P}$ represents the propagating wavefield discretized at different
 \lstset{language=fortran,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{code/wave.f90}
 
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{code/wave.py}
+
 Your task is to modify the code to implement elliptically-anisotropic wave propagation according to equation
 \begin{equation}
       {\frac{\partial^2 P}{\partial t^2}} = 
@@ -215,7 +219,7 @@ You can test your implementation using a constant velocity example shown in Figu
 \sideplot{wave}{width=\textwidth}{Wavefield snapshot for propagation from a point-source in a homogeneous medium. Modify the code to make wave propagation anisotropic.}
 
 \begin{enumerate}
-\item Change directory to \verb#geo384w/hw1/code#
+\item Change directory to \texttt{hw1/code}
 \item Run
 \begin{verbatim}
 scons wave.vpl
@@ -230,17 +234,17 @@ again to compile and test your program.
 \item (EXTRA EXTRA CREDIT) For an additional test, modify the file \texttt{SConstruct} and run appropriate commands to output a snapshot of wave propagation in the Hess VTI model, shown in Figure~\ref{fig:vp,vx}\footnote{The Hess VTI model was generated at Hess Corporation and released at \url{http://software.seg.org}. For this exercise, we are going to approximate it with an elliptically anisotropic model}. Modify the file \texttt{paper.tex} to include your figure.
 \end{enumerate}
 
-\multiplot{2}{vp,vx}{width=0.45\textwidth}{Vertical velocity (a) and horizontal velocity (b) in the Hess VTI model.}
+\multiplot{2}{vp,vx}{width=0.65\textwidth}{Vertical velocity (a) and horizontal velocity (b) in the Hess VTI model.}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{code/SConstruct}
 
-\newpage
+%\newpage
 
 \section{Completing the assignment}
 
 \begin{enumerate}
-\item Change directory to \verb#geo384w/hw1#.
+\item Change directory to \texttt{hw1}.
 \item Edit the file \texttt{paper.tex} in your favorite editor and change the
 first line to have your name instead of Newton's.
 \item Run

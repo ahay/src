@@ -83,10 +83,10 @@ elif (switch == 3):
 
     if (oref < olog):
 
-        log_a = np.empty(2*(olog-oref) + minsamp)
+        log_a = np.empty(2*int(olog-oref) + minsamp)
         log_a.fill(minval)
-    
-        log_c = np.empty(nref - 2*(olog-oref) - (maxsamp - minsamp) )
+
+        log_c = np.empty(nref - 2*int(olog-oref) - (maxsamp - minsamp) )
         log_c.fill(maxval)
 
         log_e = np.concatenate((log_a, log[minsamp:maxsamp], log_c), axis=0)

@@ -5,7 +5,7 @@ Flow('real',None,'math n1=32 n2=32 output="cos(%g*x1*x2)" ' % (2*math.pi/32))
 Flow('imag',None,'math n1=32 n2=32 output="sin(%g*x1*x2)" ' % (2*math.pi/32))
 
 for case in ('real','imag'):
-    title = string.capitalize(case) + ' part of F.T. matrix'
+    title = case.capitalize() + ' part of F.T. matrix'
     Plot(case+'1',case,'grey title="%s" ' % title)
     Plot(case+'2',case,'wiggle yreverse=y title="%s" ' % title)
 

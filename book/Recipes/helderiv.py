@@ -19,10 +19,10 @@ def Helderiv(name,eps=0.001,na=16):
          lag=$SOURCE in=$TARGET data_format=ascii_float''' % (2.0+0.5*eps))
     Flow(tag(name,'ss'),tag(name,'ss0.asc'),'dd form=native')
 
-    # ------------------------------------------------------------    
+    # ------------------------------------------------------------
     Flow(tag(name,'alag0.asc'),None,
          'echo %s n=1000,1000 n1=%d in=$TARGET data_format=ascii_int' %
-         (string.join(map(str, range(1,na+1) + range(1001-na,1001)),' '),2*na))
+         (' '.join(map(str, list(range(1,na+1)) + list(range(1001-na,1001)))),2*na))
     Flow(tag(name,'alag'),tag(name,'alag0.asc'),'dd form=native')
 
     # ------------------------------------------------------------

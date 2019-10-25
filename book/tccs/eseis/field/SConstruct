@@ -1,0 +1,327 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+
+#see the secondary folder for detailed data path
+
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2= label1="Time sampling number" unit1= title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 screenratio=1.3 wherexlabel=t wheretitle=b  bartype=v clip=0.1 %s'%other)
+
+def Wig(data1,data2,other): 
+	Result(data1,data2,'window j2=2 | wiggle transp=y yreverse=y poly=y label2=Trace unit2= label1=Time unit1="s" title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 screenratio=1.3 wherexlabel=t wheretitle=b color=g bartype=v clip=0.1 %s'%other)
+
+def Grey2(data1,data2,other): 
+	Result(data1,data2,'grey label2=Trace unit2= label1="Time sampling number" unit1= title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenratio=0.6 wherexlabel=t wheretitle=b  bartype=v clip=0.1 %s'%other)
+
+def Grey3(data1,clip,other): 
+	Result(data1,'window max1=50 |byte clip=%d allpos=y |grey3 point1=0.8 point2=0.8 flat=n label2=Scale unit2= label1=Frequency unit1="Hz" label3=IMF unit3= title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 wherexlabel=t wheretitle=b color=g bartype=v clip=0.5 %s'%(clip,other))
+
+Fetch('real.rsf','yangkang')
+Grey2('real','real','title="Seismic image"')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../Matfun'
+matfun = 'Eseis'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+n1=512
+n2=512
+dt=0.004
+N=4
+Nf=512
+df=1/dt/Nf
+flow=1
+fhigh=125
+verb=1
+
+d2=1
+o1=0
+o2=0
+
+flag=1 # forward Eseis transform
+put='n2=512 d2=1 n3=4 d3=1 o2=0 o3=0'
+put2='n2=257 %g n3=4 d3=1 o2=0 o3=0'%df
+put3='n2=2048 d2=1 n3=1 d3=1 o2=0 o3=0'
+############################################################
+## with parameter
+############################################################
+Flow('real-femdr-t real-femdi-t',[os.path.join(matROOT,matfun+'.m'),'real'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s(%(flag)d,'${SOURCES[1]}',%(n1)d,%(n2)d,%(N)d,%(flow)g,%(fhigh)g,%(dt)g,%(verb)d,'${TARGETS[0]}','${TARGETS[1]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('real-femdr','real-femdr-t','put d1=%g d2=%g o1=%g o2=%g'%(df,d2,o1,o2))
+Flow('real-femdi','real-femdi-t','put d1=%g d2=%g o1=%g o2=%g'%(df,d2,o1,o2))
+
+Grey('real-femdr','clip=6')
+Grey('real-femdi','clip=6')
+
+Flow('real-fk','real','fft1 | fft3 axis=2')
+#Flow('real-dwt','real','dwt adj=n inv=y type=b |transp | dwt adj=n inv=y type=b | transp ')
+
+Flow('real-dwt','real','transp | dwt adj=n inv=y type=b | transp ')
+
+Flow('real-dip','real','dip rect1=10 rect2=10')
+Flow('real-seis','real real-dip','seislet dip=${SOURCES[1]} adj=y inv=y type=b eps=0.1')
+Flow('real-seist','real-seis real-dip','threshold1 ifperc=1 type=h thr=10 | seislet dip=${SOURCES[1]} adj=n inv=y type=b  eps=0.1')
+Flow('real-seist-dif','real real-seist','add scale=1,-1 ${SOURCES[1]}')
+
+
+flag=0 # inverse Eseis transform
+Flow('real-femdr-tt','real-femdr-t','cut f2=64')
+Flow('real-femdi-tt','real-femdi-t','cut f2=64')
+
+Flow('real-recon-t',[os.path.join(matROOT,matfun+'.m'),'real-femdr-t','real-femdi-t'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s(%(flag)d,'${SOURCES[1]}',%(n1)d,%(n2)d,%(N)d,%(flow)g,%(fhigh)g,%(dt)g,%(verb)d,'${TARGETS[0]}','${TARGETS[0]}','${SOURCES[2]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('real-recon','real-recon-t','put d1=%g o1=%g d2=%g o2=%g'%(dt,o1,d2,o2))
+Grey('real-recon','')
+
+Flow('real-dif','real real-recon','add scale=1,-1 ${SOURCES[1]}')
+Grey('real-dif','')
+
+
+#### 1D seislet transform
+Flow('zero',None,'spike n1=1 mag=0')
+Flow('freq',None,'spike n1=1 mag=10')
+
+Flow('real-femdr-3d','real-femdr','put %s'%put)
+Flow('real-femdi-3d','real-femdi','put %s'%put)
+Grey3('real-femdr-3d',8.2,'label1=Frequency unit1=Hz frame1=30 frame2=125 frame3=0 color=j screenratio=1.3 movie=3')
+Grey3('real-femdi-3d',8.2,'label1=Frequency unit1=Hz frame1=30 frame2=125 frame3=0 color=j screenratio=1.3 movie=3')
+
+
+# hilbert transform
+Flow('real-femdr-hilb-3d','real-femdr-3d','transp | envelope hilb=y ' ) 
+Flow('real-femdi-hilb-3d','real-femdi-3d','transp | envelope hilb=y ' ) 
+
+# transformed to Eseislet domain
+seis=[]
+for j in range(N):
+    for i in range(257):
+	seis1='femdr-seis-%d-%d'%(i,j)
+	freq1='freqr-%d-%d'%(i,j)
+	Flow(freq1,'real-femdr-3d real-femdr-hilb-3d','transp | cmplx ${SOURCES[1]} | window n2=1 f2=%d n3=1 f3=%d | cpef nf=%d | roots niter=20' %(i,j,2))
+#	Flow(seis1,'real-femdr-3d real-femdr-hilb-3d %s'%freq1,
+	Flow(seis1,'real-femdr-3d real-femdr-hilb-3d freq',
+	'''
+	transp | cmplx ${SOURCES[1]} | window n2=1 f2=%d n3=1 f3=%d | 
+	freqlet freq=${SOURCES[2]} type=b '''%(i,j))
+	seis.append(seis1)
+Flow('real-femdr-seis',seis,'cat axis=2 ${SOURCES[1:%d]}'%len(seis))
+
+seis=[]
+for j in range(N):
+    for i in range(257):
+	seis2='femdi-seis-%d-%d'%(i,j)
+	freq2='freqi-%d-%d'%(i,j)
+	Flow(freq2,'real-femdi-3d real-femdi-hilb-3d','transp | cmplx ${SOURCES[1]} | window n2=1 f2=%d n3=1 f3=%d | cpef nf=%d | roots niter=20' %(i,j,2))
+#	Flow(seis2,'real-femdi-3d real-femdi-hilb-3d %s'%freq2,
+	Flow(seis2,'real-femdi-3d real-femdi-hilb-3d freq',
+	'''
+	transp | cmplx ${SOURCES[1]} | window n2=1 f2=%d n3=1 f3=%d |  
+	freqlet freq=${SOURCES[2]} type=b  '''%(i,j))
+	seis.append(seis2)
+Flow('real-femdi-seis',seis,'cat axis=2 ${SOURCES[1:%d]}'%len(seis))	
+
+Flow('real-femdr-seis0-3d','real-femdr-seis','math output="abs(input)"|real |put %s | transp'%put2)	
+Flow('real-femdi-seis0-3d','real-femdi-seis','math output="abs(input)"|real | put %s | transp'%put2)
+
+Flow('real-femdr-seis0','real-femdr-seis0-3d','put %s '%put3)	
+Flow('real-femdi-seis0','real-femdi-seis0-3d','put %s '%put3)	
+
+Grey('real-femdr-seis0','clip=6')
+Grey('real-femdi-seis0','clip=6')
+Grey3('real-femdr-seis0-3d',10,'label1=Frequency unit1=Hz frame1=30 frame2=125 frame3=0 color=j screenratio=1.3 movie=3')
+Grey3('real-femdi-seis0-3d',10,'label1=Frequency unit1=Hz frame1=30 frame2=125 frame3=0 color=j screenratio=1.3 movie=3')
+
+## Threshold
+thrs1=[]
+thrs2=[]
+for j in range (N):
+	thr1='real-femdr-seis-thr-%d'%j
+	thr2='real-femdi-seis-thr-%d'%j
+	if j== 0:
+		Flow(thr1,'real-femdr-seis','put %s | window n3=1 f3=%g | threshold1 ifperc=1 type=h thr=2 '%(put2,j))
+		Flow(thr2,'real-femdi-seis','put %s | window n3=1 f3=%g | threshold1 ifperc=1 type=h thr=2 '%(put2,j))
+	else:
+	     	if j==1:
+			Flow(thr1,'real-femdr-seis','put %s | window n3=1 f3=%g | threshold1 ifperc=1 type=h thr=2'%(put2,j))
+			Flow(thr2,'real-femdi-seis','put %s | window n3=1 f3=%g | threshold1 ifperc=1 type=h thr=2 '%(put2,j))
+		else:
+			Flow(thr1,'real-femdr-seis','put %s | window n3=1 f3=%g | threshold1 ifperc=1 type=h thr=2 '%(put2,j))
+			Flow(thr2,'real-femdi-seis','put %s | window n3=1 f3=%g | threshold1 ifperc=1 type=h thr=2 '%(put2,j))
+		
+	thrs1.append(thr1)
+	thrs2.append(thr2)
+Flow('real-femdr-seis-thr',thrs1,'cat axis=2 ${SOURCES[1:%d]} '%len(thrs1))
+Flow('real-femdi-seis-thr',thrs2,'cat axis=2 ${SOURCES[1:%d]} '%len(thrs2))
+
+emds=[]
+for j in range(N):
+    for i in range(257):
+	emds1='femdr-%d-%d'%(i,j)
+	freq1='freqr-%d-%d'%(i,j)	
+#	Flow(emds1,'real-femdr-seis-thr %s'%freq1,
+	Flow(emds1,'real-femdr-seis-thr freq',
+	'''
+	window n2=1 f2=%d | freqlet freq=${SOURCES[1]} type=b inv=y | real'''%(j*257+i))
+	emds.append(emds1)
+Flow('real-femdr-seis-inv',emds,'cat axis=2 ${SOURCES[1:%d]} |put %s | transp | put %s'%(len(emds),put2,put))
+
+
+emds=[]
+for j in range(N):
+    for i in range(257):
+	emds2='femdi-%d-%d'%(i,j)
+	freq2='freqi-%d-%d'%(i,j)
+#	Flow(emds2,'real-femdi-seis-thr %s'%freq2,
+	Flow(emds2,'real-femdi-seis-thr freq',
+	'''
+	window n2=1 f2=%d | freqlet freq=${SOURCES[1]} type=b inv=y   | real'''%(j*257+i))
+	emds.append(emds2)	
+
+Flow('real-femdi-seis-inv',emds,'cat axis=2 ${SOURCES[1:%d]} | put %s | transp | put %s'%(len(emds),put2,put3))
+
+
+Flow('real-femdr-seis-thr-3d','real-femdr-seis-thr','math output="abs(input)"|real |put %s | transp'%put2)	
+Flow('real-femdi-seis-thr-3d','real-femdi-seis-thr',' math output="abs(input)"|real |put %s | transp'%put2)	
+
+Grey3('real-femdr-seis-thr-3d',10,'label1=Frequency unit1=Hz frame1=30 frame2=125 frame3=0 color=j screenratio=1.3 movie=3')
+Grey3('real-femdi-seis-thr-3d',10,'label1=Frequency unit1=Hz frame1=30 frame2=125 frame3=0 color=j screenratio=1.3 movie=3')
+
+Flow('real-femdr-seis-inv-3d','real-femdr-seis-inv','put %s'%put)
+Flow('real-femdi-seis-inv-3d','real-femdi-seis-inv','put %s'%put)
+
+Grey3('real-femdr-seis-inv-3d',10,'label1=Frequency unit1=Hz frame1=30 frame2=125 frame3=0 color=j screenratio=1.3 movie=3')
+Grey3('real-femdi-seis-inv-3d',10,'label1=Frequency unit1=Hz frame1=30 frame2=125 frame3=0 color=j screenratio=1.3 movie=3')
+
+flag=0 # inverse Eseis transform
+Flow('real-emd-seis-recon-t',[os.path.join(matROOT,matfun+'.m'),'real-femdr-seis-inv','real-femdi-seis-inv'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s(%(flag)d,'${SOURCES[1]}',%(n1)d,%(n2)d,%(N)d,%(flow)g,%(fhigh)g,%(dt)g,%(verb)d,'${TARGETS[0]}','${TARGETS[0]}','${SOURCES[2]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('real-emd-seis-recon','real-emd-seis-recon-t','put d1=%g o1=%g d2=%g o2=%g'%(dt,o1,d2,o2))
+Grey('real-emd-seis-recon','')
+
+Flow('dif','real real-emd-seis-recon','add scale=1,-1 ${SOURCES[1]}')
+Flow('comp','real real-emd-seis-recon dif','cat axis=2 ${SOURCES[1:3]}')
+Grey('comp','title=Comparison')
+
+# sorting the coefficients
+Flow('fk1','real-femdr',
+	'''
+	put n1=526336 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort''')
+Flow('fk','real-fk',
+	'''put n1=263168 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort | pad n1=526336''')
+Flow('fkeseis','real-femdr-seis0 real-femdi-seis0',
+	'''cat axis=2 ${SOURCES[1]} | put n1=1052672 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort |window n1=526336''')
+
+# Non-stationary case
+#Flow('fkeseis2','real-femdr-seis0-n real-femdi-seis0-n',
+#	'''cat axis=2 ${SOURCES[1]} | put n1=131584 o1=1 d1=1 n2=1 
+#	unit1= unit2= | sort |window n1=65792''')
+
+Flow('dwt','real-dwt',
+	'''put n1=262144 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort | pad n1=526336''')
+
+Flow('seis','real-seis',
+	'''put n1=262144 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort | pad n1=526336''')
+
+Plot('sigcoef','fkeseis fk dwt seis',
+'''
+cat axis=2 ${SOURCES[1:4]} |
+window n1=20000 | scale axis=1 | 
+math output="20*log(input)/log(10)"|
+graph dash=1,0,0,0 label1=n label2="a\_n\^" 
+unit2="dB" wanttitle=n  labelsz=11''')
+
+
+Plot('label1',None,
+	'''
+	box x0=6.3 y0=3.1 label="Eseislet" xt=0.5 yt=0.5 
+	''') # xt,yt relative position 0.5
+
+Plot('label2',None,
+	'''
+	box x0=5.8 y0=4.8 label="Seislet" xt=0.5 yt=0.5 
+	''') # xt,yt relative position 0.5
+Plot('label3',None,
+	'''
+	box x0=5.8 y0=6.4 label="Wavelet" xt=0.5 yt=0.5 
+	''') # xt,yt relative position 0.5
+Plot('label4',None,
+	'''
+	box x0=5.8 y0=7.5 label="Fourier" xt=0.5 yt=0.5 
+	''') # xt,yt relative position 0.5
+
+Result('sigcoef','sigcoef label1 label2 label3 label4','Overlay')
+
+
+Wig('real-w','real','title="Noisy"')
+# Copy
+Flow('real-eseist','real-emd-seis-recon','put d1=1 o1=0')
+
+Wig('real-eseist-w','real-emd-seis-recon','title="EMD-seislet"')
+Wig('real-eseist-dif-w','dif','title="EMD-seislet"')
+Wig('real-seist-w','real-seist','title="Seislet"')
+Wig('real-seist-dif-w','real-seist-dif','title="Seislet"')
+
+
+Grey2('real-g','real','title="Noisy"')
+Grey2('real-eseist-g','real-emd-seis-recon','title="EMD-seislet"')
+Grey2('real-eseist-dif-g','dif','title="EMD-seislet"')
+Grey2('real-seist-g','real-seist','title="Seislet"')
+Grey2('real-seist-dif-g','real-seist-dif','title="Seislet"')
+
+## FX decon
+n2w=50
+lenf=6
+Flow('real-fx','real','put d1=0.004 | fxdecon n2w=%d lenf=%d taper=0.5| put d1=1'%(50,lenf))
+Flow('real-fx-dif','real real-fx','add scale=1,-1 ${SOURCES[1]}')
+
+Grey2('real-fx-g','real-fx','title="FX decon"')
+Grey2('real-fx-dif-g','real-fx-dif','title="FX decon"')
+
+
+Flow('real-z','real','window n2=150 n1=150 f2=250 f1=175')
+Flow('real-fx-z','real-fx','window n2=150 n1=150 f2=250 f1=175')
+Flow('real-eseist-z','real-eseist','window n2=150 n1=150 f2=250 f1=175')
+Flow('real-seist-z','real-seist','window n2=150 n1=150 f2=250 f1=175')
+
+Grey2('real-z','real-z','title="Noisy" screenratio=0.9')
+Grey2('real-fx-z','real-fx-z','title="FX decon" screenratio=0.9')
+Grey2('real-eseist-z','real-eseist-z','title="EMD-seislet" screenratio=0.9')
+Grey2('real-seist-z','real-seist-z','title="Seislet" screenratio=0.9')
+
+## Creating framebox
+x=250
+y=175
+w=150
+w1=150
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=511 min2=0 max2=511 pad=n plotfat=15 plotcol=2 screenratio=0.6
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+Result('real-0','Fig/real-g.vpl frame','Overlay')
+Result('real-fx-0','Fig/real-fx-g.vpl frame','Overlay')
+Result('real-eseist-0','Fig/real-eseist-g.vpl frame','Overlay')
+Result('real-seist-0','Fig/real-seist-g.vpl frame','Overlay')
+
+End()

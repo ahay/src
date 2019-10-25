@@ -1,0 +1,6 @@
+from rsf.tex import*
+
+End(use='amsmath,color,listings,float,multirow,multicol,enumitem,hyperref',
+    color='ALL',hires='error1,error2,error3,errortssum-1,errortssum-2',
+    options='reproduce')
+

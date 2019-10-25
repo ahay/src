@@ -88,10 +88,10 @@ Flow('horizon','Penobscot_Seabed.txt xy',
      '''
      echo in=$SOURCE data_format=ascii_float n1=3 n2=249572 | dd form=native | 
      window n1=1 f1=2 squeeze=n | intbin head=${SOURCES[1]} xkey=0 ykey=1 xmin=1000 xmax=1600 ymin=1000 ymax=1480 nx=601 ny=481 |
-     window | put label1=Inline label2=Crossline
+     window |  scale dscale=0.001 | put label1=Inline label2=Crossline
      ''',stdin=0)
 
-Result('horizon','grey color=gist_earth scalebar=y title=Horizon yreverse=n allpos=y bias=150 polarity=y')
+Result('horizon','grey color=gist_earth scalebar=y title=Horizon yreverse=n allpos=y bias=0.015 polarity=y')
 
 # Extract amplitude on one line
 
@@ -100,7 +100,7 @@ line=300-1
 Flow('horizon2','horizon','window n1=1 f1=%d' % line)
 Plot('horizon2',
      '''
-     scale dscale=0.001 | window min1=1003 max1=1477 |
+     window min1=1003 max1=1477 |
      graph min2=0 max2=1 min1=1000 max1=1480 yreverse=y scalebar=y screenht=9 
      screenwd=18 plotcol=3 plotfat=5 wanttitle=n wantaxis=n
      ''')
@@ -115,5 +115,118 @@ Result('seismic2','seismic2 horizon2','Overlay')
 
 # Zoom in
 
+Flow('horizon2-zoom','horizon2','window n1=150')
+Plot('horizon2-zoom',
+     '''
+     window min1=1003 |
+     graph min2=0.1 max2=0.3 min1=1000 max1=1151 yreverse=y scalebar=y screenht=9 
+     screenwd=18 plotcol=3 plotfat=10 wanttitle=n wantaxis=n
+     ''')
+
+Flow('seismic2-zoom','cube','window n2=1 f2=%d n3=150 min1=0.1 max1=0.3' % line)
+Plot('seismic2-zoom',
+     '''
+     grey wanttitle=n scalebar=y screenht=9 screenwd=18 barlabel=Amplitude
+     ''')
+
+Result('seismic2-zoom','seismic2-zoom horizon2-zoom','Overlay')
+
+# Extract amplitude
+
+Flow('coord-zoom','horizon2-zoom','transp')
+Flow('ampl-zoom','seismic2-zoom coord-zoom',
+     '''
+     inttest1 coord=${SOURCES[1]} same=n interp=spline nw=4 | window
+     ''')
+Result('ampl-zoom',
+       '''
+       window min1=1003 | 
+       graph title="Extracted Amplitude" unit1= unit2= label2=Amplitude
+       ''')
+
+# Amplitude of entire horizon
+
+Flow('coord','horizon','spray axis=1 n=1')
+Flow('ampl','cube coord',
+     '''
+     inttest1 coord=${SOURCES[1]} same=n interp=spline nw=4 | window
+     ''')
+Result('ampl','grey title=Amplitude unit1= yreverse=n polarity=y allpos=y')
+
+# Compare different methods
+
+methods = {'spl': 'interp=spline nw=4',
+           'near': 'interp=lag nw=1',
+           'lin': 'interp=lag nw=2'}
+for m in methods.keys():
+    Flow(m,'seismic2-zoom coord-zoom',
+         '''
+         inttest1 coord=${SOURCES[1]} same=n %s | window
+         ''' % methods[m])
+Result('methods','spl lin near',
+       '''
+       cat axis=2 ${SOURCES[1:3]} | window min1=1003 | 
+       graph title="Extracted Amplitude" unit1= unit2= label2=Amplitude
+       dash=0,1,2
+       ''')
+
+# Timeslice half-way through the data
+
+Flow('half',None,'math n1=1 output=%g' % (124.5*0.004))
+Flow('seismic2','cube','window n2=1 f2=%d n3=150' % line)
+
+for m in methods.keys():
+    Flow(m+'-half','seismic2 half',
+         '''
+         inttest1 coord=${SOURCES[1]} same=y %s | window
+         ''' % methods[m])
+Result('half','spl-half lin-half near-half',
+       '''
+       cat axis=2 ${SOURCES[1:3]} | window min1=1003 | 
+       graph title="Extracted Amplitude" unit1= unit2= label2=Amplitude
+       dash=0,1,2
+       ''')
+
+# Amplitudes along a deviated well-bore
+
+Flow('trajectory.txt',None,
+     '''echo   
+     0   0    0
+     0   0 -100
+     0   0 -200
+     5   0 -300
+    10  10 -400
+    20  20 -500
+    40  80 -650
+   160 160 -700
+   600 400 -800
+  1500 960 -800
+     n1=3 n2=10 data_format=ascii_int 
+     in=$TARGET
+     ''')
+Flow('trajectory','trajectory.txt',
+     'dd form=native type=float | transp')
+
+# Shift the 'well' to its tophole location.
+Flow('txy','trajectory','window n2=2 | add add=3000')
+Flow('trajectory2','trajectory txy',
+     '''
+     window f2=2 | 
+     cat ${SOURCES[1]} axis=2 order=2,1 |
+     spline n1=1000 o1=0 d1=0.01
+     ''')
+
+Flow('x2','trajectory2','window n2=1 f2=0')
+Flow('y2','trajectory2','window n2=1 f2=1')
+Flow('z2','trajectory2','window n2=1 f2=2')
+
+Plot('xy','x2 y2','cmplx ${SOURCES[1]} | graph title=XY')
+Plot('xz','x2 z2','cmplx ${SOURCES[1]} | graph title=XZ')
+Plot('yz','y2 z2','cmplx ${SOURCES[1]} | graph title=YZ')
+Result('trajectory','xy xz yz','SideBySideAniso')
+
+Flow('cubet','cube','transp plane=13 memsize=1000 | put o1=0 d1=25 o2=0 d2=12.5 o3=0 d3=-4')
+
+# inttest3d
 
 End()

@@ -189,4 +189,133 @@ for case in ('theta','tdxn0','nstd'):
 
 Result('bin',bins,'SideBySideIso')
 
+#identify and remove all white objects smaller than a specific size
+
+lbls = []
+bins = []
+clss = []
+skts = []
+for case in ('theta','tdxn0','nstd'):
+    # Label
+    lbl = case + '-lbl'
+    Flow(lbl,case+'-bin','dd type=float | byte pclip=100 allpos=y clip=1 | label')
+    Plot(lbl,'dd type=float | grey allpos=y pclip=100 color=j wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    lbls.append(lbl)
+
+    # Remove small regions 
+    msks = []
+    for label in range(60):
+        msk = lbl + '-msk%d' % label
+        Flow(msk+'in',lbl,'mask min=%d max=%d' % (label,label))
+        Flow(msk,msk+'in',
+             '''
+             dd type=float | 
+             stack norm=n axis=2 | stack norm=n axis=1 | 
+             spray axis=1 n=%d | spray axis=2 n=%d |
+             mask min=%d | mul ${SOURCE}
+             ''' % ((81,73)[case=='nstd'],(81,73)[case=='nstd'],75))
+        msks.append(msk)
+    msk = case + '-msk'
+    Flow(msk,msks+[case+'-bin'],'add ${SOURCES[1:60]} | mul ${SOURCES[60]}')
+    Plot(msk,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    bins.append(msk)
+    
+    # Morphological closing
+    cls = case + '-cls'
+    Flow(cls,msk,'morph what=closing')
+    Plot(cls,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    clss.append(cls)
+
+    # Morphological skeleton
+    skt = case + '-skt'
+    Flow(skt,cls,'morph what=skeleton')
+    Plot(skt,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    skts.append(skt)
+Flow('nstd-skt1','nstd-skt','pad beg1=4 end1=4 beg2=4 end2=4')
+             
+Result('lbl',lbls,'SideBySideIso')
+Result('msk',bins,'SideBySideIso')
+Result('cls',clss,'SideBySideIso')
+Result('skt',skts,'SideBySideIso')
+
+# process using thresholding
+
+thr = 0.27*255
+Flow('thre','thdr','byte pclip=100 allpos=y | dd type=float | mask min=%g' % thr)
+Result('thre','dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    
+# Label
+Flow('tlbl','thre','dd type=float | byte pclip=100 allpos=y clip=1 | label')
+Result('tlbl',
+       'dd type=float | grey allpos=y pclip=100 color=j wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+
+# Remove small regions 
+msks = []
+for label in range(60):
+    msk = 'tlbl-msk%d' % label
+    Flow(msk+'in','tlbl','mask min=%d max=%d' % (label,label))
+    Flow(msk,msk+'in',
+         '''
+         dd type=float | 
+         stack norm=n axis=2 | stack norm=n axis=1 | 
+         spray axis=1 n=%d | spray axis=2 n=%d |
+         mask min=%d | mul ${SOURCE}
+         ''' % (81,81,75))
+    msks.append(msk)
+Flow('tmsk',msks+['thre'],'add ${SOURCES[1:60]} | mul ${SOURCES[60]}')
+Result('tmsk','dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    
+# Morphological closing
+Flow('tcls','tmsk','morph what=closing')
+Result('tcls','dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+
+# Morphological skeleton
+Flow('tskt','tcls','morph what=skeleton')
+Result('tskt','dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+
+# Part 3 - make a lineament collocation map
+
+# enlarge the skeletons a bit using dilation
+
+fats = []
+for skt in ('theta-skt','tdxn0-skt','nstd-skt1'):
+    fat = skt + '-fat'
+    Flow(fat,skt,'morph what=dilation')
+    Plot(fat,'dd type=float | grey allpos=y clip=1 wanttitle=n screenratio=1 crowd=1 wantaxis=n transp=n')
+    fats.append(fat)
+Result('fat',fats,'SideBySideIso')
+
+# collocation
+
+Flow('col',fats,'add ${SOURCES[1:3]}')
+
+# color map
+
+Result('col',
+       '''
+       dd type=float | 
+       grey allpos=y pclip=100 wanttitle=n screenratio=1  
+       scalebar=y color=hot wantaxis=n transp=n
+       ''')
+
+# collocation map with a mask applied so as to display lineaments only where at least two methods collocate.
+
+Flow('col2','col','mask min=2 | mul $SOURCE')
+
+Result('col2','col',
+       '''
+       dd type=float | 
+       grey allpos=y pclip=100 wanttitle=n screenratio=1  
+       scalebar=y color=hot wantaxis=n transp=n bias=1
+       ''')
+
+# display the collocated edges superimposed on the TDXN 
+
+Result('edge','col2 tdxn',
+        '''
+        dd type=float | add ${SOURCES[1]} |
+        grey title="TDXN" color=BC clip=1.58 
+        screenratio=1 allpos=y transp=n 
+        ''')
+
 End()

@@ -107,7 +107,7 @@ if __name__ == "__main__":
     ''' % prog
 
     if argc < 2:
-        print usage
+        print(usage)
         sys.exit(2)
 
     interactive = 1
@@ -136,7 +136,7 @@ if __name__ == "__main__":
         needfiles = 2
     
     if len(files) < needfiles:
-        print usage
+        print(usage)
         sys.exit(3)
 
     annotate(files,args,interactive,textfile)

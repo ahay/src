@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-''' Perform SVD on a matrix using SCIPY.  
+''' Perform SVD on a matrix using SCIPY.
 
 REQUIRES the PYTHON API, NUMPY AND SCIPY
 '''
+from __future__ import print_function
 import sys
 
 # Import RSF API
@@ -10,12 +11,11 @@ try:
     import rsf.api as rsf
     import numpy
     import scipy
-except Exception, e:
-    print \
-'''ERROR: NEED PYTHON API, NUMPY, SCIPY '''
+except Exception as e:
+    print('''ERROR: NEED PYTHON API, NUMPY, SCIPY ''')
     sys.exit(1)
 
-# Initialize RSF command line parser    
+# Initialize RSF command line parser
 par = rsf.Par()
 # Read command line variables
 

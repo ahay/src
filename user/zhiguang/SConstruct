@@ -80,7 +80,7 @@ for prog in mains:
     if (prog != 'fftfwi_sparse_2d' and prog != 'fwigrad' and prog != 'fwiobj') or (sparsepath and sparselibs):
         bldutil.depends(env,sources,'M'+prog) # Compile
         env.StaticObject('M'+prog+'.c') # Compile
-        prog = env.Program(prog,map(lambda x: x + '.o',sources)) # Link
+        prog = env.Program(prog,[x + '.o' for x in sources]) # Link
     else:
         prog = env.RSF_Place('sf'+prog,None,var='SPARSELIBS',
                              package='suitesparse')
@@ -94,7 +94,7 @@ for prog in mpi_mains:
     bldutil.depends(env,sources,'M'+prog)
     if mpicc:
         env.StaticObject('M'+prog+'.c',CC=mpicc)
-        prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc)
+        prog = env.Program(prog,[x + '.o' for x in sources],CC=mpicc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     if root:
@@ -111,7 +111,7 @@ if root: # no compilation, just rename
     for prog in pymains:
         binary = os.path.join(bindir,'sf'+prog+exe)
         env.InstallAs(binary,'M'+prog+'.py')
-        env.AddPostAction(binary,Chmod(str(binary),0755))
+        env.AddPostAction(binary,Chmod(str(binary),0o755))
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -120,8 +120,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+    docs = [env.Doc(prog,'M' + prog) for prog in mains+mpi_mains] + \
+           [env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains]
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

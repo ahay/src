@@ -76,13 +76,16 @@ Flow('smoothed','noisy','smooth rect1=4 rect2=4')
 # Anisotropic diffusion
 Flow('diffused','noisy','impl2 rect1=10 rect2=10 tau=1')
 
+# Fast explicit diffusion
+Flow('diffused2','noisy','expl2 rect=5 cycle=4')
+
 # Median filter
 Flow('median','noisy','despike2 wide1=10 wide2=10')
 
 # Bilateral filter
 Flow('bilateral','noisy','bilat2 a1=0.1 a3=0.001 r1=10 r2=10')
 
-for case in Split('filled noisy smoothed diffused median bilateral'):
+for case in Split('filled noisy smoothed diffused diffused2 median bilateral'):
     Result(case,
            '''
            grey color=j bias=950 clip=133 scalebar=y 

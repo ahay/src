@@ -47,7 +47,7 @@ Flow('off src mid rcv so-stp rv-stp','rtrend',
 
 comps = dict(src='source',off='offset',mid='midpoint',rcv='receiver')
 
-for comp in comps.keys():
+for comp in list(comps.keys()):
     Result(comps[comp],comp,'graph wanttitle=n unit2= min2=0.11 max2=0.16')
 
 Result('sostripes','so-stp','grey mean=y wanttitle=n')

@@ -1,5 +1,10 @@
 /* Compute signal-noise-ratio.
-SNR=10 log10(sum(clean)/sum(noise))*/
+
+SNR=10 log10(sum(clean)/sum(noise))
+
+August 2019 program of the month:
+http://ahay.org/blog/2019/08/10/program-of-the-month-sfsnr2/
+*/
 /*
   Copyright (C) 2013 University of Texas at Austin
   

@@ -40,7 +40,7 @@ Flow('mod',lines,
      '''
      cat axis=2 ${SOURCES[1:%d]} |
      unif2 d1=0.004 n1=257 v00=%s
-     ''' % (nl,string.join(map(str,range(1,nl+2)),',')))
+     ''' % (nl,','.join(map(str,list(range(1,nl+2))))))
 Flow('lines','mod','igrad | bandpass flo=10 fhi=50 | put n3=1')
 
 # General rules

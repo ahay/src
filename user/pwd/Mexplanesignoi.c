@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 {
     int i, n1, n2, n12, niter, nj1, nj2, nw;
     float eps, *d, *s, *nd, **nnss, **nn, **ss;
-    bool verb;
+    bool verb, drift;
     sf_file in, out, freq, ndip, sdip;
 
     sf_init (argc,argv);
@@ -62,6 +62,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* antialiasing for second dip */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     nd = sf_floatalloc(2*n12);
     s = sf_floatalloc(n12);
     d = sf_floatalloc(n12);
@@ -75,13 +78,13 @@ int main(int argc, char* argv[])
     sf_floatread (ss[0],n12,sdip);
 
     expont_init(n1,n2,nnss[0],nnss[1]);
-    allpass22_init(allpass2_init(nw,nj1,n1,n2,nn));
+    allpass22_init(allpass2_init(nw,nj1,n1,n2,drift,nn));
     sf_chain(allpass21_lop, expont_lop, false,false,n12,n12,n12,d,nd,s);
     for (i=0; i < n12; i++) {
 	nd[n12+i] = 0.;
     }
 
-    explanesignoi_init (n1,n2, eps, nnss, nw, nj1, nj2, nn, ss);
+    explanesignoi_init (n1,n2, eps, nnss, nw, nj1, nj2, drift, nn, ss);
     sf_solver (explanesignoi_lop, sf_cgstep, n12, n12*2, s, nd, niter, 
 	       "verb", verb, "end");
 

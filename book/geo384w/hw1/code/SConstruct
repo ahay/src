@@ -10,9 +10,15 @@ proj = Project()
 # comment the next line and uncomment the lines below
 exe = proj.Program('wave.c')
 
+# UNCOMMENT BELOW IF YOU WANT TO USE FORTRAN
 #exe = proj.Program('wave.f90',
 #                   F90PATH=os.path.join(RSFROOT,'include'),
 #                   LIBS=['rsff90']+proj.get('LIBS'))
+
+# UNCOMMENT BELOW IF YOU WANT TO USE PYTHON
+#exe = proj.Command('wave.exe','wave.py','cp $SOURCE $TARGET')
+#AddPostAction(exe,Chmod(exe,0o755))
+
 
 # Constant velocity test
 ########################
@@ -58,9 +64,10 @@ zcat = WhereIs('gzcat') or WhereIs('zcat')
 for case in ('vp','epsilon'):
     sgy = 'timodel_%s.segy' % case
     sgyz = sgy + '.gz'
-    Fetch(sgyz,dir='Hess_VTI',
-          server='ftp://software.seg.org',
-          top='pub/datasets/2D')
+    Fetch(sgyz,dir='hessvti',
+          server='https://s3.amazonaws.com',
+          top='open.source.geoscience/open_data')
+    
     # Uncompress
     Flow(sgy,sgyz,zcat + ' $SOURCE',stdin=0)
     # Convert to RSF format

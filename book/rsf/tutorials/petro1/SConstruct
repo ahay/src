@@ -37,7 +37,7 @@ for case in ('brine-sand','oil-sand','shale'):
          '''
          window n1=1 f1=10 | histogram n1=51 o1=4200 d1=80 | dd type=float | 
          graph plotcol=1 title="%s" label1=IP unit1="m/s*g/cc" label2=Occurence unit2=
-         ''' % ' '.join(map(string.capitalize,case.split('-'))))
+         ''' % ' '.join(map(str.capitalize,case.split('-'))))
     hists.append(hist)
 
 Result('histogram',hists,'SideBySideIso')

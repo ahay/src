@@ -4,11 +4,12 @@ import bldutil
 
 progs = '''
 beamform dealias dealias2 dijkstra dip dip2 diplet dips dixshape
-explanesignoi expsignoi fdip mdip odip2 ofpwd ofpwd2 opwd2 planemis2 planemis3
-planereg2 planereg3 planesignoi pmshape2 predict pwcoh pwd pwd1 pwdix
-pwdsigk pwsmooth pwsmooth2 pwpaint pwpaint2 pwspray2 pwspray3 pwdsmooth2
-pwpaint3 pwspray pwstack seisigk seislet shapesigk shplanemis2 shplanemis3
-timeshift trismooth2 twodip2 distpaint distpaint3D
+explanesignoi expsignoi fdip mdip odip2 ofpwd ofpwd2 opwd2 planemis2
+planemis3 planereg2 planereg3 planesignoi pmshape2 predict pwcascade pwcoh pwd
+pwd1 pwdchain pwdchain1 pwdchain2 pwdix pwdsigk pwsmooth pwsmooth2
+pwpaint pwpaint2 pwspray2 pwspray3 pwdsmooth2 pwpaint3 pwspray pwstack
+seisigk seislet shapesigk shplanemis2 shplanemis3 timeshift trismooth2
+twodip2 distpaint distpaint3D
 '''
 
 try:  # distributed version
@@ -75,7 +76,7 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     env.StaticObject('M'+prog+'.c')
-    prog = env.Program(prog,map(lambda x: x + '.o',sources),LIBS=libs)
+    prog = env.Program(prog,[x + '.o' for x in sources],LIBS=libs)
     if root:
         install = env.Install(bindir,prog)
 
@@ -91,7 +92,7 @@ for prog in Split(
     '''):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
-    sources = map(lambda x: x + '.o',sources)
+    sources = [x + '.o' for x in sources]
     env.Object('Test' + prog + '.c')
     env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
 
@@ -102,7 +103,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = [env.Doc(prog,'M' + prog) for prog in mains]
     env.Depends(docs,'#/framework/rsf/doc.py')
 
     doc = env.RSF_Docmerge(main,docs)

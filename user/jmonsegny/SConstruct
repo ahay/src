@@ -23,7 +23,7 @@ env.Append(LIBS=[env.get('DYNLIB','')+'rsf++',env.get('DYNLIB','')+'rsf'],
 
 if CTP:
     env.Append(LIBS=['cuda','cudart'],
-               LIBPATH=filter(os.path.isdir,[os.path.join(CTP,'lib64'),os.path.join(CTP,'lib')]))
+               LIBPATH=list(filter(os.path.isdir,[os.path.join(CTP,'lib64'),os.path.join(CTP,'lib')])))
 
 cumains = Split(cuprogs)
 for prog in cumains:
@@ -32,7 +32,7 @@ for prog in cumains:
         cc = env.get('CC')
         cflags = [env.get('CUDAFLAGS'),env.get('CUDAFLAGS') +' -g']
         ldflags = ''
-        if string.rfind(cc,'icc') >= 0:
+        if str.rfind(cc,'icc') >= 0:
             cflags[0] = cflags[0] + ' -ccbin=%s' % cc
             cflags[1] = cflags[1] + ' -ccbin=%s' % cc
             ldflags = '-ccbin=%s' % cc
@@ -56,7 +56,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog+'.cu',lang='c++'),cumains)
+    docs = [env.Doc(prog,'M' + prog+'.cu',lang='c++') for prog in cumains]
     env.Depends(docs,'#/framework/rsf/doc.py')	
     
     doc = env.RSF_Docmerge(main,docs)

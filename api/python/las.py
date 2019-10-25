@@ -23,6 +23,7 @@ import re
 import keyword
 
 import numpy as np
+import sys
 
 
 def isidentifier(s):
@@ -164,8 +165,8 @@ class LASSection(object):
             namestr = name
             if item.units != '':
                 namestr = namestr + (" (%s)" % item.units)
-            print "%-16s %-30s [%s]" % (namestr, "'" + item.data + "'",
-                                        item.descr)
+            print("%-16s %-30s [%s]" % (namestr, "'" + item.data + "'",
+                                        item.descr))
 
 
 class LASReader(object):
@@ -297,9 +298,12 @@ class LASReader(object):
         Curve section of the file.
         """
         opened_here = False
-        if isinstance(f, basestring):
+        if isinstance(f, str):
             opened_here = True
-            f = open(f, 'r')
+            if sys.version_info[0] >= 3:
+                f = open(f, 'r', encoding='utf-8')
+            else:
+                f = open(f, 'r')
 
         self.wrap = False
 
@@ -382,21 +386,21 @@ if __name__ == "__main__":
     import sys
 
     las = LASReader(sys.argv[1], null_subs=np.nan)
-    print "wrap? ", las.wrap
-    print "vers? ", las.vers
-    print "null =", las.null
-    print "start =", las.start
-    print "stop  =", las.stop
-    print "step  =", las.step
-    print "Version ---"
+    print("wrap? ", las.wrap)
+    print("vers? ", las.vers)
+    print("null =", las.null)
+    print("start =", las.start)
+    print("stop  =", las.stop)
+    print("step  =", las.step)
+    print("Version ---")
     las.version.display()
-    print "Well ---"
+    print("Well ---")
     las.well.display()
-    print "Curves ---"
+    print("Curves ---")
     las.curves.display()
-    print "Parameters ---"
+    print("Parameters ---")
     las.parameters.display()
-    print "Other ---"
-    print las.other
-    print "Data ---"
-    print las.data2d
+    print("Other ---")
+    print(las.other)
+    print("Data ---")
+    print(las.data2d)

@@ -1,0 +1,360 @@
+\published{Interpretation, 7, No. 2, T374-T361, (2019)}
+\title{Missing log data interpolation and semiautomatic seismic well ties using data matching techniques}
+\author{Sean Bader~\footnotemark[1], Xinming Wu~\footnotemark[1], and Sergey Fomel~\footnotemark[1]}
+\maketitle
+\address{
+Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+}
+\lefthead{Bader, Wu \& Fomel}
+\righthead{Missing log interpolation \& well ties}
+
+
+\begin{abstract}
+Relating well log data, measured in depth, to seismic data, measured in time, typically requires estimating well log impedance and a time\new{-}to\new{-}depth relationship using available sonic and density logs. When sonic and density logs are not available, it is challenging to incorporate wells into integrated reservoir studies \old{that}\new{as the wells} cannot be tied to seismic. We propose \old{an approach that estimates}\new{a workflow to estimate} missing well log information, automatically tie\old{s} wells to seismic data and \old{generates an estimated global log}\new{generate a global well-log} property volume using data matching techniques. We first use local similarity scan to align all logs to constant geologic time and interpolate missing well log information. Local similarity is then used to tie available wells with seismic data. Finally, log data from each well is interpolated along \old{the} local seismic structure\new{s} to generate global log property volumes. We use blind well tests to \old{estimate}\new{verify} the accuracy of \old{seismic well ties}\new{well-log interpolation and seismic-well ties}. Applying the proposed workflow to a 3D seismic dataset with 26 wells achieves consistent and verifiably accurate \old{seismic well ties}\new{results}.
+\end{abstract}
+
+\section{Introduction}
+Geophysical reservoir characterization involves careful integration of multiple datasets in an attempt to understand the distribution of subsurface rock properties. An important \old{example}\new{step} of integrating multiple datasets is the seismic\new{-}well ties, where well logs are used to calibrate the seismic data\new{, which has lower vertical resolution than the well logs}. The calibration typically involves estimating a reflectivity series and time to depth relationship (TDR) using the available sonic and density logs \cite[]{whitesimm2003}. In plays where \old{the number of wells drilled outnumbers the number of} sonic and density logs \new{are not acquired in every well}, estimating missing logs is an essential step \old{to}\new{for} integrat\old{e}\new{ing} well log and seismic datasets.
+
+A simple linear interpolation of missing log data between wells \old{allows for}\new{enables} estimation of a reflectivity series and TDR; however, it does not account for variations in lithology or structure. Several methods have been proposed to estimate missing logs that could be used for a more accurate seismic\new{-}well tie. Gardner's \old{E}\new{e}quation \cite[]{gardner1974formation} has been shown to provide a reasonable relationship between sonic and density for a large number of brine saturated rock types. Additionally, the Faust method \cite[]{faust1953velocity} and Smith method \cite[]{smith2007method} provide empirical relationships between resistivity and sonic logs. \cite{saggaf2003estimation} note a high interdependence of different log types and apply regularized back-propagation neural networks to estimate missing portions of sonic logs. Each method assumes that \old{required}\new{specific} well logs are collected \old{at}\new{in} every well\old{location} to carry out the estimation.
+
+An alternative approach \new{is to} assume\old{s} that rock properties do not vary significantly in lateral space, which allows \new{using} density and sonic logs from a nearby well \old{to be used}to estimate a TDR. \new{Because} \old{T}\new{t}his assumption does not take into consideration structural \new{or} stratigraphic variations in lithology\new{, applying a TDR generated at one well to a nearby well may result in a mis-tie with the seismic data}. To account for these variations, the well must be correlated to a \old{constant}\new{common} geologic time. \cite{wheeler2014simultaneous} and \cite{wu2018incremental} use dynamic time warping (DTW) \cite[]{berndt1994using,hale2013} to correlate multiple well logs. \cite{shi2017finding} use local similarity scan (LSIM) \cite[]{fomel2007local} to optimally sort and flatten multiple well logs. Once the well logs are flattened\new{ or aligned in geologic time}, \new{which is analogous to a stratigraphic correlation,} missing well log sections can be estimated from the available data by \old{lateral}\new{horizontal} interpolation. \cite{bader2018correlation} flatten well logs \old{to constant}\new{from depth to relative} geologic time domain and interpolate a missing sonic log using several \old{other sonic logs from the dataset}\new{available sonic logs} and several empirical relationships \new{assuming fluid variations have a negligible effect on the well logs}. 
+
+\old{After a complete well log suite, including sonic and density logs, has been estimated for each well, the well logs can be used to calibrate seismic data.}\new{With a complete well-log suite, including those sonic and density logs estimated by interpolation, we are able to further tie the wells to seismic data.} The manual seismic well tie involves matching common reflectors between modeled synthetic and seismic data by stretching and squeezing the synthetic until a desired correlation between the datasets is achieved \cite[]{whitesimm2003}. To reduce interpreter bias and improve consistency between multiple seismic well ties, several automatic methods have been proposed. \cite{munozhale2012} use DTW to automatically align real and synthetic seismograms; this approach is extended to automatically\old{,} \new{and} simultaneously\old{,} tie multiple wells to seismic by estimating a synthetic image to tie with the seismic image ensuring lateral consistency of the well ties \cite[]{munozhale2015}. Further, \cite{wucaumon2017} show that laterally consistent seismic well ties \old{are}\new{can be} achieved by using DTW to correlate synthetic and seismic data that are `flattened' to\old{ constant} relative geologic time. An alternative approach to carry out the seismic well tie is LSIM; \cite{herrerab} compare DTW with LSIM, showing that both methods can successfully compute a seismic well tie. Their study shows that using DTW can achieve a higher correlation between synthetic and seismic data compared to LSIM; however, the resulting TDR using DTW shows an \new{undesirable} oscillatory behavior due to stretching and squeezing.
+
+Once each well is tied to the seismic data, the high spatial coverage of seismic can be utilized to understand lateral variations in log properties. Several methods have been proposed to interpolate log data along local seismic structures. Assuming available log data is properly tied to seismic and conforms to seismic image features, \cite{hale2010image} uses image guided blended neighbor interpolation \cite[]{hale2009image} for seismic guided well log interpolation. Alternatively, \cite{karimi2015image} show that predictive painting \cite[]{fomel2010predictive} can be used to interpolate log data along seismic structures to generate accurate starting models for post stack inversion. \cite{fomel2016scattered} presents a fast interpolation algorithm for interpolating scattered data to a regularly sampled grid. Interpolation along seismic structure using well log data generates log property volumes that conform to both well log and seismic datasets. \cite{wu2017models} proposes to compute such a structurally conformable model in the flattened space, where the seismic and well-log data are unfaulted and unfolded.
+
+In this paper, we address limitations brought about by missing well log data \old{and}\new{as well as} challenges associated with achieving consistent seismic well ties and propose a \new{workflow}\old{method} that integrates the data matching techniques, LSIM and predictive painting, to estimate missing logs, tie synthetic seismiograms to seismic, and \new{finally} interpolate all available well log data along seismic structures. We use cross-validation with a blind well test to test the consistency of seismic well ties. We apply our method to tie 26 wells and the 3D Teapot Dome seismic dataset.
+
+\inputdir{logs}
+\new{\section{Teapot dome dataset}
+We test the proposed workflow by using the Teapot Dome seismic and well-log dataset that were made available by the U.S. Department of Energy and RMOTC. Approximately 1300 wells have \old{been }drilled into the structure targeting nine reservoirs between 300 and 5500 ft MD \cite[]{harbert2012}. The well log dataset contains 900 wells, and we select a subset of 26 wells to test our methods. Also available is a 3D seismic dataset (188 crosslines, 345 inlines, sampled at 0.002s) that is acquired over the selected wells. Figure~\ref{fig:basemap} is a time slice through the 3D seismic volume at 0.72 seconds illustrating the extent of the 3D seismic data and shows the location of each well. From the time slice, we observe the dome structure and several faults that bisect the structure. These structures are obvious in the crossline shown in Figure~\ref{fig:inline3a} and will result in different depth tops and thicknesses among rock units between wells. An overview of the dataset is presented by \cite{harbert2012}.}
+
+\plot{basemap}{width=0.7\textwidth}{\new{Time slice through seismic data at 0.72 seconds. The stars indicate the location of each well. The purple well is used as the reference well for missing log data interpolation.}}
+
+\plot{inline3a}{width=0.7\textwidth}{\new{Crossline 126 from available 3D seismic data. The dome structure and several faults that bisect the structure can be observed.}}
+
+\new{As discussed later in this paper, not all wells contain sonic and density logs which are required to relate well log data (in depth) to seismic data (in time), making integration of well log and seismic datasets challenging. Additionally, as the number of wells increases, it becomes more challenging to ensure consistency and accuracy between multiple well ties. Our workflow addresses these limitations and provides a method for validating the results.}
+
+\section{Missing log data estimation and seismic well ties}
+We propose to estimate missing well log data \old{and semiautomatic seismic well ties by first aligning different datasets along}\new{by first aligning all well logs to a common} \old{constant} geologic time. \old{Aligning logs from different wells, allows us to interpolate missing logs to create complete log suites for each well, and then remove the alignment shifts, thus shifting the interpolated log back to the well's original position.}\new{Aligning well logs is analogous to stratigraphic correlation and allows us to interpolate missing sonic and density logs using the available logs. After missing well logs are interpolated, we remove the alignment shifts, thus shifting available and interpolated logs back to the well's original domain. The predicted velocity and density well logs provides the minimum required logs to forward model a synthetic seismogram assuming no changes in fluids between wells.} In the next step, synthetic seismograms are modeled using the complete well log suites at each well location and then are semi-automatically matched with a nearby real seismic trace.
+
+\subsection{Data alignment using local similarity}
+Matching datasets involves aligning similar waveforms between two datasets. Whether aligning two logs from different wells or aligning a modeled synthetic seismogram with a seismic trace, we focus on matching a response that corresponds to similar lithologies between the two datasets or a \old{constant}\new{common relative} geologic time. In comparing two datasets, our purpose is to estimate the warping function, $S_k$, required to align one dataset, $h_k$, to a reference dataset, $r_k$\old{,}\new{:}
+
+\begin{equation} \label{eq:refp}
+r_k(t) \approx h_k(S_k(t)).
+\end{equation}
+
+We can \new{represent the warping function $S_k(t)$}\old{separate the shifts in Equation \ref{eq:refp}} as follows,
+\begin{equation}\label{eq:shiftsp}
+S_k(t) = t + g_k(t).
+\end{equation}
+\old{where t}\new{T}he $t$ denotes the original independent axis and $g_k(t)$ is the shift\old{s} required to match the datasets as defined in Equation \ref{eq:refp}.
+
+\new{We estimate the warping shifts $g_k(t)$ by using LSIM method based on the}\old{The} correlation coefficient, which can be used to quantify the quality of the match between datasets \cite[]{hrs1999}. The LSIM method begins with the observation that the correlation coefficient \old{($c$)}only provides one number to describe the \old{datasets}\new{match}; however, we are interested in understanding the local changes in the datasets' similarity. Therefore, the LSIM method computes local similarity $c_t$, which is a function of time, $t$. The square of $c$ can be split into a product of two factors \cite[]{fomel2007local}:
+
+\begin{equation}
+c_t^2 = r_t*h_t 
+\end{equation}
+
+where $r_t$ and $h_t$ are regularized least-squared inverses \new{(Appendix A)}. This problem is posed as a regularized inversion where regularization operator is defined using shaping regularization and designed to enforce smoothness \cite[]{fomel2007shaping}. To visualize LSIM, the inversion is calculated for a series to shifts. The results of this calculation are accumulated and displayed on a `similarity scan' as shown in Figures~\ref{fig:scan} and \ref{fig:scan-noise} in the following synthetic example. From the similarity scan, we \old{select}\new{automatically pick} the series of shifts along the entire length of the reference dataset that optimally aligns the two datasets \cite[]{fomel2009time}.
+
+\inputdir{synthetic-example}
+To illustrate the alignment of two datasets using local similarity, we use two examples based on the simple model shown in Figure~\ref{fig:modelb}. In our first example, we apply a 40ms shift to the modeled synthetic seismogram and use LSIM to estimate the shifts to realign the shifted synthetic model with the original synthetic model (Figure~\ref{fig:shifted-matched}). Estimation of the shifts for the first example is visualized in a local similarity scan shown in Figure~\ref{fig:scan}. In our second example, we add 15\% random noise to the reflectivity model and convolve the noisy reflectivity with a 30Hz Ricker wavelet to create a noisy reference trace. LSIM is used to estimate the shifts to realign the shifted synthetic model with the noisy reference trace in Figure~\ref{fig:noise-matched}. Estimation of the shifts for the second example is visualized in a local similarity scan shown in Figure~\ref{fig:scan-noise}. From our synthetic examples, we observe that shifts can be accurately estimated to align a modeled seismogram with both a noise-free and noisy reference seismograms. We use shifts estimated from local similarity to align multiple well logs and perform seismic well ties.
+
+\plot{modelb}{width=0.7\textwidth}{Reflectivity series in time (left) convolved with a 30Hz Ricker wavelet to model a seismogram (right).}
+\plot{shifted-matched}{width=0.7\textwidth}{Modeled seismogram (left), modeled seismogram shifted by 40ms (middle), re-aligned seismogram using the shifts estimated from the local similarity scan (right).}
+\plot{scan}{width=0.6\textwidth}{Similarity scan and picked optimal shifts (\old{black}\new{white} curve). Warm colors represent high similarity while cool colors represent low similarity.}
+\plot{noise-matched}{width=0.7\textwidth}{Noisy reference trace (left), modeled seismogram shifted by 40ms (middle), re-aligned seismogram using the shifts estimated from the local similarity scan (right).}
+\plot{scan-noise}{width=0.6\textwidth}{Similarity scan and picked optimal shifts (\old{black}\new{white} curve). Warm colors represent high similarity while cool colors represent low similarity.}
+
+\subsection{Missing log data estimation}
+Building on \new{our previous work} \cite[]{bader2018correlation}, we estimate a complete sonic log using all other sonic logs in the dataset and compare it against the actual sonic log from the well. These results are also compared against a conventional approach for estimating missing sonic logs. We then extend the approach to honor true well log values for well logs that have incomplete or partial well logs.
+
+There are several potential sources of information that can be used to constrain the estimation of missing log data: (1) the same well log type at other well locations, (2) other well logs within the same well, and (3) the seismic data. We focus on using other well logs of the same \old{type}type in our estimation of a missing log.  Generally, we include information from all other wells in our estimation:
+\begin{equation} \label{eq:inversion}
+\begin{bmatrix} \boldsymbol{W_1} \\ \boldsymbol{W_2} \\ \vdots \\ \boldsymbol{W_N} \end{bmatrix} \tilde{l} \approx \begin{bmatrix} \boldsymbol{W_1}\boldsymbol{\hat{l_1}} \\ \boldsymbol{W_2}\boldsymbol{\hat{l_2}} \\ \vdots \\ \boldsymbol{W_N}\boldsymbol{\hat{l_N}} \end{bmatrix}
+\end{equation}
+where our estimated log, $\boldsymbol{\tilde{l}}$, is a weighted function of well logs from different wells denoted by the subscript $k$. If we simplify the prediction to one unknown log and one known log, Equation \ref{eq:inversion} simplifies to the following linear relationship:
+\begin{equation} \label{eq:linear}
+W_k(z) \tilde{l}(z) \approx W_k(z) \hat{l_k}(\text{\new{$S_k(z)$}\old{$p_k(z)$}}),
+\end{equation}
+where $W_k(z)$ weights the specific value used to estimate the missing log value, $\tilde{l}(z)$, from \old{an} available well log, $\hat{l_k}($\new{$S_k(z)$}\old{$p_k(z)$}$)$. To estimate a missing log at each depth sample, we must first remove structural and stratagraphic variations between the well logs by correlating the well logs to common geologic time using function\old{,} \new{$S_k(z)$}\old{$p_k(z)$}, based on the shifts estimated from LSIM. \new{The correlation is done by selecting a well log type that is available in all wells, for example, the gamma ray log. We then select one reference gamma ray log and estimate the function\old{,} $S_k(z)$, that aligns all remaining gamma ray logs to the reference. $S_k(z)$ is applied to the remaining well logs to align all well logs (density, velocity, etc.) to constant geologic time.}
+
+We design the weight, $W_k(z)$, in Equation \ref{eq:linear}, as a product of two factors: the distance between the unknown and available well logs and the caliper value at that depth, which measures the size of the borehole at each depth. We \old{make the }assum\new{e}\old{ption} that \new{the borehole is drilled to be a specific diameter and} deviations\old{in}\new{, measured by} the caliper\new{,} from \old{the}\new{this} anticipated borehole size \old{while drilling} likely indicates an inaccurate log measurement. \new{Although many environmental factors may impact the well log data, for simplicity we weight the log values in our inversion based on caliper information.}  Thus, $W_k(z)$ can be expressed as:
+\begin{equation}
+W_k(z) = \phi(|x - x_k|)*C_k(\text{\new{$S_k(z)$}\old{$p_k(z)$}}),
+\end{equation}
+where $\phi(|x - x_k|)$ is a radial basis function, $x_k$ is the well location, $x$ is the well with a missing log, and $C_k$ is inversely proportional to the deviation between the expected and actual caliper value at each depth.
+
+There are several different radial basis functions\old{, and} \cite[]{powell1987radial}. \old{w}\new{W}e chose to implement the inverse mulitquadratic radial function 
+\begin{equation}\label{eq:mgrbf}
+\phi(|x - x_k|) = \dfrac{1}{\sqrt{1 + (\epsilon |x - x_k|)^2}} \qquad\text{, where } \epsilon>0
+\end{equation}
+which gives a larger weight to a well closer to the unknown well as compared to a well further away.
+
+Returning to our original linear relationship, \old{e}\new{E}quation \ref{eq:inversion}, the estimated log, $\tilde{l}$, is a function of available well logs \old{and }weighted by each well's distance and caliper log. By solving the least-squares problem in Equation \ref{eq:inversion}, we can predict a new `pseudo well log' at each depth as follows:
+\begin{equation} \label{eq:solved}
+\tilde{l(z)} = \frac{\sum\limits_{k=1}^N W_k^2(z) \hat{l_k}(\text{\new{$S_k(z)$}\old{$p_k(z)$}})}{\sum\limits_{k=1}^N W_k^2(z)}
+\end{equation}
+
+%% Ok
+
+\subsubsection{Teapot Dome Well Log Example}
+\inputdir{logs}
+We use wells from the Teapot Dome dataset \old{from Wyoming made available by the U.S. Department of Energy and RMOTC}to test the proposed approach. \new{As discussed previously, o}\old{O}ver 1000 wells have \old{been }drilled into the anticline structure\new{.} We select \new{only} a limited subset of \old{the }26 \old{longest}\new{deepest} wells for our examples. Several wells \old{have}\new{are} missing sonic or density logs making it challenging to integrate the available log and seismic data. Table~\ref{tbl:welldata} summarizes the parameters of the initial well log dataset.
+
+\tabl{welldata}{Original well log data statistics}
+{
+%\begin{table}[!htb]
+\centering
+%\caption{Original well log data statistics}
+\scriptsize
+%\label{tab:welldata}
+\begin{tabular}{|l|l|l|l|l|l|}
+\hline
+Log Type          & Wells & Sonic  & Density  & Caliper   & Gamma  \\ \hline
+Number            &    26 &    15  &      22  &      26   &    26  \\ \hline
+Mean Length (ft)  &  4192 &  2646  &    3093  &    4074   &  4074  \\ \hline
+\end{tabular}
+%\flushleft
+%\old{*Derived from resistivity and density logs as provided with the dataset made available by RMOTC.}
+%\end{table}
+}
+
+From Equation \ref{eq:refp}, to align all wells to constant geologic time, we estimate the warping function, \new{$S_k(z)$}\old{$p_k(z)$}. Because gamma ray logs are available in all wells, we use them to estimate the warping function. The \old{longest}\new{deepest} gamma ray log is selected as the reference log, $r(z)$ \old{.}\old{, and is}\new{and the well containing this log is} denoted by the purple star in Figure~\ref{fig:basemap}. The gamma ray\new{ and sonic} log in the reference well \old{is}\new{are} compared to \old{a}\new{the} gamma ray\new{ and sonic} log in a different well in Figures~\ref{fig:GR0and2}\new{ and~\ref{fig:DT0and2}, respectively}. The shifts are estimated by matching the gamma ray log from each well to the reference gamma log as shown in Figure~\ref{fig:GR2shift0}. The alignment shifts are then applied to the remaining well logs \old{at}\new{in} each well to align all well logs to constant geologic time. Results of aligning a sonic log \old{using the estimated shifts}\new{before and after applying the shifts estimated from aligning the gamma ray logs} are shown in \old{Figure~\ref{fig:DT2shift0}}\new{Figures~\ref{fig:DT0and2} and~\ref{fig:DT2shift0}, respectively}.
+
+\multiplot{2}{GR0and2,DT0and2}{width=0.4\textwidth}{\new{(a) Median filtered gamma log from the reference well (red) and median filtered gamma log from a second well (black) before applying alignment shifts. (b) Sonic log from the reference well (red) and sonic log from a second well (black) before applying alignment shifts.}}
+
+\multiplot{2}{GR2shift0,DT2shift0}{width=0.4\textwidth}{\new{(a) Median filtered gamma log from the reference well (red) and an aligned gamma log from a second well (black) after applying estimated alignment shifts. (b) Sonic log from the reference well (red) and an aligned sonic log from a second well (black) after applying estimated alignment shifts from matching gamma logs.}}
+
+This approach results in \old{a well log dataset}\new{well logs that are} flattened along \old{constant}\new{a common} geologic time. The log data \old{was}\new{were} collected over several years, with different logging tools, and likely different techniques applied to process the data. To account for this variability, we normalize the sonic and density logs using the big histogram method \cite[]{shier2004well}\old{ and assuming that the data fall within one standard deviation of the mean for several selected stratagrahpic intervals.}\new{. For normalization, we select 15 intervals based on available well log tops and lithology variations. We estimate the cumulative mean and standard deviation for all well log data in each interval. We assume that distribution of well log data from each well, in each interval, should fall one standard deviation of the cumulative mean}. \old{Normalization in the constant geologic time domain requires little interpreter input as each log is inherently stratigraphically correlated.} With the aligned and normalized sonic logs, we estimate the missing sonic logs, or sections of sonic logs using Equation~\ref{eq:solved}.
+
+We \old{apply}\new{perform a blind well test to validate} the proposed approach \new{by}\old{to} estimat\old{e}\new{ing} a sonic log in a well where a \new{real}\old{test} sonic log is available\old{ the estimated sonic log is crossplotted against the real sonic log for the entire well in Figure~\ref{fig:xplot-DT2}}. For comparison\old{ purposes}, we use available density information and the Reverse Gardner Equation \cite[]{gardner1974formation} to estimate \old{a }sonic log; this result is crossplotted against the real sonic log for the entire well in Figure~\ref{fig:xplot-DT2gard}. \new{When estimating the Reverse Gardner Equation, we break the well into 15 intervals based on well tops and changes in lithology from the gamma ray log, and we recompute the equation that best fits the data for each interval.} \new{The estimated sonic log using the proposed approach is crossplotted against the real sonic log for the entire well in Figure~\ref{fig:xplot-DT2}.} We \new{observe} significant improvement \old{of}\new{in} the proposed approach over a conventional method for estimating a missing sonic log. Results comparing the sonic log estimated using the proposed approach against the real sonic log along two 1600 ft intervals are shown in Figure~\ref{fig:DT01p0,DT02p0}. \new{Based on the results of our blind well test using field data, the proposed approach provides a reasonable first-order approximation of the unknown well logs and can be implemented to predict missing well log data.}
+
+\multiplot{2}{xplot-DT2gard,xplot-DT2}{width=0.5\textwidth}{\new{(a) Real sonic log cross plotted against the sonic log estimated using Reverse Gardner equation.} \new{(b)} Real sonic log cross plotted against the sonic log estimated using the proposed approach.}
+
+\multiplot{2}{DT01p0,DT02p0}{width=0.4\textwidth}{\new{We perform a blind well test by estimating a sonic log using the propose approach and comparing the result against the real sonic log.} Real sonic log (black) versus estimated sonic log (magenta) along two 1600ft intervals along the reference log.}
+
+From Table~\ref{tbl:welldata}, we observe that most wells have \old{a }sonic and density log; however, the difference between the mean length of the sonic/density logs as compared to the gamma log indicates that several of the well logs were \new{not} acquired over specific intervals or have missing section as shown in Figure~\ref{fig:DT2shift0}. For well logs that have \new{missing section}\old{holes} or are partially complete, we include the available log data in Equation \ref{eq:solved} to honor the available measurements and interpolate the missing log sections. In Figure~\ref{fig:DTp2a,RHOBp2a,CAL2} we interpolate missing log data where there are holes in the original log and \old{make }use true well log measurements when available.
+
+\multiplot{3}{DTp2a,RHOBp2a,CAL2}{width=0.3\textwidth}{(a) Original sonic log (black) versus estimated sonic log (magenta). (b) Original density log (black) versus estimated density log (magenta). \new{The original well log data is used in the inversion so}\old{Notice that in} areas where sonic or density data is available the estimated logs match the original data. In the interval between \new{3500 ft and 3900 ft}\old{3500 ft and 3700 ft}, there is a significant deviation in the \new{(c)} caliper log indicating an inaccurate measurement; therefore, the estimated log deviates significantly from the original log.}
+
+\new{We applied t}\old{T}he proposed approach \old{is applied}to \new{all} 26 wells from \new{our subset of} the Teapot Dome dataset to generate complete sonic and density logs for each well. Table~\ref{tbl:wellfinal} summarizes the log dataset after estimating missing or incomplete logs.
+
+\tabl{wellfinal}{Well log data statistics after estimating logs for all wells}
+{
+%\begin{table}[!htb]
+\centering
+%\caption{Well log data statistics after estimating logs for all wells}
+\scriptsize
+%\label{tab:wellfinal}
+\begin{tabular}{|l|l|l|l|l|l|}
+\hline
+Log Type          & Wells & Sonic  & Density  & Caliper   & Gamma  \\ \hline
+Number            &    26 &    26  &      26  &      26   &    26  \\ \hline
+Mean Length (ft)  &  4192 &  3991  &    3639  &    4074   &  4074  \\ \hline
+\end{tabular}
+%\flushleft
+%\old{*Derived from resistivity and density logs as provided with the dataset made available by RMOTC.}
+%\end{table}
+}
+
+By estimating missing sonic and density logs for each well, we increase the number of logs and \old{length}\new{the section} of the log\old{s} available to integrate with the available seismic data. Using the interpolated sonic and density logs, it is possible to compute a TDR and reflectivity series to tie any given well to seismic data.
+
+\subsection{Semiautomatic Seismic Well-Ties}
+While the log data provides one source of information to understand the subsurface, an additional source of information is the 3D seismic dataset. Seismic-well ties can be used to calibrate seismic data, which has vertically lower resolution but higher spatial coverage, whereas the well logs can provide vertically higher resolution but are measured only at limited locations.
+
+Synthetic seismograms are modeled independently for each well. \cite{whitesimm2003} argue that modeling synthetic seismograms benefits from blocking or upscaling of the logs. Following their suggestion, we upscale the sonic and density logs to seismic frequencies \cite[]{backus1962long, marion1994scale} and estimate an initial reflectivity series, $r_0(z)$, in depth assuming no multiples, attenuation or dispersion.
+\begin{equation} \label{eq:rpp}
+r_0(z) = \frac{v_0(z + \Delta z)\rho(z + \Delta z) - v_0(z)\rho(z)}{v_0(z + \Delta z)\rho(z + \Delta z) + v_0(z)\rho(z)},
+\end{equation}
+where $v_0$ is the initial, upscaled, P-wave velocity from sonic in $\frac{m}{s}$, $\rho$ is density in $\frac{gm}{cm^3}$, and $\Delta z$ is the sampling interval of the log in depth. To relate reflectivity in depth to seismic data in time, we must compute a time to depth relationship (TDR). There are several ways to compute a TDR. Using available checkshot surveys or vertical seismic profiles (VSP) can provide accurate measurements of seismic travel times to known depths; however, these surveys are not available to us, so we must estimate a TDR from well sonic logs. We define the initial TDR as a function of depth at each well,
+\begin{equation} \label{eq:tdr}
+T_0(z) = 2 \int_{z_{min}}^{z} \frac{d\xi}{v_0(\xi)},
+\end{equation}
+where $T_0$ is the initial TDR, $z_{min}$ is the minimum depth at which sonic information is available, $v_0(z)$ is the initial, upscaled, P-wave velocity from sonic and \old{$dz$}\new{$d\xi$} is the depth increment.
+
+The initial TDR relates the initial reflectivity series, $r_0(z)$, to time. \new{We interpolate the resulting reflectivity series in time to a regularly sampled grid of 0.002s, which corresponds to the vertical sampling of the seismic data.}
+
+\begin{equation} \label{eq:rpt}
+r_0(t) = r_0(T_0(z))
+\end{equation}
+
+We model synthetic seismograms by convolving $r_0(t)$ with a \new{single, zero-phase, }wavelet that is representative of the seismic data's frequency content. The zero-phase wavelet extracted using Hampson Russell software is shown in Figure~\ref{fig:wavelet200}.
+
+\plot{wavelet200}{width=0.6\textwidth}{Statistical wavelet extracted from the Teapot Dome seismic dataset.}
+
+Using the statistical wavelet in Figure~\ref{fig:wavelet200} and the initial TDR, we compute a synthetic seismogram shown in Figure~\ref{fig:synth-p3} (green). We then iteratively estimate the alignment shifts\new{,} $g_{k}$\new{,} by using the LSIM method to match the synthetic seismogram \new{(red)} to the corresponding real seismic trace in Figure~\ref{fig:synth-p3} (black).
+
+In the time domain, the shifts, $g_{k,i}(t)$ at well $k$, are estimated using several iterations, $i$, of LSIM data matching. Each iteration estimates a smooth sequence of shifts to align the synthetic seismogram with the seismic trace. \cite{munozhale2015} and \cite{herrerab} observe a relationship between the shifts used to align a synthetic with seismic trace and an updated velocity function:
+
+From Equation \ref{eq:shiftsp}, assuming an initial TDR, $T_0$, we arrive at \new{updated estimate}
+\begin{equation} \label{eq:break}
+\text{\new{$S_{k,1}$}\old{$p_{k,1}$}}(T_0) = T_0 + g_{k,1}(T_0)
+\end{equation}
+after one iteration of LSIM. We estimate a\new{n} updated TDR by interpolating our shifts from time to depth
+\begin{equation} \label{eq:newtdr}
+T_1(z) = T_0(z) + g_{k,1}(T_0(z))
+\end{equation}
+Using Equation \ref{eq:tdr}, we relate the initial and updated velocity log to the initial and updated TDR,
+\begin{equation}
+\frac{dT_1(z)}{dz}\left(\frac{dT_0(z)}{dz}\right)^{-1} = \frac{v_0(z)}{v_1(z)}
+\end{equation}
+to solve for the updated velocity log,
+\begin{equation} \label{eq:vuptdr}
+v_1(z) = v_0(z)\frac{dT_0(z)}{dz}\left(\frac{dT_1(z)}{dz}\right)^{-1}
+\end{equation}
+In our implementation, we use Equation~\ref{eq:vuptdr} to update the velocity function after each iteration. Alternatively, we can directly relate the updated velocity log to the initial velocity log and the estimated shifts. Starting with the derivative of Equation \ref{eq:newtdr},
+\begin{equation}
+\frac{dT_1(z)}{dz} = \left(1 + \frac{g_{k,1}(T_0(z))}{dT_0}\right)\frac{dT_0(z)}{dz},
+\end{equation}
+we substitute Equation \ref{eq:vuptdr} and solve for the update velocity log as follows,
+\begin{equation}
+v_1(z) = v_0(z)\left(\frac{dg_{k,1}(T_0(z))}{dT_0} + 1\right)^{-1}
+\end{equation}
+
+We update the velocity function and recompute Equations \ref{eq:rpp}, \ref{eq:tdr}, and \ref{eq:rpt} after each iteration of estimating shifts using LSIM. We slowly reduce the smoothness enforced \new{by} regularization in LSIM with each iteration to ensure \new{that} stretching and squeezing \old{is}\new{are} not excessive thus resulting in an improbable velocity update \cite[]{whitesimm2003}.
+
+\new{Prior to performing the seismic-well tie, we need to understand phase variations and distortions introduced during the processing and imaging of the seismic data.}\old{In our examples, we compare our modeled synthetic seismograms to real seismic data.} There are several seismic processing and imaging techniques that adjust or correct the seismic data to zero phase. Information on phase adjustments applied to the data are not available; however, \cite{harbert2012} interprets the deepest continuous reflection to be Precambrian basement resulting in a positive amplitude\footnote{In this paper, we define a positive amplitude as related to a positive reflection coefficient.}. As provided by the U.S. Department of Energy and RMOTC, the basement reflection is a negative amplitude. To account for the observed lateral and vertical phase variations, we apply local skewness correction \cite[]{fomel2014local} \old{extended to 3D}resulting in a zero\new{-}phase\new{d} seismic volume consistent with observations from \cite{harbert2012}.
+
+\subsubsection{Seismic-well tie example}
+To demonstrate our approach, we tie 26 wells using the well log information summarized in Table~\ref{tbl:wellfinal} and the phase-adjusted 3D seismic data. Each seismic well tie is computed independently by modeling a synthetic seismogram, estimating the shifts using LSIM and computing an updated velocity function.
+
+One example of a semiautomatic seismic well tie is shown in Figure~\ref{fig:synth-p3}. The synthetic modeled from the original sonic log is compared against the synthetic modeled from a sonic log updated by shifts estimated from four iterations of matching using LSIM and the closest trace from the phase adjusted seismic dataset. The high amplitude reflectors between 0.75 and 1.10 seconds are well-aligned after four iterations of shifts are estimated to update the sonic log.
+
+\plot{synth-p3}{width=0.4\textwidth}{Synthetic modeled using the initial sonic log (green). Synthetic modeled using the sonic log updated after four iterations of matching using LSIM to estimate shifts (red). Closest trace to the well location extracted from the phase adjusted seismic data (black).}
+
+The initial Backus averaged sonic, updated sonic, and original sonic logs are shown in Figure~\ref{fig:DTpi3}. We observe that the majority of adjustments to the sonic log occurs between \new{3500 and 3900}\old{3000 and 4000} feet. This adjustment can also be observed by comparing the initial and updated TDR's in Figure~\ref{fig:tdr3}. \new{The differences between synthetic seismograms modeled from well log data and seismic data are usually attributed to either inaccuracies in the seismic phase or seismic migration velocities \cite[]{white1998stretch,henry2000pitfalls}.} The bulk shift between initial and final TDR is related to missing shallow velocity section in the well log. The results in Figure~\ref{fig:DTpi3,tdr3} provide an initial qualitative assessment of a seismic well tie to ensure the estimated shifts do not result in an improbable update to the sonic log. \new{We overlay the modeled and tied synthetic seismogram with the crossline that cuts through the well and observe a reasonable tie with the seismic data, even in the presence of a fault (Figure~\ref{fig:inline3}).}
+
+\multiplot{2}{DTpi3,tdr3}{width=0.4\textwidth}{(a) \new{Estimated}\old{Initial} sonic log \new{using the proposed approach} after Backus averaging (green). Updated sonic log after four iterations of matching using LSIM to estimate shifts (red). \new{Estimated}\old{Initial} sonic log after interpolation of missing data (black). (b) \old{Initial} TDR \new{from estimated sonic log} (green). Updated TDR after four iterations of matching using LSIM to estimate shifts (red).}
+
+\plot{inline3}{width=0.9\textwidth}{\new{Seismic crossline through well in Figures~\ref{fig:synth-p3} and \ref{fig:DTpi3,tdr3}. We observe a good tie between the modeled synthetic and real seismic data. The sonic and density logs used to model the synthetic are estimated using the proposed approach.}}
+
+
+\section{Validation by interpolation of log data along seismic structures}
+To qualitatively assess the result of each seismic well tie, we interpolate well log data from wells along seismic structure\new{s}. By generating global log property volumes we can verify the lateral continuity of an log property and perform a blind well test to validate a seismic well tie.
+
+\subsection{Interpolation using predictive painting}
+Time dip describes how a seismic event changes from one trace \old{of}\new{to} the next. If available, the \new{local} dip\new{s} could be used to interpolate log data along seismic structure and predict an expected log profile in a location with no well log data. Similar to \cite{karimi2015image}, we generate log property volumes by weighting predictive painting. Predictive painting is defined using plane-wave destruction filters which measure the local slope of seismic events \cite[]{fomel2002applications}. The local slope of seismic events is used to predict one trace from another trace and can be used to interpolate a reference well log through a seismic volume \new{(Appendix B)} \cite[]{fomel2010predictive}. The interpolation based on the distance between the reference well and any location is the seismic dataset, as defined in Equation~\ref{eq:mgrbf}. The RBF and log property volumes generated from data at each well location are combined to form a single log property volume using the following interpolant:
+\begin{equation} \label{eq:interp}
+V(x,t) = \dfrac{\sum_{k}^{N}\phi(|x - x_k|)S_k(x,t)}{\sum_{k}^{N}\phi(|x - x_k|)}
+\end{equation}
+where $\mathbf{S_{k}}$ is the volume created by spreading log data from location $x_k$ to the entire seismic data set using predictive painting and $N$ is the total number of wells used in the interpolation.
+
+\subsection{Computing log property volumes}
+We use 26 wells to compute the log property distribution throughout the Teapot Dome seismic survey. Complete density and sonic logs are estimated and tied to the seismic using the proposed approaches mentioned in the previous sections.
+Figure~\ref{fig:basemap} is a time slice through the 3D seismic volume at 0.72 seconds and shows the location of each well. Figures~\ref{fig:seismic}, \ref{fig:dipc1}, and \ref{fig:dipc2} show the phase adjusted seismic data and estimated inline and crossline dip using plane wave destruction filters.
+
+%\plot{basemap}{width=0.7\textwidth}{\old{Time slice through seismic data at 0.72 seconds. The stars indicate the location of each well. The purple well is used as the reference well for missing log data interpolation.}}
+
+\multiplot{3}{seismic,dipc1,dipc2}{width=0.45\textwidth}{(a) Phase adjusted seismic amplitude data. (b) Inline dip and (c) Crossline dip estimated using plane-wave destruction filters.}
+
+The reflection dip is used in the predictive painting algorithm and the RBF interpolant from \old{}\new{E}quation~\ref{eq:interp} to generate global log property volumes. The inputs to the interpolated sonic volume are the original sonic log interpolated to time using a TDR updated from shifts estimated using four iterations of LSIM matching. The results from interpolating sonic logs from 26 well is shown in Figure~\ref{fig:DTvol}. We observe reasonable lateral continuity along seismic structure\new{s} indicating there are no significant misties between well and seismic data. Similar\new{ly} to the interpolated sonic volume, the interpolated density volume shown in Figure~\ref{fig:RHOBvol} has reasonable lateral continuity along seismic structure\new{s} and shows \old{little}\new{no} evidence of a mistie. Qualitative interpretation of these results suggest\new{s} that \new{the estimated} well ties are laterally consistent.
+
+\multiplot{2}{DTvol,RHOBvol}{width=0.45\textwidth}{(a) Interpolated sonic and (b) interpolated density based on logs from 26 wells and the interpolant described in Equation~\ref{eq:interp}. Note that the interpolated log data follows the seismic structure.}
+
+\subsubsection{Performing a blind well test}
+The accuracy of the seismic well ties can be \new{additionally} \old{quality} checked by removing a well from the interpolation scheme and performing a blind well test. An inconsistent seismic well tie results in misalignment between the predicted and actual log at the well location. We perform a blind well test using two wells from the 26 well dataset. Results shown in Figure~\ref{fig:bwtDT3,bwtDT6} indicate a \old{good}\new{close} match between the predicted and actual sonic log at both well locations confirming lateral consistency in seismic well ties.
+
+To understand the accuracy of all seismic well ties, we \new{proceed to} perform blind well tests at each well using the remaining wells as input. Results of the actual versus predicted sonic at all 26 wells are crossplotted in Figure~\ref{fig:xbwt-DT}.
+
+\multiplot{2}{bwtDT3,bwtDT6}{width=0.4\textwidth}{Predicted (green) and actual (black) sonic logs from two different wells using a blind well test. The predicted and actual sonic logs match along the entire length of the well log indicating consistency in seismic well ties.}
+\plot{xbwt-DT}{width=0.5\textwidth}{Real sonic log cross plotted against the predicted sonic log from the blind well test for all 26 wells. Each blind well test used the remaining 25 wells as input.}
+
+The results shown in Figure~\ref{fig:xbwt-DT} indicate the predicted sonic matches reasonably well with the real sonic at all 26 wells giving us confidence that all seismic well ties are consistent and the resulting TDR for each well accurately maps the logs from depth to time.
+
+\section{Discussion}
+The proposed \old{method}\new{approach} addresses several challenges in integrated studies, specifically \new{(1)} interpolating missing well logs at wells that have incomplete well log suites and \new{(2)} providing a methodology for semiautomatically tying wells to seismic and validating the consistency of the ties. In our example, the proposed approach accurately computed a TDR at all well locations regardless of the \new{completeness of the} initial well log suite. Consequentially, integrated studies \old{are}\new{need} not be constrained to pilot wells where full log suites are collected. The proposed approach \old{may}\new{should} be \old{a}\new{particularly} useful\old{data integration tool} in onshore plays where the number of wells drilled is much higher compared to the number of sonic and density log acquired.
+
+\old{Although o}\new{O}ur method \old{addresses several challenges, we focus on}\new{involves} interpolation techniques \old{which}\new{that} assume that rock properties do not vary significantly laterally\new{.} \old{and}\new{We} make several \new{additional} assumptions related to the interpolation of missing log data:
+\begin{enumerate}
+\item Gamma logs are matched to estimate the alignment shifts; therefore, estimated section is limited to section in each well with available gamma log.
+\item All gamma logs are aligned with a single reference gamma log, estimated log section is limited to the stratigraphy found in this reference log. \new{This reference well log can be thought of as a type log which contains the entire stratigraphic column observed in other well logs.}
+\item We did not \new{perform fluid substitution prior to solving Equation~\ref{eq:solved} for each well. The proposed approach is based on interpolation, and we assume fluid substitution to have negligible impact on the results. This assumption may present challenges in reservoirs where hydrocarbons impact the well log response within the same stratigraphic interval.}\old{account for changes in fluid content. The proposed workflow assumes the rock sampled by the well logs is at irreducible water saturation.}
+\end{enumerate}
+These assumptions may not be valid in geologically complex areas with significant stratagraphic variations such as unconformities or channels \new{where entire stratigraphic units may be absent due to erosion. Additionally, the well log correlation approach, may meet similar challenges as those experienced by conventional, interpreter driven, workflows where rapid stratigraphic variability (e.g. slope deposits, clinoforms, etc.) may not correlate, or may correlate ambiguously in several places, between wells. Although we did not account for changes in the fluid content, the proposed approach provides a reasonable first-order approximation of the unknown well logs. The predicted velocity and density well logs provides the minimum required logs to forward model a synthetic seismogram and tie the well with real seismic data.}
+
+Additionally, well log data interpolation by predictive painting may result in errors when crossing faults. We observe this challenge when comparing the fault in Figure~\ref{fig:seismic} to the log property volumes in Figure~\ref{fig:DTvol,RHOBvol}. The fault in the property volumes is not accounted for during interpolation. Interpolation schemes that account for discontinuities would further improve results. Recently suggested approaches by \cite{xue2017ppfaults} and \cite{shi2017rgt} address predictive painting across faults.
+
+Our methodology can also be directly impacted by errors in the seismic data. An incorrect migration velocity will improperly place reflectors which will result in an incorrect TDR estimated from seismic well ties. Inaccuracies in the migration velocity may be a reason for the need for a velocity log update shown in Figure~\ref{fig:DTpi3}.
+
+The assumptions we make and errors in migration \old{velocity} can compound resulting in \old{significant} inaccuracies in our integrated study\old{;}\new{.} \old{h}\new{H}owever, by \old{including}\new{relating} several sources of information (multiple well logs and 3D seismic) we provide an approach and validation technique to minimize the impact of these challenges and \new{to} provide a better characterization of the subsurface.
+
+
+\section{Conclusion}
+We present \old{an approach}\new{a workflow} for integrating available well log data and \new{3D} seismic data. \new{As indicated by computational examples in this paper, the proposed workflow allows us to predict missing}\old{Our method estimates missing logs in} \new{or} incomplete well log suites by using LSIM to align all well log data to \old{constant}\new{common relative} geologic time\old{;}\new{.} Therefore, our next step of seismic-well ties is not limited to wells that have complete sonic and density well log data. The wells, with complete or interpolated well log suites, are tied to a 3D seismic dataset using shifts that are semiautomatically estimated using LSIM. The shifts are used to update the initial TDR and sonic log\new{s} providing a qualitative assessment of the seismic well tie.
+
+We verify lateral consistency of seismic well ties by interpolating log data from all available wells along seismic structures using predictive painting and performing a blind well test. Our results using well logs and a 3D seismic dataset demonstrate that the proposed approach can consistently and accurately tie well log data to seismic.
+
+\new{The approach has some limitations. In the field data examples reported in this paper, we assume that the reference type log is representative of the entire stratigraphic column found in other wells; this assumption may cause challenges in plays where rapid stratigraphic variations such as unconformities, channels or clineoforms may be present. Additionally, we did not account for fluid variability in the rocks which can cause different well log responses in the same stratigraphic unit. While fluid substitution may further improve the results, the approach proposed in this paper provides a reasonable, first-order, approximation of the unknown well logs.}
+
+\new{Although the uncertainty of the models compared to the true earth model is not considered in this paper, one can assume that each constraint added to the proposed workflow (fluid substitution, modeling, etc.) will cast the model into a range of more accurate results. We show, by using field data examples, that the proposed approach is a feasible workflow for overcoming the challenges with the conventional seismic-well tie workflows. Further refinement of the well log information should only improve the results.}
+
+The purpose of integrating seismic and well log data is to \old{provide}\new{achieve} reservoir characterization that is \new{most} consistent with all available data \new{and achieves the highest possible resolution}. Our approach \old{involves} includ\old{ing}\new{es} previously ignored wells in seismic well ties and provides a method for verifying the consistency and accuracy of the results.
+
+\section{Acknowledgments}
+We thank the Rocky Mountain Oilfield Testing Center for making the Teapot Dome dataset available. We thank sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support. \old{The}\new{All} computations in this paper were done using the Madagascar software package \cite[]{fomel2013repeat}.
+
+\appendix
+\section{Appendix A: Local Similarity}
+\new{In comparing two datasets, the purpose is to estimate a smoothly varying warping function, $S_k$, required to align one dataset, $h_k$, to a reference dataset, $r_k$,}
+
+\begin{equation} \label{eq:ref}
+r_k(t) \approx h_k(S_k(t))
+\end{equation}
+
+\noindent \new{We can represent the warping function with the shifts, $g_k(t)$, as follows:}
+\begin{equation}\label{eq:shifts}
+S_k(t) = t + g_k(t)
+\end{equation}
+\new{where the $t$ denotes the original independent axis and $g_k(t)$ are the shifts required to match the datasets as defined in Equation \ref{eq:ref}. The correlation coefficient can be used to quantify the quality of the match between datasets \cite[]{hrs1999}. The LSIM method begins with the observation that the correlation coefficient ($c$) only provides one number to describe the datasets; however, we am interested in understanding the local changes in the datasets' similarity. Therefore, the LSIM method computes local similarity $c_t$, which is a function of time, $t$. The square of $c$ can be split into a product of two factors \cite[]{fomel2007local}:}
+
+\begin{equation}
+c_t^2 = r_t*h_t 
+\end{equation}
+
+\noindent \new{where $r_t$ and $h_t$ are the solutions to the following regularized least-squares problems, respectively}
+\begin{equation*}
+\begin{aligned}
+\min_{r_t}(\sum_{t}(a_t - r_tb_t)^2 + R[r_t]) \\[1pt]
+\min_{h_t}(\sum_{t}(b_t - h_ta_t)^2 + R[h_t]) \\[3pt]
+\end{aligned}
+\end{equation*}
+\new{The regularization operator, $R$, is implemented using shaping regularization \cite[]{fomel2007shaping} and designed to enforce smoothness. To estimate the solution, LSIM is calculated for a series of shifts. The results of this calculation are accumulated and displayed on a `similarity scan.'}
+
+\section{Appendix B: Predictive Painting}
+\new{We adopt predictive painting to interpolate well log data along seismic structure. Predictive painting is defined using plane-wave destruction filters that measure the local slopes of seismic events \cite[]{fomel2002applications}. The plane-wave destruction operator can be written in linear operator notation
+\begin{equation}
+\boldmath{r} = \boldmath{D}\boldmath{s}
+\end{equation}
+where \textbf{s} is a group of seismic traces from a seismic image ($\textbf{s} = [\textbf{s}_1 \textbf{s}_2 ... \textbf{s}_N]^T $), \textbf{r} is the destruction residual, and $\textbf{\textit{D}}$, the destruction operator, is defined as
+}
+\begin{equation}
+\boldmath{D} = 
+\begin{bmatrix}
+    \boldmath{I} & 0            & 0            & \dots     & 0 \\
+    -P_{1,2}      & \boldmath{I} & 0            & \dots     & 0 \\
+    0            & -P_{2,3}      & \boldmath{I} & \dots     & 0 \\
+    \vdots       & \vdots       & \vdots       & \ddots    & \vdots \\
+    0            & 0            & \dots        & -P_{N-1,N}  & \boldmath{I}
+\end{bmatrix}
+\end{equation}
+
+\noindent \new{where \boldmath{$I$} is the identity operator and \boldmath{$P_{i,j}$} describes the prediction of trace \textbf{j} from trace \textbf{i} by shifting along the local slope of the seismic data. Slopes can be estimated in this way by minimizing the prediction residual operator \textbf{r} using regularized least-squares optimization. The prediction of one trace from another trace \cite[]{fomel2010predictive} can be defined as}
+\begin{equation}
+\boldmath{s_k} = \boldmath{P_{r,k}}\boldmath{s_r}
+\end{equation}
+\new{where \boldmath{$s_k$} is the unknown trace and \boldmath{$s_r$} is the reference trace. The predictive painting operator is defined as:}
+\begin{equation}
+\boldmath{P_{1,k}} = \boldmath{P_{k-1,k}}\dots\boldmath{P_{2,3}}\boldmath{P_{1,2}}
+\end{equation}
+\new{Predictive painting spreads information along local seismic structures to generate volumes of well log data from a single well log reference trace providing a method to predict an expected log profile in a location with no well log data.}
+
+\bibliographystyle{seg}
+\bibliography{refs}

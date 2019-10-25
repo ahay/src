@@ -35,11 +35,11 @@ static float likelihood(float *offsetx, float *offsety, int noffset, float sigma
 /* Main */
 int main(int argc, char* argv[])
 {
-  int noffset, nt, npara, nmodel, nc, seed, reject, getin, saveiter;
+  int noffset, nt, npara, nmodel, nc, seed, reject, saveiter;
   float dt, tini, currentL, newL, sigma;
   float *t0sq, *dattime, *esttime, *rangecoef, *newcoef, *currentcoef, *drangecoef, *midcoef, *offx, *offy, **final; 
   int k1,k2,k3,k4,l;
-  bool prior;
+  bool prior,rational;
 
   sf_file inp, t0sqf, out ,rangecoeff, ofx, ofy;
 
@@ -70,6 +70,9 @@ int main(int argc, char* argv[])
     
     if (!sf_getbool("prior",&prior)) prior = false;
     /* generate prior or posterior */
+    
+    if (!sf_getbool("rational",&rational)) rational = false;
+    /* use rational approximation form of GMA */
 
     /*Number of fitting parameters*/
     npara=16;
@@ -116,6 +119,14 @@ int main(int argc, char* argv[])
      	
      	/* Step 1: Initial model */
      	currentcoef[l] = drangecoef[l]*(genrand_real1()-0.5) + midcoef[l]; 
+     	
+     	if (rational) {
+     		currentcoef[11] = currentcoef[8]*currentcoef[8]; // C1 = B1^2
+     		currentcoef[12] = 2*currentcoef[8]*currentcoef[9]; // C2 = 2B1 B2
+     		currentcoef[13] = 2*currentcoef[8]*currentcoef[10] + currentcoef[9]*currentcoef[9]; // C3 = 2 B1 B3 + B2^2
+     		currentcoef[14] = 2*currentcoef[9]*currentcoef[10]; // C4 = 2B2 B3
+     		currentcoef[15] = currentcoef[10]*currentcoef[10]; // C5 = B3^2
+     	}
      }
 
     /* Loop over time slices */
@@ -136,14 +147,16 @@ int main(int argc, char* argv[])
 				/* Step 2: Find new model */
 				/* Loop over all parameters */
 				for(k3=0; k3 < npara; k3++) {
-						newcoef[k3] = drangecoef[k3]*(genrand_real1()-0.5) + midcoef[k3];
-// 						getin = 0; /* first time getting in */
-// 						while (newcoef[k3] > rangecoef[2*k3+1] || newcoef[k3] < rangecoef[2*k3] || getin == 0) {
-// 							newcoef[k3] = drangecoef[k3]*(genrand_real1()-0.5) + currentcoef[k3];
-// 							getin = 1;
-// 						}
-						
+						newcoef[k3] = drangecoef[k3]*(genrand_real1()-0.5) + midcoef[k3];		
 				}
+				
+				if (rational) {
+     				newcoef[11] = newcoef[8]*newcoef[8]; // C1 = B1^2
+     				newcoef[12] = 2*newcoef[8]*newcoef[9]; // C2 = 2B1 B2
+     				newcoef[13] = 2*newcoef[8]*newcoef[10] + newcoef[9]*newcoef[9]; // C3 = 2 B1 B3 + B2^2
+     				newcoef[14] = 2*newcoef[9]*newcoef[10]; // C4 = 2B2 B3
+     				newcoef[15] = newcoef[10]*newcoef[10]; // C5 = B3^2
+     			}
 			
 				/* Step 3: Metropolis rule */
 				if(!prior) {

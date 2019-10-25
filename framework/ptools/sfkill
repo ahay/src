@@ -1,35 +1,41 @@
 #!/usr/bin/env python
 # Kill processes, test space and clean tmp files (remotely for cluster computing)
 
-import sys, os, string, commands, pwd, types
+from __future__ import print_function, division, absolute_import
+import sys, os, string, pwd, types
 
-cluster = string.split(os.environ.get('RSF_CLUSTER','localhost 1'))
-(statmyname,myname) = commands.getstatusoutput('whoami')
-argcommand = raw_input("Process to kill : ")
-print '\n'
+if sys.version_info[0] >= 3:
+    from subprocess import getstatusoutput
+else:
+    from commands import getstatusoutput
+
+cluster = os.environ.get('RSF_CLUSTER','localhost 1').split()
+(statmyname,myname) = getstatusoutput('whoami')
+argcommand = input("Process to kill : ")
+print('\n')
 
 # Kill processes
 for node in cluster[::2]:
     if node == 'localhost':
-        (stat,kill) = commands.getstatusoutput('pkill -u %s %s' % (myname,argcommand))
+        (stat,kill) = getstatusoutput('pkill -u %s %s' % (myname,argcommand))
     else:
-        (stat,kill) = commands.getstatusoutput("ssh %s 'pkill -u %s %s' " % (node,myname,argcommand))
-    print 'Killing processes on [%s]\n' % node
+        (stat,kill) = getstatusoutput("ssh %s 'pkill -u %s %s' " % (node,myname,argcommand))
+    print('Killing processes on [%s]\n' % node)
 
 # Test disk space at TMPDATAPATH and remove tmp core files
 pathtmp = os.environ.get('TMPDATAPATH')
-if type(pathtmp) is types.NoneType:
-    print "TMPDATAPATH undefined"
+if type(pathtmp) is type(None):
+    print("TMPDATAPATH undefined")
     sys.exit(0)
 else:
     pathtsf = pathtmp + "sf*"
-    print pathtsf
+    print(pathtsf)
     for node in cluster[::2]:
         if node == 'localhost':
-            (tstat,tmpspace) = commands.getstatusoutput('ls %s 2>/dev/null ; du -s -h %s 2>/dev/null ; df %s ; rm -f %s' % (pathtsf,pathtmp,pathtmp,pathtsf))
+            (tstat,tmpspace) = getstatusoutput('ls %s 2>/dev/null ; du -s -h %s 2>/dev/null ; df %s ; rm -f %s' % (pathtsf,pathtmp,pathtmp,pathtsf))
         else:
-            (tstat,tmpspace) = commands.getstatusoutput("ssh %s 'ls %s 2>/dev/null ; du -s -h %s 2>/dev/null ; df %s ; rm -f %s' " % (node,pathtsf,pathtmp,pathtmp,pathtsf))
+            (tstat,tmpspace) = getstatusoutput("ssh %s 'ls %s 2>/dev/null ; du -s -h %s 2>/dev/null ; df %s ; rm -f %s' " % (node,pathtsf,pathtmp,pathtmp,pathtsf))
         if not tstat:
-            print '\n[%s]\n' % node
-            print tmpspace+'\n'
+            print('\n[%s]\n' % node)
+            print(tmpspace+'\n')
     sys.exit(0)

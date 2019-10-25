@@ -17,18 +17,18 @@ lag = Split(lag)
 
 Flow('lag0',None,
      'echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET' %
-     (string.join(lag,' '),len(lag)))
+     (' '.join(lag),len(lag)))
 Flow('lag','lag0','dd form=native')
 Flow('flt0','lag',
      '''echo %s n1=%d data_format=ascii_float in=$TARGET
-     a0=%s lag=$SOURCE''' % (string.join(flt,' '),len(flt),a0))
+     a0=%s lag=$SOURCE''' % (' '.join(flt),len(flt),a0))
 Flow('flt','flt0','dd form=native')
 
-lag = range(1,13) + range(85,113) + range(185,203)
+lag = list(range(1,13)) + list(range(85,113)) + list(range(185,203))
 
 Flow('alag0',None,
      'echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET' %
-     (string.join(map(str,lag),' '),len(lag)))
+     (' '.join(map(str,lag)),len(lag)))
 Flow('alag','alag0','dd form=native')
 
 Flow(['lapfac','laplag'],['flt','alag'],

@@ -59,7 +59,7 @@ par = {
     'bad': 'stretch=0.5'
     }
 
-for case in par.keys():
+for case in list(par.keys()):
     stolt = 'stolt-'+case
     Flow(stolt,'stfk vt1',
          '''
@@ -86,7 +86,7 @@ vref = [1949,1678,1751,1377,627.9]
 ncut = len(ntcut)-1
 
 Flow('casc','vt1','cascade ncut=%d ntcut=%s' % 
-     (ncut-1,string.join(map(str,ntcut[1:ncut]),',')))
+     (ncut-1,','.join(map(str,ntcut[1:ncut]))))
 
 Flow('casc2','vt1','cascade ncut=2 ntcut=200,400')
 

@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sfwindow', 'sfmath', 'sfgrey', 'sfsmooth', 'sfmodeling2d', 'sfadd', 'sfdepth2time', 'sfmul', 'sfcausint', 'sfinterleave', 'sftahread', 'sftahheadermath', 'sftahgethw', 'sftahwrite', 'sftahsort', 'sftahstatic', 'sftahgain', 'sftahnmo', 'sftahstack', 'sfkirchnew', 'sfkirchinvs']
+data=['data/marm2/vp_marmousi-ii.segy']
+size=  167937428

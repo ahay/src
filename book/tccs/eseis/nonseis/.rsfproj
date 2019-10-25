@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfreal', 'sfdots', 'sfcpef', 'sfroots', 'sffreqlet', 'sfseislet1', 'sfgraph', 'sfcausint', 'sfrtoc', 'sfshift1', 'sfclpf', 'sfcat', 'sfdwt', 'sfenvelope', 'sfcmplx']
+data=[]
+size=      21000

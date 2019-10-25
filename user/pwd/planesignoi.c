@@ -30,14 +30,15 @@ static allpas2 noi, sig;
 void planesignoi_init (int nw           /* filter size */, 
 		       int nj1, int nj2 /* dealiasing stretch */, 
 		       int nx, int ny   /* data size */, 
+		       bool drift       /* if shift filter */,
 		       float **nn       /* noise slope */, 
 		       float **ss       /* signal slope */, 
 		       float eps1       /* regularization parameter */)
 /*< initialize >*/
 {
     eps = eps1;
-    noi = allpass2_init(nw,nj1,nx,ny,nn);
-    sig = allpass2_init(nw,nj2,nx,ny,ss);
+    noi = allpass2_init(nw,nj1,nx,ny,drift,nn);
+    sig = allpass2_init(nw,nj2,nx,ny,drift,ss);
     tmp = sf_floatalloc(nx*ny);
 }
 

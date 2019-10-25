@@ -1,0 +1,3 @@
+uses=['sfwindow', 'sfput', 'sfscale', 'sfnoise', 'sfgrey', 'sfcp', 'sffft1', 'sffft3', 'sftransp', 'sfdwt', 'sfdip', 'sfseislet', 'sfthreshold1', 'sfadd', 'sfcut', 'sfspike', 'sfbyte', 'sfgrey3', 'sfenvelope', 'sfcmplx', 'sfshift1', 'sfclpf', 'sfmath', 'sfreal', 'sfseislet1', 'sfcat', 'sfstack', 'sfdots', 'sfcabs']
+data=['data/yangkang/hyper0.rsf']
+size=   14899440

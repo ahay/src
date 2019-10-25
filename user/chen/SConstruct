@@ -63,7 +63,7 @@ for prog in mains:
 	sources = ['M' + prog]
 	bldutil.depends(env,sources,'M'+prog)	
 	if not prog in Split('frt pca epfws orientation coherence fcoh1') or blas:		
-		prog = env.Program(prog,map(lambda x: x + '.c',sources))
+		prog = env.Program(prog,[x + '.c' for x in sources])
 		if root:
 			install = env.Install(bindir,prog)
 			
@@ -88,7 +88,7 @@ for prog in mains:
 for prog in Split(tprogs):
 	sources = ['T' + prog,prog]
 	bldutil.depends(env,sources,prog)
-	sources = map(lambda x: x + '.o',sources)
+	sources = [x + '.o' for x in sources]
 	env.Object('T' + prog + '.c')
 	if prog !='pca' or blas:
 		env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')	
@@ -113,8 +113,8 @@ if root:
 	user = os.path.basename(os.getcwd())
 	main = 'sf%s.py' % user
 	
-	docs += map(lambda prog: env.Doc(prog,'M' + prog),mains)  + \
-		map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+	docs += [env.Doc(prog,'M' + prog) for prog in mains]  + \
+		[env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains]
 	env.Depends(docs,'#/framework/rsf/doc.py')	
 	doc = env.RSF_Docmerge(main,docs)
 	env.Install(pkgdir,doc)

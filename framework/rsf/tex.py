@@ -1,21 +1,22 @@
 ##   Copyright (C) 2004 University of Texas at Austin
-##  
+##
 ##   This program is free software; you can redistribute it and/or modify
 ##   it under the terms of the GNU General Public License as published by
 ##   the Free Software Foundation; either version 2 of the License, or
 ##   (at your option) any later version.
-##  
+##
 ##   This program is distributed in the hope that it will be useful,
 ##   but WITHOUT ANY WARRANTY; without even the implied warranty of
 ##   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ##   GNU General Public License for more details.
-##  
+##
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function, division, absolute_import
 import os, re, glob, string, types, pwd, shutil
-import cStringIO, token, tokenize, cgi, sys, keyword
+import io, token, tokenize, cgi, sys, keyword
 
 import rsf.conf, rsf.path, rsf.latex2wiki
 import rsf.doc
@@ -24,7 +25,7 @@ import rsf.prog
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
-version = map(int,string.split(SCons.__version__,'.')[:3])
+version = list(map(int,SCons.__version__.split('.')[:3]))
 if version[0] >= 1 or version[1] >= 97 or (version[1] == 96 and version[2] >= 90):
     from SCons.Script import *
 else:
@@ -45,7 +46,7 @@ acroread    = WhereIs('acroread')
 pdfread     = acroread or WhereIs('kpdf') or WhereIs('evince') or \
     WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 pdftops     = WhereIs('pdftops')
-epstopdf    = WhereIs('epstopdf') or WhereIs('a2ping') 
+epstopdf    = WhereIs('epstopdf') or WhereIs('a2ping')
 if epstopdf:
     latex       = WhereIs('pdflatex')
     ressuffix = '.pdf'
@@ -102,7 +103,7 @@ logfigure = re.compile(r'\s*\<use ([^\>]+)')
 suffix = re.compile('\.[^\.]+$')
 cwpslides = re.compile(r'\\documentclass[^\{]*\{cwpslides\}')
 makeind = re.compile(r'\\index')
-                  
+
 #############################################################################
 # CUSTOM SCANNERS
 #############################################################################
@@ -120,16 +121,15 @@ def latexscan(node,env,path):
         geomanuscript = 0
     else:
         geomanuscript = lclass == 'geophysics' and \
-            string.rfind(options,'manuscript') >= 0
+            options.rfind('manuscript') >= 0
     slides = lclass == 'beamer' or lclass == 'cwpslides'
 
     top = str(node)
     if top[-4:] != '.ltx':
         return []
     contents = node.get_contents()
-    inputs = filter(os.path.isfile,
-                    map(lambda x: x+('.tex','')[os.path.isfile(x)],
-                        linput.findall(contents)))
+    inputs = list(filter(os.path.isfile,
+                    [x+('.tex','')[os.path.isfile(x)] for x in linput.findall(contents.decode('utf-8'))]))
     inputs.append(top[:-4]+'.tex')
     resdir = env.get('resdir','Fig')
     inputdir = env.get('inputdir','.')
@@ -148,7 +148,7 @@ def latexscan(node,env,path):
             if begcom.search(line):
                 comment = 1
                 continue
-            
+
             dir  = chdir.search(line)
             if dir:
                 inputdir = dir.group(1)
@@ -156,20 +156,20 @@ def latexscan(node,env,path):
             if dir:
                 resdir = dir.group(1)
             resdir2 = os.path.join(inputdir,resdir)
-            
+
             check = isplot.search(line)
             if check:
                  plot = check.group(1)
-                 plot = string.replace(plot,'\_','_')
+                 plot = plot.replace('\_','_')
                  plots.append(os.path.join(resdir2,plot + ressuffix))
                  if re.search('angle=90',line):
                       plotoption[plot+pssuffix] = '-flip r90'
-            
+
             check = ismplot.search(line)
             if check:
                  mplot = check.group(1)
-                 mplot = string.replace(mplot,'\_','_')
-                 for plot in string.split(mplot,','):
+                 mplot = mplot.replace('\_','_')
+                 for plot in mplot.split(','):
                      plots.append(os.path.join(resdir2,plot + ressuffix))
                      if re.search('angle=90',line):
                          plotoption[plot+pssuffix] = '-flip r90'
@@ -177,8 +177,8 @@ def latexscan(node,env,path):
             check = issmplot.search(line)
             if check:
                  smplot = check.group(1)
-                 smplot = string.replace(smplot,'\_','_')
-                 for plot in string.split(smplot,','):
+                 smplot = smplot.replace('\_','_')
+                 for plot in smplot.split(smplot,','):
                      plots.append(os.path.join(resdir2,plot + ressuffix))
                      if re.search('angle=90',line):
                          plotoption[plot+pssuffix] = '-flip r90'
@@ -203,11 +203,11 @@ def latexscan(node,env,path):
                      else:
                          plotoption[plot[-len(ressuffix):]+pssuffix] = ' cropshift=y'
                      plots.append(plot)
-  
+
         inp.close()
     bibs = []
-    for bib in isbib.findall(contents):
-        for file in string.split(bib,','):
+    for bib in isbib.findall(contents.decode('utf-8')):
+        for file in bib.split(','):
             file = file+'.bib'
             if os.path.isfile(file):
                 bibs.append(file)
@@ -232,7 +232,7 @@ def latify(target=None,source=None,env=None):
     options = env.get('options',size)
     if not options:
         options = size
-    
+
     ltx.write('%% This file is automatically generated. Do not edit!\n')
     ltx.write('\\documentclass[%s]{%s}\n\n' % (options,lclass))
     use = env.get('use')
@@ -243,7 +243,7 @@ def latify(target=None,source=None,env=None):
     else:
         notendfloat=True
     if use:
-         if type(use) is not types.ListType:
+         if type(use) is not list:
               use = use.split(',')
          for package in use:
               options = re.match(r'(\[[^\]]*\])\s*(\S+)',package)
@@ -267,31 +267,31 @@ def latify(target=None,source=None,env=None):
     return 0
 
 def sage_emit(target=None, source=None, env=None):
-    sage = str(source[0])    
+    sage = str(source[0])
     target.append(sage+'.py')
     return target, source
 
 def latex_emit(target=None, source=None, env=None):
-    tex = str(source[0])    
+    tex = str(source[0])
     stem = suffix.sub('',tex)
     target.append(stem+'.aux')
     target.append(stem+'.log')
     contents = source[0].get_contents()
-    if isbib.search(contents):
+    if isbib.search(contents.decode('utf-8')):
         target.append(stem+'.bbl')
         target.append(stem+'.blg')
-    if hastoc.search(contents):
+    if hastoc.search(contents.decode('utf-8')):
         target.append(stem+'.toc')
-    if beamer.search(contents):
+    if beamer.search(contents.decode('utf-8')):
         target.append(stem+'.nav')
         target.append(stem+'.out')
         target.append(stem+'.snm')
-    if cwpslides.search(contents):
+    if cwpslides.search(contents.decode('utf-8')):
         target.append(stem+'.nav')
         target.append(stem+'.out')
         target.append(stem+'.snm')
         target.append(stem+'.toc')
-    if makeind.search(contents):
+    if makeind.search(contents.decode('utf-8')):
         target.append(stem+'.idx')
     return target, source
 
@@ -299,21 +299,21 @@ def latex2dvi(target=None,source=None,env=None):
     "Convert LaTeX to DVI/PDF"
     tex = str(source[0])
     dvi = str(target[0])
-    stem = suffix.sub('',dvi)   
+    stem = suffix.sub('',dvi)
     if not latex:
-        print '\n\tLaTeX is missing. ' \
-            'Please install a TeX package (teTeX or TeX Live)\n'
+        print('\n\tLaTeX is missing. ' \
+            'Please install a TeX package (teTeX or TeX Live)\n')
         return 1
-    run = string.join([latex,tex],' ')
+    run = ' '.join([latex,tex])
     # First latex run
     if os.system(run):
         return 1
     # Check if bibtex is needed
-    aux = open(stem + '.aux',"r")    
+    aux = open(stem + '.aux',"r")
     for line in aux.readlines():
         if re.search("bibdata",line):
             if not bibtex:
-                print '\n\tBibTeX is missing.' 
+                print('\n\tBibTeX is missing.')
                 return 1
             os.system(' '.join([bibtex,stem]))
             os.system(run)
@@ -323,19 +323,27 @@ def latex2dvi(target=None,source=None,env=None):
             os.system(run)
             os.system(run)
             break
+        elif re.search("toc.aux",line): 
+            # to get correct page numbers
+            os.system(run)
+            os.system(run)
+            break
     aux.close()
     # Check if makeindex is needed
     idx = stem + '.idx'
     if os.path.isfile(idx):
         if not makeindex:
-            print '\n\tMakeIndex is missing.' 
+            print('\n\tMakeIndex is missing.')
             return 1
         os.system(' '.join([makeindex,idx]))
         os.system(run)
     # Check if rerun is needed
     for i in range(3): # repeat 3 times at most
         done = 1
-        log = open(stem + '.log',"r")
+        if sys.version_info[0] >= 3:
+            log = open(stem + '.log',"r",encoding='latin1')
+        else:
+            log = open(stem + '.log',"r")
         for line in log.readlines():
             if rerun.search(line):
                 done = 0
@@ -351,13 +359,17 @@ loffigs = {}
 def listoffigs(target=None,source=None,env=None):
     "Copy figures"
     global loffigs
-    
+
     pdf = str(source[0])
-    stem = suffix.sub('',pdf)   
+    stem = suffix.sub('',pdf)
 
     try:
-        lof = open(stem+'.lof')
-        log = open(stem+'.log')
+        if sys.version_info[0] >= 3:
+            lof = open(stem+'.lof',encoding='latin1')
+            log = open(stem+'.log',encoding='latin1')
+        else:
+            lof = open(stem+'.lof')
+            log = open(stem+'.log')
     except:
         return target, source
 
@@ -443,7 +455,7 @@ def pstexpen(target=None,source=None,env=None):
             return 1
     else:
         try:
-            import vpconvert
+            import rsf.vpconvert as vpconvert
             options = 'color=n fat=1 fatmult=1.5 invras=y'
             name = os.path.splitext(os.path.basename(eps))[0]
             if 'ALL' in colorfigs or name in colorfigs:
@@ -509,14 +521,14 @@ def _datalink(name):
     else:
         link = '<a href="%s/%s">%s</a>' % (dataserver,name,name)
     return link
- 
+
 def colorize(target=None,source=None,env=None):
      "Colorize python source"
      py = str(source[0])
      html = str(target[0])
 
      src = open(py,'r').read()
-     raw = string.strip(string.expandtabs(src))
+     raw = src.expandtabs().strip()
 
      out = open(html,'w')
      out.write('''
@@ -544,8 +556,8 @@ def colorize(target=None,source=None,env=None):
      margin-left: 2em;
      margin-right: 2em; }
      ''' % py)
-     for style in _styles.keys():
-          out.write('.%s { color: %s; }\n' % (_styles[style],_colors[style])) 
+     for style in list(_styles.keys()):
+          out.write('.%s { color: %s; }\n' % (_styles[style],_colors[style]))
      out.write('''</style>
      </head>
      <body>
@@ -563,7 +575,7 @@ def colorize(target=None,source=None,env=None):
      lines = [0, 0]
      _pos = 0
      while 1:
-          _pos = string.find(raw, '\n', _pos) + 1
+          _pos = raw.find('\n', _pos) + 1
           if not _pos: break
           lines.append(_pos)
      lines.append(len(raw))
@@ -571,21 +583,26 @@ def colorize(target=None,source=None,env=None):
 
      # parse the source and write it
      _pos = 0
-     text = cStringIO.StringIO(raw)
+     try:
+         text = io.StringIO(str(raw))
+     except:
+         text = io.StringIO(unicode(raw))
      out.write('<pre><font face="Lucida,Courier New">')
 
-     def call(toktype, toktext, (srow,scol), (erow,ecol), line):
+     def call(toktype, toktext, xxx_todo_changeme, xxx_todo_changeme1, line):
+          (srow,scol) = xxx_todo_changeme
+          (erow,ecol) = xxx_todo_changeme1
           global _pos
-          
+
           # calculate new positions
           oldpos = _pos
           newpos = lines[srow] + scol
           _pos = newpos + len(toktext)
-    
+
           # handle newlines
           if toktype in [token.NEWLINE, tokenize.NL]:
-               out.write("\n")
-               return
+              out.write("\n")
+              return
 
           # send the original whitespace, if needed
           if newpos > oldpos:
@@ -593,27 +610,28 @@ def colorize(target=None,source=None,env=None):
 
           # skip indenting tokens
           if toktype in [token.INDENT, token.DEDENT]:
-               _pos = newpos
-               return
+              _pos = newpos
+              return
 
           # map token type to a color group
           if token.LPAR <= toktype and toktype <= token.OP:
                toktype = token.OP
           elif toktype == token.NAME and keyword.iskeyword(toktext):
                toktype = _KEYWORD
-          elif toktype == token.NAME and toktext in _colors.keys():
+          elif toktype == token.NAME and toktext in list(_colors.keys()):
                toktype = toktext
-               
+
           style = _styles.get(toktype, _styles[_TEXT])
- 
+
           # send text
           out.write('<span class="%s">' % style)
           out.write(cgi.escape(toktext))
           out.write('</span>')
 
      try:
-          tokenize.tokenize(text.readline, call)
-     except tokenize.TokenError, ex:
+         for tokens in tokenize.generate_tokens(text.readline):
+             call(tokens[0], tokens[1], tokens[2], tokens[3], tokens[4])
+     except tokenize.TokenError as ex:
           msg = ex[0]
           line = ex[1][0]
           out.write("<h3>ERROR: %s</h3>%s\n" % (msg, raw[lines[line]:]))
@@ -622,26 +640,27 @@ def colorize(target=None,source=None,env=None):
      out.write('</font></pre></table>')
 
      info = str(source[1])
-     
+
      if os.path.isfile(info):
+
          sout = open(info)
          progs = sout.read()
          sout.close()
 
-         exec progs in locals()
+         eval(compile(progs, '<string>', 'exec'), locals())
 
-         if uses:
+         if locals()['uses']:
              out.write('</div><p><div class="progs">')
-             out.write(rsf.doc.multicolumn(uses,_proglink))
+             out.write(rsf.doc.multicolumn(locals()['uses'],_proglink))
 
-         if data:
-             while 'PRIVATE' in data:
-                 data.remove('PRIVATE')
-             while 'LOCAL' in data:
-                 data.remove('LOCAL')
+         if locals()['data']:
+             while 'PRIVATE' in locals()['data']:
+                 locals()['data'].remove('PRIVATE')
+             while 'LOCAL' in locals()['data']:
+                 locals()['data'].remove('LOCAL')
              out.write('</div><p><div class="dsets">')
-             out.write(rsf.doc.multicolumn(data,_datalink))
- 
+             out.write(rsf.doc.multicolumn(locals()['data'],_datalink))
+
      out.write('''
      </div>
      </body>
@@ -652,18 +671,18 @@ def colorize(target=None,source=None,env=None):
 
 def eps2png(target=None,source=None,env=None):
     global plotoption
-    
+
     png = str(target[0])
     eps = str(source[0])
     option = plotoption.get(os.path.basename(eps),'')
     command =  'PAPERSIZE=ledger %s %s -out %s' \
               + ' -type %s -interlaced -antialias -crop a %s'
     if not pstoimg:
-        print '\n\t"pstoimg" is missing. ' \
-            'Please install latex2html.\n'
+        print('\n\t"pstoimg" is missing. ' \
+            'Please install latex2html.\n')
         return 1
     command = command % (pstoimg,eps,png,itype,option)
-    print command
+    print(command)
     os.system(command)
     return 0
 
@@ -684,8 +703,8 @@ def eps2pdf(target=None,source=None,env=None):
 
     command = "LD_LIBRARY_PATH=%s %s %s --hires %s" % \
               (os.environ.get('LD_LIBRARY_PATH',''),gs_options,epstopdf,eps)
-    
-    print command
+
+    print(command)
     os.system(command)
     return 0
 
@@ -702,7 +721,7 @@ def dummy(target=None,source=None,env=None):
      for src in source:
          fig = str(src)
          plt = os.path.splitext(os.path.basename(fig))[0]
-         plt2 = string.replace(plt,'_','\_')
+         plt2 = plt.replace('_','\_')
          fdir = os.path.split(os.path.split(fig)[0])[0]
          if fdir != dirold:
              tex.write('\n\\section{%s}\n' % fdir)
@@ -713,17 +732,17 @@ def dummy(target=None,source=None,env=None):
              dirold = fdir
          tex.write('\\plot{%s}{width=\\textwidth}{%s/%s} ' % (plt,fdir,plt2))
          tex.write('\\clearpage\n')
-     tex.close()    
+     tex.close()
      return 0
 
 def pylab(target=None,source=None,env=None):
     global epstopdf
     pycomm = open(str(source[0]),'r').read()
-    exec pycomm in locals()
+    exec(pycomm, locals())
     os.system('%s junk_py.eps -o=%s' % (epstopdf,target[0]))
     os.unlink('junk_py.eps')
     return 0
-    
+
 Latify = Builder(action = Action(latify,
                                  varlist=['lclass','options','use',
                                           'include','resdir']),
@@ -814,7 +833,7 @@ if epstopdf:
     if matlab:
         matlabpath = os.environ.get('MATLABPATH')
         if matlabpath:
-            matlabpath = string.join([matlabpath,'Matlab'],':')
+            matlabpath = ':'.join([matlabpath,'Matlab'])
         else:
             matlabpath = 'Matlab'
         Matlab = Builder(action = 'MATLABPATH=%s DISPLAY=" " nohup %s -nodesktop '
@@ -827,7 +846,7 @@ if epstopdf:
                           '%s junk_gp.eps -o=$TARGET && rm junk_gp.eps' %
                           (gnuplot,epstopdf),
                           suffix='.pdf',src_suffix='.gp')
-        
+
     if haspylab:
         Pylab = Builder(action = Action(pylab),
                         suffix='.pdf',src_suffix='.py')
@@ -837,7 +856,7 @@ Color = Builder(action = Action(colorize),suffix='.html')
 class TeXPaper(Environment):
     def __init__(self,**kw):
         kw.update({'tools':[]})
-        apply(Environment.__init__,(self,),kw)
+        Environment.__init__(*(self,), **kw)
         rsf.conf.set_options(self)
 #        sourceforge = 'http://sourceforge.net/p/rsf/code/HEAD/tree/trunk'
         github = 'https://github.com/ahay/src/blob/master/'
@@ -856,9 +875,9 @@ class TeXPaper(Environment):
                               'Figs':Figs})
         path = {'darwin': ['/sw/bin','/opt/local/bin'],
                 'irix': ['/usr/freeware/bin']}
-        for plat in path.keys():
+        for plat in list(path.keys()):
             if sys.platform[:len(plat)] == plat:
-                for pathdir in filter(os.path.isdir,path[plat]):                
+                for pathdir in filter(os.path.isdir,path[plat]):
                     self['ENV']['PATH'] = ':'.join([pathdir,
                                                     self['ENV']['PATH']])
 
@@ -867,7 +886,7 @@ class TeXPaper(Environment):
         root = self.get('RSFROOT',rsf.prog.RSFROOT)
         self.docdir = os.environ.get('RSFBOOK',os.path.join(root,'share','madagascar'))
         self.figdir = os.environ.get('RSFFIGS',os.path.join(self.docdir,'figs'))
-        
+
         for level in tree:
             if level:
                 self.docdir = os.path.join(self.docdir,level)
@@ -904,7 +923,7 @@ class TeXPaper(Environment):
                 self.Append(BUILDERS={'Pylab':Pylab})
             if sage:
                 self.Append(BUILDERS={'Sage':Sage})
-            
+
         self.scons = []
         self.figs = []
         self.Dir()
@@ -923,11 +942,11 @@ class TeXPaper(Environment):
 
         if self.scons:
             self.Install(self.docdir,self.scons)
-        self.Alias('figinstall',self.docdir)        
+        self.Alias('figinstall',self.docdir)
         # reproducible figures
         erfigs = []
         eps = {}
-        
+
 
         # check figure repository
         vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+))$',
@@ -937,7 +956,7 @@ class TeXPaper(Environment):
                 eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+suffix+'$',
                                   r'%s/\1/%s/\2%s' % (topdir,resdir,pssuffix),
                                   fig)
-        
+
         # follow symbolic links
         for pdir in filter(os.path.islink,glob.glob(topdir+'/[a-z]*')):
             vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
@@ -949,7 +968,7 @@ class TeXPaper(Environment):
                                       r'%s/%s/\2%s' % (pdir,resdir,pssuffix),
                                       fig)
 
-        for fig in eps.keys():
+        for fig in list(eps.keys()):
             ps = eps[fig]
             resdir2 = os.path.join(self.docdir,os.path.dirname(ps))
             if fig[-3:] == vpsuffix[-3:]:
@@ -960,7 +979,7 @@ class TeXPaper(Environment):
                 pdf = re.sub(pssuffix+'$','.pdf',ps)
                 self.PDFBuild(pdf,ps)
                 erfigs.append(pdf)
-		self.Install2(resdir2,pdf)
+                self.Install2(resdir2,pdf)
             if latex2html and pstoimg:
                 png = re.sub(pssuffix+'$','.'+itype,ps)
                 self.PNGBuild(png,ps)
@@ -1006,7 +1025,7 @@ class TeXPaper(Environment):
                 crfigs.append(pdf)
             sapldir = os.path.join(self.docdir,'Sage')
             self.Install2(sapldir,sapls)
-            self.Alias('figinstall',sapldir) 
+            self.Alias('figinstall',sapldir)
         # matlab figures
         mtls = glob.glob('%s/Matlab/*.ml' % topdir)
         if mtls:
@@ -1033,7 +1052,7 @@ class TeXPaper(Environment):
             self.Alias('figinstall',pylabdir)
         # xfig figures:
         figs =  glob.glob('%s/XFig/*.fig' % topdir)
-        if figs: 
+        if figs:
             for fig in figs:
                 pdf = re.sub(r'([^/]+)\.fig$',
                              os.path.join(resdir,'\g<1>.pdf'),fig)
@@ -1045,7 +1064,7 @@ class TeXPaper(Environment):
             self.Alias('figinstall',resdir2)
         # tikz figures:
         figs =  glob.glob('%s/Tikz/*.tex' % topdir)
-        if figs: 
+        if figs:
             for fig in figs:
                 pdf = re.sub(r'([^/]+)\.tex$',
                              os.path.join(resdir,'\g<1>.pdf'),fig)
@@ -1055,7 +1074,7 @@ class TeXPaper(Environment):
             self.Alias('figinstall',resdir2)
         # non-reproducible figures
         nrfigs = crfigs + glob.glob(
-            os.path.join(topdir,os.path.join(resdir,'*.pdf'))) 
+            os.path.join(topdir,os.path.join(resdir,'*.pdf')))
         for pdf in nrfigs:
              if (acroread and ps2eps) or pdf2ps:
                 eps = re.sub('.pdf$',pssuffix,pdf)
@@ -1075,8 +1094,8 @@ class TeXPaper(Environment):
         global colorfigs, hiresfigs
         if source == '':
             source = paper
-        colorfigs.extend(string.split(color))
-        hiresfigs.extend(string.split(hires))
+        colorfigs.extend(color.split())
+        hiresfigs.extend(hires.split())
         ltx = self.Latify(target=paper+'.ltx',source=source+'.tex',
                           use=use,lclass=lclass,options=options,
                           include=include,resdir=resdir)
@@ -1116,7 +1135,7 @@ class TeXPaper(Environment):
         if source == '':
             source = paper
         if os.path.isfile(source+'.tex'):
-            apply(self.Paper,(paper,source),kw)
+            self.Paper(*(paper,source), **kw)
             self.Alias('pdf',paper+'.pdf')
             self.Alias('wiki',paper+'.wiki')
             self.Alias('read',paper+'.read')
@@ -1128,13 +1147,13 @@ class TeXPaper(Environment):
 
 default = TeXPaper()
 def Dir(**kw):
-     return apply(default.Dir,[],kw)
+     return default.Dir(*[], **kw)
 def Paper(paper,source='',**kw):
-    return apply(default.Paper,(paper,source),kw)
+    return default.Paper(*(paper,source), **kw)
 def Command2(target,source,command):
     return default.Command(target,source,command)
 def End(paper='paper',source='',**kw):
-    return apply(default.End,(paper,source),kw)
+    return default.End(*(paper,source), **kw)
 def Depends2(target,source):
     return default.Depends(target,source)
 

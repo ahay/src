@@ -64,43 +64,34 @@ int main (int argc, char* argv[])
     
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    if (!img[i2][i1]) continue; /* background */
+	    if (!img[i2][i1]) continue; /* background */	    
 	    
-	    if (i1 > 0 && img[i2][i1-1]) {
-		lbl[i2][i1] = lbl[i2][i1-1];
-	    } else if (i2+1 < n2 && i1 > 0 && img[i2+1][i1-1]) {
-		c = lbl[i2+1][i1-1];
+	    if (i2 > 0 && img[i2-1][i1]) {
+		lbl[i2][i1] = lbl[i2-1][i1];
+	    } else if (i1+1 < n1 && i2 > 0 && img[i2-1][i1+1]) {
+		c = lbl[i2-1][i1+1];
 		lbl[i2][i1] = c;
 		
-		if (i2 > 0 && img[i2-1][i1-1]) {
+		if (i1 > 0 && img[i2-1][i1-1]) {
 		    a = lbl[i2-1][i1-1];
 		    label_union(c,a);
 		}
 	    
-		if (i2 >0 && img[i2-1][i1]) {
-		    d = lbl[i2-1][i1];
+		if (i1 >0 && img[i2][i1-1]) {
+		    d = lbl[i2][i1-1];
 		    label_union(c,d);
 		}
-	    } else if (i2 > 0 && i1 > 0 && img[i2-1][i1-1]) {
+	    } else if (i1 > 0 && i2 > 0 && img[i2-1][i1-1]) {
 		lbl[i2][i1] = lbl[i2-1][i1-1];
-	    } else if (i2 >0 && img[i2-1][i1]) {
-		lbl[i2][i1] = lbl[i2-1][i1];
+	    } else if (i1 >0 && img[i2][i1-1]) {
+		lbl[i2][i1] = lbl[i2][i1-1];
 	    } else {
 		lbl[i2][i1] = label_new();
 	    }
-
-	    sf_warning("%d,%d -> %d",i1,i2,lbl[i2][i1]);
-	}
-
+	}	
     }
 
     label_flatten();
-
-    for (i2=0; i2 < n2; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    if (img[i2][i1]) sf_warning("%d,%d -> %d",i1,i2,lbl[i2][i1]);
-	}
-    }
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {

@@ -81,8 +81,10 @@ int main(int argc, char* argv[])
 			    slow_median(nw,win[0]);
 			break;
 		    case 'm': /* mean */
-		    default:
 			/* !!! ADD CODE !!! */
+			break;
+		    default:
+			sf_error("Unknown method \"%s\"",how);
 			break;
 		}
 	    }

@@ -1,4 +1,8 @@
-/* 3-D zero-offset modeling/migration with extended SSF */
+/* 3-D zero-offset modeling/migration with extended SSF 
+
+May 2019 program of the month:
+http://ahay.org/blog/2019/05/06/program-of-the-month-sfzomig3/
+*/
 
 /*
   Copyright (C) 2007 Colorado School of Mines

@@ -5,7 +5,7 @@
 \begin{abstract}
   This homework has two parts. In the theoretical part, you will
 derive the geometrical amplitude of the acoustic displacement and
-reflection traveltimes from plane and circle reflectors. In the
+reflection traveltimes from a plane reflector. In the
 computational part, you will experiment with imaging a synthetic
 dataset and a field dataset from the Gulf of Mexico.
 \end{abstract}
@@ -22,7 +22,7 @@ You are welcome to do the assignment on your personal computer by
 installing the required environments. In this case, you can obtain all
 homework assignments from the \texttt{Madagascar} repository by running
 \begin{verbatim}
-svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo384w/hw3
+svn co https://github.com/ahay/src/trunk/book/geo384w/hw3
 \end{verbatim}
 
 \section{Theoretical part}
@@ -79,7 +79,7 @@ where $J_0$ and $J_1$ are the corresponding geometrical spreading factors.
 \item In the 2-D case, the ray-family coordinate system can be
   specified by $\mathbf{r}=\{\sigma,\theta\}$, where $\sigma$ goes
   along the ray, and $\theta$ is the initial ray angle. A family of
-  rays starts from the source point $\mathbf{x}_0$ which each ray
+  rays starts from the source point $\mathbf{x}_0$, with each ray
   traveling in the direction $\mathbf{p_0} =
   \{S_0\,\cos{\theta},S_0\,\sin{\theta}\}$. Show that the coordinate
   transformation matrix $\mathbf{P}=\partial \mathbf{p}/\partial
@@ -91,7 +91,7 @@ where $J_0$ and $J_1$ are the corresponding geometrical spreading factors.
         g_2 & S_0\,\cos{\theta} \end{array}\right]\;,
   \end{equation}
   where $g_1$ and $g_2$ are the components of $\mathbf{g}$ and find
-  the corresponding transformation of the matrices
+  the corresponding transformation of matrices
   $\mathbf{X}=\partial \mathbf{x}/\partial \mathbf{r}$ and
   $\mathbf{K}=\mathbf{P}\,\mathbf{X}^{-1}$.
   \begin{eqnarray}
@@ -100,16 +100,6 @@ where $J_0$ and $J_1$ are the corresponding geometrical spreading factors.
     \mathbf{K}(\sigma)  & = & 
     \label{eq:k}
     \end{eqnarray}
-
-  \item Find the one-point geometrical spreading $J$ from a point
-    source in the 2-D case as a function of $S_0$, $\mathbf{g}$, the
-    source location $\mathbf{x}_0$, the initial ray
-    direction~$\theta$, and the ray coordinate $\sigma$.
-
-  \item Using analytical ray tracing solutions, find the two-point
-    geometrical spreading $J$ from a point source in the 2-D case as a
-    function of $S_0$, $\mathbf{g}$, the source location
-    $\mathbf{x}_0$ and the receiver location $\mathbf{x}_1$.
 
   \end{enumerate}
 
@@ -156,7 +146,7 @@ z(x) = x\,\tan{\alpha}\;,
  where $\alpha$ is the dip angle. Show that, in
     this case, equation~(\ref{eq:fermat}) reduces to a linear equation
     for $y$. Find $y$ and substitute it into~(\ref{eq:dsr}) to define the 
-    reflection traveltime.
+    reflection traveltime analytically.
 
 \item (EXTRA CREDIT) Find the reflection traveltime for a circle reflector
 \begin{equation}

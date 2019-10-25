@@ -9,14 +9,14 @@ nl = len(depth) # number of layers
 
 # Depth of interfaces
 Flow('depth.asc',None,
-     'echo %s n1=%d data_format=ascii_float in=$TARGET' % (string.join(map(str,depth),' '),nl))
+     'echo %s n1=%d data_format=ascii_float in=$TARGET' % (' '.join(map(str,depth)),nl))
 
 # Two velocity layer models
 for case in range(2):
     Flow('veloc%d.asc' % (case+1),None,
          '''
          echo %s n1=%d data_format=ascii_float in=$TARGET
-         ''' % (string.join(map(str,veloc[case]),' '),nl+1))
+         ''' % (' '.join(map(str,veloc[case])),nl+1))
 
 # Convert from text to RSF format
 for par in ('depth','veloc1','veloc2'):

@@ -32,7 +32,7 @@ directive to instruct the OpenMP-enabled compiler to execute the loop
 in parallel.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[firstline=574,lastline=585,frame=single]{\RSF/user/psava/fdutil.c}
+\lstinputlisting[firstline=592,lastline=601,frame=single]{\RSF/user/psava/fdutil.c}
 
 To simplify OpenMP-based processing for data-parallel tasks,
 Madagascar provides \texttt{sfomp} utility. Suppose, for example, that
@@ -41,7 +41,7 @@ we want to process in parallel with a bandpass filter. The serial execution
 \begin{verbatim}
 < input.rsf sfbandpass fhi=50 > output.rsf
 \end{verbatim}
-becomes parallel by inserting \texttt{sfomp} before the command, as follows:
+can be made parallel by inserting \texttt{sfomp} before the command, as follows:
 \begin{verbatim}
 < input.rsf sfomp sfbandpass fhi=50 > output.rsf
 \end{verbatim}
@@ -63,7 +63,7 @@ The result should be equivalent to that of running
 \begin{verbatim}
 < original.rsf sfomp sftransp split=2 join=1 > transp.rsf
 \end{verbatim}
-If, instead of concatenating, the results should be added together,
+If, instead of concatenating, the results need to be added together,
 use \texttt{join=0}.
 
 Certain programs have multiple input or output files. If some of the
@@ -97,7 +97,7 @@ Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
 
 The first parameter in the \texttt{split=} list indicates the axis to
 split, the second parameter tells SCons to user \texttt{sfomp} for the
-splitting, and the third (optional parameter) lists the numbers of the
+splitting, and the third (optional) parameter lists the numbers of the
 source files that need splitting (starting from zero). Splitting all
 of the source files is the default behavior, therefore the
 \texttt{[0,1]} list in the last example is actually not needed.
@@ -107,8 +107,8 @@ of the source files is the default behavior, therefore the
 MPI (from \emph{Message Passing Interface}) is a popular
 system/protocol for parallel application on both shared-memory and
 distributed-memory architectures \cite[]{pacheco,gropp}. There are several alternative
-implementations of MPI, the popular open-source implementations
-include MPICH\footnote{\url{https://www.mpich.org/}} and Open
+implementations of MPI. The most popular open-source implementations
+are MPICH\footnote{\url{https://www.mpich.org/}} and Open
 MPI\footnote{\url{https://www.open-mpi.org/}}. Madagascar detects the
 existence of MPI at the installation configuration stage. 
 
@@ -133,7 +133,7 @@ along the same dimension. To change this behavior, you can use
 transpose a 2-D dataset in parallel, we can split it over one
 dimension and join over the other dimension:
 \begin{verbatim}
-mpirun -np 10 sfmpi sftransp --input=original.rsf split=1 join=2 --output=transp.rsf
+mpirun -np 10 sfmpi sftransp --input=orig.rsf split=1 join=2 --output=transp.rsf
 \end{verbatim}
 If, instead of concatenating, the results should be added together, use \texttt{join=0}.
 
@@ -144,7 +144,7 @@ systems. Another difference is that the threads specified by
 reserved as the ``head node'' for handling input and output, and the
 computation is performed on the remaining nodes. In the example above
 (\texttt{mpirun -np 10}), 9 nodes are used for the computation while
-one node is used for input/output.
+one node is reserved for input/output.
 
 SCons processing looks similar to the OMP case but replacing \texttt{omp} with \texttt{mpi}:
 \lstset{language=python,showstringspaces=false,frame=single}
@@ -163,7 +163,7 @@ Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
 
 One of the powerful features of SCons is its ability to perform
 parallel processing. If different targets can be generated
-independently from one another, this processing can be performed in
+independently from one another, the build can proceed in
 parallel. Suppose, for example, that the \texttt{SConstruct} contains
 a loop, where different slices are extracted from a 3-D cube.
 \begin{lstlisting}
@@ -175,7 +175,7 @@ Because different slices can be generated independently, SCons can do it in para
 scons -j 10
 \end{verbatim}
 The number after \texttt{-j} corresponds to the number of parallel
-threads. Madagascar provides a script called \texttt{pscons} (for
+threads. Madagascar provides a simple script called \texttt{pscons} (for
 ``parallel scons''), which makes the task easier: \texttt{pscons}
 figures out the number of cores on the current node and runs
 \texttt{scons -j} using that number.

@@ -1,0 +1,395 @@
+from rsf.proj import *
+
+v0 = 2
+gz = 0.6
+gx = 0.15
+
+min2=0.5
+max2=6.5
+
+# velocity model
+Flow('vel',None,
+     '''
+     math n1=101 n2=351 d1=0.02 d2=0.02 output="%g+%g*x1+%g*x2"
+     label1=Depth unit1=km label2=Position unit2=km label=Velocity unit=km/s
+     ''' % (v0,gz,gx))
+
+Plot('vel',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y barreverse=y
+     title=Model minval=1.6 maxval=8.5 clip=8.5
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+Flow('v2','vel','math output="input^2" ')
+Plot('v2',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="True w(x,z)" 
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 allpos=y 
+     minval=4 maxval=18 bias=4 clip=14
+     screenratio=0.75 screenht=9 allpos=y barlabel="v\^2\_" barunit="km\^2/s\^2"
+     ''' % (min2,max2))
+     
+Plot('cvel','ax0',
+     '''
+     window n2=301 f2=25 |
+     contour nc=1 c0=3 scalebar=y plotcol=7 plotfat=8
+     wantaxis=n wanttitle=n screenratio=0.65 screenht=9
+     ''')
+Plot('velo','vel cvel','Overlay')
+
+# analytical x0
+Flow('ax0','vel',
+     '''
+     math output="x2+(sqrt((%g+%g*x2)*(%g+%g*x2)+%g*x1*%g*x1)-(%g+%g*x2))/%g" |
+     put label=Position unit=km
+     ''' % (v0,gx,v0,gx,gx,gx,v0,gx,gx))
+
+Plot('ax0',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y 
+     title="Analytical x\_0\^" screenratio=0.75 screenht=9
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+     ''')
+Plot('cax0','ax0',
+     '''
+     window n2=301 f2=25 |
+     contour nc=80 scalebar=y plotcol=7 plotfat=7
+     wantaxis=n wanttitle=n screenratio=0.75 screenht=9
+     ''')
+Plot('x0','ax0 cax0','Overlay')
+
+# analytical t0
+Flow('at0','vel',
+     '''
+     math output="acosh(((%g*%g+%g*%g)*(sqrt((%g+%g*x2)*(%g+%g*x2)+%g*x1*%g*x1)+%g*x1)
+     -input*%g*%g)/(input*%g*%g))/sqrt(%g*%g+%g*%g)" | cut n1=1 |
+     put label=Time unit=s
+     ''' % (gx,gx,gz,gz,v0,gx,v0,gx,gx,gx,gz,gz,gz,gx,gx,gz,gz,gx,gx))
+
+Plot('at0',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y min=0 max=0.85 clip=0.85
+     title="Analytical t\_0\^" screenratio=0.75 screenht=9
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+     ''')
+Plot('cat0','at0',
+     '''
+     window n2=301 f2=25 |
+     contour nc=45 scalebar=y plotcol=7 plotfat=7
+     wantaxis=n wanttitle=n screenratio=0.75 screenht=9
+     ''')
+Plot('t0','at0 cat0','Overlay')
+
+# analytical Dix
+Flow('dix',None,
+     '''
+     math n1=251 n2=351 d1=0.004 d2=0.02 output="(%g+%g*x2)*sqrt(%g*%g+%g*%g)/
+     (sqrt(%g*%g+%g*%g)*(cosh(sqrt(%g*%g+%g*%g)*x1))-%g*sinh(sqrt(%g*%g+%g*%g)*x1))"
+     label1=Time unit1=s label2=Position unit2=km label=Velocity unit=km/s
+     ''' % (v0,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz,gz,gz,gx,gx))
+
+Plot('dix',
+     '''
+     window n2=301 f2=25 | math output="input^2"|
+     grey color=j scalebar=y allpos=y 
+     title="v\^2\_\_d\^(x\_0\^,t\_0\^)" allpos=y minval=4 maxval=18 bias=4 clip=14
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6  barlabel="v\^2" barunit="km^2/s\^2"
+     screenratio=0.65 screenht=9
+     ''')
+
+Plot('cdix','dix',
+     '''
+     window n2=301 f2=25 | 
+     math output=1 | rays2 a0=180 nr=1 dt=0.01 nt=557 yshot=3 |
+     graph transp=y yreverse=y scalebar=y plotcol=7 plotfat=8
+     wantaxis=n wanttitle=n min1=0 max1=2 min2=0.5 max2=6.5
+     screenratio=0.75 screenht=9
+     ''')
+Plot('odix','dix cdix','Overlay')
+
+Result('analy','x0 t0','OverUnderAniso')
+Result('vgrad','velo odix','OverUnderAniso')
+
+# convert Dix to depth
+Flow('dixdepth','dix',
+     '''
+     time2depth velocity=$SOURCE intime=y twoway=n nz=101 dz=0.02 |
+     put label1=Depth unit1=km
+     ''')
+
+Plot('dixdepth',
+     '''
+     window n2=301 f2=25 |
+     grey color=j scalebar=y allpos=y barreverse=y
+     title="Dix Velocity Converted to Depth" minval=4 maxval=18 bias=4 clip=14
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     screenratio=0.65 screenht=9
+     ''')
+
+Result('model-grad','v2 x0 t0','OverUnderAniso')
+
+## mask
+#Flow('mask','ax0',
+#     '''
+#     math output=-1 | cut n2=25 | cut n2=25 f2=326 | dd type=int
+#     ''')
+
+## inversion
+#Flow('t2d tt2d xt2d ft2d gt2d ct2d','init dix mask',
+#     '''
+#     tdconvert niter=3 verb=n cgiter=2000 eps=5 shape=y rect1=4 rect2=15 dix=${SOURCES[1]} mask=${SOURCES[2]}
+#     t0=${TARGETS[1]} x0=${TARGETS[2]} f0=${TARGETS[3]} grad=${TARGETS[4]} cost=${TARGETS[5]}
+#     ''')
+
+## cost
+#Plot('cost0','ct2d',
+#     '''
+#     window n2=301 f2=25 | window n3=1 f3=0 | 
+#     grey color=j scalebar=y barreverse=y barlabel=Cost barunit=
+#     title="Initial f" minval=-0.22 maxval=0.004 clip=0.22
+#     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+#     screenratio=0.65 screenht=9
+#     ''')
+#Plot('cost3','ct2d',
+#     '''
+#     window n2=301 f2=25 | window n3=1 f3=3 | 
+#     grey color=j scalebar=y barreverse=y barlabel=Cost barunit=
+#     title="Final f" minval=-0.22 maxval=0.004 clip=0.22
+#     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+#     screenratio=0.65 screenht=9
+#     ''')
+
+#Result('cost','cost0 cost3','OverUnderAniso')
+
+## error
+#Plot('error0','init vel',
+#     '''
+#     add scale=1,-1 ${SOURCES[1]} | window n2=301 f2=25 |
+#     grey color=j scalebar=y barreverse=y
+#     title="Initial Model Error" minval=-0.3 maxval=0.08 clip=0.3
+#     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+#     screenratio=0.65 screenht=9
+#     ''')
+#Plot('error3','t2d vel',
+#     '''
+#     add scale=1,-1 ${SOURCES[1]} | window n2=301 f2=25 |
+#     grey color=j scalebar=y barreverse=y
+#     title="Final Model Error" minval=-0.3 maxval=0.08 clip=0.3
+#     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+#     screenratio=0.65 screenht=9
+#     ''')
+
+#Result('error','error0 error3','OverUnderAniso')
+
+############################################################################################################
+# Weak assumption 
+############################################################################################################
+
+# Reference 1D model in (z,x) from the central trace of Dix velocity 
+# velocity model
+Flow('vz','dixdepth','window n2=1 f2=175| spray axis=2 n=351 o=0 d=0.02')
+#Flow('dslow','slowz vel','math true=${SOURCES[1]} output="sqrt(input^2-1/true^2)"')
+
+# analytical x0
+Flow('ax0z','vel',
+     '''
+     math output="x2" |
+     put label=Position unit=km
+     ''')
+     
+# analytical t0 at the middle of the model
+Flow('at0z','vel',
+     '''
+     math output="(1/%g)*log(x1*%g/(%g+%g*3.5) + 1)" |
+     put label=Time unit=s
+     ''' % (gz,gz,v0,gx) )
+
+# Derivatives of Dix velocity squared
+Flow('dv2dt0','dix','math output="input^2" | smoothder')
+Flow('dv2dx0','dix','math output="input^2" | transp | smoothder | transp')
+Flow('beta','dv2dt0 dix',
+     '''
+     time2depth velocity=${SOURCES[1]} intime=y twoway=n nz=101 dz=0.02 |
+     put label1=Depth unit1=km
+     ''')
+Flow('alpha','dv2dx0 dix',
+     '''
+     time2depth velocity=${SOURCES[1]} intime=y twoway=n nz=101 dz=0.02 |
+     put label1=Depth unit1=km
+     ''')
+Plot('alpha',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="dw\_d\^/dx\_0" pclip=100
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 minval=0.6 maxval=1.7 clip=1.1 bias=0.6
+     screenratio=0.75 screenht=9 allpos=y barlabel="dw\_d\^/dx\_0\^" barunit="km/s\^2"
+     ''' % (min2,max2))
+Plot('beta',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="dw\_d\^/dt\_0" pclip=100
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 minval=4.8 maxval=20 clip=15.2 bias=4.8
+     screenratio=0.75 screenht=9 allpos=y barlabel="dw\_d\^/dt\_0\^" barunit="km\^2/s\^3"
+     ''' % (min2,max2))
+     
+# Reference velocity squared
+Flow('refdix','dixdepth','math output="input^2" ')
+Flow('refvz','vz','math output="input^2" ')
+
+Plot('refdix',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Ref w\_dr\^(x,z)" 
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 allpos=y 
+     minval=4 maxval=18 bias=4 clip=14
+     screenratio=0.75 screenht=9 allpos=y barlabel="v\^2\_" barunit="km\^2/s\^2"
+     ''' % (min2,max2))
+Plot('refvz',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Ref w\_r\^(z)"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 allpos=y 
+     minval=4 maxval=18 bias=4 clip=14
+     screenratio=0.75 screenht=9 allpos=y barlabel="v\^2" barunit="km\^2/s\^2"
+     ''' % (min2,max2))
+
+Result('input-grad','refdix alpha beta','OverUnderAniso')
+
+
+ # Remap models for FD stability
+for i in ['refdix','refvz','alpha','beta']:
+	Flow(i+'_remap',i,'window')
+
+# Find differential ########################################################################################
+Flow('depth dx0 dt0 dv','refdix_remap refvz_remap alpha_remap beta_remap',
+	'''
+	time2depthweak zsubsample=10 nsmooth=30
+	velocity=$SOURCE refvelocity=${SOURCES[1]} dvdx0=${SOURCES[2]} dvdt0=${SOURCES[3]}
+	outdx0=${TARGETS[1]} outdt0=${TARGETS[2]} outdv=${TARGETS[3]}
+	''')
+
+# t0
+Flow('dt0true','at0 at0z','math est=${SOURCES[1]} output="input-est" ')
+Plot('dt0true',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Analytical \F10 D\F3 t\_0"  
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6  minval=-0.1 maxval=0.1 clip=0.2
+     screenratio=0.75 screenht=9 barlabel="Time (s)" barunit=
+     ''' % (min2,max2))
+Plot('dt0',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Estimated \F10 D\F3 t\_0"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6  minval=-0.1 maxval=0.1 clip=0.2
+     screenratio=0.75 screenht=9 barlabel="Time (s)" barunit=
+     ''' % (min2,max2))
+Result('dt0compare','dt0true dt0','OverUnderAniso')
+
+Flow('dt0err','dt0true dt0','math est=${SOURCES[1]} output="input-est"')
+Plot('dt0err',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Error from estimated \F10 D\F3 t\_0"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+      minval=-0.1 maxval=0.1 clip=0.2
+     screenratio=0.75 screenht=9 barlabel="Time (s)" barunit=
+     ''' % (min2,max2))
+
+
+
+# x0
+Flow('dx0true','ax0 ax0z','math est=${SOURCES[1]} output="input-est" ')
+Plot('dx0true ',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Analytical \F10 D\F3 x\_0"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 minval=0 maxval=0.1 clip=0.1 allpos=y
+     screenratio=0.75 screenht=9 barlabel="Position (km)" barunit=
+     ''' % (min2,max2))
+
+Plot('dx0',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Estimated \F10 D\F3 x\_0"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 minval=0 maxval=0.1 clip=0.1 allpos=y
+     screenratio=0.75 screenht=9 barlabel="Position (km)" barunit=
+     ''' % (min2,max2))
+
+Result('dx0compare','dx0true dx0','OverUnderAniso')
+
+Flow('dx0err','dx0true dx0','math est=${SOURCES[1]} output="input-est"')
+Plot('dx0err',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Error from estimated \F10 D\F3 x\_0"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 allpos=y minval=0 maxval=0.1 clip=0.1 
+     screenratio=0.75 screenht=9 barlabel="Position (km)" barunit= 
+     ''' % (min2,max2))
+
+
+
+# v
+Flow('dv2true','vel refvz','math est=${SOURCES[1]} output="input^2-est" ')
+Plot('dv2true ',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Analytical \F10 D\F3 w"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 
+     minval=-3.5 maxval=3.5 clip=7 bias=-3.5 allpos=y
+     screenratio=0.75 screenht=9 barlabel="v\^2" barunit="km\^2\_/s\^2"
+     ''' % (min2,max2))
+
+Plot('dv',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Estimated \F10 D\F3 w "
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 
+     minval=-3.5 maxval=3.5 clip=7 bias=-3.5 allpos=y
+     screenratio=0.75 screenht=9 barlabel="v\^2" barunit="km\^2\_/s\^2"
+     ''' % (min2,max2))
+
+Result('dv2compare','dv2true dv','OverUnderAniso')
+
+Flow('dv2err','dv2true dv','math est=${SOURCES[1]} output="(input-est)"')
+Plot('dv2err',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Error from estimated \F10 D\F3 w"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 allpos=y 
+     minval=-3.5 maxval=3.5 clip=7 bias=-3.5 allpos=y
+     screenratio=0.75 screenht=9 barlabel="v\^2" barunit="km\^2\_/s\^2"
+     ''' % (min2,max2))
+
+
+Result('truecompare','dt0true dx0true dv2true','OverUnderAniso')
+Result('estcompare-grad','dt0 dx0 dv','OverUnderAniso')
+Result('errcompare-grad','dt0err dx0err dv2err','OverUnderAniso')
+
+# Velocity difference
+Flow('errvdix','vel dixdepth','math est=${SOURCES[1]} output="sqrt(abs(input^2-est^2))" ')
+Flow('errvest','vel refvz dv','math b=${SOURCES[1]} c=${SOURCES[2]} output="sqrt(abs(input^2-(b+c)))" ')
+
+Plot('errvdix',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Velocity error from conventional Dix inversion"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 allpos=y minval=0 maxval=1 clip=1 bias=0
+     screenratio=0.75 screenht=9 barlabel="v" barunit="km/s"
+     ''' % (min2,max2))
+Plot('errvest',
+     '''
+     window min2=%g max2=%g |
+     grey color=j scalebar=y title="Velocity error from the proposed method"
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 allpos=y minval=0 maxval=1 clip=1 
+     screenratio=0.75 screenht=9 barlabel="v" barunit="km/s"
+     ''' % (min2,max2))
+     
+Result('errvcompare','errvdix errvest','OverUnderAniso')
+
+End()

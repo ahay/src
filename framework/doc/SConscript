@@ -29,15 +29,14 @@ version = env.get('version','')
 repository = os.environ.get('RSF_REPOSITORY')
 
 if not repository:
-    if version[-3:] == 'svn':
+    if version[-3:] == 'git':
         repository = 'master'
     else:
         repository = 'madagascar-%s' % version
     
     repository = 'https://github.com/ahay/src/blob/'+repository 
 
-docs = map(lambda x: os.path.join('..','rsf',x),
-           Split('sfdoc doc.py prog.py use.py'))
+docs = [os.path.join('..','rsf',x) for x in Split('sfdoc doc.py prog.py use.py')]
 python = sys.executable
 
 env.Command(htm,docs,
@@ -47,3 +46,8 @@ env.Depends(htm,'#/framework/rsf/doc.py')
 env.Command(txt,docs,'%s $SOURCE -t %s' % (python,txtdir))
 env.Command(spc,docs,'%s $SOURCE -s %s' % (python,spcdir))
 env.Command(man,docs,'%s $SOURCE -g %s' % (python,mn1dir))
+
+env.Clean(htm,htmdir)
+env.Clean(txt,txtdir)
+env.Clean(spc,spcdir)
+env.Clean(man,mn1dir)

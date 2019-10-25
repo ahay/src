@@ -7,7 +7,9 @@ import bldutil
 #'''
 
 progs = '''
-dagap3  dagap3e  dagap3a dagapex angmig2 angmigM covariance2d divnp 
+dagap3  dagap3e  dagap3a dagapex angmig2 angmigM covariance2d divnp ovczop 
+dtw dtw-apply dtw-errors dtw-accumulate dtw-track dtw-flatten dtw2
+translate convolve transconv lskernel pathmin pathmin-mov
 '''
 ccprogs = '''
 '''
@@ -67,12 +69,12 @@ for prog in mains:
     bldutil.depends(env,sources,'M'+prog)
     if prog[:3] == 'mpi':
         if mpicc:
-            prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
+            prog = env.Program(prog,[x + '.c' for x in sources],CC=mpicc)
         else:
             prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     else:
         if prog != 'vtihti2ort' or env.get('LAPACK'):
-            prog = env.Program(prog,map(lambda x: x + '.c',sources))
+            prog = env.Program(prog,[x + '.c' for x in sources])
         else:
             prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
@@ -101,7 +103,7 @@ for prog in ccmains:
     sources = ['M' + prog]
     cancompile = lapack and fftw
     if cancompile:
-        prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, 
+        prog = env.Program(prog, [x + '.cc' for x in sources]+objs, 
                            LIBS=libsxx)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
@@ -115,8 +117,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) 
+    docs = [env.Doc(prog,'M' + prog) for prog in mains] + \
+           [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in ccmains] 
     env.Depends(docs,'#/framework/rsf/doc.py')	
 
     doc = env.RSF_Docmerge(main,docs)

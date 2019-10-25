@@ -33,7 +33,7 @@ call from_par("s",s,0.)
 call from_par("type",type,"constant")
 ! case of velocity distribution 
 
-if (0.0 == g1 .or. 0.0 == g2) type="const"
+if (0.0 == g1 .and. 0.0 == g2) type="const"
     
 allocate (time(n1))
 

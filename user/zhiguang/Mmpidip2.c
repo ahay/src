@@ -186,7 +186,7 @@ int main (int argc, char *argv[])
         }
 
         /* estimate t-x dip */
-        if(ir<nr) dip3(false, 1, niter, order, nj1, u, p, mm[0], pmin, pmax);
+        if(ir<nr) dip3(false, 1, niter, order, nj1, false, u, p, mm[0], pmin, pmax);
 
         if(cpuid==0){
             sendbuf=p;

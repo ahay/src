@@ -40,7 +40,7 @@ pens = {
     'avi': 'ppm'
     }
 
-formats = pens.keys()
+formats = list(pens.keys())
 formats.sort()
 
 def exists(pen):
@@ -69,10 +69,10 @@ def convert(vpl,out,format,pen,args,verb=True):
     global pens, formats
 
     if not format in formats:
-        print 'Unknown format "%s" ' % format
+        print('Unknown format "%s" ' % format)
         sys.exit(1)
     if not os.path.isfile(vpl):
-        print "\"%s\" is not a file" % vpl
+        print("\"%s\" is not a file" % vpl)
         sys.exit(1)
     if not pen:
         pen = pens[format]
@@ -104,7 +104,7 @@ def convert(vpl,out,format,pen,args,verb=True):
                 if exe:
                     break
         if not exe:
-            print 'Unsupported program "%spen".' % pen
+            print('Unsupported program "%spen".' % pen)
             sys.exit(4)
 
         if convert:
@@ -135,7 +135,7 @@ def convert(vpl,out,format,pen,args,verb=True):
         rsf.vplot2gif.convert(vpl,out,args)
     elif format == 'avi':
         if not which('ffmpeg'):
-            print "Conversion failed. Please install ffmpeg."
+            print("Conversion failed. Please install ffmpeg.")
             sys.exit(5)
         rsf.vplot2avi.convert(vpl,out)
     elif format == 'pdf' and pen == 'ps':
@@ -147,7 +147,7 @@ def convert(vpl,out,format,pen,args,verb=True):
             command = 'LD_LIBRARY_PATH=%s GS_OPTIONS="%s" %s %s --outfile=%s' \
                 % (os.environ.get('LD_LIBRARY_PATH',''),
                    os.environ.get('GS_OPTIONS',''),epstopdf,eps,out)
-            print command
+            print(command)
             fail = os.system(command)
         else:
             fail = True
@@ -155,18 +155,18 @@ def convert(vpl,out,format,pen,args,verb=True):
         os.unlink(eps)
 
         if fail:
-            raise RuntimeError, 'Cannot convert eps to pdf.' 
+            raise RuntimeError('Cannot convert eps to pdf.') 
     else:
         # default behavior
         run = '%s %s %s > %s' % (exe,args,vpl,out)
         if verb:
-            print run
+            print(run)
         return os.system(run)
 
     if convert:
         run = '%s %s %s:%s' % (convert,out,format2,out2)
         if verb:
-            print run
+            print(run)
         return os.system(run)
 
 if __name__ == "__main__":
@@ -199,25 +199,25 @@ Supported formats: %s
 
     if format != None:
         if not files:
-            print usage
+            print(usage)
             sys.exit(1)
         for infile in files:
             # attach format as suffix
             if format == os.path.splitext(infile)[1][1:]:
-                print usage
+                print(usage)
                 sys.exit(1)
             outfile = os.path.splitext(infile)[0]+'.'+format
             convert(infile,outfile,format,pen,args)
     else:
         if len(files) !=2:
-            print usage
+            print(usage)
             sys.exit(2)
         infile = files[0]
         outfile = files[1]
         # get format from suffix
         format = os.path.splitext(outfile)[1][1:].lower()
         if format == 'vpl':
-            print 'Trying to convert vpl to vpl will only destroy the input'
+            print('Trying to convert vpl to vpl will only destroy the input')
             sys.exit(3)
         else:
             convert(infile,outfile,format,pen,args)

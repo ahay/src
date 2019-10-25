@@ -4,20 +4,21 @@ import bldutil
 
 progs = '''
 abalance analytical angle angle2 approx arrival bdix bil1 bilat2 blur
-cfftwave1 cdivn cflow chebvc clpf cltft constperm constpermh
-constpermh1 cosftwave1 cpef cr deblur distance divn dix dpeiko eikonal
-eikonalvti eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3 fftone ffttest
-fftwave1 fftwave2 fftwave3 findmin2 focus fpow freqest gaussmooth
-gbeamform imray interf interp2 interpt iphase kdsort kdtree kron label
-legacy lfftexp0 llpf localskew locov lpf lrmig0 lsfit max2 median
-mffit mig3 miss3 nconv nnint nnshape nsmooth nsmooth1 ocparcel
-octentwt ofilp ofsemb ortho patch pchain pchain1 phaserot pick pick2
-pick3 plane poly polyfit regr rdiv rect1 reshape riesz rsin sc
-seislet1 semblance semblancew shape shapeagc shapefill shearer shift1
-similarity similarity2 simenv smoothderw smoothreg smspray stream
-streamiss taupfit tfchain thin timecont timefreq tomo tree trace2
-tristack tristack2 twofreq2 upgrad var2 velcon velinv vidattr vipmig0
-vofzperm warp1 warpadd warpscan zero zmarch ztrace
+boxcascade cfftwave1 cdivn cflow chebvc chebyshev clpf cltft constperm
+constpermh constpermh1 cosftwave1 cpef cr deblur distance divn dix
+dpeiko eikonal eikonalvti eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3
+fftone ffttest fftwave1 fftwave2 fftwave3 findmin2 focus fpow freqest
+gaussmooth gbeamform imray interf interp2 interpt iphase kdsort kdtree
+kron label legacy lfftexp0 llpf localskew locov lpf lrmig0 lsfit max2
+median mffit mig3 miss3 morph nconv nnint nnshape nnshapet nsmooth
+nsmooth1 ocparcel octentwt ofilp ofsemb ortho patch pchain pchain1
+phaserot pick pick2 pick3 plane poly polyfit regr rdiv rect1 reshape
+riesz rsin sc seislet1 semblance semblancew shape shapeagc shapefill
+shearer shift1 similarity similarity2 simenv smoothderw smoothreg
+smspray stfchain stfchain2 stream streamiss taupfit tfchain thin
+timecont timefreq tomo tree trace2 tricascade tristack tristack2
+twofreq2 upgrad var2 velcon velinv vidattr vipmig0 vofzperm warp1
+warpadd warpscan zero zmarch ztrace
 '''
 
 ccprogs = 'anisolr2 isolr2 isolr3 lrvc0 permlr1 permlr2 permlr3'
@@ -61,7 +62,7 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     env.StaticObject('M'+prog+'.c')
-    prog = env.Program(prog,map(lambda x: x + '.o',sources),LIBS=libs)
+    prog = env.Program(prog,[x + '.o' for x in sources],LIBS=libs)
     if root:
         install = env.Install(bindir,prog)
 
@@ -86,7 +87,7 @@ ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
     if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources),LIBS=libsxx)
+        prog = env.Program(prog,[x + '.cc' for x in sources],LIBS=libsxx)
         if root:
             install = env.Install(bindir,prog)
             
@@ -128,10 +129,10 @@ for conv in ('byte2tif','tif2byte'):
     if root:
         env.Install(bindir,prog)
 
-for prog in Split('agrid burg cburg chebyshev cosft3 fchain grid1 nsmooth1 pcg smspray spray'):
+for prog in Split('agrid burg cburg chebyshev cosft3 fchain grid1 nsmooth1 pcg sfchain smspray spray'):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
-    sources = map(lambda x: x + '.o',sources)
+    sources = [x + '.o' for x in sources]
     env.Object('Test' + prog + '.c')
     env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
 
@@ -145,7 +146,7 @@ if root: # no compilation, just rename
     for prog in pymains:
         binary = os.path.join(bindir,'sf'+prog+exe)
         env.InstallAs(binary,'M'+prog+'.py')
-        env.AddPostAction(binary,Chmod(str(binary),0755))
+        env.AddPostAction(binary,Chmod(str(binary),0o755))
     for mod in Split(pymods):
         env.Install(pkgdir,mod+'.py')
 
@@ -156,11 +157,11 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) + \
-           map(lambda prog: env.Doc(prog,'_' + prog),['byte2jpg','jpg2byte']) + \
-           map(lambda prog: env.Doc(prog,'_' + prog),['byte2tif','tif2byte']) + \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+    docs = [env.Doc(prog,'M' + prog) for prog in mains] +  \
+           [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in ccmains] + \
+           [env.Doc(prog,'_' + prog) for prog in ['byte2jpg','jpg2byte']] + \
+           [env.Doc(prog,'_' + prog) for prog in ['byte2tif','tif2byte']] + \
+           [env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains]
     env.Depends(docs,'#/framework/rsf/doc.py')	
 
     doc = env.RSF_Docmerge(main,docs)

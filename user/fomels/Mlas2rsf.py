@@ -17,6 +17,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function
 import os, sys
 import numpy, m8r
 from las import LASReader
@@ -25,6 +26,7 @@ def las2rsf(lasf,rsff):
     las = LASReader(lasf)
     rsf = m8r.Output(rsff)
     data = las.data2d
+    data = data.astype('float32')
     shape = data.shape
     rsf.put('n1',shape[1])
     rsf.put('n2',shape[0])
@@ -38,11 +40,17 @@ def las2rsf(lasf,rsff):
         rsf.put(key,name)
         item = las.curves.items[name]
         rsf.put(key+'_units',item.units)
-        desc = ' '.join(item.descr.translate(None,'"').split()[1:])
+        if sys.version_info[0] >= 3:
+            desc = ' '.join(item.descr.translate(str.maketrans('','','"')).split()[1:])
+        else:
+            desc = ' '.join(item.descr.translate(None,'"').split()[1:])
         rsf.put(name,desc)
     for name in las.well.names:
         item = las.well.items[name]
-        desc = item.data.translate(None,'"')
+        if sys.version_info[0] >= 3:
+            desc = item.data.translate(str.maketrans('','','"'))
+        else:
+            desc = item.data.translate(None,'"')
         rsf.put(name,desc)
     rsf.write(data)
     rsf.close()
@@ -55,7 +63,7 @@ Check the output using sfheaderattr < file.rsf segy=n
     '''
 
     if len(sys.argv) < 2:
-       print usage
+       print(usage)
        sys.exit(1)
     
     lasfile = sys.argv[1]

@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import print_function, division, absolute_import
 import sys, string, os, signal, types
 
 def handler(signum, frame):
@@ -45,15 +46,15 @@ def tour(dirs=[],comm='',verbose=1):
     if not verbose: # no output to stdout
         sys.stdout = open("/dev/null","w")
     sys.stderr.write('Executing "%s"...\n' % comm)
-    sys.stderr.write(string.join(dirs,'::') + '\n')
+    sys.stderr.write('::'.join(dirs) + '\n')
 
     cwd = os.getcwd()
     for subdir in dirs:
-        if type(comm) is types.ListType:
+        if type(comm) is list:
             mycomm = comm.pop(0)
         else:
             mycomm = comm
-            
+
         os.chdir (cwd)
         try:
             os.chdir (subdir)
@@ -61,27 +62,27 @@ def tour(dirs=[],comm='',verbose=1):
             sys.stderr.write('\n%s: wrong directory %s...\n' % (mycomm,subdir))
             sys.exit(1)
         os.environ['PWD'] = os.path.join(cwd,subdir)
-        sys.stderr.write(string.join(['+' * 44,subdir,'\n'],' '))
+        sys.stderr.write(' '.join(['+' * 44,subdir,'\n']))
         if mycomm:
             mycomm = mycomm.replace('%',subdir,1)
             syswait(mycomm)
-        sys.stderr.write(string.join(['-' * 44,subdir,'\n'],' '))
+        sys.stderr.write(' '.join(['-' * 44,subdir,'\n']))
     sys.stderr.write('Done.\n')
     os.chdir (cwd)
 
 if __name__ == "__main__":
     import glob
-    
+
     # own user interface instead of that provided by RSF's Python API
     # because this script has users that do not have RSF
     if len(sys.argv) < 2:
-        print '''
+        print('''
         Usage: %s [-q] command
         visits lower-case subdirectories and executes command
         -q     quiet (suppress stdout)
 
         The '%%' character is replaced with the current directory
-        ''' % sys.argv[0]
+        ''' % sys.argv[0])
         sys.exit(0)
 
     ########
@@ -93,9 +94,8 @@ if __name__ == "__main__":
     else:
         verbose = 1
 
-    comm = string.join(sys.argv,' ')
-    dirs = filter(lambda x: x[-5:] != '_html',
-                  filter(os.path.isdir,glob.glob('[a-z]*')))
+    comm = ' '.join(sys.argv)
+    dirs = [x for x in list(filter(os.path.isdir,glob.glob('[a-z]*'))) if x[-5:] != '_html']
 
     tour(sorted(dirs),comm,verbose)
     sys.exit(0)

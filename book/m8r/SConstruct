@@ -1,0 +1,47 @@
+from rsf.book import *
+
+chapters = Split('''
+intro
+shell
+format
+scons
+api
+parallel
+latex
+''')
+
+Book(title='Madagascar: \\ Open-Source Software for Geophysical Data Analysis',
+     author='Sergey Fomel',
+     chapters=chapters)
+
+End(options='book',
+    include=r'''
+\newlength{\boxwidth}
+\setlength{\boxwidth}{\textwidth}
+\addtolength{\boxwidth}{-20pt} 
+\setlength{\fboxsep}{10pt}
+\newcommand{\boxit}[1]{\noindent\fbox{\parbox{\boxwidth}{#1}}}
+\newcommand{\RSF}{../../..}
+\lstdefinelanguage{julia}%
+  {morekeywords={abstract,break,case,catch,const,continue,do,else,elseif,%
+      end,export,false,for,function,immutable,import,importall,if,in,%
+      macro,module,otherwise,quote,return,switch,true,try,type,typealias,%
+      using,while},%
+   sensitive=true,%
+   alsoother={$},%
+   morecomment=[l]\#,%
+   morecomment=[n]{\#=}{=\#},%
+%   morestring=[s]{"}{"},%
+   morestring=[m]{'}{'},%
+}[keywords,comments,strings]%
+%\lstset{%
+%    language         = Julia,
+%    basicstyle       = \ttfamily,
+%    keywordstyle     = \bfseries,
+%    stringstyle      = \color{magenta},
+%    commentstyle     = \color{ForestGreen},
+%    showstringspaces = false,
+    %}
+''',
+    use='amsmath,hyperref,listings,fancybox,color',
+    )

@@ -1,14 +1,14 @@
 from rsf.proj import *
 from rsf.recipes.galilee import Galilee
 
-lag = [1,2] + range(98,103) + range(198,203)
+lag = [1,2] + list(range(98,103)) + list(range(198,203))
 ns = len(lag)
 
 Flow('lag.asc',None,
      '''
      echo %s n1=%d n=100,100 in=$TARGET
      data_format=ascii_int
-     ''' % (string.join(map(str,lag),' '),ns))
+     ''' % (' '.join(map(str,lag)),ns))
 Flow('lag','lag.asc','dd form=native')
 
 tension = (0,0.3,0.7,1)
@@ -43,7 +43,7 @@ for tt in range(nt):
          '''
          echo %s n1=%d lag=$SOURCE in=$TARGET
          data_format=ascii_float a0=%g
-         ''' % (string.join(map(str,s),' '),ns,s0))
+         ''' % (' '.join(map(str,s)),ns,s0))
     Flow(ss,ss+'.asc','dd form=native')
     filt = 'flt%d' % tt
     slag = 'lag%d' % tt
@@ -101,6 +101,6 @@ Result('cross',cross,
        scale dscale=-1 |
        dots gaineach=0 overlap=1 dots=0 connect=4
        labels=%s label1=West-East unit1=km yreverse=y
-       ''' % (nt,string.join(map(lambda x: 'tension=%g' % x,tension),':')))
+       ''' % (nt,':'.join(['tension=%g' % x for x in tension])))
     
 End()

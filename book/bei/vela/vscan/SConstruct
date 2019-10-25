@@ -92,6 +92,5 @@ Plot('rms','rms1 rms2','Overlay')
 Plot('int','wgint',velgraph("Interval velocity",3))
 Result('wgvel1','rms int','SideBySideAniso')
 
-###########################################################################
 End()
 

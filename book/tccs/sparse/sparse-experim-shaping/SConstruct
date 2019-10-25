@@ -1,0 +1,1013 @@
+from rsf.proj import *
+import math
+import sftthrgen
+import sftthrgen3
+import sftthrgenp
+
+# modelling parameters
+
+vel=3.0
+grtype='v'
+gradz = 1.0#0.5#1.0#0.5
+
+numshots = 501
+
+noisevar = 1e-08
+
+# create inclined reflections
+# shifted by 0.2 in comparison
+# to random-experiment 
+
+z = (1.0,1.2,1.4,1.6,1.8)
+a = (0.0,5,10,15,20)
+
+for ref in range(5):
+    a0 = a[ref]*math.pi/180
+
+    rdip = 'rdip%d' % ref
+    Flow(rdip,None,
+         '''
+         spike n1=1501 d1=0.02 o1=-1 label1=Distance mag=%g
+         ''' % math.tan(a0))
+    
+    refl = 'refl%d' % ref
+    Flow(refl,rdip,
+         'math output="%g+x1*input"' % z[ref])
+
+    ampl = 'ampl%d' % ref
+        
+    Flow(ampl,rdip,'math output=0.25')
+
+Flow('rdipi','rdip0 rdip1 rdip2 rdip3 rdip4','cat axis=2 ${SOURCES[1:5]}')
+Flow('refli','refl0 refl1 refl2 refl3 refl4','cat axis=2 ${SOURCES[1:5]}')
+Flow('ampli','ampl0 ampl1 ampl2 ampl3 ampl4','cat axis=2 ${SOURCES[1:5]}')
+#Plot('refli',
+#     '''
+#     graph min2=0 max2=3 yreverse=y plotfat=5 pad=n
+#     ''')
+
+######################################################################################
+### Kirchhoff modeling of inclined reflections #######################################
+
+Flow('data-i0','refli rdipi ampli',
+     '''
+     kirmod nt=800 dt=0.004 freq=25 dip=${SOURCES[1]} refl=${SOURCES[2]}
+     nh=1  dh=0.05 h0=0  
+     ns=%d ds=0.02 s0=0.0 cmp=y
+     vel=%g gradz=%g type=%c
+     '''%(numshots,vel,gradz,grtype),split=[1,'omp'],reduce='add')
+
+Flow('data-i','data-i0','put label2=Offset unit2=km label3=Midpoint unit3=km | window | pow pow1=1 | costaper nw1=100 | costaper nw2=100')
+
+# create diffractions
+# create horizontal reflectors for velocity analysis
+
+Flow('modl',None,
+     '''
+     spike n1=1501 o1=-10 d1=0.02 n2=5
+     nsp=5 k2=1,2,3,4,5 mag=0.8,1.4,2,3,4
+     ''')
+
+Flow('refl',None,
+     '''
+     spike n1=1501 n2=5 nsp=5 k2=1,2,3,4,5
+     mag=0.0909091,0.1428570,0.1111110,0.2000000,0.3
+     ''')
+
+Flow('mod1','modl','window min1=0')
+
+Flow('rmodl','modl',
+     '''
+     pad n2=100 | noise rep=y seed=112012
+     type=n mean=2.0 range=1
+     ''')
+
+Flow('depth','rmodl','pad n2=100 | math output="1.0 + (1/5)*x2"')
+
+#2.0#1.0#1.25
+
+Flow('amodl','modl rmodl','cat axis=2 ${SOURCES[1]}')
+
+Flow('rrefl','modl',
+     '''
+     pad n2=100 | noise rep=y type=y seed=122012 |
+     math output="input^9"
+     ''')
+
+Flow('prefl','rrefl','clip2 lower=9000 | math output="(input-9000)^(1/9)"')
+
+# d1 controls inline spacing, d2 - time spacing 
+Flow('diffractivity-sparse','prefl','math output="1.0" | cut d1=1.0 d2=2.5 | math output="1.0 - input"')
+
+Flow('diffractivity-dense-e','prefl','math output="1.0" | cut d1=0.4 d2=0.9 | math output="1.0 - input"')
+
+Flow('diffractivity-dense-o','prefl','math output="1.0" | cut f1=10 f2=5 d1=0.4 d2=0.9 | math output="1.0 - input"')
+
+Flow('diffractivity-dense','diffractivity-dense-e diffractivity-dense-o','add scale=1.0,1.0 ${SOURCES[1]} | cut max1=6.5 | sfcut min1=7.5')
+
+# input/4 to achieve 40% noise level with noise variance specified at the top
+Flow('diffractivity','diffractivity-dense diffractivity-sparse','add scale=1.0,1.0 ${SOURCES[1]} | math output="input/4"')
+
+Flow('mrefl','rrefl','clip2 upper=-10')
+
+Flow('drefl','prefl mrefl','add scale=0.01,0.00 ${SOURCES[1]}')
+
+Flow('arefl','refl drefl','cat axis=2 ${SOURCES[1]}')
+
+Flow('unif','mod1','unif2 n1=101 d1=0.02 v00=5,6,8,10,15')
+
+Flow('mod2','unif','math output=1.5+2*x1')
+
+### Kirchhoff modeling of diffractions
+
+Flow('diffr0','depth diffractivity',
+     '''
+     kirmod nt=800 dt=0.004 freq=25 refl=${SOURCES[1]}
+     nh=1  dh=0.05 h0=0  
+     ns=%d ds=0.02 s0=0.0 cmp=y
+     vel=%g gradz=%g type=%c
+     '''%(numshots,vel,gradz,grtype),split=[1,'omp'],reduce='add')
+
+Flow('diffr','diffr0','put label2=Offset unit2=km label3=Midpoint unit3=km | window | pow pow1=1 | costaper nw1=100 | costaper nw2=100')
+
+######################################################################################
+### Kirchhoff modeling of horizontal reflections #####################################
+# for velocity analysis purposes (extracting RMS velocity distribution)
+
+#!# True velocity is estimated by
+#!# Conventional velocity analysis on
+#!# Four horizontal reflectors
+
+Flow('data-velan0','modl refl',
+     '''
+     kirmod nt=800 dt=0.004 freq=25 refl=${SOURCES[1]}
+     nh=51  dh=0.05 h0=0  
+     ns=%d ds=0.02 s0=0 cmp=y
+     vel=%g gradz=%g type=%c
+     '''%(numshots,vel,gradz,grtype),split=[1,'omp'],reduce='add')
+
+Flow('data-velan','data-velan0','put label2=Offset unit2=km label3=Midpoint unit3=km | window | pow pow1=1 | costaper nw1=100 | costaper nw3=100')
+
+step2consider = 0.01
+numberofvels = 301
+v1_2consider = 2.8
+vl_2consider = 2.8 + numberofvels*step2consider
+#"""
+Flow('vscan','data-velan',
+	'''
+	window n3=1 min3=5.0 |
+	vscan semblance=y half=n v0=%g nv=%d dv=%g |
+	mutter v0=0.6 x0=3.3 inner=y |
+	mutter v0=2.1 x0=3.65 t0=0.72 inner=y |
+	mutter v0=2.5 x0=3.9 t0=0.95 inner=y |
+	mutter v0=2.5 x0=4.4 t0=1.34 inner=y
+	'''%(v1_2consider,numberofvels,step2consider))
+#"""
+
+""" # scanning for gradz=0.5
+Flow('vscan','data-velan',
+	'''
+	window n3=1 min3=5.0 |
+	vscan semblance=y half=n v0=%g nv=%d dv=%g |
+	mutter v0=0.85 x0=3.0 inner=y |
+	mutter v0=2.2 x0=3.3 t0=1.25 inner=y 
+	'''%(v1_2consider,numberofvels,step2consider))
+"""
+
+"""# muting for gradz=0.5 - we seem to have less artifacts but they r still present
+	|
+	mutter v0=2.1 x0=3.65 t0=0.72 inner=y |
+	mutter v0=2.5 x0=3.9 t0=0.95 inner=y |
+	mutter v0=2.5 x0=4.4 t0=1.34 inner=y
+"""
+"""
+Plot('vscan-nm','data-velan',
+	'''
+	window n3=1 min3=5.0 |
+	vscan semblance=y half=n v0=%g nv=%d dv=%g |
+	grey allpos=n color=j title="Semblance Scan" scalebar=n bias=0.8 clip=0.4
+	'''%(v1_2consider,numberofvels,step2consider))
+
+Plot('vscan','grey allpos=n color=j title="Semblance Scan" scalebar=n bias=0.8 clip=0.4')
+"""
+Flow('pick-true','vscan','scale axis=2 | pick rect1=20 vel0=3.2')
+
+"""
+Plot('pick-true',
+     '''
+     graph pad=n transp=y yreverse=y plotcol=7 plotfat=3 wantaxis=n wanttitle=n min2=%g max2=%g
+     '''%(v1_2consider,vl_2consider))
+
+Result('vscan','vscan pick-true','Overlay')
+"""
+Flow('vtrue-ch','data-velan','window n2=1 | math output="%g*sqrt((exp((x1+0.0001)*%g)-1.0)/((x1+0.0001)*%g) + 0.06)" '%(vel,gradz,gradz))
+
+#Plot('vtrue-ch',
+#     '''
+#     graph pad=n transp=y yreverse=y plotcol=7 plotfat=3 wantaxis=n wanttitle=n min2=%g max2=%g plotcol=3
+#     '''%(v1_2consider,vl_2consider))
+
+#Result('vscan-ext','vscan-nm pick-true vtrue-ch','Overlay')
+
+Flow('veltrue-pick','pick-true','spray axis=2 n=%d d=0.02'%numshots)
+
+Flow('vtrue','veltrue-pick','window n2=1')
+
+# need to spray v(z) - mig2 takes two-dim velocity field as an input 
+
+Flow('vtrue2d','vtrue','spray axis=2 n=%d d=0.02 o=0'%numshots)
+
+### lets migrate with this velocity and check if diffractions are focused
+
+Flow('mig','diffr vtrue','kirchnew velocity=${SOURCES[1]}')
+
+Flow('mig-ch','diffr vtrue-ch','kirchnew velocity=${SOURCES[1]}')
+
+Flow('mig-n','diffr-n vtrue','kirchnew velocity=${SOURCES[1]}')
+
+Flow('mig-fw','data vtrue','kirchnew velocity=${SOURCES[1]}')
+
+### combining models: reflections and diffractions
+
+Flow('data','diffr data-i','add scale=1,1 ${SOURCES[1]}')
+
+Result('data','grey pclip=99 title="Zero-offset Section"')
+
+Result('diffr','grey pclip=99 title="Diffractions"')
+
+### Creating a mask to reduce edge effects
+
+Flow('mask','diffr',
+	'''
+	math output="exp(-0.3*(x2-5)*(x2-5))" |
+	mask min=0.01 | dd type=float | smooth rect2=10 repeat=3	
+	''')
+
+### Creating reflectivity:
+### diffractions and inclined reflections
+
+taperfilter = ' | costaper nw1=100 | costaper nw2=100 | bandpass flo=5 fhi=50'
+
+Flow('diffr-irefl','data-i diffr mask','math K=${SOURCES[2]} output="input*K" | add scale=1,1 ${SOURCES[1]} | costaper nw1=100 | costaper nw2=100')
+
+Flow('diffr-irefl-n','diffr-irefl noise','add scale=1,1 ${SOURCES[1]} | costaper nw1=100 | costaper nw2=100')
+
+### adding noise to diffractions (model has changed so we need to double check it)
+#!# we need to filter the noise so that it has the same
+#!# frequency range 
+#!# adding noise to modelled data but not here
+#!# noisevar = 1e-08
+#!# gives 40% noise
+#!# percentage is estimated as (highest-noise-value/highest diffraction value) 
+
+Flow('diffr-n','diffr','noise seed=100101 var=%g | bandpass flo=5 fhi=50 | costaper nw1=100 | costaper nw2=100'%noisevar)
+
+Flow('noise','diffr','noise seed=100101 var=%g rep=y | bandpass flo=5 fhi=50'%noisevar)
+
+Flow('diffr-nf','diffr','noise seed=100101 var=%g'%noisevar)
+
+#Result('diffr-n','diffr-n','grey pclip=99 title="Diffractions"')
+
+#Result('diffr-nf','diffr-nf','grey pclip=99 title="Diffractions nf"')
+
+Plot('diffr','fft1 | math output="abs(input)" | real | stack | scale axis=1 | graph min2=0.0 max2=1.0 title=')
+
+Plot('diffr-nf','fft1 | math output="abs(input)" | real | stack | scale axis=1 | graph plotcol=7 min2=0.0 max2=1.0 title=')
+
+Plot('diffr-n','fft1 | math output="abs(input)" | real | stack | scale axis=1 | graph plotcol=3 min2=0.0 max2=1.0 title=')
+
+#Result('filtering','diffr diffr-nf diffr-n','Overlay')
+
+######################################################################################
+### Drawing Weighting Functions ######################################################
+
+### single gaussian
+
+dv_ch = 0.01
+va_ch = 3.0
+vb_ch = 5.0
+nv_ch = (vb_ch - va_ch)/(dv_ch)
+v0_ch = 4.0
+beta_ch = 30
+
+Flow('gpi-graph',None,'spike n1=%g d1=%g o1=%g | math output="exp(-(%g)*(%g - x1)^2)"'%(nv_ch,dv_ch,va_ch,beta_ch,v0_ch))
+
+Result('gpi-graph','graph wanttitle=n label1=Velocity unit1=km/s')
+
+#Plot('gpi-graph','graph wanttitle=n label1=Velocity unit1=km/s')
+
+### tapered gaussian
+
+va_l = 3.0
+vb_l = 3.5
+nv_l = (vb_l - va_l)/(dv_ch)
+v0_l = vb_l
+beta_l = 27
+
+# left taper
+Flow('left-graph',None,'spike n1=%g d1=%g o1=%g | math output="exp(-(%g)*(%g - x1)^2)"'%(nv_l,dv_ch,va_l,beta_l,v0_l))
+
+va_r = 5.0
+vb_r = 5.5
+nv_r = (vb_r - va_r)/(dv_ch) + 1
+v0_r = va_r
+beta_r = 27
+
+# right taper
+Flow('right-graph',None,'spike n1=%g d1=%g o1=%g | math output="exp(-(%g)*(%g - x1)^2)"'%(nv_r,dv_ch,va_r,beta_r,v0_r))
+
+nv_f = (va_r - vb_l)/(dv_ch)
+
+# central part
+Flow('flat-graph',None,'spike n1=%g d1=%g o1=%g'%(nv_f,nv_ch,vb_l))
+
+Flow('gpi-tap-graph','left-graph flat-graph right-graph','cat axis=1 ${SOURCES[1]} ${SOURCES[2]}')
+
+Result('gpi-tap-graph','graph wanttitle=n label1=Velocity unit1=km/s')
+
+#Plot('gpi-tap-graph','graph wanttitle=n label1=Velocity unit1=km/s')
+
+######################################################################################
+### Compute regular GPI ##############################################################
+
+Flow('fft-t2','diffr','t2warp | fft1 | fft3 axis=2')
+
+Flow('gpi-fft-t2','fft-t2','gpi3dzo v_a=%g v_b=%g v_0=%g beta=%g'%(va_ch,vb_ch,v0_ch,beta_ch))
+
+Flow('gpi','gpi-fft-t2','fft3 axis=2 inv=y | fft1 inv=y | t2warp inv=y')
+
+Result('gpi',
+       '''
+       grey title="GPS Filtered Image"
+       ''')
+
+#Plot('gpi',
+#       '''
+#       grey title="GPI Filtered Image"
+#       ''')
+
+#Result('nt-gpi-with-graph','gpi gpi-graph','OverUnderIso')
+
+######################################################################################
+### Compute tapered GPI ##############################################################
+
+Flow('left-taper-fft','diffr','t2warp pad=1000 | fft1 | fft3 axis=2 | gpi3dzo v_0=%g v_a=%g v_b=%g beta=%g'%(v0_l,va_l,vb_l,beta_l))
+Flow('right-taper-fft','diffr','t2warp pad=1000 | fft1 | fft3 axis=2 | gpi3dzo v_0=%g v_a=%g v_b=%g beta=%g'%(v0_r,va_r,vb_r,beta_r))
+Flow('flat-fft','diffr','t2warp pad=1000 | fft1 | fft3 axis=2 | gpi3dzo v_0=1.0 v_a=%g v_b=%g beta=0.0'%(vb_l,va_r))
+
+Flow('left','left-taper-fft',
+                  '''
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+Flow('right','right-taper-fft',
+                  '''
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+Flow('flat','flat-fft',
+                  '''
+                  fft3 axis=2 inv=y |
+                  fft1 inv=y |
+                  t2warp inv=y
+                  ''')
+
+#Result('left','grey title="left"')
+#Result('right','grey title="right"')
+#Result('flat','grey title="flat"')
+
+# combine all the parts
+
+Flow('gpi-taper','left flat right','add scale=1,1 ${SOURCES[1]} | add scale=1,1 ${SOURCES[2]}')
+#Plot('gpi-taper',
+#	'''
+#	grey pclip=99 
+#	title="(v_a=%g,v_b=%g,beta=%g)(v_a=%g,v_b=%g)(v_a=%g,v_b=%g,beta=%g)"
+#	'''%(va_l,vb_l,beta_l,vb_l,va_r,va_r,vb_r,beta_r))
+
+Result('gpi-taper','grey pclip=99 title="gpi taper = left + flat + right"')
+#Result('gpi-with-graph','gpi-taper gpi-tap-graph','OverUnderIso')
+
+### Windowing parameters for
+### l2-norm data misfit estimation 
+l2min1 = 0.6
+l2max1 = 0.9 # this might be cheating but I exclude finite support of the model 
+l2min2 = 1.5
+l2max2 = 8.5
+
+norm = [l2min1,l2max1,l2min2,l2max2]
+
+norm2 = [l2min1,l2max1,l2max2,2*l2max2]
+
+### finalx displaying parameters
+minx1=0.5
+maxx1=1.5
+minx2=1.0
+maxx2=8.5
+
+display = [minx1,maxx1,minx2,maxx2]
+
+print(display)
+
+######################################################################################
+### full chain inversion PI PWD L ####################################################
+
+# starting model filled with zeroes
+Flow('mig000','diffr','math output="0.0"')
+
+eps=0.001 # damper
+pad=1000  # t2warp pad
+
+# velocities integration limits
+v_1_sftthr = 3.0 
+v_2_sftthr = 3.5
+v_3_sftthr = 5.0
+v_4_sftthr = 5.5
+
+# rect2 should be removed from the prog
+rad_sftthr = 100
+
+# sflinmig2 is used as Kirchhoff modeling operator in this case 
+# parameters for it are provided below:
+
+# migration aperture 150 is optimal
+# check 501 - full aperture should be fast with omp  
+mig2apt = 150#501
+
+# differentiation in the model domain
+dd = 'n'
+
+# amplitude correction
+ps = 'y'
+
+# antialiasing: triangular 
+mig2aal = 't'
+
+# half differentiation
+hd = 'y'
+
+# velocity
+mig2vel = 'vtrue2d'
+
+# use OMP: currently is hardcaded to y
+doomp = 'y'
+
+# number of iterations for non-regularized least-squares Kirchhoffs
+miter = 5
+
+# Dip
+dip = 'dip-hor'
+
+Flow('dip-hor','diffr','math output="0.0"')
+
+# dip of inclined reflectors
+Flow('idip','diffr-irefl','fdip rect1=10 rect2=50 n4=0')
+
+Flow('ipwd','diffr-irefl idip','pwd dip=${SOURCES[1]}')
+
+Flow('ipwd-n','diffr-irefl-n idip','pwd dip=${SOURCES[1]}')
+
+# high-frequency idip - check for the Null Space
+Flow('idip-hf','diffr-irefl','fdip rect1=10 rect2=15 n4=0')
+
+# Kirchhoff modeling operators
+
+adjmig2 = '''
+	linmig2 adj=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d dd=%s     
+	'''%(ps,hd,doomp,mig2aal,mig2apt,dd)
+
+fwdmig2 = '''
+	linmig2 adj=n
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d dd=%s     
+	'''%(ps,hd,doomp,mig2aal,mig2apt,dd)
+
+cgmig2 = '''
+	linmig2
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d dd=%s
+	'''%(ps,hd,doomp,mig2aal,mig2apt,dd)
+
+kepend = '  vel=${SOURCES[2]} dip=${SOURCES[3]}'
+kepend0 = '  vel=${SOURCES[1]} dip=${SOURCES[2]}'
+
+taper = '| costaper nw1=100 | costaper nw2=100'
+taperf = '| costaper nw1=100 | costaper nw2=100 | bandpass fhi=50'
+
+kirchhfwd = (mig2vel,'idip',fwdmig2,kepend,kepend0,taperf)
+
+kirchhcg  = (mig2vel,'idip',cgmig2,kepend,kepend0,taperf)
+
+# idip is not used is kirchhoff and just is a place holder
+Flow('mig2-model-lsq0',['diffr',mig2vel,'idip'],
+	'''
+	conjgrad
+	%s %s
+	niter=%d mod=$SOURCE
+	'''%(kirchhcg[2],kirchhcg[4],miter))
+
+Flow('mig2-model-lsq','mig2-model-lsq0','math output="input"' + taperfilter)
+
+# conventional migration
+Flow('mig2-mig','diffr vtrue2d',
+     '''
+     %s vel=${SOURCES[1]}
+     '''%(adjmig2))
+
+# generating data for "Inverse Theory Crime"
+  
+Flow('diffr-mig2',['mig2-model-lsq',mig2vel,'idip'],fwdmig2 + kepend0 + ' | noise seed=100101 var=%g'%noisevar + taperfilter)
+
+# applying conventional migration to double-check
+
+Flow('conv-mig-diffr-mig2',['diffr-mig2',mig2vel,'idip'],
+	'''
+	%s %s
+	'''%(adjmig2,kepend0))
+
+# least-squares Kirchhoff no regularization 
+sftthrgen.sftthr(kirchhfwd,kirchhcg,20,5,'mig2-n','diffr-mig2','mig000',0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig2)
+
+# same but with reflections
+# we first create diffractivity using LSQ migration (data is used without noise)
+# then we perform modelling using linmig2 operator and add noise
+# we found good parameters for ps=n - lets stick to them
+Flow('both-mig2-model-lsq0',['diffr-irefl',mig2vel,'idip'],
+	'''
+	conjgrad
+	%s %s ps=n
+	niter=%d mod=$SOURCE
+	'''%(kirchhcg[2],kirchhcg[4],miter))
+
+Flow('both-mig2-model-lsq','both-mig2-model-lsq0','math output="input"' + taperfilter)
+
+# conventional migration
+Flow('both-mig2-mig','diffr-irefl vtrue2d',
+     '''
+     %s vel=${SOURCES[1]}
+     '''%(adjmig2))
+
+Flow('both-diffr-mig2',['both-mig2-model-lsq',mig2vel,'idip'],fwdmig2 + ' ps=n ' + kepend0 + ' | noise seed=100101 var=%g'%noisevar + taperfilter)
+
+# plane-wave destruction is applied
+
+Flow('both-diffr-mig2-pwd','both-diffr-mig2 idip','pwd dip=${SOURCES[1]}')
+
+# path-summation integral operators
+
+pipwdmig2nsm = '''
+	linpipwd2d adj=n
+	domod=y sm=n dopi=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d 
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s	
+	'''%(ps,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+pipwdcgmig2nsm = '''
+	linpipwd2d
+	domod=y sm=n dopi=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d 
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s
+	'''%(ps,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+pepend = '  vel=${SOURCES[2]} dip=${SOURCES[3]}'
+pepend0 = '  vel=${SOURCES[1]} dip=${SOURCES[2]}'
+
+pifwd = (mig2vel,'idip',pipwdmig2nsm,pepend,pepend0,taperf)
+
+picg  = (mig2vel,'idip',pipwdcgmig2nsm,pepend,pepend0,taperf)
+
+# smoothing is disabled
+Flow('idpi-mig2-n',['diffr-mig2',mig2vel,'idip'],
+	'''
+	%s domod=n %s
+	'''%(pifwd[2],pifwd[4]))
+
+# chain diffractions only + sparsity 3.3e-05
+sftthrgen.sftthr(pifwd,picg,20,5,'gen-mig2-ipi-fix-n-nsm','idpi-mig2-n','mig000',3.0e-05,0.0,'Generic',0.0,48.0,display,norm,fwdmig2)
+# illustrate that p-s-i image has higher signal amplitudes
+sftthrgen.sftthr(pifwd,picg,20,5,'gen-mig2-ipi-fix-n-nsm0','idpi-mig2-n','mig000',0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig2)
+# Kirchhoff diffractions only + sparsity 5.3e-05
+sftthrgen.sftthr(kirchhfwd,kirchhcg,20,5,'mig2-fix-n','diffr-mig2','mig000',5.3e-05,0.0,'Generic',0.0,48.0,display,norm,fwdmig2)
+
+# make a graph out of it
+#sfwindow n1=1 min1=0.575 | sfscale axis=2 | sfgraph min2=-0.1 max2=1.0 | sfpen &
+
+# both - reflections and diffractions
+
+Flow('conv-image','diffr-irefl-n vtrue2d',
+     '''
+     %s vel=${SOURCES[1]}
+     '''%(adjmig2))
+
+# dip in the image domain
+Flow('dipim','conv-image','fdip rect1=10 rect2=15 n4=0')
+
+Flow('pwd-n-image','conv-image dipim','pwd dip=${SOURCES[1]}')
+
+# smoothing is enabled (PWD)
+Flow('both-idpi-mig2-n',['both-diffr-mig2',mig2vel,'idip'],
+	'''
+	%s domod=n sm=y ps=n %s
+	'''%(pifwd[2],pifwd[4]))
+
+# smoothing is disabled (PWD)
+Flow('both-idpi-mig2-no-pwd-n',['both-diffr-mig2',mig2vel,'idip'],
+	'''
+	%s domod=n sm=n ps=n %s
+	'''%(pifwd[2],pifwd[4]))
+	
+# putting together the extended model space 
+Flow('both-diffr-mig2-0','both-diffr-mig2 both-diffr-mig2',
+	'''
+	math output=0.0 |
+	cat axis=2 ${SOURCES[1]} |
+	put n3=1 o3=0.0 d3=0.1
+	''')
+
+# extended model (reflections, diffractions) (see above) path-summation integral operators
+
+psn = 'n' 
+
+pipwdmig2fwdcase = '''
+	pipwdmig2 adj=n
+	domod=y sm=y pi=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s
+	'''%(psn,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+pipwdmig2cgcase = '''
+	pipwdmig2
+	domod=y sm=y pi=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s
+	'''%(psn,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+depend = '  vel=${SOURCES[2]} dip=${SOURCES[3]}'
+depend0 = '  vel=${SOURCES[1]} dip=${SOURCES[2]}'
+
+fullchainfwd = (mig2vel,'idip',pipwdmig2fwdcase,depend,depend0,taper)
+
+fullchaincg  = (mig2vel,'idip',pipwdmig2cgcase,depend,depend0,taper)
+
+Flow('both-pipwdmig2-n',['both-diffr-mig2-0',mig2vel,'idip'],
+	'''
+	%s domod=n %s
+	'''%(fullchainfwd[2],fullchainfwd[4]))
+
+# catenate diffraction and reflection models
+
+Flow('data-1','both-idpi-mig2-n','math output="input" | put n3=1 o3=0.0 d3=0.1')
+
+Flow('data-2','both-idpi-mig2-no-pwd-n','math output="input" | put n3=1 o3=0.0 d3=0.1')
+
+Flow('extended-model','mig000 mig000','cat axis=2 ${SOURCES[1]} | put n3=1 o3=0.0 d3=0.1')
+
+# window diffractivity from the model and use kirchhoff modelling
+fwdmig2dr = '''
+	window n2=501 f2=501 |
+	put o2=0.0 | ''' + fwdmig2
+
+# outer iterations = 20
+# inner iterations = 10
+# shaping is therefore applied every 10 iterations
+# 200 iterations in total
+"""
+for case in range(1,21,1):
+
+	radius = 15 # regularization on reflections (spraying radius)
+	#thrs = 999999999 # regularization on diffractions (thresholding)
+	# is specified by the loop
+	innerit = 10 # inner iterations
+	outerit = 20 # outer iterations
+
+	thrs = 0.1*case*(1e-04)
+
+	movie = False
+
+	# Since in our opinion this is a reasonable regularization parameter-set we run inversion for it only
+	# you can delete the case condition and look at other regularization parameter values
+	if case > 0 :#== 10:
+		
+		sftthrgen3.sftthr(pipwdmig2fwdcase,pipwdmig2cgcase,outerit,innerit,'pipwdmig2-%d'%case,'data-1','extended-model',thrs,0.0,'dipim',radius,'Generic',0.0,48.0,501,0.0,display,norm,fwdmig2dr,movie,'diffr-mig2')
+""" # Here, applying regularization only every 10 iterations does not lead to sufficient model regularization
+
+# outer iterations = 40 / 100
+# inner iterations = 5
+# shaping is therefore applied every 5 iterations
+# 200 / 500 iterations in total
+for case in range(1,21,1):
+
+	radius = 3 # regularization on reflections (spraying radius)
+	#!# radius 15 - is way too strong -> noticeable leakage of reflections
+	#!# to diffraction model: I believe since smoothing is too strong
+	#!# not all the reflections are preserved and some are "smoothed out" 
+	#!# take a look at
+	#!# <conv-image.rsf sfpwspray ns=3,5,15 reduce=stack dip=dipim.rsf | sfmath K=conv-image.rsf output="K - input" | sfgrey | sfpen &
+	#thrs = 999999999 # regularization on diffractions (thresholding)
+	# is specified by the loop
+	innerit = 5  # inner iterations
+	outerit = 100#100 # outer iterations - it does not converge in first 5 iterations
+	# but I am using another cascade 
+
+	thrs = 0.1*case*(1e-04)
+
+	print(thrs)
+
+	movie = False
+
+	if case == 3:
+		
+		movie = True
+
+		sftthrgen3.sftthr(fullchainfwd,fullchaincg,outerit,innerit,'pipwdmig2-in5-%d'%case,'data-1','extended-model',thrs,0.0,'dipim',radius,'Generic',0.0,48.0,501,0.0,display,norm,fwdmig2dr,movie,'diffr-mig2')
+
+# disabling PWD and restoring reflections
+
+orthogonalize = True
+radius1 = 10
+radius2 = 35
+niter = 20
+stopper = False
+
+# disabling PWD
+fullchainfwdnsm = (mig2vel,'idip',pipwdmig2fwdcase + ' sm=n',depend,depend0,taper)
+
+fullchaincgnsm  = (mig2vel,'idip',pipwdmig2cgcase + ' sm=n',depend,depend0,taper)
+
+for case in range(1,21,1):
+
+	radius = 5   # regularization on reflections (spraying radius)
+	#thrs = 999999999 # regularization on diffractions (thresholding)
+	# is specified by the loop
+	innerit = 5  # inner iterations
+	outerit = 10 # outer iterations - it does not converge in first 5 iterations
+	# but I am using another cascade 
+
+	# lets try reflection and diffraction orthogonalization
+	orthogon = (orthogonalize,radius1,radius2,niter,stopper)
+
+	#5e-08
+	reflthrs = 0.0 + (case-1)*(1e-05)
+
+	#reflthrssft = 1e-05 + case*(0.5e-05)
+
+	movie = False
+
+	soft = 0
+
+	if case == 17 or case==18 or case==20:
+		
+		movie = True
+			
+		# Since in our opinion this is a reasonable regularization parameter-set we run inversion for it only
+		# you can delete the case condition and look at other regularization parameter values
+		#if ( (case == 17) ): # case 17 is currently optimal for orthogonalization 
+
+		sftthrgen3.sftthr(fullchainfwdnsm,fullchaincgnsm,30,innerit,'pipwdmig2-in5-no-pwd-%d'%case,'data-2','pipwdmig2-in5-3-x-it-99',reflthrs,0.0,'dipim',radius,'Generic',soft,48.0,501,0.0,display,norm,fwdmig2dr,movie,'diffr-mig2',orthogon)
+
+Flow('myFirstSimilarity','pipwdmig2-in5-no-pwd-17-result-it-0 pipwdmig2-in5-no-pwd-17-result-it-0Refl',
+	'''
+	window f2=%d |
+	similarity niter=%d rect1=%d rect2=%d other=${SOURCES[1]}
+	'''%(501,orthogon[3],orthogon[1],orthogon[2]))
+
+
+Flow('myMiddleSimilarity','pipwdmig2-in5-no-pwd-17-result-it-8 pipwdmig2-in5-no-pwd-17-result-it-8Refl',
+	'''
+	window f2=%d |
+	similarity niter=%d rect1=%d rect2=%d other=${SOURCES[1]}
+	'''%(501,orthogon[3],orthogon[1],orthogon[2]))
+
+
+Plot('updateB4OrthFirst','pipwdmig2-in5-no-pwd-17-result-it-0','grey wanttitle=n clip=0.000151452')
+
+# comparing updates to diffractions after orthogon
+Plot('updateA4OrthFirst','pipwdmig2-in5-no-pwd-17-result-it-0 pipwdmig2-in5-no-pwd-17-result-it-0DiffO',
+	'''
+	window f2=%d |
+	cat axis=2 ${SOURCES[1]} |
+	grey wanttitle=n clip=0.000151452
+	'''%501)
+
+Plot('myFirstSimilarity',
+	'''
+	scale axis=2 |
+	grey allpos=y color=j wanttitle=n scalebar=y minval=0.0 maxval=1.0
+	''')
+
+Plot('updateB4OrthMiddle','pipwdmig2-in5-no-pwd-17-result-it-8','grey wanttitle=n clip=0.000151452')
+
+# comparing updates to diffractions after orthogon
+Plot('updateA4OrthMiddle','pipwdmig2-in5-no-pwd-17-result-it-8 pipwdmig2-in5-no-pwd-17-result-it-8DiffO',
+	'''
+	window f2=%d |
+	cat axis=2 ${SOURCES[1]} |
+	grey wanttitle=n clip=0.000151452
+	'''%501)
+
+Plot('myMiddleSimilarity',
+	'''
+	grey allpos=y color=j wanttitle=n scalebar=y
+	''')
+
+# wave-number restoration using conventional LS Kirchhoff migration with mask 
+# describing diffraction locations determined through chain inversion  
+
+fwdmig22 = '''
+	linpipwd2d adj=n
+	domod=y sm=n dopi=n
+	ps=n hd=%s doomp=%s
+	antialias=%s apt=%d 
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s	
+	'''%(hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+cgmig22 = '''
+	linpipwd2d
+	domod=y sm=n dopi=n
+	ps=n hd=%s doomp=%s
+	antialias=%s apt=%d 
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s	
+	'''%(hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+kirchhfwd2 = (mig2vel,'idip',fwdmig22,depend,depend0,taper)
+
+kirchhcg2  = (mig2vel,'idip',cgmig22,depend,depend0,taper)
+
+# input to wave-number restoration 
+#Flow('input-to-wn','pipwdmig2-in5-3-x-it-99','window n2=501 f2=501 | put o2=0.0')
+
+Flow('input-to-wn','pipwdmig2-in5-no-pwd-17-x-it-9','window n2=501 f2=501 | put o2=0.0')
+
+Flow('input-to-wn-refl','pipwdmig2-in5-no-pwd-17-x-it-9','window n2=501 | put o2=0.0')
+
+# just apply a mask since we actually know diffraction locations
+Flow('diffr-locs','input-to-wn',
+	'''
+	envelope |
+	mask min=6.7e-05 |
+	dd type=float |
+	smooth rect1=2 rect2=2 repeat=5 |
+	scale axis=2
+	''')
+
+# mask min=1.439e-04 |
+# | smooth rect1=3 rect2=3
+
+for i in range(10):
+	
+	if i == 0:
+	
+		sftthrgenp.sftthr(kirchhfwd2,kirchhcg2,1,5,'restore-wn-refl-%d'%i,'both-diffr-mig2','input-to-wn-refl',0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig22)
+
+	else:
+		sftthrgenp.sftthr(kirchhfwd2,kirchhcg2,1,5,'restore-wn-refl-%d'%i,'both-diffr-mig2',modelrefl,0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig22)		
+
+	modelrefl = 'model-wn-refl-%d'%i
+	
+	Flow(modelrefl,['restore-wn-refl-%d-x-it-0'%i,'dipim'],'pwspray dip=${SOURCES[1]} ns=%d reduce=median | costaper nw1=20 nw2=20'%15)
+
+Flow('reflectivity-restored','model-wn-refl-9','math output=input')
+
+Flow('reflections-restored',['reflectivity-restored',mig2vel,'idip'],fwdmig22 + ' vel=${SOURCES[1]} dip=${SOURCES[2]}')
+
+Flow('noise-restored-refl','both-diffr-mig2 reflections-restored','math K=${SOURCES[1]} output="input - K" | bandpass fhi=75')
+
+Flow('noise-restored-refl-orthogon reflections-restoredO','noise-restored-refl reflections-restored',
+	'''
+	ortho rect1=%d rect2=%d niter=%d
+	sig=${SOURCES[1]} sig2=${TARGETS[1]} | bandpass fhi=50
+	'''%(15,15,40))
+
+for i in range(10):
+	
+	if i == 0:
+
+		sftthrgen.sftthr(kirchhfwd2,kirchhcg2,1,5,'restore-wn-a4refl-%d'%i,'noise-restored-refl','input-to-wn',0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig22)
+
+	else:
+
+		sftthrgen.sftthr(kirchhfwd2,kirchhcg2,1,5,'restore-wn-a4refl-%d'%i,'noise-restored-refl',modela4refl,0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig22)
+
+	modela4refl = 'model-wn-a4refl-%d'%i
+
+	Flow(modela4refl,['restore-wn-a4refl-%d-x-it-0'%i,'diffr-locs'],'math K=${SOURCES[1]} output="input*K"')
+
+Flow('diffractivity-restored','model-wn-a4refl-9','math output=input')
+
+#  + '| scale axis=2'
+#  + '| window min1=0.5 max1=1.5 min2=2.0 max2=8.0'
+Flow('diffractions-restored',['diffractivity-restored',mig2vel,'idip'],fwdmig22 + ' vel=${SOURCES[1]} dip=${SOURCES[2]}')
+
+# scale axis=2 | 
+Flow('noise-restored-diffr','diffr-mig2 diffractions-restored','math K=${SOURCES[1]} output="input - K"')
+
+Flow('noise-restored','noise-restored-refl diffractions-restored','math K=${SOURCES[1]} output="input - K"')
+
+Flow('noise-restored-orthogon diffractions-restoredO','noise-restored diffractions-restored',
+	'''
+	ortho rect1=%d rect2=%d niter=%d
+	sig=${SOURCES[1]} sig2=${TARGETS[1]}
+	'''%(15,15,200))
+
+def plotsect(title='',extra='',mint=0.5,maxt=1.5,minx=2.0,maxx=8.0):
+	return '''
+	bandpass fhi=50 | window min1=%g max1=%g min2=%g max2=%g | put label2="Midpoint" unit2=km |
+	grey wanttitle=n %s screenratio=0.5
+	'''%(mint,maxt,minx,maxx,extra)
+
+def plotsect2(title='',extra='',mint=0.5,maxt=1.5):
+	return '''
+	bandpass fhi=50 | window min1=%g max1=%g | put label2="Midpoint" unit2=km |
+	grey wanttitle=n %s screenratio=0.5
+	'''%(mint,maxt,extra)
+
+Result('diffr-irefl-n','diffr-irefl-n',plotsect('Zero-Offset Section'))
+
+Result('pi-w-pwd-s','data-1',plotsect('Path-Summation Integral + PWD'))
+
+Result('pi-n-pwd-s','data-2',plotsect('Path-Summation Integral - PWD'))
+
+Result('ref-dif-1','pipwdmig2-in5-3-x-it-99',plotsect2('Ref-Dif + PWD'))
+
+Result('ref-dif-2','pipwdmig2-in5-no-pwd-17-x-it-9',plotsect2('Ref-Dif - PWD'))
+
+nx = 501
+
+ox = 0.0
+
+Result('refly-w-pwd-s','pipwdmig2-in5-3-x-it-99',
+	'''
+	window n2=%d | 
+	 '''%(nx) + plotsect('Reflectivity + PWD'))
+
+Result('diffry-w-pwd-s','pipwdmig2-in5-3-x-it-99',
+	'''
+	window f2=%d | put o2=%g |
+	 '''%(nx,ox) + plotsect('diffractivity + PWD'))
+
+Result('refly-n-pwd-s','pipwdmig2-in5-no-pwd-17-x-it-9',
+	'''
+	window n2=%d | 
+	 '''%(nx) + plotsect('Reflectivity - PWD'))
+
+Result('diffry-n-pwd-s','pipwdmig2-in5-no-pwd-17-x-it-9',
+	'''
+	window f2=%d | put o2=%g |
+	 '''%(nx,ox) + plotsect('diffractivity - PWD'))
+
+Result('update-b4-refl-synth','pipwdmig2-in5-no-pwd-17-result-it-1',
+	'''
+	window n2=501 | put o2=%g |
+	'''%ox + plotsect('Update to reflections'))
+
+Result('update-b4-diffr-synth','pipwdmig2-in5-no-pwd-17-result-it-1',
+	'''
+	window f2=501 | put o2=%g |
+	'''%ox + plotsect('Update to diffractions'))
+
+Result('update-a4-diffr-synth','pipwdmig2-in5-no-pwd-17-result-it-1DiffO',
+	'''
+	put o2=%g |
+	'''%ox + plotsect('Update to diffractions orthogonalized','clip=0.000139068'))
+
+Result('diffr-n',plotsect('Diffractions'))
+
+Result('ds-s','diffractions-restoredO',plotsect('Diffractions','clip=0.000351307'))
+
+Result('rs-s','reflections-restored',plotsect('Reflections'))
+
+Result('n-s','noise-restored-orthogon',plotsect('Noise','clip=0.000351307'))
+
+Result('t-n','noise',plotsect('True Noise','clip=0.000351307'))
+
+Result('t-ds','diffr',plotsect('True Diffractions'))
+
+Result('t-rs','data-i',plotsect('True Reflections'))
+
+Result('lsq-mig2','mig2-n-x-it-19',plotsect('LS Kirchhoff'))
+
+Result('lsq-pi','gen-mig2-ipi-fix-n-nsm0-x-it-19',plotsect('LS P-S I'))
+
+Result('conv-image-diffr2','conv-mig-diffr-mig2',plotsect('Conv Image'))
+
+Result('convergence-synth','a-pipwdmig2-in5-3-movie-l2 a-pipwdmig2-in5-3-movie-l2m','SideBySideAniso')
+
+Result('convergence-no-pwd','a-pipwdmig2-in5-no-pwd-17-movie-l2 a-pipwdmig2-in5-no-pwd-17-movie-l2m','SideBySideAniso')
+
+Result('idpi-mig2-n',plotsect('DPI MIG2 N'))
+
+End()

@@ -1,5 +1,4 @@
 /* 2-D prestack LSRTM linear operator using wavefield reconstruction method
-   Note: Sponge ABC is applied!
 */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -46,9 +45,10 @@ int getTime(struct timeval t1, struct timeval  t2){
 float compareWavefields(int it, float **u){
     ///*< compare current wavefield with true wavefield saved in sp0array >*/
 
+    int ix, iz;
     float sum =0;
-    for (int ix=nb;ix<nxpad-nb;ix++){
-	for (int iz=nb;iz<nzpad-nb;iz++){
+    for (ix=nb;ix<nxpad-nb;ix++){
+	for (iz=nb;iz<nzpad-nb;iz++){
 	    if (gp1[ix][iz]) sum += fabs((u[ix][iz]-sp0array[it][ix][iz]));
 	}
     }
@@ -58,16 +58,17 @@ void rw_snapshot(float** p, int it, bool read){
     // read/write snapshot completely 
     // if read=true read, else write
   
+    int ix, iz;
     if (!read){
-	for (int ix=0;ix< nxpad;ix++){
-	    for (int iz=0;iz< nzpad;iz++){
+	for (ix=0;ix< nxpad;ix++){
+	    for (iz=0;iz< nzpad;iz++){
 		sp0array[it][ix][iz]=p[ix][iz];
 	    }
 	}
     }
     else{
-	for (int ix=0;ix< nxpad;ix++){
-	    for (int iz=0;iz< nzpad;iz++){
+	for (ix=0;ix< nxpad;ix++){
+	    for (iz=0;iz< nzpad;iz++){
 		p[ix][iz]=sp0array[it][ix][iz];
 	    }
 	}
@@ -441,27 +442,24 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	memset(sp1[0], 0, nzpad*nxpad*sizeof(float));
 	memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
 	memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
-    
 	if(adj){/* migration: mm=Lt dd */
 	    //==========================================================
 	    for(it=0; it<nt; it++){			
+		if (fromBoundary) boundary_rw(sp1, &rwbndr[it*4*(nx+nz)], false);
+		else rw_snapshot(sp1,it,false);
+
 		add_source(&sxz[is], sp1, 1, &wlt[it], true);
 		step_forward(sp0, sp1, vv, false);
 		ptr=sp0; sp0=sp1; sp1=ptr;
 		apply_sponge(sp0);
 		apply_sponge(sp1);
-
-		//it might be problematic to reconstruct perfectly if storing after absorbing
-		//this can cause failure of dot product test, I will fix it later
-		if (fromBoundary){
-		    boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
-		    //rw_snapshot(sp0,it,false); // save for tests to compare
-		}else rw_snapshot(sp0,it,false);
-
 	    }
-
+	    ptr=sp0; sp0=sp1; sp1=ptr;
 	    for (it=nt-1; it >-1; it--) {
 		/* reverse time order, Img[]+=Ps[]* Pg[]; */
+		for(i2=0; i2<nx; i2++)
+		    for(i1=0; i1<nz; i1++)
+			mod[i1+nz*i2]+=sp1[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
 
 		/* backpropagate receiver wavefield */
 		for(ig=0;ig<ng; ig++){
@@ -469,55 +467,43 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 		    gz=gxz[ig]%nz;
 		    gp1[gx+nb][gz+nb]+=dat[it+ig*nt+is*nt*ng];
 		}
-		if (fromBoundary){ 
-		    boundary_rw(sp0, &rwbndr[(it)*4*(nx+nz)], true);
-		    //fprintf(stderr,"it=%d, error=%f \n",it,compareWavefields(it,sp0));
-		    for(i2=0; i2<nx; i2++)
-			for(i1=0; i1<nz; i1++)
-			    mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
-
-		    ptr=sp0; sp0=sp1; sp1=ptr;
-		    step_forward(sp0, sp1, vv, false);
-		    add_source(&sxz[is], sp1, 1, &wlt[it], false);
-		}else{ 
-		    rw_snapshot(sp0,it,true); // read
-		    for(i2=0; i2<nx; i2++)
-			for(i1=0; i1<nz; i1++)
-			    mod[i1+nz*i2]+=sp0[i2+nb][i1+nb]*gp1[i2+nb][i1+nb];
-		}
-
 		step_forward(gp0, gp1, vv, false);
 		ptr=gp0; gp0=gp1; gp1=ptr;
 		apply_sponge(gp0); 
 		apply_sponge(gp1); 
+
+		if (fromBoundary){ 
+		    boundary_rw(sp1, &rwbndr[(it)*4*(nx+nz)], true);
+		    step_forward(sp0, sp1, vv, false);
+		    add_source(&sxz[is], sp1, 1, &wlt[it], false);
+		    ptr=sp0; sp0=sp1; sp1=ptr;
+		}else rw_snapshot(sp1,it,true); 
 	    }
 	}else{/* Born modeling/demigration: dd=L mm */	
 	    //==========================================================
 	    for(it=0; it<nt; it++){	
 		/* forward time order, Pg[]+=Ps[]* Img[]; */	
-		add_source(&sxz[is], sp1, 1, &wlt[it], true);
-		step_forward(sp0, sp1, vv, false);
-		ptr=sp0; sp0=sp1; sp1=ptr;
-		apply_sponge(sp0);
-		apply_sponge(sp1);
 		for(i2=0; i2<nx; i2++)
 		    for(i1=0; i1<nz; i1++)
-			gp1[i2+nb][i1+nb]+=sp0[i2+nb][i1+nb]*mod[i1+nz*i2];
-
-		for(ig=0;ig<ng; ig++){
-		    gx=gxz[ig]/nz;
-		    gz=gxz[ig]%nz;
-		    dat[it+ig*nt+is*nt*ng]+=gp1[gx+nb][gz+nb];
-		}
+			gp1[i2+nb][i1+nb]+=sp1[i2+nb][i1+nb]*mod[i1+nz*i2];
 
 		step_forward(gp0, gp1, vv, true);	
 		ptr=gp0; gp0=gp1; gp1=ptr;
 		apply_sponge(gp0); 
 		apply_sponge(gp1); 
-	
+		for(ig=0;ig<ng; ig++){//record data
+		    gx=gxz[ig]/nz;
+		    gz=gxz[ig]%nz;
+		    dat[it+ig*nt+is*nt*ng]+=gp1[gx+nb][gz+nb];
+		}
+
+		add_source(&sxz[is], sp1, 1, &wlt[it], true);
+		step_forward(sp0, sp1, vv, false);
+		ptr=sp0; sp0=sp1; sp1=ptr;
+		apply_sponge(sp0);
+		apply_sponge(sp1);
 	    }	
 	}
-
     }	 
 }
 

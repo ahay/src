@@ -172,8 +172,59 @@ void dynprog(int i0 /* starting velocity */,
     }
 }
 
+void dynprog1(float** weight /* [n1][n2] */)
+/*< run backward >*/
+{
+    float d, c, w, w2;
+    int i1, i2, i, ic, ib, ie, it;
+
+    c = FLT_MAX;
+    ic = -1;
+
+    /* minimum at the bottom */
+    for (i2=0; i2 < n2; i2++) {
+	d = next[i2];
+	if (d < c) {
+	    c = d;
+	    ic = i2;
+	}
+    }
+    
+    for (i2=0; i2 < n2; i2++) {
+	w = 0.5*(weight[n1-2][i2]+weight[n1-1][ic]);
+	prev[i2] = dist[SF_ABS(i2-ic)]*w;
+	what[n1-2][i2] = ic;
+    }
+
+    for (i1=n1-2; i1 >= 0; i1--) {
+	for (i2=0; i2 < n2; i2++) {
+	    w = weight[i1][i2];
+	    ib = SF_MAX(i2-gt,-1);
+	    ie = SF_MIN(i2+gt,n2);
+	    c = FLT_MAX;
+	    ic = -1;
+	    for (i=ib+1; i < ie; i++) {
+		w2 = 0.5*(w+weight[i1+1][i]);
+		d = dist[SF_ABS(i2-i)]*w2+prev[i];
+		it = i-ib-1;
+		if (d < c) {
+		    c =	d;
+		    ic = it;
+		}
+		prob[it]=d;
+	    }
+
+	    next[i2]=find_minimum(ic,ie-ib-1,ib+1,c,&what[i1][i2]);
+	}
+	for (i2=0; i2 < n2; i2++) {
+	    prev[i2]=next[i2];
+	}
+    }
+}
+
+
 void dynprog_traj(float *traj /* [n1] */)
-/*< extract trajectory >*/
+/*< extract trajectory (backward) >*/
 {
     int i2, i1;
     float c, d, fc;
@@ -196,6 +247,32 @@ void dynprog_traj(float *traj /* [n1] */)
 	fc = interpolate(fc,i1);
     }
 }
+
+void dynprog1_traj(float *traj /* [n1] */)
+/*< extract trajectory (forward) >*/
+{
+    int i2, i1;
+    float c, d, fc;
+
+    c = FLT_MAX;
+    fc = 0;
+
+    /* minimum at the top */
+    for (i2=0; i2 < n2; i2++) {
+	d = next[i2];
+	if (d < c) {
+	    c = d;
+	    fc = i2;
+	}
+    }
+
+    /* coming down */
+    for (i1=0; i1 < n1; i1++) {
+	traj[i1]=fc;
+	fc = interpolate(fc,i1);
+    }
+}
+
 
 static float interpolate(float fc, int i1)
 {

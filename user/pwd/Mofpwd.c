@@ -23,6 +23,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool drift;
     int i1, i2, n1, n2, np, ip, nw, nj;
     float p0, dp, p, **pp, **xx, **yy, *obj;
     allpas2 ap;
@@ -42,6 +43,9 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("dp",&dp)) dp=2*p0/(1.-np);
     /* dip sampling */
 
+    if (!sf_getbool("drift",&drift)) drift=false;
+    /* if shift filter */
+
     sf_putint(of,"n1",np);
     sf_putfloat(of,"d1",dp);
     sf_putfloat(of,"o1",p0);
@@ -60,7 +64,7 @@ int main(int argc, char* argv[])
     obj = sf_floatalloc(np);
 
     sf_floatread (xx[0],n1*n2,in);
-    ap = allpass2_init (nw,nj,n1,n2,pp);
+    ap = allpass2_init (nw,nj,n1,n2,drift,pp);
 
     for (ip=0; ip < np; ip++) {
         p = p0 + ip*dp;

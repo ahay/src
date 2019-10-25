@@ -23,13 +23,13 @@ def Flow(sources,flow,bindir,rsfflow=1,
          remote='', stdout=1,stdin=1,timer='',
          mpirun=None,workdir=None,batch=None,np=1,wall=''):
     'Output a command line'
-    lines = string.split(str(flow),'&&')
+    lines = (str(flow)).split('&&')
     steps = []
     for line in lines:
         substeps = []
-        sublines = string.split(line,'|')
+        sublines = line.split('|')
         for subline in sublines:           
-            pars = string.split(subline)
+            pars = subline.split()
             # command is assumed to be always first in line
             command = pars.pop(0)
             # check if this command is in our list
@@ -38,7 +38,7 @@ def Flow(sources,flow,bindir,rsfflow=1,
                     rsfprog = command
                 else:
                     rsfprog = prefix + command            
-                if rsf.doc.progs.has_key(rsfprog):
+                if rsfprog in rsf.doc.progs:
                     if checkpar:
                         for par in pars:
                             if rsf.doc.progs[rsfprog].check(par):
@@ -80,7 +80,7 @@ def Flow(sources,flow,bindir,rsfflow=1,
                         rsfprog2 = command2
                     else:
                         rsfprog2 = prefix + command2            
-                    if rsf.doc.progs.has_key(rsfprog2):
+                    if rsfprog2 in rsf.doc.progs:
                         command2 = os.path.join(bindir,rsfprog2+progsuffix) 
                         sources.append(command2)
                         if rsfprog2 not in coms:
@@ -95,12 +95,12 @@ def Flow(sources,flow,bindir,rsfflow=1,
             if rsfprog and rsfprog.startswith(prefix+'mpi') and mpirun:
                 pars.insert(0,mpirun)
             #<- assemble the command line
-            substep = remote + string.join(pars,' ')
+            substep = remote + ' '.join(pars)
             substeps.append(substep)
         #<-
-        steps.append(string.join(substeps," | "))
+        steps.append(" | ".join(substeps,))
     #<- assemble the pipeline
-    command = string.join(steps," && ")
+    command = " && ".join(steps,)
     mpiprog = rsfprog and (rsfprog[:len(prefix)+3] == prefix+'mpi' or \
                            rsfprog == prefix+'conjgradmpi' or \
                            rsfprog == prefix+'cconjgradmpi')

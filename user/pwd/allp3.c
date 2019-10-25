@@ -32,6 +32,7 @@ typedef struct Allpass *allpass;
 
 struct Allpass {
     int nx, ny, nz, nw, nj;
+    bool drift;
     float *flt, *pp;
 };
 
@@ -40,6 +41,7 @@ static allpass ap1, ap2;
 allpass allpass_init(int nw                 /* filter size */, 
 		     int nj                 /* filter step */, 
 		     int nx, int ny, int nz /* data size */, 
+		     bool drift             /* if shift filter */,
 		     float *pp              /* dip [nz*ny*nx] */)
 /*< Initialize >*/
 {
@@ -52,6 +54,7 @@ allpass allpass_init(int nw                 /* filter size */,
     ap->nx = nx;
     ap->ny = ny;
     ap->nz = nz;
+    ap->drift = drift;
     ap->pp = pp;
 
     ap->flt = sf_floatalloc(2*nw+1);
@@ -75,7 +78,7 @@ void allpass1 (bool left        /* left or right prediction */,
 	       float* yy        /* output */)
 /*< in-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip;
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip, id;
 
     nx = ap->nx;
     ny = ap->ny;
@@ -101,16 +104,103 @@ void allpass1 (bool left        /* left or right prediction */,
 	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
 		i = ix + nx * (iy + ny * iz);
 
-		if (der) {
-		    aderfilter(ap->pp[i], ap->flt);
+		if (ap->drift) {
+		    id = SF_NINT(ap->pp[i]);
+		    if (ix-ap->nw*ap->nj-id < 0 || 
+			ix+ap->nw*ap->nj-id >= nx) continue;
+
+		    if (der) {
+			aderfilter(ap->pp[i]-id, ap->flt);
+		    } else {
+			passfilter(ap->pp[i]-id, ap->flt);
+		    }
+		    
+		    for (iw = 0; iw <= 2*ap->nw; iw++) {
+			is = (iw-ap->nw)*ap->nj;
+			
+			yy[i] += (xx[i+is+ip] - xx[i-is-id]) * ap->flt[iw];
+		    }		    
 		} else {
-		    passfilter(ap->pp[i], ap->flt);
+		    if (der) {
+			aderfilter(ap->pp[i], ap->flt);
+		    } else {
+			passfilter(ap->pp[i], ap->flt);
+		    }
+		    
+		    for (iw = 0; iw <= 2*ap->nw; iw++) {
+			is = (iw-ap->nw)*ap->nj;
+			
+			yy[i] += (xx[i+is+ip] - xx[i-is]) * ap->flt[iw];
+		    }
 		}
-	      
-		for (iw = 0; iw <= 2*ap->nw; iw++) {
-		    is = (iw-ap->nw)*ap->nj;
-		  
-		    yy[i] += (xx[i+is+ip] - xx[i-is]) * ap->flt[iw];
+	    }
+	}
+    }
+}
+
+void allpass1t (bool left        /* left or right prediction */,
+	       bool der         /* derivative flag */, 
+	       const allpass ap /* PWD object */, 
+	       float* xx        /* input */, 
+	       float* yy        /* output */)
+/*< adjoint of in-line plane-wave destruction >*/
+{
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip, id;
+
+    nx = ap->nx;
+    ny = ap->ny;
+    nz = ap->nz;
+
+    if (left) {
+	i1=1; i2=ny;   ip=-nx;
+    } else {
+	i1=0; i2=ny-1; ip=nx;
+    }
+
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		i = ix + nx * (iy + ny * iz);
+		xx[i] = 0.;
+	    }
+	}
+    }
+  
+    for (iz=0; iz < nz; iz++) {
+	for (iy=i1; iy < i2; iy++) {
+	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
+		i = ix + nx * (iy + ny * iz);
+
+		if (ap->drift) {
+		    id = SF_NINT(ap->pp[i]);
+		    if (ix-ap->nw*ap->nj-id < 0 || 
+			ix+ap->nw*ap->nj-id >= nx) continue;
+
+		    if (der) {
+			aderfilter(ap->pp[i]-id, ap->flt);
+		    } else {
+			passfilter(ap->pp[i]-id, ap->flt);
+		    }
+		    
+		    for (iw = 0; iw <= 2*ap->nw; iw++) {
+			is = (iw-ap->nw)*ap->nj;
+			
+			xx[i+is+ip] += yy[i] * ap->flt[iw];
+			xx[i-is-id] -= yy[i] * ap->flt[iw];
+		    }
+		} else {
+		    if (der) {
+			aderfilter(ap->pp[i], ap->flt);
+		    } else {
+			passfilter(ap->pp[i], ap->flt);
+		    }
+		    
+		    for (iw = 0; iw <= 2*ap->nw; iw++) {
+			is = (iw-ap->nw)*ap->nj;
+			
+			xx[i+is+ip] += yy[i] * ap->flt[iw];
+			xx[i-is]    -= yy[i] * ap->flt[iw];
+		    }
 		}
 	    }
 	}
@@ -124,7 +214,7 @@ void left1 (bool left        /* left or right prediction */,
 	       float* yy        /* output */)
 /*< left part of in-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip;
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip, id;
 
     nx = ap->nx;
     ny = ap->ny;
@@ -150,15 +240,27 @@ void left1 (bool left        /* left or right prediction */,
 	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
 		i = ix + nx * (iy + ny * iz);
 
-		if (der) {
-		    aderfilter(ap->pp[i], ap->flt);
+		if (ap->drift) {
+		    id = SF_NINT(ap->pp[i]);
+		    if (ix-ap->nw*ap->nj-id < 0 || 
+			ix+ap->nw*ap->nj-id >= nx) continue;
+
+		    if (der) {
+			aderfilter(ap->pp[i]-id, ap->flt);
+		    } else {
+			passfilter(ap->pp[i]-id, ap->flt);
+		    }
 		} else {
-		    passfilter(ap->pp[i], ap->flt);
+		    if (der) {
+			aderfilter(ap->pp[i], ap->flt);
+		    } else {
+			passfilter(ap->pp[i], ap->flt);
+		    }
 		}
-	      
+
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
-		  
+		    
 		    yy[i] += xx[i+is+ip] * ap->flt[iw];
 		}
 	    }
@@ -173,7 +275,7 @@ void right1 (bool left        /* left or right prediction */,
 	       float* yy        /* output */)
 /*< right part of in-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2;
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, id;
 
     nx = ap->nx;
     ny = ap->ny;
@@ -199,16 +301,34 @@ void right1 (bool left        /* left or right prediction */,
 	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
 		i = ix + nx * (iy + ny * iz);
 
-		if (der) {
-		    aderfilter(ap->pp[i], ap->flt);
+		if (ap->drift) {
+		    id = SF_NINT(ap->pp[i]);
+		    if (ix-ap->nw*ap->nj-id < 0 || 
+			ix+ap->nw*ap->nj-id >= nx) continue;
+		    
+		    if (der) {
+			aderfilter(ap->pp[i]-id, ap->flt);
+		    } else {
+			passfilter(ap->pp[i]-id, ap->flt);
+		    }
+		    
+		    for (iw = 0; iw <= 2*ap->nw; iw++) {
+			is = (iw-ap->nw)*ap->nj;
+			
+			yy[i] += xx[i-is-id] * ap->flt[iw];
+		    }
 		} else {
-		    passfilter(ap->pp[i], ap->flt);
-		}
-	      
-		for (iw = 0; iw <= 2*ap->nw; iw++) {
-		    is = (iw-ap->nw)*ap->nj;
-		  
-		    yy[i] += xx[i-is] * ap->flt[iw];
+		    if (der) {
+			aderfilter(ap->pp[i], ap->flt);
+		    } else {
+			passfilter(ap->pp[i], ap->flt);
+		    }
+		    
+		    for (iw = 0; iw <= 2*ap->nw; iw++) {
+			is = (iw-ap->nw)*ap->nj;
+			
+			yy[i] += xx[i-is] * ap->flt[iw];
+		    }
 		}
 	    }
 	}
@@ -222,7 +342,7 @@ void allpass2 (bool left        /* left or right prediction */,
 	       float* yy        /* output */)
 /*< cross-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip;
+    int ix, iy, iz, iw, is, i, nx, ny, nz, i1, i2, ip, id;
 
     nx = ap->nx;
     ny = ap->ny;
@@ -248,16 +368,35 @@ void allpass2 (bool left        /* left or right prediction */,
 	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
 		i = ix + nx * (iy + ny * iz);
 		
-		if (der) {
-		    aderfilter(ap->pp[i], ap->flt);
-		} else {
-		    passfilter(ap->pp[i], ap->flt);
-		}
-		
-		for (iw = 0; iw <= 2*ap->nw; iw++) {
-		    is = (iw-ap->nw)*ap->nj;
+		if (ap->drift) {
+		    id = SF_NINT(ap->pp[i]);
+		    if (ix-ap->nw*ap->nj-id < 0 || 
+			ix+ap->nw*ap->nj-id >= nx) continue;
+
+		    if (der) {
+			aderfilter(ap->pp[i]-id, ap->flt);
+		    } else {
+			passfilter(ap->pp[i]-id, ap->flt);
+		    }
 		    
-		    yy[i] += (xx[i+is+ip] - xx[i-is]) * ap->flt[iw];
+		    for (iw = 0; iw <= 2*ap->nw; iw++) {
+			is = (iw-ap->nw)*ap->nj;
+			
+			yy[i] += (xx[i+is+ip] - xx[i-is-id]) * ap->flt[iw];
+		    }
+
+		} else {
+		    if (der) {
+			aderfilter(ap->pp[i], ap->flt);
+		    } else {
+			passfilter(ap->pp[i], ap->flt);
+		    }
+		    
+		    for (iw = 0; iw <= 2*ap->nw; iw++) {
+			is = (iw-ap->nw)*ap->nj;
+			
+			yy[i] += (xx[i+is+ip] - xx[i-is]) * ap->flt[iw];
+		    }
 		}
 	    }
 	}
@@ -274,7 +413,7 @@ void allpass3_init (allpass ap, allpass aq)
 void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 /*< PWD as linear operator >*/
 {
-    int i, ix, iy, iz, iw, is, nx, ny, nz, nw, nj;
+    int i, ix, iy, iz, iw, is, nx, ny, nz, nw, nj, id;
 
     if (n2 != 2*n1) sf_error("%s: size mismatch: %d != 2*%d",__FILE__,n2,n1);
 
@@ -293,16 +432,35 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 		i = ix + nx*(iy + ny*iz);
 
-		passfilter(ap1->pp[i], ap1->flt);
-	      
-		for (iw = 0; iw <= 2*nw; iw++) {
-		    is = (iw-nw)*nj;
-	
-		    if (adj) {
-			xx[i+nx+is] += yy[i] * ap1->flt[iw];
-			xx[i-is]    -= yy[i] * ap1->flt[iw];
-		    } else {
-			yy[i] += (xx[i+nx+is] - xx[i-is]) * ap1->flt[iw];
+		if (ap1->drift) {
+		    id = SF_NINT(ap1->pp[i]);
+		    if (ix-nw*nj-id < 0 || 
+			ix+nw*nj-id >= nx) continue;
+
+		    passfilter(ap1->pp[i]-id, ap1->flt);
+		    
+		    for (iw = 0; iw <= 2*nw; iw++) {
+			is = (iw-nw)*nj;
+			
+			if (adj) {
+			    xx[i+nx+is] += yy[i] * ap1->flt[iw];
+			    xx[i-is-id] -= yy[i] * ap1->flt[iw];
+			} else {
+			    yy[i] += (xx[i+nx+is] - xx[i-is-id]) * ap1->flt[iw];
+			}
+		    }
+		} else {
+		    passfilter(ap1->pp[i], ap1->flt);
+		    
+		    for (iw = 0; iw <= 2*nw; iw++) {
+			is = (iw-nw)*nj;
+			
+			if (adj) {
+			    xx[i+nx+is] += yy[i] * ap1->flt[iw];
+			    xx[i-is]    -= yy[i] * ap1->flt[iw];
+			} else {
+			    yy[i] += (xx[i+nx+is] - xx[i-is]) * ap1->flt[iw];
+			}
 		    }
 		}
 	    }
@@ -322,16 +480,35 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 		i = ix + nx*(iy + ny*iz);
 
-		passfilter(ap2->pp[i], ap2->flt);
-		
-		for (iw = 0; iw <= 2*nw; iw++) {
-		    is = (iw-nw)*nj;
+		if (ap2->drift) {
+		    id = SF_NINT(ap2->pp[i]);
+		    if (ix-nw*nj-id < 0 || 
+			ix+nw*nj-id >= nx) continue;
+
+		    passfilter(ap2->pp[i]-id, ap2->flt);
 		    
-		    if (adj) {
-			xx[i+nx*ny+is] += yy[i+n1] * ap2->flt[iw];
-			xx[i-is]       -= yy[i+n1] * ap2->flt[iw];
-		    } else {
-			yy[i+n1] += (xx[i+nx*ny+is] - xx[i-is]) * ap2->flt[iw];
+		    for (iw = 0; iw <= 2*nw; iw++) {
+			is = (iw-nw)*nj;
+			
+			if (adj) {
+			    xx[i+nx*ny+is] += yy[i+n1] * ap2->flt[iw];
+			    xx[i-is-id]    -= yy[i+n1] * ap2->flt[iw];
+			} else {
+			    yy[i+n1] += (xx[i+nx*ny+is] - xx[i-is-id]) * ap2->flt[iw];
+			}
+		    }
+		} else {
+		    passfilter(ap2->pp[i], ap2->flt);
+		    
+		    for (iw = 0; iw <= 2*nw; iw++) {
+			is = (iw-nw)*nj;
+			
+			if (adj) {
+			    xx[i+nx*ny+is] += yy[i+n1] * ap2->flt[iw];
+			    xx[i-is]       -= yy[i+n1] * ap2->flt[iw];
+			} else {
+			    yy[i+n1] += (xx[i+nx*ny+is] - xx[i-is]) * ap2->flt[iw];
+			}
 		    }
 		}
 	    }

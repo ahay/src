@@ -6,6 +6,8 @@ Flow('test.attr','clip.py',
      spike n1=1000 n2=100 n3=10 nsp=1 k1=500 |  
      ./$SOURCE clip=0.5 | attr
      ''',stdin=0)
-
 binary = Command('afdm.exe','afdm.py','cp $SOURCE $TARGET')
-AddPostAction(binary,Chmod(binary,0755))
+AddPostAction(binary,Chmod(binary,0o755))
+
+End() 
+

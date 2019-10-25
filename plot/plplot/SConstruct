@@ -73,7 +73,7 @@ for prog in mains:
 if root:
     main = 'sfplplot.py'
 
-    docs = map(env.Doc,mains)
+    docs = list(map(env.Doc,mains))
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
 

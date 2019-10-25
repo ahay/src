@@ -27,7 +27,7 @@ if psp:
           pspcxx = env.get('CXX')
     psppath = env.get('PSPPATH',[])
     psplibpath = env.get('PSPLIBPATH',[])
-    psplibs = env.get('PSPLIBS',[])+map(File,env.get('PSPEXTRA',[]))
+    psplibs = env.get('PSPLIBS',[])+list(map(File,env.get('PSPEXTRA',[])))
  
     env.Prepend(CPPPATH=['../../include'],
                 LIBPATH=['../../lib'],
@@ -44,7 +44,7 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     if psp:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+        prog = env.Program(prog,[x + '.cc' for x in sources])
     else:
         prog = env.RSF_Place('sf'+prog,None,var='PSPHOME',package='psp')
     if root:
@@ -57,8 +57,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),
-               Split(progs))
+    docs = [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in Split(progs)]
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

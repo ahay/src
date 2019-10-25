@@ -1,0 +1,730 @@
+from rsf.proj import *
+import math
+
+import sftthrgen3
+import sftthrgenp
+
+# Put "True" to create movies
+# It tests different computational parameters
+# and, therefore, is computationally intensive
+runmovies = False #True
+
+# if we want to run movies inside soft
+# iterative thresholding scripts
+runmoviesinside = False #True
+
+# lets window
+min1=0.1
+max1=2.5#2.7
+min2=15.0#14.0
+max2=22.0#23.0
+
+nx = 561
+ox = 14.994 
+
+# set display for inversion
+
+display = [min1,max1,min2,max2]
+
+# norm estimation area is the same
+# as displaying area
+
+norm = [min1,max1,min2,max2]
+
+# tapering parameters
+nw1=100
+nw2=100
+
+# window for display
+wind = 'window min1=%g max1=%g min2=%g max2=%g'%(min1,max1,min2,max2)
+
+# window the data
+wind2 = 'window min1=%g max1=2.99 min2=%g max2=%g'%(min1,min2,max2)
+
+# taper
+taper = 'costaper nw1=%g nw2=%g'%(nw1,nw2)
+
+# plotting functions
+def plotsect(title='',extra=''):
+	return wind+'|'+'''
+	grey title='%s' %s
+	'''%(title,extra)
+
+def plotdip(title='',extra=''):
+	return wind+'|'+'''
+	grey color=j scalebar=y title='%s' %s
+	'''%(title,extra)
+
+# Download pre-processed CMP gathers
+# from the Viking Graben dataset
+Fetch('paracdp.segy','viking')
+
+# Convert to RSF
+Flow('paracdp tparacdp','paracdp.segy',
+     'segyread tfile=${TARGETS[1]}')
+
+# Convert to CDP gathers, time-power gain and high-pass filter
+Flow('cmps','paracdp',
+     '''
+     intbin xk=cdpt yk=cdp | window max1=4 | 
+     pow pow1=2 | bandpass flo=5 |
+     put label3=Midpoint unit3=km o3=1.619 d3=0.0125
+     ''')
+
+# Extract offsets
+Flow('offsets mask','tparacdp',
+     '''
+     headermath output=offset | 
+     intbin head=$SOURCE xk=cdpt yk=cdp mask=${TARGETS[1]} | 
+     dd type=float |
+     scale dscale=0.001
+     ''')
+
+# Window bad traces
+Flow('maskbad','cmps',
+     'mul $SOURCE | stack axis=1 | mask min=1e-20')
+
+Flow('mask2','maskbad mask','spray axis=1 n=1 | mul ${SOURCES[1]}')
+
+# NMO stack with an ensemble of constant velocities
+Flow('stacks','cmps offsets mask2',
+     '''
+     stacks half=n v0=1.4 nv=121 dv=0.02 
+     offset=${SOURCES[1]} mask=${SOURCES[2]}
+     ''',split=[3,'omp'])
+
+# Taper midpoint
+Flow('stackst','stacks','costaper nw3=100')
+
+# Apply double Fourier transform (cosine transform)
+Flow('cosft','stackst','pad n3=2401 | cosft sign1=1 sign3=1')
+
+# Transpose f-v-k to v-f-k
+Flow('transp','cosft','transp',split=[3,'omp'])
+
+# Fowler DMO: mapping velocities
+Flow('map','transp',
+     '''
+     math output="x1/sqrt(1+0.25*x3*x3*x1*x1/(x2*x2))" | 
+     cut n2=1
+     ''')
+
+Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp',
+     split=[3,'omp'])
+
+# Inverse Fourier transform
+Flow('dmo','fowler','cosft sign1=-1 sign3=-1 | window n3=2142')
+
+# Compute envelope for picking
+Flow('envelope','dmo','envelope | scale axis=2',split=[3,'omp'])
+
+# Pick velocity pick rect1=25 rect2=50 vel0=1.45
+Flow('vpick','envelope','pick rect1=25 rect2=50 vel0=1.45')
+
+# Take a slice
+Flow('slice','dmo vpick','slice pick=${SOURCES[1]}')
+
+# Check one CMP location
+
+p = 1500#1500
+
+Flow('before','stackst','window n3=1 f3=%d | envelope' % p)
+Flow('after','envelope','window n3=1 f3=%d' % p)
+
+for case in ('before','after'):
+    Plot(case,
+         '''
+         window max1=3.5 |
+         grey color=j allpos=y title="%s DMO" 
+         label2=Velocity unit2=km/s
+         ''' % case.capitalize())
+
+Flow('vpick1','vpick','window n2=1 f2=%d' % p)
+Plot('vpick1',
+     '''
+     graph yreverse=y transp=y plotcol=7 plotfat=7 
+     pad=n min2=1.4 max2=3.8 wantaxis=n wanttitle=n
+     ''')
+Plot('after2','after vpick1','Overlay')
+
+#########################################################################
+############################ DJ picking #################################
+
+# where we divide our dataset
+
+cut = (750*0.0125)
+
+# lets divide dataset in two parts
+
+Flow('envelope_left','envelope','window max3=%g'%cut)
+
+Flow('envelope_right','envelope','window min3=%g'%(cut+0.0125))
+
+Flow('env_left','envelope_left',
+     '''
+     mute t1=1.3 v1=3.5
+     ''',
+     split=[3,'omp'])
+Flow('env_right','envelope_right',
+     '''
+     mute t1=1.3 v1=3.0
+     ''',
+     split=[3,'omp'])
+
+Flow('env','env_left env_right','cat ${SOURCES[1]} axis=3')
+
+# Pick velocity
+Flow('djvpick','env','pick rect1=30 gate=10 rect2=50 vel0=1.45')
+
+
+# Take a slice
+Flow('djslice','dmo djvpick','slice pick=${SOURCES[1]}')
+
+
+# making an appropriate step size
+Flow('dmovel','djvpick','put o2=1.619 d2=0.0125 label2=Midpoint unit2=km')
+
+Flow('dmovel-w','djvpick',wind2 + '| put o3=0.0')
+
+Flow('dmo-w','djslice',wind2 + '| put o3=0.0 | transp plane=12 | bandpass fhi=35 | transp plane=12')
+
+# Smoothing parameters for dip estimation in data domain
+r1 = 10
+r2 = 20
+
+Flow('dip-w','dmo-w','fdip rect1=%d rect2=%d'%(r1,r2))
+
+# PWD with estimated dip
+Flow('pwd-w','dmo-w dip-w','pwd dip=${SOURCES[1]}')
+
+# Creating zero and 02 dips for cascade chain
+#!# 0.2 dip supposedly removes 
+#!# gently dipping relfections
+#!# diagonal stripes from
+#!# top left to bottom right
+
+Flow('dip0-w','dip-w','math output="0.0"')
+
+Flow('dip02-w','dip-w','math output="0.2"')
+
+Flow('casc-pwd-w','dmo-w dip-w dip0-w','pwd dip=${SOURCES[1]} | pwd dip=${SOURCES[2]}')
+
+# Files
+
+mig2vel = 'dmovel-w'
+dip = 'dip-w'
+dip1 = 'dip-w'
+dip2 = 'dip0-w'
+dip3 = 'dip02-w'
+
+# Params for migration sfmig2
+eps=0.01
+
+# number of offsets
+# step btw them
+# first value
+mig2nh = 1
+mig2dh = 1.0
+mig2h0 = 0.0
+
+# smooth or not
+# apply PWD ot not
+sm = 1.0
+
+# aperture
+mig2apt = 110 #75
+mig2aal = 't'#1.0
+
+# dont use it for pwd
+rad_sftthr = 100
+
+# Gaussian tapering velocities
+v_1_sftthr = 1.8
+v_2_sftthr = 2.0
+v_3_sftthr = 3.0
+v_4_sftthr = 3.5
+
+# padding
+pad=1000
+
+# spherical divergence
+ps = 'y'
+
+# half differentiation
+hd = 'y'
+
+# omp optimization - hardcoded to 'y' but just in case
+doomp = 'y'
+
+# perform half differentiation either in data (dd='y') or model domain (dd='n') 
+dd = 'n'
+
+# Kirchhoff modeling operators
+
+# legacy
+"""
+fwdmig2adj = '''
+	mig2 vel=%s
+	adj=y normalize=n
+	nh=%d dh=%d h0=%g
+	apt=%d antialias=%g
+	'''%(mig2vel+'.rsf',mig2nh,mig2dh,mig2h0,mig2apt,mig2aal)
+"""
+
+adjmig2 = '''
+	linmig2 adj=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d dd=%s     
+	'''%(ps,hd,doomp,mig2aal,mig2apt,dd)
+
+fwdmig2 = '''
+	linmig2 adj=n
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d dd=%s     
+	'''%(ps,hd,doomp,mig2aal,mig2apt,dd)
+
+cgmig2 = '''
+	linmig2
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d dd=%s
+	'''%(ps,hd,doomp,mig2aal,mig2apt,dd)
+
+# better use linpipwd2d dopi=n sm=y domod=y
+fwdmig2pwd = '''
+	mig2pwd adj=n
+	debug=n domod=y sm=y normalize=n diff2=n
+	nh=%d dh=%d h0=%g
+	apt=%d antialias=1.0 rect2=%d
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g	
+	'''%(mig2nh,mig2dh,mig2h0,mig2apt,rad_sftthr,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad)
+
+kepend = '  vel=${SOURCES[2]} dip=${SOURCES[3]}'
+kepend0 = '  vel=${SOURCES[1]} dip=${SOURCES[2]}'
+
+taper = '| costaper nw1=100 | costaper nw2=100'
+
+kirchhfwd = (mig2vel,'dip-w',fwdmig2,kepend,kepend0,taper)
+
+kirchhcg  = (mig2vel,'dip-w',cgmig2,kepend,kepend0,taper)
+
+# dip is a place holder 
+Flow('conv-image',['dmo-w',mig2vel,'dip-w'],adjmig2 + kepend0)
+
+Flow('conv-image-pwd0',['pwd-w',mig2vel,'dip-w'],adjmig2 + kepend0)
+
+# Computing data to be fit - chain of operators applied to dmo stack
+#!# nn stands for "not normalized" - too big of a samples for gradient - gets to NaN
+
+Flow('pi-pwd-nn',['dmo-w',dip,mig2vel],
+	'''
+	linpipwd2d dip=${SOURCES[1]} vel=${SOURCES[2]} adj=n
+	domod=n sm=y dopi=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s | costaper nw1=100 nw2=100
+	'''%(ps,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd))
+
+Flow('pi-no-pwd-nn',['dmo-w',dip,mig2vel],
+	'''
+	linpipwd2d dip=${SOURCES[1]} vel=${SOURCES[2]} adj=n
+	domod=n sm=n dopi=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s | costaper nw1=100 nw2=100
+	'''%(ps,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd))
+
+# normalizing data
+Flow('pi-pwd','pi-pwd-nn','math output="input/3.91048e+12"')
+
+# same scaling as in P PWD L
+Flow('pi-no-pwd','pi-no-pwd-nn','math output="input/3.91048e+12"')
+
+### estimate dip in the image domain
+r1i = 10
+r2i = 20
+
+Flow('dipim','conv-image','fdip rect1=%d rect2=%d'%(r1i,r2i))
+
+Flow('conv-image-pwd','conv-image dipim','pwd dip=${SOURCES[1]}')
+
+# Chain of operators
+
+# Starting model
+Flow('mig000','dmo-w','math output="0.0"')
+
+# Clip of pi to plot difference
+clipdpi = 7.4549e+11
+
+Flow('extended-data','pi-pwd mig000','cat axis=2 ${SOURCES[1]} | put n3=1 o3=0.0 d3=0.1')
+
+Flow('extended-model','mig000 mig000','cat axis=2 ${SOURCES[1]} | put n3=1 o3=0.0 d3=0.1')
+
+# Creating data for shaping regularization for the chain inversion
+
+Flow('data-1','pi-pwd','math output="input" | put n3=1 o3=0.0 d3=0.1')
+
+Flow('data-2','pi-no-pwd','math output="input" | put n3=1 o3=0.0 d3=0.1')
+
+Flow('data-3','dmo-w','math output="input/3.6304e+07" | put n3=1 o3=0.0 d3=0.1')
+
+# Chain operators
+
+pipwdmig2fwdcase = '''
+	pipwdmig2 adj=n
+	domod=y sm=y pi=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s
+	'''%(ps,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+pipwdmig2cgcase = '''
+	pipwdmig2
+	domod=y sm=y pi=y
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s
+	'''%(ps,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+depend = '  vel=${SOURCES[2]} dip=${SOURCES[3]}'
+depend0 = '  vel=${SOURCES[1]} dip=${SOURCES[2]}'
+
+fullchainfwd = (mig2vel,dip,pipwdmig2fwdcase,depend,depend0,taper)
+
+fullchaincg  = (mig2vel,dip,pipwdmig2cgcase,depend,depend0,taper)
+
+orthogonalize = True
+radius1 = 10
+radius2 = 20 # 35
+niter = 40 # 20
+stopper = False
+
+for case in range(1,21,1):
+
+	radius = 5 # regularization on reflections (spraying radius)
+	innerit = 5  # inner iterations
+	outerit = 50 # outer iterations
+	soft = 0.0 # applying hard thresholding
+
+	thrs = 1e-07 + case*(2e-08)
+
+	movie = False
+
+	if ( (case == 4) or (case == 5) or (case == 6) or (case == 7) or (case == 8) ):
+			
+		movie = True
+	
+	# Since in our opinion this is a reasonable regularization parameter-set we run inversion for it only
+	# you can delete the case condition and look at other regularization parameter values
+	#if ( (case == 4) or (case == 5) or (case == 6) or (case == 7) or (case == 8) ): # case 5 is currently optimal
+	#	#	
+	#	#sftthrgen3.sftthr(pipwdmig2fwdcase,pipwdmig2cgcase,outerit,innerit,'pipwdmig2-in5-%d'%case,'data-1','extended-model',thrs,0.0,'dipim',radius,'Generic',soft,48.0,nx,ox,display,norm,fwdmig2pwd,movie,'pwd-w')
+	
+	# smaller rad
+	# we try a smaller radius here to reduce reflection leakage to diffraction domain
+	# we also perform 10 iterations only in hope to remove reflections from diffraction domain
+	# in the next cascade of iterations be4 they are too sparsified here
+	if ( case == 2):
+
+		movie = True
+
+		sftthrgen3.sftthr(fullchainfwd,fullchaincg,10,innerit,'pipwdmig2-in5-rad3-%d'%case,'data-1','extended-model',thrs-1e-08,0.0,'dipim',3,'Generic',soft,48.0,nx,ox,display,norm,fwdmig2pwd,movie,'pwd-w')
+
+
+# disabling PWD and restoring reflections
+
+fullchainfwdnsm = (mig2vel,dip,pipwdmig2fwdcase + ' sm=n',depend,depend0,taper)
+
+fullchaincgnsm  = (mig2vel,dip,pipwdmig2cgcase + ' sm=n',depend,depend0,taper)
+
+for case in range(1,21,1):
+
+	radius = 3 # regularization on reflections (spraying radius)
+	innerit = 5  # inner iterations
+	outerit = 50 # outer iterations
+	soft = 0.0 # applying hard thresholding		
+	
+	reflthrs = 1e-07 + case*(8e-08)
+	
+	movie = False
+
+	# lets try reflection and diffraction orthogonalization
+	orthogon = (orthogonalize,radius1,radius2,niter,stopper)
+
+	if ( (case == 3) or (case == 4) or (case == 5) ): # 3 seems to be optimal 
+		
+		movie = True
+
+		sftthrgen3.sftthr(fullchainfwdnsm,fullchaincgnsm,outerit,innerit,'pipwdmig2-in5-no-pwd-gso-rad3-%d'%case,'data-2','pipwdmig2-in5-rad3-2-x-it-9',reflthrs,0.0,'dipim',radius,'Generic',soft,48.0,nx,ox,display,norm,fwdmig2,movie,'pwd-w',orthogon)
+
+# illustrating reflection and diffraction updates orthogonalization
+Flow('myFirstSimilarity','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-0 pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-0Refl',
+	'''
+	window f2=%d |
+	similarity niter=%d rect1=%d rect2=%d other=${SOURCES[1]}
+	'''%(nx,orthogon[3],orthogon[1],orthogon[2]))
+
+
+Flow('myMiddleSimilarity','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-49 pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-49Refl',
+	'''
+	window f2=%d |
+	similarity niter=%d rect1=%d rect2=%d other=${SOURCES[1]}
+	'''%(nx,orthogon[3],orthogon[1],orthogon[2]))
+
+
+Plot('updateB4OrthFirst','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-0','grey wanttitle=n clip=5e-07')
+
+# comparing updates to diffractions after orthogon
+Plot('updateA4OrthFirst','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-0 pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-0DiffO',
+	'''
+	window f2=%d |
+	cat axis=2 ${SOURCES[1]} |
+	grey wanttitle=n clip=5e-07
+	'''%nx)
+
+Plot('myFirstSimilarity',
+	'''
+	scale axis=2 |
+	grey allpos=y color=j wanttitle=n scalebar=y minval=0.0 maxval=1.0
+	''')
+
+Plot('updateB4OrthMiddle','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-2','grey wanttitle=n clip=5e-07')
+
+# comparing updates to diffractions after orthogon
+Plot('updateA4OrthMiddle','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-2 pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-2DiffO',
+	'''
+	window f2=%d |
+	cat axis=2 ${SOURCES[1]} |
+	grey wanttitle=n clip=5e-07
+	'''%nx)
+
+Plot('myMiddleSimilarity',
+	'''
+	grey allpos=y color=j wanttitle=n scalebar=y
+	''')
+
+Flow('pipwdmig2-in5-no-pwd-gso-rad3-3-Refl-it-49','pipwdmig2-in5-no-pwd-gso-rad3-3-x-it-49','window n2=%d'%nx)
+
+Flow('pipwdmig2-in5-no-pwd-gso-3-DiffrO-it-49 pipwdmig2-in5-no-pwd-gso-rad3-3-ReflO-it-49','pipwdmig2-in5-no-pwd-gso-rad3-3-x-it-49 pipwdmig2-in5-no-pwd-gso-rad3-3-Refl-it-49',
+	'''
+	window f2=%d |
+	ortho rect1=%d rect2=%d niter=%d
+	sig=${SOURCES[1]} sig2=${TARGETS[1]}
+	'''%(nx,5,5,100))
+
+# inputs to w# restoration
+Flow('input-to-wn','pipwdmig2-in5-no-pwd-gso-rad3-3-x-it-49','window n2=%d f2=%d | put o2=%g'%(nx,nx,ox))
+
+Flow('input-to-wn-refl','pipwdmig2-in5-no-pwd-gso-rad3-3-x-it-49','window n2=%d | put o2=%g'%(nx,ox))
+
+# making a mask for diffraction locations
+
+Flow('diffr-locs','input-to-wn',
+	'''
+	smooth rect1=2 rect2=2 |
+	math output="abs(input)" |
+	mask min=5e-10 |
+	dd type=float |
+	scale axis=2
+	''')
+
+# w# restoration operators
+fwdmig22 = '''
+	linpipwd2d adj=n
+	domod=y sm=n dopi=n
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d 
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s	
+	'''%(ps,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+cgmig22 = '''
+	linpipwd2d
+	domod=y sm=n dopi=n
+	ps=%s hd=%s doomp=%s
+	antialias=%s apt=%d 
+	v_1=%g v_2=%g v_3=%g v_4=%g
+	pad=%g dd=%s	
+	'''%(ps,hd,doomp,mig2aal,mig2apt,v_1_sftthr,v_2_sftthr,v_3_sftthr,v_4_sftthr,pad,dd)
+
+kirchhfwd2 = (mig2vel,dip,fwdmig22,depend,depend0,taper)
+
+kirchhcg2  = (mig2vel,dip,cgmig22,depend,depend0,taper)
+
+# loops for w# restoration
+
+for i in range(10):
+
+	if i == 0:
+
+		sftthrgenp.sftthr(kirchhfwd2,kirchhcg2,1,5,'restore-wn-refl-%d'%i,'dmo-w','input-to-wn-refl',0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig22)
+
+	else :
+
+		sftthrgenp.sftthr(kirchhfwd2,kirchhcg2,1,5,'restore-wn-refl-%d'%i,'dmo-w',modelrefl,0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig22)
+
+	modelrefl = 'model-wn-refl-%d'%i
+
+	Flow(modelrefl,['restore-wn-refl-%d-x-it-0'%i,'dipim'],'pwspray dip=${SOURCES[1]} ns=%d reduce=median | costaper nw1=20 nw2=20'%15)
+
+Flow('reflectivity-restored','model-wn-refl-9','math output=input')
+
+# dip is a place holder
+Flow('reflections-restored',['reflectivity-restored',mig2vel,dip],fwdmig22 + depend0)
+
+Flow('noise-restored-refl','dmo-w reflections-restored','math K=${SOURCES[1]} output="input - K"')
+
+for i in range(10):
+	
+	if i == 0:
+
+		sftthrgenp.sftthr(kirchhfwd2,kirchhcg2,1,5,'restore-wn-a4refl-%d'%i,'noise-restored-refl','input-to-wn',0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig22)
+
+	else:
+
+		sftthrgenp.sftthr(kirchhfwd2,kirchhcg2,1,5,'restore-wn-a4refl-%d'%i,'noise-restored-refl',modela4refl,0.0,0.0,'Generic',0.0,48.0,display,norm,fwdmig22)
+
+	modela4refl = 'model-wn-a4refl-%d'%i
+
+	Flow(modela4refl,['restore-wn-a4refl-%d-x-it-0'%i,'diffr-locs'],'math K=${SOURCES[1]} output="input*K"')
+
+Flow('diffractivity-restored','model-wn-a4refl-9','math output=input')
+
+Flow('diffractions-restored',['diffractivity-restored',mig2vel,dip],fwdmig22 + depend0)
+
+Flow('noise-restored','noise-restored-refl diffractions-restored','math K=${SOURCES[1]} output="input - K"')
+
+# noise restored orthogon
+
+Flow('noise-restored-orthogon diffractions-restoredO','noise-restored diffractions-restored',
+	'''
+	ortho rect1=%d rect2=%d niter=%d
+	sig=${SOURCES[1]} sig2=${TARGETS[1]}
+	'''%(15,15,20))
+
+# differences in the image domain
+
+Flow('imnoise-restored-refl','conv-image reflectivity-restored','add scale=1,-1 ${SOURCES[1]}')#%(4.92634e-07,-3.94439e-07))
+
+windowing = '''
+	min1=0.45 max1=2.25 min2=16 max2=20.5 screenratio=0.5
+	'''
+
+windowingg = '''
+	min1=0.45 max1=2.25 min2=16 max2=20.5
+	'''
+
+Result('inversion-with-pwd','pipwdmig2-in5-rad3-2-x-it-9',
+	'''
+	grey wanttitle=n
+	''')
+
+Result('reflectivity-with-pwd','pipwdmig2-in5-rad3-2-x-it-9',
+	'''
+	window n2=%d | grey wanttitle=n %s
+	'''%(nx,windowing))
+
+Result('diffractivity-with-pwd','pipwdmig2-in5-rad3-2-x-it-9',
+	'''
+	window f2=%d | put o2=%g | grey wanttitle=n %s
+	'''%(nx,ox,windowing))
+
+Result('pi-pwd','pi-pwd',
+	'''
+	grey wanttitle=n %s
+	'''%windowing)
+
+Result('inversion-no-pwd','pipwdmig2-in5-no-pwd-gso-rad3-3-x-it-49',
+	'''
+	grey wanttitle=n
+	''')
+
+Result('pi-no-pwd','pi-no-pwd',
+	'''
+	grey wanttitle=n %s
+	'''%windowing)
+
+Result('reflectivity-no-pwd','pipwdmig2-in5-no-pwd-gso-rad3-3-x-it-49',
+	'''
+	window n2=%d | grey wanttitle=n %s
+	'''%(nx,windowing))
+
+Result('diffractivity-no-pwd','pipwdmig2-in5-no-pwd-gso-rad3-3-x-it-49',
+	'''
+	window f2=%d | put o2=%g | grey wanttitle=n %s
+	'''%(nx,ox,windowing))
+
+Result('update-b4-refl','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-2',
+	'''
+	window n2=%d | grey wanttitle=n %s clip=1e-07
+	'''%(nx,windowing))
+
+Result('update-b4-diffr','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-2',
+	'''
+	window f2=%d | put o2=%g | grey wanttitle=n %s clip=1e-07
+	'''%(nx,ox,windowing))
+
+Result('update-a4-refl','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-2',
+	'''
+	window n2=%d | grey wanttitle=n %s clip=1e-07
+	'''%(nx,windowing))
+
+Result('update-a4-diffr','pipwdmig2-in5-no-pwd-gso-rad3-3-result-it-2DiffO',
+	'''
+	put o2=%g | grey wanttitle=n %s clip=1e-07
+	'''%(ox,windowing))
+
+Result('reflections-restored','reflections-restored',
+	'''
+	grey wanttitle=n %s
+	'''%windowing)
+
+Result('diffraction-restored','diffractions-restored',
+	'''
+	grey wanttitle=n clip=3.34392e+06 %s
+	'''%windowing)
+
+Result('noise-restored-orthogon','noise-restored-orthogon',
+	'''
+	grey wanttitle=n clip=3.34392e+06 %s
+	'''%windowing)
+
+Result('dmo-w','dmo-w',
+	'''
+	grey wanttitle=n %s
+	'''%windowing)
+
+Result('pwd-w','pwd-w',
+	'''
+	grey wanttitle=n %s
+	'''%windowing)
+
+Result('image-fw','conv-image',
+	'''
+	grey wanttitle=n %s
+	'''%windowing)
+
+Result('conv-image-pwd','conv-image-pwd',
+	'''
+	grey wanttitle=n %s
+	'''%windowing)
+
+Result('convergence','a-pipwdmig2-in5-no-pwd-gso-rad3-3-movie-l2 a-pipwdmig2-in5-no-pwd-gso-rad3-3-movie-l2m','SideBySideAniso')
+
+Flow('combined','pipwdmig2-in5-no-pwd-gso-rad3-3-x-it-49 conv-image',
+	'''
+	window f2=%d |
+	put o2=%g |
+	math K=${SOURCES[1]} output="abs(input)*15/4.61296e-06 + K/7.34756e+07"
+	'''%(nx,ox))
+
+Result('combined',
+	'''
+	grey wanttitle=n color=iC clip=0.57384 %s
+	'''%windowing)
+
+End()

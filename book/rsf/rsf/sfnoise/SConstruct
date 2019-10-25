@@ -24,7 +24,7 @@ for case in pars.keys():
          '''
          histogram n1=61 o1=-3 d1=0.1 |
          dd type=float | scale axis=1 |
-         graph title="Normalized Distribution" label1=Value 
+         bargraph title="Normalized Distribution" label1=Value 
          ''')
 
     Result(case,[case,hist],'OverUnderAniso')

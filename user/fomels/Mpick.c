@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     int dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     int it, niter, nm, n1, n2, n3, i3, i2, i1, i, gate, i0;
     float **scan, **weight, *pick, *ampl, *pick2, o2, d2, an, asum, a, ct, vel0;
-    bool smooth, norm;
+    bool smooth, norm, back;
     char key[6], *label;
     sf_file scn, pik;
 
@@ -98,6 +98,8 @@ int main(int argc, char* argv[])
     /* if apply smoothing */
     if (!sf_getbool("norm",&norm)) norm=false;
     /* if apply normalization (0.~1.) */
+    if (!sf_getbool("back",&back)) back=false;
+    /* if run backward */
 
     scan = sf_floatalloc2(n1,n2);
     weight = sf_floatalloc2(n2,n1);
@@ -130,9 +132,14 @@ int main(int argc, char* argv[])
 	    }
 
 	    dynprog(i0, weight);
-	    dynprog_traj(pick2);
+	    if (back) {
+		dynprog1(weight);
+		dynprog1_traj(pick2);
+	    } else {
+		dynprog_traj(pick2);
+	    }
 
-	    if (smooth) { // "ampl" and "pick" will be output
+	    if (smooth) { /* "ampl" and "pick" will be output */
 	        for (i1=0; i1 < n1; i1++) {
 	    	    i = i1 + i3*n1;
 	    	    ct = pick2[i1];
@@ -147,7 +154,7 @@ int main(int argc, char* argv[])
 	    	        ampl[i]=scan[it][i1]*(1.-ct)+scan[it+1][i1]*ct;
 	    	    }
 	        }
-	    } else { // "pick2" will be output
+	    } else { /* "pick2" will be output */
 	        for (i1=0; i1 < n1; i1++) {
 	    	    pick2[i1] = o2+pick2[i1]*d2;
 	        }
@@ -156,7 +163,7 @@ int main(int argc, char* argv[])
     }
     sf_warning(".");
 
-    if (smooth) { // take "ampl" and "pick", output "pick2"
+    if (smooth) { /* take "ampl" and "pick", output "pick2" */
 	    /* normalize amplitudes */
 	    asum = 0.;
 	    for (i = 0; i < nm; i++) {

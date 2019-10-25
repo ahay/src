@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 """
 NAME
-	ooio
+        ooio
 DESCRIPTION
-	Object-Oriented I/O
+        Object-Oriented I/O
 SOURCE
-	user/ivlad/ooio.py
+        user/ivlad/ooio.py
 """
 # Copyright (C) 2010 Ioan Vlad
 #
@@ -67,11 +67,11 @@ class BaseFile:
             line_to_print = indent + key + spc + dots_to_print * '.' + spc
             if key in self.bny_attribs:
                 line_to_print += '<' + str(len(attribs[key])) + \
-        	                    ' binary bytes, not printed>'
-    	    else:
+                    ' binary bytes, not printed>'
+            else:
                 val = attribs[key]
                 if type(val) == list and len(val) == 1:
-        	        val=val[0] # Better readability without brackets
+                    val=val[0] # Better readability without brackets
             line_to_print += str(val)
             ivlad.msg(line_to_print)
 
@@ -117,7 +117,7 @@ class File(BaseFile):
         if self.writing_to_stdout:
             self.handle = sys.stdout
         else:
-            self.handle = open(self.full_nm, 'w')
+            self.handle = open(self.full_nm, 'wb')
             
     def close(self):
         if not self.writing_to_stdout: # stdout does not need to be closed
@@ -190,7 +190,7 @@ class RSFheader(File):
         to_print += item + '='
         # To do: properly handle comments containing newline characters
         # i.e. replace '\n' with '\n# '
-        if type(val) in (str, unicode):
+        if type(val) == str:
             if newline in val: # multiline string
                 quot="'''"
                 if quot in val:
@@ -218,7 +218,7 @@ class RSFheader(File):
 
     def write_dict(self, adict, common_comment=None):
         # adict must be the dictionary of arguments passed to the program
-        keys = adict.keys()
+        keys = list(adict.keys())
         keys.sort()
         for key in keys:
             keycomment = common_comment
@@ -327,7 +327,7 @@ class RSFfile(MetaFile):
 
         # Note to self: add a parent_file argument
         # When parent_file is a RSF file, history should be copied
-	    # When parent file is a non-RSF file, just the name should be kept
+           # When parent file is a non-RSF file, just the name should be kept
 
     def __list2dict(self, ilist, dictkey):
         if ilist != None:
@@ -347,5 +347,5 @@ class RSFfile(MetaFile):
     def write(self,val):
         if not self.hdr_flushed:
             self.flush_hdr()
-        self.dat.handle.write(struct.pack(ivlad.fmt[self.dtype],val))
 
+        self.dat.handle.write(bytes(struct.pack(ivlad.fmt[self.dtype],val)))

@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("frect",&frect)) frect=1;
     /* smoothing in frequency */
 
-    twosmooth_init(n,nw,rect,frect);
+    twosmooth_init(n,nw,rect,frect,0);
 
     sf_floatread(x,n,src);
     sf_floatread(y,n,tgt);

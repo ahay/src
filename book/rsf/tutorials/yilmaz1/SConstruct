@@ -1,0 +1,76 @@
+from rsf.proj import *
+
+# Fourier-domain sampling
+df = 0.976562 
+dk = 1.25
+
+Flow('fft',None,
+     '''
+     spike n1=129 d1=%g n2=32 d2=%g o2=-20 
+     label1=Frequency  unit1=Hz
+     label2=Wavenumber unit2=cycles/km
+     ''' % (df,dk))
+
+for freq in range(12,84,12): # loop over frequencies
+    planes = []
+    spikes = []
+    for dip in range(0,18,3): # loop over dips
+        k = freq*dip*0.04
+        spike = 'spike%d-%d' % (freq,dip)
+        k1 = int(freq/df+1)
+        k2 = int(((k+20)/dk)%32+1)
+        Flow(spike,'fft','spike k1=%d k2=%d' % (k1,k2))
+        Plot(spike,
+             '''
+             pad end2=1 |
+             wiggle poly=y transp=y clip=1 
+             wanttitle=n wantaxis1=%d plotcol=1
+             crowd1=0.9 labelsz=20 titlesz=20 
+             grid1=y gridcol=3 g1num0=0 g1num=100 
+             ''' % (dip==0))
+        spikes.append(spike)
+        
+        plane = 'plane%d-%d' % (freq,dip)
+        Flow(plane,spike,'rtoc | fft3 inv=y sign=0 | fft1 inv=y')
+        Plot(plane,
+             '''
+             wiggle poly=y transp=y label2= unit2= plotcol=1
+             title="dip=%d" wantaxis2=n wantaxis1=%d
+             crowd1=0.9 labelsz=20 titlesz=20 yreverse=y
+             ''' % (dip,dip==0))
+        planes.append(plane)
+        
+    Result('planes%d' % freq,planes,'SideBySideAniso')
+    Result('spikes%d' % freq,spikes,'SideBySideAniso')
+    
+# make a stack
+spikes2 = []
+planes2 = []
+for dip in range(0,18,3): # loop over dips
+    spike = 'spike%d' % dip
+    spikes = ['spike%d-%d' % (freq,dip) for freq in range(12,84,12)]
+    Flow(spike,spikes,'add ${SOURCES[1:6]}')
+    Plot(spike,
+             '''
+             pad end2=1 |
+             wiggle poly=y transp=y clip=1 
+             wanttitle=n wantaxis1=%d plotcol=1
+             crowd1=0.9 labelsz=20 titlesz=20 
+             grid1=y gridcol=3 g1num0=0 g1num=100
+             ''' % (dip==0))
+    spikes2.append(spike)
+    plane = 'plane%d' % dip
+    planes = ['plane%d-%d' % (freq,dip) for freq in range(12,84,12)]
+    Flow(plane,planes,'add ${SOURCES[1:6]}')
+    Plot(plane,
+             '''
+             wiggle poly=y transp=y label2= unit2= 
+             wanttitle=n wantaxis2=n wantaxis1=%d plotcol=1
+             crowd1=0.9 labelsz=20 titlesz=20 yreverse=y
+             ''' % (dip==0))
+    planes2.append(plane)
+
+Result('planes',planes2,'SideBySideAniso')
+Result('spikes',spikes2,'SideBySideAniso')
+    
+End()

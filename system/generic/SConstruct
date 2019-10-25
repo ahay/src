@@ -2,16 +2,17 @@ import os, sys, re, string, types
 sys.path.append('../../framework')
 import bldutil
 
-progs = ''' 
+progs = '''
 agc aliasp bandpass bin bin1 boxsmooth canny causint clip clip2
 cmatmult cmatmult2 cosft costaper deriv dipfilter dsmooth dwt enoint2
-equal extract fern fft1 fft3 grad2 grad3 heat histogram igrad intshow
-inttest1 inttest2 impl1 impl2 impl3 iwarp jacobi jacobi2 lapfill
-laplac laplac3d linear linefit logwarp lorenz lpad mandelbrot match
-matmult max1 miss2 monof monof2 mutter noise otsu polymask postfilter2
-pow reg2tri remap1 roots shapebin shapebin1 sharpen slice smooth
-smoothder smoothreg2 spectra spectra2 spline splinefilter swtdenoise
-t2warp tclip threshold trapez tri2reg trirand trishape unif2 unif3
+equal expl1 expl2 extract fern fft1 fft3 grad2 grad3 heat histogram
+igrad intshow inttest1 inttest2 inttest3 impl1 impl2 impl3 iwarp
+jacobi jacobi2 lapfill laplac laplac3d linear linefit logwarp lorenz
+lpad mandelbrot match matmult max1 miss2 monof monof2 mutter noise
+otsu polymask postfilter2 pow reg2tri remap1 roots shapebin shapebin1
+sharpen slice smooth smoothder smoothreg2 spectra spectra2 spline
+splinefilter swtdenoise t2warp tclip threshold trapez tri2reg trirand
+trishape unif2 unif3
 '''
 
 # hlinfilter
@@ -57,7 +58,7 @@ docalias = {}
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    main = env.Program(prog,map(lambda x: x + '.c',sources))
+    main = env.Program(prog,[x + '.c' for x in sources])
     if root:
         install = env.Install(bindir,main[0])
 
@@ -67,8 +68,8 @@ for prog in mains:
              '%s/libdrsf.dylib %s' % \
              (WhereIs('install_name_tool'),libdir,install[0]))
 
-        if prog in alias.keys():
-            other = string.replace(str(main[0]),prog,alias[prog])
+        if prog in list(alias.keys()):
+            other = str(main[0]).replace(prog,alias[prog])
             install = env.InstallAs(os.path.join(bindir,other),main[0])
 
             if dynlib and env['PLATFORM'] == 'darwin':
@@ -78,13 +79,13 @@ for prog in mains:
                 (WhereIs('install_name_tool'),libdir,install[0]))
 
             if env['PLATFORM'] == 'cygwin':
-                other = string.replace(other,'.exe','')
+                other = other.replace('.exe','')
             docalias[other] = 'sf'+prog
 
 for prog in Split('gaussshape2'):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)
-    sources = map(lambda x: x + '.o',sources)
+    sources = [x + '.o' for x in sources]
     env.Object('Test' + prog + '.c')
     env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
 
@@ -94,7 +95,7 @@ for prog in Split('gaussshape2'):
 if root:
     main = 'sfgeneric.py'
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = [env.Doc(prog,'M' + prog) for prog in mains]
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs,alias=docalias)
     
