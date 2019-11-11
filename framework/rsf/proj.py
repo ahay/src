@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from __future__ import division, absolute_import, print_function
-import os, stat, sys, types, copy, re, string, ftplib, socket
+import os, stat, sys, types, copy, re, string, ftplib, socket, json
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
@@ -49,7 +49,27 @@ sfsuffix = '.rsf'
 # suffix for vplot files
 vpsuffix = '.vpl'
 
-dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
+def get_geolocation(address=""):
+    """Get geolocation from http://ipinfo.io."""
+    if address == "":
+        url = "http://ipinfo.io/json"
+    else:
+        url = "http://ipinfo.io/" + address + "/json"
+
+    try:
+        response = urllib_request.urlopen(url)
+        data = json.load(response)
+        return data['country']
+    except:
+        print("Could not find IP address")
+        return None
+
+country = get_geolocation()
+if country == "CN":
+    dataserver = os.environ.get('RSF_DATASERVER','49.235.136.252')
+else:
+    dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
+
 libs = os.environ.get('LIBS',"")
 
 resdir = None
