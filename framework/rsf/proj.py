@@ -66,10 +66,8 @@ def get_geolocation(address=""):
 
 country = get_geolocation()
 if country == "CN":
-    print("Downloading data from 49.235.136.252")
-    dataserver = os.environ.get('RSF_DATASERVER','49.235.136.252')
+    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
 else:
-    print("Downloading data from http://www.ahay.org")
     dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 
 libs = os.environ.get('LIBS',"")
@@ -199,6 +197,7 @@ def retrieve(target=None,source=None,env=None):
                 else:
                     localfile=file
                 try:
+                    print("Downloading data from {}".format(dataserver))
                     urllib_request.urlretrieve(rdir,localfile)
                     if not os.stat(localfile)[6]:
                         print('Could not download file "%s" ' % localfile)
