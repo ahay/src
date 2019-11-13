@@ -50,24 +50,26 @@ sfsuffix = '.rsf'
 vpsuffix = '.vpl'
 
 def get_geolocation(address=""):
-    """Get geolocation from http://ipinfo.io."""
+    """Get geolocation from http://ip-api.com."""
     if address == "":
-        url = "http://ipinfo.io/json"
+        url = "http://ip-api.com/json"
     else:
-        url = "http://ipinfo.io/" + address + "/json"
+        url = "http://ip-api.com/json/" + address
 
     try:
         response = urllib_request.urlopen(url)
         data = json.load(response)
-        return data['country']
+        return data['countryCode']
     except:
-        print("Could not find IP address")
+        print("Fail to get country code")
         return None
 
 country = get_geolocation()
 if country == "CN":
+    print("Downloading data from 49.235.136.252")
     dataserver = os.environ.get('RSF_DATASERVER','49.235.136.252')
 else:
+    print("Downloading data from http://www.ahay.org")
     dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 
 libs = os.environ.get('LIBS',"")
