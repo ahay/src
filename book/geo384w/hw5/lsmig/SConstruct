@@ -59,7 +59,7 @@ Plot('vofz',
      title=Model screenratio=1
      ''')
 
-Result('modl','vofz lays0 lays1','Overlay')
+Result('lmodel','vofz lays0 lays1','Overlay')
 
 # Exploding reflector
 
