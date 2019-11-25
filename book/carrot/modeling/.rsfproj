@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfricker2', 'sfcat', 'sfput', 'sfacoustic1D', 'sfgraph', 'sfgrey']
+data=[]
+size=    1214400
