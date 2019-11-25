@@ -1,3 +1,10 @@
+
+
+To programs:
+
+* user/carrot: New contributor (Hongyu Zhou)
+* sfacoustic1D: 1-D acoustic wave propapagation with CE absorbing boundary
+
 ==Release 3.0 (2019-09-09)==
 
 ===Additions and enhancements===
