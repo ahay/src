@@ -90,7 +90,12 @@ void main(int argc, char* argv[])
 
 
       record[it]=next[rx];
-          sf_warning("it=%d\n",it);
+      if (it%1000==0)
+      {
+        sf_warning("it=%d\n",it);
+        /* code */
+      }
+          
 
     }
 
