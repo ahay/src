@@ -2,11 +2,11 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = ''' acoustic1D
+progs = ''' acoustic1D acoustic1D_FWI_ptb
 '''
 
 try:  # distributed version
-    Import('env root pkgdir bindir')
+    Import('env root pkgdir bindir libdir incdir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -14,6 +14,7 @@ except: # local version
     SConscript('../../api/c/SConstruct')
 
 src = Glob('[a-z]*.c')
+
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
@@ -29,6 +30,7 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
+    env.StaticObject('M'+prog+'.c')
     prog = env.Program(prog,[x + '.c' for x in sources])
     if root:
         env.Install(bindir,prog)

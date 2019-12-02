@@ -18,42 +18,31 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
 #include <time.h>
-//#include <iostream>
 
-void main(int argc, char* argv[])
+void acoustic1D(float *vel,float *src,float dx,int nx,float dt, int nt, int sx, int rx,float *record, float **record_all)
+/*<1-D acoustic wave propagation with CE absorbing boundary>*/
 {
-    sf_init(argc,argv);bool verb;
-    if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
 
-      /*I/O*/
-       /* I/O files */
-    sf_file Fsrc = sf_input ("in"); /*source info*/
-    sf_file Fvel=sf_input("vel"); /*velocity model*/
+
       
-    int sx,rx;
-    if (!sf_getint("sx",&sx))sf_error("need sx");
     /*source position*/ 
-    if (!sf_getint("rx",&rx)) sf_error("need rx");
     /*reciever position*/
-    sf_warning("sx=%d rx=%d",sx,rx);
- 
-    //* cube axes */
-    sf_axis at=sf_iaxa(Fsrc,1);int nt=sf_n(at);float dt=sf_d(at);
-    sf_axis ax=sf_iaxa(Fvel,1);int nx=sf_n(ax);float dx=sf_d(ax);
-   sf_warning("nx=%d, dx=%g \n nt=%d, dt=%g",nx,dx,nt,dt);
+    //sf_warning("sx=%d rx=%d",sx,rx);
+   //sf_warning("nx=%d, dx=%g \n nt=%d, dt=%g",nx,dx,nt,dt);
+//
+//sf_warning("dt=%g",dt);
+//printf("dt=%f\n",dt );
+   //sf_error("test");
 
     //sf_error("test");
-    float *vel=sf_floatalloc(nx);sf_floatread(vel,nx,Fvel);
-    float *src=sf_floatalloc(nt);sf_floatread(src,nt,Fsrc);
 
     float *prev=sf_floatalloc(nx);
     float *curr=sf_floatalloc(nx);
     float *next=sf_floatalloc(nx);
 
-    float **record_all=sf_floatalloc2(nt,nx);
+    //float **record_all=sf_floatalloc2(nt,nx);
     for (int ix = 0; ix < nx; ++ix)
     {
       prev[ix]=0.0;
@@ -62,7 +51,7 @@ void main(int argc, char* argv[])
       /* code */
     }
 
-    float *record=sf_floatalloc(nt);
+    //float *record=sf_floatalloc(nt);
     for (int it = 0; it < nt; ++it)
     {
       record[it]=0.0;
@@ -90,36 +79,22 @@ void main(int argc, char* argv[])
 
 
       record[it]=next[rx];
+      /*
       if (it%1000==0)
       {
         sf_warning("it=%d\n",it);
-        /* code */
+      
       }
+      */
           
 
     }
 
 
-    sf_file Frec = sf_output("out");/* seismic record @ rx*/
-    sf_oaxa(Frec,at,1);
-    sf_floatwrite(record,nt,Frec);
 
 
-    sf_file Frec_all = sf_output("rec_all");/*seismic record for all position*/
-    sf_oaxa(Frec_all,at,1);
-    sf_oaxa(Frec_all,ax,2);
-    sf_floatwrite(record_all[0],nt*nx,Frec_all);
+    //sf_warning("nt=%d",nt);
 
-
-
-    sf_warning("nt=%d",nt);
-
-    free(record);
-
-
-  
-    sf_close();
-    exit(0);
 
 
 
