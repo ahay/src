@@ -13,7 +13,7 @@ Flow('vel_mid',['vel1','vel2', 'vel3','vel4'],'cat axis=1  ${SOURCES[1:-1]}')
 Flow('vel','vel_mid','put label1=Distance unit1=m')
 
 
-Flow(['rec','rec_all'],'src','acoustic1D  vel=vel.rsf sx=10 rx=10 rec_all=${TARGETS[1]}' )
+Flow('rec rec_all','src vel','acoustic1D  vel=${SOURCES[1]} sx=10 rx=10 rec_all=${TARGETS[1]}' )
 
 Flow('vel_ini','vel','smooth rect1=25')
 Flow('vel_recover',['rec','vel_ini','src'],'acoustic1D_FWI_ptb  vel=${SOURCES[1]} src=${SOURCES[2]} sx=10 rx=10 niter=100 damp=1e-9' )
