@@ -6,6 +6,7 @@ To programs:
 * sfacoustic1D: 1-D acoustic wave propapagation with CE absorbing boundary
 * sfacoustic1D_FWI_ptb: 1-D acoustic FWI with Perturbation method
 * sfacoustic1D_FWI_adj: 1-D acoustic FWI with adjoint state method
+* sfviewbin: quick view of binary data (1D/2D/3D)
 
 ==Release 3.0 (2019-09-09)==
 
