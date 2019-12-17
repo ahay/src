@@ -753,8 +753,8 @@ class Input(_File):
                     self.datatype=np.int32
                 else:
                     sys.stderr.write('error reading from input file.\n')
-                    sys.stderr.write('data_format=%s\n'%data_format)
-                    sys.stderr.write('filename=%s.\n',self.filename)
+                    sys.stderr.write('data_format=%s\n' % data_format)
+                    sys.stderr.write('filename=%s.\n' % self.filename)
                     sys.stderr.write('data_format must be native_float, '+
                                      'native_complex or native_int\n')
                     sys.stderr.write('error - exiting program\n')
@@ -762,7 +762,7 @@ class Input(_File):
             except:
                 sys.stderr.write('error reading from input file.\n')
                 sys.stderr.write('data_format is not defined\n')
-                sys.stderr.write('filename=%s.\n',self.filename)
+                sys.stderr.write('filename=%s.\n' % self.filename)
                 sys.stderr.write('error - exiting program\n')
                 quit()
                 #kls write code to compute self.shape
