@@ -6,9 +6,9 @@ progs = '''
 apef apef2 apefsignoi atm1 atm2 bilstack c1coh difference doeps domf
 dominantf donf dowmf duffing duffing1 duffing2 duwt dwt2 dwt97 epsf
 fagrad fbpick findwellcoord fkoclet fkoclet3 fourbreg2 fourmis2
-freqreg freshape geoconvert gravcon groll hv2d judgechaos initial
-instattr instsnr intbin4 internalmult kuwahara localsnr locorr lpad2
-lpf2 lpfdenoise1 lpfdenoise2 lrmf ltft lum lum2 lumsmoother
+freqreg freshape fxyspf geoconvert gravcon groll hv2d judgechaos
+initial instattr instsnr intbin4 internalmult kuwahara localsnr locorr
+lpad2 lpf2 lpfdenoise1 lpfdenoise2 lrmf ltft lum lum2 lumsmoother
 lumsharpener matchoper mean mf mig2 miss4 miss43 mkcmp mlm mtm mtres
 mlwm multiple mvo mvo1 nmradon nmult nonloc oclet oshift1 pick31
 pseudoprim pwcsemb pwd2 pwsfault pwsfault3 pwsmooth3 radonoper
