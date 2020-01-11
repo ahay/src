@@ -1,6 +1,6 @@
-/* f-x-y domian interpolation/denoise using 3D streaming PEF */
+/* 3D f-x-y streaming prediction filter (SPF) for interpolation/denoising.  */
 /*
-  Copyright (C) 2017 Jilin University
+  Copyright (C) 2020 Jilin University
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
