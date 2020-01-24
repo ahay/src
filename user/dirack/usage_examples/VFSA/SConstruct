@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# SConstruct  (Madagascar Script)
+#
+# Purpose: Obtain zero offset CRS parameters using VFSA.
+#
+# Site: http://www.dirackslounge.online
+# 
+# Version 1.0
+#
+# Programer: Rodolfo A. C. Neves (Dirack) 19/09/2019
+#
+# Email: rodolfo_profissional@hotmail.com
+#
+# License: GPL-3.0 <https://www.gnu.org/licenses/gpl-3.0.txt>.
+
+
+# Madagascar library
+from rsf.proj import *
+
+# Python math library
+import math
+
+# Ploting functions
+from graph_scons import *
+
+# Modeling: Gaussian reflector in a velocity linear model
+# velocity increases with depth and a 0.5 velocity gradient
+Flow('gaussianReflector',None,
+     '''
+     math d1=0.01 n1=2001 o1=-5 unit1=km label1=Offset
+     output="4-3*exp(-(x1-5)^2/9)"
+     ''')
+
+# Velocity Model
+Flow('velocityModel','gaussianReflector',
+     '''
+     window min1=0 max1=10 |
+     spray axis=1 n=451 d=0.01 o=0 label=Depth unit=km |
+     math output="1.5+0.5*x1+0.0*x2"
+     ''')
+
+Flow('reflectorDip','gaussianReflector','math output="2/3*(x1-5)*input" ')
+
+# Kirchoff Modeling
+Flow('dataCube','gaussianReflector reflectorDip',
+     '''
+     kirmod cmp=y dip=${SOURCES[1]} 
+     nh=161 dh=0.025 h0=0
+     ns=401 ds=0.025 s0=0
+     freq=10 dt=0.004 nt=1001
+     vel=1.5 gradz=0.5 gradx=0.0 verb=y |
+     put d2=0.0125 label3="CMP" unit3="Km" label2="Offset" unit2="Km" label1=Time unit1=s
+     ''')
+
+m0=5
+t0=1.1
+v0=1.5
+
+# Very Fast Simulated Aneelling Global Optimization (VFSA)
+Flow('crsParameters','dataCube',
+	'''
+	vfsacrsnh m0=%g v0=%g t0=%g verb=y repeat=2
+	''' % (m0,v0,t0))
+
+# Aproximation Error
+Flow('dataReflectionSurface','dataCube','envelope | max1 | window n1=1 | real')
+Plot('dataReflectionSurface',
+	'''
+	grey color=j bias=2 scalebar=y barlabel=Time barunit=s barreverse=y 
+	title="Modeled traveltime surface" label1=Half-Offset unit1=km label2=Midpoint unit2=km
+	''')
+Flow('crsAppSurface',['dataReflectionSurface','crsParameters'],
+	'''
+	nhcrssurf param=${SOURCES[1]} m0=%g v0=%g t0=%g verb=y
+	''' % (m0,v0,t0))
+Plot('crsAppSurface',
+	'''
+	grey color=j bias=2 scalebar=y barlabel=Time barunit=s barreverse=y 
+	title="Non-hyperbolic CRS m0=5Km" label1=Half-Offset unit1=km label2=Midpoint unit2=km
+	''')
+
+Flow('error',['crsAppSurface','dataReflectionSurface'],
+	'''
+	add scale=1,-1 ${SOURCES[1]} | 
+	math output="abs(input)" 
+	''')
+Plot('error',
+	'''
+	grey color=j scalebar=y barlabel=Time barunit=s barreverse=y 
+	title="Approximation error" label1=Half-Offset unit1=km label2=Midpoint unit2=km
+	maxval=1 minval=0
+	''')
+
+Result('errorAndCRSSurfaces',['dataReflectionSurface','crsAppSurface','error'],'SideBySideAniso')
+
+End()
+
