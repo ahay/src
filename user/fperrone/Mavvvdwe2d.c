@@ -86,6 +86,7 @@ Date: November 2013
 #include <omp.h>
 #endif
 
+#include "kernels.h"
 #include <time.h>
 /* check: dt<= 0.2 * min(dx,dz)/vmin */
 
@@ -95,9 +96,6 @@ Date: November 2013
 #define C1 +1.1989919
 #define C2 -0.08024696
 #define C3 +0.00855954
-
-enum adj_t{FWD,ADJ};
-
 
 int main(int argc, char* argv[])
 {
@@ -119,37 +117,34 @@ int main(int argc, char* argv[])
   sf_file Fdat=NULL; /* data      */
   sf_file Fwfl=NULL; /* wavefield */
 
-  /* I/O arrays */
-  float  *ww=NULL;  /* wavelet   */
-  pt2d   *ss=NULL;  /* sources   */
-  pt2d   *rr=NULL;  /* receivers */
-  float  *dd=NULL;  /* data      */
-
-  float *tt=NULL;
-  float *ro=NULL;  /* density */
-  float *uat=NULL; /* 1st derivative of wavefield */
-  float *vp=NULL;  /* velocity */
-  float *vt=NULL;  /* temporary vp*vp * dt*dt */
-
   /* for benchmarking */
   clock_t start_t, end_t;
   float total_t;
 
   /*------------------------------------------------------------*/
-  /* init RSF */
+  /*------------------------------------------------------------*/
+  /*                   RSF INITIALISATION                       */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
   sf_init(argc,argv);
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  // command line parameters
-  if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity flag */
-  if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
-  if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
-  if(! sf_getbool( "adj",&adj )) adj=false;  /* Adjoint flag*/
+  /*                COMMAND LINE PARAMETERS                     */
   /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity    */
+  if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface */
+  if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
+  if(! sf_getbool( "adj",&adj )) adj=false;  /* Adjointness  */
+
+  if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
   /*------------------------------------------------------------*/
-  /* I/O files */
+  /*------------------------------------------------------------*/
+  /*                       OPEN FILES                           */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
   Fwav = sf_input ("in" );  /* wavelet   */
   Fvel = sf_input ("vel");  /* velocity  */
   Fden = sf_input ("den");  /* density   */
@@ -160,18 +155,15 @@ int main(int argc, char* argv[])
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  /* absorbing boundary */
-  if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
-
+  /*                  EXTRAPOLATION KERNEL                      */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
   start_t=clock();
-  switch (adj){
-  case FWD:
-    // fwdextrap2d();
-    break;
-  case ADJ:
-    // adjextrap2d();
-    break;
-  }
+
+  if (adj)
+    fwdextrap2d();
+  else
+    adjextrap2d();
 
   end_t = clock();
   if(verb) fprintf(stderr,"\n");
@@ -180,6 +172,20 @@ int main(int argc, char* argv[])
     total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
     fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
   }
+
+
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  /*                   CLOSE FILES AND EXIT                       */
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  if (Fwav!=NULL) sf_fileclose(Fwav);
+  if (Fsou!=NULL) sf_fileclose(Fsou);
+  if (Frec!=NULL) sf_fileclose(Frec);
+  if (Fvel!=NULL) sf_fileclose(Fvel);
+  if (Fden!=NULL) sf_fileclose(Fden);
+  if (Fdat!=NULL) sf_fileclose(Fdat);
+  if (Fwfl!=NULL) sf_fileclose(Fwfl);
 
   exit (0);
 }
