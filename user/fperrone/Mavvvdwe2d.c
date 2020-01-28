@@ -153,6 +153,10 @@ int main(int argc, char* argv[])
   Fdat = sf_output("out");  /* data      */
   Fwfl = sf_output("wfl");  /* wavefield */
 
+  wfl_struct_t *wfl = calloc(1,sizeof(wfl_struct_t));
+  acq_struct_t *acq = calloc(1,sizeof(acq_struct_t));
+  mod_struct_t *mod = calloc(1,sizeof(mod_struct_t));
+
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                  EXTRAPOLATION KERNEL                      */
@@ -161,9 +165,9 @@ int main(int argc, char* argv[])
   start_t=clock();
 
   if (adj)
-    fwdextrap2d();
+    fwdextrap2d(wfl,acq,mod);
   else
-    adjextrap2d();
+    adjextrap2d(wfl,acq,mod);
 
   end_t = clock();
   if(verb) fprintf(stderr,"\n");
@@ -173,6 +177,14 @@ int main(int argc, char* argv[])
     fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
   }
 
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  /*                            FREE MEMORY                       */
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  free(wfl);
+  free(acq);
+  free(mod);
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
