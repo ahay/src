@@ -1,4 +1,4 @@
-/* 2D acoustic variable-velocity variable-density time-domain FD modeling 
+/* 2D acoustic variable-velocity variable-density time-domain FD modeling
 
 The code uses a standard second-order stencil in time.
 The coefficients of the spatial stencil are computed 
@@ -86,6 +86,7 @@ Date: November 2013
 #include <omp.h>
 #endif
 
+#include "prep_utils.h"
 #include "kernels.h"
 #include <time.h>
 /* check: dt<= 0.2 * min(dx,dz)/vmin */
@@ -97,16 +98,25 @@ Date: November 2013
 #define C2 -0.08024696
 #define C3 +0.00855954
 
+typedef struct in_para_struct{
+  bool verb;
+  bool fsrf;
+  bool dabc;
+  bool adj;
+  int nb;
+}in_para_struct_t;
+
+static void print_param(in_para_struct_t in_para){
+  sf_warning("verbosity          = %s",((in_para.verb==false)?"no":"yes"));
+  sf_warning("free surface       = %s",((in_para.fsrf==false)?"no":"yes"));
+  sf_warning("absorbing boundary = %s",((in_para.dabc==false)?"no":"yes"));
+  if (in_para.dabc) sf_warning("- sponge thickness = %d",in_para.nb);
+}
+
 int main(int argc, char* argv[])
 {
   // command line parameters
-  // flags
-  bool verb; // verbosity
-  bool fsrf; // free surface
-  bool dabc; // absorbing boundaries
-  bool adj;  // adjoint flag
-  // numerical arguments
-  int  nb;
+  in_para_struct_t in_para;
 
   /* I/O files */
   sf_file Fwav=NULL; /* wavelet   */
@@ -133,48 +143,130 @@ int main(int argc, char* argv[])
   /*                COMMAND LINE PARAMETERS                     */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity    */
-  if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface */
-  if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
-  if(! sf_getbool( "adj",&adj )) adj=false;  /* Adjointness  */
+  if(! sf_getbool("verb",&(in_para.verb))) in_para.verb=false; /* Verbosity    */
+  if(! sf_getbool("free",&(in_para.fsrf))) in_para.fsrf=false; /* Free surface */
+  if(! sf_getbool("dabc",&(in_para.dabc))) in_para.dabc=false; /* Absorbing BC */
+  if(! sf_getbool( "adj",&(in_para.adj) )) in_para.adj=false;  /* Adjointness  */
 
-  if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
+  if( !sf_getint("nb",&(in_para.nb)) || in_para.nb<NOP) in_para.nb=NOP;
+
+  if (in_para.verb)
+    print_param(in_para);
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                       OPEN FILES                           */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  Fwav = sf_input ("in" );  /* wavelet   */
+  Fwav = sf_input ("wav" ); /* wavelet   */
   Fvel = sf_input ("vel");  /* velocity  */
   Fden = sf_input ("den");  /* density   */
   Fsou = sf_input ("sou");  /* sources   */
   Frec = sf_input ("rec");  /* receivers */
-  Fdat = sf_output("out");  /* data      */
+  Fdat = sf_output("data"); /* data      */
   Fwfl = sf_output("wfl");  /* wavefield */
 
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                      READ AXES                             */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  sf_warning("WAVELET axes..");
+  sf_axis axWav[2];
+  axWav[0] = sf_iaxa(Fwav,1);
+  sf_setlabel(axWav[0],"shot");
+  sf_setunit(axWav[0],"1");
+  if(in_para.verb) sf_raxa(axWav[0]); /* shot */
+
+  axWav[1] = sf_iaxa(Fwav,2);
+  sf_setlabel(axWav[1],"time");
+  sf_setunit(axWav[1],"s");
+  if(in_para.verb) sf_raxa(axWav[1]); /* time */
+
+  sf_warning("VELOCITY model axes..");
+  sf_axis axVel[2];
+  axVel[0] = sf_iaxa(Fvel,1);
+  sf_setlabel(axVel[0],"z");
+  sf_setunit(axVel[0],"m");
+  if(in_para.verb) sf_raxa(axVel[0]); /* depth */
+
+  axVel[1] = sf_iaxa(Fvel,2);
+  sf_setlabel(axVel[1],"z");
+  sf_setunit(axVel[1],"m");
+  if(in_para.verb) sf_raxa(axVel[1]); /* lateral */
+
+  sf_warning("DENSITY model axes..");
+  sf_axis axDen[2];
+  axDen[0] = sf_iaxa(Fden,1);
+  sf_setlabel(axDen[0],"z");
+  sf_setunit(axDen[0],"m");
+  if(in_para.verb) sf_raxa(axDen[0]); /* depth */
+
+  axDen[1] = sf_iaxa(Fden,2);
+  sf_setlabel(axDen[1],"z");
+  sf_setunit(axDen[1],"m");
+  if(in_para.verb) sf_raxa(axDen[1]); /* lateral */
+
+  sf_warning("SHOT COORDINATES axes..");
+  sf_axis axSou[2];
+  axSou[0] = sf_iaxa(Fsou,1);
+  sf_setlabel(axSou[0],"shot");
+  sf_setunit(axSou[0],"1");
+  if(in_para.verb) sf_raxa(axSou[0]); /* shot */
+
+  axSou[1] = sf_iaxa(Fsou,2);
+  sf_setlabel(axSou[1],"coords");
+  sf_setunit(axSou[1],"1");
+  if(in_para.verb) sf_raxa(axSou[1]); /* coords */
+
+  sf_warning("RECEIVER COORDINATES axes..");
+  sf_axis axRec[2];
+  axRec[0] = sf_iaxa(Frec,1);
+  sf_setlabel(axRec[0],"s");
+  sf_setunit(axRec[0],"1");
+  if(in_para.verb) sf_raxa(axRec[0]); /* shot */
+
+  axRec[1] = sf_iaxa(Frec,2);
+  sf_setlabel(axRec[1],"coords");
+  sf_setunit(axRec[1],"1");
+  if(in_para.verb) sf_raxa(axRec[1]); /* coords */
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                       PREPARE STRUCTURES                   */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Allocate structures..");
   wfl_struct_t *wfl = calloc(1,sizeof(wfl_struct_t));
   acq_struct_t *acq = calloc(1,sizeof(acq_struct_t));
   mod_struct_t *mod = calloc(1,sizeof(mod_struct_t));
 
+  // PREPARE THE ACQUISITION STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
+  prepare_acquisition(acq, axSou, axRec, Fsou, Frec);
+
+  // PREPARE THE MODEL PARAMETERS CUBES
+  if (in_para.verb) sf_warning("Read parameter cubes..");
+  prepare_model_2d(mod,axVel,Fvel,"VELOCITY");
+  prepare_model_2d(mod,axDen,Fden,"DENSITY");
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                  EXTRAPOLATION KERNEL                      */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Start Extrapolation..");
   start_t=clock();
 
-  if (adj)
+  if (!in_para.adj)
     fwdextrap2d(wfl,acq,mod);
   else
     adjextrap2d(wfl,acq,mod);
 
   end_t = clock();
-  if(verb) fprintf(stderr,"\n");
 
-  if (verb){
+  if (in_para.verb){
     total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-    fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
+    sf_warning("Total time taken by CPU: %g", total_t );
   }
 
   /* -------------------------------------------------------------*/
@@ -182,8 +274,11 @@ int main(int argc, char* argv[])
   /*                            FREE MEMORY                       */
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Free memory..");
   free(wfl);
   free(acq);
+
+  clear_model_2d(mod);
   free(mod);
 
   /* -------------------------------------------------------------*/
@@ -191,6 +286,7 @@ int main(int argc, char* argv[])
   /*                   CLOSE FILES AND EXIT                       */
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Close files..");
   if (Fwav!=NULL) sf_fileclose(Fwav);
   if (Fsou!=NULL) sf_fileclose(Fsou);
   if (Frec!=NULL) sf_fileclose(Frec);
@@ -199,5 +295,6 @@ int main(int argc, char* argv[])
   if (Fdat!=NULL) sf_fileclose(Fdat);
   if (Fwfl!=NULL) sf_fileclose(Fwfl);
 
+  if (in_para.verb) sf_warning("ALL DONE..");
   exit (0);
 }
