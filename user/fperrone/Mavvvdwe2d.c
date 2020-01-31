@@ -191,7 +191,7 @@ int main(int argc, char* argv[])
   if(in_para.verb) sf_raxa(axVel[0]); /* depth */
 
   axVel[1] = sf_iaxa(Fvel,2);
-  sf_setlabel(axVel[1],"z");
+  sf_setlabel(axVel[1],"x");
   sf_setunit(axVel[1],"m");
   if(in_para.verb) sf_raxa(axVel[1]); /* lateral */
 
@@ -203,7 +203,7 @@ int main(int argc, char* argv[])
   if(in_para.verb) sf_raxa(axDen[0]); /* depth */
 
   axDen[1] = sf_iaxa(Fden,2);
-  sf_setlabel(axDen[1],"z");
+  sf_setlabel(axDen[1],"x");
   sf_setunit(axDen[1],"m");
   if(in_para.verb) sf_raxa(axDen[1]); /* lateral */
 
@@ -231,6 +231,12 @@ int main(int argc, char* argv[])
   sf_setunit(axRec[1],"1");
   if(in_para.verb) sf_raxa(axRec[1]); /* coords */
 
+  sf_warning("CHECK MODEL DIMENSIONS..");
+  if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
+      (sf_n(axDen[1])!=sf_n(axVel[1]))){
+    sf_error("Inconsistent model dimensions!");
+    return -1;
+  }
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                       PREPARE STRUCTURES                   */
@@ -243,12 +249,15 @@ int main(int argc, char* argv[])
 
   // PREPARE THE ACQUISITION STRUCTURE
   if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
-  prepare_acquisition(acq, axSou, axRec, Fsou, Frec);
+  prepare_acquisition_2d(acq, axSou, axRec, axWav, Fsou, Frec,Fwav);
 
   // PREPARE THE MODEL PARAMETERS CUBES
   if (in_para.verb) sf_warning("Read parameter cubes..");
-  prepare_model_2d(mod,axVel,Fvel,"VELOCITY");
-  prepare_model_2d(mod,axDen,Fden,"DENSITY");
+  prepare_model_2d(mod,axVel,axDen,Fvel,Fden);
+
+  // PREPARATION OF THE WAVEFIELD STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
+  prepare_wfl_2d(wfl,mod);
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                  EXTRAPOLATION KERNEL                      */
@@ -275,7 +284,10 @@ int main(int argc, char* argv[])
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
   if (in_para.verb) sf_warning("Free memory..");
+  clear_wfl_2d(wfl);
   free(wfl);
+
+  clear_acq_2d(acq);
   free(acq);
 
   clear_model_2d(mod);
@@ -295,6 +307,6 @@ int main(int argc, char* argv[])
   if (Fdat!=NULL) sf_fileclose(Fdat);
   if (Fwfl!=NULL) sf_fileclose(Fwfl);
 
-  if (in_para.verb) sf_warning("ALL DONE..");
+  if (in_para.verb) sf_warning("ALL DONE!");
   exit (0);
 }
