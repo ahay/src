@@ -2,6 +2,9 @@
 
 #ifndef _PREP_H
 
+typedef struct in_para_struct in_para_struct_t;
+/*^*/
+
 typedef struct wfl_struct wfl_struct_t;
 /*^*/
 
@@ -9,6 +12,15 @@ typedef struct acq_struct acq_struct_t;
 /*^*/
 
 typedef struct mod_struct mod_struct_t;
+/*^*/
+
+struct in_para_struct{
+  bool verb;
+  bool fsrf;
+  bool dabc;
+  bool adj;
+  int nb;
+};
 /*^*/
 
 struct wfl_struct{
@@ -30,6 +42,9 @@ struct wfl_struct{
   float d2;
   float o1;
   float o2;
+  // pointers to files
+  sf_file Fdata;
+  sf_file Fwfl;
 };
 /*^*/
 
@@ -40,14 +55,10 @@ struct acq_struct{
   float ot;
   float *wav;
   // acquisition geometry
-  long ns;
-  long  *nr;
-  float *xs;
-  float *ys;
-  float *zs;
-  float *xr;
-  float *yr;
-  float *zr;
+  long ns;    // NUMBER OF SOURCES TO BE SIMULATED SIMULTANEOUSLY
+  long nr;
+  float *scoord;
+  float *rcoord;
 };
 /*^*/
 
@@ -60,6 +71,9 @@ struct mod_struct{
   float o2;
   float *vmod;
   float *dmod;
+  // parameters for modeling
+  float *incomp;
+  float *buoy;
 };
 /*^*/
 
@@ -101,6 +115,17 @@ void prepare_model_2d(mod_struct_t* mod,
   dave /= (nelem);
   sf_warning("Velocity Model average value = %g",dave);
 
+  // modeling parameters
+  mod->incomp = sf_floatalloc(nelem);
+  mod->buoy   = sf_floatalloc(nelem);
+
+  for (long i=0; i<nelem; i++){
+    float const v = mod->vmod[i];
+    float const r = mod->dmod[i];
+    mod->incomp[i] = v*v*r;
+    mod->buoy[i]   = 1./r;
+  }
+
 }
 
 void clear_model_2d(mod_struct_t* mod)
@@ -108,6 +133,8 @@ void clear_model_2d(mod_struct_t* mod)
 {
   free(mod->vmod);
   free(mod->dmod);
+  free(mod->incomp);
+  free(mod->buoy);
 }
 
 void prepare_acquisition_2d( acq_struct_t* acq,
@@ -115,19 +142,25 @@ void prepare_acquisition_2d( acq_struct_t* acq,
                           sf_file Fsou, sf_file Frec, sf_file Fwav)
 /*< Read the acquisition geometry from files >*/
 {
-  // NUMBER OF SHOTS AND POSITIONS
-  if (sf_n(axsou[1])!=2)
-    sf_error("The source coordinate file is not correct!");
+  //
+  if (sf_n(axsou[0])!=2)
+    sf_error("Wrong number of coordinates in the source file!");
 
   // shot coordinates
-  acq->ns = sf_n(axsou[0]);
-  acq->xs = sf_floatalloc(acq->ns);
-  acq->zs = sf_floatalloc(acq->ns);
-  sf_floatread(acq->xs,acq->ns,Fsou);
-  sf_floatread(acq->zs,acq->ns,Fsou);
+  acq->ns = sf_n(axsou[1]);
+  acq->scoord = sf_floatalloc(2*acq->ns);
+  for (long isou=0; isou<acq->ns; isou++)
+    sf_floatread(acq->scoord+2*isou,2,Fsou);
+
+  //
+  if (sf_n(axrec[0])!=2)
+    sf_error("Wrong number of coordinates in the receiver file!");
 
   // receiver coordinates
-
+  acq->nr = sf_n(axrec[1]);
+  acq->rcoord = sf_floatalloc(2*acq->nr);
+  for (long irec=0; irec<acq->nr; irec++)
+    sf_floatread(acq->rcoord+2*irec,2,Frec);
 
   // wavelet parameters
   acq->nt = sf_n(axwav[1]);
@@ -158,13 +191,13 @@ void prepare_acquisition_2d( acq_struct_t* acq,
 void clear_acq_2d(acq_struct_t *acq)
 /*< Free the arrays in the acquisition structure >*/
 {
-  free(acq->xs);
-  free(acq->zs);
+  free(acq->scoord);
+  free(acq->rcoord);
 
   free(acq->wav);
 }
 
-void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod)
+void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file Fwfl, in_para_struct_t para)
 /*< Allocate the wavefield structure >*/
 {
   // FIXME: the wavefield model need to be extended for absorbing boundaries
@@ -199,6 +232,9 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod)
   memset(wfl->v2c,0,wflsize);
   memset(wfl->v2p,0,wflsize);
   memset(wfl->v2a,0,wflsize);
+
+  wfl->Fdata = Fdata;
+  wfl->Fwfl  = Fwfl;
 
 }
 

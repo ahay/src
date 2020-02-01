@@ -98,14 +98,6 @@ Date: November 2013
 #define C2 -0.08024696
 #define C3 +0.00855954
 
-typedef struct in_para_struct{
-  bool verb;
-  bool fsrf;
-  bool dabc;
-  bool adj;
-  int nb;
-}in_para_struct_t;
-
 static void print_param(in_para_struct_t in_para){
   sf_warning("verbosity          = %s",((in_para.verb==false)?"no":"yes"));
   sf_warning("free surface       = %s",((in_para.fsrf==false)?"no":"yes"));
@@ -257,7 +249,13 @@ int main(int argc, char* argv[])
 
   // PREPARATION OF THE WAVEFIELD STRUCTURE
   if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
-  prepare_wfl_2d(wfl,mod);
+  prepare_wfl_2d(wfl,mod,Fdat,Fwfl,in_para);
+
+  // WAVEFIELD HEADERS
+  sf_oaxa(Fwfl,axVel[0],1);
+  sf_oaxa(Fwfl,axVel[1],2);
+  sf_oaxa(Fwfl,axWav[1],3);
+
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                  EXTRAPOLATION KERNEL                      */
