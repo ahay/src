@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 
   // PREPARE THE MODEL PARAMETERS CUBES
   if (in_para.verb) sf_warning("Read parameter cubes..");
-  prepare_model_2d(mod,axVel,axDen,Fvel,Fden);
+  prepare_model_2d(mod,in_para,axVel,axDen,Fvel,Fden);
 
   // PREPARATION OF THE WAVEFIELD STRUCTURE
   if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");

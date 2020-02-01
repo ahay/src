@@ -35,13 +35,22 @@ struct wfl_struct{
   float *v2p; // component 2 previous
   float *v1a; // component 1 aux
   float *v2a; // component 1 aux
+  // buffers to store the data
+  float *rdata;
+  // buffer for the wavefield snapshot
+  float *bwfl;
   // dimensions
-  long n1;
-  long n2;
+  long nabc;  // size of the absorbing boundary
+  long modN1;
+  long modN2;
+  long simN1;
+  long simN2;
+  float modO1;
+  float modO2;
+  float simO1;
+  float simO2;
   float d1;
   float d2;
-  float o1;
-  float o2;
   // pointers to files
   sf_file Fdata;
   sf_file Fwfl;
@@ -80,6 +89,7 @@ struct mod_struct{
 #endif
 
 void prepare_model_2d(mod_struct_t* mod,
+                      in_para_struct_t para,
                       sf_axis axvel[2], sf_axis axden[2],
                       sf_file Fvmod, sf_file Fdmod)
 /*< Sets up the specified model cube >*/
@@ -116,6 +126,8 @@ void prepare_model_2d(mod_struct_t* mod,
   sf_warning("Velocity Model average value = %g",dave);
 
   // modeling parameters
+  // TODO: extend the models
+
   mod->incomp = sf_floatalloc(nelem);
   mod->buoy   = sf_floatalloc(nelem);
 
@@ -201,16 +213,22 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file 
 /*< Allocate the wavefield structure >*/
 {
   // FIXME: the wavefield model need to be extended for absorbing boundaries
-  wfl->n1 = mod->n1;
-  wfl->n2 = mod->n2;
+  wfl->modN1 = mod->n1;
+  wfl->modN2 = mod->n2;
+
+  wfl->nabc = para.nb;
+  wfl->simN1 = mod->n1 + 2*para.nb;
+  wfl->simN2 = mod->n2 + 2*para.nb;
 
   wfl->d1 = mod->d1;
   wfl->d2 = mod->d2;
 
-  wfl->o1 = mod->o1;
-  wfl->o2 = mod->o2;
+  wfl->modO1 = mod->o1;
+  wfl->modO2 = mod->o2;
+  wfl->simO1 = mod->o1 - para.nb*mod->d1;
+  wfl->simO2 = mod->o2 - para.nb*mod->d2;
 
-  long nelem = wfl->n1*wfl->n2;
+  long nelem = wfl->simN1*wfl->simN2;
   long wflsize = nelem*sizeof(float);
   wfl->pc = sf_floatalloc(nelem);
   wfl->pp = sf_floatalloc(nelem);
@@ -233,6 +251,8 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file 
   memset(wfl->v2p,0,wflsize);
   memset(wfl->v2a,0,wflsize);
 
+  wfl->bwfl = sf_floatalloc(wfl->modN1*wfl->modN2);
+
   wfl->Fdata = Fdata;
   wfl->Fwfl  = Fwfl;
 
@@ -253,5 +273,7 @@ void clear_wfl_2d(wfl_struct_t *wfl)
   free(wfl->v2c);
   free(wfl->v2p);
   free(wfl->v2a);
+
+  free(wfl->bwfl);
 
 }

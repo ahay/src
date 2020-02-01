@@ -4,8 +4,8 @@
 static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, bool adjflag)
 {
 
-  long n1 = wfl->n1;
-  long n2 = wfl->n2;
+  long n1 = wfl->simN1;
+  long n2 = wfl->simN2;
 
   float *v1c = wfl->v1c;
   float *v2c = wfl->v2c;
@@ -47,8 +47,8 @@ static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t cons
 static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, bool adjflag)
 {
 
-  long n1 = wfl->n1;
-  long n2 = wfl->n2;
+  long n1 = wfl->simN1;
+  long n2 = wfl->simN2;
 
   float* pc = wfl->pc;
   float* pp = wfl->pp;
@@ -129,7 +129,7 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
   sf_warning("FORWARD EXTRAPOLATION..");
 
   int nt = acq->nt;
-  long nelem = wfl->n1*wfl->n2;
+  long nelem = wfl->simN1*wfl->simN2;
 
   // loop over time
   for (int it=0; it<nt; it++){
@@ -151,12 +151,17 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
   sf_warning("ADJOINT EXTRAPOLATION..");
 
   int nt = acq->nt;
+  long nelem = wfl->simN1*wfl->simN2;
 
   // loop over time
   for (int it=0; it<nt; it++){
     velupd(wfl,mod,acq,true);
     presupd(wfl,mod,acq,true);
     injectPsource(wfl,mod,acq,it);
+
+    // write the wavefield out
+    sf_floatwrite(wfl->pc,nelem,wfl->Fwfl);
+
     swapwfl(wfl);
   }
 
