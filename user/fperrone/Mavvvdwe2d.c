@@ -235,6 +235,7 @@ int main(int argc, char* argv[])
   // PREPARE THE ACQUISITION STRUCTURE
   if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
   prepare_acquisition_2d(acq, axSou, axRec, axWav, Fsou, Frec,Fwav);
+  set_sr_interpolation_coeffs();
 
   // PREPARE THE MODEL PARAMETERS CUBES
   if (in_para.verb) sf_warning("Read parameter cubes..");

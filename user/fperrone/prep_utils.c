@@ -243,6 +243,12 @@ void prepare_acquisition_2d( acq_struct_t* acq,
 
 }
 
+void set_sr_interpolation_coeff()
+/*< interpolation coefficients for source injection and receiver extraction >*/
+{
+
+}
+
 void clear_acq_2d(acq_struct_t *acq)
 /*< Free the arrays in the acquisition structure >*/
 {
