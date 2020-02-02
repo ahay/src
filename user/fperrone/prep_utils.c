@@ -35,6 +35,8 @@ struct wfl_struct{
   float *v2p; // component 2 previous
   float *v1a; // component 1 aux
   float *v2a; // component 1 aux
+  float *tap1;  // ABC coeffs
+  float *tap2;  //
   // buffers to store the data
   float *rdata;
   // buffer for the wavefield snapshot
@@ -88,6 +90,44 @@ struct mod_struct{
 
 #endif
 
+static float* build_extended_model_2d(float const *mod, long n1, long n2, int next)
+{
+
+  sf_warning(" Extend the 2d models with absorbing boundaries..");
+
+  long n1ext = n1+2*next;
+  long n2ext = n2+2*next;
+  long nelem = n1ext*n2ext;
+  float* extd = sf_floatalloc(nelem);
+
+  // core
+  for (long i2=next,j2=0; i2<next+n2; i2++,j2++){
+    for (long i1=next,j1=0; i1<next+n1; i1++,j1++){
+      float const v = mod[j1+j2*n1];
+      extd[i1+i2*n1ext] = v;
+    }
+  }
+
+  // extend laterally
+  for (long i2=0;i2<next;i2++){
+    for (long i1=0,j1=next; i1<n1; i1++,j1++){
+      extd[j1+i2*n1ext] = extd[j1+next*n1ext];
+      extd[j1+(n2ext-1-i2)*n1ext] = extd[j1+(n2ext-1-next)*n1ext];
+    }
+  }
+
+  // extend up and down
+  for (long i2=0;i2<n2ext;i2++){
+    for (long i1=0; i1<next; i1++){
+      extd[i1+i2*n1ext] = extd[next+i2*n1ext];
+      extd[(n1ext-1-i1)+i2*n1ext] = extd[(n1ext-1-next)+i2*n1ext];
+    }
+  }
+
+  return extd;
+
+}
+
 void prepare_model_2d(mod_struct_t* mod,
                       in_para_struct_t para,
                       sf_axis axvel[2], sf_axis axden[2],
@@ -126,16 +166,19 @@ void prepare_model_2d(mod_struct_t* mod,
   sf_warning("Velocity Model average value = %g",dave);
 
   // modeling parameters
-  // TODO: extend the models
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+  int nabc = para.nb;
+  mod->incomp = build_extended_model_2d(mod->vmod,n1,n2,nabc);
+  mod->buoy = build_extended_model_2d(mod->dmod,n1,n2,nabc);
 
-  mod->incomp = sf_floatalloc(nelem);
-  mod->buoy   = sf_floatalloc(nelem);
-
-  for (long i=0; i<nelem; i++){
-    float const v = mod->vmod[i];
-    float const r = mod->dmod[i];
-    mod->incomp[i] = v*v*r;
-    mod->buoy[i]   = 1./r;
+  // compute incompressibility and buoyancy
+  long nelemext = (n1+2*nabc)*(n2+2*nabc);
+  for (long i=0; i<nelemext; i++){
+    float v = mod->incomp[i];
+    float d = mod->buoy[i];
+    mod->incomp[i] = v*v*d;
+    mod->buoy[i] = 1./d;
   }
 
 }
@@ -251,6 +294,10 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file 
   memset(wfl->v2p,0,wflsize);
   memset(wfl->v2a,0,wflsize);
 
+  // sponge
+  wfl->tap1 = sf_floatalloc(wfl->simN1);
+  wfl->tap2 = sf_floatalloc(wfl->simN2);
+
   wfl->bwfl = sf_floatalloc(wfl->modN1*wfl->modN2);
 
   wfl->Fdata = Fdata;
@@ -273,6 +320,9 @@ void clear_wfl_2d(wfl_struct_t *wfl)
   free(wfl->v2c);
   free(wfl->v2p);
   free(wfl->v2a);
+
+  free(wfl->tap1);
+  free(wfl->tap2);
 
   free(wfl->bwfl);
 

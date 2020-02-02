@@ -1,39 +1,78 @@
 #include <rsf.h>
 #include "prep_utils.h"
 
+#ifndef _KERNELS_H
+
+#define NOP 3 /* derivative operator half-size */
+/*^*/
+
+#endif
+
+/* LS coefficients */
+#define C1 +1.1989919
+#define C2 -0.08024696
+#define C3 +0.00855954
+
 static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, bool adjflag)
 {
 
-  long n1 = wfl->simN1;
-  long n2 = wfl->simN2;
+  long const n1 = wfl->simN1;
+  long const n2 = wfl->simN2;
 
-  float *v1c = wfl->v1c;
-  float *v2c = wfl->v2c;
-  float *v1p = wfl->v1p;
-  float *v2p = wfl->v2p;
+  float * const v1c = wfl->v1c;
+  float * const v2c = wfl->v2c;
+  float const * v1p = wfl->v1p;
+  float const * v2p = wfl->v2p;
 
-  float* pp = wfl->pp;
+  float * const v1a = wfl->v1a;
+  float * const v2a = wfl->v2a;
 
-  float* buoy = mod->buoy;
-  float dt = acq->dt;
-  float d1 = mod->d1;
-  float d2 = mod->d2;
+  float const * pp = wfl->pp;
+
+  float const * tap1 = wfl->tap1;
+  float const * tap2 = wfl->tap2;
+
+  float const * buoy = mod->buoy;
+  float const dt = acq->dt;
+  float const d1 = mod->d1;
+  float const d2 = mod->d2;
+
+  float const dtd1 = dt/d1;
+  float const dtd2 = dt/d2;
 
   if (!adjflag){
 
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      for (long i1=NOP; i1<n1-NOP; i1++){
+        v1a[i1  +i2*n1] = (C1*(pp[i1+1+i2*n1] - pp[i1  +i2*n1])+
+                           C2*(pp[i1+2+i2*n1] - pp[i1-1+i2*n1])+
+                           C3*(pp[i1+3+i2*n1] - pp[i1-2+i2*n1]))*dtd1;
+      }
+    }
+
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      for (long i1=NOP; i1<n1-NOP; i1++){
+        v2a[i1+i2*n1] = (C1*(pp[i1+(i2+1)*n1] - pp[i1+i2    *n1])+
+                         C2*(pp[i1+(i2+2)*n1] - pp[i1+(i2-1)*n1])+
+                         C3*(pp[i1+(i2+3)*n1] - pp[i1+(i2-2)*n1]))*dtd2;
+      }
+    }
+
     // 1-component
-    for (long i2=0; i2<n2; i2++){
-      for (long i1=0; i1<n1-1; i1++){
-        float const pd1 = (pp[i1+1+i2*n1] - pp[i1+i2*n1])/d1;
-        v1c[i1+i2*n1] = v1p[i1+i2*n1] - buoy[i1+i2*n1]*pd1*dt;
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      float const spox = tap2[i2];
+      for (long i1=NOP,idx=i1+i2*wfl->simN1; i1<n1-NOP; i1++,idx++){
+        float const spo = spox*tap1[i1];
+        v1c[idx] = spo*(v1p[idx] - buoy[idx]*v1a[idx]);
       }
     }
 
     // 2-component
-    for (long i2=0; i2<n2-1; i2++){
-      for (long i1=0; i1<n1; i1++){
-        float const pd2 = (pp[i1+(i2+1)*n1] - pp[i1+i2*n1])/d2;
-        v2c[i1+i2*n1] = v2p[i1+i2*n1] - buoy[i1+i2*n1]*pd2*dt;
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      float const spox = tap2[i2];
+      for (long i1=NOP,idx=i1+i2*wfl->simN1; i1<n1-NOP; i1++,idx++){
+        float const spo = spox*tap1[i1];
+        v2c[idx] = spo*(v2p[idx] - buoy[idx]*v2a[idx]);
       }
     }
 
@@ -47,28 +86,52 @@ static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t cons
 static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, bool adjflag)
 {
 
-  long n1 = wfl->simN1;
-  long n2 = wfl->simN2;
+  long const n1 = wfl->simN1;
+  long const n2 = wfl->simN2;
 
-  float* pc = wfl->pc;
-  float* pp = wfl->pp;
+  float * const pc = wfl->pc;
+  float const * pp = wfl->pp;
 
-  float *v1c = wfl->v1c;
-  float *v2c = wfl->v2c;
+  float const *v1c = wfl->v1c;
+  float const *v2c = wfl->v2c;
 
-  float *incomp = mod->incomp;
-  float d1 = mod->d1;
-  float d2 = mod->d2;
-  float dt = acq->dt;
+  float * const v1a = wfl->v1a;
+  float * const v2a = wfl->v2a;
+
+  float const * tap1 = wfl->tap1;
+  float const * tap2 = wfl->tap2;
+
+  float const *incomp = mod->incomp;
+  float const d1 = mod->d1;
+  float const d2 = mod->d2;
+  float const dt = acq->dt;
+
+  float const dtd1 = dt/d1;
+  float const dtd2 = dt/d2;
 
   if (!adjflag){
 
-    for (long i2=1; i2<n2; i2++){
-      for (long i1=1; i1<n1; i1++){
-        float const v1d1 = -(v1c[i1+i2*n1] - v1c[i1-1+i2*n1])/d1;
-        float const v2d2 = -(v2c[i1+i2*n1] - v2c[i1  +(i2-1)*n1])/d2;
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      for (long i1=NOP; i1<n1-NOP; i1++){
+        v1a[i1+i2*n1] = -(C1*(v1c[i1  +i2*n1] - v1c[i1-1+i2*n1])+
+                          C2*(v1c[i1+1+i2*n1] - v1c[i1-2+i2*n1])+
+                          C3*(v1c[i1+2+i2*n1] - v1c[i1-3+i2*n1]))*dtd1;
+      }
+    }
 
-        pc[i1+i2*n1] = pp[i1+i2*n1] + incomp[i1+i2*n1]*(v1d1+v2d2)*dt;
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      for (long i1=NOP; i1<n1-NOP; i1++){
+        v2a[i1+i2*n1] = -(C1*(v2c[i1+(i2  )*n1] - v2c[i1  +(i2-1)*n1])+
+                          C2*(v2c[i1+(i2+1)*n1] - v2c[i1  +(i2-2)*n1])+
+                          C3*(v2c[i1+(i2+2)*n1] - v2c[i1  +(i2-3)*n1]))*dtd2;
+      }
+    }
+
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      float const spox = tap2[i2];
+      for (long i1=NOP,idx=i1+i2*wfl->simN1; i1<n1-NOP; i1++,idx++){
+        float const spo = spox*tap1[i1];
+        pc[idx] = spo*(pp[idx] + incomp[idx]*(v1a[idx]+v2a[idx]));
       }
     }
 
@@ -86,21 +149,21 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
   long nsou = acq->ns;
   long nt   = acq->nt;
 
-  long modN1 = mod->n1;
+  long N1 = wfl->simN1;
 
   float modD1 = mod->d1;
   float modD2 = mod->d2;
-  float modO1 = mod->o1;
-  float modO2 = mod->o2;
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
 
   for (long isou=0; isou<nsou; isou++){
     float xs = acq->scoord[isou*2];
     float zs = acq->scoord[isou*2+1];
 
-    int ixs = (xs-modO2)/modD2;
-    int izs = (zs-modO1)/modD1;
+    int ixs = (xs-o2)/modD2;
+    int izs = (zs-o1)/modD1;
 
-    wfl->pc[izs + modN1*ixs] += acq->wav[it+isou*nt];
+    wfl->pc[izs + N1*ixs] += acq->wav[it+isou*nt];
   }
 
 }
@@ -123,13 +186,28 @@ static void swapwfl(wfl_struct_t* wfl)
 }
 
 
+static void extract_wfl_2d(wfl_struct_t* wfl)
+{
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long nabc = wfl->nabc;
+  long simN1 = wfl->simN1;
+
+  // copy the write chunk of wavefield
+  for (long i2=0; i2<modN2; i2++)
+    memcpy(wfl->bwfl+i2*modN1,wfl->pc+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
+
+  long nelem = modN1*modN2;
+  sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+
+}
+
 void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
 /*< extrapolation kernel 2d - forward operator >*/
 {
   sf_warning("FORWARD EXTRAPOLATION..");
 
   int nt = acq->nt;
-  long nelem = wfl->simN1*wfl->simN2;
 
   // loop over time
   for (int it=0; it<nt; it++){
@@ -138,7 +216,8 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     injectPsource(wfl,mod,acq,it);
 
     // write the wavefield out
-    sf_floatwrite(wfl->pc,nelem,wfl->Fwfl);
+    extract_wfl_2d(wfl);
+
 
     swapwfl(wfl);
   }
@@ -151,7 +230,6 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
   sf_warning("ADJOINT EXTRAPOLATION..");
 
   int nt = acq->nt;
-  long nelem = wfl->simN1*wfl->simN2;
 
   // loop over time
   for (int it=0; it<nt; it++){
@@ -160,9 +238,31 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     injectPsource(wfl,mod,acq,it);
 
     // write the wavefield out
-    sf_floatwrite(wfl->pc,nelem,wfl->Fwfl);
+    extract_wfl_2d(wfl);
 
     swapwfl(wfl);
+  }
+
+}
+
+void setupABC(wfl_struct_t* wfl)
+/*< Setup of the coefficients for the absorbing boundary >*/
+{
+
+  float tapbase = 0.92;
+  float alpha = sqrt(-log(tapbase));
+
+  for (long i=0; i<wfl->simN1; i++)
+    wfl->tap1[i] = 1.;
+  for (long i=0; i<wfl->simN2; i++)
+    wfl->tap2[i] = 1.;
+
+  for (int i=0; i<wfl->nabc; i++){
+    float tap = exp(-alpha*alpha);
+    wfl->tap1[i] = tap;
+    wfl->tap2[i] = tap;
+    wfl->tap1[wfl->simN1-1-i] = tap;
+    wfl->tap2[wfl->simN2-1-i] = tap;
   }
 
 }
