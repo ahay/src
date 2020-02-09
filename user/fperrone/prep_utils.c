@@ -19,6 +19,7 @@ struct in_para_struct{
   bool fsrf;
   bool dabc;
   bool adj;
+  bool dpt;
   int nb;
 };
 /*^*/
@@ -70,6 +71,11 @@ struct acq_struct{
   long nr;
   float *scoord;
   float *rcoord;
+  // interpolation coefficients for source injection and extraction
+  float *hicksSou1;
+  float *hicksSou2;
+  float *hicksRcv1;
+  float *hicksRcv2;
 };
 /*^*/
 
@@ -243,15 +249,84 @@ void prepare_acquisition_2d( acq_struct_t* acq,
 
 }
 
-void set_sr_interpolation_coeff()
+/*
+ * Evaluates the Bessel function (from Dave Hale's KaiserWindow class in the Java Mines TK)
+ */
+static double ino(double x)
+{
+  double s = 1.0;
+  double ds = 1.0;
+  double d = 0.0;
+  do {
+    d += 2.0;
+    ds *= (x*x)/(d*d);
+    s += ds;
+  } while (ds>s*DBL_EPSILON);
+  return s;
+}
+
+/*
+ * Sinc function
+ */
+static double sinc(double x){
+
+  if (x==0.0)
+    return 1;
+  else
+    return sin(M_PI*x)/(M_PI*x);
+}
+
+/*
+ * Kaiser window with fixed scale parameter and radius
+ */
+static double kwin(double x, double xmax){
+  double b = 6.31;
+  double xx = x*x;
+  double xxmax = xmax*xmax;
+  double scale = 1./ino(b);
+
+  return (xx<xxmax)? scale*ino(b*sqrt(1.- xx/xxmax)):0.;
+
+}
+
+void set_sr_interpolation_coeffs(acq_struct_t * const acq, wfl_struct_t const * wfl)
 /*< interpolation coefficients for source injection and receiver extraction >*/
 {
+  long nsous = acq->ns;
+  long nrecs = acq->nr;
+
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+  float d1 = wfl->d1;
+  float d2 = wfl->d2;
+
+  acq->hicksSou1 = sf_floatalloc(8*nsous);
+  acq->hicksSou2 = sf_floatalloc(8*nsous);
+  acq->hicksRcv1 = sf_floatalloc(8*nrecs);
+  acq->hicksRcv2 = sf_floatalloc(8*nrecs);
+
+  for (long isou=0; isou<nsous; isou++){
+    float x1s = acq->scoord[2*isou+1]; // z coordinate
+    float x2s = acq->scoord[2*isou  ]; // x coordinate
+    long ix1s = (x1s-o1)/d1;
+    long ix2s = (x2s-o2)/d2;
+    float rem1 = (x1s - (ix1s*d1+o1))/d1;
+    float rem2 = (x2s - (ix2s*d2+o2))/d2;
+    for (int i=-3,ii=0; i<=4; i++,ii++){
+      acq->hicksSou1[ii+isou*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
+      acq->hicksSou2[ii+isou*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
+    }
+  }
 
 }
 
 void clear_acq_2d(acq_struct_t *acq)
 /*< Free the arrays in the acquisition structure >*/
 {
+
+  free(acq->hicksSou1);
+  free(acq->hicksSou2);
+
   free(acq->scoord);
   free(acq->rcoord);
 
@@ -261,7 +336,7 @@ void clear_acq_2d(acq_struct_t *acq)
 void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file Fwfl, in_para_struct_t para)
 /*< Allocate the wavefield structure >*/
 {
-  // FIXME: the wavefield model need to be extended for absorbing boundaries
+
   wfl->modN1 = mod->n1;
   wfl->modN2 = mod->n2;
 
