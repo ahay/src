@@ -309,6 +309,39 @@ static void extract_wfl_2d(wfl_struct_t* wfl)
 
 }
 
+static void extract_dat_2d(wfl_struct_t* wfl,acq_struct_t const * acq){
+
+  long nr = acq->nr;
+  long n1 = wfl->simN1;
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+  float d1 = wfl->d1;
+  float d2 = wfl->d2;
+
+  wfl->rdata = sf_floatalloc(nr);
+  for (long ir=0; ir<nr; ir++){
+    float xr = acq->rcoord[2*ir];
+    float zr = acq->rcoord[2*ir+1];
+    long ixr = (xr - o2)/d2;
+    long izr = (zr - o1)/d1;
+    long idx = izr + n1*ixr;
+    float rv = 0.;
+    for (int j=-3,jh=0; j<=4; j++,jh++){
+      const float hicks2 = acq->hicksRcv2[jh+ir*8];
+      for (int i=-3,ih=0; i<=4; i++,ih++){
+        const float hc = acq->hicksRcv1[ih+ir*8]*hicks2;
+        rv += hc*wfl->pc[idx + i +j*n1];
+      }
+    }
+    wfl->rdata[ir] = rv;
+  }
+
+  sf_floatwrite(wfl->rdata,nr,wfl->Fdata);
+
+  free(wfl->rdata);
+
+}
+
 void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
 /*< extrapolation kernel 2d - forward operator >*/
 {
@@ -324,6 +357,9 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
     // write the wavefield out
     extract_wfl_2d(wfl);
+
+    // extract the data at the receiver locations
+    extract_dat_2d(wfl,acq);
 
     swapwfl(wfl);
   }

@@ -326,6 +326,10 @@ int main(int argc, char* argv[])
   sf_oaxa(Fwfl,axVel[1],2);
   sf_oaxa(Fwfl,axWav[1],3);
 
+  // DATA HEADERS
+  sf_oaxa(Fdat,axRec[1],1);
+  sf_oaxa(Fdat,axWav[1],2);
+
   // DOT PRODUCT TEST
   if (in_para.dpt)
     dpt(wfl,acq,mod);

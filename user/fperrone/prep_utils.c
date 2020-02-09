@@ -318,11 +318,27 @@ void set_sr_interpolation_coeffs(acq_struct_t * const acq, wfl_struct_t const * 
     }
   }
 
+  for (long irec=0; irec<nrecs; irec++){
+    float x1r = acq->rcoord[2*irec+1]; // z coordinate
+    float x2r = acq->rcoord[2*irec  ]; // x coordinate
+    long ix1r = (x1r-o1)/d1;
+    long ix2r = (x2r-o2)/d2;
+    float rem1 = (x1r - (ix1r*d1+o1))/d1;
+    float rem2 = (x2r - (ix2r*d2+o2))/d2;
+    for (int i=-3,ii=0; i<=4; i++,ii++){
+      acq->hicksRcv1[ii+irec*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
+      acq->hicksRcv2[ii+irec*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
+    }
+  }
+
 }
 
 void clear_acq_2d(acq_struct_t *acq)
 /*< Free the arrays in the acquisition structure >*/
 {
+
+  free(acq->hicksRcv1);
+  free(acq->hicksRcv2);
 
   free(acq->hicksSou1);
   free(acq->hicksSou2);
