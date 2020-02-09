@@ -54,6 +54,8 @@ struct wfl_struct{
   float simO2;
   float d1;
   float d2;
+  //free surface flag
+  bool freesurf;
   // pointers to files
   sf_file Fdata;
   sf_file Fwfl;
@@ -396,6 +398,8 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file 
   wfl->tap2 = sf_floatalloc(wfl->simN2);
 
   wfl->bwfl = sf_floatalloc(wfl->modN1*wfl->modN2);
+
+  wfl->freesurf = para.fsrf;
 
   wfl->Fdata = Fdata;
   wfl->Fwfl  = Fwfl;

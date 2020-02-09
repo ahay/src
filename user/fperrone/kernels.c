@@ -342,6 +342,17 @@ static void extract_dat_2d(wfl_struct_t* wfl,acq_struct_t const * acq){
 
 }
 
+static void applyFreeSurfaceBC(wfl_struct_t *wfl){
+
+  long nb = wfl->nabc;
+  long n1 = wfl->simN1;
+  long n2 = wfl->simN2;
+
+  for (long i2=0; i2<n2; i2++)
+    memset(wfl->pc+i2*n1,0,(nb+1)*sizeof(float));
+
+}
+
 void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
 /*< extrapolation kernel 2d - forward operator >*/
 {
@@ -354,6 +365,9 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     velupd(wfl,mod,acq,FWD);
     presupd(wfl,mod,acq,FWD);
     injectPsource(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
     extract_wfl_2d(wfl);
@@ -378,6 +392,9 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     velupd(wfl,mod,acq,ADJ);
     presupd(wfl,mod,acq,ADJ);
     injectPsource(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
     extract_wfl_2d(wfl);
