@@ -1,0 +1,182 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+import math
+
+def Wig(data,other): 
+	Result(data,'put d1=0.004 d2=1 o1=0 o2=1 |window j2=2 | wiggle labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 color=g grid=n poly=y transp=y yreverse=y clip=0.55  label2=Trace  unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n wheretitle=t   %s'%other)
+
+def Wigzoom(data,other): 
+	Result(data,'put d1=0.004 d2=1 o1=1.5 o2=0 | window j2=2 | wiggle grid=n poly=y transp=y yreverse=y clip=0.55 label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n  wheretitle=b  %s'%other)
+
+def Grey(data,other):
+	Result(data,'grey grid=n labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 label2=Trace  unit2="" label1=Time unit1="s" title="" wherexlabel=b scalebar=n wheretitle=t   %s'%other)
+
+def Graph(data,other):
+	Result(data,'graph grid=n label2=Amplitude  unit2="" labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 label1=Time unit1="s" title="" wherexlabel=b scalebar=n wheretitle=t %s'%other)
+
+def Grey3(data,other):
+	Result(data,'transp plane=12|byte allpos=y | grey3 flat=n color=j frame2=60 frame1=120 frame3=15 grid=n label1=Time  unit1="s" label3=Trace label2=Frequency unit2="Hz" title="" wherexlabel=b scalebar=n wheretitle=t labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 point1=0.8 point1=0.85 %s'%other)
+	
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Gentrace'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+pi=math.pi
+t1=0.5
+t2=0.8
+dt=0.004
+k1=t1/dt
+k2=t2/dt
+nt=252
+f0=50
+Q=60
+fhi=1/dt/2
+flo=0
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('trace0',[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s(%(t1)g,%(t2)g,%(dt)g,%(nt)g,%(f0)g,%(Q)g,'${TARGETS[0]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('trace','trace0','put d1=%g d2=1 o1=0 o2=0'%dt)
+#Graph('trace','max2=1.25 min2=-0.75')
+
+
+Flow('trace-st','trace','noise seed=201516 var=0.02 | st fhi=%g flo=%g | cabs | transp'%(fhi,flo))
+Grey('trace-st','label1=Frequency unit1=Hz label2=Time unit2=s color=j clip=0.4')
+
+i=0
+sts=[]
+traces=[]
+N=30
+for var in range(N):
+	s=0.02
+	i=i+1
+	Flow('trace-%d'%i,'trace','noise seed=%d var=%g'%(i+201516,s))
+	Flow('trace-st-%d'%i,'trace-%d'%i,'st fhi=%g flo=%g | cabs | transp'%(fhi,flo))
+	
+	traces.append('trace-%d'%i)
+	sts.append('trace-st-%d'%i)
+	Grey('trace-st-%d'%i,'label1=Frequency unit1=Hz label2=Time unit2=s color=j clip=0.4')
+Flow('traces',traces,'cat axis=2 ${SOURCES[1:%d]} | put o2=1 d2=1'%len(traces))
+
+Wig('traces','screenratio=1.8 wherexlabel=b title="Synthetic Data"')
+Graph('trace-15','title="Single Trace" transp=y max1=1 min1=0 max2=1.1 min2=-1.1 screenratio=1.8 yreverse=y')
+
+#single channel
+Flow('trace-f-t1','trace-st','window n2=1 f2=%g '%(k1))
+Flow('trace-f-t2','trace-st','window n2=1 f2=%g '%(k2))
+Flow('trace-f-t','trace-f-t1 trace-f-t2','cat axis=2 ${SOURCES[1]}')
+Graph('trace-f-t','label1=Frequency unit1=Hz label2=Amplitude ')
+
+Flow('trace-ratio','trace-f-t2 trace-f-t1','divn rect1=3 den=${SOURCES[1]} eps=0.01 | math output="log(input)" |  window min1=20 max1=80')
+Graph('trace-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
+
+Flow('freq',None,'spike d1=0.992063 n1=127 o1=0 n2=1 d2=1 o2=0 | math output="x1" | window min1=20 max1=80')
+Flow('lsfit coef','trace-ratio freq','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+Result('trace-lsfit','trace-ratio lsfit',
+       '''
+       cat axis=2 ${SOURCES[1]} | 
+       graph dash=0,1 title="Least-squares fitted line" 
+       label1="Frequency" unit1=Hz label2="Division ratio" unit2=
+       ''')
+Flow('trace-Q-esti','coef','window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
+
+#single channel
+Q1s=[]
+i=0
+for var in range(N):
+	s=0.01
+	i=i+1
+#	Flow('trace-%d'%i,'data','window n2=1 f2=%d | noise seed=%d var=%g'%(i-1,i+201516,s))
+#	Flow('trace-st-%d'%i,'trace-%d'%i,'st fhi=%g flo=%g | cabs | transp'%(fhi,flo))
+	
+#	linears.append('trace-%d'%i)
+#	sts.append('trace-st-%d'%i)
+
+	Flow('trace-f-t1-%d'%i,'trace-st-%d'%i,'window n2=1 f2=%g '%(k1))
+	Flow('trace-f-t2-%d'%i,'trace-st-%d'%i,'window n2=1 f2=%g '%(k2))
+	Flow('trace-f-t-%d'%i,['trace-f-t1-%d'%i,'trace-f-t2-%d'%i],'cat axis=2 ${SOURCES[1]}')
+#	Graph('trace-f-t','label1=Frequency unit1=Hz label2=Amplitude ')
+
+	Flow('ratio-%d'%i,['trace-f-t2-%d'%i,'trace-f-t1-%d'%i],'divn rect1=3 den=${SOURCES[1]} eps=0.01 | math output="log(input)" |  window min1=20 max1=80')
+#Graph('trace-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
+
+	Flow(['lsfit-%d'%i,'coef-%d'%i],['ratio-%d'%i,'freq'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	Flow('trace-Q-esti-%d'%i,'coef-%d'%i,'window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
+	Q1s.append('trace-Q-esti-%d'%i)
+Flow('trace-Q1s-esti',Q1s,'cat axis=2 ${SOURCES[1:%d]} |window'%len(Q1s))
+Graph('trace-Q1s-esti','min2=20 max2=180 label2="Quality factor" label1=Trace unit1= plotfat=10')
+
+
+#multi channel
+Flow('trace-st-N',sts,'cat axis=3 ${SOURCES[1:%d]}'%len(sts))
+
+Flow('trace-f-t1-N','trace-st-N','window n2=1 f2=%g '%(k1))
+Flow('trace-f-t2-N','trace-st-N','window n2=1 f2=%g '%(k2))
+Flow('trace-ratio-N','trace-f-t2-N trace-f-t1-N','divn rect1=3 rect2=30 den=${SOURCES[1]} eps=0.1 | math output="log(input)" |  window min1=20 max1=80')
+
+Flow('trace-ratio-1','trace-ratio-N','window n2=1')
+Graph('trace-ratio-1','label1=Frequency unit1=Hz label2=Regularized division ratio')
+
+
+Flow('freq-N',None,'spike d1=0.992063 n1=127 o1=0 n2=1 d2=1 o2=0 | math output="x1" | window min1=20 max1=80|spray axis=2 n=%d o=1 d=1'%N)
+
+Grey3('trace-st-N','title="Time-frequency Cube"')
+
+Grey('trace-f-t2-N','label1=Frequency unit1=Hz title="Numerator" color=j allpos=y')
+Grey('trace-f-t1-N','label1=Frequency unit1=Hz title="Denominator" color=j allpos=y')
+
+
+lsfits=[]
+coefs=[]
+
+i=0
+for var in range(N):
+	i=i+1
+	Flow('trace-ratio-%d'%i,'trace-ratio-N','window n2=1 f2=%d'%(i-1))
+	Flow('freq-%d'%i,'freq-N','window n2=1 f2=%d'%(i-1))
+	Flow(['lsfit-N-%d'%i,'coef-N-%d'%i],['trace-ratio-%d'%i,'freq-%d'%i],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	lsfits.append('lsfit-N-%d'%i)
+	coefs.append('coef-N-%d'%i)
+	
+Flow('trace-lsfits',lsfits,'cat axis=2 ${SOURCES[1:%d]}'%len(lsfits))
+
+Flow('trace-coef-N',coefs,'cat axis=2 ${SOURCES[1:%d]} |window'%len(coefs))
+
+#Flow('lsfit-N coef-N','trace-ratio-N freq-N','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+#Flow('trace-Q-esti-N','coef-N','window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
+Flow('trace-Q-esti-N','trace-coef-N','math output="-%g*%g/input"'%(pi,t2-t1))
+
+Grey('trace-ratio-N','label1=Frequency unit1=Hz label2=Trace color=j scalebar=y bias=-0.6 clip=0.6')
+Grey('trace-lsfits','label1=Frequency unit1=Hz label2=Trace color=j scalebar=y bias=-0.6 clip=0.6')
+
+Graph('trace-coef-N','min2=-0.02 max2=-0.01 label2="Value" label1=Trace unit1= plotfat=10')
+Graph('trace-Q-esti-N','min2=20 max2=180 label2="Quality factor" label1=Trace unit1= plotfat=10')
+
+
+Flow('trace-true',None,'spike n1=30 d1=1 o1=0 |math output="60"')
+Graph('trace-true','min2=20 max2=180 label2="Quality factor" label1=Trace unit1= plotfat=10')
+
+Flow('trace-comp','trace-Q-esti-N trace-true trace-Q1s-esti','cat axis=2 ${SOURCES[1:3]}')
+Graph('trace-comp','min2=20 max2=180 label2="Quality factor" label1=Trace unit1= plotfat=10')
+
+
+
+#sfdisfil <trace-Q-esti-N.rsf
+#sfdisfil <trace-Q-esti.rsf
+
+
+
+
+End()
