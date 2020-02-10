@@ -362,6 +362,8 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
   // loop over time
   for (int it=0; it<nt; it++){
+    bool save = ((wfl->snap) && !(it%wfl->jsnap));
+
     velupd(wfl,mod,acq,FWD);
     presupd(wfl,mod,acq,FWD);
     injectPsource(wfl,mod,acq,it);
@@ -370,7 +372,7 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
       applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
-    extract_wfl_2d(wfl);
+    if (save) extract_wfl_2d(wfl);
 
     // extract the data at the receiver locations
     extract_dat_2d(wfl,acq);
@@ -389,6 +391,8 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
   // loop over time
   for (int it=0; it<nt; it++){
+    bool save = ((wfl->snap) && !(it%wfl->jsnap));
+
     velupd(wfl,mod,acq,ADJ);
     presupd(wfl,mod,acq,ADJ);
     injectPsource(wfl,mod,acq,it);
@@ -397,7 +401,7 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
       applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
-    extract_wfl_2d(wfl);
+    if (save) extract_wfl_2d(wfl);
 
     swapwfl(wfl);
   }

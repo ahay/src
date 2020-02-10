@@ -41,7 +41,7 @@ Frec.rsf - Coordinates of the receivers
 		axis 2 - receiver index
 
 Fsou.rsf - Coordinate of the sources
-		axis 1 - (x,y,z) of the source
+		axis 1 - (x,z) of the source
 		axis 2 - source index
 
 Fwfl.rsf - Output wavefield
@@ -54,13 +54,11 @@ free=y/n - free surface on/off
 
 dabc=y/n - absorbing boundary conditions on/off
 
-jdata    - data sampling 
-
 jsnap    - wavefield snapshots sampling
 
 
 Author: Francesco Perrone
-Date: November 2013
+Date: February 2020
  */
 
 /*
@@ -96,6 +94,8 @@ static void print_param(in_para_struct_t in_para){
   sf_warning("free surface       = %s",((in_para.fsrf==false)?"no":"yes"));
   sf_warning("absorbing boundary = %s",((in_para.dabc==false)?"no":"yes"));
   if (in_para.dabc) sf_warning("- sponge thickness = %d",in_para.nb);
+  sf_warning("wavefield snapshots= %s",((in_para.snap==false)?"no":"yes"));
+  if (in_para.snap) sf_warning("- wavefield time undersampling = %d",in_para.jsnap);
 }
 
 static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
@@ -203,8 +203,11 @@ int main(int argc, char* argv[])
   if(! sf_getbool("free",&(in_para.fsrf))) in_para.fsrf=false; /* Free surface */
   if(! sf_getbool("dabc",&(in_para.dabc))) in_para.dabc=false; /* Absorbing BC */
   if(! sf_getbool( "adj",&(in_para.adj) )) in_para.adj=false;  /* Adjointness  */
+  if(! sf_getbool("snap",&(in_para.snap))) in_para.snap=true; /* wavefield snapshots */
 
   if( !sf_getint("nb",&(in_para.nb)) || in_para.nb<NOP) in_para.nb=NOP;
+  if (in_para.snap)
+    if (!sf_getint("jsnap",&(in_para.jsnap)) || in_para.jsnap<1) in_para.jsnap=1;
 
   if (!sf_getbool( "dpt",&(in_para.dpt))) in_para.dpt=false;  /* run dot product test */
 
@@ -222,7 +225,9 @@ int main(int argc, char* argv[])
   Fsou = sf_input ("sou");  /* sources   */
   Frec = sf_input ("rec");  /* receivers */
   Fdat = sf_output("out");  /* data      */
-  Fwfl = sf_output("wfl");  /* wavefield */
+
+  if (in_para.snap)
+    Fwfl = sf_output("wfl");  /* wavefield */
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -322,9 +327,16 @@ int main(int argc, char* argv[])
   set_sr_interpolation_coeffs(acq,wfl);
 
   // WAVEFIELD HEADERS
+  sf_axis axTimeWfl = axWav[1];
+  sf_setn(axTimeWfl,acq->nt/in_para.jsnap);
+  sf_setd(axTimeWfl,acq->dt*in_para.jsnap);
+  sf_seto(axTimeWfl,acq->ot);
+  sf_setlabel(axTimeWfl,"time");
+  sf_setunit(axTimeWfl,"s");
+
   sf_oaxa(Fwfl,axVel[0],1);
   sf_oaxa(Fwfl,axVel[1],2);
-  sf_oaxa(Fwfl,axWav[1],3);
+  sf_oaxa(Fwfl,axTimeWfl,3);
 
   // DATA HEADERS
   sf_oaxa(Fdat,axRec[1],1);

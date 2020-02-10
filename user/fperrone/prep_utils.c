@@ -18,9 +18,11 @@ struct in_para_struct{
   bool verb;
   bool fsrf;
   bool dabc;
+  bool snap;
   bool adj;
   bool dpt;
   int nb;
+  int jsnap;
 };
 /*^*/
 
@@ -56,6 +58,9 @@ struct wfl_struct{
   float d2;
   //free surface flag
   bool freesurf;
+  //wavefield snapshots
+  bool snap;
+  int jsnap;
   // pointers to files
   sf_file Fdata;
   sf_file Fwfl;
@@ -228,7 +233,7 @@ void prepare_acquisition_2d( acq_struct_t* acq,
   // wavelet parameters
   acq->nt = sf_n(axwav[1]);
   acq->dt = sf_d(axwav[1]);
-  acq->ot = sf_d(axwav[1]);
+  acq->ot = sf_o(axwav[1]);
 
   long nsouwav = sf_n(axwav[0]);
   long nwavsamp = nsouwav*acq->nt;
@@ -403,6 +408,8 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file 
 
   wfl->Fdata = Fdata;
   wfl->Fwfl  = Fwfl;
+  wfl->snap = para.snap;
+  wfl->jsnap=para.jsnap;
 
 }
 
