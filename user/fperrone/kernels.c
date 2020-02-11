@@ -241,7 +241,6 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
 {
 
   long nsou = acq->ns;
-  long nt   = acq->nt;
 
   long N1 = wfl->simN1;
 
@@ -259,7 +258,7 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
 
     int ixs = (xs-o2)/modD2;
     int izs = (zs-o1)/modD1;
-    float force = acq->wav[it+isou*nt];
+    float force = acq->wav[isou + nsou*it];
     long idx = izs + N1*ixs;
 
     for (int j=-3,jh=0; j<=4; j++,jh++){
@@ -269,7 +268,6 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
         wfl->pc[idx + i + N1*j] += hc*scale*force;
       }
     }
-
 
   }
 
@@ -358,7 +356,7 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 {
   sf_warning("FORWARD EXTRAPOLATION..");
 
-  int nt = acq->nt;
+  int nt = acq->ntdat;
 
   // loop over time
   for (int it=0; it<nt; it++){
@@ -387,7 +385,7 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 {
   sf_warning("ADJOINT EXTRAPOLATION..");
 
-  int nt = acq->nt;
+  int nt = acq->ntdat;
 
   // loop over time
   for (int it=0; it<nt; it++){

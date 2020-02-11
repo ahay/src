@@ -315,20 +315,22 @@ int main(int argc, char* argv[])
   if (in_para.verb) sf_warning("Read parameter cubes..");
   prepare_model_2d(mod,in_para,axVel,axDen,Fvel,Fden);
 
+  // PREPARE THE ACQUISITION STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
+  prepare_acquisition_2d(acq, in_para, axSou, axRec, axWav, Fsou, Frec,Fwav);
+
   // PREPARATION OF THE WAVEFIELD STRUCTURE
   if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
   prepare_wfl_2d(wfl,mod,Fdat,Fwfl,in_para);
+
   if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
   setupABC(wfl);
-
-  // PREPARE THE ACQUISITION STRUCTURE
-  if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
-  prepare_acquisition_2d(acq, axSou, axRec, axWav, Fsou, Frec,Fwav);
+  if (in_para.verb) sf_warning("Prepare the interpolation coefficients for source and receivers..");
   set_sr_interpolation_coeffs(acq,wfl);
 
   // WAVEFIELD HEADERS
   sf_axis axTimeWfl = axWav[1];
-  sf_setn(axTimeWfl,acq->nt/in_para.jsnap);
+  sf_setn(axTimeWfl,acq->ntsnap);
   sf_setd(axTimeWfl,acq->dt*in_para.jsnap);
   sf_seto(axTimeWfl,acq->ot);
   sf_setlabel(axTimeWfl,"time");
@@ -340,6 +342,8 @@ int main(int argc, char* argv[])
 
   // DATA HEADERS
   sf_oaxa(Fdat,axRec[1],1);
+  sf_setn(axWav[1],acq->ntdat);
+  sf_setd(axWav[1],acq->dt);
   sf_oaxa(Fdat,axWav[1],2);
 
   // DOT PRODUCT TEST

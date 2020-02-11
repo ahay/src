@@ -69,7 +69,9 @@ struct wfl_struct{
 
 struct acq_struct{
   // wavelet and time parameters
-  int nt;
+  long nt;
+  long ntdat;  // number of samples to have an intenger multiple of the undersampling of the wavefield
+  long ntsnap;
   float dt;
   float ot;
   float *wav;
@@ -205,9 +207,9 @@ void clear_model_2d(mod_struct_t* mod)
   free(mod->buoy);
 }
 
-void prepare_acquisition_2d( acq_struct_t* acq,
-                          sf_axis axsou[2], sf_axis axrec[2], sf_axis axwav[2],
-                          sf_file Fsou, sf_file Frec, sf_file Fwav)
+void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
+                             sf_axis axsou[2], sf_axis axrec[2], sf_axis axwav[2],
+                             sf_file Fsou, sf_file Frec, sf_file Fwav)
 /*< Read the acquisition geometry from files >*/
 {
   //
@@ -234,9 +236,13 @@ void prepare_acquisition_2d( acq_struct_t* acq,
   acq->nt = sf_n(axwav[1]);
   acq->dt = sf_d(axwav[1]);
   acq->ot = sf_o(axwav[1]);
+  acq->ntdat = (acq->nt/para.jsnap)*para.jsnap;
+  acq->ntsnap= (acq->nt+para.jsnap-1)/para.jsnap;
+  sf_warning("Ntsnap = %d\n",acq->ntsnap);
+  sf_warning("Ntdat  = %d\n",acq->ntdat);
 
   long nsouwav = sf_n(axwav[0]);
-  long nwavsamp = nsouwav*acq->nt;
+  long nwavsamp = nsouwav*acq->ntdat;
 
   if (nsouwav==1){
     sf_warning("Using the same wavelet for all shots!");
@@ -252,7 +258,9 @@ void prepare_acquisition_2d( acq_struct_t* acq,
   }
 
   acq->wav = sf_floatalloc(nwavsamp);
-  sf_floatread(acq->wav,nwavsamp,Fwav);
+  memset(acq->wav,0,nwavsamp*sizeof(float));
+  for (int isou=0; isou<nsouwav; isou++)
+    sf_floatread(acq->wav+isou*acq->ntdat,acq->nt,Fwav);
 
 }
 
