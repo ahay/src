@@ -1,0 +1,163 @@
+from rsf.proj import *
+
+## module defining
+def Grey(data,other): 
+	Result(data,'put d2=10|grey label2="Position" labelfat=4 font=2 titlefat=4 label1="Time" unit2=m unit1=ms   labelsz=10 title="" wherexlabel=b wheretitle=t screenratio=0.7 clip=0.5 screenratio=1.2 %s'%other)
+
+def Grey_p(data,other): 
+	Result(data,'put o2=-9 d2=1 | grey label2="Prediction" labelfat=4 font=2 titlefat=4 label1="Time" unit2=trace unit1=ms   labelsz=10 title="" wherexlabel=b wheretitle=t screenratio=0.7 clip=0.5 screenratio=1.2 %s'%other)
+	
+for case in Split('f00'):
+    dat = case+'.dat'
+    Flow(case,dat,
+         '''
+         echo in=$SOURCE n1=501 n2=501 o1=0 o2=0 d1=1 d2=1 
+         data_format=xdr_float | dd form=native
+         ''',stdin=0)
+    if case != 'p':
+        Result(case,'grey title=%s screenratio=1' % case)
+    else:
+        Result(case,'grey title=Slope screenratio=1 color=j scalebar=y clip=5') 
+
+    pad = case+'-pad'
+    Flow(pad,case,'pad end1=25')
+
+
+Flow('synth','f00','scale axis=2 | window f2=100 n2=99 f1=340 | put o1=1 d1=1 o2=1 d2=1')
+Grey('synth','title="Clean data"')
+Flow('synth0','synth','cp')
+Grey('synth0','title="" screenratio=0.7')
+
+Flow('synth-n','synth','saltpepper den=3 inten=10 seed=201415')
+Grey('synth-n','title="Noisy data"')
+
+ns0=9
+Flow('dip','synth','bandpass fhi=0.2 | dip rect1=%d rect2=%d' % (ns0,ns0))
+Flow('dip-n','synth-n','bandpass fhi=0.2 | dip rect1=%d rect2=%d' % (12,12))
+Grey('dip','color=j title="Local slope" clip=1.5')
+Grey('dip-n','color=j title="Local slope" clip=1.5')
+
+Flow('synth-spray','synth dip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=1 o2=%d
+     ''' % (ns0,-ns0))
+Result('synth-spray','grey ')
+
+Flow('synths-spray','synth-n dip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=1 o2=%d
+     ''' % (ns0,-ns0))
+Result('synths-spray','grey ')
+     
+Flow('synths-sprayn','synth-n dip-n',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=1 o2=%d
+     ''' % (ns0,-ns0))     
+Result('synths-sprayn','grey ')
+
+
+Result('synth-cube','synth-spray',
+       '''
+       transp plane=23 | put o1=1 d1=1 d2=10 d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Position" label1="Time" unit2=m unit1=ms label3="Prediction" unit3=trace
+       frame1=100 frame2=50 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=3 screenratio=0.7 clip=0.00358515 title="Locally flattened"
+       '''  % (-ns0,ns0+1,-ns0+4))
+            
+# The same as synth-cube
+Result('synths-cube','synth-spray',
+       '''
+       transp plane=23 | put o1=1 d1=1 d2=10 d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Position" label1="Time" unit2=m unit1=ms label3="Prediction" unit3=trace
+       frame1=100 frame2=50 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=3 screenratio=0.7 clip=0.00358515 title="Locally flattened"
+       '''  % (-ns0,ns0+1,-ns0+4))
+Result('synths-cuben','synths-sprayn',
+       '''
+       transp plane=23 | put o1=1 d1=1 d2=10 d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Position" label1="Time" unit2=m unit1=ms label3="Prediction" unit3=trace
+       frame1=100 frame2=50 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=3 screenratio=0.7 clip=0.00358515 title="Locally flattened"
+       '''  % (-ns0,ns0+1,-ns0+4))
+
+Flow('synth-somf','synths-spray','transp plane=12 | mf nfw=%d | transp plane=12 | window n2=1 f2=%d'%(ns0,ns0))
+Grey('synth-somf','title="Denoised (Proposed)"')
+
+Flow('synth-somf-n','synth-somf  synth-n','add scale=-1,1 ${SOURCES[1]}')
+Grey('synth-somf-n','title="Noise (Proposed)"')
+
+Flow('synth-sosvmf-n','synth-somf  synth-n','add scale=-1,1 ${SOURCES[1]}')
+Grey('synth-sosvmf-n','title="Noise (Proposed)"')
+
+Flow('synth-mf','synth-n','transp | mf nfw=%d | transp '%ns0)
+Flow('synth-mf-n','synth-mf  synth-n','add scale=-1,1 ${SOURCES[1]}')
+Grey('synth-mf','title="Denoised (MF)"')
+Grey('synth-mf-n','title="Noise (MF)"')
+
+Flow('flat1','synths-spray','window n3=1 f3=9')
+Flow('flat2','synths-spray','window n3=1 f3=50')
+Flow('flat3','synths-spray','window n3=1 f3=90')
+
+Flow('flat1-n','synths-sprayn','window n3=1 f3=9')
+Flow('flat2-n','synths-sprayn','window n3=1 f3=50')
+Flow('flat3-n','synths-sprayn','window n3=1 f3=90')
+
+Grey_p('flat1','title="Trace=9"')
+Grey_p('flat2','title="Trace=50"')
+Grey_p('flat3','title="Trace=90"')
+Grey_p('flat1-n','title="Trace=9"')
+Grey_p('flat2-n','title="Trace=50"')
+Grey_p('flat3-n','title="Trace=90"')
+
+Flow('flat1-n-mf','flat1-n','transp|mf nfw=13 |transp')
+Flow('flat2-n-mf','flat2-n','transp|mf nfw=13 |transp')
+Flow('flat3-n-mf','flat3-n','transp|mf nfw=13 |transp')
+
+Flow('flat1-n-mft','flat1-n-mf','transp')
+Flow('flat2-n-mft','flat2-n-mf','transp')
+Flow('flat3-n-mft','flat3-n-mf','transp')
+
+Flow('flat1-simi','flat1-n flat1-n-mft','transp |similarity other=${SOURCES[1]} rect1=10 rect2=10 | scale axis=2')
+Flow('flat2-simi','flat2-n flat2-n-mft','transp |similarity other=${SOURCES[1]} rect1=10 rect2=10 | scale axis=2')
+Flow('flat3-simi','flat3-n flat3-n-mft','transp |similarity other=${SOURCES[1]} rect1=10 rect2=10 | scale axis=2')
+
+
+Flow('flat1-n-svmf','flat1-n flat1-simi','transp plane=12 | svmf nfw=9 similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 | transp plane=12 ')
+Flow('flat2-n-svmf','flat2-n flat2-simi','transp plane=12 | svmf nfw=9 similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 | transp plane=12 ')
+Flow('flat3-n-svmf','flat3-n flat3-simi','transp plane=12 | svmf nfw=9 similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 | transp plane=12 ')
+
+## A different way for SVMF
+# Flow('flat1-n-svmf','flat1-n','transp|tsmf nfw=9 |transp')
+# Flow('flat2-n-svmf','flat2-n','transp|tsmf nfw=9 |transp')
+# Flow('flat3-n-svmf','flat3-n','transp|tsmf nfw=9 |transp')
+
+Grey_p('flat1-n-mf','title="Trace=9 (MF)"')
+Grey_p('flat2-n-mf','title="Trace=50 (MF)"')
+Grey_p('flat3-n-mf','title="Trace=90 (MF)"')
+Grey_p('flat1-n-svmf','title="Trace=9 (SVMF)"')
+Grey_p('flat2-n-svmf','title="Trace=50 (SVMF)"')
+Grey_p('flat3-n-svmf','title="Trace=90 (SVMF)"')
+
+
+Flow('flat1-n-mf-dif','flat1-n-mf flat1-n','add scale=-1,1 ${SOURCES[1]}')
+Flow('flat2-n-mf-dif','flat2-n-mf flat2-n','add scale=-1,1 ${SOURCES[1]}')
+Flow('flat3-n-mf-dif','flat3-n-mf flat3-n','add scale=-1,1 ${SOURCES[1]}')
+
+Flow('flat1-n-svmf-dif','flat1-n-svmf flat1-n','add scale=-1,1 ${SOURCES[1]}')
+Flow('flat2-n-svmf-dif','flat2-n-svmf flat2-n','add scale=-1,1 ${SOURCES[1]}')
+Flow('flat3-n-svmf-dif','flat3-n-svmf flat3-n','add scale=-1,1 ${SOURCES[1]}')
+
+Grey_p('flat1-n-mf-dif','title="Trace=9 (MF)" clip=1')
+Grey_p('flat2-n-mf-dif','title="Trace=50 (MF)" clip=1')
+Grey_p('flat3-n-mf-dif','title="Trace=90 (MF)" clip=1')
+Grey_p('flat1-n-svmf-dif','title="Trace=9 (SVMF)" clip=1')
+Grey_p('flat2-n-svmf-dif','title="Trace=50 (SVMF)" clip=1')
+Grey_p('flat3-n-svmf-dif','title="Trace=90 (SVMF)" clip=1')
+
+
+
+
+End()

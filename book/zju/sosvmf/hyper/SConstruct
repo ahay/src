@@ -1,0 +1,278 @@
+from rsf.proj import *
+from math import *
+import os
+
+## module defining
+def Grey(data,other): 
+	Result(data,'grey label2="Trace" label1="Time" unit1=s unit2="" labelsz=10 title="" wherexlabel=b wheretitle=t clip=0.5 screenratio=1.2 labelfat=4 font=2 titlefat=4 %s'%other)
+
+
+
+wf = 2*pi
+nt = 501
+dt = 0.004
+ot = 0
+nx = 501
+dx = 0.01
+ox = 0
+nw = 200
+dw = 0.0005
+ow = 0
+r1=10
+r2=10
+
+for eve in (1,2,3,4):
+    spike='spike%d' % eve
+    tpara='tpara%d'   % eve
+    para='para%d'     % eve
+    Flow(spike,None,
+        '''
+        spike n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g nsp=1 k1=%d mag=1  p2=0| 
+        ricker1 frequency=15 | put unit2=km label2=Distance
+        ''' % (nt,dt,ot,nx,dx,ox,eve*80-30))
+
+    Flow(tpara,spike,
+        '''
+        window n1=1 | math output="-sqrt(%g*%g+(x1-2.5)*(x1-2.5)/%g/%g)+%g"
+        ''' % (0.004*(eve*80-30),0.004*(eve*80-30),2,2,0.004*(eve*80-30)))
+
+    Flow(para,[spike, tpara],
+        'datstretch datum=${SOURCES[1]} ')
+
+Flow('hyper','para1 para2 para3 para4','add ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} | window f2=128 n2=256 |put d2=1 o2=1 | scale axis=2 | window n1=400 | window j2=2')
+Grey('hyper','')
+
+Flow('hdip','hyper',
+     'bandpass fhi=50 | dip rect1=%d rect2=%d'%(r1,r2))
+
+Grey('hyper','')
+Grey('hdip','color=j clip=1.42 scalebar=y barlabel="Slope"')
+
+ns0=7
+Flow('hflat','hyper hdip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=1 o2=%d
+     ''' % (ns0,-ns0))
+Result('hflat',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=100 frame2=15 frame3=%d point1=0.6 point2=0.6
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3))
+     
+
+Flow('hyper-1','hyper','cp')
+Flow('hdip-1','hdip','cp')
+Flow('hflat-1','hflat','cp')
+Grey('hyper-1','')
+Grey('hdip-1','color=j clip=1.42 scalebar=y barlabel="Slope"')
+
+Result('hflat-1',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=100 frame2=100 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3))
+
+###for noisy data
+
+#Flow('hyper-nn','hyper','saltpepper den=2 inten=10 seed=201415 ')
+Flow('hyper-n','hyper','selfblend range=0.5 var=2 seed=201516')
+
+Grey('hyper-n','')
+#Grey('hyper-nn','')
+
+## obtaining inaccurate dip
+Flow('hdip-n','hyper-n',
+     'saltpepper den=1.2 inten=10 seed=201415 |bandpass fhi=50 | dip rect1=%d rect2=%d'%(r1,r2))
+Grey('hdip-n','color=j clip=1.42 scalebar=y  barlabel="Slope"')
+
+
+Flow('hflat-n','hyper-n hdip-n',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=1 o2=%d
+     ''' % (ns0,-ns0))
+Result('hflat-n',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=100 frame2=100 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3))
+
+Flow('hflat-n-mf','hflat-n','transp| mf nfw=9 | transp')
+
+#hyper-simi calculated below
+Flow('hflat-n-svmf','hflat-n hyper-simi','transp plane=12 | svmf nfw=9 similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 | transp plane=12 ')
+
+## A different way for SVMF (if you are familiar with the SVMF paper, i.e., Chen, 2015, EG)
+#Flow('hflat-n-svmf','hflat-n','transp| tsmf nfw=9 | transp')
+Result('hflat-n-mf',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=100 frame2=100 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3))
+Result('hflat-n-svmf',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=100 frame2=100 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3)) 
+             
+Flow('hyper-somf','hflat-n','transp plane=12 | mf nfw=%d | transp plane=12 | window n2=1 f2=%d'%(ns0,ns0))
+
+Flow('hflat-n-mft','hflat-n','transp plane=12 | mf nfw=%d'%ns0)
+
+Flow('hyper-simi','hflat-n hflat-n-mft','transp |similarity other=${SOURCES[1]} rect1=10 rect2=10 | scale axis=2')
+Flow('hyper-sosvmf','hflat-n hyper-simi','transp plane=12 | svmf nfw=%d similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 | transp plane=12 | window n2=1 f2=%d'%(ns0,ns0))
+Flow('hyper-mf','hyper-n','transp | mf nfw=%d|transp'%ns0)
+Flow('hyper-mf2','hyper-n','transp | mf nfw=%d|transp'%(ns0))
+Flow('hyper-mf-demo','hyper-n','transp | mf nfw=%d|transp'%(ns0-2))
+
+
+Flow('hyper-simi0','hyper-n hyper-mf','transp |similarity other=${SOURCES[1]} rect1=10 rect2=10 | scale axis=2')
+Flow('hyper-svmf','hyper-n hyper-simi0','transp | svmf nfw=%d similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 |transp'%ns0)
+
+
+## A different way for SVMF (if you are familiar with the SVMF paper, i.e., Chen, 2015, EG)
+#Flow('hyper-svmf','hyper-n','transp | tsmf nfw=%d|transp'%ns0)
+
+Flow('hyper-mf-simi','hyper-mf-demo hyper-n','similarity other=${SOURCES[1]} rect1=10 rect2=10')
+Grey('hyper-mf-simi','title="Local similarity" color=j clip=1 scalebar=y')
+
+Flow('hyper-L0','hyper-L','math output="7"|dd type=int|dd type=float')
+Grey('hyper-L0','title="Filter length" color=j clip=8 allpos=y scalebar=y')
+
+Flow('hyper-L','hyper-mf-simi','math output="2+(1-input)*11"|dd type=int|dd type=float')
+Grey('hyper-L','title="Filter length" color=j clip=13 allpos=y scalebar=y')
+
+Grey('hyper-mf','title="MF"')
+Grey('hyper-mf2','title="MF"')
+
+Grey('hyper-mf-demo','title="MF"')
+Grey('hyper-somf','title="SOMF"')       
+Grey('hyper-sosvmf','title="SOSVMF"')       
+Grey('hyper-svmf','title="SVMF"') 
+
+Flow('hyper-mf-n','hyper-n hyper-mf','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyper-somf-n','hyper-n hyper-somf','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyper-sosvmf-n','hyper-n hyper-sosvmf','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyper-svmf-n','hyper-n hyper-svmf','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('hyper-mf-n','title="MF"')
+Grey('hyper-somf-n','title="SOMF"')       
+Grey('hyper-sosvmf-n','title="SOSVMF"')
+Grey('hyper-svmf-n','title="SVMF"')
+
+Plot('label1',None,
+	'''
+	box x0=4.2 y0=4.9 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+
+Plot('label2',None,
+	'''
+	box x0=2.8 y0=7.1 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+
+Plot('label3',None,
+	'''
+	box x0=4.4 y0=6.5 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+
+Plot('label4',None,
+	'''
+	box x0=5.8 y0=4.5 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+	
+			
+
+Result('hflat0','Fig/hflat.vpl label1','Overlay')
+Result('hflat-n0','Fig/hflat-n.vpl label1','Overlay')	
+Result('hflat-n-mf0','Fig/hflat-n-mf.vpl label1','Overlay')
+Result('hflat-n-svmf0','Fig/hflat-n-svmf.vpl label1','Overlay')
+
+Result('hflat-z','hflat',
+       '''
+       transp plane=23 | put d3=1 o3=%d | 
+       window min1=0.25 max1=0.75 min2=25 max2=75 |  
+       byte clip=0.8 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=50 frame2=5 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3)) 
+       
+Result('hflat-n-z','hflat-n',
+       '''
+       transp plane=23 | put d3=1 o3=%d | 
+       window min1=0.25 max1=0.75 min2=25 max2=75 |  
+       byte clip=0.8 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=50 frame2=5 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3)) 
+       
+Result('hflat-n-mf-z','hflat-n-mf',
+       '''
+       transp plane=23 | put d3=1 o3=%d | 
+       window min1=0.25 max1=0.75 min2=25 max2=75 |  
+       byte clip=0.8 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=50 frame2=5 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3)) 
+       
+Result('hflat-n-svmf-z','hflat-n-svmf',
+       '''
+       transp plane=23 | put d3=1 o3=%d | 
+       window min1=0.25 max1=0.75 min2=25 max2=75 |  
+       byte clip=0.8 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Trace" label1="Time" label3="Prediction" 
+       frame1=50 frame2=5 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="s" unit3="trace" 
+       '''  % (-ns0,ns0+1,-ns0+2,3)) 
+       
+       
+       
+Result('hflat-z0','Fig/hflat-z.vpl label4','Overlay')
+Result('hflat-n-z0','Fig/hflat-n-z.vpl label4','Overlay')	
+Result('hflat-n-mf-z0','Fig/hflat-n-mf-z.vpl label4','Overlay')
+Result('hflat-n-svmf-z0','Fig/hflat-n-svmf-z.vpl label4','Overlay')
+
+
+Result('hyper-mf0','Fig/hyper-mf.vpl label2','Overlay')
+Result('hyper-svmf0','Fig/hyper-svmf.vpl label2','Overlay')
+Result('hyper-somf0','Fig/hyper-somf.vpl label2','Overlay')
+Result('hyper-sosvmf0','Fig/hyper-sosvmf.vpl label2','Overlay')
+
+
+Flow('hyper-mf-z','hyper-mf','window min1=0.25 max1=0.75 min2=25 max2=75')
+Flow('hyper-svmf-z','hyper-svmf','window min1=0.25 max1=0.75 min2=25 max2=75')
+Flow('hyper-somf-z','hyper-somf','window min1=0.25 max1=0.75 min2=25 max2=75')
+Flow('hyper-sosvmf-z','hyper-sosvmf','window min1=0.25 max1=0.75 min2=25 max2=75')
+
+Grey('hyper-mf-z','title="MF" clip=0.75')
+Grey('hyper-somf-z','title="SOMF" clip=0.75')       
+Grey('hyper-sosvmf-z','title="SOSVMF" clip=0.75')
+Grey('hyper-svmf-z','title="SVMF" clip=0.75')
+
+
+Result('hyper-mf-z0','Fig/hyper-mf-z.vpl label3','Overlay')
+Result('hyper-svmf-z0','Fig/hyper-svmf-z.vpl label3','Overlay')
+Result('hyper-somf-z0','Fig/hyper-somf-z.vpl label3','Overlay')
+Result('hyper-sosvmf-z0','Fig/hyper-sosvmf-z.vpl label3','Overlay')
+
+End()
