@@ -104,7 +104,7 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   sf_warning("DOT PRODUCT TEST: ");
 
   sf_warning("Zero the source function..");
-  long nwavsamp = acq->ns*acq->nt;
+  long nwavsamp = acq->ns*acq->ntdat;
   float * wav = sf_floatalloc(nwavsamp);
   //save the source  in a temp buffer
   memcpy(wav,acq->wav,nwavsamp*sizeof(float));
@@ -159,6 +159,14 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
 
   // restore the source
   memcpy(acq->wav,wav,nwavsamp*sizeof(float));
+
+  // reset the wavefields
+  reset_wfl(wfl);
+
+  //reset the pointer to the output files
+  sf_seek(wfl->Fdata,0,SEEK_SET);
+  sf_seek(wfl->Fwfl,0,SEEK_SET);
+
 
   free(wav);
 

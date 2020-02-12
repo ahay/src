@@ -178,7 +178,7 @@ void prepare_model_2d(mod_struct_t* mod,
   for (int i=0; i<nelem; i++)
     dave += mod->dmod[i];
   dave /= (nelem);
-  sf_warning("Velocity Model average value = %g",dave);
+  sf_warning("Density Model average value = %g",dave);
 
   // modeling parameters
   long n1 = mod->n1;
