@@ -191,6 +191,17 @@ int main(int argc, char* argv[])
   sf_file Fdat=NULL; /* data      */
   sf_file Fwfl=NULL; /* wavefield */
 
+  /* Other parameters */
+  bool verb;
+  bool fsrf;
+  bool adj;
+  bool dptf;
+  bool snap;
+  bool dabc;
+  int nb;
+  int jsnap;
+
+
   /* for benchmarking */
   clock_t start_t, end_t;
   float total_t;
@@ -207,17 +218,31 @@ int main(int argc, char* argv[])
   /*                COMMAND LINE PARAMETERS                     */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  if(! sf_getbool("verb",&(in_para.verb))) in_para.verb=false; /* Verbosity    */
-  if(! sf_getbool("free",&(in_para.fsrf))) in_para.fsrf=false; /* Free surface */
-  if(! sf_getbool("dabc",&(in_para.dabc))) in_para.dabc=false; /* Absorbing BC */
-  if(! sf_getbool( "adj",&(in_para.adj) )) in_para.adj=false;  /* Adjointness  */
-  if(! sf_getbool("snap",&(in_para.snap))) in_para.snap=true; /* wavefield snapshots */
+  if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity    */
+  if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface */
+  if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
+  if(! sf_getbool( "adj",&adj)) adj=false;  /* Adjointness  */
+  if(! sf_getbool("snap",&snap)) snap=true; /* wavefield snapshots */
 
-  if( !sf_getint("nb",&(in_para.nb)) || in_para.nb<NOP) in_para.nb=NOP;
-  if (in_para.snap)
-    if (!sf_getint("jsnap",&(in_para.jsnap)) || in_para.jsnap<1) in_para.jsnap=1;
+  if( !sf_getint("nb",&nb)) nb=NOP; /* thickness of the absorbing boundary: NOP is the width of the FD stencil */
+  if (nb<NOP) nb=NOP;
+  jsnap=1;
+  if (snap){
+    if (!sf_getint("jsnap",&jsnap)) jsnap=1;  /* undersampling factor for the wavefields*/
+    if (jsnap<1) jsnap=1;
+  }
 
-  if (!sf_getbool( "dpt",&(in_para.dpt))) in_para.dpt=false;  /* run dot product test */
+  if (!sf_getbool( "dpt",&dptf)) dptf=false;  /* run dot product test */
+
+  // fill the structure;
+  in_para.verb=verb;
+  in_para.fsrf=fsrf;
+  in_para.dabc=dabc;
+  in_para.adj=adj;
+  in_para.snap=snap;
+  in_para.nb=nb;
+  in_para.jsnap=jsnap;
+  in_para.dpt=dptf;
 
   if (in_para.verb)
     print_param(in_para);
