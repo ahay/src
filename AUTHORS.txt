@@ -44,6 +44,7 @@ Douglas McCowan <dwmccowan@windstream.net>
 Dmitrii Merzlikin <dmitrii.merzlikin@utexas.edu>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 Jorge Monsegny <jmonsegny@hotmail.com>
+Rodolfo Neves <rodolfo_profissional@hotmail.com>
 Francesco Perrone <perfrancesco@gmail.com>
 Jack Poulson <jack.poulson@gmail.com>
 Kelly Regimbal <kregimbal@utexas.edu>
