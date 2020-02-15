@@ -258,17 +258,48 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
 
     int ixs = (xs-o2)/modD2;
     int izs = (zs-o1)/modD1;
-    float force = acq->wav[isou + nsou*it];
+    float force = acq->wav[isou + nsou*it]*scale;
     long idx = izs + N1*ixs;
 
     for (int j=-3,jh=0; j<=4; j++,jh++){
       const float hicks2 = acq->hicksSou2[jh+isou*8];
       for (int i=-3,ih=0; i<=4; i++,ih++){
         const float hc = acq->hicksSou1[ih+isou*8]*hicks2;
-        wfl->pc[idx + i + N1*j] += hc*scale*force;
+        wfl->pc[idx + i + N1*j] += hc*force;
       }
     }
 
+  }
+
+}
+
+static void injectBornSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
+
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long n12 = modN1*modN2;
+  long nb = wfl->nabc;
+
+  float d1 = mod->d1;
+  float d2 = mod->d2;
+  float dt = acq->dt;
+  float dtd12 = (d1*d2)/dt;
+
+  fread(wfl->bwfl,n12,sizeof(float),wfl->Fbsrc);
+
+  for (long i2=0; i2<modN2; i2++){
+    for (long i1=0; i1<modN1; i1++){
+      long simIdx = (i1+nb) + (i2+nb)*wfl->simN1;
+      long modIdx = i1 + i2*modN1;
+
+      float const dv = mod->velpert[modIdx];
+      float const vc = mod->vmod[modIdx];
+      float const rh = mod->dmod[modIdx];
+      float const vp= 2.f*vc*dv*rh*dtd12;
+
+      wfl->pc[simIdx] += vp*wfl->bwfl[modIdx];
+
+    }
   }
 
 }
@@ -307,6 +338,20 @@ static void extract_wfl_2d(wfl_struct_t* wfl)
 
 }
 
+static void extract_scat_wfl_2d(wfl_struct_t * const wfl){
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long nabc = wfl->nabc;
+  long simN1 = wfl->simN1;
+
+  // copy the write chunk of wavefield
+  for (long i2=0; i2<modN2; i2++)
+    memcpy(wfl->bwfl+i2*modN1,wfl->pc+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
+
+  long nelem = modN1*modN2;
+  sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
+}
+
 static void extract_dat_2d(wfl_struct_t* wfl,acq_struct_t const * acq){
 
   long nr = acq->nr;
@@ -335,6 +380,39 @@ static void extract_dat_2d(wfl_struct_t* wfl,acq_struct_t const * acq){
   }
 
   sf_floatwrite(wfl->rdata,nr,wfl->Fdata);
+
+  free(wfl->rdata);
+
+}
+
+static void extract_scat_dat_2d(wfl_struct_t * const wfl,acq_struct_t const *acq){
+
+  long nr = acq->nr;
+  long n1 = wfl->simN1;
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+  float d1 = wfl->d1;
+  float d2 = wfl->d2;
+
+  wfl->rdata = sf_floatalloc(nr);
+  for (long ir=0; ir<nr; ir++){
+    float xr = acq->rcoord[2*ir];
+    float zr = acq->rcoord[2*ir+1];
+    long ixr = (xr - o2)/d2;
+    long izr = (zr - o1)/d1;
+    long idx = izr + n1*ixr;
+    float rv = 0.;
+    for (int j=-3,jh=0; j<=4; j++,jh++){
+      const float hicks2 = acq->hicksRcv2[jh+ir*8];
+      for (int i=-3,ih=0; i<=4; i++,ih++){
+        const float hc = acq->hicksRcv1[ih+ir*8]*hicks2;
+        rv += hc*wfl->pc[idx + i +j*n1];
+      }
+    }
+    wfl->rdata[ir] = rv;
+  }
+
+  sf_floatwrite(wfl->rdata,nr,wfl->Fsdata);
 
   free(wfl->rdata);
 
@@ -380,6 +458,32 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
 }
 
+void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
+/*< kernel for Born forward extrapolation >*/
+{
+  int nt = acq->ntdat;
+
+  // loop over time
+  for (int it=0; it<nt; it++){
+    bool save = (wfl->Fswfl);
+
+    velupd(wfl,mod,acq,FWD);
+    presupd(wfl,mod,acq,FWD);
+    injectBornSource(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC(wfl);
+
+    // write the wavefield out
+    if (save) extract_scat_wfl_2d(wfl);
+
+    // extract the data at the receiver locations
+    extract_scat_dat_2d(wfl,acq);
+
+    swapwfl(wfl);
+  }
+}
+
 void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
 /*< extrapolation kernel 2d - adjoint operator  >*/
 {
@@ -403,6 +507,12 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
     swapwfl(wfl);
   }
+
+}
+
+void bornadjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
+/*< kernel for Born forward extrapolation >*/
+{
 
 }
 

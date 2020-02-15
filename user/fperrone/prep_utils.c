@@ -64,6 +64,10 @@ struct wfl_struct{
   // pointers to files
   sf_file Fdata;
   sf_file Fwfl;
+  // born modeling (scattered data)
+  sf_file Fsdata;
+  sf_file Fswfl;
+  FILE* Fbsrc;
 };
 /*^*/
 
@@ -100,6 +104,9 @@ struct mod_struct{
   // parameters for modeling
   float *incomp;
   float *buoy;
+  // perturnations (for born modeling)
+  float *velpert;
+  float *denpert;
 };
 /*^*/
 
@@ -223,6 +230,75 @@ void prepare_model_2d(mod_struct_t* mod,
 
 }
 
+void prepare_born_model_2d(mod_struct_t * const mod,
+                           sf_axis axVel[2],
+                           sf_file Fvpert,
+                           sf_file Frpert)
+/*< Prepare the born operator model parameters >*/
+{
+  sf_warning(" Read the model perturbation files..");
+
+  long n1 = sf_n(axVel[0]);
+  long n2 = sf_n(axVel[1]);
+  long n12 = n1*n2;
+
+  mod->velpert = sf_floatalloc(n12);
+  mod->denpert = sf_floatalloc(n12);
+
+  memset(mod->velpert,0,n12*sizeof(float));
+  memset(mod->denpert,0,n12*sizeof(float));
+
+  if (Fvpert)
+    sf_floatread(mod->velpert,n12,Fvpert);
+
+  if (Frpert)
+    sf_floatread(mod->denpert,n12,Frpert);
+
+}
+
+void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq)
+/*< Make the born sources for FWD born modelling>*/
+{
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+
+  long nt = acq->ntdat;
+  float dt = acq->dt;
+
+  if(!(wfl->Fbsrc = fopen("./bsrc.b","w+"))){
+    sf_error("Error opening temp file: %s, %d",__FILE__,__LINE__);
+    exit(-1);
+  }
+
+  float *snapc = sf_floatalloc(n1*n2);
+  float *snapn = sf_floatalloc(n1*n2);
+
+  sf_floatread(snapc,n1*n2,wfl->Fwfl);
+  for (long it=0; it<nt-1; it++){
+
+    sf_floatread(snapn,n1*n2,wfl->Fwfl);
+
+    for (long i=0; i<n1*n2; i++)
+      wfl->bwfl[i] = (snapn[i] - snapc[i])/dt;
+
+    fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fbsrc);
+
+    float *tmp = snapc;
+    snapc = snapn;
+    snapn = tmp;
+  }
+
+  memset(wfl->bwfl,0,n1*n2*sizeof(float));
+  fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fbsrc);
+
+  rewind(wfl->Fbsrc);
+
+  free(snapc);
+  free(snapn);
+
+}
+
+
 void clear_model_2d(mod_struct_t* mod)
 /*< Free the model parameter cubes >*/
 {
@@ -230,6 +306,13 @@ void clear_model_2d(mod_struct_t* mod)
   free(mod->dmod);
   free(mod->incomp);
   free(mod->buoy);
+}
+
+void clear_born_model_2d(mod_struct_t* mod)
+/*< Free the model perturbation parameters cubes for the born operator >*/
+{
+  free(mod->velpert);
+  free(mod->denpert);
 }
 
 void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
@@ -446,6 +529,15 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file 
 
 }
 
+void prepare_born_wfl_2d(wfl_struct_t * const wfl,sf_file Fsdat, sf_file Fswfl)
+/*< Set up the extra parameters for the born operator>*/
+{
+  wfl->Fsdata = Fsdat;
+  wfl->Fswfl  = Fswfl;
+
+  wfl->Fbsrc = NULL;
+}
+
 void clear_wfl_2d(wfl_struct_t *wfl)
 /*< Clear the wavefield structure >*/
 {
@@ -467,4 +559,13 @@ void clear_wfl_2d(wfl_struct_t *wfl)
 
   free(wfl->bwfl);
 
+}
+
+void clear_born_wfl_2d(wfl_struct_t *wfl)
+/*< clear the source for born modeling >*/
+{
+  if (wfl->Fbsrc){
+    fclose(wfl->Fbsrc);
+    remove("./bsrc.b");
+  }
 }

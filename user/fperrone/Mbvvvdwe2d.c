@@ -113,7 +113,6 @@ int main(int argc, char* argv[])
   bool verb;
   bool fsrf;
   bool adj;
-  bool snap;
   bool dabc;
   int nb;
 
@@ -137,7 +136,6 @@ int main(int argc, char* argv[])
   if (!sf_getbool("free",&fsrf)) fsrf=false;  /* free surface */
   if (!sf_getbool("adj",&adj))    adj=false;  /* adjoint flag */
   if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
-  if (!sf_getbool("snap",&snap))  snap=false;  /* scattered wavefield snapshots*/
 
   if( !sf_getint("nb",&nb)) nb=NOP; /* thickness of the absorbing boundary: NOP is the width of the FD stencil*/
   if (nb<NOP) nb=NOP;
@@ -147,7 +145,7 @@ int main(int argc, char* argv[])
   in_para.fsrf=fsrf;
   in_para.dabc=dabc;
   in_para.adj=adj;
-  in_para.snap=snap;
+  in_para.snap=true;  // we need the source wavefield
   in_para.nb=nb;
 
   if (in_para.verb)
@@ -195,7 +193,7 @@ int main(int argc, char* argv[])
     }
 
     // this is the output of the born forward modeling
-    Fsdat = sf_output("sdat");  /* scattered data*/
+    Fsdat = sf_output("out");  /* scattered data*/
   }
   else{
 
@@ -243,6 +241,44 @@ int main(int argc, char* argv[])
   sf_setunit(axDen[1],"m");
   if(in_para.verb) sf_raxa(axDen[1]); /* lateral */
 
+  sf_axis axVelPert[2];
+  sf_axis axDenPert[2];
+  if (!in_para.adj){
+
+    if (vpert){
+      sf_warning("VELOCITY PERTURBATION model axes..");
+      axVelPert[0] = sf_iaxa(Fvpert,1);
+      sf_setlabel(axVelPert[0],"z");
+      sf_setunit(axVelPert[0],"m");
+      if(in_para.verb) sf_raxa(axVelPert[0]); /* depth */
+
+      sf_warning("CHECK MODEL DIMENSIONS..");
+      if ((sf_n(axVel[0])!=sf_n(axVelPert[0]))){
+        sf_error("Inconsistent model dimensions!");
+
+        exit(-1);
+      }
+
+    }
+
+    if (rpert){
+      sf_warning("DENSITY PERTURBATION model axes..");
+      axDenPert[0] = sf_iaxa(Frpert,1);
+      sf_setlabel(axDenPert[0],"z");
+      sf_setunit(axDenPert[0],"m");
+      if(in_para.verb) sf_raxa(axDenPert[0]); /* depth */
+
+      sf_warning("CHECK MODEL DIMENSIONS..");
+      if ((sf_n(axDen[1])!=sf_n(axDenPert[1]))){
+        sf_error("Inconsistent model dimensions!");
+
+        exit(-1);
+      }
+
+    }
+
+  }
+
   sf_warning("SHOT COORDINATES axes..");
   sf_axis axSou[2];
   axSou[0] = sf_iaxa(Fsou,1);
@@ -288,6 +324,9 @@ int main(int argc, char* argv[])
   // PREPARE THE MODEL PARAMETERS CUBES
   if (in_para.verb) sf_warning("Read parameter cubes..");
   prepare_model_2d(mod,in_para,axVel,axDen,Fvel,Fden);
+  if (!in_para.adj)
+    prepare_born_model_2d(mod,axVel,Fvpert,Frpert);
+
 
   // PREPARE THE ACQUISITION STRUCTURE
   if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
@@ -296,6 +335,7 @@ int main(int argc, char* argv[])
   // PREPARATION OF THE WAVEFIELD STRUCTURE
   if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
   prepare_wfl_2d(wfl,mod,Fbdat,Fbwfl,in_para);
+  prepare_born_wfl_2d(wfl,Fsdat,Fswfl);
 
   if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
   setupABC(wfl);
@@ -313,6 +353,13 @@ int main(int argc, char* argv[])
   sf_oaxa(Fbwfl,axVel[1],2);
   sf_oaxa(Fbwfl,axTimeWfl,3);
 
+  // HEADERS
+  if (!in_para.adj){
+    sf_oaxa(Fswfl,axVel[0],1);
+    sf_oaxa(Fswfl,axVel[1],2);
+    sf_oaxa(Fswfl,axTimeWfl,3);
+  }
+
   // DATA HEADERS
   sf_oaxa(Fbdat,axRec[1],1);
   sf_oaxa(Fsdat,axRec[1],1);
@@ -321,6 +368,10 @@ int main(int argc, char* argv[])
                                 acq->dt);
   sf_oaxa(Fbdat,axTimeData,2);
   sf_oaxa(Fsdat,axTimeData,2);
+
+
+
+
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -337,29 +388,57 @@ int main(int argc, char* argv[])
     sf_warning("Total time taken by CPU: %g", total_t );
   }
 
+  //rewind the source wavefield
+  sf_seek(wfl->Fwfl,0,SEEK_SET);
+
+  // reset the wavefields
+  reset_wfl(wfl);
+
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  /*                  BORN OPERAOTR                             */
+  /*                  BORN OPERATOR                             */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   if (!in_para.adj){
     // FWD BORN MODELING: model pert -> wfl
     if (in_para.verb) sf_warning("FWD Born operator..");
-    start_t=clock();
 
+    // prepare the born sources
+    make_born_sources_2d(wfl,mod,acq);
+
+
+    start_t=clock();
+    bornfwdextrap2d(wfl,acq,mod);
     end_t = clock();
   }
   else{
     // ADJ BORN MODELING: wfl -> model pert
     if (in_para.verb) sf_warning("Adjoint Born operator..");
     start_t=clock();
-
+    bornadjextrap2d(wfl,acq,mod);
     end_t = clock();
   }
   if (in_para.verb){
     total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
     sf_warning("Total time taken by CPU: %g", total_t );
   }
+
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  /*                            FREE MEMORY                       */
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Free memory..");
+  clear_wfl_2d(wfl);
+  clear_born_wfl_2d(wfl);
+  free(wfl);
+
+  clear_acq_2d(acq);
+  free(acq);
+
+  clear_model_2d(mod);
+  clear_born_model_2d(mod);
+  free(mod);
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
