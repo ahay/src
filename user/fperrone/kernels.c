@@ -410,6 +410,7 @@ void setupABC(wfl_struct_t* wfl)
 /*< Setup of the coefficients for the absorbing boundary >*/
 {
 
+  float taplen = wfl->nabc-NOP+1;
   float tapbase = 0.92;
   float alpha = sqrt(-log(tapbase));
 
@@ -418,8 +419,9 @@ void setupABC(wfl_struct_t* wfl)
   for (long i=0; i<wfl->simN2; i++)
     wfl->tap2[i] = 1.;
 
-  for (int i=0; i<wfl->nabc; i++){
-    float tap = exp(-alpha*alpha);
+  for (int i=NOP,j=0; i<wfl->nabc; i++,j++){
+    float arg = alpha*(taplen-j)/taplen;
+    float tap = exp(-arg*arg);
     wfl->tap1[i] = tap;
     wfl->tap2[i] = tap;
     wfl->tap1[wfl->simN1-1-i] = tap;

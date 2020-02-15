@@ -89,9 +89,13 @@ free=y/n - free surface on/off
 #include <rsf.h>
 #include "prep_utils.h"
 #include "kernels.h"
+#include<time.h>
 
 int main(int argc, char* argv[])
 {
+  // command line parameters
+  in_para_struct_t in_para;
+
   /* I/O files */
   sf_file Fwav=NULL; /* wavelet   */
   sf_file Fvpert=NULL; /* velocity perturbation */
@@ -100,13 +104,17 @@ int main(int argc, char* argv[])
   sf_file Frec=NULL; /* receivers */
   sf_file Fvel=NULL; /* velocity  */
   sf_file Fden=NULL; /* density   */
-  sf_file Fdat=NULL; /* data      */
-  sf_file Fwfl=NULL; /* wavefield */
+  sf_file Fbdat=NULL; /* data      */
+  sf_file Fsdat=NULL; /* data      */
+  sf_file Fbwfl=NULL; /* wavefield */
+  sf_file Fswfl=NULL; /* wavefield */
 
   /* Other parameters */
   bool verb;
   bool fsrf;
   bool adj;
+  bool snap;
+  bool dabc;
   int nb;
 
   /* for benchmarking */
@@ -119,7 +127,7 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   sf_init(argc,argv);
-
+  init_param(&in_para);
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                   PARSE THE PARAMETERS                     */
@@ -128,21 +136,230 @@ int main(int argc, char* argv[])
   if (!sf_getbool("verb",&verb)) verb=true;   /* verbosity flag*/
   if (!sf_getbool("free",&fsrf)) fsrf=false;  /* free surface */
   if (!sf_getbool("adj",&adj))    adj=false;  /* adjoint flag */
+  if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
+  if (!sf_getbool("snap",&snap))  snap=false;  /* scattered wavefield snapshots*/
 
   if( !sf_getint("nb",&nb)) nb=NOP; /* thickness of the absorbing boundary: NOP is the width of the FD stencil*/
   if (nb<NOP) nb=NOP;
+
+  // fill the structure;
+  in_para.verb=verb;
+  in_para.fsrf=fsrf;
+  in_para.dabc=dabc;
+  in_para.adj=adj;
+  in_para.snap=snap;
+  in_para.nb=nb;
+
+  if (in_para.verb)
+    print_param(in_para);
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                       OPEN FILES                           */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
+  // Parameters for the set up of the Born operator
   Fwav = sf_input ("in" );  /* wavelet   */
   Fvel = sf_input ("vel");  /* velocity  */
   Fden = sf_input ("den");  /* density   */
   Fsou = sf_input ("sou");  /* sources   */
   Frec = sf_input ("rec");  /* receivers */
-  Fdat = sf_output("out");  /* data      */
+
+  bool vpert=false;
+  bool rpert=false;
+
+  if (!in_para.adj){
+
+    // these are the input of the forward born modelling
+    if (sf_getstring("vpert")){
+      Fvpert= sf_input ("vpert");  /* velocity perturbation */
+      vpert=true;
+    }
+
+    if (sf_getstring("dpert")){
+      Frpert= sf_input ("rpert");  /* density perturbation */
+      rpert=true;
+    }
+
+    // these are aux output of the born forward modeling
+    if (sf_getstring("bwfl")){
+      Fbwfl = sf_output("bwfl");  /* background wavefield*/
+    }
+
+    if (sf_getstring("bdat")){
+      Fbdat = sf_output("bdat");  /* scattered data*/
+    }
+
+    if (sf_getstring("swfl")){
+      Fswfl = sf_output("swfl");  /* scattered wavefield*/
+    }
+
+    // this is the output of the born forward modeling
+    Fsdat = sf_output("sdat");  /* scattered data*/
+  }
+  else{
+
+  }
+
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                      READ AXES                             */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  sf_warning("WAVELET axes..");
+  sf_axis axWav[2];
+  axWav[0] = sf_iaxa(Fwav,1);
+  sf_setlabel(axWav[0],"shot");
+  sf_setunit(axWav[0],"1");
+  if(in_para.verb) sf_raxa(axWav[0]); /* shot */
+
+  axWav[1] = sf_iaxa(Fwav,2);
+  sf_setlabel(axWav[1],"time");
+  sf_setunit(axWav[1],"s");
+  if(in_para.verb) sf_raxa(axWav[1]); /* time */
+
+  sf_warning("VELOCITY model axes..");
+  sf_axis axVel[2];
+  axVel[0] = sf_iaxa(Fvel,1);
+  sf_setlabel(axVel[0],"z");
+  sf_setunit(axVel[0],"m");
+  if(in_para.verb) sf_raxa(axVel[0]); /* depth */
+
+  axVel[1] = sf_iaxa(Fvel,2);
+  sf_setlabel(axVel[1],"x");
+  sf_setunit(axVel[1],"m");
+  if(in_para.verb) sf_raxa(axVel[1]); /* lateral */
+
+  sf_warning("DENSITY model axes..");
+  sf_axis axDen[2];
+  axDen[0] = sf_iaxa(Fden,1);
+  sf_setlabel(axDen[0],"z");
+  sf_setunit(axDen[0],"m");
+  if(in_para.verb) sf_raxa(axDen[0]); /* depth */
+
+  axDen[1] = sf_iaxa(Fden,2);
+  sf_setlabel(axDen[1],"x");
+  sf_setunit(axDen[1],"m");
+  if(in_para.verb) sf_raxa(axDen[1]); /* lateral */
+
+  sf_warning("SHOT COORDINATES axes..");
+  sf_axis axSou[2];
+  axSou[0] = sf_iaxa(Fsou,1);
+  sf_setlabel(axSou[0],"shot");
+  sf_setunit(axSou[0],"1");
+  if(in_para.verb) sf_raxa(axSou[0]); /* shot */
+
+  axSou[1] = sf_iaxa(Fsou,2);
+  sf_setlabel(axSou[1],"coords");
+  sf_setunit(axSou[1],"1");
+  if(in_para.verb) sf_raxa(axSou[1]); /* coords */
+
+  sf_warning("RECEIVER COORDINATES axes..");
+  sf_axis axRec[2];
+  axRec[0] = sf_iaxa(Frec,1);
+  sf_setlabel(axRec[0],"s");
+  sf_setunit(axRec[0],"1");
+  if(in_para.verb) sf_raxa(axRec[0]); /* shot */
+
+  axRec[1] = sf_iaxa(Frec,2);
+  sf_setlabel(axRec[1],"coords");
+  sf_setunit(axRec[1],"1");
+  if(in_para.verb) sf_raxa(axRec[1]); /* coords */
+
+  sf_warning("CHECK MODEL DIMENSIONS..");
+  if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
+      (sf_n(axDen[1])!=sf_n(axVel[1]))){
+    sf_error("Inconsistent model dimensions!");
+
+    exit(-1);
+  }
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                       PREPARE STRUCTURES                   */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Allocate structures..");
+  wfl_struct_t *wfl = calloc(1,sizeof(wfl_struct_t));
+  acq_struct_t *acq = calloc(1,sizeof(acq_struct_t));
+  mod_struct_t *mod = calloc(1,sizeof(mod_struct_t));
+
+  // PREPARE THE MODEL PARAMETERS CUBES
+  if (in_para.verb) sf_warning("Read parameter cubes..");
+  prepare_model_2d(mod,in_para,axVel,axDen,Fvel,Fden);
+
+  // PREPARE THE ACQUISITION STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
+  prepare_acquisition_2d(acq, in_para, axSou, axRec, axWav, Fsou, Frec,Fwav);
+
+  // PREPARATION OF THE WAVEFIELD STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
+  prepare_wfl_2d(wfl,mod,Fbdat,Fbwfl,in_para);
+
+  if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
+  setupABC(wfl);
+  if (in_para.verb) sf_warning("Prepare the interpolation coefficients for source and receivers..");
+  set_sr_interpolation_coeffs(acq,wfl);
+
+  // WAVEFIELD HEADERS
+  sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
+                                acq->ot,
+                                acq->dt*in_para.jsnap);
+  sf_setlabel(axTimeWfl,"time");
+  sf_setunit(axTimeWfl,"s");
+
+  sf_oaxa(Fbwfl,axVel[0],1);
+  sf_oaxa(Fbwfl,axVel[1],2);
+  sf_oaxa(Fbwfl,axTimeWfl,3);
+
+  // DATA HEADERS
+  sf_oaxa(Fbdat,axRec[1],1);
+  sf_oaxa(Fsdat,axRec[1],1);
+  sf_axis axTimeData = sf_maxa( acq->ntdat,
+                                acq->ot,
+                                acq->dt);
+  sf_oaxa(Fbdat,axTimeData,2);
+  sf_oaxa(Fsdat,axTimeData,2);
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                  BACKGROUND WAVEFIELD                      */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Background wavefield extrapolation..");
+  start_t=clock();
+  fwdextrap2d(wfl,acq,mod);
+  end_t = clock();
+
+  if (in_para.verb){
+    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+    sf_warning("Total time taken by CPU: %g", total_t );
+  }
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                  BORN OPERAOTR                             */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if (!in_para.adj){
+    // FWD BORN MODELING: model pert -> wfl
+    if (in_para.verb) sf_warning("FWD Born operator..");
+    start_t=clock();
+
+    end_t = clock();
+  }
+  else{
+    // ADJ BORN MODELING: wfl -> model pert
+    if (in_para.verb) sf_warning("Adjoint Born operator..");
+    start_t=clock();
+
+    end_t = clock();
+  }
+  if (in_para.verb){
+    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+    sf_warning("Total time taken by CPU: %g", total_t );
+  }
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
@@ -156,8 +373,10 @@ int main(int argc, char* argv[])
   if (Frec!=NULL) sf_fileclose(Frec);
   if (Fvel!=NULL) sf_fileclose(Fvel);
   if (Fden!=NULL) sf_fileclose(Fden);
-  if (Fdat!=NULL) sf_fileclose(Fdat);
-  if (Fwfl!=NULL) sf_fileclose(Fwfl);
+  if (Fbdat!=NULL) sf_fileclose(Fbdat);
+  if (Fsdat!=NULL) sf_fileclose(Fsdat);
+  if (Fbwfl!=NULL) sf_fileclose(Fbwfl);
+  if (Fswfl!=NULL) sf_fileclose(Fswfl);
 
   exit (0);
 }

@@ -105,6 +105,31 @@ struct mod_struct{
 
 #endif
 
+void init_param(in_para_struct_t* par)
+/*< parameter initialization >*/
+{
+
+  par->adj=false;
+  par->dabc=true;
+  par->dpt=false;
+  par->fsrf=false;
+  par->snap=false;
+  par->verb=true;
+  par->jsnap=1;
+  par->nb=1;
+}
+
+void print_param(in_para_struct_t in_para)
+/*< display the parameters >*/
+{
+  sf_warning("verbosity          = %s",((in_para.verb==false)?"no":"yes"));
+  sf_warning("free surface       = %s",((in_para.fsrf==false)?"no":"yes"));
+  sf_warning("absorbing boundary = %s",((in_para.dabc==false)?"no":"yes"));
+  if (in_para.dabc) sf_warning("- sponge thickness = %d",in_para.nb);
+  sf_warning("wavefield snapshots= %s",((in_para.snap==false)?"no":"yes"));
+  if (in_para.snap) sf_warning("- wavefield time undersampling = %d",in_para.jsnap);
+}
+
 static float* build_extended_model_2d(float const *mod, long n1, long n2, int next)
 {
 

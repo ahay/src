@@ -89,15 +89,6 @@ Date: February 2020
 #include <time.h>
 /* check: dt<= 0.2 * min(dx,dz)/vmin */
 
-static void print_param(in_para_struct_t in_para){
-  sf_warning("verbosity          = %s",((in_para.verb==false)?"no":"yes"));
-  sf_warning("free surface       = %s",((in_para.fsrf==false)?"no":"yes"));
-  sf_warning("absorbing boundary = %s",((in_para.dabc==false)?"no":"yes"));
-  if (in_para.dabc) sf_warning("- sponge thickness = %d",in_para.nb);
-  sf_warning("wavefield snapshots= %s",((in_para.snap==false)?"no":"yes"));
-  if (in_para.snap) sf_warning("- wavefield time undersampling = %d",in_para.jsnap);
-}
-
 static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   long n1 = wfl->simN1;
   long n2 = wfl->simN2;
@@ -362,10 +353,9 @@ int main(int argc, char* argv[])
   set_sr_interpolation_coeffs(acq,wfl);
 
   // WAVEFIELD HEADERS
-  sf_axis axTimeWfl = axWav[1];
-  sf_setn(axTimeWfl,acq->ntsnap);
-  sf_setd(axTimeWfl,acq->dt*in_para.jsnap);
-  sf_seto(axTimeWfl,acq->ot);
+  sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
+                              acq->ot,
+                              acq->dt*in_para.jsnap);
   sf_setlabel(axTimeWfl,"time");
   sf_setunit(axTimeWfl,"s");
 
@@ -375,9 +365,10 @@ int main(int argc, char* argv[])
 
   // DATA HEADERS
   sf_oaxa(Fdat,axRec[1],1);
-  sf_setn(axWav[1],acq->ntdat);
-  sf_setd(axWav[1],acq->dt);
-  sf_oaxa(Fdat,axWav[1],2);
+  sf_axis axTimeData = sf_maxa( acq->ntdat,
+                                acq->ot,
+                                acq->dt);
+  sf_oaxa(Fdat,axTimeData,2);
 
   // DOT PRODUCT TEST
   if (in_para.dpt)
