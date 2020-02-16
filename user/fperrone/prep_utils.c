@@ -82,6 +82,7 @@ struct acq_struct{
   float dt;
   float ot;
   float *wav;
+  float *dat;
   // acquisition geometry
   long ns;    // NUMBER OF SOURCES TO BE SIMULATED SIMULTANEOUSLY
   long nr;
@@ -302,9 +303,41 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
 
 }
 
-void stack_wfl_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq)
+void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq)
 /*< project the wavefields in the born model space>*/
 {
+  long nt = acq->ntdat;
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+
+  float dt = acq->dt;
+
+  float *srcwfl = sf_floatalloc(n1*n2*nt);
+  float *tmp = sf_floatalloc(n1*n2);
+
+  fread(srcwfl,sizeof(float),n1*n2*nt,wfl->Fpvdiv);
+  for (long it=0; it<nt; it++){
+    float *wp = srcwfl + (nt-1-it)*n1*n2;
+    sf_floatread(tmp,n1*n2,wfl->Fswfl);
+
+    for (long i=0; i<n1*n2; i++)
+      wp[i] = wp[i]*tmp[i];
+
+  }
+
+  //stack the wavefield
+  memset(tmp,0,n1*n2*sizeof(float));
+  for (long it=0; it<nt; it++){
+    float *wp = srcwfl + it*n1*n2;
+
+    for (long i=0; i<n1*n2; i++){
+      float v = mod->vmod[i];
+      float r = mod->dmod[i];
+      tmp[i]+= 2.f*v*r*wp[i]*dt;
+    }
+  }
+
+  sf_floatwrite(tmp,n1*n2,Fvpert);
 
 }
 
@@ -379,6 +412,19 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
   for (int isou=0; isou<nsouwav; isou++)
     sf_floatread(acq->wav+isou*acq->ntdat,acq->nt,Fwav);
 
+}
+
+void prepare_scatt_data_2d(acq_struct_t * acq,sf_file Fsdat)
+/*< prepare the scattered data for backward extrapolation >*/
+{
+  long nr = acq->nr;
+  long nt = acq->ntdat;
+
+  acq->dat = sf_floatalloc(nr*nt);
+  for(long it=0; it<nt; it++){
+    float* wp = acq->dat + (nt-1-it)*nr;
+    sf_floatread(wp,nr,Fsdat);
+  }
 }
 
 /*

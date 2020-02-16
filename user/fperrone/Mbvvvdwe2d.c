@@ -104,10 +104,10 @@ int main(int argc, char* argv[])
   sf_file Frec=NULL; /* receivers */
   sf_file Fvel=NULL; /* velocity  */
   sf_file Fden=NULL; /* density   */
-  sf_file Fbdat=NULL; /* data      */
-  sf_file Fsdat=NULL; /* data      */
-  sf_file Fbwfl=NULL; /* wavefield */
-  sf_file Fswfl=NULL; /* wavefield */
+  sf_file Fbdat=NULL; /* background data */
+  sf_file Fsdat=NULL; /* scattered data */
+  sf_file Fbwfl=NULL; /* background wavefield */
+  sf_file Fswfl=NULL; /* scattered wavefield */
 
   /* Other parameters */
   bool verb;
@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
   /*                       OPEN FILES                           */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  // Parameters for the set up of the Born operator
+  // Parameters for the set up of the Born operator (both fwd and adj)
   Fwav = sf_input ("in" );  /* wavelet   */
   Fvel = sf_input ("vel");  /* velocity  */
   Fden = sf_input ("den");  /* density   */
@@ -180,22 +180,24 @@ int main(int argc, char* argv[])
     }
 
     // these are aux output of the born forward modeling
-    if (sf_getstring("bwfl")){
-      Fbwfl = sf_output("bwfl");  /* background wavefield*/
-    }
-
-    if (sf_getstring("bdat")){
-      Fbdat = sf_output("bdat");  /* scattered data*/
-    }
-
-    if (sf_getstring("swfl")){
-      Fswfl = sf_output("swfl");  /* scattered wavefield*/
-    }
+    Fbwfl = sf_output("bwfl");  /* background wavefield*/
+    Fbdat = sf_output("bdat");  /* background data*/
+    Fswfl = sf_output("swfl");  /* scattered wavefield*/
 
     // this is the output of the born forward modeling
     Fsdat = sf_output("out");  /* scattered data*/
   }
   else{
+    Fsdat = sf_input("pdata"); /* input pressure data to backproject */
+    Fswfl = sf_output("swfl");  /* scattered wavefield*/
+    Fbdat = sf_output("bdat");  /* background data*/
+    Fbwfl = sf_output("bwfl");  /* background wavefield*/
+
+    Fvpert = sf_output("out"); /* default output: velocity perturbation image */
+
+    if (sf_getstring("rpert")){
+      Frpert = sf_output("rpert");  /* density perturbation image */
+    }
 
   }
 
@@ -248,12 +250,14 @@ int main(int argc, char* argv[])
     if (vpert){
       sf_warning("VELOCITY PERTURBATION model axes..");
       axVelPert[0] = sf_iaxa(Fvpert,1);
-      sf_setlabel(axVelPert[0],"z");
-      sf_setunit(axVelPert[0],"m");
-      if(in_para.verb) sf_raxa(axVelPert[0]); /* depth */
-
+      axVelPert[1] = sf_iaxa(Fvpert,2);
+      if(in_para.verb){
+        sf_raxa(axVelPert[0]); /* depth */
+        sf_raxa(axVelPert[1]); /* lateral */
+      }
       sf_warning("CHECK MODEL DIMENSIONS..");
-      if ((sf_n(axVel[0])!=sf_n(axVelPert[0]))){
+      if ((sf_n(axVel[0])!=sf_n(axVelPert[0]))||
+          (sf_n(axVel[1])!=sf_n(axVelPert[1]))){
         sf_error("Inconsistent model dimensions!");
 
         exit(-1);
@@ -264,12 +268,15 @@ int main(int argc, char* argv[])
     if (rpert){
       sf_warning("DENSITY PERTURBATION model axes..");
       axDenPert[0] = sf_iaxa(Frpert,1);
-      sf_setlabel(axDenPert[0],"z");
-      sf_setunit(axDenPert[0],"m");
-      if(in_para.verb) sf_raxa(axDenPert[0]); /* depth */
+      axDenPert[1] = sf_iaxa(Frpert,2);
+      if(in_para.verb){
+        sf_raxa(axDenPert[0]); /* depth */
+        sf_raxa(axDenPert[1]); /* lateral */
+      }
 
       sf_warning("CHECK MODEL DIMENSIONS..");
-      if ((sf_n(axDen[1])!=sf_n(axDenPert[1]))){
+      if ((sf_n(axDen[0])!=sf_n(axDenPert[0]))||
+          (sf_n(axDen[1])!=sf_n(axDenPert[1]))){
         sf_error("Inconsistent model dimensions!");
 
         exit(-1);
@@ -294,14 +301,14 @@ int main(int argc, char* argv[])
   sf_warning("RECEIVER COORDINATES axes..");
   sf_axis axRec[2];
   axRec[0] = sf_iaxa(Frec,1);
-  sf_setlabel(axRec[0],"s");
+  sf_setlabel(axRec[0],"coords");
   sf_setunit(axRec[0],"1");
-  if(in_para.verb) sf_raxa(axRec[0]); /* shot */
+  if(in_para.verb) sf_raxa(axRec[0]); /* coords */
 
   axRec[1] = sf_iaxa(Frec,2);
-  sf_setlabel(axRec[1],"coords");
+  sf_setlabel(axRec[1],"s");
   sf_setunit(axRec[1],"1");
-  if(in_para.verb) sf_raxa(axRec[1]); /* coords */
+  if(in_para.verb) sf_raxa(axRec[1]); /* shots */
 
   sf_warning("CHECK MODEL DIMENSIONS..");
   if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
@@ -310,6 +317,21 @@ int main(int argc, char* argv[])
 
     exit(-1);
   }
+
+  sf_axis axScData[2];
+  if (in_para.adj){
+    sf_warning("SCATTERED DATA axes..");
+    axScData[0] = sf_iaxa(Fsdat,1);
+    axScData[1] = sf_iaxa(Fsdat,2);
+
+    if ((sf_n(axScData[0])!=sf_n(axRec[1]))){
+      sf_error("Inconsistent receiver dimensions!");
+
+      exit(-1);
+    }
+
+  }
+
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -331,6 +353,8 @@ int main(int argc, char* argv[])
   // PREPARE THE ACQUISITION STRUCTURE
   if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
   prepare_acquisition_2d(acq, in_para, axSou, axRec, axWav, Fsou, Frec,Fwav);
+  if (in_para.adj)
+    prepare_scatt_data_2d(acq,Fsdat);
 
   // PREPARATION OF THE WAVEFIELD STRUCTURE
   if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
@@ -344,8 +368,8 @@ int main(int argc, char* argv[])
 
   // WAVEFIELD HEADERS
   sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
-                                acq->ot,
-                                acq->dt*in_para.jsnap);
+                              acq->ot,
+                              acq->dt*in_para.jsnap);
   sf_setlabel(axTimeWfl,"time");
   sf_setunit(axTimeWfl,"s");
 
@@ -353,25 +377,50 @@ int main(int argc, char* argv[])
   sf_oaxa(Fbwfl,axVel[1],2);
   sf_oaxa(Fbwfl,axTimeWfl,3);
 
-  // HEADERS
-  if (!in_para.adj){
-    sf_oaxa(Fswfl,axVel[0],1);
-    sf_oaxa(Fswfl,axVel[1],2);
-    sf_oaxa(Fswfl,axTimeWfl,3);
-  }
+  sf_oaxa(Fswfl,axVel[0],1);
+  sf_oaxa(Fswfl,axVel[1],2);
+  sf_oaxa(Fswfl,axTimeWfl,3);
 
-  // DATA HEADERS
   sf_oaxa(Fbdat,axRec[1],1);
-  sf_oaxa(Fsdat,axRec[1],1);
   sf_axis axTimeData = sf_maxa( acq->ntdat,
                                 acq->ot,
                                 acq->dt);
   sf_oaxa(Fbdat,axTimeData,2);
-  sf_oaxa(Fsdat,axTimeData,2);
+
+  // HEADERS
+  if (!in_para.adj){
+    // DATA HEADERS
+    sf_oaxa(Fsdat,axRec[1],1);
+    sf_oaxa(Fsdat,axTimeData,2);
+  }
+  else{
+    if (Fvpert){
+      sf_axis axVpImg[2];
+      axVpImg[0] = sf_maxa(sf_n(axVel[0]),
+                           sf_o(axVel[0]),
+                           sf_d(axVel[0]));
+      axVpImg[1] = sf_maxa(sf_n(axVel[1]),
+                           sf_o(axVel[1]),
+                           sf_d(axVel[1]));
+
+      sf_oaxa(Fvpert,axVpImg[0],1);
+      sf_oaxa(Fvpert,axVpImg[1],2);
+    }
+    if (Frpert){
+      sf_axis axRhImg[2];
+      axRhImg[0] = sf_maxa(sf_n(axVel[0]),
+                           sf_o(axVel[0]),
+                           sf_d(axVel[0]));
+      axRhImg[1] = sf_maxa(sf_n(axVel[1]),
+                           sf_o(axVel[1]),
+                           sf_d(axVel[1]));
+
+      sf_oaxa(Frpert,axRhImg[0],1);
+      sf_oaxa(Frpert,axRhImg[1],2);
+    }
 
 
-
-
+  }
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -419,8 +468,13 @@ int main(int argc, char* argv[])
     // extrapolate data
     bornadjextrap2d(wfl,acq,mod);
 
+    sf_seek(wfl->Fswfl,0,SEEK_SET);
+
+    // prepare the born sources
+    make_born_sources_2d(wfl,mod,acq);
+
     // stack wavefields
-    stack_wfl_2d(wfl,mod,acq);
+    stack_wfl_2d(Fvpert,Frpert,wfl,mod,acq);
 
     end_t = clock();
   }

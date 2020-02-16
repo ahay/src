@@ -275,6 +275,37 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
 
 static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it){
 
+  long nrec = acq->nr;
+
+  long N1 = wfl->simN1;
+
+  float modD1 = mod->d1;
+  float modD2 = mod->d2;
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+
+  float dt = acq->dt;
+  float scale = dt/(modD1*modD2);
+
+  for (long irec=0; irec<nrec; irec++){
+    float xr = acq->rcoord[irec*2];
+    float zr = acq->rcoord[irec*2+1];
+
+    int ixr = (xr-o2)/modD2;
+    int izr = (zr-o1)/modD1;
+    float force = acq->dat[irec + nrec*it]*scale;
+    long idx = izr + N1*ixr;
+
+    for (int j=-3,jh=0; j<=4; j++,jh++){
+      const float hicks2 = acq->hicksRcv2[jh+irec*8];
+      for (int i=-3,ih=0; i<=4; i++,ih++){
+        const float hc = acq->hicksRcv1[ih+irec*8]*hicks2;
+        wfl->pc[idx + i + N1*j] += hc*force;
+      }
+    }
+
+  }
+
 }
 
 static void injectBornVpSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
