@@ -468,6 +468,7 @@ int main(int argc, char* argv[])
     // extrapolate data
     bornadjextrap2d(wfl,acq,mod);
 
+    //rewind the scattered wavefield
     sf_seek(wfl->Fswfl,0,SEEK_SET);
 
     // prepare the born sources

@@ -284,16 +284,13 @@ static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_
   float o1 = wfl->simO1;
   float o2 = wfl->simO2;
 
-  float dt = acq->dt;
-  float scale = dt/(modD1*modD2);
-
   for (long irec=0; irec<nrec; irec++){
     float xr = acq->rcoord[irec*2];
     float zr = acq->rcoord[irec*2+1];
 
     int ixr = (xr-o2)/modD2;
     int izr = (zr-o1)/modD1;
-    float force = acq->dat[irec + nrec*it]*scale;
+    float force = acq->dat[irec + nrec*it];
     long idx = izr + N1*ixr;
 
     for (int j=-3,jh=0; j<=4; j++,jh++){

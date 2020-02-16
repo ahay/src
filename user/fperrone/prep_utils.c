@@ -339,6 +339,9 @@ void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_
 
   sf_floatwrite(tmp,n1*n2,Fvpert);
 
+  free(srcwfl);
+  free(tmp);
+
 }
 
 void clear_model_2d(mod_struct_t* mod)
