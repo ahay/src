@@ -273,7 +273,11 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
 
 }
 
-static void injectBornSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
+static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it){
+
+}
+
+static void injectBornVpSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
 
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
@@ -282,7 +286,7 @@ static void injectBornSource(wfl_struct_t * const wfl, mod_struct_t const *mod, 
 
   float dt = acq->dt;
 
-  fread(wfl->bwfl,n12,sizeof(float),wfl->Fbsrc);
+  fread(wfl->bwfl,n12,sizeof(float),wfl->Fpvdiv);
 
   for (long i2=0; i2<modN2; i2++){
     for (long i1=0; i1<modN1; i1++){
@@ -466,7 +470,7 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
 
     velupd(wfl,mod,acq,FWD);
     presupd(wfl,mod,acq,FWD);
-    injectBornSource(wfl,mod,acq,it);
+    injectBornVpSource(wfl,mod,acq,it);
 
     if (wfl->freesurf)
       applyFreeSurfaceBC(wfl);
@@ -510,6 +514,24 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 void bornadjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
 /*< kernel for Born forward extrapolation >*/
 {
+  int nt = acq->ntdat;
+
+  // loop over time
+  for (int it=0; it<nt; it++){
+    bool save = (wfl->Fswfl);
+
+    velupd(wfl,mod,acq,ADJ);
+    presupd(wfl,mod,acq,ADJ);
+    injectPdata(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC(wfl);
+
+    // write the wavefield out
+    if (save) extract_scat_wfl_2d(wfl);
+
+    swapwfl(wfl);
+  }
 
 }
 

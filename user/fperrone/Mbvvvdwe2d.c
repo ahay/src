@@ -400,22 +400,28 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   if (!in_para.adj){
+    start_t=clock();
     // FWD BORN MODELING: model pert -> wfl
     if (in_para.verb) sf_warning("FWD Born operator..");
 
     // prepare the born sources
     make_born_sources_2d(wfl,mod,acq);
 
-
-    start_t=clock();
+    // extrapolate secondary sources
     bornfwdextrap2d(wfl,acq,mod);
     end_t = clock();
   }
   else{
+    start_t=clock();
     // ADJ BORN MODELING: wfl -> model pert
     if (in_para.verb) sf_warning("Adjoint Born operator..");
-    start_t=clock();
+
+    // extrapolate data
     bornadjextrap2d(wfl,acq,mod);
+
+    // stack wavefields
+    stack_wfl_2d(wfl,mod,acq);
+
     end_t = clock();
   }
   if (in_para.verb){

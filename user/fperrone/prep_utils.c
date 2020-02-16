@@ -67,7 +67,10 @@ struct wfl_struct{
   // born modeling (scattered data)
   sf_file Fsdata;
   sf_file Fswfl;
-  FILE* Fbsrc;
+  char* pvtmpfilename;
+  char* prtmpfilename;
+  FILE* Fpvdiv;
+  FILE* Fprgrd;
 };
 /*^*/
 
@@ -265,10 +268,7 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
   long nt = acq->ntdat;
   float dt = acq->dt;
 
-  if(!(wfl->Fbsrc = fopen("./bsrc.b","w+"))){
-    sf_error("Error opening temp file: %s, %d",__FILE__,__LINE__);
-    exit(-1);
-  }
+  wfl->Fpvdiv = sf_tempfile(&(wfl->pvtmpfilename),"w+");
 
   float *snapc = sf_floatalloc(n1*n2);
   float *snapn = sf_floatalloc(n1*n2);
@@ -278,14 +278,14 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
 
     sf_floatread(snapn,n1*n2,wfl->Fwfl);
 
+    // compute the divergence of the particle velocity from the pressure field
     for (long i=0; i<n1*n2; i++){
       float v = mod->vmod[i];
       float r = mod->dmod[i];
       float k = 1.f/(v*v*r);
       wfl->bwfl[i] = k*(snapn[i] - snapc[i])/dt;
-
     }
-    fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fbsrc);
+    fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fpvdiv);
 
     float *tmp = snapc;
     snapc = snapn;
@@ -293,15 +293,20 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
   }
 
   memset(wfl->bwfl,0,n1*n2*sizeof(float));
-  fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fbsrc);
+  fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fpvdiv);
 
-  rewind(wfl->Fbsrc);
+  rewind(wfl->Fpvdiv);
 
   free(snapc);
   free(snapn);
 
 }
 
+void stack_wfl_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq)
+/*< project the wavefields in the born model space>*/
+{
+
+}
 
 void clear_model_2d(mod_struct_t* mod)
 /*< Free the model parameter cubes >*/
@@ -539,7 +544,8 @@ void prepare_born_wfl_2d(wfl_struct_t * const wfl,sf_file Fsdat, sf_file Fswfl)
   wfl->Fsdata = Fsdat;
   wfl->Fswfl  = Fswfl;
 
-  wfl->Fbsrc = NULL;
+  wfl->Fpvdiv = NULL;
+  wfl->Fprgrd = NULL;
 }
 
 void clear_wfl_2d(wfl_struct_t *wfl)
@@ -568,8 +574,6 @@ void clear_wfl_2d(wfl_struct_t *wfl)
 void clear_born_wfl_2d(wfl_struct_t *wfl)
 /*< clear the source for born modeling >*/
 {
-  if (wfl->Fbsrc){
-    fclose(wfl->Fbsrc);
-    remove("./bsrc.b");
-  }
+  if (wfl->Fpvdiv)
+    remove(wfl->pvtmpfilename);
 }
