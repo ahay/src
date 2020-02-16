@@ -278,9 +278,13 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
 
     sf_floatread(snapn,n1*n2,wfl->Fwfl);
 
-    for (long i=0; i<n1*n2; i++)
-      wfl->bwfl[i] = (snapn[i] - snapc[i])/dt;
+    for (long i=0; i<n1*n2; i++){
+      float v = mod->vmod[i];
+      float r = mod->dmod[i];
+      float k = 1.f/(v*v*r);
+      wfl->bwfl[i] = k*(snapn[i] - snapc[i])/dt;
 
+    }
     fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fbsrc);
 
     float *tmp = snapc;

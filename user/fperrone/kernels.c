@@ -172,16 +172,16 @@ static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t con
     for (long i2=NOP; i2<n2-NOP; i2++){
       for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
         v1a[idx] = -(C1*(v1c[i1  +i2*n1] - v1c[i1-1+i2*n1])+
-                          C2*(v1c[i1+1+i2*n1] - v1c[i1-2+i2*n1])+
-                          C3*(v1c[i1+2+i2*n1] - v1c[i1-3+i2*n1]))*dtd1;
+                     C2*(v1c[i1+1+i2*n1] - v1c[i1-2+i2*n1])+
+                     C3*(v1c[i1+2+i2*n1] - v1c[i1-3+i2*n1]))*dtd1;
       }
     }
 
     for (long i2=NOP; i2<n2-NOP; i2++){
       for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
         v2a[idx] = -(C1*(v2c[i1+(i2  )*n1] - v2c[i1  +(i2-1)*n1])+
-                          C2*(v2c[i1+(i2+1)*n1] - v2c[i1  +(i2-2)*n1])+
-                          C3*(v2c[i1+(i2+2)*n1] - v2c[i1  +(i2-3)*n1]))*dtd2;
+                     C2*(v2c[i1+(i2+1)*n1] - v2c[i1  +(i2-2)*n1])+
+                     C3*(v2c[i1+(i2+2)*n1] - v2c[i1  +(i2-3)*n1]))*dtd2;
       }
     }
 
@@ -280,10 +280,7 @@ static void injectBornSource(wfl_struct_t * const wfl, mod_struct_t const *mod, 
   long n12 = modN1*modN2;
   long nb = wfl->nabc;
 
-  float d1 = mod->d1;
-  float d2 = mod->d2;
   float dt = acq->dt;
-  float dtd12 = (d1*d2)/dt;
 
   fread(wfl->bwfl,n12,sizeof(float),wfl->Fbsrc);
 
@@ -295,7 +292,7 @@ static void injectBornSource(wfl_struct_t * const wfl, mod_struct_t const *mod, 
       float const dv = mod->velpert[modIdx];
       float const vc = mod->vmod[modIdx];
       float const rh = mod->dmod[modIdx];
-      float const vp= 2.f*vc*dv*rh*dtd12;
+      float const vp= 2.f*vc*dv*rh*dt;
 
       wfl->pc[simIdx] += vp*wfl->bwfl[modIdx];
 
