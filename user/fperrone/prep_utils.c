@@ -162,7 +162,7 @@ void print_param(in_para_struct_t in_para)
 static float* build_extended_model_2d(float const *mod, long n1, long n2, int next)
 {
 
-  sf_warning(" Extend the 2d models with absorbing boundaries..");
+  sf_warning("\tExtend the 2d models with absorbing boundaries..");
 
   long n1ext = n1+2*next;
   long n2ext = n2+2*next;
@@ -204,9 +204,6 @@ void prepare_model_2d(mod_struct_t* mod,
 /*< Sets up the specified model cube >*/
 {
 
-  if ((sf_n(axvel[0])!=sf_n(axden[0])) || (sf_n(axvel[1])!=sf_n(axden[1])))
-    sf_error("Inconsistent model dimensions!");
-
   mod->n1 = sf_n(axvel[0]);
   mod->n2 = sf_n(axvel[1]);
   mod->d1 = sf_d(axvel[0]);
@@ -223,7 +220,7 @@ void prepare_model_2d(mod_struct_t* mod,
   for (int i=0; i<nelem; i++)
     vave += mod->vmod[i];
   vave /= (nelem);
-  sf_warning("Velocity Model average value = %g",vave);
+  sf_warning("\tVelocity Model average value = %g",vave);
 
   mod->dmod = (float*) sf_floatalloc(nelem);
   sf_floatread(mod->dmod,nelem,Fdmod);
@@ -232,7 +229,7 @@ void prepare_model_2d(mod_struct_t* mod,
   for (int i=0; i<nelem; i++)
     dave += mod->dmod[i];
   dave /= (nelem);
-  sf_warning("Density Model average value = %g",dave);
+  sf_warning("\tDensity Model average value = %g",dave);
 
   // modeling parameters
   long n1 = mod->n1;
@@ -253,12 +250,16 @@ void prepare_model_2d(mod_struct_t* mod,
 }
 
 void prepare_born_model_2d(mod_struct_t * const mod,
-                           sf_axis axVel[2],
-                           sf_file Fvpert,
-                           sf_file Frpert)
+                            sf_axis axVel[2], sf_axis axDen[2],
+                            sf_file Fvel, sf_file Fden,
+                            sf_file Fvpert, sf_file Frpert,
+                            in_para_struct_t in_para)
 /*< Prepare the born operator model parameters >*/
 {
-  sf_warning(" Read the model perturbation files..");
+  sf_warning("\tPrepare the background model..");
+  prepare_model_2d(mod,in_para,axVel,axDen,Fvel,Fden);
+
+  sf_warning("\tPrepare the perturbation cubes..");
 
   long n1 = sf_n(axVel[0]);
   long n2 = sf_n(axVel[1]);
@@ -270,12 +271,14 @@ void prepare_born_model_2d(mod_struct_t * const mod,
   memset(mod->velpert,0,n12*sizeof(float));
   memset(mod->denpert,0,n12*sizeof(float));
 
-  if (Fvpert)
-    sf_floatread(mod->velpert,n12,Fvpert);
+  if (!in_para.adj){
+    //FWD
+    if (Fvpert)
+      sf_floatread(mod->velpert,n12,Fvpert);
 
-  if (Frpert)
-    sf_floatread(mod->denpert,n12,Frpert);
-
+    if (Frpert)
+      sf_floatread(mod->denpert,n12,Frpert);
+  }
 }
 
 void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq)
@@ -435,17 +438,27 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
 
 }
 
-void prepare_scatt_data_2d(acq_struct_t * acq,sf_file Fsdat)
-/*< prepare the scattered data for backward extrapolation >*/
+void prepare_born_acquisition_2d(acq_struct_t * const acq,
+                                 sf_axis axsou[2], sf_axis axrec[2], sf_axis axwav[2],
+                                 sf_file Fsou, sf_file Frec, sf_file Fwav,
+                                 sf_file Fsdat,
+                                 in_para_struct_t in_para)
+/*< preparation of the acquisition for born operator >*/
 {
-  long nr = acq->nr;
-  long nt = acq->ntdat;
+  prepare_acquisition_2d(acq, in_para, axsou, axrec, axwav, Fsou, Frec,Fwav);
 
-  acq->dat = sf_floatalloc(nr*nt);
-  for(long it=0; it<nt; it++){
-    float* wp = acq->dat + (nt-1-it)*nr;
-    sf_floatread(wp,nr,Fsdat);
+  if (in_para.adj){
+    // Read the data to backproject
+    long nr = acq->nr;
+    long nt = acq->ntdat;
+
+    acq->dat = sf_floatalloc(nr*nt);
+    for(long it=0; it<nt; it++){
+      float* wp = acq->dat + (nt-1-it)*nr;
+      sf_floatread(wp,nr,Fsdat);
+    }
   }
+
 }
 
 /*

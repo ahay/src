@@ -269,7 +269,6 @@ int main(int argc, char* argv[])
   if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
       (sf_n(axDen[1])!=sf_n(axVel[1]))){
     sf_error("Inconsistent model dimensions!");
-
     exit(-1);
   }
   // ====================================================
@@ -332,9 +331,9 @@ int main(int argc, char* argv[])
       if ((sf_n(axVel[0])!=sf_n(axVelPert[0]))||
           (sf_n(axVel[1])!=sf_n(axVelPert[1]))){
         sf_error("Inconsistent model dimensions!");
-
         exit(-1);
       }
+
     }
 
     if (rpert){
@@ -350,7 +349,6 @@ int main(int argc, char* argv[])
       if ((sf_n(axDen[0])!=sf_n(axDenPert[0]))||
           (sf_n(axDen[1])!=sf_n(axDenPert[1]))){
         sf_error("Inconsistent model dimensions!");
-
         exit(-1);
       }
     }
@@ -364,7 +362,6 @@ int main(int argc, char* argv[])
 
     if ((sf_n(axScData[0])!=sf_n(axRec[1]))){
       sf_error("Inconsistent receiver dimensions!");
-
       exit(-1);
     }
 
@@ -381,162 +378,170 @@ int main(int argc, char* argv[])
   mod_struct_t *mod = calloc(1,sizeof(mod_struct_t));
 
   // PREPARE THE MODEL PARAMETERS CUBES
-  if (in_para.verb) sf_warning("Read parameter cubes..");
-  prepare_model_2d(mod,in_para,axVel,axDen,Fvel,Fden);
-  if (!in_para.adj)
-    prepare_born_model_2d(mod,axVel,Fvpert,Frpert);
-
+  if (in_para.verb) sf_warning("Model parameter cubes..");
+  prepare_born_model_2d(mod,axVel,axDen,Fvel,Fden,Fvpert,Frpert,in_para);
 
   // PREPARE THE ACQUISITION STRUCTURE
   if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
-  prepare_acquisition_2d(acq, in_para, axSou, axRec, axWav, Fsou, Frec,Fwav);
-  if (in_para.adj)
-    prepare_scatt_data_2d(acq,Fsdat);
+  prepare_born_acquisition_2d(acq,axSou,axRec,axWav,Fsou,Frec,Fwav,Fsdat,in_para);
 
-  // PREPARATION OF THE WAVEFIELD STRUCTURE
-  if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
-  prepare_wfl_2d(wfl,mod,Fbdat,Fbwfl,in_para);
-  prepare_born_wfl_2d(wfl,Fsdat,Fswfl);
+//  // PREPARATION OF THE WAVEFIELD STRUCTURE
+//  if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
+//  prepare_wfl_2d(wfl,mod,Fbdat,Fbwfl,in_para);
+//  prepare_born_wfl_2d(wfl,Fsdat,Fswfl);
+//
+//  if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
+//  setupABC(wfl);
+//  if (in_para.verb) sf_warning("Prepare the interpolation coefficients for source and receivers..");
+//  set_sr_interpolation_coeffs(acq,wfl);
 
-  if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
-  setupABC(wfl);
-  if (in_para.verb) sf_warning("Prepare the interpolation coefficients for source and receivers..");
-  set_sr_interpolation_coeffs(acq,wfl);
-
-  // WAVEFIELD HEADERS
-  sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
-                              acq->ot,
-                              acq->dt*in_para.jsnap);
-  sf_setlabel(axTimeWfl,"time");
-  sf_setunit(axTimeWfl,"s");
-
-  sf_oaxa(Fbwfl,axVel[0],1);
-  sf_oaxa(Fbwfl,axVel[1],2);
-  sf_oaxa(Fbwfl,axTimeWfl,3);
-
-  sf_oaxa(Fswfl,axVel[0],1);
-  sf_oaxa(Fswfl,axVel[1],2);
-  sf_oaxa(Fswfl,axTimeWfl,3);
-
-  sf_oaxa(Fbdat,axRec[1],1);
-  sf_axis axTimeData = sf_maxa( acq->ntdat,
-                                acq->ot,
-                                acq->dt);
-  sf_oaxa(Fbdat,axTimeData,2);
-
-  // HEADERS
-  if (!in_para.adj){
-    // DATA HEADERS
-    sf_oaxa(Fsdat,axRec[1],1);
-    sf_oaxa(Fsdat,axTimeData,2);
-  }
-  else{
-    if (Fvpert){
-      sf_axis axVpImg[2];
-      axVpImg[0] = sf_maxa(sf_n(axVel[0]),
-                           sf_o(axVel[0]),
-                           sf_d(axVel[0]));
-      axVpImg[1] = sf_maxa(sf_n(axVel[1]),
-                           sf_o(axVel[1]),
-                           sf_d(axVel[1]));
-
-      sf_oaxa(Fvpert,axVpImg[0],1);
-      sf_oaxa(Fvpert,axVpImg[1],2);
-    }
-    if (Frpert){
-      sf_axis axRhImg[2];
-      axRhImg[0] = sf_maxa(sf_n(axVel[0]),
-                           sf_o(axVel[0]),
-                           sf_d(axVel[0]));
-      axRhImg[1] = sf_maxa(sf_n(axVel[1]),
-                           sf_o(axVel[1]),
-                           sf_d(axVel[1]));
-
-      sf_oaxa(Frpert,axRhImg[0],1);
-      sf_oaxa(Frpert,axRhImg[1],2);
-    }
-
-
-  }
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  /*                  BACKGROUND WAVEFIELD                      */
-  /*------------------------------------------------------------*/
-  /*------------------------------------------------------------*/
-  if (in_para.verb) sf_warning("Background wavefield extrapolation..");
-  start_t=clock();
-  fwdextrap2d(wfl,acq,mod);
-  end_t = clock();
-
-  if (in_para.verb){
-    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-    sf_warning("Total time taken by CPU: %g", total_t );
-  }
-
-  //rewind the source wavefield
-  sf_seek(wfl->Fwfl,0,SEEK_SET);
-
-  // reset the wavefields
-  reset_wfl(wfl);
-
-  /*------------------------------------------------------------*/
-  /*------------------------------------------------------------*/
-  /*                  BORN OPERATOR                             */
+  /*                       SET-UP HEADERS                       */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   if (!in_para.adj){
-    start_t=clock();
-    // FWD BORN MODELING: model pert -> wfl
-    if (in_para.verb) sf_warning("FWD Born operator..");
 
-    // prepare the born sources
-    make_born_sources_2d(wfl,mod,acq);
-
-    // extrapolate secondary sources
-    bornfwdextrap2d(wfl,acq,mod);
-    end_t = clock();
   }
   else{
-    start_t=clock();
-    // ADJ BORN MODELING: wfl -> model pert
-    if (in_para.verb) sf_warning("Adjoint Born operator..");
 
-    // extrapolate data
-    bornadjextrap2d(wfl,acq,mod);
-
-    //rewind the scattered wavefield
-    sf_seek(wfl->Fswfl,0,SEEK_SET);
-
-    // prepare the born sources
-    make_born_sources_2d(wfl,mod,acq);
-
-    // stack wavefields
-    stack_wfl_2d(Fvpert,Frpert,wfl,mod,acq);
-
-    end_t = clock();
-  }
-  if (in_para.verb){
-    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-    sf_warning("Total time taken by CPU: %g", total_t );
   }
 
-  /* -------------------------------------------------------------*/
-  /* -------------------------------------------------------------*/
-  /*                            FREE MEMORY                       */
-  /* -------------------------------------------------------------*/
-  /* -------------------------------------------------------------*/
-  if (in_para.verb) sf_warning("Free memory..");
-  clear_wfl_2d(wfl);
-  clear_born_wfl_2d(wfl);
-  free(wfl);
-
-  clear_acq_2d(acq);
-  free(acq);
-
-  clear_model_2d(mod);
-  clear_born_model_2d(mod);
-  free(mod);
+//  // WAVEFIELD HEADERS
+//  sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
+//                              acq->ot,
+//                              acq->dt*in_para.jsnap);
+//  sf_setlabel(axTimeWfl,"time");
+//  sf_setunit(axTimeWfl,"s");
+//
+//  sf_oaxa(Fbwfl,axVel[0],1);
+//  sf_oaxa(Fbwfl,axVel[1],2);
+//  sf_oaxa(Fbwfl,axTimeWfl,3);
+//
+//  sf_oaxa(Fswfl,axVel[0],1);
+//  sf_oaxa(Fswfl,axVel[1],2);
+//  sf_oaxa(Fswfl,axTimeWfl,3);
+//
+//  sf_oaxa(Fbdat,axRec[1],1);
+//  sf_axis axTimeData = sf_maxa( acq->ntdat,
+//                                acq->ot,
+//                                acq->dt);
+//  sf_oaxa(Fbdat,axTimeData,2);
+//
+//  // HEADERS
+//  if (!in_para.adj){
+//    // DATA HEADERS
+//    sf_oaxa(Fsdat,axRec[1],1);
+//    sf_oaxa(Fsdat,axTimeData,2);
+//  }
+//  else{
+//    if (Fvpert){
+//      sf_axis axVpImg[2];
+//      axVpImg[0] = sf_maxa(sf_n(axVel[0]),
+//                           sf_o(axVel[0]),
+//                           sf_d(axVel[0]));
+//      axVpImg[1] = sf_maxa(sf_n(axVel[1]),
+//                           sf_o(axVel[1]),
+//                           sf_d(axVel[1]));
+//
+//      sf_oaxa(Fvpert,axVpImg[0],1);
+//      sf_oaxa(Fvpert,axVpImg[1],2);
+//    }
+//    if (Frpert){
+//      sf_axis axRhImg[2];
+//      axRhImg[0] = sf_maxa(sf_n(axVel[0]),
+//                           sf_o(axVel[0]),
+//                           sf_d(axVel[0]));
+//      axRhImg[1] = sf_maxa(sf_n(axVel[1]),
+//                           sf_o(axVel[1]),
+//                           sf_d(axVel[1]));
+//
+//      sf_oaxa(Frpert,axRhImg[0],1);
+//      sf_oaxa(Frpert,axRhImg[1],2);
+//    }
+//
+//
+//  }
+//
+//  /*------------------------------------------------------------*/
+//  /*------------------------------------------------------------*/
+//  /*                  BACKGROUND WAVEFIELD                      */
+//  /*------------------------------------------------------------*/
+//  /*------------------------------------------------------------*/
+//  if (in_para.verb) sf_warning("Background wavefield extrapolation..");
+//  start_t=clock();
+//  fwdextrap2d(wfl,acq,mod);
+//  end_t = clock();
+//
+//  if (in_para.verb){
+//    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+//    sf_warning("Total time taken by CPU: %g", total_t );
+//  }
+//
+//  //rewind the source wavefield
+//  sf_seek(wfl->Fwfl,0,SEEK_SET);
+//
+//  // reset the wavefields
+//  reset_wfl(wfl);
+//
+//  /*------------------------------------------------------------*/
+//  /*------------------------------------------------------------*/
+//  /*                  BORN OPERATOR                             */
+//  /*------------------------------------------------------------*/
+//  /*------------------------------------------------------------*/
+//  if (!in_para.adj){
+//    start_t=clock();
+//    // FWD BORN MODELING: model pert -> wfl
+//    if (in_para.verb) sf_warning("FWD Born operator..");
+//
+//    // prepare the born sources
+//    make_born_sources_2d(wfl,mod,acq);
+//
+//    // extrapolate secondary sources
+//    bornfwdextrap2d(wfl,acq,mod);
+//    end_t = clock();
+//  }
+//  else{
+//    start_t=clock();
+//    // ADJ BORN MODELING: wfl -> model pert
+//    if (in_para.verb) sf_warning("Adjoint Born operator..");
+//
+//    // extrapolate data
+//    bornadjextrap2d(wfl,acq,mod);
+//
+//    //rewind the scattered wavefield
+//    sf_seek(wfl->Fswfl,0,SEEK_SET);
+//
+//    // prepare the born sources
+//    make_born_sources_2d(wfl,mod,acq);
+//
+//    // stack wavefields
+//    stack_wfl_2d(Fvpert,Frpert,wfl,mod,acq);
+//
+//    end_t = clock();
+//  }
+//  if (in_para.verb){
+//    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+//    sf_warning("Total time taken by CPU: %g", total_t );
+//  }
+//
+//  /* -------------------------------------------------------------*/
+//  /* -------------------------------------------------------------*/
+//  /*                            FREE MEMORY                       */
+//  /* -------------------------------------------------------------*/
+//  /* -------------------------------------------------------------*/
+//  if (in_para.verb) sf_warning("Free memory..");
+//  clear_wfl_2d(wfl);
+//  clear_born_wfl_2d(wfl);
+//  free(wfl);
+//
+//  clear_acq_2d(acq);
+//  free(acq);
+//
+//  clear_model_2d(mod);
+//  clear_born_model_2d(mod);
+//  free(mod);
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
