@@ -14,6 +14,9 @@ typedef struct acq_struct acq_struct_t;
 typedef struct mod_struct mod_struct_t;
 /*^*/
 
+typedef struct born_setup_struct born_setup_struct_t;
+/*^*/
+
 struct in_para_struct{
   bool verb;
   bool fsrf;
@@ -111,6 +114,21 @@ struct mod_struct{
   // perturnations (for born modeling)
   float *velpert;
   float *denpert;
+};
+/*^*/
+
+struct born_setup_struct{
+  bool inputVelPerturbation;
+  bool inputDenPerturbation;
+  //
+  bool outputBackgroundWfl;
+  bool outputScatteredWfl;
+  //
+  bool outputBackgroundData;
+  //
+  bool outputVelPertImage;
+  bool outputDenPertImage;
+  //
 };
 /*^*/
 

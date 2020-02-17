@@ -95,17 +95,27 @@ int main(int argc, char* argv[])
 {
   // command line parameters
   in_para_struct_t in_para;
+  // running mode parameters
+  born_setup_struct_t born_para;
 
   /* I/O files */
+  // FWD and ADJ
   sf_file Fwav=NULL; /* wavelet   */
-  sf_file Fvpert=NULL; /* velocity perturbation */
-  sf_file Frpert=NULL; /* density perturbation */
   sf_file Fsou=NULL; /* sources   */
   sf_file Frec=NULL; /* receivers */
   sf_file Fvel=NULL; /* velocity  */
   sf_file Fden=NULL; /* density   */
+
+  // input for FWD, output for ADJ
+  sf_file Fvpert=NULL; /* velocity perturbation */
+  sf_file Frpert=NULL; /* density perturbation */
+
+  // output FWD
   sf_file Fbdat=NULL; /* background data */
+  // input ADJ
   sf_file Fsdat=NULL; /* scattered data */
+
+  // auxiliary
   sf_file Fbwfl=NULL; /* background wavefield */
   sf_file Fswfl=NULL; /* scattered wavefield */
 
@@ -156,7 +166,6 @@ int main(int argc, char* argv[])
   /*                       OPEN FILES                           */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  // Parameters for the set up of the Born operator (both fwd and adj)
   Fwav = sf_input ("in" );  /* wavelet   */
   Fvel = sf_input ("vel");  /* velocity  */
   Fden = sf_input ("den");  /* density   */
@@ -166,59 +175,69 @@ int main(int argc, char* argv[])
   bool vpert=false;
   bool rpert=false;
 
-  if (!in_para.adj){
+  if (in_para.adj){
+    // ADJ BORN OPERATOR
 
-    // these are the input of the forward born modelling
-    if (sf_getstring("vpert")){
-      Fvpert= sf_input ("vpert");  /* velocity perturbation */
-      vpert=true;
-    }
+    Fsdat = sf_input("pdata"); /* input pressure data to backproject (REQUIRED)*/
 
+    born_para.outputVelPertImage=true;
+    Fvpert= sf_output ("out");  /* default output: velocity perturbation image */
+
+    born_para.outputDenPertImage=false;
     if (sf_getstring("dpert")){
       Frpert= sf_input ("rpert");  /* density perturbation */
+      born_para.outputDenPertImage=true;
+    }
+
+    born_para.outputScatteredWfl=false;
+    if (sf_getstring("swfl")){
+      Fswfl = sf_output("swfl");  /* scattered wavefield*/
+      born_para.outputScatteredWfl=true;
+    }
+
+  }
+  else{
+    // FWD BORN OPERATOR
+    born_para.inputVelPerturbation=true;
+    Fvpert= sf_input ("vpert");  /* velocity perturbation */
+    vpert=true;
+
+    born_para.inputDenPerturbation=false;
+    if (sf_getstring("dpert")){
+      Frpert= sf_input ("rpert");  /* density perturbation */
+      born_para.inputDenPerturbation=true;
       rpert=true;
     }
 
     // these are aux output of the born forward modeling
-    Fbwfl = sf_output("bwfl");  /* background wavefield*/
-    Fbdat = sf_output("bdat");  /* background data*/
-    Fswfl = sf_output("swfl");  /* scattered wavefield*/
+    born_para.outputBackgroundWfl=false;
+    if (sf_getstring("bwfl")){
+      Fbwfl = sf_output("bwfl");  /* background wavefield*/
+      born_para.outputBackgroundWfl=true;
+    }
+
+    born_para.outputBackgroundData=false;
+    if (sf_getstring("bdat")){
+      Fbdat = sf_output("bdat");  /* background data*/
+      born_para.outputBackgroundData=true;
+    }
+
+    born_para.outputScatteredWfl=false;
+    if (sf_getstring("swfl")){
+      Fswfl = sf_output("swfl");  /* scattered wavefield*/
+      born_para.outputScatteredWfl=true;
+    }
 
     // this is the output of the born forward modeling
     Fsdat = sf_output("out");  /* scattered data*/
   }
-  else{
-    Fsdat = sf_input("pdata"); /* input pressure data to backproject */
-    Fswfl = sf_output("swfl");  /* scattered wavefield*/
-    Fbdat = sf_output("bdat");  /* background data*/
-    Fbwfl = sf_output("bwfl");  /* background wavefield*/
-
-    Fvpert = sf_output("out"); /* default output: velocity perturbation image */
-
-    if (sf_getstring("rpert")){
-      Frpert = sf_output("rpert");  /* density perturbation image */
-    }
-
-  }
-
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   /*                      READ AXES                             */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  sf_warning("WAVELET axes..");
-  sf_axis axWav[2];
-  axWav[0] = sf_iaxa(Fwav,1);
-  sf_setlabel(axWav[0],"shot");
-  sf_setunit(axWav[0],"1");
-  if(in_para.verb) sf_raxa(axWav[0]); /* shot */
-
-  axWav[1] = sf_iaxa(Fwav,2);
-  sf_setlabel(axWav[1],"time");
-  sf_setunit(axWav[1],"s");
-  if(in_para.verb) sf_raxa(axWav[1]); /* time */
-
+  // from the input common to FWD and ADJ
   sf_warning("VELOCITY model axes..");
   sf_axis axVel[2];
   axVel[0] = sf_iaxa(Fvel,1);
@@ -243,9 +262,63 @@ int main(int argc, char* argv[])
   sf_setunit(axDen[1],"m");
   if(in_para.verb) sf_raxa(axDen[1]); /* lateral */
 
+  // ====================================================
+  // CHECK
+  // ====================================================
+  sf_warning("CHECK MODEL DIMENSIONS..");
+  if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
+      (sf_n(axDen[1])!=sf_n(axVel[1]))){
+    sf_error("Inconsistent model dimensions!");
+
+    exit(-1);
+  }
+  // ====================================================
+  // ====================================================
+
+  sf_warning("WAVELET axes..");
+  sf_axis axWav[2];
+  axWav[0] = sf_iaxa(Fwav,1);
+  axWav[1] = sf_iaxa(Fwav,2);
+  sf_setlabel(axWav[0],"shot");
+  sf_setlabel(axWav[1],"time");
+  sf_setunit(axWav[0],"1");
+  sf_setunit(axWav[1],"s");
+  if(in_para.verb){
+    sf_raxa(axWav[0]); /* shot */
+    sf_raxa(axWav[1]); /* time */
+  }
+
+  sf_warning("SHOT COORDINATES axes..");
+  sf_axis axSou[2];
+  axSou[0] = sf_iaxa(Fsou,1);
+  axSou[1] = sf_iaxa(Fsou,2);
+  sf_setlabel(axSou[0],"coords");
+  sf_setlabel(axSou[1],"shot");
+  sf_setunit(axSou[0],"1");
+  sf_setunit(axSou[1],"1");
+  if(in_para.verb) {
+    sf_raxa(axSou[0]); /* shot */
+    sf_raxa(axSou[1]); /* coords */
+  }
+
+  sf_warning("RECEIVER COORDINATES axes..");
+  sf_axis axRec[2];
+  axRec[0] = sf_iaxa(Frec,1);
+  axRec[1] = sf_iaxa(Frec,2);
+  sf_setlabel(axRec[0],"coords");
+  sf_setlabel(axRec[1],"receiver");
+  sf_setunit(axRec[0],"1");
+  sf_setunit(axRec[1],"1");
+  if(in_para.verb) {
+    sf_raxa(axRec[0]); /* coords */
+    sf_raxa(axRec[1]); /* shots */
+  }
+
   sf_axis axVelPert[2];
   sf_axis axDenPert[2];
+  sf_axis axScData[2];
   if (!in_para.adj){
+    // FWD BORN OPERATOR
 
     if (vpert){
       sf_warning("VELOCITY PERTURBATION model axes..");
@@ -262,7 +335,6 @@ int main(int argc, char* argv[])
 
         exit(-1);
       }
-
     }
 
     if (rpert){
@@ -281,45 +353,11 @@ int main(int argc, char* argv[])
 
         exit(-1);
       }
-
     }
 
   }
-
-  sf_warning("SHOT COORDINATES axes..");
-  sf_axis axSou[2];
-  axSou[0] = sf_iaxa(Fsou,1);
-  sf_setlabel(axSou[0],"shot");
-  sf_setunit(axSou[0],"1");
-  if(in_para.verb) sf_raxa(axSou[0]); /* shot */
-
-  axSou[1] = sf_iaxa(Fsou,2);
-  sf_setlabel(axSou[1],"coords");
-  sf_setunit(axSou[1],"1");
-  if(in_para.verb) sf_raxa(axSou[1]); /* coords */
-
-  sf_warning("RECEIVER COORDINATES axes..");
-  sf_axis axRec[2];
-  axRec[0] = sf_iaxa(Frec,1);
-  sf_setlabel(axRec[0],"coords");
-  sf_setunit(axRec[0],"1");
-  if(in_para.verb) sf_raxa(axRec[0]); /* coords */
-
-  axRec[1] = sf_iaxa(Frec,2);
-  sf_setlabel(axRec[1],"s");
-  sf_setunit(axRec[1],"1");
-  if(in_para.verb) sf_raxa(axRec[1]); /* shots */
-
-  sf_warning("CHECK MODEL DIMENSIONS..");
-  if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
-      (sf_n(axDen[1])!=sf_n(axVel[1]))){
-    sf_error("Inconsistent model dimensions!");
-
-    exit(-1);
-  }
-
-  sf_axis axScData[2];
-  if (in_para.adj){
+  else{
+    // ADJ BORN OPERATOR
     sf_warning("SCATTERED DATA axes..");
     axScData[0] = sf_iaxa(Fsdat,1);
     axScData[1] = sf_iaxa(Fsdat,2);
@@ -331,7 +369,6 @@ int main(int argc, char* argv[])
     }
 
   }
-
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
