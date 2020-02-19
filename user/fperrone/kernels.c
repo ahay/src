@@ -9,9 +9,6 @@
 #define IDX2D(i1,i2)((i1) + (i2)*n1)
 /*^*/
 
-typedef enum adj_enum_t{FWD,ADJ} adj_t;
-/*^*/
-
 #endif
 
 /* LS coefficients */
@@ -481,6 +478,34 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
     // extract the data at the receiver locations
     extract_dat_2d(wfl,acq);
+
+    swapwfl(wfl);
+  }
+
+}
+
+void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t const * mod, born_setup_struct_t para)
+/*< Born background wavefield extrapolation >*/
+{
+  int nt = acq->ntdat;
+  bool saveData= para.outputBackgroundData;
+
+  // loop over time
+  for (int it=0; it<nt; it++){
+
+
+    velupd(wfl,mod,acq,FWD);
+    presupd(wfl,mod,acq,FWD);
+    injectPsource(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC(wfl);
+
+    // write the wavefield out
+    extract_wfl_2d(wfl);
+
+    // extract the data at the receiver locations
+    if (saveData) extract_dat_2d(wfl,acq);
 
     swapwfl(wfl);
   }

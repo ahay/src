@@ -17,12 +17,15 @@ typedef struct mod_struct mod_struct_t;
 typedef struct born_setup_struct born_setup_struct_t;
 /*^*/
 
+typedef enum adj_enum_t{FWD,ADJ} adj_t;
+/*^*/
+
 struct in_para_struct{
   bool verb;
   bool fsrf;
   bool dabc;
   bool snap;
-  bool adj;
+  adj_t adj;
   bool dpt;
   int nb;
   int jsnap;
@@ -377,6 +380,9 @@ void clear_model_2d(mod_struct_t* mod)
 void clear_born_model_2d(mod_struct_t* mod)
 /*< Free the model perturbation parameters cubes for the born operator >*/
 {
+
+  clear_model_2d(mod);
+
   free(mod->velpert);
   free(mod->denpert);
 }
@@ -618,9 +624,14 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file 
 
 }
 
-void prepare_born_wfl_2d(wfl_struct_t * const wfl,sf_file Fsdat, sf_file Fswfl)
+void prepare_born_wfl_2d( wfl_struct_t * const wfl, mod_struct_t * mod,
+                          sf_file Fdata, sf_file Fwfl,
+                          sf_file Fsdat, sf_file Fswfl,
+                          in_para_struct_t para)
 /*< Set up the extra parameters for the born operator>*/
 {
+  prepare_wfl_2d(wfl,mod,Fdata,Fwfl,para);
+
   wfl->Fsdata = Fsdat;
   wfl->Fswfl  = Fswfl;
 
@@ -654,6 +665,8 @@ void clear_wfl_2d(wfl_struct_t *wfl)
 void clear_born_wfl_2d(wfl_struct_t *wfl)
 /*< clear the source for born modeling >*/
 {
+  clear_wfl_2d(wfl);
+
   if (wfl->Fpvdiv)
     remove(wfl->pvtmpfilename);
 }
