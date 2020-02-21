@@ -352,15 +352,12 @@ static void extract_wfl_2d(wfl_struct_t* wfl)
 {
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
-  long nabc = wfl->nabc;
+  long nabc  = wfl->nabc;
   long simN1 = wfl->simN1;
 
   // copy the write chunk of wavefield
   for (long i2=0; i2<modN2; i2++)
     memcpy(wfl->bwfl+i2*modN1,wfl->pc+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
-
-  long nelem = modN1*modN2;
-  sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
 
 }
 
@@ -374,8 +371,6 @@ static void extract_scat_wfl_2d(wfl_struct_t * const wfl){
   for (long i2=0; i2<modN2; i2++)
     memcpy(wfl->bwfl+i2*modN1,wfl->pc+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
 
-  long nelem = modN1*modN2;
-  sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
 }
 
 static void extract_dat_2d(wfl_struct_t* wfl,acq_struct_t const * acq){
@@ -460,6 +455,9 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 {
   sf_warning("FORWARD EXTRAPOLATION..");
 
+  long modN1=wfl->modN1;
+  long modN2=wfl->modN2;
+  long nelem=modN1*modN2;
   int nt = acq->ntdat;
 
   // loop over time
@@ -474,8 +472,10 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
       applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
-    if (save) extract_wfl_2d(wfl);
-
+    if (save){
+      extract_wfl_2d(wfl);
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+    }
     // extract the data at the receiver locations
     extract_dat_2d(wfl,acq);
 
@@ -487,7 +487,10 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t const * mod, born_setup_struct_t para)
 /*< Born background wavefield extrapolation >*/
 {
+  long modN1 =wfl->modN1;
+  long modN2 =wfl->modN2;
   int nt = acq->ntdat;
+  long nelem = modN1*modN2;
   bool saveData= para.outputBackgroundData;
 
   // loop over time
@@ -503,6 +506,11 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
 
     // write the wavefield out
     extract_wfl_2d(wfl);
+
+    if (para.outputBackgroundWfl)
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+    else
+      fwrite(wfl->bwfl,sizeof(float),nelem,para.Fbwfl);
 
     // extract the data at the receiver locations
     if (saveData) extract_dat_2d(wfl,acq);
@@ -543,6 +551,9 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 {
   sf_warning("ADJOINT EXTRAPOLATION..");
 
+  long modN1=wfl->modN1;
+  long modN2=wfl->modN2;
+  long nelem=modN1*modN2;
   int nt = acq->ntdat;
 
   // loop over time
@@ -557,21 +568,27 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
       applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
-    if (save) extract_wfl_2d(wfl);
+    if (save) {
+      extract_wfl_2d(wfl);
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+    }
 
     swapwfl(wfl);
   }
 
 }
 
-void bornadjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
+void bornadjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod, born_setup_struct_t para)
 /*< kernel for Born forward extrapolation >*/
 {
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long nelem = modN1*modN2;
   int nt = acq->ntdat;
-
+  bool save = para.outputScatteredWfl;
   // loop over time
   for (int it=0; it<nt; it++){
-    bool save = (wfl->Fswfl);
+
 
     velupd(wfl,mod,acq,ADJ);
     presupd(wfl,mod,acq,ADJ);
@@ -581,7 +598,11 @@ void bornadjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
       applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
-    if (save) extract_scat_wfl_2d(wfl);
+    extract_scat_wfl_2d(wfl);
+    if (save)
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
+    else
+      fwrite(wfl->bwfl,sizeof(float),nelem,para.Fswfl);
 
     swapwfl(wfl);
   }

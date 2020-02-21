@@ -132,6 +132,11 @@ struct born_setup_struct{
   bool outputVelPertImage;
   bool outputDenPertImage;
   //
+  // I need this to compute the secondary sources
+  char* bckwflfilename;
+  FILE* Fbwfl;
+  char* sctwflfilename;
+  FILE* Fswfl;
 };
 /*^*/
 
@@ -284,7 +289,7 @@ void prepare_born_model_2d(mod_struct_t * const mod,
   }
 }
 
-void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq)
+void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
 /*< Make the born sources for FWD born modelling>*/
 {
   long n1 = mod->n1;
@@ -298,10 +303,19 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
   float *snapc = sf_floatalloc(n1*n2);
   float *snapn = sf_floatalloc(n1*n2);
 
-  sf_floatread(snapc,n1*n2,wfl->Fwfl);
+  // read the background wavefield
+  if (para.outputBackgroundWfl)
+    sf_floatread(snapc,n1*n2,wfl->Fwfl);
+  else
+    fread(snapc,sizeof(float),n1*n2,para.Fbwfl);
+
   for (long it=0; it<nt-1; it++){
 
-    sf_floatread(snapn,n1*n2,wfl->Fwfl);
+    // read the background wavefield
+    if (para.outputBackgroundWfl)
+      sf_floatread(snapn,n1*n2,wfl->Fwfl);
+    else
+      fread(snapn,sizeof(float),n1*n2,para.Fbwfl);
 
     // compute the divergence of the particle velocity from the pressure field
     for (long i=0; i<n1*n2; i++){
@@ -327,7 +341,7 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
 
 }
 
-void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq)
+void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
 /*< project the wavefields in the born model space>*/
 {
   long nt = acq->ntdat;
@@ -342,7 +356,11 @@ void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_
   fread(srcwfl,sizeof(float),n1*n2*nt,wfl->Fpvdiv);
   for (long it=0; it<nt; it++){
     float *wp = srcwfl + (nt-1-it)*n1*n2;
-    sf_floatread(tmp,n1*n2,wfl->Fswfl);
+
+    if (para.outputScatteredWfl)
+      sf_floatread(tmp,n1*n2,wfl->Fswfl);
+    else
+      fread(tmp,sizeof(float),n1*n2,para.Fswfl);
 
     for (long i=0; i<n1*n2; i++)
       wp[i] = wp[i]*tmp[i];

@@ -172,9 +172,6 @@ int main(int argc, char* argv[])
   Fsou = sf_input ("sou");  /* sources   */
   Frec = sf_input ("rec");  /* receivers */
 
-  bool vpert=false;
-  bool rpert=false;
-
   switch(in_para.adj){
   case ADJ:
     // ADJ BORN OPERATOR
@@ -190,10 +187,29 @@ int main(int argc, char* argv[])
       born_para.outputDenPertImage=true;
     }
 
+    // these are aux output of the born forward modeling
+    born_para.outputBackgroundWfl=false;
+    if (sf_getstring("bwfl")){
+      Fbwfl = sf_output("bwfl");  /* background wavefield*/
+      born_para.outputBackgroundWfl=true;
+    }
+    else{
+      born_para.Fbwfl = sf_tempfile(&(born_para.bckwflfilename),"w+");
+    }
+
+    born_para.outputBackgroundData=false;
+    if (sf_getstring("bdat")){
+      Fbdat = sf_output("bdat");  /* background data*/
+      born_para.outputBackgroundData=true;
+    }
+
     born_para.outputScatteredWfl=false;
     if (sf_getstring("swfl")){
       Fswfl = sf_output("swfl");  /* scattered wavefield*/
       born_para.outputScatteredWfl=true;
+    }
+    else{
+      born_para.Fswfl = sf_tempfile(&(born_para.sctwflfilename),"w+");
     }
 
   break;
@@ -201,13 +217,11 @@ int main(int argc, char* argv[])
     // FWD BORN OPERATOR
     born_para.inputVelPerturbation=true;
     Fvpert= sf_input ("vpert");  /* velocity perturbation */
-    vpert=true;
 
     born_para.inputDenPerturbation=false;
     if (sf_getstring("dpert")){
       Frpert= sf_input ("rpert");  /* density perturbation */
       born_para.inputDenPerturbation=true;
-      rpert=true;
     }
 
     // these are aux output of the born forward modeling
@@ -215,6 +229,9 @@ int main(int argc, char* argv[])
     if (sf_getstring("bwfl")){
       Fbwfl = sf_output("bwfl");  /* background wavefield*/
       born_para.outputBackgroundWfl=true;
+    }
+    else{
+      born_para.Fbwfl = sf_tempfile(&(born_para.bckwflfilename),"w+");
     }
 
     born_para.outputBackgroundData=false;
@@ -317,10 +334,10 @@ int main(int argc, char* argv[])
   sf_axis axVelPert[2];
   sf_axis axDenPert[2];
   sf_axis axScData[2];
-  if (!in_para.adj){
+  if (in_para.adj==FWD){
     // FWD BORN OPERATOR
 
-    if (vpert){
+    if (Fvpert){
       sf_warning("VELOCITY PERTURBATION model axes..");
       axVelPert[0] = sf_iaxa(Fvpert,1);
       axVelPert[1] = sf_iaxa(Fvpert,2);
@@ -337,7 +354,7 @@ int main(int argc, char* argv[])
 
     }
 
-    if (rpert){
+    if (Frpert){
       sf_warning("DENSITY PERTURBATION model axes..");
       axDenPert[0] = sf_iaxa(Frpert,1);
       axDenPert[1] = sf_iaxa(Frpert,2);
@@ -410,7 +427,7 @@ int main(int argc, char* argv[])
                                 acq->dt);
   sf_setlabel(axTimeData,"time");
   sf_setunit(axTimeData,"s");
-  if (!in_para.adj){
+  if (in_para.adj==FWD){
     // WAVEFIELD HEADERS
     if (born_para.outputBackgroundWfl){
       sf_oaxa(Fbwfl,axVel[0],1);
@@ -434,6 +451,22 @@ int main(int argc, char* argv[])
   }
   else{
     // WAVEFIELD HEADERS
+    if (born_para.outputBackgroundWfl){
+      sf_oaxa(Fbwfl,axVel[0],1);
+      sf_oaxa(Fbwfl,axVel[1],2);
+      sf_oaxa(Fbwfl,axTimeWfl,3);
+    }
+    if (born_para.outputScatteredWfl){
+      sf_oaxa(Fswfl,axVel[0],1);
+      sf_oaxa(Fswfl,axVel[1],2);
+      sf_oaxa(Fswfl,axTimeWfl,3);
+    }
+    // DATA HEADERS
+    if (born_para.outputBackgroundData){
+        sf_oaxa(Fbdat,axRec[1],1);
+        sf_oaxa(Fbdat,axTimeData,2);
+    }
+
     sf_axis axPert[2];
     axPert[0] = sf_maxa(sf_n(axVel[0]),
                         sf_o(axVel[0]),
@@ -469,7 +502,10 @@ int main(int argc, char* argv[])
   }
 
   //rewind the source wavefield
-  sf_seek(wfl->Fwfl,0,SEEK_SET);
+  if (born_para.outputBackgroundWfl)
+    sf_seek(wfl->Fwfl,0,SEEK_SET);
+  else
+    fseek((FILE*) born_para.Fbwfl,0, SEEK_SET);
 
   // reset the wavefields
   reset_wfl(wfl);
@@ -479,56 +515,65 @@ int main(int argc, char* argv[])
   /*                  BORN OPERATOR                             */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-//  if (!in_para.adj){
-//    start_t=clock();
-//    // FWD BORN MODELING: model pert -> wfl
-//    if (in_para.verb) sf_warning("FWD Born operator..");
-//
-//    // prepare the born sources
-//    make_born_sources_2d(wfl,mod,acq);
-//
-//    // extrapolate secondary sources
-//    bornfwdextrap2d(wfl,acq,mod);
-//    end_t = clock();
-//  }
-//  else{
-//    start_t=clock();
-//    // ADJ BORN MODELING: wfl -> model pert
-//    if (in_para.verb) sf_warning("Adjoint Born operator..");
-//
-//    // extrapolate data
-//    bornadjextrap2d(wfl,acq,mod);
-//
-//    //rewind the scattered wavefield
-//    sf_seek(wfl->Fswfl,0,SEEK_SET);
-//
-//    // prepare the born sources
-//    make_born_sources_2d(wfl,mod,acq);
-//
-//    // stack wavefields
-//    stack_wfl_2d(Fvpert,Frpert,wfl,mod,acq);
-//
-//    end_t = clock();
-//  }
-//  if (in_para.verb){
-//    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-//    sf_warning("Total time taken by CPU: %g", total_t );
-//  }
-//
+  if (in_para.adj==FWD){
+    start_t=clock();
+    // FWD BORN MODELING: model pert -> wfl
+    if (in_para.verb) sf_warning("FWD Born operator..");
+
+    // prepare the born sources
+    make_born_sources_2d(wfl,mod,acq,born_para);
+
+    // extrapolate secondary sources
+    bornfwdextrap2d(wfl,acq,mod);
+    end_t = clock();
+  }
+  else{
+    start_t=clock();
+    // ADJ BORN MODELING: wfl -> model pert
+    if (in_para.verb) sf_warning("Adjoint Born operator..");
+
+    // extrapolate data
+    bornadjextrap2d(wfl,acq,mod,born_para);
+
+    //rewind the scattered wavefield
+    if (born_para.outputScatteredWfl)
+      sf_seek(wfl->Fswfl,0,SEEK_SET);
+    else
+      fseek(born_para.Fswfl,0,SEEK_SET);
+
+    // prepare the born sources
+    make_born_sources_2d(wfl,mod,acq,born_para);
+
+    // stack wavefields
+    stack_wfl_2d(Fvpert,Frpert,wfl,mod,acq,born_para);
+
+    end_t = clock();
+  }
+  if (in_para.verb){
+    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+    sf_warning("Total time taken by CPU: %g", total_t );
+  }
+
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
   /*                            FREE MEMORY                       */
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
   if (in_para.verb) sf_warning("Free memory..");
+  if (in_para.verb) sf_warning("Wavefields structure..");
   clear_born_wfl_2d(wfl);
   free(wfl);
-
+  if (in_para.verb) sf_warning("Acquisition structure..");
   clear_acq_2d(acq);
   free(acq);
 
+  if (in_para.verb) sf_warning("Model structure..");
   clear_born_model_2d(mod);
   free(mod);
+
+  if (in_para.verb) sf_warning("Temporary files..");
+  if (!born_para.outputBackgroundWfl) remove(born_para.bckwflfilename);
+  if (!born_para.outputScatteredWfl) remove(born_para.sctwflfilename);
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
