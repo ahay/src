@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfpow', 'sfmutter', 'sfscale', 'sfwindow', 'sfgrey', 'sfvscan', 'sfpick', 'sfnmo', 'sfcp', 'sfnoise', 'sfheadersort', 'sfspray', 'sfsmooth', 'sftransp', 'sfmf', 'sfmath', 'sfadd', 'sfbandpass', 'sfwiggle', 'sfput', 'sfinmo', 'sfdip', 'sfpwspray']
+data=['data/rad/cmp807_raw.HH', 'data/haskell/mo_supp.HH']
+size=    8108368
