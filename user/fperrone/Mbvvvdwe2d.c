@@ -173,6 +173,42 @@ int main(int argc, char* argv[])
   Frec = sf_input ("rec");  /* receivers */
 
   switch(in_para.adj){
+  case FWD:
+    // FWD BORN OPERATOR
+    born_para.inputVelPerturbation=true;
+    Fvpert= sf_input ("vpert");  /* velocity perturbation */
+
+    born_para.inputDenPerturbation=false;
+    if (sf_getstring("rpert")){
+      Frpert= sf_input ("rpert");  /* density perturbation */
+      born_para.inputDenPerturbation=true;
+    }
+
+    // these are aux output of the born forward modeling
+    born_para.outputBackgroundWfl=false;
+    if (sf_getstring("bwfl")){
+      Fbwfl = sf_output("bwfl");  /* background wavefield*/
+      born_para.outputBackgroundWfl=true;
+    }
+    else{
+      born_para.Fbwfl = sf_tempfile(&(born_para.bckwflfilename),"w+");
+    }
+
+    born_para.outputBackgroundData=false;
+    if (sf_getstring("bdat")){
+      Fbdat = sf_output("bdat");  /* background data*/
+      born_para.outputBackgroundData=true;
+    }
+
+    born_para.outputScatteredWfl=false;
+    if (sf_getstring("swfl")){
+      Fswfl = sf_output("swfl");  /* scattered wavefield*/
+      born_para.outputScatteredWfl=true;
+    }
+
+    // this is the output of the born forward modeling
+    Fsdat = sf_output("out");  /* scattered data*/
+    break;
   case ADJ:
     // ADJ BORN OPERATOR
 
@@ -213,41 +249,6 @@ int main(int argc, char* argv[])
     }
 
   break;
-  case FWD:
-    // FWD BORN OPERATOR
-    born_para.inputVelPerturbation=true;
-    Fvpert= sf_input ("vpert");  /* velocity perturbation */
-
-    born_para.inputDenPerturbation=false;
-    if (sf_getstring("dpert")){
-      Frpert= sf_input ("rpert");  /* density perturbation */
-      born_para.inputDenPerturbation=true;
-    }
-
-    // these are aux output of the born forward modeling
-    born_para.outputBackgroundWfl=false;
-    if (sf_getstring("bwfl")){
-      Fbwfl = sf_output("bwfl");  /* background wavefield*/
-      born_para.outputBackgroundWfl=true;
-    }
-    else{
-      born_para.Fbwfl = sf_tempfile(&(born_para.bckwflfilename),"w+");
-    }
-
-    born_para.outputBackgroundData=false;
-    if (sf_getstring("bdat")){
-      Fbdat = sf_output("bdat");  /* background data*/
-      born_para.outputBackgroundData=true;
-    }
-
-    born_para.outputScatteredWfl=false;
-    if (sf_getstring("swfl")){
-      Fswfl = sf_output("swfl");  /* scattered wavefield*/
-      born_para.outputScatteredWfl=true;
-    }
-
-    // this is the output of the born forward modeling
-    Fsdat = sf_output("out");  /* scattered data*/
   }
 
   /*------------------------------------------------------------*/
@@ -521,7 +522,8 @@ int main(int argc, char* argv[])
     if (in_para.verb) sf_warning("FWD Born operator..");
 
     // prepare the born sources
-    make_born_sources_2d(wfl,mod,acq,born_para);
+    make_born_velocity_sources_2d(wfl,mod,acq,born_para);
+    make_born_pressure_sources_2d(wfl,mod,acq,born_para);
 
     // extrapolate secondary sources
     bornfwdextrap2d(wfl,acq,mod);
@@ -542,7 +544,7 @@ int main(int argc, char* argv[])
       fseek(born_para.Fswfl,0,SEEK_SET);
 
     // prepare the born sources
-    make_born_sources_2d(wfl,mod,acq,born_para);
+    make_born_pressure_sources_2d(wfl,mod,acq,born_para);
 
     // stack wavefields
     stack_wfl_2d(Fvpert,Frpert,wfl,mod,acq,born_para);

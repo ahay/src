@@ -140,6 +140,20 @@ struct born_setup_struct{
 };
 /*^*/
 
+#define NOP 3 /* derivative operator half-size */
+/*^*/
+
+#define IDX2D(i1,i2)((i1) + (i2)*n1)
+/*^*/
+
+/* LS coefficients */
+#define C1 +1.1989919
+/*^*/
+#define C2 -0.08024696
+/*^*/
+#define C3 +0.00855954
+/*^*/
+
 #endif
 
 void init_param(in_para_struct_t* par)
@@ -279,17 +293,73 @@ void prepare_born_model_2d(mod_struct_t * const mod,
   memset(mod->velpert,0,n12*sizeof(float));
   memset(mod->denpert,0,n12*sizeof(float));
 
-  if (!in_para.adj){
-    //FWD
-    if (Fvpert)
-      sf_floatread(mod->velpert,n12,Fvpert);
-
-    if (Frpert)
-      sf_floatread(mod->denpert,n12,Frpert);
+  if (in_para.adj==FWD){
+    if (Fvpert) sf_floatread(mod->velpert,n12,Fvpert);
+    if (Frpert) sf_floatread(mod->denpert,n12,Frpert);
   }
+
 }
 
-void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
+void make_born_velocity_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
+/*< Make the born sources for FWD born modelling>*/
+{
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+
+  long nt = acq->ntdat;
+  float d1 = mod->d1;
+  float d2 = mod->d2;
+
+  wfl->Fprgrd = sf_tempfile(&(wfl->prtmpfilename),"w+");
+
+  float *pp = sf_floatalloc(n1*n2);
+  float *v1a= sf_floatalloc(n1*n2);
+  float *v2a= sf_floatalloc(n1*n2);
+
+  for (long it=0; it<nt; it++){
+    // read the background wavefield
+    if (para.outputBackgroundWfl)
+      sf_floatread(pp,n1*n2,wfl->Fwfl);
+    else
+      fread(pp,sizeof(float),n1*n2,para.Fbwfl);
+
+    for (long i2=0; i2<n2; i2++){
+      for (long i1=2; i1<n1-3; i1++){
+        v1a[i1+i2*n1] = (C1*(pp[i1+1+i2*n1] - pp[i1  +i2*n1])+
+                         C2*(pp[i1+2+i2*n1] - pp[i1-1+i2*n1])+
+                         C3*(pp[i1+3+i2*n1] - pp[i1-2+i2*n1]))/d1;
+      }
+    }
+
+    for (long i2=2; i2<n2-3; i2++){
+      for (long i1=0; i1<n1; i1++){
+        v2a[i1+i2*n1] = (C1*(pp[i1+(i2+1)*n1] - pp[i1+i2    *n1])+
+                         C2*(pp[i1+(i2+2)*n1] - pp[i1+(i2-1)*n1])+
+                         C3*(pp[i1+(i2+3)*n1] - pp[i1+(i2-2)*n1]))/d2;
+      }
+    }
+
+    fwrite(v1a,sizeof(float),n1*n2,wfl->Fprgrd);
+    fwrite(v2a,sizeof(float),n1*n2,wfl->Fprgrd);
+
+  }
+
+  rewind(wfl->Fprgrd);
+  // read the background wavefield
+  if (para.outputBackgroundWfl)
+    sf_seek(wfl->Fwfl,0,SEEK_SET);
+  else
+    rewind(para.Fbwfl);
+
+
+  free(pp);
+  free(v1a);
+  free(v2a);
+
+
+}
+
+void make_born_pressure_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
 /*< Make the born sources for FWD born modelling>*/
 {
   long n1 = mod->n1;
@@ -310,7 +380,6 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
     fread(snapc,sizeof(float),n1*n2,para.Fbwfl);
 
   for (long it=0; it<nt-1; it++){
-
     // read the background wavefield
     if (para.outputBackgroundWfl)
       sf_floatread(snapn,n1*n2,wfl->Fwfl);
@@ -330,7 +399,6 @@ void make_born_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, ac
     snapc = snapn;
     snapn = tmp;
   }
-
   memset(wfl->bwfl,0,n1*n2*sizeof(float));
   fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fpvdiv);
 
@@ -687,4 +755,6 @@ void clear_born_wfl_2d(wfl_struct_t *wfl)
 
   if (wfl->Fpvdiv)
     remove(wfl->pvtmpfilename);
+  if (wfl->Fprgrd)
+    remove(wfl->prtmpfilename);
 }

@@ -1,21 +1,6 @@
 #include <rsf.h>
 #include "prep_utils.h"
 
-#ifndef _KERNELS_H
-
-#define NOP 3 /* derivative operator half-size */
-/*^*/
-
-#define IDX2D(i1,i2)((i1) + (i2)*n1)
-/*^*/
-
-#endif
-
-/* LS coefficients */
-#define C1 +1.1989919
-#define C2 -0.08024696
-#define C3 +0.00855954
-
 static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
 {
 
@@ -302,7 +287,34 @@ static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_
 
 }
 
-static void injectBornVpSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
+static void injectBornVelocitySource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long n12 = modN1*modN2;
+  long nb = wfl->nabc;
+
+  float dt = acq->dt;
+
+  fread(wfl->v1a,sizeof(float),n12,wfl->Fprgrd);
+  fread(wfl->v2a,sizeof(float),n12,wfl->Fprgrd);
+
+  for (long i2=0; i2<modN2; i2++){
+    for (long i1=0; i1<modN1; i1++){
+      long simIdx = (i1+nb) + (i2+nb)*wfl->simN1;
+      long modIdx = i1 + i2*modN1;
+
+      float dr = mod->denpert[modIdx];
+      float rh = mod->dmod[modIdx];
+      float rp = dr*dt/(rh*rh);
+
+      wfl->v1c[simIdx] += rp*wfl->v1a[modIdx];
+      wfl->v2c[simIdx] += rp*wfl->v2a[modIdx];
+    }
+  }
+
+}
+
+static void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
 
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
@@ -319,11 +331,13 @@ static void injectBornVpSource(wfl_struct_t * const wfl, mod_struct_t const *mod
       long modIdx = i1 + i2*modN1;
 
       float const dv = mod->velpert[modIdx];
+      float const dr = mod->denpert[modIdx];
       float const vc = mod->vmod[modIdx];
       float const rh = mod->dmod[modIdx];
-      float const vp= 2.f*vc*dv*rh*dt;
+      float const vp= 2.f*vc*dv*rh;
+      float const rp= vc*vc*dr;
 
-      wfl->pc[simIdx] += vp*wfl->bwfl[modIdx];
+      wfl->pc[simIdx] += (vp+rp)*dt*wfl->bwfl[modIdx];
 
     }
   }
@@ -530,8 +544,9 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
     bool save = (wfl->Fswfl);
 
     velupd(wfl,mod,acq,FWD);
+    injectBornVelocitySource(wfl,mod,acq,it);
     presupd(wfl,mod,acq,FWD);
-    injectBornVpSource(wfl,mod,acq,it);
+    injectBornPressureSource(wfl,mod,acq,it);
 
     if (wfl->freesurf)
       applyFreeSurfaceBC(wfl);
