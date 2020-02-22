@@ -402,7 +402,12 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl, mod_struct_t const 
   memset(wfl->bwfl,0,n1*n2*sizeof(float));
   fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fpvdiv);
 
+  // rewind
   rewind(wfl->Fpvdiv);
+  if (para.outputBackgroundWfl)
+    sf_seek(wfl->Fwfl,0,SEEK_SET);
+  else
+    rewind(para.Fbwfl);
 
   free(snapc);
   free(snapn);
@@ -420,6 +425,10 @@ void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_
 
   float *srcwfl = sf_floatalloc(n1*n2*nt);
   float *tmp = sf_floatalloc(n1*n2);
+  float *vimg = sf_floatalloc(n1*n2);
+
+  // set
+  memset(vimg,0,n1*n2*sizeof(float));
 
   fread(srcwfl,sizeof(float),n1*n2*nt,wfl->Fpvdiv);
   for (long it=0; it<nt; it++){
@@ -431,25 +440,19 @@ void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_
       fread(tmp,sizeof(float),n1*n2,para.Fswfl);
 
     for (long i=0; i<n1*n2; i++)
-      wp[i] = wp[i]*tmp[i];
-
-  }
-
-  //stack the wavefield
-  memset(tmp,0,n1*n2*sizeof(float));
-  for (long it=0; it<nt; it++){
-    float *wp = srcwfl + it*n1*n2;
+      tmp[i] *= wp[i];
 
     for (long i=0; i<n1*n2; i++){
       float v = mod->vmod[i];
       float r = mod->dmod[i];
-      tmp[i]+= 2.f*v*r*wp[i]*dt;
+      vimg[i] += 2.f*v*r*tmp[i]*dt;
     }
   }
 
-  sf_floatwrite(tmp,n1*n2,Fvpert);
+  sf_floatwrite(vimg,n1*n2,Fvpert);
 
   free(srcwfl);
+  free(vimg);
   free(tmp);
 
 }
