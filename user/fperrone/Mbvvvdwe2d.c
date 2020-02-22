@@ -218,8 +218,8 @@ int main(int argc, char* argv[])
     Fvpert= sf_output ("out");  /* default output: velocity perturbation image */
 
     born_para.outputDenPertImage=false;
-    if (sf_getstring("dpert")){
-      Frpert= sf_input ("rpert");  /* density perturbation */
+    if (sf_getstring("rpert")){
+      Frpert= sf_output ("rpert");  /* density perturbation */
       born_para.outputDenPertImage=true;
     }
 
@@ -544,10 +544,11 @@ int main(int argc, char* argv[])
       fseek(born_para.Fswfl,0,SEEK_SET);
 
     // prepare the born sources
+    make_born_velocity_sources_2d(wfl,mod,acq,born_para);
     make_born_pressure_sources_2d(wfl,mod,acq,born_para);
 
     // stack wavefields
-    stack_wfl_2d(Fvpert,Frpert,wfl,mod,acq,born_para);
+    stack_pressure_part_2d(Fvpert,Frpert,wfl,mod,acq,born_para);
 
     end_t = clock();
   }

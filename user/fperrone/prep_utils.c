@@ -414,7 +414,14 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl, mod_struct_t const 
 
 }
 
-void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
+void stack_velocity_part_2d(sf_file Frpert, wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
+/*< project the wavefields in the born model space >*/
+{
+  if (!Frpert)
+    return;
+}
+
+void stack_pressure_part_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
 /*< project the wavefields in the born model space>*/
 {
   long nt = acq->ntdat;
@@ -450,6 +457,37 @@ void stack_wfl_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_
   }
 
   sf_floatwrite(vimg,n1*n2,Fvpert);
+
+  if (Frpert){
+
+    if (para.outputScatteredWfl)
+      sf_seek(wfl->Fswfl,0,SEEK_SET);
+    else
+      rewind(para.Fswfl);
+
+    float *rimg = sf_floatalloc(n1*n2);
+    memset(rimg,0,n1*n2*sizeof(float));
+
+    for (long it=0; it<nt; it++){
+      float *wp = srcwfl + (nt-1-it)*n1*n2;
+
+      if (para.outputScatteredWfl)
+        sf_floatread(tmp,n1*n2,wfl->Fswfl);
+      else
+        fread(tmp,sizeof(float),n1*n2,para.Fswfl);
+
+      for (long i=0; i<n1*n2; i++)
+        tmp[i] *= wp[i];
+
+      for (long i=0; i<n1*n2; i++){
+        float v = mod->vmod[i];
+        rimg[i] += v*v*tmp[i]*dt;
+      }
+    }
+
+    sf_floatwrite(rimg,n1*n2,Frpert);
+    free(rimg);
+  }
 
   free(srcwfl);
   free(vimg);
