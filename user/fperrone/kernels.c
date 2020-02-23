@@ -362,7 +362,7 @@ static void swapwfl(wfl_struct_t* wfl)
 }
 
 
-static void extract_wfl_2d(wfl_struct_t* wfl)
+static void extract_vel_wfl_2d(wfl_struct_t* wfl, int comp)
 {
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
@@ -370,15 +370,23 @@ static void extract_wfl_2d(wfl_struct_t* wfl)
   long simN1 = wfl->simN1;
 
   // copy the write chunk of wavefield
-  for (long i2=0; i2<modN2; i2++)
-    memcpy(wfl->bwfl+i2*modN1,wfl->pc+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
+  switch (comp){
+  case 1:
+    for (long i2=0; i2<modN2; i2++)
+      memcpy(wfl->bwfl+i2*modN1,wfl->v1c+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
+    break;
+  case 2:
+    for (long i2=0; i2<modN2; i2++)
+      memcpy(wfl->bwfl+i2*modN1,wfl->v2c+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
+    break;
+  }
 
 }
 
-static void extract_scat_wfl_2d(wfl_struct_t * const wfl){
+static void extract_pres_wfl_2d(wfl_struct_t * const wfl){
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
-  long nabc = wfl->nabc;
+  long nabc  = wfl->nabc;
   long simN1 = wfl->simN1;
 
   // copy the write chunk of wavefield
@@ -487,7 +495,7 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
     // write the wavefield out
     if (save){
-      extract_wfl_2d(wfl);
+      extract_pres_wfl_2d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
     }
     // extract the data at the receiver locations
@@ -519,7 +527,7 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
       applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
-    extract_wfl_2d(wfl);
+    extract_pres_wfl_2d(wfl);
 
     if (para.outputBackgroundWfl)
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
@@ -537,6 +545,9 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
 void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
 /*< kernel for Born forward extrapolation >*/
 {
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long nelem = modN1*modN2;
   int nt = acq->ntdat;
 
   // loop over time
@@ -552,7 +563,10 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
       applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
-    if (save) extract_scat_wfl_2d(wfl);
+    if (save){
+      extract_pres_wfl_2d(wfl);
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
+    }
 
     // extract the data at the receiver locations
     extract_scat_dat_2d(wfl,acq);
@@ -584,7 +598,7 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
     // write the wavefield out
     if (save) {
-      extract_wfl_2d(wfl);
+      extract_pres_wfl_2d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
     }
 
@@ -593,19 +607,28 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
 
 }
 
-void bornadjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod, born_setup_struct_t para)
+void bornadjextrap2d(wfl_struct_t * wfl,
+                     acq_struct_t const * acq,
+                     mod_struct_t const * mod,
+                     born_setup_struct_t *para)
 /*< kernel for Born forward extrapolation >*/
 {
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
   long nelem = modN1*modN2;
   int nt = acq->ntdat;
-  bool save = para.outputScatteredWfl;
+  bool save = para->outputScatteredWfl;
   // loop over time
   for (int it=0; it<nt; it++){
 
 
     velupd(wfl,mod,acq,ADJ);
+    if (para->outputDenPertImage){
+      extract_vel_wfl_2d(wfl,1);
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv1);
+      extract_vel_wfl_2d(wfl,2);
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv2);
+    }
     presupd(wfl,mod,acq,ADJ);
     injectPdata(wfl,mod,acq,it);
 
@@ -613,11 +636,11 @@ void bornadjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
       applyFreeSurfaceBC(wfl);
 
     // write the wavefield out
-    extract_scat_wfl_2d(wfl);
+    extract_pres_wfl_2d(wfl);
     if (save)
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
     else
-      fwrite(wfl->bwfl,sizeof(float),nelem,para.Fswfl);
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fswfl);
 
     swapwfl(wfl);
   }

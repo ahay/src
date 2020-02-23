@@ -382,10 +382,14 @@ int main(int argc, char* argv[])
   if (in_para.verb) sf_warning("Start Extrapolation..");
   start_t=clock();
 
-  if (!in_para.adj)
+  switch (in_para.adj){
+  case FWD:
     fwdextrap2d(wfl,acq,mod);
-  else
+    break;
+  case ADJ:
     adjextrap2d(wfl,acq,mod);
+    break;
+  }
 
   end_t = clock();
 

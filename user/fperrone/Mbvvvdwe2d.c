@@ -221,6 +221,8 @@ int main(int argc, char* argv[])
     if (sf_getstring("rpert")){
       Frpert= sf_output ("rpert");  /* density perturbation */
       born_para.outputDenPertImage=true;
+      born_para.Fpv1 = sf_tempfile(&(born_para.pv1wflfilename),"w+");
+      born_para.Fpv2 = sf_tempfile(&(born_para.pv2wflfilename),"w+");
     }
 
     // these are aux output of the born forward modeling
@@ -522,8 +524,8 @@ int main(int argc, char* argv[])
     if (in_para.verb) sf_warning("FWD Born operator..");
 
     // prepare the born sources
-    make_born_velocity_sources_2d(wfl,mod,acq,born_para);
-    make_born_pressure_sources_2d(wfl,mod,acq,born_para);
+    make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
+    make_born_pressure_sources_2d(wfl,mod,acq,&born_para);
 
     // extrapolate secondary sources
     bornfwdextrap2d(wfl,acq,mod);
@@ -535,20 +537,24 @@ int main(int argc, char* argv[])
     if (in_para.verb) sf_warning("Adjoint Born operator..");
 
     // extrapolate data
-    bornadjextrap2d(wfl,acq,mod,born_para);
+    bornadjextrap2d(wfl,acq,mod,&born_para);
 
+    if (in_para.verb) sf_warning("rewind reconstructed wavefield..");
     //rewind the scattered wavefield
     if (born_para.outputScatteredWfl)
       sf_seek(wfl->Fswfl,0,SEEK_SET);
     else
       fseek(born_para.Fswfl,0,SEEK_SET);
 
+    if (in_para.verb) sf_warning("make secondary sources..");
     // prepare the born sources
-    make_born_velocity_sources_2d(wfl,mod,acq,born_para);
-    make_born_pressure_sources_2d(wfl,mod,acq,born_para);
+    make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
+    make_born_pressure_sources_2d(wfl,mod,acq,&born_para);
 
+    if (in_para.verb) sf_warning("stack..");
     // stack wavefields
-    stack_pressure_part_2d(Fvpert,Frpert,wfl,mod,acq,born_para);
+    stack_velocity_part_2d(Frpert,wfl,mod,acq,&born_para);
+    stack_pressure_part_2d(Fvpert,Frpert,wfl,mod,acq,&born_para);
 
     end_t = clock();
   }
@@ -577,6 +583,10 @@ int main(int argc, char* argv[])
   if (in_para.verb) sf_warning("Temporary files..");
   if (!born_para.outputBackgroundWfl) remove(born_para.bckwflfilename);
   if (!born_para.outputScatteredWfl) remove(born_para.sctwflfilename);
+  if (born_para.outputDenPertImage){
+    remove(born_para.pv1wflfilename);
+    remove(born_para.pv2wflfilename);
+  }
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/

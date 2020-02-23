@@ -137,6 +137,10 @@ struct born_setup_struct{
   FILE* Fbwfl;
   char* sctwflfilename;
   FILE* Fswfl;
+  char* pv1wflfilename; // to compute the density perturbation in the adjoint
+  char* pv2wflfilename;
+  FILE* Fpv1;
+  FILE* Fpv2;
 };
 /*^*/
 
@@ -300,9 +304,14 @@ void prepare_born_model_2d(mod_struct_t * const mod,
 
 }
 
-void make_born_velocity_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
+void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
+                                   mod_struct_t const * mod,
+                                   acq_struct_t const * acq,
+                                   born_setup_struct_t *para)
 /*< Make the born sources for FWD born modelling>*/
 {
+  sf_warning("PARTICLE VELOCITY secondary sources (pressure gradient)..");
+
   long n1 = mod->n1;
   long n2 = mod->n2;
 
@@ -318,10 +327,10 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl, mod_struct_t const 
 
   for (long it=0; it<nt; it++){
     // read the background wavefield
-    if (para.outputBackgroundWfl)
+    if (para->outputBackgroundWfl)
       sf_floatread(pp,n1*n2,wfl->Fwfl);
     else
-      fread(pp,sizeof(float),n1*n2,para.Fbwfl);
+      fread(pp,sizeof(float),n1*n2,para->Fbwfl);
 
     for (long i2=0; i2<n2; i2++){
       for (long i1=2; i1<n1-3; i1++){
@@ -346,10 +355,10 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl, mod_struct_t const 
 
   rewind(wfl->Fprgrd);
   // read the background wavefield
-  if (para.outputBackgroundWfl)
+  if (para->outputBackgroundWfl)
     sf_seek(wfl->Fwfl,0,SEEK_SET);
   else
-    rewind(para.Fbwfl);
+    rewind(para->Fbwfl);
 
 
   free(pp);
@@ -359,9 +368,14 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl, mod_struct_t const 
 
 }
 
-void make_born_pressure_sources_2d(wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
+void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
+                                   mod_struct_t const * mod,
+                                   acq_struct_t const * acq,
+                                   born_setup_struct_t * para)
 /*< Make the born sources for FWD born modelling>*/
 {
+  sf_warning("PRESSURE secondary sources (pressure gradient)..");
+
   long n1 = mod->n1;
   long n2 = mod->n2;
 
@@ -374,17 +388,17 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl, mod_struct_t const 
   float *snapn = sf_floatalloc(n1*n2);
 
   // read the background wavefield
-  if (para.outputBackgroundWfl)
+  if (para->outputBackgroundWfl)
     sf_floatread(snapc,n1*n2,wfl->Fwfl);
   else
-    fread(snapc,sizeof(float),n1*n2,para.Fbwfl);
+    fread(snapc,sizeof(float),n1*n2,para->Fbwfl);
 
   for (long it=0; it<nt-1; it++){
     // read the background wavefield
-    if (para.outputBackgroundWfl)
+    if (para->outputBackgroundWfl)
       sf_floatread(snapn,n1*n2,wfl->Fwfl);
     else
-      fread(snapn,sizeof(float),n1*n2,para.Fbwfl);
+      fread(snapn,sizeof(float),n1*n2,para->Fbwfl);
 
     // compute the divergence of the particle velocity from the pressure field
     for (long i=0; i<n1*n2; i++){
@@ -404,26 +418,89 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl, mod_struct_t const 
 
   // rewind
   rewind(wfl->Fpvdiv);
-  if (para.outputBackgroundWfl)
+  if (para->outputBackgroundWfl)
     sf_seek(wfl->Fwfl,0,SEEK_SET);
   else
-    rewind(para.Fbwfl);
+    rewind(para->Fbwfl);
 
   free(snapc);
   free(snapn);
 
 }
 
-void stack_velocity_part_2d(sf_file Frpert, wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
+void stack_velocity_part_2d(sf_file Frpert,
+                            wfl_struct_t * const wfl,
+                            mod_struct_t const * mod,
+                            acq_struct_t const * acq,
+                            born_setup_struct_t *para)
 /*< project the wavefields in the born model space >*/
 {
+  sf_warning("PARTICLE VELOCITY component of the density perturbation..");
+
   if (!Frpert)
     return;
+
+  long nt = acq->ntdat;
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+
+  float dt = acq->dt;
+
+  float* v1a = sf_floatalloc(n1*n2);
+  float* v2a = sf_floatalloc(n1*n2);
+  float* v1r = sf_floatalloc(n1*n2*nt); // back-propagated particle velocities
+  float* v2r = sf_floatalloc(n1*n2*nt);
+  float *rimg = sf_floatalloc(n1*n2);
+  memset(rimg,0,n1*n2*sizeof(float));
+
+  rewind(para->Fpv1);
+  rewind(para->Fpv2);
+
+  fread(v1r,sizeof(float),n1*n2*nt,para->Fpv1);
+  fread(v2r,sizeof(float),n1*n2*nt,para->Fpv2);
+
+  for (int it=0; it<nt; it++){
+    float* w1p = v1r + (nt-1-it)*n1*n2;
+    float* w2p = v2r + (nt-1-it)*n1*n2;
+
+    // source side gradient of pressure
+    fread(v1a,sizeof(float),n1*n2,wfl->Fprgrd);
+    fread(v2a,sizeof(float),n1*n2,wfl->Fprgrd);
+
+    for (long i=0; i<n1*n2; i++){
+      v1a[i] *= w1p[i]; // flipping time flips the sign of the velocity
+      v2a[i] *= w2p[i];
+    }
+
+    for (long i=0; i<n1*n2; i++){
+      float r = mod->dmod[i];
+      rimg[i] += -dt/(r*r)*(v1a[i]+v2a[i]);
+    }
+
+  }
+
+  rewind(para->Fpv1);
+  fwrite(rimg,sizeof(float),n1*n2,para->Fpv1);
+  rewind(para->Fpv1);
+
+  free(v1a);
+  free(v2a);
+  free(v1r);
+  free(v2r);
+  free(rimg);
+
 }
 
-void stack_pressure_part_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const wfl, mod_struct_t const * mod, acq_struct_t const * acq, born_setup_struct_t para)
+void stack_pressure_part_2d(sf_file Fvpert,
+                            sf_file Frpert,
+                            wfl_struct_t * const wfl,
+                            mod_struct_t const * mod,
+                            acq_struct_t const * acq,
+                            born_setup_struct_t *para)
 /*< project the wavefields in the born model space>*/
 {
+  sf_warning("PRESSURE component of the velocity and density perturbations..");
+
   long nt = acq->ntdat;
   long n1 = mod->n1;
   long n2 = mod->n2;
@@ -441,10 +518,10 @@ void stack_pressure_part_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const
   for (long it=0; it<nt; it++){
     float *wp = srcwfl + (nt-1-it)*n1*n2;
 
-    if (para.outputScatteredWfl)
+    if (para->outputScatteredWfl)
       sf_floatread(tmp,n1*n2,wfl->Fswfl);
     else
-      fread(tmp,sizeof(float),n1*n2,para.Fswfl);
+      fread(tmp,sizeof(float),n1*n2,para->Fswfl);
 
     for (long i=0; i<n1*n2; i++)
       tmp[i] *= wp[i];
@@ -458,23 +535,23 @@ void stack_pressure_part_2d(sf_file Fvpert, sf_file Frpert, wfl_struct_t * const
 
   sf_floatwrite(vimg,n1*n2,Fvpert);
 
-  if (Frpert){
+  if (para->outputDenPertImage){
 
-    if (para.outputScatteredWfl)
+    if (para->outputScatteredWfl)
       sf_seek(wfl->Fswfl,0,SEEK_SET);
     else
-      rewind(para.Fswfl);
+      rewind(para->Fswfl);
 
     float *rimg = sf_floatalloc(n1*n2);
-    memset(rimg,0,n1*n2*sizeof(float));
+    fread(rimg,sizeof(float),n1*n2,para->Fpv1);
 
     for (long it=0; it<nt; it++){
       float *wp = srcwfl + (nt-1-it)*n1*n2;
 
-      if (para.outputScatteredWfl)
+      if (para->outputScatteredWfl)
         sf_floatread(tmp,n1*n2,wfl->Fswfl);
       else
-        fread(tmp,sizeof(float),n1*n2,para.Fswfl);
+        fread(tmp,sizeof(float),n1*n2,para->Fswfl);
 
       for (long i=0; i<n1*n2; i++)
         tmp[i] *= wp[i];
