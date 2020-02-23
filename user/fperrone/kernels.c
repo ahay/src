@@ -219,7 +219,10 @@ static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t con
 }
 
 
-static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it)
+static void injectPsource(wfl_struct_t* wfl,
+                          mod_struct_t const * mod,
+                          acq_struct_t const * acq,
+                          long it)
 {
 
   long nsou = acq->ns;
@@ -234,6 +237,8 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
   float dt = acq->dt;
   float scale = dt/(modD1*modD2);
 
+  float * wf = wfl->pc;
+
   for (long isou=0; isou<nsou; isou++){
     float xs = acq->scoord[isou*2];
     float zs = acq->scoord[isou*2+1];
@@ -247,7 +252,7 @@ static void injectPsource(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struc
       const float hicks2 = acq->hicksSou2[jh+isou*8];
       for (int i=-3,ih=0; i<=4; i++,ih++){
         const float hc = acq->hicksSou1[ih+isou*8]*hicks2;
-        wfl->pc[idx + i + N1*j] += hc*force;
+        wf[idx + i + N1*j] += hc*force;
       }
     }
 
@@ -517,7 +522,6 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
 
   // loop over time
   for (int it=0; it<nt; it++){
-
 
     velupd(wfl,mod,acq,FWD);
     presupd(wfl,mod,acq,FWD);

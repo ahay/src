@@ -127,8 +127,18 @@ int main(int argc, char* argv[])
   int nb;
 
   /* for benchmarking */
-  clock_t start_t, end_t;
-  float total_t;
+  clock_t start_bck_t, end_bck_t;
+  float total_bck_t=0;
+  clock_t start_fwd_t, end_fwd_t;
+  float total_fwd_t=0;
+  clock_t start_adj_t, end_adj_t;
+  float total_adj_t=0;
+  clock_t start_vsrc_t,end_vsrc_t;
+  clock_t start_psrc_t,end_psrc_t;
+  clock_t start_bextrap_t,end_bextrap_t;
+  float total_vsrc_t=0;
+  float total_psrc_t=0;
+  float total_bextrap_t=0;
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -495,20 +505,16 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   if (in_para.verb) sf_warning("Background wavefield extrapolation..");
-  start_t=clock();
+  start_bck_t=clock();
   bornbckwfl2d(wfl,acq,mod,born_para);
-  end_t = clock();
-
-  if (in_para.verb){
-    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-    sf_warning("Total time taken by CPU: %g", total_t );
-  }
+  end_bck_t = clock();
+  total_bck_t = (float)(end_bck_t - start_bck_t) / CLOCKS_PER_SEC;
 
   //rewind the source wavefield
   if (born_para.outputBackgroundWfl)
     sf_seek(wfl->Fwfl,0,SEEK_SET);
   else
-    fseek((FILE*) born_para.Fbwfl,0, SEEK_SET);
+    fseek(born_para.Fbwfl,0, SEEK_SET);
 
   // reset the wavefields
   reset_wfl(wfl);
@@ -519,20 +525,31 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   if (in_para.adj==FWD){
-    start_t=clock();
+    start_fwd_t=clock();
     // FWD BORN MODELING: model pert -> wfl
     if (in_para.verb) sf_warning("FWD Born operator..");
 
     // prepare the born sources
+    start_vsrc_t=clock();
     make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
+    end_vsrc_t=clock();
+    total_vsrc_t = (float)(end_vsrc_t - start_vsrc_t) / CLOCKS_PER_SEC;
+    start_psrc_t=clock();
     make_born_pressure_sources_2d(wfl,mod,acq,&born_para);
+    end_psrc_t=clock();
+    total_psrc_t = (float)(end_psrc_t - start_psrc_t) / CLOCKS_PER_SEC;
 
     // extrapolate secondary sources
+    start_bextrap_t=clock();
     bornfwdextrap2d(wfl,acq,mod);
-    end_t = clock();
+    end_bextrap_t=clock();
+    total_bextrap_t = (float)(end_bextrap_t - start_bextrap_t) / CLOCKS_PER_SEC;
+
+    end_fwd_t = clock();
+    total_fwd_t = (float)(end_fwd_t - start_fwd_t) / CLOCKS_PER_SEC;
   }
   else{
-    start_t=clock();
+    start_adj_t=clock();
     // ADJ BORN MODELING: wfl -> model pert
     if (in_para.verb) sf_warning("Adjoint Born operator..");
 
@@ -553,15 +570,13 @@ int main(int argc, char* argv[])
 
     if (in_para.verb) sf_warning("stack..");
     // stack wavefields
-    stack_velocity_part_2d(Frpert,wfl,mod,acq,&born_para);
+    stack_velocity_part_2d(wfl,mod,acq,&born_para);
     stack_pressure_part_2d(Fvpert,Frpert,wfl,mod,acq,&born_para);
 
-    end_t = clock();
+    end_adj_t = clock();
+    total_adj_t = (float)(end_adj_t - start_adj_t) / CLOCKS_PER_SEC;
   }
-  if (in_para.verb){
-    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-    sf_warning("Total time taken by CPU: %g", total_t );
-  }
+
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
@@ -604,6 +619,20 @@ int main(int argc, char* argv[])
   if (Fsdat!=NULL) sf_fileclose(Fsdat);
   if (Fbwfl!=NULL) sf_fileclose(Fbwfl);
   if (Fswfl!=NULL) sf_fileclose(Fswfl);
+
+  if (in_para.verb){
+    sf_warning("PROFILING: [CPU time] ");
+    sf_warning("Background wavefield extrapolation : %g", total_bck_t );
+    if (in_para.adj==FWD){
+      sf_warning("Born FWD operator : %g", total_fwd_t );
+      sf_warning("Make velocity secondary sources : %g", total_vsrc_t );
+      sf_warning("Make pressure secondary sources : %g", total_psrc_t );
+      sf_warning("Scattered wavefield extrapolation : %g", total_bextrap_t );
+    }
+    else
+      sf_warning("Born ADJ operator : %g", total_adj_t );
+  }
+
 
   exit (0);
 }

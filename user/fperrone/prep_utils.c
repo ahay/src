@@ -360,11 +360,9 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
   else
     rewind(para->Fbwfl);
 
-
   free(pp);
   free(v1a);
   free(v2a);
-
 
 }
 
@@ -374,7 +372,7 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
                                    born_setup_struct_t * para)
 /*< Make the born sources for FWD born modelling>*/
 {
-  sf_warning("PRESSURE secondary sources (pressure gradient)..");
+  sf_warning("PRESSURE secondary sources (particle velocity divergence)..");
 
   long n1 = mod->n1;
   long n2 = mod->n2;
@@ -428,8 +426,7 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
 
 }
 
-void stack_velocity_part_2d(sf_file Frpert,
-                            wfl_struct_t * const wfl,
+void stack_velocity_part_2d(wfl_struct_t * const wfl,
                             mod_struct_t const * mod,
                             acq_struct_t const * acq,
                             born_setup_struct_t *para)
@@ -437,7 +434,7 @@ void stack_velocity_part_2d(sf_file Frpert,
 {
   sf_warning("PARTICLE VELOCITY component of the density perturbation..");
 
-  if (!Frpert)
+  if (!para->outputDenPertImage)
     return;
 
   long nt = acq->ntdat;
@@ -468,13 +465,13 @@ void stack_velocity_part_2d(sf_file Frpert,
     fread(v2a,sizeof(float),n1*n2,wfl->Fprgrd);
 
     for (long i=0; i<n1*n2; i++){
-      v1a[i] *= w1p[i]; // flipping time flips the sign of the velocity
-      v2a[i] *= w2p[i];
+      v1a[i] *= -1.*w1p[i]; // flipping time flips the sign of the velocity
+      v2a[i] *= -1.*w2p[i];
     }
 
     for (long i=0; i<n1*n2; i++){
       float r = mod->dmod[i];
-      rimg[i] += -dt/(r*r)*(v1a[i]+v2a[i]);
+      rimg[i] += dt/(r*r)*(v1a[i]+v2a[i]);
     }
 
   }
@@ -622,18 +619,18 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
   acq->ot = sf_o(axwav[1]);
   acq->ntdat = (acq->nt/para.jsnap)*para.jsnap;
   acq->ntsnap= (acq->nt+para.jsnap-1)/para.jsnap;
-  sf_warning("Ntsnap = %d\n",acq->ntsnap);
-  sf_warning("Ntdat  = %d\n",acq->ntdat);
+  sf_warning("\t Number of wavefield snapshots = %d",acq->ntsnap);
+  sf_warning("\t Number of data timesteps simulated = %d",acq->ntdat);
 
   long nsouwav = sf_n(axwav[0]);
   long nwavsamp = nsouwav*acq->ntdat;
 
   if (nsouwav==1){
-    sf_warning("Using the same wavelet for all shots!");
+    sf_warning("\t Using the same wavelet for all shots!");
   }
   else{
     if (nsouwav==acq->ns){
-      sf_warning("Every shot has a different wavelet");
+      sf_warning("\t Every shot has a different wavelet");
     }
     else{
       sf_error("Inconsistent number of wavelets and shots");
