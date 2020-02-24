@@ -136,9 +136,13 @@ int main(int argc, char* argv[])
   clock_t start_vsrc_t,end_vsrc_t;
   clock_t start_psrc_t,end_psrc_t;
   clock_t start_bextrap_t,end_bextrap_t;
+  clock_t start_vstk_t,end_vstk_t;
+  clock_t start_pstk_t,end_pstk_t;
   float total_vsrc_t=0;
   float total_psrc_t=0;
   float total_bextrap_t=0;
+  float total_vstk_t=0;
+  float total_pstk_t=0;
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -530,6 +534,7 @@ int main(int argc, char* argv[])
     if (in_para.verb) sf_warning("FWD Born operator..");
 
     // prepare the born sources
+    if (in_para.verb) sf_warning("\tMake secondary sources..");
     start_vsrc_t=clock();
     make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
     end_vsrc_t=clock();
@@ -540,6 +545,7 @@ int main(int argc, char* argv[])
     total_psrc_t = (float)(end_psrc_t - start_psrc_t) / CLOCKS_PER_SEC;
 
     // extrapolate secondary sources
+    if (in_para.verb) sf_warning("\tExtrapolate scattered wavefield..");
     start_bextrap_t=clock();
     bornfwdextrap2d(wfl,acq,mod);
     end_bextrap_t=clock();
@@ -554,24 +560,39 @@ int main(int argc, char* argv[])
     if (in_para.verb) sf_warning("Adjoint Born operator..");
 
     // extrapolate data
+    if (in_para.verb) sf_warning("\tExtrapolate scattered wavefield..");
+    start_bextrap_t=clock();
     bornadjextrap2d(wfl,acq,mod,&born_para);
+    end_bextrap_t=clock();
+    total_bextrap_t = (float)(end_bextrap_t - start_bextrap_t) / CLOCKS_PER_SEC;
 
-    if (in_para.verb) sf_warning("rewind reconstructed wavefield..");
     //rewind the scattered wavefield
     if (born_para.outputScatteredWfl)
       sf_seek(wfl->Fswfl,0,SEEK_SET);
     else
       fseek(born_para.Fswfl,0,SEEK_SET);
 
-    if (in_para.verb) sf_warning("make secondary sources..");
+    if (in_para.verb) sf_warning("\tMake secondary sources..");
     // prepare the born sources
+    start_vsrc_t=clock();
     make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
+    end_vsrc_t=clock();
+    total_vsrc_t = (float)(end_vsrc_t - start_vsrc_t) / CLOCKS_PER_SEC;
+    start_psrc_t=clock();
     make_born_pressure_sources_2d(wfl,mod,acq,&born_para);
+    end_psrc_t=clock();
+    total_psrc_t = (float)(end_psrc_t - start_psrc_t) / CLOCKS_PER_SEC;
 
-    if (in_para.verb) sf_warning("stack..");
+    if (in_para.verb) sf_warning("\tStacking..");
     // stack wavefields
+    start_vstk_t=clock();
     stack_velocity_part_2d(wfl,mod,acq,&born_para);
+    end_vstk_t=clock();
+    total_vstk_t = (float)(end_vstk_t - start_vstk_t) / CLOCKS_PER_SEC;
+    start_pstk_t=clock();
     stack_pressure_part_2d(Fvpert,Frpert,wfl,mod,acq,&born_para);
+    end_pstk_t=clock();
+    total_pstk_t = (float)(end_pstk_t - start_pstk_t) / CLOCKS_PER_SEC;
 
     end_adj_t = clock();
     total_adj_t = (float)(end_adj_t - start_adj_t) / CLOCKS_PER_SEC;
@@ -621,16 +642,26 @@ int main(int argc, char* argv[])
   if (Fswfl!=NULL) sf_fileclose(Fswfl);
 
   if (in_para.verb){
+    sf_warning("=========================================================== ");
     sf_warning("PROFILING: [CPU time] ");
-    sf_warning("Background wavefield extrapolation : %g", total_bck_t );
+    sf_warning("=========================================================== ");
+    sf_warning("Background wavefield extrapolation :  %7.3g [s]", total_bck_t );
     if (in_para.adj==FWD){
-      sf_warning("Born FWD operator : %g", total_fwd_t );
-      sf_warning("Make velocity secondary sources : %g", total_vsrc_t );
-      sf_warning("Make pressure secondary sources : %g", total_psrc_t );
-      sf_warning("Scattered wavefield extrapolation : %g", total_bextrap_t );
+      sf_warning("Born FWD operator                  :  %7.3g [s]", total_fwd_t );
+      sf_warning("Make velocity secondary sources    :  %7.3g [s]", total_vsrc_t );
+      sf_warning("Make pressure secondary sources    :  %7.3g [s]", total_psrc_t );
+      sf_warning("Scattered wavefield extrapolation  :  %7.3g [s]", total_bextrap_t );
     }
-    else
-      sf_warning("Born ADJ operator : %g", total_adj_t );
+    else{
+      sf_warning("Born ADJ operator                  : %7.3g [s]", total_adj_t );
+      sf_warning("Scattered wavefield extrapolation  : %7.3g [s]", total_bextrap_t );
+      sf_warning("Make velocity secondary sources    : %7.3g [s]", total_vsrc_t );
+      sf_warning("Make pressure secondary sources    : %7.3g [s]", total_psrc_t );
+      sf_warning("Stack particle velocity components : %7.3g [s]", total_vstk_t);
+      sf_warning("Stack pressure component           : %7.3g [s]", total_pstk_t);
+    }
+    sf_warning("=========================================================== ");
+    sf_warning("=========================================================== ");
   }
 
 

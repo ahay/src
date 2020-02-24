@@ -30,40 +30,51 @@ static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t cons
   float const dtd1 = dt/d1;
   float const dtd2 = dt/d2;
 
+  long i2start=NOP;
+  long i2end = n2-NOP;
+  long i1start=NOP;
+  long i1end = n1-NOP;
+
   switch (adjflag){
   case FWD:
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP; i1<n1-NOP; i1++){
-        v1a[i1  +i2*n1] = (C1*(pp[i1+1+i2*n1] - pp[i1  +i2*n1])+
-                           C2*(pp[i1+2+i2*n1] - pp[i1-1+i2*n1])+
-                           C3*(pp[i1+3+i2*n1] - pp[i1-2+i2*n1]))*dtd1;
+    for (long i2=i2start; i2<i2end; i2++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
+
+        v1a[idx] = (C1*(pp[i1+1+i2*n1] - pp[i1  +i2*n1])+
+                    C2*(pp[i1+2+i2*n1] - pp[i1-1+i2*n1])+
+                    C3*(pp[i1+3+i2*n1] - pp[i1-2+i2*n1]))*dtd1;
       }
     }
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP; i1<n1-NOP; i1++){
-        v2a[i1+i2*n1] = (C1*(pp[i1+(i2+1)*n1] - pp[i1+i2    *n1])+
-                         C2*(pp[i1+(i2+2)*n1] - pp[i1+(i2-1)*n1])+
-                         C3*(pp[i1+(i2+3)*n1] - pp[i1+(i2-2)*n1]))*dtd2;
+    for (long i2=i2start; i2<i2end; i2++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
+
+        v2a[idx] = (C1*(pp[i1+(i2+1)*n1] - pp[i1+ i2   *n1])+
+                    C2*(pp[i1+(i2+2)*n1] - pp[i1+(i2-1)*n1])+
+                    C3*(pp[i1+(i2+3)*n1] - pp[i1+(i2-2)*n1]))*dtd2;
+
       }
     }
+
 
     // 1-component
-    for (long i2=NOP; i2<n2-NOP; i2++){
+    for (long i2=i2start; i2<i2end; i2++){
       float const spox = tap2[i2];
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         float const spo = spox*tap1[i1];
-        v1c[idx] = spo*(v1p[idx] - buoy[idx]*v1a[idx]);
+        float const b =buoy[idx];
+        v1c[idx] = spo*(v1p[idx] - b*v1a[idx]);
       }
     }
 
     // 2-component
-    for (long i2=NOP; i2<n2-NOP; i2++){
+    for (long i2=i2start; i2<i2end; i2++){
       float const spox = tap2[i2];
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         float const spo = spox*tap1[i1];
-        v2c[idx] = spo*(v2p[idx] - buoy[idx]*v2a[idx]);
+        float const b =buoy[idx];
+        v2c[idx] = spo*(v2p[idx] - b*v2a[idx]);
       }
     }
 
@@ -71,44 +82,44 @@ static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t cons
   case ADJ:
     // ===============================================================
     // 2nd order in time
-    for (int i2=NOP; i2<n2-NOP; i2++){
+    for (int i2=i2start; i2<i2end; i2++){
       float const spo2 = tap2[i2];
-      for (int i1=NOP, idx=IDX2D(i1,i2  ); i1<n1-NOP; i1++,idx++){
+      for (int i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
         float const spo = tap1[i1]* spo2;
         float k = incomp[idx]*dt;
         pa[idx] = spo*k*pp[idx];
       }
     }
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP; i1<n1-NOP; i1++){
-        v1a[i1  +i2*n1] = (C1*(pa[i1+1+i2*n1] - pa[i1  +i2*n1])+
-                           C2*(pa[i1+2+i2*n1] - pa[i1-1+i2*n1])+
-                           C3*(pa[i1+3+i2*n1] - pa[i1-2+i2*n1]))/d1;
+    for (long i2=i2start; i2<i2end; i2++){
+      for (long i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
+        v1a[idx] = (C1*(pa[i1+1+i2*n1] - pa[i1  +i2*n1])+
+                    C2*(pa[i1+2+i2*n1] - pa[i1-1+i2*n1])+
+                    C3*(pa[i1+3+i2*n1] - pa[i1-2+i2*n1]))/d1;
       }
     }
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP; i1<n1-NOP; i1++){
-        v2a[i1+i2*n1] = (C1*(pa[i1+(i2+1)*n1] - pa[i1+i2    *n1])+
-                         C2*(pa[i1+(i2+2)*n1] - pa[i1+(i2-1)*n1])+
-                         C3*(pa[i1+(i2+3)*n1] - pa[i1+(i2-2)*n1]))/d2;
+    for (long i2=i2start; i2<i2end; i2++){
+      for (long i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
+        v2a[idx] = (C1*(pa[i1+(i2+1)*n1] - pa[i1+i2    *n1])+
+                    C2*(pa[i1+(i2+2)*n1] - pa[i1+(i2-1)*n1])+
+                    C3*(pa[i1+(i2+3)*n1] - pa[i1+(i2-2)*n1]))/d2;
       }
     }
 
     // 1-component
-    for (long i2=NOP; i2<n2-NOP; i2++){
+    for (long i2=i2start; i2<i2end; i2++){
       float const spox = tap2[i2];
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+      for (long i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
         float const spo = spox*tap1[i1];
         v1c[idx] = spo*v1p[idx] - v1a[idx];
       }
     }
 
     // 2-component
-    for (long i2=NOP; i2<n2-NOP; i2++){
+    for (long i2=i2start; i2<i2end; i2++){
       float const spox = tap2[i2];
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+      for (long i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
         float const spo = spox*tap1[i1];
         v2c[idx] = spo*v2p[idx] - v2a[idx];
       }
@@ -148,30 +159,36 @@ static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t con
   float const dtd1 = dt/d1;
   float const dtd2 = dt/d2;
 
+  long i2start=NOP;
+  long i2end = n2-NOP;
+  long i1start=NOP;
+  long i1end = n1-NOP;
+
   switch (adjflag){
   case FWD:
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
-        v1a[idx] = -(C1*(v1c[i1  +i2*n1] - v1c[i1-1+i2*n1])+
-                     C2*(v1c[i1+1+i2*n1] - v1c[i1-2+i2*n1])+
-                     C3*(v1c[i1+2+i2*n1] - v1c[i1-3+i2*n1]))*dtd1;
+    for (long i2=i2start; i2<i2end; i2++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
+            v1a[idx] = -(C1*(v1c[i1  +i2*n1] - v1c[i1-1+i2*n1])+
+                         C2*(v1c[i1+1+i2*n1] - v1c[i1-2+i2*n1])+
+                         C3*(v1c[i1+2+i2*n1] - v1c[i1-3+i2*n1]))*dtd1;
       }
     }
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+    for (long i2=i2start; i2<i2end; i2++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         v2a[idx] = -(C1*(v2c[i1+(i2  )*n1] - v2c[i1  +(i2-1)*n1])+
                      C2*(v2c[i1+(i2+1)*n1] - v2c[i1  +(i2-2)*n1])+
                      C3*(v2c[i1+(i2+2)*n1] - v2c[i1  +(i2-3)*n1]))*dtd2;
       }
     }
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
+    for (long i2=i2start; i2<i2end; i2++){
       float const spox = tap2[i2];
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+      for (long i1=i2start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         float const spo = spox*tap1[i1];
-        pc[idx] = spo*(pp[idx] + incomp[idx]*(v1a[idx]+v2a[idx]));
+        float const k = incomp[idx];
+        pc[idx] = spo*(pp[idx] + k*(v1a[idx]+v2a[idx]));
       }
     }
 
@@ -179,9 +196,9 @@ static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t con
   case ADJ:
     // ===============================================================
     // 2nd order in time
-    for (int i2=NOP; i2<n2-NOP; i2++){
+    for (long i2=i2start; i2<i2end; i2++){
       float const spo2 = tap2[i2];
-      for (int i1=NOP,idx=IDX2D(i1,i2  ); i1<n1-NOP; i1++,idx++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         float const spo = spo2*tap1[i1];
         float irho = buoy[idx]*dt;
         v2p[idx] = spo*irho*v2c[idx];
@@ -189,25 +206,25 @@ static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t con
       }
     }
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+    for (long i2=i2start; i2<i2end; i2++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         v1a[idx] = -(C1*(v1p[i1  +i2*n1] - v1p[i1-1+i2*n1])+
                      C2*(v1p[i1+1+i2*n1] - v1p[i1-2+i2*n1])+
                      C3*(v1p[i1+2+i2*n1] - v1p[i1-3+i2*n1]))/d1;
       }
     }
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+    for (long i2=i2start; i2<i2end; i2++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         v2a[idx] = -(C1*(v2p[i1+(i2  )*n1] - v2p[i1  +(i2-1)*n1])+
                      C2*(v2p[i1+(i2+1)*n1] - v2p[i1  +(i2-2)*n1])+
                      C3*(v2p[i1+(i2+2)*n1] - v2p[i1  +(i2-3)*n1]))/d2;
       }
     }
 
-    for (long i2=NOP; i2<n2-NOP; i2++){
+    for (long i2=i2start; i2<i2end; i2++){
       float const spox = tap2[i2];
-      for (long i1=NOP,idx=IDX2D(i1,i2); i1<n1-NOP; i1++,idx++){
+      for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         float const spo = spox*tap1[i1];
         pc[idx] = spo*pp[idx] + (v1a[idx]+v2a[idx]);
       }
@@ -624,7 +641,6 @@ void bornadjextrap2d(wfl_struct_t * wfl,
   bool save = para->outputScatteredWfl;
   // loop over time
   for (int it=0; it<nt; it++){
-
 
     velupd(wfl,mod,acq,ADJ);
     if (para->outputDenPertImage){

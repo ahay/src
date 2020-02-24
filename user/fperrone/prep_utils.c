@@ -310,7 +310,7 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
                                    born_setup_struct_t *para)
 /*< Make the born sources for FWD born modelling>*/
 {
-  sf_warning("PARTICLE VELOCITY secondary sources (pressure gradient)..");
+  sf_warning("\tPARTICLE VELOCITY secondary sources (pressure gradient)..");
 
   long n1 = mod->n1;
   long n2 = mod->n2;
@@ -372,7 +372,7 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
                                    born_setup_struct_t * para)
 /*< Make the born sources for FWD born modelling>*/
 {
-  sf_warning("PRESSURE secondary sources (particle velocity divergence)..");
+  sf_warning("\tPRESSURE secondary sources (particle velocity divergence)..");
 
   long n1 = mod->n1;
   long n2 = mod->n2;
@@ -432,7 +432,7 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
                             born_setup_struct_t *para)
 /*< project the wavefields in the born model space >*/
 {
-  sf_warning("PARTICLE VELOCITY component of the density perturbation..");
+  sf_warning("\tPARTICLE VELOCITY component of the density perturbation..");
 
   if (!para->outputDenPertImage)
     return;
@@ -496,7 +496,7 @@ void stack_pressure_part_2d(sf_file Fvpert,
                             born_setup_struct_t *para)
 /*< project the wavefields in the born model space>*/
 {
-  sf_warning("PRESSURE component of the velocity and density perturbations..");
+  sf_warning("\tPRESSURE component of the velocity and density perturbations..");
 
   long nt = acq->ntdat;
   long n1 = mod->n1;
