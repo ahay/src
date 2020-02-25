@@ -194,8 +194,10 @@ int main(int argc, char* argv[])
 
 
   /* for benchmarking */
-  clock_t start_t, end_t;
-  float total_t;
+  clock_t start_fwd_t, end_fwd_t;
+  float total_fwd_t=0;
+  clock_t start_adj_t, end_adj_t;
+  float total_adj_t=0;
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -380,22 +382,21 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   if (in_para.verb) sf_warning("Start Extrapolation..");
-  start_t=clock();
+
 
   switch (in_para.adj){
   case FWD:
+    start_fwd_t=clock();
     fwdextrap2d(wfl,acq,mod);
+    end_fwd_t=clock();
+    total_fwd_t = (float)(end_fwd_t - start_fwd_t) / CLOCKS_PER_SEC;
     break;
   case ADJ:
+    start_adj_t=clock();
     adjextrap2d(wfl,acq,mod);
+    end_adj_t=clock();
+    total_adj_t = (float)(end_adj_t - start_adj_t) / CLOCKS_PER_SEC;
     break;
-  }
-
-  end_t = clock();
-
-  if (in_para.verb){
-    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-    sf_warning("Total time taken by CPU: %g", total_t );
   }
 
   /* -------------------------------------------------------------*/
@@ -412,6 +413,20 @@ int main(int argc, char* argv[])
 
   clear_model_2d(mod);
   free(mod);
+
+  if (in_para.verb){
+    sf_warning("=========================================================== ");
+    sf_warning("PROFILING: [CPU time] ");
+    sf_warning("=========================================================== ");
+    if (in_para.adj==FWD){
+      sf_warning("Born FWD operator                  :  %7.3g [s]", total_fwd_t );
+    }
+    else{
+      sf_warning("Born ADJ operator                  : %7.3g [s]", total_adj_t );
+    }
+    sf_warning("=========================================================== ");
+    sf_warning("=========================================================== ");
+  }
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
