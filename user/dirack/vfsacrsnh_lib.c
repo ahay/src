@@ -31,8 +31,7 @@
 #include <rsf.h>
 /*^*/
 
-float signal(float s) { 
-/*< Signal function >*/
+static float mysignal(float s) { 
 
 	if(s >= 0){
 		
@@ -76,7 +75,7 @@ void disturbParameters(float temperature, float* disturbedParameter, float* para
 
 	u=getRandomNumberBetween0and1();
 			
-	disturbance = signal(u - 0.5) * temperature * (pow( (1+temperature),fabs(2*u-1) )-1);
+	disturbance = mysignal(u - 0.5) * temperature * (pow( (1+temperature),fabs(2*u-1) )-1);
 
 	/* RN */
 	aperture = Rn_MAX - Rn_MIN;
