@@ -355,15 +355,17 @@ int main(int argc, char* argv[])
   set_sr_interpolation_coeffs(acq,wfl);
 
   // WAVEFIELD HEADERS
-  sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
-                              acq->ot,
-                              acq->dt*in_para.jsnap);
-  sf_setlabel(axTimeWfl,"time");
-  sf_setunit(axTimeWfl,"s");
+  if (snap){
+    sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
+                                acq->ot,
+                                acq->dt*in_para.jsnap);
+    sf_setlabel(axTimeWfl,"time");
+    sf_setunit(axTimeWfl,"s");
 
-  sf_oaxa(Fwfl,axVel[0],1);
-  sf_oaxa(Fwfl,axVel[1],2);
-  sf_oaxa(Fwfl,axTimeWfl,3);
+    sf_oaxa(Fwfl,axVel[0],1);
+    sf_oaxa(Fwfl,axVel[1],2);
+    sf_oaxa(Fwfl,axTimeWfl,3);
+  }
 
   // DATA HEADERS
   sf_oaxa(Fdat,axRec[1],1);
