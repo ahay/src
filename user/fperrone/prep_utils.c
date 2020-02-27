@@ -188,8 +188,6 @@ void print_param(in_para_struct_t in_para)
 static float* build_extended_model_2d(float const *mod, long n1, long n2, int next)
 {
 
-  sf_warning("\tExtend the 2d models with absorbing boundaries..");
-
   long n1ext = n1+2*next;
   long n2ext = n2+2*next;
   long nelem = n1ext*n2ext;
@@ -246,7 +244,7 @@ void prepare_model_2d(mod_struct_t* mod,
   for (int i=0; i<nelem; i++)
     vave += mod->vmod[i];
   vave /= (nelem);
-  sf_warning("\tVelocity Model average value = %g",vave);
+  if (para.verb) sf_warning("\tVelocity Model average value = %g",vave);
 
   mod->dmod = (float*) sf_floatalloc(nelem);
   sf_floatread(mod->dmod,nelem,Fdmod);
@@ -255,12 +253,13 @@ void prepare_model_2d(mod_struct_t* mod,
   for (int i=0; i<nelem; i++)
     dave += mod->dmod[i];
   dave /= (nelem);
-  sf_warning("\tDensity Model average value = %g",dave);
+  if (para.verb) sf_warning("\tDensity Model average value = %g",dave);
 
   // modeling parameters
   long n1 = mod->n1;
   long n2 = mod->n2;
   int nabc = para.nb;
+  if (para.verb) sf_warning("\tExtend the 2d models with absorbing boundaries..");
   mod->incomp = build_extended_model_2d(mod->vmod,n1,n2,nabc);
   mod->buoy = build_extended_model_2d(mod->dmod,n1,n2,nabc);
 
@@ -619,24 +618,27 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
   acq->ot = sf_o(axwav[1]);
   acq->ntdat = (acq->nt/para.jsnap)*para.jsnap;
   acq->ntsnap= (acq->nt+para.jsnap-1)/para.jsnap;
-  sf_warning("\t Number of wavefield snapshots = %d",acq->ntsnap);
-  sf_warning("\t Number of data timesteps simulated = %d",acq->ntdat);
+  if (para.verb) sf_warning("\t Number of wavefield snapshots = %d",acq->ntsnap);
+  if (para.verb) sf_warning("\t Number of data timesteps simulated = %d",acq->ntdat);
 
   long nsouwav = sf_n(axwav[0]);
   long nwavsamp = nsouwav*acq->ntdat;
 
-  if (nsouwav==1){
-    sf_warning("\t Using the same wavelet for all shots!");
-  }
-  else{
-    if (nsouwav==acq->ns){
-      sf_warning("\t Every shot has a different wavelet");
+  if (para.verb) {
+    if (nsouwav==1){
+      sf_warning("\t Using the same wavelet for all shots!");
     }
     else{
-      sf_error("Inconsistent number of wavelets and shots");
-      return;
+      if (nsouwav==acq->ns){
+        sf_warning("\t Every shot has a different wavelet");
+      }
+      else{
+        sf_error("Inconsistent number of wavelets and shots");
+        return;
+      }
     }
   }
+
 
   acq->wav = sf_floatalloc(nwavsamp);
   memset(acq->wav,0,nwavsamp*sizeof(float));

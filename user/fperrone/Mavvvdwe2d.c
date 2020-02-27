@@ -260,7 +260,7 @@ int main(int argc, char* argv[])
   /*                      READ AXES                             */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  sf_warning("WAVELET axes..");
+  if(in_para.verb) sf_warning("WAVELET axes..");
   sf_axis axWav[2];
   axWav[0] = sf_iaxa(Fwav,1);
   sf_setlabel(axWav[0],"shot");
@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
   sf_setunit(axWav[1],"s");
   if(in_para.verb) sf_raxa(axWav[1]); /* time */
 
-  sf_warning("VELOCITY model axes..");
+  if(in_para.verb) sf_warning("VELOCITY model axes..");
   sf_axis axVel[2];
   axVel[0] = sf_iaxa(Fvel,1);
   sf_setlabel(axVel[0],"z");
@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
   sf_setunit(axVel[1],"m");
   if(in_para.verb) sf_raxa(axVel[1]); /* lateral */
 
-  sf_warning("DENSITY model axes..");
+  if(in_para.verb) sf_warning("DENSITY model axes..");
   sf_axis axDen[2];
   axDen[0] = sf_iaxa(Fden,1);
   sf_setlabel(axDen[0],"z");
@@ -296,7 +296,7 @@ int main(int argc, char* argv[])
   sf_setunit(axDen[1],"m");
   if(in_para.verb) sf_raxa(axDen[1]); /* lateral */
 
-  sf_warning("SHOT COORDINATES axes..");
+  if(in_para.verb) sf_warning("SHOT COORDINATES axes..");
   sf_axis axSou[2];
   axSou[0] = sf_iaxa(Fsou,1);
   sf_setlabel(axSou[0],"shot");
@@ -308,7 +308,7 @@ int main(int argc, char* argv[])
   sf_setunit(axSou[1],"1");
   if(in_para.verb) sf_raxa(axSou[1]); /* coords */
 
-  sf_warning("RECEIVER COORDINATES axes..");
+  if(in_para.verb) sf_warning("RECEIVER COORDINATES axes..");
   sf_axis axRec[2];
   axRec[0] = sf_iaxa(Frec,1);
   sf_setlabel(axRec[0],"s");
@@ -320,7 +320,7 @@ int main(int argc, char* argv[])
   sf_setunit(axRec[1],"1");
   if(in_para.verb) sf_raxa(axRec[1]); /* coords */
 
-  sf_warning("CHECK MODEL DIMENSIONS..");
+  if(in_para.verb) sf_warning("CHECK MODEL DIMENSIONS..");
   if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
       (sf_n(axDen[1])!=sf_n(axVel[1]))){
     sf_error("Inconsistent model dimensions!");
@@ -416,20 +416,6 @@ int main(int argc, char* argv[])
   clear_model_2d(mod);
   free(mod);
 
-  if (in_para.verb){
-    sf_warning("=========================================================== ");
-    sf_warning("PROFILING: [CPU time] ");
-    sf_warning("=========================================================== ");
-    if (in_para.adj==FWD){
-      sf_warning("Born FWD operator                  :  %7.3g [s]", total_fwd_t );
-    }
-    else{
-      sf_warning("Born ADJ operator                  : %7.3g [s]", total_adj_t );
-    }
-    sf_warning("=========================================================== ");
-    sf_warning("=========================================================== ");
-  }
-
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
   /*                   CLOSE FILES AND EXIT                       */
@@ -445,5 +431,18 @@ int main(int argc, char* argv[])
   if (Fwfl!=NULL) sf_fileclose(Fwfl);
 
   if (in_para.verb) sf_warning("ALL DONE!");
+
+  sf_warning("=========================================================== ");
+  sf_warning("PROFILING: [CPU time] ");
+  sf_warning("=========================================================== ");
+  if (in_para.adj==FWD){
+    sf_warning("Born FWD operator                  :  %7.3g [s]", total_fwd_t );
+  }
+  else{
+    sf_warning("Born ADJ operator                  : %7.3g [s]", total_adj_t );
+  }
+  sf_warning("=========================================================== ");
+  sf_warning("=========================================================== ");
+
   exit (0);
 }
