@@ -606,11 +606,13 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
   long modN1=wfl->modN1;
   long modN2=wfl->modN2;
   long nelem=modN1*modN2;
-  int nt = acq->ntdat;
+  long nt = acq->ntdat;
 
   // loop over time
-  for (int it=0; it<nt; it++){
+  for (long it=0; it<nt; it++){
     bool save = ((wfl->snap) && !(it%wfl->jsnap));
+    if ((it+1)%100==0)
+      sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
     velupd(wfl,mod,acq,ADJ);
     presupd(wfl,mod,acq,ADJ);
