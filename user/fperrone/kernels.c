@@ -294,8 +294,9 @@ static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_
 
     int ixr = (xr-o2)/modD2;
     int izr = (zr-o1)/modD1;
-    float force = acq->dat[irec + nrec*it];
     long idx = izr + N1*ixr;
+
+    float force = acq->dat[irec + nrec*it];
 
     for (int j=-3,jh=0; j<=4; j++,jh++){
       const float hicks2 = acq->hicksRcv2[jh+irec*8];
@@ -485,12 +486,13 @@ static void extract_scat_dat_2d(wfl_struct_t * const wfl,acq_struct_t const *acq
 
 static void applyFreeSurfaceBC(wfl_struct_t *wfl){
 
-  long nb = wfl->nabc;
-  long n1 = wfl->simN1;
-  long n2 = wfl->simN2;
+  long const nb = wfl->nabc;
+  long const n1 = wfl->simN1;
+  long const n2 = wfl->simN2;
 
   for (long i2=0; i2<n2; i2++)
-    memset(wfl->pc+i2*n1,0,(nb+1)*sizeof(float));
+    for (long i1=0; i1<nb+1; i1++)
+      wfl->pc[i1+i2*n1]=0.;
 
 }
 
@@ -565,7 +567,7 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
 
 }
 
-void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
+void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod, born_setup_struct_t para)
 /*< kernel for Born forward extrapolation >*/
 {
   long modN1 = wfl->modN1;
@@ -578,9 +580,11 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
     bool save = (wfl->Fswfl);
 
     velupd(wfl,mod,acq,FWD);
-    injectBornVelocitySource(wfl,mod,acq,it);
+    if (para.inputDenPerturbation)
+      injectBornVelocitySource(wfl,mod,acq,it);
     presupd(wfl,mod,acq,FWD);
-    injectBornPressureSource(wfl,mod,acq,it);
+    if (para.inputVelPerturbation)
+      injectBornPressureSource(wfl,mod,acq,it);
 
     if (wfl->freesurf)
       applyFreeSurfaceBC(wfl);

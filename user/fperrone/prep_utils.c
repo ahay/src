@@ -375,6 +375,7 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
 
   long n1 = mod->n1;
   long n2 = mod->n2;
+  long nelem = n1*n2;
 
   long nt = acq->ntdat;
   float dt = acq->dt;
@@ -384,32 +385,52 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
   float *snapc = sf_floatalloc(n1*n2);
   float *snapn = sf_floatalloc(n1*n2);
 
-  // read the background wavefield
-  if (para->outputBackgroundWfl)
-    sf_floatread(snapc,n1*n2,wfl->Fwfl);
-  else
-    fread(snapc,sizeof(float),n1*n2,para->Fbwfl);
-
-  for (long it=0; it<nt-1; it++){
+  if (para->outputBackgroundWfl){
     // read the background wavefield
-    if (para->outputBackgroundWfl)
-      sf_floatread(snapn,n1*n2,wfl->Fwfl);
-    else
-      fread(snapn,sizeof(float),n1*n2,para->Fbwfl);
+    sf_floatread(snapc,nelem,wfl->Fwfl);
 
-    // compute the divergence of the particle velocity from the pressure field
-    for (long i=0; i<n1*n2; i++){
-      float v = mod->vmod[i];
-      float r = mod->dmod[i];
-      float k = 1.f/(v*v*r);
-      wfl->bwfl[i] = k*(snapn[i] - snapc[i])/dt;
+    for (long it=0; it<nt-1; it++){
+      // read the background wavefield
+      sf_floatread(snapn,nelem,wfl->Fwfl);
+
+      // compute the divergence of the particle velocity from the pressure field
+      for (long i=0; i<nelem; i++){
+        float const v = mod->vmod[i];
+        float const r = mod->dmod[i];
+        float const scale = 1.f/(v*v*r)/dt;
+        wfl->bwfl[i] = scale*(snapn[i] - snapc[i]);
+      }
+      fwrite(wfl->bwfl,nelem,sizeof(float),wfl->Fpvdiv);
+
+      float *tmp = snapc;
+      snapc = snapn;
+      snapn = tmp;
     }
-    fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fpvdiv);
 
-    float *tmp = snapc;
-    snapc = snapn;
-    snapn = tmp;
   }
+  else{
+    // read the background wavefield
+    fread(snapc,sizeof(float),nelem,para->Fbwfl);
+
+    for (long it=0; it<nt-1; it++){
+      // read the background wavefield
+      fread(snapn,sizeof(float),nelem,para->Fbwfl);
+
+      // compute the divergence of the particle velocity from the pressure field
+      for (long i=0; i<nelem; i++){
+        float const v = mod->vmod[i];
+        float const r = mod->dmod[i];
+        float const scale = 1.f/(v*v*r)/dt;
+        wfl->bwfl[i] = scale*(snapn[i] - snapc[i]);
+      }
+      fwrite(wfl->bwfl,nelem,sizeof(float),wfl->Fpvdiv);
+
+      float *tmp = snapc;
+      snapc = snapn;
+      snapn = tmp;
+    }
+  }
+
   memset(wfl->bwfl,0,n1*n2*sizeof(float));
   fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fpvdiv);
 
@@ -500,36 +521,35 @@ void stack_pressure_part_2d(sf_file Fvpert,
   long nt = acq->ntdat;
   long n1 = mod->n1;
   long n2 = mod->n2;
+  long nelem=n1*n2;
 
   float dt = acq->dt;
 
-  float *srcwfl = sf_floatalloc(n1*n2*nt);
-  float *tmp = sf_floatalloc(n1*n2);
-  float *vimg = sf_floatalloc(n1*n2);
+  float *srcwfl = sf_floatalloc(nelem*nt);
+  float *tmp = sf_floatalloc(nelem);
+  float *vimg = sf_floatalloc(nelem);
 
   // set
-  memset(vimg,0,n1*n2*sizeof(float));
+  memset(vimg,0,nelem*sizeof(float));
 
-  fread(srcwfl,sizeof(float),n1*n2*nt,wfl->Fpvdiv);
+  fread(srcwfl,sizeof(float),nelem*nt,wfl->Fpvdiv);
   for (long it=0; it<nt; it++){
-    float *wp = srcwfl + (nt-1-it)*n1*n2;
+    float *wp = srcwfl + (nt-1-it)*nelem;
 
     if (para->outputScatteredWfl)
-      sf_floatread(tmp,n1*n2,wfl->Fswfl);
+      sf_floatread(tmp,nelem,wfl->Fswfl);
     else
-      fread(tmp,sizeof(float),n1*n2,para->Fswfl);
+      fread(tmp,sizeof(float),nelem,para->Fswfl);
 
-    for (long i=0; i<n1*n2; i++)
-      tmp[i] *= wp[i];
-
-    for (long i=0; i<n1*n2; i++){
-      float v = mod->vmod[i];
-      float r = mod->dmod[i];
-      vimg[i] += 2.f*v*r*tmp[i]*dt;
+    for (long i=0; i<nelem; i++){
+      float const v = mod->vmod[i];
+      float const r = mod->dmod[i];
+      float scale = 2.f*v*r*dt;
+      vimg[i] += scale*tmp[i]*wp[i];
     }
   }
 
-  sf_floatwrite(vimg,n1*n2,Fvpert);
+  sf_floatwrite(vimg,nelem,Fvpert);
 
   if (para->outputDenPertImage){
 
@@ -538,27 +558,25 @@ void stack_pressure_part_2d(sf_file Fvpert,
     else
       rewind(para->Fswfl);
 
-    float *rimg = sf_floatalloc(n1*n2);
-    fread(rimg,sizeof(float),n1*n2,para->Fpv1);
+    float *rimg = sf_floatalloc(nelem);
+    fread(rimg,sizeof(float),nelem,para->Fpv1);
 
     for (long it=0; it<nt; it++){
-      float *wp = srcwfl + (nt-1-it)*n1*n2;
+      float *wp = srcwfl + (nt-1-it)*nelem;
 
       if (para->outputScatteredWfl)
-        sf_floatread(tmp,n1*n2,wfl->Fswfl);
+        sf_floatread(tmp,nelem,wfl->Fswfl);
       else
-        fread(tmp,sizeof(float),n1*n2,para->Fswfl);
+        fread(tmp,sizeof(float),nelem,para->Fswfl);
 
-      for (long i=0; i<n1*n2; i++)
-        tmp[i] *= wp[i];
-
-      for (long i=0; i<n1*n2; i++){
+      for (long i=0; i<nelem; i++){
         float v = mod->vmod[i];
-        rimg[i] += v*v*tmp[i]*dt;
+        float const scale = v*v*dt;
+        rimg[i] += scale*tmp[i]*wp[i];
       }
     }
 
-    sf_floatwrite(rimg,n1*n2,Frpert);
+    sf_floatwrite(rimg,nelem,Frpert);
     free(rimg);
   }
 

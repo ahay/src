@@ -536,7 +536,8 @@ int main(int argc, char* argv[])
     // prepare the born sources
     if (in_para.verb) sf_warning("\tMake secondary sources..");
     start_vsrc_t=clock();
-    make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
+    if (born_para.inputDenPerturbation)
+      make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
     end_vsrc_t=clock();
     total_vsrc_t = (float)(end_vsrc_t - start_vsrc_t) / CLOCKS_PER_SEC;
     start_psrc_t=clock();
@@ -547,7 +548,7 @@ int main(int argc, char* argv[])
     // extrapolate secondary sources
     if (in_para.verb) sf_warning("\tExtrapolate scattered wavefield..");
     start_bextrap_t=clock();
-    bornfwdextrap2d(wfl,acq,mod);
+    bornfwdextrap2d(wfl,acq,mod,born_para);
     end_bextrap_t=clock();
     total_bextrap_t = (float)(end_bextrap_t - start_bextrap_t) / CLOCKS_PER_SEC;
 
@@ -575,9 +576,11 @@ int main(int argc, char* argv[])
     if (in_para.verb) sf_warning("\tMake secondary sources..");
     // prepare the born sources
     start_vsrc_t=clock();
-    make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
+    if (born_para.inputDenPerturbation)
+      make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
     end_vsrc_t=clock();
     total_vsrc_t = (float)(end_vsrc_t - start_vsrc_t) / CLOCKS_PER_SEC;
+
     start_psrc_t=clock();
     make_born_pressure_sources_2d(wfl,mod,acq,&born_para);
     end_psrc_t=clock();
@@ -589,6 +592,7 @@ int main(int argc, char* argv[])
     stack_velocity_part_2d(wfl,mod,acq,&born_para);
     end_vstk_t=clock();
     total_vstk_t = (float)(end_vstk_t - start_vstk_t) / CLOCKS_PER_SEC;
+
     start_pstk_t=clock();
     stack_pressure_part_2d(Fvpert,Frpert,wfl,mod,acq,&born_para);
     end_pstk_t=clock();
@@ -641,29 +645,26 @@ int main(int argc, char* argv[])
   if (Fbwfl!=NULL) sf_fileclose(Fbwfl);
   if (Fswfl!=NULL) sf_fileclose(Fswfl);
 
-  if (in_para.verb){
-    sf_warning("=========================================================== ");
-    sf_warning("PROFILING: [CPU time] ");
-    sf_warning("=========================================================== ");
-    sf_warning("Background wavefield extrapolation :  %7.3g [s]", total_bck_t );
-    if (in_para.adj==FWD){
-      sf_warning("Born FWD operator                  :  %7.3g [s]", total_fwd_t );
-      sf_warning("Make velocity secondary sources    :  %7.3g [s]", total_vsrc_t );
-      sf_warning("Make pressure secondary sources    :  %7.3g [s]", total_psrc_t );
-      sf_warning("Scattered wavefield extrapolation  :  %7.3g [s]", total_bextrap_t );
-    }
-    else{
-      sf_warning("Born ADJ operator                  : %7.3g [s]", total_adj_t );
-      sf_warning("Scattered wavefield extrapolation  : %7.3g [s]", total_bextrap_t );
-      sf_warning("Make velocity secondary sources    : %7.3g [s]", total_vsrc_t );
-      sf_warning("Make pressure secondary sources    : %7.3g [s]", total_psrc_t );
-      sf_warning("Stack particle velocity components : %7.3g [s]", total_vstk_t);
-      sf_warning("Stack pressure component           : %7.3g [s]", total_pstk_t);
-    }
-    sf_warning("=========================================================== ");
-    sf_warning("=========================================================== ");
+  sf_warning("=========================================================== ");
+  sf_warning("PROFILING: [CPU time] ");
+  sf_warning("=========================================================== ");
+  sf_warning("Background wavefield extrapolation :  %7.3g [s]", total_bck_t );
+  if (in_para.adj==FWD){
+    sf_warning("Born FWD operator                  :  %7.3g [s]", total_fwd_t );
+    sf_warning("Make velocity secondary sources    :  %7.3g [s]", total_vsrc_t );
+    sf_warning("Make pressure secondary sources    :  %7.3g [s]", total_psrc_t );
+    sf_warning("Scattered wavefield extrapolation  :  %7.3g [s]", total_bextrap_t );
   }
-
+  else{
+    sf_warning("Born ADJ operator                  : %7.3g [s]", total_adj_t );
+    sf_warning("Scattered wavefield extrapolation  : %7.3g [s]", total_bextrap_t );
+    sf_warning("Make velocity secondary sources    : %7.3g [s]", total_vsrc_t );
+    sf_warning("Make pressure secondary sources    : %7.3g [s]", total_psrc_t );
+    sf_warning("Stack particle velocity components : %7.3g [s]", total_vstk_t);
+    sf_warning("Stack pressure component           : %7.3g [s]", total_pstk_t);
+  }
+  sf_warning("=========================================================== ");
+  sf_warning("=========================================================== ");
 
   exit (0);
 }
