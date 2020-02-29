@@ -46,6 +46,7 @@ struct wfl_struct{
   float *v2a; // component 1 aux
   float *tap1;  // ABC coeffs
   float *tap2;  //
+  float *tap3;
   // buffers to store the data
   float *rdata;
   // buffer for the wavefield snapshot
@@ -54,14 +55,19 @@ struct wfl_struct{
   long nabc;  // size of the absorbing boundary
   long modN1;
   long modN2;
+  long modN3;
   long simN1;
   long simN2;
+  long simN3;
   float modO1;
   float modO2;
+  float modO3;
   float simO1;
   float simO2;
+  float simO3;
   float d1;
   float d2;
+  float d3;
   //free surface flag
   bool freesurf;
   //wavefield snapshots
@@ -97,18 +103,23 @@ struct acq_struct{
   // interpolation coefficients for source injection and extraction
   float *hicksSou1;
   float *hicksSou2;
+  float *hicksSou3;
   float *hicksRcv1;
   float *hicksRcv2;
+  float *hicksRcv3;
 };
 /*^*/
 
 struct mod_struct{
   long n1;
   long n2;
+  long n3;
   float d1;
   float d2;
+  float d3;
   float o1;
   float o2;
+  float o3;
   float *vmod;
   float *dmod;
   // parameters for modeling
@@ -221,6 +232,34 @@ static float* build_extended_model_2d(float const *mod, long n1, long n2, int ne
 
 }
 
+static float* build_extended_model_3d(float const *mod, long n1, long n2, long n3, int next)
+{
+  long n1ext = n1+2*next;
+  long n2ext = n2+2*next;
+  long n3ext = n3+2*next;
+  long nelem = n1ext*n2ext*n3ext;
+  float* extd = sf_floatalloc(nelem);
+
+  // core
+  for (long i3=next,j3=0; i3<next+n3; i3++,j3++){
+    for (long i2=next,j2=0; i2<next+n2; i2++,j2++){
+      for (long i1=next,j1=0; i1<next+n1; i1++,j1++){
+        float const v = mod[j1+n1*(j2+n2*j3)];
+        extd[i1+n1ext*(i2+n2ext*i3)] = v;
+      }
+    }
+  }
+
+  // extend left and right
+
+  // extend front and back
+
+  // extend up and down
+
+
+  return extd;
+}
+
 void prepare_model_2d(mod_struct_t* mod,
                       in_para_struct_t para,
                       sf_axis axvel[2], sf_axis axden[2],
@@ -265,6 +304,62 @@ void prepare_model_2d(mod_struct_t* mod,
 
   // compute incompressibility and buoyancy
   long nelemext = (n1+2*nabc)*(n2+2*nabc);
+  for (long i=0; i<nelemext; i++){
+    float v = mod->incomp[i];
+    float d = mod->buoy[i];
+    mod->incomp[i] = v*v*d;
+    mod->buoy[i] = 1./d;
+  }
+
+}
+
+void prepare_model_3d(mod_struct_t* mod,
+                      in_para_struct_t para,
+                      sf_axis axvel[3], sf_axis axden[3],
+                      sf_file Fvmod, sf_file Fdmod)
+/*< Sets up the specified model cube >*/
+{
+  mod->n1 = sf_n(axvel[0]);
+  mod->n2 = sf_n(axvel[1]);
+  mod->n3 = sf_n(axvel[2]);
+  mod->d1 = sf_d(axvel[0]);
+  mod->d2 = sf_d(axvel[1]);
+  mod->d3 = sf_d(axvel[2]);
+  mod->o1 = sf_o(axvel[0]);
+  mod->o2 = sf_o(axvel[1]);
+  mod->o3 = sf_o(axvel[2]);
+
+  long nelem = mod->n1*mod->n2*mod->n3;
+
+  mod->vmod = (float*) sf_floatalloc(nelem);
+  sf_floatread(mod->vmod,nelem,Fvmod);
+
+  double vave = 0;
+  for (int i=0; i<nelem; i++)
+    vave += mod->vmod[i];
+  vave /= (nelem);
+  if (para.verb) sf_warning("\tVelocity Model average value = %g",vave);
+
+  mod->dmod = (float*) sf_floatalloc(nelem);
+  sf_floatread(mod->dmod,nelem,Fdmod);
+
+  double dave = 0;
+  for (int i=0; i<nelem; i++)
+    dave += mod->dmod[i];
+  dave /= (nelem);
+  if (para.verb) sf_warning("\tDensity Model average value = %g",dave);
+
+  // modeling parameters
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+  long n3 = mod->n3;
+  int nabc = para.nb;
+  if (para.verb) sf_warning("\tExtend the 2d models with absorbing boundaries..");
+  mod->incomp = build_extended_model_3d(mod->vmod,n1,n2,n3,nabc);
+  mod->buoy = build_extended_model_3d(mod->dmod,n1,n2,n3,nabc);
+
+  // compute incompressibility and buoyancy
+  long nelemext = (n1+2*nabc)*(n2+2*nabc)*(n3+2*nabc);
   for (long i=0; i<nelemext; i++){
     float v = mod->incomp[i];
     float d = mod->buoy[i];
