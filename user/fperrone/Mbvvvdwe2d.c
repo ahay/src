@@ -2,72 +2,33 @@
 /*
 The code uses a standard second-order stencil in time.
 The coefficients of the spatial stencil are computed 
-by matching the transfer function of the discretized 
-first-derivative operator to the ideal response. 
-The optimized coefficients minimize dispersion 
-given that particular size of the stencil.
+by matching the transfer function of the 6-point discretized
+first-derivative operator to the ideal response.
 
-The term 
-	ro div (1/ro grad (u))
+The code implements the linearized operator obtained from the
+system of first-order PDEs parametrized in incompressibility and density
+
+dv/dt = - 1./rho * grad(p)
+dp/dt = - K * div(v)
+
 where
-	ro   : density
-	div  : divergence op
-	grad : gradient  op
-	u    : wavefield
+	rho  : density
+	K    : incompressibility
+	div  : divergence operator
+	grad : gradient  operator
+	p,v    : pressure and particle velocity wavefields
 	
-is implemented in order to obtain a positive semi-definite operator.
-
-The "reflectivity" that is used in the code is intended to be function of the 
-change in VELOCITY. In particular, it is supposed to be equal to the product between 
-the background and the perturbation in the velocity field, that is, the linear term in
-the perturbation when you expand the square of the perturbed velocity
+The models supplied by the user are wave speed and density, the code performs
+the conversion internally to buoyancy (inverse density) and incompressibility.
 	
-	v^2 = (vo + vp)^2 ~ vo^2 + 2*vo*vp
-	
-by assuming the perturbation is small compared to the background, the term vp^2 
-can be neglected. The factor 2 is included in the source injection term in the code.
+The forward operator maps perturbations in density or wave speed (or both)
+to a pressure wavefield. The adjoint operator projects recorded pressure data
+to perturbations in density or wave speed.
 
 ============= FILE DESCRIPTIONS   ========================      
 
-Fdat.rsf - An RSF file containing your data in the following format:
-			axis 1 - Receiver location
-			axis 2 - Time
-			
-Fwav.rsf - An RSF file containing your VOLUME DENSITY INJECTION RATE 
-           wavelet information.  The sampling interval, origin time, 
-           and number of time samples will be used as the defaults for the modeling code.
-	       i.e. your wavelet needs to have the same length and parameters that you want to model with!
-	       The first axis is the number of source locations.
-	       The second axis is time.
-		   
-Fvel.rsf - An N dimensional RSF file that contains the values for the velocity field at every point in the computational domain.
-		
-Fden.rsf - An N dimensional RSF file that contains the values for density at every point in the computational domain.
-
-Fref.rsf - Reflectivity (same dimensions of the velocity model)
-
-Frec.rsf - Coordinates of the receivers
-		axis 1 - (x,z) of the receiver
-		axis 2 - receiver index
-
-Fsou.rsf - Coordinate of the sources
-		axis 1 - (x,y,z) of the source
-		axis 2 - source index
-
-Fwfl.rsf - Output wavefield
-
-Fliw.rsf - linearized scattered wavefield
-
-Flid.rsf - linearized scattered data
-
-verb=y/n - verbose flag
-
-snap=y/n - wavefield snapshots flag
-
-free=y/n - free surface on/off
-
-
-
+Author: Francesco Perrone
+Date: February 2020
 */
 /*
   Copyright (C) 2013 Colorado School of Mines
@@ -273,7 +234,7 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
   // from the input common to FWD and ADJ
-  sf_warning("VELOCITY model axes..");
+  if (in_para.verb) sf_warning("VELOCITY model axes..");
   sf_axis axVel[2];
   axVel[0] = sf_iaxa(Fvel,1);
   sf_setlabel(axVel[0],"z");
@@ -285,7 +246,7 @@ int main(int argc, char* argv[])
   sf_setunit(axVel[1],"m");
   if(in_para.verb) sf_raxa(axVel[1]); /* lateral */
 
-  sf_warning("DENSITY model axes..");
+  if (in_para.verb) sf_warning("DENSITY model axes..");
   sf_axis axDen[2];
   axDen[0] = sf_iaxa(Fden,1);
   sf_setlabel(axDen[0],"z");
@@ -300,7 +261,7 @@ int main(int argc, char* argv[])
   // ====================================================
   // CHECK
   // ====================================================
-  sf_warning("CHECK MODEL DIMENSIONS..");
+  if (in_para.verb) sf_warning("CHECK MODEL DIMENSIONS..");
   if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
       (sf_n(axDen[1])!=sf_n(axVel[1]))){
     sf_error("Inconsistent model dimensions!");
@@ -309,7 +270,7 @@ int main(int argc, char* argv[])
   // ====================================================
   // ====================================================
 
-  sf_warning("WAVELET axes..");
+  if (in_para.verb) sf_warning("WAVELET axes..");
   sf_axis axWav[2];
   axWav[0] = sf_iaxa(Fwav,1);
   axWav[1] = sf_iaxa(Fwav,2);
@@ -322,7 +283,7 @@ int main(int argc, char* argv[])
     sf_raxa(axWav[1]); /* time */
   }
 
-  sf_warning("SHOT COORDINATES axes..");
+  if (in_para.verb) sf_warning("SHOT COORDINATES axes..");
   sf_axis axSou[2];
   axSou[0] = sf_iaxa(Fsou,1);
   axSou[1] = sf_iaxa(Fsou,2);
@@ -335,7 +296,7 @@ int main(int argc, char* argv[])
     sf_raxa(axSou[1]); /* coords */
   }
 
-  sf_warning("RECEIVER COORDINATES axes..");
+  if (in_para.verb) sf_warning("RECEIVER COORDINATES axes..");
   sf_axis axRec[2];
   axRec[0] = sf_iaxa(Frec,1);
   axRec[1] = sf_iaxa(Frec,2);
@@ -355,14 +316,14 @@ int main(int argc, char* argv[])
     // FWD BORN OPERATOR
 
     if (Fvpert){
-      sf_warning("VELOCITY PERTURBATION model axes..");
+      if (in_para.verb) sf_warning("VELOCITY PERTURBATION model axes..");
       axVelPert[0] = sf_iaxa(Fvpert,1);
       axVelPert[1] = sf_iaxa(Fvpert,2);
       if(in_para.verb){
         sf_raxa(axVelPert[0]); /* depth */
         sf_raxa(axVelPert[1]); /* lateral */
       }
-      sf_warning("CHECK MODEL DIMENSIONS..");
+      if (in_para.verb) sf_warning("CHECK MODEL DIMENSIONS..");
       if ((sf_n(axVel[0])!=sf_n(axVelPert[0]))||
           (sf_n(axVel[1])!=sf_n(axVelPert[1]))){
         sf_error("Inconsistent model dimensions!");
@@ -372,7 +333,7 @@ int main(int argc, char* argv[])
     }
 
     if (Frpert){
-      sf_warning("DENSITY PERTURBATION model axes..");
+      if (in_para.verb) sf_warning("DENSITY PERTURBATION model axes..");
       axDenPert[0] = sf_iaxa(Frpert,1);
       axDenPert[1] = sf_iaxa(Frpert,2);
       if(in_para.verb){
@@ -380,7 +341,7 @@ int main(int argc, char* argv[])
         sf_raxa(axDenPert[1]); /* lateral */
       }
 
-      sf_warning("CHECK MODEL DIMENSIONS..");
+      if (in_para.verb) sf_warning("CHECK MODEL DIMENSIONS..");
       if ((sf_n(axDen[0])!=sf_n(axDenPert[0]))||
           (sf_n(axDen[1])!=sf_n(axDenPert[1]))){
         sf_error("Inconsistent model dimensions!");
@@ -391,7 +352,7 @@ int main(int argc, char* argv[])
   }
   else{
     // ADJ BORN OPERATOR
-    sf_warning("SCATTERED DATA axes..");
+    if (in_para.verb) sf_warning("SCATTERED DATA axes..");
     axScData[0] = sf_iaxa(Fsdat,1);
     axScData[1] = sf_iaxa(Fsdat,2);
 
@@ -508,7 +469,7 @@ int main(int argc, char* argv[])
   /*                  BACKGROUND WAVEFIELD                      */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  if (in_para.verb) sf_warning("Background wavefield extrapolation..");
+  sf_warning("Background wavefield extrapolation..");
   start_bck_t=clock();
   bornbckwfl2d(wfl,acq,mod,born_para);
   end_bck_t = clock();
@@ -531,7 +492,7 @@ int main(int argc, char* argv[])
   if (in_para.adj==FWD){
     start_fwd_t=clock();
     // FWD BORN MODELING: model pert -> wfl
-    if (in_para.verb) sf_warning("FWD Born operator..");
+    sf_warning("FWD Born operator..");
 
     // prepare the born sources
     if (in_para.verb) sf_warning("\tMake secondary sources..");
@@ -558,7 +519,7 @@ int main(int argc, char* argv[])
   else{
     start_adj_t=clock();
     // ADJ BORN MODELING: wfl -> model pert
-    if (in_para.verb) sf_warning("Adjoint Born operator..");
+    sf_warning("Adjoint Born operator..");
 
     // extrapolate data
     if (in_para.verb) sf_warning("\tExtrapolate scattered wavefield..");
@@ -576,7 +537,7 @@ int main(int argc, char* argv[])
     if (in_para.verb) sf_warning("\tMake secondary sources..");
     // prepare the born sources
     start_vsrc_t=clock();
-    if (born_para.inputDenPerturbation)
+    if (born_para.outputDenPertImage)
       make_born_velocity_sources_2d(wfl,mod,acq,&born_para);
     end_vsrc_t=clock();
     total_vsrc_t = (float)(end_vsrc_t - start_vsrc_t) / CLOCKS_PER_SEC;
@@ -589,7 +550,8 @@ int main(int argc, char* argv[])
     if (in_para.verb) sf_warning("\tStacking..");
     // stack wavefields
     start_vstk_t=clock();
-    stack_velocity_part_2d(wfl,mod,acq,&born_para);
+    if (born_para.outputDenPertImage)
+      stack_velocity_part_2d(wfl,mod,acq,&born_para);
     end_vstk_t=clock();
     total_vstk_t = (float)(end_vstk_t - start_vstk_t) / CLOCKS_PER_SEC;
 

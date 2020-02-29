@@ -2,60 +2,24 @@
 
 The code uses a standard second-order stencil in time.
 The coefficients of the spatial stencil are computed 
-by matching the transfer function of the discretized 
-first-derivative operator to the ideal response. 
-The optimized coefficients minimize dispersion 
-given that particular size of the stencil.
+by matching the transfer function of the 6-point discretized
+first-derivative operator to the ideal response.
 
-The term 
-	ro div (1/ro grad (u))
+The code implements the linearized operator obtained from the
+system of first-order PDEs parametrized in incompressibility and density
+
+dv/dt = - 1./rho * grad(p)
+dp/dt = - K * div(v)
+
 where
-	ro   : density
-	div  : divergence op
-	grad : gradient  op
-	u    : wavefield
+  rho  : density
+  K    : incompressibility
+  div  : divergence operator
+  grad : gradient  operator
+  p,v    : pressure and particle velocity wavefields
 
-is implemented in order to obtain a positive semi-definite operator.
-
-The code implements both the forward (adj=n) and adjoint (adj=y) modeling operator.
-
-============= FILE DESCRIPTIONS   ========================      
-
-Fdat.rsf - An RSF file containing your data in the following format:
-			axis 1 - Receiver location
-			axis 2 - Time
-
-Fwav.rsf - An RSF file containing your VOLUME DENSITY INJECTION RATE 
-           wavelet information.  The sampling interval, origin time, 
-           and number of time samples will be used as the defaults for the modeling code.
-	       i.e. your wavelet needs to have the same length and parameters that you want to model with!
-	       The first axis is the number of source locations.
-	       The second axis is time.
-
-Fvel.rsf - An N dimensional RSF file that contains the values for the velocity field at every point in the computational domain.
-
-Fden.rsf - An N dimensional RSF file that contains the values for density at every point in the computational domain.
-
-Frec.rsf - Coordinates of the receivers
-		axis 1 - (x,z) of the receiver
-		axis 2 - receiver index
-
-Fsou.rsf - Coordinate of the sources
-		axis 1 - (x,z) of the source
-		axis 2 - source index
-
-Fwfl.rsf - Output wavefield
-
-verb=y/n - verbose flag
-
-snap=y/n - wavefield snapshots flag
-
-free=y/n - free surface on/off
-
-dabc=y/n - absorbing boundary conditions on/off
-
-jsnap    - wavefield snapshots sampling
-
+The models supplied by the user are wave speed and density, the code performs
+the conversion internally to buoyancy (inverse density) and incompressibility.
 
 Author: Francesco Perrone
 Date: February 2020
@@ -436,10 +400,10 @@ int main(int argc, char* argv[])
   sf_warning("PROFILING: [CPU time] ");
   sf_warning("=========================================================== ");
   if (in_para.adj==FWD){
-    sf_warning("Born FWD operator                  :  %7.3g [s]", total_fwd_t );
+    sf_warning("FWD operator                  :  %7.3g [s]", total_fwd_t );
   }
   else{
-    sf_warning("Born ADJ operator                  : %7.3g [s]", total_adj_t );
+    sf_warning("ADJ operator                  : %7.3g [s]", total_adj_t );
   }
   sf_warning("=========================================================== ");
   sf_warning("=========================================================== ");

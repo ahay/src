@@ -281,10 +281,10 @@ void prepare_born_model_2d(mod_struct_t * const mod,
                             in_para_struct_t in_para)
 /*< Prepare the born operator model parameters >*/
 {
-  sf_warning("\tPrepare the background model..");
+  if (in_para.verb) sf_warning("\tPrepare the background model..");
   prepare_model_2d(mod,in_para,axVel,axDen,Fvel,Fden);
 
-  sf_warning("\tPrepare the perturbation cubes..");
+  if (in_para.verb) sf_warning("\tPrepare the perturbation cubes..");
 
   long n1 = sf_n(axVel[0]);
   long n2 = sf_n(axVel[1]);
@@ -454,9 +454,6 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
 {
   sf_warning("\tPARTICLE VELOCITY component of the density perturbation..");
 
-  if (!para->outputDenPertImage)
-    return;
-
   long nt = acq->ntdat;
   long n1 = mod->n1;
   long n2 = mod->n2;
@@ -490,8 +487,9 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
     }
 
     for (long i=0; i<n1*n2; i++){
-      float r = mod->dmod[i];
-      rimg[i] += dt/(r*r)*(v1a[i]+v2a[i]);
+      double r = mod->dmod[i];
+      double scale = dt/(r*r);
+      rimg[i] += (float) scale*(v1a[i]+v2a[i]);
     }
 
   }
@@ -542,10 +540,10 @@ void stack_pressure_part_2d(sf_file Fvpert,
       fread(tmp,sizeof(float),nelem,para->Fswfl);
 
     for (long i=0; i<nelem; i++){
-      float const v = mod->vmod[i];
-      float const r = mod->dmod[i];
-      float scale = 2.f*v*r*dt;
-      vimg[i] += scale*tmp[i]*wp[i];
+      double const v = mod->vmod[i];
+      double const r = mod->dmod[i];
+      double scale = 2.f*v*r*dt;
+      vimg[i] += (float) scale*tmp[i]*wp[i];
     }
   }
 
@@ -570,9 +568,9 @@ void stack_pressure_part_2d(sf_file Fvpert,
         fread(tmp,sizeof(float),nelem,para->Fswfl);
 
       for (long i=0; i<nelem; i++){
-        float v = mod->vmod[i];
-        float const scale = v*v*dt;
-        rimg[i] += scale*tmp[i]*wp[i];
+        double const v = mod->vmod[i];
+        double const scale = v*v*dt;
+        rimg[i] += (float) scale*tmp[i]*wp[i];
       }
     }
 

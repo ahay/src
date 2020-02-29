@@ -288,6 +288,8 @@ static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_
   float o1 = wfl->simO1;
   float o2 = wfl->simO2;
 
+  float *sp = sf_floatalloc(64);
+
   for (long irec=0; irec<nrec; irec++){
     float xr = acq->rcoord[irec*2];
     float zr = acq->rcoord[irec*2+1];
@@ -302,11 +304,19 @@ static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_
       const float hicks2 = acq->hicksRcv2[jh+irec*8];
       for (int i=-3,ih=0; i<=4; i++,ih++){
         const float hc = acq->hicksRcv1[ih+irec*8]*hicks2;
-        wfl->pc[idx + i + N1*j] += hc*force;
+        sp[ih+8*jh] = hc*force;
+      }
+    }
+
+    for (int j=-3,jh=0; j<=4; j++,jh++){
+      for (int i=-3,ih=0; i<=4; i++,ih++){
+        wfl->pc[idx + i + N1*j] += sp[ih+8*jh];
       }
     }
 
   }
+
+  free(sp);
 
 }
 
@@ -413,9 +423,13 @@ static void extract_pres_wfl_2d(wfl_struct_t * const wfl){
   long simN1 = wfl->simN1;
 
   // copy the write chunk of wavefield
-  for (long i2=0; i2<modN2; i2++)
-    memcpy(wfl->bwfl+i2*modN1,wfl->pc+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
-
+  for (long i2=0; i2<modN2; i2++){
+    float * const pwflo = wfl->bwfl+i2*modN1;
+    float * const pwfli = wfl->pc + nabc+ (i2+nabc)*simN1;
+    for(long i1=0; i1<modN1; i1++){
+      pwflo[i1] = pwfli[i1];
+    }
+  }
 }
 
 static void extract_dat_2d(wfl_struct_t* wfl,acq_struct_t const * acq){
