@@ -44,10 +44,6 @@ Date: February 2020
  */
 
 #include <rsf.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include "prep_utils.h"
 #include "kernels.h"
 #include <time.h>
