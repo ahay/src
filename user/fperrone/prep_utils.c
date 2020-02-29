@@ -251,10 +251,34 @@ static float* build_extended_model_3d(float const *mod, long n1, long n2, long n
   }
 
   // extend left and right
+  for (long i3=next; i3<next+n3; i3++){
+    for (long i2=0; i2<next; i2++){
+      for (long i1=next; i1<next+n1; i1++){
+        extd[i1+n1ext*(        i2+n2ext*i3)] = extd[i1+n1ext*(        next+n2ext*i3)];
+        extd[i1+n1ext*(n2ext-1-i2+n2ext*i3)] = extd[i1+n1ext*(n2ext-1-next+n2ext*i3)];
+      }
+    }
+  }
 
   // extend front and back
+  for (long i3=0; i3<next; i3++){
+    for (long i2=0; i2<n2ext; i2++){
+      for (long i1=next; i1<next+n1; i1++){
+        extd[i1+n1ext*(i2+n2ext*(        i3))] = extd[i1+n1ext*(i2+n2ext*(        next))];
+        extd[i1+n1ext*(i2+n2ext*(n3ext-1-i3))] = extd[i1+n1ext*(i2+n2ext*(n3ext-1-next))];
+      }
+    }
+  }
 
   // extend up and down
+  for (long i3=0; i3<n3ext; i3++){
+    for (long i2=0; i2<n2ext; i2++){
+      for (long i1=0; i1<next; i1++){
+        extd[        i1+n1ext*(i2+n2ext*i3)] = extd[        next+n1ext*(i2+n2ext*i3)];
+        extd[n1ext-1-i1+n1ext*(i2+n2ext*i3)] = extd[n1ext-1-next+n1ext*(i2+n2ext*i3)];
+      }
+    }
+  }
 
 
   return extd;
