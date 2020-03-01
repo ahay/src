@@ -784,7 +784,7 @@ static void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t cons
 
 }
 
-static void swapwfl(wfl_struct_t* wfl)
+static void swapwfl2d(wfl_struct_t* wfl)
 {
 
   float *tmp = wfl->pc;
@@ -798,6 +798,27 @@ static void swapwfl(wfl_struct_t* wfl)
   tmp = wfl->v2c;
   wfl->v2c = wfl->v2p;
   wfl->v2p = tmp;
+
+}
+
+static void swapwfl3d(wfl_struct_t* wfl)
+{
+
+  float *tmp = wfl->pc;
+  wfl->pc = wfl->pp;
+  wfl->pp = tmp;
+
+  tmp = wfl->v1c;
+  wfl->v1c = wfl->v1p;
+  wfl->v1p = tmp;
+
+  tmp = wfl->v2c;
+  wfl->v2c = wfl->v2p;
+  wfl->v2p = tmp;
+
+  tmp = wfl->v3c;
+  wfl->v3c = wfl->v3p;
+  wfl->v3p = tmp;
 
 }
 
@@ -1028,7 +1049,7 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     // extract the data at the receiver locations
     extract_dat_2d(wfl,acq);
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
   }
 
 }
@@ -1065,7 +1086,7 @@ void fwdextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     // extract the data at the receiver locations
     extract_dat_3d(wfl,acq);
 
-    swapwfl(wfl);
+    swapwfl3d(wfl);
   }
 
 }
@@ -1100,7 +1121,7 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
     // extract the data at the receiver locations
     if (saveData) extract_dat_2d(wfl,acq);
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
   }
 
 }
@@ -1136,7 +1157,7 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
     // extract the data at the receiver locations
     extract_scat_dat_2d(wfl,acq);
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
   }
 }
 
@@ -1169,7 +1190,7 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
     }
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
   }
 
 }
@@ -1204,7 +1225,7 @@ void adjextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
     }
 
-    swapwfl(wfl);
+    swapwfl3d(wfl);
   }
 
 }
@@ -1243,7 +1264,7 @@ void bornadjextrap2d(wfl_struct_t * wfl,
     else
       fwrite(wfl->bwfl,sizeof(float),nelem,para->Fswfl);
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
   }
 
 }
