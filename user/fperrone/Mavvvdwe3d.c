@@ -232,6 +232,53 @@ int main(int argc, char* argv[])
   if (in_para.verb) sf_warning("Read parameter cubes..");
   prepare_model_3d(mod,in_para,axVel,axDen,Fvel,Fden);
 
+  // PREPARE THE ACQUISITION STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
+  prepare_acquisition_3d(acq, in_para, axSou, axRec, axWav, Fsou, Frec,Fwav);
+
+  // PREPARATION OF THE WAVEFIELD STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
+  prepare_wfl_3d(wfl,mod,Fdat,Fwfl,in_para);
+
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                  EXTRAPOLATION KERNEL                      */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Start Extrapolation..");
+
+  switch (in_para.adj){
+  case FWD:
+    start_fwd_t=clock();
+//    fwdextrap3d(wfl,acq,mod);
+    end_fwd_t=clock();
+    total_fwd_t = (float)(end_fwd_t - start_fwd_t) / CLOCKS_PER_SEC;
+    break;
+  case ADJ:
+    start_adj_t=clock();
+//    adjextrap3d(wfl,acq,mod);
+    end_adj_t=clock();
+    total_adj_t = (float)(end_adj_t - start_adj_t) / CLOCKS_PER_SEC;
+    break;
+  }
+
+  if (in_para.verb) sf_warning("Extrapolation completed..");
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  /*                            FREE MEMORY                       */
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Free memory..");
+  clear_wfl_3d(wfl);
+  free(wfl);
+
+  clear_acq_3d(acq);
+  free(acq);
+
+  clear_model(mod);
+  free(mod);
+
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
   /*                   CLOSE FILES AND EXIT                       */

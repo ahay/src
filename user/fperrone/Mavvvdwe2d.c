@@ -345,7 +345,6 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   if (in_para.verb) sf_warning("Start Extrapolation..");
 
-
   switch (in_para.adj){
   case FWD:
     start_fwd_t=clock();
@@ -361,6 +360,7 @@ int main(int argc, char* argv[])
     break;
   }
 
+  if (in_para.verb) sf_warning("Extrapolation completed..");
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
   /*                            FREE MEMORY                       */
@@ -373,7 +373,7 @@ int main(int argc, char* argv[])
   clear_acq_2d(acq);
   free(acq);
 
-  clear_model_2d(mod);
+  clear_model(mod);
   free(mod);
 
   /* -------------------------------------------------------------*/

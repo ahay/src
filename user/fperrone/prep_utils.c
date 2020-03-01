@@ -40,10 +40,13 @@ struct wfl_struct{
   // velocities
   float *v1c; // component 1 current
   float *v2c; // component 2 current
+  float *v3c; // component 3 current
   float *v1p; // component 1 previous
   float *v2p; // component 2 previous
+  float *v3p; // component 3 previous
   float *v1a; // component 1 aux
-  float *v2a; // component 1 aux
+  float *v2a; // component 2 aux
+  float *v3a; // component 3 aux
   float *tap1;  // ABC coeffs
   float *tap2;  //
   float *tap3;
@@ -703,7 +706,7 @@ void stack_pressure_part_2d(sf_file Fvpert,
 
 }
 
-void clear_model_2d(mod_struct_t* mod)
+void clear_model(mod_struct_t* mod)
 /*< Free the model parameter cubes >*/
 {
   free(mod->vmod);
@@ -716,7 +719,7 @@ void clear_born_model_2d(mod_struct_t* mod)
 /*< Free the model perturbation parameters cubes for the born operator >*/
 {
 
-  clear_model_2d(mod);
+  clear_model(mod);
 
   free(mod->velpert);
   free(mod->denpert);
@@ -746,6 +749,66 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
   acq->rcoord = sf_floatalloc(2*acq->nr);
   for (long irec=0; irec<acq->nr; irec++)
     sf_floatread(acq->rcoord+2*irec,2,Frec);
+
+  // wavelet parameters
+  acq->nt = sf_n(axwav[1]);
+  acq->dt = sf_d(axwav[1]);
+  acq->ot = sf_o(axwav[1]);
+  acq->ntdat = (acq->nt/para.jsnap)*para.jsnap;
+  acq->ntsnap= (acq->nt+para.jsnap-1)/para.jsnap;
+  if (para.verb) sf_warning("\t Number of wavefield snapshots = %d",acq->ntsnap);
+  if (para.verb) sf_warning("\t Number of data timesteps simulated = %d",acq->ntdat);
+
+  long nsouwav = sf_n(axwav[0]);
+  long nwavsamp = nsouwav*acq->ntdat;
+
+  if (para.verb) {
+    if (nsouwav==1){
+      sf_warning("\t Using the same wavelet for all shots!");
+    }
+    else{
+      if (nsouwav==acq->ns){
+        sf_warning("\t Every shot has a different wavelet");
+      }
+      else{
+        sf_error("Inconsistent number of wavelets and shots");
+        return;
+      }
+    }
+  }
+
+
+  acq->wav = sf_floatalloc(nwavsamp);
+  memset(acq->wav,0,nwavsamp*sizeof(float));
+  for (int isou=0; isou<nsouwav; isou++)
+    sf_floatread(acq->wav+isou*acq->ntdat,acq->nt,Fwav);
+
+}
+
+void prepare_acquisition_3d( acq_struct_t* acq, in_para_struct_t para,
+    sf_axis axsou[2], sf_axis axrec[2], sf_axis axwav[2],
+    sf_file Fsou, sf_file Frec, sf_file Fwav)
+/*< Read the acquisition geometry from files >*/
+{
+  //
+  if (sf_n(axsou[0])!=3)
+    sf_error("Wrong number of coordinates in the source file!");
+
+  // shot coordinates
+  acq->ns = sf_n(axsou[1]);
+  acq->scoord = sf_floatalloc(3*acq->ns);
+  for (long isou=0; isou<acq->ns; isou++)
+    sf_floatread(acq->scoord+3*isou,3,Fsou);
+
+  //
+  if (sf_n(axrec[0])!=3)
+    sf_error("Wrong number of coordinates in the receiver file!");
+
+  // receiver coordinates
+  acq->nr = sf_n(axrec[1]);
+  acq->rcoord = sf_floatalloc(3*acq->nr);
+  for (long irec=0; irec<acq->nr; irec++)
+    sf_floatread(acq->rcoord+3*irec,3,Frec);
 
   // wavelet parameters
   acq->nt = sf_n(axwav[1]);
@@ -905,6 +968,24 @@ void clear_acq_2d(acq_struct_t *acq)
   free(acq->wav);
 }
 
+void clear_acq_3d(acq_struct_t *acq)
+/*< Free the arrays in the acquisition structure >*/
+{
+
+  free(acq->hicksRcv1);
+  free(acq->hicksRcv2);
+  free(acq->hicksRcv3);
+
+  free(acq->hicksSou1);
+  free(acq->hicksSou2);
+  free(acq->hicksSou3);
+
+  free(acq->scoord);
+  free(acq->rcoord);
+
+  free(acq->wav);
+}
+
 void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file Fwfl, in_para_struct_t para)
 /*< Allocate the wavefield structure >*/
 {
@@ -962,6 +1043,74 @@ void prepare_wfl_2d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file 
 
 }
 
+void prepare_wfl_3d(wfl_struct_t *wfl,mod_struct_t *mod, sf_file Fdata, sf_file Fwfl, in_para_struct_t para)
+/*< Allocate the wavefield structure >*/
+{
+  wfl->modN1 = mod->n1;
+  wfl->modN2 = mod->n2;
+  wfl->modN3 = mod->n3;
+
+  wfl->nabc = para.nb;
+  wfl->simN1 = mod->n1 + 2*para.nb;
+  wfl->simN2 = mod->n2 + 2*para.nb;
+  wfl->simN3 = mod->n3 + 2*para.nb;
+
+  wfl->d1 = mod->d1;
+  wfl->d2 = mod->d2;
+  wfl->d3 = mod->d3;
+
+  wfl->modO1 = mod->o1;
+  wfl->modO2 = mod->o2;
+  wfl->modO3 = mod->o3;
+  wfl->simO1 = mod->o1 - para.nb*mod->d1;
+  wfl->simO2 = mod->o2 - para.nb*mod->d2;
+  wfl->simO3 = mod->o3 - para.nb*mod->d3;
+
+  long nelem = wfl->simN1*wfl->simN2*wfl->simN3;
+  long wflsize = nelem*sizeof(float);
+  wfl->pc = sf_floatalloc(nelem);
+  wfl->pp = sf_floatalloc(nelem);
+  wfl->pa = sf_floatalloc(nelem);
+  memset(wfl->pc,0,wflsize);
+  memset(wfl->pp,0,wflsize);
+  memset(wfl->pa,0,wflsize);
+
+  wfl->v1c = sf_floatalloc(nelem);
+  wfl->v1p = sf_floatalloc(nelem);
+  wfl->v1a = sf_floatalloc(nelem);
+  memset(wfl->v1c,0,wflsize);
+  memset(wfl->v1p,0,wflsize);
+  memset(wfl->v1a,0,wflsize);
+
+  wfl->v2c = sf_floatalloc(nelem);
+  wfl->v2p = sf_floatalloc(nelem);
+  wfl->v2a = sf_floatalloc(nelem);
+  memset(wfl->v2c,0,wflsize);
+  memset(wfl->v2p,0,wflsize);
+  memset(wfl->v2a,0,wflsize);
+
+  wfl->v3c = sf_floatalloc(nelem);
+  wfl->v3p = sf_floatalloc(nelem);
+  wfl->v3a = sf_floatalloc(nelem);
+  memset(wfl->v3c,0,wflsize);
+  memset(wfl->v3p,0,wflsize);
+  memset(wfl->v3a,0,wflsize);
+
+  // sponge
+  wfl->tap1 = sf_floatalloc(wfl->simN1);
+  wfl->tap2 = sf_floatalloc(wfl->simN2);
+  wfl->tap3 = sf_floatalloc(wfl->simN3);
+
+  wfl->bwfl = sf_floatalloc(wfl->modN1*wfl->modN2*wfl->modN3);
+
+  wfl->freesurf = para.fsrf;
+
+  wfl->Fdata = Fdata;
+  wfl->Fwfl  = Fwfl;
+  wfl->snap = para.snap;
+  wfl->jsnap=para.jsnap;
+}
+
 void prepare_born_wfl_2d( wfl_struct_t * const wfl, mod_struct_t * mod,
                           sf_file Fdata, sf_file Fwfl,
                           sf_file Fsdat, sf_file Fswfl,
@@ -998,6 +1147,32 @@ void clear_wfl_2d(wfl_struct_t *wfl)
 
   free(wfl->bwfl);
 
+}
+
+void clear_wfl_3d(wfl_struct_t *wfl)
+/*< Clear the wavefield structure >*/
+{
+  free(wfl->pc);
+  free(wfl->pp);
+  free(wfl->pa);
+
+  free(wfl->v1c);
+  free(wfl->v1p);
+  free(wfl->v1a);
+
+  free(wfl->v2c);
+  free(wfl->v2p);
+  free(wfl->v2a);
+
+  free(wfl->v3c);
+  free(wfl->v3p);
+  free(wfl->v3a);
+
+  free(wfl->tap1);
+  free(wfl->tap2);
+  free(wfl->tap3);
+
+  free(wfl->bwfl);
 }
 
 void clear_born_wfl_2d(wfl_struct_t *wfl)
