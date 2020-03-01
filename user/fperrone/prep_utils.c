@@ -428,6 +428,67 @@ void prepare_born_model_2d(mod_struct_t * const mod,
 
 }
 
+void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, acq_struct_t const * acq,born_setup_struct_t *para)
+/*< computing the particle velocity from the background pressure field >*/
+{
+  sf_warning("\tCompute velocity from pressure..");
+
+  long n1 = wfl->modN1;
+  long n2 = wfl->modN2;
+  long nb = wfl->nabc;
+  long nt = acq->ntdat;
+
+  float dt = acq->dt;
+  float d1 = wfl->d1;
+  float d2 = wfl->d2;
+
+  float *pp = sf_floatalloc(n1*n2);
+  float *v1= sf_floatalloc(n1*n2);
+  float *v2= sf_floatalloc(n1*n2);
+
+  memset(v1,0,n1*n2*sizeof(float));
+  memset(v2,0,n1*n2*sizeof(float));
+
+  if (para->outputScatteredWfl)
+    sf_seek(wfl->Fswfl,0,SEEK_SET);
+  else
+    rewind(para->Fswfl);
+
+  for (long it=0; it<nt; it++){
+    if (para->outputScatteredWfl)
+      sf_floatread(pp,n1*n2,wfl->Fswfl);
+    else
+      fread(pp,sizeof(float),n1*n2,para->Fswfl);
+
+    for (long i2=0; i2<n2; i2++){
+      for (long i1=0; i1<n1; i1++){
+        float k = mod->incomp[i1+nb  +(i2+nb)*(n1+2*nb)];
+        pp[i1  +i2*n1] *= k*dt;
+      }
+    }
+
+    for (long i2=0; i2<n2; i2++){
+      for (long i1=2; i1<n1-3; i1++){
+        v1[i1+i2*n1] -= (C1*(pp[i1+1+i2*n1] - pp[i1  +i2*n1])+
+                         C2*(pp[i1+2+i2*n1] - pp[i1-1+i2*n1])+
+                         C3*(pp[i1+3+i2*n1] - pp[i1-2+i2*n1]))/d1;
+      }
+    }
+
+    for (long i2=2; i2<n2-3; i2++){
+      for (long i1=0; i1<n1; i1++){
+        v2[i1+i2*n1] -= (C1*(pp[i1+(i2+1)*n1] - pp[i1+(i2  )*n1])+
+                         C2*(pp[i1+(i2+2)*n1] - pp[i1+(i2-1)*n1])+
+                         C3*(pp[i1+(i2+3)*n1] - pp[i1+(i2-2)*n1]))/d2;
+      }
+    }
+
+    fwrite(v1,sizeof(float),n1*n2,para->Fpv1);
+    fwrite(v2,sizeof(float),n1*n2,para->Fpv2);
+  }
+
+}
+
 void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
                                    mod_struct_t const * mod,
                                    acq_struct_t const * acq,

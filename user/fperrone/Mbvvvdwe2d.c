@@ -534,6 +534,9 @@ int main(int argc, char* argv[])
     else
       fseek(born_para.Fswfl,0,SEEK_SET);
 
+    if (born_para.outputDenPertImage)
+      make_pv_from_pres_2d(wfl,mod,acq,&born_para);
+
     if (in_para.verb) sf_warning("\tMake secondary sources..");
     // prepare the born sources
     start_vsrc_t=clock();

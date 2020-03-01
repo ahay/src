@@ -1245,12 +1245,6 @@ void bornadjextrap2d(wfl_struct_t * wfl,
   for (int it=0; it<nt; it++){
 
     velupd2d(wfl,mod,acq,ADJ);
-    if (para->outputDenPertImage){
-      extract_vel_wfl_2d(wfl,1);
-      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv1);
-      extract_vel_wfl_2d(wfl,2);
-      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv2);
-    }
     presupd2d(wfl,mod,acq,ADJ);
     injectPdata(wfl,mod,acq,it);
 
