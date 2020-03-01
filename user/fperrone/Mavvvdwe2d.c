@@ -310,9 +310,9 @@ int main(int argc, char* argv[])
   prepare_wfl_2d(wfl,mod,Fdat,Fwfl,in_para);
 
   if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
-  setupABC(wfl);
+  setupABC_2d(wfl);
   if (in_para.verb) sf_warning("Prepare the interpolation coefficients for source and receivers..");
-  set_sr_interpolation_coeffs(acq,wfl);
+  set_sr_interpolation_coeffs_2d(acq,wfl);
 
   // WAVEFIELD HEADERS
   if (snap){

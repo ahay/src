@@ -161,7 +161,10 @@ struct born_setup_struct{
 #define NOP 3 /* derivative operator half-size */
 /*^*/
 
-#define IDX2D(i1,i2)((i1) + (i2)*n1)
+#define IDX2D(i1,i2)((i1) + n1*(i2))
+/*^*/
+
+#define IDX3D(i1,i2,i3)( (i1) + n1*( (i2) + n2*(i3) ) )
 /*^*/
 
 /* LS coefficients */
@@ -908,7 +911,7 @@ static double kwin(double x, double xmax){
 
 }
 
-void set_sr_interpolation_coeffs(acq_struct_t * const acq, wfl_struct_t const * wfl)
+void set_sr_interpolation_coeffs_2d(acq_struct_t * const acq, wfl_struct_t const * wfl)
 /*< interpolation coefficients for source injection and receiver extraction >*/
 {
   long nsous = acq->ns;
@@ -947,6 +950,64 @@ void set_sr_interpolation_coeffs(acq_struct_t * const acq, wfl_struct_t const * 
     for (int i=-3,ii=0; i<=4; i++,ii++){
       acq->hicksRcv1[ii+irec*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
       acq->hicksRcv2[ii+irec*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
+    }
+  }
+
+}
+
+void set_sr_interpolation_coeffs_3d(acq_struct_t * const acq, wfl_struct_t const * wfl)
+/*< interpolation coefficients for source injection and receiver extraction >*/
+{
+  long nsous = acq->ns;
+  long nrecs = acq->nr;
+
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+  float o3 = wfl->simO3;
+  float d1 = wfl->d1;
+  float d2 = wfl->d2;
+  float d3 = wfl->d3;
+
+  acq->hicksSou1 = sf_floatalloc(8*nsous);
+  acq->hicksSou2 = sf_floatalloc(8*nsous);
+  acq->hicksSou3 = sf_floatalloc(8*nsous);
+  acq->hicksRcv1 = sf_floatalloc(8*nrecs);
+  acq->hicksRcv2 = sf_floatalloc(8*nrecs);
+  acq->hicksRcv3 = sf_floatalloc(8*nrecs);
+
+  for (long isou=0; isou<nsous; isou++){
+    float x1s = acq->scoord[3*isou+2]; // z coordinate
+    float x3s = acq->scoord[3*isou+1]; // y coordinate
+    float x2s = acq->scoord[3*isou  ]; // x coordinate
+
+    long ix1s = (x1s-o1)/d1;
+    long ix2s = (x2s-o2)/d2;
+    long ix3s = (x3s-o3)/d3;
+    float rem1 = (x1s - (ix1s*d1+o1))/d1;
+    float rem2 = (x2s - (ix2s*d2+o2))/d2;
+    float rem3 = (x3s - (ix3s*d3+o3))/d3;
+    for (int i=-3,ii=0; i<=4; i++,ii++){
+      acq->hicksSou1[ii+isou*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
+      acq->hicksSou2[ii+isou*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
+      acq->hicksSou3[ii+isou*8] = sinc(i-rem3)*kwin(i-rem3,4.5);
+    }
+  }
+
+  for (long irec=0; irec<nrecs; irec++){
+    float x1r = acq->rcoord[3*irec+2]; // z coordinate
+    float x3r = acq->rcoord[3*irec+1]; // z coordinate
+    float x2r = acq->rcoord[3*irec  ]; // x coordinate
+
+    long ix1r = (x1r-o1)/d1;
+    long ix2r = (x2r-o2)/d2;
+    long ix3r = (x3r-o3)/d3;
+    float rem1 = (x1r - (ix1r*d1+o1))/d1;
+    float rem2 = (x2r - (ix2r*d2+o2))/d2;
+    float rem3 = (x3r - (ix3r*d3+o3))/d3;
+    for (int i=-3,ii=0; i<=4; i++,ii++){
+      acq->hicksRcv1[ii+irec*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
+      acq->hicksRcv2[ii+irec*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
+      acq->hicksRcv3[ii+irec*8] = sinc(i-rem3)*kwin(i-rem3,4.5);
     }
   }
 

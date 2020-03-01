@@ -240,6 +240,31 @@ int main(int argc, char* argv[])
   if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
   prepare_wfl_3d(wfl,mod,Fdat,Fwfl,in_para);
 
+  if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
+  setupABC_3d(wfl);
+  if (in_para.verb) sf_warning("Prepare the interpolation coefficients for source and receivers..");
+  set_sr_interpolation_coeffs_3d(acq,wfl);
+
+  // WAVEFIELD HEADERS
+  if (snap){
+    sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
+                                acq->ot,
+                                acq->dt*in_para.jsnap);
+    sf_setlabel(axTimeWfl,"time");
+    sf_setunit(axTimeWfl,"s");
+
+    sf_oaxa(Fwfl,axVel[0],1);
+    sf_oaxa(Fwfl,axVel[1],2);
+    sf_oaxa(Fwfl,axVel[2],3);
+    sf_oaxa(Fwfl,axTimeWfl,4);
+  }
+
+  // DATA HEADERS
+  sf_oaxa(Fdat,axRec[1],1);
+  sf_axis axTimeData = sf_maxa( acq->ntdat,
+                                acq->ot,
+                                acq->dt);
+  sf_oaxa(Fdat,axTimeData,2);
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -251,7 +276,7 @@ int main(int argc, char* argv[])
   switch (in_para.adj){
   case FWD:
     start_fwd_t=clock();
-//    fwdextrap3d(wfl,acq,mod);
+    fwdextrap3d(wfl,acq,mod);
     end_fwd_t=clock();
     total_fwd_t = (float)(end_fwd_t - start_fwd_t) / CLOCKS_PER_SEC;
     break;
