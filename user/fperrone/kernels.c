@@ -93,17 +93,17 @@ static void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t co
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
-        v1a[idx] = (C1*(pa[i1+1+i2*n1] - pa[i1  +i2*n1])+
-                    C2*(pa[i1+2+i2*n1] - pa[i1-1+i2*n1])+
-                    C3*(pa[i1+3+i2*n1] - pa[i1-2+i2*n1]))/d1;
+        v1a[idx] = (C1*(pa[idx+1] - pa[idx  ])+
+                    C2*(pa[idx+2] - pa[idx-1])+
+                    C3*(pa[idx+3] - pa[idx-2]))/d1;
       }
     }
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
-        v2a[idx] = (C1*(pa[i1+(i2+1)*n1] - pa[i1+i2    *n1])+
-                    C2*(pa[i1+(i2+2)*n1] - pa[i1+(i2-1)*n1])+
-                    C3*(pa[i1+(i2+3)*n1] - pa[i1+(i2-2)*n1]))/d2;
+        v2a[idx] = (C1*(pa[idx+1*n1] - pa[idx     ])+
+                    C2*(pa[idx+2*n1] - pa[idx-1*n1])+
+                    C3*(pa[idx+3*n1] - pa[idx-2*n1]))/d2;
       }
     }
 
