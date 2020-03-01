@@ -282,7 +282,7 @@ int main(int argc, char* argv[])
     break;
   case ADJ:
     start_adj_t=clock();
-//    adjextrap3d(wfl,acq,mod);
+    adjextrap3d(wfl,acq,mod);
     end_adj_t=clock();
     total_adj_t = (float)(end_adj_t - start_adj_t) / CLOCKS_PER_SEC;
     break;
