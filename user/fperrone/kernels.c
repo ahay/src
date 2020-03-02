@@ -1,7 +1,8 @@
 #include <rsf.h>
 #include "prep_utils.h"
 
-static void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
+void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
+/*< particle velocity time step in 2d >*/
 {
 
   long const n1 = wfl->simN1;
@@ -130,7 +131,8 @@ static void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t co
 
 }
 
-static void velupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
+void velupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
+/*< particle velocity time step in 3d >*/
 {
 
   long const n1 = wfl->simN1;
@@ -341,7 +343,8 @@ static void velupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t co
 
 }
 
-static void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, adj_t adjflag)
+void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, adj_t adjflag)
+/*< pressure time step in 2d >*/
 {
 
   long const n1 = wfl->simN1;
@@ -446,7 +449,8 @@ static void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t c
 
 }
 
-static void presupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, adj_t adjflag)
+void presupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, adj_t adjflag)
+/*< pressure time step in 3d >*/
 {
 
   long const n1 = wfl->simN1;
@@ -595,10 +599,11 @@ static void presupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t c
 }
 
 
-static void injectPsource2d(wfl_struct_t* wfl,
+void injectPsource2d(wfl_struct_t* wfl,
                           mod_struct_t const * mod,
                           acq_struct_t const * acq,
                           long it)
+/*< Injection of the source signature in 2d >*/
 {
 
   long nsou = acq->ns;
@@ -684,7 +689,9 @@ static void injectPsource3d(wfl_struct_t* wfl,
 
 }
 
-static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it){
+void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it)
+/*< inject the recorded data in 2d >*/
+{
 
   long nrec = acq->nr;
 
@@ -754,7 +761,9 @@ static void injectBornVelocitySource(wfl_struct_t * const wfl, mod_struct_t cons
 
 }
 
-static void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
+void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it)
+/*< injection of a extended source over the whole volume in 2d >*/
+{
 
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
@@ -784,7 +793,8 @@ static void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t cons
 
 }
 
-static void swapwfl2d(wfl_struct_t* wfl)
+void swapwfl2d(wfl_struct_t* wfl)
+/*< wavefield pointers circulation 2d >*/
 {
 
   float *tmp = wfl->pc;
@@ -823,7 +833,8 @@ static void swapwfl3d(wfl_struct_t* wfl)
 }
 
 
-static void extract_vel_wfl_2d(wfl_struct_t* wfl, int comp)
+void extract_vel_wfl_2d(wfl_struct_t* wfl, int comp)
+/*< Extracts the velocity components in 2d >*/
 {
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
@@ -844,7 +855,9 @@ static void extract_vel_wfl_2d(wfl_struct_t* wfl, int comp)
 
 }
 
-static void extract_pres_wfl_2d(wfl_struct_t * const wfl){
+void extract_pres_wfl_2d(wfl_struct_t * const wfl)
+/*< extract the pressure wavefield 2d >*/
+{
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
   long nabc  = wfl->nabc;
@@ -992,7 +1005,9 @@ static void extract_scat_dat_2d(wfl_struct_t * const wfl,acq_struct_t const *acq
 
 }
 
-static void applyFreeSurfaceBC2d(wfl_struct_t *wfl){
+void applyFreeSurfaceBC2d(wfl_struct_t *wfl)
+/*< apply the free surface boundary condition at the top of the model in 2d >*/
+{
 
   long const nb = wfl->nabc;
   long const n1 = wfl->simN1;
@@ -1004,7 +1019,9 @@ static void applyFreeSurfaceBC2d(wfl_struct_t *wfl){
 
 }
 
-static void applyFreeSurfaceBC3d(wfl_struct_t *wfl){
+void applyFreeSurfaceBC3d(wfl_struct_t *wfl)
+/*< apply the free surface boundary condition at the top of the model in 3d >*/
+{
 
   long const nb = wfl->nabc;
   long const n1 = wfl->simN1;
