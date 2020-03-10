@@ -65,6 +65,10 @@ tccs/shemd/hyperoil
 tccs/shemd/synth1
 tccs/shemd/fxemddemo
 tccs/shemd/fxmssademo
+tccs/strsvd/complex
+tccs/strsvd/dipsteer
+tccs/strsvd/fieldstrsvd
+tccs/strsvd/hyper
 tccs/timelapse/timelapse
 xjtu/primer/testelastic2d
 '''
