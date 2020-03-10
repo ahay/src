@@ -53,6 +53,8 @@ slim/slimUserManual/sffdct
 tccs/atten/karman1
 tccs/diffr/chan3d
 tccs/diffr/gom
+tccs/drr3d/synth
+tccs/drr3d/field
 tccs/avo/avo2
 tccs/opwd/wrap
 tccs/emdpf/fxdecon
