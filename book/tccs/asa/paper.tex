@@ -1,0 +1,248 @@
+\published{Journal of Geophysics and Engineering, 12, no. 12, 175-187, (2015)}
+
+\title{Application of spectral decomposition using regularized non-stationary autoregression to random noise attenuation}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Wencheng Yang\footnotemark[1], Runqiu Wang\footnotemark[1], Yangkang Chen\footnotemark[2], Jian Wu\footnotemark[1], Shan Qu\footnotemark[1], Jiang Yuan\footnotemark[1] and Shuwei Gan\footnotemark[1]}
+\address{
+\footnotemark[1] State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200 \\
+ziyouqishi\_2014@163.com \\
+\footnotemark[2]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+Email: ykchen@utexas.edu
+}
+\lefthead{Yang et al.}
+\righthead{Denoising by SDRNAR}
+
+% for multiple-revision
+\DeclareRobustCommand{\dlo}[1]{}
+\DeclareRobustCommand{\wen}[1]{#1}
+\maketitle
+
+\begin{abstract}
+
+We propose an application of spectral decomposition using regularized non-stationary autoregression (SDRNAR) to random noise attenuation. SDRNAR is a recently proposed signal-analysis method, which aims at decomposing the seismic signal into several spectral components, each of which has a smoothly variable frequency and smoothly variable amplitude. 
+In the proposed novel denoising approach, random noise is deemed to be the residual part of decomposed spectral components because it is unpredictable. 
+One unique property of this novel denoising approach is that the amplitude maps 
+for different frequency components can also be obtained during the denoising process, which can be valuable for some interpretation tasks. Compared with spectral decomposition algorithm by empirical mode decomposition (EMD), SDRNAR has higher efficiency and better decomposition performance. Compared with $f$-$x$ deconvolution\wen{ and mean filter}, the proposed denoising approach can obtain higher signal-to-noise ratio (SNR) and preserve more useful energy.  \wen{The proposed approach can only be applied to seismic profiles with relatively flat events, which becomes its main limitation. However, because it is applied trace by trace, it can preserve spatial discontinuities}. We use both synthetic and field data examples to demonstrate the performance of the proposed method. 
+
+\end{abstract}
+
+\section{Introduction}
+Random noise attenuation plays an indispensable role in seismic data processing. The useful signal that is smeared in the ambient random noise is often neglected and thus may cause fake discontinuity of seismic events and artifact in final migrated image. Enhancing the useful signal while preserving edge properties of the seismic profiles by attenuating random noise can help reduce interpretation difficulties and misleading risks for oil \& gas detection. There has been a bunch of random noise attenuation approaches. 
+
+The widely used $f-x$ deconvolution \cite[]{canales} can achieve good result for linear events but may fail in handling complex or hyperbolic events. The way to deal with this linear-events dependence limitation is to use local $f-x$ deconvolution with small windows. However, different window size\wen{s} will result in different denoising effects and \wen{the} window size is actually data dependent. Thus, localized $f-x$ deconvolution with small processing windows is often hard to be implemented in practice. \wen{In addition to the local $f-x$ deconvolution with small windows, forward-backward prediction method \cite[]{yanghua1999} is also effective, but is still limited to linear events.} A mean or median filter \cite[]{nlm,liuyang2009tvmf,yangkang2014svmf} is often used to attenuate specific types of random noise. For example, a mean filter is only effective to attenuate highly Gaussian white noise, and a median filter \cite[]{yangkang2014svmf,yangkang2014nmo} can only remove spike-like random noise with excellent performance. An eigen-image based approach \cite[]{bekara2007}, or sometimes referred as global singular value decomposition (SVD), is effective for horizontal-events seismic profiles, but can not be adapted to complex profile. Otherwise, much useful dipping energy will be removed. An enhanced version of this method turns global SVD to local SVD \cite[]{bekara2007}, where a dip steering process is performed in each local processing window to make the local events flat. The problem for local SVD is that only one slope component for each processing window is allowed, and also the size of each processing window is often difficult to select. Matrix completion via $f-x$ domain multichannel singular spectrum analysis (MSSA) can handle complex dipping events well by extracting the first several eigen components after SVD for each frequency slice. The $f-x$ MSSA approach is based on a pre-known rank of the seismic data. However, for complex seismic data, the rank is hard to select, and for curved events, the rank tends to be high and thus will involve a serious rank-mixing problem. One widely used denoising approach that has relative ease for controlling parameters is spectral decomposition. \wen{\cite{yangkang2014simi} proposed a post-processing strategy in order to guarantee no coherent signal is lost in the removed noise section.}
+
+Spectral decomposition of seismic data into different components is often used in random noise attenuation because useful energy and random noise usually reside in different spectral bands. Once signal and random noise are separated in different spectral scales, the random noise can be effectively attenuated by simply removing the large scale components. Existing spectral decomposition schemes include the Fourier transform, wavelet transform \cite[]{mallat,wavelet}, curvelet transform \cite[]{curvelet}, seislet transform \cite[]{seislet,yangkang20142}\wen{, and matching pursuit method \cite[]{yanghua2007,yanghua2010}}. Each of them has some special properties. 
+
+\cite{emd} proposed a new signal decomposition method called Empirical Mode Decomposition (EMD). The original aim of EMD is to stabilize a complex signal, that is, to decompose a signal into a series of Intrinsic Mode Functions (IMF). Each IMF has a locally constant frequency. The frequency of each IMF is decreasing according to the sequence in which each IMF is separated out. EMD is a breakthrough in the analysis of linear and stable spectrum, because it can adaptively separate a\dlo{n} nonlinear and non-stationary signal, which is the feature of seismic data, into different frequency ranges. The random noise can be removed by removing the first IMF, which corresponds to the highest oscillatory components. \wen{EMD can also be utilized in each frequency slice in the $f-x$ domain to preserve horizontal energy, while leaving the dipping energy dealt with by other specific denoising approaches \cite[]{yangkang2014eage1,yangkang2014shemd}}.
+
+\cite{sdrnar} proposed a novel spectral decomposition scheme termed spectral decomposition using regularized non-stationary autoregression (SDRNAR), which aims at decomposing a seismic signal into sub-signals with smoothly variable frequency and smoothly variable amplitude. This method differs from EMD in that it can more explicitly control the frequency and amplitude of different components and their smoothness than EMD. 
+
+The motivation for \cite{sdrnar} to propose this method is to provide a faster and more precise way to implement spectral analysis. Inspired by the application of EMD to random noise attenuation in the signal-processing field, in this paper, we apply SDRNAR to random noise attenuation in the $t-x$ domain. Instead of removing the first IMF, we remove the residual of SDRNAR, because the random noise is thought to be the highest oscillatory and thus unpredictably distributed.  The uniqueness of the proposed denoising approach is that all the spectral information as indicated by \cite{sdrnar} can be achieved during the denoising process. Compared with EMD, SDRNAR can separate the seismic data into different frequency component with much less frequency-component mixture. We show that SDRNAR can separate the useful signal components and noise effectively while EMD can not. We compared the proposed denoising approach with the well-known $f$-$x$ deconvolution and mean filter according to their denoising performance. Results show that, the proposed approach can preserve much more useful energy than $f$-$x$ deconvolution and mean filter. 
+
+We organize the paper as follows: we first introduce the basis of regression analysis, then we review the principle of SDRNAR and propose the application of SDRNAR to random noise attenuation, finally we use both synthetic and field data examples to demonstrate the performance of the proposed approach and make a comparison with the alternatives.
+
+
+\section{Method}
+\subsection{Regression analysis}
+
+Let's first review the classic stationary regression theory. Let $d(t)$ be a time series, it can be represented in the norm of $b_n(t)(n=1,2,\cdots,N)$ (called basis function) in the least square criteria: 
+
+\begin{equation}
+\label{eq:one}
+\min\parallel d(t)-\sum_{n=1}^{N}a_nb_n(t)\parallel_2^2,
+\end{equation}
+where $a_n$ is the regressive coefficient and $\parallel \parallel_2^2$ denotes the squared \dlo{L-2}\wen{L2} norm of a function. In the non-stationary case, the regressive coefficients become variable with time, which can be expressed as:
+
+\begin{equation}
+\label{eq:two}
+\min\parallel d(t)-\sum_{n=1}^{N}a_n(t)b_n(t)\parallel_2^2.
+\end{equation}
+
+The minimization of equation \ref{eq:two} is ill-posed for the reason that more unknown variables than given variables need to be found. In the theory of SDRNAR, \cite{sdrnar} used shaping regularization to constrain equation \ref{eq:two}.
+
+\subsection{Denoising by spectral decomposition}
+
+The non-stationary decomposition model for a complex signal $d(t)$ is:
+
+\begin{equation}
+\label{eq:three}
+d(t)=\sum_{n=1}^{N}d_n(t)=\sum_{n=1}^{N}\hat{A}_n(t)e^{i\Phi_n(t)}+r(t),
+\end{equation}
+
+where $d_n(t)$, $\hat{A}_n(t)$, $\Phi_n(t)$, $r(t)$ stand for \dlo{sub-signal}\wen{decomposed signal}, local amplitude, local phase and residual respectively. $\hat{A}_n(t)$ can be found by following equation \ref{eq:four} using regularized non-stationary regression (RNR): 
+
+\begin{equation}
+\label{eq:four}
+\min\parallel d(t)-\sum_{n=1}^{N}\hat{A}_n(t)e^{i\Phi_n(t)}\parallel_2^2,
+\end{equation}
+
+and $\Phi_n(t)$ can be found by time integration of the instantaneous frequency $f_n(t)$ following equation \ref{eq:five}:
+
+\begin{equation}
+\label{eq:five}
+\Phi_n(t)=2\pi\int_0^t f_n(\tau)d\tau.
+\end{equation}
+
+The instantaneous frequency $f_n(t)$ in equation \ref{eq:five} can be determined directly from the phase of different complex roots $\hat Z_n(t)$ of the polynomial function (shown in equation \ref{eq:poly}) following equation \ref{eq:instf}:
+
+\begin{equation}
+\label{eq:instf}
+f_n(t)=-Re\left[ arg\left(\frac{\hat{Z}_n(t)}{2\pi\Delta t}\right)\right],
+\end{equation}
+
+\begin{eqnarray}
+\label{eq:poly}
+F(Z)=(1-Z/Z_1)(1-Z/Z_2)\cdots(1-Z/Z_N) \\ \nonumber
+\quad=1+a_1Z+a_2Z^2+\cdots+a_nZ^N.
+\end{eqnarray}
+
+
+\wen{In non-stationary case, the filter coefficients $a_n$ becomes a smoothly varying functions of time $a_n(t)$ (shown in equation \ref{eq:two}), which makes the filter shown in equation \ref{eq:poly} adapt to non-stationary changes in the input data. The complex roots $\hat{Z}_n(t)$ can be found using a eigenvalue-based algorithm \cite[]{sdrnar}.}
+
+The final denoised data can be got by: 
+\begin{equation}
+\label{eq:denoise}
+\hat{d}(t)=\sum_{n=1}^{N}\hat{A}_n(t)e^{i\Phi_n(t)}.
+\end{equation}
+
+The decomposition is similar to empirical mode decomposition (EMD), but differs in that it has a mathematical formulation for controlling the decomposition. Figure \ref{fig:sig,sig1,sigemd1,sig2,sigemd2,cresid,sigemd3} gives a comparison between SDRNAR and EMD in decomposing a synthetic signal that has two oscillating frequency components. As can be seen from the demonstration, both SDRNAR and EMD successfully decompose the combined signal into individual monotonic component. The residuals using both methods are very close to zero. Figure \ref{fig:trace-sig,trace-sign1,trace-sigemd4,trace-sign2,trace-sigemd3,trace-sign3,trace-sigemd2} shows a comparison between SDRNAR and EMD in decomposing a noise free synthetic seismic trace.
+
+A special property of the proposed approach is that, apart from the denoised data, we can also get other valuable information from the data, such as the instantaneous frequency $f_n(t)$ and amplitude of the instantaneous frequency $\hat{A}_n(t)$ of the $n$th component. The spectral information can be valuable in interpretation jobs like identifying the oil\&gas traps, which has already been shown by \cite{sdrnar}.\dlo{This abstract focuses on the denoising performance of the novel spectral decomposition approach.}
+
+\inputdir{sigsep}
+\multiplot{7}{sig,sig1,sigemd1,sig2,sigemd2,cresid,sigemd3}{width=0.34\columnwidth}{Signal Separation using SDRNAR and EMD. (a) Original signal. (b) Frequency component 1 using SDRNAR. (c) Frequency component 1 using EMD. (d) Frequency component 2 using SDRNAR. (d) Frequency component 2 using EMD. (f) Residual using SDRNAR. (g) Residual using EMD.}
+
+
+\inputdir{tracesep}
+\multiplot{7}{trace-sig,trace-sign1,trace-sigemd4,trace-sign2,trace-sigemd3,trace-sign3,trace-sigemd2}{width=0.34\columnwidth}{Trace decomposition using SDRNAR and EMD. (a) Original noise free seismic trace. (b) First component using SDRNAR. (c) First component using EMD. (d) Second component using SDRNAR. (e) Second component using EMD. (f) Third component using SDRNAR.}
+
+
+
+
+\subsection{Algorithm steps}
+The algorithm steps can be summarized below:
+\begin{enumerate}
+\item Use non-stationary autoregression to compute $a_n(t)$ with \dlo{$b_n(t)=a_n(t-n)$}\wen{$b_n(t)=d(t-n\Delta t)$ ($\Delta t$ is the time interval)} according to equation \ref{eq:two};
+\item Find the roots $Z_n(t)$ of each polynomial according to equation \ref{eq:poly};
+\item Compute instantaneous frequency $f_n(t)$ according to equation \ref{eq:instf};
+\item Compute local phase $\phi_n(t)$ according to equation \ref{eq:five};
+\item Fit the data to compute the amplitude corresponding to each frequency component $\hat{A}_n(t)$ and the fitted denoised data $\hat{d}(t)$ according to equations \ref{eq:four} and \ref{eq:denoise}.
+\end{enumerate}
+
+
+\section{Examples}
+
+\inputdir{simple}
+\plot{trace-disp}{width=\columnwidth}{Denoising demonstration using the proposed approach for single-trace synthetic data. (a) Noisy data. (b) First spectral component. (c) Second spectral component. (d) Third spectral component. (e) Fourth spectral component. (f) The residual after SDRNAR. (g) Denoised data. \wen{The SNR has increased from -10.17 to 0.9729.}}
+
+
+
+The first example is a noisy single trace, shown in Figure \ref{fig:trace-disp}a. The clean synthetic trace is generated by convolving Ricker wavelet with four different central frequency (40 Hz, 30 Hz, 20 Hz, \wen{and} 10Hz, respectively) with the same reflectivity coefficients located at different temporal positions. After adding Gaussian white noise, the wavelet has been smeared in the noise. After spectral decomposition using SDRNAR, the decomposed signals are shown in Figures \ref{fig:trace-disp}b-\ref{fig:trace-disp}e. The residual or the random noise is shown in Figure \ref{fig:trace-disp}f. The denoised data, summation of \ref{fig:trace-disp}b-\ref{fig:trace-disp}e, is shown in Figure \ref{fig:trace-disp}g. A huge level of noise has been removed during the denoising process. \wen{In order to numerically compare the performances using the proposed approach, we use the signal-to-noise ratio (SNR) defined as: 
+\begin{equation}
+\label{eq:snr}
+SNR=10\log_{10}\frac{\Arrowvert \mathbf{s} \Arrowvert_2^2}{\Arrowvert \mathbf{s}-\hat{\mathbf{s}}\Arrowvert_2^2},
+\end{equation}
+where $\mathbf{s}$ is the noise-free signal and $\hat{\mathbf{s}}$ is the denoised signal. After using the proposed approach, the SNR has increased from -10.17 to 0.9729.}
+
+The second example is a synthetic seismic profile with four horizontal events (Figures \ref{fig:synth0,synth}). Figures \ref{fig:synth0} and \ref{fig:synth} show the clean and noisy synthetic data, respectively. The central frequency of the Ricker wavelet used to synthesize the profile is decreasing as we can see from the original profile. Their corresponding central frequency are 40Hz, 30Hz, 20 Hz, and 10 Hz, from up to down, respectively. The denoised section and \wen{removed} noise section are shown in Figures \ref{fig:synth-cfit} and \ref{fig:synth-cdif}, respectively. As a reference, Figures \ref{fig:synth-fx} and \ref{fig:synth-fx-dif} show the denoised profile and removed noise section for $f$-$x$ deconvolution. Because of the application of spatial prediction filter in $f$-$x$ domain, there exist some boundary effects in the denoised section, as shown in Figure \ref{fig:synth-fx}. The clean denoised section and coherency-free noise sections using the proposed approach show an excellent denoising performance. 
+
+The original SNR of the noisy data (Figure \ref{fig:synth}) is $-23.94$. After using $f$-$x$ deconvolution (\ref{fig:synth-fx}), the SNR increases to $-1.91$. After using the proposed approach (\ref{fig:synth-cfit}), the SNR increases to $1.54$. In this example, we decompose the signal into four components. Figure \ref{fig:synth-sign0,synth-sign1,synth-sign2,synth-sign3} show\wen{s} the decomposed four components using SDRNAR. For comparison with EMD, we also demonstrate the four decomposed components using EMD in Figure \ref{fig:simf1,simf2,simf3,simf4}. As can be seen in Figure \ref{fig:synth-sign0,synth-sign1,synth-sign2,synth-sign3}, the decomposed components are clean, exhibiting smoothly-variable frequency. However, the EMD decomposed components have serious mode-mixing issues, as mentioned in \cite[]{kopecky2010,yangkang2014}, which made the removal of random noise by removing one mode difficult. The amplitude maps of instantaneous frequency are shown in Figure \ref{fig:synth-cwht0,synth-cwht1,synth-cwht2,synth-cwht3}. Figure \ref{fig:synth-cwht0,synth-cwht1,synth-cwht2,synth-cwht3} also confirms the observation from Figure \ref{fig:synth-sign0,synth-sign1,synth-sign2,synth-sign3} that the decomposed components contain smoothly-variable frequency.
+
+The third example is a relatively more complex data, with dipping and conflicting events (Figure \ref{fig:complex,complex-cfit,complex-cdif,complex-mf,complex-mf-dif}). This example demonstrates the limitation of the proposed approach in dealing with complex seismic profiles. As we can see from the both denoised section and removed noise section as shown in Figures \ref{fig:complex-cfit} and \ref{fig:complex-cdif}, respectively, there is some damages to dipping energy. As the slope becomes larger, there are more damages to the useful energy. The horizontal events, however, are well preserved and denoised. The reason causing the limitation of the proposed approach comes from the fact that the SDRNAR method is applied trace by trace. The parameters selected for the decomposition should be relatively the same in order to be efficient, otherwise, we need to specify the parameters trace by trace, which make the SDRNAR method can not adapt to highly spatially variable components, e.g., steeply dipping event. \new{We also show the performance of the same example using the mean filter. Figure \ref{fig:complex-mf} is the denoised result using mean filter and Figure \ref{fig:complex-mf-dif} is the corresponding noise section. As we can see from Figures \ref{fig:complex-mf} and \ref{fig:complex-mf-dif}, the mean filter nearly remove all the dipping energy.}
+
+The fourth example is a post-stack field data. It comes from part of the 2-D field land data from the open-source website Freeusp 
+(http://www.freeusp.org/). The stacked data is shown in Figure \ref{fig:data-f}. After random noise attenuation using the proposed approach, the denoised data is shown in Figure \ref{fig:cfit-f}. Figure \ref{fig:cdif-f} shows the difference between the denoised section and original noise section. From the denoising performance, we conclude the proposed approach does an excellent job. We also apply $f$-$x$ deconvolution \wen{and mean filter} to the field dataset. The denoised section and removed noise section using $f-x$ deconvolution are shown in Figure \ref{fig:data-fx} and \ref{fig:data-fx-dif}, respectively. \wen{The denoised section and removed noise section using mean filter are shown in Figure \ref{fig:data-mf} and \ref{fig:data-mf-dif}, respectively.} Even though the denoised section using $f$-$x$ deconvolution \wen{and mean filter} seem\dlo{s} clean, there exist some coherent horizontal events in the noise section (Figures \ref{fig:data-fx-dif} \wen{and \ref{fig:data-mf-dif}}). Because in this example we do not know the true answer, we can not numerically compare the SNRs of two approaches, however, from the visual comparisons, it is enough to draw a conclusion that the proposed approach does a better job. \wen{In this example, the denoised section using mean filter is over smoothed. The two areas pointed out by the labels A and B show the over-smoothed places. The spatial discontinuities will cause a failure using mean filter because mean filter is based on the spatial coherency assumption. The lost information due to over smoothing can be found in the noise section, as pointed out by the label C. Thus, we conclude that the proposed approach can outperform the mean filter in preserving spatial discontinuities.} Figure \ref{fig:sign0,sign1,sign2,sign3} shows the four decomposed components using SDRNAR, from which we can see the smoothly-variable-frequency behavior for each component. For a referential comparison, the separated results using EMD are shown in Figure \ref{fig:imf1,imf2,imf3,imf4}. It is obvious that the separated components do not have constant or smoothly-variable frequency. Additionally, we obtain the spectral information shown in Figure \ref{fig:cwht0,cwht1,cwht2,cwht3}. From Figure \ref{fig:cwht3}, it seems that there is a low-frequency anomaly around 0.75\wen{ }s, which may indicate a trap of oil \& gas. 
+
+
+\inputdir{simple}
+\multiplot{2}{synth0,synth}{width=0.45\columnwidth}{(a) Clean synthetic data. (b) Noisy synthetic data.}
+
+\multiplot{4}{synth-cfit,synth-cdif,synth-fx,synth-fx-dif}{width=0.45\columnwidth}{Amplitudes of  different frequency components.}
+
+
+\multiplot{4}{synth-sign0,synth-sign1,synth-sign2,synth-sign3}{width=0.45\columnwidth}{Amplitudes of  different frequency components.}
+
+
+
+
+\inputdir{simpleemd}
+\multiplot{4}{simf1,simf2,simf3,simf4}{width=0.45\columnwidth}{Different separated components for synthetic data using EMD. (a) First separated component. (b) Second separated component. (c) Third separated component. (d) Fourth separated component.}
+
+
+
+\inputdir{simple}
+\multiplot{4}{synth-cwht0,synth-cwht1,synth-cwht2,synth-cwht3}{width=0.45\columnwidth}{Amplitudes of  different frequency components.}
+
+
+\inputdir{dipping}
+\multiplot{5}{complex,complex-cfit,complex-cdif,complex-mf,complex-mf-dif}{width=0.45\columnwidth}{(a) Noisy synthetic example with dipping events. (b) Denoised result using the proposed approach. (c) Removed noise section using the proposed approach. Note that the damage to dipping events suggest a denoising failure. (d) Denoised result using mean filter. (e) Removed noise section using mean filter.}
+
+
+\inputdir{freeusp}
+\plot{data-f}{width=0.48\columnwidth}{Input noisy field data from Freeusp.}
+
+\multiplot{6}{cfit-f,cdif-f,data-fx,data-fx-dif,data-mf,data-mf-dif}{width=0.34\columnwidth}{Different separated components for field data using SDRNAR. (a) First separated component. (b) Second separated component. (c) Third separated component. (d) Fourth separated component.}
+
+\inputdir{freeusp}
+\multiplot{4}{sign0,sign1,sign2,sign3}{width=0.4\columnwidth}{Different separated components for field data using SDRNAR. (a) First separated component. (b) Second separated component. (c) Third separated component. (d) Fourth separated component.}
+
+\inputdir{freeuspemd}
+\multiplot{4}{imf1,imf2,imf3,imf4}{width=0.4\columnwidth}{Different separated components for field data using EMD. (a) First separated component. (b) Second separated component. (c) Third separated component. (d) Fourth separated component.}
+
+\inputdir{freeusp}
+\multiplot{4}{cwht0,cwht1,cwht2,cwht3}{width=0.4\columnwidth}{Amplitudes of  different frequency components.}
+
+
+
+\section{Discussions}
+
+SDRNAR is a new spectral decomposition approach that can decompose a 1D signal into different spectral components. 
+With exact mathematical formulation, SDRNAR can control its behavior by selecting different parameters. SDRNAR differs 
+from EMD in that SDRNAR can be manually manipulated rather than empirically data dependent. The proposed denoising algorithm is 
+based on applying SDRNAR to each seismic trace. Although there are other options of direction and domain for applying
+SDRNAR, this paper focuses on the $t$-$x$ domain application of SDRNAR to each 1-D signal along temporal direction.
+
+The proposed approach is more beneficial for post-stack or NMO corrected profiles where seismic events are mostly horizontal. We can 
+understand this property by analyzing the implementation steps of SDRNAR. We apply SDRNAR to each trace of a profile with the same parameters. 
+When seismic events are not horizontal, the optimal parameters used for each trace may not be equivalent. It can not be made possible for manually choosing the best parameters for each trace. 
+However, an efficient and adaptive parameter selection algorithm for each trace can be developed in the future in order to handle the horizontal-events restriction. \wen{It can perform obviously better than those specific denoising approaches for horizontal events, e.g. mean filter, as it is applied based on the assumption of spatial coherency. There is danger in smoothing too much along spatial directions using other approaches. The proposed approach can be widely used in processing land post-stack data, where most of reflections are horizontal. The proposed approach can also be used to denoise microseismic trace, because many microseismic data can only be processed trace by trace. } 
+
+
+The efficiency and performance for SDRNAR to decompose seismic traces into local monotonic components are better than that of EMD. Because of the explicit 
+mathematical formulation of SDRNAR, we can use fast iterative solver to handle the under-determined equations involved in SDRNAR. However, without any mathematical model to 
+support EMD, we can not use fast algorithm to apply EMD. The cost of SDRNAR is $O(NN_tN_{iter})$, where $N_t$ is the number of time samples and $N_{iter}$ is the number of shaping iterations (typically between 10 and 100). As can be seen in the examples, the decomposition of seismic traces achieved by EMD are not applicable for removing
+random noise, because of the serious mode-mixing problem. The separated components of SDRNAR, however, obtain excellent results for removing unpredictable random noise.
+
+
+
+
+\section{Conclusions}
+We have proposed a new method to attenuate random noise in $t-x$ domain, by applying the SDRNAR to each seismic trace and remove the residuals for each trace. 
+SDRNAR can achieve better decomposition than EMD in that no mode mixture exists and no useful energy lays in the noise component. In addition to denoising, the amplitude maps 
+for different frequency components can also be obtained, which can be used to aid in seismic interpretation and help in finding oil \& gas related low-frequency anomalies. We use both synthetic and field data examples to demonstrate the implementation and performance of the proposed denoising approach. \wen{The proposed approach can not be applied to complex seismic profile, which becomes its main limitation. However, compared with those filters that can be specifically used for horizontal events (e.g. mean filter), the proposed approach can get better result. Because it is applied trace by trace, and thus can preserve spatial discontinuities.}  Compared with $f$-$x$ 
+deconvolution \wen{and mean filter}, the proposed approach can obtain higher SNR and preserve more useful energy.
+
+\section{Acknowledgments}
+We thank the Freeusp website for providing the open-source field data. We are grateful to developers of the Madagascar software package for providing corresponding codes for testing the algorithms and preparing the figures. We would like to thank three anonymous reviewers for helpful suggestions, which improves the manuscript a lot. This work is supported by the National Basic Research Program of China (grant NO: 2013 CB228600).
+
+
+
+
+\bibliographystyle{seg}
+\bibliography{asa}
+
+
+\newpage
+\listoffigures
+
+
+
+
+

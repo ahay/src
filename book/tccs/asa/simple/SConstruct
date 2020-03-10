@@ -1,0 +1,201 @@
+from rsf.proj import *
+
+def Grey(data,other): 
+	Result(data,'real | grey clip=0.7 max1=2 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Grey1(data,other): 
+	Result(data,'math output="abs(input)" | real | grey max1=2 label2=Trace unit2="" label1=Time unit1="s" wherexlabel=t allpos=y color=j title= scalebar=y unit2= %s clip=0.5 maxval=0.5 minval=-0.5'%other)
+
+def Grey2(data,other): 
+	Result(data,'grey max1=2 clip=0.7 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Grey3(data,other): 
+	Result(data,'grey clip=0.7 max1=2 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Greyzoom(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=1.5 o2=0 | grey minval=-0.3 maxval=0.3 clip=0.3 label2=Trace color=g unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n  %s'%other)
+
+
+###########################################################################
+## Four horizontal events
+###########################################################################
+Flow('synth1',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=1 k1=110 p2=0 mag=1 |
+     ricker1 frequency=40  
+     ''')
+
+Flow('synth2',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=1 k1=220 p2=0 mag=1 |
+     ricker1 frequency=30 
+     ''')
+
+Flow('synth3',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=1 k1=330 p2=0 mag=1 |
+     ricker1 frequency=20 
+     ''')
+
+Flow('synth4',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=1 k1=440 p2=0 mag=1 |
+     ricker1 frequency=10 
+     ''')
+Flow('synth0','synth1 synth2 synth3 synth4','add scale=1,1,1,1 ${SOURCES[1:4]} | window n2=200  | scale axis=2 ')
+Flow('synth','synth0','noise seed=2008 var=0.1')
+
+#Plot('synth','grey clip=0.9 title="Input Data"')
+Grey2('synth','title="Noisy data"')
+Grey2('synth0','title="Clean data"')
+
+
+# find adaptive PEF
+ns = 4
+
+Flow('synth-shift','synth','shift1 ns=%d' % ns)
+
+Flow('synth-itrace','synth','envelope hilb=y')
+Flow('synth-ctrace','synth synth-itrace','cmplx ${SOURCES[1]}')
+
+Flow('synth-ishift','synth-shift','envelope hilb=y')
+Flow('synth-cshift','synth-shift synth-ishift','cmplx ${SOURCES[1]} | transp plane=23')
+
+Flow('synth-cpef synth-cpre','synth-cshift synth-ctrace',
+     'clpf match=${SOURCES[1]} rect1=20 rect2=40 pred=${TARGETS[1]}')
+Flow('synth-cerr','synth-cpre synth-ctrace','add scale=-1,1 ${SOURCES[1]}')
+
+Result('synth-cerr','real | grey clip=0.9 title="Residual after RNAR" ')
+
+Flow('synth-cpoly','synth-cpef','window n3=1 | math output=-1 | cat axis=3 $SOURCE')
+Flow('synth-croots','synth-cpoly',
+     '''
+     transp plane=23 | transp plane=12 |
+     roots verb=n niter=100 sort=p |
+     transp plane=12 | transp plane=23
+     ''')
+
+# Frequency components
+import math
+wf = 2*math.pi
+dt = 0.004
+
+Flow('synth-group','synth-croots',
+     '''
+     math output="-arg(input)/%g" | real 
+     ''' % (wf*dt))
+
+Flow('synth-freqs','synth-group',
+     '''
+     causint | math output="input*%g/(x1+%g)" 
+     ''' % (dt,dt))
+
+for n in range(ns):
+    group = 'synth-group%d' % n
+    Flow(group,'synth-group','window n3=1 f3=%d' % n)
+    Plot(group,
+    '''
+    grey color=j bias=50 clip=25 scalebar=y title="Instantaneous Frequency %d"
+    barlabel=Frequency barunit=Hz unit2=
+    ''' % (n+1))
+    Result(group,'Overlay')
+    
+    freq = 'synth-freq%d' % n
+    Flow(freq,'synth-freqs','window n3=1 f3=%d' % n)
+    Plot(freq,
+    '''
+    grey color=j bias=50 clip=25 scalebar=y title="Local Frequency %d"
+    barlabel=Frequency barunit=Hz 
+    ''' % (n+1))
+    Result(freq,'Overlay')
+    
+Result('synth-freqs','synth-freq0 synth-freq1','OverUnderIso')
+
+Result('synth-vgroup','synth-group0 synth-group1','OverUnderIso')
+
+# Decomposition
+
+Flow('synth-comps','synth-freqs','rtoc | math output="exp(I*input*x1*%g)" ' % wf)
+
+Flow('synth-cwht synth-cfit','synth-comps synth-ctrace',
+     'clpf match=${SOURCES[1]} rect1=5 rect2=5 pred=${TARGETS[1]}')
+
+Flow('synth-cdif','synth-cfit synth-ctrace','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('synth-csign','synth-comps synth-cwht','math other=${SOURCES[1]} output="input*other" ')
+
+
+for n in range(ns):
+    sign = 'synth-sign%d' % n
+    Flow(sign,'synth-csign','window n3=1 f3=%d' % n)
+    cwht = 'synth-cwht%d' % n
+    Flow(cwht,'synth-cwht','window n3=1 f3=%d' % n)
+
+Grey1('synth-cwht0','title="Component 1"')
+Grey1('synth-cwht1','title="Component 2"')
+Grey1('synth-cwht2','title="Component 3"')
+Grey1('synth-cwht3','title="Component 4"')
+Grey('synth-sign0','title="Component 1"')
+Grey('synth-sign1','title="Component 2"')
+Grey('synth-sign2','title="Component 3"')
+Grey('synth-sign3','title="Component 4"')
+
+Grey('synth-cfit','title="Denoised data (SDRNAR)"')
+Grey('synth-cdif','title="Noise (SDRNAR)"')
+
+Flow('synth-fx','synth','fxdecon n2w=200 lenf=35')
+Grey3('synth-fx','title="Denoised data (FX)"')
+
+Flow('synth-fx-dif','synth synth-fx','add scale=1,-1 ${SOURCES[1]}')
+Grey3('synth-fx-dif','title="Noise (FX)"')
+
+Flow('synth-mf','synth','transp | mf nfw=10 boundary=y | transp')
+Grey3('synth-mf','title="Denoised data (MF)"')
+
+Flow('synth-mf-dif','synth synth-mf','add scale=1,-1 ${SOURCES[1]}')
+Grey3('synth-mf-dif','title="Noise (MF)"')
+
+Flow('synth-svd','synth','svddenoise pclip=0.5')
+Grey3('synth-svd','title="Denoised data (SVD)"')
+
+Flow('synth-svd-dif','synth synth-svd','add scale=1,-1 ${SOURCES[1]}')
+Grey3('synth-svd-dif','title="Noise (SVD)"')
+
+
+## For single trace
+Flow('trace1','synth','window n2=1 f2=100')
+Flow('trace10','synth0','window n2=1 f2=100')
+Flow('trace2','synth-sign0','real | window n2=1 f2=100 ')	#first
+Flow('trace3','synth-sign1','real |window n2=1 f2=100')	#second
+Flow('trace4','synth-sign2','real |window n2=1 f2=100')	#third
+Flow('trace5','synth-sign3','real |window n2=1 f2=100')	#fouth
+Flow('trace6','synth-cdif','real |window n2=1 f2=100')	#noise
+Flow('trace7','synth-cfit','real |window n2=1 f2=100')	#denoised
+
+#Result('trace-disp','trace7 trace6 trace5 trace4 trace3 trace2 trace1','cat axis=2 ${SOURCES[1:7]} | dots clip=1 labels=Denoised:Residual:Fourth:Third:Second:First:Noisy') 
+Result('trace-disp','trace7 trace6 trace5 trace4 trace3 trace2 trace1','cat axis=2 ${SOURCES[1:7]} | dots clip=1 labels=\(g\):\(f\):\(e\):\(d\):\(c\):\(b\):\(a\)') 
+
+## compute SNR
+Flow('synth-diff0','synth synth0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('synth-snr0','synth0 synth-diff0','snr2 noise=${SOURCES[1]}')
+
+Flow('synth-diff1','synth-cfit synth0','real | add scale=1,-1 ${SOURCES[1]} ')
+Flow('synth-snr1','synth0 synth-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('synth-diff2','synth0 synth-mf','add scale=1,-1 ${SOURCES[1]} ')
+Flow('synth-snr2','synth0 synth-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('synth-diff3','synth0 synth-fx','add scale=1,-1 ${SOURCES[1]} ')
+Flow('synth-snr3','synth0 synth-diff3','snr2 noise=${SOURCES[1]}')
+
+Flow('trace-dif','trace10 trace7','add scale=1,-1 ${SOURCES[1]} ')
+Flow('trace-snr','trace10 trace-dif','snr2 noise=${SOURCES[1]}')
+
+Flow('trace-dif0','trace10 trace1','add scale=1,-1 ${SOURCES[1]} ')
+Flow('trace-snr0','trace10 trace-dif0','snr2 noise=${SOURCES[1]}')
+
+End()
