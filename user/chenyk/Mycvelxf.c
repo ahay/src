@@ -19,9 +19,19 @@
 #include <rsf.h>
 
 
-void velxf( bool adj, bool add, int nt, float dt, float ot, 
-			float *x2, int nx, float *data, float *mask, float *s,
-			int ns, float *modl, float *z2)
+void velxf( bool adj, 	/*adj flag*/
+			bool add, 	/*add flag*/
+			int nt, 	/*nt*/
+			float dt, 	/*dt*/
+			float ot, 	/*ot*/
+			float *x2, 	/*squared x axis*/
+			int nx, 	/*number of space samples*/
+			float *data, /*input data, e.g., CMP gather*/
+			float *mask, /*mask*/
+			float *s,	/*velocity axis*/
+			int ns, 	/*number of velocities*/
+			float *modl,/*velocity spectrum domain*/
+			float *z2 	/*squared t axis*/)
 {
 	int is, ix, iz, it;
 	float x2s, t, ft, gt;
@@ -95,9 +105,9 @@ int main(int argc, char* argv[])
 	if(!sf_histfloat(in,"d1",&dt))	sf_error("Need dt");
 	if(!sf_histfloat(in,"o1",&ot)) 	sf_error("Need ot");
 	if(!sf_histint(in,"n2",&ns)) 	sf_error("Need ns");
-	if(!sf_histfloat(in,"d2",&ds)) 	sf_error("Need ns");	
-	if(!sf_histfloat(in,"o2",&os)) 	sf_error("Need ds");
-    if (!sf_getint("nx",&nx)) 	sf_error("Need nx");
+	if(!sf_histfloat(in,"d2",&ds)) 	sf_error("Need ds");	
+	if(!sf_histfloat(in,"o2",&os)) 	sf_error("Need os");
+    if (!sf_getint("nx",&nx)) 		sf_error("Need nx");
     if (!sf_getfloat("dx",&dx)) 	sf_error("Need dx");
     if (!sf_getfloat("ox",&ox)) 	sf_error("Need ox");
 	sf_putint(out,"n1",nt);
