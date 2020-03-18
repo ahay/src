@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfintbin', 'sfput', 'sfbyte', 'sfgrey3', 'sfwindow', 'sfcp', 'sfgrey', 'sfdd', 'sfgraph', 'sfspectra', 'sfscale', 'sftimefreq', 'sfstft', 'sfmath', 'sfstack', 'sfsmooth', 'sfcat', 'sfdivn', 'sfst', 'sfreal', 'sftransp', 'sfbox', 'sfcabs', 'sfclip2']
+data=['data/boonsville/boonsvillel249.sgy', 'PRIVATE']
+size= 1600857124
