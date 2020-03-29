@@ -18,7 +18,7 @@ ccprogs = 'diffcxx'
 mpiprogs='petsctest'
 
 cprogs = '''
-
+cqrtm
 '''
 
 tprogs='''
@@ -146,7 +146,7 @@ NVCC = env.get('NVCC')
 
 cuda_mains = Split(cprogs)
 for prog in cuda_mains:
-    if CTP and NVCC:
+    if CTP and NVCC and mpicc:
         cfile = env.Command('CUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         cc = env.get('CC')
         cflags = env.get('CUDAFLAGS')
@@ -154,6 +154,10 @@ for prog in cuda_mains:
         if string.rfind(cc,'icc') >= 0:
             cflags = cflags + ' -ccbin=%s' % cc
             ldflags = '-ccbin=%s' % cc
+        #You need to revise here based on your system
+        env.Prepend(CPPPATH=['/usr/include/mpich-3.2-x86_64/'],
+                    LIBPATH=['/usr/lib64/mpich-3.2/lib'],
+                    LIBS=['mpi'])
         prog = env.Program(prog,cfile,
                            CC=NVCC,
                            LINKFLAGS=ldflags,
