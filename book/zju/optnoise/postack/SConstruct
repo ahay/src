@@ -1,0 +1,220 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+def Grey(data,other):
+	Result(data,'grey labelsz=10 titlesz=10 clip=0.15 color=e label1=Depth unit1=m screenratio=0.65 color=e %s'%other)
+
+Flow('post-data0','elf7_win.HH','window f3=18 n3=1 n2=150 | put unit1=s unit2= label2=Trace d2=1 o2=1 | scale axis=2 ')
+
+Flow('post-n','post-data0','noise rep=y var=0.05 seed=20110|bandpass flo=0.004 fhi=0.01|math output=0') 
+# Flow('post-gath','post-data0 post-n','cp| add scale=1,1 ${SOURCES[1]}') 
+Flow('post-gath','post-data0','cp') 
+
+Plot('post-gath','grey labelsz=12 titlesz=12.5 title="(a) Input" ')
+
+
+Flow('post-mask','post-gath','math output=1 | pad n1=300')
+Flow('post-gpad','post-gath','pad n1=300')
+Flow('post-gpad1','post-gath1','pad n1=300')
+
+Flow('post-dip','post-gpad post-mask','dip rect1=15 rect2=15 pmax=1 mask=${SOURCES[1]} order=2')
+Plot('post-dip','window n1=194 | dd form=native | grey labelsz=12 titlesz=12.5 color=j title="(b) Slope" allpos=y scalebar=y')
+
+Flow('post-trace','post-dip','window n2=1 | math output=x1')
+Flow('post-pick','post-dip post-trace','pwpaint seed=${SOURCES[1]} eps=0.05 order=2')
+
+Plot('post-pick0','post-pick',
+     '''
+     window n1=194 |
+     grey labelsz=12 titlesz=12.5 color=j allpos=y
+     title="(d) Relative Age" clip=3.2
+     ''')
+Plot('post-pick1','post-pick',
+     '''
+     window n1=194 |
+     contour c0=0 dc=0.05 nc=64
+     transp=y yreverse=y plotcol=7 plotfat=5
+     wanttitle=n wantaxis=n
+     ''')
+Plot('post-pick','post-pick0 post-pick1','Overlay')
+
+Flow('post-flat','post-gpad post-pick','iwarp warp=${SOURCES[1]} n1=194')
+Flow('post-flat1','post-gpad1 post-pick','iwarp warp=${SOURCES[1]} n1=194')
+
+Flow('post-gath-rec','post-flat post-pick','iwarp warp=${SOURCES[1]} inv=n | window n1=194')
+
+Plot('post-flat','grey labelsz=12 titlesz=12.5 title="(d) Flattened" ')
+Plot('post-gath-rec','grey labelsz=12 titlesz=12.5 title="Mapped back" ')
+
+Flow('post-fdip','post-flat','dip rect1=20 rect2=20 pmax=0.1 order=2')
+Plot('post-fdip','window n1=194 | dd form=native | grey labelsz=12 titlesz=12.5 color=j title="Slope" allpos=y scalebar=y')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'FXEMD0'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+n1=194
+n2=150
+dt=0.004
+lf=5
+hf=120
+N=1
+verb=0
+############################################################
+## EMD
+############################################################
+Flow('post-flat-emd0',[os.path.join(matROOT,matfun+'.m'),'post-flat'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(dt)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Flow('post-emd00',[os.path.join(matROOT,matfun+'.m'),'post-gath'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(dt)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+     
+Flow('post-emd0','post-emd00','put d2=1 d1=12.5 o2=1 o1=925 label2=Trace unit2= ')     
+     
+Flow('post-flat-emd','post-flat-emd0','put d2=1 d1=12.5 o2=1 o1=925 label2=Trace unit2= ')
+Flow('post-dif0','post-gath post-gath-rec','add scale=1,-1 ${SOURCES[1]}')
+Flow('post-emd-rec','post-flat-emd post-pick post-dif0','iwarp warp=${SOURCES[1]} inv=n | window n1=194 | add scale=1,1 ${SOURCES[2]}')
+
+Flow('post-dif','post-gath post-emd-rec','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('post-gath','title="Original"')
+
+Flow('post-fx','post-gath1','fxdecon n2w=50 fmin=0')
+Flow('post-fx-dif','post-fx post-gath1','add scale=-1,1 ${SOURCES[1]}')
+Grey('post-fx','title="FX" clip=0.15')
+Grey('post-fx-dif','title="FX" clip=0.15')
+
+Grey('post-flat','title="Flattened"')
+Grey('post-flat1','title="Flattened"')
+Grey('post-flat-emd','title="EMD"')
+Grey('post-emd-rec','title="EMD"')
+Grey('post-dif','title="Difference"')
+
+
+
+Flow('post-emd1','post-emd-rec','cp')
+Flow('post-dif11','post-dif post-n','cp |add scale=1,1 ${SOURCES[1]}')
+Flow('post-dif00','post-gath post-emd0 post-n','add scale=1,-1 ${SOURCES[1]}|add scale=1,1 ${SOURCES[2]}')
+
+Flow('post-gath1','post-gath post-n','cp | add scale=1,1 ${SOURCES[1]}')
+Grey('post-gath1','title="Original" color=g')
+
+Grey('post-emd0','title="EMD" color=g clip=0.15')
+Grey('post-emd1','title="Proposed" color=g clip=0.15')
+Grey('post-dif00','title="EMD" color=g clip=0.15')
+Grey('post-dif11','title="Proposed" color=g clip=0.15')
+
+
+r=20
+N=20
+############################################################
+## OPT
+############################################################
+matfun = 'OPT'
+Flow('post-flat-opt0',[os.path.join(matROOT,matfun+'.m'),'post-flat','post-fdip'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${SOURCES[2]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(N)d,%(r)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+     
+Flow('post-flat-opt','post-flat-opt0','put d2=1 d1=12.5 o2=1 o1=925 label2=Trace unit2= ')
+Flow('post-opt-rec','post-flat-opt post-pick post-dif0','iwarp warp=${SOURCES[1]} inv=n | window n1=194 | add scale=1,1 ${SOURCES[2]}')
+
+Flow('post-opt-dif','post-gath post-opt-rec','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('post-flat-opt','title="OPT" clip=0.15')
+Grey('post-opt-rec','title="OPT" clip=0.15')
+Grey('post-opt-dif','title="OPT Difference"')
+
+############################################################
+## KL
+############################################################
+matfun = 'KL'
+Flow('post-flat-kl0',[os.path.join(matROOT,matfun+'.m'),'post-flat'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(r)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Flow('post-flat-kl','post-flat-kl0','put d2=1 d1=12.5 o2=1 o1=925 label2=Trace unit2= ')
+Flow('post-kl-rec','post-flat-kl post-pick post-dif0','iwarp warp=${SOURCES[1]} inv=n | window n1=194 | add scale=1,1 ${SOURCES[2]}')
+
+Flow('post-kl-dif','post-gath post-kl-rec','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('post-flat-kl','title="KL" clip=0.15')
+Grey('post-kl-rec','title="KL" clip=0.15')
+Grey('post-kl-dif','title="KL Difference"')
+
+
+
+Flow('post-zooma-1','post-gath','window f1=50 n1=50 f2=120 n2=20')
+Flow('post-zooma-2','post-emd-rec','window f1=50 n1=50 f2=120 n2=20')
+
+Flow('post-zoomb-1','post-gath','window f1=140 n1=50 f2=60 n2=40')
+Flow('post-zoomb-2','post-emd-rec','window f1=140 n1=50 f2=60 n2=40')
+
+Grey('post-zooma-1','title="Zoomed C (original)"')
+Grey('post-zooma-2','title="Zoomed C (Filtered)"')
+Grey('post-zoomb-1','title="Zoomed D (original)"')
+Grey('post-zoomb-2','title="Zoomed D (Filtered)"')
+
+
+## Creating framebox1
+x=380
+y=0.54
+w=60
+w1=0.50
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+## Creating framebox2
+x=185
+y=1.50
+w=60
+w1=0.50
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+## Create label A
+Plot('labela',None,
+	'''
+	box x0=11.2 y0=7.0 label="C" xt=-0.5 yt=0.5 length=0.75 
+	''')
+
+## Create label B
+Plot('labelb',None,
+	'''
+	box x0=6.4 y0=3.3 label="D" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+
+Result('post-gath0','Fig/post-gath.vpl frame1 frame2 labela labelb','Overlay')
+Result('post-emd-rec0','Fig/post-emd-rec.vpl frame1 frame2 labela labelb','Overlay')
+
+
+
+End()

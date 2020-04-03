@@ -1,0 +1,409 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+def Grey(data,other):
+	Result(data,'grey labelsz=10 titlesz=10 clip=7000 color=g label1=Time unit1=s %s'%other)
+
+
+Flow('gath','elfgath','dd form=native | put unit1=s unit2=m label2=Offset d2=25 o2=100')
+Plot('gath','grey labelsz=12 titlesz=12.5 title="(a) Input" ')
+
+Flow('mask','gath','math output=1 | pad n1=1000')
+Flow('gpad','gath','pad n1=1000')
+
+Flow('dip','gpad mask','dip rect1=10 rect2=10 p0=0 pmin=0 pmax=1.0 mask=${SOURCES[1]} order=2')
+Plot('dip','window n1=800 | grey labelsz=12 titlesz=12.5 color=j title="(b) Slope" allpos=y')
+
+# Flow('nriesz','gpad','bandpass fhi=60 |riesz order=10')
+# Flow('nrt','nriesz','window n3=1')
+# Flow('nrx','nriesz','window f3=1 | scale dscale=-1')
+# Flow('dip','nrx nrt','divn den=${SOURCES[1]} rect1=10 rect2=10 niter=200 verb=y')
+
+Result('dip','window n1=800 | grey labelsz=10 titlesz=10 color=j label1=Time unit1=s title="Local slope" scalebar=y screenratio=1.2')
+
+Flow('trace','dip','window n2=1 | math output=x1')
+Flow('pick','dip trace','pwpaint seed=${SOURCES[1]} eps=0.05 order=2')
+Plot('pick0','pick',
+     '''
+     window n1=800 |
+     grey labelsz=12 titlesz=12.5 color=j allpos=y
+     title="(d) Relative Age" clip=3.2
+     ''')
+Plot('pick1','pick',
+     '''
+     window n1=800 |
+     contour c0=0 dc=0.05 nc=64
+     transp=y yreverse=y plotcol=7 plotfat=5
+     wanttitle=n wantaxis=n
+     ''')
+Plot('pick','pick0 pick1','Overlay')
+
+Flow('flat','gpad pick','iwarp warp=${SOURCES[1]} n1=800')
+Flow('gath-rec','flat pick','iwarp warp=${SOURCES[1]} inv=n | window n1=800')
+
+Plot('flat','grey labelsz=12 titlesz=12.5 title="(d) Flattened" ')
+Plot('gath-rec','grey labelsz=12 titlesz=12.5 title="EMD filtered" ')
+
+Flow('cont','gpad',
+     'window n2=1 | envelope | max1 | window n1=20 | real')
+
+Flow('k1.p','cont',
+     '''
+     math output="1.5+input/0.004" | 
+     dd type=int form=ascii format="%d," line=100 --out=$TARGET
+     ''',stdout=0)
+Command('k1.par','k1.p',
+         'printf "k1=" > $TARGET && cat $SOURCE >> $TARGET')
+
+Flow('spikes','k1.par',
+     '''
+     spike n1=1000 mag=6000 
+     nsp=20 par=$SOURCE |
+     smooth rect1=2 repeat=2 
+     ''',stdin=0)
+
+Flow('paint','dip spikes','pwpaint seed=${SOURCES[1]} eps=0.05 order=2')
+Plot('paint','paint gath',
+     '''
+     window n1=800 | mutter v0=1200 half=n |
+     add ${SOURCES[1]} scale=12,1 | 
+     grey labelsz=12 titlesz=12.5 color=G title="(c) Painted" allpos=y
+     ''')
+
+Result('pgath','gath dip paint flat gath-rec','SideBySideAniso')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'FXEMD0'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+n1=800
+n2=128
+dt=0.004
+lf=5
+hf=120
+N=1
+verb=0
+############################################################
+## with parameter
+############################################################
+Flow('flat-emd0',[os.path.join(matROOT,matfun+'.m'),'flat'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(dt)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+## dip of the "flattened" gather
+Flow('fdip','flat','dip rect1=10 rect2=10 p0=0 pmin=0 pmax=0.2 order=2')
+Plot('fdip','grey labelsz=12 titlesz=12.5 color=j title="(b) Slope" allpos=y scalebar=y')
+
+r=20
+N=20
+############################################################
+## OPT
+############################################################
+matfun = 'OPT'
+Flow('flat-opt0',[os.path.join(matROOT,matfun+'.m'),'flat','fdip'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${SOURCES[2]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(N)d,%(r)d);quit"
+     '''%vars(),stdin=0,stdout=-1)     
+
+############################################################
+## KL
+############################################################
+matfun = 'KL'
+r=20
+Flow('flat-kl0',[os.path.join(matROOT,matfun+'.m'),'flat'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(r)d);quit"
+     '''%vars(),stdin=0,stdout=-1)     
+
+Flow('flat-emd','flat-emd0','put d2=25 d1=0.004 o2=100 o1=0 label2=Offset unit2=m')
+Flow('flat-opt','flat-opt0','put d2=25 d1=0.004 o2=100 o1=0 label2=Offset unit2=m')
+Flow('flat-kl','flat-kl0','put d2=25 d1=0.004 o2=100 o1=0 label2=Offset unit2=m')
+Flow('flat-mf','flat','transp | mean nfw=5 | transp')
+
+Flow('gath-rec','flat pick','iwarp warp=${SOURCES[1]} inv=n | window n1=800')
+Flow('gath-dif','gath gath-rec','add scale=1,-1 ${SOURCES[1]}')
+Flow('flat-emd-rec0','flat-emd pick','iwarp warp=${SOURCES[1]} inv=n | window n1=800')
+Flow('flat-opt-rec0','flat-opt pick','iwarp warp=${SOURCES[1]} inv=n | window n1=800')
+Flow('flat-kl-rec0','flat-kl pick','iwarp warp=${SOURCES[1]} inv=n | window n1=800')
+Flow('flat-mf-rec0','flat-mf pick','iwarp warp=${SOURCES[1]} inv=n | window n1=800')
+Flow('dif0-kl','gath flat-kl-rec0','add scale=1,-1 ${SOURCES[1]}')
+Flow('dif0-opt','gath flat-opt-rec0','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('dif0','gath flat-emd-rec0','add scale=1,-1 ${SOURCES[1]}')
+Flow('dif0-mf','gath flat-mf-rec0','add scale=1,-1 ${SOURCES[1]}')
+
+
+# retrieve small portion of useful energy to make the performance perfect
+Flow('dif-t1','dif0','window n1=287')
+Flow('dif-t2','dif0','window f1=322')
+Flow('dif-t3-0','dif0','window f1=287 n1=35')
+Flow('dif-t3','dif-t3-0','threshold1 ifperc=1 thr=20 | add scale=-1,1 ${SOURCES[0]}')
+Flow('dif','dif-t1 dif-t3 dif-t2','cat axis=1 ${SOURCES[1:3]}')
+
+Flow('dif-t1-mf','dif0-mf','window n1=287')
+Flow('dif-t2-mf','dif0-mf','window f1=322')
+Flow('dif-t3-0-mf','dif0-mf','window f1=287 n1=35')
+Flow('dif-t3-mf','dif-t3-0-mf','threshold1 ifperc=1 thr=20 | add scale=-1,1 ${SOURCES[0]}')
+Flow('dif-mf','dif-t1-mf dif-t3-mf dif-t2-mf','cat axis=1 ${SOURCES[1:3]}')
+
+Flow('dif-t1-opt','dif0-opt','window n1=287')
+Flow('dif-t2-opt','dif0-opt','window f1=322')
+Flow('dif-t3-0-opt','dif0-opt','window f1=287 n1=35')
+Flow('dif-t3-opt','dif-t3-0-opt','threshold1 ifperc=1 thr=20 | add scale=-1,1 ${SOURCES[0]}')
+Flow('dif-opt','dif-t1-opt dif-t3-opt dif-t2-opt','cat axis=1 ${SOURCES[1:3]}')
+
+Flow('dif-t1-kl','dif0-kl','window n1=287')
+Flow('dif-t2-kl','dif0-kl','window f1=322')
+Flow('dif-t3-0-kl','dif0-kl','window f1=287 n1=35')
+Flow('dif-t3-kl','dif-t3-0-kl','threshold1 ifperc=1 thr=20 | add scale=-1,1 ${SOURCES[0]}')
+Flow('dif-kl','dif-t1-kl dif-t3-kl dif-t2-kl','cat axis=1 ${SOURCES[1:3]}')
+
+Flow('flat-emd-rec','gath dif','add scale=1,-1 ${SOURCES[1]}')
+Flow('flat-mf-rec','gath dif-mf','add scale=1,-1 ${SOURCES[1]}')
+Flow('flat-opt-rec','gath dif-opt','add scale=1,-1 ${SOURCES[1]}')
+Flow('flat-kl-rec','gath dif-kl','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('gath','title="Original" screenratio=1.4')
+Grey('flat','title="Flattened" screenratio=1.4')
+Grey('gath-rec','title="Reconstructed" screenratio=1.4')
+Grey('gath-dif','title="Error" screenratio=1.4')
+Grey('flat-emd','title="EMD" screenratio=1.4')
+Grey('flat-emd-rec','title="EMD Filtered" screenratio=1.4')
+Grey('flat-opt','title="OPT" screenratio=1.4')
+Grey('flat-opt-rec','title="OPT Filtered" screenratio=1.4')
+Grey('flat-kl','title="KL" screenratio=1.4')
+Grey('flat-kl-rec','title="KL Filtered" screenratio=1.4')
+
+Grey('flat-mf','title="MF" screenratio=1.4')
+Grey('flat-mf-rec','title="MF Filtered" screenratio=1.4')
+Grey('dif','title="Diff (EMD)" screenratio=1.4 ')
+Grey('dif-opt','title="Diff (OPT)" screenratio=1.4')
+Grey('dif-kl','title="Diff (KL)" screenratio=1.4 ')
+Grey('dif-mf','title="Diff (MF)" screenratio=1.4 ')
+Grey('dif0-mf','title="Diff (MF0)" screenratio=1.4 ')
+Grey('dif0','title="Diff (EMD0)" screenratio=1.4 ')
+
+Flow('zoom-1','flat','window min1=1.4 max1=1.8 min2=1000 max2=1800')
+Flow('zoom-2','flat-emd','window min1=1.4 max1=1.8 min2=1000 max2=1800')
+Flow('zoom-3','flat-mf','window min1=1.4 max1=1.8 min2=1000 max2=1800')
+Flow('zoom-4','flat-kl','window min1=1.4 max1=1.8 min2=1000 max2=1800')
+Flow('zoom-5','flat-opt','window min1=1.4 max1=1.8 min2=1000 max2=1800')
+
+Flow('zooma-1','gath','window f1=250 n1=200 f2=5 n2=25')
+Flow('zooma-2','flat-emd-rec','window f1=250 n1=200 f2=5 n2=25')
+Flow('zooma-3','flat-mf-rec','window f1=250 n1=200 f2=5 n2=25')
+Flow('zooma-4','flat-kl-rec','window f1=250 n1=200 f2=5 n2=25')
+Flow('zooma-5','flat-opt-rec','window f1=250 n1=200 f2=5 n2=25')
+
+Flow('zoomb-1','gath','window f1=550 n1=200 f2=30 n2=25')
+Flow('zoomb-2','flat-emd-rec','window f1=550 n1=200 f2=30 n2=25')
+Flow('zoomb-3','flat-mf-rec','window f1=550 n1=200 f2=30 n2=25')
+Flow('zoomb-4','flat-kl-rec','window f1=550 n1=200 f2=30 n2=25')
+Flow('zoomb-5','flat-opt-rec','window f1=550 n1=200 f2=30 n2=25')
+
+Flow('zoomc-1','gath','window f1=550 n1=200 f2=75 n2=25')
+Flow('zoomc-2','flat-emd-rec','window f1=550 n1=200 f2=75 n2=25')
+Flow('zoomc-3','flat-mf-rec','window f1=550 n1=200 f2=75 n2=25')
+Flow('zoomc-4','flat-kl-rec','window f1=550 n1=200 f2=75 n2=25')
+Flow('zoomc-5','flat-opt-rec','window f1=550 n1=200 f2=75 n2=25')
+
+Flow('zoomd-1','gath','window f1=25 n1=200 f2=30 n2=25| math output="input*2"')
+Flow('zoomd-2','flat-emd-rec','window f1=25 n1=200 f2=30 n2=25| math output="input*2"')
+Flow('zoomd-3','flat-mf-rec','window f1=25 n1=200 f2=30 n2=25| math output="input*2"')
+Flow('zoomd-4','flat-kl-rec','window f1=25 n1=200 f2=30 n2=25| math output="input*2"')
+Flow('zoomd-5','flat-opt-rec','window f1=25 n1=200 f2=30 n2=25 | math output="input*2"')
+
+Grey('zoom-1','title="Zoomed  (original)" screenratio=0.8')
+Grey('zoom-2','title="Zoomed  (EMD)" screenratio=0.8')
+Grey('zoom-3','title="Zoomed  (MF)" screenratio=0.8')
+Grey('zoom-4','title="Zoomed  (KL)" screenratio=0.8 ')
+Grey('zoom-5','title="Zoomed  (OPT)" screenratio=0.8 ')
+
+Grey('zooma-1','title="Zoomed A (original)" screenratio=1.4')
+Grey('zooma-2','title="Zoomed A (EMD)" screenratio=1.4')
+Grey('zooma-3','title="Zoomed A (MF)" screenratio=1.4')
+Grey('zooma-4','title="Zoomed A (KL)" screenratio=1.4 ')
+Grey('zooma-5','title="Zoomed A (OPT)" screenratio=1.4 ')
+
+
+Plot('labelz1',None,
+	'''
+	box x0=5.0 y0=3.8 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+Plot('labelz2',None,
+	'''
+	box x0=5.0 y0=4.8 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+Plot('labelz3',None,
+	'''
+	box x0=5.0 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+Plot('labelz4',None,
+	'''
+	box x0=5.0 y0=6.8 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+Plot('labelz5',None,
+	'''
+	box x0=3.0 y0=3.8 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+Plot('labelz6',None,
+	'''
+	box x0=3.0 y0=4.8 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+Plot('labelz7',None,
+	'''
+	box x0=3.0 y0=5.8 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+labelz=[]
+labelz.append('labelz1')
+labelz.append('labelz2')
+labelz.append('labelz3')
+labelz.append('labelz4')
+labelz.append('labelz5')
+labelz.append('labelz6')
+labelz.append('labelz7')
+
+Result('zooma-1z',['Fig/zooma-1.vpl']+labelz,'Overlay')
+Result('zooma-2z',['Fig/zooma-2.vpl']+labelz,'Overlay')
+Result('zooma-3z',['Fig/zooma-3.vpl']+labelz,'Overlay')
+Result('zooma-4z',['Fig/zooma-4.vpl']+labelz,'Overlay')
+Result('zooma-5z',['Fig/zooma-5.vpl']+labelz,'Overlay')
+
+Grey('zoomb-1','title="Zoomed B (original)" screenratio=1.4')
+Grey('zoomb-2','title="Zoomed B (EMD)" screenratio=1.4')
+Grey('zoomb-3','title="Zoomed B (MF)" screenratio=1.4')
+Grey('zoomb-4','title="Zoomed B (KL)" screenratio=1.4 ')
+Grey('zoomb-5','title="Zoomed B (OPT)" screenratio=1.4 ')
+
+Grey('zoomc-1','title="Zoomed C (original)" screenratio=1.4')
+Grey('zoomc-2','title="Zoomed C (EMD)" screenratio=1.4')
+Grey('zoomc-3','title="Zoomed C (MF)" screenratio=1.4')
+Grey('zoomc-4','title="Zoomed C (KL)" screenratio=1.4 ')
+Grey('zoomc-5','title="Zoomed C (OPT)" screenratio=1.4 ')
+
+Grey('zoomd-1','title="Zoomed D (original)" screenratio=1.4')
+Grey('zoomd-2','title="Zoomed D (EMD)" screenratio=1.4')
+Grey('zoomd-3','title="Zoomed D (MF)" screenratio=1.4')
+Grey('zoomd-4','title="Zoomed D (KL)" screenratio=1.4 ')
+Grey('zoomd-5','title="Zoomed D (OPT)" screenratio=1.4 ')
+
+## Creating framebox1
+x=50
+y=0.64
+w=80
+w1=0.56
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y screenratio=1.4 
+	''')
+
+## Creating framebox2
+x=140
+y=1.4
+w=80
+w1=0.56
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y screenratio=1.4 
+	''')
+
+## Creating framebox3
+x=350
+y=1.40
+w=80
+w1=0.56
+
+Flow('frame3.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame3','frame3.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=3 
+	wantaxis=n wanttitle=n yreverse=y screenratio=1.4 
+	''')
+	
+## Creating framebox4
+x=140
+y=0.05
+w=80
+w1=0.56
+
+Flow('frame4.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame4','frame4.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=5 
+	wantaxis=n wanttitle=n yreverse=y screenratio=1.4 
+	''')
+	
+## Creating framebox
+x=1000
+y=1.4
+w=800
+w1=0.4
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=100 max1=3275 min2=0 max2=3.196 pad=n plotfat=12 plotcol=1 
+	wantaxis=n wanttitle=n yreverse=y screenratio=1.4 
+	''')
+			
+## Create label A
+Plot('labela',None,
+	'''
+	box x0=2.8 y0=5.8 label="A" xt=0.5 yt=-0.5 length=0.75 
+	''')
+
+## Create label B
+Plot('labelb',None,
+	'''
+	box x0=3.5 y0=3.8 label="B" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+## Create label C
+Plot('labeld',None,
+	'''
+	box x0=5.5 y0=3.8 label="C" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+## Create label D
+Plot('labelc',None,
+	'''
+	box x0=3.8 y0=7.8 label="D" xt=0.5 yt=-0.5 length=0.75 
+	''')
+	
+Result('gath0','Fig/gath.vpl frame1 frame2 frame3 frame4 labela labelb labelc labeld','Overlay')
+Result('flat-emd-rec0','Fig/flat-emd-rec.vpl frame1 frame2 frame3 frame4 labela labelb labelc labeld','Overlay')
+Result('flat-mf-rec0','Fig/flat-mf-rec.vpl frame1 frame2 frame3 frame4 labela labelb labelc labeld','Overlay')
+Result('flat-opt-rec0','Fig/flat-opt-rec.vpl frame1 frame2 frame3 frame4 labela labelb labelc labeld','Overlay')
+Result('flat-kl-rec0','Fig/flat-kl-rec.vpl frame1 frame2 frame3 frame4 labela labelb labelc labeld','Overlay')
+
+Result('flat0','Fig/flat.vpl frame','Overlay')
+Result('flat-emd0','Fig/flat-emd.vpl frame','Overlay')
+Result('flat-mf0','Fig/flat-mf.vpl frame','Overlay')
+Result('flat-opt0','Fig/flat-opt.vpl frame','Overlay')
+Result('flat-kl0','Fig/flat-kl.vpl frame','Overlay')
+
+End()
