@@ -63,6 +63,7 @@ tccs/emdpf/linear
 tccs/fpwd/sigmoid
 trip/hug/marm1s_shallow
 tccs/synwav/gch1
+tccs/sgk/synth
 tccs/shemd/hyperoil
 tccs/shemd/synth1
 tccs/shemd/fxemddemo
