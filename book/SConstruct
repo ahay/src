@@ -74,6 +74,10 @@ tccs/strsvd/fieldstrsvd
 tccs/strsvd/hyper
 tccs/timelapse/timelapse
 xjtu/primer/testelastic2d
+zju/optnoise/flat
+zju/optnoise/prestack
+zju/optnoise/poststack
+zju/optnoise/slope
 '''
 
 all =  ARGUMENTS.get('all', 'n')
