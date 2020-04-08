@@ -28,18 +28,18 @@ def filter(coef,par):
     ''' % coef
 # ------------------------------------------------------------
 def fdx(par):
-    return filter('%s' %('0,'+s_coefm+','  +s_coefp     ),par) + '| transp'
+    return str(list(filter('%s' %('0,'+s_coefm+','  +s_coefp     ),par))) + '| transp'
 def cdx(par):
-    return filter('%s' %(     c_coefm+',0,'+c_coefp     ),par) + '| transp'
+    return str(list(filter('%s' %(     c_coefm+',0,'+c_coefp     ),par))) + '| transp'
 def bdx(par):
-    return filter('%s' %(     s_coefm+','  +s_coefp+',0'),par) + '| transp'
+    return str(list(filter('%s' %(     s_coefm+','  +s_coefp+',0'),par))) + '| transp'
 # ------------------------------------------------------------
 def fdz(par):
-    return filter('%s' %('0,'+s_coefm+','  +s_coefp     ),par)
+    return str(list(filter('%s' %('0,'+s_coefm+','  +s_coefp     ),par)))
 def cdz(par):
-    return filter('%s' %(     c_coefm+',0,'+c_coefp     ),par)
+    return str(list(filter('%s' %(     c_coefm+',0,'+c_coefp     ),par)))
 def bdz(par):
-    return filter('%s' %(     s_coefm+','  +s_coefp+',0'),par)
+    return str(list(filter('%s' %(     s_coefm+','  +s_coefp+',0'),par)))
 # ------------------------------------------------------------
 def ddapply(out,inp,flt,stat,par):
     Flow(out,[inp,flt],
