@@ -1,0 +1,203 @@
+from rsf.proj import *
+def Grey(data,other): 
+	Result(data,'put d2=50 | grey label2=Distance  unit2="m" clip=0.5 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.4 max1=4.0 %s '%other)
+	
+	
+	
+Flow('fielda','field0',
+     'remap1 o1=0 d1=0.008 n1=501 |put o2=-3200 d2=100 | put label2="Offset" unit2="m"')
+#Grey('fielda','')
+
+############################################################
+####### Blend 
+############################################################
+## Apply dithering
+Flow('dither','fielda',
+     '''
+     window n1=1 |
+     noise rep=y seed=122011 var=10 | math output="250*input"
+     ''')
+
+Flow('shottime1','fielda','window n1=1 | math output=100*x1')
+Flow('shottime2','shottime1 dither','add scale=1,1 ${SOURCES[1]}')
+
+
+## Blend 
+Flow('field','fielda fielda shottime1 shottime2','blend shot_time_in=${SOURCES[3]} shot_time_out=${SOURCES[2]} |add scale=1,1 ${SOURCES[1]}' )
+
+for case in ('a',''):	
+	dat='field'+case
+	Result(dat,'grey wanttitle=n clip=0.74 ' )
+
+dat='field'
+typ='semblance'
+scn=typ+'scn'
+Flow(scn,'field','vscan half=y v0=2500 dv=5 nv=301 type=%s  nb=5 | clip2 lower=0' %typ)
+Plot(scn+'0',scn,
+		'''
+		grey color=j allpos=y wanttitle=n pclip=98 labelsz=10 unit2="m/s"
+		''')
+Flow(scn+'c','fielda','vscan half=y v0=2500 dv=5 nv=301 type=%s  nb=5 | clip2 lower=0' %typ)
+Plot(scn+'c0',scn+'c',
+		'''
+		grey color=j allpos=y wanttitle=n pclip=98 labelsz=10 unit2="m/s"
+		''')		
+pik=typ+'pik'
+Flow(pik,scn,'scale axis=2 | pick  rect1=50 rect2=10 vel0=2500')
+Plot(pik,
+             '''
+             graph yreverse=y transp=y min2=2000 max2=2600 pad=n
+             Resultcol=7 Resultfat=7 wanttitle=n wantaxis=n
+             ''')
+Result(scn,[scn+'0',pik],'Overlay')
+nmo = typ + 'nmo'
+Flow(nmo,[dat,pik],'nmo half=y velocity=${SOURCES[1]} str=0.1 ')
+Result(nmo,
+			'''
+			grey wanttitle=n
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74
+			''' )
+
+nmomf = typ + 'nmomf'
+Flow(nmomf,nmo,'transp | mf nfw=13 | transp')
+Result(nmomf,
+			'''
+			grey wanttitle=n 
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74
+			''' )
+inmo = typ + 'inmo'
+Flow(inmo,[nmomf,pik],'inmo half=y velocity=${SOURCES[1]} str=0.4')
+Result(inmo,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+diffmf=typ+'diffmf'
+Flow(diffmf,['field',inmo],'add scale=1,-1 ${SOURCES[1]}')
+Result(diffmf,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+errormf=typ+'errormf'
+Flow(errormf,['fielda',inmo],'add scale=1,-1 ${SOURCES[1]}')
+Result(errormf,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+
+dat='field'
+#Flow('ref',nmomf,'stack')
+Flow('ref','fielda','window n2=1 f2=32')
+typ='semblance'
+scn=typ+'scn-simi'
+Flow(scn,'field ref','simivscan ref=${SOURCES[1]} thr=0.2  half=y v0=2500 dv=5 nv=301 type=%s nb=5| clip2 lower=0' %typ)
+Plot(scn+'0',scn,
+		'''
+		grey color=j allpos=y wanttitle=n pclip=98 labelsz=10 unit2="m/s"
+		''')
+Flow(scn+'c','fielda ref','simivscan ref=${SOURCES[1]} thr=0.3  half=y v0=2500 dv=5 nv=301 type=%s nb=5| clip2 lower=0' %typ)
+Plot(scn+'c0',scn+'c',
+		'''
+		grey color=j allpos=y wanttitle=n pclip=98 labelsz=10 unit2="m/s"
+		''')		
+pik=typ+'pik-simi'
+Flow(pik,scn,'scale axis=2 | pick rect1=25 rect2=2 vel0=2500')
+Plot(pik,
+             '''
+             graph yreverse=y transp=y min2=2000 max2=2600 pad=n
+             Resultcol=7 Resultfat=7 wanttitle=n wantaxis=n
+             ''')
+Result(scn,[scn+'0',pik],'Overlay')
+nmo = typ + 'nmo-simi'
+Flow(nmo,[dat,pik],'nmo half=y velocity=${SOURCES[1]} str=0.1 ')
+Result(nmo,
+			'''
+			grey wanttitle=n
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74
+			''' )
+
+nmomf = typ + 'nmomf-simi'
+Flow(nmomf,nmo,'transp | mf nfw=13 | transp')
+Result(nmomf,
+			'''
+			grey wanttitle=n 
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74
+			''' )
+inmo = typ + 'inmo-simi'
+Flow(inmo,[nmomf,pik],'inmo half=y velocity=${SOURCES[1]} str=0.4')
+Result(inmo,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+diffmf=typ+'diffmf-simi'
+Flow(diffmf,['field',inmo],'add scale=1,-1 ${SOURCES[1]}')
+Result(diffmf,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+errormf=typ+'errormf-simi'
+Flow(errormf,['fielda',inmo],'add scale=1,-1 ${SOURCES[1]}')
+Result(errormf,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+			
+Result('comp1','./Fig/fielda.vpl ./Fig/field.vpl ./Fig/semblancescn.vpl','SideBySideAniso')
+Result('comp2','./Fig/semblancenmo.vpl ./Fig/semblancenmomf.vpl' ,'SideBySideAniso')
+Result('comp3','./Fig/semblanceinmo.vpl ./Fig/semblancediffmf.vpl ./Fig/semblanceerrormf.vpl' ,'SideBySideAniso')
+
+Result('comp4','./Fig/fielda.vpl ./Fig/field.vpl ./Fig/semblancescn-simi.vpl','SideBySideAniso')
+Result('comp5','./Fig/semblancenmo-simi.vpl ./Fig/semblancenmomf-simi.vpl' ,'SideBySideAniso')
+Result('comp6','./Fig/semblanceinmo-simi.vpl ./Fig/semblancediffmf-simi.vpl ./Fig/semblanceerrormf-simi.vpl' ,'SideBySideAniso')
+
+
+             
+## Creating framebox
+x=3200
+y=1.95
+w=400
+w1=0.4
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=2500 max1=4000 min2=0 max2=4 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')             
+             
+x=2650
+y=2.25
+w=400
+w1=1
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=2500 max1=4000 min2=0 max2=4 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')  
+
+Plot('label1',None,
+	'''
+	box x0=8 y0=3.5 label="Multiples" xt=0.5 yt=1 length=0.5 size=.7
+	''')
+
+Plot('label2',None,
+	'''
+	box x0=8 y0=5.5 label="Pick" xt=0.5 yt=0.5 length=0.5 size=.5
+	''')
+			             
+Result('scn1','semblancescn0 frame1 frame2 label1','Overlay')
+Result('scn2','semblancescn-simi0 frame1 frame2 label1 label2','Overlay')
+Result('scn1-c','semblancescnc0 frame2 label1','Overlay')
+Result('scn2-c','semblancescn-simic0 frame2 label1','Overlay')
+Result('comp-scn','Fig/scn1.vpl Fig/scn2.vpl','SideBySideAniso')
+Result('comp-scn-c','Fig/scn1-c.vpl Fig/scn2-c.vpl','SideBySideAniso')
+Result('comp-dat','Fig/fielda.vpl Fig/field.vpl','SideBySideAniso')
+Result('comp','Fig/scn1-c.vpl Fig/scn2-c.vpl Fig/scn1.vpl Fig/scn2.vpl','SideBySideAniso')
+
+
+End()
