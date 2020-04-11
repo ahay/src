@@ -1,4 +1,4 @@
-\published{Journal of Applied Geophysics, 130, 194–208, (2016)}
+\published{Journal of Applied Geophysics, 130, 194-208, (2016)}
 
 \title{Compressive sensing for seismic data reconstruction via fast projection onto convex sets based on seislet transform}
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
@@ -20,13 +20,13 @@ Email: ykchen@utexas.edu
 \lefthead{Gan et al.}
 \righthead{Compressive sensing with seislet}
 %\footer{Iterative deblending using shaping regularization}
+\maketitle
 
 \begin{abstract}
 According to the compressive sensing (CS) theory in the signal-processing field, we proposed a new CS approach based on a fast projection onto convex sets (POCS) algorithm with sparsity constraint in the seislet transform domain. The seislet transform appears to be the sparest among the state-of-the-art sparse transforms. The FPOCS can obtain much faster convergence than conventional POCS (about two thirds of conventional iterations can be saved)\new{, while maintaining the same recovery performance}. \new{The FPOCS can obtain faster and better performance than FISTA for relatively cleaner data but will get slower and worse performance than FISTA, which becomes a reference to decide which algorithm to use in practice according the noise level in the seismic data.} The seislet transform based CS approach can achieve obviously better data recovery results than $f-k$ transform based scenarios, considering \old{both} signal-to-noise ratio (SNR)\new{, local similarity comparison,} and visual observation, because of a much sparser structure in the seislet transform domain. We have used both synthetic and field data examples to demonstrate the \new{superior} performance \new{the proposed seislet-based FPOCS approach}. 
 \end{abstract}
 
 
-\newpage
 
 \section{Introduction}
 % It breaks the long-standing pillar of Nyquist-Shannon sampling theory, which assumes that information is naturally band-limited. Instead, CS assumes a model where the signal is sparse in some transform domain. This lets us sense a signal with far fewer samples. We then use $L_1$-optimization techniques to reconstruct the signal as if we had taken all of the samples. 
