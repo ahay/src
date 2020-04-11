@@ -28,5 +28,16 @@ Result('sines','graph title=Sines')
 
 # Fourier transform
 
+# tapering with Blackman window
+Flow('sinest','sines',
+     '''
+     math output="input*(0.42 - 0.5*cos(2*x1*%g) + 0.08*cos(4*x1*%g))"
+     ''' % (math.pi/0.25,math.pi/0.25))
+Result('sinest','graph title="Sines Tapered" ')
+
+Flow('spectrum','sinest','spectra')
+Result('spectrum','window max1=500 | graph title=Spectrum')
+
+# filtering in the Fourier domain
 
 End()
