@@ -1,0 +1,269 @@
+\published{Journal of Applied Geophysics, 130, 194–208, (2016)}
+
+\title{Compressive sensing for seismic data reconstruction via fast projection onto convex sets based on seislet transform}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Shuwei Gan\footnotemark[1], Shoudong Wang\footnotemark[1], Yangkang Chen\footnotemark[2], Xiaohong Chen\footnotemark[1], Weiling Huang\footnotemark[1] and Hanming Chen\footnotemark[1]}
+\address{
+\footnotemark[1] State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200 \\
+Email: gsw19900128@126.com\&swang104@ucsc.edu\&chenxh@cup.edu.cn \\
+cup\_hwl@126.com \& huichanming@126.com \\
+\footnotemark[2] Jackson School of Geosciences\\
+The University of Texas at Austin\\
+University Station, Box X\\
+Austin, TX 78713-8924, USA \\
+Email: ykchen@utexas.edu
+}
+
+\lefthead{Gan et al.}
+\righthead{Compressive sensing with seislet}
+%\footer{Iterative deblending using shaping regularization}
+
+\begin{abstract}
+According to the compressive sensing (CS) theory in the signal-processing field, we proposed a new CS approach based on a fast projection onto convex sets (POCS) algorithm with sparsity constraint in the seislet transform domain. The seislet transform appears to be the sparest among the state-of-the-art sparse transforms. The FPOCS can obtain much faster convergence than conventional POCS (about two thirds of conventional iterations can be saved)\new{, while maintaining the same recovery performance}. \new{The FPOCS can obtain faster and better performance than FISTA for relatively cleaner data but will get slower and worse performance than FISTA, which becomes a reference to decide which algorithm to use in practice according the noise level in the seismic data.} The seislet transform based CS approach can achieve obviously better data recovery results than $f-k$ transform based scenarios, considering \old{both} signal-to-noise ratio (SNR)\new{, local similarity comparison,} and visual observation, because of a much sparser structure in the seislet transform domain. We have used both synthetic and field data examples to demonstrate the \new{superior} performance \new{the proposed seislet-based FPOCS approach}. 
+\end{abstract}
+
+
+\newpage
+
+\section{Introduction}
+% It breaks the long-standing pillar of Nyquist-Shannon sampling theory, which assumes that information is naturally band-limited. Instead, CS assumes a model where the signal is sparse in some transform domain. This lets us sense a signal with far fewer samples. We then use $L_1$-optimization techniques to reconstruct the signal as if we had taken all of the samples. 
+
+Most of the time, seismic data processing need a regular and dense dataset input, which is of extreme importance for obtaining a high-resolution result.  However, during the data acquisition process, many different reasons may result in the missing traces\new{, including economic reasons, ground surface limitations, and regulatory reasons}. Seismic data reconstruction is such a pre-condition procedure that can be used to remove sampling artifacts\new{, filling the gaps}, and to improve amplitude analysis, which is indispensable for the subsequent processing steps including high-resolution processing, wave-equation migration, multiple suppression, amplitude-versus-offset (AVO) or amplitude-versus-azimuth (AVAZ) analysis, and time-lapse studies \cite[]{daniel2002,liubin2004,abma2005,abma2006,juefu2010,mostafa2010,yangkang2014halfthr,yangkang2015eage2}. 
+
+In recent years, because of the popularity of compressive sensing (CS) based applications \cite[]{candes20062}, there exists a new paradigm for seismic data acquisition that can potentially reduce the survey time and increase the data resolution \cite[]{herrmann2010}. Compressive sensing (CS) is a relatively new paradigm in signal processing that has recently received a lot of attention. The theory indicates that the signal which is sparse under some basis may still be recovered even though the number of measurements is deemed insufficient by Shannon's criterion. The principle of CS involves solving a least-square minimization problem with a $L_1$ norm penalty term of the reconstructed model, which requires compromising a least-square data-misfit constraint and a sparsity constraint over the reconstructed model. The iterative shrinkage thresholding (IST) and the projection onto convex sets (POCS) are two common approaches used to solve the minimization problem in the exploration geophysics field. 
+
+%In recent years, compressive sensing has raised a lot of attention among different kinds of areas, like compressive imaging, medical imaging, analog-to-information conversion, and geophysical data analysis, to name just a few. According to the Shannon/Nyquist sampling theorem, signal processing requires that a signal must be sampled at the rate of at least twice its highest frequency in order to be represented explicitly. While the compressive sensing theory can reconstruct the signal with much less sampling rate because its exploration of the sparsity-promotion in some transformed domain. The CS strategy is composed of three key steps: data acquisition through a randomized sensing matrix, sparsifying transform and a sparsity-promotion recovery by solving a least-square problem with a $L_1$ norm  penalty term of the reconstructed model, which requires compromising a least-square data-misfit constraint and a sparsity constraint over the reconstructed model. As the acquisition process is a starting point in seismic processing, how to obtain more information through as little survey time as possible has a great practical significance. A lot of researches have been done to explore the new acquisition strategy in the CS level. In this paper, we assume that the irregular acquisition surveys already satisfy the randomized sampling requirement approximately, which makes the missing traces harmless by turning them into incoherent Gaussian noise that can be attenuated easily.
+
+Inspired from the fast iterative shrinkage-thresholding algorithm (FISTA) introduced in \cite{beck2009}, we propose a similar faster version of POCS (FPOCS).  Sparsity of seismic data has been explored utilizing different transforms, such as Fourier transform, curvelet \cite[]{candes20061} and synchrosqueezed wavelet transform \cite[]{yangkang2014sswt}. We compare the sparseness of different well-known sparse transforms by displaying the transform domain and drawing the transform domain coefficients decaying curves. The comparison shows that the seislet transform is obviously sparser than other alternative sparse transforms. Thus, we use the seislet transform \cite[]{seislet,yangkang20142} as the sparsity promoting transform in the compressive sensing data recovery framework in order to explore its related behaviors. Both synthetic and field data examples show that the proposed seislet based FPOCS can obtain better and faster data recovery than the $f$-$k$ transform based POCS method. 
+
+\new{The contributions of the paper can be divided into three aspects. (1) We extend the acceleration strategy used previously in the IST approach to POCS approach, and compare the performance difference of IST and POCS (and related FISTA and FPOCS) in seismic data with different noise level and pointed out that the selection of IST or POCS depends on the noise level of seismic data. (2) We compare the transform domain sparsity of different well-known sparse transforms in terms of the plotted sparse coefficients and coefficients decaying diagrams, and find out that the seislet transform has a much sparser transform domain structure than Fourier transform, wavelet transform, and the curvelet transform. (3) The seislet-based CS approach for seismic data reconstruction is initially investigated and the performance of seislet-based approach and $f$-$k$ based approach are compared in terms of the reconstruction signal-to-noise ratio (SNR), local similarity comparison, and visual observation. }
+
+\section{Methods}
+\subsection{Problem statement}
+The interpolation problem in a CS framework can be summarized in the following model:
+\begin{equation}
+\label{eq:int}
+\mathbf{d}_{obs} = \mathbf{S}\mathbf{d}, \mathbf{m} = \mathbf{Ad}
+\end{equation}
+where $\mathbf{d}_{obs}$ is the observed data, $\mathbf{S}$ is the sampling operator, $\mathbf{d}$ is the unknown data we would like to
+estimate, $\mathbf{A}$ is the sparsity-promoting transform, and $\mathbf{m}$ is the transform domain coefficients.
+
+The synthesis based approach solves the following problem:
+\begin{equation}
+\label{eq:syn}
+\min_{\mathbf{m}} \parallel\mathbf{d}_{obs}- \mathbf{SA}^{-1}\mathbf{m} \parallel_2^2 + \lambda \parallel \mathbf{m} \parallel_1,
+\end{equation}
+where $\mathbf{A}^{-1}$ denotes the inverse sparsity-promoting transform.
+
+The analysis-based approach solves the following problem:
+\begin{equation}
+\label{eq:ana}
+\min_{\mathbf{d}} \parallel \mathbf{d}_{obs} - \mathbf{S}\mathbf{d}  \parallel_2^2 + \lambda \parallel \mathbf{A} \mathbf{d} \parallel_1.
+\end{equation}
+
+The analysis-based approach emphasizes the sparsity of the
+canonical transformed coefficients, so it tends to recover data with
+smooth regions; while the synthesis-based approach finds the
+sparsest approximation of the given data in the transformed domain \cite[]{jianwei2014}.
+
+\subsection{Fast iterative shrinkage thresholding algorithm}
+The iterative shrinkage thresholding (IST) is one of the most effective methods to solve problem \ref{eq:syn}:
+\begin{equation}
+\label{eq:ist}
+\mathbf{m}_{n+1} = \mathbf{T}_{\tau}\left[\mathbf{m}_{n} + (\mathbf{S}\mathbf{A}^{-1})^H(\mathbf{d}_{obs}-(\mathbf{S}\mathbf{A}^{-1})\mathbf{m}_n)\right],
+\end{equation}
+where $\mathbf{m}_n$ denotes the coefficients model after $n$th iteration, $\mathbf{T}_{\tau}$ denotes a thresholding operator (which is a nonlinear operator) with an input parameter $\tau$, and $[\cdot]^H$ denotes the adjoint operator. It's worth noting that $\tau$ has different connections with $\lambda$ according to the thresholding type \cite[]{yangkang2014halfthr}.
+
+Due to the $O(1/k)$ convergence of IST, implementing IST is usually very time-consuming in practice. \cite{beck2009} proposed the fast iterative shrinkage thresholding algorithm (FISTA) to improve the convergence rate:
+\begin{equation}
+\begin{split}
+\mathbf{m}_{n}'  &= \mathbf{m}_n + \frac{v_n-1}{v_{n+1}}(\mathbf{m}_n-\mathbf{m}_{n-1}), \\
+\mathbf{m}_{n+1} &= \mathbf{T}_{\tau}\left[\mathbf{m}_{n}' + (\mathbf{S}\mathbf{A}^{-1})^H\left(\mathbf{d}_{obs}-(\mathbf{S}\mathbf{A}^{-1})\mathbf{m}_n'\right)\right],
+\end{split}
+\end{equation}
+where $v_n$ is a controlling parameter with the initial value $v_0=1$ and $\mathbf{v}_{n+1}=(1+\sqrt{1+4v_n^2})/2$. 
+
+The improved convergence rate is $O(1/k^2)$, and thus becomes widely used in the image-processing field since its invention.
+
+\subsection{Projection onto convex sets and its fast version}
+In exploration geophysics field, geophysicists prefer formulating the seismic data reconstruction problem as problem \ref{eq:ana}. The projection onto convex sets (POCS) algorithm is one of the most widely used methods for reconstructing missing seismic data, especially for those irregular sampled seismic data binned onto regular grids.  The POCS \cite[]{abma2006} aims to solve equation \ref{eq:ana} by the following framework:
+\begin{equation}
+\label{eq:pocs}
+\mathbf{d}_{n+1} = \mathbf{d}_{obs} + (\mathbf{I}-\mathbf{S})\mathbf{A}^{-1}\mathbf{T}_{\tau}\left[\mathbf{A}(\mathbf{d}_n)\right],
+\end{equation}
+where $\mathbf{d}_n$ denotes the estimated data after $n$th iteration. 
+
+Inspired from the FISTA, we propose the following faster version of POCS (FPOCS):
+\begin{equation}
+\begin{split}
+\mathbf{d}_{n}'  &= \mathbf{d}_n + \frac{v_n-1}{v_{n+1}}(\mathbf{d}_n-\mathbf{d}_{n-1}), \\
+\mathbf{d}_{n+1} &= \mathbf{d}_{obs} + (\mathbf{I}-\mathbf{S})\mathbf{A}^{-1}\mathbf{T}_{\tau}\left[\mathbf{A}(\mathbf{d}_{n}')\right].
+\end{split}
+\end{equation}
+An obvious difference between IST and POCS (or between FPOCS and FISTA) is whether we make use of the known data. Briefly speaking, the IST (FISTA) treats all the data components as unknown while POCS (FPOCS) only treats the missing data components as unknown. The comparison between IST (FISTA) and POCS (FPOCS) in terms of the reconstruction performance and convergence rate can be done from two cases: irregularly sampled noisy data and irregularly sampled clean data. We will implement such two comparisons in the section of examples. The general conclusion can be given in advance: for irregularly sampled noisy dataset, the IST (FISTA) method can be superior  because during the thresholding process, the extra random noise will be attenuated gradually; for irregularly sampled clean dataset, the POCS (FPOCS) method can be superior because the known sampled data help constrain the spatial coherency during the inversion. Here, the noisy level is relative. Those data acquired from the marine acquisition are much better than those data from land acquisition. In this paper, we only deal with the datasets from marine acquisition, thus we prefer the FPOCS instead of the FISTA. 
+
+\subsection{Review of seislet transform}
+The construction of seislet transform \cite[]{seislet} follows the basics of the second-generation wavelet transform. The forward transform starts with the finest scale (the original sampling) and goes to the coarsest scale. The inverse transform starts with the coarsest scale and goes back to the finest scale \cite[]{yangkang20142}. The forward and inverse seislet transforms can be
+expressed as:
+\begin{equation}
+\label{eq:one}
+\mathbf{r}=\mathbf{o}-\mathbf{P\left[e\right]},
+\end{equation}
+\begin{equation}
+\label{eq:two}
+\mathbf{c}=\mathbf{e}+\mathbf{U\left[r\right]},
+\end{equation}
+\begin{equation}
+\label{eq:three}
+\mathbf{e}=\mathbf{c}-\mathbf{U\left[r\right]},
+\end{equation}
+\begin{equation}
+\label{eq:four}
+\mathbf{o}=\mathbf{r}+\mathbf{P\left[e\right]},
+\end{equation}
+where $\mathbf{P}$ is the prediction operator, $\mathbf{U}$ is the updating operator. $\mathbf{r}$ denotes the difference between true odd trace and predicted odd trace (from even trace), $\mathbf{c}$ denotes a coarse approximation of the data. At the start of forward transform, e and o correspond to the even and odd
+traces of the data domain. At the start of the inverse transform, $\mathbf{c}$ and $\mathbf{r}$ will have just one
+trace of the coarsest scale of the seislet domain. The seislet transform differs from the wavelet transform in that the prediction and updating operators utilize the local slope of seismic profiles to predict and update the even and odd traces. The above prediction and update operators can be defined as follows:
+\begin{equation}
+\label{eq:five}
+\mathbf{P}\left[\mathbf{e}\right]_k=\left(\mathbf{P}^{(+)}_k\left[\mathbf{e}_{k-1}\right]+\mathbf{P}^{(-)}_k\left[\mathbf{e}_k\right]\right)/2,
+\end{equation}
+\begin{equation}
+\label{eq:six}
+\mathbf{U}\left[\mathbf{r}\right]_k=\left(\mathbf{P}^{(+)}_k\left[\mathbf{r}_{k-1}\right]+\mathbf{P}^{(-)}_k\left[\mathbf{r}_k\right]\right)/4,
+\end{equation}
+where $\mathbf{P}^{(+)}_k$ and $\mathbf{P}^{(-)}_k$ are operators that predict a trace from its left and right neighbors, correspondingly, by shifting seismic events according to their local slopes.
+The local slope can be calculated using a robust algorithm as introduced in \cite{fomel2002pwd}.
+
+
+\subsection{Comparison of sparsity-promoting transforms}
+The well-known exited sparsity-promoting transforms in the exploration geophysics field include the Fourier\cite[]{chandrasekharan1949}, wavelet transform\cite[]{akansu2010}, and curvelet transform \cite[]{candes20061}. 
+
+In order to effectively compare the sparseness of different transforms, we first select an input dataset (here, we use the synthetic example shown in Figure \ref{fig:sigmoid-1} as the input dataset). Then we transform the input data into sparse transform domain using different sparse transforms. Figure \ref{fig:sig-fk,sig-dwt,sig-seis,sig-curv-img} shows different transformed domains for the input data. The 2-D Fourier transform in this case means the $f-k$ transform. The 2-D wavelet transform means implementing the 1-D wavelet transform along the temporal direction first and along the spatial direction second. The 2-D seislet transform means implementing the seislet transform along the spatial direction first and 1-D seislet transform along the temporal direction second. The 2-D curvelet transform refers to the 2-D wedge wrapping based fast discrete curvelet transform \cite[]{candes20061}. Next we sort the coefficients in the transform domains into decaying 1-D vectors according to the coefficient amplitude and scale the 1-D vectors. Finally we plot the decaying coefficients with respect to the sequence number for all the transforms in one plot. Figure \ref{fig:sig-c} shows a comparison between the decay of sorted coefficients in the 2-D Fourier transform, 2-D wavelet transform, 2-D seislet transform and 2-D curvelet transform domains. Our experiments show that the seislet coefficients decay significantly faster than coefficients of the other transforms, which indicates a more compact structure of the seislet domain. Thus, our FPOCS is preferred to use the 2-D seislet transform domain as the sparsity-promoting transform.
+
+%Figure \ref{fig:slet,sletthr} shows what the seislet domain looks like for the blended seismic data shown in Figure \ref{fig:blendedsyn}. 
+%Figure \ref{fig:slet} shows the seislet domain of Figure \ref{fig:blendedsyn}, Figure \ref{fig:sletthr} shows the thresholded seislet domain. Obviously much blending noise has been removed out after applying soft shresholding. 
+
+\inputdir{coef}
+\multiplot{4}{sig-fk,sig-dwt,sig-seis,sig-curv-img}{width=0.45\textwidth}{Comparison among different sparsity-promoting transforms based on the synthetic example shown in Figure \ref{fig:sigmoid-1}. (a) 2-D Fourier transform domain. (b) 2-D Wavelet transform domain. (c) 2-D Seislet transform domain. (d) 2-D Curvelet transform domain.}
+\plot{sig-c}{width=0.8\textwidth}{Coefficients decreasing diagram of different sparsity-promoting transforms.}
+
+\section{Examples}
+We use one synthetic example and one field data example to demonstrate the interpolation effect using the proposed approach. 
+The first synthetic example is a combination of linear reflectors, curved reflectors and faults. The original data and decimated data with 30\% randomly removed traces are shown in Figures \ref{fig:sigmoid-1} and \ref{fig:sigmoid-zero-0}, respectively. \old{Figures \ref{fig:fk} and \ref{fig:fk-zero} show the corresponding spectrum of Figures \ref{fig:sigmoid-1} and \ref{fig:sigmoid-zero-0}.} After $f-k$ based POCS and FPOCS, and seislet based POCS and FPOCS, the reconstructed data and their corresponding error sections using different approaches are shown in Figures \ref{fig:data-pocs-fft-0,data-fpocs-fft-1,data-pocs-seis-0,data-fpocs-seis-1} and \ref{fig:diff-pocs-fft,diff-fpocs-fft,diff-pocs-seis,diff-fpocs-seis}, respectively. \new{In this paper, we use the percentile thresholding strategy \cite[]{yangkang2014halfthr}. The percentile thresholding refers to using a constant percentage of maximum coefficients during the iterations. For the first example, 15 \% coefficients are preserved during the iterations. The percentile thresholding refers to using a constant percentage of maximum coefficients during the iterations.} \old{The corresponding spectrum for four methods are shown in Figure \ref{fig:fk-pocs-fft,fk-fpocs-fft,fk-pocs-seis,fk-fpocs-seis}.}  We zoom in the frame boxes as shown in Figures \ref{fig:sigmoid-1,sigmoid-zero-0} and \ref{fig:data-pocs-fft-0,data-fpocs-fft-1,data-pocs-seis-0,data-fpocs-seis-1}, and show the zoomed sections in Figure \ref{fig:data-z,data-zero-z,data-pocs-fft-z,data-fpocs-fft-z,data-pocs-seis-z,data-fpocs-seis-z} for better comparison. In order to numerically compare the performance, we use the signal-to-noise ratio (SNR): $SNR=10\log_{10}(\Arrowvert\mathbf{d}_{true}\Arrowvert_2^2/\Arrowvert\mathbf{d}_{true}-\mathbf{d}_{inter}\Arrowvert_2^2)$\old{.} \new{, which is widely used in the literature to numerically measure the data recovery error \cite[]{guochang2009,wencheng2015asa}.} We plot the SNR diagram of the first example in Figure \ref{fig:snrs}.  As can be seen from the comparison of different approaches, the seislet based POCS and FPOCS obviously perform better than $f-k$ based POCS and FPOCS, according to both SNR comparison and visual observation. \new{It should be mentioned that the superior performance of FPOCS algorithm depends on the parameter selection (percentage of coefficients in the transformed domain) in the percentile thresholding strategy. Figure \ref{fig:snrs} shows the performances of different algorithms using the best selected parameter (the percentage is 15 \%), while Figure \ref{fig:snrs0} shows the performance of different algorithms using inappropriate parameter (the percentage is 20 \%). It is obvious that in Figure \ref{fig:snrs0}, both seislet based FPOCS and $f-k$ based FPOCS go through an SNR increasing and then decreasing process. Thus, when using the FPOCS algorithm in practice, we might need to have several parameters tuning process in order to select the best parameter.} The reconstructed results using FPOCS and POCS are nearly the same. From the convergence diagram, we can confirm that the FPOCS and POCS converge to the same SNR but FPOCS converges much faster. Figure \ref{fig:trace-comp} shows the amplitude comparison for the 175th trace (as highlighted in Figures \ref{fig:sigmoid-1}, \ref{fig:data-fpocs-fft-1} and \ref{fig:data-fpocs-seis-1}).  It is also obvious that the seislet based FPOCS approach can obtain better performance than the $f-k$ based FPOCS approach. \new{In addition to the SNR comparison, we also use another newly developed way to measure the recovery performance: the local similarity. The local similarity was initially used to measure the signal reconstruction in the noise attenuation problem \cite[]{yangkang2015ortho}. Here, we borrow the same way to numerically measure the data reconstruction performance. Appendix A gives a short review of the local similarity and its calculation. We use the local similarity in two ways: 1) to calculate the local similarity between the true data and the reconstructed data; 2) to calculate the local similarity between the true data and the estimation error. The higher the former similarity is, the better reconstruction performance is, since such similarity measure the correctness. However, the higher the latter similarity is, the worse reconstruction performance is, since such similarity magnifies the error. Figure \ref{fig:simi-pocs-fft,simi-fpocs-fft,simi-pocs-seis,simi-fpocs-seis} shows the local similarity between the true dataset and the reconstructed data. The two similarity maps on the bottom row obviously contains fewer anomalies than that on the top row, indicating that the two $f$-$k$ based approaches cause more error than the seislet based approaches. Please note that the the maximum local similarity is 1, which means that the two compared signals are exactly the same. Figure \ref{fig:simi-diff-pocs-fft,simi-diff-fpocs-fft,simi-diff-pocs-seis,simi-diff-fpocs-seis} shows the local similarity between the true dataset and the reconstruction error. The two similarity maps on the bottom show small values while the two maps on the top row show high-value anomalies, further confirming the superior performance using the seislet-based approach.} \new{Figure \ref{fig:tsimi-comp} shows the local similarity comparison (between the reconstructed trace and the true trace), which again confirms that the reconstructed trace using the seislet-based approach is much more similar to the true data.}
+
+In order to compare the difference between IST and POCS (or between FPOCS and FISTA). We do two experiments with clean and noisy irregularly sampled datasets, respectively. For the clean data case, we use the same synthetic example as shown in Figure\new{s} \ref{fig:sigmoid-1} \new{and \ref{fig:sigmoid-zero}}. We reconstruct the missing data with seislet POCS, seislet FPOCS, seislet IST, seislet FISTA, and show the convergence diagrams in terms of SNR in Figure \ref{fig:istpocs-snrs}. It is obvious that both seislet POCS and seislet FPOCS obtain better converged results than seislet IST and seislet FISTA, which results from the fact that in POCS based methods the sampled clean data components help constrain the model during the inversion. However, for the noisy data case, as shown in Figure \ref{fig:sigmoidn-zero}, the convergence diagrams show opposite performance compared with the clean data case. Both seislet POCS and seislet FPOCS obtain better converged results than seislet IST and seislet FISTA. This phenomenon results from the fact that during the inversion, the IST based methods can help remove the random noise iteratively while the POCS based approaches maintain the random noise in the known data components. The conclusion from these two experiments can guide us to decide which type of method (POCS or IST) to use in practice according to the level of noise existing in the seismic data: for relatively noisier dataset, the IST (FISTA) method can be superior  because during the thresholding process, the extra random noise will be attenuated gradually; for relatively cleaner dataset, the POCS (FPOCS) method can be superior because the known sampled data help constrain the spatial coherency during the inversion. \new{Currently, we do not have ways to quantify the noise level acceptable for FPOCS. It might be an interesting topic for future investigation.}. The next field data example is from a marine survey, with high data quality, thus we keep using the POCS based approach for comparison 
+
+The second example is a field data example, as shown in Figures \ref{fig:sean-1}. The incomplete data by randomly removing 30\% traces is shown in Figure \ref{fig:sean-zero-0}. \old{Figures \ref{fig:sean-fk} and \ref{fig:sean-fk-zero} show the corresponding spectrum of Figures \ref{fig:sean-1} and \ref{fig:sean-zero-0}.} The reconstructed results for the field data example are shown in Figures \ref{fig:sean-pocs-fft-0,sean-fpocs-fft-1,sean-pocs-seis-0,sean-fpocs-seis-1}. \new{For the field data example, 18 \% coefficients are preserved during the iterations.} The error sections using different approaches are shown in Figure \ref{fig:sean-diff-pocs-fft,sean-diff-fpocs-fft,sean-diff-pocs-seis,sean-diff-fpocs-seis}. It is obvious that the reconstructed data using seislet based approach are much more coherent than $f-k$ based and have less reconstruction error. We also show zoomed sections in Figure \ref{fig:sean-z,sean-zero-z,sean-pocs-fft-z,sean-fpocs-fft-z,sean-pocs-seis-z,sean-fpocs-seis-z} for better comparison. The SNR diagrams are shown in Figure \ref{fig:sean-snrs}. \new{It also shows a similar conclusion that is consistent with that from the previous synthetic example: the seislet-based approaches can obtain better reconstruction performance and the the FPOCS can obtain much faster convergence.} Because $f-k$ transform is a global transform, $f-k$ based approaches will cause artifacts outside the main data structure, as can be seen at the top of Figure \ref{fig:sean-fpocs-fft-1}. Since the seislet transform is a local transform, it will not cause such artifacts.  Figure \ref{fig:sean-trace-comp} shows the amplitude comparison for the 48th trace (as highlighted in Figures \ref{fig:sean-1}, \ref{fig:sean-fpocs-fft-1} and \ref{fig:sean-fpocs-seis-1}). It is obvious that the seislet based FPOCS has less reconstruction error compared with the $f-k$ based FPOCS. \new{Figure \ref{fig:sean-simi-pocs-fft,sean-simi-fpocs-fft,sean-simi-pocs-seis,sean-simi-fpocs-seis} shows the local similarity between the true field data and the reconstructed datasets. The two similarity maps on the bottom row have relatively smaller values than that on the top row, indicating that the seislet based approaches can obtain more accurate reconstructed results. The low-value anomalies in the deep-water part are caused by the low-amplitude (nearly zero) deep-water reflections and should not be taken into the consideration in evaluating different performance. Figure \ref{fig:sean-simi-diff-pocs-fft,sean-simi-diff-fpocs-fft,sean-simi-diff-pocs-seis,sean-simi-diff-fpocs-seis} shows the local similarity between the true dataset and the reconstruction error. The two similarity maps on the bottom show small values while the two maps on the top row show high-value anomalies, further confirming the superior performance using the seislet-based approach.} \new{Figure \ref{fig:sean-tsimi-comp} shows the local similarity comparison for the field data example (between the reconstructed trace and the true trace), which further confirms the aforementioned conclusions.}
+\inputdir{synth}
+\multiplot{4}{sigmoid-1,sigmoid-zero-0}{width=0.46\columnwidth}{(a) Synthetic data. (b) Decimated synthetic data with 30\% removed traces. \old{(c) \& (d) are the $f$-$k$ spectrum corresponding to (a) and (b).}}
+
+\multiplot{4}{data-pocs-fft-0,data-fpocs-fft-1,data-pocs-seis-0,data-fpocs-seis-1}{width=0.46\columnwidth}{(a)-(d) Reconstructed sections corresponding to POCS with $f$-$k$ thresholding, FPOCS with $f$-$k$ thresholding, POCS with seislet thresholding and FPOCS with seislet thresholding.}
+
+\multiplot{4}{simi-pocs-fft,simi-fpocs-fft,simi-pocs-seis,simi-fpocs-seis}{width=0.46\columnwidth}{\new{Local similarity between the reconstructed sections with the true data using different approaches. (a) $f$-$k$ POCS. (b) $f$-$k$ FPOCS. (c) Seislet POCS. (d) Seislet FPOCS. } }
+
+\multiplot{4}{diff-pocs-fft,diff-fpocs-fft,diff-pocs-seis,diff-fpocs-seis}{width=0.46\columnwidth}{(a)-(d) Reconstruction error sections corresponding to Figures \ref{fig:data-pocs-fft-0}-\ref{fig:data-fpocs-seis-1}, respectively. }
+
+\multiplot{4}{simi-diff-pocs-fft,simi-diff-fpocs-fft,simi-diff-pocs-seis,simi-diff-fpocs-seis}{width=0.46\columnwidth}{\new{Local similarity between the error sections with the true data using different approaches. (a) $f$-$k$ POCS. (b) $f$-$k$ FPOCS. (c) Seislet POCS. (d) Seislet FPOCS. } }
+
+%\multiplot{4}{fk-pocs-fft,fk-fpocs-fft,fk-pocs-seis,fk-fpocs-seis}{width=0.46\columnwidth}{(a)-(d) $f$-$k$ spectrum corresponding to the reconstructed sections Figures \ref{fig:data-pocs-fft-0}-\ref{fig:data-fpocs-seis-1}.}
+
+\multiplot{6}{data-z,data-zero-z,data-pocs-fft-z,data-fpocs-fft-z,data-pocs-seis-z,data-fpocs-seis-z}{width=0.46\columnwidth}{Zoomed sections. (a) True data. (b) Decimated data. (c) POCS with $f$-$k$ thresholding. (d) FPOCS with $f$-$k$ thresholding. (e) POCS with seislet thresholding. (f) FPOCS with seislet thresholding.}
+
+\inputdir{./}
+\plot{snrs}{width=0.8\textwidth}{SNR comparison of the synthetic example\old{.}\new{, when the best parameter is selected.}}
+
+\plot{snrs0}{width=0.8\textwidth}{\new{SNR comparison of the synthetic example, when the inappropriate parameter is selected.}}
+
+\inputdir{synth}
+%\plot{trace-comp}{width=0.8\textwidth}{Amplitude comparison. Black solid line denotes the true trace. Red dot dash line denotes FPOCS with seislet thresholding. Green dash line denotes FPOCS using $f$-$k$ thresholding.  }
+
+\multiplot{2}{trace-comp,tsimi-comp}{width=0.65\textwidth}{\old{Amplitude comparison. Black solid line denotes the true trace. Red dot dash line denotes FPOCS with seislet thresholding. Green dash line denotes FPOCS using $f$-$k$ thresholding.} \new{(a) Amplitude comparison. (b) Local similarity comparison. Black solid line denotes the true trace. Red dot dashed line denotes FPOCS with seislet thresholding. Green dashed line denotes FPOCS using $f$-$k$ thresholding. Note that the amplitude using seislet thresholding is much closer to the true amplitude and the local similarity using seislet thresholding is much closer to the maximum similarity: 1.} }
+
+\inputdir{./}
+\multiplot{4}{sigmoid-zero,istpocs-snrs,sigmoidn-zero,istpocsnoise-snrs}{width=0.45\textwidth}{\old{(b) Noisy irregularly sampled synthetic example. (b) Comparison of POCS (FPOCS) and IST (FISTA) of noisy data in terms of SNR. ".,*,o,-" correspond to seislet FPOCS, seislet POCS, seislet FISTA, and seislet IST.}\new{(a) Clean synthetic data. (b) Comparison of POCS (FPOCS) and IST (FISTA) of clean data in terms of SNR. (c) Noisy synthetic data. (d) Comparison of POCS (FPOCS) and IST (FISTA) of noisy data in terms of SNR.}}
+
+
+
+\inputdir{sean}
+\multiplot{4}{sean-1,sean-zero-0}{width=0.41\columnwidth}{\new{Field data example.} (a)\old{Field data.}\new{True field data.} (b) Decimated field data with  30 \% removed traces. \old{(c) \& (d) are the $f$-$k$ spectrum corresponding to (a) and (b).}}
+
+\multiplot{4}{sean-pocs-fft-0,sean-fpocs-fft-1,sean-pocs-seis-0,sean-fpocs-seis-1}{width=0.41\columnwidth}{\new{Field data example.} (a)-(d) Reconstructed sections corresponding to POCS with $f$-$k$ thresholding, FPOCS with $f$-$k$ thresholding, POCS with seislet thresholding and FPOCS with seislet thresholding. Note the artifacts caused by the $f$-$k$ based methods, as pointed out by the arrows.}
+
+\multiplot{4}{sean-simi-pocs-fft,sean-simi-fpocs-fft,sean-simi-pocs-seis,sean-simi-fpocs-seis}{width=0.46\columnwidth}{\new{Field data example.} \new{Local similarity between the reconstructed sections with the true data using different approaches. (a) $f$-$k$ POCS. (b) $f$-$k$ FPOCS. (c) Seislet POCS. (d) Seislet FPOCS. } }
+
+\multiplot{4}{sean-diff-pocs-fft,sean-diff-fpocs-fft,sean-diff-pocs-seis,sean-diff-fpocs-seis}{width=0.41\columnwidth}{\new{Field data example.} (a)-(d) Reconstruction error sections corresponding to Figures \ref{fig:sean-pocs-fft-0}-\ref{fig:sean-fpocs-seis-1}, respectively.}
+
+\multiplot{4}{sean-simi-diff-pocs-fft,sean-simi-diff-fpocs-fft,sean-simi-diff-pocs-seis,sean-simi-diff-fpocs-seis}{width=0.46\columnwidth}{\new{Field data example.} \new{Local similarity between the error sections with the true data using different approaches. (a) $f$-$k$ POCS. (b) $f$-$k$ FPOCS. (c) Seislet POCS. (d) Seislet FPOCS. } }
+
+
+
+%\multiplot{4}{sean-fk-pocs-fft,sean-fk-fpocs-fft,sean-fk-pocs-seis,sean-fk-fpocs-seis}{width=0.41\columnwidth}{\wen{Field data example.} (a)-(d) $f$-$k$ spectrum corresponding to the reconstructed sections Figures \ref{fig:sean-pocs-fft-0}-\ref{fig:sean-fpocs-seis-1}.}
+	
+\multiplot{6}{sean-z,sean-zero-z,sean-pocs-fft-z,sean-fpocs-fft-z,sean-pocs-seis-z,sean-fpocs-seis-z}{width=0.41\columnwidth}{Zoomed sections \new{of the field data example}. (a) True data. (b) Decimated data. (c) POCS with $f$-$k$ thresholding. (d) FPOCS with $f$-$k$ thresholding. (e) POCS with seislet thresholding. (f) FPOCS with seislet thresholding.}
+\inputdir{./}
+\plot{sean-snrs}{width=0.8\textwidth}{\old{SNR of field data (".,*,o,-" correspond to seislet FPOCS, seislet POCS, $f-k$ FPOCS and $f-k$ POCS).} \new{SNR comparison of the field data example.}}
+\inputdir{sean}
+\multiplot{2}{sean-trace-comp,sean-tsimi-comp}{width=0.65\textwidth}{\old{Amplitude comparison. Black solid line denotes the true trace. Red dot dash line denotes FPOCS with seislet thresholding. Green dash line denotes FPOCS using $f$-$k$ thresholding.} \new{Field data example. (a) Amplitude comparison. (b) Local similarity comparison. Black solid line denotes the true trace. Red dot dashed line denotes FPOCS with seislet thresholding. Green dashed line denotes FPOCS using $f$-$k$ thresholding. Note that the amplitude using seislet thresholding is much closer to the true amplitude and the local similarity using seislet thresholding is much closer to the maximum similarity: 1.} }
+
+
+
+\section{Discussions}
+\old{There exists a long-standing argument about the sparse transforms: what is the sparsest transform for seismic data? In this paper, we first compare the sparsity of different well-known transforms widely used in the seismic data processing community, including the Fourier transform, the wavelet transform, the curvelet transform, and the seislet transform. The plotted transform domains show that the seislet domain is a very compact domain that is suitable for some sparsity-based processing, such as signal-and-noise separation and sparsity-regularized seismic data interpolation. While the curvelet has been very popular in the general image-processing field since its invention more than one decade ago, it seems not superior in compress well-structured seismic data. For the very typical synthetic example used in this paper, the curvelet transform does not obtain a very compact compression, at least not as sparse as we thought about. The transform domain coefficients decaying curves can further confirm such observation in that the coefficients in the seislet domain decays the fastest, indicating the fact that the maximum amplitude of the compressed coefficients differ the most with the relatively low amplitude. The comparison, to the best of our knowledge, is never done in the literature. This sparse comparison offers us a new view in selecting the sparsest transform for related applications in seismic data processing.}
+
+
+The seislet transform was proposed in \cite{seislet}.\old{, and} \new{In this paper, we first compare the sparsity of different well-known transforms widely used in the seismic data processing community, including the Fourier transform, the wavelet transform, the curvelet transform, and the seislet transform. The comparison, to the best of our knowledge, is never done in the literature. This sparse comparison offers us a new view in selecting the sparsest transform for related applications in seismic data processing.} \new{The seislet transform} has found successful applications in noise attenuation \cite[]{liuyang20091,seislet}. However, the successful application of the seislet transform in iterative interpolation, especially from the industry, is barely reported. One of the drawbacks that impede the wide application of seislet based interpolation is the efficiency. The seislet transform itself does not slow down the efficiency too much. The efficiency of seislet transform is about 2-4 times slower than the fast Fourier transform, and is about 4-8 times slower than the fast wavelet transform \cite{seislet}.  However, the slope estimation that is required by the seislet transform is much slower. In order to accelerate the process, the slope estimation is commonly estimated every several iterations. In this paper, the slope estimation is iterated every 5 iterations. Even though, the computational cost is still much heavier than the widely used Fourier transform. In this paper, the FPOCS approach can greatly accelerate the efficiency by reducing a large number of iterations. According to the performance of the two examples in the paper, about two thirds iterations can be saved using the fast iterative approach. The cost saving in the paper is only obtained from 2D data examples. The application of 3D seislet-based POCS approach can even offer more cost savings,  which will potentially allow the wide application of the seislet transform in the industry. 
+
+
+The widely used POCS and IST algorithms can be both considered as the simplest and most effective iterative approaches for seismic data interpolation. In a mathematical sense, the IST is a type of POCS, the multiple projections include the weighted projection (model update), the forward sparse transform, the soft thresholding, and the inverse sparse transform. However, in the community of exploration geophysics, the IST algorithm and the POCS algorithm are different. The most apparent difference is whether to use the known data as a part of the model.  However, there is no published literature discussing the performance difference using the two approaches. We use a group of two simple but convincing tests with and without strong random noise to show the slight difference between the two approaches. The selection of the two approach simply depends on the noise level in the seismic data. When the noise level is high, we should use the IST based approach (FIST), otherwise, we should use the POCS based approach (FPOCS). 
+
+
+How to measure data recovery performance is another long-standing argument in the seismic data processing community. In the case of simulated test, in which we know the true answer, the traditionally used signal-to-noise ratio (SNR) seems to be the best choice. However, the SNR can only obtain a global measurement of the recovery quality while the local performance is not measured effectively. For example, an extrema (or huge error) in a local area will also result in a small global average. We use the local similarity \cite[]{fomel2007localattr} as a way to measure the data reconstruction performance in this paper. This evaluation is based on the assumption that the true signal and the estimated should have high local similarity and the true signal and the estimation error should have low local similarity. From the local similarity maps, we can get more details of different approaches. We can observe clearly that, even in the case of very close SNRs, the local similarity can still show slight but obvious difference, which makes it more sensitive in comparing different state-of-the-art approaches. 
+
+
+\section{Conclusion}
+We have proposed a novel fast\old{er} projection onto convex sets (FPOCS) solver for compressive sensing of seismic data via sparsity constraint in seislet transform domain. The seislet transform is demonstrated to be much sparser than other state-of-the-art sparse transforms and thus is more suitable for a compressive sensing based seismic data recovery approach. The FPOCS can obtain much faster convergence than conventional POCS\new{, which can potentially make the seislet-based POCS approach applicable in practice according to the efficiency acceleration}. \new{We have found that the the POCS based approach can be superior than the IST based approach in relatively cleaner dataset while can be slightly worse than the IST based approach in relatively noisier dataset. This conclusion can guide us to use different iterative approach according to the noise level in the data. In addition to the signal-to-noise ratio (SNR), the local similarity is also used to measure the data recovery performance. We are surprisingly to find out that even in the case of very close SNRs, the local similarity can still show slight but obvious difference, and thus the local similarity measurement is more sensitive in comparing different state-of-the-art approaches.} The seislet transform based compressive sensing can achieve obviously better data recovery results than $f-k$ transform based scenarios because of a much sparser structure in the seislet transform domain. We have used both synthetic and field data examples to demonstrate the superior performance of the proposed seislet-based FPOCS approach. 
+
+\section*{Acknowledgements}
+We would like to thank Jianwei Ma and Sergey Fomel for fruitful discussions about compressive sensing and the seislet transform. \new{We also thank Jyoti Behura and one anonymous reviewer for constructive suggestions that improve the manuscript greatly.} This research is supported by the National Natural Science Foundation of China (Grant No.41274137), the National Science and Technology of Major Projects of China (Grant No. 2011ZX05019-006), and National Engineering Laboratory of Offshore Oil Exploration. 
+
+
+\section{Appendix A: Review of local similarity}
+A common way to measure the similarity between two signals is to calculate the global correlation coefficient:
+\begin{equation}
+\label{eq:simi}
+\gamma=\frac{\displaystyle\sum_{i=1}^Na(i)b(i)}{\displaystyle\sqrt{\sum_{i=1}^Na^2(i)\sum_{i=1}^Nb^2(i)}},
+\end{equation}
+where $r$ is the global correlation coefficient, $N$ denotes the number of samples of the signals $\mathbf{a}$ and $\mathbf{b}$. In order to calculate the similarity between two signals locally, one can use the localized correlation coefficient:
+\begin{equation}
+\label{eq:simi}
+\gamma_m(t)=\frac{\displaystyle\sum_{i=t-m/2}^{t+m/2} a(i) b(i)}{\sqrt{\displaystyle\sum_{i=t-m/2}^{t+m/2} a^2(i) \displaystyle\sum_{i=t-m/2}^{t+m/2} b^2(i) }},
+\end{equation}
+where $\gamma_m(t)$ denotes the local correlation coefficient, $m$ is the local window size.
+\par
+\new{\cite{fomel2007localattr} designed an elegant way to calculate the local similarity: 
+\begin{align}
+\label{eq:local}
+\gamma(t) & =\sqrt{\gamma_1(t)\gamma_2(t)}, \\
+\label{eq:local1}
+\gamma_1(t)&=\arg\min_{\gamma_1(t)} \left(\sum_{t}(a(t)-\gamma_1(t)b(t)) + R(\gamma_1(t)) \right), \\
+\label{eq:local2}
+\gamma_2(t)&=\arg\min_{\gamma_2(t)} \left(\sum_{t}(b(t)-\gamma_2(t)a(t)) + R(\gamma_2(t)) \right).
+\end{align}
+Equation \ref{eq:local} represents that the local similarity can be expressed as the product of two vectors that are the solutions of two minimization problems. $R$ is a regularization operator for constraining $\gamma_1$ and $\gamma_2$. $R$ can be chosen as a local triangular smoother to enforce the smoothness of vectors $\gamma_1$ and $\gamma_2$, and then equations \ref{eq:local1} and \ref{eq:local2} can be solved using the shaping regularization \cite[]{fomel2007shape}:
+\begin{align}
+\label{eq:local3}
+\mathbf{\gamma}_1 &= [\lambda_1^2\mathbf{I} + \mathcal{S}(\mathbf{B}^T\mathbf{B}-\lambda_1^2\mathbf{I})]^{-1}\mathcal{S}\mathbf{B}^T\mathbf{a},\\
+\label{eq:local4}
+\mathbf{\gamma}_2 &= [\lambda_2^2\mathbf{I} + \mathcal{S}(\mathbf{A}^T\mathbf{A}-\lambda_2^2\mathbf{I})]^{-1}\mathcal{S}\mathbf{A}^T\mathbf{b},
+\end{align}
+where $\mathbf{A}$ is a diagonal operator composed from the elements of $\mathbf{a}$: $\mathbf{A}=diag(\mathbf{a})$ and $\mathbf{B}$ is a diagonal operator composed from the elements of $\mathbf{b}$: $\mathbf{B}=diag(\mathbf{b})$. $\mathbf{\mathcal{S}}$ is a smoothing operator, and $\lambda_1$ and $\lambda_2$ are two parameters controlling the physical dimensionality and enabling fast convergence when inversion is implemented iteratively. These two parameters can be chosen as the least-squares norms of $\mathbf{A}$ and $\mathbf{B}$ \cite[]{fomel2007localattr}. The local similarity algorithm can be used to calculate the local similarity of signal of any dimension. For 1D signals, the meanings of equations \ref{eq:local3} and \ref{eq:local4} are intuitive. For 2D or higher-dimensional signals, each signal is first reshaped into a 1D signal and then follows equations \ref{eq:local3} and \ref{eq:local4} to calculate the local similarity vector. The smoothing operator is applied to the 2D or multi-dimensional form of the original signal to enforce the smoothness in any dimension.}
+
+
+\bibliographystyle{seg}
+\bibliography{cs}
+
+

@@ -1,0 +1,360 @@
+from rsf.proj import*
+import math 
+
+## module definition
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s"  labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4  screenratio=1.4 title="" wherexlabel=b wheretitle=t color=g clip=803 %s'%other)
+
+def Greyplot(data,other): 
+	Plot(data,'grey label2=Trace unit2="" label1=Time unit1="s"  labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenratio=1.4 title="" wherexlabel=b wheretitle=t color=g clip=803 %s'%other)
+
+def Graph(data,other):
+	Result(data,'graph label1="" label2="" unit1="" unit2=""  labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4  title="" wherexlabel=b wheretitle=t %s' %other)
+
+def Graphplot(data,other):
+	Plot(data,'graph label1="" label2="" unit1="" unit2=""  labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4  title="" wherexlabel=b wheretitle=t %s' %other)
+
+def sqrt(a):
+	return math.sqrt(a)
+
+## parameters definition 
+zeroperc=30
+ifperc=1
+thr=15
+mode="soft"
+ddip=50
+padno=256
+r1=10
+r2=10
+fhi=60
+niter=35
+
+#Create the well-known  sean data
+#############################################################################
+Fetch('sean.HH','bp')
+
+Flow('sean','sean.HH',
+     'dd form=native | window n3=1 f3=3 n1=500')
+
+## zero trace (remove certain percent of traces)
+Flow('sean-mask','sean','window n1=1 | noise type=y range=0.5 mean=0.5 rep=y seed=201414 | threshold1 ifperc=1 type=hard thr=%d | mask min=0.000000001 | spray axis=1 n=500 |dd type=float'%(100-zeroperc))
+Flow('sean-mask2','sean-mask','math output="1-input"')
+Flow('sean-zero','sean sean-mask','add mode=p ${SOURCES[1]}')
+
+Grey('sean','')
+Grey('sean-mask','color=j')
+Grey('sean-mask','color=j')
+Grey('sean-zero','')
+
+## define forward and backward transform strings
+forw = 'rtoc | fft3 axis=1 pad=2 |fft3 axis=2 pad=2'
+back = 'fft3 axis=2 pad=2 inv=y | fft3 axis=1 pad=2 inv=y |real'
+
+## define forward and backward transform strings
+forwseis1 = 'pad n2=256 | seislet adj=y inv=y dip=${SOURCES[3]} eps=0.1 type=b '
+backseis1 = 'seislet adj=n inv=y dip=${SOURCES[3]} eps=0.1 type=b | window n2=180'
+
+forwseis2 = 'pad n2=256 | seislet adj=y inv=y dip=${SOURCES[4]} eps=0.1 type=b '
+backseis2 = 'seislet adj=n inv=y dip=${SOURCES[4]} eps=0.1 type=b | window n2=180'
+
+## compute the initial snr (SNR=10log(sum(s^2)/sum(n^2))
+Flow('diff0','sean sean-zero','add scale=1,-1 ${SOURCES[1]}')
+Flow('snr0',['sean','diff0'],'snr2 noise=${SOURCES[1]}')
+
+## FK
+Flow('seanfk','sean','%s | cabs'%forw)
+Flow('seanfktest','seanfk','threshold1 type=hard thr=12')
+
+
+##1## FFT POCS iterations (N=2, soft thresholding)  
+sig="sean-zero"
+Greyplot(sig,'title="Iteration 0"')
+data = sig
+datas = [sig]
+snrs_pocs=['snr0']
+for iter in range(niter):
+    old = data
+    data = 'data-1pocs%d' % (iter+1)
+    snr  ='snr-1pocs%d'%(iter+1)
+    diff ='diff-1pocs%d'%(iter+1)
+    # 1. Forward FFT
+    # 2. Threshold in FK domain
+    # 3. Inverse FFT
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data,[old,'sean-mask2',sig],
+         '''
+         %s | threshold1 ifperc=%d type=%s thr=%g ifverb=1 | 
+         %s | mul ${SOURCES[1]} | 
+         add ${SOURCES[2]}
+         ''' % (forw,ifperc,mode,thr,back))
+    Flow(diff,['sean',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['sean',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs_pocs.append(snr)
+Plot('pocs',datas,'Movie')
+
+##2## FFT FPOCS 
+sig="sean-zero"
+Greyplot(sig,'title="Iteration 0"')
+data = sig
+datas = [sig]
+snrs_fpocs=['snr0']
+old1 = sig
+t1=1
+for iter in range(niter): 
+    t2=t1
+    t1=(1+sqrt(1+4*t2*t2))/2
+    frac=(t2-1)/t1
+    old2 = old1
+    old1 = data
+    data = 'data-1fpocs%d' % (iter+1)
+    snr  ='snr-1fpocs%d'%(iter+1)
+    diff ='diff-1fpocs%d'%(iter+1)
+    # 1. multiply by space mask 1
+    # 2. add data from last iteration and observed data with scale (-1,1,1)
+    # 3. Inverse FFT
+    # 4. thresholding in FK domain
+    # 5. Forward FFT
+    Flow(data,[old1,old2,'sean-mask2',sig],
+         '''
+	 add scale=%g,%g ${SOURCES[1]} | 
+	 %s | threshold1 ifperc=%d type=%s thr=%g | %s |
+	 mul ${SOURCES[2]} | 
+         add scale=1,1 ${SOURCES[3]}
+         ''' % (1+frac,-frac,forw,ifperc,mode,thr,back))
+    Flow(diff,['sean',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['sean',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs_fpocs.append(snr)
+Plot('fpocs',datas,'Movie')
+
+
+thr=15
+##3## Seislet POCS iterations (soft thresholding)  
+sig="sean-zero"
+Greyplot(sig,'title="Iteration 0"')
+data = sig
+datas = [sig]
+snrs_pocs_seis=['snr0']
+for iter in range(niter):
+    old = data
+    if iter % ddip ==0 :
+        dip='dip-pocs%g'%int(iter/ddip)
+        Flow(dip,'sean',
+     	     '''
+             bandpass fhi=%g | pad n2=%g | 
+             dip rect1=%g rect2=%g
+             '''%(fhi,padno,r1,r2))    
+    data = 'data-1pocs-seis%d' % (iter+1)
+    snr  ='snr-1pocs-seis%d'%(iter+1)
+    diff ='diff-1pocs-seis%d'%(iter+1)
+    # Seislet based POCS
+    Flow(data,[old,'sean-mask2',sig,dip],
+         '''
+         %s | threshold1 ifperc=%d type=%s thr=%g ifverb=1 | 
+         %s | mul ${SOURCES[1]} | 
+         add scale=1,1 ${SOURCES[2]} 
+         ''' % (forwseis1,ifperc,mode,thr,backseis1))
+    Flow(diff,['sean',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['sean',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs_pocs_seis.append(snr)
+Plot('pocs_seis',datas,'Movie')
+
+##4## Seislet FPOCS 
+sig="sean-zero"
+Greyplot(sig,'title="Iteration 0"')
+data = sig
+datas = [sig]
+snrs_fpocs_seis=['snr0']
+old1 = sig
+t1=1
+for iter in range(niter): 
+    t2=t1
+    t1=(1+sqrt(1+4*t2*t2))/2
+    frac=(t2-1)/t1
+
+    old2 = old1
+    old1 = data
+    if iter % ddip ==0 :
+        dip='dip-fpocs%g'%int(iter/ddip)
+        Flow(dip,'sean',
+     	     '''
+             bandpass fhi=%g | pad n2=%g | 
+             dip rect1=%g rect2=%g
+             '''%(fhi,padno,r1,r2))    
+
+    data = 'data-1fpocs-seis%d' % (iter+1)
+    snr  ='snr-1fpocs-seis%d'%(iter+1)
+    diff ='diff-1fpocs-seis%d'%(iter+1)
+
+    # Seislet based Fast POCS
+    Flow(data,[old1,old2,'sean-mask2',sig, dip],
+         '''
+	 add scale=%g,%g ${SOURCES[1]} | 
+	 %s | threshold1 ifperc=%d type=%s thr=%g | %s |
+	 mul ${SOURCES[2]} | 
+         add scale=1,1 ${SOURCES[3]}
+         ''' % (1+frac,-frac,forwseis2,ifperc,mode,thr,backseis2))
+
+    Flow(diff,['sean',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['sean',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs_fpocs_seis.append(snr)
+Plot('fpocs-seis',datas,'Movie')
+
+## ploting convergence diagram
+Flow('SNR-POCS',snrs_pocs,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs_pocs))
+Flow('SNR-FPOCS',snrs_fpocs,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs_pocs))
+Flow('SNR-POCS-seis',snrs_pocs_seis,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs_pocs))
+Flow('SNR-FPOCS-seis',snrs_fpocs_seis,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs_pocs))
+Flow('sean-SNRs','SNR-POCS SNR-FPOCS SNR-POCS-seis SNR-FPOCS-seis','cat axis=2 ${SOURCES[1:4]}')
+
+Graph('sean-SNRs','label1="Iteration no. #" label2=SNR unit2=dB symbol="-o*." plotcol="5,2,3,4" symbolsz=10 max2=13 min1=0 max1=%d title="SNR Comparison"'%niter)
+
+Flow('sean-pocs-fft','data-1pocs%d'%niter,'cp')
+Flow('sean-fpocs-fft','data-1fpocs%d'%niter,'cp')
+Flow('sean-pocs-seis','data-1pocs-seis%d'%niter,'cp')
+Flow('sean-fpocs-seis','data-1fpocs-seis%d'%niter,'cp')
+
+Flow('sean-diff-pocs-fft','diff-1pocs%d'%niter,'cp')
+Flow('sean-diff-fpocs-fft','diff-1fpocs%d'%niter,'cp')
+Flow('sean-diff-pocs-seis','diff-1pocs-seis%d'%niter,'cp')
+Flow('sean-diff-fpocs-seis','diff-1fpocs-seis%d'%niter,'cp')
+
+Flow('sean-fk','sean','%s | cabs | window f1=500 '%forw)
+Flow('sean-fk-zero','sean-zero','%s | cabs | window f1=500'%forw)
+Flow('sean-fk-pocs-fft','sean-pocs-fft','%s | cabs | window f1=500'%forw)
+Flow('sean-fk-fpocs-fft','sean-fpocs-fft','%s | cabs | window f1=500'%forw)
+Flow('sean-fk-pocs-seis','sean-pocs-seis','%s | cabs | window f1=500'%forw)
+Flow('sean-fk-fpocs-seis','sean-fpocs-seis','%s | cabs | window f1=500'%forw)
+
+Grey('sean-pocs-fft','')
+Grey('sean-fpocs-fft','')
+Grey('sean-pocs-seis','')
+Grey('sean-fpocs-seis','')
+
+Grey('sean-diff-pocs-fft','')
+Grey('sean-diff-fpocs-fft','')
+Grey('sean-diff-pocs-seis','')
+Grey('sean-diff-fpocs-seis','')
+
+Grey('sean-fk','color=j label1=Frequency unit1=Hz label2="Normalized wavenumber" clip=220108')
+Grey('sean-fk-zero','color=j label1=Frequency unit1=Hz label2="Normalized wavenumber" clip=220108')
+Grey('sean-fk-pocs-fft','color=j label1=Frequency unit1=Hz label2="Normalized wavenumber" clip=220108')
+Grey('sean-fk-fpocs-fft','color=j label1=Frequency unit1=Hz label2="Normalized wavenumber" clip=220108')
+Grey('sean-fk-pocs-seis','color=j label1=Frequency unit1=Hz label2="Normalized wavenumber" clip=220108')
+Grey('sean-fk-fpocs-seis','color=j label1=Frequency unit1=Hz label2="Normalized wavenumber" clip=220108')
+
+## Zoom
+Flow('sean-z','sean','window min1=2.5 max1=2.8 min2=2 max2=100')
+Flow('sean-zero-z','sean-zero','window min1=2.5 max1=2.8 min2=2 max2=100')
+Flow('sean-pocs-fft-z','sean-pocs-fft','window min1=2.5 max1=2.8 min2=2 max2=100')
+Flow('sean-fpocs-fft-z','sean-fpocs-fft','window min1=2.5 max1=2.8 min2=2 max2=100')
+Flow('sean-pocs-seis-z','sean-pocs-seis','window min1=2.5 max1=2.8 min2=2 max2=100')
+Flow('sean-fpocs-seis-z','sean-fpocs-seis','window min1=2.5 max1=2.8 min2=2 max2=100')
+
+Grey('sean-z','screenratio=0.70')
+Grey('sean-zero-z','screenratio=0.70')
+Grey('sean-pocs-fft-z','screenratio=0.70')
+Grey('sean-fpocs-fft-z','screenratio=0.70')
+Grey('sean-pocs-seis-z','screenratio=0.70')
+Grey('sean-fpocs-seis-z','screenratio=0.70')
+## Creating framebox
+x=2
+y=2.5
+w=99
+w1=0.3
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=179 min2=1.9 max2=3.896 pad=n plotfat=15 plotcol=2 screenratio=1.4
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+Result('sean-0','Fig/sean.vpl frame','Overlay')
+Result('sean-zero-0','Fig/sean-zero.vpl frame','Overlay')	
+Result('sean-pocs-fft-0','Fig/sean-pocs-fft.vpl frame','Overlay')	
+Result('sean-fpocs-fft-0','Fig/sean-fpocs-fft.vpl frame','Overlay')	
+Result('sean-pocs-seis-0','Fig/sean-pocs-seis.vpl frame','Overlay')	
+Result('sean-fpocs-seis-0','Fig/sean-fpocs-seis.vpl frame','Overlay')	
+
+## point out the artifacts
+Plot('arrow1',None,
+	'''
+	box x0=2 y0=7.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('arrow2',None,
+	'''
+	box x0=3 y0=7.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+		
+# adding reference trace
+Flow('trace.asc',None,
+         '''
+         echo %d 0 %d 1 n1=4 in=$TARGET data_format=ascii_float
+         ''' % (47,47)) #47 is the trace number
+Plot('trace','trace.asc',
+         '''
+         dd form=native type=complex | 
+         graph min1=0 max1=179 min2=0 title="" wantaxis=n scalebar=n pad=n plotfat=8 dash=2  screenratio=1.4
+         ''') #250 is the number of traces
+
+Result('sean-1','Fig/sean.vpl frame trace','Overlay')
+Result('sean-zero-1','Fig/sean-zero.vpl frame trace','Overlay')	
+Result('sean-pocs-fft-1','Fig/sean-pocs-fft.vpl frame trace arrow1 arrow2','Overlay')	
+Result('sean-fpocs-fft-1','Fig/sean-fpocs-fft.vpl frame trace arrow1 arrow2','Overlay')	
+Result('sean-pocs-seis-1','Fig/sean-pocs-seis.vpl frame trace','Overlay')	
+Result('sean-fpocs-seis-1','Fig/sean-fpocs-seis.vpl frame trace','Overlay')         
+
+Flow('sean-trace-comp','sean sean-fpocs-fft sean-fpocs-seis','cat axis=3 ${SOURCES[1:3]} | window n2=1 f2=47 min1=2.55 max1=2.77')
+Graph('sean-trace-comp','label2=Amplitude unit2= label1=Time unit1=s screenratio=0.6 dash=0,3,5 plotcol="7,3,5" symbolsz=10 max2=1000 min2=-1000 title="Amplitude Comparison"')
+
+## Similarity
+Flow('sean-simi-pocs-fft','sean sean-pocs-fft','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('sean-simi-fpocs-fft','sean sean-fpocs-fft','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('sean-simi-pocs-seis','sean sean-pocs-seis','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('sean-simi-fpocs-seis','sean sean-fpocs-seis','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Grey('sean-simi-pocs-fft','color=j clip=1.5 allpos=y scalebar=y minval=0.25 maxval=1.2')
+Grey('sean-simi-fpocs-fft','color=j clip=1.5 allpos=y scalebar=y minval=0.25 maxval=1.2')
+Grey('sean-simi-pocs-seis','color=j clip=1.5 allpos=y scalebar=y minval=0.25 maxval=1.2')
+Grey('sean-simi-fpocs-seis','color=j clip=1.5 allpos=y scalebar=y minval=0.25 maxval=1.2')
+
+Flow('sean-simi-diff-pocs-fft','sean sean-diff-pocs-fft','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('sean-simi-diff-fpocs-fft','sean sean-diff-fpocs-fft','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('sean-simi-diff-pocs-seis','sean sean-diff-pocs-seis','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('sean-simi-diff-fpocs-seis','sean sean-diff-fpocs-seis','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Grey('sean-simi-diff-pocs-fft','color=j clip=1 allpos=y scalebar=y minval=0.0 maxval=1')
+Grey('sean-simi-diff-fpocs-fft','color=j clip=1 allpos=y scalebar=y minval=0.0 maxval=1')
+Grey('sean-simi-diff-pocs-seis','color=j clip=1 allpos=y scalebar=y minval=0.0 maxval=1')
+Grey('sean-simi-diff-fpocs-seis','color=j clip=1 allpos=y scalebar=y minval=0.0 maxval=1')
+
+Flow('true','sean-trace-comp','window n2=1 ')
+Flow('tfft','sean-trace-comp','window n2=1 f2=1 ')
+Flow('tseis','sean-trace-comp','window n2=1 f2=2 ')
+Flow('tsimi1','true tfft','similarity other=${SOURCES[1]} niter=20 rect1=5')
+Flow('tsimi2','true tseis','similarity other=${SOURCES[1]} niter=20 rect1=5')
+Flow('sean-tsimi-comp-0','tsimi1 tsimi2','cat axis=2 ${SOURCES[1]}')
+
+
+Graph('sean-tsimi-comp-0','label2=Similarity unit2= label1=Time unit1=s screenratio=0.6 dash=3,5 plotcol="3,5" plotfat=10 symbolsz=10 max2=1.1 min2=0 title="Local Similarity Comparison"')
+
+Plot('Seislet',None,
+	'''
+	box x0=7.5 y0=8.1 label="Seislet" xt=-0.5 yt=-0.5 length=2
+	''')
+	
+Plot('FK',None,
+	'''
+	box x0=10 y0=5.7 label="FK" xt=-0.5 yt=-0.5 length=1 
+	''')	
+Result('sean-tsimi-comp','Fig/sean-tsimi-comp-0.vpl FK Seislet','Overlay')	
+
+End()
