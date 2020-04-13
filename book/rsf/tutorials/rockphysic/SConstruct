@@ -1,0 +1,773 @@
+from __future__ import division
+from math import pi
+from rsf.proj import *
+import string
+
+csv = 'qsiwell5.csv'
+
+#Fetch(csv,'1504_Seismic_petrophysics_1',
+      #server='https://raw.githubusercontent.com',
+      #top='seg/tutorials-2015/master')
+
+Flow('well',csv,'csv2rsf header=y')
+
+# Examine with < well.rsf sfheaderattr segy=n
+
+# Limit depth
+
+Flow('depthmask','well','window n1=1 | mask min=2100 max=2400')
+Flow('logs','well depthmask','headerwindow mask=${SOURCES[1]}')
+
+# Calculate litho-facies log
+
+for case in ('VSH','PHIE','IP','DEPTH','VP','VS','VPVS','RHO'):
+    Flow(case,'logs','headermath output=%s segy=n' % case)
+
+Flow('sand-mask','VSH','mask max=0.2')
+
+Flow('shale-mask','sand-mask','add add=-1 scale=-1')
+
+Flow('depth-mask','DEPTH','mask min=2100 max=2250')
+
+Flow('VP-sand-mask','VP sand-mask','headercut mask=${SOURCES[1]}')
+Flow('PHIE-sand-mask','PHIE sand-mask','headercut mask=${SOURCES[1]}')
+
+hists = []
+for case in ('sand','shale'):
+    Flow(case,['logs',case+'-mask'],'headerwindow mask=${SOURCES[1]}')
+
+# Litho-Facies Log
+
+Flow('LFC','sand-mask shale-mask',
+     'add scale=1,2 ${SOURCES[1]} | dd type=float | window')
+
+# Make a special colormap
+
+#blue =   [0,0,1]
+green =  [0,1,0]
+red =    [1,0,0]
+#brown =  [0.6,0.4,0.2]
+
+Flow('lfc.asc',None,
+     '''
+     echo %s n1=3 n2=256 in=$TARGET data_format=ascii_float
+     ''' % ' '.join(map(str,green*128+red*128)))
+Flow('lfc.csv','lfc.asc','disfil col=3 format="%g," number=n | sed s/,$//')
+
+Plot('LFC','LFC lfc.csv',
+     '''
+     grey color=${SOURCES[1]} pclip=100 allpos=y bias=1 
+     wantaxis=n title=LFC wherexlabel=b titlesz=15
+     ''')
+
+Flow('lfc-depth','LFC','byte pclip=100 allpos=y bias=1')
+
+for case in ('VSH','PHIE','IP','VPVS'):
+    graph = ''
+    if case == 'VSH':
+        graph += ' plotcol=4 title="Vsh"'
+    if case == 'PHIE':
+        graph += ' plotcol=5 wantaxis=n wanttitle=y' 
+    if case == 'IP':
+        graph += ' label2=Ip unit2="m/s*g/cc" title="Ip"'
+    if case == 'VPVS':
+        graph += ' label2=Vp/Vs unit2= title="Vp/Vs"'
+    Plot(case,['DEPTH',case,'lfc-depth','lfc.csv'],
+         '''
+         cmplx ${SOURCES[1]} | window | 
+         graph transp=y depth=${SOURCES[2]} color=${SOURCES[3]} yreverse=y label1=Depth unit1= wanttitle=y plotcol=7 labelsz=12
+         ''' + graph)
+
+
+Plot('VP-PHI-crossplot','PHIE-sand-mask VP-sand-mask lfc-depth lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y title="P-wave velocity versus effective porosity" 
+       label1="Phi-e" unit1=" " label2=Vp unit2="m/s" wanttitle=y min1=0 max1=0.4 min2=2000 max2=4000
+       ''')
+
+Plot('VPVS-IP-crossplot','IP VPVS lfc-depth lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y title="Vp/Vs versus Ip"
+       label2="Vp/Vs" unit2=" " label1=Ip unit1="m/s*g/cc" wanttitle=y min1=4000 max1=8000 min2=1.5 max2=3.0
+       ''')
+#Plot('two','VP-PHI-crossplot VPVS-IP-crossplot','OverUnderAniso')
+Result('QC','VSH IP VPVS VP-PHI-crossplot VPVS-IP-crossplot','SideBySideAniso')
+
+Flow('sand-depth-mask','sand-mask depth-mask','mul ${SOURCES[1]}')
+Flow('shale-depth-mask','shale-mask depth-mask','mul ${SOURCES[1]}')
+Flow('LFC-depth-mask','sand-depth-mask shale-depth-mask',
+     'add scale=1,2 ${SOURCES[1]} | dd type=float | window')
+Flow('lfc-depth-depth-mask','LFC-depth-mask','byte pclip=100 allpos=y bias=1')
+
+Flow('VP-sand-depth-mask','VP sand-depth-mask','headercut mask=${SOURCES[1]}')
+Flow('PHIE-sand-depth-mask','PHIE sand-depth-mask','headercut mask=${SOURCES[1]}')
+Flow('VP-depth-mask','VP depth-mask','headercut mask=${SOURCES[1]}')
+Flow('PHIE-depth-mask','PHIE depth-mask','headercut mask=${SOURCES[1]}')
+Flow('VSH-depth-mask','VSH depth-mask','headercut mask=${SOURCES[1]}')
+Flow('IP-depth-mask','IP depth-mask','headercut mask=${SOURCES[1]}')
+Flow('VPVS-depth-mask','VPVS depth-mask','headercut mask=${SOURCES[1]}')
+
+for case in ('VSH-depth-mask','PHIE-depth-mask','IP-depth-mask','VPVS-depth-mask'):
+    graph = ''
+    if case == 'VSH':
+        graph += ' plotcol=4 title="Vsh"'
+    if case == 'PHIE':
+        graph += ' plotcol=5 wantaxis=n wanttitle=y'
+    if case == 'IP':
+        graph += ' label2=Ip unit2="m/s*g/cc" title="Ip"'
+    if case == 'VPVS':
+        graph += ' label2=Vp/Vs unit2= title="Vp/Vs"'
+    Plot(case,['DEPTH',case,'lfc-depth-depth-mask','lfc.csv'],
+         '''
+         cmplx ${SOURCES[1]} | window n2=984|
+         graph transp=y depth=${SOURCES[2]} color=${SOURCES[3]} yreverse=y label1=Depth unit1= wanttitle=y plotcol=7 labelsz=12
+         ''' + graph)
+
+Plot('VP-PHI-depth-mask-crossplot','PHIE-sand-depth-mask VP-sand-depth-mask lfc-depth-depth-mask lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y title="Vp versus PHIE" 
+       label1="PHIE" unit1=" " label2=Vp unit2="m/s" wanttitle=y min1=0 max1=0.4 min2=2000 max2=4000
+       ''')
+       
+Plot('VPVS-IP-depth-mask-crossplot','IP-depth-mask VPVS-depth-mask lfc-depth-depth-mask lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y title="Vp/Vs versus Ip"
+       label2="Vp/Vs" unit2=" " label1=Ip unit1="m/s*g/cc" wanttitle=y min1=4000 max1=8000 min2=1.5 max2=3.0
+       ''')
+
+Result('QC-depth-mask','VSH-depth-mask IP-depth-mask VPVS-depth-mask VP-PHI-depth-mask-crossplot VPVS-IP-depth-mask-crossplot','SideBySideAniso')
+
+# RPM parameters
+import numpy as np
+
+RHO_qz = 2.6
+K_qz = 37.0
+G_qz = 44.0
+RHO_sh = 2.8
+K_sh = 15.0
+MU_sh = 5.0
+RHO_b = 1.1
+K_b = 2.8 
+RHO_o = 0.8
+K_o = 0.9
+RHO_g = 0.2
+K_g = 0.06              
+phic=0.4
+Cn=8.0
+P=45.0
+f=1.0
+
+
+# Hertz-Mindlin model
+P = float(P/(1e3)) # converts pressure in same units as solid moduli (GPa)
+PR_qz  =float((3*K_qz-2*G_qz)/(6*K_qz+2*G_qz)) # poisson's ratio of mineral mixture
+K_HM = float((P*(Cn**2*(1-phic)**2*G_qz**2) / (18*np.pi**2*(1-PR_qz)**2))**(1/3))
+G_HM = float(((2+3*f-PR_qz*(1+3*f))/(5*(2-PR_qz))) * ((P*(3*Cn**2*(1-phic)**2*G_qz**2)/(2*np.pi**2*(1-PR_qz)**2)))**(1/3))
+
+tmp   = float(G_HM/6*((9*K_HM+8*G_HM) / (K_HM+2*G_HM)))
+tmp_sti = float(G_qz/6*((9*K_qz+8*G_qz) / (K_qz+2*G_qz)))
+
+# porosity
+Flow('phi',None,'spike n1=50 o1=0.01 d1=0.00795918367 | math output=x1 | put d1=1 o1=0')
+
+# softsand model
+
+Flow('K_DRY_ssm','phi','math output="-4/3*%g + (((input/%g)/(%g+4/3*%g)) + ((1-input/%g)/(%g+4/3*%g)))^(-1)"'%(G_HM,phic,K_HM,G_HM,phic,K_qz,G_HM))
+Flow('G_DRY_ssm','phi','math output="-%g + ((input/%g)/(%g+%g) + ((1-input/%g)/(%g+%g)))^(-1)"'%(tmp,phic,G_HM,tmp,phic,G_qz,tmp))
+# Gassmann equation
+Flow('rho_ssm','phi','math output="%g*(1-input)+%g*input"'%(RHO_qz,RHO_b))
+Flow('K_ssm','phi K_DRY_ssm','math x=${SOURCES[0]} y=${SOURCES[1]} output="y + (1-y/%g)^2 / ( (x/%g) + ((1-x)/%g) - (y/%g^2) )"'%(K_qz,K_b,K_qz,K_qz))
+Flow('vp_ssm','K_ssm rho_ssm G_DRY_ssm','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="sqrt((x+4/3*z)/y)*(1000)"')
+Flow('vs_ssm','G_DRY_ssm rho_ssm','math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x/y)*(1e3)"')
+
+# stiffsand model
+
+Flow('K_DRY_sti','phi','math output="-4/3*%g + (((input/%g)/(%g+4/3*%g)) + ((1-input/%g)/(%g+4/3*%g)))^(-1)"'%(G_qz,phic,K_HM,G_qz,phic,K_qz,G_qz))
+Flow('G_DRY_sti','phi','math output="-%g + ((input/%g)/(%g+%g) + ((1-input/%g)/(%g+%g)))^(-1)"'%(tmp_sti,phic,G_HM,tmp_sti,phic,G_qz,tmp_sti))
+# Gassmann equation
+Flow('rho_sti','phi','math output="%g*(1-input)+%g*input"'%(RHO_qz,RHO_b))
+Flow('K_sti','phi K_DRY_sti','math x=${SOURCES[0]} y=${SOURCES[1]} output="y + (1-y/%g)^2 / ( (x/%g) + ((1-x)/%g) - (y/%g^2) )"'%(K_qz,K_b,K_qz,K_qz))
+Flow('vp_sti','K_sti rho_sti G_DRY_sti','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="sqrt((x+4/3*z)/y)*(1000)"')
+Flow('vs_sti','G_DRY_sti rho_sti','math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x/y)*(1e3)"')
+
+# Cutoff
+Flow('cutoff-sand-mask','VSH','mask max=0.3')
+Flow('cutoff-shale-mask','VSH','mask min=0.5')
+Flow('cutoff-ss-mask','cutoff-sand-mask depth-mask','mul ${SOURCES[1]}')
+Flow('cutoff-sh-mask','cutoff-shale-mask depth-mask','mul ${SOURCES[1]}')
+Flow('PHIE-cutoff-ss-mask','PHIE cutoff-ss-mask','headercut mask=${SOURCES[1]}')
+Flow('VP-cutoff-ss-mask','VP cutoff-ss-mask','headercut mask=${SOURCES[1]}')
+Flow('IP-cutoff-ss-mask','IP cutoff-ss-mask','headercut mask=${SOURCES[1]}')
+Flow('VPVS-cutoff-ss-mask','VPVS cutoff-ss-mask','headercut mask=${SOURCES[1]}')
+Flow('LFC-cutoff-mask','cutoff-ss-mask cutoff-sh-mask',
+     'add scale=1,2 ${SOURCES[1]} | dd type=float | window')
+Flow('lfc-depth-cutoff-mask','LFC-cutoff-mask','byte pclip=100 allpos=y bias=1')
+
+# Plot models
+Plot('VP-PHI-cutoff-ss-mask-crossplot','PHIE-cutoff-ss-mask VP-cutoff-ss-mask lfc-depth-cutoff-mask lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y title="Soft sand and Stiff sand models"
+       label1="PHIE" unit1=" " label2=Vp unit2="m/s" wanttitle=y min1=0 max1=0.4 min2=2000 max2=4000
+       ''')
+Plot('vp_ssm-phi-crossplot','phi vp_ssm',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph
+       label1="Phi" unit1=" " label2=Vp unit2="m/s" wanttitle=n wantaxis=n min1=0 max1=0.4 min2=2000 max2=4000
+       ''')
+Plot('vp_sti-phi-crossplot','phi vp_sti',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph dash=2
+       label1="Phi" unit1=" " label2=Vp unit2="m/s" wanttitle=n wantaxis=n min1=0 max1=0.4 min2=2000 max2=4000
+       ''')
+Result('soft-stiff-models','VP-PHI-cutoff-ss-mask-crossplot vp_ssm-phi-crossplot vp_sti-phi-crossplot','Overlay')
+
+# Mineralogy affects velocities
+
+K_Voigt = 0.8*K_qz + 0.2*K_sh
+K_Reuss = 1/ ( 0.8/K_qz + 0.2/K_sh )
+K_Hill = (K_Voigt + K_Reuss) / 2
+
+MU_Voigt = 0.8*G_qz + 0.2*MU_sh
+MU_Reuss = 1/ ( 0.8/G_qz + 0.2/MU_sh )
+MU_Hill = (MU_Voigt + MU_Reuss) / 2
+
+rho = 0.8*RHO_qz + 0.2*RHO_sh
+
+# Net-to-gross
+Flow('NG',None,'spike n1=5 o1=0.6 d1=0.1 | math output=x1 | put o1=0 d1=1')
+
+# Simple Voigt-Reuss-Hill bounds
+
+vp_ssm_phi_crossplots = []
+vp_sti_phi_crossplots = []
+
+for i in range (5):
+   ng = 'ng-%d.rsf'%i
+   Flow(ng,'NG','window f1=%d n1=1'%i)
+   # K
+   Flow('K_Voight-%d'%i,ng,'math output="input*%g + (1-input)*%g"'%(K_qz,K_sh))
+   Flow('K_Reuss-%d'%i,ng,'math output="1/ ( input/%g + (1-input)/%g )"'%(K_qz,K_sh))
+   Flow('K_VRH-s-%d'%i,'K_Voight-%d K_Reuss-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2"')
+
+   # MU
+   Flow('MU_Voight-%d'%i,ng,'math output="input*%g + (1-input)*%g"'%(G_qz,MU_sh))
+   Flow('MU_Reuss-%d'%i,ng,'math output="1/ ( input/%g + (1-input)/%g )"'%(G_qz,MU_sh))
+   Flow('MU_VRH-s-%d'%i,'MU_Voight-%d MU_Reuss-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2"')
+
+   # RHO
+   Flow('RHO_VRH-s-%d'%i,ng,'math output="input*%g+(1-input)*%g"'%(RHO_qz,RHO_sh))
+   
+   # Cat to match phi dimension
+   k_voights = []
+   k_reusss = []
+   k_vrhs = []
+   mu_voights = []
+   mu_reusss = []
+   mu_vrhs = []
+   rho_vrhs = []
+
+   for j in range (50):
+      k_vrhs.append('K_VRH-s-%d'%i)
+      mu_vrhs.append('MU_VRH-s-%d'%i)
+      rho_vrhs.append('RHO_VRH-s-%d'%i)
+   
+   Flow('K_VRH-%d'%i,k_vrhs,'cat axis=1 ${SOURCES[1:50]}')
+   Flow('MU_VRH-%d'%i,mu_vrhs,'cat axis=1 ${SOURCES[1:50]}')
+   Flow('RHO_VRH-%d'%i,rho_vrhs,'cat axis=1 ${SOURCES[1:50]}')
+
+   # softsand model
+
+   phic_VRH_ssm = 0.5
+   Cn_VRH_ssm = 12
+   P_VRH = 45
+
+   #tmp_VRH   = float(G_HM_VRH_ssm/6*((9*K_HM_VRH_ssm+8*G_HM_VRH_ssm) / (K_HM_VRH_ssm+2*G_HM_VRH_ssm))) 
+
+   # Hertz-Mindlin model
+   P_VRH = float(P_VRH/(1e3)) # converts pressure in same units as solid moduli (GPa)
+
+   Flow('PR_qz_VRH-%d'%i,'K_VRH-%d MU_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="(3*x-2*y)/(6*x+2*y)"') # poisson's ratio of mineral mixture
+
+   Flow('K_HM_VRH_ssm-%d'%i,'PR_qz_VRH-%d MU_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="(%g*(%g^2*(1-%g)^2*y^2) / (18*%g^2*(1-x)^2))^(1/3)"'%(P_VRH,Cn_VRH_ssm,phic_VRH_ssm,pi))
+
+   Flow('G_HM_VRH_ssm-%d'%i,'PR_qz_VRH-%d MU_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="((2+3*%g-x*(1+3*%g))/(5*(2-x))) * ((%g*(3*%g^2*(1-%g)^2*y^2)/(2*%g^2*(1-x)^2)))^(1/3)"'%(f,f,P_VRH,Cn_VRH_ssm,phic_VRH_ssm,pi))
+
+   Flow('tmp_VRH-%d'%i,'G_HM_VRH_ssm-%d K_HM_VRH_ssm-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="x/6*((9*y+8*x) / (y+2*x))"')
+
+   Flow('K_DRY_ssm_VRH-%d'%i,'phi G_HM_VRH_ssm-%d K_HM_VRH_ssm-%d K_VRH-%d'%(i,i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="-4/3*y + (((x/%g)/(z+4/3*y)) + ((1-x/%g)/(t+4/3*y)))^(-1)"'%(phic_VRH_ssm,phic_VRH_ssm))
+
+   Flow('G_DRY_ssm_VRH-%d'%i,'phi tmp_VRH-%d G_HM_VRH_ssm-%d MU_VRH-%d'%(i,i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="-y + ((x/%g)/(z+y) + ((1-x/%g)/(t+y)))^(-1)"'%(phic_VRH_ssm,phic_VRH_ssm))
+
+   # Gassmann equation
+   Flow('rho_ssm_VRH-%d'%i,'phi RHO_VRH-%d'%i,'math x=${SOURCES[0]} y=${SOURCES[1]} output="y*(1-x)+%g*x"'%(RHO_b))
+   Flow('K_ssm_VRH-%d'%i,'phi K_DRY_ssm_VRH-%d K_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="y + (1-y/z)^2 / ( (x/%g) + ((1-x)/z) - (y/z^2) )"'%(K_b))
+   Flow('vp_ssm_VRH-%d'%i,'K_ssm_VRH-%d rho_ssm_VRH-%d G_DRY_ssm_VRH-%d'%(i,i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="sqrt((x+4/3*z)/y)*(1000)"')
+   Flow('vs_ssm_VRH-%d'%i,'G_DRY_ssm_VRH-%d rho_ssm_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x/y)*(1e3)"')
+
+   # stiffsand model
+
+   phic_VRH_sti = 0.4
+   Cn_VRH_sti = 8
+
+   Flow('tmp_VRH_sti-%d'%i,'K_VRH-%d MU_VRH-%d'%(i,i), 'math x=${SOURCES[0]} y=${SOURCES[1]} output="y/6*((9*x+8*y) / (x+2*y))"')
+
+   # Hertz-Mindlin model
+   Flow('K_HM_VRH_sti-%d'%i,'MU_VRH-%d PR_qz_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="(%g*(%g^2*(1-%g)^2*x^2) / (18*%g^2*(1-y)^2))^(1/3)"'%(P_VRH,Cn_VRH_sti,phic_VRH_sti,pi))
+
+   Flow('G_HM_VRH_sti-%d'%i,'PR_qz_VRH-%d MU_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="((2+3*%g-x*(1+3*%g))/(5*(2-x))) * ((%g*(3*%g^2*(1-%g)^2*y^2)/(2*%g^2*(1-x)^2)))^(1/3)"'%(f,f,P_VRH,Cn_VRH_sti,phic_VRH_sti,pi))
+   Flow('K_DRY_sti_VRH-%d'%i,'phi MU_VRH-%d K_HM_VRH_sti-%d K_VRH-%d'%(i,i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="-4/3*y + (((x/%g)/(z+4/3*y)) + ((1-x/%g)/(t+4/3*y)))^(-1)"'%(phic_VRH_sti,phic_VRH_sti))
+   Flow('G_DRY_sti_VRH-%d'%i,'phi tmp_VRH_sti-%d G_HM_VRH_sti-%d MU_VRH-%d'%(i,i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="-y + ((x/%g)/(z+y) + ((1-x/%g)/(t+y)))^(-1)"'%(phic_VRH_sti,phic_VRH_sti))
+   
+   # Gassmann equation
+   Flow('rho_sti_VRH-%d'%i,'phi RHO_VRH-%d'%i,'math x=${SOURCES[0]} y=${SOURCES[1]} output="y*(1-x)+%g*x"'%(RHO_b))
+   Flow('K_sti_VRH-%d'%i,'phi K_DRY_sti_VRH-%d K_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="y + (1-y/z)^2 / ( (x/%g) + ((1-x)/z) - (y/z^2) )"'%(K_b))
+   Flow('vp_sti_VRH-%d'%i,'K_sti_VRH-%d rho_sti_VRH-%d G_DRY_sti_VRH-%d'%(i,i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="sqrt((x+4/3*z)/y)*(1000)"')
+   Flow('vs_sti_VRH-%d'%i,'G_DRY_sti_VRH-%d rho_sti_VRH-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x/y)*(1e3)"')
+
+   # Plot models
+   Plot('VP-PHI-cutoff-ss-mask-crossplot-1','PHIE-cutoff-ss-mask VP-cutoff-ss-mask lfc-depth-cutoff-mask lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y title="Soft sand model"
+       label1="PHIE" unit1=" " label2=Vp unit2="m/s" wanttitle=y min1=0 max1=0.4 min2=2000 max2=4000
+       ''')
+   Plot('VP-PHI-cutoff-ss-mask-crossplot-2','PHIE-cutoff-ss-mask VP-cutoff-ss-mask lfc-depth-cutoff-mask lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y title="Stiff sand model"
+       label1="PHIE" unit1=" " label2=Vp unit2="m/s" wanttitle=y min1=0 max1=0.4 min2=2000 max2=4000
+       ''')
+   
+   Plot('vp_ssm-phi-crossplot-%d'%i,'phi vp_ssm_VRH-%d'%i,
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph plotcol=%d
+       label1="Phi" unit1=" " label2=Vp unit2="m/s" wanttitle=n wantaxis=n min1=0 max1=0.4 min2=2000 max2=4000
+       '''%(i+1))
+   Plot('vp_sti-phi-crossplot-%d'%i,'phi vp_sti_VRH-%d'%i,
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph plotcol=%d
+       label1="Phi" unit1=" " label2=Vp unit2="m/s" wanttitle=n wantaxis=n min1=0 max1=0.4 min2=2000 max2=4000
+       '''%(i+1))
+   vp_ssm_phi_crossplots.append('vp_ssm-phi-crossplot-%d'%i)
+   vp_sti_phi_crossplots.append('vp_sti-phi-crossplot-%d'%i)
+
+vp_ssm_phi_crossplots.append('VP-PHI-cutoff-ss-mask-crossplot-1')
+vp_sti_phi_crossplots.append('VP-PHI-cutoff-ss-mask-crossplot-2')
+
+Plot('vp_ssm-phi-crossplot_VRH',vp_ssm_phi_crossplots,'Overlay')
+Plot('vp_sti-phi-crossplot_VRH',vp_sti_phi_crossplots,'Overlay')
+
+Result('soft-stiff-models_VRH','vp_ssm-phi-crossplot_VRH vp_sti-phi-crossplot_VRH','SideBySideAniso')
+
+# Rock physics template (RPT)
+
+# Stiff phi
+Flow('phiRPT',None,'spike n1=10 o1=0.01 d1=%g | math output=x1 | put o1=0 d1=1'%(0.39/9))
+
+# Soft phi
+Flow('phiRPTss',None,'spike n1=10 o1=0.01 d1=%g | math output=x1 | put o1=0 d1=1'%(0.49/9))
+
+Flow('swRPT',None,'spike n1=10 o1=0 d1=%g | math output=x1 | put o1=0 d1=1'%(1/9))
+
+# Simple Voigt-Reuss-Hill bounds
+
+VshRPT = 0.6
+
+K_VoigtRPT = VshRPT*K_sh + (1-VshRPT)*K_qz
+K_ReussRPT = 1/ ( VshRPT/K_sh + (1-VshRPT)/K_qz )
+K_VRHRPT   = (K_VoigtRPT+K_ReussRPT)/2
+
+MU_VoigtRPT = VshRPT*MU_sh + (1-VshRPT)*G_qz
+MU_ReussRPT = 1/ ( VshRPT/MU_sh + (1-VshRPT)/G_qz )
+MU_VRHRPT   = (MU_VoigtRPT+MU_ReussRPT)/2
+
+RHO_VRHRPT = VshRPT*RHO_sh + (1-VshRPT)*RHO_qz
+
+# softsand model
+
+phicRPTss=0.5
+CnRPTss=12
+PRPTss=45
+fRPTss=0.3
+
+# Hertz-Mindlin model
+PRPTss = float(PRPTss/(1e3)) # converts pressure in same units as solid moduli (GPa)
+PR_qzRPTss  =float((3*K_VRHRPT-2*MU_VRHRPT)/(6*K_VRHRPT+2*MU_VRHRPT)) # poisson's ratio of mineral mixture
+K_HMRPTss = float((PRPTss*(CnRPTss**2*(1-phicRPTss)**2*MU_VRHRPT**2) / (18*np.pi**2*(1-PR_qzRPTss)**2))**(1/3))
+G_HMRPTss = float(((2+3*fRPTss-PR_qzRPTss*(1+3*fRPTss))/(5*(2-PR_qzRPTss))) * ((PRPTss*(3*CnRPTss**2*(1-phicRPTss)**2*MU_VRHRPT**2)/(2*np.pi**2*(1-PR_qzRPTss)**2)))**(1/3))
+
+tmpRPT   = float(G_HMRPTss/6*((9*K_HMRPTss+8*G_HMRPTss) / (K_HMRPTss+2*G_HMRPTss)))
+tmp_stiRPT = float(MU_VRHRPT/6*((9*K_VRHRPT+8*MU_VRHRPT) / (K_VRHRPT+2*MU_VRHRPT)))
+
+Flow('K_DRY_ssmRPT','phiRPTss','math output="-4/3*%g + (((input/%g)/(%g+4/3*%g)) + ((1-input/%g)/(%g+4/3*%g)))^(-1)"'%(G_HMRPTss,phicRPTss,K_HMRPTss,G_HMRPTss,phicRPTss,K_VRHRPT,G_HMRPTss)) 
+Flow('G_DRY_ssmRPT','phiRPTss','math output="-%g + ((input/%g)/(%g+%g) + ((1-input/%g)/(%g+%g)))^(-1)"'%(tmpRPT,phicRPTss,G_HMRPTss,tmpRPT,phicRPTss,MU_VRHRPT,tmpRPT))
+
+# stiffsand model
+
+phicRPT=0.4
+CnRPT=8
+PRPT=45
+fRPT=0.3
+
+# Hertz-Mindlin model
+PRPT = float(PRPT/(1e3)) # converts pressure in same units as solid moduli (GPa)
+PR_qzRPT  =float((3*K_VRHRPT-2*MU_VRHRPT)/(6*K_qz+2*MU_VRHRPT)) # poisson's ratio of mineral mixture
+K_HMRPT = float((PRPT*(CnRPT**2*(1-phicRPT)**2*MU_VRHRPT**2) / (18*np.pi**2*(1-PR_qzRPT)**2))**(1/3))
+G_HMRPT = float(((2+3*fRPT-PR_qzRPT*(1+3*fRPT))/(5*(2-PR_qzRPT))) * ((PRPT*(3*CnRPT**2*(1-phicRPT)**2*MU_VRHRPT**2)/(2*np.pi**2*(1-PR_qzRPT)**2)))**(1/3))
+
+Flow('K_DRY_stiRPT','phiRPT','math output="-4/3*%g + (((input/%g)/(%g+4/3*%g)) + ((1-input/%g)/(%g+4/3*%g)))^(-1)"'%(MU_VRHRPT,phicRPT,K_HMRPT,MU_VRHRPT,phicRPT,K_VRHRPT,MU_VRHRPT))
+Flow('G_DRY_stiRPT','phiRPT','math output="-%g + ((input/%g)/(%g+%g) + ((1-input/%g)/(%g+%g)))^(-1)"'%(tmp_stiRPT,phicRPT,G_HMRPT,tmp_stiRPT,phicRPT,MU_VRHRPT,tmp_stiRPT))
+
+# Oil fluid
+
+(K_hc, RHO_hc) = (K_o, RHO_o)
+
+# Simple Voigt-Reuss-Hill bounds
+
+Flow('K_VoigtRPToil','swRPT','math output="input*%g + (1-input)*%g"'%(K_b,K_hc))
+Flow('K_ReussRPToil','swRPT','math output="1/ ( input/%g + (1-input)/%g )"'%(K_b,K_hc))
+Flow('RHO_RPToil','swRPT','math output="input*%g+(1-input)*%g"'%(RHO_b,RHO_hc))
+
+# Gassmann
+xxyyplots=[]
+xxyyplots_2=[]
+xx_ssms=[]
+yy_ssms=[]
+xx_stis=[]
+yy_stis=[]
+
+for i in range (10):
+   # Density
+   Flow('RHO_RPToil-s-%d'%i,'RHO_RPToil','window f1=%d n1=1'%i)
+   
+   # Cat to match phi dimension
+   rho_rptoils = []
+   
+   for j in range (10):
+      rho_rptoils.append('RHO_RPToil-s-%d'%i)
+   
+   Flow('RHO_RPToil-%d'%i,rho_rptoils,'cat axis=1 ${SOURCES[1:10]}')
+   
+   # K
+   Flow('K_ReussRPToil-s-%d'%i,'K_ReussRPToil','window f1=%d n1=1'%i)
+
+   # Cat to match phi dimension
+   k_reuss_rptoils = []
+
+   for j in range (10):
+      k_reuss_rptoils.append('K_ReussRPToil-s-%d'%i)
+
+   Flow('K_ReussRPToil-%d'%i,k_reuss_rptoils,'cat axis=1 ${SOURCES[1:10]}')
+   
+   # Stiff sand
+   Flow('rho_stiRPT-%d'%i,'phiRPT RHO_RPToil-%d'%i,'math x=${SOURCES[0]} y=${SOURCES[1]} output="%g*(1-x)+y*x"'%(RHO_VRHRPT))
+   Flow('K_stiRPT-%d'%i,'phiRPT K_DRY_stiRPT K_ReussRPToil-%d'%i,'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="y + (1-y/%g)^2 / ( (x/z) + ((1-x)/%g) - (y/%g^2) )"'%(K_VRHRPT,K_VRHRPT,K_VRHRPT))
+   Flow('vp_stiRPT-%d'%i,'K_stiRPT-%d rho_stiRPT-%d G_DRY_stiRPT'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="sqrt((x+4/3*z)/y)*(1000)"')
+   Flow('vs_stiRPT-%d'%i,'G_DRY_stiRPT rho_stiRPT-%d'%i,'math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x/y)*(1e3)"')
+   Flow('xx_sti-%d'%i,'vp_stiRPT-%d rho_stiRPT-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="x*y"')
+   Flow('yy_sti-%d'%i,'vp_stiRPT-%d vs_stiRPT-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="x/y"')   
+
+   # Soft sand
+   Flow('rho_ssmRPT-%d'%i,'phiRPTss RHO_RPToil-%d'%i,'math x=${SOURCES[0]} y=${SOURCES[1]} output="%g*(1-x)+y*x"'%(RHO_VRHRPT))
+   Flow('K_ssmRPT-%d'%i,'phiRPTss K_DRY_ssmRPT K_ReussRPToil-%d'%i,'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="y + (1-y/%g)^2 / ( (x/z) + ((1-x)/%g) - (y/%g^2) )"'%(K_VRHRPT,K_VRHRPT,K_VRHRPT))
+   Flow('vp_ssmRPT-%d'%i,'K_ssmRPT-%d rho_ssmRPT-%d G_DRY_ssmRPT'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="sqrt((x+4/3*z)/y)*(1000)"')
+   Flow('vs_ssmRPT-%d'%i,'G_DRY_ssmRPT rho_ssmRPT-%d'%i,'math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x/y)*(1e3)"')
+   Flow('xx_ssm-%d'%i,'vp_ssmRPT-%d rho_ssmRPT-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="x*y"')
+   Flow('yy_ssm-%d'%i,'vp_ssmRPT-%d vs_ssmRPT-%d'%(i,i),'math x=${SOURCES[0]} y=${SOURCES[1]} output="x/y"')
+   
+   # Plot
+   Plot('xx-yy-crossplot-%d'%i,'xx_ssm-%d yy_ssm-%d'%(i,i),
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* title="Soft sand model" plotfat=10
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0 
+       ''')
+   Plot('xx-yy-crossplot-%d-2'%i,'xx_ssm-%d yy_ssm-%d'%(i,i),
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph title="Soft sand model"
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0
+       ''')
+   Plot('xx-yy-crossplot-%d-sti'%i,'xx_sti-%d yy_sti-%d'%(i,i),
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* title="Soft sand model" plotfat=10
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0
+       ''')
+   Plot('xx-yy-crossplot-%d-2-sti'%i,'xx_sti-%d yy_sti-%d'%(i,i),
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph title="Soft sand model"
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0
+       ''')
+   xxyyplots.append('xx-yy-crossplot-%d'%i)
+   xxyyplots.append('xx-yy-crossplot-%d-2'%i)
+   xxyyplots_2.append('xx-yy-crossplot-%d-sti'%i)
+   xxyyplots_2.append('xx-yy-crossplot-%d-2-sti'%i)
+   xx_ssms.append('xx_ssm-%d'%i)
+   yy_ssms.append('yy_ssm-%d'%i)
+   xx_stis.append('xx_sti-%d'%i)
+   yy_stis.append('yy_sti-%d'%i)
+
+Flow('xx_ssms',xx_ssms,'cat axis=2 ${SOURCES[1:10]}')
+Flow('xx_stis',xx_stis,'cat axis=2 ${SOURCES[1:10]}')
+Flow('yy_ssms',yy_ssms,'cat axis=2 ${SOURCES[1:10]}')
+Flow('yy_stis',yy_stis,'cat axis=2 ${SOURCES[1:10]}')
+
+for i in range (10):
+   Flow('xx_ssm-%d-2'%i,'xx_ssms','window f1=%d n1=1'%i)
+   Flow('yy_ssm-%d-2'%i,'yy_ssms','window f1=%d n1=1'%i)
+   Flow('xx_sti-%d-2'%i,'xx_stis','window f1=%d n1=1'%i)
+   Flow('yy_sti-%d-2'%i,'yy_stis','window f1=%d n1=1'%i)
+   
+   Plot('xx-yy-crossplot-%d-2-1'%i,'xx_ssm-%d-2 yy_ssm-%d-2'%(i,i),
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* title="Soft sand model" plotfat=10
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0
+       ''')
+   Plot('xx-yy-crossplot-%d-2-2'%i,'xx_ssm-%d-2 yy_ssm-%d-2'%(i,i),
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph title="Soft sand model"
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0
+       ''')
+   Plot('xx-yy-crossplot-%d-2-1-sti'%i,'xx_sti-%d-2 yy_sti-%d-2'%(i,i),
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* title="Soft sand model" plotfat=10
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0 
+       ''')
+   Plot('xx-yy-crossplot-%d-2-2-sti'%i,'xx_sti-%d-2 yy_sti-%d-2'%(i,i),
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph title="Soft sand model" 
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0 
+       ''')
+
+   xxyyplots.append('xx-yy-crossplot-%d-2-1'%i)
+   xxyyplots.append('xx-yy-crossplot-%d-2-2'%i)
+   xxyyplots_2.append('xx-yy-crossplot-%d-2-1-sti'%i)
+   xxyyplots_2.append('xx-yy-crossplot-%d-2-2-sti'%i)   
+
+Result('xxyyplots',xxyyplots,'Overlay')
+Result('xxyyplots_2',xxyyplots_2,'Overlay')
+
+Plot('xxyyplots',xxyyplots,'Overlay')
+Plot('xxyyplots_2',xxyyplots_2,'Overlay')
+
+# Plot with well data
+
+Plot('VPVS-IP-cutoff-ss-mask-crossplot','IP-cutoff-ss-mask VPVS-cutoff-ss-mask lfc-depth-cutoff-mask lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} title="Vp/Vs versus Ip with softsand model"
+       label2="Vp/Vs" unit2=" " label1=Ip unit1="m/s*g/cc" wanttitle=y min1=2000 max1=11000 min2=1.6 max2=3.0
+       ''')
+
+Plot('VPVS-IP-cutoff-ss-mask-crossplot-2','IP-cutoff-ss-mask VPVS-cutoff-ss-mask lfc-depth-cutoff-mask lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} title="Vp/Vs versus Ip with stiff sand model"
+       label2="Vp/Vs" unit2=" " label1=Ip unit1="m/s*g/cc" wanttitle=y min1=2000 max1=11000 min2=1.6 max2=3.0
+       ''')
+
+Result('xxyyplotswell','xxyyplots VPVS-IP-cutoff-ss-mask-crossplot','Overlay')
+Result('xxyyplotswell_2','xxyyplots_2 VPVS-IP-cutoff-ss-mask-crossplot-2','Overlay')
+
+# Seismic modeling
+
+Flow('depth-mask-ss','DEPTH','mask min=2175 max=2215')
+Flow('depth-mask-sh','DEPTH','mask min=2135 max=2175')
+
+Flow('VP-depth-mask-sh','VP depth-mask-sh','headercut mask=${SOURCES[1]}')
+Flow('VS-depth-mask-sh','VS depth-mask-sh','headercut mask=${SOURCES[1]}')
+Flow('RHO-depth-mask-sh','RHO depth-mask-sh','headercut mask=${SOURCES[1]}')
+
+Flow('VP-depth-mask-ss','VP depth-mask-ss','headercut mask=${SOURCES[1]}')
+Flow('VS-depth-mask-ss','VS depth-mask-ss','headercut mask=${SOURCES[1]}')
+Flow('RHO-depth-mask-ss','RHO depth-mask-ss','headercut mask=${SOURCES[1]}')
+
+# Mean
+
+vp0=2430
+vp1=3032
+vs0=919 
+vs1=1543
+rho0=2.11
+rho1=2.17
+Ip0=5136
+Ip1=6593
+VpVs0=2.64
+VpVs1=1.96
+drho=rho1-rho0
+dvp=vp1-vp0
+dvs=vs1-vs0
+rho=(rho1+rho0)/2.0
+vp=(vp1+vp0)/2.0
+vs=(vs1+vs0)/2.0
+
+# Two-layer
+
+Flow('toplayerip',None,'spike n1=250 | math output=%g'%(vp0*rho0))
+Flow('botlayerip',None,'spike n1=250 | math output=%g'%(vp1*rho1))
+Flow('toplayervpvs',None,'spike n1=250 | math output=%g'%(vp0/vs0))
+Flow('botlayervpvs',None,'spike n1=250 | math output=%g'%(vp1/vs1))
+
+Plot('layerip','toplayerip botlayerip','cat axis=1 ${SOURCES[1]} | put d1=0.001 o1=0 label1=TWT unit1=sec label2=IP unit2="m/s*g/cc" | graph title="IP" transp=y yreverse=y wheretitle=b')
+
+Plot('layervpvs','toplayervpvs botlayervpvs','cat axis=1 ${SOURCES[1]} | put d1=0.001 o1=0 label1=TWT unit1=sec label2="Vp/Vs" unit2=" " | graph title="Vp/Vs" transp=y yreverse=y wheretitle=b')
+
+# AVO
+
+# Zoeppritz
+Flow('avo',None,
+     '''
+     zoeppritz na=31 da=1 vp1=%g vp2=%g vs1=%g vs2=%g rho1=%g rho2=%g
+     ''' % (vp0,vp1,vs0,vs1,rho0,rho1))
+
+Plot('avo','avo','graph title="AVO" label1="Angle of incidence" label2="Amplitude" wheretitle=b')
+
+Flow('avo2','avo','spray axis=1 n=500 o=0 d=0.001 label=TWT unit=sec')
+
+Flow('avo-ref','avo2','spike k1=250 | mul $SOURCE')
+
+# Synthetic seismic
+Flow('seismic','avo-ref','ricker1 frequency=25')
+
+Plot('seismic1','seismic','window n2=1 | graph title="angle=0" transp=y label1=Time unit1=sec label2=Amplitude wheretitle=b yreverse=y unit2= min2=-0.008 max2=0.008')
+
+Plot('seismic2','seismic','window n2=1 f2=30 | graph transp=y title="angle=30" label1=Time unit1=sec label2=Amplitude wheretitle=b yreverse=y unit2= min2=-0.008 max2=0.008')
+
+Result('twolayer','layerip layervpvs seismic1 seismic2 avo','SideBySideAniso')
+
+# Calibrate with RPM
+
+RHO_qz=2.65
+K_qz=37
+MU_qz=15
+RHO_sh=2.8
+K_sh=15
+MU_sh=5
+phi=0.15
+nn=0.9
+P=45
+Cn=12
+phic=0.5
+f=0.3
+
+# Simple Voigt-Reuss-Hill bounds
+
+K_Voigtcal = nn*K_qz + (1-nn)*K_sh
+K_Reusscal = 1/ ( nn/K_qz + (1-nn)/K_sh )
+K0   = (K_Voigtcal+K_Reusscal)/2
+
+MU_Voigtcal = nn*MU_qz + (1-nn)*MU_sh
+MU_Reusscal = 1/ ( nn/MU_qz + (1-nn)/MU_sh )
+G0   = (MU_Voigtcal+MU_Reusscal)/2
+RHO0 = nn*RHO_qz + (1-nn)*RHO_sh
+
+# Hertz-Mindlin model
+
+P/= 1e3 # converts pressure in same units as solid moduli (GPa)
+PR0=(3*K0-2*G0)/(6*K0+2*G0) # poisson's ratio of mineral mixture
+K_HM = (P*(Cn**2*(1-phic)**2*G0**2) / (18*np.pi**2*(1-PR0)**2))**(1/3)
+G_HM = ((2+3*f-PR0*(1+3*f))/(5*(2-PR0))) * ((P*(3*Cn**2*(1-phic)**2*G0**2)/(2*np.pi**2*(1-PR0)**2)))**(1/3)
+
+# Softsand model
+
+K_DRY =-4/3*G_HM + (((phi/phic)/(K_HM+4/3*G_HM)) + ((1-phi/phic)/(K0+4/3*G_HM)))**-1
+tmp   = G_HM/6*((9*K_HM+8*G_HM) / (K_HM+2*G_HM))
+G_DRY = -tmp + ((phi/phic)/(G_HM+tmp) + ((1-phi/phic)/(G0+tmp)))**-1
+
+# Gassmann
+
+rho_rpm  = RHO0*(1-phi)+RHO_g*phi
+K_rpm    = K_DRY + (1-K_DRY/K0)**2 / ( (phi/K_g) + ((1-phi)/K0) - (K_DRY/K0**2) )
+vp_rpm   = np.sqrt((K_rpm+4./3*G_DRY)/rho_rpm)*1e3
+vs_rpm   = np.sqrt(G_DRY/rho_rpm)*1e3
+
+# Twolayer
+
+Flow('avo-2',None,
+     '''
+     zoeppritz na=31 da=1 vp1=%g vp2=%g vs1=%g vs2=%g rho1=%g rho2=%g
+     ''' % (vp0,vp_rpm,vs0,vs_rpm,rho0,rho_rpm))
+
+Plot('avo-2','avo-2','graph title="Gas case, phi=0.15" label1="Angle of incidence" label2="Amplitude" wheretitle=b')
+
+Flow('avo2-2','avo-2','spray axis=1 n=500 o=0 d=0.001 label=TWT unit=sec')
+
+Flow('avo-ref-2','avo2-2','spike k1=250 | mul $SOURCE')
+
+Flow('botlayerip-2',None,'spike n1=250 | math output=%g'%(vp_rpm*rho_rpm))
+Flow('botlayervpvs-2',None,'spike n1=250 | math output=%g'%(vp_rpm/vs_rpm))
+
+Plot('layerip-2','toplayerip botlayerip-2','cat axis=1 ${SOURCES[1]} | put d1=0.001 o1=0 label1=TWT unit1=sec label2=IP unit2="m/s*g/cc" | graph title="IP" transp=y yreverse=y wheretitle=b')
+
+Plot('layervpvs-2','toplayervpvs botlayervpvs-2','cat axis=1 ${SOURCES[1]} | put d1=0.001 o1=0 label1=TWT unit1=sec label2="Vp/Vs" unit2=" " | graph title="Vp/Vs" transp=y yreverse=y wheretitle=b')
+
+# Synthetic seismic
+Flow('seismic-2','avo-ref-2','ricker1 frequency=25')
+
+Plot('seismic1-2','seismic-2','window n2=1 | graph title="angle=0" transp=y label1=Time unit1=sec label2=Amplitude wheretitle=b yreverse=y unit2= min2=-0.003 max2=0.003')
+
+Plot('seismic2-2','seismic-2','window n2=1 f2=30 | graph transp=y title="angle=30" label1=Time unit1=sec label2=Amplitude wheretitle=b yreverse=y unit2= min2=-0.003 max2=0.003')
+
+Result('twolayer-2','layerip-2 layervpvs-2 seismic1-2 seismic2-2 avo-2','SideBySideAniso')
+
+# Increase the porosity
+
+phi_2=0.25
+
+# Softsand model
+
+K_DRY_2 =-4/3*G_HM + (((phi/phic)/(K_HM+4/3*G_HM)) + ((1-phi_2/phic)/(K0+4/3*G_HM)))**-1
+G_DRY_2 = -tmp + ((phi_2/phic)/(G_HM+tmp) + ((1-phi_2/phic)/(G0+tmp)))**-1
+
+# Gassmann
+
+rho_rpm_2  = RHO0*(1-phi_2)+RHO_g*phi_2
+K_rpm_2    = K_DRY_2 + (1-K_DRY_2/K0)**2 / ( (phi_2/K_g) + ((1-phi_2)/K0) - (K_DRY_2/K0**2) )
+vp_rpm_2   = np.sqrt((K_rpm_2+4./3*G_DRY_2)/rho_rpm_2)*1e3
+vs_rpm_2   = np.sqrt(G_DRY_2/rho_rpm_2)*1e3
+
+# Twolayer
+
+Flow('avo-3',None,
+     '''
+     zoeppritz na=31 da=1 vp1=%g vp2=%g vs1=%g vs2=%g rho1=%g rho2=%g
+     ''' % (vp0,vp_rpm_2,vs0,vs_rpm_2,rho0,rho_rpm_2))
+
+Plot('avo-3','avo-3','graph title="Gas case, phi=0.25" label1="Angle of incidence" label2="Amplitude" wheretitle=b')
+
+Flow('avo2-3','avo-3','spray axis=1 n=500 o=0 d=0.001 label=TWT unit=sec')
+
+Flow('avo-ref-3','avo2-3','spike k1=250 | mul $SOURCE')
+
+Flow('botlayerip-3',None,'spike n1=250 | math output=%g'%(vp_rpm_2*rho_rpm_2))
+Flow('botlayervpvs-3',None,'spike n1=250 | math output=%g'%(vp_rpm_2/vs_rpm_2))
+
+Plot('layerip-3','toplayerip botlayerip-3','cat axis=1 ${SOURCES[1]} | put d1=0.001 o1=0 label1=TWT unit1=sec label2=IP unit2="m/s*g/cc" | graph title="IP" transp=y yreverse=y wheretitle=b')
+
+Plot('layervpvs-3','toplayervpvs botlayervpvs-3','cat axis=1 ${SOURCES[1]} | put d1=0.001 o1=0 label1=TWT unit1=sec label2="Vp/Vs" unit2=" " | graph title="Vp/Vs" transp=y yreverse=y wheretitle=b')
+
+# Synthetic seismic
+Flow('seismic-3','avo-ref-3','ricker1 frequency=25')
+
+Plot('seismic1-3','seismic-3','window n2=1 | graph title="angle=0" transp=y label1=Time unit1=sec label2=Amplitude wheretitle=b yreverse=y unit2= min2=-0.005 max2=0.005')
+
+Plot('seismic2-3','seismic-3','window n2=1 f2=30 | graph transp=y title="angle=30" label1=Time unit1=sec label2=Amplitude wheretitle=b yreverse=y unit2= min2=-0.005 max2=0.005')
+
+Result('twolayer-3','layerip-3 layervpvs-3 seismic1-3 seismic2-3 avo-3','SideBySideAniso')
+
+End()
