@@ -1,7 +1,8 @@
 #include <rsf.h>
 #include "prep_utils.h"
 
-static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
+void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
+/*< particle velocity time step in 2d >*/
 {
 
   long const n1 = wfl->simN1;
@@ -41,18 +42,18 @@ static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t cons
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
 
-        v1a[idx] = (C1*(pp[i1+1+i2*n1] - pp[i1  +i2*n1])+
-                    C2*(pp[i1+2+i2*n1] - pp[i1-1+i2*n1])+
-                    C3*(pp[i1+3+i2*n1] - pp[i1-2+i2*n1]))*dtd1;
+        v1a[idx] = (C1*(pp[idx+1] - pp[idx  ])+
+                    C2*(pp[idx+2] - pp[idx-1])+
+                    C3*(pp[idx+3] - pp[idx-2]))*dtd1;
       }
     }
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
 
-        v2a[idx] = (C1*(pp[i1+(i2+1)*n1] - pp[i1+ i2   *n1])+
-                    C2*(pp[i1+(i2+2)*n1] - pp[i1+(i2-1)*n1])+
-                    C3*(pp[i1+(i2+3)*n1] - pp[i1+(i2-2)*n1]))*dtd2;
+        v2a[idx] = (C1*(pp[idx+1*n1] - pp[idx     ])+
+                    C2*(pp[idx+2*n1] - pp[idx-1*n1])+
+                    C3*(pp[idx+3*n1] - pp[idx-2*n1]))*dtd2;
 
       }
     }
@@ -93,17 +94,17 @@ static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t cons
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
-        v1a[idx] = (C1*(pa[i1+1+i2*n1] - pa[i1  +i2*n1])+
-                    C2*(pa[i1+2+i2*n1] - pa[i1-1+i2*n1])+
-                    C3*(pa[i1+3+i2*n1] - pa[i1-2+i2*n1]))/d1;
+        v1a[idx] = (C1*(pa[idx+1] - pa[idx  ])+
+                    C2*(pa[idx+2] - pa[idx-1])+
+                    C3*(pa[idx+3] - pa[idx-2]))/d1;
       }
     }
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
-        v2a[idx] = (C1*(pa[i1+(i2+1)*n1] - pa[i1+i2    *n1])+
-                    C2*(pa[i1+(i2+2)*n1] - pa[i1+(i2-1)*n1])+
-                    C3*(pa[i1+(i2+3)*n1] - pa[i1+(i2-2)*n1]))/d2;
+        v2a[idx] = (C1*(pa[idx+1*n1] - pa[idx     ])+
+                    C2*(pa[idx+2*n1] - pa[idx-1*n1])+
+                    C3*(pa[idx+3*n1] - pa[idx-2*n1]))/d2;
       }
     }
 
@@ -130,7 +131,220 @@ static void velupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t cons
 
 }
 
-static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, adj_t adjflag)
+void velupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
+/*< particle velocity time step in 3d >*/
+{
+
+  long const n1 = wfl->simN1;
+  long const n2 = wfl->simN2;
+  long const n3 = wfl->simN3;
+  long const n12 = n1*n2;
+
+  float * const v1c = wfl->v1c;
+  float * const v2c = wfl->v2c;
+  float * const v3c = wfl->v3c;
+
+  float const * v1p = wfl->v1p;
+  float const * v2p = wfl->v2p;
+  float const * v3p = wfl->v3p;
+
+  float * const v1a = wfl->v1a;
+  float * const v2a = wfl->v2a;
+  float * const v3a = wfl->v3a;
+
+  float const * pp = wfl->pp;
+  float * const pa = wfl->pa;
+
+  float const * tap1 = wfl->tap1;
+  float const * tap2 = wfl->tap2;
+  float const * tap3 = wfl->tap3;
+
+  float const * buoy = mod->buoy;
+  float const * incomp = mod->incomp;
+  float const dt = acq->dt;
+  float const d1 = mod->d1;
+  float const d2 = mod->d2;
+  float const d3 = mod->d3;
+
+  float const dtd1 = dt/d1;
+  float const dtd2 = dt/d2;
+  float const dtd3 = dt/d3;
+
+  long i3start=NOP;
+  long i3end = n3-NOP;
+  long i2start=NOP;
+  long i2end = n2-NOP;
+  long i1start=NOP;
+  long i1end = n1-NOP;
+
+  switch (adjflag){
+  case FWD:
+
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+
+          v1a[idx] = (C1*(pp[idx+1] - pp[idx  ])+
+                      C2*(pp[idx+2] - pp[idx-1])+
+                      C3*(pp[idx+3] - pp[idx-2]))*dtd1;
+        }
+      }
+    }
+
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+
+          v2a[idx] = (C1*(pp[idx+  n1] - pp[idx     ])+
+                      C2*(pp[idx+2*n1] - pp[idx-1*n1])+
+                      C3*(pp[idx+3*n1] - pp[idx-2*n1]))*dtd2;
+
+        }
+      }
+    }
+
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+
+          v3a[idx] = (C1*(pp[idx+  n12] - pp[idx      ])+
+                      C2*(pp[idx+2*n12] - pp[idx-1*n12])+
+                      C3*(pp[idx+3*n12] - pp[idx-2*n12]))*dtd3;
+
+        }
+      }
+    }
+
+    // 1-component
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i1start, idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          float const b =buoy[idx];
+          v1c[idx] = spo*(v1p[idx] - b*v1a[idx]);
+        }
+      }
+    }
+    // 2-component
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i1start, idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          float const b =buoy[idx];
+          v2c[idx] = spo*(v2p[idx] - b*v2a[idx]);
+        }
+      }
+    }
+    // 3-component
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i1start, idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          float const b =buoy[idx];
+          v3c[idx] = spo*(v3p[idx] - b*v3a[idx]);
+        }
+      }
+    }
+
+    break;
+
+  case ADJ:
+    // ===============================================================
+    // 2nd order in time
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (int i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (int i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
+          float const spo = tap1[i1]* spoxy;
+          float const k = incomp[idx]*dt;
+          pa[idx] = spo*k*pp[idx];
+        }
+      }
+    }
+
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+
+          v1a[idx] = (C1*(pa[idx+1] - pa[idx  ])+
+                      C2*(pa[idx+2] - pa[idx-1])+
+                      C3*(pa[idx+3] - pa[idx-2]))*dtd1;
+        }
+      }
+    }
+
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+
+          v2a[idx] = (C1*(pa[idx+  n1] - pa[idx     ])+
+                      C2*(pa[idx+2*n1] - pa[idx-1*n1])+
+                      C3*(pa[idx+3*n1] - pa[idx-2*n1]))*dtd2;
+
+        }
+      }
+    }
+
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+
+          v3a[idx] = (C1*(pa[idx+  n12] - pa[idx      ])+
+                      C2*(pa[idx+2*n12] - pa[idx-1*n12])+
+                      C3*(pa[idx+3*n12] - pa[idx-2*n12]))*dtd3;
+
+        }
+      }
+    }
+
+    // 1-component
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i1start, idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          v1c[idx] = spo*v1p[idx] - v1a[idx];
+        }
+      }
+    }
+    // 2-component
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i1start, idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          v2c[idx] = spo*v2p[idx] - v2a[idx];
+        }
+      }
+    }
+    // 3-component
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i1start, idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          v3c[idx] = spo*v3p[idx] - v3a[idx];
+        }
+      }
+    }
+
+    break;
+  }
+
+}
+
+void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, adj_t adjflag)
+/*< pressure time step in 2d >*/
 {
 
   long const n1 = wfl->simN1;
@@ -169,17 +383,17 @@ static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t con
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
-            v1a[idx] = -(C1*(v1c[i1  +i2*n1] - v1c[i1-1+i2*n1])+
-                         C2*(v1c[i1+1+i2*n1] - v1c[i1-2+i2*n1])+
-                         C3*(v1c[i1+2+i2*n1] - v1c[i1-3+i2*n1]))*dtd1;
+            v1a[idx] = (C1*(-v1c[idx  ] + v1c[idx-1])+
+                        C2*(-v1c[idx+1] + v1c[idx-2])+
+                        C3*(-v1c[idx+2] + v1c[idx-3]))*dtd1;
       }
     }
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
-        v2a[idx] = -(C1*(v2c[i1+(i2  )*n1] - v2c[i1  +(i2-1)*n1])+
-                     C2*(v2c[i1+(i2+1)*n1] - v2c[i1  +(i2-2)*n1])+
-                     C3*(v2c[i1+(i2+2)*n1] - v2c[i1  +(i2-3)*n1]))*dtd2;
+        v2a[idx] =  (C1*(-v2c[idx     ] + v2c[idx-1*n1])+
+                     C2*(-v2c[idx+1*n1] + v2c[idx-2*n1])+
+                     C3*(-v2c[idx+2*n1] + v2c[idx-3*n1]))*dtd2;
       }
     }
 
@@ -208,17 +422,17 @@ static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t con
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
-        v1a[idx] = -(C1*(v1p[i1  +i2*n1] - v1p[i1-1+i2*n1])+
-                     C2*(v1p[i1+1+i2*n1] - v1p[i1-2+i2*n1])+
-                     C3*(v1p[i1+2+i2*n1] - v1p[i1-3+i2*n1]))/d1;
+        v1a[idx] = (C1*(-v1p[idx  ] + v1p[idx-1])+
+                    C2*(-v1p[idx+1] + v1p[idx-2])+
+                    C3*(-v1p[idx+2] + v1p[idx-3]))/d1;
       }
     }
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
-        v2a[idx] = -(C1*(v2p[i1+(i2  )*n1] - v2p[i1  +(i2-1)*n1])+
-                     C2*(v2p[i1+(i2+1)*n1] - v2p[i1  +(i2-2)*n1])+
-                     C3*(v2p[i1+(i2+2)*n1] - v2p[i1  +(i2-3)*n1]))/d2;
+        v2a[idx] = (C1*(-v2p[idx     ] + v2p[idx-1*n1])+
+                    C2*(-v2p[idx+1*n1] + v2p[idx-2*n1])+
+                    C3*(-v2p[idx+2*n1] + v2p[idx-3*n1]))/d2;
       }
     }
 
@@ -235,11 +449,161 @@ static void presupd(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t con
 
 }
 
+void presupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* acq, adj_t adjflag)
+/*< pressure time step in 3d >*/
+{
 
-static void injectPsource(wfl_struct_t* wfl,
+  long const n1 = wfl->simN1;
+  long const n2 = wfl->simN2;
+  long const n3 = wfl->simN3;
+  long const n12= n1*n2;
+
+  float * const pc = wfl->pc;
+  float const * pp = wfl->pp;
+
+  float const *v1c = wfl->v1c;
+  float const *v2c = wfl->v2c;
+  float const *v3c = wfl->v3c;
+  float * const v1p = wfl->v1p;
+  float * const v2p = wfl->v2p;
+  float * const v3p = wfl->v3p;
+
+  float * const v1a = wfl->v1a;
+  float * const v2a = wfl->v2a;
+  float * const v3a = wfl->v3a;
+
+  float const * tap1 = wfl->tap1;
+  float const * tap2 = wfl->tap2;
+  float const * tap3 = wfl->tap3;
+
+  float const *buoy   = mod->buoy;
+  float const *incomp = mod->incomp;
+  float const d1 = mod->d1;
+  float const d2 = mod->d2;
+  float const d3 = mod->d3;
+  float const dt = acq->dt;
+
+  float const dtd1 = dt/d1;
+  float const dtd2 = dt/d2;
+  float const dtd3 = dt/d3;
+
+  long i3start=NOP;
+  long i3end = n3-NOP;
+  long i2start=NOP;
+  long i2end = n2-NOP;
+  long i1start=NOP;
+  long i1end = n1-NOP;
+
+  switch (adjflag){
+  case FWD:
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          v1a[idx] = (C1*(-v1c[idx  ] + v1c[idx-1])+
+                      C2*(-v1c[idx+1] + v1c[idx-2])+
+                      C3*(-v1c[idx+2] + v1c[idx-3]))*dtd1;
+        }
+      }
+    }
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          v2a[idx] =  (C1*(-v2c[idx     ] + v2c[idx-1*n1])+
+                       C2*(-v2c[idx+1*n1] + v2c[idx-2*n1])+
+                       C3*(-v2c[idx+2*n1] + v2c[idx-3*n1]))*dtd2;
+        }
+      }
+    }
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          v3a[idx] =  (C1*(-v3c[idx      ] + v3c[idx-1*n12])+
+                       C2*(-v3c[idx+1*n12] + v3c[idx-2*n12])+
+                       C3*(-v3c[idx+2*n12] + v3c[idx-3*n12]))*dtd3;
+        }
+      }
+    }
+
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i2start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          float const k = incomp[idx];
+          pc[idx] = spo*(pp[idx] + k*(v1a[idx]+v2a[idx]+v3a[idx]));
+        }
+      }
+    }
+
+    break;
+
+  case ADJ:
+    // ===============================================================
+    // 2nd order in time
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          float irho = buoy[idx]*dt;
+          v3p[idx] = spo*irho*v3c[idx];
+          v2p[idx] = spo*irho*v2c[idx];
+          v1p[idx] = spo*irho*v1c[idx];
+        }
+      }
+    }
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          v1a[idx] = (C1*(-v1p[idx  ] + v1p[idx-1])+
+                      C2*(-v1p[idx+1] + v1p[idx-2])+
+                      C3*(-v1p[idx+2] + v1p[idx-3]))*dtd1;
+        }
+      }
+    }
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          v2a[idx] =  (C1*(-v2p[idx     ] + v2p[idx-1*n1])+
+                       C2*(-v2p[idx+1*n1] + v2p[idx-2*n1])+
+                       C3*(-v2p[idx+2*n1] + v2p[idx-3*n1]))*dtd2;
+        }
+      }
+    }
+    for (long i3=i3start; i3<i3end; i3++){
+      for (long i2=i2start; i2<i2end; i2++){
+        for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          v3a[idx] =  (C1*(-v3p[idx      ] + v3p[idx-1*n12])+
+                       C2*(-v3p[idx+1*n12] + v3p[idx-2*n12])+
+                       C3*(-v3p[idx+2*n12] + v3p[idx-3*n12]))*dtd3;
+        }
+      }
+    }
+
+    for (long i3=i3start; i3<i3end; i3++){
+      float const spoy = tap3[i3];
+      for (long i2=i2start; i2<i2end; i2++){
+        float const spoxy = spoy*tap2[i2];
+        for (long i1=i2start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
+          float const spo = spoxy*tap1[i1];
+          pc[idx] = spo*pp[idx] + (v1a[idx]+v2a[idx]+v3a[idx]);
+        }
+      }
+    }
+
+    break;
+  }
+
+}
+
+
+void injectPsource2d(wfl_struct_t* wfl,
                           mod_struct_t const * mod,
                           acq_struct_t const * acq,
                           long it)
+/*< Injection of the source signature in 2d >*/
 {
 
   long nsou = acq->ns;
@@ -264,12 +628,13 @@ static void injectPsource(wfl_struct_t* wfl,
     int izs = (zs-o1)/modD1;
     float force = acq->wav[isou + nsou*it]*scale;
     long idx = izs + N1*ixs;
+    const float K = mod->incomp[idx];
 
     for (int j=-3,jh=0; j<=4; j++,jh++){
       const float hicks2 = acq->hicksSou2[jh+isou*8];
       for (int i=-3,ih=0; i<=4; i++,ih++){
         const float hc = acq->hicksSou1[ih+isou*8]*hicks2;
-        wf[idx + i + N1*j] += hc*force;
+        wf[idx + i + N1*j] += K*hc*force;
       }
     }
 
@@ -277,7 +642,57 @@ static void injectPsource(wfl_struct_t* wfl,
 
 }
 
-static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it){
+static void injectPsource3d(wfl_struct_t* wfl,
+                            mod_struct_t const * mod,
+                            acq_struct_t const * acq,
+                            long it){
+
+  long nsou = acq->ns;
+
+  long N1 = wfl->simN1;
+  long N2 = wfl->simN2;
+
+  float modD1 = mod->d1;
+  float modD2 = mod->d2;
+  float modD3 = mod->d3;
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+  float o3 = wfl->simO3;
+
+  float dt = acq->dt;
+  float scale = dt/(modD1*modD2);
+
+  float * wf = wfl->pc;
+
+  for (long isou=0; isou<nsou; isou++){
+    float xs = acq->scoord[isou*3];
+    float ys = acq->scoord[isou*3+2];
+    float zs = acq->scoord[isou*3+1];
+
+    int iys = (ys-o3)/modD3;
+    int ixs = (xs-o2)/modD2;
+    int izs = (zs-o1)/modD1;
+    float force = acq->wav[isou + nsou*it]*scale;
+    long idx = izs + N1*(ixs + N2*iys);
+
+    for (int k=-3,kh=0; k<=4; k++,kh++){
+      const float hicks3 = acq->hicksSou3[kh+isou*8];
+      for (int j=-3,jh=0; j<=4; j++,jh++){
+        const float hicks2 = acq->hicksSou2[jh+isou*8];
+        for (int i=-3,ih=0; i<=4; i++,ih++){
+          const float hc = acq->hicksSou1[ih+isou*8]*hicks2*hicks3;
+          wf[idx + i + N1*(j + k*N2)] += hc*force;
+        }
+      }
+    }
+
+  }
+
+}
+
+void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it)
+/*< inject the recorded data in 2d >*/
+{
 
   long nrec = acq->nr;
 
@@ -288,24 +703,35 @@ static void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_
   float o1 = wfl->simO1;
   float o2 = wfl->simO2;
 
+  float *sp = sf_floatalloc(64);
+
   for (long irec=0; irec<nrec; irec++){
     float xr = acq->rcoord[irec*2];
     float zr = acq->rcoord[irec*2+1];
 
     int ixr = (xr-o2)/modD2;
     int izr = (zr-o1)/modD1;
-    float force = acq->dat[irec + nrec*it];
     long idx = izr + N1*ixr;
+
+    float force = acq->dat[irec + nrec*it];
 
     for (int j=-3,jh=0; j<=4; j++,jh++){
       const float hicks2 = acq->hicksRcv2[jh+irec*8];
       for (int i=-3,ih=0; i<=4; i++,ih++){
         const float hc = acq->hicksRcv1[ih+irec*8]*hicks2;
-        wfl->pc[idx + i + N1*j] += hc*force;
+        sp[ih+8*jh] = hc*force;
+      }
+    }
+
+    for (int j=-3,jh=0; j<=4; j++,jh++){
+      for (int i=-3,ih=0; i<=4; i++,ih++){
+        wfl->pc[idx + i + N1*j] += sp[ih+8*jh];
       }
     }
 
   }
+
+  free(sp);
 
 }
 
@@ -336,7 +762,9 @@ static void injectBornVelocitySource(wfl_struct_t * const wfl, mod_struct_t cons
 
 }
 
-static void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
+void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it)
+/*< injection of a extended source over the whole volume in 2d >*/
+{
 
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
@@ -366,7 +794,8 @@ static void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t cons
 
 }
 
-static void swapwfl(wfl_struct_t* wfl)
+void swapwfl2d(wfl_struct_t* wfl)
+/*< wavefield pointers circulation 2d >*/
 {
 
   float *tmp = wfl->pc;
@@ -383,8 +812,30 @@ static void swapwfl(wfl_struct_t* wfl)
 
 }
 
+static void swapwfl3d(wfl_struct_t* wfl)
+{
 
-static void extract_vel_wfl_2d(wfl_struct_t* wfl, int comp)
+  float *tmp = wfl->pc;
+  wfl->pc = wfl->pp;
+  wfl->pp = tmp;
+
+  tmp = wfl->v1c;
+  wfl->v1c = wfl->v1p;
+  wfl->v1p = tmp;
+
+  tmp = wfl->v2c;
+  wfl->v2c = wfl->v2p;
+  wfl->v2p = tmp;
+
+  tmp = wfl->v3c;
+  wfl->v3c = wfl->v3p;
+  wfl->v3p = tmp;
+
+}
+
+
+void extract_vel_wfl_2d(wfl_struct_t* wfl, int comp)
+/*< Extracts the velocity components in 2d >*/
 {
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
@@ -405,15 +856,46 @@ static void extract_vel_wfl_2d(wfl_struct_t* wfl, int comp)
 
 }
 
-static void extract_pres_wfl_2d(wfl_struct_t * const wfl){
+void extract_pres_wfl_2d(wfl_struct_t * const wfl)
+/*< extract the pressure wavefield 2d >*/
+{
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
   long nabc  = wfl->nabc;
   long simN1 = wfl->simN1;
 
   // copy the write chunk of wavefield
-  for (long i2=0; i2<modN2; i2++)
-    memcpy(wfl->bwfl+i2*modN1,wfl->pc+(nabc+(i2+nabc)*simN1),modN1*sizeof(float));
+  for (long i2=0; i2<modN2; i2++){
+    float * const pwflo = wfl->bwfl+i2*modN1;
+    float * const pwfli = wfl->pc + (i2+nabc)*simN1;
+    for(long i1=0,j1=nabc; i1<modN1; i1++,j1++){
+      pwflo[i1] = pwfli[j1];
+    }
+  }
+
+}
+
+static void extract_pres_wfl_3d(wfl_struct_t * const wfl){
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long modN3 = wfl->modN3;
+  long nabc  = wfl->nabc;
+  long simN1 = wfl->simN1;
+  long simN2 = wfl->simN2;
+
+  // copy the write chunk of wavefield
+  for (long i3=0; i3<modN3; i3++){
+    float * const pwflo3 = wfl->bwfl+i3*modN1*modN2;
+    float * const pwfli3 = wfl->pc + (i3+nabc)*simN1*simN2;
+    for (long i2=0; i2<modN2; i2++){
+      float * const pwflo32 = pwflo3 + i2*modN1;
+      float * const pwfli32 = pwfli3 + (i2+nabc)*simN1;
+
+      for(long i1=0,j1=nabc; i1<modN1; i1++,j1++){
+        pwflo32[i1] = pwfli32[j1];
+      }
+    }
+  }
 
 }
 
@@ -439,6 +921,47 @@ static void extract_dat_2d(wfl_struct_t* wfl,acq_struct_t const * acq){
       for (int i=-3,ih=0; i<=4; i++,ih++){
         const float hc = acq->hicksRcv1[ih+ir*8]*hicks2;
         rv += hc*wfl->pc[idx + i +j*n1];
+      }
+    }
+    wfl->rdata[ir] = rv;
+  }
+
+  sf_floatwrite(wfl->rdata,nr,wfl->Fdata);
+
+  free(wfl->rdata);
+
+}
+
+static void extract_dat_3d(wfl_struct_t* wfl,acq_struct_t const * acq){
+  long nr = acq->nr;
+  long n1 = wfl->simN1;
+  long n2 = wfl->simN2;
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+  float o3 = wfl->simO3;
+  float d1 = wfl->d1;
+  float d2 = wfl->d2;
+  float d3 = wfl->d3;
+
+  wfl->rdata = sf_floatalloc(nr);
+
+  for (long ir=0; ir<nr; ir++){
+    float xr = acq->rcoord[3*ir];
+    float yr = acq->rcoord[3*ir+1];
+    float zr = acq->rcoord[3*ir+2];
+    long ixr = (xr - o2)/d2;
+    long iyr = (yr - o3)/d3;
+    long izr = (zr - o1)/d1;
+    long idx = izr + n1*(ixr + iyr*n2);
+    float rv = 0.;
+    for (int k=-3,kh=0; k<=4; k++,kh++){
+      const float hicks3 = acq->hicksRcv3[kh+ir*8];
+      for (int j=-3,jh=0; j<=4; j++,jh++){
+        const float hicks2 = acq->hicksRcv2[jh+ir*8];
+        for (int i=-3,ih=0; i<=4; i++,ih++){
+          const float hc = acq->hicksRcv1[ih+ir*8]*hicks2*hicks3;
+          rv += hc*wfl->pc[idx + i +j*n1];
+        }
       }
     }
     wfl->rdata[ir] = rv;
@@ -483,14 +1006,33 @@ static void extract_scat_dat_2d(wfl_struct_t * const wfl,acq_struct_t const *acq
 
 }
 
-static void applyFreeSurfaceBC(wfl_struct_t *wfl){
+void applyFreeSurfaceBC2d(wfl_struct_t *wfl)
+/*< apply the free surface boundary condition at the top of the model in 2d >*/
+{
 
-  long nb = wfl->nabc;
-  long n1 = wfl->simN1;
-  long n2 = wfl->simN2;
+  long const nb = wfl->nabc;
+  long const n1 = wfl->simN1;
+  long const n2 = wfl->simN2;
 
   for (long i2=0; i2<n2; i2++)
-    memset(wfl->pc+i2*n1,0,(nb+1)*sizeof(float));
+    for (long i1=0; i1<nb+1; i1++)
+      wfl->pc[i1+i2*n1]=0.;
+
+}
+
+void applyFreeSurfaceBC3d(wfl_struct_t *wfl)
+/*< apply the free surface boundary condition at the top of the model in 3d >*/
+{
+
+  long const nb = wfl->nabc;
+  long const n1 = wfl->simN1;
+  long const n2 = wfl->simN2;
+  long const n3 = wfl->simN3;
+
+  for (long i3=0; i3<n3; i3++)
+    for (long i2=0; i2<n2; i2++)
+      for (long i1=0; i1<nb+1; i1++)
+        wfl->pc[i1+n1*(i2+n2*i3)]=0.;
 
 }
 
@@ -502,18 +1044,20 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
   long modN1=wfl->modN1;
   long modN2=wfl->modN2;
   long nelem=modN1*modN2;
-  int nt = acq->ntdat;
+  long nt = acq->ntdat;
 
   // loop over time
-  for (int it=0; it<nt; it++){
+  for (long it=0; it<nt; it++){
     bool save = ((wfl->snap) && !(it%wfl->jsnap));
+    if ((it+1)%100==0)
+      sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
-    velupd(wfl,mod,acq,FWD);
-    presupd(wfl,mod,acq,FWD);
-    injectPsource(wfl,mod,acq,it);
+    velupd2d(wfl,mod,acq,FWD);
+    presupd2d(wfl,mod,acq,FWD);
+    injectPsource2d(wfl,mod,acq,it);
 
     if (wfl->freesurf)
-      applyFreeSurfaceBC(wfl);
+      applyFreeSurfaceBC2d(wfl);
 
     // write the wavefield out
     if (save){
@@ -523,7 +1067,44 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     // extract the data at the receiver locations
     extract_dat_2d(wfl,acq);
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
+  }
+
+}
+
+void fwdextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
+/*< extrapolation kernel 2d - forward operator >*/
+{
+  sf_warning("FORWARD EXTRAPOLATION..");
+
+  long modN1=wfl->modN1;
+  long modN2=wfl->modN2;
+  long modN3=wfl->modN3;
+  long nelem=modN1*modN2*modN3;
+  long nt = acq->ntdat;
+
+  // loop over time
+  for (long it=0; it<nt; it++){
+    bool save = ((wfl->snap) && !(it%wfl->jsnap));
+    if ((it+1)%100==0)
+      sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
+
+    velupd3d(wfl,mod,acq,FWD);
+    presupd3d(wfl,mod,acq,FWD);
+    injectPsource3d(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC3d(wfl);
+
+    // write the wavefield out
+    if (save){
+      extract_pres_wfl_3d(wfl);
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+    }
+    // extract the data at the receiver locations
+    extract_dat_3d(wfl,acq);
+
+    swapwfl3d(wfl);
   }
 
 }
@@ -540,12 +1121,12 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
   // loop over time
   for (int it=0; it<nt; it++){
 
-    velupd(wfl,mod,acq,FWD);
-    presupd(wfl,mod,acq,FWD);
-    injectPsource(wfl,mod,acq,it);
+    velupd2d(wfl,mod,acq,FWD);
+    presupd2d(wfl,mod,acq,FWD);
+    injectPsource2d(wfl,mod,acq,it);
 
     if (wfl->freesurf)
-      applyFreeSurfaceBC(wfl);
+      applyFreeSurfaceBC2d(wfl);
 
     // write the wavefield out
     extract_pres_wfl_2d(wfl);
@@ -558,12 +1139,12 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
     // extract the data at the receiver locations
     if (saveData) extract_dat_2d(wfl,acq);
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
   }
 
 }
 
-void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
+void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod, born_setup_struct_t para)
 /*< kernel for Born forward extrapolation >*/
 {
   long modN1 = wfl->modN1;
@@ -575,13 +1156,15 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
   for (int it=0; it<nt; it++){
     bool save = (wfl->Fswfl);
 
-    velupd(wfl,mod,acq,FWD);
-    injectBornVelocitySource(wfl,mod,acq,it);
-    presupd(wfl,mod,acq,FWD);
-    injectBornPressureSource(wfl,mod,acq,it);
+    velupd2d(wfl,mod,acq,FWD);
+    if (para.inputDenPerturbation)
+      injectBornVelocitySource(wfl,mod,acq,it);
+    presupd2d(wfl,mod,acq,FWD);
+    if (para.inputVelPerturbation)
+      injectBornPressureSource(wfl,mod,acq,it);
 
     if (wfl->freesurf)
-      applyFreeSurfaceBC(wfl);
+      applyFreeSurfaceBC2d(wfl);
 
     // write the wavefield out
     if (save){
@@ -592,7 +1175,7 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
     // extract the data at the receiver locations
     extract_scat_dat_2d(wfl,acq);
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
   }
 }
 
@@ -604,18 +1187,20 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
   long modN1=wfl->modN1;
   long modN2=wfl->modN2;
   long nelem=modN1*modN2;
-  int nt = acq->ntdat;
+  long nt = acq->ntdat;
 
   // loop over time
-  for (int it=0; it<nt; it++){
+  for (long it=0; it<nt; it++){
     bool save = ((wfl->snap) && !(it%wfl->jsnap));
+    if ((it+1)%100==0)
+      sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
-    velupd(wfl,mod,acq,ADJ);
-    presupd(wfl,mod,acq,ADJ);
-    injectPsource(wfl,mod,acq,it);
+    velupd2d(wfl,mod,acq,ADJ);
+    presupd2d(wfl,mod,acq,ADJ);
+    injectPsource2d(wfl,mod,acq,it);
 
     if (wfl->freesurf)
-      applyFreeSurfaceBC(wfl);
+      applyFreeSurfaceBC2d(wfl);
 
     // write the wavefield out
     if (save) {
@@ -623,7 +1208,42 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
     }
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
+  }
+
+}
+
+void adjextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
+/*< extrapolation kernel 2d - adjoint operator  >*/
+{
+  sf_warning("ADJOINT EXTRAPOLATION..");
+
+  long modN1=wfl->modN1;
+  long modN2=wfl->modN2;
+  long modN3=wfl->modN3;
+  long nelem=modN1*modN2*modN3;
+  long nt = acq->ntdat;
+
+  // loop over time
+  for (long it=0; it<nt; it++){
+    bool save = ((wfl->snap) && !(it%wfl->jsnap));
+    if ((it+1)%100==0)
+      sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
+
+    velupd3d(wfl,mod,acq,ADJ);
+    presupd3d(wfl,mod,acq,ADJ);
+    injectPsource3d(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC3d(wfl);
+
+    // write the wavefield out
+    if (save) {
+      extract_pres_wfl_3d(wfl);
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+    }
+
+    swapwfl3d(wfl);
   }
 
 }
@@ -642,18 +1262,12 @@ void bornadjextrap2d(wfl_struct_t * wfl,
   // loop over time
   for (int it=0; it<nt; it++){
 
-    velupd(wfl,mod,acq,ADJ);
-    if (para->outputDenPertImage){
-      extract_vel_wfl_2d(wfl,1);
-      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv1);
-      extract_vel_wfl_2d(wfl,2);
-      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv2);
-    }
-    presupd(wfl,mod,acq,ADJ);
+    velupd2d(wfl,mod,acq,ADJ);
+    presupd2d(wfl,mod,acq,ADJ);
     injectPdata(wfl,mod,acq,it);
 
     if (wfl->freesurf)
-      applyFreeSurfaceBC(wfl);
+      applyFreeSurfaceBC2d(wfl);
 
     // write the wavefield out
     extract_pres_wfl_2d(wfl);
@@ -662,16 +1276,15 @@ void bornadjextrap2d(wfl_struct_t * wfl,
     else
       fwrite(wfl->bwfl,sizeof(float),nelem,para->Fswfl);
 
-    swapwfl(wfl);
+    swapwfl2d(wfl);
   }
 
 }
 
-void setupABC(wfl_struct_t* wfl)
+void setupABC_2d(wfl_struct_t* wfl)
 /*< Setup of the coefficients for the absorbing boundary >*/
 {
 
-  float taplen = wfl->nabc-NOP+1;
   float tapbase = 0.92;
   float alpha = sqrt(-log(tapbase));
 
@@ -680,13 +1293,59 @@ void setupABC(wfl_struct_t* wfl)
   for (long i=0; i<wfl->simN2; i++)
     wfl->tap2[i] = 1.;
 
-  for (int i=NOP,j=0; i<wfl->nabc; i++,j++){
-    float arg = alpha*(taplen-j)/taplen;
-    float tap = exp(-arg*arg);
+  for (int i=0; i<NOP; i++){
+    float tap = exp(-alpha*alpha);
     wfl->tap1[i] = tap;
     wfl->tap2[i] = tap;
     wfl->tap1[wfl->simN1-1-i] = tap;
     wfl->tap2[wfl->simN2-1-i] = tap;
+  }
+
+  float taplen = wfl->nabc-NOP;
+  for (int i=0,j=NOP; i<taplen; i++,j++){
+    float arg = alpha*(taplen-i)/taplen;
+    float tap = exp(-arg*arg);
+    wfl->tap1[j] = tap;
+    wfl->tap2[j] = tap;
+    wfl->tap1[wfl->simN1-1-j] = tap;
+    wfl->tap2[wfl->simN2-1-j] = tap;
+  }
+
+}
+
+void setupABC_3d(wfl_struct_t* wfl)
+/*< Setup of the coefficients for the absorbing boundary >*/
+{
+  float tapbase = 0.92;
+  float alpha = sqrt(-log(tapbase));
+
+  for (long i=0; i<wfl->simN1; i++)
+    wfl->tap1[i] = 1.;
+  for (long i=0; i<wfl->simN2; i++)
+    wfl->tap2[i] = 1.;
+  for (long i=0; i<wfl->simN3; i++)
+    wfl->tap3[i] = 1.;
+
+  for (int i=0; i<NOP; i++){
+    float tap = exp(-alpha*alpha);
+    wfl->tap1[i] = tap;
+    wfl->tap2[i] = tap;
+    wfl->tap3[i] = tap;
+    wfl->tap1[wfl->simN1-1-i] = tap;
+    wfl->tap2[wfl->simN2-1-i] = tap;
+    wfl->tap3[wfl->simN3-1-i] = tap;
+  }
+
+  float taplen = wfl->nabc-NOP;
+  for (int i=0,j=NOP; i<taplen; i++,j++){
+    float arg = alpha*(taplen-i)/taplen;
+    float tap = exp(-arg*arg);
+    wfl->tap1[j] = tap;
+    wfl->tap2[j] = tap;
+    wfl->tap3[j] = tap;
+    wfl->tap1[wfl->simN1-1-j] = tap;
+    wfl->tap2[wfl->simN2-1-j] = tap;
+    wfl->tap3[wfl->simN3-1-j] = tap;
   }
 
 }

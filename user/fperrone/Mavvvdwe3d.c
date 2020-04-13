@@ -1,67 +1,28 @@
 /* 3D acoustic variable-velocity variable-density time-domain FD modeling 
 
 The code uses a standard second-order stencil in time.
-The coefficients of the spatial stencil are computed 
-by matching the transfer function of the discretized 
-first-derivative operator to the ideal response. 
-The optimized coefficients minimize dispersion 
-given that particular size of the stencil.
+The coefficients of the spatial stencil are computed
+by matching the transfer function of the 6-point discretized
+first-derivative operator to the ideal response.
 
-The term 
-	ro div (1/ro grad (u))
+The code implements the linearized operator obtained from the
+system of first-order PDEs parametrized in incompressibility and density
+
+dv/dt = - 1./rho * grad(p)
+dp/dt = - K * div(v)
+
 where
-	ro   : density
-	div  : divergence op
-	grad : gradient  op
-	u    : wavefield
-	
-is implemented in order to obtain a positive semi-definite operator.
+  rho  : density
+  K    : incompressibility
+  div  : divergence operator
+  grad : gradient  operator
+  p,v    : pressure and particle velocity wavefields
 
-The code implements both the forward (adj=n) and adjoint (adj=y) modeling operator.
-
-============= FILE DESCRIPTIONS   ========================      
-
-Fdat.rsf - An RSF file containing your data in the following format:
-			axis 1 - Receiver location
-			axis 2 - Time
-			
-Fwav.rsf - An RSF file containing your VOLUME DENSITY INJECTION RATE 
-           wavelet information.  The sampling interval, origin time, 
-           and number of time samples will be used as the defaults for the modeling code.
-	       i.e. your wavelet needs to have the same length and parameters that you want to model with!
-	       The first axis is the number of source locations.
-	       The second axis is time.
-		   
-Fvel.rsf - An N dimensional RSF file that contains the values for the velocity field at every point in the computational domain.
-		
-Fden.rsf - An N dimensional RSF file that contains the values for density at every point in the computational domain.
-
-Frec.rsf - Coordinates of the receivers
-		axis 1 - (x,z) of the receiver
-		axis 2 - receiver index
-
-Fsou.rsf - Coordinate of the sources
-		axis 1 - (x,y,z) of the source
-		axis 2 - source index
-
-Fwfl.rsf - Output wavefield
-
-verb=y/n - verbose flag
-
-snap=y/n - wavefield snapshots flag
-
-free=y/n - free surface on/off
-
-dabc=y/n - absorbing boundary conditions on/off
-
-jdata    - data sampling 
-
-jsnap    - wavefield snapshots sampling
-
-
+The models supplied by the user are wave speed and density, the code performs
+the conversion internally to buoyancy (inverse density) and incompressibility.
 
 Author: Francesco Perrone
-Date: November 2013
+Date: November 2020
 */
 
 /*
@@ -83,774 +44,295 @@ Date: November 2013
 */
 
 #include <rsf.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
-#include "fdlib.h"
+#include "prep_utils.h"
+#include "kernels.h"
 #include <time.h>
-/* check: dt<= 0.2 * min(dx,dz)/vmin */
-
-#define NOP 3 /* derivative operator half-size */
-
-/* Muir's derivative operator */
-//#define C1 +0.598144  //  1225/ 1024      /2 
-//#define C2 -0.039876  // -1225/(1024*  15)/2
-//#define C3 +0.004785  //  1225/(1024* 125)/2 
-//#define C4 -0.000348  // -1225/(1024*1715)/2 
-
-/* LS coefficients */
-#define C1 +1.1989919
-#define C2 -0.08024696
-#define C3 +0.00855954
-
 
 int main(int argc, char* argv[])
 {
-    bool verb,fsrf,snap,dabc,adj; 
-    int  jsnap,ntsnap,jdata;
-
-    /* I/O files */
-    sf_file Fwav=NULL; /* wavelet   */
-    sf_file Fsou=NULL; /* sources   */
-    sf_file Frec=NULL; /* receivers */
-    sf_file Fvel=NULL; /* velocity  */
-    sf_file Fden=NULL; /* density   */
-    sf_file Fdat=NULL; /* data      */
-    sf_file Fwfl=NULL; /* wavefield */
-
-    /* cube axes */
-    sf_axis at,az,ax,ay;
-    sf_axis as,ar;
-
-    int     nt,nz,nx,ny,ns,nr,nb;
-    int     it,iz,ix,iy;
-    float   dt,dz,dx,dy,idz,idx,idy;
-
-    /* FDM structure */
-    fdm3d    fdm=NULL;
-    abcone3d abc=NULL;
-    sponge   spo=NULL;
-
-    /* I/O arrays */
-    float  *ww=NULL;           /* wavelet   */
-    pt3d   *ss=NULL;           /* sources   */
-    pt3d   *rr=NULL;           /* receivers */
-    float  *dd=NULL;           /* data      */
-
-    float ***tt=NULL;
-    float ***ro=NULL;           /* density */
-    float ***iro=NULL;           /* density */
-    float ***uat=NULL;          /* 1st derivative of wavefield */
-    float ***vp=NULL;           /* velocity */
-    float ***vt=NULL;           /* temporary vp*vp * dt*dt */
-
-	float ***fsrfcells=NULL;		/* ghost cells for free surface BC */
-
-    float ***um2,***um1,***uo,***ua,***ut; /* wavefield: um = U @ t-1; uo = U @ t; up = U @ t+1 */
-
-    /* linear interpolation weights/indices */
-    lint3d cs,cr;
-
-	/* FD coefficients */
-	float c1x,c1z,c1y,c2x,c2z,c2y,c3x,c3z,c3y;
-
-    /* wavefield cut params */
-    sf_axis   acz=NULL,acx=NULL,acy=NULL;
-    int       nqz,nqx,nqy;
-    float     oqz,oqx,oqy;
-    float     dqz,dqx,dqy;
-    float     ***uc=NULL;
-
-	/* for benchmarking */
-	clock_t start_t, end_t;
-	float total_t;
-
-    /*------------------------------------------------------------*/
-    /* init RSF */
-    sf_init(argc,argv);
-
-    /*------------------------------------------------------------*/
-    /*------------------------------------------------------------*/
-
-    if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity flag */
-    if(! sf_getbool("snap",&snap)) snap=false; /* Wavefield snapshots flag */
-    if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
-    if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
-	if(! sf_getbool( "adj",&adj )) adj=false;  /* Adjoint flag*/
-    /*------------------------------------------------------------*/
-
-    /*------------------------------------------------------------*/
-    /* I/O files */
-    Fwav = sf_input ("in" ); /* wavelet   */
-    Fvel = sf_input ("vel"); /* velocity  */
-    Fden = sf_input ("den"); /* density   */
-    Fsou = sf_input ("sou"); /* sources   */
-    Frec = sf_input ("rec"); /* receivers */
-    Fdat = sf_output("out"); /* data      */
-
-    if(snap) Fwfl = sf_output("wfl"); /* wavefield */
-
-
-    /*------------------------------------------------------------*/
-    /* axes */
-    at = sf_iaxa(Fwav,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
-    az = sf_iaxa(Fvel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* z */
-    ax = sf_iaxa(Fvel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* x */
-    ay = sf_iaxa(Fvel,3); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay); /* y */
-
-    as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
-    ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
-
-    nt = sf_n(at); dt = sf_d(at);
-    nz = sf_n(az); dz = sf_d(az);
-    nx = sf_n(ax); dx = sf_d(ax);
-    ny = sf_n(ay); dy = sf_d(ay);
-
-    ns = sf_n(as);
-    nr = sf_n(ar);
-    /*------------------------------------------------------------*/
-
-    /*------------------------------------------------------------*/
-    /* other execution parameters */
-    if(! sf_getint("jdata",&jdata)) jdata=1;
-    /* # of t steps at which to save receiver data */
-    if(snap) {
-	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;        
-        /* # of t steps at which to save wavefield */ 
-    }
-    /*------------------------------------------------------------*/
-
-    /*------------------------------------------------------------*/
-    /* setup output data header */
-    sf_oaxa(Fdat,ar,1);
-
-    sf_setn(at,nt/jdata);
-    sf_setd(at,dt*jdata);
-    sf_oaxa(Fdat,at,2);
-
-    /* setup output wavefield header */
-    if(snap) {
-	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(az); /* Saved wfld window nz */
-	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(ax); /* Saved wfld window nx */
-	if(!sf_getint  ("nqy",&nqy)) nqy=sf_n(ay); /* Saved wfld window ny */
-	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(az); /* Saved wfld window oz */
-	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(ax); /* Saved wfld window ox */
-	if(!sf_getfloat("oqy",&oqy)) oqy=sf_o(ay); /* Saved wfld window oy */
-
-	dqz=sf_d(az);
-	dqx=sf_d(ax);
-	dqy=sf_d(ay);
-
-	acz = sf_maxa(nqz,oqz,dqz); sf_raxa(acz);
-	acx = sf_maxa(nqx,oqx,dqx); sf_raxa(acx);
-	acy = sf_maxa(nqy,oqy,dqy); sf_raxa(acy);
-	/* check if the imaging window fits in the wavefield domain */
-
-	uc=sf_floatalloc3(sf_n(acz),sf_n(acx),sf_n(acy));
-
-	ntsnap=0;
-	for(it=0; it<nt; it++) {
-	    if(it%jsnap==0) ntsnap++;
-	}
-	sf_setn(at,  ntsnap);
-	sf_setd(at,dt*jsnap);
-	if(verb) sf_raxa(at);
-
-	sf_oaxa(Fwfl,acz,1);
-	sf_oaxa(Fwfl,acx,2);
-	sf_oaxa(Fwfl,acy,3);
-	sf_oaxa(Fwfl,at, 4);
-    }
-
-    /*------------------------------------------------------------*/
-    /* expand domain for FD operators and ABC */
-    if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
-
-    fdm=fdutil3d_init(verb,fsrf,az,ax,ay,nb,1);
-
-    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
-    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
-    sf_setn(ay,fdm->nypad); sf_seto(ay,fdm->oypad); if(verb) sf_raxa(ay);
-    /*------------------------------------------------------------*/
-
-	/* wavelet and data vector */
-	ww = sf_floatalloc(ns);
-    dd = sf_floatalloc(nr);
-
-    /*------------------------------------------------------------*/
-    /* setup source/receiver coordinates */
-    ss = (pt3d*) sf_alloc(ns,sizeof(*ss)); 
-    rr = (pt3d*) sf_alloc(nr,sizeof(*rr)); 
-
-    pt3dread1(Fsou,ss,ns,3); /* read (x,y,z) coordinates */
-    pt3dread1(Frec,rr,nr,3); /* read (x,y,z) coordinates */
-
-    cs = lint3d_make(ns,ss,fdm);
-    cr = lint3d_make(nr,rr,fdm);
-	fdbell3d_init(1);
-    /*------------------------------------------------------------*/
-    /* setup FD coefficients */
-    idz = 1/dz;
-    idx = 1/dx;
-    idy = 1/dy;
-
-	c1x = C1*idx;
-	c1y = C1*idy;
-	c1z = C1*idz;
-
-	c2x = C2*idx;
-	c2y = C2*idy;	
-	c2z = C2*idz;
-
-	c3x = C3*idx;
-	c3y = C3*idy;
-	c3z = C3*idz;
-    /*------------------------------------------------------------*/ 
-    tt = sf_floatalloc3(nz, nx, ny); 
-
-    vp = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad); 
-    vt = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad); 
-
-
-    /* input density */
-	ro  = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-	iro = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-	sf_floatread(tt[0][0],nz*nx*ny,Fden); expand3d(tt,ro ,fdm);
-
-	/* inverse density to avoid computation on the fly */
-	/* 
-	there is 1 shell for i1=0 || i2=0 || i3=0 that is zero,
-	no big deal but better to fix it
-	*/
-	for 		(iy=1; iy<fdm->nypad; iy++) {
-		for 	(ix=1; ix<fdm->nxpad; ix++) {
-			for (iz=1; iz<fdm->nzpad; iz++) {
-				iro[iy][ix][iz] = 6./(  3*ro[iy  ][ix  ][iz  ] + 
-									  	  ro[iy  ][ix  ][iz-1] +
-									  	  ro[iy  ][ix-1][iz  ] + 
-										  ro[iy-1][ix  ][iz  ] );
-			}
-		}
-	}
-
-	/* input velocity */
-	sf_floatread(tt[0][0],nz*nx*ny,Fvel );    expand3d(tt,vp,fdm);
-	/* precompute vp^2 * dt^2 */
-	for 		(iy=0; iy<fdm->nypad; iy++) {
-		for 	(ix=0; ix<fdm->nxpad; ix++) {
-			for (iz=0; iz<fdm->nzpad; iz++) {
-				vt[iy][ix][iz] = vp[iy][ix][iz] * vp[iy][ix][iz] * dt * dt ;
-			}
-		}
-	}
-	if(fsrf) { /* free surface */
-		fsrfcells = sf_floatalloc3(4*NOP,fdm->nxpad,fdm->nypad); 
-	}
-
-	free(**tt); free(*tt); free(tt);    
-
-    /*------------------------------------------------------------*/
-
-    if(dabc) {
-		/* one-way abc setup */
-		abc = abcone3d_make(NOP,dt,vp,fsrf,fdm);
-		/* sponge abc setup */
-		spo = sponge_make(fdm->nb);
-    }
-
-	free(**vp); free(*vp); free(vp);
-
-    /*------------------------------------------------------------*/
-
-    /* allocate wavefield arrays */
-    um2 = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-    um1 = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-    uo  = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-    ua  = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-    uat = sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-
-	for 		(iy=0; iy<fdm->nypad; iy++) {
-		for 	(ix=0; ix<fdm->nxpad; ix++) {
-			for (iz=0; iz<fdm->nzpad; iz++) {
-				um2[iy][ix][iz]=0;
-				um1[iy][ix][iz]=0;
-				 uo[iy][ix][iz]=0;
-				 ua[iy][ix][iz]=0;
-			}
-		}
-	}
-
-    /*------------------------------------------------------------*/
-    /*                                                            */
-    /*  MAIN LOOP                                                 */
-    /*                                                            */
-    /*------------------------------------------------------------*/
-    if (!adj){
-	    if(verb) fprintf(stderr,"\nFORWARD ACOUSTIC VARIABLE-DENSITY WAVE EXTRAPOLATION \n");
-		// extrapolation			
-		start_t=clock();
-		for (it=0; it<nt; it++) {
-			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
-
-			#ifdef _OPENMP
-			#pragma omp parallel private(iy,ix,iz) 
-			#endif
-			{
-
-				if (fsrf){
-					/* free surface */
-					#ifdef _OPENMP
-					#pragma omp for schedule(dynamic,fdm->ompchunk)
-					#endif
-					for 		(iy=0; iy<fdm->nypad; iy++) {
-						for 	(ix=0; ix<fdm->nxpad; ix++) {
-							for (iz=nb; iz<nb+2*NOP; iz++) {
-								fsrfcells[iy][ix][2*NOP+(iz-nb)  ] =  um1[iy][ix][iz];
-								fsrfcells[iy][ix][2*NOP-(iz-nb)-1] = -um1[iy][ix][iz];
-							}
-						}
-					}
-				}
-
-
-				// derivatives in z
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {		
-
-							// gather
-							uat[iy][ix][iz]  = iro[iy][ix][iz]*(
-										c3z*(um1[iy][ix][iz+2] - um1[iy][ix][iz-3]) +
-										c2z*(um1[iy][ix][iz+1] - um1[iy][ix][iz-2]) +
-										c1z*(um1[iy][ix][iz  ] - um1[iy][ix][iz-1])  
-										);
-						}
-					}
-				}
-
-				if (fsrf){
-					// free surface
-					#ifdef _OPENMP
-					#pragma omp for schedule(dynamic,fdm->ompchunk)
-					#endif
-					for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-						for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-							for (iz=nb-NOP; iz<nb+NOP; iz++) {
-								uat[iy][ix][iz]  = iro[iy][ix][iz]*(
-									c3z*(fsrfcells[iy][ix][2*NOP+(iz-nb)+2] - fsrfcells[iy][ix][2*NOP+(iz-nb)-3]) +
-									c2z*(fsrfcells[iy][ix][2*NOP+(iz-nb)+1] - fsrfcells[iy][ix][2*NOP+(iz-nb)-2]) +
-									c1z*(fsrfcells[iy][ix][2*NOP+(iz-nb)  ] - fsrfcells[iy][ix][2*NOP+(iz-nb)-1])  
-									);
-							}
-						}
-					}
-				}
-
-
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {		
-	
-						// scatter
-						ua[iy][ix][iz] = c1z*(	uat[iy][ix][iz  ] -
-												uat[iy][ix][iz+1]) +
-										c2z*(	uat[iy][ix][iz-1] -
-												uat[iy][ix][iz+2]) +
-										c3z*(	uat[iy][ix][iz-2] -
-												uat[iy][ix][iz+3]);
-						}
-					}
-				}
-
-				// derivatives in x
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
-						// gather
-						uat[iy][ix][iz]  = iro[iy][ix][iz]*(
-										c3x*(um1[iy][ix+2][iz] - um1[iy][ix-3][iz]) +
-										c2x*(um1[iy][ix+1][iz] - um1[iy][ix-2][iz]) +
-										c1x*(um1[iy][ix  ][iz] - um1[iy][ix-1][iz])  
-										);
-						}
-					}
-				}
-
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
-					// scatter
-					ua[iy][ix][iz] += c1x*(	uat[iy][ix  ][iz] -
-											uat[iy][ix+1][iz]) +
-									c2x*(	uat[iy][ix-1][iz] -
-											uat[iy][ix+2][iz]) +
-									c3x*(	uat[iy][ix-2][iz] -
-											uat[iy][ix+3][iz]);
-						}
-					}
-				}
-		
-				// derivatives in y
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
-						// gather
-						uat[iy][ix][iz]  = iro[iy][ix][iz]*(
-										c3y*(um1[iy+2][ix][iz] - um1[iy-3][ix][iz]) +
-										c2y*(um1[iy+1][ix][iz] - um1[iy-2][ix][iz]) +
-										c1y*(um1[iy  ][ix][iz] - um1[iy-1][ix][iz])  
-										);
-						}
-					}
-				}
-
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
-					// scatter
-					ua[iy][ix][iz] += c1y*(	uat[iy  ][ix][iz] -
-											uat[iy+1][ix][iz]) +
-									c2y*(	uat[iy-1][ix][iz] -
-											uat[iy+2][ix][iz]) +
-									c3y*(	uat[iy-2][ix][iz] -
-											uat[iy+3][ix][iz]);
-						}
-					}
-				}
-
-
-				/* step forward in time */
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
-						uo[iy][ix][iz] = 2*um1[iy][ix][iz] 
-									-  um2[iy][ix][iz] 
-									-  ro[iy][ix][iz]*vt[iy][ix][iz]*ua[iy][ix][iz];
-						}
-					}
-				}		
-			} /* end parallel section */
-
-			// source injection
-			/* inject acceleration source */
-			sf_floatread(ww,ns,Fwav);
-			lint3d_bell(uo,ww,cs);
-
-			/* extract data at receivers */
-			lint3d_extract(uo,dd,cr);
-			if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
-
-			/* extract wavefield in the "box" */
-			if(snap && it%jsnap==0) {
-				cut3d(uo,uc,fdm,acz,acx,acy);
-				sf_floatwrite(uc[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fwfl);
-			}
-
-			/* one-way abc  + sponge apply */	
-			if(dabc) {
-				abcone3d_apply(uo,um1,NOP,abc,fdm);
-				sponge3d_apply(uo,spo,fdm);
-				sponge3d_apply(um1,spo,fdm);
-			}
-
-			
-			/* circulate wavefield arrays */
-			ut=um2;
-			um2=um1;
-			um1=uo;
-			uo=ut;
-			
-	    } /* end time loop */
-	    end_t = clock();
-		if(verb) fprintf(stderr,"\n");
-
-		if (verb){	
-			total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-			fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
-			fprintf(stderr,"Exiting of the program...\n");
-		}
-    }
-    else{
-	    if(verb) fprintf(stderr,"\nADJOINT ACOUSTIC VARIABLE-DENSITY WAVE EXTRAPOLATION \n");
-		// extrapolation
-		start_t = clock();
-		for (it=0; it<nt; it++){
-			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
-
-			// source injection
-			/* inject acceleration source */
-			sf_floatread(ww,ns,Fwav);	
-			lint3d_bell(uo,ww,cs);
-
-			/* extract data at receivers */
-			if(it%jdata==0) {
-				lint3d_extract(uo,dd,cr);
-				sf_floatwrite(dd,nr,Fdat);
-			}
-			/* extract wavefield in the "box" */
-
-			if(snap && it%jsnap==0) {
-				cut3d(uo,uc,fdm,acz,acx,acy);
-				sf_floatwrite(uc[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fwfl);
-			}
-	
-			#ifdef _OPENMP
-			#pragma omp parallel private(iy,ix,iz)
-			#endif
-			{
-
-				if (fsrf){
-					/* free surface */
-					#ifdef _OPENMP
-					#pragma omp for schedule(dynamic,fdm->ompchunk)
-					#endif
-					for 		(iy=0; iy<fdm->nypad; iy++) {
-						for 	(ix=0; ix<fdm->nxpad; ix++) {
-							for (iz=nb; iz<nb+2*NOP; iz++) {
-								fsrfcells[iy][ix][2*NOP+(iz-nb)  ] =  uo[iy][ix][iz];
-								fsrfcells[iy][ix][2*NOP-(iz-nb)-1] = -uo[iy][ix][iz];
-							}
-						}
-					}
-				}
-
-				// scaling		
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=0; iy<fdm->nypad; iy++) {
-					for 	(ix=0; ix<fdm->nxpad; ix++) {
-						for (iz=0; iz<fdm->nzpad; iz++) {
-							ua[iy][ix][iz] = -ro[iy][ix][iz]*vt[iy][ix][iz]*uo[iy][ix][iz];
-						}
-					}
-				}
-
-
-				// derivative in z
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-
-						// gather
-						uat[iy][ix][iz]  = iro[iy][ix][iz]*(
-										c3z*(ua[iy][ix][iz+2] - ua[iy][ix][iz-3]) +
-										c2z*(ua[iy][ix][iz+1] - ua[iy][ix][iz-2]) +
-										c1z*(ua[iy][ix][iz  ] - ua[iy][ix][iz-1]) 
-										);
-						}
-					}
-				}
-
-				if (fsrf){
-					/* free surface */
-					#ifdef _OPENMP
-					#pragma omp for schedule(dynamic,fdm->ompchunk)
-					#endif
-					for 		(iy=0; iy<fdm->nypad; iy++) {					
-						for 	(ix=0; ix<fdm->nxpad; ix++) {
-							for (iz=nb-2*NOP; iz<nb+2*NOP; iz++) {
-								ua[iy][ix][iz] = -ro[iy][ix][iz]*vt[iy][ix][iz]*
-													fsrfcells[iy][ix][2*NOP+(iz-nb)];
-							}
-						}
-					}
-				}
-									
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=0; iy<fdm->nypad; iy++) {
-					for 	(ix=0; ix<fdm->nxpad; ix++) {
-						for (iz=0; iz<fdm->nzpad; iz++) {
-					// scatter
-					um1[iy][ix][iz]  +=   c1z*(uat[iy][ix][iz]  - 
-											 uat[iy][ix][iz+1]) +
-										c2z*(uat[iy][ix][iz-1]  - 
-											 uat[iy][ix][iz+2]) +
-										c3z*(uat[iy][ix][iz-2]  - 
-											 uat[iy][ix][iz+3]);
-						}
-					}
-				}
-
-				// derivative in x
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=0; iy<fdm->nypad; iy++) {
-					for 	(ix=0; ix<fdm->nxpad; ix++) {
-						for (iz=0; iz<fdm->nzpad; iz++) {
-					// gather
-					uat[iy][ix][iz]  = iro[iy][ix][iz]*(
-									c3x*(ua[iy][ix+2][iz] - ua[iy][ix-3][iz]) +
-									c2x*(ua[iy][ix+1][iz] - ua[iy][ix-2][iz]) +
-									c1x*(ua[iy][ix  ][iz] - ua[iy][ix-1][iz])
-									);
-						}
-					}
-				}
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=0; iy<fdm->nypad; iy++) {
-					for 	(ix=0; ix<fdm->nxpad; ix++) {
-						for (iz=0; iz<fdm->nzpad; iz++) {
-						// scatter
-						um1[iy][ix][iz] += c1x*(uat[iy][ix  ][iz] - 
-												uat[iy][ix+1][iz]) + 
-										c2x*(	uat[iy][ix-1][iz] - 
-												uat[iy][ix+2][iz]) + 
-										c3x*(	uat[iy][ix-2][iz] - 
-												uat[iy][ix+3][iz]);
-						}
-					}
-				}
-
-				// derivative in y
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=0; iy<fdm->nypad; iy++) {
-					for 	(ix=0; ix<fdm->nxpad; ix++) {
-						for (iz=0; iz<fdm->nzpad; iz++) {
-					// gather
-					uat[iy][ix][iz]  = iro[iy][ix][iz]*(
-									c3y*(ua[iy+2][ix][iz] - ua[iy-3][ix][iz]) +
-									c2y*(ua[iy+1][ix][iz] - ua[iy-2][ix][iz]) +
-									c1y*(ua[iy  ][ix][iz] - ua[iy-1][ix][iz])
-									);
-						}
-					}
-				}
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=0; iy<fdm->nypad; iy++) {
-					for 	(ix=0; ix<fdm->nxpad; ix++) {
-						for (iz=0; iz<fdm->nzpad; iz++) {
-						// scatter
-						um1[iy][ix][iz] += c1y*(uat[iy  ][ix][iz] - 
-												uat[iy+1][ix][iz]) + 
-										c2y*(	uat[iy-1][ix][iz] - 
-												uat[iy+2][ix][iz]) + 
-										c3y*(	uat[iy-2][ix][iz] - 
-												uat[iy+3][ix][iz]);
-						}
-					}
-				}
-
-				/* spray in time */
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 		(iy=0; iy<fdm->nypad; iy++) {
-					for 	(ix=0; ix<fdm->nxpad; ix++) {
-						for (iz=0; iz<fdm->nzpad; iz++) {
-				
-							um1[iy][ix][iz] += 2*uo[iy][ix][iz];
-							um2[iy][ix][iz] = -uo[iy][ix][iz];
-						}
-					}
-				}
-		
-			}
-
-			/* one-way abc  + sponge apply */	
-			if(dabc) {
-				abcone3d_apply(um1,uo,NOP,abc,fdm);
-				sponge3d_apply(uo,spo,fdm);
-				sponge3d_apply(um1,spo,fdm);
-				sponge3d_apply(um2,spo,fdm);				
-			}
-
-			/* circulate wavefield arrays */
-			ut=uo;
-			uo=um1;
-			um1=um2;
-			um2=ut;
-
-    	} /* end time loop*/
-    	end_t = clock();
-		if(verb) fprintf(stderr,"\n");
-
-		if (verb){	
-			total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-			fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
-			fprintf(stderr,"Exiting of the program...\n");
-		}
-
-	}
-    if(verb) fprintf(stderr,"\n");
-
-    /*------------------------------------------------------------*/
-    /* deallocate arrays */
-    free(**um2); free(*um2); free(um2);
-    free(**um1); free(*um1); free(um1);
-    free(**uo);  free(*uo);  free(uo);
-    free(**ua);  free(*ua);  free(ua);
-	free(**uat); free(*uat); free(uat);
-
-    if(snap) {
-        free(**uc); free(*uc); free(uc);
-    }
-
-	if (fsrf){
-		free(**fsrfcells); free(*fsrfcells); free(fsrfcells);
-	}
-
-    free(**vt);  free(*vt);  free(vt);
-	free(**ro);  free(*ro);  free(ro);
-	free(**iro); free(*iro); free(iro);
-
-    free(ww);
-    free(ss);
-    free(rr);
-    free(dd);
-
-	if (dabc){
-		free(spo);
-		free(abc);	
-	}
-	free(fdm);
-	/* ------------------------------------------------------------------------------------------ */	
-	/* CLOSE FILES AND EXIT */
-    if (Fwav!=NULL) sf_fileclose(Fwav); 
-
-    if (Fsou!=NULL) sf_fileclose(Fsou);
-    if (Frec!=NULL) sf_fileclose(Frec);
-
-    if (Fvel!=NULL) sf_fileclose(Fvel);
-    if (Fden!=NULL) sf_fileclose(Fden);
-
-    if (Fdat!=NULL) sf_fileclose(Fdat);
-
-    if (Fwfl!=NULL) sf_fileclose(Fwfl);
-
-    exit (0);
+  // command line parameters
+  in_para_struct_t in_para;
+
+  /* I/O files */
+  sf_file Fwav=NULL; /* wavelet   */
+  sf_file Fsou=NULL; /* sources   */
+  sf_file Frec=NULL; /* receivers */
+  sf_file Fvel=NULL; /* velocity  */
+  sf_file Fden=NULL; /* density   */
+  sf_file Fdat=NULL; /* data      */
+  sf_file Fwfl=NULL; /* wavefield */
+
+  /* Other parameters */
+  bool verb;
+  bool fsrf;
+  bool adj;
+  bool dptf;
+  bool snap;
+  bool dabc;
+  int nb;
+  int jsnap;
+
+
+  /* for benchmarking */
+  clock_t start_fwd_t, end_fwd_t;
+  float total_fwd_t=0;
+  clock_t start_adj_t, end_adj_t;
+  float total_adj_t=0;
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                   RSF INITIALISATION                       */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  sf_init(argc,argv);
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                COMMAND LINE PARAMETERS                     */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity    */
+  if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface */
+  if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
+  if(! sf_getbool( "adj",&adj)) adj=false;  /* Adjointness  */
+  if(! sf_getbool("snap",&snap)) snap=true; /* wavefield snapshots */
+
+  if( !sf_getint("nb",&nb)) nb=NOP; /* thickness of the absorbing boundary: NOP is the width of the FD stencil */
+  if (nb<NOP) nb=NOP;
+  jsnap=1;
+  if (snap){
+    if (!sf_getint("jsnap",&jsnap)) jsnap=1;  /* undersampling factor for the wavefields*/
+    if (jsnap<1) jsnap=1;
+  }
+
+  if (!sf_getbool( "dpt",&dptf)) dptf=false;  /* run dot product test */
+
+  // fill the structure;
+  in_para.verb=verb;
+  in_para.fsrf=fsrf;
+  in_para.dabc=dabc;
+  in_para.adj=adj;
+  in_para.snap=snap;
+  in_para.nb=nb;
+  in_para.jsnap=jsnap;
+  in_para.dpt=dptf;
+
+  if (in_para.verb)
+    print_param(in_para);
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                       OPEN FILES                           */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  Fwav = sf_input ("in" );  /* wavelet   */
+  Fvel = sf_input ("vel");  /* velocity  */
+  Fden = sf_input ("den");  /* density   */
+  Fsou = sf_input ("sou");  /* sources   */
+  Frec = sf_input ("rec");  /* receivers */
+  Fdat = sf_output("out");  /* data      */
+
+  if (in_para.snap)
+    Fwfl = sf_output("wfl");  /* wavefield */
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                      READ AXES                             */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if(in_para.verb) sf_warning("WAVELET axes..");
+  sf_axis axWav[2];
+  axWav[0] = sf_iaxa(Fwav,1);
+  sf_setlabel(axWav[0],"shot");
+  sf_setunit(axWav[0],"1");
+  if(in_para.verb) sf_raxa(axWav[0]); /* shot */
+
+  axWav[1] = sf_iaxa(Fwav,2);
+  sf_setlabel(axWav[1],"time");
+  sf_setunit(axWav[1],"s");
+  if(in_para.verb) sf_raxa(axWav[1]); /* time */
+
+  if(in_para.verb) sf_warning("VELOCITY model axes..");
+  sf_axis axVel[3];
+  axVel[0] = sf_iaxa(Fvel,1);
+  sf_setlabel(axVel[0],"z");
+  sf_setunit(axVel[0],"m");
+  if(in_para.verb) sf_raxa(axVel[0]); /* depth */
+
+  axVel[1] = sf_iaxa(Fvel,2);
+  sf_setlabel(axVel[1],"x");
+  sf_setunit(axVel[1],"m");
+  if(in_para.verb) sf_raxa(axVel[1]); /* lateral */
+
+  axVel[2] = sf_iaxa(Fvel,3);
+  sf_setlabel(axVel[2],"y");
+  sf_setunit(axVel[2],"m");
+  if(in_para.verb) sf_raxa(axVel[2]); /* lateral */
+
+  if(in_para.verb) sf_warning("DENSITY model axes..");
+  sf_axis axDen[3];
+  axDen[0] = sf_iaxa(Fden,1);
+  sf_setlabel(axDen[0],"z");
+  sf_setunit(axDen[0],"m");
+  if(in_para.verb) sf_raxa(axDen[0]); /* depth */
+
+  axDen[1] = sf_iaxa(Fden,2);
+  sf_setlabel(axDen[1],"x");
+  sf_setunit(axDen[1],"m");
+  if(in_para.verb) sf_raxa(axDen[1]); /* lateral */
+
+  axDen[2] = sf_iaxa(Fden,3);
+  sf_setlabel(axDen[2],"x");
+  sf_setunit(axDen[2],"m");
+  if(in_para.verb) sf_raxa(axDen[2]); /* lateral */
+
+  if(in_para.verb) sf_warning("SHOT COORDINATES axes..");
+  sf_axis axSou[2];
+  axSou[0] = sf_iaxa(Fsou,1);
+  sf_setlabel(axSou[0],"shot");
+  sf_setunit(axSou[0],"1");
+  if(in_para.verb) sf_raxa(axSou[0]); /* shot */
+
+  axSou[1] = sf_iaxa(Fsou,2);
+  sf_setlabel(axSou[1],"coords");
+  sf_setunit(axSou[1],"1");
+  if(in_para.verb) sf_raxa(axSou[1]); /* coords */
+
+  if(in_para.verb) sf_warning("RECEIVER COORDINATES axes..");
+  sf_axis axRec[2];
+  axRec[0] = sf_iaxa(Frec,1);
+  sf_setlabel(axRec[0],"s");
+  sf_setunit(axRec[0],"1");
+  if(in_para.verb) sf_raxa(axRec[0]); /* shot */
+
+  axRec[1] = sf_iaxa(Frec,2);
+  sf_setlabel(axRec[1],"coords");
+  sf_setunit(axRec[1],"1");
+  if(in_para.verb) sf_raxa(axRec[1]); /* coords */
+
+  if(in_para.verb) sf_warning("CHECK MODEL DIMENSIONS..");
+  if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
+      (sf_n(axDen[1])!=sf_n(axVel[1])) ||
+      (sf_n(axDen[2])!=sf_n(axVel[2])) ){
+    sf_error("Inconsistent model dimensions!");
+
+    exit(-1);
+  }
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                       PREPARE STRUCTURES                   */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Allocate structures..");
+  wfl_struct_t *wfl = calloc(1,sizeof(wfl_struct_t));
+  acq_struct_t *acq = calloc(1,sizeof(acq_struct_t));
+  mod_struct_t *mod = calloc(1,sizeof(mod_struct_t));
+
+  // PREPARE THE MODEL PARAMETERS CUBES
+  if (in_para.verb) sf_warning("Read parameter cubes..");
+  prepare_model_3d(mod,in_para,axVel,axDen,Fvel,Fden);
+
+  // PREPARE THE ACQUISITION STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the acquisition geometry structure..");
+  prepare_acquisition_3d(acq, in_para, axSou, axRec, axWav, Fsou, Frec,Fwav);
+
+  // PREPARATION OF THE WAVEFIELD STRUCTURE
+  if (in_para.verb) sf_warning("Prepare the wavefields for modeling..");
+  prepare_wfl_3d(wfl,mod,Fdat,Fwfl,in_para);
+
+  if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
+  setupABC_3d(wfl);
+  if (in_para.verb) sf_warning("Prepare the interpolation coefficients for source and receivers..");
+  set_sr_interpolation_coeffs_3d(acq,wfl);
+
+  // WAVEFIELD HEADERS
+  if (snap){
+    sf_axis axTimeWfl = sf_maxa(acq->ntsnap,
+                                acq->ot,
+                                acq->dt*in_para.jsnap);
+    sf_setlabel(axTimeWfl,"time");
+    sf_setunit(axTimeWfl,"s");
+
+    sf_oaxa(Fwfl,axVel[0],1);
+    sf_oaxa(Fwfl,axVel[1],2);
+    sf_oaxa(Fwfl,axVel[2],3);
+    sf_oaxa(Fwfl,axTimeWfl,4);
+  }
+
+  // DATA HEADERS
+  sf_oaxa(Fdat,axRec[1],1);
+  sf_axis axTimeData = sf_maxa( acq->ntdat,
+                                acq->ot,
+                                acq->dt);
+  sf_oaxa(Fdat,axTimeData,2);
+
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  /*                  EXTRAPOLATION KERNEL                      */
+  /*------------------------------------------------------------*/
+  /*------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Start Extrapolation..");
+
+  switch (in_para.adj){
+  case FWD:
+    start_fwd_t=clock();
+    fwdextrap3d(wfl,acq,mod);
+    end_fwd_t=clock();
+    total_fwd_t = (float)(end_fwd_t - start_fwd_t) / CLOCKS_PER_SEC;
+    break;
+  case ADJ:
+    start_adj_t=clock();
+    adjextrap3d(wfl,acq,mod);
+    end_adj_t=clock();
+    total_adj_t = (float)(end_adj_t - start_adj_t) / CLOCKS_PER_SEC;
+    break;
+  }
+
+  if (in_para.verb) sf_warning("Extrapolation completed..");
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  /*                            FREE MEMORY                       */
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Free memory..");
+  clear_wfl_3d(wfl);
+  free(wfl);
+
+  clear_acq_3d(acq);
+  free(acq);
+
+  clear_model(mod);
+  free(mod);
+
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  /*                   CLOSE FILES AND EXIT                       */
+  /* -------------------------------------------------------------*/
+  /* -------------------------------------------------------------*/
+  if (in_para.verb) sf_warning("Close files..");
+  if (Fwav!=NULL) sf_fileclose(Fwav);
+  if (Fsou!=NULL) sf_fileclose(Fsou);
+  if (Frec!=NULL) sf_fileclose(Frec);
+  if (Fvel!=NULL) sf_fileclose(Fvel);
+  if (Fden!=NULL) sf_fileclose(Fden);
+  if (Fdat!=NULL) sf_fileclose(Fdat);
+  if (Fwfl!=NULL) sf_fileclose(Fwfl);
+
+  if (in_para.verb) sf_warning("ALL DONE!");
+  /*------------------------------------------------------------*/
+  /*                    PROFILING INFO                          */
+  /*------------------------------------------------------------*/
+  sf_warning("=========================================================== ");
+  sf_warning("PROFILING: [CPU time] ");
+  sf_warning("=========================================================== ");
+  if (in_para.adj==FWD){
+    sf_warning("FWD operator                  :  %7.3g [s]", total_fwd_t );
+  }
+  else{
+    sf_warning("ADJ operator                  : %7.3g [s]", total_adj_t );
+  }
+  sf_warning("=========================================================== ");
+  sf_warning("=========================================================== ");
+
+  exit (0);
 }

@@ -2,60 +2,24 @@
 
 The code uses a standard second-order stencil in time.
 The coefficients of the spatial stencil are computed 
-by matching the transfer function of the discretized 
-first-derivative operator to the ideal response. 
-The optimized coefficients minimize dispersion 
-given that particular size of the stencil.
+by matching the transfer function of the 6-point discretized
+first-derivative operator to the ideal response.
 
-The term 
-	ro div (1/ro grad (u))
+The code implements the linearized operator obtained from the
+system of first-order PDEs parametrized in incompressibility and density
+
+dv/dt = - 1./rho * grad(p)
+dp/dt = - K * div(v)
+
 where
-	ro   : density
-	div  : divergence op
-	grad : gradient  op
-	u    : wavefield
+  rho  : density
+  K    : incompressibility
+  div  : divergence operator
+  grad : gradient  operator
+  p,v    : pressure and particle velocity wavefields
 
-is implemented in order to obtain a positive semi-definite operator.
-
-The code implements both the forward (adj=n) and adjoint (adj=y) modeling operator.
-
-============= FILE DESCRIPTIONS   ========================      
-
-Fdat.rsf - An RSF file containing your data in the following format:
-			axis 1 - Receiver location
-			axis 2 - Time
-
-Fwav.rsf - An RSF file containing your VOLUME DENSITY INJECTION RATE 
-           wavelet information.  The sampling interval, origin time, 
-           and number of time samples will be used as the defaults for the modeling code.
-	       i.e. your wavelet needs to have the same length and parameters that you want to model with!
-	       The first axis is the number of source locations.
-	       The second axis is time.
-
-Fvel.rsf - An N dimensional RSF file that contains the values for the velocity field at every point in the computational domain.
-
-Fden.rsf - An N dimensional RSF file that contains the values for density at every point in the computational domain.
-
-Frec.rsf - Coordinates of the receivers
-		axis 1 - (x,z) of the receiver
-		axis 2 - receiver index
-
-Fsou.rsf - Coordinate of the sources
-		axis 1 - (x,z) of the source
-		axis 2 - source index
-
-Fwfl.rsf - Output wavefield
-
-verb=y/n - verbose flag
-
-snap=y/n - wavefield snapshots flag
-
-free=y/n - free surface on/off
-
-dabc=y/n - absorbing boundary conditions on/off
-
-jsnap    - wavefield snapshots sampling
-
+The models supplied by the user are wave speed and density, the code performs
+the conversion internally to buoyancy (inverse density) and incompressibility.
 
 Author: Francesco Perrone
 Date: February 2020
@@ -80,10 +44,6 @@ Date: February 2020
  */
 
 #include <rsf.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include "prep_utils.h"
 #include "kernels.h"
 #include <time.h>
@@ -260,7 +220,7 @@ int main(int argc, char* argv[])
   /*                      READ AXES                             */
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
-  sf_warning("WAVELET axes..");
+  if(in_para.verb) sf_warning("WAVELET axes..");
   sf_axis axWav[2];
   axWav[0] = sf_iaxa(Fwav,1);
   sf_setlabel(axWav[0],"shot");
@@ -272,7 +232,7 @@ int main(int argc, char* argv[])
   sf_setunit(axWav[1],"s");
   if(in_para.verb) sf_raxa(axWav[1]); /* time */
 
-  sf_warning("VELOCITY model axes..");
+  if(in_para.verb) sf_warning("VELOCITY model axes..");
   sf_axis axVel[2];
   axVel[0] = sf_iaxa(Fvel,1);
   sf_setlabel(axVel[0],"z");
@@ -284,7 +244,7 @@ int main(int argc, char* argv[])
   sf_setunit(axVel[1],"m");
   if(in_para.verb) sf_raxa(axVel[1]); /* lateral */
 
-  sf_warning("DENSITY model axes..");
+  if(in_para.verb) sf_warning("DENSITY model axes..");
   sf_axis axDen[2];
   axDen[0] = sf_iaxa(Fden,1);
   sf_setlabel(axDen[0],"z");
@@ -296,7 +256,7 @@ int main(int argc, char* argv[])
   sf_setunit(axDen[1],"m");
   if(in_para.verb) sf_raxa(axDen[1]); /* lateral */
 
-  sf_warning("SHOT COORDINATES axes..");
+  if(in_para.verb) sf_warning("SHOT COORDINATES axes..");
   sf_axis axSou[2];
   axSou[0] = sf_iaxa(Fsou,1);
   sf_setlabel(axSou[0],"shot");
@@ -308,7 +268,7 @@ int main(int argc, char* argv[])
   sf_setunit(axSou[1],"1");
   if(in_para.verb) sf_raxa(axSou[1]); /* coords */
 
-  sf_warning("RECEIVER COORDINATES axes..");
+  if(in_para.verb) sf_warning("RECEIVER COORDINATES axes..");
   sf_axis axRec[2];
   axRec[0] = sf_iaxa(Frec,1);
   sf_setlabel(axRec[0],"s");
@@ -320,7 +280,7 @@ int main(int argc, char* argv[])
   sf_setunit(axRec[1],"1");
   if(in_para.verb) sf_raxa(axRec[1]); /* coords */
 
-  sf_warning("CHECK MODEL DIMENSIONS..");
+  if(in_para.verb) sf_warning("CHECK MODEL DIMENSIONS..");
   if ((sf_n(axDen[0])!=sf_n(axVel[0])) ||
       (sf_n(axDen[1])!=sf_n(axVel[1]))){
     sf_error("Inconsistent model dimensions!");
@@ -350,9 +310,9 @@ int main(int argc, char* argv[])
   prepare_wfl_2d(wfl,mod,Fdat,Fwfl,in_para);
 
   if (in_para.verb) sf_warning("Prepare the absorbing boundary..");
-  setupABC(wfl);
+  setupABC_2d(wfl);
   if (in_para.verb) sf_warning("Prepare the interpolation coefficients for source and receivers..");
-  set_sr_interpolation_coeffs(acq,wfl);
+  set_sr_interpolation_coeffs_2d(acq,wfl);
 
   // WAVEFIELD HEADERS
   if (snap){
@@ -385,7 +345,6 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   if (in_para.verb) sf_warning("Start Extrapolation..");
 
-
   switch (in_para.adj){
   case FWD:
     start_fwd_t=clock();
@@ -401,6 +360,7 @@ int main(int argc, char* argv[])
     break;
   }
 
+  if (in_para.verb) sf_warning("Extrapolation completed..");
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
   /*                            FREE MEMORY                       */
@@ -413,22 +373,8 @@ int main(int argc, char* argv[])
   clear_acq_2d(acq);
   free(acq);
 
-  clear_model_2d(mod);
+  clear_model(mod);
   free(mod);
-
-  if (in_para.verb){
-    sf_warning("=========================================================== ");
-    sf_warning("PROFILING: [CPU time] ");
-    sf_warning("=========================================================== ");
-    if (in_para.adj==FWD){
-      sf_warning("Born FWD operator                  :  %7.3g [s]", total_fwd_t );
-    }
-    else{
-      sf_warning("Born ADJ operator                  : %7.3g [s]", total_adj_t );
-    }
-    sf_warning("=========================================================== ");
-    sf_warning("=========================================================== ");
-  }
 
   /* -------------------------------------------------------------*/
   /* -------------------------------------------------------------*/
@@ -445,5 +391,18 @@ int main(int argc, char* argv[])
   if (Fwfl!=NULL) sf_fileclose(Fwfl);
 
   if (in_para.verb) sf_warning("ALL DONE!");
+
+  sf_warning("=========================================================== ");
+  sf_warning("PROFILING: [CPU time] ");
+  sf_warning("=========================================================== ");
+  if (in_para.adj==FWD){
+    sf_warning("FWD operator                  :  %7.3g [s]", total_fwd_t );
+  }
+  else{
+    sf_warning("ADJ operator                  : %7.3g [s]", total_adj_t );
+  }
+  sf_warning("=========================================================== ");
+  sf_warning("=========================================================== ");
+
   exit (0);
 }
