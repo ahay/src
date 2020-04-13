@@ -539,19 +539,19 @@ for i in range (10):
        '''
        cmplx ${SOURCES[1]} | window |
        graph title="Soft sand model"
-       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=y min1=2000 max1=11000 min2=1.6 max2=3.0
        ''')
    Plot('xx-yy-crossplot-%d-2-1-sti'%i,'xx_sti-%d-2 yy_sti-%d-2'%(i,i),
        '''
        cmplx ${SOURCES[1]} | window |
-       graph symbol=* title="Soft sand model" plotfat=10
+       graph symbol=* title="Stiff sand model" plotfat=10
        label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0 
        ''')
    Plot('xx-yy-crossplot-%d-2-2-sti'%i,'xx_sti-%d-2 yy_sti-%d-2'%(i,i),
        '''
        cmplx ${SOURCES[1]} | window |
-       graph title="Soft sand model" 
-       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=n min1=2000 max1=11000 min2=1.6 max2=3.0 
+       graph title="Stiff sand model" 
+       label1="Ip" unit1="m/s*g/cc" label2="Vp/Vs" unit2=" " wanttitle=y min1=2000 max1=11000 min2=1.6 max2=3.0 
        ''')
 
    xxyyplots.append('xx-yy-crossplot-%d-2-1'%i)
