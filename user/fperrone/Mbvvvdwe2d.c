@@ -528,12 +528,6 @@ int main(int argc, char* argv[])
     end_bextrap_t=clock();
     total_bextrap_t = (float)(end_bextrap_t - start_bextrap_t) / CLOCKS_PER_SEC;
 
-    //rewind the scattered wavefield
-    if (born_para.outputScatteredWfl)
-      sf_seek(wfl->Fswfl,0,SEEK_SET);
-    else
-      fseek(born_para.Fswfl,0,SEEK_SET);
-
     if (born_para.outputDenPertImage)
       make_pv_from_pres_2d(wfl,mod,acq,&born_para);
 

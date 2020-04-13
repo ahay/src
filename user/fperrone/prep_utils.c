@@ -586,7 +586,7 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
         float const scale = 1.f/(v*v*r)/dt;
         wfl->bwfl[i] = scale*(snapn[i] - snapc[i]);
       }
-      fwrite(wfl->bwfl,nelem,sizeof(float),wfl->Fpvdiv);
+      fwrite(wfl->bwfl,sizeof(float),nelem,wfl->Fpvdiv);
 
       float *tmp = snapc;
       snapc = snapn;
@@ -609,7 +609,7 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
         float const scale = 1.f/(v*v*r)/dt;
         wfl->bwfl[i] = scale*(snapn[i] - snapc[i]);
       }
-      fwrite(wfl->bwfl,nelem,sizeof(float),wfl->Fpvdiv);
+      fwrite(wfl->bwfl,sizeof(float),nelem,wfl->Fpvdiv);
 
       float *tmp = snapc;
       snapc = snapn;
@@ -618,7 +618,7 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
   }
 
   memset(wfl->bwfl,0,n1*n2*sizeof(float));
-  fwrite(wfl->bwfl,n1*n2,sizeof(float),wfl->Fpvdiv);
+  fwrite(wfl->bwfl,sizeof(float),n1*n2,wfl->Fpvdiv);
 
   // rewind
   rewind(wfl->Fpvdiv);
@@ -712,6 +712,11 @@ void stack_pressure_part_2d(sf_file Fvpert,
   float *srcwfl = sf_floatalloc(nelem*nt);
   float *tmp = sf_floatalloc(nelem);
   float *vimg = sf_floatalloc(nelem);
+
+  if (para->outputScatteredWfl)
+    sf_seek(wfl->Fswfl,0,SEEK_SET);
+  else
+    rewind(para->Fswfl);
 
   // set
   memset(vimg,0,nelem*sizeof(float));
@@ -840,7 +845,6 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
       }
     }
   }
-
 
   acq->wav = sf_floatalloc(nwavsamp);
   memset(acq->wav,0,nwavsamp*sizeof(float));

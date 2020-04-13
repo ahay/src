@@ -628,12 +628,13 @@ void injectPsource2d(wfl_struct_t* wfl,
     int izs = (zs-o1)/modD1;
     float force = acq->wav[isou + nsou*it]*scale;
     long idx = izs + N1*ixs;
+    const float K = mod->incomp[idx];
 
     for (int j=-3,jh=0; j<=4; j++,jh++){
       const float hicks2 = acq->hicksSou2[jh+isou*8];
       for (int i=-3,ih=0; i<=4; i++,ih++){
         const float hc = acq->hicksSou1[ih+isou*8]*hicks2;
-        wf[idx + i + N1*j] += hc*force;
+        wf[idx + i + N1*j] += K*hc*force;
       }
     }
 
