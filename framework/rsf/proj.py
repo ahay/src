@@ -66,7 +66,8 @@ def get_geolocation(address=""):
 
 country = get_geolocation()
 if country == "CN":
-    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
+#    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
+    dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 else:
     dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 
