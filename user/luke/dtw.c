@@ -247,6 +247,30 @@ void dtw_apply_shifts( float* match, int* shifts, float* warped, int n){
 	return;
 }
 
+void dtw_apply_scaled_shifts( float* match, int* shifts, float* warped, float scale, int n){
+	/*< apply scaled  integer shifts to matching trace >*/
+	int i;
+	for ( i = 0 ; i < n ; i++){
+		/* read shift, scale */
+		float shiftscl = scale*(float)shifts[ i];
+		/* cast to integer */
+		int shift = (int)shiftscl;
+		/* make sure shifts in bounds */
+		if (i + shift < 0){
+			warped [ i] = match [ 0];
+		} else { 
+			if (i + shift > n-1){
+				warped[ i] = match [ n-1] ;
+			} else{
+				/* apply shifts */
+				warped [ i] = match[ i + shift]; 
+			}
+			
+		}
+	}
+	return;
+}
+
 void dtw_copy(float* array, float val, int n)
 /*< copies float vals into array >*/
 {
@@ -284,6 +308,15 @@ void dtw_mul(float* array, float val, int n)
 	int i;
 	for ( i = 0 ; i < n ; i++){
 		array[i] += val;
+	}
+	return;
+}
+
+void dtw_linear_comb(float* C, float alpha, float* A, float beta, float* B, int n)
+	/*< C = alpha*A + beta*B >*/
+{
+	for ( int i = 0 ; i < n ; i++ ){
+		C[ i] = alpha*A[ i] + beta*B[ i];
 	}
 	return;
 }
@@ -519,6 +552,24 @@ float* dtw_int_to_float( int* intarray, int n)
 		floatarray[ i] = (float)intarray[ i];
 	}
 	return floatarray;
+}
+
+void dtw_int_to_float_v( float* floatarray, int* intarray, int n)
+	/*< write an int array to a float array >*/
+{
+	for (int i = 0 ; i < n ; i++){
+		floatarray[i] = (float)intarray[i];
+	}
+	return;
+}
+
+void dtw_float_to_int_v( int* intarray, float* floatarray, int n)
+	/*< write a float array to an int array >*/
+{
+	for (int i = 0 ; i < n ; i++ ){
+		intarray[i] = (int)floatarray[i];
+	}
+	return;
 }
 
 void dtw_put_column( float* array, float* column, int i, int n )
