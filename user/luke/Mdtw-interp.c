@@ -118,7 +118,7 @@ int main (int argc, char* argv[])
 		float spot = places[i];
 		/* are we reading new traces this iteration? */
 		/* check to make sure we are "sandwitched" by the right traces*/
-		while ( !(loc_prior <= spot && loc_next >= spot) || (loc_pos >= in_n2 - 1) ){
+		while ( !(loc_prior <= spot && loc_next >= spot) && (loc_pos < in_n2 ) ){
 			/* need new traces */
 			updated_shifts = false;
 			/* copy the next to prior */
