@@ -1,3 +1,3 @@
 uses=['sfcp', 'sfgrey', 'sfwindow', 'sfgraph', 'sffxdecon', 'sfadd', 'sfdd', 'sfbox', 'sfmath', 'sfst', 'sfcabs', 'sftransp', 'sfcat', 'sfput', 'sfwiggle', 'sfspike', 'sfdivn', 'sflsfit', 'sfspray', 'sfbyte', 'sfgrey3']
 data=[]
-size=   70488692
+size=   70316736

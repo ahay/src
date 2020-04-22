@@ -1,6 +1,12 @@
 from rsf.proj import*
 from rsf.prog import RSFROOT
 import math
+#  Modified on April, 22, 2020
+## Thank Yuriy Ivanov for pointing out a bug in the program
+#  which results in slightly different curves as compared with the original publication
+#  but the technical conclusions are still solid
+## It seems that fitting ratio=Ax is a little more stable than fitting ratio=Ax+B (not sure why?)
+
 pi=math.pi
 
 def Wig(data,other): 
@@ -49,7 +55,7 @@ w=40
 w1=0.15
 
 Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
-	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
 Plot('frame','frame.asc',
 	'''
 	dd type=complex form=native |
@@ -85,8 +91,8 @@ fhi=1/dt/2
 flo=0
 k1=int(t1/dt)
 k2=int(t2/dt)
-print(k1)
-print(k2)
+print k1
+print k2
 
 for var in range(N):
 	s=0.01
@@ -107,6 +113,8 @@ Wig('fields','screenratio=1.8 wherexlabel=b title="Synthetic Data"')
 Q1s=[]
 i=0
 Flow('freq',None,'spike d1=0.664894 n1=189 o1=0 n2=1 d2=1 o2=0 | math output="x1" | window min1=20 max1=50')
+Flow('ones','freq','math output=1')
+Flow('freq-two','freq ones','cat axis=2 ${SOURCES[1]}')
 for var in range(N):
 	s=0.01
 	i=i+1
@@ -118,7 +126,7 @@ for var in range(N):
 	Flow('ratio-%d'%i,['field-f-t2-%d'%i,'field-f-t1-%d'%i],'divn rect1=3 den=${SOURCES[1]} eps=0.01 | math output="log(input)" |  window min1=20 max1=50')
 #Graph('field-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
 
-	Flow(['lsfit-%d'%i,'coef-%d'%i],['ratio-%d'%i,'freq'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	Flow(['lsfit-%d'%i,'coef-%d'%i],['ratio-%d'%i,'freq-two'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 	Flow('field-Q-esti-%d'%i,'coef-%d'%i,'window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
 	Q1s.append('field-Q-esti-%d'%i)
 Flow('field-Q1s-esti',Q1s,'cat axis=2 ${SOURCES[1:%d]} |window'%len(Q1s))
@@ -139,7 +147,7 @@ for var in range(N):
 	Flow('ratio-dn-%d'%i,['field-dn-f-t2-%d'%i,'field-dn-f-t1-%d'%i],'divn rect1=3 den=${SOURCES[1]} eps=0.01 | math output="log(input)" |  window min1=20 max1=50')
 #Graph('field-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
 
-	Flow(['lsfit-dn-%d'%i,'coef-dn-%d'%i],['ratio-dn-%d'%i,'freq'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	Flow(['lsfit-dn-%d'%i,'coef-dn-%d'%i],['ratio-dn-%d'%i,'freq-two'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 	Flow('field-dn-Q-esti-%d'%i,'coef-dn-%d'%i,'window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
 	Q1s_dn.append('field-dn-Q-esti-%d'%i)
 Flow('field-dn-Q1s-esti',Q1s_dn,'cat axis=2 ${SOURCES[1:%d]} |window|put d1=1 o1=1'%len(Q1s))
@@ -153,7 +161,7 @@ Flow('field-dn-st-N',sts_dn,'cat axis=3 ${SOURCES[1:%d]}'%len(sts))
 
 Flow('field-f-t1-N','field-st-N','window n2=1 f2=%g '%(k1))
 Flow('field-f-t2-N','field-st-N','window n2=1 f2=%g '%(k2))
-Flow('field-ratio-N','field-f-t2-N field-f-t1-N','divn rect1=3 rect2=5 den=${SOURCES[1]} eps=0.1 | math output="log(input)" |  window min1=20 max1=50')
+Flow('field-ratio-N','field-f-t2-N field-f-t1-N','divn rect1=3 rect2=10 den=${SOURCES[1]} eps=0.1 | math output="log(input)" |  window min1=20 max1=50')
 
 Flow('field-ratio-1','field-ratio-N','window n2=1')
 Graph('field-ratio-1','label1=Frequency unit1=Hz label2=Regularized division ratio')
@@ -173,13 +181,13 @@ i=0
 for var in range(N):
 	i=i+1
 	Flow('field-ratio-%d'%i,'field-ratio-N','window n2=1 f2=%d'%(i-1))
-	Flow('freq-%d'%i,'freq-N','window n2=1 f2=%d'%(i-1))
+	Flow('freq-%d'%i,'freq-N ones','window n2=1 f2=%d | cat axis=2 ${SOURCES[1]}'%(i-1))
 	Flow(['lsfit-N-%d'%i,'coef-N-%d'%i],['field-ratio-%d'%i,'freq-%d'%i],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 	lsfits.append('lsfit-N-%d'%i)
 	coefs.append('coef-N-%d'%i)
 	
 Flow('field-lsfits',lsfits,'cat axis=2 ${SOURCES[1:%d]}'%len(lsfits))
-Flow('field-coef-N',coefs,'cat axis=2 ${SOURCES[1:%d]} |window'%len(coefs))
+Flow('field-coef-N',coefs,'cat axis=2 ${SOURCES[1:%d]} |window n1=1'%len(coefs))
 
 #Flow('lsfit-N coef-N','field-ratio-N freq-N','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 #Flow('field-Q-esti-N','coef-N','window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
@@ -195,7 +203,7 @@ Graph('field-Q-esti-N','min2=20 max2=230 label2="Quality factor" label1=Trace un
 #sfdisfil <field-Q-esti.rsf
 
 Flow('field-comp','field-Q-esti-N field-Q1s-esti','cat axis=2 ${SOURCES[1:2]} | put o1=1')
-Graph('field-comp','min2=0 max2=100 label2="Quality factor" label1=Trace unit1= plotfat=10')
+Graph('field-comp','min2=-50 max2=100 label2="Quality factor" label1=Trace unit1= plotfat=10')
 
 
 
