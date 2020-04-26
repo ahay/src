@@ -95,14 +95,14 @@ int main(int argc, char* argv[])
   clock_t start_adj_t, end_adj_t;
   float total_adj_t=0;
   clock_t start_vsrc_t,end_vsrc_t;
-  clock_t start_psrc_t,end_psrc_t;
-  clock_t start_bextrap_t,end_bextrap_t;
-  clock_t start_vstk_t,end_vstk_t;
-  clock_t start_pstk_t,end_pstk_t;
   float total_vsrc_t=0;
+  clock_t start_psrc_t,end_psrc_t;
   float total_psrc_t=0;
+  clock_t start_bextrap_t,end_bextrap_t;
   float total_bextrap_t=0;
+  clock_t start_vstk_t,end_vstk_t;
   float total_vstk_t=0;
+  clock_t start_pstk_t,end_pstk_t;
   float total_pstk_t=0;
 
   /*------------------------------------------------------------*/
@@ -576,13 +576,15 @@ int main(int argc, char* argv[])
   free(acq);
 
   if (in_para.verb) sf_warning("Model structure..");
-  clear_born_model_2d(mod);
+  clear_born_model(mod);
   free(mod);
 
   if (in_para.verb) sf_warning("Temporary files..");
   if (!born_para.outputBackgroundWfl) remove(born_para.bckwflfilename);
   if (!born_para.outputScatteredWfl) remove(born_para.sctwflfilename);
   if (born_para.outputDenPertImage){
+    fclose(born_para.Fpv1);
+    fclose(born_para.Fpv2);
     remove(born_para.pv1wflfilename);
     remove(born_para.pv2wflfilename);
   }

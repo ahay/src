@@ -153,8 +153,10 @@ struct born_setup_struct{
   FILE* Fswfl;
   char* pv1wflfilename; // to compute the density perturbation in the adjoint
   char* pv2wflfilename;
+  char* pv3wflfilename;
   FILE* Fpv1;
   FILE* Fpv2;
+  FILE* Fpv3;
 };
 /*^*/
 
@@ -428,6 +430,36 @@ void prepare_born_model_2d(mod_struct_t * const mod,
 
 }
 
+void prepare_born_model_3d(mod_struct_t * const mod,
+                            sf_axis axVel[3], sf_axis axDen[3],
+                            sf_file Fvel, sf_file Fden,
+                            sf_file Fvpert, sf_file Frpert,
+                            in_para_struct_t in_para)
+/*< Prepare the born operator model parameters >*/
+{
+  if (in_para.verb) sf_warning("\tPrepare the background model..");
+  prepare_model_3d(mod,in_para,axVel,axDen,Fvel,Fden);
+
+  if (in_para.verb) sf_warning("\tPrepare the perturbation cubes..");
+
+  long n1  = sf_n(axVel[0]);
+  long n2  = sf_n(axVel[1]);
+  long n3  = sf_n(axVel[2]);
+  long n123= n1*n2*n3;
+
+  mod->velpert = sf_floatalloc(n123);
+  mod->denpert = sf_floatalloc(n123);
+
+  memset(mod->velpert,0,n123*sizeof(float));
+  memset(mod->denpert,0,n123*sizeof(float));
+
+  if (in_para.adj==FWD){
+    if (Fvpert) sf_floatread(mod->velpert,n123,Fvpert);
+    if (Frpert) sf_floatread(mod->denpert,n123,Frpert);
+  }
+
+}
+
 void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, acq_struct_t const * acq,born_setup_struct_t *para)
 /*< computing the particle velocity from the background pressure field >*/
 {
@@ -435,6 +467,7 @@ void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
 
   long n1 = wfl->modN1;
   long n2 = wfl->modN2;
+  long nelem = n1*n2;
   long nb = wfl->nabc;
   long nt = acq->ntdat;
 
@@ -442,12 +475,12 @@ void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
   float d1 = wfl->d1;
   float d2 = wfl->d2;
 
-  float *pp = sf_floatalloc(n1*n2);
-  float *v1= sf_floatalloc(n1*n2);
-  float *v2= sf_floatalloc(n1*n2);
+  float *pp = sf_floatalloc(nelem);
+  float *v1 = sf_floatalloc(nelem);
+  float *v2 = sf_floatalloc(nelem);
 
-  memset(v1,0,n1*n2*sizeof(float));
-  memset(v2,0,n1*n2*sizeof(float));
+  memset(v1,0,nelem*sizeof(float));
+  memset(v2,0,nelem*sizeof(float));
 
   if (para->outputScatteredWfl)
     sf_seek(wfl->Fswfl,0,SEEK_SET);
@@ -456,9 +489,9 @@ void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
 
   for (long it=0; it<nt; it++){
     if (para->outputScatteredWfl)
-      sf_floatread(pp,n1*n2,wfl->Fswfl);
+      sf_floatread(pp,nelem,wfl->Fswfl);
     else
-      fread(pp,sizeof(float),n1*n2,para->Fswfl);
+      fread(pp,sizeof(float),nelem,para->Fswfl);
 
     for (long i2=0; i2<n2; i2++){
       for (long i1=0; i1<n1; i1++){
@@ -485,6 +518,91 @@ void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
 
     fwrite(v1,sizeof(float),n1*n2,para->Fpv1);
     fwrite(v2,sizeof(float),n1*n2,para->Fpv2);
+  }
+
+}
+
+void make_pv_from_pres_3d(wfl_struct_t * const wfl, mod_struct_t * const mod, acq_struct_t const * acq,born_setup_struct_t *para)
+/*< computing the particle velocity from the background pressure field >*/
+{
+  sf_warning("\tCompute velocity from pressure..");
+
+  long n1 = wfl->modN1;
+  long n2 = wfl->modN2;
+  long n3 = wfl->modN3;
+  long nelem = n1*n2*n3;
+  long nb = wfl->nabc;
+  long nt = acq->ntdat;
+
+  float dt = acq->dt;
+  float d1 = wfl->d1;
+  float d2 = wfl->d2;
+  float d3 = wfl->d3;
+
+  float *pp = sf_floatalloc(nelem);
+  float *v1 = sf_floatalloc(nelem);
+  float *v2 = sf_floatalloc(nelem);
+  float *v3 = sf_floatalloc(nelem);
+
+  memset(v1,0,nelem*sizeof(float));
+  memset(v2,0,nelem*sizeof(float));
+  memset(v3,0,nelem*sizeof(float));
+
+  if (para->outputScatteredWfl)
+    sf_seek(wfl->Fswfl,0,SEEK_SET);
+  else
+    rewind(para->Fswfl);
+
+  for (long it=0; it<nt; it++){
+    if (para->outputScatteredWfl)
+      sf_floatread(pp,n1*n2,wfl->Fswfl);
+    else
+      fread(pp,sizeof(float),n1*n2,para->Fswfl);
+
+    for (long i3=0; i3<n3; i3++){
+      for (long i2=0; i2<n2; i2++){
+        for (long i1=0; i1<n1; i1++){
+          float k = mod->incomp[i1+nb +(n1+2*nb)*((i2+nb)+(n2+2*nb)*(i3+nb))];
+          pp[i1 + n1*(i2+ n2*i3)] *= k*dt;
+        }
+      }
+    }
+
+    for (long i3=0; i3<n3; i3++){
+      for (long i2=0; i2<n2; i2++){
+        for (long i1=2; i1<n1-3; i1++){
+          v1[i1+(i2+i3*n2)*n1] -= ( C1*(pp[i1+1+(i2+i3*n2)*n1] - pp[i1  +(i2+i3*n2)*n1])+
+                                    C2*(pp[i1+2+(i2+i3*n2)*n1] - pp[i1-1+(i2+i3*n2)*n1])+
+                                    C3*(pp[i1+3+(i2+i3*n2)*n1] - pp[i1-2+(i2+i3*n2)*n1]))/d1;
+        }
+      }
+    }
+
+    for (long i3=0; i3<n3; i3++){
+      for (long i2=2; i2<n2-3; i2++){
+        for (long i1=0; i1<n1; i1++){
+          v2[i1+(i2+i3*n2)*n1] -= ( C1*(pp[i1+(i2+1+i3*n2)*n1] - pp[i1+(i2  +i3*n2)*n1])+
+                                    C2*(pp[i1+(i2+2+i3*n2)*n1] - pp[i1+(i2-1+i3*n2)*n1])+
+                                    C3*(pp[i1+(i2+3+i3*n2)*n1] - pp[i1+(i2-2+i3*n2)*n1]))/d2;
+        }
+      }
+    }
+
+    for (long i3=2; i3<n3-3; i3++){
+      for (long i2=0; i2<n2; i2++){
+        for (long i1=0; i1<n1; i1++){
+          v3[i1+(i2+i3*n2)*n1] -= ( C1*(pp[i1+(i2+(i3+1)*n2)*n1] - pp[i1+(i2+ i3   *n2)*n1])+
+                                    C2*(pp[i1+(i2+(i3+2)*n2)*n1] - pp[i1+(i2+(i3-1)*n2)*n1])+
+                                    C3*(pp[i1+(i2+(i3+3)*n2)*n1] - pp[i1+(i2+(i3-2)*n2)*n1]))/d3;
+        }
+      }
+    }
+
+
+    fwrite(v1,sizeof(float),nelem,para->Fpv1);
+    fwrite(v2,sizeof(float),nelem,para->Fpv2);
+    fwrite(v3,sizeof(float),nelem,para->Fpv3);
+
   }
 
 }
@@ -551,6 +669,88 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
 
 }
 
+void make_born_velocity_sources_3d(wfl_struct_t * const wfl,
+                                   mod_struct_t const * mod,
+                                   acq_struct_t const * acq,
+                                   born_setup_struct_t *para)
+/*< Make the born sources for FWD born modelling>*/
+{
+  sf_warning("\tPARTICLE VELOCITY secondary sources (pressure gradient)..");
+
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+  long n3 = mod->n3;
+  long nelem = n1*n2*n3;
+
+  long nt = acq->ntdat;
+  float d1 = mod->d1;
+  float d2 = mod->d2;
+  float d3 = mod->d3;
+
+  wfl->Fprgrd = sf_tempfile(&(wfl->prtmpfilename),"w+");
+
+  float *pp = sf_floatalloc(nelem);
+  float *v1a= sf_floatalloc(nelem);
+  float *v2a= sf_floatalloc(nelem);
+  float *v3a= sf_floatalloc(nelem);
+
+  for (long it=0; it<nt; it++){
+    // read the background wavefield
+    if (para->outputBackgroundWfl)
+      sf_floatread(pp,nelem,wfl->Fwfl);
+    else
+      fread(pp,sizeof(float),nelem,para->Fbwfl);
+
+    for (long i3=0; i3<n3; i3++){
+    for (long i2=0; i2<n2; i2++){
+      for (long i1=2; i1<n1-3; i1++){
+        v1a[i1+n1*(i2+i3*n2)] = (C1*(pp[i1+1+n1*(i2+i3*n2)] - pp[i1  +n1*(i2+i3*n2)])+
+                                 C2*(pp[i1+2+n1*(i2+i3*n2)] - pp[i1-1+n1*(i2+i3*n2)])+
+                                 C3*(pp[i1+3+n1*(i2+i3*n2)] - pp[i1-2+n1*(i2+i3*n2)]))/d1;
+      }
+    }
+    }
+
+    for (long i3=0; i3<n3; i3++){
+    for (long i2=2; i2<n2-3; i2++){
+      for (long i1=0; i1<n1; i1++){
+        v2a[i1+n1*(i2+i3*n2)] = (C1*(pp[i1+n1*((i2+1)+i3*n2)] - pp[i1+n1*( i2   +i3*n2)])+
+                                 C2*(pp[i1+n1*((i2+2)+i3*n2)] - pp[i1+n1*((i2-1)+i3*n2)])+
+                                 C3*(pp[i1+n1*((i2+3)+i3*n2)] - pp[i1+n1*((i2-2)+i3*n2)]))/d2;
+      }
+    }
+    }
+
+    for (long i3=2; i3<n3-3; i3++){
+      for (long i2=0; i2<n2; i2++){
+        for (long i1=0; i1<n1; i1++){
+          v3a[i1+n1*(i2+i3*n2)] = (C1*(pp[i1+1+n1*(i2+(i3+1)*n2)] - pp[i1+1+n1*(i2+ i3   *n2)])+
+                                   C2*(pp[i1+1+n1*(i2+(i3+2)*n2)] - pp[i1+1+n1*(i2+(i3-1)*n2)])+
+                                   C3*(pp[i1+1+n1*(i2+(i3+3)*n2)] - pp[i1+1+n1*(i2+(i3-2)*n2)]))/d3;
+        }
+      }
+    }
+
+    fwrite(v1a,sizeof(float),nelem,wfl->Fprgrd);
+    fwrite(v2a,sizeof(float),nelem,wfl->Fprgrd);
+    fwrite(v3a,sizeof(float),nelem,wfl->Fprgrd);
+
+  }
+
+  rewind(wfl->Fprgrd);
+  // read the background wavefield
+  if (para->outputBackgroundWfl)
+    sf_seek(wfl->Fwfl,0,SEEK_SET);
+  else
+    rewind(para->Fbwfl);
+
+  free(pp);
+  free(v1a);
+  free(v2a);
+  free(v3a);
+
+}
+
 void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
                                    mod_struct_t const * mod,
                                    acq_struct_t const * acq,
@@ -568,8 +768,8 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
 
   wfl->Fpvdiv = sf_tempfile(&(wfl->pvtmpfilename),"w+");
 
-  float *snapc = sf_floatalloc(n1*n2);
-  float *snapn = sf_floatalloc(n1*n2);
+  float *snapc = sf_floatalloc(nelem);
+  float *snapn = sf_floatalloc(nelem);
 
   if (para->outputBackgroundWfl){
     // read the background wavefield
@@ -617,8 +817,91 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
     }
   }
 
-  memset(wfl->bwfl,0,n1*n2*sizeof(float));
-  fwrite(wfl->bwfl,sizeof(float),n1*n2,wfl->Fpvdiv);
+  memset(wfl->bwfl,0,nelem*sizeof(float));
+  fwrite(wfl->bwfl,sizeof(float),nelem,wfl->Fpvdiv);
+
+  // rewind
+  rewind(wfl->Fpvdiv);
+  if (para->outputBackgroundWfl)
+    sf_seek(wfl->Fwfl,0,SEEK_SET);
+  else
+    rewind(para->Fbwfl);
+
+  free(snapc);
+  free(snapn);
+
+}
+
+void make_born_pressure_sources_3d(wfl_struct_t * const wfl,
+                                   mod_struct_t const * mod,
+                                   acq_struct_t const * acq,
+                                   born_setup_struct_t * para)
+/*< Make the born sources for FWD born modelling>*/
+{
+  sf_warning("\tPRESSURE secondary sources (particle velocity divergence)..");
+
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+  long n3 = mod->n3;
+  long nelem = n1*n2*n3;
+
+  long nt = acq->ntdat;
+  float dt = acq->dt;
+
+  wfl->Fpvdiv = sf_tempfile(&(wfl->pvtmpfilename),"w+");
+
+  float *snapc = sf_floatalloc(nelem);
+  float *snapn = sf_floatalloc(nelem);
+
+  if (para->outputBackgroundWfl){
+    // read the background wavefield
+    sf_floatread(snapc,nelem,wfl->Fwfl);
+
+    for (long it=0; it<nt-1; it++){
+      // read the background wavefield
+      sf_floatread(snapn,nelem,wfl->Fwfl);
+
+      // compute the divergence of the particle velocity from the pressure field
+      for (long i=0; i<nelem; i++){
+        float const v = mod->vmod[i];
+        float const r = mod->dmod[i];
+        float const scale = 1.f/(v*v*r)/dt;
+        wfl->bwfl[i] = scale*(snapn[i] - snapc[i]);
+      }
+      fwrite(wfl->bwfl,sizeof(float),nelem,wfl->Fpvdiv);
+
+      float *tmp = snapc;
+      snapc = snapn;
+      snapn = tmp;
+    }
+
+  }
+  else{
+    // read the background wavefield
+    fread(snapc,sizeof(float),nelem,para->Fbwfl);
+
+    for (long it=0; it<nt-1; it++){
+      // read the background wavefield
+      fread(snapn,sizeof(float),nelem,para->Fbwfl);
+
+      // compute the divergence of the particle velocity from the pressure field
+      for (long i=0; i<nelem; i++){
+        float const v = mod->vmod[i];
+        float const r = mod->dmod[i];
+        float const scale = 1.f/(v*v*r)/dt;
+        wfl->bwfl[i] = scale*(snapn[i] - snapc[i]);
+      }
+      fwrite(wfl->bwfl,sizeof(float),nelem,wfl->Fpvdiv);
+
+      float *tmp = snapc;
+      snapc = snapn;
+      snapn = tmp;
+    }
+
+  }
+
+  memset(wfl->bwfl,0,nelem*sizeof(float));
+  fwrite(wfl->bwfl,sizeof(float),nelem,wfl->Fpvdiv);
 
   // rewind
   rewind(wfl->Fpvdiv);
@@ -688,6 +971,72 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
   free(v2a);
   free(v1r);
   free(v2r);
+  free(rimg);
+
+}
+
+void stack_velocity_part_3d(wfl_struct_t * const wfl,
+                            mod_struct_t const * mod,
+                            acq_struct_t const * acq,
+                            born_setup_struct_t *para)
+/*< project the wavefields in the born model space >*/
+{
+  sf_warning("\tPARTICLE VELOCITY component of the density perturbation..");
+  long nt = acq->ntdat;
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+  long n3 = mod->n3;
+  long nelem = n1*n2*n3;
+
+  float dt = acq->dt;
+
+  float* v1a = sf_floatalloc(nelem);
+  float* v2a = sf_floatalloc(nelem);
+  float* v3a = sf_floatalloc(nelem);
+  float* v1r = sf_floatalloc(nelem*nt); // back-propagated particle velocities
+  float* v2r = sf_floatalloc(nelem*nt);
+  float* v3r = sf_floatalloc(nelem*nt);
+  float *rimg = sf_floatalloc(nelem);
+  memset(rimg,0,nelem*sizeof(float));
+
+  rewind(para->Fpv1);
+  rewind(para->Fpv2);
+  rewind(para->Fpv3);
+
+  fread(v1r,sizeof(float),nelem*nt,para->Fpv1);
+  fread(v2r,sizeof(float),nelem*nt,para->Fpv2);
+  fread(v3r,sizeof(float),nelem*nt,para->Fpv3);
+
+  for (int it=0; it<nt; it++){
+    float* w1p = v1r + (nt-1-it)*nelem;
+    float* w2p = v2r + (nt-1-it)*nelem;
+    float* w3p = v3r + (nt-1-it)*nelem;
+
+    // source side gradient of pressure
+    fread(v1a,sizeof(float),nelem,wfl->Fprgrd);
+    fread(v2a,sizeof(float),nelem,wfl->Fprgrd);
+    fread(v3a,sizeof(float),nelem,wfl->Fprgrd);
+
+    for (long i=0; i<nelem; i++){
+      v1a[i] *= -1.*w1p[i]; // flipping time flips the sign of the velocity
+      v2a[i] *= -1.*w2p[i];
+      v3a[i] *= -1.*w3p[i];
+    }
+
+    for (long i=0; i<nelem; i++){
+      double r = mod->dmod[i];
+      double scale = dt/(r*r);
+      rimg[i] += (float) scale*(v1a[i]+v2a[i]+v3a[i]);
+    }
+
+  }
+
+  free(v1a);
+  free(v2a);
+  free(v3a);
+  free(v1r);
+  free(v2r);
+  free(v3r);
   free(rimg);
 
 }
@@ -775,6 +1124,91 @@ void stack_pressure_part_2d(sf_file Fvpert,
 
 }
 
+void stack_pressure_part_3d(sf_file Fvpert,
+                            sf_file Frpert,
+                            wfl_struct_t * const wfl,
+                            mod_struct_t const * mod,
+                            acq_struct_t const * acq,
+                            born_setup_struct_t *para)
+/*< project the wavefields in the born model space>*/
+{
+  sf_warning("\tPRESSURE component of the velocity and density perturbations..");
+
+  long nt = acq->ntdat;
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+  long n3 = mod->n3;
+  long nelem=n1*n2*n3;
+
+  float dt = acq->dt;
+
+  float *srcwfl = sf_floatalloc(nelem*nt);
+  float *tmp = sf_floatalloc(nelem);
+  float *vimg = sf_floatalloc(nelem);
+
+  if (para->outputScatteredWfl)
+    sf_seek(wfl->Fswfl,0,SEEK_SET);
+  else
+    rewind(para->Fswfl);
+
+  // set
+  memset(vimg,0,nelem*sizeof(float));
+
+  fread(srcwfl,sizeof(float),nelem*nt,wfl->Fpvdiv);
+  for (long it=0; it<nt; it++){
+    float *wp = srcwfl + (nt-1-it)*nelem;
+
+    if (para->outputScatteredWfl)
+      sf_floatread(tmp,nelem,wfl->Fswfl);
+    else
+      fread(tmp,sizeof(float),nelem,para->Fswfl);
+
+    for (long i=0; i<nelem; i++){
+      double const v = mod->vmod[i];
+      double const r = mod->dmod[i];
+      double scale = 2.f*v*r*dt;
+      vimg[i] += (float) scale*tmp[i]*wp[i];
+    }
+  }
+
+  sf_floatwrite(vimg,nelem,Fvpert);
+
+  if (para->outputDenPertImage){
+
+    if (para->outputScatteredWfl)
+      sf_seek(wfl->Fswfl,0,SEEK_SET);
+    else
+      rewind(para->Fswfl);
+
+    float *rimg = sf_floatalloc(nelem);
+    fread(rimg,sizeof(float),nelem,para->Fpv1);
+
+    for (long it=0; it<nt; it++){
+      float *wp = srcwfl + (nt-1-it)*nelem;
+
+      if (para->outputScatteredWfl)
+        sf_floatread(tmp,nelem,wfl->Fswfl);
+      else
+        fread(tmp,sizeof(float),nelem,para->Fswfl);
+
+      for (long i=0; i<nelem; i++){
+        double const v = mod->vmod[i];
+        double const scale = v*v*dt;
+        rimg[i] += (float) scale*tmp[i]*wp[i];
+      }
+    }
+
+    sf_floatwrite(rimg,nelem,Frpert);
+    free(rimg);
+  }
+
+  free(srcwfl);
+  free(vimg);
+  free(tmp);
+
+}
+
+
 void clear_model(mod_struct_t* mod)
 /*< Free the model parameter cubes >*/
 {
@@ -784,10 +1218,9 @@ void clear_model(mod_struct_t* mod)
   free(mod->buoy);
 }
 
-void clear_born_model_2d(mod_struct_t* mod)
+void clear_born_model(mod_struct_t* mod)
 /*< Free the model perturbation parameters cubes for the born operator >*/
 {
-
   clear_model(mod);
 
   free(mod->velpert);
@@ -935,6 +1368,29 @@ void prepare_born_acquisition_2d(acq_struct_t * const acq,
   }
 
 }
+
+void prepare_born_acquisition_3d(acq_struct_t * const acq,
+                                 sf_axis axsou[2], sf_axis axrec[2], sf_axis axwav[2],
+                                 sf_file Fsou, sf_file Frec, sf_file Fwav,
+                                 sf_file Fsdat,
+                                 in_para_struct_t in_para)
+/*< preparation of the acquisition for born operator >*/
+{
+  prepare_acquisition_3d(acq, in_para, axsou, axrec, axwav, Fsou, Frec,Fwav);
+
+  if (in_para.adj){
+    // Read the data to backproject
+    long nr = acq->nr;
+    long nt = acq->ntdat;
+
+    acq->dat = sf_floatalloc(nr*nt);
+    for(long it=0; it<nt; it++){
+      float* wp = acq->dat + (nt-1-it)*nr;
+      sf_floatread(wp,nr,Fsdat);
+    }
+  }
+}
+
 
 /*
  * Evaluates the Bessel function (from Dave Hale's KaiserWindow class in the Java Mines TK)
@@ -1252,6 +1708,21 @@ void prepare_born_wfl_2d( wfl_struct_t * const wfl, mod_struct_t * mod,
   wfl->Fprgrd = NULL;
 }
 
+void prepare_born_wfl_3d( wfl_struct_t * const wfl, mod_struct_t * mod,
+                          sf_file Fdata, sf_file Fwfl,
+                          sf_file Fsdat, sf_file Fswfl,
+                          in_para_struct_t para)
+/*< Set up the extra parameters for the born operator>*/
+{
+  prepare_wfl_3d(wfl,mod,Fdata,Fwfl,para);
+
+  wfl->Fsdata = Fsdat;
+  wfl->Fswfl  = Fswfl;
+
+  wfl->Fpvdiv = NULL;
+  wfl->Fprgrd = NULL;
+}
+
 void clear_wfl_2d(wfl_struct_t *wfl)
 /*< Clear the wavefield structure >*/
 {
@@ -1305,6 +1776,17 @@ void clear_born_wfl_2d(wfl_struct_t *wfl)
 /*< clear the source for born modeling >*/
 {
   clear_wfl_2d(wfl);
+
+  if (wfl->Fpvdiv)
+    remove(wfl->pvtmpfilename);
+  if (wfl->Fprgrd)
+    remove(wfl->prtmpfilename);
+}
+
+void clear_born_wfl_3d(wfl_struct_t *wfl)
+/*< clear the source for born modeling >*/
+{
+  clear_wfl_3d(wfl);
 
   if (wfl->Fpvdiv)
     remove(wfl->pvtmpfilename);
