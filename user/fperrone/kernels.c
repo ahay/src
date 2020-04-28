@@ -1,5 +1,6 @@
 #include <rsf.h>
 #include "prep_utils.h"
+#include "bench_utils.h"
 
 void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
 /*< particle velocity time step in 2d >*/
@@ -1170,8 +1171,13 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
+    tic("VEL UPDATE");
     velupd2d(wfl,mod,acq,FWD);
+    toc("VEL UPDATE");
+
+    tic("PRES UPDATE");
     presupd2d(wfl,mod,acq,FWD);
+    toc("PRES UPDATE");
     injectPsource2d(wfl,mod,acq,it);
 
     if (wfl->freesurf)

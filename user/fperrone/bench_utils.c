@@ -11,6 +11,7 @@ struct bench_t{
   clock_t start;
   clock_t end;
   float total;
+  long ncalls;
 };
 /*^*/
 
@@ -22,10 +23,33 @@ int counter=0;
 void tic(char const *name)
 /*< start the timing >*/
 {
-  timer[counter]=malloc(sizeof(bench_t));
-  timer[counter]->fname=name;
-  timer[counter]->start=clock();
-  counter++;
+  if (counter==0){
+    timer[counter]=calloc(1,sizeof(bench_t));
+    timer[counter]->fname=name;
+    timer[counter]->start=clock();
+    timer[counter]->ncalls=1;
+    counter++;
+  }
+  else{
+    int ic=0;
+    while (ic<counter){
+      if (strcmp(timer[ic]->fname,name)==0) break;
+      ic++;
+    }
+
+    if (ic==counter){
+      timer[ic]=calloc(1,sizeof(bench_t));
+      timer[counter]->fname=name;
+      timer[ic]->start=clock();
+      timer[ic]->ncalls=1;
+      counter++;
+    }
+    else{
+      timer[ic]->start=clock();
+      timer[ic]->ncalls++;
+    }
+  }
+
 }
 
 void toc(char const *name)
@@ -34,8 +58,9 @@ void toc(char const *name)
   int ic=0;
   while (strcmp(timer[ic]->fname,name))
     ic++;
+
   timer[ic]->end=clock();
-  timer[ic]->total=(float) (timer[ic]->end-timer[ic]->start) / CLOCKS_PER_SEC;
+  timer[ic]->total+=(float) (timer[ic]->end-timer[ic]->start) / CLOCKS_PER_SEC;
 }
 
 void printprof()
