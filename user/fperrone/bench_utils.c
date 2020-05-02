@@ -67,20 +67,21 @@ void printprof()
 /*< print the info and clear the memory>*/
 {
   char info[100];
-  sf_warning("=========================================================== ");
+  sf_warning("====================================================================");
   sf_warning("PROFILING: [CPU time] ");
-  sf_warning("=========================================================== ");
+  sf_warning("====================================================================");
+  sf_warning("#call-----Function -------------------------------------Runtime-----");
   for (int ic=0; ic<counter; ic++){
-    int len=strlen(timer[ic]->fname);
+    sprintf(info,"%4ld    %s", timer[ic]->ncalls, timer[ic]->fname);
+    int len=strlen(info);
     int spacelen=50-len;
-    sprintf(info,"%s",timer[ic]->fname);
     for (int is=0; is<spacelen; is++)
       sprintf(info,"%s ",info);
-    sprintf(info,"%s: %7.3g [s]", info, timer[ic]->total);
+    sprintf(info,"%s: %7.2f [s]", info, timer[ic]->total);
     sf_warning(info);
     free(timer[ic]);
   }
-  sf_warning("=========================================================== ");
-  sf_warning("=========================================================== ");
+  sf_warning("====================================================================");
+  sf_warning("====================================================================");
 
 }

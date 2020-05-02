@@ -268,14 +268,14 @@ int main(int argc, char* argv[])
 
   switch (in_para.adj){
   case FWD:
-    tic("FWD OPERATOR");
+    tic("fwdextrap3d");
     fwdextrap3d(wfl,acq,mod);
-    toc("FWD OPERATOR");
+    toc("fwdextrap3d");
     break;
   case ADJ:
-    tic("ADJ OPERATOR");
+    tic("adjextrap3d");
     adjextrap3d(wfl,acq,mod);
-    toc("ADJ OPERATOR");
+    toc("adjextrap3d");
     break;
   }
 

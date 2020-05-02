@@ -1171,25 +1171,35 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
-    tic("VEL UPDATE");
+    tic("velupd2d");
     velupd2d(wfl,mod,acq,FWD);
-    toc("VEL UPDATE");
+    toc("velupd2d");
 
-    tic("PRES UPDATE");
+    tic("presupd2d");
     presupd2d(wfl,mod,acq,FWD);
-    toc("PRES UPDATE");
-    injectPsource2d(wfl,mod,acq,it);
+    toc("presupd2d");
 
-    if (wfl->freesurf)
+    tic("injectPsource2d");
+    injectPsource2d(wfl,mod,acq,it);
+    toc("injectPsource2d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC2d");
       applyFreeSurfaceBC2d(wfl);
+      toc("applyFreeSurfaceBC2d");
+    }
 
     // write the wavefield out
     if (save){
+      tic("extract_pres_wfl_2d");
       extract_pres_wfl_2d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+      toc("extract_pres_wfl_2d");
     }
     // extract the data at the receiver locations
+    tic("extract_dat_2d");
     extract_dat_2d(wfl,acq);
+    toc("extract_dat_2d");
 
     swapwfl2d(wfl);
   }
@@ -1213,20 +1223,34 @@ void fwdextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
+    tic("velupd3d");
     velupd3d(wfl,mod,acq,FWD);
+    toc("velupd3d");
+
+    tic("presupd3d");
     presupd3d(wfl,mod,acq,FWD);
+    toc("presupd3d");
+
+    tic("injectPsource3d");
     injectPsource3d(wfl,mod,acq,it);
+    toc("injectPsource3d");
 
-    if (wfl->freesurf)
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC3d");
       applyFreeSurfaceBC3d(wfl);
-
+      toc("applyFreeSurfaceBC3d");
+    }
     // write the wavefield out
     if (save){
+      tic("extract_pres_wfl_3d");
       extract_pres_wfl_3d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+      toc("extract_pres_wfl_3d");
     }
     // extract the data at the receiver locations
+    tic("extract_dat_3d");
     extract_dat_3d(wfl,acq);
+    toc("extract_dat_3d");
 
     swapwfl3d(wfl);
   }
@@ -1388,17 +1412,30 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
+    tic("velupd2d");
     velupd2d(wfl,mod,acq,ADJ);
-    presupd2d(wfl,mod,acq,ADJ);
-    injectPsource2d(wfl,mod,acq,it);
+    toc("velupd2d");
 
-    if (wfl->freesurf)
+    tic("presupd2d");
+    presupd2d(wfl,mod,acq,ADJ);
+    toc("presupd2d");
+
+    tic("injectPsource2d");
+    injectPsource2d(wfl,mod,acq,it);
+    toc("injectPsource2d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC2d");
       applyFreeSurfaceBC2d(wfl);
+      toc("applyFreeSurfaceBC2d");
+    }
 
     // write the wavefield out
     if (save) {
+      tic("extract_pres_wfl_2d");
       extract_pres_wfl_2d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+      toc("extract_pres_wfl_2d");
     }
 
     swapwfl2d(wfl);
@@ -1423,17 +1460,30 @@ void adjextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
+    tic("velupd3d");
     velupd3d(wfl,mod,acq,ADJ);
-    presupd3d(wfl,mod,acq,ADJ);
-    injectPsource3d(wfl,mod,acq,it);
+    toc("velupd3d");
 
-    if (wfl->freesurf)
+    tic("presupd3d");
+    presupd3d(wfl,mod,acq,ADJ);
+    toc("presupd3d");
+
+    tic("injectPsource3d");
+    injectPsource3d(wfl,mod,acq,it);
+    toc("injectPsource3d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC3d");
       applyFreeSurfaceBC3d(wfl);
+      toc("applyFreeSurfaceBC3d");
+    }
 
     // write the wavefield out
     if (save) {
+      tic("extract_pres_wfl_3d");
       extract_pres_wfl_3d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+      toc("extract_pres_wfl_3d");
     }
 
     swapwfl3d(wfl);
