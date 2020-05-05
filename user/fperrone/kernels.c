@@ -1269,14 +1269,38 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
   // loop over time
   for (int it=0; it<nt; it++){
 
+    tic("velupd2d");
     velupd2d(wfl,mod,acq,FWD);
-    presupd2d(wfl,mod,acq,FWD);
-    injectPsource2d(wfl,mod,acq,it);
+    toc("velupd2d");
 
-    if (wfl->freesurf)
+    // extract the velocity secondary sources
+    if (para.inputDenPerturbation || para.outputDenPertImage){
+      tic("born_velocity_sources_2d");
+      born_velocity_sources_2d(wfl,mod,acq);
+      toc("born_velocity_sources_2d");
+    }
+
+    tic("presupd2d");
+    presupd2d(wfl,mod,acq,FWD);
+    toc("presupd2d");
+
+    tic("injectPsource2d");
+    injectPsource2d(wfl,mod,acq,it);
+    toc("injectPsource2d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC2d");
       applyFreeSurfaceBC2d(wfl);
+      toc("applyFreeSurfaceBC2d");
+    }
+
+    // extract the pressure secondary sources
+    tic("born_pressure_sources_2d");
+    born_pressure_sources_2d(wfl,mod,acq);
+    toc("born_pressure_sources_2d");
 
     // write the wavefield out
+    tic("extract_pres_wfl_2d");
     extract_pres_wfl_2d(wfl);
 
     if (para.outputBackgroundWfl)
@@ -1284,8 +1308,14 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
     else
       fwrite(wfl->bwfl,sizeof(float),nelem,para.Fbwfl);
 
+    toc("extract_pres_wfl_2d");
+
     // extract the data at the receiver locations
-    if (saveData) extract_dat_2d(wfl,acq);
+    if (saveData){
+      tic("extract_dat_2d");
+      extract_dat_2d(wfl,acq);
+      toc("extract_dat_2d");
+    }
 
     swapwfl2d(wfl);
   }
@@ -1340,24 +1370,45 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
   for (int it=0; it<nt; it++){
     bool save = (wfl->Fswfl);
 
+    tic("velupd2d");
     velupd2d(wfl,mod,acq,FWD);
-    if (para.inputDenPerturbation)
-      injectBornVelocitySource2d(wfl,mod,acq,it);
-    presupd2d(wfl,mod,acq,FWD);
-    if (para.inputVelPerturbation)
-      injectBornPressureSource2d(wfl,mod,acq,it);
+    toc("velupd2d");
 
-    if (wfl->freesurf)
+    if (para.inputDenPerturbation){
+      tic("injectBornVelocitySource2d");
+      injectBornVelocitySource2d(wfl,mod,acq,it);
+      toc("injectBornVelocitySource2d");
+    }
+
+    tic("presupd2d");
+    presupd2d(wfl,mod,acq,FWD);
+    toc("presupd2d");
+
+    if (para.inputVelPerturbation){
+      tic("injectBornPressureSource2d");
+      injectBornPressureSource2d(wfl,mod,acq,it);
+      toc("injectBornPressureSource2d");
+    }
+
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC2d");
       applyFreeSurfaceBC2d(wfl);
+      toc("applyFreeSurfaceBC2d");
+    }
 
     // write the wavefield out
     if (save){
+      tic("extract_pres_wfl_2d");
       extract_pres_wfl_2d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
+      toc("extract_pres_wfl_2d");
     }
 
     // extract the data at the receiver locations
+    tic("extract_scat_dat_2d");
     extract_scat_dat_2d(wfl,acq);
+    toc("extract_scat_dat_2d");
 
     swapwfl2d(wfl);
   }
@@ -1506,19 +1557,43 @@ void bornadjextrap2d(wfl_struct_t * wfl,
   // loop over time
   for (int it=0; it<nt; it++){
 
+    tic("velupd2d");
     velupd2d(wfl,mod,acq,ADJ);
-    presupd2d(wfl,mod,acq,ADJ);
-    injectPdata2d(wfl,mod,acq,it);
+    toc("velupd2d");
 
-    if (wfl->freesurf)
+    if (para->outputDenPertImage){
+      tic("extract_vel_wfl_2d");
+      extract_vel_wfl_2d(wfl, 1);
+      toc("extract_vel_wfl_2d");
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv1);
+      tic("extract_vel_wfl_2d");
+      extract_vel_wfl_2d(wfl, 2);
+      toc("extract_vel_wfl_2d");
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv2);
+    }
+
+    tic("presupd2d");
+    presupd2d(wfl,mod,acq,ADJ);
+    toc("presupd2d");
+
+    tic("injectPdata2d");
+    injectPdata2d(wfl,mod,acq,it);
+    toc("injectPdata2d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC2d");
       applyFreeSurfaceBC2d(wfl);
+      toc("applyFreeSurfaceBC2d");
+    }
 
     // write the wavefield out
+    tic("extract_pres_wfl_2d");
     extract_pres_wfl_2d(wfl);
     if (save)
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
     else
       fwrite(wfl->bwfl,sizeof(float),nelem,para->Fswfl);
+    toc("extract_pres_wfl_2d");
 
     swapwfl2d(wfl);
   }

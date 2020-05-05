@@ -607,6 +607,40 @@ void make_pv_from_pres_3d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
 
 }
 
+void born_velocity_sources_2d(wfl_struct_t * const wfl,
+                              mod_struct_t const * mod,
+                              acq_struct_t const * acq)
+/*< Make the born sources for FWD born modelling>*/
+{
+
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+  long simN1 = wfl->simN1;
+
+  float *v1a= sf_floatalloc(n1*n2);
+  float *v2a= sf_floatalloc(n1*n2);
+
+  for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+    for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+      float iro = mod->buoy[i1+i2*simN1];
+      v1a[j1+j2*n1] = -(wfl->v1c[i1+i2*simN1] - wfl->v1p[i1+i2*simN1])/iro;
+    }
+  }
+
+  for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+    for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+      float iro = mod->buoy[i1+i2*simN1];
+      v2a[j1+j2*n1] = -(wfl->v2c[i1+i2*simN1] - wfl->v2p[i1+i2*simN1])/iro;
+    }
+  }
+
+  fwrite(v1a,sizeof(float),n1*n2,wfl->Fprgrd);
+  fwrite(v2a,sizeof(float),n1*n2,wfl->Fprgrd);
+
+  free(v1a);
+  free(v2a);
+}
+
 void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
                                    mod_struct_t const * mod,
                                    acq_struct_t const * acq,
@@ -748,6 +782,31 @@ void make_born_velocity_sources_3d(wfl_struct_t * const wfl,
   free(v1a);
   free(v2a);
   free(v3a);
+
+}
+
+void born_pressure_sources_2d(wfl_struct_t * const wfl,
+                              mod_struct_t const * mod,
+                              acq_struct_t const * acq)
+/*< Make the born sources for FWD born modelling>*/
+{
+  long n1 = mod->n1;
+  long n2 = mod->n2;
+  long simN1 = wfl->simN1;
+  long nelem = n1*n2;
+
+  float dt = acq->dt;
+
+  // compute the divergence of the particle velocity from the pressure field
+  for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+    for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+    float const v = mod->vmod[j1+j2*n1];
+    float const r = mod->dmod[j1+j2*n1];
+    float const scale = 1.f/(v*v*r)/dt;
+    wfl->bwfl[j1+j2*n1] = scale*(wfl->pc[i1+i2*simN1] - wfl->pp[i1+i2*simN1]);
+    }
+  }
+  fwrite(wfl->bwfl,sizeof(float),nelem,wfl->Fpvdiv);
 
 }
 
@@ -1704,8 +1763,8 @@ void prepare_born_wfl_2d( wfl_struct_t * const wfl, mod_struct_t * mod,
   wfl->Fsdata = Fsdat;
   wfl->Fswfl  = Fswfl;
 
-  wfl->Fpvdiv = NULL;
-  wfl->Fprgrd = NULL;
+  wfl->Fprgrd = sf_tempfile(&(wfl->prtmpfilename),"w+");
+  wfl->Fpvdiv = sf_tempfile(&(wfl->pvtmpfilename),"w+");
 }
 
 void prepare_born_wfl_3d( wfl_struct_t * const wfl, mod_struct_t * mod,
