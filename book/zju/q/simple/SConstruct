@@ -1,5 +1,11 @@
 from rsf.proj import*
 from rsf.prog import RSFROOT
+#  Modified on April, 22, 2020
+## Thank Yuriy Ivanov for pointing out a bug in the program
+#  which results in slightly different curves as compared with the original publication
+#  but the technical conclusions are still solid
+## It seems that fitting ratio=Ax is a little more stable than fitting ratio=Ax+B (not sure why?)
+
 import math
 
 def Wig(data,other): 
@@ -83,7 +89,9 @@ Flow('trace-ratio','trace-f-t2 trace-f-t1','divn rect1=3 den=${SOURCES[1]} eps=0
 Graph('trace-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
 
 Flow('freq',None,'spike d1=0.992063 n1=127 o1=0 n2=1 d2=1 o2=0 | math output="x1" | window min1=20 max1=80')
-Flow('lsfit coef','trace-ratio freq','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+Flow('ones','freq','math output=1')
+Flow('freq-two','freq ones','cat axis=2 ${SOURCES[1]}')
+Flow('lsfit coef','trace-ratio freq-two','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 Result('trace-lsfit','trace-ratio lsfit',
        '''
        cat axis=2 ${SOURCES[1]} | 
@@ -112,7 +120,7 @@ for var in range(N):
 	Flow('ratio-%d'%i,['trace-f-t2-%d'%i,'trace-f-t1-%d'%i],'divn rect1=3 den=${SOURCES[1]} eps=0.01 | math output="log(input)" |  window min1=20 max1=80')
 #Graph('trace-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
 
-	Flow(['lsfit-%d'%i,'coef-%d'%i],['ratio-%d'%i,'freq'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	Flow(['lsfit-%d'%i,'coef-%d'%i],['ratio-%d'%i,'freq-two'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 	Flow('trace-Q-esti-%d'%i,'coef-%d'%i,'window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
 	Q1s.append('trace-Q-esti-%d'%i)
 Flow('trace-Q1s-esti',Q1s,'cat axis=2 ${SOURCES[1:%d]} |window'%len(Q1s))
@@ -145,14 +153,14 @@ i=0
 for var in range(N):
 	i=i+1
 	Flow('trace-ratio-%d'%i,'trace-ratio-N','window n2=1 f2=%d'%(i-1))
-	Flow('freq-%d'%i,'freq-N','window n2=1 f2=%d'%(i-1))
+	Flow('freq-%d'%i,'freq-N ones','window n2=1 f2=%d | cat axis=2 ${SOURCES[1]}'%(i-1))
 	Flow(['lsfit-N-%d'%i,'coef-N-%d'%i],['trace-ratio-%d'%i,'freq-%d'%i],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 	lsfits.append('lsfit-N-%d'%i)
 	coefs.append('coef-N-%d'%i)
 	
 Flow('trace-lsfits',lsfits,'cat axis=2 ${SOURCES[1:%d]}'%len(lsfits))
 
-Flow('trace-coef-N',coefs,'cat axis=2 ${SOURCES[1:%d]} |window'%len(coefs))
+Flow('trace-coef-N',coefs,'cat axis=2 ${SOURCES[1:%d]} |window n1=1'%len(coefs))
 
 #Flow('lsfit-N coef-N','trace-ratio-N freq-N','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 #Flow('trace-Q-esti-N','coef-N','window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
@@ -168,8 +176,8 @@ Graph('trace-Q-esti-N','min2=20 max2=180 label2="Quality factor" label1=Trace un
 Flow('trace-true',None,'spike n1=30 d1=1 o1=0 |math output="60"')
 Graph('trace-true','min2=20 max2=180 label2="Quality factor" label1=Trace unit1= plotfat=10')
 
-Flow('trace-comp','trace-Q-esti-N trace-true trace-Q1s-esti','cat axis=2 ${SOURCES[1:3]}')
-Graph('trace-comp','min2=20 max2=180 label2="Quality factor" label1=Trace unit1= plotfat=10')
+Flow('trace-comp','trace-true trace-Q-esti-N trace-Q1s-esti ','cat axis=2 ${SOURCES[1:3]}')
+Graph('trace-comp','min2=0 max2=400 label2="Quality factor" label1=Trace unit1= plotfat=10')
 
 
 

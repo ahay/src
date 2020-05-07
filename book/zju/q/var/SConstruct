@@ -2,6 +2,12 @@ from rsf.proj import*
 from rsf.prog import RSFROOT
 import math
 
+#  Modified on April, 22, 2020
+## Thank Yuriy Ivanov for pointing out a bug in the program
+#  which results in slightly different curves as compared with the original publication
+#  but the technical conclusions are still solid
+## It seems that fitting ratio=Ax is a little more stable than fitting ratio=Ax+B (not sure why?)
+
 def Wig(data,other): 
 	Result(data,'put d1=0.004 d2=1 o1=0 o2=1 |window j2=2 | wiggle labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 color=g grid=n poly=y transp=y yreverse=y clip=0.55  label2=linear  unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n wheretitle=t   %s'%other)
 
@@ -65,7 +71,10 @@ Flow('linear-ratio','linear-f-t2 linear-f-t1','divn rect1=3 den=${SOURCES[1]} ep
 Graph('linear-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
 
 Flow('freq',None,'spike d1=0.992063 n1=127 o1=0 n2=1 d2=1 o2=0 | math output="x1" | window min1=20 max1=80')
-Flow('lsfit coef','linear-ratio freq','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+Flow('ones','freq','math output=1')
+Flow('freq-two','freq ones','cat axis=2 ${SOURCES[1]}')
+
+Flow('lsfit coef','linear-ratio freq-two','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 Result('linear-lsfit','linear-ratio lsfit',
        '''
        cat axis=2 ${SOURCES[1]} | 
@@ -114,7 +123,7 @@ for var in range(N):
 	Flow('ratio-%d'%i,['linear-f-t2-%d'%i,'linear-f-t1-%d'%i],'divn rect1=3 den=${SOURCES[1]} eps=0.01 | math output="log(input)" |  window min1=20 max1=80')
 #Graph('linear-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
 
-	Flow(['lsfit-%d'%i,'coef-%d'%i],['ratio-%d'%i,'freq'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	Flow(['lsfit-%d'%i,'coef-%d'%i],['ratio-%d'%i,'freq-two'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 	Flow('linear-Q-esti-%d'%i,'coef-%d'%i,'window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
 	Q1s.append('linear-Q-esti-%d'%i)
 Flow('linear-Q1s-esti',Q1s,'cat axis=2 ${SOURCES[1:%d]} |window'%len(Q1s))
@@ -145,14 +154,14 @@ i=0
 for var in range(N):
 	i=i+1
 	Flow('linear-ratio-%d'%i,'linear-ratio-N','window n2=1 f2=%d'%(i-1))
-	Flow('freq-%d'%i,'freq-N','window n2=1 f2=%d'%(i-1))
+	Flow('freq-%d'%i,'freq-N ones','window n2=1 f2=%d | cat axis=2 ${SOURCES[1]}'%(i-1))
 	Flow(['lsfit-N-%d'%i,'coef-N-%d'%i],['linear-ratio-%d'%i,'freq-%d'%i],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 	lsfits.append('lsfit-N-%d'%i)
 	coefs.append('coef-N-%d'%i)
 	
 Flow('linear-lsfits',lsfits,'cat axis=2 ${SOURCES[1:%d]}'%len(lsfits))
 
-Flow('linear-coef-N',coefs,'cat axis=2 ${SOURCES[1:%d]} |window'%len(coefs))
+Flow('linear-coef-N',coefs,'cat axis=2 ${SOURCES[1:%d]} |window n1=1'%len(coefs))
 
 #Flow('lsfit-N coef-N','linear-ratio-N freq-N','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
 #Flow('linear-Q-esti-N','coef-N','window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
@@ -168,11 +177,10 @@ Graph('linear-Q-esti-N','min2=20 max2=230 label2="Quality factor" label1=Trace u
 #sfdisfil <linear-Q-esti-N.rsf
 #sfdisfil <linear-Q-esti.rsf
 
-
 Flow('linear-true',None,'spike n1=40 d1=1 o1=0 |math output="41+x1"')
 Graph('linear-true','min2=20 max2=230 label2="Quality factor" label1=Trace unit1= plotfat=10')
 
-Flow('linear-comp','linear-Q-esti-N linear-true linear-Q1s-esti','cat axis=2 ${SOURCES[1:3]}')
+Flow('linear-comp','linear-true linear-Q-esti-N linear-Q1s-esti','cat axis=2 ${SOURCES[1:3]}')
 Graph('linear-comp','min2=20 max2=230 label2="Quality factor" label1=Trace unit1= plotfat=10')
 
 

@@ -67,7 +67,7 @@ fi
 
 echo "checking for RSFROOT ... $root"
 if test "$root" = "no"; then
-    root=`$python -c "import sys; print sys.prefix"`
+    root=`$python -c "import sys; print(sys.prefix)"`
     warning "I am setting RSFROOT to $root"
 fi
 

@@ -46,7 +46,8 @@ Date: February 2020
 #include <rsf.h>
 #include "prep_utils.h"
 #include "kernels.h"
-#include <time.h>
+#include "bench_utils.h"
+
 /* check: dt<= 0.2 * min(dx,dz)/vmin */
 
 static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
@@ -151,13 +152,6 @@ int main(int argc, char* argv[])
   bool dabc;
   int nb;
   int jsnap;
-
-
-  /* for benchmarking */
-  clock_t start_fwd_t, end_fwd_t;
-  float total_fwd_t=0;
-  clock_t start_adj_t, end_adj_t;
-  float total_adj_t=0;
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
@@ -347,16 +341,14 @@ int main(int argc, char* argv[])
 
   switch (in_para.adj){
   case FWD:
-    start_fwd_t=clock();
+    tic("fwdextrap2d");
     fwdextrap2d(wfl,acq,mod);
-    end_fwd_t=clock();
-    total_fwd_t = (float)(end_fwd_t - start_fwd_t) / CLOCKS_PER_SEC;
+    toc("fwdextrap2d");
     break;
   case ADJ:
-    start_adj_t=clock();
+    tic("adjextrap2d");
     adjextrap2d(wfl,acq,mod);
-    end_adj_t=clock();
-    total_adj_t = (float)(end_adj_t - start_adj_t) / CLOCKS_PER_SEC;
+    toc("adjextrap2d");
     break;
   }
 
@@ -392,17 +384,7 @@ int main(int argc, char* argv[])
 
   if (in_para.verb) sf_warning("ALL DONE!");
 
-  sf_warning("=========================================================== ");
-  sf_warning("PROFILING: [CPU time] ");
-  sf_warning("=========================================================== ");
-  if (in_para.adj==FWD){
-    sf_warning("FWD operator                  :  %7.3g [s]", total_fwd_t );
-  }
-  else{
-    sf_warning("ADJ operator                  : %7.3g [s]", total_adj_t );
-  }
-  sf_warning("=========================================================== ");
-  sf_warning("=========================================================== ");
 
+  printprof();
   exit (0);
 }

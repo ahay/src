@@ -1,5 +1,6 @@
 #include <rsf.h>
 #include "prep_utils.h"
+#include "bench_utils.h"
 
 void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * acq, adj_t adjflag)
 /*< particle velocity time step in 2d >*/
@@ -690,10 +691,9 @@ static void injectPsource3d(wfl_struct_t* wfl,
 
 }
 
-void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it)
+void injectPdata2d(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it)
 /*< inject the recorded data in 2d >*/
 {
-
   long nrec = acq->nr;
 
   long N1 = wfl->simN1;
@@ -735,7 +735,61 @@ void injectPdata(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const
 
 }
 
-static void injectBornVelocitySource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
+void injectPdata3d(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t const * acq, long it)
+/*< inject the recorded data in 2d >*/
+{
+  long nrec = acq->nr;
+
+  long N1 = wfl->simN1;
+  long N2 = wfl->simN2;
+
+  float modD1 = mod->d1;
+  float modD2 = mod->d2;
+  float modD3 = mod->d3;
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+  float o3 = wfl->simO3;
+
+  float *sp = sf_floatalloc(8*8*8);
+
+  for (long irec=0; irec<nrec; irec++){
+    float xr = acq->rcoord[irec*2];
+    float yr = acq->rcoord[irec*2+2];
+    float zr = acq->rcoord[irec*2+1];
+
+    int ixr = (xr-o2)/modD2;
+    int iyr = (yr-o3)/modD3;
+    int izr = (zr-o1)/modD1;
+    long idx = izr + N1*(ixr+N2*iyr);
+
+    float force = acq->dat[irec + nrec*it];
+
+    for (int k=-3,kh=0; k<=4; k++,kh++){
+      const float hicks3 = acq->hicksRcv3[kh+irec*8];
+      for (int j=-3,jh=0; j<=4; j++,jh++){
+        const float hicks2 = acq->hicksRcv2[jh+irec*8];
+        for (int i=-3,ih=0; i<=4; i++,ih++){
+          const float hc = acq->hicksRcv1[ih+irec*8]*hicks2*hicks3;
+          sp[ih+8*(jh+8*kh)] = hc*force;
+        }
+      }
+    }
+
+    for (int k=-3,kh=0; k<=4; k++,kh++){
+      for (int j=-3,jh=0; j<=4; j++,jh++){
+        for (int i=-3,ih=0; i<=4; i++,ih++){
+          wfl->pc[idx + i + N1*(j+ k*N2)] += sp[ih+8*(jh+8*kh)];
+        }
+      }
+    }
+
+  }
+
+  free(sp);
+
+}
+
+static void injectBornVelocitySource2d(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
   long n12 = modN1*modN2;
@@ -762,10 +816,41 @@ static void injectBornVelocitySource(wfl_struct_t * const wfl, mod_struct_t cons
 
 }
 
-void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it)
+static void injectBornVelocitySource3d(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it){
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long modN3 = wfl->modN3;
+  long nelem = modN1*modN2*modN3;
+  long nb = wfl->nabc;
+
+  float dt = acq->dt;
+
+  fread(wfl->v1a,sizeof(float),nelem,wfl->Fprgrd);
+  fread(wfl->v2a,sizeof(float),nelem,wfl->Fprgrd);
+  fread(wfl->v3a,sizeof(float),nelem,wfl->Fprgrd);
+
+  for (long i3=0; i3<modN3; i3++){
+    for (long i2=0; i2<modN2; i2++){
+      for (long i1=0; i1<modN1; i1++){
+        long simIdx = (i1+nb) + wfl->simN1*((i2+nb)+wfl->simN2*(i3+nb));
+        long modIdx = i1 + modN1*(i2+i3*modN2);
+
+        float dr = mod->denpert[modIdx];
+        float rh = mod->dmod[modIdx];
+        float rp = dr*dt/(rh*rh);
+
+        wfl->v1c[simIdx] += rp*wfl->v1a[modIdx];
+        wfl->v2c[simIdx] += rp*wfl->v2a[modIdx];
+        wfl->v3c[simIdx] += rp*wfl->v3a[modIdx];
+      }
+    }
+  }
+
+}
+
+void injectBornPressureSource2d(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it)
 /*< injection of a extended source over the whole volume in 2d >*/
 {
-
   long modN1 = wfl->modN1;
   long modN2 = wfl->modN2;
   long n12 = modN1*modN2;
@@ -789,6 +874,40 @@ void injectBornPressureSource(wfl_struct_t * const wfl, mod_struct_t const *mod,
 
       wfl->pc[simIdx] += (vp+rp)*dt*wfl->bwfl[modIdx];
 
+    }
+  }
+
+}
+
+void injectBornPressureSource3d(wfl_struct_t * const wfl, mod_struct_t const *mod, acq_struct_t const * acq, long it)
+/*< injection of a extended source over the whole volume in 3d >*/
+{
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long modN3 = wfl->modN3;
+  long nelem = modN1*modN2*modN3;
+  long nb = wfl->nabc;
+
+  float dt = acq->dt;
+
+  fread(wfl->bwfl,nelem,sizeof(float),wfl->Fpvdiv);
+
+  for (long i3=0; i3<modN3; i3++){
+    for (long i2=0; i2<modN2; i2++){
+      for (long i1=0; i1<modN1; i1++){
+        long simIdx = (i1+nb) + wfl->simN1*((i2+nb)+wfl->simN2*(i3+nb));
+        long modIdx = i1 + modN1*(i2 + i3*modN2);
+
+        float const dv = mod->velpert[modIdx];
+        float const dr = mod->denpert[modIdx];
+        float const vc = mod->vmod[modIdx];
+        float const rh = mod->dmod[modIdx];
+        float const vp= 2.f*vc*dv*rh;
+        float const rp= vc*vc*dr;
+
+        wfl->pc[simIdx] += (vp+rp)*dt*wfl->bwfl[modIdx];
+
+      }
     }
   }
 
@@ -1052,20 +1171,35 @@ void fwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
+    tic("velupd2d");
     velupd2d(wfl,mod,acq,FWD);
-    presupd2d(wfl,mod,acq,FWD);
-    injectPsource2d(wfl,mod,acq,it);
+    toc("velupd2d");
 
-    if (wfl->freesurf)
+    tic("presupd2d");
+    presupd2d(wfl,mod,acq,FWD);
+    toc("presupd2d");
+
+    tic("injectPsource2d");
+    injectPsource2d(wfl,mod,acq,it);
+    toc("injectPsource2d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC2d");
       applyFreeSurfaceBC2d(wfl);
+      toc("applyFreeSurfaceBC2d");
+    }
 
     // write the wavefield out
     if (save){
+      tic("extract_pres_wfl_2d");
       extract_pres_wfl_2d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+      toc("extract_pres_wfl_2d");
     }
     // extract the data at the receiver locations
+    tic("extract_dat_2d");
     extract_dat_2d(wfl,acq);
+    toc("extract_dat_2d");
 
     swapwfl2d(wfl);
   }
@@ -1089,20 +1223,34 @@ void fwdextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
+    tic("velupd3d");
     velupd3d(wfl,mod,acq,FWD);
+    toc("velupd3d");
+
+    tic("presupd3d");
     presupd3d(wfl,mod,acq,FWD);
+    toc("presupd3d");
+
+    tic("injectPsource3d");
     injectPsource3d(wfl,mod,acq,it);
+    toc("injectPsource3d");
 
-    if (wfl->freesurf)
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC3d");
       applyFreeSurfaceBC3d(wfl);
-
+      toc("applyFreeSurfaceBC3d");
+    }
     // write the wavefield out
     if (save){
+      tic("extract_pres_wfl_3d");
       extract_pres_wfl_3d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+      toc("extract_pres_wfl_3d");
     }
     // extract the data at the receiver locations
+    tic("extract_dat_3d");
     extract_dat_3d(wfl,acq);
+    toc("extract_dat_3d");
 
     swapwfl3d(wfl);
   }
@@ -1144,6 +1292,42 @@ void bornbckwfl2d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
 
 }
 
+void bornbckwfl3d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t const * mod, born_setup_struct_t para)
+/*< Born background wavefield extrapolation >*/
+{
+  long modN1 =wfl->modN1;
+  long modN2 =wfl->modN2;
+  long modN3 =wfl->modN3;
+  int nt = acq->ntdat;
+  long nelem = modN1*modN2*modN3;
+  bool saveData= para.outputBackgroundData;
+
+  // loop over time
+  for (int it=0; it<nt; it++){
+
+    velupd3d(wfl,mod,acq,FWD);
+    presupd3d(wfl,mod,acq,FWD);
+    injectPsource3d(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC3d(wfl);
+
+    // write the wavefield out
+    extract_pres_wfl_3d(wfl);
+
+    if (para.outputBackgroundWfl)
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+    else
+      fwrite(wfl->bwfl,sizeof(float),nelem,para.Fbwfl);
+
+    // extract the data at the receiver locations
+    if (saveData) extract_dat_3d(wfl,acq);
+
+    swapwfl3d(wfl);
+  }
+
+}
+
 void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod, born_setup_struct_t para)
 /*< kernel for Born forward extrapolation >*/
 {
@@ -1158,10 +1342,10 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
 
     velupd2d(wfl,mod,acq,FWD);
     if (para.inputDenPerturbation)
-      injectBornVelocitySource(wfl,mod,acq,it);
+      injectBornVelocitySource2d(wfl,mod,acq,it);
     presupd2d(wfl,mod,acq,FWD);
     if (para.inputVelPerturbation)
-      injectBornPressureSource(wfl,mod,acq,it);
+      injectBornPressureSource2d(wfl,mod,acq,it);
 
     if (wfl->freesurf)
       applyFreeSurfaceBC2d(wfl);
@@ -1177,6 +1361,39 @@ void bornfwdextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
 
     swapwfl2d(wfl);
   }
+}
+
+void bornfwdextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod, born_setup_struct_t para)
+/*< kernel for Born forward extrapolation >*/
+{
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long modN3 = wfl->modN3;
+  long nelem = modN1*modN2*modN3;
+  int nt = acq->ntdat;
+
+  // loop over time
+  for (int it=0; it<nt; it++){
+    bool save = (wfl->Fswfl);
+
+    velupd3d(wfl,mod,acq,FWD);
+    if (para.inputDenPerturbation)
+      injectBornVelocitySource3d(wfl,mod,acq,it);
+    presupd3d(wfl,mod,acq,FWD);
+    if (para.inputVelPerturbation)
+      injectBornPressureSource3d(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC3d(wfl);
+
+    // write the wavefield out
+    if (save){
+      extract_pres_wfl_3d(wfl);
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
+    }
+
+  }
+
 }
 
 void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t const * mod)
@@ -1195,17 +1412,30 @@ void adjextrap2d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
+    tic("velupd2d");
     velupd2d(wfl,mod,acq,ADJ);
-    presupd2d(wfl,mod,acq,ADJ);
-    injectPsource2d(wfl,mod,acq,it);
+    toc("velupd2d");
 
-    if (wfl->freesurf)
+    tic("presupd2d");
+    presupd2d(wfl,mod,acq,ADJ);
+    toc("presupd2d");
+
+    tic("injectPsource2d");
+    injectPsource2d(wfl,mod,acq,it);
+    toc("injectPsource2d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC2d");
       applyFreeSurfaceBC2d(wfl);
+      toc("applyFreeSurfaceBC2d");
+    }
 
     // write the wavefield out
     if (save) {
+      tic("extract_pres_wfl_2d");
       extract_pres_wfl_2d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+      toc("extract_pres_wfl_2d");
     }
 
     swapwfl2d(wfl);
@@ -1230,17 +1460,30 @@ void adjextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t cons
     if ((it+1)%100==0)
       sf_warning("Time step %4d of %4d (%2.1f %%)",it, nt, ((100.*it)/nt));
 
+    tic("velupd3d");
     velupd3d(wfl,mod,acq,ADJ);
-    presupd3d(wfl,mod,acq,ADJ);
-    injectPsource3d(wfl,mod,acq,it);
+    toc("velupd3d");
 
-    if (wfl->freesurf)
+    tic("presupd3d");
+    presupd3d(wfl,mod,acq,ADJ);
+    toc("presupd3d");
+
+    tic("injectPsource3d");
+    injectPsource3d(wfl,mod,acq,it);
+    toc("injectPsource3d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC3d");
       applyFreeSurfaceBC3d(wfl);
+      toc("applyFreeSurfaceBC3d");
+    }
 
     // write the wavefield out
     if (save) {
+      tic("extract_pres_wfl_3d");
       extract_pres_wfl_3d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fwfl);
+      toc("extract_pres_wfl_3d");
     }
 
     swapwfl3d(wfl);
@@ -1259,12 +1502,13 @@ void bornadjextrap2d(wfl_struct_t * wfl,
   long nelem = modN1*modN2;
   int nt = acq->ntdat;
   bool save = para->outputScatteredWfl;
+
   // loop over time
   for (int it=0; it<nt; it++){
 
     velupd2d(wfl,mod,acq,ADJ);
     presupd2d(wfl,mod,acq,ADJ);
-    injectPdata(wfl,mod,acq,it);
+    injectPdata2d(wfl,mod,acq,it);
 
     if (wfl->freesurf)
       applyFreeSurfaceBC2d(wfl);
@@ -1277,6 +1521,41 @@ void bornadjextrap2d(wfl_struct_t * wfl,
       fwrite(wfl->bwfl,sizeof(float),nelem,para->Fswfl);
 
     swapwfl2d(wfl);
+  }
+
+}
+
+void bornadjextrap3d(wfl_struct_t * wfl,
+                     acq_struct_t const * acq,
+                     mod_struct_t const * mod,
+                     born_setup_struct_t *para)
+/*< kernel for Born forward extrapolation >*/
+{
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long modN3 = wfl->modN3;
+  long nelem = modN1*modN2*modN3;
+  int nt = acq->ntdat;
+  bool save = para->outputScatteredWfl;
+
+  // loop over time
+  for (int it=0; it<nt; it++){
+
+    velupd3d(wfl,mod,acq,ADJ);
+    presupd3d(wfl,mod,acq,ADJ);
+    injectPdata3d(wfl,mod,acq,it);
+
+    if (wfl->freesurf)
+      applyFreeSurfaceBC3d(wfl);
+
+    // write the wavefield out
+    extract_pres_wfl_3d(wfl);
+    if (save)
+      sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
+    else
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fswfl);
+
+    swapwfl3d(wfl);
   }
 
 }
