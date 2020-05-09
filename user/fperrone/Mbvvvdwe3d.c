@@ -137,6 +137,10 @@ int main(int argc, char* argv[])
       born_para.outputScatteredWfl=true;
     }
 
+    //defaults
+    born_para.outputDenPertImage=false;
+    born_para.outputVelPertImage=false;
+
     // this is the output of the born forward modeling
     Fsdat = sf_output("out");  /* scattered data*/
     break;
@@ -181,6 +185,10 @@ int main(int argc, char* argv[])
     else{
       born_para.Fswfl = sf_tempfile(&(born_para.sctwflfilename),"w+");
     }
+
+    //defaults
+    born_para.inputDenPerturbation=false;
+    born_para.inputVelPerturbation=false;
 
   break;
   }
@@ -452,15 +460,21 @@ int main(int argc, char* argv[])
   /*--------------------------------------------------------------*/
   /*--------------------------------------------------------------*/
   sf_warning("Background wavefield extrapolation..");
-  tic("Background wavefield");
+  tic("bornbckwfl3d");
   bornbckwfl3d(wfl,acq,mod,born_para);
-  toc("Background wavefield");
+  toc("bornbckwfl3d");
 
   //rewind the source wavefield
   if (born_para.outputBackgroundWfl)
     sf_seek(wfl->Fwfl,0,SEEK_SET);
   else
     fseek(born_para.Fbwfl,0, SEEK_SET);
+
+  //rewind the secondary sources
+  if (born_para.inputDenPerturbation || born_para.outputDenPertImage){
+    rewind(wfl->Fprgrd);
+  }
+  rewind(wfl->Fpvdiv);
 
   // reset the wavefields
   reset_wfl(wfl);
@@ -475,23 +489,11 @@ int main(int argc, char* argv[])
     // FWD BORN MODELING: model pert -> wfl
     sf_warning("FWD Born operator..");
 
-    // prepare the born sources
-    if (in_para.verb) sf_warning("\tMake secondary sources..");
-    if (born_para.inputDenPerturbation){
-      tic("Particle Velocity Secondary Sources");
-      make_born_velocity_sources_3d(wfl,mod,acq,&born_para);
-      toc("Particle Velocity Secondary Sources");
-    }
-
-    tic("Pressure Secondary Sources");
-    make_born_pressure_sources_3d(wfl,mod,acq,&born_para);
-    toc("Pressure Secondary Sources");
-
     // extrapolate secondary sources
     if (in_para.verb) sf_warning("\tExtrapolate scattered wavefield..");
-    tic("FWD Born Scattered Wavefield Extrapolation");
+    tic("bornfwdextrap3d");
     bornfwdextrap3d(wfl,acq,mod,born_para);
-    toc("FWD Born Scattered Wavefield Extrapolation");
+    toc("bornfwdextrap3d");
 
     toc("FWD Born operator");
   }
@@ -502,39 +504,21 @@ int main(int argc, char* argv[])
 
     // extrapolate data
     if (in_para.verb) sf_warning("\tExtrapolate scattered wavefield..");
-    tic("ADJ Born Scattered Wavefield Extrapolation");
+    tic("bornadjextrap3d");
     bornadjextrap3d(wfl,acq,mod,&born_para);
-    toc("ADJ Born Scattered Wavefield Extrapolation");
-
-    if (born_para.outputDenPertImage){
-      tic("Pressure to Particle Velocity");
-      make_pv_from_pres_3d(wfl,mod,acq,&born_para);
-      toc("Pressure to Particle Velocity");
-    }
-
-    // prepare the born sources
-    if (in_para.verb) sf_warning("\tMake secondary sources..");
-    if (born_para.outputDenPertImage){
-      tic("Particle Velocity Secondary Sources");
-      make_born_velocity_sources_3d(wfl,mod,acq,&born_para);
-      toc("Particle Velocity Secondary Sources");
-    }
-
-    tic("Pressure Secondary Sources");
-    make_born_pressure_sources_3d(wfl,mod,acq,&born_para);
-    toc("Pressure Secondary Sources");
+    toc("bornadjextrap3d");
 
     // stack wavefields
     if (in_para.verb) sf_warning("\tStacking..");
     if (born_para.outputDenPertImage){
-      tic("Imaging: Stack Particle Velocity component");
+      tic("stack_velocity_part_3d");
       stack_velocity_part_3d(wfl,mod,acq,&born_para);
-      toc("Imaging: Stack Particle Velocity component");
+      toc("stack_velocity_part_3d");
     }
 
-    tic("Imaging: Stack Pressure component");
+    tic("stack_pressure_part_3d");
     stack_pressure_part_3d(Fvpert,Frpert,wfl,mod,acq,&born_para);
-    toc("Imaging: Stack Pressure component");
+    toc("stack_pressure_part_3d");
 
     toc("ADJ Born operator");
   }

@@ -262,9 +262,9 @@ void velupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * a
       float const spoy = tap3[i3];
       for (int i2=i2start; i2<i2end; i2++){
         float const spoxy = spoy*tap2[i2];
-        for (int i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
+        for (int i1=i1start, idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
           float const spo = tap1[i1]* spoxy;
-          float const k = incomp[idx]*dt;
+          float const k = incomp[idx];
           pa[idx] = spo*k*pp[idx];
         }
       }
@@ -548,7 +548,7 @@ void presupd3d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* a
         float const spoxy = spoy*tap2[i2];
         for (long i1=i1start,idx=IDX3D(i1,i2,i3); i1<i1end; i1++,idx++){
           float const spo = spoxy*tap1[i1];
-          float irho = buoy[idx]*dt;
+          float irho = buoy[idx];
           v3p[idx] = spo*irho*v3c[idx];
           v2p[idx] = spo*irho*v2c[idx];
           v1p[idx] = spo*irho*v1c[idx];
@@ -975,6 +975,43 @@ void extract_vel_wfl_2d(wfl_struct_t* wfl, int comp)
 
 }
 
+void extract_vel_wfl_3d(wfl_struct_t* wfl, int comp)
+/*< Extracts the velocity components in 2d >*/
+{
+  long modN1 = wfl->modN1;
+  long modN2 = wfl->modN2;
+  long modN3 = wfl->modN3;
+  long nabc  = wfl->nabc;
+  long simN1 = wfl->simN1;
+  long simN2 = wfl->simN2;
+
+  // copy the write chunk of wavefield
+  switch (comp){
+  case 1:
+    for (long i3=0; i3<modN3; i3++)
+    for (long i2=0; i2<modN2; i2++)
+      memcpy( wfl->bwfl+modN1*(i2+modN2*i3),
+              wfl->v1c+(nabc+simN1*((i2+nabc)+simN2*(i3+nabc))),
+              modN1*sizeof(float));
+    break;
+  case 2:
+    for (long i3=0; i3<modN3; i3++)
+    for (long i2=0; i2<modN2; i2++)
+      memcpy( wfl->bwfl+modN1*(i2+modN2*i3),
+              wfl->v2c+(nabc+simN1*((i2+nabc)+simN2*(i3+nabc))),
+              modN1*sizeof(float));
+    break;
+  case 3:
+    for (long i3=0; i3<modN3; i3++)
+    for (long i2=0; i2<modN2; i2++)
+      memcpy( wfl->bwfl+modN1*(i2+modN2*i3),
+              wfl->v3c+(nabc+simN1*((i2+nabc)+simN2*(i3+nabc))),
+              modN1*sizeof(float));
+    break;
+  }
+
+}
+
 void extract_pres_wfl_2d(wfl_struct_t * const wfl)
 /*< extract the pressure wavefield 2d >*/
 {
@@ -1065,7 +1102,7 @@ static void extract_dat_3d(wfl_struct_t* wfl,acq_struct_t const * acq){
   wfl->rdata = sf_floatalloc(nr);
 
   for (long ir=0; ir<nr; ir++){
-    float xr = acq->rcoord[3*ir];
+    float xr = acq->rcoord[3*ir  ];
     float yr = acq->rcoord[3*ir+1];
     float zr = acq->rcoord[3*ir+2];
     long ixr = (xr - o2)/d2;
@@ -1079,7 +1116,7 @@ static void extract_dat_3d(wfl_struct_t* wfl,acq_struct_t const * acq){
         const float hicks2 = acq->hicksRcv2[jh+ir*8];
         for (int i=-3,ih=0; i<=4; i++,ih++){
           const float hc = acq->hicksRcv1[ih+ir*8]*hicks2*hicks3;
-          rv += hc*wfl->pc[idx + i +j*n1];
+          rv += hc*wfl->pc[idx + i + n1*(j+k*n2)];
         }
       }
     }
@@ -1119,6 +1156,48 @@ static void extract_scat_dat_2d(wfl_struct_t * const wfl,acq_struct_t const *acq
     wfl->rdata[ir] = rv;
   }
 
+  sf_floatwrite(wfl->rdata,nr,wfl->Fsdata);
+
+  free(wfl->rdata);
+
+}
+
+static void extract_scat_dat_3d(wfl_struct_t * const wfl,acq_struct_t const *acq){
+
+  long nr = acq->nr;
+  long n1 = wfl->simN1;
+  long n2 = wfl->simN2;
+  float o1 = wfl->simO1;
+  float o2 = wfl->simO2;
+  float o3 = wfl->simO3;
+  float d1 = wfl->d1;
+  float d2 = wfl->d2;
+  float d3 = wfl->d3;
+
+  wfl->rdata = sf_floatalloc(nr);
+  for (long ir=0; ir<nr; ir++){
+    float xr = acq->rcoord[3*ir];
+    float yr = acq->rcoord[3*ir+1];
+    float zr = acq->rcoord[3*ir+2];
+    long ixr = (xr - o2)/d2;
+    long iyr = (yr - o3)/d3;
+    long izr = (zr - o1)/d1;
+    long idx = izr + n1*(ixr + iyr*n2);
+
+    float rv = 0.;
+    for (int k=-3,kh=0; k<=4; k++,kh++){
+      const float hicks3 = acq->hicksRcv3[kh+ir*8];
+      for (int j=-3,jh=0; j<=4; j++,jh++){
+        const float hicks2 = acq->hicksRcv2[jh+ir*8];
+        for (int i=-3,ih=0; i<=4; i++,ih++){
+          const float hc = acq->hicksRcv1[ih+ir*8]*hicks2*hicks3;
+          rv += hc*wfl->pc[idx + i +j*n1];
+        }
+      }
+    }
+    wfl->rdata[ir] = rv;
+
+  }
   sf_floatwrite(wfl->rdata,nr,wfl->Fsdata);
 
   free(wfl->rdata);
@@ -1335,14 +1414,38 @@ void bornbckwfl3d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
   // loop over time
   for (int it=0; it<nt; it++){
 
+    tic("velupd3d");
     velupd3d(wfl,mod,acq,FWD);
-    presupd3d(wfl,mod,acq,FWD);
-    injectPsource3d(wfl,mod,acq,it);
+    toc("velupd3d");
 
-    if (wfl->freesurf)
+    // extract the velocity secondary sources
+    if (para.inputDenPerturbation || para.outputDenPertImage){
+      tic("born_velocity_sources_3d");
+      born_velocity_sources_3d(wfl,mod,acq);
+      toc("born_velocity_sources_3d");
+    }
+
+    tic("presupd3d");
+    presupd3d(wfl,mod,acq,FWD);
+    toc("presupd3d");
+
+    tic("injectPsource3d");
+    injectPsource3d(wfl,mod,acq,it);
+    toc("injectPsource3d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC3d");
       applyFreeSurfaceBC3d(wfl);
+      toc("applyFreeSurfaceBC3d");
+    }
+
+    // extract the pressure secondary sources
+    tic("born_pressure_sources_3d");
+    born_pressure_sources_3d(wfl,mod,acq);
+    toc("born_pressure_sources_3d");
 
     // write the wavefield out
+    tic("extract_pres_wfl_3d");
     extract_pres_wfl_3d(wfl);
 
     if (para.outputBackgroundWfl)
@@ -1350,8 +1453,14 @@ void bornbckwfl3d(wfl_struct_t * wfl, acq_struct_t const * acq,  mod_struct_t co
     else
       fwrite(wfl->bwfl,sizeof(float),nelem,para.Fbwfl);
 
+    toc("extract_pres_wfl_3d");
+
     // extract the data at the receiver locations
-    if (saveData) extract_dat_3d(wfl,acq);
+    if (saveData){
+      tic("extract_dat_3d");
+      extract_dat_3d(wfl,acq);
+      toc("extract_dat_3d");
+    }
 
     swapwfl3d(wfl);
   }
@@ -1442,6 +1551,11 @@ void bornfwdextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
       extract_pres_wfl_3d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
     }
+
+    // extract the data at the receiver locations
+    tic("extract_scat_dat_3d");
+    extract_scat_dat_3d(wfl,acq);
+    toc("extract_scat_dat_3d");
 
   }
 
@@ -1616,19 +1730,48 @@ void bornadjextrap3d(wfl_struct_t * wfl,
   // loop over time
   for (int it=0; it<nt; it++){
 
+    tic("velupd3d");
     velupd3d(wfl,mod,acq,ADJ);
-    presupd3d(wfl,mod,acq,ADJ);
-    injectPdata3d(wfl,mod,acq,it);
+    toc("velupd3d");
 
-    if (wfl->freesurf)
+    if (para->outputDenPertImage){
+      tic("extract_vel_wfl_3d");
+      extract_vel_wfl_3d(wfl, 1);
+      toc("extract_vel_wfl_3d");
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv1);
+      tic("extract_vel_wfl_3d");
+      extract_vel_wfl_3d(wfl, 2);
+      toc("extract_vel_wfl_3d");
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv2);
+      tic("extract_vel_wfl_3d");
+      extract_vel_wfl_3d(wfl, 3);
+      toc("extract_vel_wfl_3d");
+      fwrite(wfl->bwfl,sizeof(float),nelem,para->Fpv3);
+    }
+
+    tic("presupd3d");
+    presupd3d(wfl,mod,acq,ADJ);
+    toc("presupd3d");
+
+    tic("injectPdata3d");
+    injectPdata3d(wfl,mod,acq,it);
+    toc("injectPdata3d");
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC3d");
       applyFreeSurfaceBC3d(wfl);
+      toc("applyFreeSurfaceBC3d");
+    }
 
     // write the wavefield out
+    tic("extract_pres_wfl_3d");
     extract_pres_wfl_3d(wfl);
     if (save)
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
     else
       fwrite(wfl->bwfl,sizeof(float),nelem,para->Fswfl);
+
+    toc("extract_pres_wfl_3d");
 
     swapwfl3d(wfl);
   }

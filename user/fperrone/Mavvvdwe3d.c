@@ -48,6 +48,91 @@ Date: November 2020
 #include "kernels.h"
 #include "bench_utils.h"
 
+static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
+  long n1 = wfl->simN1;
+  long n2 = wfl->simN2;
+  long n3 = wfl->simN3;
+  long nelem = n1*n2*n3;
+  sf_warning("DOT PRODUCT TEST: ");
+
+  sf_warning("Zero the source function..");
+  long nwavsamp = acq->ns*acq->ntdat;
+  float * wav = sf_floatalloc(nwavsamp);
+  //save the source  in a temp buffer
+  memcpy(wav,acq->wav,nwavsamp*sizeof(float));
+  memset(acq->wav,0,nwavsamp*sizeof(float));
+
+  sf_warning("set a random wavefield x..");
+  float *x = sf_floatalloc(nelem);
+  memset(x,0,nelem*sizeof(float));
+
+  for (long i3=NOP; i3<n3-NOP; i3++){
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      for (long i1=NOP; i1<n1-NOP; i1++){
+        float v= .1*(drand48()-.5);
+        wfl->pp[IDX3D(i1,i2,i3)] = v;
+        x[IDX3D(i1,i2,i3)] = v;
+      }
+    }
+  }
+  sf_warning("FWD extrapolate x..");
+  fwdextrap3d(wfl,acq,mod);
+  float *Ax = sf_floatalloc(nelem);
+  memcpy(Ax,wfl->pp,nelem*sizeof(float));
+
+  sf_warning("Reset the wavefields..");
+  reset_wfl(wfl);
+
+  sf_warning("set a random wavefield y..");
+  float *y = sf_floatalloc(nelem);
+  memset(y,0,nelem*sizeof(float));
+  for (long i3=NOP; i3<n3-NOP; i3++){
+    for (long i2=NOP; i2<n2-NOP; i2++){
+      for (long i1=NOP; i1<n1-NOP; i1++){
+        float v= .1*(drand48()-.5);
+        wfl->pp[IDX3D(i1,i2,i3)] = v;
+        y[IDX3D(i1,i2,i3)] = v;
+      }
+    }
+  }
+
+  sf_warning("ADJ extrapolate y..");
+  adjextrap3d(wfl,acq,mod);
+  float *Aty = sf_floatalloc(nelem);
+  memcpy(Aty,wfl->pp,nelem*sizeof(float));
+
+  sf_warning("Dot-products check..");
+  double yAx = 0.;
+  double xAty= 0.;
+  for (long i=0; i<nelem; i++)
+  {
+    yAx  += y[i]*Ax[i];
+    xAty += x[i]*Aty[i];
+  }
+  sf_warning("< Ax,  y> = %9.7g",yAx);
+  sf_warning("<  x,Aty> = %9.7g",xAty);
+
+
+  // restore the source
+  memcpy(acq->wav,wav,nwavsamp*sizeof(float));
+
+  // reset the wavefields
+  reset_wfl(wfl);
+
+  //reset the pointer to the output files
+  sf_seek(wfl->Fdata,0,SEEK_SET);
+  sf_seek(wfl->Fwfl,0,SEEK_SET);
+
+
+  free(wav);
+
+  free(Ax);
+  free(Aty);
+
+  free(x);
+  free(y);
+}
+
 int main(int argc, char* argv[])
 {
   // command line parameters
@@ -258,6 +343,10 @@ int main(int argc, char* argv[])
                                 acq->ot,
                                 acq->dt);
   sf_oaxa(Fdat,axTimeData,2);
+
+  // DOT PRODUCT TEST
+  if (in_para.dpt)
+    dpt(wfl,acq,mod);
 
   /*------------------------------------------------------------*/
   /*------------------------------------------------------------*/
