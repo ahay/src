@@ -644,6 +644,7 @@ void born_velocity_sources_3d(wfl_struct_t * const wfl,
                               acq_struct_t const * acq)
 /*< Make the born sources for FWD born modelling>*/
 {
+
   long n1 = mod->n1;
   long n2 = mod->n2;
   long n3 = mod->n3;
@@ -1852,8 +1853,8 @@ void prepare_born_wfl_3d( wfl_struct_t * const wfl, mod_struct_t * mod,
   wfl->Fsdata = Fsdat;
   wfl->Fswfl  = Fswfl;
 
-  wfl->Fpvdiv = NULL;
-  wfl->Fprgrd = NULL;
+  wfl->Fprgrd = sf_tempfile(&(wfl->prtmpfilename),"w+");
+  wfl->Fpvdiv = sf_tempfile(&(wfl->pvtmpfilename),"w+");
 }
 
 void clear_wfl_2d(wfl_struct_t *wfl)

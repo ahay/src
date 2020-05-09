@@ -1176,7 +1176,7 @@ static void extract_scat_dat_3d(wfl_struct_t * const wfl,acq_struct_t const *acq
 
   wfl->rdata = sf_floatalloc(nr);
   for (long ir=0; ir<nr; ir++){
-    float xr = acq->rcoord[3*ir];
+    float xr = acq->rcoord[3*ir  ];
     float yr = acq->rcoord[3*ir+1];
     float zr = acq->rcoord[3*ir+2];
     long ixr = (xr - o2)/d2;
@@ -1536,20 +1536,38 @@ void bornfwdextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
   for (int it=0; it<nt; it++){
     bool save = (wfl->Fswfl);
 
+    tic("velupd3d");
     velupd3d(wfl,mod,acq,FWD);
-    if (para.inputDenPerturbation)
-      injectBornVelocitySource3d(wfl,mod,acq,it);
-    presupd3d(wfl,mod,acq,FWD);
-    if (para.inputVelPerturbation)
-      injectBornPressureSource3d(wfl,mod,acq,it);
+    toc("velupd3d");
 
-    if (wfl->freesurf)
+    if (para.inputDenPerturbation){
+      tic("injectBornVelocitySource3d");
+      injectBornVelocitySource3d(wfl,mod,acq,it);
+      toc("injectBornVelocitySource3d");
+    }
+
+    tic("presupd3d");
+    presupd3d(wfl,mod,acq,FWD);
+    toc("velupd3d");
+
+    if (para.inputVelPerturbation){
+      tic("injectBornPressureSource3d");
+      injectBornPressureSource3d(wfl,mod,acq,it);
+      toc("injectBornPressureSource3d");
+    }
+
+    if (wfl->freesurf){
+      tic("applyFreeSurfaceBC3d");
       applyFreeSurfaceBC3d(wfl);
+      toc("applyFreeSurfaceBC3d");
+    }
 
     // write the wavefield out
     if (save){
+      tic("extract_pres_wfl_3d");
       extract_pres_wfl_3d(wfl);
       sf_floatwrite(wfl->bwfl,nelem,wfl->Fswfl);
+      toc("extract_pres_wfl_3d");
     }
 
     // extract the data at the receiver locations
@@ -1557,6 +1575,7 @@ void bornfwdextrap3d(wfl_struct_t * wfl, acq_struct_t const * acq, mod_struct_t 
     extract_scat_dat_3d(wfl,acq);
     toc("extract_scat_dat_3d");
 
+    swapwfl3d(wfl);
   }
 
 }
