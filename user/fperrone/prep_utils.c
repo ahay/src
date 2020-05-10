@@ -1127,9 +1127,9 @@ void stack_velocity_part_3d(wfl_struct_t * const wfl,
   float* v1a = sf_floatalloc(nelem);
   float* v2a = sf_floatalloc(nelem);
   float* v3a = sf_floatalloc(nelem);
-  float* v1r = sf_floatalloc(nelem*nt); // back-propagated particle velocities
-  float* v2r = sf_floatalloc(nelem*nt);
-  float* v3r = sf_floatalloc(nelem*nt);
+  float* v1r = sf_floatalloc(nelem); // back-propagated particle velocities
+  float* v2r = sf_floatalloc(nelem);
+  float* v3r = sf_floatalloc(nelem);
   float *rimg = sf_floatalloc(nelem);
   memset(rimg,0,nelem*sizeof(float));
 
@@ -1137,14 +1137,15 @@ void stack_velocity_part_3d(wfl_struct_t * const wfl,
   rewind(para->Fpv2);
   rewind(para->Fpv3);
 
-  fread(v1r,sizeof(float),nelem*nt,para->Fpv1);
-  fread(v2r,sizeof(float),nelem*nt,para->Fpv2);
-  fread(v3r,sizeof(float),nelem*nt,para->Fpv3);
-
   for (int it=0; it<nt; it++){
-    float* w1p = v1r + (nt-1-it)*nelem;
-    float* w2p = v2r + (nt-1-it)*nelem;
-    float* w3p = v3r + (nt-1-it)*nelem;
+    long off = (nelem*(nt-1-it))*sizeof(float);
+    fseek(para->Fpv1,off,SEEK_SET);
+    fseek(para->Fpv2,off,SEEK_SET);
+    fseek(para->Fpv3,off,SEEK_SET);
+
+    fread(v1r,sizeof(float),nelem,para->Fpv1);
+    fread(v2r,sizeof(float),nelem,para->Fpv2);
+    fread(v3r,sizeof(float),nelem,para->Fpv3);
 
     // source side gradient of pressure
     fread(v1a,sizeof(float),nelem,wfl->Fprgrd);
@@ -1152,9 +1153,9 @@ void stack_velocity_part_3d(wfl_struct_t * const wfl,
     fread(v3a,sizeof(float),nelem,wfl->Fprgrd);
 
     for (long i=0; i<nelem; i++){
-      v1a[i] *= -1.*w1p[i]; // flipping time flips the sign of the velocity
-      v2a[i] *= -1.*w2p[i];
-      v3a[i] *= -1.*w3p[i];
+      v1a[i] *= -1.*v1r[i]; // flipping time flips the sign of the velocity
+      v2a[i] *= -1.*v2r[i];
+      v3a[i] *= -1.*v3r[i];
     }
 
     for (long i=0; i<nelem; i++){
@@ -1276,7 +1277,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
 
   float dt = acq->dt;
 
-  float *srcwfl = sf_floatalloc(nelem*nt);
+  float *srcwfl = sf_floatalloc(nelem);
   float *tmp = sf_floatalloc(nelem);
   float *vimg = sf_floatalloc(nelem);
 
@@ -1288,9 +1289,10 @@ void stack_pressure_part_3d(sf_file Fvpert,
   // set
   memset(vimg,0,nelem*sizeof(float));
 
-  fread(srcwfl,sizeof(float),nelem*nt,wfl->Fpvdiv);
   for (long it=0; it<nt; it++){
-    float *wp = srcwfl + (nt-1-it)*nelem;
+    long off = (nelem*(nt-1-it))*sizeof(float);
+    fseek(wfl->Fpvdiv,off,SEEK_SET);
+    fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv);
 
     if (para->outputScatteredWfl)
       sf_floatread(tmp,nelem,wfl->Fswfl);
@@ -1301,7 +1303,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
       double const v = mod->vmod[i];
       double const r = mod->dmod[i];
       double scale = 2.f*v*r*dt;
-      vimg[i] += (float) scale*tmp[i]*wp[i];
+      vimg[i] += (float) scale*tmp[i]*srcwfl[i];
     }
   }
 
@@ -1318,7 +1320,9 @@ void stack_pressure_part_3d(sf_file Fvpert,
     fread(rimg,sizeof(float),nelem,para->Fpv1);
 
     for (long it=0; it<nt; it++){
-      float *wp = srcwfl + (nt-1-it)*nelem;
+      long off = (nelem*(nt-1-it))*sizeof(float);
+      fseek(wfl->Fpvdiv,off,SEEK_END);
+      fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv);
 
       if (para->outputScatteredWfl)
         sf_floatread(tmp,nelem,wfl->Fswfl);
@@ -1328,7 +1332,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
       for (long i=0; i<nelem; i++){
         double const v = mod->vmod[i];
         double const scale = v*v*dt;
-        rimg[i] += (float) scale*tmp[i]*wp[i];
+        rimg[i] += (float) scale*tmp[i]*srcwfl[i];
       }
     }
 

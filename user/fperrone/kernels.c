@@ -666,9 +666,9 @@ static void injectPsource3d(wfl_struct_t* wfl,
   float * wf = wfl->pc;
 
   for (long isou=0; isou<nsou; isou++){
-    float xs = acq->scoord[isou*3];
-    float ys = acq->scoord[isou*3+2];
-    float zs = acq->scoord[isou*3+1];
+    float xs = acq->scoord[isou*3  ];
+    float ys = acq->scoord[isou*3+1];
+    float zs = acq->scoord[isou*3+2];
 
     int iys = (ys-o3)/modD3;
     int ixs = (xs-o2)/modD2;
@@ -753,9 +753,9 @@ void injectPdata3d(wfl_struct_t* wfl, mod_struct_t const * mod, acq_struct_t con
   float *sp = sf_floatalloc(8*8*8);
 
   for (long irec=0; irec<nrec; irec++){
-    float xr = acq->rcoord[irec*2];
-    float yr = acq->rcoord[irec*2+2];
-    float zr = acq->rcoord[irec*2+1];
+    float xr = acq->rcoord[irec*3  ];
+    float yr = acq->rcoord[irec*3+1];
+    float zr = acq->rcoord[irec*3+2];
 
     int ixr = (xr-o2)/modD2;
     int iyr = (yr-o3)/modD3;
@@ -1174,6 +1174,7 @@ static void extract_scat_dat_3d(wfl_struct_t * const wfl,acq_struct_t const *acq
   float d3 = wfl->d3;
 
   wfl->rdata = sf_floatalloc(nr);
+
   for (long ir=0; ir<nr; ir++){
     float xr = acq->rcoord[3*ir  ];
     float yr = acq->rcoord[3*ir+1];
