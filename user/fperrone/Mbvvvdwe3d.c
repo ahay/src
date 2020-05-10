@@ -477,7 +477,7 @@ int main(int argc, char* argv[])
   rewind(wfl->Fpvdiv);
 
   // reset the wavefields
-  reset_wfl(wfl);
+  reset_wfl_3d(wfl);
 
   /*--------------------------------------------------------------*/
   /*--------------------------------------------------------------*/

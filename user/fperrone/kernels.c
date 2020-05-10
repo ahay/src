@@ -1109,6 +1109,7 @@ static void extract_dat_3d(wfl_struct_t* wfl,acq_struct_t const * acq){
     long iyr = (yr - o3)/d3;
     long izr = (zr - o1)/d1;
     long idx = izr + n1*(ixr + iyr*n2);
+
     float rv = 0.;
     for (int k=-3,kh=0; k<=4; k++,kh++){
       const float hicks3 = acq->hicksRcv3[kh+ir*8];
@@ -1122,11 +1123,9 @@ static void extract_dat_3d(wfl_struct_t* wfl,acq_struct_t const * acq){
     }
     wfl->rdata[ir] = rv;
   }
-
   sf_floatwrite(wfl->rdata,nr,wfl->Fdata);
 
   free(wfl->rdata);
-
 }
 
 static void extract_scat_dat_2d(wfl_struct_t * const wfl,acq_struct_t const *acq){
@@ -1191,17 +1190,15 @@ static void extract_scat_dat_3d(wfl_struct_t * const wfl,acq_struct_t const *acq
         const float hicks2 = acq->hicksRcv2[jh+ir*8];
         for (int i=-3,ih=0; i<=4; i++,ih++){
           const float hc = acq->hicksRcv1[ih+ir*8]*hicks2*hicks3;
-          rv += hc*wfl->pc[idx + i +j*n1];
+          rv += hc*wfl->pc[idx + i + n1*(j + k*n2)];
         }
       }
     }
     wfl->rdata[ir] = rv;
-
   }
   sf_floatwrite(wfl->rdata,nr,wfl->Fsdata);
 
   free(wfl->rdata);
-
 }
 
 void applyFreeSurfaceBC2d(wfl_struct_t *wfl)
@@ -1866,19 +1863,40 @@ void setupABC_3d(wfl_struct_t* wfl)
 
 }
 
-void reset_wfl(wfl_struct_t* wfl)
+void reset_wfl_2d(wfl_struct_t* wfl)
 /*< reset the wavefields to zero >*/
 {
 
   long n1=wfl->simN1;
   long n2=wfl->simN2;
-  memset(wfl->v1c,0,n1*n2*sizeof(float));
-  memset(wfl->v2c,0,n1*n2*sizeof(float));
-  memset(wfl->v1p,0,n1*n2*sizeof(float));
-  memset(wfl->v2p,0,n1*n2*sizeof(float));
+  long nelem=n1*n2;
+  memset(wfl->v1c,0,nelem*sizeof(float));
+  memset(wfl->v2c,0,nelem*sizeof(float));
+  memset(wfl->v1p,0,nelem*sizeof(float));
+  memset(wfl->v2p,0,nelem*sizeof(float));
 
-  memset(wfl->pc,0,n1*n2*sizeof(float));
-  memset(wfl->pp,0,n1*n2*sizeof(float));
+  memset(wfl->pc,0,nelem*sizeof(float));
+  memset(wfl->pp,0,nelem*sizeof(float));
+
+}
+
+void reset_wfl_3d(wfl_struct_t* wfl)
+/*< reset the wavefields to zero >*/
+{
+
+  long n1=wfl->simN1;
+  long n2=wfl->simN2;
+  long n3=wfl->simN3;
+  long nelem=n1*n2*n3;
+  memset(wfl->v1c,0,nelem*sizeof(float));
+  memset(wfl->v2c,0,nelem*sizeof(float));
+  memset(wfl->v3c,0,nelem*sizeof(float));
+  memset(wfl->v1p,0,nelem*sizeof(float));
+  memset(wfl->v2p,0,nelem*sizeof(float));
+  memset(wfl->v3p,0,nelem*sizeof(float));
+
+  memset(wfl->pc,0,nelem*sizeof(float));
+  memset(wfl->pp,0,nelem*sizeof(float));
 
 }
 

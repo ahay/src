@@ -79,7 +79,7 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   memcpy(Ax,wfl->pp,n1*n2*sizeof(float));
 
   sf_warning("Reset the wavefields..");
-  reset_wfl(wfl);
+  reset_wfl_2d(wfl);
 
   sf_warning("set a random wavefield y..");
   float *y = sf_floatalloc(n1*n2);
@@ -113,7 +113,7 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   memcpy(acq->wav,wav,nwavsamp*sizeof(float));
 
   // reset the wavefields
-  reset_wfl(wfl);
+  reset_wfl_2d(wfl);
 
   //reset the pointer to the output files
   sf_seek(wfl->Fdata,0,SEEK_SET);
