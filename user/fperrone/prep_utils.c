@@ -1166,6 +1166,10 @@ void stack_velocity_part_3d(wfl_struct_t * const wfl,
 
   }
 
+  rewind(para->Fpv1);
+  fwrite(rimg,sizeof(float),nelem,para->Fpv1);
+  rewind(para->Fpv1);
+
   free(v1a);
   free(v2a);
   free(v3a);
@@ -1321,7 +1325,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
 
     for (long it=0; it<nt; it++){
       long off = (nelem*(nt-1-it))*sizeof(float);
-      fseek(wfl->Fpvdiv,off,SEEK_END);
+      fseek(wfl->Fpvdiv,off,SEEK_SET);
       fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv);
 
       if (para->outputScatteredWfl)
