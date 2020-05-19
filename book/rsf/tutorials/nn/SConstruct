@@ -1,0 +1,302 @@
+from __future__ import division
+from rsf.proj import *
+
+# Sigmoid
+
+Flow('spike1',None,'spike n1=50 o1=-5 d1=%g | math output=x1'%(10/49))
+Flow('sigmaspike1','spike1','math output="1/(1+exp(-input))"')
+Flow('spike2',None,'spike n1=80 o1=-6 d1=%g | math output=x1'%(12/78))
+Flow('sigmaspike2','spike2','math output="1/(1+exp(-input))"')
+Plot('sigmaspike1','graph grid=y label1= unit1= title="Sigmoid function" max1=6.3 min1=-6.3')
+Plot('sigmaspike2','graph wanttile=n wantaxis=n label1= unit1= dash=2 title="Sigmoid function" max1=6.3 min1=-6.3')
+Result('sigma','sigmaspike1 sigmaspike2','Overlay')
+
+# Tanh
+
+Flow('tanhspike1','spike1','math output="(exp(input)-exp(-input))/(exp(input)+exp(-input))"')
+Flow('tanhspike2','spike2','math output="(exp(input)-exp(-input))/(exp(input)+exp(-input))"')
+Plot('tanhspike1','graph grid=y label1= unit1= title="Tanh function" max1=6.3 min1=-6.3')
+Plot('tanhspike2','graph wanttile=n wantaxis=n label1= unit1= dash=2 title="Tanh function" max1=6.3 min1=-6.3')
+Result('tanh','tanhspike1 tanhspike2','Overlay')
+
+# ReLU
+
+Flow('maskspike1','spike1','mask min=0 | dd type=float')
+Flow('maskspike2','spike2','mask min=0 | dd type=float')
+Flow('reluspike1','spike1 maskspike1','mul ${SOURCES[1]}')
+Flow('reluspike2','spike2 maskspike2','mul ${SOURCES[1]}')
+Plot('reluspike1','graph grid=y label1= unit1= title="ReLU function" max1=6.3 min1=-6.3')
+Plot('reluspike2','graph wanttile=n wantaxis=n label1= unit1= dash=2 title="ReLU function" max1=6.3 min1=-6.3')
+Result('relu','reluspike1 reluspike2','Overlay')
+
+# Load and process data
+
+# Convert to RSF
+Flow('R-39','R-39.las','las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+
+# Examine with "< R-39.rsf sfheaderattr segy=n desc=y"
+
+# Skip the ends of the logs
+for case in ('DT4P','DT4S','RHOB','DEPT'):
+    Flow(case,'R-39','headermath output=%s segy=n | window n2=7743' % case)
+
+Flow('VP1','DT4P','math output="1e6/input"')
+Flow('VS1','DT4S','math output="1e6/input"')
+
+# Replace dodgy data in the VS log with mean
+Flow('VSmask','VS1','mask max=0 | dd type=float')
+Flow('VSmaskpos','VSmask','math output="1-input" | dd type=float')
+Flow('VSpos','VS1 VSmaskpos','mul ${SOURCES[1]}')
+Flow('VSneg','VSmask','math output="input*1973.8"')
+Flow('VS2','VSpos VSneg','add ${SOURCES[1]}')
+
+# Take every 5th sample
+Flow('VP','VP1','window j1=5 | window n1=501')
+Flow('VS','VS2','window j1=5 | window n1=501')
+Flow('RHO','RHOB','window j1=5 | window n1=501')
+Flow('DEPTH','DEPT','window j1=5 | window n1=501')
+
+# Make upper layers and normalize
+
+Flow('VPupwn','VP','window n1=500 | rtoc')
+Flow('VSupwn','VS','window n1=500 | rtoc')
+Flow('RHOupwn','RHO','window n1=500 | rtoc')
+
+Flow('VPup','VP','window n1=500 | math output="(input-3461.27)/393.466"')
+Flow('VSup','VS','window n1=500 | math output="(input-1905.71)/248.724"')
+Flow('RHOup','RHO','window n1=500 | math output="(input-2455.2)/109.047"')
+Flow('DEPTHup','DEPTH','window n1=500')
+
+# Make lower layers and normalize
+Flow('VPlowwn','VP','window f1=1 n1=500 | rtoc')
+Flow('VSlowwn','VS','window f1=1 n1=500 | rtoc')
+Flow('RHOlowwn','RHO','window f1=1 n1=500 | rtoc')
+
+Flow('VPlow','VP','window f1=1 n1=500 | math output="(input-3461.43)/393.381"')
+Flow('VSlow','VS','window f1=1 n1=500 | math output="(input-1905.76)/248.718"')
+Flow('RHOlow','RHO','window f1=1 n1=500 | math output="(input-2455.9)/108.041"')
+Flow('DEPTHlow','DEPTH','window f1=1 n1=500')
+
+# Angle of incidence
+
+def theta(target=None,source=None,env=None):
+    'Angle of incidence'
+    import numpy, m8r
+    numpy.random.seed(42)
+    min_theta=0
+    max_theta=20
+    n=500
+    theta = numpy.random.random(n)*(max_theta-min_theta)+min_theta
+   
+    rsf = m8r.Output(str(target[0]))
+    rsf.put("n1",n)
+    rsf.put("o1",0)
+    rsf.put("d1",1)
+    rsf.write(theta)
+    rsf.close()
+    return 0
+
+Command('thetawn.rsf',None,action=Action(theta))
+Flow('theta','thetawn','math output="(input-9.97123)/5.97377"')
+
+#Flow('thetawn',None,'spike o1=0.10123167692437374 n1=500 d1=0.03959531912 | math output=x1 | put o1=0 d1=1')
+#Flow('theta',None,'spike o1=0.10123167692437374 n1=500 d1=0.03959531912 | math output=x1 | put o1=0 d1=1 | math output="(input-9.98026)/5.7208"')
+
+# Create training data
+Flow('X','VPup VSup RHOup VPlow VSlow RHOlow theta','cat ${SOURCES[1:7]} axis=2')
+
+# Create training label
+
+# Zoeppritz solution for P-P reflectivity
+from math import pi
+Flow('theta1','thetawn','math output="input*%g/180" | rtoc'%(pi))
+Flow('p','theta1 VPupwn','math x=${SOURCES[0]} y=${SOURCES[1]} output="sin(x)/y"')
+Flow('theta2','p VPlowwn','math x=${SOURCES[0]} y=${SOURCES[1]} output="asin(x*y)"')
+Flow('phi1','p VSupwn','math x=${SOURCES[0]} y=${SOURCES[1]} output="asin(x*y)"')
+Flow('phi2','p VSlowwn','math x=${SOURCES[0]} y=${SOURCES[1]} output="asin(x*y)"')
+Flow('a','RHOlowwn phi2 RHOupwn phi1','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)-z*(1-2*sin(t)^2)"')
+Flow('b','RHOlowwn phi2 RHOupwn phi1','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)+2*z*sin(t)^2"')
+Flow('c','RHOupwn phi1 RHOlowwn phi2','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)+2*z*sin(t)^2"')   
+Flow('d','RHOlowwn VSlowwn RHOupwn VSupwn','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="2*(x*y^2-z*t^2)"')
+Flow('E','theta1 VPupwn theta2 VPlowwn b c','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="(k*cos(x)/y)+(m*cos(z)/t)"')
+Flow('F','phi1 VSupwn phi2 VSlowwn b c','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="(k*cos(x)/y)+(m*cos(z)/t)"')
+Flow('G','a d theta1 VPupwn phi2 VSlowwn','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="x-y*cos(z)/t*cos(k)/m"')
+Flow('H','a d theta2 VPlowwn phi1 VSupwn','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="x-y*cos(z)/t*cos(k)/m"')
+Flow('D','E F G H p','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*y+z*t*k^2"')
+Flow('rpp','D F b theta1 VPupwn c theta2 VPlowwn H p a d phi2 VSlowwn','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} l=${SOURCES[6]} n=${SOURCES[7]} o=${SOURCES[8]} p=${SOURCES[9]} q=${SOURCES[10]} r=${SOURCES[11]} s=${SOURCES[12]} f=${SOURCES[13]} output="(1/x) * (y*(z*(cos(t)/k) - m*(cos(l)/n)) - o*p^2 * (q + r*(cos(t)/k)*(cos(s)/f)))" | real') 
+
+# Plot to QC
+
+for case in ('VP','VS','RHO'):
+   graph=''
+   if case=='VP':
+      graph+='plotcol=6 title="Vp" label2=Vp unit2="m/s"'
+   if case=='VS':
+      graph+='plotcol=5 title="Vs" label2=Vs unit2="m/s"'
+   if case=='RHO':
+      graph+='plotcol=4 title="Rho" label2=Rho unit2="kg/m3"'
+   if case=='rpp':
+      graph+='plotcol=7 title="Rpp" label2= unit2='   
+   Plot(case,['DEPTH',case],
+         '''
+         cmplx ${SOURCES[1]} | window |
+         graph grid=y transp=y yreverse=y label1=Depth unit1=m labelsz=12
+         ''' + graph)
+Plot('rpp','put o1=2193.04 d1=0.762 | graph transp=y grid=y yreverse=y symbol=* symbolsz=10 labelsz=12 label2= unit2= title="Rpp" label1=Depth unit1=m min2=-0.4 max2=0.4')
+
+Result('QC','VP VS RHO rpp','SideBySideAniso')
+
+# Split into training and validation set
+
+Flow('Xtrain1 Ytrain1','X rpp','shuffle3 seed=42 axis=1 pi2=${SOURCES[1]} po2=${TARGETS[1]}')
+Flow('Xtrain','Xtrain1','transp | window n1=400')
+Flow('Ytrain','Ytrain1','transp | window n1=400')
+
+def numpy_load(target=None,source=None,env=None):
+    'convert from numpy to RSF format'
+    import numpy, m8r
+    data = numpy.load(str(source[0]))
+    data = data.astype('float64')
+    #print(data.dtype)
+    rsf = m8r.Output(str(target[0]))
+    rsf.put("n2",data.shape[0])
+    rsf.put("o2",2193.04)
+    rsf.put("d2",0.762)
+    rsf.put("n1",data.shape[1])
+    rsf.put("o1",0)
+    rsf.put("d1",1)
+    rsf.put("label2","Time")
+    rsf.put("unit2","s")
+    rsf.write(data)
+    rsf.close()
+    return 0
+
+def numpy_load2(target=None,source=None,env=None):
+    'convert from numpy to RSF format'
+    import numpy, m8r
+    data = numpy.load(str(source[0]))
+    data=data.astype('float64')
+    rsf = m8r.Output(str(target[0]))
+    rsf.put("n1",data.shape[0])
+    rsf.put("o1",2193.04)
+    rsf.put("d1",0.762)
+    rsf.put("n2",1)
+    rsf.put("o2",0)
+    rsf.put("d2",1)
+    rsf.put("label1","Time")
+    rsf.put("unit1","s")
+    rsf.write(data)
+    rsf.close()
+    return 0
+
+# Load prepared data
+
+Command('Xtrain-1-1.rsf','X_train.npy',action=Action(numpy_load))
+Command('Ytrain-1.rsf','y_train.npy',action=Action(numpy_load2))
+Command('Yval-1.rsf','y_val.npy',action=Action(numpy_load2))
+Command('Xval-1-1.rsf','X_val.npy',action=Action(numpy_load))
+Command('Xblind-1-1.rsf','X_blind.npy',action=Action(numpy_load))
+Command('Yblind-1.rsf','y_blind.npy',action=Action(numpy_load2))
+
+Flow('Xtrain-1','Xtrain-1-1','transp')
+Flow('Xval-1','Xval-1-1','transp')
+Flow('Xblind-1','Xblind-1-1','transp')
+
+# Create patch
+Flow('Xtrainpatch','Xtrain','sfpatch w=1,7 p=400,1')
+
+Flow('Ytrainpatch','Ytrain','sfpatch w=1,1 p=400,1 | spray n=1 axis=2')
+
+Flow('Xtrainpatch2','Xtrain','sfpatch w=100,7')
+
+Flow('Ytrainpatch2','Ytrain','sfpatch w=100,1 | spray n=1 axis=2')
+
+Flow('Xtrainpatch3','Xtrain','sfpatch w=20,7')
+
+Flow('Ytrainpatch3','Ytrain','sfpatch w=20,1 | spray n=1 axis=2')
+
+# Validation data
+Flow('Xval','Xtrain1','transp | window f1=400')
+Flow('Yval','Ytrain1','transp | window f1=400')
+
+# Testing set
+
+# Take every 5th sample
+Flow('VPtest','VP1','window j1=5 | window f1=1348')
+Flow('VStest','VS2','window j1=5 | window f1=1348')
+Flow('RHOtest','RHOB','window j1=5 | window f1=1348')
+Flow('DEPTHtest','DEPT','window j1=5 | window f1=1348')
+
+# Make upper layers and normalize with training scaler
+
+Flow('VPupwntest','VPtest','window n1=200 | rtoc')
+Flow('VSupwntest','VStest','window n1=200 | rtoc')
+Flow('RHOupwntest','RHOtest','window n1=200 | rtoc')
+
+Flow('VPuptest','VPtest','window n1=200 | math output="(input-3461.27)/393.466"')
+Flow('VSuptest','VStest','window n1=200 | math output="(input-1905.71)/248.724"')
+Flow('RHOuptest','RHOtest','window n1=200 | math output="(input-2455.2)/109.047"')
+Flow('DEPTHuptest','DEPTHtest','window n1=200')
+
+# Make lower layers and normalize with training scaler
+Flow('VPlowwntest','VPtest','window f1=1 n1=200 | rtoc')
+Flow('VSlowwntest','VStest','window f1=1 n1=200 | rtoc')
+Flow('RHOlowwntest','RHOtest','window f1=1 n1=200 | rtoc')
+
+Flow('VPlowtest','VPtest','window f1=1 n1=200 | math output="(input-3461.43)/393.381"')
+Flow('VSlowtest','VStest','window f1=1 n1=200 | math output="(input-1905.76)/248.718"')
+Flow('RHOlowtest','RHOtest','window f1=1 n1=200 | math output="(input-2455.9)/108.041"')
+Flow('DEPTHlowtest','DEPTHtest','window f1=1 n1=200')
+
+# Create testing data
+Flow('Xtest','VPuptest VSuptest RHOuptest VPlowtest VSlowtest RHOlowtest thetatest','cat ${SOURCES[1:7]} axis=2')
+
+Flow('Xtestwn','VPupwntest VSupwntest RHOupwntest VPlowwntest VSlowwntest RHOlowwntest thetawntest','cat ${SOURCES[1:7]} axis=2')
+
+# Angle of incidence
+
+Flow('thetawntest',None,'spike o1=0 n1=200 d1=1 | math output=30 | put o1=0 d1=1')
+Flow('thetatest',None,'spike o1=0 n1=200 d1=1 | math output=30 | put o1=0 d1=1 | math output="(input-9.98026)/5.7208"')
+
+# Create true testing label
+Flow('theta1test','thetawntest','math output="input*%g/180" | rtoc'%(pi))
+Flow('ptest','theta1test VPupwntest','math x=${SOURCES[0]} y=${SOURCES[1]} output="sin(x)/y"')
+Flow('theta2test','ptest VPlowwntest','math x=${SOURCES[0]} y=${SOURCES[1]} output="asin(x*y)"')
+Flow('phi1test','ptest VSupwntest','math x=${SOURCES[0]} y=${SOURCES[1]} output="asin(x*y)"')
+Flow('phi2test','ptest VSlowwntest','math x=${SOURCES[0]} y=${SOURCES[1]} output="asin(x*y)"')
+Flow('atest','RHOlowwntest phi2test RHOupwntest phi1test','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)-z*(1-2*sin(t)^2)"')
+Flow('btest','RHOlowwntest phi2test RHOupwntest phi1test','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)+2*z*sin(t)^2"')
+Flow('ctest','RHOupwntest phi1test RHOlowwntest phi2test','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)+2*z*sin(t)^2"')
+Flow('dtest','RHOlowwntest VSlowwntest RHOupwntest VSupwntest','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="2*(x*y^2-z*t^2)"')
+Flow('Etest','theta1test VPupwntest theta2test VPlowwntest btest ctest','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="(k*cos(x)/y)+(m*cos(z)/t)"')
+Flow('Ftest','phi1test VSupwntest phi2test VSlowwntest btest ctest','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="(k*cos(x)/y)+(m*cos(z)/t)"')
+Flow('Gtest','atest dtest theta1test VPupwntest phi2test VSlowwntest','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="x-y*cos(z)/t*cos(k)/m"')
+Flow('Htest','atest dtest theta2test VPlowwntest phi1test VSupwntest','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="x-y*cos(z)/t*cos(k)/m"')
+Flow('Dtest','Etest Ftest Gtest Htest ptest','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*y+z*t*k^2"')
+Flow('rpptest','Dtest Ftest btest theta1test VPupwntest ctest theta2test VPlowwntest Htest ptest atest dtest phi2test VSlowwntest','math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} l=${SOURCES[6]} n=${SOURCES[7]} o=${SOURCES[8]} p=${SOURCES[9]} q=${SOURCES[10]} r=${SOURCES[11]} s=${SOURCES[12]} f=${SOURCES[13]} output="(1/x) * (y*(z*(cos(t)/k) - m*(cos(l)/n)) - o*p^2 * (q + r*(cos(t)/k)*(cos(s)/f)))" | real')
+
+# Plot to QC
+
+for case in ('VPtest','VStest','RHOtest'):
+   graph=''
+   if case=='VPtest':
+      graph+='plotcol=6 title="Vp" label2=Vp unit2="m/s"'
+   if case=='VStest':
+      graph+='plotcol=5 title="Vs" label2=Vs unit2="m/s"'
+   if case=='RHOtest':
+      graph+='plotcol=4 title="Rho" label2=Rho unit2="kg/m3"'
+   if case=='rpp':
+      graph+='plotcol=7 title="Rpp" label2= unit2='
+   Plot(case,['DEPTHtest',case],
+        '''
+        cmplx ${SOURCES[1]} | window |
+        graph grid=y transp=y yreverse=y label1=Depth unit1=m labelsz=12
+        ''' + graph)
+Plot('rpptest','put o1=3220.22 d1=0.762 | graph transp=y grid=y yreverse=y symbol=* symbolsz=10 labelsz=12 label2= unit2= title="Rpp" label1=Depth unit1=m min2=-0.12 max2=0.12')
+
+Result('QCtest','VPtest VStest RHOtest rpptest','SideBySideAniso')
+
+
+
+End()
+
