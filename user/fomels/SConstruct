@@ -24,7 +24,7 @@ cltftfft
 
 ccprogs = 'anisolr2 isolr2 isolr3 lrvc0 permlr1 permlr2 permlr3'
 
-pyprogs = 'cgi fft ipick las2rsf matplotlib results wxipick wxresults zoom wxzoom'
+pyprogs = 'shuffle3 cgi fft ipick las2rsf matplotlib results wxipick wxresults zoom wxzoom'
 pymods = 'conjdir conjgrad dottest steepd'
 
 try:  # distributed version
