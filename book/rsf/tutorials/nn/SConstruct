@@ -31,6 +31,11 @@ Result('relu','reluspike1 reluspike2','Overlay')
 
 # Load and process data
 
+# download well-log data
+Fetch('R-39.las','1808_Neural_networks',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials-2018/master')
+
 # Convert to RSF
 Flow('R-39','R-39.las','las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
 
