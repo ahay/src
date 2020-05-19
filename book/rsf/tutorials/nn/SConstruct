@@ -296,7 +296,507 @@ Plot('rpptest','put o1=3220.22 d1=0.762 | graph transp=y grid=y yreverse=y symbo
 
 Result('QCtest','VPtest VStest RHOtest rpptest','SideBySideAniso')
 
+# Initialize parameters
 
+#Flow('W1-0-30',None,'spike n2=7 n1=300 mag=0 | noise seed=42 mean=0 var=1 | math output="input*sqrt(1/7)" | put d1=0.762 o1=2193.04 d2=1 o2=0')
+Flow('W1-0-30-1 W2-0-30-1',None,'inittwolayer n1=300 n2=7 w2=${TARGETS[1]} mean=0 var=0.1 seed=42')
+Flow('W1-0-30','W1-0-30-1','transp | put d1=0.762 o1=2193.04 d2=1 o2=0')
+Flow('W2-0-30','W2-0-30-1','transp | put d1=0.762 o1=2193.04 d2=1 o2=0')
+
+Flow('b1-0-30',None,'spike n1=300 mag=0 n2=1 | put d1=0.762 o1=2193.04 d2=1 o2=0')
+#Flow('W2-0-30',None,'spike n1=300 mag=0 n2=1 | noise seed=42 mean=0 var=1 | math output="input*sqrt(1/300)" | put d1=0.762 o1=2193.04 d2=1 o2=0')
+#Flow('W2-0-30',None,'inittwolayer n1=300 n2=1 mean=0 var=0.1 seed=42')
+Flow('b2-0-30',None,'spike n1=1 mag=0 n2=1 | put d1=0.762 o1=2193.04 d2=1 o2=0')
+#i=1
+
+Flow('vW1-0-30',None,'spike n2=7 n1=300 mag=0')
+Flow('vb1-0-30',None,'spike n2=1 n1=300 mag=0')
+Flow('vW2-0-30',None,'spike n2=300 n1=1 mag=0')
+Flow('vb2-0-30',None,'spike n2=1 n1=1 mag=0')
+
+Flow('sW1-0-30',None,'spike n2=7 n1=300 mag=0')
+Flow('sb1-0-30',None,'spike n2=1 n1=300 mag=0')
+Flow('sW2-0-30',None,'spike n2=300 n1=1 mag=0')
+Flow('sb2-0-30',None,'spike n2=1 n1=1 mag=0')
+
+Flow('lossm vlossm W1m b1m W2m b2m','Xtrainpatch Ytrainpatch Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=0 opt=1 seed=42 stop=20 lossfunc=0 reg=0 alpha=0')
+
+Flow('lossa vlossa W1a b1a W2a b2a','Xtrainpatch Ytrainpatch Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.0001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=0 opt=2 seed=42 stop=40 lossfunc=0 reg=0 alpha=0')
+
+Flow('lossa10 vlossa10 W1a10 b1a10 W2a10 b2a10','Xtrainpatch2 Ytrainpatch2 Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.0001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=0 opt=2 seed=42 stop=40 lossfunc=0 reg=0 alpha=0')
+
+Flow('lossa10reg1 vlossa10reg1 W1a10reg1 b1a10reg1 W2a10reg1 b2a10reg1','Xtrainpatch3 Ytrainpatch3 Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.0001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=0 opt=2 seed=42 stop=40 lossfunc=1 reg=1 alpha=0')
+
+Flow('loss-1a10 vloss-1a10 W1-1a10 b1-1a10 W2-1a10 b2-1a10','Xtrainpatch3 Ytrainpatch3 Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.0001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=0 opt=2 seed=42 stop=40 lossfunc=1 reg=0 alpha=0')
+
+Flow('lossa20 vlossa20 W1a20 b1a20 W2a20 b2a20','Xtrainpatch3 Ytrainpatch3 Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.0001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=0 opt=2 seed=42 stop=40 lossfunc=0 reg=0 alpha=0')
+
+Flow('loss vloss W1 b1 W2 b2','Xtrainpatch Ytrainpatch Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=0 opt=0 seed=42 stop=20 lossfunc=0 reg=0 alpha=0')  
+
+Flow('losstanh vlosstanh W1tanh b1tanh W2tanh b2tanh','Xtrainpatch Ytrainpatch Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=1 opt=1 seed=42 stop=20 lossfunc=0 reg=0 alpha=0')
+
+Flow('lossrelu vlossrelu W1relu b1relu W2relu b2relu','Xtrainpatch Ytrainpatch Xval Yval W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayer label=${SOURCES[1]} valdata=${SOURCES[2]} vallabel=${SOURCES[3]} niter=100 lr=0.001 valloss=${TARGETS[1]} weight1out=${TARGETS[2]} bias1out=${TARGETS[3]} weight2out=${TARGETS[4]} bias2out=${TARGETS[5]} weight1=${SOURCES[4]} bias1=${SOURCES[5]} weight2=${SOURCES[6]} bias2=${SOURCES[7]} act=2 opt=1 seed=42 stop=20 lossfunc=0 reg=0 alpha=0')
+
+#lossistrain=[]
+#lossisval=[]
+#while i<num_epochs:
+   #lossjtrain = 'losstrain-%d'%(i)
+   #lossjval = 'lossval-%d'%(i)
+   #lossjstrain = []
+   #lossjsval = []
+   #w1ii = 'W1val-%d'%i
+   #b1ii = 'b1val-%d'%i
+   #b1ii1 = 'b1val-%d-1'%i
+   #w2ii = 'W2val-%d'%i
+   #b2ii = 'b2val-%d'%i
+   #b2ii1 = 'b2val-%d-1'%i
+   #Xtrainshuff = 'Xtrainshuff-%d'%i
+   #Ytrainshuff = 'Ytrainshuff-%d'%i
+   #a1iival = 'prevala1val-%d'%(i)
+   #z2iival = 'prevalz2val-%d'%(i)
+   #lossiival = 'lossval-%d'%(i)
+   #w2ii = 'W2-%d'%(i-1)
+   #b2ii = 'b2-%d'%(i-1)
+   #lossi = 'loss-%d'%(i)
+   #j=0   
+
+   # Validation
+   
+   #Flow(w1ii,'W1-%d-30'%(i-1),'cp')
+   #Flow(w2ii,'W2-%d-30'%(i-1),'cp')
+   #Flow(b1ii,'b1-%d-30'%(i-1),'cp')
+   #Flow(b2ii,'b2-%d-30'%(i-1),'cp')
+   
+   #Flow(b1ii1,b1ii,'spray axis=2 n=100')
+   #Flow(a1iival,[w1ii,'Xvaltransp',b1ii1],'matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | math output="(exp(input)-exp(-input))/(exp(input)+exp(-input))"')
+   #Flow(b2ii1,b2ii,'spray axis=2 n=100')
+   #Flow(z2iival,[w2ii,a1iival,b2ii1],'matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | transp')
+   #Flow(lossiival,[z2iival,'Yval'],'math x=${SOURCES[0]} y=${SOURCES[1]} output="(x-y)^2" | stack axis=1')
+   #jval=0
+   #while jval<100:
+      #lossjval = 'lossval-%d'%(j)
+      # Forward
+      #xijval = 'Xval-%d-%d'%(i,jval)
+      #yijval = 'Yval-%d-%d'%(i,jval)
+      #a1ijval = 'prevala1-%d-%d'%(i,jval)
+      #z2ijval = 'prevalz2-%d-%d'%(i,jval)
+      #lossijval = 'lossval-%d-%d'%(i,jval)
+
+      #Flow(xijval,'Xval','window n1=10 f1=%d | transp'%(jval))
+      #Flow(yijval,'Yval','window n1=10 f1=%d'%(jval))
+      #Flow(b1ii1,b1ii,'spray axis=2 n=10')
+      #Flow(a1ijval,[w1ii,xijval,b1ii1],'matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | math output="1/(1+exp(-input))"')
+      #Flow(b2ii1,b2ii,'spray axis=2 n=10')
+      #Flow(z2ijval,[w2ii,a1ijval,b2ii1],'matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | transp')
+      #Flow(lossijval,[z2ijval,yijval],'math x=${SOURCES[0]} y=${SOURCES[1]} output="(x-y)^2" | stack axis=1')
+      #lossjsval.append(lossijval)
+      #jval = jval+10
+   #Flow([Xtrainshuff,Ytrainshuff],'Xtrainpatch Ytrainpatch','shuffle1 pi2=${SOURCES[1]} po2=${TARGETS[1]} seed=%d'%i)
+   #Flow('Ytrainshuff','Ytrain','shuffle axis=1 seed=%d'%i)
+   # Training
+   #while j<31:
+      #t+=1
+      #lossjtrain = 'losstrain-%d'%(j)
+      #w1ij = 'W1-%d-%d'%(i,j)
+      #b1ij = 'b1-%d-%d'%(i,j)
+      #w2ij = 'W2-%d-%d'%(i,j)
+      #w2ij1 = 'W2-%d-%d-1'%(i,j)
+      #b2ij = 'b2-%d-%d'%(i,j)
+      #if j==0:
+         #w2iij = 'W2-%d-%d'%(i-1,30)
+         #b2iij = 'b2-%d-%d'%(i-1,30)
+         #w1iij = 'W1-%d-%d'%(i-1,30)
+         #b1iij = 'b1-%d-%d'%(i-1,30)
+         #b1iij1 = 'b1-%d-%d-1'%(i-1,30)
+         #b2iij1 = 'b2-%d-%d-1'%(i-1,30)
+         #vW1iij = 'vW1-%d-%d'%(i-1,30)
+         #vW2iij = 'vW2-%d-%d'%(i-1,30)
+         #vb1iij = 'vb1-%d-%d'%(i-1,30)
+         #vb2iij = 'vb2-%d-%d'%(i-1,30)
+
+         #sW1iij = 'sW1-%d-%d'%(i-1,30)
+         #sW2iij = 'sW2-%d-%d'%(i-1,30)
+         #sb1iij = 'sb1-%d-%d'%(i-1,30)
+         #sb2iij = 'sb2-%d-%d'%(i-1,30)
+      #else:
+         #w2iij = 'W2-%d-%d'%(i,j-1)
+         #b2iij = 'b2-%d-%d'%(i,j-1)
+         #w1iij = 'W1-%d-%d'%(i,j-1)
+         #b1iij = 'b1-%d-%d'%(i,j-1)
+         #b1iij1 = 'b1-%d-%d-1'%(i,j-1)
+         #b2iij1 = 'b2-%d-%d-1'%(i,j-1)
+         #vW1iij = 'vW1-%d-%d'%(i,j-1)
+         #vW2iij = 'vW2-%d-%d'%(i,j-1)
+         #vb1iij = 'vb1-%d-%d'%(i,j-1)
+         #vb2iij = 'vb2-%d-%d'%(i,j-1)
+
+         #sW1iij = 'sW1-%d-%d'%(i,j-1)
+         #sW2iij = 'sW2-%d-%d'%(i,j-1)
+         #sb1iij = 'sb1-%d-%d'%(i,j-1)
+         #sb2iij = 'sb2-%d-%d'%(i,j-1)
+      #xij = 'Xtrain-%d-%d'%(i,j)
+      #xij1 = 'Xtrain-%d-%d-1'%(i,j)
+      #yij = 'Ytrain-%d-%d'%(i,j)
+      #a1ij = 'pretraina1-%d-%d'%(i,j)
+      #a1ij1 = 'pretraina1-%d-%d-1'%(i,j)
+      #z2ij = 'pretrainz2-%d-%d'%(i,j)
+      #errij = 'err_output-%d-%d'%(i,j)
+      #errij1 = 'err_output-%d-%d-1'%(i,j)
+      #grad_W2ij = 'grad_W2-%d-%d'%(i,j)
+      #grad_W1ij = 'grad_W1-%d-%d'%(i,j)
+      #err_hiddenij='err_hidden-%d-%d'%(i,j)
+      #err_hiddenij1='err_hidden-%d-%d-1'%(i,j)
+      #derivativeij = 'derivative-%d-%d'%(i,j)
+      #lossijtrain = 'losstrain-%d-%d'%(i,j)      
+      #vW1ij = 'vW1-%d-%d'%(i,j)
+      #vW2ij = 'vW2-%d-%d'%(i,j)
+      #vb1ij = 'vb1-%d-%d'%(i,j)
+      #vb2ij = 'vb2-%d-%d'%(i,j)  
+
+      #sW1ij = 'sW1-%d-%d'%(i,j)
+      #sW2ij = 'sW2-%d-%d'%(i,j)
+      #sb1ij = 'sb1-%d-%d'%(i,j)
+      #sb2ij = 'sb2-%d-%d'%(i,j)    
+
+      # Forward
+      #Flow(xij,Xtrainshuff,'window n1=1 f1=%d | transp'%j)
+      #Flow(yij,Ytrainshuff,'window n1=1 f1=%d'%j)
+      #Flow(b1iij1,b1iij,'spray axis=2 n=20')
+      #Flow(a1ij,[w1iij,xij,b1iij1],'matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | math output="(exp(input)-exp(-input))/(exp(input)+exp(-input))"')
+      #Flow(b2iij1,b2iij,'spray axis=2 n=20')
+      #Flow(z2ij,[w2iij,a1ij,b2iij1],'matmult2 <$SOURCE mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | transp')
+      
+      # Backward
+      #Flow(errij,[z2ij,yij],'math x=${SOURCES[0]} y=${SOURCES[1]} output="x-y" | transp plane=12 | math output="input/20"')
+      #Flow(a1ij1,a1ij,'transp plane=12')
+      #Flow(grad_W2ij,[errij,a1ij1],'matmult2 mat=${SOURCES[1]}')
+      #Flow(vW2ij,[vW2iij,grad_W2ij],'math x=${SOURCES[1]} output="(%g*input + (1-%g)*x)"'%(beta1,beta1))
+      #!sfrm grad_W2ij
+      #Flow(vb2ij,[errij,vb2iij],'stack axis=2 norm=n | math x=${SOURCES[1]} output="(%g*x + (1-%g)*input)"'%(beta1,beta1))
+      #Flow(sW2ij,[sW2iij,grad_W2ij],'math x=${SOURCES[1]} output="(%g*input + (1-%g)*x^2)/(1-%g^%g)"'%(beta2,beta2,beta2,t))
+      #Flow(sb2ij,[errij,sb2iij],'stack axis=2 norm=n | math x=${SOURCES[1]} output="(%g*x + (1-%g)*input^2)/(1-%g^%g)"'%(beta2,beta2,beta2,t))
+      #Flow(w2ij,[w2iij,grad_W2ij],'math x=${SOURCES[1]} output="input-%g*x"'%(learning_rate))
+      #Flow(w2ij,[w2iij,vW2ij],'math x=${SOURCES[1]} output="input-%g*x"'%(learning_rate))
+      #Flow(b2ij,[errij,b2iij],'stack axis=2 norm=n | math x=${SOURCES[1]} output="input-%g*x"'%(learning_rate))      
+      #Flow(b2ij,[b2iij,vb2ij],'math x=${SOURCES[1]} output="input-%g*x"'%(learning_rate))      
+
+      #Flow(derivativeij,a1ij,'math output="1-(tanh(input))^2" | transp')
+      #Flow(errij1,errij,'transp | spray axis=1 n=1')
+      #Flow(w2ij1,w2ij,'spray axis=1 n=1')
+      #Flow(err_hiddenij,[errij,derivativeij,w2ij],'matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input*x" | transp plane=12')
+      #Flow(None,errij,'sfrm')
+      #Flow(xij1,Xtrainshuff,'window n1=1 f1=%d'%j)
+      #Flow(grad_W1ij,[err_hiddenij,xij1],'spray axis=2 n=20 | matmult2 mat=${SOURCES[1]}')
+      #Flow(vW1ij,[vW1iij,grad_W1ij],'math x=${SOURCES[1]} output="(%g*input + (1-%g)*x)"'%(beta1,beta1))
+      #!sfrm grad_W1ij
+      #Flow(vb1ij,[err_hiddenij,vb1iij],'math x=${SOURCES[1]} output="(%g*x + (1-%g)*input)"'%(beta1,beta1))
+      #Flow(sW1ij,[sW1iij,grad_W1ij],'math x=${SOURCES[1]} output="(%g*input + (1-%g)*x^2)/(1-%g^%g)"'%(beta2,beta2,beta2,t))
+      #Flow(sb1ij,[err_hiddenij,sb1iij],'math x=${SOURCES[1]} output="(%g*x + (1-%g)*input^2)/(1-%g^%g)"'%(beta2,beta2,beta2,t))
+      #Flow(w1ij,[w1iij,grad_W1ij],'math x=${SOURCES[1]} output="input-%g*x"'%(learning_rate))
+      #Flow(b1ij,[b1iij,err_hiddenij],'math x=${SOURCES[1]} output="input-%g*x"'%(learning_rate))
+      #!sfrm err_hiddenij
+      #Flow(w1ij,[w1iij,vW1ij],'math x=${SOURCES[1]} output="input-%g*x"'%(learning_rate))
+      #Flow(b1ij,[b1iij,vb1ij],'math x=${SOURCES[1]} output="input-%g*x"'%(learning_rate)) 
+      #Flow(lossijtrain,[z2ij,yij],'math x=${SOURCES[0]} y=${SOURCES[1]} output="(x-y)^2" | stack axis=1')
+      #lossjstrain.append(lossijtrain)
+      #j = j+1
+      #import numpy as np
+      #learning_rate = init_learning_rate*np.exp(-0.1*t)
+   #Flow(lossjtrain,lossjstrain,'add ${SOURCES[0:%g]} | math output="input/31"'%len(lossjstrain))
+   #lossistrain.append(lossjtrain)
+
+   #Flow(lossjval,lossjsval,'add ${SOURCES[0:%g]} | math output="input/31"'%len(lossjsval))
+   #lossisval.append(lossiival)
+  
+   #i=i+1
+   #import numpy as np
+   
+
+# Plot loss
+
+Plot('loss','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-4 max2=-1 title="MSE" plotcol=7 grid=y')
+Plot('vloss','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" min2=-4 max2=-1 label2="Log loss" unit1= unit2= title="MSE" wanttitle=n wantaxis=n plotcol=5 grid=y')
+Result('trainloss','loss vloss','Overlay')
+
+Plot('loss2','loss','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-4.5 max2=-1 title="MSE" plotcol=7 grid=y')
+Plot('lossa','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-4.5 max2=-1 title="MSE" wanttitle=n wantaxis=n min1=0 max1=100 plotcol=6 grid=y')
+Plot('lossa10','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-5.0 max2=-1.5 title="MSE" wanttitle=y wantaxis=y min1=0 max1=100 plotcol=6 grid=y')
+Plot('lossa10reg1','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-5.0 max2=-1.5 title="MSE" wanttitle=y wantaxis=y min1=0 max1=100 plotcol=6 grid=y')
+Plot('loss-1a10','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-5.0 max2=-1.5 title="MSE" wanttitle=n wantaxis=n min1=0 max1=100 plotcol=7 grid=y')
+Plot('lossa20','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-5.0 max2=-1.5 title="MSE" wanttitle=y wantaxis=y min1=0 max1=100 plotcol=5 grid=y')
+Plot('lossa-2','lossa','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-5.0 max2=-1.5 title="MSE" wanttitle=n wantaxis=n min1=0 max1=100 plotcol=7 grid=y')
+Plot('lossm','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-4.5 max2=-1 title="MSE" wanttitle=n wantaxis=n min1=0 max1=100 plotcol=5 grid=y')
+Plot('losstanh','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-4 max2=-1 title="MSE" wanttitle=n wantaxis=n min1=0 max1=100 plotcol=6 grid=y')
+Plot('lossrelu','put o1=1 d1=1 | math output="log(input)/log(10)" | graph label1="Epoch" label2=" Log loss" unit1= unit2= min2=-4 max2=-1 title="MSE" wanttitle=n wantaxis=n min1=0 max1=100 plotcol=5 grid=y')
+
+Result('lossopt','loss2 lossa lossm','Overlay')
+Result('lossact','loss losstanh lossrelu','Overlay')
+Result('lossbatch','lossa-2 lossa10 lossa20','Overlay')
+Result('lossloss','lossa20 loss-1a10','Overlay')
+Result('lossreg','loss-1a10 lossa10reg1','Overlay')
+
+# Plot results
+
+#postz2is=[]
+#for i in range (0,400,20):
+   #postxi = 'postXtrain-%d'%i
+   #posta1i = 'posttraina1-%d'%i
+   #postz2i = 'posttrainz2-%d'%i
+
+   #Flow(postxi,'Xtrain','window n1=20 f1=%d | transp'%i)
+   #Flow('b1train-90-30','b1-90-30','spray axis=2 n=20')
+   #Flow(posta1i,['W1-90-30',postxi,'b1train-90-30'],'matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | math output="1/(1+exp(-input))"')
+   #Flow('b2train-90-30','b2-90-30','spray axis=2 n=20')
+   #Flow(postz2i,['W2-90-30',posta1i,'b2train-90-30'],'matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | transp')
+   #postz2is.append(postz2i)
+
+#Flow('post_train',postz2is,'cat axis=1 ${SOURCES[1:%g]}'%len(postz2is))
+
+#Flow('b1train','b1','spray axis=2 n=400')
+#Flow('Xtraintransp','Xtrain','transp plane=12')
+#Flow('posttraina1','W1 Xtraintransp b1train','matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | math output="1/(1+exp(-input))"')
+#Flow('b2train','b2','spray axis=2 n=400')
+#Flow('post_train','W2 posttraina1 b2train','transp | matmult2 mat=${SOURCES[1]} | math x=${SOURCES[2]} output="input+x" | transp')
+
+Flow('W1transp','W1','transp')
+Flow('W1atransp','W1a','transp')
+Flow('W1mtransp','W1m','transp')
+Flow('W1-1a10transp','W1-1a10','transp')
+Flow('W1a10transp','W1a10','transp')
+Flow('W1a10reg1transp','W1a10reg1','transp')
+
+Flow('post_train','Xtrain W1transp b1 W2 b2','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Flow('pre_train','Xtrain W1-0-30 b1-0-30 W2-0-30 b2-0-30','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Flow('post_traina10','Xtrain W1a10transp b1a10 W2a10 b2a10','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Flow('post_traina10reg1','Xtrain W1a10reg1transp b1a10reg1 W2a10reg1 b2a10reg1','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Flow('post_train-1a10','Xtrain W1-1a10transp b1-1a10 W2-1a10 b2-1a10','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Flow('post_traina','Xtrain W1atransp b1a W2a b2a','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Flow('post_trainm','Xtrain W1mtransp b1m W2m b2m','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+#Flow('post_traintanh','Xtrain W1tanh b1tanh W2tanh b2tanh','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=1')
+
+#Flow('post_trainrelu','Xtrain W1relu b1relu W2relu b2relu','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=2')
+
+Plot('pre_train','window n1=100 | put o1=0 d1=1 | graph title="Training data sigmoid" label2="y" plotcol=1 unit2="output signal" wanttitle=n wantaxis=n label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+Plot('post_train','window n1=100 | put o1=0 d1=1 | graph title="Training data sigmoid" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+Plot('post_traina','window n1=100 | put o1=0 d1=1 | graph title="Training data Adam" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+Plot('post_trainm','window n1=100 | put o1=0 d1=1 | graph title="Training data Momentum" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+Plot('post_traina10','window n1=100 | put o1=0 d1=1 | graph title="Training data Adam" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+Plot('post_traina10reg1','window n1=100 | put o1=0 d1=1 | graph title="Training data Adam" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+Plot('post_train-1a10','window n1=100 | put o1=0 d1=1 | graph title="Training data L1" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+#Plot('post_traintanh','window n1=100 | put o1=0 d1=1 | graph title="Training data tanh" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+#Plot('post_trainrelu','put o1=0 d1=1 | graph title="Training data ReLU" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+Plot('Ytrain','window n1=100 | put o1=0 d1=1 | graph title="Training data" label2="y" plotcol=5 unit2="output signal" wanttitle=n wantaxis=n label1="Data instance number" min2=-0.3 max2=0.3 unit1= ')
+
+# MSE
+
+Flow('train-loss','post_train Ytrain-1','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+Flow('train-lossm','post_trainm Ytrain','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+Flow('train-losstanh','post_traintanh Ytrain','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+Flow('train-lossrelu','post_trainrelu Ytrain','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')      
+Flow('train-lossa','post_traina Ytrain','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+
+Result('trainresult','post_train Ytrain pre_train','Overlay')
+#Result('trainresulttanh','post_traintanh Ytrain-1','Overlay')
+Result('trainresultm','post_trainm Ytrain','Overlay')
+#Result('trainresultrelu','post_trainrelu Ytrain-1','Overlay')
+Result('trainresulta','post_traina Ytrain','Overlay')
+Result('trainresulta10','post_traina10 Ytrain','Overlay')
+Result('trainresult-1a10','post_train-1a10 Ytrain','Overlay')
+Result('trainresulta10reg1','post_traina10reg1 Ytrain','Overlay')
+
+# Validation
+
+Flow('post_val','Xval W1transp b1 W2 b2','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+Flow('post_vala','Xval W1atransp b1a W2a b2a','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+Flow('post_valm','Xval W1mtransp b1m W2m b2m','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+Flow('post_valtanh','Xval-1 W1tanh b1tanh W2tanh b2tanh','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=1')
+
+Plot('post_val','put o1=0 d1=1 | graph title="Validation data sigmoid" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.4 max2=0.2 unit1= ')
+Plot('post_vala','put o1=0 d1=1 | graph title="Validation data Adam" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.4 max2=0.2 unit1= ')
+Plot('post_valm','put o1=0 d1=1 | graph title="Validation data Momentum" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.4 max2=0.2 unit1= ')
+Plot('post_valtanh','put o1=0 d1=1 | graph title="Validation data sigmoid" label2="y" plotcol=6 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.5 max2=0.5 unit1= ')
+Plot('Yval','put o1=0 d1=1 | graph title="Validation data" label2="y" plotcol=5 unit2="output signal" wanttitle=n wantaxis=n label1="Data instance number" min2=-0.4 max2=0.2 unit1= ')
+
+# MSE
+
+Flow('val-loss','post_val Yval','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+Flow('val-lossa','post_vala Yval','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+Flow('val-lossm','post_valm Yval','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+
+Result('valresult','post_val Yval','Overlay')
+Result('valresulta','post_vala Yval','Overlay')
+Result('valresultm','post_valm Yval','Overlay')
+
+#Flow('post_valtanh','Xval W1tanh b1tanh W2tanh b2tanh','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=1')
+
+#Plot('post_valtanh','put o1=0 d1=1 | graph title="Validation data tanh" label2="y" plotcol=6 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.5 max2=0.5 unit1= ')
+
+# MSE
+
+Flow('val-losstanh','post_valtanh Yval','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+
+Result('valresulttanh','post_valtanh Yval-1','Overlay')
+
+Flow('post_valrelu','Xval W1relu b1relu W2relu b2relu','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=2')
+
+Plot('post_valrelu','put o1=0 d1=1 | graph title="Validation data ReLU" label2="y" plotcol=6 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.5 max2=0.5 unit1= ')
+
+Flow('val-lossrelu','post_valrelu Yval','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+
+Result('valresultrelu','post_valrelu Yval','Overlay')
+
+# Test
+
+Flow('post_test','Xtest W1transp b1 W2 b2','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Flow('post_testa','Xtest W1atransp b1a W2a b2a','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Flow('post_testm','Xtest W1mtransp b1m W2m b2m','twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+Plot('post_test','window n1=100 | put o1=0 d1=1 | graph title="Testing data sigmoid" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.12 max2=0.12 unit1= ')
+
+Plot('post_testa','window n1=100 | put o1=0 d1=1 | graph title="Testing data Adam" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.12 max2=0.12 unit1= ')
+
+Plot('post_testm','window n1=100 | put o1=0 d1=1 | graph title="Testing data Momentum" label2="y" plotcol=7 unit2="output signal" wanttitle=y wantaxis=y label1="Data instance number" min2=-0.12 max2=0.12 unit1= ')
+
+Plot('Ytest','rpptest','window n1=100 | put o1=0 d1=1 | graph title="Testing data" label2="y" plotcol=5 unit2="output signal" wanttitle=n wantaxis=n label1="Data instance number" min2=-0.12 max2=0.12 unit1= ')
+
+# MSE
+
+Flow('test-loss','post_test rpptest','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+Flow('test-lossa','post_testa rpptest','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+Flow('test-lossm','post_testm rpptest','math output="(input-x)^2" x=${SOURCES[1]} | stack axis=1')
+
+Result('testresult','post_test Ytest','Overlay')
+Result('testresulta','post_testa Ytest','Overlay')
+Result('testresultm','post_testm Ytest','Overlay')
+
+# Test with different incidence angle
+
+Flow('thetawntest2',None,'spike o1=0 n1=60 d1=1 | math output=x1 | put o1=0 d1=1')
+Flow('thetatest2',None,'spike o1=0 n1=60 d1=1 | math output=x1 | put o1=0 d1=1 | math output="(input-9.97123)/5.97377"')
+Flow('Xtest2','Xtest','window f1=76 n1=1 n2=6 | transp plane=12')
+Flow('VPupwntest2','VPupwntest','window f1=76 n1=1')
+Flow('VSupwntest2','VSupwntest','window f1=76 n1=1')
+Flow('RHOupwntest2','RHOupwntest','window f1=76 n1=1')
+Flow('VPlowwntest2','VPlowwntest','window f1=76 n1=1')
+Flow('VSlowwntest2','VSlowwntest','window f1=76 n1=1')
+Flow('RHOlowwntest2','RHOlowwntest','window f1=76 n1=1')
+
+for l in range (60):
+   # Create testing label
+   # Zoeppritz solution for P-P reflectivity
+   from math import pi
+   thetawntest2='thetawntest2-%d'%l
+   theta1test2='thetha1test2-%d'%l
+   Xtest2='Xtest2-%d'%l
+   ptest2='ptest2-%d'%l
+   theta2test2='theta2test2-%d'%l
+   thetatest2='thetatest2-%d'%l
+   phi1test2='phi1test2-%d'%l
+   phi2test2='phi2test2-%d'%l
+   atest2='atest2-%d'%l
+   btest2='btest2-%d'%l   
+   ctest2='ctest2-%d'%l
+   dtest2='dtest2-%d'%l
+   Dtest2='Dtest2-%d'%l  
+   Etest2='Etest2-%d'%l   
+   Ftest2='Ftest2-%d'%l
+   Gtest2='Gtest2-%d'%l
+   Htest2='Htest2-%d'%l
+   rpptest2='rpptest2-%d'%l
+
+   Flow(thetawntest2,'thetawntest2','window n1=1 f1=%d'%l)
+   Flow(thetatest2,'thetatest2','window n1=1 f1=%d | put n2=1'%l)
+   Flow(Xtest2,['Xtest2',thetatest2],'cat axis=2 ${SOURCES[1]} | put o1=2193.04')
+   Flow(theta1test2,thetawntest2,'math output="input*%g/180" | rtoc'%(pi))
+   Flow(ptest2,['VPupwntest',theta1test2],'window f1=75 n1=1 | math x=${SOURCES[1]} output="sin(x)/input"')
+   Flow(theta2test2,['VPlowwntest',ptest2],'window f1=75 n1=1 | math y=${SOURCES[1]} output="asin(input*y)"')
+   Flow(phi1test2,['VSupwntest',ptest2],'window f1=75 n1=1 | math y=${SOURCES[1]} output="asin(input*y)"')
+   Flow(phi2test2,['VSlowwntest',ptest2],'window f1=75 n1=1 | math y=${SOURCES[1]} output="asin(input*y)"')
+   Flow(atest2,['RHOlowwntest2', phi2test2, 'RHOupwntest2', phi1test2],'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)-z*(1-2*sin(t)^2)"')
+   Flow(btest2,['RHOlowwntest2',phi2test2, 'RHOupwntest2', phi1test2],'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)+2*z*sin(t)^2"')
+   Flow(ctest2,['RHOupwntest2', phi1test2, 'RHOlowwntest2', phi2test2],'math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*(1-2*sin(y)^2)+2*z*sin(t)^2"')
+   Flow(dtest2,'RHOlowwntest2 VSlowwntest2 RHOupwntest2 VSupwntest2','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="2*(x*y^2-z*t^2)"')
+   Flow(Etest2,[theta1test2, 'VPupwntest2', theta2test2,'VPlowwntest2', btest2, ctest2],'math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="(k*cos(x)/y)+(m*cos(z)/t)"')
+   Flow(Ftest2,[phi1test2, 'VSupwntest2', phi2test2, 'VSlowwntest2', btest2, ctest2],'math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="(k*cos(x)/y)+(m*cos(z)/t)"')
+   Flow(Gtest2,[atest2, dtest2, theta1test2, 'VPupwntest2', phi2test2, 'VSlowwntest2'],'math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="x-y*cos(z)/t*cos(k)/m"')
+   Flow(Htest2,[atest2, dtest2, theta2test2, 'VPlowwntest2', phi1test2, 'VSupwntest2'],'math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} output="x-y*cos(z)/t*cos(k)/m"')
+   Flow(Dtest2,[Etest2, Ftest2, Gtest2, Htest2, ptest2],'math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="x*y+z*t*k^2"')
+   Flow(rpptest2,[Dtest2,Ftest2,btest2,theta1test2, 'VPupwntest2', ctest2, theta2test2, 'VPlowwntest2', Htest2, ptest2, atest2, dtest2, phi2test2, 'VSlowwntest2'],'math k=${SOURCES[4]} x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} m=${SOURCES[5]} l=${SOURCES[6]} n=${SOURCES[7]} o=${SOURCES[8]} p=${SOURCES[9]} q=${SOURCES[10]} r=${SOURCES[11]} s=${SOURCES[12]} f=${SOURCES[13]} output="(1/x) * (y*(z*(cos(t)/k) - m*(cos(l)/n)) - o*p^2 * (q + r*(cos(t)/k)*(cos(s)/f)))" | real')
+
+# Forward
+
+postz2istest2=[]
+postz2istest2a=[]
+postz2istest2m=[]
+postz2istest2a10reg1=[]
+rppstest2=[]
+for i in range (0,60):
+   postxitest2 = 'postXtest2-%d'%i
+   posta1itest2 = 'posttest2a1-%d'%i
+   postz2itest2 = 'posttest2z2-%d'%i
+   postz2itest2a = 'posttest2z2a-%d'%i
+   postz2itest2m = 'posttest2z2m-%d'%i
+   postz2itest2a10reg1 = 'posttest2z2a10reg1-%d'%i
+   xtest2 = 'Xtest2-%d'%i   
+   rpptest2 = 'rpptest2-%d'%i
+   
+   Flow(postz2itest2,[xtest2,'W1transp','b1','W2','b2'], 'twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')   
+   Flow(postz2itest2a,[xtest2,'W1atransp','b1a','W2a','b2a'], 'twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+   Flow(postz2itest2m,[xtest2,'W1mtransp','b1m','W2m','b2m'], 'twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+   
+   Flow(postz2itest2a10reg1,[xtest2,'W1a10reg1transp','b1a10reg1','W2a10reg1','b2a10reg1'], 'twolayerfwd weight1=${SOURCES[1]} bias1=${SOURCES[2]} weight2=${SOURCES[3]} bias2=${SOURCES[4]} act=0')
+
+   postz2istest2.append(postz2itest2)
+   postz2istest2a.append(postz2itest2a)
+   postz2istest2m.append(postz2itest2m)
+   postz2istest2a10reg1.append(postz2itest2a10reg1)
+   rppstest2.append(rpptest2)
+
+Flow('Ytest2',rppstest2,'cat axis=1 ${SOURCES[1:%g]}'%len(rppstest2))
+
+Flow('post_test2',postz2istest2,'cat axis=1 ${SOURCES[1:%g]}'%len(postz2istest2))
+
+Flow('post_test2a',postz2istest2a,'cat axis=1 ${SOURCES[1:%g]}'%len(postz2istest2a))
+
+Flow('post_test2m',postz2istest2m,'cat axis=1 ${SOURCES[1:%g]}'%len(postz2istest2m))
+
+Flow('post_test2a10reg1',postz2istest2a10reg1,'cat axis=1 ${SOURCES[1:%g]}'%len(postz2istest2a10reg1))
+
+Plot('post_test2','put o1=0 d1=1 | graph title="Testing data sigmoid" label2="Amplitude" plotcol=7 unit2= wanttitle=y wantaxis=y min2=-0.07 max2=0.001 label1="Incidence angle" unit1="degree"')
+
+Plot('post_test2a','put o1=0 d1=1 | graph title="Testing data Adam" label2="Amplitude" plotcol=7 unit2= wanttitle=y wantaxis=y min2=-0.07 max2=0.001 label1="Incidence angle" unit1="degree"')
+
+Plot('Ytest2-1','Ytest2','put o1=0 d1=1 | graph title="Testing data Adam" label2="Amplitude" plotcol=5 unit2= wanttitle=y wantaxis=y min2=-0.022 max2=0.001 label1="Incidence angle" unit1="degree"')
+
+Plot('post_test2a10reg1','put o1=0 d1=1 | graph title="Testing data Adam" label2="Amplitude" plotcol=7 unit2= wanttitle=n wantaxis=n min2=-0.022 max2=0.001 label1="Incidence angle" unit1="degree"')
+
+Plot('post_test2m','put o1=0 d1=1 | graph title="Testing data Momentum" label2="Amplitude" plotcol=7 unit2= wanttitle=y wantaxis=y min2=-0.07 max2=0.001 label1="Incidence angle" unit1="degree"')
+
+Plot('Ytest2','put o1=0 d1=1 | graph title="Testing data" label2="y" plotcol=5 unit2= wanttitle=n wantaxis=n label1="Incidence angle" min2=-0.07 max2=0.001 unit1="degree"')
+
+Result('testresult2','post_test2 Ytest2','Overlay')
+Result('testresult2a','post_test2a Ytest2','Overlay')
+Result('testresult2m','post_test2m Ytest2','Overlay')
+Result('testresult2a10reg1','post_test2a10reg1 Ytest2-1','Overlay')
 
 End()
 
