@@ -5,9 +5,9 @@ import string
 
 csv = 'qsiwell5.csv'
 
-#Fetch(csv,'1504_Seismic_petrophysics_1',
-      #server='https://raw.githubusercontent.com',
-      #top='seg/tutorials-2015/master')
+Fetch(csv,'1706_Seismic_rock_physics',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials-2017/master')
 
 Flow('well',csv,'csv2rsf header=y')
 
