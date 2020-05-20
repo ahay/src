@@ -1,6 +1,15 @@
 from rsf.proj import *
 import math
 
+# get colormap from example
+from matplotlib import cm
+cmap = cm.YlGnBu
+cfile = open('YlGnBu_r.csv','w')
+for i in range(256):
+    cfile.write("%g,%g,%g\n"%cmap(i)[:3])
+cfile.close()
+
+# function to create sinusoids
 def Sine(name,f,a=1,n1=2501):
     Flow(name,None,
          '''
@@ -8,12 +17,19 @@ def Sine(name,f,a=1,n1=2501):
         output="%g*sin(%g * x1)"
         ''' % (n1,a,2*math.pi*f))
 Sine('sin',261.63)
+
+
+################################################################################
+## BACKGROUND ##################################################################
+################################################################################
+
+# plot the sinusoid
 Result('sin','graph title=Sine')
 
+# plot the first 80 points
 Result('sin80','sin','window n1=80 | graph title=Sine symbol=o grid=y')
 
 # three sine curves
-
 f = [261.6, 329.6, 392.0]
 a = [1.5, 0.5, 1]
 
@@ -27,7 +43,6 @@ Flow('sines',sins,'add ${SOURCES[1:3]}')
 Result('sines','graph title=Sines unit1=s label1=Time label2=Amplitude')
 
 # Fourier transform
-
 # tapering with Blackman window
 Flow('sinest','sines',
      '''
@@ -35,6 +50,7 @@ Flow('sinest','sines',
      ''' % (math.pi/0.25,math.pi/0.25))
 Result('sinest','graph title="Sines Tapered" ')
 
+# get the spectrum
 Flow('spectrum','sinest','spectra')
 Result('spectrum','window max1=500 | graph title=Spectrum')
 
@@ -44,6 +60,7 @@ Result('spectrum','window max1=500 | graph title=Spectrum')
 Flow('filtspectrum','spectrum','cut min1=300 max1=356')
 Result('filtspectrum','window max1=500 | graph title="Filtered Spectrum"')
 
+# view the filtered signal
 Flow('fftsinest','sinest','fft1')
 Flow('filtfft','fftsinest','cut min1=300 max1=356')
 Flow('filtsinest','filtfft','fft1 inv=y')
@@ -53,8 +70,12 @@ Result('filtsinest','graph title="Sines Filtered" unit1=s label1=Time label2=Amp
 Flow('psdsinest','filtfft','math output="input*conj(input)"')
 Result('psdsinest','window max1=500 | math output="abs(input)" | real | graph title="Power spectral density"')
 
-# Nonstationary signal
 
+################################################################################
+## EXAMPLE 1 ###################################################################
+################################################################################
+
+# nonstationary signal
 Sine('sin2-1',f[0],a[0],n1=1250)
 Sine('sin2-2',f[2],a[2],n1=1251)
 
@@ -68,325 +89,122 @@ Flow('sinest2','sines2',
      '''
      math output="input*(0.42 - 0.5*cos(2*x1*%g) + 0.08*cos(4*x1*%g))"
      ''' % (math.pi/0.25,math.pi/0.25))
-Result('sinest2','graph title="Nonstationary Sines Tapered" unit1=s label1=Time label2=Amplitude')
-Plot('sinest2','graph wanttitle=n title="Nonstationary Sines Tapered" unit1=s label1=Time label2=Amplitude')
+Plot('sinest2','graph title="Nonstationary Sines Tapered" unit1=s label1=Time label2=Amplitude')
 
+# get spectrum
 Flow('spectrum2','sinest2','spectra')
 Result('spectrum2','window max1=500 | graph title="Nonstationary Sines Spectrum"')
 
-# ST
+## 1) S Transform
 Flow('sinest2st','sinest2','st')
-Plot('sinest2st','math output="abs(input)" | real | byte allpos=y | grey transp=n title="S Transform" color=j max2=1000 yreverse=n min2=0 wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
+Plot('sinest2st','sinest2st YlGnBu_r.csv','math output="abs(input)" | real | byte allpos=y | grey transp=n title="S Transform" color=${SOURCES[1]} max2=1000 yreverse=n min2=0 wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
 Result('sinest2st','sinest2 sinest2st','OverUnderAniso')
 
-# LTFT
-Flow('sinest2ltft','sinest2','ltft')
-Plot('sinest2ltft','math output="abs(input)" | real | byte allpos=y | grey transp=n title="LTFT Transform" color=j max2=1000 yreverse=n min2=0 wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
+## 2) Short-time Fourier transform
+Flow('sinestft','sinest2','stft ntw=512 window=y')
+Result('sinestft','sinestft YlGnBu_r.csv','math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y min2=0 max2=1000 min1=0.025 max1=0.225')
+
+## 3) Time-frequency analysis using local attributes
+Flow('sinest2ltft500','sinest2','timefreq nw=256 dw=1 rect=500')
+Flow('sinest2ltft1000','sinest2','timefreq nw=256 dw=1 w0=256 rect=500')
+
+Flow('sinest2ltft', 'sinest2ltft500 sinest2ltft1000', 'cat ${SOURCES[1]} axis=2')  
+Plot('sinest2ltft','sinest2ltft YlGnBu_r.csv','grey transp=n title="LTFT Transform" color=${SOURCES[1]} max2=512 yreverse=n min2=0 wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
 Result('sinest2ltft','sinest2 sinest2ltft','OverUnderAniso')
 
-# FFT-LTFT
+## LTFT
 Flow('sinest2fftltft','sinest2','fft1 | cltftfft w0=0 nw=2501 dw=0.0001')
-Plot('sinest2fftltft','math output="abs(input)" | real | byte allpos=y | grey transp=y title="FFT-LTFT Transform" color=j max1=1000 yreverse=n min1=0 wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
+Plot('sinest2fftltft','sinest2fftltft YlGnBu_r.csv','math output="abs(input)" | real | byte allpos=y | grey transp=y title="FFT-LTFT Transform" color=${SOURCES[1]} max1=1000 yreverse=n min1=0 wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
 Result('sinest2fftltft','sinest2 sinest2fftltft','OverUnderAniso')
 
-# Piano music
-Flow('piano',None,'echo in=piano_22050Hz.asc n1=220500 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=4.54e-5 | window j1=10')
-Result('piano','graph title="Piano music" unit1=s label1=Time label2=Amplitude')
+
+################################################################################
+## EXAMPLE 2 ###################################################################
+################################################################################
+
+## Piano music
+# get the data
+Fetch('piano_22050Hz.txt','signals',
+        server='https://raw.githubusercontent.com',
+        top='seg/tutorials-2018/master/1806_Time-frequency')
+Flow('piano.txt','piano_22050Hz.txt','/usr/bin/tail -n +5')
+Flow('piano','piano.txt','echo in=$SOURCE n1=220500 o1=0 d1=4.5351e-5 data_format=ascii_float | dd form=native') 
+
+# stft
+Flow('pianostft','piano','stft ntw=2048 window=y')
+
+# view result
 Plot('piano','graph title="Piano music" wanttitle=n unit1=s label1=Time label2=Amplitude')
+Plot('pianostft','pianostft YlGnBu_r.csv','window j1=10 min2=0 max2=1000 | math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Result('pianostft', 'piano pianostft','OverUnderAniso')
 
-# ST
-Flow('pianost','piano','st')
-Plot('pianost','math output="abs(input)" | real | byte allpos=y | grey label2=Frequency unit2=Hz label1=Time unit1=s transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t')
-Result('pianost','piano pianost','OverUnderAniso')
 
-# LTFT
-Flow('pianoltft','piano','ltft')
-Plot('pianoltft','math output="abs(input)" | real | byte allpos=y | grey transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('pianoltft','piano pianoltft','OverUnderAniso')
+################################################################################
+## EXAMPLE 3 ###################################################################
+################################################################################
 
-# FFT-LTFT
-Flow('pianofftltft','piano','fft1 | cltftfft w0=0 nw=22050 dw=0.000454')
-Plot('pianofftltft','math output="abs(input)" | real | byte allpos=y | grey transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('pianofftltft','piano pianofftltft','OverUnderAniso')
+## Human voice
+# get the data
+Fetch('seg_44100Hz.txt','signals',
+        server='https://raw.githubusercontent.com',
+        top='seg/tutorials-2018/master/1806_Time-frequency')
+Flow('seg.txt','seg_44100Hz.txt','/usr/bin/tail -n +5')
+Flow('seg','seg.txt','echo in=$SOURCE n1=28672 o1=0 d1=2.27e-5 data_format=ascii_float | dd form=native') 
 
-# Human voice
-Flow('seg',None,'echo in=seg_44100Hz.asc n1=28672 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=2.27e-5')
-Result('seg','graph title="Human voice" unit1=s label1=Time label2=Amplitude')
+# stft
+Flow('segstft','seg','stft ntw=512 window=y')
+
+# view result
 Plot('seg','graph title="Human voice" wanttitle=n unit1=s label1=Time label2=Amplitude')
+Plot('segstft','segstft YlGnBu_r.csv','math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Result('segstft', 'seg segstft','OverUnderAniso')
 
-# ST
-Flow('segst','seg','st')
-Plot('segst','math output="abs(input)" | real | byte allpos=y | grey transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('segst','seg segst','OverUnderAniso')
 
-# LTFT
-Flow('segltft','seg','ltft')
-Plot('segltft','math output="abs(input)" | real | byte allpos=y | grey transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('segltft','seg segltft','OverUnderAniso')
+################################################################################
+## EXAMPLE 4 ###################################################################
+################################################################################
 
-# FFT-LTFT
-Flow('segfftltft','seg','fft1 | cltftfft w0=0 nw=28672 dw=2.27e-5')
-Plot('segfftltft','math output="abs(input)" | real | byte allpos=y | grey transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('segfftltft','seg segfftltft','OverUnderAniso')
-
-# Bat
+## Bat
 # Human earing limit
-Flow('humanear',None,'spike n1=12001 d1=4.00641 o1=0 k1=4493 l1=4493 | math output="input*24000"')
-Plot('humanear','graph wanttitle=n transp=y wantaxis=n plotcol=7 plotfat=5')
-Flow('bat',None,'echo in=bat_96000Hz.asc n1=480000 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=1.04e-5 | window n1=24000 f1=44000')
-Result('bat','graph title="Bat chirps" unit1=s label1=Time label2=Amplitude')
+Flow('humanear',None,'spike n1=12001 d1=4.00641 o1=0 k1=4493 l1=4493 | math output="18000*input"')
+Plot('humanear','graph wanttitle=n transp=y wantaxis=n plotcol=1 lotfat=5')
+
+# get the data
+Fetch('bat_96000Hz.txt','signals',
+        server='https://raw.githubusercontent.com',
+        top='seg/tutorials-2018/master/1806_Time-frequency')
+Flow('bat.txt','bat_96000Hz.txt','/usr/bin/tail -n +6')
+Flow('bat','bat.txt','echo in=$SOURCE n1=480000 o1=0 d1=1.04e-5 data_format=ascii_float | dd form=native')
+
+# stft
+Flow('batstft','bat','stft ntw=256 window=y')
+
+# view result
 Plot('bat','graph title="Bat chirps" wanttitle=n unit1=s label1=Time label2=Amplitude')
-Plot('batsthuman','batst humanear','Overlay')
+Plot('batstft','batstft YlGnBu_r.csv','window j1=25 | math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Plot('batsthuman','batstft humanear','Overlay')
+Result('batstft', 'bat batsthuman','OverUnderAniso')
 
-# ST
-Flow('batst','bat','st')
-Plot('batst','math output="abs(input)" | real | grey transp=n allpos=y title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('batst','bat batsthuman','OverUnderAniso')
 
-# LTFT
-Flow('batltft','bat','ltft')
-Plot('batltft','math output="abs(input)" | real | byte allpos=y | grey transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Plot('batltfthuman','batltft humanear','Overlay')
-Result('batltft','bat batltfthuman','OverUnderAniso')
+################################################################################
+## EXAMPLE 5 ###################################################################
+################################################################################
 
-# FFT-LTFT
-Flow('batfftltft','bat','fft1 | cltftfft w0=0.4576 nw=24000 dw=1.04e-5')
-Plot('batfftltft','math output="abs(input)" | real | byte allpos=y | grey transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Plot('batfftltfthuman','batfftltft humanear','Overlay')
-Result('batfftltft','bat batfftltfthuman','OverUnderAniso')
+## Tremor
+# get the data
+Fetch('tremor_100Hz.txt','signals',
+        server='https://raw.githubusercontent.com',
+        top='seg/tutorials-2018/master/1806_Time-frequency')
+Flow('tremor.txt','tremor_100Hz.txt','/usr/bin/tail -n +5')
+Flow('tremor','tremor.txt','echo in=$SOURCE n1=90001 o1=0 d1=0.01 data_format=ascii_float | dd form=native') 
 
-# Tremor
-Flow('tremor',None,'echo in=tremor_100Hz.asc n1=90001 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=0.01 | window f1=40000 n1=24000')
-Result('tremor','graph title="Tremor" unit1=s label1=Time label2=Amplitude')
-Plot('tremor','graph title="Volcanic Tremor" wanttitle=n unit1=s label1=Time label2=Amplitude')
+# stft
+Flow('tremorstft','tremor','stft ntw=256 window=y')
 
-# ST
-Flow('tremorst','tremor','st')
-Plot('tremorst','math output="abs(input)" | real | grey transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('tremorst','tremor tremorst','OverUnderAniso')
+# view result
+Plot('tremor','graph title="Tremor" unit1=s label1=Time label2=Amplitude')
+Plot('tremorstft','tremorstft YlGnBu_r.csv','window j1=10 | math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Result('tremorstft', 'tremor tremorstft','OverUnderAniso')
 
-# LTFT
-Flow('tremorltft','tremor','ltft')
-Plot('tremorltft','math output="abs(input)" | real | grey transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('tremorltft','tremor tremorltft','OverUnderAniso')
-
-# FFT-LTFT
-Flow('tremorfftltft','tremor','fft1 | cltftfft w0=400 nw=24000 dw=0.01')
-Plot('tremorfftltft','math output="abs(input)" | real | grey transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('tremorfftltft','tremor tremorfftltft','OverUnderAniso')
-
-# F3
-
-def numpy_load(target=None,source=None,env=None):
-    'convert from numpy to RSF format'
-    import numpy, m8r
-    data = numpy.load(str(source[0]))
-    rsf = m8r.Output(str(target[0]))
-    rsf.put("n3",194)
-    rsf.put("o3",0)
-    #rsf.put("d3",0.002)
-    rsf.put("n2",299)
-    rsf.put("o2",0)
-    rsf.put("d2",1)
-    rsf.put("n1",451)
-    rsf.put("o1",0)
-    rsf.put("d1",1)
-    rsf.put("label3","Time")
-    rsf.put("unit3","s")
-    rsf.put("label2","Inline")
-    rsf.put("unit2","")
-    rsf.put("label1","Crossline")
-    rsf.put("unit1","")
-    rsf.write(data)
-    rsf.close()
-    return 0
-
-# load data
-Command('F3.rsf','F3_volume_3x3_16bit.npy',action=Action(numpy_load))
-Result('F3','window n3=1 f3=45 | grey title="F3 seismic"')
-
-# extract traces
-Flow('trace1','F3','window n3=1 f3=45 n2=1 f2=219')
-Flow('trace2','F3','window n3=1 f3=45 n2=1 f2=218')
-Result('trace','trace1 trace2','cat axis=2 ${SOURCES[1]} | graph label2="Amplitude" label1=" " title="F3 trace"')
-
-# ST
-Flow('trace1st','trace1','put d1=4e-3 | st')
-Result('trace1st','math output="abs(input)" | real | grey allpos=y transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=" "')
-
-# LTFT
-Flow('trace1ltft','trace1','put d1=4e-3 | ltft')
-Result('trace1ltft','math output="abs(input)" | real | grey allpos=y transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=" "')
-
-# FFT-LTFT
-Flow('trace1fftltft','trace1','put d1=4e-3 | fft1 | cltftfft w0=0 nw=451 dw=4e-3')
-Result('trace1fftltft','math output="abs(input)" | real | grey allpos=y transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=" "')
-
-# Human electrocardiogram
-Flow('ecg',None,'echo in=ecg_500Hz.asc n1=10000 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=2e-3')
-Result('ecg','graph unit1=s label1=Time label2=Amplitude title="Human electrocardiogram"')
-Plot('ecg','graph unit1=s label1=Time label2=Amplitude title="Human electrocardiogram" wanttitle=n')
-
-# ST
-Flow('ecgst','ecg','st')
-Plot('ecgst','math output="abs(input)" | real | grey allpos=y transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('ecgst','ecg ecgst','OverUnderAniso')
-
-# LTFT
-Flow('ecgltft','ecg','ltft')
-Plot('ecgltft','math output="abs(input)" | real | grey allpos=y transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('ecgltft','ecg ecgltft','OverUnderAniso')
-
-# FFT-LTFT
-Flow('ecgfftltft','ecg','fft1 | cltftfft w0=0 nw=10000 dw=0.002')
-Plot('ecgfftltft','math output="abs(input)" | real | grey allpos=y transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('ecgfftltft','ecg ecgfftltft','OverUnderAniso')
-
-# Landslide
-Flow('landslide',None,'echo in=landslide_100Hz.asc n1=714628 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=0.01 | window f1=591628 n1=24000')
-Result('landslide','graph unit1=s label1=Time label2=Amplitude title="Landslide"')
-Plot('landslide','graph unit1=s label1=Time label2=Amplitude title="Landslide" wanttitle=n')
-
-# ST
-Flow('landslidest','landslide','st')
-Plot('landslidest','math output="abs(input)" | real | grey allpos=y transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('landslidest','landslide landslidest','OverUnderAniso')
-
-# LTFT
-Flow('landslideltft','landslide','ltft')
-Plot('landslideltft','math output="abs(input)" | real | grey allpos=y transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('landslideltft','landslide landslideltft','OverUnderAniso')
-
-# FFT-LTFT
-Flow('landslidefftltft','landslide','fft1 | cltftfft w0=5916.28 nw=24000 dw=0.01')
-Plot('landslidefftltft','math output="abs(input)" | real | grey allpos=y transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('landslidefftltft','landslide landslidefftltft','OverUnderAniso')
-
-# Nuclear
-Flow('nuclear',None,'echo in=nuclear_20Hz.asc n1=6000 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=0.05')
-Result('nuclear','graph unit1=s label1=Time label2=Amplitude title="Nuclear test"')
-Plot('nuclear','graph unit1=s label1=Time label2=Amplitude title="Nuclear test" wanttitle=n')
-
-# ST
-Flow('nuclearst','nuclear','st')
-Plot('nuclearst','math output="abs(input)" | real | grey allpos=y transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('nuclearst','nuclear nuclearst','OverUnderAniso')
-
-# LTFT
-Flow('nuclearltft','nuclear','ltft')
-Plot('nuclearltft','math output="abs(input)" | real | grey allpos=y transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('nuclearltft','nuclear nuclearltft','OverUnderAniso')
-
-# FFT-LTFT
-Flow('nuclearfftltft','nuclear','fft1 | cltftfft w0=0 nw=6000 dw=0.05')
-Plot('nuclearfftltft','math output="abs(input)" | real | grey allpos=y transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('nuclearfftltft','nuclear nuclearfftltft','OverUnderAniso')
-
-# Hurricane Irma
-Flow('irma',None,'echo in=irma_1Hz.asc n1=122244 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=1 | window f1=98244')
-Result('irma','graph unit1=s label1=Time label2=Amplitude title="Hurricane Irma"')
-Plot('irma','graph unit1=s label1=Time label2=Amplitude title="Hurricane Irma" wanttitle=n')
-
-# ST
-Flow('irmast','irma','st')
-Plot('irmast','math output="abs(input)" | real | grey allpos=y transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('irmast','irma irmast','OverUnderAniso')
-
-# LTFT
-Flow('irmaltft','irma','ltft')
-Plot('irmaltft','math output="abs(input)" | real | grey allpos=y transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('irmaltft','irma irmaltft','OverUnderAniso')
-
-# FFT-LTFT
-Flow('irmafftltft','irma','fft1 | cltftfft w0=98244 nw=24000 dw=1')
-Plot('irmafftltft','math output="abs(input)" | real | grey allpos=y transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('irmafftltft','irma irmafftltft','OverUnderAniso')
-
-# Airgun
-Flow('airgun',None,'echo in=airgun_800Hz.asc n1=100000 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=1.25e-3 | window n1=24000')
-Result('airgun','graph unit1=s label1=Time label2=Amplitude title="Airgun"')
-Plot('airgun','graph unit1=s label1=Time label2=Amplitude title="Airgun" wanttitle=n')
-
-# ST
-Flow('airgunst','airgun','st')
-Plot('airgunst','math output="abs(input)" | real | grey allpos=y transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('airgunst','airgun airgunst','OverUnderAniso')
-
-# LTFT
-Flow('airgunltft','airgun','ltft')
-Plot('airgunltft','math output="abs(input)" | real | grey allpos=y transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('airgunltft','airgun airgunltft','OverUnderAniso')
-
-# FFT-LTFT
-Flow('airgunfftltft','airgun','fft1 | cltftfft w0=0 nw=24000 dw=1.25e-3')
-Plot('airgunfftltft','math output="abs(input)" | real | grey allpos=y transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('airgunfftltft','airgun airgunfftltft','OverUnderAniso')
-
-# Hydrophone
-Flow('hydrophone',None,'echo in=upsweep_400Hz.asc n1=80000 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=2.5e-3 | window n1=24000')
-Result('hydrophone','graph unit1=s label1=Time label2=Amplitude title="Hydrophone"')
-Plot('hydrophone','graph unit1=s label1=Time label2=Amplitude title="Hydrophone" wanttitle=n')
-
-# ST
-Flow('hydrophonest','hydrophone','st')
-Plot('hydrophonest','math output="abs(input)" | real | grey allpos=y transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('hydrophonest','hydrophone hydrophonest','OverUnderAniso')
-
-# LTFT
-Flow('hydrophoneltft','hydrophone','ltft')
-Plot('hydrophoneltft','math output="abs(input)" | real | grey allpos=y transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('hydrophoneltft','hydrophone hydrophoneltft','OverUnderAniso')
-
-# FFT-LTFT
-Flow('hydrophonefftltft','hydrophone','fft1 | cltftfft w0=0 nw=24000 dw=2.5e-3')
-Plot('hydrophonefftltft','math output="abs(input)" | real | grey allpos=y transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('hydrophonefftltft','hydrophone hydrophonefftltft','OverUnderAniso')
-
-# Earthquake
-Flow('earthquake',None,'echo in=earthquake_20Hz.asc n1=48000 o1=0 data_format=ascii_float | sfdd form=native | sfput d1=0.05 | window f1=8000 n1=24000')
-Result('earthquake','graph unit1=s label1=Time label2=Amplitude title="Earthquake"')
-Plot('earthquake','graph unit1=s label1=Time label2=Amplitude title="Earthquake" wanttitle=n')
-
-# ST
-Flow('earthquakest','earthquake','st')
-Plot('earthquakest','math output="abs(input)" | real | grey allpos=y transp=n title="S Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('earthquakest','earthquake earthquakest','OverUnderAniso')
-
-# LTFT
-Flow('earthquakeltft','earthquake','ltft')
-Plot('earthquakeltft','math output="abs(input)" | real | grey allpos=y transp=n title="LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
-Result('earthquakeltft','earthquake earthquakeltft','OverUnderAniso')
-
-# FFT-LTFT
-Flow('earthquakefftltft','earthquake','fft1 | cltftfft w0=400 nw=24000 dw=0.05')
-Plot('earthquakefftltft','math output="abs(input)" | real | grey allpos=y transp=y title="FFT-LTFT Transform" color=j yreverse=n wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
-Result('earthquakefftltft','earthquake earthquakefftltft','OverUnderAniso')
-
-# EMD
-Flow('earthquakeemd','earthquake','emd | put o1=400') 
-for i in range(4):
-        if i!=3:
-            Flow('earthquakeemd%d'%(i+1),'earthquakeemd','window n2=1 f2=%d'%(i))
-        else:
-            Flow('earthquakeemd%d'%(i+1),'earthquakeemd','window n2=2 f2=%d | stack axis=2 norm=2'%(i))
-
-Plot('earthquakeemd1','graph unit1=s label1=Time label2=Amplitude title="IMF1"')
-Plot('earthquakeemd2','graph unit1=s label1=Time label2=Amplitude title="IMF2"')
-Plot('earthquakeemd3','graph unit1=s label1=Time label2=Amplitude title="IMF3"')
-Plot('earthquakeemd4','graph unit1=s label1=Time label2=Amplitude title="IMF4"')
-Plot('earthquake-2','earthquake','graph unit1=s label1=Time label2=Amplitude title="Earthquake"')
-
-Result('earthquakeimf','earthquake-2 earthquakeemd1 earthquakeemd2 earthquakeemd3 earthquakeemd4','OverUnderAniso')
-
-# Instantaneous frequency
-Flow('hilbert','earthquakeemd','hilbert')
-Flow('dx','earthquakeemd','igrad')
-Flow('dy','hilbert','igrad')
-Flow('f','earthquakeemd hilbert dx dy','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="(x*t-z*y)/(x*x+y*y)"') 
-Result('f','grey transp=n label1=Time unit1=s label2=IMF color=j title="Instantaneous frequency" yreverse=n wherexlabel=b wheretitle=t scalebar=y')
-
-# Instantaneous amplitude
-Flow('R','earthquakeemd hilbert','math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x*x+y*y)"')
-Result('R','grey transp=n label1=Time unit1=s label2=IMF color=j title="Instantaneous amplitude" yreverse=n wherexlabel=b wheretitle=t scalebar=y')
 
 End()
