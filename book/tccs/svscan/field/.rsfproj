@@ -1,0 +1,3 @@
+uses=['sfremap1', 'sfput', 'sfwindow', 'sfnoise', 'sfmath', 'sfadd', 'sfblend', 'sfgrey', 'sfvscan', 'sfclip2', 'sfscale', 'sfpick', 'sfgraph', 'sfnmo', 'sftransp', 'sfmf', 'sfinmo', 'sfsimivscan', 'sfdd', 'sfbox']
+data=[]
+size=    4009868

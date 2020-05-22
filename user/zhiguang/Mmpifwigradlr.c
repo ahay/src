@@ -498,7 +498,6 @@ int main(int argc, char* argv[])
 			/* write data into disk */
 			fseeko(swap, is*nr*nt*sizeof(float complex), SEEK_SET);
 			fwrite(pp[0], sizeof(float complex)*nt, nr, swap);
-			fclose(swap);
 		}else{
 			/* read data */
 			sf_seek(Fdat, is*nr*nt*sizeof(float complex), SEEK_SET);
@@ -675,6 +674,7 @@ int main(int argc, char* argv[])
 		} // function==3
 
 	} // end of shot
+	fclose(swap);
 	MPI_Barrier(comm);
 
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/

@@ -1,3 +1,17 @@
+
+
+To programs:
+
+* user/dirack: New contributor (Rodolfo A C Neves)
+* sfvfsacrsnh: Zero offset CRS parameter inversion (RN, RNIP, BETA) with Very Fast Simulated Aneeling (VFSA) Global Optimization and non-hyperbolic CRS traveltime approximation.
+* sfnhcrssurf: Build Non-Hyperbolic CRS approximation surface given RN, RNIP and BETA parameters.
+
+* user/carrot: New contributor (Hongyu Zhou)
+* sfacoustic1D: 1-D acoustic wave propapagation with CE absorbing boundary
+* sfacoustic1D_FWI_ptb: 1-D acoustic FWI with Perturbation method
+* sfacoustic1D_FWI_adj: 1-D acoustic FWI with adjoint state method
+* sfviewbin: quick view of binary data (1D/2D/3D)
+
 ==Release 3.0 (2019-09-09)==
 
 ===Additions and enhancements===

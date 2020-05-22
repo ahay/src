@@ -1,0 +1,352 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+
+
+def Grey(data, other):
+    Result(data, 'window f2=3 n2=252 | grey label2=Trace  unit2="" clip=0.2 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.2 %s ' % other)
+
+
+def Greyfk(data, other):
+    Result(data, 'window f2=3 | grey label2=Trace  unit2="" clip=0.8 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.4 %s ' % other)
+
+
+def Greyplot(data, other):
+    Plot(data, 'window f2=3 n2=252 | grey label2=Trace  unit2="" clip=0.8 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.4 %s ' % other)
+
+
+def Graph(data, other):
+    Result(data, 'graph label1="Iter #no" label2="SNR" unit2=dB unit1="" title="" wherexlabel=b wheretitle=t %s' % other)
+
+
+# Create the well-known complex model
+#############################################################################
+Flow('complex-0', None,
+     '''
+     spike n1=512 n2=256 d2=0.1 o2=0 label2=Trace unit2=
+     nsp=3 k1=100,160,200 p2=-0.3,0,0.3 mag=1,1,1 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0 | put d2=1 | window n1=401
+     ''')
+Flow('complex1-0', None,
+     '''
+     spike n1=512 n2=256 d2=0.1 o2=0 label2=Trace unit2=
+     nsp=1 k1=64 p2=1 mag=1 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0 | put d2=1 | window n1=401
+     ''')
+
+Flow('linear', 'complex-0 complex1-0', 'add scale=1,1 ${SOURCES[1]}')
+Grey('linear', '')
+
+# Dip-separated structural filtering
+# Chen, Y., 2016, Dip-separated structural filtering using seislet thresholding and adaptive empirical mode decomposition based dip filter: Geophysical Journal International, 206, 457-469.
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'FX_EMD'
+matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+n1 = 401
+n2 = 256
+dt = 0.004
+lf = 0
+hf = 125
+N = 1
+verb = 0
+############################################################
+# with parameter
+############################################################
+Flow('complex-tmp', [os.path.join(matROOT, matfun+'.m'), 'linear'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(dt)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     ''' % vars(), stdin=0, stdout=-1)
+Flow('complex', 'complex-tmp', 'put d2=1 d1=0.004 o2=0 o1=0')
+Flow('complex1', 'linear complex', 'add scale=1,-1 ${SOURCES[1]}')
+
+Flow('complex-zero', 'complex', 'zerotrace j=2 l=1')
+Grey('complex-zero', '')
+
+Flow('complex1-zero', 'complex1', 'zerotrace j=2 l=1')
+Grey('complex1-zero', '')
+
+Flow('linear-zero', 'linear', 'zerotrace j=2 l=1')
+Grey('linear-zero', '')
+
+Flow('mask-t', None, 'math n1=1 n2=256 d2=1 output="1" | zerotrace j=2 l=1')
+Flow('mask', 'mask-t', 'window |spray axis=1 n=401 d=0.004 o=0')
+Grey('mask', 'color=j')
+Flow('mask1', 'mask', 'math output="1-input"')
+
+Flow('fk-linear', 'linear',
+     'rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=512')
+Flow('fk-linear-zero', 'linear-zero',
+     'rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=512')
+Greyfk('fk-linear-zero', 'allpos=y color=j clip=100 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5')
+Greyfk('fk-linear', 'allpos=y color=j clip=100 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5')
+
+
+# parameters
+ddip = 3
+fhi = 15
+r1 = 10
+r2 = 10
+padno = 256
+thr0 = 1
+niter = 100
+mode = 's'
+# POCS (thresholding in the seislet domain)
+## define forward and backward seislet transform strings####
+forw = 'seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b'
+back = 'seislet dip=${SOURCES[1]} inv=y eps=0.1 type=b'
+
+forwfft = 'fft1 | fft3 axis=2 pad=1'
+backfft = 'fft3 axis=2 inv=y pad=1 | fft1 inv=y '
+
+sig = 'complex-zero'
+data_pocs = sig
+data_fft_pocs = sig
+plots_pocs = [sig]
+plots_fft_pocs = [sig]
+diffsa_pocs = []
+diffsa_fft_pocs = []
+diffsb_pocs = []
+diffsb_fft_pocs = []
+diffs_pocs = []
+diffs_fft_pocs = []
+dips_pocs = []
+datas_pocs = []
+datas_fft_pocs = []
+snrs_pocs = []
+snrs_fft_pocs = []
+# Create mask for seislet transform
+Flow('dipmask', 'complex', 'math output=1 | pad n2=%d' % (padno))
+Flow('dip', ['complex', 'dipmask'],
+     '''
+		bandpass fhi=%d | pad n2=%d | 
+		dip mask=${SOURCES[1]} rect1=%d rect2=%d liter=30
+		''' % (fhi, padno, r1, r2))
+Flow('dip1', ['complex1', 'dipmask'],
+     '''
+		bandpass fhi=%d | pad n2=%d | 
+		dip mask=${SOURCES[1]} rect1=%d rect2=%d liter=30
+		''' % (fhi, padno, r1, r2))
+Grey('dip', 'clip=1 color=j')
+Grey('dip1', 'clip=1 color=j')
+
+Flow('complex-zero-seis', 'complex-zero dip', '%s' % forw)
+Flow('complex-zero-seis1', 'complex1-zero dip', '%s' % forw)
+
+Flow('linear-zero-seis', 'complex-zero-seis complex-zero-seis1',
+     'add scale=1,1 ${SOURCES[1]}')
+Grey('linear-zero-seis', '')
+
+
+for iter in range(niter):
+    thr = thr0+((8.-thr0)*iter*iter/((niter-1)*(niter-1)))
+    if iter % ddip == 0:
+        dip_pocs = 'dip-pocs%d' % int(iter/ddip)
+        Flow(dip_pocs, [data_pocs, 'dipmask'],
+                '''
+		bandpass fhi=%d | pad n2=%d | 
+		dip mask=${SOURCES[1]} rect1=%d rect2=%d liter=30
+		''' % (fhi, padno, r1, r2))
+    dips_pocs.append(dip_pocs)
+    Greyplot(dip_pocs, 'clip=1 color=j')
+    old_pocs = data_pocs
+    data_pocs = 'data-pocs%d' % iter
+    diffa_pocs = 'diffa-pocs%d' % iter
+    diffb_pocs = 'diffb-pocs%d' % iter
+    diff_pocs = 'diff-pocs%d' % iter
+    snr_pocs = 'snr-pocs%d' % iter
+    # 1. Forward seislet
+    # 2. Multiply by seislet mask
+    # 3. Inverse seislet
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data_pocs, [old_pocs, dip_pocs, 'mask1', sig],
+         '''
+         %s | threshold1 ifperc=1 mode=%s thr=%g | 
+         %s | mul ${SOURCES[2]}  | 
+         add ${SOURCES[3]}
+         ''' % (forw, mode, thr, back))
+    Flow(diff_pocs, ['complex', data_pocs], 'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr_pocs, ['complex', diff_pocs], 'snr2 noise=${SOURCES[1]}')
+
+    Greyplot(data_pocs, 'title="Iteration %d"' % (iter+1))
+    datas_pocs.append(data_pocs)
+    snrs_pocs.append(snr_pocs)
+
+
+thr0 = 2
+data_fft_pocs = 'linear-zero'
+sig = 'linear-zero'
+for iter in range(niter):
+    thr = thr0+((8.-thr0)*iter*iter/((niter-1)*(niter-1)))
+
+    old_fft_pocs = data_fft_pocs
+    data_fft_pocs = 'data-fft_pocs%d' % iter
+    diffa_fft_pocs = 'diffa-fft_pocs%d' % iter
+    diffb_fft_pocs = 'diffb-fft_pocs%d' % iter
+    diff_fft_pocs = 'diff-fft_pocs%d' % iter
+    snr_fft_pocs = 'snr-fft_pocs%d' % iter
+    # 1. Forward seislet
+    # 2. Multiply by seislet mask
+    # 3. Inverse seislet
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data_fft_pocs, [old_fft_pocs, 'mask1', sig],
+         '''
+         %s | threshold1 ifperc=1 mode=%s thr=%g | 
+         %s | mul ${SOURCES[1]}  | 
+         add ${SOURCES[2]}
+         ''' % (forwfft, mode, thr, backfft))
+    Flow(diff_fft_pocs, ['linear', data_fft_pocs],
+         'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr_fft_pocs, ['linear', diff_fft_pocs], 'snr2 noise=${SOURCES[1]}')
+
+    Greyplot(data_fft_pocs, 'title="Iteration %d"' % (iter+1))
+    datas_fft_pocs.append(data_fft_pocs)
+    snrs_fft_pocs.append(snr_fft_pocs)
+
+Flow('snrs-fft-pocs', snrs_fft_pocs,
+     'cat axis=1 ${SOURCES[1:%d]}' % (len(snrs_fft_pocs)))
+Flow('snrs-pocs', snrs_pocs, 'cat axis=1 ${SOURCES[1:%d]}' % (len(snrs_pocs)))
+Plot('dips-pocs', dips_pocs, 'Movie')
+Plot('datas-pocs', datas_pocs, 'Movie')
+
+Flow('complex-seis', data_pocs, 'cp')
+Flow('complex-seis-dif', 'complex complex-seis',
+     'add scale=1,-1 ${SOURCES[1]}')
+
+Grey('complex-seis', '')
+Grey('complex-seis-dif', '')
+
+
+Flow('linear-fft', data_fft_pocs, 'cp')
+Flow('linear-fft-dif', 'linear linear-fft', 'add scale=1,-1 ${SOURCES[1]}')
+
+Grey('linear-fft', '')
+Grey('linear-fft-dif', '')
+
+
+Flow('fk-complex-seis', 'complex-seis',
+     'rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=512')
+Greyfk('fk-complex-seis',
+       'allpos=y color=j clip=100 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5')
+
+Graph('snrs-fft-pocs', 'title="Convergence diagram"')
+Graph('snrs-pocs', 'title="Convergence diagram"')
+Result(dip_pocs, dip_pocs, 'Overlay')
+
+
+sig = 'complex1-zero'
+data_pocs = sig
+plots_pocs = [sig]
+thr0 = 0.5
+snrs_pocs = []
+ddip = 100
+for iter in range(niter):
+    thr = thr0+((8.-thr0)*iter*iter/((niter-1)*(niter-1)))
+    if iter % ddip == 0:
+        dip_pocs = 'dip1-pocs%d' % int(iter/ddip)
+        Flow(dip_pocs, [data_pocs, 'dipmask'],
+                '''
+		bandpass fhi=%d | pad n2=%d | 
+		dip mask=${SOURCES[1]} rect1=%d rect2=%d liter=30
+		''' % (fhi, padno, r1, r2))
+    dips_pocs.append(dip_pocs)
+    Greyplot(dip_pocs, 'clip=1 color=j')
+    old_pocs = data_pocs
+    data_pocs = 'data1-pocs%d' % iter
+    diffa_pocs = 'diffa1-pocs%d' % iter
+    diffb_pocs = 'diffb1-pocs%d' % iter
+    diff_pocs = 'diff1-pocs%d' % iter
+    snr_pocs = 'snr1-pocs%d' % iter
+    # 1. Forward seislet
+    # 2. Multiply by seislet mask
+    # 3. Inverse seislet
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data_pocs, [old_pocs, 'dip1', 'mask1', sig],
+         '''
+         %s | threshold1 ifperc=1 mode=%s thr=%g | 
+         %s | mul ${SOURCES[2]}  | 
+         add ${SOURCES[3]}
+         ''' % (forw, mode, thr, back))
+    Flow(diff_pocs, ['complex1', data_pocs], 'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr_pocs, ['complex1', diff_pocs], 'snr2 noise=${SOURCES[1]}')
+
+    Greyplot(data_pocs, 'title="Iteration %d"' % (iter+1))
+    datas_pocs.append(data_pocs)
+    snrs_pocs.append(snr_pocs)
+
+
+Flow('snrs1-pocs', snrs_pocs, 'cat axis=1 ${SOURCES[1:%d]}' % (len(snrs_pocs)))
+Plot('dips1-pocs', dips_pocs, 'Movie')
+Plot('datas1-pocs', datas_pocs, 'Movie')
+Graph('snrs1-pocs', 'title="Convergence diagram"')
+
+Flow('complex1-seis', data_pocs, 'cp')
+Flow('complex1-seis-dif', 'complex1 complex1-seis',
+     'add scale=1,-1 ${SOURCES[1]}')
+
+Grey('complex1-seis', '')
+Grey('complex1-seis-dif', '')
+
+Flow('linear-seis', 'complex-seis complex1-seis',
+     'add scale=1,1 ${SOURCES[1]}')
+Flow('linear-seis-dif', 'linear linear-seis', 'add scale=1,-1 ${SOURCES[1]}')
+Grey('linear-seis', '')
+Grey('linear-seis-dif', '')
+
+Flow('linear-rm', 'linear', 'rmtrace factor=2')
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Spitz'
+matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+n1 = 401
+n2 = 128
+n22 = 255
+d1 = 0.004
+d2 = 1
+o1 = 0
+o2 = 0
+npef = 10
+pre1 = 1
+pre2 = 1
+flow = 0.1
+fhigh = 120
+############################################################
+# with parameter
+############################################################
+Flow('linear-fx-t', [os.path.join(matROOT, matfun+'.m'), 'linear-rm'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)g,%(d1)g,%(npef)d,%(pre1)g,%(pre2)g,%(flow)g,%(fhigh)g);quit"
+     ''' % vars(), stdin=0, stdout=-1)
+Flow('linear-fx', 'linear-fx-t', 'put d1=%g d2=%g o1=%g o2=%g' % (d1, d2, o1, o2))
+Flow('linear-fx-dif', 'linear linear-fx',
+     'window n2=%d | add scale=1,-1 ${SOURCES[1]}' % n22)
+
+Grey('linear-fx', 'title="Spitz"')
+Grey('linear-fx-dif', 'title="Spitz"')
+
+
+Flow('fk-linear-fx', 'linear-fx',
+     'rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=512')
+Greyfk('fk-linear-fx', 'allpos=y color=j clip=100 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5')
+
+
+End()

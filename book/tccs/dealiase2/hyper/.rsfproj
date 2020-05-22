@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfgraph', 'sfspike', 'sfbandpass', 'sfinmo', 'sfpad', 'sfrmtrace', 'sfaddtrace', 'sfmutter', 'sfriesz', 'sfwindow', 'sfscale', 'sfgrey', 'sfdivn', 'sfdip', 'sfvscan', 'sfenvelope', 'sfpick', 'sfspray', 'sfv2d', 'sfput', 'sfrtoc', 'sffft3', 'sfcabs', 'sfseislet', 'sfthreshold1', 'sfmul', 'sfadd', 'sfsnr2', 'sfcat', 'sfcp']
+data=[]
+size=  298045072

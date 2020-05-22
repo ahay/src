@@ -1,0 +1,124 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from math import pi
+
+# Data size: 301*61*61
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=0.4 |
+       grey3 flat=n frame1=100 frame2=5 frame3=5 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time" unit1=s title=
+       screenratio=1.4 color=g %s'''%other)
+
+def Grey30(data,other):
+	Result(data,
+       '''
+       byte clip=0.4 |
+       grey3 flat=n frame1=100 frame2=5 frame3=5 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time" unit1=s title=
+       screenratio=1.4 color=g %s'''%other)
+       
+def Grey(data,other):
+	Result(data,
+       '''
+       grey label2=Trace label1="Time" unit1=s clip=0.4 title=
+       screenratio=1.4 color=g %s'''%other)
+
+def Wig(data,other):
+	Result(data,
+       '''
+       wiggle poly=y transp=y yreverse=y label2=Trace label1="Time" unit1=s clip=0.4 title=
+       screenratio=1.4 color=g %s'''%other)
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Synth'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+    
+k=3
+n=4
+put='d1=1 o1=1 n2=20 d2=1 o2=1 n3=20 d3=1 o3=1'
+############################################################
+## with parameter
+############################################################
+
+Flow(['synth-clean-0','synth-noisy-0','synth-obs-0','synth-mssa-0','synth-dmssa1-0','synth-dmssa2-0','synth-dmssa3-0'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}','${TARGETS[6]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Flow('synth-clean','synth-clean-0','put %s'%put)
+Flow('synth-noisy','synth-noisy-0','put %s'%put)
+Flow('synth-obs','synth-obs-0','put %s'%put)
+Flow('synth-mssa','synth-mssa-0','put %s'%put)
+Flow('synth-dmssa1','synth-dmssa1-0','put %s'%put)
+Flow('synth-dmssa2','synth-dmssa2-0','put %s'%put)
+Flow('synth-dmssa','synth-dmssa3-0','put %s'%put)
+
+## Load data
+# Flow('synth-clean','../data/syn_clean.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.004 d2=1 d3=1 o1=0 o2=1 o3=1')
+# Flow('synth-noisy','../data/syn_noisy_sigma0.2.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.004 d2=1 d3=1 o1=0 o2=1 o3=1')
+# Flow('synth-obs','../data/syn_noisy_sigma0.2_mis.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.004 d2=1 d3=1 o1=0 o2=1 o3=1')
+# Flow('synth-mssa','../data/syn_sigma0.2_mssa.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.004 d2=1 d3=1 o1=0 o2=1 o3=1')
+# Flow('synth-dmssa','../data/syn_sigma0.2_dmssa.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.004 d2=1 d3=1 o1=0 o2=1 o3=1')
+
+# Flow('synth-dmssa2','../data/syn_sigma0.2_dmssa_K2.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.004 d2=1 d3=1 o1=0 o2=1 o3=1')
+# Flow('synth-dmssa1','../data/syn_sigma0.2_dmssa_K1.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.004 d2=1 d3=1 o1=0 o2=1 o3=1')
+
+
+Grey3('synth-clean','title=Clean')
+Grey3('synth-noisy','title=Noisy')
+Grey3('synth-obs','title=Observed')
+Grey3('synth-mssa','title=MSSA')
+Grey3('synth-dmssa','title="Proposed (K=3)"')
+Grey30('synth-dmssa2','title="Proposed (K=2)"')
+Grey3('synth-dmssa1','title="Proposed (K=1)"')
+
+# Xline=4
+Flow('synth-s-clean','synth-clean','window n3=1 f3=4')
+Flow('synth-s-noisy','synth-noisy','window n3=1 f3=4')
+Flow('synth-s-obs','synth-obs','window n3=1 f3=4')
+Flow('synth-s-mssa','synth-mssa','window n3=1 f3=4')
+Flow('synth-s-dmssa','synth-dmssa','window n3=1 f3=4')
+Flow('synth-s-dmssa2','synth-dmssa2','window n3=1 f3=4')
+Flow('synth-s-dmssa1','synth-dmssa1','window n3=1 f3=4')
+
+
+# Inline=4
+Flow('synth-s-clean-i','synth-clean','window n2=1 f2=4')
+Flow('synth-s-noisy-i','synth-noisy','window n2=1 f2=4')
+Flow('synth-s-obs-i','synth-obs','window n2=1 f2=4')
+Flow('synth-s-mssa-i','synth-mssa','window n2=1 f2=4')
+Flow('synth-s-dmssa-i','synth-dmssa','window n2=1 f2=4')
+Flow('synth-s-dmssa2-i','synth-dmssa2','window n2=1 f2=4')
+Flow('synth-s-dmssa1-i','synth-dmssa1','window n2=1 f2=4')
+
+Wig('synth-s-clean','title=Clean')
+Wig('synth-s-noisy','title=Noisy')
+Wig('synth-s-obs','title=Observed')
+Wig('synth-s-mssa','title=MSSA')
+Wig('synth-s-dmssa','title="Proposed (K=3)"')
+Wig('synth-s-dmssa2','title="Proposed (K=2)"')
+Wig('synth-s-dmssa1','title="Proposed (K=1)"')
+
+Wig('synth-s-clean-i','title=Clean')
+Wig('synth-s-noisy-i','title=Noisy')
+Wig('synth-s-obs-i','title=Observed')
+Wig('synth-s-mssa-i','title=MSSA')
+Wig('synth-s-dmssa-i','title="Proposed (K=3)"')
+Wig('synth-s-dmssa2-i','title="Proposed (K=2)"')
+Wig('synth-s-dmssa1-i','title="Proposed (K=1)"')
+
+
+
+
+End()

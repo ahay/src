@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfpow', 'sfnoise', 'sfbandpass', 'sfmutter', 'sfscale', 'sfput', 'sfgrey', 'sfwindow', 'sfspike', 'sfcausint', 'sftransp', 'sflinear', 'sfmath', 'sfgraph', 'sfnmo', 'sfheadersort', 'sfcp', 'sfmf', 'sfspray', 'sfadd', 'sfwiggle']
+data=['data/haskell/hask_mult.HH', 'data/haskell/picks.hask.txt', 'data/haskell/hm_supp.HH']
+size=    1642336

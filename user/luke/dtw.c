@@ -1,4 +1,4 @@
-/* One Dimensional Dynamic Time Warping underlying programs*/
+/* One Dimensional Dynamic Time Warping underlying programs, removing madagascar dependencies for arrays*/
 /*^*/
 #include <rsf.h>
 
@@ -27,7 +27,7 @@ void dtw_two_sided_smoothing_sum( float* ef, float* er, float* e, float* etilde,
 float* _dtw_alignment_errors( float* match, float* ref, int n1, int maxshift , float ex){
 	/*< finds pointwise alignment errors for shifts between min and max, returns mismatch >*/
 	int j2, i, j;
-	float* mismatch = sf_floatalloc(n1*(2*maxshift+1));
+	float* mismatch = malloc((n1*(2*maxshift+1))*sizeof(float));
 	/* loop through samples in reference trace*/
 	for ( i = 0 ; i < n1 ; i++){
 		/* loop through permissible shifts */
@@ -247,6 +247,30 @@ void dtw_apply_shifts( float* match, int* shifts, float* warped, int n){
 	return;
 }
 
+void dtw_apply_scaled_shifts( float* match, int* shifts, float* warped, float scale, int n){
+	/*< apply scaled  integer shifts to matching trace >*/
+	int i;
+	for ( i = 0 ; i < n ; i++){
+		/* read shift, scale */
+		float shiftscl = scale*(float)shifts[ i];
+		/* cast to integer */
+		int shift = (int)shiftscl;
+		/* make sure shifts in bounds */
+		if (i + shift < 0){
+			warped [ i] = match [ 0];
+		} else { 
+			if (i + shift > n-1){
+				warped[ i] = match [ n-1] ;
+			} else{
+				/* apply shifts */
+				warped [ i] = match[ i + shift]; 
+			}
+			
+		}
+	}
+	return;
+}
+
 void dtw_copy(float* array, float val, int n)
 /*< copies float vals into array >*/
 {
@@ -288,6 +312,15 @@ void dtw_mul(float* array, float val, int n)
 	return;
 }
 
+void dtw_linear_comb(float* C, float alpha, float* A, float beta, float* B, int n)
+	/*< C = alpha*A + beta*B >*/
+{
+	for ( int i = 0 ; i < n ; i++ ){
+		C[ i] = alpha*A[ i] + beta*B[ i];
+	}
+	return;
+}
+
 void dtw_set_file_params(sf_file _file, int n1, float d1, float o1,
     const char* label1, const char* unit1,
     int n2, float d2, float o2,
@@ -310,23 +343,23 @@ void dtw_set_file_params(sf_file _file, int n1, float d1, float o1,
 float* dtw_symmetric_accumulation(float* mismatch, int n1, int maxshift, float str)
 	/*< performs symmetric smoothing accumulation given an input mismatch array, assumes we have already spread over nulls >*/
 {
-	float* accumulate_f = sf_floatalloc(n1*(2*maxshift+1));
+	float* accumulate_f = malloc(n1*(2*maxshift+1)*sizeof(float));
 	/* accumulate forward errors */
 	dtw_accumulate_errors( mismatch, accumulate_f, n1, maxshift, str);
 	/* declare array for backward error accumulation */
-	float* accumulate_b = sf_floatalloc(n1*(2*maxshift+1));
+	float* accumulate_b = malloc(sizeof(float)*n1*(2*maxshift+1));
 	/* reverse mismatch */
-	float* mismatch_r = sf_floatalloc(n1*(2*maxshift+1));
+	float* mismatch_r = malloc(sizeof(float)*n1*(2*maxshift+1));
 	dtw_reverse_array(mismatch, mismatch_r, n1, (2*maxshift+1));
 	/* accumulate backward errors */
 	dtw_accumulate_errors( mismatch_r, accumulate_b, n1, maxshift, str);
 	free (   mismatch_r);
 	/* flip them */
-	float* accumulate_br = sf_floatalloc(n1*(2*maxshift+1));
+	float* accumulate_br = malloc(sizeof(float)*n1*(2*maxshift+1));
 	dtw_reverse_array(accumulate_b,accumulate_br, n1, (2*maxshift+1));
 	free ( accumulate_b) ;
 	/* sum the errors */
-	float* accumulate = sf_floatalloc(n1*(2*maxshift+1));
+	float* accumulate = malloc(sizeof(float)*n1*(2*maxshift+1));
 	dtw_two_sided_smoothing_sum(accumulate_f, accumulate_br, mismatch, accumulate,n1*(2*maxshift+1));
 	free ( accumulate_f) ;
 	free ( accumulate_br);
@@ -337,19 +370,19 @@ float* dtw_symmetric_accumulation(float* mismatch, int n1, int maxshift, float s
 void dtw_symmetric_accumulation_v(float* accumulate, float* mismatch, int n1, int maxshift, float str)
 	/*< performs symmetric smoothing accumulation given an input mismatch array, assumes we have already spread over nulls >*/
 {
-	float* accumulate_f = sf_floatalloc(n1*(2*maxshift+1));
+	float* accumulate_f = malloc(sizeof(float)*n1*(2*maxshift+1));
 	/* accumulate forward errors */
 	dtw_accumulate_errors( mismatch, accumulate_f, n1, maxshift, str);
 	/* declare array for backward error accumulation */
-	float* accumulate_b = sf_floatalloc(n1*(2*maxshift+1));
+	float* accumulate_b = malloc(sizeof(float)*n1*(2*maxshift+1));
 	/* reverse mismatch */
-	float* mismatch_r = sf_floatalloc(n1*(2*maxshift+1));
+	float* mismatch_r = malloc(sizeof(float)*n1*(2*maxshift+1));
 	dtw_reverse_array(mismatch, mismatch_r, n1, (2*maxshift+1));
 	/* accumulate backward errors */
 	dtw_accumulate_errors( mismatch_r, accumulate_b, n1, maxshift, str);
 	free (   mismatch_r);
 	/* flip them */
-	float* accumulate_br = sf_floatalloc(n1*(2*maxshift+1));
+	float* accumulate_br = malloc(sizeof(float)*n1*(2*maxshift+1));
 	dtw_reverse_array(accumulate_b,accumulate_br, n1, (2*maxshift+1));
 	free ( accumulate_b) ;
 	/* zero out accumulation array */
@@ -367,7 +400,7 @@ void dtw_find_shifts(int* shifts, float* ref, float* match,
     int n1, int maxshift, float str, float ex)
 /*< integrated program to calculate shifts in one go, good for parallelization takes already allocated shifts with int(n1) as input>*/
 {
-	float* mismatch = sf_floatalloc(n1*(2*maxshift+1));
+	float* mismatch = malloc(sizeof(float)*n1*(2*maxshift+1));
 	/* determine the best shifts using dynamic warping */
 	dtw_alignment_errors( match, ref, mismatch, n1, maxshift, ex);
 	/* spread values over nulls */
@@ -385,7 +418,7 @@ void dtw_find_shifts(int* shifts, float* ref, float* match,
 float* dtw_write_gather_nullvals(float* gather, int n1, int n2, float nullval)
 	/*< writes null values to gatherarray >*/
 {
-	float* ngather = sf_floatalloc(n1*n2);
+	float* ngather = malloc(sizeof(float)*n1*n2);
 	dtw_acopy(ngather, gather, n1*n2);
 	int i1, i2;
 	/* loop through traces */
@@ -412,7 +445,7 @@ float* dtw_write_gather_nullvals(float* gather, int n1, int n2, float nullval)
 float* dtw_copy_nulls(float* clean, float* nulls, int n, float nullval)
 	/*< puts a nullval in the clean array with the same index if one exists in the nulls array >*/
 {
-	float* nclean = sf_floatalloc(n);
+	float* nclean = malloc(sizeof(float)*n);
 	int i;
 	for (i = 0; i < n ; i++){
 		if ( nulls[ i] == nullval){
@@ -430,7 +463,7 @@ float* dtw_subtract_minimum(float* array, int n)
 {
 	int i;
 	float minval = SF_FLOAT;
-	float* arrout = sf_floatalloc(n);
+	float* arrout = malloc(sizeof(float)*n);
 	/* find minimum */
 	for ( i = 0 ; i < n ; i++ ){
 		if (array[ i] < minval){
@@ -470,7 +503,7 @@ void dtw_norm_stack(float* gather, float* stack, int n1, int n2, float nullval)
 	/* loop indexes */
 	int i1, i2;
 	/* fold array */
-	int*    fold = sf_intalloc(n1);
+	int*    fold = malloc(sizeof(int)*n1);
 	/* loop through */
 	for ( i2 = 0 ; i2 < n2 ; i2++ ){
 		for ( i1 = 0 ; i1 < n1 ; i1++ ){
@@ -502,7 +535,7 @@ void dtw_get_column( float* array, float* column, int i, int n )
 float* _dtw_get_column( float* array, int i, int n )
 /*< grab ith column from an array with height, outputs the column n>*/	
 {
-	float* column = sf_floatalloc(n);
+	float* column = malloc(sizeof(float)*n);
 	int j;
 	for ( j =  0 ; j < n ; j++ ){
 		column [ j ] = array [ j + i*n ];
@@ -513,12 +546,30 @@ float* _dtw_get_column( float* array, int i, int n )
 float* dtw_int_to_float( int* intarray, int n)
 /*< write an int array to a float array >*/
 {
-	float* floatarray = sf_floatalloc(n);
+	float* floatarray = malloc(sizeof(float)*n);
 	int i;
 	for ( i = 0 ; i < n ; i++){
 		floatarray[ i] = (float)intarray[ i];
 	}
 	return floatarray;
+}
+
+void dtw_int_to_float_v( float* floatarray, int* intarray, int n)
+	/*< write an int array to a float array >*/
+{
+	for (int i = 0 ; i < n ; i++){
+		floatarray[i] = (float)intarray[i];
+	}
+	return;
+}
+
+void dtw_float_to_int_v( int* intarray, float* floatarray, int n)
+	/*< write a float array to an int array >*/
+{
+	for (int i = 0 ; i < n ; i++ ){
+		intarray[i] = (int)floatarray[i];
+	}
+	return;
 }
 
 void dtw_put_column( float* array, float* column, int i, int n )
@@ -547,7 +598,7 @@ long dtw_size(int* N, int ndim)
 int* dtw_unwrap(long indx, int* N, int ndim)
 	/*< unwraps index into coordinates >*/
 {
-    int* Ind = sf_intalloc(ndim);
+    int* Ind = malloc(sizeof(int)*ndim);
 	int j, n;
 	long r = indx;
 	for (j = ndim-1 ; j >= 0 ; j--){
@@ -574,7 +625,7 @@ long dtw_wrap(int* Ind, int* N, int ndim)
 int* dtw_swaperoo(int* In, int t1, int t2, int ndim)
 	/*< swaps the t1 and t2 of In >*/
 {
-	int* Out = sf_intalloc(ndim);
+	int* Out = malloc(sizeof(int)*ndim);
 	int i ;
 	/* initialize */
 	for (i = 0 ; i < ndim ; i++){
@@ -608,7 +659,7 @@ void dtw_swaperoo_v(int* Out, int* In, int t1, int t2, int ndim)
 float* dtw_swaperoof(float* In, int t1, int t2, int ndim)
 	/*< swaps the t1 and t2 of In for floats >*/
 {
-	float* Out = sf_floatalloc(ndim);
+	float* Out = malloc(sizeof(float)*ndim);
 	int i ;
 	/* initialize */
 	for (i = 0 ; i < ndim ; i++){
@@ -642,7 +693,7 @@ float* dtw_transp( float* arr, int t1, int t2, int* Nin, int ndim)
 	/*< follows madagascar convention for transp plane=t1t2 >*/
 {
 	/* allocate transpose array */
-	float* arrT = sf_floatalloc(dtw_size(Nin,ndim));
+	float* arrT = malloc(sizeof(float)*dtw_size(Nin,ndim));
 	/* determine N of output array */
 	int* Nout = dtw_swaperoo( Nin, t1, t2, ndim);
 	/* loop through array elements and transpose */

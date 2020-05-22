@@ -1,0 +1,121 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+def Grey1(data,other):
+	Result(data,
+	  '''
+       window n1=194  | window n2=55  | grey clip=0.3 wanttitle=n label1=Depth unit1=m label2=Trace unit2= labelsz=10 
+	  labelfat=4 font=2 titlesz=10 titlefat=4 labelfat=4 font=2 titlefat=4 color=g %s 
+       '''%other)
+
+def Grey2(data,other):
+	Result(data,
+	  '''
+       put d1=12.5 o1=925 d2=1 o2=1 | window n2=55|grey clip=0.3 wanttitle=n label1=Depth unit1=m label2=Trace unit2= labelsz=10 
+       labelfat=4 font=2 titlefat=10 color=g %s 
+       '''%other)
+
+def Grey3(data,other):
+	Result(data,
+	  '''
+       math output="2*input"| grey clip=0.3 wanttitle=n label2=Trace unit2=
+       labelfat=4 font=2 titlefat=4 color=g %s 
+       '''%other)
+
+##################
+# Field data test
+##################
+ns=7
+Flow('field','field0','cp')
+Flow('field-noise','field','cp')
+Grey1('field-noise','')
+
+# FX deconvolution
+Flow('field-fx','field-noise','put d1=0.004|fxdecon n2w=60 lenf=4|put d1=12.5')
+Grey1('field-fx','title=FX')
+
+ns0=7 # smoothing radius
+# structure-oriented SVD
+
+Flow('simi','field-fx field','similarity other=${SOURCES[1]} rect1=5 rect2=5')
+Flow('field-fxsimi','field-fx simi','simidenoise1 similarity=${SOURCES[1]} s1=0.5 s2=0.5')
+Grey1('field-fxsimi','')
+
+Flow('field-ndip','field-fxsimi','put d1=0.004|bandpass fhi=60 | dip rect1=%d rect2=%d | put d1=12.5' % (5,5))
+Result('field-ndip1','field-ndip',
+       '''
+       grey color=j scalebar=y wanttitle=n label2=Distance
+       barlabel=Slope barunit=samples bartype=h labelfat=4
+       font=2 titlefat=4 barlabelfat=4
+       ''')
+Flow('field-spray','field-noise field-ndip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=0 o2=1
+     ''' % (ns0))
+Result('field-cube','field-spray',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte gainpanel=all |
+       grey3 wanttitle= flat=n labelfat=4 font=2 titlefat=4
+       label2=Distance label3="Prediction" unit3=trace
+       frame1=100 frame2=40 frame3=%d point1=0.9 point2=0.8 
+       o3num=%d d3num=3 n3tic=%d  clip=0.00358515
+       '''  % (-ns0,ns0+1,-ns0+1,5))
+
+# standard mean filter
+#Flow('datameanf','spray','stack axis=2')
+#Grey1('datameanf','title=MeanF')
+
+# standard 
+#Flow('datamf','spray','transp plane=12 | mf nfw=%d | transp plane=12 | window n2=1 f2=%d'%(ns0,ns0))
+#Grey1('datamf','title=MF')
+
+
+#Flow('datasvd','field-spray','svddenoise pclip=4 | window n2=1 f2=%d'%5)
+Flow('field-svd','field-spray','svddenoise pclip=50 | stack axis=2')
+Grey1('field-svd','title=STRSVD')
+
+# global svd
+Flow('field-gsvd','field-noise','svddenoise pclip=20')
+Grey1('field-gsvd','title=GSVD')
+
+# local svd
+########################################################################
+# INITIALIZATION
+#######################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'synthlsvd'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+nt=194
+nx=60
+twin=50
+xwin=50
+r=4
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('field-lsvd',[os.path.join(matROOT,matfun+'.m'), 'field-noise'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(nt)d,%(nx)d,%(r)d,%(twin)d,%(xwin)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Grey2('field-lsvd','title=LSVD')
+
+
+# Difference sections
+Flow('field-n-svd','field-noise field-svd','add scale=1,-1 ${SOURCES[1]}')
+Flow('field-n-fx','field-noise field-fx','add scale=1,-1 ${SOURCES[1]}')
+Flow('field-n-lsvd','field-noise field-lsvd','add scale=1,-1 ${SOURCES[1]}')
+Flow('field-n-gsvd','field-noise field-gsvd','add scale=1,-1 ${SOURCES[1]}')
+Grey1('field-n-svd','clip=0.4')
+Grey1('field-n-fx','clip=0.4')
+Grey1('field-n-lsvd','clip=0.4')
+Grey1('field-n-gsvd','clip=0.4')
+
+
+End()

@@ -53,6 +53,8 @@ slim/slimUserManual/sffdct
 tccs/atten/karman1
 tccs/diffr/chan3d
 tccs/diffr/gom
+tccs/drr3d/synth
+tccs/drr3d/field
 tccs/avo/avo2
 tccs/opwd/wrap
 tccs/emdpf/fxdecon
@@ -61,12 +63,21 @@ tccs/emdpf/linear
 tccs/fpwd/sigmoid
 trip/hug/marm1s_shallow
 tccs/synwav/gch1
+tccs/sgk/synth
 tccs/shemd/hyperoil
 tccs/shemd/synth1
 tccs/shemd/fxemddemo
 tccs/shemd/fxmssademo
+tccs/strsvd/complex
+tccs/strsvd/dipsteer
+tccs/strsvd/fieldstrsvd
+tccs/strsvd/hyper
 tccs/timelapse/timelapse
 xjtu/primer/testelastic2d
+zju/optnoise/flat
+zju/optnoise/prestack
+zju/optnoise/poststack
+zju/optnoise/slope
 '''
 
 all =  ARGUMENTS.get('all', 'n')

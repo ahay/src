@@ -1,0 +1,253 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+# module defining
+
+
+def Grey(hyper, other):
+    Result(hyper,
+           '''        
+	  grey  font=2 labelsz=6 titlefat=4 title= wheretitle=t
+       labelfat=4 screenratio=1.4 clip=0.3 wherexlabel=b
+       label2="Offset" unit2=km 
+       %s ''' % other)
+
+
+def Greydip(hyper1, hyper2, other):
+    Result(hyper1, hyper2,
+           '''
+       grey font=2 labelsz=6 titlefat=4 title= wheretitle=t
+       labelfat=4 screenratio=1.4 clip=0.3 wherexlabel=b
+       label2="Offset" unit2=km barlabel=Slope barunit=samples
+       allpos=y scalebar=n clip=10 maxval=10 color=j 
+       screenratio=1.4 %s
+       ''' % other)
+
+
+def Greyfk(data, other):
+    Result(data, 'grey font=2 labelsz=6 titlefat=4 title=  labelfat=4 label2=Trace unit2="" clip=30 label1=Time unit1="s" title="" wherexlabel=b wanttitle=y wheretitle=t screenratio=1.4 %s ' % other)
+
+
+def Greyplot(data, other):
+    Plot(data,
+         '''
+		grey font=2 titlefat=4 labelfat=4 barwidth=0.1 labelfat=4
+       label2=Offset unit2=m barlabel=Slope barunit=samples
+       allpos=y scalebar=n clip=2.0 maxval=2 color=j title= wheretitle=b
+       screenratio=1.4 %s
+       ''' % other)
+
+
+def Graph(data, other):
+    Result(data, 'graph label1="Iter #no" label2="SNR" unit2=dB unit1="" title="" wherexlabel=b wheretitle=t %s' % other)
+
+
+# Donwload data
+Fetch('midpts.hh', 'midpts')
+
+# Select a CMP gather, mute
+Flow('bei', 'midpts.hh',
+     '''
+     window n3=1 | dd form=native | 
+     mutter half=n v0=1.5 |
+     put label1=Time unit1=s label2=Offset unit2=km | scale axis=2
+     ''')
+
+Grey('bei', 'title="Under-sampled"')
+
+Flow('bei-zero', 'bei', 'addtrace ratio=2')
+Grey('bei-zero', 'title="Zero-padded"')
+
+# test mutter
+# mutter hyper=y half=n t0=0.3 x0=0 slope0=0.005
+Flow('bei-zero-mute', 'bei-zero', 'mutter hyper=y half=n t0=0.00 x0=0 slope0=0.65')
+Grey('bei-zero-mute', 'title="Muted"')
+Flow('mute-dif', 'bei-zero-mute bei-zero', 'add scale=-1,1 ${SOURCES[1]}')
+Grey('mute-dif', 'title="Mute-dif"')
+
+# velocity dependent (VD) dips
+Flow('svsc', 'bei-zero',
+     'vscan semblance=y v0=1.4 nv=111 dv=0.01 type=semblance nb=10 half=n | clip2 lower=0')
+
+Plot('svsc',
+     '''
+			grey color=j allpos=y labelsz=8 labelfat=2 font=2 titlesz=10 titlefat=2 screenratio=1.4 title="Velocity Scan" font=2 labelsz=6 titlefat=4  wheretitle=t
+       labelfat=4 screenratio=1.4 wherexlabel=b
+       label2="Offset" unit2=km
+			''')
+
+Flow('svsc2', 'bei', 'vscan semblance=y v0=1.4 nv=111 dv=0.01 nb=10 half=n')
+
+Plot('svsc2',
+     '''
+     envelope |
+     grey allpos=y label2=Velocity unit2=m/s labelfat=4
+     screenratio=1.4 title="Velocity Scan" font=2 titlefat=4 wanttitle=n 
+     
+     ''')
+
+Flow('vpick', 'svsc', 'scale axis=2 | pick rect1=5')
+Plot('vpick',
+     '''
+             graph yreverse=y transp=y min2=1.4 max2=2.51 pad=n screenratio=1.4
+             plotcol=7 plotfat=15 wanttitle=n wantaxis=n scalebar=n simbolfat=10
+             ''')
+
+
+Plot('vpick1', 'vpick',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=2.5 
+     pad=n wantaxis=n wanttitle=n plotcol=3
+     screenratio=1.4 screenht=8 labelsz=6 plotfat=4 plotcol=7 dash=0
+     ''')
+Result('vscan', 'svsc vpick', 'Overlay')
+###########################################################
+
+Flow('vdip', 'vpick',
+     '''
+     v2d n=48 d=0.067 o=0.264 mute=y half=n v0=2.0 t0=0.004 tp=0.05
+     ''')
+
+Greydip('bei-vdip', 'vdip', 'title="Velocity->Dip"')
+
+
+Flow('pdip', 'bei', 'dip rect1=10 rect2=5 order=3')
+Greydip('bei-pdip', 'pdip', 'title="PWD"')
+
+# Create mask
+Flow('mask', 'bei', 'math output="1" | addtrace ratio=2')
+Flow('mask1', 'mask', 'math output="1-input"')
+Grey('mask', 'color=j')
+
+Flow('fk-bei-zero', 'bei-zero',
+     'put d2=1 o2=0 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=1000')
+Flow('fk-bei', 'bei', 'put d2=1 o2=0 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=1000')
+
+Greyfk('fk-bei-zero', 'allpos=y color=j label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 title="Zero-padded"')
+Greyfk('fk-bei', 'allpos=y color=j label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 title="Under-sampled"')
+
+thr0 = 6
+niter = 40
+mode = 's'
+padno = 64
+n2 = 48
+
+# POCS (thresholding in the seislet domain)
+## define forward and backward seislet transform strings####
+forw = 'pad n2=%d | seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b' % padno
+back = 'seislet dip=${SOURCES[1]} inv=y eps=0.1 type=b | window n2=%d' % n2
+
+sig = 'bei-zero'
+data_pocs = sig
+plots_pocs = [sig]
+diffsa_pocs = []
+diffsb_pocs = []
+diffs_pocs = []
+snrs_pocs = []
+dips_pocs = []
+datas_pocs = []
+snrs_pocs = []
+# Create mask for seislet transform
+
+Flow('vdip-pad', 'vdip', 'pad n2=%d' % padno)
+
+for iter in range(niter):
+    thr = thr0+((thr0-thr0)*iter*iter/((niter-1)*(niter-1)))
+    old_pocs = data_pocs
+    data_pocs = 'data-pocsvd%d' % iter
+    diffa_pocs = 'diffa-pocsvd%d' % iter
+    diffb_pocs = 'diffb-pocsvd%d' % iter
+    diff_pocs = 'diff-pocsvd%d' % iter
+    snr_pocs = 'snr-pocsvd%d' % iter
+# 1. Forward seislet
+# 2. Multiply by seislet mask
+# 3. Inverse seislet
+# 4. Multiply by space mask
+# 5. Add data outside of hole
+    Flow(data_pocs, [old_pocs, 'vdip-pad', 'mask1', sig],
+         '''
+         %s | threshold1 ifperc=1 mode=%s thr=%g | 
+         %s | mul ${SOURCES[2]}  | 
+         add ${SOURCES[3]} | %s | threshold1 ifperc=1 mode=%s thr=%g | 
+         %s | mutter hyper=y half=n t0=0.00 x0=0 slope0=0.65
+         ''' % (forw, mode, thr, back, forw, mode, thr, back))
+    Flow(diff_pocs, [old_pocs, data_pocs], 'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr_pocs, [diff_pocs, data_pocs], 'snr2 noise=${SOURCES[1]}')
+
+    Greyplot(data_pocs, 'title="Iteration %d"' % (iter+1))
+    datas_pocs.append(data_pocs)
+    snrs_pocs.append(snr_pocs)
+
+Flow('snrs-pocsvd', snrs_pocs,
+     'cat axis=1 ${SOURCES[1:%d]}' % (len(snrs_pocs)))
+Plot('datas-pocsvd', datas_pocs, 'Movie')
+
+Flow('bei-seisvd', data_pocs, 'cp')
+
+Grey('bei-seisvd', 'title="Proposed"')
+
+Graph('snrs-pocsvd', 'title="Convergence diagram"')
+
+
+Flow('fk-bei-seisvd', 'bei-seisvd',
+     'put d2=1 o2=0 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=1000')
+Greyfk('fk-bei-seisvd', 'allpos=y color=j label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 title="Proposed"')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Spitz'
+matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+n1 = 1000
+n2 = 24
+n22 = 37
+d1 = 0.004
+d2 = 0.067
+o1 = 0
+o2 = 0.264
+npef = 5
+pre1 = 1
+pre2 = 1
+flow = 0.1
+fhigh = 120
+############################################################
+# with parameter
+############################################################
+Flow('bei-fx-t', [os.path.join(matROOT, matfun+'.m'), 'bei'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)g,%(d1)g,%(npef)d,%(pre1)g,%(pre2)g,%(flow)g,%(fhigh)g);quit"
+     ''' % vars(), stdin=0, stdout=-1)
+Flow('bei-fx', 'bei-fx-t', 'put d1=%g d2=%g o1=%g o2=%g ' % (d1, d2, o1, o2))
+
+
+Grey('bei-fx', 'label1=Time unit1=s screenratio=1.4 title="Spitz"')
+
+
+Flow('fk-bei-fx', 'bei-fx',
+     'put d2=1 o2=0 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=1000')
+Greyfk('fk-bei-fx', 'allpos=y color=j label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 title="Spitz"')
+
+Flow('bei-seis-bp', 'bei-seisvd', 'bandpass flo=9')
+Grey('bei-seis-bp', 'label1=Time unit1=s screenratio=1.4 title="Bandpass"')
+
+Flow('bei-dif-bp', 'bei-seisvd bei-seis-bp', 'add scale=1,-1 ${SOURCES[1]}')
+Grey('bei-dif-bp', 'label1=Time unit1=s screenratio=1.4 title="Bandpass"')
+
+
+Flow('fk-bei-seis-bp', 'bei-seis-bp',
+     'put d2=1 o2=0 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=1000')
+
+Flow('fk-dif-bp', 'bei-dif-bp',
+     'put d2=1 o2=0 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=1000')
+Greyfk('fk-bei-seis-bp', 'allpos=y color=j label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 title="Proposed"')
+Greyfk('fk-dif-bp', 'allpos=y color=j label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 title="Bandpass"')
+
+
+End()

@@ -1,0 +1,3 @@
+uses=['sfcp', 'sfput', 'sfgrey', 'sfaddtrace', 'sfwindow', 'sfmath', 'sfspray', 'sfrtoc', 'sffft3', 'sfcabs', 'sftransp', 'sfremap1', 'sfscale', 'sfpad', 'sfbandpass', 'sfdip', 'sfseislet', 'sfthreshold1', 'sfmul', 'sfadd', 'sfdiff', 'sfcat', 'sfgraph']
+data=[]
+size=   24735240

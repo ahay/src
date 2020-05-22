@@ -1,0 +1,128 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1="Time" title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 screenht=10.24 screenratio=0.75 screenwd=13.65 wherexlabel=b wheretitle=t bartype=v  clip=0.4 color=d %s'%other)
+	
+n1=512
+n2=512
+put='n1=200 n2=256 d1=1 d2=1 o1=0 o2=0'
+
+#Create the well-known sigmoid model
+#############################################################################
+Flow('sig',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=.008 n2=256 |
+     smooth rect1=3 diff1=1 | smooth rect1=3 |
+     put label2=Distance | put d2=1 | scale axis=2
+     ''')
+Grey('sig','')
+	
+## FK
+Flow('sig-fk','sig','fft1 | fft3 axis=2 | cabs')
+Grey('sig-fk','clip=500 allpos=y label1="Frequency" label2="Normalized wavenumber"')
+
+## DWT
+Flow('sig-dwt','sig','dwt inv=y | transp | dwt inv=y|transp')
+Grey('sig-dwt','clip=1 label2="Spatial scale" unit1= label1="Temporal scale"')
+
+## Seislet
+# Spatial seislet
+Flow('sig-dip','sig','bandpass fhi=40 |dip rect1=10 rect2=10 ')
+Flow('sig-seis-t','sig sig-dip','seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+
+# Temporal seislet
+Flow('zero',None,'spike n1=1 mag=0')
+Flow('freq',None,'spike n1=1 mag=10')
+# hilbert transform
+Flow('sig-hilb','sig-seis-t','envelope hilb=y ' ) 
+
+seis=[]
+for i in range(256):
+	seis1='sig-seis%d'%i
+	Flow(seis1,'sig-seis-t sig-hilb freq',
+	'''
+	cmplx ${SOURCES[1]} | window n2=1 f2=%d | 
+	freqlet freq=${SOURCES[2]} type=b '''%i)
+	seis.append(seis1)
+Flow('sig-seis',seis,'cat axis=2 ${SOURCES[1:%d]} | cabs'%len(seis))
+Grey('sig-seis','clip=30 label2="Spatial scale" label1="Temporal scale" unit1=')
+
+## Curvelet 
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Curve'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+
+n1=200
+n2=256
+#Flow('sig-0','sig','pad n1=512 ')
+
+flag=1 # forward Eseis transform
+############################################################
+## with parameter
+############################################################
+Flow('sig-curv-c-t sig-curv-img-t',[os.path.join(matROOT,matfun+'.m'),'sig'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}',%(n1)d,%(n2)d,'${TARGETS[0]}','${TARGETS[1]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Flow('sig-curv-img','sig-curv-img-t','put d1=1 o1=1 d2=1 o2=1')
+Grey('sig-curv-img','clip=1 label2="Spatial scale" label1="Temporal scale"')
+
+
+# sorting the coefficients
+Flow('seisc','sig-seis',
+	'''
+	put n1=51200 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort | window n1=51200''')
+Flow('fkc','sig-fk',
+	'''
+	put n1=51712 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort  | window n1=51200''')
+Flow('dwtc','sig-dwt',
+	'''put n1=51200 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort  | window n1=51200''')
+Flow('curvc','sig-curv-c-t',
+	'''put n1=54791 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort  | window n1=51200''')
+
+
+# transformed domain coefficients decaying diagram
+Plot('sig-c','seisc fkc dwtc curvc',
+'''
+cat axis=2 ${SOURCES[1:4]} |
+window n1=500 | scale axis=1 | 
+math output="20*log(input)/log(10)"|
+graph dash=1,0,2,3 label1=n label2="a\_n\^" 
+unit2="dB" wanttitle=n  labelsz=11''')
+
+# Making frames
+Plot('label0',None,
+	'''
+	box x0=9.5 y0=6.8 label="Fourier" xt=0.5 yt=0.5
+	''')
+Plot('label1',None,
+	'''
+	box x0=7.5 y0=7.4 label="Wavelet" xt=0.5 yt=0.5 
+	''') # xt,yt relative position 0.5
+Plot('label2',None, 
+	'''
+	box x0=3.9 y0=4.1 label="Seislet" xt=0.5 yt=0.5
+	''')
+Plot('label3',None, 
+	'''
+	box  x0=3.3 y0=7.5 label="Curvelet" xt=0.5 yt=0.5
+	''')
+Result('sig-c','sig-c label0 label1 label2 label3','Overlay')
+
+End()

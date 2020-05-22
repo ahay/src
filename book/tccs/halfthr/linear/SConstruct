@@ -1,0 +1,295 @@
+from rsf.proj import*
+mute='cp'
+## module definition
+def Grey(data,other): 
+	Result(data,'window f2=5 n2=256 | grey label2=Trace unit2="" label1=Time unit1="s" screenratio=1.4 title="" wherexlabel=b wheretitle=t color=b %s'%other)
+
+def Wig(data,other): 
+	Result(data,'window f2=5 n2=256 |window j2=5 |add mode=p scale=1 | wiggle transp=y yreverse=y poly=y screenratio=1.4 label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t clip=0.15 %s '%other)
+
+def Greyplot(data,other): 
+	Plot(data,'window f2=5 n2=256 | grey label2=Trace unit2="" label1=Time unit1="s" screenratio=1.4 title="" wherexlabel=b wheretitle=t clip=0.15 %s '%other)
+
+def Wigplot(data,other): 
+	Plot(data,'window f2=5 n2=256 |window j2=5 |add mode=p scale=1 | wiggle transp=y yreverse=y poly=y screenratio=1.4 label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t clip=0.15 %s '%other)
+
+def Graph(data,other):
+	Result(data,'graph label1="" label2="" unit1="" unit2="" title="" wherexlabel=b wheretitle=t %s' %other)
+
+def Graphplot(data,other):
+	Plot(data,'graph label1="" label2="" unit1="" unit2=""  title="" wherexlabel=b wheretitle=t %s' %other)
+## parameters definition
+zeroperc=30
+
+#Create the well-known complex model
+#############################################################################
+Flow('linear',None,
+     '''
+     spike n1=512 n2=256 d2=0.1 o2=0 label2=Trace unit2=
+     nsp=4 k1=64,100,160,200 p2=1.5,-0.3,0,0.5 mag=1,1,1,1 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0 | put d2=1 | pad beg2=5 end2=5
+     ''')
+
+## zero trace (remove certain percent of traces)
+Flow('linear-mask','linear','window n1=1 | noise type=y range=0.5 mean=0.5 rep=y seed=201414| threshold1 ifperc=1 type=hard thr=%d | mask min=0.000000001 | spray axis=1 n=512 |dd type=float'%(100-zeroperc))
+Flow('linear-mask2','linear-mask','math output="1-input"')
+Flow('linear-zero','linear linear-mask','add mode=p ${SOURCES[1]}')
+
+Wig('linear','clip=0.15')
+Grey('linear-mask','color=j')
+Wig('linear-zero','clip=0.15')
+
+## define forward and backward transform strings
+forw2 = 'rtoc | fft3 axis=1 pad=2 |fft3 axis=2 pad=2'
+back2 = 'fft3 axis=2 pad=2 inv=y | fft3 axis=1 pad=2 inv=y |real'
+
+## compute the initial snr (SNR=10log(sum(s^2)/sum(n^2))
+Flow('diff0','linear linear-zero','add scale=1,-1 ${SOURCES[1]}')
+Flow('snr0',['linear','diff0'],'snr2 noise=${SOURCES[1]}')
+sig="linear-zero"
+Greyplot(sig,'title="Iteration 0"')
+niter=60
+thr=8
+percthr=6
+
+## POCS (N=2) hard -constant
+data = sig
+datas = [sig]
+snrs1=['snr0']
+
+for iter in range(niter):
+    old = data
+    data = 'data1-%d' % (iter+1)
+    snr  ='snr1-%d'%(iter+1)
+    diff ='diff1-%d'%(iter+1)
+    # 1. Forward FFT
+    # 2. Threshold in FK domain
+    # 3. Inverse FFT
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data,[old,'linear-mask',sig,'linear-mask2'],
+         '''
+         mul ${SOURCES[1]} | 
+         add scale=-1,1,1 ${SOURCES[2]} ${SOURCES[0]}  | 
+	 %s | threshold1 type=hard  thr=%g ifverb=1 ifperc=0 | 
+         %s | mul ${SOURCES[3]} | add scale=1,1 ${SOURCES[2]} |%s
+         ''' % (forw2,thr,back2,mute))
+    Flow(diff,['linear',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['linear',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs1.append(snr)
+Plot('pocs1',datas,'Movie')
+
+
+## POCS  (N=2) soft -constant
+data = sig
+datas = [sig]
+snrs2=['snr0']
+for iter in range(niter):
+    old = data
+    data = 'data2-%d' % (iter+1)
+    snr  ='snr2-%d'%(iter+1)
+    diff ='diff2-%d'%(iter+1)
+    # 1. Forward FFT
+    # 2. Threshold in FK domain
+    # 3. Inverse FFT
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data,[old,'linear-mask',sig,'linear-mask2'],
+         '''
+         mul ${SOURCES[1]} | 
+         add scale=-1,1,1 ${SOURCES[2]} ${SOURCES[0]}  | 
+	 %s | threshold1 type=soft  thr=%g ifverb=1 ifperc=0 | 
+         %s | mul ${SOURCES[3]} | add scale=1,1 ${SOURCES[2]} |%s
+         ''' % (forw2,thr,back2,mute))
+    Flow(diff,['linear',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['linear',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs2.append(snr)
+Plot('pocs2',datas,'Movie')
+
+## POCS  (N=2) half thresholding -constant
+data = sig
+datas = [sig]
+snrs3=['snr0']
+for iter in range(niter):
+    old = data
+    data = 'data3-%d' % (iter+1)
+    snr  ='snr3-%d'%(iter+1)
+    diff ='diff3-%d'%(iter+1)
+    # 1. Forward FFT
+    # 2. Threshold in FK domain
+    # 3. Inverse FFT
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data,[old,'linear-mask',sig,'linear-mask2'],
+         '''
+         mul ${SOURCES[1]} | 
+         add scale=-1,1,1 ${SOURCES[2]} ${SOURCES[0]}  | 
+	 %s | halfthr  thr=%g ifverb=1 ifperc=0 | 
+         %s | mul ${SOURCES[3]} | add scale=1,1 ${SOURCES[2]} |%s
+         ''' % (forw2,thr,back2,mute))
+    Flow(diff,['linear',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['linear',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs3.append(snr)
+Plot('pocs3',datas,'Movie')
+
+
+
+
+## POCS (N=2) hard - percentile
+data = sig
+datas = [sig]
+snrs4=['snr0']
+
+for iter in range(niter):
+    old = data
+    data = 'data4-%d' % (iter+1)
+    snr  ='snr4-%d'%(iter+1)
+    diff ='diff4-%d'%(iter+1)
+    # 1. Forward FFT
+    # 2. Threshold in FK domain
+    # 3. Inverse FFT
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data,[old,'linear-mask',sig,'linear-mask2'],
+         '''
+         mul ${SOURCES[1]} | 
+         add scale=-1,1,1 ${SOURCES[2]} ${SOURCES[0]}  | 
+	 %s | threshold1 type=hard  thr=%g ifverb=1 ifperc=1 | 
+         %s | mul ${SOURCES[3]} | add scale=1,1 ${SOURCES[2]} |%s
+         ''' % (forw2,percthr,back2,mute))
+    Flow(diff,['linear',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['linear',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs4.append(snr)
+Plot('pocs4',datas,'Movie')
+
+
+## POCS  (N=2) soft -percentile
+data = sig
+datas = [sig]
+snrs5=['snr0']
+for iter in range(niter):
+    old = data
+    data = 'data5-%d' % (iter+1)
+    snr  ='snr5-%d'%(iter+1)
+    diff ='diff5-%d'%(iter+1)
+    # 1. Forward FFT
+    # 2. Threshold in FK domain
+    # 3. Inverse FFT
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data,[old,'linear-mask',sig,'linear-mask2'],
+         '''
+         mul ${SOURCES[1]} | 
+         add scale=-1,1,1 ${SOURCES[2]} ${SOURCES[0]}  | 
+	 %s | threshold1 type=soft  thr=%g ifverb=1 ifperc=1 | 
+         %s | mul ${SOURCES[3]} | add scale=1,1 ${SOURCES[2]} |%s
+         ''' % (forw2,percthr,back2,mute))
+    Flow(diff,['linear',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['linear',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs5.append(snr)
+Plot('pocs5',datas,'Movie')
+
+## POCS  (N=2) half thresholding -percentile
+data = sig
+datas = [sig]
+snrs6=['snr0']
+for iter in range(niter):
+    old = data
+    data = 'data6-%d' % (iter+1)
+    snr  ='snr6-%d'%(iter+1)
+    diff ='diff6-%d'%(iter+1)
+    # 1. Forward FFT
+    # 2. Threshold in FK domain
+    # 3. Inverse FFT
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data,[old,'linear-mask',sig,'linear-mask2'],
+         '''
+         mul ${SOURCES[1]} | 
+         add scale=-1,1,1 ${SOURCES[2]} ${SOURCES[0]}  | 
+	 %s | halfthr  thr=%g ifverb=1 ifperc=1 | 
+         %s | mul ${SOURCES[3]} | add scale=1,1 ${SOURCES[2]} |%s
+         ''' % (forw2,percthr,back2,mute))
+    Flow(diff,['linear',data],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr,['linear',diff],'snr2 noise=${SOURCES[1]}')
+    Greyplot(data,'title="Iteration %d"' % (iter+1))
+    datas.append(data)
+    snrs6.append(snr)
+Plot('pocs6',datas,'Movie')
+
+## ploting convergence diagram 
+Flow('SNR1',snrs1,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs1))
+Flow('SNR2',snrs2,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs2))
+Flow('SNR3',snrs3,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs3))
+Flow('SNR4',snrs4,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs4))
+Flow('SNR5',snrs5,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs5))
+Flow('SNR6',snrs6,'cat axis=1 ${SOURCES[1:%d]}'%len(snrs6))
+
+Flow('SNRs','SNR2 SNR3 SNR5 SNR6','cat axis=2 ${SOURCES[1:4]}')
+#Graph('SNRs','label1="Iteration no. #" label2=SNR unit2=dB symbol="-*ohsf" symbolsz=10')
+Graph('SNRs','label1="Iteration no. #" label2=SNR unit2=dB symbol="*osp" symbolsz=10')
+
+## Plot result
+Wig('data2-%d'%niter,'')
+Wig('data3-%d'%niter,'')
+Wig('data5-%d'%niter,'')
+Wig('data6-%d'%niter,'')
+Result('data2','Fig/data2-%d.vpl'%niter,'Overlay')
+Result('data3','Fig/data3-%d.vpl'%niter,'Overlay')
+Result('data5','Fig/data5-%d.vpl'%niter,'Overlay')
+Result('data6','Fig/data6-%d.vpl'%niter,'Overlay')
+
+## Plot difference
+Wigplot('diff2-%d'%niter,'')
+Wigplot('diff3-%d'%niter,'')
+Wigplot('diff5-%d'%niter,'')
+Wigplot('diff6-%d'%niter,'')
+
+Flow('diff2_10','diff2-%d'%niter,'add mode=p scale=10')
+Flow('diff3_10','diff3-%d'%niter,'add mode=p scale=10')
+Flow('diff5_10','diff5-%d'%niter,'add mode=p scale=10')
+Flow('diff6_10','diff6-%d'%niter,'add mode=p scale=10')
+Wig('diff2_10','')
+Wig('diff3_10','')
+Wig('diff5_10','')
+Wig('diff6_10','')
+Result('diff2','diff2-%d'%niter,'Overlay')
+Result('diff3','diff3-%d'%niter,'Overlay')
+Result('diff5','diff5-%d'%niter,'Overlay')
+Result('diff6','diff6-%d'%niter,'Overlay')
+
+## FK domain ploting (without log)
+Flow('linearfk','linear','%s | cabs'%forw2)
+Flow('linear-zerofk','linear-zero','%s | cabs'%forw2)
+Flow('data2-%d'%niter+'fk','data2-%d'%niter,'%s|cabs'%forw2)
+Flow('diff2-%d'%niter+'fk','diff2-%d'%niter,'%s|cabs'%forw2)
+Greyplot('linearfk','label1="Frequency" unit1=Hz label2="Normalized wavenumber" uni2= color=j')
+Greyplot('linear-zerofk','label1="Frequency" unit1=Hz label2="Normalized wavenumber" uni2= color=j')
+Greyplot('data2-%d'%niter+'fk','label1="Frequency" unit1=Hz label2="Normalized wavenumber" uni2= color=j')
+Greyplot('diff2-%d'%niter+'fk','label1="Frequency" unit1=Hz label2="Normalized wavenumber" uni2= color=j')
+Result('compfk','linearfk linear-zerofk '+'data2-%d'%niter+'fk'+' diff2-%d'%niter+'fk','SideBySideIso')
+
+
+## FK domain ploting (with log)
+Flow('linearfklog','linear','%s | cabs | math output="log(input)"'%forw2)
+Flow('linear-zerofklog','linear-zero','%s | cabs |math output="log(input)"'%forw2)
+Flow('data2-%d'%niter+'fklog','data2-%d'%niter,'%s|cabs |math output="log(input)"'%forw2)
+Flow('diff2-%d'%niter+'fklog','diff2-%d'%niter,'%s|cabs |math output="log(input)"'%forw2)
+Greyplot('linearfklog','label1="Frequency" unit1=Hz label2="Normalized wavenumber" uni2= color=j')
+Greyplot('linear-zerofklog','label1="Frequency" unit1=Hz label2="Normalized wavenumber" uni2= color=j')
+Greyplot('data2-%d'%niter+'fklog','label1="Frequency" unit1=Hz label2="Normalized wavenumber" uni2= color=j')
+Greyplot('diff2-%d'%niter+'fklog','label1="Frequency" unit1=Hz label2="Normalized wavenumber" uni2= color=j')
+Result('compfklog','linearfklog linear-zerofklog '+'data2-%d'%niter+'fklog'+' diff2-%d'%niter+'fklog','SideBySideIso')
+
+End()

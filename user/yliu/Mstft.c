@@ -21,7 +21,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv, sym, opt;
+    bool inv, sym, opt, wind;
     int n1, nt, nw, i, i1, i2, n2, j, ntw, m;
     float dw, ow, *p, *inp, d1, o1, wt, shift;
     kiss_fft_cpx *pp, ce;
@@ -35,6 +35,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, perform inverse transform */
+    if (!sf_getbool("window",&wind)) wind=false;
+    /* if y, add Hanning window*/
     if (!sf_getbool("sym",&sym)) sym=false;
     /* if y, apply symmetric scaling to make the FFT operator Hermitian */
     if (!sf_getbool("opt",&opt)) opt=true;
@@ -107,6 +109,12 @@ int main(int argc, char* argv[])
 			p[j] = inp[i+j-m];
 		    }
 		}
+
+        if (wind) { 
+            for (i1=0; i1 < ntw; i1++) {
+			    p[i1] *= (0.5 - 0.5*cosf(2*SF_PI*i1 / (ntw - 1)));
+            }
+        }
 		
 		if (sym) {
 		    for (i1=0; i1 < ntw; i1++) {

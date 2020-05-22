@@ -1,0 +1,78 @@
+from rsf.proj import*
+# Key Reference:
+# Chen, Y., 2017, Fast dictionary learning for noise attenuation of multidimensional seismic data, Geophysical Journal International, 209, 21-31.
+# 
+# Note that the original synthetic data cannot be found now
+# so I use a new one that is often used in my work
+# e.g., in 
+# Chen et al., 2016, An open-source Matlab code package for improved rank-reduction 3D seismic data denoising and reconstruction, Computers & Geosciences, 95, 59-66.
+# Huang et al., 2016, Damped multichannel singular spectrum analysis for 3D random noise attenuation, Geophysics, 81, V261-V270.
+# 
+# In addition
+# All codes have been significantly rewritten and upgraded so that the general performance the codes are much improved. Thus the computational time comparison is not exactly the same as previously reported. But, as you will see, SGK is still much faster than the KSVD method without losing much of the effectiveness.
+# 
+
+from rsf.prog import RSFROOT
+from math import pi
+
+# Data size: 301*61*61
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte gainpanel=e clip=0.8  | 
+       grey3 flat=n frame1=30 frame2=8 frame3=8 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time" unit1=s  title= screenratio=1.3  color=g %s'''%other)
+
+def Greys(data,other):
+	Result(data,
+       '''
+       byte gainpanel=e clip=1 bar=bar.rsf | 
+       grey3 flat=n frame1=30 frame2=8 frame3=8 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time" unit1=s  title= screenratio=1.3  color=g %s'''%other)
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Synth'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+put='d1=175 n2=20 n3=20 d1=0.004 d2=1 d3=1 o2=1 o3=1'
+Flow('syn3d-t syn3d-n-t syn3d-sgk-t syn3d-ksvd-t',[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('syn3d','syn3d-t','put %s'%put)     
+Flow('syn3d-n','syn3d-n-t','put %s'%put)     
+Flow('syn3d-sgk','syn3d-sgk-t','put %s'%put)     
+Flow('syn3d-ksvd','syn3d-ksvd-t','put %s'%put)     
+Flow('syn3d-ksvd-n','syn3d-n syn3d-ksvd','add scale=1,-1 ${SOURCES[1]}')
+Flow('syn3d-sgk-n','syn3d-n syn3d-sgk','add scale=1,-1 ${SOURCES[1]}')
+
+Grey3('syn3d','title="Clean"')
+Grey3('syn3d-n','title="Noisy"')
+Grey3('syn3d-ksvd','title="KSVD"')
+Grey3('syn3d-sgk','title="SGK"')
+Grey3('syn3d-ksvd-n','title="KSVD"')
+Grey3('syn3d-sgk-n','title="SGK"')
+
+#calculate similarity
+Flow('syn3d-simi1','syn3d-ksvd syn3d-ksvd-n','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5 rect3=5')
+Flow('syn3d-simi2','syn3d-sgk syn3d-sgk-n','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5 rect3=5 ')
+
+Flow('syn3d-simi3','syn3d-simi1','math output="input*2"')
+Flow('syn3d-simi4','syn3d-simi2','math output="input*2"')
+
+Greys('syn3d-simi1','color=j scalebar=y minval=0 maxval=1 title="K-SVD" ')
+Greys('syn3d-simi2','color=j scalebar=y minval=0 maxval=1 title="SGK"')
+Greys('syn3d-simi3','color=j scalebar=y minval=0 maxval=1 title="K-SVD" ')
+Greys('syn3d-simi4','color=j scalebar=y minval=0 maxval=1 title="SGK"')
+
+
+End()

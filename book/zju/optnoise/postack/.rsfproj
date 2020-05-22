@@ -1,0 +1,3 @@
+uses=['sfwindow', 'sfput', 'sfscale', 'sfnoise', 'sfbandpass', 'sfmath', 'sfcp', 'sfgrey', 'sfpad', 'sfdip', 'sfdd', 'sfpwpaint', 'sfcontour', 'sfiwarp', 'sfadd', 'sffxdecon', 'sfgraph', 'sfbox']
+data=[]
+size=    4184400

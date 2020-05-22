@@ -1,0 +1,238 @@
+\published{Geophysical Journal International, 218, 655-665, (2019)}
+
+\title{Multi-channel quality factor Q estimation}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Yangkang Chen\footnotemark[1]}
+\maketitle
+\address{
+\footnotemark[1]
+School of Earth Sciences\\
+Zhejiang University\\
+Hangzhou, Zhejiang Province, China, 310027\\
+yangkang.chen@zju.edu.cn 
+}
+
+\lefthead{Chen, 2019}
+\righthead{Multi-channel Q estimation}
+
+\begin{abstract}
+The estimation of quality factor, Q, plays an important role in many geophysical problems, including Q-compensated seismic imaging, geophysical interpretation, and fluid characterization. One of the most widely used approaches for estimating Q is the spectral ratio method (SRM). However, the spectral division in SRM may not be stable due to the spectral nulls. The shaping regularized inversion that treats the spectral division as a regularized least-squares inversion problem can help solve the spectral-nulls problem and make the spectral division stable. In the case of very noisy seismic data, the time-frequency maps can not be optimally obtained and thus the Q estimation performance will be strongly affected and unstable even with the regularized inversion method. We propose a multi-channel Q estimation approach that takes advantage of the multi-channel spatial coherence to constrain the inversion so that the estimated Q is spatially continuous. We use a set of synthetic and real data examples to demonstrate the performance of the multi-channel Q estimation method. Results show that the proposed method can obtain accurate and more importantly stable Q estimation result even in the case of strong random noise.
+\end{abstract}
+
+
+\section{Introduction}
+Because of the anelasticity and heterogeneity of earth medium, seismic waves experience absorption when traveling through the earth \cite[]{ricker1953,futterman1962,wright1981,kneib1995,changjun2002,yanghua2002,patro2006,youyi2010,youyi2012,shuwei2016vscan,yufeng2018geo}. The attenuation of seismic waves is a property of the earth, and is quantified by Q, the quality factor. Seismic attenuation affects both amplitude and waveforms of the recorded seismic data. The accuracy and stability when estimating the quality factor have effects on processing quality, seismic imaging, amplitudes interpretation and reservoir description \cite[]{guorui2014,yufeng2018l12}. 
+Q can be used to enhance seismic resolution by inverse Q filtering or Q-compensated migration \cite[]{Kjartansson1979Constant,Carcione2002Time,toverud2005comparison,carcione2007wave,zhang2007seismic,wang2011attenuation,prudencio2013spatial,delle2014frequency,dutta2014attenuation,zhu2014time,li2015efficient,matsushima2015seismic,wang2015q,tieyuan2015Implementation,zhu2017viscoelastic,jingnan2018}, and can also be used to aid AVO analysis because the attenuation effects are superimposed on AVO signature and can be corrected if accurate Q values are available for compensation. Besides, Q can be potentially used as a hydrocarbon indicator \cite[]{hedlin2001,yanghua2004,yanghua2014}. In addition, Q can be used to provide information about lithology, porosity, and fluid or gas saturation of subsurface to facilitate seismic interpretation \cite[]{pengcheng2012}. 
+
+The algorithm for estimating Q from recorded seismic data has been investigated exclusively in the literature. Q can be estimated in time domain, frequency domain and time-frequency domain, each domain has its own advantage and limitation. In time domain, the pulse amplitude decay (PAD) \cite[]{brzostowski1992}, pulse rising time (PRT) \cite[]{Kjartansson1979Constant}, and pulse broadening (PB) \cite[]{wright1981} are the most common approaches. In the frequency domain, those approaches include spectral ratio method (SRM) \cite[]{hauge1981,raikes1984}, centroid frequency shifting (CFS) \cite[]{quan1997} and peak frequency shifting (PFS) \cite[]{changjun2002,jinghuai2007}. All these frequency domain approaches require Fourier transforms to calculate the frequency spectra of seismic records sampled within a time window \cite[]{senlin2009}.  The time-frequency domain approach includes peak scale variations (PSV) \cite[]{li2006} in the wavelet domain to estimate Q by assuming an idealized pulse as the seismic source wavelet. However, the difference between the real source wavelet and an idealized pulse may be substantial, which is the limitation of the PSV method. There also exists a type of Q estimation approaches based on the instantaneous frequency (IF) of seismic record. In this type of method, Q can be estimated by inversion from the relationship between the measured instantaneous spectra and the seismic attenuation \cite[]{tonn1991,barnes1991,engelhard1996}. \cite{matheney1995} proposed a IF matching (IFM) method, which can iteratively modifies the causal attenuation operator \cite[]{akirichards.2002} so that the IF at the envelope peak of the reference pulse is the closest to that of the target pulse and thus Q can be estimated. Although IFM requires a time-window and an iterative procedure, it does not have the requirement of selecting variable frequency bands as required by SRM. 
+
+Several researchers compared different Q estimation methods in the literature. \cite{jannsen1985} compared PRT, SRM, spectrum modeling method and wavelet modeling method, and concluded that the wavelet modeling method is relatively better. \cite{tonn1991} compared the Q estimation approaches based on zero-offset VSP data, and concluded that no single method is generally superior. The performance of different Q estimation approaches depends on the specific situation where they are used. For example, analytical signal method is better for true amplitude recording, and SRM is the best for noise free data. \cite{senlin2009} compared four Q estimation methods, including SRM, CFS, PFS and wavelet envelope peak instantaneous frequency (WEPIF) methods according to their performance regarding wavelet independence, noise resistance and resolution of thin beds. Their comparison results showed that SRM is the best in both wavelet independence and noise resistance. WEPIF is the best in obtaining a highest resolution for a wedge model. \cite{reine2009} compared four time-frequency transforms used for SRM. Their results show that time-frequency transforms with a systematically varying time window, such as the S transform and continuous wavelet transform (CWT), can obtain more robust estimation of Q \cite[]{guochang2010}.  
+
+By reformulating the SRM in the time domain, \cite{pengcheng2012} proposed a matching filtering method  (MFM). Instead of calculating a spectral ratio, the Q estimation turns to finding a convolution operator in the time domain. The MFM is theoretically same to the SRM because the inverse Fourier transform of a spectral ratio is a matching filter. However, the time domain MFM is more robust in the presence of noise than direct spectral division in the frequency domain. Based on the concept of frequency down-shift, \cite{raji2013} proposed a new mathematical model to achieve a reliable Q estimation, which shows less sensitivity to noise interference and change of frequency bandwidth. Their inversion process mainly consist of two stages: (1) computation of the centroid frequency for the individual signal using variable window length and fast Fourier transform; (2) estimation of the difference in the centroid frequency and traveltime for a paired incident and transmitted signals. 
+
+From the literature review, we can conclude that the noise level existing in the seismic records is the main effect on the Q estimation performance. In this paper, we propose a multi-channel Q estimation approach using a regularized spectral ratio method, which can utilize the spatial coherence of useful reflection signals to alleviate the influence of strong random noise. The proposed method can help obtain an accurate Q estimation result even from the raw seismic data without the need of denoising. We formulate the spectral division as a regularized inversion problem and use shaping regularization with a local smoothing constraint to solve the optimization problem. The smoothness constraint is applied both along the frequency and space directions. According to the conclusion from \cite{reine2009} and \cite{guochang2010}, we propose to use the S transform \cite[]{stockwell1996} as the optimal time-frequency transform for the Q estimation. We organize the paper as follows: we first introduce the state-of-the-art single-channel Q estimation method based on the spectral ratio method. Then, we introduce the multi-channel Q estimation method based on the regularized spectral division framework, and we also introduce the shaping regularization method to solve the inversion-based regularized spectral division problem. Next, we test the proposed multi-channel Q estimation method on several synthetic and real data examples in the section of EXAMPLES. We also discuss the issues regarding the influence of noise and denoising, and computational complexity in the section of INTRODUCTION. Finally, we draw some key conclusions at the end of the paper.
+
+\section{Theory}
+
+\subsection{Single-channel spectral ratio method}
+The  seismic wave amplitude spectrum after propagating from traveltime $t_1$ to $t_2$ in a homogeneous attenuating medium are given by:
+\begin{align}
+\label{eq:sp1}
+Y(f,t_1) &= A(t_1)Y(f,t_0)e^{-\frac{\pi f(t_1-t_0)}{Q}},\\
+\label{eq:sp2}
+Y(f,t_2) &= A(t_2)Y(f,t_0)e^{-\frac{\pi f(t_2-t_0)}{Q}},
+\end{align}
+where $f$ is the frequency, $Y(f,t_1)$ and $Y(f,t_2)$ are the seismic wave amplitude spectrum after propagating traveltime $t_1$ and $t_2$, respectively, $Y(f,t_0)$ is the initial amplitude spectrum, and $A(t)$ is a factor independent of frequency. Combining equations \ref{eq:sp1} and \ref{eq:sp2}, we can obtain:
+\begin{equation}
+\label{eq:sp}
+\frac{Y(f,t_2)}{Y(f,t_1)} = \frac{A(t_2)e^{-\frac{\pi ft_2}{Q}}}{A(t_1)e^{-\frac{\pi ft_1}{Q}}} = d(f).
+\end{equation}
+Take a natural log of each side of equation \ref{eq:sp}, we obtain:
+\begin{equation}
+\label{eq:log}
+\ln[d(f)] = A+Bf,
+\end{equation} 
+where $A$ and $B$ are both constants, and $A=\ln(A(t_2)/A(t_1))$, $B=-(\pi(t_2-t_1)/Q)$. Here, $B$ can be estimated by the slope of linear regression line. Then, $Q$ can be estimated by 
+\begin{equation}
+\label{eq:q}
+Q=\frac{\pi(t_1-t_2)}{B}.
+\end{equation}
+
+\subsection{Multi-channel Q estimation method}
+The method introduced above refers to the single-channel method for Q estimation. In the single channel method, Q is estimated trace-by-trace, which does not consider the spatial coherence of the Q model. In the multi-channel method, we introduce the spatial coordinate $x$ into equations \ref{eq:sp1} and \ref{eq:sp2}:
+\begin{align}
+\label{eq:sp1x}
+Y(f,t_1,x) &= A(t_1,x)Y(f,t_0,x)e^{-\frac{\pi f(t_1-t_0)}{Q(x)}},\\
+\label{eq:sp2x}
+Y(f,t_2,x) &= A(t_2,x)Y(f,t_0,x)e^{-\frac{\pi f(t_2-t_0)}{Q(x)}},
+\end{align}
+where $x$ indicates that $Y(f,t_1,x)$, $A(t_1,x)$, $Q(x)$ vary with spatial coordinate $x$. Dividing equation \ref{eq:sp1x} by equation \ref{eq:sp2x}, equation \ref{eq:spx} becomes:
+\begin{equation}
+\label{eq:spx}
+\frac{Y(f,t_2,x)}{Y(f,t_1,x)} = \frac{A(t_2,x)e^{-\frac{\pi ft_2}{Q(x)}}}{A(t_1,x)e^{-\frac{\pi ft_1}{Q(x)}}} = d(f,x).
+\end{equation}
+
+\subsection{Spectral division by shaping regularization}
+The key step in the SRM is the division between $Y(f,t_2,x)$ and $Y(f,t_1,x)$. The division may be unstable when denominator $Y(f,t_1,x)$ is very small or the spectrum is not smooth. \cite{fomel2007localattr} and \cite{guochang2010} treated the division of two vectors ($\mathbf{a}$ and $\mathbf{b}$) as a regularized least-squares minimization problem:
+\begin{equation}
+\label{eq:opti}
+\min_{\mathbf{c}} \parallel \mathbf{a} -\mathbf{B}\mathbf{c} \parallel_2^2 + \mathbf{R}(\mathbf{c}),
+\end{equation}  
+where $\mathbf{B}=diag(\mathbf{b})$, $diag$ denotes the diagonal matrix composed of $\mathbf{b}$, $\mathbf{R}$ is the regularization operator. Shaping regularization \cite[]{fomel2007shape} can provide a convenient way for enforcing the smoothness of the solution in equation \ref{eq:opti} and the solution of equation \ref{eq:opti} has the following form:
+\begin{equation}
+\label{eq:solu}
+\mathbf{c} = [\lambda^2\mathbf{I} + \mathcal{T}(\mathbf{B}^T\mathbf{B}-\lambda_1^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{B}^T\mathbf{a},
+\end{equation}
+where $\mathbf{\mathcal{T}}$ is a two-dimensional smoothing operator, which controls the smoothness along the frequency and space axes. $\lambda$ is a parameter controlling the physical dimensionality and enabling fast convergence when inversion is implemented iteratively. It can be chosen as $\lambda  = \Arrowvert\mathbf{B}^T\mathbf{B}\Arrowvert_2$ \cite[]{fomel2007localattr}. 
+
+Here, in order to obtain a stable division between $Y(f,t_2,x)$ and $Y(f,t_1,x)$, we only need to substitute $\mathbf{a}$ and $\mathbf{b}$ with $Y(f,t_2,x)$ and $Y(f,t_1,x)$, where $f\in(f_{min},f_{max})$, respectively.
+
+When the spectral ratio $d(f,x)$ is calculated, we can do the least-squares line-fitting by taking the natural log of each side of equation \ref{eq:spx}:
+\begin{equation}
+\label{eq:logx}
+\ln[d(f,x)] = A(x)+B(x)f,
+\end{equation} 
+where $A(x)$ and $B(x)$ are both varying with the space coordinate $x$, and 
+\begin{align}
+\label{eq:Ax}
+A(x)&=\ln(A(t_2,x)/A(t_1,x)),\\
+\label{eq:Bx}
+B(x)&=\frac{-\pi(t_2-t_1)}{Q(x)}.
+\end{align}
+The least-squares line-fitting for estimating $A(x)$ and $B(x)$ can be expressed as 
+\begin{equation}
+\left(\hat{A}(x),\hat{B}(x) \right) = \displaystyle \arg \min_{\left(A(x),B(x)\right)}\left\|
+\left[\begin{array}{cc}
+1 & f_1\\
+1 & f_2\\
+\vdots & \vdots\\
+1 & f_n\\
+\end{array}\right]\left[\begin{array}{c}
+A(x)\\
+B(x)
+\end{array}\right]-\left[\begin{array}{cc}
+\ln[d(f1,x)]\\
+\ln[d(f2,x)]\\
+\vdots \\
+\ln[d(fn,x)]\\
+\end{array}\right] \right\|_2^2.
+\end{equation}
+After the least-squares line-fitting, Q can be calculated as
+\begin{equation}
+\label{eq:qx}
+Q(x)=\frac{\pi(t_1-t_2)}{B(x)}.
+\end{equation}
+
+The proposed method requires a time-frequency mapping to obtain $Y(f,t,x)$ for the subsequent calculation. \cite{reine2009} showed that the time-frequency transform used to calculate the spectrum of the seismic wave affects the accuracy of estimated Q, and the S transform and CWT decrease the variability of the attenuation estimate, specifically at the high and low ends of the spectrum because of a variable window function used in the definition. Because of the success of the S transform in estimating Q as shown in \cite{reine2009} and \cite{guochang2010}, we continue to use the S transform as the time-frequency transform in our multi-channel Q estimation framework. In the appendix, we provide a brief review of the S transform.
+
+The proposed method is convenient to implement and its parameters are easy to control. The proposed multi-channel Q estimation method is developed based on the state-of-the-art spectral ratio method framework. The difference between the proposed method and the traditional method lies in the way we calculate the spectral division. The regularized spectral division is an elegant way to avoid the problem of spectral nulls when doing a spectral division conventionally. The shaping regularization method has also been a state-of-the-art algorithm in recent years. A detailed algorithm framework of the iterative shaping regularization can be found in \cite{fomel2007shape}. The smoothness constraint is very straightforward to apply, i.e., two smoothing operators along the frequency and space directions individually. The smoothing operators can be a triangle operator or a Gaussian smoothing operator, both of which are very typical in the signal processing literature. In the whole algorithm framework, the only parameters we need to set are the smoothing radii along the frequency and space axes and the frequency range for least-squares line fitting. The larger smoothing radius, the smoother spectral ratio we will get. The frequency range is related with the dominant frequency range of the useful signals. We have mentioned the parameter selection in detail for each example. In practice, one need to adjust these parameters several times. Since there parameters have very straightforward implications, the adjustment of the parameters is still easy to control. 
+
+
+\section{Examples}
+In this section, we use two synthetic examples to demonstrate the performance of the proposed multi-channel Q estimation method. In the first example, we use a spatially constant Q to simulate the example. In the second example, we use a spatially varying Q. Then, we apply the proposed method to a field data example. 
+
+The first synthetic example is shown in Figure \ref{fig:traces,trace-15}. We apply band-limited random noise to the clean data to simulate a realistic data that contains random ambient noise, as shown in Figure \ref{fig:traces}. The signal-to-noise ratio (SNR) of the noisy data is -4.5 dB. We use the following SNR definition \cite[]{yangkang2016irr5d,mostafa2016geo,mostafa2016bssa,mostafa2017geo,yangkang2017sgk}:
+\begin{equation}
+\label{eq:snr}
+\text{SNR}=10\log_{10}\frac{\Arrowvert \mathbf{s} \Arrowvert_2^2}{\Arrowvert \mathbf{s} -\hat{\mathbf{s}}\Arrowvert_2^2}.
+\end{equation}
+where $\mathbf{s}$ denotes the noise-free data and $\hat{\mathbf{s}}$ denotes the denoised data. 
+
+The random noise is very strong and the the useful reflection signals are almost buried in the strong noise. Figure \ref{fig:trace-15} shows a single trace (the middle trace) that is extracted from the multi-channel seismic section.  To apply the spectral ratio method (SRM), we first transform the seismic data from time-space domain to time-frequency-space domain using the S transform. We show the time-frequency cube of the seismic data in Figure \ref{fig:trace-st-N}. Because of the strong random noise, the 2D time-frequency analysis becomes highly affected and resulted time-frequency map is highly irregular, as revealed by the front panel in Figure \ref{fig:trace-st-N}. However, when time-frequency maps are arranged section by section in a 3D cube, the peaks (high amplitude anomaly) on the time-frequency maps become continuous along the space direction in the time-frequency cube. Thus, by taking the 3D time-frequency cube into consideration when computing the spectral ratio, the spatial coherence can be well utilized. Figure \ref{fig:trace-f-t2-N,trace-f-t1-N} shows two multi-channel time slice. Figure \ref{fig:trace-f-t2-N} shows the time slice corresponding to time $t_2$ and Figure \ref{fig:trace-f-t1-N} shows the time slice of $t_1$. The 2D matrix in Figure \ref{fig:trace-f-t2-N} is equivalent to the numerator $A(t_2,x)e^{-\frac{\pi ft_2}{Q(x)}}$ in equation \ref{eq:spx} while the 2D matrix in Figure \ref{fig:trace-f-t1-N} corresponds to the denominator $A(t_1,x)e^{-\frac{\pi ft_2}{Q(x)}}$. In a vector form, Figure \ref{fig:trace-f-t2-N} corresponds to vector $\mathbf{a}$ in equation \ref{eq:opti} and Figure \ref{fig:trace-f-t1-N} denotes the vector $\mathbf{b}$ that constructs the diagonal matrix $\mathbf{B}$ in equation \ref{eq:opti}.
+
+The calculated the spectral ratio is shown in Figure \ref{fig:trace-ratio-N}. Because of the two-dimensional smoothness contraint, the calculated spectral ratio is smooth on both axes and is not affected seriously by the random noise in the raw data. Figure \ref{fig:trace-lsfits} shows the predicted spectral ratio using the least-squares line-fitting. Figure \ref{fig:trace-coef-N} shows  the calculated slope ($B$ in equation \ref{eq:log}) of the fitted line.  Figure \ref{fig:trace-comp} shows the comparison of the estimated Q using single-channel and multi-channel methods, respectively. The blue line shows the exact Q that is used to generate the synthetic example. The red line shows the estimated Q using the proposed multi-channel Q estimation method. The pink line shows the estimated Q using the single-channel Q estimation method. The exact Q used for simulating the example is 60 and the estimated Q is very close to the exact Q and is almost spatially constant. However, due to the strong noise, the single-channel method obtains very unstable Q results, which are obviously not acceptable. In this example, we use a 5-point radius for the frequency direction smoothing and a 10-point radius for the space direction smoothing to obtain the result. We use the frequency range $f\in(20 \text{Hz},80 \text{Hz})$ for the least-squares line-fitting. 
+
+The second example with spatially varying Q is shown in Figure \ref{fig:linear-0,linear-15}. Figure \ref{fig:linears} shows the multi-channel seismic section. Figure \ref{fig:linear-15} shows a single trace extracted from the seismic section. In this example, the quality factor, Q, varies from 40 to 80 from left to right. The SNR of this example is -1.53 dB. The time-frequency cube using the S transform is shown in Figure \ref{fig:linear-st-N}. Figure \ref{fig:linear-f-t2-N,linear-f-t1-N} shows the two constant time slices. Figure \ref{fig:linear-f-t2-N} and \ref{fig:linear-f-t1-N} correspond to $t_2=0.8$ s and $t_1=0.5$ s, respectively. Figure \ref{fig:linear-ratio-N} displays the spectral ratio result using the proposed shaping regularization method, which is smooth along both frequency and space directions. Figure \ref{fig:linear-lsfits} shows the predicted spectral ratio using the least-squares line-fitting method. It is clear that the smoothness regularized spectral ratio is close to the predicted spectral ratio by least-squares line-fitting. Figure \ref{fig:linear-comp} shows a comparison of different estimated Q results. The pink line from the single-channel Q estimation is highly oscillating, while the estimated space-varying Q curve as denoted by the red line is very close to the exact Q curve denoted by the blue line. In this example, we use a 5-point radius for the frequency direction smoothing and a 15-point radius for the space direction smoothing to obtain the result. We use the frequency range $f\in(20\text{Hz},80 \text{Hz})$ for the least-squares line-fitting. 
+
+We then apply the proposed method to a real seismic data. The seismic section is shown in Figure \ref{fig:field-0}. It is clear that the field data is very noisy, not only containing strong random noise, but also corrupted by strong high-frequency linear noise. The highlighted area by the blue dashed lines and the frame box correspond to a hydrocarbon reservoir. We focus on studying the spatial variation of the quality factor in the reservoir area, which can provide insight on the viscosity and fluid property in this area. Figure \ref{fig:field-single} shows a single trace (first trace in the gather). Because of the strong noise and poor SNR of this dataset, it is difficult to distinguish between the reflections signals and noise in purely from the single trace.
+Figure \ref{fig:field-st-N} shows the time-frequency cube of this example using the S transform. It is salient that the time-frequency maps help reveal the seismic events more clearly than the original amplitude profile. Figure \ref{fig:field-f-t2-N,field-f-t1-N} shows the two time-slices used for calculating the space-varying spectral ratio.  Figure \ref{fig:field-f-t2-N} corresponds to $t_2=1.18$ s and Figure \ref{fig:field-f-t1-N} corresponds to $t_1=0.71$ s. Figure \ref{fig:field-ratio-N} shows the spectral ratio using the proposed method. Figure \ref{fig:field-lsfits} shows the predicted spectral ratio by least-squares line-fitting. Figure \ref{fig:field-comp} shows the comparison of estimated space-varying Q using the single-channel method and the proposed multi-channel method. The red line corresponds to the single-channel method, which is highly unstable while the blue line corresponds the multi-channel method, which is much smoother. In this example, we use a 5-point radius for the frequency direction smoothing and a 10-point radius for the space direction smoothing to obtain the result. To alleviate the influence of high-frequency noise, we use a relatively narrower frequency range $f\in(20 \text{Hz},50 \text{Hz})$ for the least-squares line-fitting. 
+
+
+\inputdir{simple}
+\multiplot{2}{traces,trace-15}{width=0.45\columnwidth}{The synthetic example. (a) The multi-channel seismic section with $\text{SNR}=-4.5$ dB. (b) The middle trace in (a).}
+\plot{trace-st-N}{width=\columnwidth}{Time-frequency cube of the multi-channel seismic section. Note that although the time-frequency map of a single-trace is irregular, the time-frequency map along the position direction is coherent. }
+\multiplot{2}{trace-f-t2-N,trace-f-t1-N}{width=0.6\columnwidth}{The multi-channel time slice of time $t_2$ (a) and time $t_1$ (b). In equation \ref{eq:spx}, (a) denotes the numerator and (b) denotes the denominator. In equation \ref{eq:opti}, (a) denotes the vector $\mathbf{a}$ and (b) denotes the vector $\mathbf{b}$.}
+\multiplot{2}{trace-ratio-N,trace-lsfits}{width=0.6\columnwidth}{(a) The calculated spectral division. (b) The predicted spectral ratio via line fitting.}
+\multiplot{2}{trace-coef-N,trace-comp}{width=0.5\columnwidth}{(a) The slope ($B$ in equation \ref{eq:log}) of the fitted line. (b) The estimated quality factor, compared with the result of single-channel method, and the exact solution. The blue line in (b) corresponds to the exact Q that is used to generate the synthetic data. The pink line denotes the estimated result using the single-channel method.  The blue line denotes the estimated Q using the proposed multi-channel method. Note that the estimated Q using the proposed method is very close to the exact solution while the Q estimated from the single-channel method is highly unstable. }
+
+\inputdir{var}
+\multiplot{2}{linears,linear-15}{width=0.45\columnwidth}{The synthetic data example  with spatially varying quality factor. (a) The multi-channel seismic profile with $\text{SNR}=-1.53$ dB. (b) The middle trace in (a).}
+\plot{linear-st-N}{width=\columnwidth}{Time-frequency cube of the synthetic example  with spatially varying quality factor. Note that the time-frequency map along the position direction is coherent. }
+\multiplot{2}{linear-f-t2-N,linear-f-t1-N}{width=0.6\columnwidth}{The multi-channel time slice of time $t_2$ (a) and time $t_1$ (b) for the synthetic data example  with spatially varying quality factor. In equation \ref{eq:spx}, (a) denotes the numerator and (b) denotes the denominator. In equation \ref{eq:opti}, (a) denotes the vector $\mathbf{a}$ and (b) denotes the vector $\mathbf{b}$.}
+\multiplot{2}{linear-ratio-N,linear-lsfits}{width=0.6\columnwidth}{Synthetic data example with spatially varying quality factor. (a) The calculated spectral division. (b) The predicted spectral ratio via line fitting.}
+\plot{linear-comp}{width=0.8\columnwidth}{The estimated Q using the proposed multi-channel method compared with the single-channel method and the exact solution for the synthetic example with spatially varying quality factor. The blue line corresponds to the exact Q that is used to generate the synthetic data. The pink line denotes the estimated result using the single-channel method.  The red line denotes the estimated Q using the proposed multi-channel method. Note that the estimated Q using the proposed method is very close to the exact solution while the Q estimated from the single-channel method is highly unstable. }
+
+\inputdir{field}
+\multiplot{2}{field-0,field-single}{width=0.45\columnwidth}{The field data example. (a) The field seismic profile. (b) The first trace in (a).}
+\plot{field-st-N}{width=\columnwidth}{Time-frequency cube of the field seismic profile. Note that the time-frequency map along the position direction is coherent. }
+\multiplot{2}{field-f-t2-N,field-f-t1-N}{width=0.6\columnwidth}{The multi-channel time slice of time $t_2$ (a) and time $t_1$ (b) for the field data example. In equation \ref{eq:spx}, (a) denotes the numerator and (b) denotes the denominator. In equation \ref{eq:opti}, (a) denotes the vector $\mathbf{a}$ and (b) denotes the vector $\mathbf{b}$.}
+\multiplot{2}{field-ratio-N,field-lsfits}{width=0.6\columnwidth}{Field data example. (a) The calculated spectral division. (b) The predicted spectral ratio via line fitting.}
+\plot{field-comp}{width=0.8\columnwidth}{The estimated Q using the proposed multi-channel method compared with the single-channel method. The red line denotes the estimated result using the single-channel method.  The blue line denotes the estimated Q using the proposed multi-channel method. Note that the estimated Q using the proposed method is spatially smooth while the Q estimated from the single-channel method is highly oscillating. }
+
+
+\section{Discussions}
+The Q estimation problem is a long-standing problem and has been investigated extensively for several decades. However, it is the first time that a multi-channel method is proposed for estimating the quality factor from surface-recorded reflection seismic data. The main advantage of the proposed method is that it can be applied to the raw reflection seismic data directly without the need of denoising. Although the seismic data can be denoised first and be used to estimate the quality factor secondly, the reliability of the Q estimation heavily depends on the effectiveness of the denoising algorithm. Although a lot of denoising algorithm have been developed in the seismic community, because of the inappropriate parameter selection or inadequacy of denoising assumption, damage to the useful reflection signals is almost unavoidable \cite[]{yangkang2015ortho}. As long as the signal energy is damaged, the subsequent Q estimation that depends on the accuracy of signal amplitude cannot be convincing. Besides, separating the quality factor estimation into two steps in the traditional seismic data processing framework, i.e., denoising and Q estimation, is not elegant. By developing the multi-channel Q estimation algorithm, we make Q estimation an entity that only depends on the raw data itself. The independency of the proposed method from this perspective also makes it conveniently to be embeded into an automatic seismic data processing and inversion workflow. 
+
+Although robust in the presence of strong noise, as can be concluded from the field data example, it is still instructive to see how the result from the proposed method is compared with the result from denoised data in a single-channel framework. Comparing the denoising-based traditional processing framework and the denoising-free multi-channel Q estimation framework can also be informative to evaluate the reliability of the new algorithm. For the raw field data shown in Figure \ref{fig:field-0}, we use the state-of-the-art $f-x$ predictive filtering (or FX Decon) method \cite[]{canales1984} to remove the noise first. The denoised data is shown in Figure \ref{fig:field-dn}. Figure \ref{fig:field-dn-n} shows the removed noise from the raw data.
+Comparing the denoised data in Figure \ref{fig:field-dn} and the raw data in Figure \ref{fig:field-0}, it is clear to see the huge improvement. However, it is also possible to see some leaked signal energy, especially around the time slice of 0.6 s and 0.7 s. Figure \ref{fig:field-dn-st-N} shows the time-frequency cube of the denoised field data. It is obvious that because of the removal of much random and coherent linear noise, the time-frequency cube of the denoised data becomes much clearer and smoother. Figure \ref{fig:field-dn-Q1s-esti} shows the estimated Q from the denoised data using the single-channel method. The axes on Figure \ref{fig:field-dn-Q1s-esti} are set the same as on Figure \ref{fig:field-comp} for a easier comparison. From Figure \ref{fig:field-dn-Q1s-esti} we observe that the estimated Q from the denoised data can be less oscillating compared with that from the raw data using the traditional single-channel framework. It indicates that the denoising step can indeed make the Q estimation more stable. However, the Q is still not continuous along the space direction and many abrupt changes in Q between neighbor channels still exist. It is surprising to see that the estimated Q from raw data using the new method and the estimated Q from denoised data using the traditional method are pretty close, indicating the fact that the new method can avoid a denoising step without much affecting the accuracy of the estimated Q. 
+
+
+\multiplot{2}{field-dn,field-dn-n}{width=0.45\columnwidth}{Denoising test. (a) Denoised field data using the $f-x$ predictive filtering method. (b) Removed noise using the $f-x$ predictive filtering method.}
+\plot{field-dn-st-N}{width=\columnwidth}{Time-frequency cube of the denoised field data. Note that the time-frequency map is much smoother than that from the raw data (Figure \ref{fig:field-st-N}). }
+\plot{field-dn-Q1s-esti}{width=0.8\columnwidth}{The estimated Q from the denoised data using the single-channel method.}
+
+
+To understand the computational complexity of the proposed multi-channel Q estimation method, we need to analyse its implementation in detail. The main computational steps in the multi-channel Q estimation method are the forward S transform, regularization spectral division, and least-squares line-fitting. Let the target multi-channel seismic section be of the size $N_tN_x$. When transformed into the time-frequency domain, the 3D time-frequency cube is of the size $N_fN_tN_x$. The number of iterations during the regularized spectral division is $N_{iter}$, which is normally less than 50. The smoothing radii for the frequency and space directions are $R_f$ and $R_x$, respectively. The computational cost of the typical forward S transform on the raw 2D seismic section is $O(N_xN_fN_t\log(N_t))$. With iterative solver, the inversion-based spectral division takes $O(N_{iter}N_fN_x+N_{iter}N_fR_f+N_{iter}N_xR_x)$, where the first term comes from the iterative conjugate gradient solver, and the latter two terms come from the smoothing regularization in the frequency and space directions. The least-squares line-fitting takes only $O(N_f)$. Overall, since normally the computational cost of the regularized spectral division is much smaller than that of the S transform, the main computational cost of the proposed algorithm framework comes from the forward S transform. The traditional single-channel Q estimation method differs with the regularized one only in the second step, i.e., the inversion-based spectral division. In traditional single channel method, the cost is $O(N_xN_f)$. In the case of single-channel regularized spectral division, the cost is $O(N_{iter}N_fN_x+N_{iter}N_fR_f)$, which is only smaller than the proposed multi-channel method by $O(N_{iter}N_xR_x)$. Considering that the smoothing radius in the proposed method is not chosen too large to avoid over-smoothing, the extra computational cost from the multi-channel method is not significant. In summary, the computational cost of the spectral ratio method is mainly from the S transform and improving the efficiency of the S transform is beneficial in increasing the efficiency of the overall algorithm framework.
+
+
+
+
+
+
+
+\section{Conclusions}
+Q estimation is highly affected when the noise is strong. We have proposed a novel multi-channel Q estimation algorithm based on the commonly used spectral ratio method. In order to deal with the spectral nulls, we formulate the spectral division as an inversion problem and solve it using the shaping regularization method with a smoothness constraint. In order to deal with the instability of the solution when the random noise is very strong, we propose to use an extra spatial smoothness constraint in the shaping regularization framework. The synthetic examples with spatially constant and varying Q demonstrate that the proposed method can obtain very accurate Q estimation results. The real seismic data example with strong noise demonstrates that the proposed method can help obtain stable Q estimation performance in the presence of high noise level.
+
+
+\section{Acknowledgements}
+The research is supported by the starting fund from Zhejiang University.
+
+\bibliographystyle{seg}
+\bibliography{q}
+
+\newpage
+\append{S transform}
+For non-stationary data, time-frequency transforms are useful, as they can produce a spectral estimate centered at each time element of the data. In this respect, a 1D data trace is mapped into a 2D spectrogram, which has dimensions of time and frequency \cite[]{reine2009}. To introduce the S transform, we first briefly introduce the short-time Fourier transform (STFT).
+
+The STFT is a Fourier-related transform used to determine the sinusoidal frequency and phase content of local sections of a signal as it changes over time
+\begin{equation}
+\label{eq:constft}
+X_F(\tau,f)=\text{STFT}\{x(\tau)\}=\int_{-\infty}^{\infty}x(t)w(t-\tau)e^{-i2\pi ft}dt,
+\end{equation}
+where $f$ is the frequency, $\tau$ is a parameter that controls the position of the window function along the $t$ axis. 
+
+The STFT might be the most recognized time-frequency transform. It can be understood in such way that the data trace $x$ is gated by a sliding window function $w$, and the Fourier transform \cite[]{bracewell1978}. The sliding window function is commonly chosen as a Hanning window or Gaussian window.
+
+When $w(t)$ is chosen as a Gaussian window function:
+\begin{equation}
+\label{eq:gauss}
+w(t)=e^{-t^2/2\sigma^2},
+\end{equation}
+where $\sigma$ is the distribution width, the STFT transforms to the definition of Gabor transform \cite[]{carmona1998}.
+
+The S transform was proposed by \cite{stockwell1996} as an extension to the Morlet wavelet transform. Instead of a fixed time length for each frequency in the window functions chosen for STFT, the S transform analyzes shorter data segments as the frequencies increase. Related with the Gaussian window function as shown in equation \ref{eq:gauss}, the distribution width $\sigma$ is substituted with:
+\begin{equation}
+\label{eq:inversesigma}
+\sigma=\frac{1}{|f|}.
+\end{equation}
+Besides, the Gaussian window function used in the S transform is normalized with respect to the amplitude. Thus, the width of the Gaussian window scales inversely with frequency and amplitude scales linearly with the frequency:
+\begin{equation}
+\label{eq:Sgauss}
+w(t,f)=\frac{|f|}{\sqrt{2\pi}}e^{-t^2f^2/2}.
+\end{equation}
+Combining equation \ref{eq:constft} with equation \ref{eq:Sgauss} we can obtain the definition of the S transform (ST):
+\begin{equation}
+\label{eq:strans}
+X_S(\tau,f)=\text{ST}\{x(\tau)\}=\frac{|f|}{2\pi}\int_{-\infty}^{\infty}x(t)e^{-(t-\tau)^2f^2/2}e^{-i2\pi ft}dt.
+\end{equation}
+The S transform use a frequency-dependent window similar to that of wavelet transform, which allows a better resolution of low frequency components and enables a better time resolution of high frequency components.
