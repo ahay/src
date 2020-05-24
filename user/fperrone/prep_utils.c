@@ -54,6 +54,9 @@ struct wfl_struct{
   float *rdata;
   // buffer for the wavefield snapshot
   float *bwfl;
+  float *vbuf1;
+  float *vbuf2;
+  float *vbuf3;
   // dimensions
   long nabc;  // size of the absorbing boundary
   long modN1;
@@ -84,8 +87,14 @@ struct wfl_struct{
   sf_file Fswfl;
   char* pvtmpfilename;
   char* prtmpfilename;
+  char* prgrd1tmpfilename;
+  char* prgrd2tmpfilename;
+  char* prgrd3tmpfilename;
   FILE* Fpvdiv;
   FILE* Fprgrd;
+  FILE* Fprgrd1;
+  FILE* Fprgrd2;
+  FILE* Fprgrd3;
 };
 /*^*/
 
@@ -618,25 +627,15 @@ void born_velocity_sources_2d(wfl_struct_t * const wfl,
   long nelem = n1*n2;
   long simN1 = wfl->simN1;
 
-  float *vbuf= sf_floatalloc(nelem);
-
   for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
     for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
-      float iro = mod->buoy[i1+i2*simN1];
-      vbuf[j1+j2*n1] = -(wfl->v1c[i1+i2*simN1] - wfl->v1p[i1+i2*simN1])/iro;
+      wfl->vbuf1[j1+j2*n1] = (wfl->v1a[i1+i2*simN1]);
+      wfl->vbuf2[j1+j2*n1] = (wfl->v2a[i1+i2*simN1]);
     }
   }
-  fwrite(vbuf,sizeof(float),n1*n2,wfl->Fprgrd);
+  fwrite(wfl->vbuf1,sizeof(float),nelem,wfl->Fprgrd1);
+  fwrite(wfl->vbuf2,sizeof(float),nelem,wfl->Fprgrd2);
 
-  for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
-    for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
-      float iro = mod->buoy[i1+i2*simN1];
-      vbuf[j1+j2*n1] = -(wfl->v2c[i1+i2*simN1] - wfl->v2p[i1+i2*simN1])/iro;
-    }
-  }
-  fwrite(vbuf,sizeof(float),n1*n2,wfl->Fprgrd);
-
-  free(vbuf);
 }
 
 void born_velocity_sources_3d(wfl_struct_t * const wfl,
@@ -841,15 +840,10 @@ void born_pressure_sources_2d(wfl_struct_t * const wfl,
   long simN1 = wfl->simN1;
   long nelem = n1*n2;
 
-  float idt = 1./acq->dt;
-
   // compute the divergence of the particle velocity from the pressure field
   for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
     for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
-    float const v = mod->vmod[j1+j2*n1];
-    float const r = mod->dmod[j1+j2*n1];
-    float const scale = idt/(v*v*r);
-    wfl->bwfl[j1+j2*n1] = scale*(wfl->pc[i1+i2*simN1] - wfl->pp[i1+i2*simN1]);
+    wfl->bwfl[j1+j2*n1] = (wfl->v1a[i1+i2*simN1] + wfl->v2a[i1+i2*simN1]);
     }
   }
   fwrite(wfl->bwfl,sizeof(float),nelem,wfl->Fpvdiv);
@@ -1081,8 +1075,8 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
     float* w2p = v2r + (nt-1-it)*n1*n2;
 
     // source side gradient of pressure
-    fread(v1a,sizeof(float),n1*n2,wfl->Fprgrd);
-    fread(v2a,sizeof(float),n1*n2,wfl->Fprgrd);
+    fread(v1a,sizeof(float),n1*n2,wfl->Fprgrd1);
+    fread(v2a,sizeof(float),n1*n2,wfl->Fprgrd2);
 
     for (long i=0; i<n1*n2; i++){
       v1a[i] *= -1.*w1p[i]; // flipping time flips the sign of the velocity
@@ -1601,6 +1595,20 @@ void set_sr_interpolation_coeffs_2d(acq_struct_t * const acq, wfl_struct_t const
       acq->hicksSou1[ii+isou*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
       acq->hicksSou2[ii+isou*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
     }
+
+    if (wfl->freesurf){
+      for (int i=-3,ii=0; i<=4; i++,ii++){
+        int si = ix1s+i;
+        if ( si <= wfl->nabc){
+          int di = wfl->nabc-si;
+          float tmp = acq->hicksSou1[ii+isou*8];
+          acq->hicksSou1[       ii + isou*8] = 0.;
+          if (di>0) acq->hicksSou1[2*di + ii + isou*8] -= tmp;
+        }
+      }
+    }
+
+
   }
 
   for (long irec=0; irec<nrecs; irec++){
@@ -1614,6 +1622,19 @@ void set_sr_interpolation_coeffs_2d(acq_struct_t * const acq, wfl_struct_t const
       acq->hicksRcv1[ii+irec*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
       acq->hicksRcv2[ii+irec*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
     }
+
+    if (wfl->freesurf){
+      for (int i=-3,ii=0; i<=4; i++,ii++){
+        int si = ix1r+i;
+        if ( si <= wfl->nabc){
+          int di = wfl->nabc-si;
+          float tmp = acq->hicksRcv1[ii+irec*8];
+          acq->hicksRcv1[       ii + irec*8] = 0.;
+          if (di>0) acq->hicksRcv1[2*di + ii + irec*8] -= tmp;
+        }
+      }
+    }
+
   }
 
 }
@@ -1846,7 +1867,11 @@ void prepare_born_wfl_2d( wfl_struct_t * const wfl, mod_struct_t * mod,
   wfl->Fsdata = Fsdat;
   wfl->Fswfl  = Fswfl;
 
-  wfl->Fprgrd = sf_tempfile(&(wfl->prtmpfilename),"w+");
+  wfl->vbuf1 = sf_floatalloc(mod->n1*mod->n2);
+  wfl->vbuf2 = sf_floatalloc(mod->n1*mod->n2);
+
+  wfl->Fprgrd1 = sf_tempfile(&(wfl->prgrd1tmpfilename),"w+");
+  wfl->Fprgrd2 = sf_tempfile(&(wfl->prgrd2tmpfilename),"w+");
   wfl->Fpvdiv = sf_tempfile(&(wfl->pvtmpfilename),"w+");
 }
 
@@ -1919,10 +1944,15 @@ void clear_born_wfl_2d(wfl_struct_t *wfl)
 {
   clear_wfl_2d(wfl);
 
+  free(wfl->vbuf1);
+  free(wfl->vbuf2);
+
   if (wfl->Fpvdiv)
     remove(wfl->pvtmpfilename);
-  if (wfl->Fprgrd)
-    remove(wfl->prtmpfilename);
+  if (wfl->Fprgrd1)
+    remove(wfl->prgrd1tmpfilename);
+  if (wfl->Fprgrd2)
+    remove(wfl->prgrd2tmpfilename);
 }
 
 void clear_born_wfl_3d(wfl_struct_t *wfl)

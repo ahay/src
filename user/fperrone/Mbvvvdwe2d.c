@@ -472,7 +472,8 @@ int main(int argc, char* argv[])
 
   //rewind the secondary sources
   if (born_para.inputDenPerturbation || born_para.outputDenPertImage){
-    rewind(wfl->Fprgrd);
+    rewind(wfl->Fprgrd1);
+    rewind(wfl->Fprgrd2);
   }
   rewind(wfl->Fpvdiv);
 
