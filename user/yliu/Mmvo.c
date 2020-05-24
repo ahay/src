@@ -63,6 +63,8 @@ int main (int argc, char* argv[])
     nw1 = nt/2+1;
     dw = 1./(nt*d1);
     k=(int)(f/dw);
+    if(fabs(f-k*dw)>fabs(f-(k+1)*dw))
+        k=k+1;
 
     FD = (kiss_fft_cpx*)sf_complexalloc(nw1);
     TD = sf_floatalloc(nt);
@@ -75,7 +77,7 @@ int main (int argc, char* argv[])
 
     sf_putint(out, "n1", N);
     sf_putfloat(out, "o1", 0);
-    sf_putfloat(out, "d1", 1);
+    sf_putfloat(out, "d1", nw*d1);
 
     outp =sf_floatalloc(N);
 
@@ -93,13 +95,14 @@ int main (int argc, char* argv[])
 	
 	if(mvo) {
 	    if(log) {
-		outp[j]=log10(sf_cabsf(FD[k]));
+		outp[j]=log10(sf_cabsf(FD[k])*2/nw);
 	    } else {
-		outp[j]=sf_cabsf(FD[k]);
+		outp[j]=sf_cabsf(FD[k])*2/nw;
 	    }
 	}
 	if(!mvo) outp[j]= 180.0*sf_cargf(FD[k])/SF_PI;
-    }
+    }    
+
     sf_floatwrite(outp,N,out);
     
     free(um);
