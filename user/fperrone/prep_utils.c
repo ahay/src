@@ -1675,6 +1675,19 @@ void set_sr_interpolation_coeffs_3d(acq_struct_t * const acq, wfl_struct_t const
       acq->hicksSou2[ii+isou*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
       acq->hicksSou3[ii+isou*8] = sinc(i-rem3)*kwin(i-rem3,4.5);
     }
+
+    if (wfl->freesurf){
+      for (int i=-3,ii=0; i<=4; i++,ii++){
+        int si = ix1s+i;
+        if ( si <= wfl->nabc){
+          int di = wfl->nabc-si;
+          float tmp = acq->hicksSou1[ii+isou*8];
+          acq->hicksSou1[       ii + isou*8] = 0.;
+          if (di>0) acq->hicksSou1[2*di + ii + isou*8] -= tmp;
+        }
+      }
+    }
+
   }
 
   for (long irec=0; irec<nrecs; irec++){
@@ -1693,6 +1706,19 @@ void set_sr_interpolation_coeffs_3d(acq_struct_t * const acq, wfl_struct_t const
       acq->hicksRcv2[ii+irec*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
       acq->hicksRcv3[ii+irec*8] = sinc(i-rem3)*kwin(i-rem3,4.5);
     }
+
+    if (wfl->freesurf){
+      for (int i=-3,ii=0; i<=4; i++,ii++){
+        int si = ix1r+i;
+        if ( si <= wfl->nabc){
+          int di = wfl->nabc-si;
+          float tmp = acq->hicksRcv1[ii+irec*8];
+          acq->hicksRcv1[       ii + irec*8] = 0.;
+          if (di>0) acq->hicksRcv1[2*di + ii + irec*8] -= tmp;
+        }
+      }
+    }
+
   }
 
 }
