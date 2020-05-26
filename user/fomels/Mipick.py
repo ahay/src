@@ -195,7 +195,7 @@ def display(event):
     y = canvas.canvasx(event.y)
     if x >= x0 and y >= y0 and x <= x1 and y <= y1:
         x = o2+(x-x0)*xscale
-        y = o1+(y-y0)*ysca
+        y = o1+(y-y0)*yscale
         coords.set("(%s = %g %s, %s = %g %s)" % (label1,y,unit1,
                                                  label2,x,unit2))
     else:
