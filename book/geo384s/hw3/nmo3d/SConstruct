@@ -78,7 +78,7 @@ Plot('vscan',
 Flow('picks','picks.txt',
      '''
      wc -l | 
-     sed 's/^/in=$SOURCE data_format=ascii_float n1=3 n2=/' |
+     sed 's/^[ ]*/in=$SOURCE data_format=ascii_float n1=3 n2=/' |
      dd form=native | window n1=2
      ''')
 
