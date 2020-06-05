@@ -650,14 +650,15 @@ void born_velocity_sources_3d(wfl_struct_t * const wfl,
   long nelem = n1*n2*n3;
   long simN1 = wfl->simN1;
   long simN2 = wfl->simN2;
+  float dt = acq->dt;
 
   float *vbuf= sf_floatalloc(nelem);
 
   for (long i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
     for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
       for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
-        float iro = mod->buoy[i1+simN1*(i2+i3*simN2)];
-        vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v1c[i1+simN1*(i2+i3*simN2)] - wfl->v1p[i1+simN1*(i2+i3*simN2)])/iro;
+        float irodt = dt*mod->buoy[i1+simN1*(i2+i3*simN2)];
+        vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v1c[i1+simN1*(i2+i3*simN2)] - wfl->v1p[i1+simN1*(i2+i3*simN2)])/irodt;
       }
     }
   }
@@ -666,8 +667,8 @@ void born_velocity_sources_3d(wfl_struct_t * const wfl,
   for (long i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
     for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
       for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
-        float iro = mod->buoy[i1+simN1*(i2+i3*simN2)];
-        vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v2c[i1+simN1*(i2+i3*simN2)] - wfl->v2p[i1+simN1*(i2+i3*simN2)])/iro;
+        float irodt = dt*mod->buoy[i1+simN1*(i2+i3*simN2)];
+        vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v2c[i1+simN1*(i2+i3*simN2)] - wfl->v2p[i1+simN1*(i2+i3*simN2)])/irodt;
       }
     }
   }
@@ -676,8 +677,8 @@ void born_velocity_sources_3d(wfl_struct_t * const wfl,
   for (long i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
     for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
       for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
-        float iro = mod->buoy[i1+simN1*(i2+i3*simN2)];
-        vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v3c[i1+simN1*(i2+i3*simN2)] - wfl->v3p[i1+simN1*(i2+i3*simN2)])/iro;
+        float irodt = dt*mod->buoy[i1+simN1*(i2+i3*simN2)];
+        vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v3c[i1+simN1*(i2+i3*simN2)] - wfl->v3p[i1+simN1*(i2+i3*simN2)])/irodt;
       }
     }
   }

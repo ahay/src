@@ -29,16 +29,16 @@ void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * a
   float const d1 = mod->d1;
   float const d2 = mod->d2;
 
-  float const dtd1 = dt/d1;
-  float const dtd2 = dt/d2;
+  float const id1 = 1./d1;
+  float const id2 = 1./d2;
 
-  float const d11=C1*dtd1;
-  float const d12=C2*dtd1;
-  float const d13=C3*dtd1;
+  float const d11=C1*id1;
+  float const d12=C2*id1;
+  float const d13=C3*id1;
 
-  float const d21=C1*dtd2;
-  float const d22=C2*dtd2;
-  float const d23=C3*dtd2;
+  float const d21=C1*id2;
+  float const d22=C2*id2;
+  float const d23=C3*id2;
 
   long const i2start=NOP;
   long const i2end = n2-NOP;
@@ -50,19 +50,17 @@ void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * a
   {
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
-        float const b =buoy[idx];
-        v1a[idx] = b*(d11*(pp[idx+1] - pp[idx  ])+
-                      d12*(pp[idx+2] - pp[idx-1])+
-                      d13*(pp[idx+3] - pp[idx-2]));
+        v1a[idx] = (d11*(pp[idx+1] - pp[idx  ])+
+                    d12*(pp[idx+2] - pp[idx-1])+
+                    d13*(pp[idx+3] - pp[idx-2]));
       }
     }
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
-        float const b =buoy[idx];
-        v2a[idx] = b*(d21*(pp[idx+1*n1] - pp[idx     ])+
-                      d22*(pp[idx+2*n1] - pp[idx-1*n1])+
-                      d23*(pp[idx+3*n1] - pp[idx-2*n1]));
+        v2a[idx] = (d21*(pp[idx+1*n1] - pp[idx     ])+
+                    d22*(pp[idx+2*n1] - pp[idx-1*n1])+
+                    d23*(pp[idx+3*n1] - pp[idx-2*n1]));
       }
     }
 
@@ -72,8 +70,9 @@ void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * a
       float const spox = tap2[i2];
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         float const spo = spox*tap1[i1];
-        v1c[idx] = spo*(v1p[idx] - v1a[idx]);
-        v2c[idx] = spo*(v2p[idx] - v2a[idx]);
+        float const b =buoy[idx];
+        v1c[idx] = spo*(v1p[idx] - b*v1a[idx]*dt);
+        v2c[idx] = spo*(v2p[idx] - b*v2a[idx]*dt);
       }
     }
 
@@ -87,7 +86,7 @@ void velupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const * a
       float const spo2 = tap2[i2];
       for (int i1=i1start, idx=IDX2D(i1,i2  ); i1<i1end; i1++,idx++){
         float const spo = tap1[i1]* spo2;
-        float const k = incomp[idx];
+        float const k = incomp[idx]*dt;
         pa[idx] = spo*k*pp[idx];
       }
     }
@@ -338,16 +337,16 @@ void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* a
   float const d2 = mod->d2;
   float const dt = acq->dt;
 
-  float const dtd1 = dt/d1;
-  float const dtd2 = dt/d2;
+  float const id1 = 1./d1;
+  float const id2 = 1./d2;
 
-  float const d11=C1*dtd1;
-  float const d12=C2*dtd1;
-  float const d13=C3*dtd1;
+  float const d11=C1*id1;
+  float const d12=C2*id1;
+  float const d13=C3*id1;
 
-  float const d21=C1*dtd2;
-  float const d22=C2*dtd2;
-  float const d23=C3*dtd2;
+  float const d21=C1*id2;
+  float const d22=C2*id2;
+  float const d23=C3*id2;
 
   long const i2start=NOP;
   long const i2end = n2-NOP;
@@ -359,8 +358,7 @@ void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* a
   {
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
-        float const k = incomp[idx];
-        v1a[idx] = k*(d11*(-v1c[idx  ] + v1c[idx-1])+
+        v1a[idx] =   (d11*(-v1c[idx  ] + v1c[idx-1])+
                       d12*(-v1c[idx+1] + v1c[idx-2])+
                       d13*(-v1c[idx+2] + v1c[idx-3]));
       }
@@ -368,8 +366,7 @@ void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* a
 
     for (long i2=i2start; i2<i2end; i2++){
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
-        float const k = incomp[idx];
-        v2a[idx] =  k*( d21*(-v2c[idx     ] + v2c[idx-1*n1])+
+        v2a[idx] =    ( d21*(-v2c[idx     ] + v2c[idx-1*n1])+
                         d22*(-v2c[idx+1*n1] + v2c[idx-2*n1])+
                         d23*(-v2c[idx+2*n1] + v2c[idx-3*n1]));
       }
@@ -379,7 +376,8 @@ void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* a
       float const spox = tap2[i2];
       for (long i1=i2start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         float const spo = spox*tap1[i1];
-        pc[idx] = spo*(pp[idx] + (v1a[idx]+v2a[idx]));
+        float const k = incomp[idx];
+        pc[idx] = spo*(pp[idx] + k*(v1a[idx]+v2a[idx])*dt);
       }
     }
 
@@ -393,7 +391,7 @@ void presupd2d(wfl_struct_t* wfl, mod_struct_t const* mod, acq_struct_t const* a
       float const spo2 = tap2[i2];
       for (long i1=i1start,idx=IDX2D(i1,i2); i1<i1end; i1++,idx++){
         float const spo = spo2*tap1[i1];
-        float const irho = buoy[idx];
+        float const irho = buoy[idx]*dt;
         v2p[idx] = spo*irho*v2c[idx];
         v1p[idx] = spo*irho*v1c[idx];
       }
