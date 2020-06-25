@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     curr = sf_floatalloc(nz);
 
-    ifft2_allocate(cwavem);
+    fft2_allocate(cwavem);
 
     for (im = 0; im < m2; im++) {
 #ifdef _OPENMP

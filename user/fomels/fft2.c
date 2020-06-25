@@ -41,7 +41,8 @@ static sf_complex *trace2;
 int fft2_init(bool cmplx1        /* if complex transform */,
 	      int pad1           /* padding on the first axis */,
 	      int nx,   int ny   /* input data size */, 
-	      int *nx2, int *ny2 /* padded data size */)
+	      int *nx2, int *ny2 /* padded data size */
+    )
 /*< initialize >*/
 {
 #ifndef SF_HAS_FFTW
@@ -103,20 +104,6 @@ void fft2(float *inp      /* [n1*n2] */,
 {
     int i1, i2;
 
-#ifdef SF_HAS_FFTW
-    if (NULL==cfg) {
-	cfg = cmplx? 
-	    fftwf_plan_dft_2d(n2,n1,
-			      (fftwf_complex *) cc[0], 
-			      (fftwf_complex *) out,
-			      FFTW_FORWARD, FFTW_MEASURE):
-	    fftwf_plan_dft_r2c_2d(n2,n1,
-				  ff[0], (fftwf_complex *) out,
-				  FFTW_MEASURE);
-	if (NULL == cfg) sf_error("FFTW failure.");
-    }
-#endif
-
     /* FFT centering */
     for (i2=0; i2<n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
@@ -148,10 +135,19 @@ void fft2(float *inp      /* [n1*n2] */,
 #endif
 }
 
-void ifft2_allocate(sf_complex *inp /* [nk*n2] */)
+void fft2_allocate(sf_complex *inp /* [nk*n2] */)
 /*< allocate inverse transform >*/
 {
 #ifdef SF_HAS_FFTW
+    cfg = cmplx? 
+	fftwf_plan_dft_2d(n2,n1,
+			  (fftwf_complex *) cc[0], 
+			  (fftwf_complex *) inp,
+			  FFTW_FORWARD, FFTW_MEASURE):
+	fftwf_plan_dft_r2c_2d(n2,n1,
+			      ff[0], (fftwf_complex *) out,
+			      FFTW_MEASURE);
+    if (NULL == cfg) sf_error("FFTW failure.");
     icfg = cmplx? 
 	fftwf_plan_dft_2d(n2,n1,
 			  (fftwf_complex *) inp, 
