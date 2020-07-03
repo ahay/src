@@ -115,7 +115,7 @@ sf_datatype sf_gettype (sf_file file);
 sf_dataform sf_getform (sf_file file);
 void sf_settype (sf_file file, sf_datatype type);
 void sf_setformat (sf_file file, const char* format);
-void sf_setaformat (const char* format, int line);
+void sf_setaformat (const char* format, int line, int strip);
 void sf_fileclose (sf_file file);
 bool sf_histint (sf_file file, const char* key,/*@out@*/ int* par);
 bool sf_histints (sf_file file, const char* key,/*@out@*/ int* par, size_t n);
