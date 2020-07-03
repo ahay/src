@@ -31,6 +31,7 @@ static sf_complex **cc=NULL;
 
 #ifdef SF_HAS_FFTW
 static fftwf_plan cfg=NULL, icfg=NULL;
+static fftwf_complex * out;
 #else
 static kiss_fftr_cfg cfg, icfg;
 static kiss_fft_cfg cfg1, icfg1, cfg2, icfg2;
