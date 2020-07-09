@@ -31,7 +31,6 @@ static sf_complex **cc=NULL;
 
 #ifdef SF_HAS_FFTW
 static fftwf_plan cfg=NULL, icfg=NULL;
-static fftwf_complex * out;
 #else
 static kiss_fftr_cfg cfg, icfg;
 static kiss_fft_cfg cfg1, icfg1, cfg2, icfg2;
@@ -146,7 +145,7 @@ void fft2_allocate(sf_complex *inp /* [nk*n2] */)
 			  (fftwf_complex *) inp,
 			  FFTW_FORWARD, FFTW_MEASURE):
 	fftwf_plan_dft_r2c_2d(n2,n1,
-			      ff[0], (fftwf_complex *) out,
+			      ff[0], (fftwf_complex *) inp,
 			      FFTW_MEASURE);
     if (NULL == cfg) sf_error("FFTW failure.");
     icfg = cmplx? 
