@@ -1,4 +1,4 @@
-/* Debugging (wf=9.0) - Find a symmetric chain of 2D-Fourier (Non-complex Transform W(real) -> cmplx)) weighting and scaling */
+/* Find a symmetric chain of 2D-Fourier weighting and scaling */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -18,10 +18,10 @@
 */
 
 #include <rsf.h>
-
 #include "chain2dfft.h"
 #include "twosmooth2.h"
 #include "fft2.h"
+
 int main(int argc, char* argv[])
 {
     int i, n, nk, n2, iter, niter, liter, nt, nx, nt1, nt2, nx2;
@@ -42,18 +42,12 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(src,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(src,"n2",&nx)) sf_error("No n2= in input");
-   
     n = nt*nx; 
 
-    /* 2D-fft initialize*/
-    /* nk is reshaped to be 1-D vector size (nk * n2 in fft2.c) */
     nk = fft2_init(isCmplx, pad, nt, nx, &nt1, &nx2);
     nt2 = nk/nx2;
-    /* nt1 is the size for padding, nt2 is the size for output of FFT */
  
-    n2 = 3*n+nk; /* 3 x(nt * nx) + 1 f(nk) */
-
-    /*nz2 =n1 nx2 = n2 in fft_init but nk = (fast_size nt ~ n1/2 +1) * n2*/
+    n2 = 3*n+nk; 
     sf_putint(fwht,"n1",nt2);
     sf_putint(fwht,"n2",nx2);
 
@@ -82,10 +76,8 @@ int main(int argc, char* argv[])
     sfchain2d_init(nt,nx,nt1,nx2,nk,
 		   w+2*n,w+3*n,w,w+n,x);
 
-
     sf_conjgrad_init(n2, n2, 3*n, 3*n, 1., 1.e-6, true, false);
  
-
     p = sf_floatalloc(n2); 
 
     /* initialize w [time w and freqz w] */
@@ -93,7 +85,7 @@ int main(int argc, char* argv[])
     w[i] = 0.0f; 
     }
     for (i=2*n; i < n2; i++) {
-    w[i] = 9.0f;
+    w[i] = 1.0f;
     }
 
     if (!sf_getint("niter",&niter)) niter=0;
@@ -104,8 +96,6 @@ int main(int argc, char* argv[])
     for (iter=0; iter < niter; iter++) {
     sf_warning("Start %d",iter);
 
-
-
     sfchain2d_res(y,r);
 
     sf_warning("Residual %d",iter);
@@ -115,7 +105,7 @@ int main(int argc, char* argv[])
 
     for (i=0; i < n2; i++) {
         w[i] += dw[i];
-    }
+    }   
     }
 
     sf_floatwrite(w+2*n,n,wht); 
