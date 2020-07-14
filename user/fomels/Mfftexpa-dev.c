@@ -1,4 +1,4 @@
-/* Development stage Two-step Lowrank - 2-D FFT-based zero-offset exploding reflector modeling/migration with adjoint  */
+/* Two-step Lowrank - 2-D FFT-based zero-offset exploding reflector modeling/migration with adjoint  */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -21,16 +21,16 @@
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "fft2_new.h"//download raw from github(July 9) chaing line149 out->inp
+#include "fft2.h"
 
 int main(int argc, char* argv[])
 {
     bool adj, cmplx;
     int it, nt, ix, nx, iz, nz, nx2, nz2, ntx, nzx, nzx2, pad1;
     int im, i, j, m2, ik, n2, nk, snap;
-    float dt, dx, dz, old, x0, t0, cc;
+    float dt, dx, dz, old, x0, t0;
     float *curr, *prev, **img, **dat, **lft, **rht;
-    sf_complex *cwave, *cwavem,**wave;
+    sf_complex cc,*cwave, *cwavem,**wave;
     float *currm, **wave2;
 
     sf_file data, image, left, right, snaps;
@@ -179,9 +179,6 @@ int main(int argc, char* argv[])
     wave = sf_complexalloc2(nk,m2);
     wave2  = sf_floatalloc2(nzx2,m2);
 
-/*    if (adj) fft2_allocate(cwave);
-    else fft2_allocate(cwavem);*/
-
 	for (ik = 0; ik < nk; ik++) {
 		for (im = 0; im < m2; im++) {
 			wave[im][ik] = sf_cmplx(0.,0.);
@@ -194,10 +191,8 @@ int main(int argc, char* argv[])
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz]=0.;
+	currm[iz]=0.;
     }
-
-
-
 
     /* Main program */
 
@@ -209,6 +204,9 @@ int main(int argc, char* argv[])
 
     c = sf_floatalloc(nzx2);
     sf_floatread(dat[0],ntx,data);
+
+	sf_complex *ctmp;
+	ctmp = sf_complexalloc(nk);
 
 
     /* time stepping */
@@ -229,15 +227,9 @@ int main(int argc, char* argv[])
 		c[j] += c[j] - prev[i];
 		prev[i] = old;
 
-		//c is 2*p(t) - p(t+dt)
 	}
 	}
 
-///////////////////////////////////////////////////////////
-
-	sf_complex *ctmp;
-	ctmp = sf_complexalloc(nk);
-	
 	/* for forward ffts of each rank column */
 	fft2_allocate(ctmp);
 
@@ -255,6 +247,7 @@ int main(int argc, char* argv[])
 		for (ik=0;ik<nk;ik++){
 			/* copy data to wave*/
 			wave[im][ik] =  ctmp[ik];
+
 		}
 	}
 
@@ -263,16 +256,14 @@ int main(int argc, char* argv[])
 	fft2_allocate(cwave);
 
 	for (ik = 0; ik < nk; ik++) {
-		cc = 0.0;
+		cc = sf_cmplx(0.,0.);
 		for (im = 0; im < m2; im++) {
-
 			cc += wave[im][ik]*rht[ik][im];
 		}	 
 		cwave[ik] = cc;
 	}
 
 	ifft2(curr,cwave);
-///////////////////////////////////////////////////////////			
 		
 
 	for (ix = 0; ix < nx; ix++) {
@@ -284,8 +275,6 @@ int main(int argc, char* argv[])
 		curr[j] += c[j];
 	}
 	}
-
-
 
 	/* inject data */
 	for (ix=0; ix < nx; ix++) {
@@ -320,7 +309,6 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(img[0],nzx,image);
 
-/////////////////////////////////////////////////
     } else{ /* modeling */
 	
 	float c;
@@ -353,7 +341,6 @@ int main(int argc, char* argv[])
 
 	/* matrix multiplication */
 
-/////////////////My mess of fft ///////////////////////
 	/* Alloc for forward (cwave) only */
 	fft2_allocate(cwave);
 	fft2(curr,cwave);
@@ -362,7 +349,7 @@ int main(int argc, char* argv[])
 
 	/* Alloc for inverse (cwavem) only */
 	fft2_allocate(cwavem);
-//////////////////////////////////////////////////////
+
 
 
 	for (im = 0; im < m2; im++) {
@@ -389,6 +376,17 @@ int main(int argc, char* argv[])
 		}
 		curr[j] = c;
 	}
+	}
+
+	/* output snap wavefield */
+	if (NULL != snaps && 0 == it%snap) {
+	    for (ix=0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    img[ix][iz] = curr[ix+iz*nx2];
+		}
+	    }
+
+	    sf_floatwrite(img[0],nzx,snaps);
 	}
 
 
