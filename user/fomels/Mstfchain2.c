@@ -1,4 +1,4 @@
-/* Find a symmetric chain of Fourier weighting and scaling */
+/* Find a symmetric chain of Fourier weighting and scaling with movies*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,10 +24,14 @@
 
 int main(int argc, char* argv[])
 {
-    int i, n, nw, n2, iter, niter, liter, nt, nx;
-    int rect1, rect2, frect1, frect2; 
-    float *w, *dw, *x, *y, *r, *p;
+    int i, n, nw, n2, iter, niter, liter, snap, nt, nx;
+    int rect1, rect2, frect1, frect2;
+    float dt,dx,x0; 
+    float *w, *dw, *x, *y, *r, *p, *lsmig;
     sf_file wht, fwht, src, tgt, mch;
+
+    /*sf_file for w, wf, lsmig snapshot*/
+    sf_file snap_w, snap_wf, snap_lsmig;
 
     sf_init(argc,argv);
     src = sf_input("in");
@@ -39,6 +43,10 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(src,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(src,"n2",&nx)) sf_error("No n2= in input");
+    if (!sf_histfloat(src,"d1",&dt)) sf_error("No d1= in input");
+    if (!sf_histfloat(src,"d2",&dx)) sf_error("No d2= in input");
+    if (!sf_histfloat(src,"o2",&x0)) x0=0.; 
+
     n = nt*nx;
 
     nw = kiss_fft_next_fast_size((nt+1)/2)+1;
@@ -51,6 +59,7 @@ int main(int argc, char* argv[])
 
     x = sf_floatalloc(n);
     y = sf_floatalloc(n);
+    lsmig = sf_floatalloc(n); /* decon image */
     r = sf_floatalloc(3*n);
 
     if (!sf_getint("rect1",&rect1)) rect1=1;
@@ -59,6 +68,74 @@ int main(int argc, char* argv[])
     if (!sf_getint("frect1",&frect1)) frect1=1;
     if (!sf_getint("frect2",&frect2)) frect2=1;
     /* smoothing in frequency */
+
+
+    /* I/O Setup for snapshot */
+
+    if (!sf_getint("snap",&snap)) snap=0;
+    /* interval for snapshots */
+
+    if (snap > 0) {
+    snap_w = sf_output("wsnap");
+    /* time weight movie */
+    snap_wf = sf_output("wfsnap");
+    /* frequency weight movie */
+
+    snap_lsmig = sf_output("lsmigsnap");
+    /* Deconvolved image movie */
+
+    
+    /* time/space weight */
+    sf_putint(snap_w,"n1",nt);
+    sf_putfloat(snap_w,"d1",dt);
+    sf_putfloat(snap_w,"o1",0.);
+    sf_putstring(snap_w,"label1","Depth");
+
+    sf_putint(snap_w,"n2",nx);
+    sf_putfloat(snap_w,"d2",dx);
+    sf_putfloat(snap_w,"o2",x0);
+    sf_putstring(snap_w,"label2","Distance");
+    
+    sf_putint(snap_w,"n3",niter);
+    sf_putfloat(snap_w,"d3",1.0);
+    sf_putfloat(snap_w,"o3",0.0);
+
+    /* frequency weight */
+    sf_putint(snap_wf,"n1",nw);
+    sf_putfloat(snap_wf,"d1",dt);
+    sf_putfloat(snap_wf,"o1",0.);
+    sf_putstring(snap_wf,"label1","Vertical wavenumber");
+
+    sf_putint(snap_wf,"n2",nx);
+    sf_putfloat(snap_wf,"d2",dx);
+    sf_putfloat(snap_wf,"o2",x0);
+    sf_putstring(snap_wf,"label2","Distance");
+
+    sf_putint(snap_wf,"n3",niter);
+    sf_putfloat(snap_wf,"d3",1.0);
+    sf_putfloat(snap_wf,"o3",0.0);
+
+    /* decon image */
+
+    sf_putint(snap_lsmig,"n1",nt);
+    sf_putfloat(snap_lsmig,"d1",dt);
+    sf_putfloat(snap_lsmig,"o1",0.);
+    sf_putstring(snap_lsmig,"label1","Depth");
+
+    sf_putint(snap_lsmig,"n2",nx);
+    sf_putfloat(snap_lsmig,"d2",dx);
+    sf_putfloat(snap_lsmig,"o2",x0);
+    sf_putstring(snap_lsmig,"label2","Distance");
+
+
+    sf_putint(snap_lsmig,"n3",niter);
+    sf_putfloat(snap_lsmig,"d3",1.0);
+    sf_putfloat(snap_lsmig,"o3",0.0);
+    }
+
+
+
+
 
     twosmooth2_init(n,nw*nx,nt,nw,
 		    rect1,rect2,
@@ -99,6 +176,26 @@ int main(int argc, char* argv[])
 	for (i=0; i < n2; i++) {
 	    w[i] += dw[i];
 	}
+
+
+    /* Snapshot of w, wf, deconvolved inmage */
+
+    if(NULL != snap_w){
+        sf_floatwrite(w+2*n, n, snap_w);
+    }
+    if(NULL != snap_wf){
+        sf_floatwrite(w+3*n, nw*nx, snap_wf);        
+    }
+
+    if(NULL != snap_lsmig){
+    /* y is first migration (target) matched by m2 (src) */
+
+        sfchain2_deconimg(y , lsmig, w+2*n, w+3*n);
+        sf_floatwrite(lsmig, n, snap_lsmig);        
+    }
+
+
+
     }
 
     sf_floatwrite(w+2*n,n,wht);

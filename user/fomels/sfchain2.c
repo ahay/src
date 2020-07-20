@@ -127,6 +127,35 @@ void sfchain2_apply(float *y)
 }
 
 
+void sfchain2_deconimg(const float *t ,float *lsmig, float* spaceW, float* freqW)
+/*<apply the chain to the target (first mig) equavalent to ls migration >*/
+{
+    int i2, i1, i, iw;
+
+    for (i2=0; i2 < nx; i2++) {
+	for (i1=0; i1 < nt; i1++) {
+	    i = i1+i2*nt;
+	    tmp2[i2][i1] = spaceW[i]*t[i];
+	}
+	for (i1=n; i1 < nf; i1++) {
+	    tmp2[i2][i1] = 0.0f;
+	}
+	kiss_fftr(forw, tmp2[i2], cdata2);
+	for (iw=0; iw < nw; iw++) {
+	    cdata2[iw]=sf_crmul(cdata2[iw],freqW[iw+i2*nw]/nf);
+	}
+	kiss_fftri(invs, cdata2, tmp2[i2]);
+    }
+    for (i=0; i < n; i++) {
+	i1 = i%nt;
+	i2 = i/nt;
+	
+	lsmig[i] = spaceW[i]*tmp2[i2][i1];
+    }
+}
+
+
+
 void sfchain2_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y) 
 /*< linear operator >*/
 {
