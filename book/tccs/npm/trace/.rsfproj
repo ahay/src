@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfbandpass', 'sfscale', 'sfput', 'sfgraph', 'sfwindow', 'sfiphase', 'sftimefreq', 'sftransp', 'sfgrey', 'sfnoise', 'sfemd', 'sfcat', 'sfstack', 'sfdots', 'sfshift1', 'sfenvelope', 'sfcmplx', 'sfclpf', 'sfadd', 'sfreal', 'sfmath', 'sfroots', 'sfcausint', 'sfrtoc', 'sfmask', 'sfheaderwindow', 'sfsmooth']
+data=['data/attr/pptrace.rsf']
+size=   45048680

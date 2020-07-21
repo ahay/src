@@ -1,0 +1,241 @@
+# import packages
+
+from rsf.proj import *
+from math import *
+from rsf.prog import RSFROOT
+
+# get the data
+
+Fetch('pptrace.rsf', 'attr')
+Flow('pptrace1', 'pptrace.rsf',
+     '''
+     dd form=native | bandpass flo=3 | scale dscale=0.1 | put label1=Time unit1=s
+     ''')
+
+graph = '''
+        window max1=10 |
+        graph wanttitle=n min2=-10.5 max2=10.5 screenratio=0.8 crowd1=0.75 crowd2=0.28
+        pad=n
+        '''
+dt = 0.004
+Plot('trace', 'pptrace1',
+     '''
+     graph title="Seismic Trace" label1= unit1= label2=Amplitude
+     labelsz=15  wheretitle=t wherexlabel=b min2=-10 max2=10
+     ''')
+Result('trace', 'pptrace1', graph)
+
+# local frequency (local attributes)
+
+Plot('freq', 'pptrace1',
+     '''
+     iphase rect1=30 hertz=y |
+     graph title="Local Frequency"  min2=0 max2=50
+     plotcol=2 plotfat=6 label1=Time unit1=s label2=Frequency unit2=Hz
+     labelsz=15 titlesz=18 wheretitle=t wherexlabel=b wantaxis1=n
+     ''')
+Plot('seis', 'trace freq', 'OverUnderAniso')
+Result('seis', 'Overlay', vppen='yscale=1.0')
+
+# time-frequency analysis by local attribute
+
+Flow('timefreq1', 'pptrace1', 'timefreq rect=60')
+Flow('timefreq', 'timefreq1', 'window n2=1000')
+Plot('stf', 'timefreq',
+     '''
+     transp |scale axis=2 | window min2=0 max2=10 min1=0 max1=80|
+     grey wanttitle=n color=j scalebar=y minval=0 maxval=1 allpos=y label2=Time unit2=s
+     label1=Frequency unit1=Hz grid=y screenratio=0.35 labelsz=11 wherexlabel=b
+     ''')
+
+# EEMD
+
+nimf = 6
+emds = []
+for seed in range(25):
+    sn = 'sn%d' % seed
+    Flow(sn, 'pptrace1', 'noise var=0.01 seed=%d' % seed)
+    emd = 'emd%d' % seed
+    Flow(emd, sn, 'emd | window n2=%d' % nimf)
+    emds.append(emd)
+
+# ensemble average
+Flow('emd', emds, 'cat axis=3 ${SOURCES[1:%d]} | stack axis=3' % len(emds))
+Flow('emd_input', 'emd', 'window n2=4')
+
+imfs = []
+for emd in range(nimf):
+    imf = 'imf%d' % emd
+    Flow(imf, 'emd', 'window n2=1 f2=%d' % emd)
+    Plot(imf,
+         '''
+         window min1=0 max1=10 |
+         graph wanttitle=n min2=-10 max2=10 screenratio=0.7 pad=n
+         label2=Amplitude label1= unit1= labelsz=11
+         ''')
+    imfs.append(imf)
+
+Result('emd', imfs[:4],
+       '''
+       cat axis=2 ${SOURCES[1:4]} |
+       dots gaineach=n yreverse=y label1=Time unit1=s
+       ''')
+
+# non-stationary auto-regression
+
+Flow('shift', 'pptrace1', 'shift1 ns=5')
+
+Flow('ishift', 'shift', 'envelope hilb=y')
+Flow('cshift', 'shift ishift', 'cmplx ${SOURCES[1]}')
+
+Flow('itrace', 'pptrace1', 'envelope hilb=y')
+Flow('ctrace', 'pptrace1 itrace', 'cmplx ${SOURCES[1]}')
+
+Flow('cpef cpre', 'cshift ctrace',
+     'clpf match=${SOURCES[1]} rect1=75 pred=${TARGETS[1]}')
+Flow('cerr', 'cpre ctrace', 'add scale=-1,1 ${SOURCES[1]}')
+
+Result('cdecon', 'cerr cpre ctrace',
+     '''
+     cat axis=2 ${SOURCES[1:3]} | real |
+     dots labels=Difference:Fit:Original gaineach=n
+     ''')
+
+# find complex polynomial roots
+
+Flow('cpoly', 'cpef', 'window n2=1 | math output=-1 | cat axis=2 $SOURCE')
+Flow('croots', 'cpoly', 'transp | roots verb=n niter=100 sort=p | transp')
+
+Flow('group', 'croots',
+     '''
+     math output="-arg(input)/%g" | real
+     ''' % (2*pi*dt))
+
+Result('group', 'group',
+       '''
+       window max1=6 |
+       graph title="Instantaneous Frequencies" label1=Time unit1=s label2=Frequency unit2=Hz
+       plotfat=3 min2=0
+       ''')
+
+Flow('freqs', 'group',
+     '''
+     causint | math output="input*%g/(x1+%g)"
+     ''' % (dt,dt))
+Result('freqs', 'graph title = "Local Frequencies" min2=0')
+
+Flow('comps', 'freqs', 'rtoc | math output="exp(I*input*x1*%g)"' % (2*pi))
+
+Flow('cwht cfit', 'comps ctrace',
+     'clpf match=${SOURCES[1]} rect1=6 pred=${TARGETS[1]}')
+Flow('cdif', 'cfit ctrace', 'add scale=-1,1 ${SOURCES[1]}')
+
+Result('cdif', 'cdif cfit ctrace',
+       '''
+       cat axis=2 ${SOURCES[1:3]} | real |
+       dots labels=Difference:Fit:Original gaineach=n
+       ''')
+
+Flow('csign', 'comps cwht', 'math other=${SOURCES[1]} output="input*other"')
+Flow('nar', 'csign', 'window n2=4 | real')
+Result('csign', 'csign cdif',
+       '''
+       cat axis=2 ${SOURCES[1:2]} | window n2=4 | real |
+       dots gaineach=n yreverse=y label1=Time unit1=s
+       ''')
+for case in range(4):
+    sign = 'sign%d' % case
+    Result(sign, 'csign',
+           '''
+           window n2=1 f2=%d | real | %s plotcol=%d min2=-5 max2=5 parallel2=n
+           ''' % (case, graph, (1,3,4,2)[case]))
+
+# mask low amplitude
+
+Flow('mask', 'cwht', 'math output="abs(input)" | real | mask min=0.2')
+
+groups= []
+for case in range(4):
+    mask = 'mask%d' % case
+    Flow(mask, 'mask', 'window n2=1 f2=%d' % case)
+    grup = 'group%d' % case
+    Flow(grup, ['group', mask],
+         '''
+         window n2=1 f2=%d |
+         rtoc | math output="x1+I*input" |
+         transp plane=12 | headerwindow mask=${SOURCES[1]} | window
+         ''' % case)
+    #Plot(grup,
+    #     '''
+    #     graph title="Instantaneous Frequencies" label1=Time unit1=s yreverse=y
+    #     label2=Frequency unit2=Hz plotfat=3 min2=0 plotcol=%d max2=80 min1=0 max1=10
+    #     ''' % (1,3,4,2)[case])
+    Plot(grup,
+         '''
+         graph wanttitle=n screenratio=0.35  scalebar=y bartype=v yreverse=y
+         plotfat=6 plotcol=%d min1=0 max1=10 min2=0 max2=80 pad=n labelsz=11
+         label2= unit2=
+         ''' % (1,3,4,2)[case])
+    groups.append(grup)
+
+Plot('tgroup', groups, 'Overlay')
+
+# initiation for matlab
+
+matlab = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'trace'
+matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
+
+if not matlab:
+    sys.stderr.write('\n Cannot find matlab.\n')
+    sys.exit(1)
+
+# test for trace based on emd
+
+Flow('tfemd1', [os.path.join(matROOT, matfun+'.m'), 'emd_input'],
+     '''
+     MATLABPATH=%(matlabpath)s %(matlab)s
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}', '${TARGET}'); quit"
+     ''' % vars(), stdin=0, stdout=-1)
+
+Flow('tfemd', 'tfemd1', 'put o2=%d d2=%g o1=%d d1=%g | window min2=0 max2=10' % (0,dt,0,80/249.0))
+Plot('tfemd', 'tfemd',
+       '''
+       scale axis=2 | grey wanttitle=n color=j scalebar=y minval=0 maxval=1
+       allpos=y label2=Time unit2=s label1=Frequency unit1=Hz grid=y
+       screenratio=0.35 wherexlabel=b labelsz=11
+       ''')
+#Smooth process
+
+Flow('SmoothTimeFreqEmd', 'tfemd', 'smooth rect1=3 rect2=3 repeat=2')
+Plot('SmoothTimeFreqEmd',
+       '''
+       scale axis=2 | grey wanttitle=n color=j scalebar=y minval=0 maxval=1
+       allpos=y label2=Time unit2=s label1=Frequency unit1=Hz grid=y
+       screenratio=0.35 wherexlabel=b labelsz=11
+      ''')
+
+# test for trace based on nar
+
+
+Flow('tfnar1', [os.path.join(matROOT, matfun+'.m'), 'nar'],
+     '''
+     MATLABPATH=%(matlabpath)s %(matlab)s
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}', '${TARGET}'); quit"
+     ''' % vars(), stdin=0, stdout=-1)
+
+Flow('tfnar', 'tfnar1', 'put o2=%d d2=%g o1=%d d1=%g | window min2=0 max2=10' % (0,dt,0,80/249.0))
+Plot('tfnar', 'tfnar',
+       '''
+       scale axis=2 | grey wanttitle=n color=j scalebar=y minval=0 maxval=1
+       allpos=y label2=Time unit2=s label1=Frequency unit1=Hz grid=y
+       screenratio=0.35 wherexlabel=b labelsz=11
+       ''')
+
+# the map of timefrequency for different method
+Result('stf', 'Overlay')
+Result('tfemd', 'Overlay')
+Result('tfnar', 'Overlay')
+
+End()

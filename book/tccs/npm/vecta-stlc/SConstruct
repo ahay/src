@@ -1,0 +1,90 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+from math import *
+from rsf.prog import RSFROOT
+
+# load data
+
+data = 'bend_l1_pmig_enhanc.sgy'
+Fetch(data, 'vecta', private)
+Flow('data', data, 'segyread stdin=0 | window n2=471 max1=1.5 | scale axis=2')
+
+Plot('data', 'grey  clip=0.5 title="Input Data" screenratio=0.7 lavelsz=11')
+Result('data', 'Overlay')
+
+# parameters setting
+
+nt = 751       # time sampling points
+nx = 471       # trace
+dt = 0.002
+dx = 1
+nf = 1/dt      # sample  frequency
+df = (1/dt/2)/(nf-1)
+
+
+# define cubic plot
+def Grey2(data, other):
+    Result(data,
+           '''
+           transp | window min1=0 max1=150 | scale axis=2 |
+           grey wanttitle=n color=j scalebar=y minval=0 maxval=1 allpos=y label2=Time
+           unit2=s label1=Frequency unit1=hz grid=y screenratio=0.5 labelsz=11 wherexlabel=b
+           %s
+           ''' % (other))
+def Grey21(data):
+    Result(data,
+           '''
+           window min1=0 max1=150 | scale axis=2 |
+           grey wanttitle=n color=j scalebar=y minval=0 maxval=1 allpos=y label2=Time
+           unit2=s label1=Frequency unit1=hz grid=y screenratio=0.5 labelsz=11 wherexlabel=b
+           ''')
+
+# Slice image
+
+def Grey22(data,other):
+    Result(data,
+           '''
+           scale axis=2 |
+           grey wanttitle=y color=j scalebar=y minval=0 maxval=1 allpos=y label2=Trace
+           unit2= label1=Time unit1=s grid=y screenratio=0.5 labelsz=11 wherexlabel=t
+           %s ''' % (other))
+
+def Grey3(data, other):
+    Result(data,
+           '''
+           byte | transp plane=23 memsize=1000 | grey3 flat=n transp=y color=j
+           unit1=s unit2= allpos=y frame1=300 frame2=150 frame3=77 label2=Trace
+           label1=Time label3=Frequency labelsz=6 screenratio=1 point1=0.8
+           point2=0.8
+           %s
+           ''' % (other))
+
+# TF nalysis method=local timefreq
+
+Flow('TimeFreqCube_LC', 'data', 'timefreq rect=7')
+Grey3('TimeFreqCube_LC', 'title="LC"')
+
+# TF method=st
+
+Flow('TimeFreqCube_ST', 'data', 'st rect=7 | math output="abs(input)" | real')
+Grey3('TimeFreqCube_ST', 'title="ST"')
+
+# Slice nalysis method = LC
+
+for num in range(20,140,20):
+    tfslice = 'LC_TimeFreqSlice%d' % (num/20)
+    Flow(tfslice, 'TimeFreqCube_LC', 'window n2=1 f2=%d' % (num-1))
+    Grey22(tfslice, 'title="%d Hz"'%(num/2))
+
+# Slice nalysis method = ST
+
+for num in range(20,140,20):
+    tfslice = 'ST_TimeFreqSlice%d' % (num/20)
+    Flow(tfslice, 'TimeFreqCube_ST', 'window n2=1 f2=%d' % (num-1))
+    Grey22(tfslice, 'title="%d Hz"'%(num/2))
+
+
+
+
+
+End()

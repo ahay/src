@@ -1,0 +1,160 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+from math import *
+from rsf.prog import RSFROOT
+
+# load data
+
+data = 'bend_l1_pmig_enhanc.sgy'
+Fetch(data, 'vecta', private)
+Flow('data', data, 'segyread stdin=0 | window n2=471 max1=1.5 | scale axis=2')
+
+Plot('data', 'grey  label1=Time unit1=s label2=Trace title="Input Data" screenratio=0.5 labelsz=11')
+Result('data', 'Overlay')
+
+# parameters setting
+
+nt = 751       # time sampling points
+nx = 471       # trace
+dt = 0.002
+dx = 1
+nf = 1/dt      # sample  frequency
+df = (1/dt/2)/(nf-1)
+
+# define cubic plot
+def Grey2(data, other):
+    Result(data,
+           '''
+           transp | window min1=0 max1=150 | scale axis=2 |
+           grey wanttitle=n color=j scalebar=y minval=0 maxval=1 allpos=y label2=Time
+           unit2=s label1=Frequency unit1=hz grid=y screenratio=0.5 labelsz=11 wherexlabel=b
+           %s
+           ''' % (other))
+def Grey21(data):
+    Result(data,
+           '''
+           window min1=0 max1=150 | scale axis=2 |
+           grey wanttitle=n color=j scalebar=y minval=0 maxval=1 allpos=y label2=Time
+           unit2=s label1=Frequency unit1=hz grid=y creenratio=0.5 labelsz=11 wherexlabel=b
+           ''')
+
+def Grey22(data, other):
+    Plot(data,
+           '''
+           scale axis=2 |
+           grey wanttitle=y color=j scalebar=y minval=0 maxval=1 allpos=y label2=Trace
+           unit2= label1=Time unit1=s grid=y screenratio=0.5 labelsz=11 wherexlabel=t
+           %s ''' % (other))
+
+def Grey3(data, other):
+    Result(data,
+           '''
+           byte allpos=n clip=0.000005 | transp plane=23 memsize=1000 | grey3 flat=n transp=y color=j
+           unit1=s unit2= allpos=y frame1=300 frame2=150 frame3=100 label2=Trace
+           label1=Time label3=Frequency labelsz=6 screenratio=1 point1=0.8
+           point2=0.8
+           %s
+           ''' % (other))
+           
+# define nar transform for later use
+
+def nar_tran(Slice):
+    ns = 5
+    Flow('shift', Slice, 'shift1 ns=%d' % ns)
+
+    Flow('itrace', Slice, 'envelope hilb=y')
+    Flow('ctrace', [Slice,'itrace'], 'cmplx ${SOURCES[1]}')
+
+    Flow('ishift', 'shift', 'envelope hilb=y')
+    Flow('cshift', 'shift ishift', 'cmplx ${SOURCES[1]} | transp plane=23')
+
+    Flow('cpef cpre','cshift ctrace',
+         'clpf match=${SOURCES[1]} rect1=7 rect2=20 pred=${TARGETS[1]}')
+    Flow('cerr','cpre ctrace','add scale=-1,1 ${SOURCES[1]}')
+
+    #Result('cerr','real | grey clip=0.44 title="Residual after RNAR" ')
+
+    Flow('cpoly','cpef','window n3=1 | math output=-1 | cat axis=3 $SOURCE')
+    Flow('croots','cpoly',
+         '''
+         transp plane=23 | transp plane=12 |
+         roots verb=n niter=100 sort=p |
+         transp plane=12 | transp plane=23
+         ''')
+    # Frequency components
+    import math
+    wf = 2*math.pi
+    dt = 0.002
+
+    Flow('group','croots',
+         '''
+         math output="-arg(input)/%g" | real
+         ''' % (wf*dt))
+
+    Flow('freqs','group',
+         '''
+         causint | math output="input*%g/(x1+%g)"
+         ''' % (dt,dt))
+    # Decomposition
+
+    Flow('comps','freqs','rtoc | math output="exp(I*input*x1*%g)" ' % wf)
+    Flow('cwht cfit','comps ctrace',
+         'clpf match=${SOURCES[1]} rect1=5 rect2=5 pred=${TARGETS[1]}')
+    Flow('csign','comps cwht',
+         '''
+         math other=${SOURCES[1]} output="input*other" | real | transp plane=23
+         | put n1=751 n2=2355 n3=1
+         ''')
+
+nar_tran('data')
+
+matlab = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'VectaTraceNar'
+matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
+if not matlab:
+    sys.stderr.write('\n Cannot find MatLab.\n')
+
+# MatLab process
+
+Flow('tfnars tfslice1 tfslice2 tfslice3 tfslice4 tfslice5 tfslice6', [os.path.join(matROOT, matfun+'.m'), 'csign'],
+     '''
+     MATLABPATH=%(matlabpath)s %(matlab)s
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}', '${TARGET}', '${TARGETS[1]}', '${TARGETS[2]}', '${TARGETS[3]}', '${TARGETS[4]}', '${TARGETS[5]}', '${TARGETS[6]}'); quit"
+     ''' % vars(), stdin=0, stdout=-1)
+
+Flow('TimeFreqCubeNar', 'tfnars',
+     '''
+     put o1=%g d1=%g n1=%d  o2=%g d2=%g n2=%d  o3=%g d3=%g n3=%d
+     ''' % (0,dt,nt,0,df,nf,0,dx,nx))
+
+# plot label
+
+Plot('label',None,'box x0=8.5 y0=7.2 label="Gas?" size=0.3 xt=0.75 yt=0.75')
+
+for num in range(6):
+    DataOut = 'SliceNar%d' % (num+1)
+    DataIn  = 'tfslice%d' % (num+1)
+    Flow(DataOut, DataIn, 'put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d' % (0, dt, nt, 0, dx, nx))
+    Grey22('SliceNar%d' % (num+1), 'title="%d Hz"' % ((num+1)*10))
+    Plot('GasSliceNar%d' % (num+1), [DataOut, 'label'], 'Overlay')
+    Result('GasSliceNar%d' % (num+1), 'Overlay')
+
+Grey3('TimeFreqCubeNar','title="NPM"')
+Result('TimeFreqCubeEmd','../vecta-emd/Fig/TimeFreqCubeEmd.vpl','Overlay')
+Result('TimeFreqCube_LC','../vecta-stlc/Fig/TimeFreqCube_LC.vpl','Overlay')
+
+
+# Smooth process
+
+for num in range(6):
+    DataOut = 'SmoothSliceNar%d' % (num+1)
+    DataIn =  'SliceNar%d' % (num+1)
+    Flow(DataOut, DataIn, 'smooth rect1=3 rect2=3 repeat=2')
+    Grey22('SmoothSliceNar%d' % (num+1), 'title="%d Hz"' % ((num+1)*10))
+    Plot('GasSmoothSliceNar%d' % (num+1), [DataOut, 'label'], 'Overlay')
+    Result('GasSmoothSliceNar%d' % (num+1), 'Overlay')
+    Result('GasSmoothSliceEmd%d' % (num+1),'../vecta-emd/Fig/GasSmoothSliceEmd%d.vpl'%(num+1), 'Overlay')
+    Result('LC_TimeFreqSlice%d' % (num+1),'../vecta-stlc/Fig/LC_TimeFreqSlice%d.vpl'%(num+1), 'Overlay')
+
+End()
