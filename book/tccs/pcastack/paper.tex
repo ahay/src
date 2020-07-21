@@ -1,0 +1,217 @@
+\published{IEEE Geoscience and Remote Sensing Letters, 14, no. 8, 1213-1217, (2017)}
+
+\title{Application of principal component analysis in weighted stacking of seismic data}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\author{Jianyong Xie\footnotemark[1], Wei Chen\footnotemark[2], Dong Zhang\footnotemark[1], Shaohuan Zu\footnotemark[1], and Yangkang Chen\footnotemark[3]}
+
+\address{
+\footnotemark[1]
+State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200 \\
+%331334826@qq.com
+gsw19900128@126.com\\
+\footnotemark[2]
+Key Laboratory of Exploration Technology for Oil and Gas Resources of Ministry of Education, Yangtze University, Wuhan, Hubei, China, 430100, Hubei Cooperative Innovation Center of Unconventional Oil and Gas, Wuhan, Hubei, China, 430100, and State Key Laboratory of Geodesy and Earth's Dynamics, Institute of Geodesy and Geophysics, Chinese Academy of Sciences, Wuhan, China, 430077, chenwei2014@yangtzeu.edu.cn.\\
+gsw19900128@126.com\\
+\footnotemark[3] Jackson School of Geosciences\\
+The University of Texas at Austin\\
+University Station, Box X\\
+Austin, TX 78713-8924, USA \\
+Email: ykchen@utexas.edu\\
+}
+
+\maketitle
+
+\begin{abstract}
+Optimal stacking of multiple datasets plays a significant role in many scientific domains. The quality of stacking will affect the signal-to-noise ratio (SNR) and amplitude fidelity of the stacked image. In seismic data processing, the similarity-weighted stacking makes use of the local similarity between each trace and a reference trace as the weight to stack the flattened prestack seismic data after normal moveout (NMO) correction. The traditional reference trace is an approximated zero-offset trace that is calculated from a direct arithmetic mean of the data matrix along the spatial direction. However, in the case that the data matrix contains abnormal mis-aligned trace, erratic and non-gaussian random noise, the accuracy of the approximated zero-offset trace would be greatly affected, thereby further influence the quality of stacking. We propose a novel weighted stacking method that is based on principal component analysis (PCA). The principal components of the data matrix, namely the useful signals, are extracted based on a low-rank decomposition method by solving an optimization problem with a low-rank constraint. The optimization problem is solved via a common singular value decomposition algorithm. The low-rank decomposition of the data matrix will alleviate the influence of abnormal trace, erratic and non-gaussian random noise, thus will be more robust than the traditional alternatives.  We use both synthetic and field data examples to show the successful performance of the proposed approach.
+\end{abstract}
+
+
+\section{Introduction} 
+Stacking of multiple datasets to output a final smoothed data is a common research subject in many scientific fields. The stacking can be viewed as the simplest form of random noise attenuation for enhancing multi-dimensional remote sensing datasets \cite[]{yanan2014,zhuang2015}. 
+In seismic data processing, stacking simply means the summation of a collection of seismic traces from different records into a single trace. The quality of stacking greatly affect the performance of many seismic data processing tasks. It can be considered as the simplest way for improving the SNR \cite[]{elad2006,candes20062} in prestack seismic data processing. It can quickly obtain a meaningful post-stack seismic image without wavefield continuation. The three steps in the stacking process are normal moveout (NMO) velocity analysis, NMO correction and trace summation.  
+
+The original weighted stacking used an SNR-based weighted stacking strategy to minimize random noise. \cite{Schoenberger96} proposed a different weighted stacking approach that can suppress the multiples effectively by solving a set of optimization equations in order to determine the stacking weights. \cite{Neelamani06} took the signal structures into consideration and proposed a simultaneous stacking and denoising approach (SAD). %\cite{Zhang06} made use of the wavelet transformation theory and the high-order statistics theory when proposing a high-order weighted stacking approach. 
+Based on the statistics theory, \cite{Trickett07} proposed to use a maximum-likelihood estimator for weighted stacking by estimating the probability distribution of random noise. \cite{Tang07} calculated the stacking weights as functions of angle and azimuth and proposed a selective stacking approach. 
+
+\cite{stackgrsl2014} proposed a novel method for stacking seismic data in time-frequency domain \cite[]{liuwei2016ewt,hongbo2015}. %\cite{dengpan2016} took the amplitude-versus-offset (AVO) effect into consideration and proposed a weighted stacking method which can handle the amplitude variation phenomenon of CMP gathers. 
+\cite{Liu09} proposed a similarity-weighted stacking approach that designs the weights of each trace by calculating the local similarity between each trace and a reference trace, and the method was demonstrated to be superior to the state-of-the-art weighted stacking approaches. %However, the selection of the reference trace plays an important role in the final stacking performance. %The traditionally stacked trace is not plausible to be the reference trace when there are abnormal traces in the NMO-corrected gather. We propose to use a stacked trace from a denoised NMO-corrected gather after truncated singular value decomposition (TSVD) as the reference for calculating the similarity-based stacking weights. 
+The reference trace in the traditional similarity-weighted stacking method is an approximated zero-offset trace directly calculated from the spatial arithmetic mean of data matrix \cite[]{ron2010}. When the data matrix contains mis-aligned trace, erratic and non-gaussian random noise, the spatial arithmetic mean of the data matrix is of low fidelity to approximate the zero-offset trace. In this letter, we propose a novel principal component analysis (PCA) \cite[]{farrell2005,duqian2007} based weighted stacking method. Considering the complicated situations of field seismic data as mentioned above, we propose to extract the principal components of seismic data to approximate a highly accurate zero-offset trace. The principal components of the data matrix are extracted via solving an optimization problem with low-rank constraint. A singular value decomposition can be used to efficiently solve the optimization problem and then the low-rank approximation of the data matrix, which has a high SNR and is close to the ideal NMO-corrected common midpoint (CMP) gather, can be easily obtained. The new stacking method is easy to implement and can obtain significantly better stacked profile with cleaner geological structures. %, since the TSVD step can reduce the influences of both abnormal traces and random noise on the final performance. 
+We first use a simple synthetic example to show the principle and then use a real pre-stack field data example to further demonstrate the tremendous improvement over the traditional approaches.
+
+
+\section{Method}
+\subsection{Equal-weight stacking}
+In order to enhance the SNR of the zero-offset trace, all traces in a prestack CMP gather are summed. The traditional equal-weight stacking is the average of all traces in a prestack CMP gather.
+\begin{equation}
+\label{eq:stack}
+\hat{s}(t)= \frac{1}{N}\sum_{i=1}^{N} s_i(t),
+\end{equation} 
+where $t$ is time, $s_i(t)$ denotes the $i$th trace. $\hat{s}(t)$ is the stacked zero-offset trace, and $N$ is the number of traces. 
+
+\subsection{Weighted stacking}
+However, the quality of each trace is different and each trace should contribute differently to the final stacked trace. A better stacking approach is to weight each trace before stacking based on certain criteria. The weighted stacking process can be formulated as
+\begin{equation}
+\label{eq:simistack}
+\hat{s}_w(t)= \frac{1}{\sum_{i=1}^{N}w_{i}(t)}\sum_{i=1}^{N}w_{i}(t)\cdot s_i(t) 
+\end{equation} 
+where $w_{i}(t)$ is the weight applied to trace $i$ and time $t$ in a CMP gather. $\hat{s}_w(t)$ is the stacked trace after weighting.
+
+Different methods have been proposed to apply weights according to different criteria. For example, the smart stacking proposed by \cite{Rashed08} is based on sign difference between sample point and the alpha-trimmed mean to remove frequency distortions. \cite{Neelamani06} uses an iterative algorithm called \emph{leave me out} (LMO) to estimate noise variances from data. The desired signal is assumed to be flat with constant amplitude across all the traces within a gather in the LMO method.
+
+\subsection{Similarity-weighted stacking}
+The similarity-weighted stacking method was proposed by \cite{Liu09} to weight each trace according to the time-variant local similarity between each trace and the mean trace.
+
+To implement the similarity-weighted stacking, we first apply the equal-weight stack to the NMO-corrected CMP gather to obtain the reference trace. Then we compute the local similarity \cite[]{yangkang2015orthogroll} between the reference trace and the NMO-corrected CMP gather and apply soft thresholding \cite[]{donoho1995} to all local similarity values. Finally, we apply the weighted stack to the CMP gather using local similarity based weights to get the final stacked trace. %The mathematical principal of similarity-weighted stacking can be summarized as:
+%\begin{equation}
+%\label{eq:simistack}
+%\hat{s}_w(t)= \frac{1}{\sum_{i=1}^{N}w_{i}(t)}\sum_{i=1}^{N}w_{i}(t)\cdot s_i(t) 
+%\end{equation} 
+% $w_i$ denotes the weight of the $i$th trace in a CMP gather, which
+The local similarity based weighting criteria is defined as:
+\begin{align}
+\label{eq:weight}
+w_i(t)=\left\{\begin{array}{cl}
+\eta_{i}(t)-\epsilon, & \quad \eta_i>\epsilon \\
+0 & \quad  \eta_i \le \epsilon
+\end{array},\right.
+\end{align}
+where $\epsilon$ is the threshold value, $\eta_i(t)$ is the local similarity between $i$th prestack trace and the reference trace:
+\begin{equation}
+\label{eq:eta}
+\eta_i(t) = \mathcal{S}(s_i(t),\hat{s}(t)).
+\end{equation}
+where $\mathcal{S}(a,b)$ denotes the local similarity between traces $a$ and $b$. $\hat{s}(t)$ is the arithmetic mean as introduced in (\ref{eq:stack}). $\epsilon$ can be intelligently chosen by defining a percentage. The percentage is used to preserve or reject the values during thresholding. For example, a percentage of 10 means that we preserve 10\% largest value of the local similarity $\eta$. The result is not very sensitive to $\epsilon$. We usually keep a 50\% of largest $\eta$ values to obtain the stacking result.
+
+\subsection{Low-rank approximation of the data matrix}
+In the similarity-weighted stacking approaches (\ref{eq:simistack})-(\ref{eq:eta}), $\hat{s}(t)= \frac{1}{N}\sum_{i=1}^{N} s_i(t)$ is not an appropriate zero-offset approximation. The spatial arithmetic mean of the data matrix is the true zero-offset trace only if the random noise is statistically white, and all traces after NMO correction are aligned well. Furthermore, no existing abnormal traces should exist in the data matrix. These requirements are seldom met due to the extremely complicated features of real seismic data and seismic data are always contaminated with different types of noise, e.g. erratic noise and colored noise.
+
+A better way for calculating the approximation of the zero-offset trace is to calculate the spatial arithmetic mean of a low-rank approximated data matrix using principal component analysis (PCA). PCA is an important tool for multivariate analysis in statistics. The idea is to reduce the dimensionality
+of a data set while preserving as much variability of data variables as possible \cite[]{jolliffe2010}.
+
+Suppose the data matrix $\mathbf{D}$ is composed of signal component $\mathbf{S}$, random noise $\mathbf{N}$, erratic noise $\mathbf{E}$, and mis-aligned data components $\mathbf{M}$:
+\begin{equation}
+\label{eq:pca1}
+\mathbf{D} = \mathbf{S} + \mathbf{N} + \mathbf{E} + \mathbf{M}.
+\end{equation}
+For seismic stacking in this paper, $\mathbf{D}$ is simply a common midpoint gather.
+ If we assume the error components $ \mathbf{N} + \mathbf{E} + \mathbf{M}$ are composed of small random perturbations, an optimal estimate of $\mathbf{S}$ can be acquired via the following optimization problem:
+ \begin{equation}
+ \label{eq:pca2}
+ \begin{split}
+ &\min \parallel \mathbf{N} + \mathbf{E} + \mathbf{M} \parallel_F^2, \\
+ s.t. &\quad rank(\mathbf{S})=k, \quad \mathbf{D} = \mathbf{S} + \mathbf{N} + \mathbf{E} + \mathbf{M},
+ \end{split}
+ \end{equation}
+ where $k$ denotes the rank constraint applied to the target signal components. The problem can be efficiently solved via singular value decomposition (SVD).  The observed data matrix $\mathbf{D}$ can be decomposed into a group of eigen-images via the SVD. The low-rank component $\mathbf{S}$ can be described with a few eigen-images that are associated with the largest singular values. The other noise items $ \mathbf{N}$, $\mathbf{E}$, $\mathbf{M}$, however, will have energy spread over all the eigen-images.
+ 
+\subsection{Weighted stacking based on PCA} 
+After the low-rank approximation of the data matrix $\hat{\mathbf{S}}$ is obtained, a better zero-offset reference trace can be obtained via calculating the arithmetic mean of the data matrix along the spatial direction:
+ \begin{equation}
+ \label{eq:ave}
+\hat{s}_{lr}(t)= \hat{S}\mathbf{a},
+ \end{equation}
+ where $\mathbf{a}$ is an averaging column vector $[\frac{1}{N},\frac{1}{N},\cdots,\frac{1}{N}]_{1\times N}^T$. Here $[\cdot]$ denotes the transpose of the input matrix/vector.
+Substituting $\hat{s}(t)$ in (\ref{eq:eta}) with $\hat{s}_{lr}(t)$, we can obtain a new weighting criteria:
+\begin{align}
+\label{eq:weight1}
+\omega_i(t)=\left\{\begin{array}{cl}
+\beta_{i}(t)-\epsilon, & \quad \beta_i>\epsilon \\
+0 & \quad \beta_i \le \epsilon
+\end{array},\right.
+\end{align}
+where $\beta_i(t)$ is the local similarity between $i$th prestack trace and the low-rank approximated reference trace:
+\begin{equation}
+\label{eq:beta}
+\beta_i(t) = \mathcal{S}(s_i(t),\hat{s}_{lr}(t)).
+\end{equation}
+Inserting the new weighting criteria, as shown in (\ref{eq:weight1}), into (\ref{eq:simistack}), we obtain the new PCA-based weighted stacking approach. The detailed algorithm workflow of the proposed weighted stacking approach can be expressed as:
+
+\begin{enumerate}
+\item Calculate the SVD of data matrix $\mathbf{D}$:
+\begin{equation}
+\label{eq:svd}
+[\mathbf{U},\Sigma,\mathbf{V}]=\text{SVD}(\mathbf{D})
+\end{equation}
+\item Calculate the low-rank approximated singular value matrix by selecting the $k$ largest diagonal elements and setting others zero:
+\begin{equation}
+\label{eq:singular}
+\hat{\Sigma} = \Sigma(1:k,1:k)
+\end{equation}
+\item Calculate the low-rank approximated data matrix
+\begin{equation}
+\label{eq:lr}
+\hat{\mathbf{S}} = \mathbf{U}\hat{\Sigma}\mathbf{V}^T.
+\end{equation}
+\item Calculate the arithmetic mean of the low-rank approximated data matrix according to (\ref{eq:ave}).
+\item Calculate the local similarity between each trace and the low-rank approximated zero-offset reference trace.
+\item Calculate the PCA-based weighting function $w_i(t)$ according to (\ref{eq:weight1}).
+\item Stack the CMP gather using the calculated weighting function according to (\ref{eq:simistack}).
+\end{enumerate}
+For more complicated cases, the nonlinear equivalent of standard PCA (NPCA) can be used to potentially obtain even better performance. The NPCA reduces the observed variables to a number of uncorrelated principal components. The most important advantages of nonlinear over linear PCA are that it incorporates nominal and ordinal variables, and that it can handle and discover nonlinear relationships between variables, which may indicates the the traces may not need to be exactly flattened before stacking.
+
+\section{Examples}
+
+We first use a simple synthetic example to show the logic of the proposed approach. Fig. \ref{fig:syncomp} shows an NMO-corrected CMP gather on the left. It is salient that there is an abnormal trace in the CMP gather. Besides, there is a significant amount of random noise in the data. For this data set, it is not plausible to directly take the arithmetic mean of the traces to stand for the zero-offset trace, since the abnormal trace will greatly degrade the fidelity of the equal-weight stacked trace and the non-gaussian random noise will cause a lot of residual noise in the stacked trace. However, the low-rank approximated data matrix (as shown in the right subfigure in Fig. 1) that alleviates the influence of the abnormal trace and non-Gaussian random noise is much cleaner and close to the ideal NMO-corrected CMP gather.  
+
+The second to fifth subfigures (from left to right) in Fig. \ref{fig:compare} show the stacked traces using traditional stacking, smart stacking \cite[]{Rashed08}, SNR stacking \cite[]{Neelamani06} and similarity weighted stacking  \cite[]{Liu09}, respectively. Despite the existence of the abnormal first trace, the similarity-weighted trace obtains the best stacking performance as shown in \cite{Liu09}. We zoom in the last figure in Fig. \ref{fig:compare} and show it in the middle of Fig. \ref{fig:simi-combine}. In addition, we show the clean signal on the left of Fig. \ref{fig:simi-combine} and the stacked signal using the proposed method on the right of Fig. \ref{fig:simi-combine}. It is obvious that the abnormal trace makes the stacked trace based on local similarity deviate from the true signal a lot around 0.175s, as pointed out by the arrow. The proposed method, however, obtains a successful stacked signal.  The SNR of the similarity based method is 8.85 dB and the SNR of the PCA based method is 9.38 dB. We can conclude from the synthetic example that the proposed method can not only help improve the SNR, but also can help better preserve the amplitude of the useful signals. %Instead of using the Fig. 2b as the reference trace, we first apply TSVD to the NMO-corrected data, shown in Fig. 1b, and then obtain an equal-weight stacked trace, then using this trace as the reference for calculating the local similarity. After both TSVD and similarity-weighted stacking, the stacked trace (Fig. 3b) is even better than that of the similarity stacking approach (Fig. 3c).  
+
+The number of stacking signals may be large, e.g., more than 50. The number of abnormal traces can also be larger than 1. Actually, when the number of stacking signals becomes larger, the method becomes more appealing, since more signals also implies more complicated signal features, more noise, and more abnormal traces. The superiority of the proposed method will become more practically beneficial when the data size and structure becomes more complicated, e.g., the field data example discussed next.
+
+We then apply the proposed method to a field data example, as shown in Fig. \ref{fig:cmps}. The second field data is a 2-D line from the Blake Outer Ridge area offshore Florida and Georgia. Fig. \ref{fig:nmo} shows a demonstration of flattening one CMP gather (Fig. \ref{fig:nmo}a) using NMO velocity analysis (Fig. \ref{fig:nmo}b) and NMO correction (Fig. \ref{fig:nmo}c). The white line overlaying Fig. \ref{fig:nmo}b denotes the automatically picked NMO velocity used for flattening the gather. Fig. \ref{fig:blake-weight} shows the weight calculated using the proposed method (equations \ref{eq:weight1} and \ref{eq:beta}). The stacked seismic images using different methods are shown in Fig. \ref{fig:blake-stack0,blake-simistack0,blake-simistack-tsvd0}. 
+
+As shown in Fig. \ref{fig:blake-stack0,blake-simistack0,blake-simistack-tsvd0}, the three sections (a),(b),(c) correspond to the stacked images of this field data example using three different methods: equal-weight stacking, similarity-weighted stacking, and PCA-based stacking. The proposed approach obtains a more satisfying stacking performance, as shown in Fig. \ref{fig:blake-simistack-tsvd0}. The amplitude of seismic reflections becomes obviously stronger using the proposed approach (Fig. \ref{fig:blake-simistack-tsvd0}). Fig. \ref{fig:zoom1,zoom2,zoom3} shows zoomed sections that correspond to the pink frame boxes shown in Fig. \ref{fig:blake-stack0,blake-simistack0,blake-simistack-tsvd0}. It further confirms that the proposed method can help obtain cleaner stacked image and better preserve the amplitude of the useful signals. In order to quantitatively compare the stacking performance of different methods, we plot the average spectrum (1D FFT along the time axis) of all the traces of the stacked images for three methods and show them in Fig. \ref{fig:field-fs}. The black line denotes the average spectrum of equal-weight stacking method. The green line corresponds to similarity stacking method. The red line corresponds to the proposed approach. It is very obvious that the energy of the proposed algorithm is stronger than that of the equal-weight stacking method and similarity stacking method, indicating that the proposed algorithm helps best preserve the amplitude of seismic reflection events. We also calculate the maximum frequency energy (MFE), i.e., the maximum amplitude of the average frequency spectrum, for three methods. MFE is 231.83 for the equal-weight method, 415.24 for the similarity method, and 504.77 for the proposed method. The proposed method improve the equal-weight method by 117.33\% and improve the similarity method by 21.56\% in terms of MFE. 
+
+\new{It is worth mentioning that there is no 100\% reliable way to compare the stacking performance of real seismic data in the literature, since there is no ground truth for real data. When judging the stacking performance by human observation, we care about the "large amplitude/energy" of those key reflectors since stronger amplitude/energy makes us see clearer the reflectors, as highlighted by the ellipses and arrows in Fig. 8. When interpreting the seismic profiles, the No 1 principle is to detect those critical reflectors, the No 2 principle is the coherency of those reflectors since it is related to the horizon tracking in seismic interpretation. The "accuracy" or "fidelity" of amplitude is not very important in interpretation of time-migrated seismic images. However, the modern seismic imaging techniques such as true-amplitude least-squares migration \cite[]{yangkang2017lsrtm}, seek to obtain true-amplitude subsurface image where the amplitude correctness is of vital importance. However, this is beyond the scope of the letter For judging the stacking performance of field data, we highly recommend to judge by "observing" and "interpreting".  }
+
+\inputdir{synth}
+\plot{syncomp}{width=\columnwidth}{Left: Original NMO-corrected data. Right: Low-rank approximated data matrix. }
+
+\plot{compare}{width=\columnwidth}{From left to right: NMO-corrected data, conventional stack, smart stack \cite[]{Rashed08}, SNR stack \cite[]{Neelamani06}, and similarity stack \cite[]{Liu09}.}
+
+\plot{simi-combine}{width=\columnwidth}{From left to right: true signal, stacked signal using the similarity-weighted stacking (SNR=8.85 dB), and stacked signal based on the PCA method SNR=9.38 dB.}
+
+
+\inputdir{field}
+
+\plot{cmps}{width=\columnwidth}{Field data example.  }
+
+\plot{nmo}{width=\columnwidth}{Demonstration of NMO correction for the field data example. }
+
+\plot{blake-weight}{width=\columnwidth}{PCA-based weights for each time and space indices.}
+
+\multiplot{3}{blake-stack0,blake-simistack0,blake-simistack-tsvd0}{width=0.7\columnwidth}{(a) Stacked result using equal-weight method. (b) Stacked result using local similarity based weight. (c) Stacked result using the proposed method.}
+
+\inputdir{./}
+\multiplot{3}{zoom1,zoom2,zoom3}{width=0.7\columnwidth}{Zoomed sections from Fig. \ref{fig:blake-stack0,blake-simistack0,blake-simistack-tsvd0}. (a) Stacked result using equal-weight method. (b) Stacked result using local similarity based weight. (c) Stacked result using the proposed method.}
+
+\plot{field-fs}{width=\columnwidth}{Comparisons of the average spectrum of all the traces. The black line denotes the average spectrum of equal-weight stacking method. The green line corresponds to similarity stacking method. The red line corresponds to the proposed approach. Note that energy of the proposed algorithm is obviously stronger than the other two methods.}
+
+
+ 
+\section{Conclusion}
+The similarity-weighted stacking approach can obtain a much improved stacking result than the equal-weight stacking considering the increased SNR, however, will still cause
+energy damage when an inappropriate reference trace is used to calculate the similarity based weights. %We propose a combined TSVD and local similarity stacking technique that can mitigate the influence of abnormal traces to the amplitude of reference trace. 
+We proposed a new weighted stacking method that is based on principal component analysis (PCA). The principal of the method is to prepare an ideal NMO-corrected data matrix via low-rank approximation. The low-rank approximation, or in other words the principal components, is obtained via solving a low-rank constrained optimization problem via singular value decomposition (SVD). The proposed PCA-based stacking method can help alleviate the negative effects caused from abnormal trace, erratic and non-gaussian random noise existing in the data matrix, and thus is robust in field data processing.  The proposed approach is tested via a synthetic CMP gather and a field data example, which shows very promising performance. Future research topics include substituting the current PCA framework with more sophisticated algorithms to make the obtained components statistically as independent as possible, such as Independent Component Analysis (ICA), where higher-order statistics rather than second-order moments are used to determine basic vectors and is proven to be stronger than PCA \cite[]{ica2001}.
+
+
+
+
+%\begin{figure}[htb!]
+%\centering
+%\includegraphics[width=0.5\columnwidth]{field/Fig/blake-simi-cube}
+%\caption{NMO-corrected 3D data cube. }
+%\label{fig:blake-simi-cube}
+%\end{figure}
+
+\section{Acknowledgments}
+This research is supported by Supported by State Key Laboratory of Geodesy and Earth's Dynamics (Institute of Geodesy and Geophysics, CAS, Grant No. SKLGED2017-4-3-E) and Sinopec Key Laboratory of Geophysics (Grant No. 33550006-15-FW2099-0017). J. Xie is supported by China Scholarship Council (201606440091). J. Xie also thanks the Shell Ph.D Scholarship to support excellence in geophysical research.
+
+\bibliographystyle{seg}
+\bibliography{svdstack}
+
+
+
