@@ -1,0 +1,183 @@
+\published{Journal of Applied Geophysics, 119, 99-105, (2015)}
+
+\title{Enhancing seismic reflections using empirical mode decomposition in the flattened domain}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Yangkang Chen\footnotemark[1], Guoyin Zhang\footnotemark[2], Shuwei Gan\footnotemark[2], and Chenglin Zhang\footnotemark[3]}
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+Email: ykchen@utexas.edu
+
+\footnotemark[2] State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200 \\
+guoyinzh@126.com
+%guoyinzh@126.com  
+%ziyouqishi\_2014@163.com
+
+\footnotemark[3] Exploration and Development Institute of Southwest Oil \& Gasfield Company, \\
+ PetroChina oil Company \\
+  Jianshe North Road (Section 1), No. 83,
+Chengdu, China, 610041 \\
+zclcup@163.com \\
+
+\footnotemark[4] School of Electronic and Information Engineering \\
+Hebei University of Technology \\
+Xiping Road No. 5340, Beichen District \\
+Tianjin, China, 300401\\
+zyt@hebut.edu.cn
+}
+\lefthead{Chen et al.}
+\righthead{EMD in the flattened domain}
+
+
+\maketitle
+
+\begin{abstract}
+Due to different reasons, the seismic reflections are not continuous even when no faults or \new{no} discontinuities exist. We propose a novel approach for enhancing the amplitude of seismic reflections and mak\old{e}\new{ing} \new{the} seismic reflections continuous. We use plane\new{-}wave flattening \new{technique} to provide \old{highly} horizontal events for the following empirical mode decomposition (EMD) based smoothing in the flattened domain. \old{An}\new{The} inverse plane\new{-}wave flattening can be used to obtain original curved events. The plane\new{-}wave flattening process requires a precise local slope estimation, which \old{was}\new{is} provided by the plane-wave destruction (PWD) algorithm. The EMD based smoothing filter is a non-parametric and adaptive filter, thus can be conveniently used. Both pre-stack and post-stack field data examples show tremendous improvement for the data quality, which \old{is especially interpretation friendly} \new{makes the following interpretation easier and more reliable}.  
+\end{abstract}
+
+\section{Introduction}
+Modern exploration for hydrocarbon requires more advanced techniques for each steps of seismic acquisition, processing, and interpretation \cite[]{yangkang20142,qushan2015}. The key step that connects geophysics and geology is interpretation. A clean pre-stack dataset can aid AVO-related inversion. A clean post-migrated image will help geologists make right decisions and reduce the interpretation risks \cite[]{yangkang20141,zhiguang2014,yangkang2015image,wencheng2015stack}. Due to different reasons, e.g. unpredictable noise or sampling issues, the raw seismic data might not be clean or coherent enough. 
+
+To solve this problem, we can not use \old{a}\new{the} traditional random noise attenuation \old{technique}\new{techniques} to make the seismic reflections coherent, because \old{this type of }discontinuous noise is not randomly spreaded across the whole profile. \old{Using a}\new{The} traditional random noise attenuation technique\old{s} \cite[]{wencheng2015asa,yangkang2015}, such as the $f-x$ deconvolution \cite[]{canales1984}, $f-x$ singular spectrum analysis \cite[]{mssa}, Karhunen-loeve (KL) or singular value decomposition (SVD) filtering \cite[]{jones1987}, will harm much of the useful reflections. The discontinuous problem of some seismic dataset can be solved using a smoothing operator. A mean filter is usually used to smooth the seismic reflections instead of solely removing random noise. However, mean filter requires \old{a} exactly flattened reflections, otherwise much \new{of the} useful reflections will be lost. In addition, the parameters setting when utilizing the mean filter requires some effort in practice.  \cite{hale2011} proposed a bilateral filtering approach for improving the smoothness and coherency along the local structure of seismic data. Considering the damages to useful energy in many smoothing and denoising algorithms, \new{\cite{yangkang2014simi,yangkang2015ortho}} proposed a signal-compensation approach for reducing the damages to useful reflections during the initial denoising processing.
+
+In this paper, we propose a novel approach for enhancing seismic signal either in pre-stack dataset or in post-stack (-migrated) image. The novel approach utilizes the \old{excellent}\new{good} smoothing ability of the empirical mode decomposition (EMD) based denoising approaches. Instead of using EMD to remove random noise \cite[]{yangkang2014emdsum}, here we only use EMD to enhance seismic reflections and to make seismic events more coherent. Because those EMD based denoising approaches are best used in horizontal reflections, a plane\new{-}wave flattening process is \old{applied}\new{implemented} before the traditional EMD based approach. Even though, the EMD based filtering approach does not require exactly flattened events. Unlike 1D mean and median filters, EMD based filtering can also preserve useful reflections with small dip angle. What is even more attractive is that EMD based denoising approach is \old{very} adaptive. The only parameter we need to define is the number of dip components. Considering that, in practice, we commonly choose to remove the first EMD component in order to remove the highest oscillating components, the EMD based filtering is non-parametric. Because of the adaptivity and the superior performance of the EMD based smoothing in field seismic data processing, more and more researchers are turning to use this techinique as a blind-processing tool in order to deal with the rapidly increasing data size in modern seismic data processing \new{\cite[]{jiajun2015eemd,shuwei20152}}. We use both pre-stack common midpoint (CMP) gather and post-stack image to demonstrate the performance of the proposed approach\old{es}. Results show that the amplitude and the coherency of seismic reflections can be tremendously enhanced.
+
+\section{Method}
+%For every frequency, 
+The proposed processing workflow can be briefly summarized as: 1) Apply forward plane\new{-}wave flattening to the raw dataset. 2) Apply EMD filtering in $f-x$ domain. 3) Apply inverse plane\new{-}wave flattening to obtain curved seismic reflections.
+In the following contexts, we \new{will} give some details about both EMD based smoothing and plane\new{-}wave flattening\old{ in the following contexts}.
+\subsection{Smoothing by empirical mode decomposition}
+Empirical mode decomposition (EMD) is used to empirically decompose a non-stationary signal into a finite set of subsignals, which are termed \new{as} intrinsic mode functions (IMF) and are considered to be \new{locally} \old{stable}\new{stationary}. The IMFs satisfy two conditions: (1) in the whole data set, the number of extrema and the number of zero crossings must either equal or differ at most by one; and (2) at any point, the mean value of the envelope defined by the local maxima and the envelope defined by the local minima is zero \cite[]{emd}. 
+Let $s(t)$, $c_n(t)$, $r(t)$ and $N$ denote the original non-stationary signal, the separated IMF, the residual and the number of IMFs, respectively. The EMD can be expressed as:
+\begin{equation}
+\label{eq:emd}
+s(t)=\sum_{n=1}^{N}c_n(t)+r(t).
+\end{equation}
+For a non-stationary signal $s(t)$, using equation \ref{eq:emd}, we get a finite set of subsignals $c_n(t)$,($n=1,2,\cdots,N$). 
+
+We can straightforwardly use the EMD to denoise each seismic trace because of the special frequency-decreasing property of IMF. IMFs represent\old{s} different oscillations embedded in the data, and the oscillating frequency for each subsignal $c_n(t)$ decreases as the sequence number of IMF \old{become}\new{gets} larger. This property results from the sifting algorithm to implement the decomposition. The sifting process can be summarized as a process in which low-frequency component is gradually removed out to generate a more local-constant-frequency mode, which is followed by generating the next mode.
+
+\cite{yangkang2014emdsum} provided an overall introduction of the applications of EMD in random noise attenuation of seismic data. According to \cite{yangkang2014emdsum}, EMD can be used to denoise each 1-D signal from the 2-D seismic profile in time-space ($t$-$x$) domain either along the time direction or space direction. However, because of the mode-mixing problem, $t$-$x$ domain EMD along the time direction will cause some damage to useful seismic signal. A better way \new{utilize EMD to remove noise} is to apply EMD along the space direction and to remove the highly oscillating components. The frequency-space ($f$-$x$) domain EMD can help to obtain faster implementation and even better performances. 
+%The EMD based smoothing method was proposed by \cite{bekara} as:
+%\begin{enumerate}
+%\item 
+%Transform the data to the $f-x$ domain.
+%\item 
+%For every frequency, 
+%\begin{enumerate}
+%\item
+%separate real and imaginary parts in the spatial sequence,
+%\item
+%compute IMF1, for the real signal and subtract it to obtain the filtered real signal,
+%\item
+%repeat for the imaginary part,
+%\item
+%combine to create the filtered complex signal.
+%\end{enumerate}
+%\item
+%Transform data back to the $t-x$ domain.
+%\end{enumerate}
+$f-x$ EMD refers to applying EMD on
+each frequency slice in the $f-x$ domain, and remov\old{e}\new{ing} the first IMF,
+which mainly represent the high\old{er}\new{est} wavenumber components. The methodology can be summarized as \cite[]{yangkang2015}:
+\begin{equation}
+\label{eq:fxemd}
+\begin{split}
+\hat{s}(m,t) &= \mathcal{F}^{-1}\left(\sum_{n=2}^{N}C_n(m,w)\right), \\
+\mathcal{F} d(m,t)  &= \sum_{n=1}^{N} C_n(m,w),
+\end{split}
+\end{equation}
+where $\hat{s}(m,t)$ and $d(m,t)$ denote the estimated signal and observed noisy signal, respectively. $\mathcal{F}$ and $\mathcal{F}^{-1}$ denote the forward and inverse Fourier transforms along the time axis, respectively. $C_n$ denotes the $n$th EMD decomposed component. $w$ denotes frequency. In order to \old{maximize}\new{optimize} the effectiveness, the seismic events should \new{better} be flattened first.
+
+It is worth to be mentioned here that the $f-x$ EMD does not require exactly flattened events. Unlike 1D mean and median filters, $f-x$ EMD can also preserve useful reflections with small dip angle. Compared with Karhunen-loeve (KL) or singular value decomposition (SVD) filtering, the $f-x$ EMD can be much more adaptive, because the horizontal events mainly lay in the first 1-3 IMFs after EMD in the $f-x$ domain, however, the number of singular values corresponding to the useful horizontal reflections for KL or SVD transforms have a large range and thus is not convenient to chose. The performance for preserving horizontal events of $f-x$ EMD is also much better than that of KL or SVD transforms \cite[]{yangkang2015}.
+
+\subsection{plane\new{-}wave flattening}
+Considering that the local plane wave can be described as the following differential equation: 
+\begin{equation}
+\label{eq:plane}
+\frac{\partial u}{\partial x}+\sigma\frac{\partial u}{\partial t} = 0,
+\end{equation}
+where $\sigma$ is the local slope in continuous space, and $u$ denotes the wavefield. In the case of the constant local slope, equation \ref{eq:plane} has the following solution:
+\begin{equation}
+\label{eq:planesolu}
+P(t,x) = f(t-\sigma),
+\end{equation}
+\new{where} $f$ is the waveform function. In order to flatten a seismic section, we need to first select a reference trace\old{. Then}\new{, and then} we flatten the whole profile by predicting each trace from the reference trace, following the local slope. Predicting trace $k$ from trace $r$ (reference trace) is simply:
+\begin{equation}
+\label{eq:pre}
+\mathbf{P}_{r,k} = \mathbf{P}_{r,r+1}\cdots\mathbf{P}_{k-2,k-1}\mathbf{P}_{k-1,k}.
+\end{equation}
+The above recursive operator $\mathbf{P}_{r,k}$ is called predictive paining \cite[]{fomel2010painting}.
+Each $\mathbf{P}_{i,j}$ denotes the prediction operator following the local slope $\sigma$.
+
+%\subsection{plane\new{-}wave destruction}
+The local slope can be obtained by solving the following equation:
+\begin{equation}
+\label{eq:pwd}
+\mathbf{D}(\sigma)\mathbf{S} = \mathbf{0},
+\end{equation}
+where \old{$\mathbf{s}$}\new{$\mathbf{S}$} is the seismic section, $\mathbf{S}=[\mathbf{s}_1\quad\mathbf{s}_2\cdots\mathbf{s}_N]^T$, $\mathbf{s}_i$ denotes $i$th trace, $[\cdot]^T$ denotes the transpose of the input matrix,  and $\mathbf{D}$ is called plane\new{-}wave destruction (PWD) operator \cite[]{fomel2002pwd}, which has the following form:
+\begin{equation}
+  \label{eq:d}
+  \mathbf{D}(\sigma) = 
+  \left[\begin{array}{ccccc}
+      \mathbf{I} & 0 & 0 & \cdots & 0 \\
+      - \mathbf{P}_{1,2} & \mathbf{I} & 0 & \cdots & 0 \\
+      0 & - \mathbf{P}_{2,3} & \mathbf{I} & \cdots & 0 \\
+      \cdots & \cdots & \cdots & \cdots & \cdots \\
+      0 & 0 & \cdots & - \mathbf{P}_{N-1,N} & \mathbf{I} \\
+    \end{array}\right]\;.
+\end{equation}
+Equation \ref{eq:pwd} can be solved by iterative inversion using shaping regularization with a local smoothness constraint \cite[]{fomel2007shape}. \cite{shuwei2015} used a similar methodology to provide a flattened domain for attenuating random noise using truncated singular value decomposition.
+
+Figure \ref{fig:sigmoid,sdip,sflat,flat-rec} shows a simple demonstration of the plane-wave flattening process. Figure \ref{fig:sigmoid} \old{is}\new{shows} a synthetic data, with dipping reflector, curved events, and faults in the profile. Figure \ref{fig:sdip} shows the corresponding local slope estimation using the PWD algorithm. Figure \ref{fig:sflat} shows the flattened domain of the synthetic data using the plane-wave flattening algorithm. The reference trace is selected as the 30th trace in the section, as highlighted by the blue line in Figures \ref{fig:sigmoid}, \ref{fig:sflat} and \ref{fig:flat-rec}. Figure \ref{fig:flat-rec} shows the reconstructed synthetic data using the inverse plane-wave flattening process. 
+
+\inputdir{sigmoid}
+\multiplot{4}{sigmoid,sdip,sflat,flat-rec}{width=0.45\columnwidth}{\new{Demonstration of the plane\new{-}wave flattening algorithm.}(a) Synthetic example. (b) Local slope estimation. (c) Flattened domain. (d) Reconstructed data.}
+
+%\subsection{Signal enhancing workflow}
+
+\section{Field data examples}
+The first example is a pre-stack CMP gather, as shown in Figure \ref{fig:gath0}. In order to apply the EMD based smoother, we first use plane\new{-}wave flattening \new{algorithm} to flatten the original CMP gather. The local slope used in the plane-wave flattening algorithm is \old{provided}\new{shown} in Figure \ref{fig:dip}. The flattened gather is shown in Figure \ref{fig:flat}. We can see some incoherence and some random noise appearing in the flattened gather. However, after applying EMD in the $f-x$ domain, we obtain a quite smooth gather, as shown in Figure \ref{fig:flat-emd}\old{,}\new{.} \old{a}\new{A}fter using \new{the} inverse plane\new{-}wave flattening \new{algorithm}, we \new{can} obtain the filtered data (Figure \ref{fig:flat-emd-rec0}). Figure \ref{fig:dif} shows the difference section between Figures \ref{fig:gath0} and \ref{fig:flat-emd-rec0}.  We can see a tremendous improvement from the zoomed sections, corresponding to the frame boxes A and B, in Figures \ref{fig:zooma-1,zooma-2} and \ref{fig:zoomb-1,zoomb-2}. The seismic reflections after signal enhancing are obviously much more coherent than the original data. The reference trace for flattening \new{in this example} is chosen as the middle trace of the section. 
+
+The second example is a post-stack section, as shown in Figure \ref{fig:post-gath0}. This data set has much more curved events than the first example. However, by using \new{the} plane\new{-}wave flattening \new{algorithm}, we can still get a well-fattened section that is suitable for applying an EMD based smoothing operator. The reflection-enhanced data is shown in Figure \ref{fig:post-emd-rec0}. Figure \ref{fig:post-dif} shows the difference section \new{before and after the smoothing}. We also zoom two parts from the original section and filtered section, and show them in Figure \ref{fig:post-zooma-1,post-zooma-2,post-zoomb-1,post-zoomb-2}. The comparison \new{also} \old{obviously} shows that the proposed seismic reflection enhancing process can help obtain much more continuous event\new{s}.
+\inputdir{prestack}
+
+\multiplot{3}{gath0,flat,flat-emd}{width=0.45\columnwidth}{Pre-stack data example.  (a) Pre-stack data. (b) Flattened domain using plane\new{-}wave flattening. (c) EMD filter\old{ed}\new{ing} in the flattened domain.}
+%\multiplot{4}{gath0,flat,flat-emd,flat-mf}{width=0.45\columnwidth}{Pre-stack data example.  (a) Pre-stack data. (b) Flattened domain using plane\new{-}wave flattening. (c) EMD filtered in the flattened domain. (d) MF filtered in the flattened domain.   }
+
+\multiplot{2}{flat-emd-rec0,dif}{width=0.45\columnwidth}{Pre-stack data example. (a) Seismic reflection enhanced data using EMD. (c) Difference section between Figure\new{s} \ref{fig:gath0} and \ref{fig:flat-emd-rec0}.  }
+%\multiplot{4}{flat-emd-rec0,flat-mf-rec0,dif,dif0-mf}{width=0.45\columnwidth}{Pre-stack data example. (a) Seismic reflection enhanced data using EMD. (b) Seismic reflection enhanced data using MF. (c) Difference section between Figure \ref{fig:gath0} and (a). (d) Difference section between Figure \ref{fig:gath0} and (b).   }
+
+\plot{dip}{width=0.45\columnwidth}{Local slope of pre-stack data example for plane-wave flattening.  }
+
+\multiplot{2}{zooma-1,zooma-2}{width=0.45\columnwidth}{Pre-stack data example. (a) Zoomed sections corresponding to the framebox A in Figure \ref{fig:gath0}. (b) Zoomed sections corresponding to the framebox A in Figure \ref{fig:flat-emd-rec0}.}
+%\multiplot{3}{zooma-1,zooma-2,zooma-3}{width=0.45\columnwidth}{Pre-stack data example. (a) Zoomed sections corresponding to the framebox A in Figure \ref{fig:gath0}. (b) Zoomed sections corresponding to the framebox A in Figure \ref{fig:flat-emd-rec0}. (c) Zoomed sections corresponding to the framebox A in Figure \ref{fig:flat-mf-rec0}.}
+
+\multiplot{2}{zoomb-1,zoomb-2}{width=0.45\columnwidth}{Pre-stack data example. (a) Zoomed sections corresponding to the framebox B in Figure \ref{fig:gath0}. (b) Zoomed sections corresponding to the framebox B in Figure \ref{fig:flat-emd-rec0}.}
+%\multiplot{3}{zoomb-1,zoomb-2,zoomb-3}{width=0.45\columnwidth}{Pre-stack data example. (a) Zoomed sections corresponding to the framebox B in Figure \ref{fig:gath0}. (b) Zoomed sections corresponding to the framebox B in Figure \ref{fig:flat-emd-rec0}. (c) Zoomed sections corresponding to the framebox B in Figure \ref{fig:flat-mf-rec0}.}
+
+\inputdir{postack}
+\multiplot{3}{post-gath0,post-emd-rec0,post-dif}{width=0.45\columnwidth}{Post-stack data example. (a) \old{Postack}\new{Post-stack} data. (b) Signal enhanced data. (c) Difference.}
+
+\multiplot{4}{post-zooma-1,post-zooma-2,post-zoomb-1,post-zoomb-2}{width=0.45\columnwidth}{Post-stack data example. (a) \& (b) Zoomed sections corresponding to the framebox C in Figure \ref{fig:post-gath0,post-emd-rec0,post-dif}. (c) \& (d) Zoomed sections corresponding to the framebox D in Figure \ref{fig:post-gath0,post-emd-rec0,post-dif}.}
+
+
+ 
+\section{Conclusions}
+In this paper, we proposed a seismic reflection enhancing approach using \new{the} empirical mode decomposition \new{(EMD)} in the flattened domain. We use the plane\new{-}wave flattening algorithm to flatten the seismic data by predicting different traces from one reference trace.  The proposed approach is not intended to attenuate random noise, instead, it is used to enhance seismic reflections in order to make the events more continuous and thus easier for interpretation. The EMD based \old{filtering}\new{smoothing} is non-parametric and adaptive to different dataset, thus can be conveniently used in practice. Both pre-stack and post-stack examples show that the proposed approaches can successfully enhance the useful signals and make the seismic reflections more continuous. 
+
+\section{Acknowledgements}
+We would like to thank the chief editor Jyoti Behura\new{, Ryan Swindeman, Jitao Ma, Tingting Liu, Karl Schleicher, Josef Paffenholz} and two anonymous reviewers for \new{helpful discussions and} constructive suggestions that improve the grammar and configuration of the paper a lot\old{, Tingting Liu for helpful discussions about EMD.} Yangkang Chen would like to thank Texas Consortium for Computational Seismology (TCCS) for financial support. This paper was prepared in the Madagascar open-source platform \cite[]{mada2013} and all the examples are reproducible.
+
+
+\bibliographystyle{seg}
+\bibliography{enhemd}
+
+
