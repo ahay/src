@@ -1,6 +1,11 @@
 #EnsureSConsVersion(1,0)
 
 import atexit, os, sys
+
+# to deal with non-ASCII characters
+reload(sys)  
+sys.setdefaultencoding('utf8')
+
 sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
 
