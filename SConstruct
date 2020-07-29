@@ -2,9 +2,13 @@
 
 import atexit, os, sys
 
+if sys.version_info.major == 3 and sys.version_info.minor >= 4:
+    from importlib import reload
+
 # to deal with non-ASCII characters
-reload(sys)  
-sys.setdefaultencoding('utf8')
+reload(sys)
+if sys.version_info.major == 2:
+   sys.setdefaultencoding('utf8')
 
 sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
