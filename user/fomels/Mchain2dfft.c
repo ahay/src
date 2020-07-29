@@ -29,8 +29,10 @@ int main(int argc, char* argv[])
     int i, n, nk, n2, iter, niter, liter, snap, nt, nx, nt1, nt2, nx2;
     int rect1, rect2, frect1, frect2; 
     float dt,dx,x0;
-    float *w, *dw, *x, *y, *r, *p, *lsmig;
+    float l2_r,l2_r_new,alpha;
+    float *w, *dw, *x, *y, *r, *p, *lsmig,*r_new, *w_prev;
     sf_file wht, fwht, src, tgt, mch;
+    sf_file w0, wf0;
     /*sf_file for w, wf, lsmig snapshot*/
     sf_file snap_w, snap_wf, snap_lsmig;
     /* For fft2 */
@@ -44,10 +46,15 @@ int main(int argc, char* argv[])
 
     tgt = sf_input("target");
     /* target */
+
+    w0 = sf_input("init_w");
+    wf0 = sf_input("init_wf");
+
     fwht = sf_output("fweight"); 
     /* frequency weight */
     mch = sf_output("match"); 
     /* matched */
+
 
     if (!sf_histint(src,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(src,"n2",&nx)) sf_error("No n2= in input");
@@ -72,11 +79,13 @@ int main(int argc, char* argv[])
 
     w = sf_floatalloc(n2); 
     dw = sf_floatalloc(n2);
+    w_prev = sf_floatalloc(n2);
 
     x = sf_floatalloc(n); 
     y = sf_floatalloc(n);
     lsmig = sf_floatalloc(n); /* decon image */
     r = sf_floatalloc(3*n);
+    r_new = sf_floatalloc(3*n);
 
 
     /* I/O Setup for snapshot */
@@ -144,9 +153,6 @@ int main(int argc, char* argv[])
 
 
 
-
-
-
     if (!sf_getint("rect1",&rect1)) rect1=1;
     /* smoothing in time dim1*/
     if (!sf_getint("rect2",&rect2)) rect2=1;
@@ -169,22 +175,25 @@ int main(int argc, char* argv[])
 
     sf_conjgrad_init(n2, n2, 3*n, 3*n, 1., 1.e-6, true, false);
  
+
     p = sf_floatalloc(n2); 
 
     /* initialize w [time w and freqz w] */
     for (i=0; i < 2*n; i++) {
     w[i] = 0.0f; 
     }
-    for (i=2*n; i < n2; i++) {
-    w[i] = 1.0f;
-    }
 
-
+    sf_floatread(w+2*n, n, w0);
+    sf_floatread(w+3*n, nk, wf0);
+   
 
     for (iter=0; iter < niter; iter++) {
     sf_warning("Start %d",iter);
+    alpha=1.0;
 
     sfchain2d_res(y,r);
+    l2_r = cblas_snrm2(3*n,r,1);
+    sf_warning("(Before update) L2 norm of res: %g", l2_r);
 
     sf_warning("Residual %d",iter);
     
@@ -192,8 +201,41 @@ int main(int argc, char* argv[])
 
 
     for (i=0; i < n2; i++) {
-        w[i] += dw[i];
+        w[i] += alpha*dw[i];
     }   
+
+    sfchain2d_res(y,r_new);
+
+    l2_r_new = cblas_snrm2(3*n,r_new,1);
+
+    sf_warning("(After update) L2 norm of res: %g, alpha = %g", l2_r_new,alpha);
+
+
+    while(l2_r_new>l2_r && alpha > 0.00001){ 
+        sf_warning("Too big step !");    
+
+        for (i=0; i < n2; i++) {
+            w[i] = w_prev[i];
+        }
+
+        alpha *=0.5;
+
+        for (i=0; i < n2; i++) {
+            w[i] += alpha*dw[i];
+        }
+
+        sfchain2d_res(y,r_new);
+
+        l2_r_new = cblas_snrm2(3*n,r_new,1);
+        sf_warning("(After update) L2 norm of res: %g, alpha = %g", l2_r_new,alpha);
+
+
+    }
+    sf_warning("Pass now !");
+    
+
+
+
 
     /* Snapshot of w, wf, deconvolved inmage */
 
