@@ -3,8 +3,11 @@
 import atexit, os, sys
 
 # to deal with non-ASCII characters
-reload(sys)  
-sys.setdefaultencoding('utf8')
+try:
+    reload(sys)  
+    sys.setdefaultencoding('utf8')
+except: # Python3
+    pass
 
 sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
