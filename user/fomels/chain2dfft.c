@@ -22,7 +22,7 @@
 #include "fft2.h"
 
 
-static int n, nk, nt, nx, nt1,nt2,nx2;
+static int n, nk, nw, nt, nx, nt1,nt2,nx2;
 static float *w, *wf, **tmp1, **tmp2, *x1, *x2, *s;
 static sf_complex *ctmp1, *ctmp2; /* for 2D-fft */
 
@@ -44,6 +44,7 @@ void sfchain2d_init(int  n1     /* trace length */,
     nx2 = n_fftx;
     nk = n_out_fft;
     nt2 = nk/n_fftx;
+    nw = nt2;
 
     /*Model parameters*/
     n = n1*n2;
@@ -207,6 +208,13 @@ void sfchain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
 /*< linear operator >*/
 {
     int i, ik, i1, i2;
+    int *dc_id, *nyq_id;
+    int id;
+    float scale;
+    dc_id = sf_intalloc(nx);
+    nyq_id = sf_intalloc(nx);
+
+
     if (nxx != 3*n+nk || nyy != 3*n) sf_error("%s: Wrong size",__FILE__);
     
     sf_adjnull(adj,add,nxx,nyy,x,y);
@@ -242,9 +250,24 @@ void sfchain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
     fft2_allocate(ctmp1);	
 	fft2(tmp1[0],ctmp1);
 
+    for(id = 0; id < nx; id++){
+        dc_id[id] = id*nw;
+        nyq_id[id] = (id+1)*nw - 1;
+    }
+
 	for (ik=0; ik < nk; ik++) {
+        scale = 2.0;
+        for(id=0; id<nx; id++)
+        { 
+            if(ik==dc_id[id] || ik == nyq_id[id]){
+                scale = 1.0;
+                break;
+            }
+        }
+
 	    x[3*n+ik] += 
-			crealf(ctmp1[ik]*conjf(ctmp2[ik])/nk);
+			scale*crealf(ctmp1[ik]*conjf(ctmp2[ik])/(nt1*nx2));
+
 	    ctmp1[ik] *= wf[ik];
 	}	
 	ifft2(tmp1[0],ctmp1);
@@ -286,8 +309,6 @@ void sfchain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
 		ctmp1[ik] *=wf[ik];
 	}
 	ifft2(tmp1[0],ctmp1);
-
-
     fft2_allocate(ctmp2);
 	fft2(tmp2[0],ctmp2);
 	for(ik=0; ik<nk;ik++){
@@ -295,11 +316,9 @@ void sfchain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
 	}
 	ifft2(tmp2[0],ctmp2);
 
-
 	for (i=0; i < n; i++) {
 	    i1 = i%nt;
 	    i2 = i/nt;
-	    
 	    y[n+i] += tmp1[i2][i1] + tmp2[i2][i1] - x[n+i];
 	    y[2*n+i] += x2[i]*x[2*n+i] + w[i]*x[n+i];
 	}
