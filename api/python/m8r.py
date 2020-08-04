@@ -788,7 +788,7 @@ class Input(_File):
                 lhs = tokenlist[0]
                 rhs = tokenlist[1]
                 quotmark = None
-                if rhs is list and rhs[0] in (squot, dquot):
+                if len(rhs) != 0 and rhs[0] in (squot, dquot):
                     if rhs[0] == squot:
                         quotmark = squot
                     else:
