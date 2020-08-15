@@ -4,11 +4,11 @@ from rsf.proj import *
 # Fetch the dataset
 ####################
 tgz = '2D_Land_data_2ms.tgz'
-## Fetch(tgz,
-##       server='http://www.freeusp.org',
-##       top='RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
-##       dir='Data')
-files = map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy'))
+Fetch(tgz,
+      server='https://www.freeusp.org',
+      top='RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
+      dir='Data')
+files = list(map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy')))
 Flow(files,tgz,
      'gunzip -c $SOURCE | tar -xvf -',stdin=0,stdout=-1)
 
