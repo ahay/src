@@ -3,7 +3,8 @@
 #
 # SConstruct  (Madagascar Script)
 #
-# Purpose: Scratch of velocity inversion algorithm.
+# Purpose: Kirchhoff-Newton modeling, velocity analysis,
+# NMO correction and stack.
 #
 # Site: http://www.dirackslounge.online
 # 
@@ -21,6 +22,7 @@ from rsf.proj import *
 # Personal Madagascar recipes
 from rsf.recipes.kimodel import multiLayerModel as mlmod
 from rsf.recipes.kimodel import kirchhoffNewtonModeling as kinewmod
+from rsf.recipes.velocityAnalysis import velocityAnalysis as nmoStack
 
 xmax = 6.0
 zmax = 2.0
@@ -53,10 +55,25 @@ kinewmod(reflectors='interfaces',
 	nh=161,
 	dh=0.025)
 
+# NMO Stack
+nmoStack(dataCube='multiLayerDataCube',
+	pick='vnmo',
+	stack='stackedSection',
+	vrms='vrms',
+	v0=1.5,
+	dv=0.01,
+	nv=100,
+	vel0=1.5,
+	rect1=15,
+	rect2=40,
+	rect3=3,
+	dt=0.004)
+
 # Use aliases to split building
 # Call it 'scons alias' to build
 # target identified by alias
 Alias('model','interfaces.rsf')
 Alias('kimodel','multiLayerDataCube.rsf')
+Alias('velan','stackedSection.rsf')
 
 End()
