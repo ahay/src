@@ -22,8 +22,9 @@ cqrtm
 '''
 
 tprogs='''
-clapack cblas csolver eno1 eno2 eno3 spline fft2
+clapack cblas csolver eno1 eno2 eno3 spline fft2 
 '''
+
 pyprogs='''
 pyran
 '''
@@ -127,11 +128,10 @@ for prog in mpimains:
     bldutil.depends(env,sources,'M'+prog)
     if lapack:	
         if mpicc and mpilib:
-            env.Prepend(CPPPATH=[mpicpp],
-                    LIBPATH=[mpilib],
-                    LIBS='')
             prog = env.Program(prog,
                     [x + '.c' for x in sources],
+                    CPPPATH=[mpicpp]+env.get('CPPPATH'),
+                    LIBPATH=[mpilib]+env.get('LIBPATH'),
                     CC=mpicc,LIBS=[libs,'X11'])
         else:
             prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
