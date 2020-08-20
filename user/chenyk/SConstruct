@@ -154,12 +154,10 @@ for prog in cuda_mains:
         if string.rfind(cc,'icc') >= 0:
             cflags = cflags + ' -ccbin=%s' % cc
             ldflags = '-ccbin=%s' % cc
-        #You need to revise here based on your system
-        env.Prepend(CPPPATH=['/usr/include/mpich-3.2-x86_64/'],
-                    LIBPATH=['/usr/lib64/mpich-3.2/lib'],
-                    LIBS=['mpi'])
         prog = env.Program(prog,cfile,
                            CC=NVCC,
+                           CPPPATH=[mpicpp]+env.get('CPPPATH'),
+                           LIBPATH=[mpilib]+env.get('LIBPATH'),
                            LINKFLAGS=ldflags,
                            CFLAGS=cflags)
     else:
