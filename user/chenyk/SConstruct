@@ -126,17 +126,16 @@ mpicpp = os.environ.get("MPICPP")
 for prog in mpimains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    if lapack:	
-        if mpicc and mpilib:
-            prog = env.Program(prog,
+    if petsclib and mpicc and mpilib:
+        prog = env.Program(prog,
                     [x + '.c' for x in sources],
                     CPPPATH=[mpicpp]+env.get('CPPPATH'),
                     LIBPATH=[mpilib]+env.get('LIBPATH'),
                     CC=mpicc,LIBS=[libs,'X11'])
-        else:
-            prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
-        if root:
-            env.Install(bindir,prog)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+    if root:
+        env.Install(bindir,prog)
 
 ######################################################################
 # compiling CUDA programs
