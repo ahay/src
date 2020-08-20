@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfspline', 'sfderiv', 'sfunif2', 'sfkirmod_newton', 'sfput', 'sfvscan', 'sfpick', 'sfsmooth', 'sfnmo', 'sfstack', 'sfmul', 'sfcausint', 'sfmath', 'sfgrey']
+data=[]
+size=  342524872

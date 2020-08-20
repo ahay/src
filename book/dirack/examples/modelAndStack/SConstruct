@@ -76,4 +76,6 @@ Alias('model','interfaces.rsf')
 Alias('kimodel','multiLayerDataCube.rsf')
 Alias('velan','stackedSection.rsf')
 
+Result('stackedSection','grey title=Stack')
+
 End()
