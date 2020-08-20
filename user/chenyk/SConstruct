@@ -146,7 +146,7 @@ NVCC = env.get('NVCC')
 
 cuda_mains = Split(cprogs)
 for prog in cuda_mains:
-    if CTP and NVCC and mpicc:
+    if CTP and NVCC and mpicc and mpicpp:
         cfile = env.Command('CUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         cc = env.get('CC')
         cflags = env.get('CUDAFLAGS')
