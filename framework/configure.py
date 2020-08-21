@@ -302,7 +302,7 @@ def cc(context):
                                                   '/usr/local/include')
             if os.path.isdir('/usr/local/lib'):
                 context.env['LIBPATH'] = path_get(context, 'LIBPATH', 
-                								  '/usr/local/lib')
+                                                  '/usr/local/lib')
     # Solaris
     elif plat['OS'] == 'sunos':
         context.env['CFLAGS'] = context.env.get('CFLAGS','').replace(
