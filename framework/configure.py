@@ -296,6 +296,13 @@ def cc(context):
             if os.path.isdir('/sw/lib'):
                 context.env['LIBPATH'] = path_get(context,'LIBPATH',
                                                   '/sw/lib')
+        if os.path.isdir('/usr/local/Homebrew'):  # paths for Homebrew
+            if os.path.isdir('/usr/local/include'):
+                context.env['CPPPATH'] = path_get(context, 'CPPPATH',
+                                                  '/usr/local/include')
+            if os.path.isdir('/usr/local/lib'):
+                context.env['LIBPATH'] = path_get(context, 'LIBPATH', 
+                								  '/usr/local/lib')
     # Solaris
     elif plat['OS'] == 'sunos':
         context.env['CFLAGS'] = context.env.get('CFLAGS','').replace(
