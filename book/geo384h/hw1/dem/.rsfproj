@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfbyte', 'sfgrey', 'sfhistogram', 'sfgraph', 'sfcausint', 'sfcat', 'sfscale']
-data=['data/bay/austin-w.HH']
-size=    1444449
