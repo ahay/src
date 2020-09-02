@@ -19,6 +19,7 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
+lapack = env.get('LAPACK')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
@@ -34,8 +35,11 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    env.StaticObject('M'+prog+'.c')
-    prog = env.Program(prog,[x + '.c' for x in sources])
+    if lapack:
+        env.StaticObject('M'+prog+'.c')
+        prog = env.Program(prog,[x + '.c' for x in sources])
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
 ######################################################################
