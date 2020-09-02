@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfbyte', 'sfgrey', 'sfhistogram', 'sfbargraph', 'sfcausint']
+data=['data/bay/austin-w.HH']
+size=    1444449

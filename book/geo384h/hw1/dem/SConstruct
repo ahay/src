@@ -1,0 +1,43 @@
+from rsf.proj import *
+
+# Download data
+Fetch('austin-w.HH','bay')
+
+# Convert to byte form
+Flow('byte','austin-w.HH',
+     '''
+     dd form=native |
+     byte pclip=100 allpos=y
+     ''')
+
+# Display
+Result('byte',
+       '''
+       grey yreverse=n screenratio=1 
+       title="Digital Elevation Map" 
+       ''')
+
+# Histogram
+Flow('hist','byte',
+     '''
+     dd type=float |
+     histogram n1=256 o1=0 d1=1 |
+     dd type=float
+     ''')
+Plot('hist',
+     'bargraph label1=Value label2=Occurence title=Histogram')
+
+# Cumulative histogram
+Flow('cumu','hist','causint')
+
+Plot('cumu',
+       '''
+       bargraph label1=Value label2=Occurence
+       title="Cumulative Histogram"
+       ''')
+
+Result('hist','hist cumu','SideBySideIso')
+
+# ADD HISTOGRAM EQUALIZATION
+
+End()
