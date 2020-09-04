@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfgraph', 'sffft1', 'sfmath', 'sfreal', 'sfnoise', 'sfwindow', 'sfmvo', 'sfput', 'sfsmooth']
-data=['data/csem/Ts.H']
-size=     633616

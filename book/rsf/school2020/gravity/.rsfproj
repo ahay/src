@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfwindow', 'sfcmplx', 'sfgraph', 'sfcat', 'sftransp', 'sfbin', 'sfreverse', 'sfgrey', 'sfcontour', 'sfmtm', 'sfigrad', 'sfderiv', 'sfgravcon']
-data=['data/gravity/gravity.dat']
-size=    4386688
