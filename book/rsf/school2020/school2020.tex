@@ -1,0 +1,195 @@
+\title{Madagascar tutorial: Writing technical papers by using Madagascar and LaTeX}
+
+\author{Maurice the Aye-Aye\footnotemark[1]}
+
+\address{
+\footnotemark[1] King Julien's Royal Advisor, \\
+Island of Madagascar, \\ Africa}
+
+\lefthead{Aye-Aye}
+\righthead{Tutorial}
+\footer{Madagascar Documentation}
+
+\maketitle
+
+\begin{abstract}
+From the viewpoint of science, all technical papers should be
+"reproducible" in the sense that someone of reasonable skill ought to
+be able to read the paper and then reproduce the results (from Joe
+Dellinger). \texttt{SEGTeX} is a \LaTeX\ package for geophysical
+publications, which is a important component in \textsc{Madagascar}
+Project. \texttt{SEGTeX} consists of class files for Geophysics
+papers, SEG expanded abstracts, etc, and cumulative bibliography of
+geophysical publications. In this tutorial, you will dive into writing
+part in the \textsc{Madagascar} architecture \cite[]{m8r} and learn
+how to use the \textsc{Madagascar} and \texttt{SEGTeX} to write a
+reproducible paper. By the end of this tutorial, you should have
+learned to: 
+\begin{enumerate} 
+\item design a paper project by following \texttt{SEGTeX} rules,
+\item insert figures from \textsc{Madagascar} workflow into papers, 
+\item generate a PDF paper with several styles by using different 
+\texttt{SEGTeX} classes,
+\item revise a paper with notated signs.  
+\end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing this tutorial requires
+\begin{itemize}
+\item \textsc{Madagascar} software environment available from \\
+\url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. An Internet connection is required for
+access to the data repository.
+
+The tutorial itself is available from the \textsc{Madagascar} repository
+by running
+\begin{verbatim}
+svn co https://github.com/ahay/src/trunk/book/rsf/school2020 ~/school2020
+\end{verbatim}
+\section{Introduction}
+
+In this tutorial, you will be asked to run commands from the Unix
+shell (identified by \texttt{bash\$}) and to edit files in a text
+editor. Different editors are available in a typical Unix environment
+(\texttt{vi}, \texttt{emacs}, \texttt{nedit}, etc.)
+
+Your first assignment:
+\begin{enumerate}
+\item Open a Unix shell.
+\item Change directory to the tutorial directory
+\begin{verbatim}
+bash$ cd ~/school2020
+\end{verbatim}
+\item Open the \texttt{school2020.tex} file in your favorite editor,
+  for example by running
+\begin{verbatim}
+bash$ emacs school2020.tex & 
+\end{verbatim}
+\item Look at the first line in the file and change the author name
+  from Maurice the Aye-Aye to your name (first things first).
+\end{enumerate}
+
+\section{Examples}
+\subsection{Gravity example}
+\begin{enumerate}
+\item Change directory to \texttt{gravity} directory
+\begin{verbatim}
+bash$ cd gravity
+\end{verbatim}
+\item Run
+\begin{verbatim}
+bash$ scons bin.view
+\end{verbatim}
+
+in the Unix shell. A number of commands will appear in the shell
+followed by Figure~\ref{fig:bin} appearing on your screen.
+\item To understand the commands, examine the script that generated them by 
+opening the \texttt{SConstruct} file in a text editor. Notice that,
+instead of Shell commands, the script contains rules.
+\begin{itemize}
+\item The first rule, \texttt{Fetch}, allows the script to download the 
+input data file \texttt{gravity.asc} from the data server.
+\item Other rules have the form \texttt{Flow(target,source,command)} for
+generating data files or \texttt{Plot} and \texttt{Result} for
+generating picture files.
+\item \texttt{Fetch}, \texttt{Flow}, \texttt{Plot}, and \texttt{Result} 
+are defined in \textsc{Madagascar}'s \texttt{rsf.proj} package, which
+extends the functionality of \href{http://www.scons.org}{SCons} .
+\end{itemize}
+\item To better understand how rules translate into commands, run 
+\begin{verbatim}
+bash$ scons -c bin.rsf
+\end{verbatim}
+The \texttt{-c} flag tells scons to remove the \texttt{bin.rsf} file
+and all its dependencies.
+\item Next, run
+\begin{verbatim}
+bash$ scons -n bin.rsf
+\end{verbatim}
+The \texttt{-n} flag tells scons not to run the command but simply to
+display it on the screen. Identify the lines in
+the \texttt{SConstruct} file that generate the output you see on the
+screen.
+\item Run
+\begin{verbatim}
+bash$ scons bin.rsf
+\end{verbatim}
+  Examine the file \texttt{bin.rsf} both by opening it in a text
+  editor and by running
+\begin{verbatim}
+bash$ sfin bin.rsf
+\end{verbatim}
+
+  When you view bin.rsf in the text editor, you see a history of all
+  the programs used to create the file. The \texttt{sfin} program
+  lists basic information about the file including data dimensions and
+  extents of each axis.
+\end{enumerate}
+
+\inputdir{gravity}
+
+\plot{bin}{width=.39\textwidth}{Relative gravity anomaly}.
+
+\multiplot{4}{mtm,sxder,hxder,cont}{width=.39\textwidth}{Denoised 
+              data (a), derivative along X axis (b), derivative along
+              Y axis (c), and upward continuation (d).}
+
+Figure~\ref{fig:bin} shows the data about relative gravity anomaly
+from China. To improve the \old{SNR}\new{signal-to-noise ratio (SNR)} 
+of the data, we used a 2D modified-trimmed-mean (MTM) filter 
+\old{\mbox{\cite[]{Wu91}}}\new{\cite[]{Lee85}} to
+attenuate random noise, the result is shown in
+Figure~\ref{fig:mtm}.
+
+For 1D case, one selects a filter window around each data point $x_i$,
+where the filter-window length is $N$, and the median $m_i$ is expressed
+as
+
+      \old{
+        \parbox{\textwidth}{
+        \begin{equation}
+        \label{eq:eq1}
+          m_k = median[x_i] \qquad (k=i-(N-1)/2,\cdots,i+(N-1)/2)\;,
+      \end{equation}
+    }}
+
+    \new{\begin{equation}
+        \label{eq:eq1}
+          m_i = median[x_k] \qquad (k=i-(N-1)/2,\cdots,i+(N-1)/2)\;,
+      \end{equation}
+    }
+where filter-window length $N$ is an odd number. The MTM filter
+averages only those samples in the window inside a value range
+[$m_k-\delta,m_k+\delta$] as
+      \begin{equation}
+        \label{eq:eq2}
+          mtm_i = mean[x_k|m_i-\delta \le x_k \le m_i+\delta] 
+          \qquad (k=i-(N-1)/2,\cdots,i+(N-1)/2)\;,
+      \end{equation}
+where $mtm$ is MTM filter output and $\delta$ is threshold value. 
+
+One can also calculate derivatives to distinguish the structure along
+different directions. Figure~\ref{fig:sxder} and \ref{fig:hxder}
+display the spatial derivatives along X and Y directions,
+respectively. Finally, upward continuation method is also used to
+highlight deep geological objectives (Figure~\ref{fig:cont}).
+
+\subsection{Seismic example}
+Add your text and insert the figures from ``seismic'' folder ...
+
+\subsection{CSEM example}
+Write your text and insert the figures from ``CSEM'' folder ...
+
+
+
+\bibliographystyle{seg}
+\bibliography{school2020}
+
+
+
