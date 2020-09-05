@@ -7,8 +7,12 @@ Fetch('Ts.H','csem')
 Flow('Ts','Ts.H','dd form=native')
 Result('Ts','graph title=DATA label1=Time unit1=s label2=Amplitude')
 
-Flow('spectra','Ts','fft1 | math output="abs(input*(2/45001))" | real')
-Result('spectra','graph title=Spectra min1=0 max1=1.5')
+Flow('spectra','Ts','fft1 | math output="abs(input)" | real')
+Result('spectra',
+       '''
+       graph title=Spectra min1=0 max1=1.5
+       label1=Frequency unit1=Hz label2=Amplitude unit2=
+       ''')
 
 # Random noise added 
 Flow('tsa','Ts','noise type=y range=2e-9 seed=1000')
@@ -27,7 +31,7 @@ Result('tsa','Ts tsa','Overlay')
 
 # Calculate MVO curve for noisy data
 Flow('mvotsa','tsa',
-     'mvo f=0.08 m=1 nnw=125 n=1 | window n1=360 | put d1=1')
+     'mvo f=0.08 m=1 nnw=125 n=1 | window n1=360 | put d1=12.5')
 Plot('mvotsa',
      '''
      graph title= label1=Time unit1=s label2=Amplitude 
@@ -39,7 +43,7 @@ Flow('stsa','tsa','smooth rect1=100')
 Plot('mvostsa','stsa',
      '''
      mvo f=0.08 m=1 nnw=125 n=1 | 
-     window n1=360 | put d1=1 |
+     window n1=360 | put d1=12.5 |
      graph title= label1=Time unit1=s label2=Amplitude
      min2=-13 max2=-6 dash=1 plotcol=5
      ''')
@@ -48,7 +52,7 @@ Plot('mvostsa','stsa',
 Plot('mvo','Ts',
      '''
      mvo f=0.08 m=1 nnw=125 n=1 | 
-     window n1=360 | put d1=1 |
+     window n1=360 | put d1=12.5 |
      graph title="MVO curves" label1=Time unit1=s label2=Amplitude
      min2=-13 max2=-6 plotcol=7
      ''')
