@@ -325,25 +325,6 @@ Result('vel',
        barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
        ''')
 
-Flow('scn00','cmps',
-     '''
-     vscan semblance=y v0=%g nv=%d dv=%g half=y str=0
-     ''' % (v0,nv,dv),split=[3,1285])
-
-Flow('scn1','scn','window n3=1 f3=600')
-Flow('vel1','vel','window n2=1 f2=600')
-Plot('scn1',
-     '''
-     grey color=J title="CMP 600" screenratio=1.7 xscalebar=y
-     labelfat=4 font=2 titlefat=4 bias=0.03
-     ''')
-Plot('vel1',
-     '''
-     graph transp=y yreverse=y pad=n wanttitle=n screenratio=1.7
-     plotcol=9 plotfat=8 wantaxis=n min2=1 max2=4.75 
-     ''')
-Result('vel1','scn1 vel1','Overlay')
-
 #################
 # Brute stacking
 #################
