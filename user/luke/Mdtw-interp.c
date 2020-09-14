@@ -77,7 +77,8 @@ int main (int argc, char* argv[])
 	/* let's make an array of output locations */
 	float* places = malloc(sizeof(float)*out_n2);
 	/* let's assign the place values */
-	for (int i = 0 ; i < out_n2 ; i++){
+	int i;
+	for (i = 0 ; i < out_n2 ; i++){
 		places[i] = out_o2 + i*out_d2;
 	}
 	/* prepare the output file */
@@ -113,7 +114,7 @@ int main (int argc, char* argv[])
 	/* initially say our shifts are not updated */
 	bool updated_shifts = false;
 	/* now lets start looping through our output locations */
-	for ( int i = 0 ; i < out_n2 ; i++ ){
+	for ( i = 0 ; i < out_n2 ; i++ ){
 		/* where is our interpolated trace ?*/
 		float spot = places[i];
 		/* are we reading new traces this iteration? */
