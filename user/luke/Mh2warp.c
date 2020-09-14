@@ -21,9 +21,9 @@
 
 void transpose_array(float* array, float* transp, int n2, int n1){
 	/* program for transposing 2d array */
-	int i;
+	int i, j;
 	for ( i = 0 ; i < n2 ; i++ ){
-		for ( int j = 0 ; j < n1 ; j++ ){
+		for ( j = 0 ; j < n1 ; j++ ){
 			transp[j*n2 + i ] = array[i*n1 + j];
 		}
 	}
