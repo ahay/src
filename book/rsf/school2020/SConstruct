@@ -1,0 +1,6 @@
+from rsf.tex import *
+
+Paper('school2020',use='hyperref,listings',options='noblind,manuscript,revised',color='bin mtm sxder hxder cont')
+
+End()
+

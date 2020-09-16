@@ -21,8 +21,9 @@
 
 void transpose_array(float* array, float* transp, int n2, int n1){
 	/* program for transposing 2d array */
-	for ( int i = 0 ; i < n2 ; i++ ){
-		for ( int j = 0 ; j < n1 ; j++ ){
+	int i, j;
+	for ( i = 0 ; i < n2 ; i++ ){
+		for ( j = 0 ; j < n1 ; j++ ){
 			transp[j*n2 + i ] = array[i*n1 + j];
 		}
 	}
@@ -32,7 +33,8 @@ void transpose_array(float* array, float* transp, int n2, int n1){
 void get_column( float* array, float* column, int i, int n )
 /* grab ith column from an array with height n */	
 {
-	for ( int j =  0 ; j < n ; j++ ){
+	int j;
+	for ( j =  0 ; j < n ; j++ ){
 		column [ j ] = array [ j + i*n ];
 	}
 	return;
@@ -41,7 +43,8 @@ void get_column( float* array, float* column, int i, int n )
 void put_column( float* array, float* column, int i, int n )
 /* put ith column into an array with height n */	
 {
-	for ( int j =  0 ; j < n ; j++ ){
+	int j;
+	for ( j =  0 ; j < n ; j++ ){
 		array [ j + i*n ] = column [ j ] ;
 	}
 	return;
@@ -126,8 +129,9 @@ int main(int argc, char* argv[])
 	/* initialize the stretch */
     mo = sf_stretch4_init (in_n2, in_o2, in_d2, out_n2, eps);
 	
+	int i, j;
 	/* get the streaching coordinates */
-    for (int i =0; i  < out_n2; i++) {
+    for (i =0; i  < out_n2; i++) {
 		h = out_o2 + i*out_d2;
 		if (h<0){
 			h2[ i] = mid - sqrtf(-1*h);
@@ -141,14 +145,14 @@ int main(int argc, char* argv[])
 	float* arrOutT = sf_floatalloc(out_n2*n1);
 	
 	/* loop through traces of transposed array */
-    for (int i = 0; i < n1; i++) {
+    for (i = 0; i < n1; i++) {
 		/* get this column */
 		get_column( arrInT , trace , i, in_n2 );
-		for (int j = 0 ; j < in_n2 ; j++){
+		for (j = 0 ; j < in_n2 ; j++){
 		}
 		/* warp the column */
 		sf_stretch4_invert (false,mo,trace2,trace);
-		for (int j = 0 ; j < in_n2 ; j++){
+		for (j = 0 ; j < in_n2 ; j++){
 		}
 		/* put it in the transposed output array */
 		put_column( arrOutT, trace2, i, out_n2);

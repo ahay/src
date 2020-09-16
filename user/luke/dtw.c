@@ -315,7 +315,8 @@ void dtw_mul(float* array, float val, int n)
 void dtw_linear_comb(float* C, float alpha, float* A, float beta, float* B, int n)
 	/*< C = alpha*A + beta*B >*/
 {
-	for ( int i = 0 ; i < n ; i++ ){
+	int i;
+	for ( i = 0 ; i < n ; i++ ){
 		C[ i] = alpha*A[ i] + beta*B[ i];
 	}
 	return;
@@ -557,7 +558,8 @@ float* dtw_int_to_float( int* intarray, int n)
 void dtw_int_to_float_v( float* floatarray, int* intarray, int n)
 	/*< write an int array to a float array >*/
 {
-	for (int i = 0 ; i < n ; i++){
+	int i;
+	for ( i = 0 ; i < n ; i++ ){
 		floatarray[i] = (float)intarray[i];
 	}
 	return;
@@ -566,7 +568,8 @@ void dtw_int_to_float_v( float* floatarray, int* intarray, int n)
 void dtw_float_to_int_v( int* intarray, float* floatarray, int n)
 	/*< write a float array to an int array >*/
 {
-	for (int i = 0 ; i < n ; i++ ){
+	int i;
+	for ( i = 0 ; i < n ; i++ ){
 		intarray[i] = (int)floatarray[i];
 	}
 	return;

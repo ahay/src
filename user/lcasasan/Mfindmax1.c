@@ -79,8 +79,8 @@ int main (int argc, char* argv[])
 	sf_putstring(out,"unit2","");
 	
 	if (!(max_val==NULL)) {
-		sf_putint(out,"n1",n2);
-    	sf_putfloat(out,"o1",o2);
+		sf_putint(max_val,"n1",n2);
+    	sf_putfloat(max_val,"o1",o2);
 		sf_putint(max_val,"n2",1);
 		sf_putstring(max_val,"o2","");
     	sf_putstring(max_val,"d2","");

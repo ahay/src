@@ -23,7 +23,7 @@
 #include <time.h>
 //#include <iostream>
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     sf_init(argc,argv);bool verb;
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
