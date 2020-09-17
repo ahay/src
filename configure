@@ -79,7 +79,7 @@ if test "$scons" = "no"; then
     cd scons
     archive=`ls scons-*.tar.gz`
     gunzip < $archive | tar xf - > /dev/null
-    dir=`ls -d scons-* | grep '[^mz]$'`
+    dir=`ls -d scons-* SCons-* | grep '[^mz]$'`
     cd $dir
     $python setup.py install --prefix=$root > /dev/null
     cd $here

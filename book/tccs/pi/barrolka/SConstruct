@@ -463,6 +463,8 @@ Flow('sdpi_vel_slice','sall vel_tr',
 
 # Target horizon slices
 
+Fetch('PC35Sand_PhaseRot90.ilclt','barrolka',server)
+
 Flow('horizon','PC35Sand_PhaseRot90.ilclt','echo n1=3 n2=283965 data_format=ascii_float in=$SOURCE | dd form=native',stdin=0)
 
 Flow('head','horizon','window n1=2 | dd type=int')
