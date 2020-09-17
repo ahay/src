@@ -1,4 +1,10 @@
+===Additions and enhancements===
 
+To the reproducible documents collection:
+
+To SCons:
+
+* Upgraded to scons-3.1.2
 
 To programs:
 
