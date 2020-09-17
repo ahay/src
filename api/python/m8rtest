@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 '''
+>>> from __future__ import print_function
 >>> import m8r
 >>> par = m8r.Par(["prog","a=5","b=as","a=100"])
 >>> par.int("a")
@@ -21,7 +22,7 @@
 >>> spike3 = spike2*spike2+spike
 >>> spike3.max()
 5.0
->>> print spike3.dot(spike2)
+>>> print(spike3.dot(spike2))
 100.0
 >>> spike[5]
 1.0

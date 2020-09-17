@@ -347,8 +347,8 @@ class File(object):
         return stack[0]
     def cdot2(self):
         'Dot product with itself'
-        abs2 = Filter('math')(output="\"abs(input)\"").real[self]
-        return abs2.dot(abs2)
+        stack = Filter('math')(output="\"input*conj(input)\"").real.stack(norm=False,axis=0)[self]
+        return stack[0]
     def dot2(self):
         'Dot product with itself'
         return self.dot(self)
