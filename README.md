@@ -7,7 +7,7 @@ Madagascar
 [![CircleCI](https://img.shields.io/circleci/project/github/ahay/src/master.svg?label=Circle%20CI)](https://circleci.com/gh/ahay/src)
 [![TravisCI](https://img.shields.io/travis/com/ahay/src.svg?label=Travis%20CI)](https://travis-ci.com/ahay/src)
 [![SourceForge](https://img.shields.io/sourceforge/dt/rsf.svg)](https://sourceforge.net/projects/rsf/)
-[![join slack](https://img.shields.io/badge/slack-Madagascar-orange.svg?logo=slack )](https://join.slack.com/t/ahayorg/shared_invite/zt-hi7y8gg3-sdGq_C4cS7pkxVSQZXz8QQ)
+[![join slack](https://img.shields.io/badge/slack-Madagascar-orange.svg?logo=slack )](https://join.slack.com/t/ahayorg/shared_invite/zt-hkyvgitg-M2E_TTgg6G1pL2664ax~QQ)
 ###  A package for reproducible geophysical data processing
 
 http://www.ahay.org
