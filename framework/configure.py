@@ -89,6 +89,26 @@ plat = {'OS': 'unknown',
         'cpu': 'unknown'}
 pkg = {}
 
+def distribution():
+    '''
+    Get the distribution id and version id from os-release file.
+
+    Returns:
+        A tuple containing the distribution id and version id.
+    '''
+    etc_dir = '/etc'
+    os_release = os.path.join(etc_dir, 'os-release')
+    with open(os_release) as f:
+        lines = f.readlines()
+        for line in lines:
+            if '=' in line:
+                key, value = line.split('=')
+                if key.lower() == 'id':
+                    dist_id = value.strip().replace('"','')
+                elif key.lower() == 'version_id':
+                    version_id = value.strip().replace('"','')
+    return dist_id, version_id
+
 def need_pkg(pkgtype,fatal=True):
     global pkg, plat
     pkgnm = 'unknown'
@@ -153,42 +173,55 @@ def identify_platform(context):
     global plat
     context.Message("checking platform ... ")
     plat['OS'] = context.env.get('PLATFORM',sys.platform)
+    dist_info = distribution()
     try:
         from platform import architecture, uname
         if sys.version_info[:2] < (2, 6): # Python < 2.6
             from platform import dist
+            dist_info = dist()
+        elif sys.version_info[:2] >= (3, 7): # Python >= 3.7
+            try:
+                from distro import linux_distribution as dist
+                dist_info = dist()
+            except:
+                dist_info = distribution()
         else:
             from platform import linux_distribution as dist
+            dist_info = dist()
 
         plat['arch'] = architecture()[0]
         del architecture
 
         name = uname()[2].split('.')[-2]
         if plat['OS'] in ('linux', 'posix', 'linux2'):
-            if dist()[0].lower() == 'fedora':
+            if dist_info[0].lower() == 'fedora':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
-                plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'redhat' or \
-                    dist()[0].lower()[:7] == 'red hat':
+                plat['version'] = dist_info()[1]
+            elif dist_info[0].lower() == 'redhat' or \
+                    dist_info[0].lower()[:7] == 'red hat':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'rhel' # Red Hat Enterprise Linux
-                plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'ubuntu':
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'ubuntu':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
-                plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'debian':
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'centos':
+                plat['OS'] = 'linux'
+                plat['distro'] = 'centos'
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'debian':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'debian'
-                plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'suse':
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'suse':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'suse'
-            elif dist()[0].lower() == 'linuxmint':
+            elif dist_info[0].lower() == 'linuxmint':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
-                plat['version'] = dist()[1]
+                plat['version'] = dist_info[1]
             elif name[-7:] == 'generic':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
@@ -203,7 +236,7 @@ def identify_platform(context):
         elif plat['OS'] in ('hp-ux', 'hpux'):
             plat['OS'] = 'hpux'
             plat['distro'] = uname()[2].split('.')[-2]
-        del uname, dist
+        del uname
     except: # "platform" not installed. Python < 2.3
         # For each OS with Python < 2.3, should use specific
         # commands hthrough os.system to find distro/version
