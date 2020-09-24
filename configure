@@ -32,8 +32,16 @@ findprog python
 python=$prog
 echo "checking for Python ... $python"
 if test "$python" = "no"; then
-    fatal_error "Please install Python before proceeding: http://www.python.org"
-    exit 1
+    findprog python3
+    python=$prog
+    if test "$python" = "no"; then
+	findprog python2
+	python=$prog
+	if test "$python" = "no"; then
+	    fatal_error "Please install Python before proceeding: http://www.python.org"
+	    exit 1
+	fi
+    fi
 fi
 python_v=`$python -V 2>&1 | awk '{print $2}'`
 echo "checking Python version ... $python_v"
