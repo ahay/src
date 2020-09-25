@@ -32,16 +32,8 @@ findprog python
 python=$prog
 echo "checking for Python ... $python"
 if test "$python" = "no"; then
-    findprog python3
-    python=$prog
-    if test "$python" = "no"; then
-	findprog python2
-	python=$prog
-	if test "$python" = "no"; then
-	    fatal_error "Please install Python before proceeding: http://www.python.org"
-	    exit 1
-	fi
-    fi
+    fatal_error "Please install Python before proceeding: http://www.python.org"
+    exit 1
 fi
 python_v=`$python -V 2>&1 | awk '{print $2}'`
 echo "checking Python version ... $python_v"
@@ -87,7 +79,7 @@ if test "$scons" = "no"; then
     cd scons
     archive=`ls scons-*.tar.gz`
     gunzip < $archive | tar xf - > /dev/null
-    dir=`ls -d scons-* SCons-* | grep '[^mz]$'`
+    dir=`ls -d [Ss][Cc]ons-* | grep '[^mz]$'`
     cd $dir
     $python setup.py install --prefix=$root > /dev/null
     cd $here
