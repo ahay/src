@@ -173,7 +173,6 @@ def identify_platform(context):
     global plat
     context.Message("checking platform ... ")
     plat['OS'] = context.env.get('PLATFORM',sys.platform)
-    dist_info = distribution()
     try:
         from platform import architecture, uname
         if sys.version_info[:2] < (2, 6): # Python < 2.6
@@ -512,7 +511,8 @@ xlib = [
 
 pkg['xaw']={'rhel':'libXaw-devel',
             'fedora':'libXaw-devel',
-            'ubuntu':'libxaw7-dev'}
+            'ubuntu':'libxaw7-dev',
+            'centos':'libXaw-devel'}
 
 # If this check is failed
 # you may not be able to display .vpl images on the screen
@@ -614,6 +614,7 @@ pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
                  'darwin':'netpbm (fink)',
                  'rhel':'netpbm-devel',
                  'fedora':'netpbm-devel',
+                 'centos':'netpbm-devel',
                  'suse'  :'libnetpbm-devel',
                  'ubuntu':'libnetpbm10-dev'}
 
@@ -662,7 +663,8 @@ def ppm(context):
 pkg['libtiff'] = {'suse':'libtiff-devel',
                   'ubuntu': 'libtiff5-dev',
                   'fedora':'libtiff-devel',
-                  'rhel':'libtiff-devel'}
+                  'rhel':'libtiff-devel',
+                  'centos':'libtiff-devel'}
 
 def tiff(context):
     context.Message("checking for tiff ... ")
@@ -694,7 +696,8 @@ def tiff(context):
 
 pkg['libgd'] = {'suse':'gd-devel',
                 'rhel':'gd-devel',
-                'ubuntu':'libgd-dev'}
+                'ubuntu':'libgd-dev',
+                'centos':'gd-devel'}
 
 def gd(context):
     context.Message("checking for GD (PNG) ... ")
@@ -746,6 +749,7 @@ pkg['plplot'] = {'fedora':'plplot-devel',
                  'rhel': 'plplot-devel',
                  'darwin':'plplot',
                  'suse':'libplplot-devel',
+                 'centos':'libplplot-devel + libtool-ltdl-devel',
                  'ubuntu':'libplplot-dev'}
 
 def plplot(context):
@@ -865,7 +869,8 @@ def ffmpeg(context):
     context.env['CPPPATH'] = oldpath
 
 pkg['cairo'] = {'suse':'cairo-devel',
-                'ubuntu':'libcairo2-dev'}
+                'ubuntu':'libcairo2-dev',
+                'centos':'cairo-devel'}
 
 def cairo(context):
     context.Message("checking for cairo (PNG) ... ")
@@ -929,7 +934,8 @@ def cairo(context):
     LIBS.pop()
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
-               'ubuntu':'libjpeg-dev'}
+               'ubuntu':'libjpeg-dev',
+               'centos':'libjpeg-turbo-devel'}
 
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
@@ -964,6 +970,7 @@ pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut-devel',
                  'rhel':'freeglut-devel',
                  'suse'  :'freeglut-devel',
                  'ubuntu':'freeglut3-dev',
+                 'centos':'freeglut-devel',
                  'cygwin':'opengl (Setup...Graphics)'}
 
 # If this test is failed, no opengl programs
@@ -1023,7 +1030,8 @@ def opengl(context):
 
 pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
                'rhel':'blas-devel + atlas-devel',
-               'ubuntu':'libblas-dev'}
+               'ubuntu':'libblas-dev',
+               'centos':'blas-devel'}
 
 def blas(context):
     context.Message("checking for BLAS ... ")
@@ -1062,41 +1070,51 @@ def blas(context):
             context.env['LIBS'] = LIBS
             context.env['BLAS'] = blas
         else:
-            # some systems require cblas and atlas
-            for atlas_dir in filter(os.path.isdir,
-                                    ['/usr/lib64/atlas/',
-                                     '/usr/lib/atlas/']):
-                context.env['LIBPATH'].append(atlas_dir)
-            LIBS.pop()
-            LIBS.append('f77blas')
+            # Centos 8 requires cblas
+            context.env['CPPPATH'] = path_get(context,'CPPPATH',
+                                          '/usr/include/cblas')
             LIBS.append('cblas')
-            LIBS.append('atlas')
             res = context.TryLink(text,'.c')
             if res:
                 context.Result(res)
                 context.env['LIBS'] = LIBS
                 context.env['BLAS'] = 'cblas'
             else:
-                # try tatlas (threaded atlas + BLAS)
+                # some systems require cblas and atlas
+                for atlas_dir in filter(os.path.isdir,
+                                        ['/usr/lib64/atlas/',
+                                         '/usr/lib/atlas/']):
+                    context.env['LIBPATH'].append(atlas_dir)
                 LIBS.pop()
-                LIBS.pop()
-                LIBS.pop()
-                LIBS.append('tatlas')
+                LIBS.append('f77blas')
+                LIBS.append('atlas')
                 res = context.TryLink(text,'.c')
                 if res:
                     context.Result(res)
                     context.env['LIBS'] = LIBS
-                    context.env['BLAS'] = 'tatlas'
+                    context.env['BLAS'] = 'cblas'
                 else:
-                    context.Result(context_failure)
-                    context.env['CPPDEFINES'] = \
-                       path_get(context,'CPPDEFINES','NO_BLAS')
+                    # try tatlas (threaded atlas + BLAS)
                     LIBS.pop()
-                    context.env['BLAS'] = None
-                    need_pkg('blas', fatal=False)
+                    LIBS.pop()
+                    LIBS.pop()
+                    LIBS.append('tatlas')
+                    res = context.TryLink(text,'.c')
+                    if res:
+                        context.Result(res)
+                        context.env['LIBS'] = LIBS
+                        context.env['BLAS'] = 'tatlas'
+                    else:
+                        context.Result(context_failure)
+                        context.env['CPPDEFINES'] = \
+                           path_get(context,'CPPDEFINES','NO_BLAS')
+                        LIBS.pop()
+                        context.env['BLAS'] = None
+                        need_pkg('blas', fatal=False)
 
 pkg['lapack'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
-                 'rhel':'blas-devel + atlas-devel'}
+                 'rhel':'blas-devel + atlas-devel',
+                 'centos':'lapack-devel'}
 
 def lapack(context):
     context.Message("checking for LAPACK ... ")
@@ -1153,13 +1171,14 @@ def lapack(context):
 
 pkg['mpi'] = {'fedora':'openmpi + openmpi-devel + openmpi-libs',
               'ubuntu':'libopenmpi-dev',
-              'rhel':'openmpi-devel'}
+              'rhel':'openmpi-devel',
+              'centos':'openmpi-devel'}
 
 def mpi(context):
     context.Message("checking for MPICC ... ")
     path = os.environ['PATH']
     if plat['OS'] == 'linux':
-        if plat['distro'] == 'fedora' or plat['distro'] == 'rhel':
+        if plat['distro'] in ['fedora', 'rhel', 'centos']:
             path += ':/usr/lib64/openmpi/bin/'
     mpicc = context.env.get('MPICC',WhereIs('mpicc', path))
     if mpicc:
@@ -1318,6 +1337,7 @@ def cuda(context):
 pkg['fftw'] = {'fedora':'fftw-devel',
                'rhel':'fftw-devel',
                'ubuntu':'libfftw3-dev',
+               'centos':'fftw-devel',
                'darwin':'fftw-3-single'}
 
 def fftw(context):
@@ -1613,6 +1633,7 @@ def psp(context):
 
 pkg['SuiteSparse'] = {'ubuntu':'libsuitesparse-dev',
                       'rhel':'suitesparse-devel',
+                      'centos':'suitesparse-devel',
                       'fedora':'suitesparse-devel'}
 
 def sparse(context):
@@ -1958,7 +1979,8 @@ def api_options(context):
 
 pkg['c++'] = {'fedora':'gcc-c++',
               'suse'  :'gcc-c++',
-              'ubuntu':'g++'}
+              'ubuntu':'g++',
+              'centos':'gcc-c++'}
 
 # For the C++ API
 def cxx(context):
