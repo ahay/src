@@ -69,13 +69,13 @@ void ctf2dprec_lop(bool adj, bool add, int nxx, int nyy, sf_complex* x, sf_compl
 	    cfft2(tmp1[0],ctmp1);
 
 	    /* frequency weight */
-	    for (ik=0; ik < nk; ik++) {
+/*	    for (ik=0; ik < nk; ik++) {
 	#ifdef SF_HAS_COMPLEX_H
 			ctmp1[ik] *= wf[ik];
 	#else
 		    ctmp1[ik] = sf_crmul(wf[ik],ctmp1[ik]);
 	#endif
-	    }
+	    }*/
 	    /* inverse FFT */
 	    icfft2(tmp1[0],ctmp1);
 
@@ -112,20 +112,19 @@ void ctf2dprec_lop(bool adj, bool add, int nxx, int nyy, sf_complex* x, sf_compl
 	    cfft2(tmp1[0],ctmp1);
 
 	    /* frequency weight */
-	    for (ik=0; ik < nk; ik++) {
+/*	    for (ik=0; ik < nk; ik++) {
 	#ifdef SF_HAS_COMPLEX_H
 			ctmp1[ik] *= wf[ik];
 	#else
 		    ctmp1[ik] = sf_crmul(wf[ik],ctmp1[ik]);
 	#endif
-	    }
+	    }*/
 	    /* inverse FFT */
 	    icfft2(tmp1[0],ctmp1);
 
 	    for (i=0; i < nz*nx; i++) {
 		i1 = i%nz;
 		i2 = i/nz;
-		y[i] += w[i]*tmp1[i2][i1];
 	#ifdef SF_HAS_COMPLEX_H
 		y[i] += w[i]*tmp1[i2][i1];
 	#else

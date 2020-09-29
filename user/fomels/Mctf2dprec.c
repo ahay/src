@@ -28,33 +28,51 @@ http://ahay.org/blog/2013/12/01/program-of-the-month-sfcausint/
 int main(int argc, char* argv[])
 {
     int nz, nx, nz2, nx2, nk, nzx, n_left, i;
+    int nk_rfft, nx_rfft;
     bool adj;
-    sf_complex **pp, **qq;
-    sf_file in=NULL, out=NULL, w=NULL, wf=NULL;
+    float *ww, *ff;
+    sf_complex *pp, *qq;
+    sf_file src, out, w, wf;
 
     sf_init(argc,argv);
 
-    in = sf_input("in");
+    src = sf_input("in");
     out = sf_output("out");
     w = sf_input("w");
     wf = sf_input("wf");
 
-    if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
+    if (!sf_histint(src,"n1",&nz)) sf_error("No n1= in input");
+    if (!sf_histint(src,"n2",&nx)) sf_error("No n2= in input");
+    /* dim nk from frequency weight - derived from real fft2 */
+    if (!sf_histint(wf,"n1",&nk_rfft)) sf_error("No n1= in wf");
+    if (!sf_histint(wf,"n2",&nx_rfft)) sf_error("No n2= in wf");
+
 
     nzx = nz*nx;
-    n_left = sf_leftsize(in,2);
+    n_left = sf_leftsize(src,2);
     
     nk = cfft2_init(1,nz,nx,&nz2,&nx2);
+    sf_warning("nz is %d nx is %d", nz,nx);
+    sf_warning("(Padded Dom) nz2 is %d nx2 is %d", nz2,nx2);
+    sf_warning("(FFT Dom) nk is %d nx2 is %d nk(comb) is %d", nk/nx2, nx2,nk);
+
+    pp = sf_complexalloc(nzx);
+    qq = sf_complexalloc(nzx);
+
+    ww = sf_floatalloc(nz*nx);
+    sf_floatread(ww,nzx,w);
+    sf_fileclose(w);
+
+    ff = sf_floatalloc(nk);
+    sf_floatread(ff,nk_rfft,wf);
+    sf_fileclose(wf);
+
+    ctf2dprec_init(nz, nx, nk, nz2, nx2, ww, ff);
 
 
-    ctf2dprec_init(nz, nx, nk, nz2, nx2, w, wf);
+    sf_complexread(pp,nzx,src);
 
 
-    pp = sf_complexalloc2(nz,nx);
-    qq = sf_complexalloc2(nz,nx);
-
-    sf_complexread(pp[0],nzx,in);
 
     if (!sf_getbool("adj",&adj)) adj=false;
 
