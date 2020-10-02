@@ -1,7 +1,7 @@
 /* TF Weights Preconditioner for Complex input as linear oper. */
 #include <rsf.h>
 #include "ctf2dprec.h"
-#include "cfft2w.h"
+#include "cfft2.h"
 
 
 static int nz, nx, nz2, nx2, nk;
@@ -65,17 +65,16 @@ void ctf2dprec_lop(bool adj, bool add, int nxx, int nyy, sf_complex* x, sf_compl
 	    }
 
 	    /* forward FFT */
-	    icfft2_allocate(ctmp1);
 	    cfft2(tmp1[0],ctmp1);
 
 	    /* frequency weight */
-/*	    for (ik=0; ik < nk; ik++) {
+	    for (ik=0; ik < nk; ik++) {
 	#ifdef SF_HAS_COMPLEX_H
 			ctmp1[ik] *= wf[ik];
 	#else
 		    ctmp1[ik] = sf_crmul(wf[ik],ctmp1[ik]);
 	#endif
-	    }*/
+	    }
 	    /* inverse FFT */
 	    icfft2(tmp1[0],ctmp1);
 
@@ -88,7 +87,6 @@ void ctf2dprec_lop(bool adj, bool add, int nxx, int nyy, sf_complex* x, sf_compl
 		x[i] = sf_cadd(x[i],tmp1[i2][i1]);
 	#endif
 	    }
-	cfft2_finalize();
 
     } else{ /* Forward */
 
@@ -108,17 +106,16 @@ void ctf2dprec_lop(bool adj, bool add, int nxx, int nyy, sf_complex* x, sf_compl
 		}
 	    }
 	    /* forward FFT */
-	    icfft2_allocate(ctmp1);
 	    cfft2(tmp1[0],ctmp1);
 
 	    /* frequency weight */
-/*	    for (ik=0; ik < nk; ik++) {
+	    for (ik=0; ik < nk; ik++) {
 	#ifdef SF_HAS_COMPLEX_H
 			ctmp1[ik] *= wf[ik];
 	#else
 		    ctmp1[ik] = sf_crmul(wf[ik],ctmp1[ik]);
 	#endif
-	    }*/
+	    }
 	    /* inverse FFT */
 	    icfft2(tmp1[0],ctmp1);
 
@@ -132,6 +129,5 @@ void ctf2dprec_lop(bool adj, bool add, int nxx, int nyy, sf_complex* x, sf_compl
 	#endif
 	    }
 
-		cfft2_finalize();
     }
 }
