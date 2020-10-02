@@ -832,7 +832,7 @@ class Input(_File):
         To be backward conpatible you can create an array and pass it as.  This will
         define the number of entries you want to read and the dataformat. 
         '''
-        if data == []:
+        if len(data) == 0:
             if shape==None:
                 shape=self.shape()
             if datatype==None:
@@ -1404,6 +1404,8 @@ class Filter(object):
     def setcommand(self,kw,args=[]):
         parstr = []
         for (key,val) in kw.items():
+            if key[:2] == '__': # convention to handle -- parameters
+                key = '--'+key[2:]
             if self.checkpar and self.prog and not self.prog.pars.get(key):
                 sys.stderr.write('checkpar: No %s= parameter in %s\n' %
                                  (key,self.prog.name))
