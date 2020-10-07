@@ -333,7 +333,7 @@ def cc(context):
                 context.env['CPPPATH'] = path_get(context, 'CPPPATH',
                                                   '/usr/local/include')
             if os.path.isdir('/usr/local/lib'):
-                context.env['LIBPATH'] = path_get(context, 'LIBPATH', 
+                context.env['LIBPATH'] = path_get(context, 'LIBPATH',
                                                   '/usr/local/lib')
     # Solaris
     elif plat['OS'] == 'sunos':
@@ -370,7 +370,8 @@ def libs(context):
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
         LIBS.append('socket')
-    elif plat['OS'] == 'cygwin' or plat['distro'] == 'centos':
+    elif plat['OS'] == 'cygwin' or
+         (plat['distro'] == 'centos' and plat['version'] == 8):
         context.env['CPPPATH'] = path_get(context,'CPPPATH',
                                           '/usr/include/tirpc')
         LIBS.append('tirpc')
