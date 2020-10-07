@@ -370,7 +370,7 @@ def libs(context):
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
         LIBS.append('socket')
-    elif plat['OS'] == 'cygwin' or
+    elif plat['OS'] == 'cygwin' or \
          (plat['distro'] == 'centos' and plat['version'] == 8):
         context.env['CPPPATH'] = path_get(context,'CPPPATH',
                                           '/usr/include/tirpc')
