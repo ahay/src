@@ -27,7 +27,7 @@
 #endif
 int main(int argc, char* argv[]) 
 {
-    int nx, nz, nt, ix, iz, it, nbt, nbb, nxl, nxr,  nxb, nyb, nzb, isx, isz;
+    int nx, nz, nt, ix, iz, it, nbt, nbb, nxl, nxr,  nxb, nzb, isx, isz;
     float dt, dx, dy, dz, o1, o2, o3;
     float **old,  **cur,  **tmp, *wav;
     float  **v, **vtmp, v0, **sigma, **delta, **seta;

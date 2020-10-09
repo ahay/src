@@ -28,8 +28,8 @@
 #endif
 int main(int argc, char* argv[]) 
 {
-    int nx, nz, nt, ix, iz, it, nbt, nbb, nxl, nxr,  nxb, nyb, nzb, isx, isz;
-    float dt, dx, dy, dz, o1, o2, o3;
+    int nx, nz, nt, ix, iz, it, nbt, nbb, nxl, nxr,  nxb, nzb, isx, isz;
+    float dt, dx, dz, o1, o2;
     float **old,  **cur,  **tmp, *wav;
     float  **v, **vtmp, v0, **sigma, **delta, **seta;
     float ***aa, w, g1, g2, czt, czb, cxl, cxr; /* top, bottom, left, right */

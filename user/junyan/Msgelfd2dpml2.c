@@ -68,7 +68,7 @@ int main(int argc, char **argv)
 
 	sf_file Gpxfp, Gpzfp, Gsxfp, Gszfp,sxxfp, sxzfp, szxfp, szzfp;
 	/* output data and file */
-	sf_file snapfpx, snapfpz, vpfp, vsfp, rhofp, datfp,snapfppx, snapfppz, snapfpsx, snapfpsz;
+	sf_file snapfpx, snapfpz, vpfp, vsfp, rhofp, snapfppx, snapfppz, snapfpsx, snapfpsz;
 	/* check stability condition */
 	double S2=1., S4=0.857142855, S6=0.805369132, S8=0.777417902, S10=0.76673391, S12=0.746790483;
 

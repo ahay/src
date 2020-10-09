@@ -77,6 +77,7 @@ void bd3_close(void)
 
 
 float ***extmodel3d(float ***init_model,int nz,int nx,int ny,int np)
+/*< extended model >*/
 {
 	float ***p;
 	int ix,iy,iz;
