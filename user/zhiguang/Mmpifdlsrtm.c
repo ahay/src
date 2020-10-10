@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
     if(!sf_getbool("verb", &verb)) verb=false;
     if(!sf_getbool("snap", &snap)) snap=false;
     
-    in=sf_input("--input");
+    in=sf_input("input");
     vel=sf_input("velocity");
     wavelet=sf_input("wavelet");
     
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
         nspand=(ns/numprocs+1)*numprocs;
     
     if(cpuid==0){
-        out=sf_output("--output");
+        out=sf_output("output");
         if(adj){
             sf_putint(out, "n1", nz);
             sf_putfloat(out, "d1", dz);
