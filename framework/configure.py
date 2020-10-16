@@ -353,7 +353,7 @@ def ar(context):
         context.Result(context_failure)
         need_pkg('ar')
 
-pkg['libs'] = {'fedora':'glibc-headers',
+pkg['libs'] = {'fedora':'libtirpc-devel (Setup...Libs)',
                'cygwin':'libtirpc-devel (Setup...Libs)',
                'centos':'libtirpc-devel (Setup...Libs)'}
 
@@ -371,7 +371,8 @@ def libs(context):
         LIBS.append('nsl')
         LIBS.append('socket')
     elif plat['OS'] == 'cygwin' or \
-         (plat['distro'] == 'centos' and plat['version'] == 8):
+         (plat['distro'] == 'centos' and plat['version'] == 8) or \
+	 plat['distro'] == 'fedora':
         context.env['CPPPATH'] = path_get(context,'CPPPATH',
                                           '/usr/include/tirpc')
         LIBS.append('tirpc')
