@@ -63,7 +63,9 @@ if root:
 
     for color in Split('''
         cubeyf1 gist_earth izoaz linearlfb lb montag owb rwb seismic spectral
-        viridis
+        viridis acton bamako batlow berlin bilbao broc brocO buda cork corkO 
+        davos devon grayC hawaii imola inferno lajolla lapaz lisbon magma nuuk 
+        oleron oslo plasma roma romaO tofino tokyo turku vik vikO
         '''):
         env.Install(incdir,color+'.csv')
 
