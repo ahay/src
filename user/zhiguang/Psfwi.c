@@ -29,7 +29,7 @@ bool verb, first;
 int cpuid, numprocs, nturn; // mpi-related
 int nz, nx, nzx, padnz, padnx, padnzx, nb, nt; // dimension
 int ns, ds_v, s0_v, sz, nr, dr_v, rz, *nr2, *r02, *r0_v; // acquisition
-int frectx, frectz, interval, wnt, nsource; // wavefield
+int frectx, frectz, interval, wnt, nsource_; // wavefield
 int waterz, wtn1, wtn2, woffn1, woffn2, grectx, grectz; // gradient
 int drectx, drectz, nrepeat, ider=0; // smoothing kernel
 
@@ -76,7 +76,7 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	frectz=soupar->frectz;
 	interval=acpar->interval;
 	wnt=(nt-1)/interval+1;
-	nsource=soupar->nsource;
+	nsource_=soupar->nsource;
 	
 	dt=acpar->dt;
 	dt2=dt*dt;
@@ -172,7 +172,7 @@ void gradient_standard(float *x, float *fcost, float *grad)
 	p1=sf_floatalloc2(padnz, padnx);
 	p2=sf_floatalloc2(padnz, padnx);
 	term=sf_floatalloc2(padnz, padnx);
-	rr=sf_floatalloc2(padnzx, nsource);
+	rr=sf_floatalloc2(padnzx, nsource_);
 	wave=sf_floatalloc3(nz, nx, wnt);
 	pp=sf_floatalloc2(nt, nr);
 
@@ -216,7 +216,7 @@ void gradient_standard(float *x, float *fcost, float *grad)
 			laplace(p1, term, padnx, padnz, dx2, dz2);
 				
 			/* load source */
-			for(isou=0; isou<nsource; isou++){
+			for(isou=0; isou<nsource_; isou++){
 				if(encode==0){
 #ifdef _OPENMP 
 #pragma omp parallel for \

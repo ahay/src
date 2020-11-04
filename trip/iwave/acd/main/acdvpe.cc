@@ -63,8 +63,8 @@ using TSOpt::SEGYSpace;
 using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
 
-int xargc;
-char **xargv;
+int xargc_;
+char **xargv_;
 
 /** this version requires that two model files be present:
     csqext - extended version of csq, with [d=spatial dimn]

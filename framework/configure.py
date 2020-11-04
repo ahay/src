@@ -373,7 +373,8 @@ def libs(context):
         LIBS.append('socket')
     elif plat['OS'] == 'cygwin' or \
          (plat['distro'] == 'centos' and int(plat['version'][0]) >= 8) or \
-	 plat['distro'] == 'fedora':
+	 plat['distro'] == 'fedora' or \
+         (plat['distro'] == 'ubuntu' and int(plat['version'][:2]) >= 20):
         context.env['CPPPATH'] = path_get(context,'CPPPATH',
                                           '/usr/include/tirpc')
         LIBS.append('tirpc')
