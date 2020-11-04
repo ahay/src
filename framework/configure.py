@@ -117,6 +117,7 @@ def need_pkg(pkgtype,fatal=True):
             pkgnm = pkg[pkgtype].get(plat['distro'])
             if fatal:
                 stderr_write('Needed package: ' + pkgnm,'yellow_on_red')
+                sys.exit(unix_failure)
             else:
                 stderr_write('Optional package: ' + pkgnm,'bold')
     if fatal:
@@ -186,7 +187,7 @@ def identify_platform(context):
                 dist_info = distribution()
         else:
             from platform import linux_distribution as dist
-            dist_info = dist()
+            dist_info = dist(full_distribution_name=0)
 
         plat['arch'] = architecture()[0]
         del architecture
@@ -371,7 +372,7 @@ def libs(context):
         LIBS.append('nsl')
         LIBS.append('socket')
     elif plat['OS'] == 'cygwin' or \
-         (plat['distro'] == 'centos' and plat['version'] == 8) or \
+         (plat['distro'] == 'centos' and int(plat['version'][0]) >= 8) or \
 	 plat['distro'] == 'fedora':
         context.env['CPPPATH'] = path_get(context,'CPPPATH',
                                           '/usr/include/tirpc')
