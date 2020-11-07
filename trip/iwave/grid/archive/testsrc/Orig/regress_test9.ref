@@ -1,4 +1,0 @@
-GRIDPP Unit Test 9
-create GridDC<double>, perm old file=dtest9.rsf
-all data samples in file = 9.0, compute max and min
-test9 result: max=9 min=9

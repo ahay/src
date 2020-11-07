@@ -1,5 +1,0 @@
-from rsf.tex import *
-
-End(options='short',use='hyperref,listings,jfc,html',
-    include='\\newcommand{\\RSF}{../../..}')
-

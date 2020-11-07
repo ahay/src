@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfpow', 'sfreverse', 'sfnmostretch', 'sfgrey']
-data=['data/wz/wz.24.H']
-size=      76800

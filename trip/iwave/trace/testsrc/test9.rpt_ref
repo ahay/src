@@ -1,2 +1,0 @@
-test9 result: max=9 min=9
-(should be 9, 9, temp file should be unlinked)
