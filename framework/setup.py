@@ -26,7 +26,7 @@ except ImportError:
     sys.exit(1)
 
 setup(name='madagascar-framework',
-      version='3.0',
+      version='3.1',
       maintainer='Sergey Fomel',
       maintainer_email='sergey.fomel@gmail.com',
       url='http://www.ahay.org/',
