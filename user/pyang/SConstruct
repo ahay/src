@@ -28,13 +28,12 @@ mpi_cprogs = '''
 ######################################################################
 # 4. CUDA main programs
 cuda_progs = '''
-fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d 
+fbrec gpurtm gpufwi genshots gpufd3d 
 '''
 
 ######################################################################
 # 5. CUDA+MPI main programs
 cuda_mpi_progs = '''
-mpigpufwi
 '''
 
 ######################################################################
