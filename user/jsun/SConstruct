@@ -16,7 +16,7 @@ ccprogs = 'ortholr3 cisolr2 cisolr2grad cisolr2abc cisolr2abc1 fraclr2 zfraclr2 
 # vwelr3
 # eiktest eiktest2 cisolr1eik eiksol
 
-mpi_progs = 'mpilsrtmgmres '
+mpi_progs = 'mpilsrtmgmres mpirtmop'
 #for distributed FFTW3
 #mpiwave2 mpiwave3 mpifftexp1 mpiwave2kiss mpiwave3kiss mpifftexp1kiss
 
