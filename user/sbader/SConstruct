@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 pyprogs = '''
-backusave mqrbf sbclip1 sbslice sbslice2 genmask constraint energy extend extend1 interp logzero realign replace tdr
+backusave constraint energy extend extend1 interp logzero mqrbf realign replace sbclip1 sbslice tdr
 '''
 
 pymods = ''

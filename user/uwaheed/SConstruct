@@ -3,7 +3,6 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-facttieikonal ttieikonal
 '''
 
 try:  # distributed version

@@ -28,8 +28,8 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-quantile leftsize filedims fileflush create gettype lmo multicheck hist2
-sparsify csqrtf pad2nextfastsize
+create csqrtf filedims fileflush gettype hist2 leftsize lmo multicheck 
+pad2nextfastsize quantile sparsify
 '''
 
 # F90 mains
@@ -39,7 +39,8 @@ seekwin
 
 # Python mains that do not need SWIG+numpy
 targets.py = '''
-pclip prep4plot wiki2static invalid split zcp touch rmrf csv2rsf wuab ximage
+barcube csv2rsf invalid pclip prep4plot rmrf scatterplot split touch 
+wiki2static wuab ximage zcp
 '''
 
 # scatterplot

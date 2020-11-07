@@ -14,32 +14,7 @@ except:
     SConscript(os.path.join(RSFSRC,'system/seismic/SConstruct'))
 
 progs = ''' 
-tahgethw
-tahread
-tahwrite
-tahnmo
-tahmakeskey
-tahstack
-tahsort
-tahscscale
-lintshape2d
-tah5dinterp
-karlistinterp
-karlpocs
-tahmakeevent
-tahheadermath
-make_ix_indx
-tahmute
-tahremoveclick
-tahgain
-tahfilter
-tahagc
-tahpef
-tahstatic
-tahwindow
-tahmakesloc
-tahscdecon
-tahspecbal
+karlpocs tahagc tahgain tahgethw tahheadermath tahmakeskey tahmute tahnmo tahpef tahread tahscdecon tahscscale tahsort tahstack tahstatic tahwindow tahwrite
 '''
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],

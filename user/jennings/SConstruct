@@ -15,7 +15,7 @@ except:
 
 # C mains
 progs = '''
-minmax listminmax sizes
+listminmax minmax sizes
 '''
 
 # Python mains that do not need SWIG+numpy

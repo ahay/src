@@ -22,10 +22,10 @@ else:
 
 #-------------------------------------------------------------------------
 
-cprogs = '''permwave2d'''
-ccprogs = '''permlr2ddti'''
-cuprogs = '''awefd3dgpu'''
-cmpiprogs = '''mpitransp'''
+cprogs = ''''''
+ccprogs = ''''''
+cuprogs = ''''''
+cmpiprogs = ''''''
 
 #--------------------------------------------------------------------------
 lapack = env.get('LAPACK')

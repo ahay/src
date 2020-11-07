@@ -19,20 +19,13 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-tkirmig 
-tkirinv
-csp2d
 kirchinvs
-lsm_dsr2d
-lsdmo
 '''
 
 # icsp2d
 
 # F90 mains
 targets.f90 = '''
-velxf3 
-velinvnew
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

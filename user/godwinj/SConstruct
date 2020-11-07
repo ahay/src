@@ -16,10 +16,7 @@ except:
 targets = bldutil.UserSconsTargets()
 
 targets.py = '''
-pysvd
-threedcube
-gui
-browser
+browser gui pysvd threedcube
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

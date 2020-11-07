@@ -21,7 +21,6 @@ targets.c = '''
 
 # Python targets
 targets.py = '''
-pgreywfl
 '''
 
 try:  # distributed version
