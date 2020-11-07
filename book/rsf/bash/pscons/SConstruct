@@ -1,9 +1,0 @@
-from rsf.proj import *
-
-Flow('a',None,'math n1=512 n2=512 output="x1+x2"')
-Flow('b',None,'math n1=512 n2=512 output="-x1-x2"')
-
-Flow('c','a b','math b=${SOURCES[1]} output="input+b"',
-               split=[2,256])
-End()
-

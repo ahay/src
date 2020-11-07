@@ -1,9 +1,0 @@
-from rsf.tex import *
-
-Paper('thesis',
-     lclass='article',
-#    options='letterpaper,twoside,12pt', # use this for 2-sided
-     options='letterpaper,12pt,nolabel', # use this for 1-sided
-     use='csm-thesis,natbib,amsmath,comment,listings,color,graphicx,rotating')
-
-End(use='color')
