@@ -25,7 +25,7 @@ ztrace
 
 ccprogs = 'anisolr2 isolr2 isolr3 lrvc0 permlr1 permlr2 permlr3'
 
-pyprogs = 'shuffle3 cgi fft ipick las2rsf matplotlib results wxipick wxresults zoom wxzoom twolayer onelayer'
+pyprogs = 'las2rsf '
 pymods = 'conjdir conjgrad dottest steepd'
 
 try:  # distributed version
