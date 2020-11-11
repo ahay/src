@@ -60,14 +60,14 @@ const char * sdoc[] = {
 using RVL::RVLException;
 using RVL::valparse;
 using RVL::ProtectedDivision;
-int xargc;
-char **xargv;
+int xargc_;
+char **xargv_;
 
 int main(int argc, char ** argv) {
 
   try {
 
-    xargc=argc; xargv=argv;
+    xargc_=argc; xargv_=argv;
     requestdoc(1);
 
     PARARRAY * par = ps_new();

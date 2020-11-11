@@ -1,4 +1,4 @@
-/* Two-step Lowrank - 2-D FFT-based zero-offset exploding reflector modeling/migration with adjoint  */
+/* Two-step Lowrank 2-D zero-offset exploding reflector modeling/migration with adjoint  */
 /*
   Copyright (C) 2010 University of Texas at Austin
   

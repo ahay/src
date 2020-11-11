@@ -8,7 +8,7 @@ boxcascade ccausint cfftexpa-dev cfftwave1 cdivn cflow chain2dfft
 chebvc chebyshev clpf cltft cltftfft constperm constpermh constpermh1
 cosftwave1 cpef cr ctf2dprec deblur distance divn dix dpeiko eikonal
 eikonalvti eno2 erf exgr fft2 fftexp0 fftexp1 fftexp3 fftexpa
-fftexpa-dev fftone ffttest fftwave1 fftwave2 fftwave3 findmin2 focus
+fftexp0a fftone ffttest fftwave1 fftwave2 fftwave3 findmin2 focus
 fpow freqest gaussmooth gbeamform imray interf interp2 interpt iphase
 kdsort kdtree kron label legacy lfftexp0 llpf localskew locov lpf
 lrmig0 lsfit max2 median mffit mig3 miss3 morph nconv nnint nnshape
@@ -17,7 +17,7 @@ pchain pchain1 phaserot pick pick2 pick3 plane poly polyfit regr rdiv
 rect1 reshape riesz rsin sc seislet1 semblance semblancew shape
 shapeagc shapefill shearer shift1 similarity similarity2 simenv
 smoothderw smoothreg smspray stfchain stfchain2 stltft stpf stphase
-stream streamiss sttimefreq taupfit tfchain thin timecont timefreq
+stream streamiss sttimefreq taupfit tfchain tf2dprec thin timecont timefreq
 tomo tree trace2 tricascade tristack tristack2 twofreq2 upgrad var2
 velcon velinv vipmig0 vofzperm warp1 warpadd warpscan zero zmarch
 ztrace

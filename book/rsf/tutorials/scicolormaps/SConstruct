@@ -1,0 +1,211 @@
+#############################################################
+# Scientific color maps from 
+#       http://www.fabiocrameri.ch/colourmaps.php
+# Described in
+#       Crameri, F., Shephard, G.E. & Heron, P.J. The misuse 
+#       of colour in science communication. Nat Commun 11, 
+#       5444 (2020). 
+#       https://doi.org/10.1038/s41467-020-19160-7
+# Some Matplotlib color maps from
+#       https://bids.github.io/colormap/
+##############################################################
+
+from rsf.proj import *
+
+##############################################################
+# Sequential color maps and Mpl color maps
+############################################################## 
+
+# Monalisa test image
+Fetch('mona.img','imgs')
+
+Flow('mona','mona.img',
+     '''
+     echo n1=512 n2=513 in=$SOURCE data_format=native_uchar |
+     dd type=float
+     ''',stdin=0)
+
+# Sequential color maps
+seqcolors = {
+    'acton':  'Crameri acton',
+    'bamako': 'Crameri bamako',
+    'bilbao': 'Crameri bilbao',
+    'buda':   'Crameri buda',
+    'davos':  'Crameri davos',
+    'devon':  'Crameri devon',
+    'grayC':  'Crameri grayC',
+    'hawaii': 'Crameri hawaii',
+    'imola':  'Crameri imola',
+    'lajolla':'Crameri lajolla',
+    'lapaz':  'Crameri lapaz',
+    'nuuk':   'Crameri nuuk',
+    'oslo':   'Crameri oslo',
+    'tokyo':  'Crameri tokyo',
+    'turku':  'Crameri turku'
+}
+
+for col,title in seqcolors.items():
+	Result(col,'mona',
+           '''
+           grey allpos=y pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)"
+           transp=n wantaxis=n screenratio=1 titlesz=8        
+           ''' % (col,title,col))
+
+# Matplotlib color maps 
+mplcolors = {
+    'inferno': 'MPL inferno',
+    'magma':   'MPL magma',
+    'plasma':  'MPL plasma',
+    'viridis': 'MPL viridis'
+}
+
+for col,title in mplcolors.items():
+        Result(col,'mona',
+           '''
+           grey allpos=y pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)"
+           transp=n wantaxis=n screenratio=1 titlesz=8
+           ''' % (col,title,col))
+
+##############################################################
+# Divergent color maps
+############################################################## 
+
+# Wedge dataset 
+freq = 25 # Frequency in Hz
+polar = -1
+
+Flow('top',None,'spike n1=300 d1=1 o1=0 mag=0.06')
+Flow('bot','top','math output="input*(2-x1/299)" ')
+Flow('wedge','top bot',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     unif2 n1=181 o1=0 d1=0.001 v00=10,15,%d |
+     put label1=Time unit1=s label2=Trace unit2= o2=1
+     ''' % (15+5*polar))
+
+Flow('seis','wedge','ai2refl | ricker1 frequency=%g' % freq)
+
+# Divergent color maps
+divcolors = {
+    'berlin': 'Crameri berlin',
+    'broc':   'Crameri broc',
+    'cork':   'Crameri cork',
+    'lisbon': 'Crameri lisbon',
+    'tofino': 'Crameri tofino',
+    'vik':    'Crameri vik'
+}
+
+for col,title in divcolors.items():
+        Result(col,'seis',
+           '''
+           grey allpos=n pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)"
+           transp=y wantaxis=y screenratio=1 titlesz=8
+           ''' % (col,title,col))
+
+####################################################################
+# Special color maps
+#################################################################### 
+
+# Get St. Helens topography data for oleron color map
+par = {
+    'before':dict(n1=327,n2=468 ,o1=557.815,o2=5107.985,d1=0.030030675,d2=0.029978587,scale='')}
+case = 'before'
+txt = 'st-helens_%s.txt' % case
+Fetch(txt,'data',
+      server='https://raw.githubusercontent.com',
+      top='agile-geoscience/notebooks/master')
+asc = case+'.asc'
+Flow(asc,txt,'/usr/bin/tail -n +6')
+Flow(case,asc,
+     '''
+     echo in=$SOURCE data_format=ascii_float
+     label=Elevation unit=m
+     n1=%(n1)d o1=%(o1)g d1=%(d1)g label1=X
+     n2=%(n2)d o2=%(o2)g d2=%(d2)g label2=Y |
+     dd form=native %(scale)s
+     ''' % par[case],stdin=0)
+
+# Horizon for batlow color map
+horizon = 'Penobscot_HorB.txt'
+
+Fetch(horizon,'data',
+      server='https://raw.githubusercontent.com',
+      top='agile-geoscience/notebooks/master')
+
+# Convert from xyz triples to horizon
+Flow('xyz',horizon,
+     '''
+     echo n1=3 n2=254674 data_format=ascii_float in=$SOURCE |
+     dd form=native
+     ''')
+
+Flow('xy','xyz','window n1=2 | dd type=int')
+Flow('horizon','xyz xy',
+     '''
+     window f1=2 squeeze=n |
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 |
+     window | put label=Time unit=ms label1=Inline label2=Crossline
+     ''')
+
+Flow('filled','horizon','lapfill grad=y verb=y niter=500')
+
+# Smoothed Marmosi model for roma color map
+raw=['marmsmooth.HH']
+for file in raw:
+    Fetch(file,"marm")
+    if file is 'marmvel.hh':
+        d=.004
+        fileOut='marmvel'
+        t='Velocity\ Model'
+    if file is 'marmsmooth.HH':
+        d=.024
+        fileOut='marmsmooth'
+        t='Smoothed\ Velocity\ Model'
+# Convert Files to RSF and update headers
+    Flow(fileOut,file,'''dd form=native |
+        scale rscale=.001 | put
+        label1=Depth label2=Position unit1=km unit2=km
+        d1=%f d2=%f''' % (d,d))
+
+# Special color maps
+specolors = {
+    'batlow': 'Crameri batlow',
+    'oleron': 'Crameri oleron',
+    'roma':   'Crameri roma',
+}
+
+Result('oleron',case,
+       '''
+       clip2 lower=0 |       
+       grey allpos=n pclip=100 scalebar=y crowd1=0.8
+       color=%s title="%s (color=%s)" yreverse=n
+       transp=n wantaxis=y screenratio=1 titlesz=8
+       ''' % ('oleron',specolors['oleron'],'oleron'))
+
+Result('batlow','filled',
+       '''       
+       grey allpos=n pclip=100 scalebar=y crowd1=0.8
+       color=%s title="%s (color=%s)" yreverse=n
+       transp=n wantaxis=y screenratio=1 titlesz=8
+       bias=950 clip=133 minval=800 maxval=1100 
+       ''' % ('batlow',specolors['batlow'],'batlow'))
+
+Result('roma','marmsmooth',
+       '''     
+       grey allpos=y pclip=100 scalebar=y crowd1=0.8
+       color=%s title="%s (color=%s)" yreverse=y
+       transp=y wantaxis=y screenratio=1 titlesz=8
+       ''' % ('roma',specolors['roma'],'roma'))
+
+
+# Cyclic color maps
+cyccolors = {
+    'romaO': 'Crameri romaO',
+    'brocO': 'Crameri brocO',
+    'corkO': 'Crameri corkO',
+}
+
+End()
