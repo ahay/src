@@ -73,7 +73,7 @@ void coe3d(float *a, float phi,float ep,float dl,float w_vp,float f, float kx,fl
 	D*(powf(cosphi*kx,2)+ky*ky)+E*(powf(sinphi*kx,2)+ky*ky)+F;
     //printf("%f,%f,%f,%f,%f\n",a0,a1,a2,a3,a4);
 
-/*   a4=fm1+2.0*ep*fm1*powf(sinphi,2)-f/2.0*epdl*powf(sin2phi,2);
+   a4=fm1+2.0*ep*fm1*powf(sinphi,2)-f/2.0*epdl*powf(sin2phi,2);
      a3=(2.0*fm1*ep*sin2phi-f*epdl*sin4phi)*kx;
      a2=( 2*(f-1.0)*(1.0+ep)-f*epdl*(2.0*cos2phi*cos2phi-sin2phi*sin2phi ) )*kx*kx+ w_vp*w_vp*(2.0*ep*sinphi*sinphi+2.0-f)+
      2.0*ky*ky*( (f-1.0)*(1.0+ep)+(f-1.0)*ep*sinphi*sinphi-f*epdl*cosphi*cosphi);
@@ -81,7 +81,7 @@ void coe3d(float *a, float phi,float ep,float dl,float w_vp,float f, float kx,fl
      a0=powf(kx,4)*( fm1*(1.0+2.0*ep*cosphi*cosphi)-f*0.5*epdl*sin2phi*sin2phi  )+fm1*(1.0+2.0*ep)*powf(ky,4)+
      powf(kx*ky,2)*( fm1*(2.0*(1.0+ep)+2.0*ep*cosphi*cosphi)-2.0*f*epdl*sinphi*sinphi   )+
      powf(w_vp*kx,2)*(2.0-f+2.0*ep*cosphi*cosphi)-powf(w_vp,4)+powf(w_vp*ky,2)*(4.0+2.0*ep-2.0*f);
-*/
+
 //   printf("fromaa%f,%f,%f,%f,%f\n",a0,a1,a2,a3,a4);
 
     a[0]=a0; a[1]=a1; a[2]=a2; a[3]=a3; a[4]=a4;
@@ -465,7 +465,8 @@ void weit3d(float *weight,float phi,float ep,float dl,float w_vp,float f,float d
     printf("i_mx1=%d,i_my1=%d\n",i_mx,i_my);
     i_mx=i_mx*5.0/6.0; i_my=i_my*4.5/6.0;
     //i_my=i_mx;
-    if (i_mx <2) i_mx=2; if(i_my<2) i_my=2;
+    if (i_mx <2) i_mx=2; 
+    if(i_my<2) i_my=2;
     for (ii_my=0;ii_my<my;ii_my++){
 	ky=ii_my*dky;
 	for(ii_mx=0;ii_mx<mx;ii_mx++){
@@ -497,9 +498,9 @@ void phase_apro_matrix_cos(float *a,float dx,float dkx,int m,int n)
 void phase_apro_matrix_cos3d(float *a,float dx,float dy,float dkx,float dky,int mx,int my,int nx,int ny)
 {
     // a(m,n)
-    int i_mx,i_my, i_nx,i_ny,i_m,i_n,n,m;
+    int i_mx,i_my, i_nx,i_ny,i_m,i_n,n;
     float x,kx,y,ky;
-    n=nx*ny; m=mx*my;
+    n=nx*ny;
     for(i_my=0;i_my<my;i_my++){
 	ky=i_my*dky;
 	for(i_mx=0;i_mx<mx;i_mx++){
@@ -536,9 +537,9 @@ void phase_apro_matrix_sin(float *a,float dx,float dkx,int m,int n)
 
 void phase_apro_matrix_sin3d(float *a,float dx,float dy,float dkx,float dky,int mx,int my,int nx,int ny)
 {  // a(m-1,n-1)
-    int i_m,i_n,i_mx,i_my,i_nx,i_ny,m,n;
+    int i_m,i_n,i_mx,i_my,i_nx,i_ny,n;
     float x,kx,y,ky;
-    m=(mx-1)*my; n=(nx-1)*ny;
+    n=(nx-1)*ny;
     for(i_my=0;i_my<my;i_my++){
 	ky=i_my*dky; 
 	for(i_mx=0;i_mx<mx-1;i_mx++){
@@ -761,10 +762,10 @@ void explicit_table3d(sf_complex *conapp,sf_complex *conapm,
                       float phi,float f,float dx,float dy,float dkx,float dky,float dz,int mx,int my,int nx,int ny,
                       float ep,float dl,float w_vp,float *weight,float *qc,float *rc,float *qs,float *rs)
 {
-    int m,n,mm1,nm1;
+    int m;
     //float *qc,*rc,*qs,*rs,*weight;
     sf_complex *dppc,*dpps;
-    m=my*mx; n=ny*nx; mm1=my*(mx-1); nm1=ny*(nx-1);
+    m=my*mx;
     //qc=sf_floatalloc(m*n); rc=sf_floatalloc(n*n); qs=sf_floatalloc(mm1*nm1); rs=sf_floatalloc(nm1*nm1); weight=sf_floatalloc(m);
     dppc=sf_complexalloc(m); dpps=sf_complexalloc(m);
     printf("bbbbbbbbbbbbb\n");
@@ -1052,10 +1053,10 @@ void implicitleftmatrixisovtifd2(float **leftmatrix, sf_complex * sz,int nsx,flo
 void implicitleftmatrixisovtifd1(float **leftmatrix, sf_complex * sz,int nsx,float dsx)
 {
     int isx;
-    float sx,sx2,sx4;
+    float sx,sx2;
     for (isx=0;isx<nsx;isx++){
 	sx=dsx*isx;
-	sx2=sx*sx; sx4=sx2*sx2;
+	sx2=sx*sx; 
 	leftmatrix[isx][0]=sz[isx]*sx2;
 	leftmatrix[isx][1]=-sx2;
     }

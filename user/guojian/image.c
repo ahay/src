@@ -126,10 +126,14 @@ void shot_image_cross(sf_complex *wld_s,sf_complex *wld_r,float *image_z,int nx,
 		    //hx=ihx*image_par.dx+image_par.ohx;  iihx=(int)(hx/image_par.dx);
 		    iihx=ihx+iohx;
 		    shift_ix_s=ix-iihx;  shift_iy_s=iy-iihy; shift_ix_r=ix+iihx; shift_iy_r=iy+iihy;
-		    if (shift_ix_s <0) shift_ix_s=0; if (shift_ix_s >=nx) shift_ix_s=nx-1;
-		    if (shift_ix_r <0) shift_ix_r=0; if (shift_ix_r >=nx) shift_ix_r=nx-1;
-		    if (shift_iy_s <0) shift_iy_s=0; if (shift_iy_s >=ny) shift_iy_s=ny-1;
-		    if (shift_iy_r <0) shift_iy_r=0; if (shift_iy_r >=ny) shift_iy_r=ny-1;
+		    if (shift_ix_s <0) shift_ix_s=0; 
+            if (shift_ix_s >=nx) shift_ix_s=nx-1;
+		    if (shift_ix_r <0) shift_ix_r=0; 
+            if (shift_ix_r >=nx) shift_ix_r=nx-1;
+		    if (shift_iy_s <0) shift_iy_s=0; 
+            if (shift_iy_s >=ny) shift_iy_s=ny-1;
+		    if (shift_iy_r <0) shift_iy_r=0; 
+            if (shift_iy_r >=ny) shift_iy_r=ny-1;
 		    ws=wld_s[i2(shift_iy_s,shift_ix_s,nx)]; wr=wld_r[i2(shift_iy_r,shift_ix_r,nx)];  
 		    image_z[i4(iy,ix,ihy,ihx,nimg)]+=crealf( conjf(ws)*wr);
             
@@ -148,11 +152,7 @@ void shot_image_cross_tilt(sf_complex *wld_s,sf_complex *wld_r,float *image_z,in
     sf_complex ws,wr;
     int ihx,ihy,ix,iy,iihx,iihy,iohx,iohy;
     int shift_ix_s,shift_iy_s,shift_ix_r,shift_iy_r;
-    float eps;
     int nimg[3];
-    int nsmooth;
-    nsmooth=200;
-    eps=1200;
     d4(nx,image_par.nhy,image_par.nhx,nimg);
     iohy=(int)(image_par.ohy/image_par.dy); iohx=(int)(image_par.ohx/image_par.dx);
     for(iy=0;iy<ny;iy++){
@@ -164,10 +164,14 @@ void shot_image_cross_tilt(sf_complex *wld_s,sf_complex *wld_r,float *image_z,in
 		    //hx=ihx*image_par.dx+image_par.ohx;  iihx=(int)(hx/image_par.dx);
 		    iihx=ihx+iohx;
 		    shift_ix_s=ix-iihx;  shift_iy_s=iy-iihy; shift_ix_r=ix+iihx; shift_iy_r=iy+iihy;
-		    if (shift_ix_s <0) shift_ix_s=0; if (shift_ix_s >=nx_iz) shift_ix_s=nx_iz-1;
-		    if (shift_ix_r <0) shift_ix_r=0; if (shift_ix_r >=nx_iz) shift_ix_r=nx_iz-1;
-		    if (shift_iy_s <0) shift_iy_s=0; if (shift_iy_s >=ny) shift_iy_s=ny-1;
-		    if (shift_iy_r <0) shift_iy_r=0; if (shift_iy_r >=ny) shift_iy_r=ny-1;
+		    if (shift_ix_s <0) shift_ix_s=0; 
+            if (shift_ix_s >=nx_iz) shift_ix_s=nx_iz-1;
+		    if (shift_ix_r <0) shift_ix_r=0; 
+            if (shift_ix_r >=nx_iz) shift_ix_r=nx_iz-1;
+		    if (shift_iy_s <0) shift_iy_s=0; 
+            if (shift_iy_s >=ny) shift_iy_s=ny-1;
+		    if (shift_iy_r <0) shift_iy_r=0; 
+            if (shift_iy_r >=ny) shift_iy_r=ny-1;
 		    ws=wld_s[i2(shift_iy_s,shift_ix_s,nx)]; wr=wld_r[i2(shift_iy_r,shift_ix_r,nx)]; // wait for nx
 /*
   de=0.0;
@@ -198,7 +202,7 @@ void shot_image_stack(float *img,float mig_min_x,float mig_min_y,int mig_nx,int 
 /*< stack image >*/
 {
     float *tmp_img;
-    float img_min_x,img_max_x,img_min_y,img_max_y,img_dx,img_dy;
+    float img_min_x,img_max_x,img_min_y,img_dx,img_dy;
     float mig_max_x,rite_min_x,rite_max_x;
     int img_ny,img_nx,rite_nx;
     int n_hy_hx,img_nhx,img_nhy,nz;
@@ -207,7 +211,7 @@ void shot_image_stack(float *img,float mig_min_x,float mig_min_y,int mig_nx,int 
     int block_size,block_i;
     int iy,rite_iy,ix,i_hy_hx,iz;
 
-    img_min_x=image_par.min_x; img_max_x=image_par.max_x; img_min_y=image_par.min_y; img_max_y=image_par.max_y;
+    img_min_x=image_par.min_x; img_max_x=image_par.max_x; img_min_y=image_par.min_y;
     img_dx=image_par.dx; img_dy=image_par.dy;             img_ny=image_par.ny; img_nx=image_par.nx;
     img_nhx=image_par.nhx; img_nhy=image_par.nhy;  nz=image_par.nz;
 

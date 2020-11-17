@@ -53,7 +53,7 @@ struct shot_rotate_par_type shot_rotate_init(float rotate_angle,int nx,int nz,fl
 {
     struct shot_rotate_par_type rotate_par;
     float x,z,wx;
-    int i,tmpn;
+    int i;
     rotate_par.nx=nx; rotate_par.dx=dx; rotate_par.dz=dz; rotate_par.nz=nz;
     rotate_par.rotate_angle=rotate_angle; 
     if( 0.0==rotate_angle){
@@ -63,7 +63,6 @@ struct shot_rotate_par_type shot_rotate_init(float rotate_angle,int nx,int nz,fl
     else{
 	rotate_par.nz_rotate=((nz-1)*dz*cos(fabs(rotate_angle))+(nx-1)*dx*sin(fabs(rotate_angle)))/dz+1;
 	rotate_par.ix_rotate_center=((nz-1)*dz*sin(fabs(rotate_angle))-0.0)/dx;
-	tmpn=((nx-1)*dx*cos(fabs(rotate_angle)))/dx+1; 
 	//printf("rororotate=%d, nx=%d,center=%d\n",tmpn,nx,rotate_par.ix_rotate_center);
 	rotate_par.nx_rotate=kissfftn( ((nx-1)*dx*cosf(fabsf(rotate_angle)))/dx+rotate_par.ix_rotate_center+1);
 	rotate_par.nz_s_rotate=((nx-1)*dx*sinf(fabsf(rotate_angle)))/dz+1;
@@ -99,12 +98,12 @@ void shot_rotate_get_bx_ex_iz(float *dkx,int *bx,int *ex, int iz,int boundary_nx
 {
 
     float dx,dz,rotate_angle;
-    int nx,nz,nx_rotate,nz_rotate,ix_rotate_center;
+    int nx_rotate,ix_rotate_center;
     int nz_left,nz_right;
     int tmp_nx,nx_iz;
     float x,z,tan_rotate_angle;
-    dx=rotate_par.dx; dz=rotate_par.dz; nx=rotate_par.nx; nz=rotate_par.nz; rotate_angle=rotate_par.rotate_angle;
-    nx_rotate=rotate_par.nx_rotate;     nz_rotate=rotate_par.nz_rotate; ix_rotate_center=rotate_par.ix_rotate_center;
+    dx=rotate_par.dx; dz=rotate_par.dz; rotate_angle=rotate_par.rotate_angle;
+    nx_rotate=rotate_par.nx_rotate;     ix_rotate_center=rotate_par.ix_rotate_center;
     nz_left=rotate_par.nz_left; nz_right=rotate_par.nz_right;
     tan_rotate_angle=sin(fabs(rotate_angle))/cos(fabs(rotate_angle));
     if (iz < nz_left) {
@@ -142,7 +141,7 @@ void shot_rotate_data_rotate(sf_complex * z0_s,sf_complex * z0_s_rotate,struct s
 /*< rotation >*/
 {
     float rotate_angle,cos_rotate_angle,sin_rotate_angle,dx,dz;
-    int nx,nx_rotate,nz_rotate,nz_s_rotate,ix_rotate_center;
+    int nx,nx_rotate,nz_s_rotate,ix_rotate_center;
 
     int  ix,ix_rotate,iz_rotate,i_ix_rotate,i_iz_rotate;
     float x,x_rotate,z_rotate,wx_rotate,wz_rotate;
@@ -150,11 +149,10 @@ void shot_rotate_data_rotate(sf_complex * z0_s,sf_complex * z0_s_rotate,struct s
     sf_complex *z0_s_smooth;
     int nd; float ddx;
     int ix_fin_rotate,iz_fin_rotate;
-    float dwx;
 
     rotate_angle=rotate_par->rotate_angle;
     dx=rotate_par->dx; dz=rotate_par->dz; nx=rotate_par->nx; 
-    nx_rotate=rotate_par->nx_rotate; nz_rotate=rotate_par->nz_rotate; 
+    nx_rotate=rotate_par->nx_rotate;
     nz_s_rotate=rotate_par->nz_s_rotate;
     ix_rotate_center=rotate_par->ix_rotate_center;
     cos_rotate_angle=cos(fabs(rotate_angle)); sin_rotate_angle=sin(fabs(rotate_angle));
@@ -164,7 +162,6 @@ void shot_rotate_data_rotate(sf_complex * z0_s,sf_complex * z0_s_rotate,struct s
     z0_s_smooth=sf_complexalloc(nd*nx);
 
     vector_value_c(z0_s_smooth,sf_cmplx(0.0,0.0),nd*nx);
-    dwx=1.0/(float)(rotate_par->Nsinc);
     for(ix=0;ix<nd*nx;ix++){
 	wx_rotate=(float)(ix%nd)/(float)(nd);
 	ix_rotate=ix/nd;
@@ -266,7 +263,8 @@ void shot_rotate_image_rotate(float *image,float *image_rotate,struct shot_rotat
 	       for(ii_ix_rotate=0;ii_ix_rotate<8;ii_ix_rotate++) 
 	       sincz[ii_ix_rotate]=(1-wwx)*i0sinc[ii_ix_rotate]+wwx*i1sinc[ii_ix_rotate];
 	    */
-	    if (wx_rotate < 0) wx_rotate=1+wx_rotate; if (wz_rotate < 0) wz_rotate=1+wz_rotate;
+	    if (wx_rotate < 0) wx_rotate=1+wx_rotate; 
+        if (wz_rotate < 0) wz_rotate=1+wz_rotate;
 	    iwx=(int)(wx_rotate/dwx); i0sinc=rotate_par.sinc+8*iwx;
 	    for(ii_ix_rotate=0;ii_ix_rotate<8;ii_ix_rotate++) sincx[ii_ix_rotate]=i0sinc[ii_ix_rotate];
 	    iwx=(int)(wz_rotate/dwx); i0sinc=rotate_par.sinc+8*iwx;
@@ -308,14 +306,14 @@ void shot_rotate_image_rotate(float *image,float *image_rotate,struct shot_rotat
 
 
 void shot_rotate_data_tilt_2d(sf_complex *wldin, sf_complex **wldout,struct shot_rotate_par_type rotate_par){
-    int nxin,nzin,nxout,nzout,nd;
+    int nxin,nxout,nzout,nd;
     float *sincx,*sincz;
     sf_complex *wldsmooth;
     int *bx_s_rotate;
     float oxout,costilt,sintilt,tilt,dx,dz,dwx,ddx;
     int ix,ix1,iz1,iwx,iwz,jz,jx,ixout,izout,bxout,exout,nx;
     float x,x1,z1,wx,wz;
-    nxin=rotate_par.nxout_azimuth; nzin=rotate_par.nz;
+    nxin=rotate_par.nxout_azimuth;
     nxout=rotate_par.nx_s_rotate;   nzout=rotate_par.nz_s_rotate; oxout=rotate_par.oxout_tilt;
     costilt=rotate_par.costilt; sintilt=rotate_par.sintilt; tilt=rotate_par.rotate_angle;
     dx=rotate_par.dx; dz=rotate_par.dz;
@@ -435,7 +433,7 @@ void shot_rotate_velocity_tilt_2d(float **velin2d,float **velout2d,sf_file veloc
 				  struct shot_rotate_par_type rotate_par)
 {
     int nxin,nzin,nxout,nzout;
-    float dzout,dzin,dxout,dxin,oxout,oxin,ozin,ozout;
+    float dzout,dzin,dxout,dxin,oxout,oxin,ozin;
     int ixin,izin,ixout,izout;
     float zout,xout,xin,zin,wx,wz,w00,w01,w10,w11;
     float costilt,sintilt;
@@ -445,7 +443,7 @@ void shot_rotate_velocity_tilt_2d(float **velin2d,float **velout2d,sf_file veloc
     sf_histint(velocityin,"n1",&nzin); sf_histfloat(velocityin,"d1",&dzin); sf_histfloat(velocityin,"o1",&ozin);
   
     nxout=rotate_par.nx_rotate; dxout=rotate_par.dx; oxout=rotate_par.oxout_tilt;
-    nzout=rotate_par.nz_rotate; dzout=rotate_par.dz; ozout=0.0;
+    nzout=rotate_par.nz_rotate; dzout=rotate_par.dz; 
     for(izout=0;izout<nzout;izout++){
 	zout=(float)(izout)*dzout;
 	for(ixout=0;ixout<nxout;ixout++){
