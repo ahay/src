@@ -38,8 +38,6 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     
     for(int a=0; a<nr; a++) 
 	for(int b=0; b<nc; b++) {
-	    int iz = rs[a] % nz;
-	    int ix = (int) rs[a]/nz;
             int ikz = cs[b] % nkz;
             int ikx = (int) cs[b]/nkz;
 	    float hypk = hypot(kzs[ikz],kxs[ikx]);

@@ -27,7 +27,7 @@ int prop1Pa(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *r
     int iz, ix, im, ik, i, j;
     int nz2, nx2, nk, nzx, nzx2;
     int pad1 = 1;
-    sf_complex **wave, **wave2, *curr, *currm, *cwave, *cwavem, c;
+    sf_complex **wave, *curr, *currm, *cwave, c;
 
     nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
     if (nk!=nkzx) sf_error("nk discrepancy!");
@@ -39,10 +39,8 @@ int prop1Pa(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *r
     currm  = sf_complexalloc(nzx2);
     
     cwave  = sf_complexalloc(nk);
-    cwavem = sf_complexalloc(nk);
     
     wave   = sf_complexalloc2(nk,m2);
-    wave2  = sf_complexalloc2(nzx2,m2);
 
     icfft2_allocate(cwave);
 
