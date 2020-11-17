@@ -364,7 +364,7 @@ int main(int argc, char* argv[])
 
     //Parallel times precalculation
     precalctimes<<<grid,block,smemsize*smemsize*sizeof(float)>>>(bsize,order,smemsize,d_vels_p,d_prectimes_p,width,depth,dx,order+1);
-    cudaThreadSynchronize();
+    cudaDeviceSynchronize();
 
     //Parallel 
     while(!stop[0]){
@@ -372,9 +372,9 @@ int main(int argc, char* argv[])
         d_stop = stop;
         relax<<<grid,block,smemsize*smemsize*sizeof(float)>>>\
         (bsize,order,smemsize,d_vels_p,d_times_p,d_auxtimes_p,d_prectimes_p,d_auxpred_p,width,depth);
-        cudaThreadSynchronize();
+        cudaDeviceSynchronize();
         writeback<<<grid,block>>>(order,d_times_p,d_auxtimes_p,d_pred_p,d_auxpred_p,width,depth,d_stop_p);
-        cudaThreadSynchronize();
+        cudaDeviceSynchronize();
         stop = d_stop;
     }
 
