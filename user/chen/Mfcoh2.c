@@ -24,13 +24,13 @@
 
 int main(int argc, char* argv[])
 {
-	sf_file in, out, idip, xdip;
+	sf_file in, out, idip;
 	int n1, n2, n3, ntw, nxw;
-	int i1, i2, i3;
-	float **u1, **u2, **pu, **p1, **p2;
+	int i3;
+	float **u1, **p1;
 	bool twod, verb;
 	int min1, min2, max1, max2;
-	void *h1, *h2;
+	void *h1;
 
 	sf_init(argc, argv);
 
@@ -52,9 +52,6 @@ int main(int argc, char* argv[])
 	if(sf_getstring("idip")!=NULL) idip  = sf_output("idip");
 	/* inline dip */
 	else idip = NULL;
-	if(sf_getstring("xdip")!=NULL) xdip  = sf_output("xdip");
-	/* crossline dip */
-	else xdip = NULL;
 	if (!sf_getint("min1", &min1) ) min1=-2;
 	if (!sf_getint("max1", &max1) ) max1=2;
 	/* inline slope */

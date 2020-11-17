@@ -52,7 +52,7 @@ void* epspoly_init(int n1, int nfw, int order)
 void epspoly(void *h, float *x, int d)
 /*< eps by polynomial fitting >*/
 {
-	int i1, j1, j2, min, max, l;
+	int i1, j1, j2, min, max;
 	EPSPOLY *p;
 	float t, *pv;
 	void *h1;
@@ -83,7 +83,6 @@ void epspoly(void *h, float *x, int d)
 	{
 		min = MAX(i1-p->nfw, 0);
 		max = MIN(i1, p->n-p->nfw-1);
-		l = max - min + 1;
 		j2 = min;
         for(j1=min+1; j1 <= max; j1++)
         if(p->e[j1] < p->e[j2]) j2 = j1;
