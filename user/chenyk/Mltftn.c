@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 	rect[iw+nw] = rect[iw] = SF_MAX(1, (int) rect0/(1.0+alpha*iw/nw));
     }
 
-	int i,ii, id, dim, n[SF_MAX_DIM], dim1, nd, b;
+	int i,ii, dim, n[SF_MAX_DIM], dim1, nd, b;
     int box[SF_MAX_DIM];
     char key[8];
     

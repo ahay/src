@@ -4,13 +4,12 @@
 int main(void)
 {
 	
-    int i1,i2,nt,nx,ntfft,nxfft;
+    int i1,i2,nt,nx,nxfft;
 
- 	kiss_fft_cpx **a,**b,**c,*temp;
+ 	kiss_fft_cpx **a,**b,**c;
     a = (kiss_fft_cpx**) sf_complexalloc2(4,4);
     b = (kiss_fft_cpx**) sf_complexalloc2(4,4);
     c = (kiss_fft_cpx**) sf_complexalloc2(4,4);
-    temp = (kiss_fft_cpx*) sf_complexalloc(4);
 
 	a[0][0]=cmplx(1.0,0.0);
 	a[0][1]=cmplx(1.5,0.0);
@@ -29,10 +28,6 @@ int main(void)
 	a[3][2]=cmplx(2.0,0.0);
 	a[3][3]=cmplx(3.0,0.0);
 
-	kiss_fft_cfg forw,invs;
-    forw = kiss_fft_alloc(4,0,NULL,NULL);	
-    invs = kiss_fft_alloc(4,1,NULL,NULL);
-
 	/*for(i1=0;i1<4;i1++)
 			kiss_fft_stride(forw,a[0]+i1,b[0]+i1,4); */
 
@@ -43,7 +38,6 @@ int main(void)
 
 	nt=4; nx=4;
    	nxfft = 2*kiss_fft_next_fast_size((nx+1)/2);
-   	ntfft = 2*kiss_fft_next_fast_size((nt+1)/2);
 	xfft(a,b,nt,nxfft);
 	ixfft(b,c,nt,nxfft);
 

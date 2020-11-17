@@ -133,7 +133,7 @@ void powwt(int iter, float *rr, /*input vector*/
 {
 
   int i; 
-  float small, minval, maxval;
+  float small, maxval;
   float *arr, *awt; 
   arr=sf_floatalloc(n);
   awt=sf_floatalloc(n);
@@ -149,7 +149,6 @@ void powwt(int iter, float *rr, /*input vector*/
   
   if(pow<0.0)
   {
-  	minval=mmin(n,awt);
   	maxval=mmax(n,awt);
   	small=srate*maxval;
   	for(i=0;i<n;i++)
@@ -160,7 +159,6 @@ void powwt(int iter, float *rr, /*input vector*/
   {
   	for(i=0;i<n;i++)
   		arr[i]=fabsf(rr[i]);
-  	minval=mmin(n,arr);
   	maxval=mmax(n,arr);
   	small=eps*maxval;
   	for(i=0;i<n;i++)
