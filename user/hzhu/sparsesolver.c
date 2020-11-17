@@ -96,14 +96,19 @@ void sparse_factor(double omega, int n1, int n2, float d1, float d2,
 
     status = umfpack_zl_triplet_to_col(n, n, nz, 
             Ti, Tj, Tx, Tz, Ap, Ai, Ax, Az, Map);
-
+    if(!status)
+        abort();
 
     status = umfpack_zl_symbolic(n, n, Ap, Ai, Ax, Az, 
             &Symbolic, Control, NULL);
+    if(!status)
+        abort();
 
     
     status = umfpack_zl_numeric(Ap, Ai, Ax, Az, Symbolic, &Numeric[0],
             Control, NULL);
+    if(!status)
+        abort();
 
 }
 
@@ -130,6 +135,8 @@ void sparse_solve(int npml, int pad1, int pad2, sf_complex ***f, bool hermite, i
                 NULL, NULL, NULL, NULL,
                 Xx[its], Xz[its], Bx[its], Bz[its],
                 Numeric[its], Control, NULL);
+        if(!status)
+            abort();
         fdcut(npml, pad1, pad2, f[is], Xx[its], Xz[its]);
     }
 }
