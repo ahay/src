@@ -30,8 +30,6 @@ int main(int argc, char* argv[])
     float eps, epsr, t, t0, dt, p, p0, dp, x, x0, dx, v0;//, v, dv, dv2, sq;
     float ***slice, ***slice0, ***tstr, ***pstr, ***xstr;
     float kappa1, kappa2, kappa3, alpha=-9999.9, beta=-9999.9; //coefficients
-    float smax;
-    float pwarp1, pwarp2, pwarp3;
     double root2d = -9999.9;
     float root2, droot2dp=-9999.9;
     float s0,s,ds;

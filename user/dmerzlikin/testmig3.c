@@ -74,7 +74,6 @@ void testmig3_lop (bool adj, bool add, int fnx, int fny, float* x, float* y)
 
     float tstart, tend, elapsed;
     int i, ch=0;
-    float *model, *datat2, *outputt2, *data, *output, *pwddata;
 
     if((nt*nx*ny != n12) || (fnx != n12) || (fny != n12)) sf_error("Wrong dimensions");
 

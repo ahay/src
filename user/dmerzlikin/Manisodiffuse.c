@@ -25,7 +25,7 @@
 
 int main(int argc, char* argv[])
 {
-    int niter, i, repeat, i1, i2, i3, n12, n123, n23, n1,n2,n3;
+    int niter, repeat, n12, n123, n1,n2,n3;
     float *data, *data2, eps, *vx, *vy;
     sf_file in, out, fvx, fvy;
 
@@ -39,7 +39,6 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n3",&n3)) sf_error("No n3=");
     n12 = n1*n2;
     n123 = n12*n3;
-    n23 = n2*n3;
 
     /* Allocate and read data */
     data = sf_floatalloc(n123);

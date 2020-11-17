@@ -24,10 +24,9 @@
 
 int main (int argc, char *argv[])
 {
-    int n1,n2,n3, n12,n123, i1,i2,i3, index;
+    int n1,n2,n3, n12, i1,i2,i3, index;
     float *pxpx, *pxpy, *pypy;
     float *l1, *l2, *ux, *uy, *vx, *vy;
-    float T, D, norm, swap;
     sf_file in, in2, in3, out, out2, uxf, uyf, vxf, vyf;
     float eps; // eps tolerance
     bool normalize;// normalize eigen vectors
@@ -52,7 +51,6 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n2",&n2)) n2=1;
     if (!sf_histint(in,"n3",&n3)) n3=1;
     n12 = n1*n2;
-    n123 = n12*n3;
 
     if (!sf_getfloat("eps",&eps)) eps=0.00001; // tolerance
     if (!sf_getbool("normalize",&normalize)) normalize=false; // normalize eigen vectors

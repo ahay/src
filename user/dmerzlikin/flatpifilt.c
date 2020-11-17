@@ -38,8 +38,8 @@ void flatpifilt_init(int n1, int n2     /* data size */,
 		 float eps)
 /*< initialize (call freqfilt2 afterwards) >*/
 {
-    int ik, iw, nfft, nw, ch=0;
-    float dw, w, w2, dk, k, k0, k2, v_0, v_a, v_b, beta_1, beta_2, beta;
+    int ik, iw, nfft, nw;
+    float dw, w, dk, k, k0, v_0, v_a, v_b, beta_1, beta_2, beta;
     double complex z, zl, zr, zc; // coefficients for erfi calculation
 	
 	//float beta=10.0; // bias coefficient

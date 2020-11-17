@@ -53,11 +53,11 @@ adjoint diffractions = L^T PWD^T P^T data or as a matrix
 
 int main(int argc, char* argv[])
 {
-    int nt, nt2, nx, n12, i, j, nx2, ix;
+    int nt, nt2, nx, i, j, nx2;
     bool adj, sm, domod, pi, verb;
     float dt, dt2, dx, ot, ot2, ox, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr;
-    float *data, *dataext , *output, *datat2, *outputt2, *model, *pwdmodel, *outputext, *pwdmodelext, *modelext;
+    float *data, *dataext , *output, *datat2, *outputt2, *model, *outputext, *modelext;
     sf_file inp, out, fvel, dip;
     int nw, nj1, apt;
     float *pp, *pwdata, *pwdataext;
@@ -168,8 +168,6 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad",&nt2)) nt2=nt;
     /* output time samples */
 	
-    n12 = nt2*nx;   
-
     /* memory allocation
 
     suffix "ext" stands for extended model dimensions:
@@ -191,8 +189,6 @@ int main(int argc, char* argv[])
     }
 
     modelext = sf_floatalloc(nt*nx);
-    pwdmodel = sf_floatalloc(nt*nx);  
-    pwdmodelext = sf_floatalloc(nt*nx);
     data = sf_floatalloc(nt*nx);
     model = sf_floatalloc(nt*nx);
     datat2 = sf_floatalloc(nt2*nx); 

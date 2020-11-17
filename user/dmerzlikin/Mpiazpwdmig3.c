@@ -8,9 +8,9 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nt2, nx,ny, i1, i2, n12,nt12, i, j;
+    int nt, nt2, nx,ny, n12;
     bool adj, sm, domod, dopi;
-    float dt, dt2, dx,dy, ot, ot2, ox,oy, epst2;
+    float dt, dx,dy, ot, ox,oy, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr;
     float * input, * output;
     sf_file inp, out;
@@ -19,13 +19,11 @@ int main(int argc, char* argv[])
     float *pp1, *pp2, *az;
     sf_file dip, azin;
     /* Kirchhoff params */
-    bool half, verb,normalize,debug, doomp;
-    int nh, **fold, apt;
+    bool doomp;
+    int apt;
     float *vel, rho;
     float angle;
-    int ix, ih, nh2;
     sf_file velFile;
-    float elapsed, tstart, tend;
     char *antialias;
 
     /* Initialize */

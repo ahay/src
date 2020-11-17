@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool sm;
-    int nt,nx,ny,n12,n123, nw,nj1,nj2, n4, i;
+    int nt,nx,ny,n12,n123, n4, i;
     float dt,dx,dy, ot,ox,oy;
     float conv;
     sf_file in, in2, azin, out;

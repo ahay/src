@@ -11,23 +11,13 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nt2, nx,ny, i1, i2, n12,nt12, i, j;
-    bool adj, sm, domod;
+    int nt, nt2, nx,ny, n12,nt12, i;
+    bool adj;
     float dt, dt2, dx,dy, ot, ot2, ox,oy, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr;
     float * data, * output, * datat2, * outputt2, * model;
     sf_file inp, out;
-    /* PWD parameters */
-    int nw, nj1;
-    float *pp, *pwdata;
-    sf_file dip,outpwdcheck,outdipcheck;
     /* kirchhoff params */
-    bool half, verb,normalize,debug;
-    int nh, **fold, apt;
-    float **v, rho, *off;
-    float h0, dh, aal, angle;
-    int ix, ih, nh2;
-    sf_file vel, gather, offset;
     float elapsed, tstart, tend;
 
     //MADAGASCAR C API

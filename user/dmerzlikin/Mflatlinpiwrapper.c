@@ -11,12 +11,12 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nt2, nx, i1, i2, ch, n12, n122, fk;
+    int nt, nt2, nx, i1, i2, n122;
     bool adj, sm, domod;
     float dt, dt2, dx, ot, ot2, ox, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr;
     float * data, * output, * datat2, * outputt2, * smooth, * model;
-    sf_file inp, out, pifk;
+    sf_file inp, out;
     /* smoothing variables */
     int nrep, dim, dim1, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM], i0, i, j, nvar;
     bool diff[SF_MAX_DIM], box[SF_MAX_DIM];
@@ -75,13 +75,6 @@ int main(int argc, char* argv[])
     nvar = nt*nx; // 2D 
     // nvar = nt*nx*ny; // 3D
     
-    /* to output f-k pi filter */
-    if (NULL != sf_getstring("pifk")) {
-        pifk = sf_output("pifk");
-    } else {
-        pifk = NULL;
-    }    
-
     /* get parameters from command line */
     if (!sf_getbool("adj",&adj)) adj=false;
 
@@ -106,8 +99,6 @@ int main(int argc, char* argv[])
 	if (!sf_getint("repeat",&nrep)) nrep=1;
     /* repeat filtering several times */
 	
-	n12 = nt2*nx;
-    
     data = sf_floatalloc(nt*nx);
     model = sf_floatalloc(nt*nx);
     datat2 = sf_floatalloc(nt2*nx); 
