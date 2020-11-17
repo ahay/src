@@ -54,13 +54,8 @@ int main(int argc, char* argv[])
 
 	bool verb,conj,twin,pandq,Gtot,Htot;
 	
-    /* OMP parameters */
-	#ifdef _OPENMP
-    int ompnth;
-	#endif 	
-	
 	float	*pplus0, *pplus, *pplusinv, *pplustemp, *Pplus, *Pplus_trace, *pminus, *Pminus, *Refl, *Gp, *Gm, *G, *H;
-	float	*qplus, *qplusinv, *qplustemp, *Qplus, *Qplus_trace, *qminus, *Qminus;
+	float	*qplus, *qplustemp, *Qplus, *Qplus_trace, *qminus, *Qminus;
 	float	*window, *taper, pi;
 	int		*tw;
 
@@ -83,7 +78,7 @@ int main(int argc, char* argv[])
     int     nt,nf,ntr,mode,nshots,niter,len;
     int     i,it,ix,ishot,iter,i0;
 	int		twc, twa, shift, n[2], rect[2], s[2];
-    float   scale,eps,dt,df,dx,ot,of,a,b,c,d,e,f;
+    float   scale,eps,a,b,c,d,e,f;
 
 	sf_triangle tr;
 
@@ -96,7 +91,7 @@ int main(int argc, char* argv[])
     /* Initialize OMP parameters */
     /*------------------------------------------------------------*/
 	#ifdef _OPENMP
-    ompnth=omp_init();
+    omp_init();
 	#endif	
 
 	/*------------------------------------------------------------*/
@@ -169,9 +164,9 @@ int main(int argc, char* argv[])
 	af = sf_iaxa(FRefl,1); sf_setlabel(af,"Frequency"); if(verb) sf_raxa(af); /* frequency */
 	ax = sf_iaxa(Fplus,2); sf_setlabel(ax,"r"); if(verb) sf_raxa(ax); /* space */
     
-	nt = sf_n(at); dt = sf_d(at); ot = sf_o(at);
-	nf = sf_n(af); df = sf_d(af); of = sf_o(af);
-	ntr = sf_n(ax); dx = sf_d(ax);
+	nt = sf_n(at); 
+	nf = sf_n(af); 
+	ntr = sf_n(ax); 
 	
 	if (verb) fprintf(stderr,"nt: %d nf: %d ntr:%d\n",nt,nf,ntr);
 
@@ -289,7 +284,7 @@ int main(int argc, char* argv[])
 		sprintf(filename3,"%03d.rsf",ishot);
 		for (i=0; i<7; i++)
 			filename2[len+i] = filename3[i];
-			filename2[len+7] = '\0';
+		filename2[len+7] = '\0';
 		if (verb) fprintf(stderr,"Loading %s in memory\n",filename2);
 	  	FRefl = sf_input(filename2);
     	sf_floatread(&Refl[ishot*2*nf*ntr],2*nf*ntr,FRefl);
