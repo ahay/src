@@ -45,11 +45,6 @@ int main(int argc, char* argv[])
     bool verb,fsrf,snap,expl,dabc; 
     int  jsnap,ntsnap,jdata;
 
-    /* OMP parameters */
-#ifdef _OPENMP
-    int ompnth;
-#endif 
-
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */
     sf_file Fsou=NULL; /* sources   */
@@ -113,11 +108,6 @@ int main(int argc, char* argv[])
     /* init RSF */
     sf_init(argc,argv);
 
-    /*------------------------------------------------------------*/
-    /* OMP parameters */
-#ifdef _OPENMP
-    ompnth=omp_init();
-#endif
     /*------------------------------------------------------------*/
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
