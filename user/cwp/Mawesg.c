@@ -132,14 +132,15 @@ with NaNs.
 /***************/
 // Muir's operators
 /* 1D forward FD derivative stencils */
-//#define Fz(a,ix,iz,s) (2*C4*(a[ix  ][iz+4] - a[ix  ][iz-3]) +     \
+/*#define Fz(a,ix,iz,s) (2*C4*(a[ix  ][iz+4] - a[ix  ][iz-3]) +     \
                        2*C3*(a[ix  ][iz+3] - a[ix  ][iz-2]) +     \
                        2*C2*(a[ix  ][iz+2] - a[ix  ][iz-1]) +     \
                        2*C1*(a[ix  ][iz+1] - a[ix  ][iz  ])  )*s
-//#define Fx(a,ix,iz,s) (2*C4*(a[ix+4][iz  ] - a[ix-3][iz  ]) +     \
+#define Fx(a,ix,iz,s) (2*C4*(a[ix+4][iz  ] - a[ix-3][iz  ]) +     \
                        2*C3*(a[ix+3][iz  ] - a[ix-2][iz  ]) +     \
                        2*C2*(a[ix+2][iz  ] - a[ix-1][iz  ]) +     \
                        2*C1*(a[ix+1][iz  ] - a[ix  ][iz  ])  )*s
+*/
 
 // Optimized LS
 /* 1D forward FD derivative stencils */
@@ -152,14 +153,15 @@ with NaNs.
                        
 // Muir's operators
 /* 1D backward FD derivative stencils */
-//#define Bz(a,ix,iz,s) (2*C4*(a[ix  ][iz+3] - a[ix  ][iz-4]) +     \
+/*#define Bz(a,ix,iz,s) (2*C4*(a[ix  ][iz+3] - a[ix  ][iz-4]) +     \
                        2*C3*(a[ix  ][iz+2] - a[ix  ][iz-3]) +     \
                        2*C2*(a[ix  ][iz+1] - a[ix  ][iz-2]) +     \
                        2*C1*(a[ix  ][iz  ] - a[ix  ][iz-1])  )*s
-//#define Bx(a,ix,iz,s) (2*C4*(a[ix+3][iz  ] - a[ix-4][iz  ]) +     \
+#define Bx(a,ix,iz,s) (2*C4*(a[ix+3][iz  ] - a[ix-4][iz  ]) +     \
                        2*C3*(a[ix+2][iz  ] - a[ix-3][iz  ]) +     \
                        2*C2*(a[ix+1][iz  ] - a[ix-2][iz  ]) +     \
                        2*C1*(a[ix  ][iz  ] - a[ix-1][iz  ])  )*s
+*/
 
 // Optimized LS
 /* 1D forward FD derivative stencils */
@@ -174,18 +176,19 @@ with NaNs.
 /***************/
 // Muir's operators
 /* 1D forward FD derivative stencils */
-//#define Fz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+4] - a[iy ][ix  ][iz-3]) +     \
+/*#define Fz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+4] - a[iy ][ix  ][iz-3]) +     \
                        2*C3*( a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-2]) +     \
                        2*C2*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-1]) +     \
                        2*C1*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz  ])  )*s
-//#define Fx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+4][iz  ] - a[iy ][ix-3][iz  ]) +     \
+#define Fx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+4][iz  ] - a[iy ][ix-3][iz  ]) +     \
                        2*C3*( a[iy][ix+3][iz  ] - a[iy ][ix-2][iz  ]) +     \
                        2*C2*( a[iy][ix+2][iz  ] - a[iy ][ix-1][iz  ]) +     \
                        2*C1*( a[iy][ix+1][iz  ] - a[iy ][ix  ][iz  ])  )*s
-//#define Fy3(a,iy,ix,iz,s) (2*C4*(a[iy+4][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
+#define Fy3(a,iy,ix,iz,s) (2*C4*(a[iy+4][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
                        2*C3*( a[iy+3][ix][iz  ] - a[iy-2][ix ][iz  ]) +     \
                        2*C2*( a[iy+2][ix][iz  ] - a[iy-1][ix ][iz  ]) +     \
                        2*C1*( a[iy+1][ix][iz  ] - a[iy  ][ix ][iz  ])  )*s
+*/
 
 // Optimized LS
 /* 1D forward FD derivative stencils */
@@ -201,18 +204,19 @@ with NaNs.
                        
 // Muir's operators
 /* 1D backward FD derivative stencils */
-//#define Bz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-4]) +     \
+/*#define Bz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-4]) +     \
                        2*C3*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-3]) +     \
                        2*C2*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz-2]) +     \
                        2*C1*( a[iy][ix  ][iz  ] - a[iy ][ix  ][iz-1])  )*s
-//#define Bx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+3][iz  ] - a[iy ][ix-4][iz  ]) +     \
+#define Bx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+3][iz  ] - a[iy ][ix-4][iz  ]) +     \
                        2*C3*( a[iy][ix+2][iz  ] - a[iy ][ix-3][iz  ]) +     \
                        2*C2*( a[iy][ix+1][iz  ] - a[iy ][ix-2][iz  ]) +     \
                        2*C1*( a[iy][ix  ][iz  ] - a[iy ][ix-1][iz  ])  )*s
-//#define By3(a,iy,ix,iz,s) (2*C4*(a[iy+3][ix][iz  ] - a[iy-4][ix ][iz  ]) +     \
+#define By3(a,iy,ix,iz,s) (2*C4*(a[iy+3][ix][iz  ] - a[iy-4][ix ][iz  ]) +     \
                        2*C3*( a[iy+2][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
                        2*C2*( a[iy+1][ix][iz  ] - a[iy-2][ix ][iz  ]) +     \
                        2*C1*( a[iy  ][ix][iz  ] - a[iy-1][ix ][iz  ])  )*s
+*/
                        
 // LS optimized
 /* 1D backward FD derivative stencils */
