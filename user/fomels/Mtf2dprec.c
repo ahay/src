@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    int nz, nx, nz2, nx2, nk, nzx, n_left, i, i2,i1;
+    int nz, nx, nz2, nx2, nk, nzx, n_left, i;
     int nk_rfft, nx_rfft;
     bool adj;
     float *ww, *ff;
@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
     if(nx_rfft != nx2) sf_error("FFT dimension error (nx)");
 
 
-    pp = sf_complexalloc(nzx);
-    qq = sf_complexalloc(nzx);
+    pp = sf_floatalloc(nzx);
+    qq = sf_floatalloc(nzx);
 
     ww = sf_floatalloc(nz*nx);
     sf_floatread(ww,nzx,w);
