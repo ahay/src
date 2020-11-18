@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
   else infile = sf_input (infile_filename);
   infile_start=sf_tell(infile);
   if(verbose>1)
-    fprintf(stderr,"sf_tell(infile)=%lld\n",infile_start);
+    fprintf(stderr,"sf_tell(infile)=%lld\n",(long long)infile_start);
 
 
   if(verbose>0)
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
      is appended to end of .rsf file. */
   inheaders_start=sf_tell(inheaders);
   if(verbose>1)
-    fprintf(stderr,"sf_tell(inheaders)=%lld\n",inheaders_start);
+    fprintf(stderr,"sf_tell(inheaders)=%lld\n",(long long)inheaders_start);
 
   if (!sf_histint(infile,"n1",&n1_traces))
     sf_error("input file does not define n1");

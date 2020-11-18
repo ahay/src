@@ -86,10 +86,6 @@ void agc_apply(float* indata, float* outdata, float* scalars,
                int firstlive, int lastlive){
   int half_lenagc;
   int itime;
-  double thispower;
-  double thisfold;
-  float leftamp;
-  float rightamp;
 
   half_lenagc=lenagc/2;
   /* fprintf(stderr,"half_lenagc=%d,lastlive=%d,firstlive=%d\n",
@@ -143,10 +139,6 @@ void compute_rms(float* indata, float* rms,
 		 int firstlive, int lastlive){
   int half_lenagc;
   int itime;
-  double thispower;
-  double thisfold;
-  float leftamp;
-  float rightamp;
 
   half_lenagc=lenagc/2;
   /* fprintf(stderr,"half_lenagc=%d,lastlive=%d,firstlive=%d\n",
@@ -227,8 +219,6 @@ int main(int argc, char* argv[])
     int n1_traces;
     int n1_headers;
 
-    char* header_format=NULL;
-    sf_datatype typehead;
     /* kls do I need to add this?  sf_datatype typein; */
     float* fheader=NULL;
     float* intrace=NULL;
@@ -243,18 +233,11 @@ int main(int argc, char* argv[])
     int ntaper;
     int numxstart;
     int numtstart;
-    float* taper;
     char **list_of_floats;
     float* xstart;
     float* tstart;
-    int indx_of_offset;
-    float offset;
     float d1;
     float o1;
-    float time_start;
-    int itime_start;
-    int itime_stop;
-    int indx_taper;
     float wagc;
     int lenagc;
 
@@ -272,7 +255,6 @@ int main(int argc, char* argv[])
     int nfft;
     int nf;
     float df;
-    float scale;
     int ifreq;
     float cntrfreq;
     
@@ -302,10 +284,6 @@ int main(int argc, char* argv[])
 	sf_error("input data not define n1_traces");
     if (!sf_histint(in,"n1_headers",&n1_headers)) 
 	sf_error("input data does not define n1_headers");
-
-    header_format=sf_histstring(in,"header_format");
-    if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
-    else                                       typehead=SF_FLOAT;
 
     if(verbose>0)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
     fheader = sf_floatalloc(n1_headers);
@@ -367,7 +345,6 @@ int main(int argc, char* argv[])
 	taper[indx_time]=val_sin*val_sin;
     }
     */
-    indx_of_offset=segykey("offset");
     
     if (!sf_histfloat(in,"d1",&d1))
       sf_error("input data does not define d1");
@@ -398,7 +375,6 @@ int main(int argc, char* argv[])
     nfft  = kiss_fft_next_fast_size(n1_traces+200);
     nf    = nfft/2+1;
     df    = 1./(nfft*d1);
-    scale = 1./nfft;
     cfg   = kiss_fftr_alloc(nfft,0,NULL,NULL);
     icfg  = kiss_fftr_alloc(nfft,1,NULL,NULL);
     fft1  = sf_complexalloc(nf);
@@ -443,8 +419,6 @@ int main(int argc, char* argv[])
 	/* process the tah. */
 	/********************/
 
-	if(typehead == SF_INT)offset=((int  *)fheader)[indx_of_offset];
-	else                  offset=((float*)fheader)[indx_of_offset];
 	/* maybe latter add agc design start time
 	intlin(numxstart,xstart,tstart,
 	       tstart[0],tstart[numxstart-1],1,

@@ -79,7 +79,6 @@ int main(int argc, char* argv[])
   /* kls do I need to add this?  sf_datatype typein; */
   float* fheader=NULL;
   float* intrace=NULL;
-  float* fprevheader=NULL;
   int numkeys;
   int ikey;
   char** list_of_keys;

@@ -463,9 +463,12 @@ int main(int argc, char *argv[]){
   ymin_data=y[0]; ymax_data=y[0];
   zmin_data=z[0]; zmax_data=z[0];
   for(i=0; i<n2_in; i++){   
-    if(xmin_data>x[i])xmin_data=x[i]; if(xmax_data<x[i])xmax_data=x[i];
-    if(ymin_data>y[i])ymin_data=y[i]; if(ymax_data<y[i])ymax_data=y[i];
-    if(zmin_data>z[i])zmin_data=z[i]; if(zmax_data<z[i])zmax_data=z[i];
+    if(xmin_data>x[i])xmin_data=x[i]; 
+    if(xmax_data<x[i])xmax_data=x[i];
+    if(ymin_data>y[i])ymin_data=y[i]; 
+    if(ymax_data<y[i])ymax_data=y[i];
+    if(zmin_data>z[i])zmin_data=z[i]; 
+    if(zmax_data<z[i])zmax_data=z[i];
   }
   fprintf(stderr,"xmin_data=%f, xmax_data=%f\n",xmin_data,xmax_data);
   fprintf(stderr,"ymin_data=%f, ymax_data=%f\n",ymin_data,ymax_data);
