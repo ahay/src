@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     sf_file imask, weight, precon;
     int uts, mts, i, j;
     char *order, *cost;
-    float *x0, *g0;
+    float fx0, *x0, *g0;
     float geps, gscale, lower, upper;
     int miter;
 
