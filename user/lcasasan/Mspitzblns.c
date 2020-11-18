@@ -33,9 +33,9 @@ int main(int argc, char* argv[])
 
 
     int n[2], w[2], k[2], a[2], l[2], w_out[2], n_out[2];   
-    int  n1, n2, n12, i3, n3, w12;
+    int  n1, n2, n12, i3, n3;
 	int  n12_out, w12_out ;
-	float f[2],fs;     /* bandwitch real and normalized f = fs * fk */ 
+	float f[2];     /* bandwitch real and normalized f = fs * fk */ 
     float d1,d2; 			   /* data parameters */    
     int ntraces, order, L; /* input parameters */
  	float *wall, *data, *windwt;
@@ -60,7 +60,6 @@ int main(int argc, char* argv[])
 
 	n[0]=n1;
 	n[1]=n2;	
-	fs = 1.0 / d1;	
 	//TENT PARAMETERS
 	a[0] = 1; a[1] = 1; l[0] = 1;	l[1] = 1;
 	
@@ -103,7 +102,6 @@ int main(int argc, char* argv[])
 	w_out[0] = w[0];
 	w_out[1] = L * (w[1]-1) + 1;
 	
-	w12 = w[0]*w[1];
 	w12_out= w_out[0]*w_out[1];
 
 	

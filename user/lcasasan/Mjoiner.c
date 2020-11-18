@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
 	
     if (!sf_histint(index_FILE,"n1",&nindex)) sf_error("No n1= in index file");
 	
-    if (!n2==nindex) sf_error("Error index file lenght nindex=%d differs from input n2=%d",nindex,n2);
+    if (!(n2==nindex)) sf_error("Error index file lenght nindex=%d differs from input n2=%d",nindex,n2);
 	
     column = sf_floatalloc(n1);
 	
