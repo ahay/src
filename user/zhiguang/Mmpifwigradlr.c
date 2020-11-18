@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	int rectx, rectz, n, m, m2, pad1, ds_v, s0_v, sx, sz, dr_v, r0_v, rz;
 	int cpuid, numprocs;
 
-	float dt, t0, dr, r0, ds, s0, z0, dz, x0, dx, wfdt;
+	float dr, r0, ds, s0, dz, x0, dx;
 	float w0, fcost=0., gamma;
 	float kx,kz,k2,*kk1, *kk2;
 	float kz0, kx0, dkz, dkx;
@@ -131,8 +131,8 @@ int main(int argc, char* argv[])
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 	ax=sf_iaxa(Fvel, 2); rnx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax);
-	az=sf_iaxa(Fvel, 1); rnz=sf_n(az); dz=sf_d(az); z0=sf_o(az);
-	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); t0=sf_o(at);
+	az=sf_iaxa(Fvel, 1); rnz=sf_n(az); dz=sf_d(az);
+	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); 
 
 	if(!sf_getint("ns", &ns)) sf_error("shot number required"); /* shot number */
 	if(!sf_getfloat("ds", &ds)) sf_error("shot interval required"); /* shot interval */
@@ -162,7 +162,6 @@ int main(int argc, char* argv[])
 	nzx=nx*nz; rnzx=rnz*rnx;
 	
 	wfnt=(nt-1)/scalet+1;
-	wfdt=dt*scalet;
 
 	ds_v=ds/dx+0.5;
 	s0_v=s0/dx+0.5+nb;

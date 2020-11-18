@@ -316,8 +316,8 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 /*< low-rank one-step forward modeling >*/
 {
 	int it,iz,im,ik,ix,i,j,is;     /* index variables */
-	int nxb,nzb,dx,dz,spx,spz,gpz,gpx,gpl,snpint,dt,nth=1,wfit;
-	int nt,nz,nx, nk, nzx, nz2, nx2, nzx2;
+	int nxb,nzb,gpz,gpx,gpl,snpint,dt,nth=1,wfit;
+	int nt,nz,nx, nk, nz2, nx2, nzx2;
 	sf_complex c;
     sf_complex *cwave, *cwavem;
     sf_complex **wave, *curr;
@@ -326,11 +326,7 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 	nz = geop->nz;
 	nxb = geop->nxb;
 	nzb = geop->nzb;
-	dx = geop->dx;
-	dz = geop->dz;
 
-	spx = geop->spx;
-	spz = geop->spz;
 	gpz  = geop->gpz;
 	gpx  = geop->gpx;
 	gpl  = geop->gpl;
@@ -349,7 +345,6 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 
 	/*Matrix dimensions*/
 	nk = cfft2_init(pad1,nzb,nxb,&nz2,&nx2);
-	nzx = nzb*nxb;
 	nzx2 = nz2*nx2;
 
 	curr   = sf_complexalloc(nzx2);
@@ -452,8 +447,8 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 /*< low-rank one-step backward propagation + imaging >*/
 {
 	int it,iz,im,ik,ix,i,j;     /* index variables */
-	int nxb,nzb,dx,dz,gpz,gpx,gpl,snpint,dt,wfit;
-	int nt,nz,nx, nk, nzx, nz2, nx2, nzx2;
+	int nxb,nzb,gpz,gpx,gpl,snpint,wfit;
+	int nt,nz,nx, nk, nz2, nx2, nzx2;
 	sf_complex c;
 	sf_complex *cwave, *cwavem, *currm;
 	sf_complex **wave, *curr;
@@ -463,8 +458,6 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 	nz = geop->nz;
 	nxb = geop->nxb;
 	nzb = geop->nzb;
-	dx = geop->dx;
-	dz = geop->dz;
 
 	gpz  = geop->gpz;
 	gpx  = geop->gpx;
@@ -472,12 +465,10 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 	snpint = geop->snpint;
 
 	nt = geop->nt;
-	dt = geop->dt;
 
 	ccr = sf_complexalloc2(nz, nx);
 
 	nk = cfft2_init(pad1,nzb,nxb,&nz2,&nx2);
-	nzx = nzb*nxb;
 	nzx2 = nz2*nx2;
 
 	curr = sf_complexalloc(nzx2);

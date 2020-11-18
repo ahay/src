@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
 	int scalet, snap, snapshot, fnx, fnz, fnzx, nk, nb;
 	int rectx, rectz, repeat, gpz, n, m, pad1, trunc, spx, spz;
 
-	float dt, t0, z0, dz, x0, dx, s0, ds, wfdt, srctrunc;
+	float dt, z0, dz, dx, s0, ds, wfdt, srctrunc;
     float dtau, tau0, tau;
 
 	int nr, ndr, nr0;
@@ -316,8 +316,8 @@ int main(int argc, char *argv[])
         Fbwf=sf_output("Fbwf");
 	}
 
-	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); t0=sf_o(at);
-    ax=sf_iaxa(Fvel, 2); vnx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax);
+	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); 
+    ax=sf_iaxa(Fvel, 2); vnx=sf_n(ax); dx=sf_d(ax); 
 	az=sf_iaxa(Fvel, 1); rnz=sf_n(az); dz=sf_d(az); z0=sf_o(az);
     if(!sf_histint(Fdat, "n1", &nt2)) sf_error("Need n1= in input!");
 	/* number of time samples; nt is the length of the whole source wavelet */

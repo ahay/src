@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
             padvv[ix+pad+nx][iz]=padvv[pad+nx-1][iz];
         }
 	
-	
-	htau=(ntau-1)/2;
+
+    htau=(ntau-1)/2;
 	if(adj){ /* migration */
 		
 		for(itau=0; itau<ntau; itau++){

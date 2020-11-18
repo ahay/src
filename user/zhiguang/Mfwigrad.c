@@ -3,6 +3,7 @@
 #include <rsf.h>
 
 #include "waveoperator.h"
+#include "fdprep.h"
 
 int main(int argc, char *argv[])
 {

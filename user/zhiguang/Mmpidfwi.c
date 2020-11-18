@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 
 	MPI_Comm comm=MPI_COMM_WORLD;
 
-	sf_file Fv, Fd, Fw, Fdat, Fimg, Fgrad, Finv=NULL, Ferr=NULL, Fmod=NULL;
+	sf_file Fv, Fd, Fw, Fdat, Fgrad, Finv=NULL, Ferr=NULL, Fmod=NULL;
 
 	sf_init(argc, argv);
 

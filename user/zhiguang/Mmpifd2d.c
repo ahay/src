@@ -39,7 +39,7 @@ void cal_div(float **p1, float **term);
 
 int main(int argc, char* argv[])
 {
-	bool verb, wfl;
+	bool verb;
 	int ix, iz, is, ir, it, ib;
 	int ns, nr, sx, rx, sz, rz, rectx, rectz;
 	int ds_v, dr_v, s0_v, r0_v;

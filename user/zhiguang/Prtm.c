@@ -32,7 +32,7 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, nzx, padnz, padnx, padnzx, nt, nr, nb, wnt;
 
-	float dx2, dz2, dt2, dt;
+	float dx2, dz2, dt2;
 	float **vv, **dd, **mm;
 	float **p0, **p1, **p2, **term, **tmparray, **rr, ***wave;
 	float *sendbuf, *recvbuf;
@@ -62,7 +62,6 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
 	dt2=acpar->dt*acpar->dt;
-	dt=acpar->dt;
 
 	//sf_putint(Fwfl1, "n1", padnz);
 	//sf_putint(Fwfl1, "n2",padnx);
