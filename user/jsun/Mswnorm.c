@@ -29,9 +29,9 @@ int normalize(float den, int n1, int n2, float *dat);
 
 int main(int argc, char * argv[])
 {
-    
-    int dim,nz,nx,nt,nzx,nzxt,ndims[SF_MAX_DIM];
-    int size,i,nth;
+
+    int nz, nx, nt, nzx, nzxt;
+    int size, i, nth;
     bool sw,logsc;
     sf_file in, out;
     float *dat0,*dat,den,scale,rescale;
@@ -57,8 +57,6 @@ int main(int argc, char * argv[])
     if (!sf_getfloat("var_thres",&var_thres)) var_thres=0.; /* variance threshold (normalized) */
     if (!sf_getfloat("perc",&perc)) perc=5; /* threshold percentage of the maximum value */
     perc /= 100.;
-
-    dim = sf_filedims(in,ndims);
 
     az = sf_iaxa(in, 1); nz = sf_n(az);
     ax = sf_iaxa(in, 2); nx = sf_n(ax);

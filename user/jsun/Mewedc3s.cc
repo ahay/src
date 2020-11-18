@@ -632,8 +632,8 @@ static int samplexx3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             //double u2y = Chr[4];
             //double u2z = Chr[5];
             /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
-            double u3x = Chr[6];
+            //double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
+            //double u3x = Chr[6];
             //double u3y = Chr[7];
             //double u3z = Chr[8];
 
@@ -722,9 +722,9 @@ static int sampleyy3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             double u2y = Chr[4];
             //double u2z = Chr[5];
             /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
+            //double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
             //double u3x = Chr[6];
-            double u3y = Chr[7];
+            //double u3y = Chr[7];
             //double u3z = Chr[8];
 
             res(a,b) = zpx(cos(v2t),sin(v2t))*u2y*u2y +
@@ -812,10 +812,10 @@ static int samplezz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             //double u2y = Chr[4];
             double u2z = Chr[5];
             /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
+            //double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
             //double u3x = Chr[6];
             //double u3y = Chr[7];
-            double u3z = Chr[8];
+            //double u3z = Chr[8];
 
             res(a,b) = zpx(cos(v2t),sin(v2t))*u2z*u2z +
                        zpx(cos(v1t),sin(v1t))*u1z*u1z ;
@@ -902,9 +902,9 @@ static int samplexy3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             double u2y = Chr[4];
             //double u2z = Chr[5];
             /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
-            double u3x = Chr[6];
-            double u3y = Chr[7];
+            //double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
+            //double u3x = Chr[6];
+            //double u3y = Chr[7];
             //double u3z = Chr[8];
 
             res(a,b) = zpx(cos(v2t),sin(v2t))*u2x*u2y +
@@ -992,10 +992,10 @@ static int samplexz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             //double u2y = Chr[4];
             double u2z = Chr[5];
             /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
-            double u3x = Chr[6];
+            //double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
+            //double u3x = Chr[6];
             //double u3y = Chr[7];
-            double u3z = Chr[8];
+            //double u3z = Chr[8];
 
             res(a,b) = zpx(cos(v2t),sin(v2t))*u2x*u2z +
                        zpx(cos(v1t),sin(v1t))*u1x*u1z ;
@@ -1082,10 +1082,10 @@ static int sampleyz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             double u2y = Chr[4];
             double u2z = Chr[5];
             /* P wave */
-            double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
+            //double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
             //double u3x = Chr[6];
-            double u3y = Chr[7];
-            double u3z = Chr[8];
+            //double u3y = Chr[7];
+            //double u3z = Chr[8];
 
             res(a,b) = zpx(cos(v2t),sin(v2t))*u2y*u2z +
                        zpx(cos(v1t),sin(v1t))*u1y*u1z ;

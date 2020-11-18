@@ -622,13 +622,13 @@ static int samplexx3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
 
             /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
-            double u1x = Chr[0];
+            //double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
+            //double u1x = Chr[0];
             //double u1y = Chr[1];
             //double u1z = Chr[2];
             /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
-            double u2x = Chr[3];
+            //double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
+            //double u2x = Chr[3];
             //double u2y = Chr[4];
             //double u2z = Chr[5];
             /* P wave */
@@ -711,14 +711,14 @@ static int sampleyy3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
 
             /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
+            //double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
             //double u1x = Chr[0];
-            double u1y = Chr[1];
+            //double u1y = Chr[1];
             //double u1z = Chr[2];
             /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
+            //double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
             //double u2x = Chr[3];
-            double u2y = Chr[4];
+            //double u2y = Chr[4];
             //double u2z = Chr[5];
             /* P wave */
             double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
@@ -800,15 +800,15 @@ static int samplezz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
 
             /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
+            //double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
             //double u1x = Chr[0];
             //double u1y = Chr[1];
-            double u1z = Chr[2];
+            //double u1z = Chr[2];
             /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
+            //double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
             //double u2x = Chr[3];
             //double u2y = Chr[4];
-            double u2z = Chr[5];
+            //double u2z = Chr[5];
             /* P wave */
             double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
             //double u3x = Chr[6];
@@ -889,14 +889,14 @@ static int samplexy3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
 
             /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
-            double u1x = Chr[0];
-            double u1y = Chr[1];
+            //double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
+            //double u1x = Chr[0];
+            //double u1y = Chr[1];
             //double u1z = Chr[2];
             /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
-            double u2x = Chr[3];
-            double u2y = Chr[4];
+            //double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
+            //double u2x = Chr[3];
+            //double u2y = Chr[4];
             //double u2z = Chr[5];
             /* P wave */
             double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
@@ -978,15 +978,15 @@ static int samplexz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
 
             /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
-            double u1x = Chr[0];
+            //double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
+            //double u1x = Chr[0];
             //double u1y = Chr[1];
-            double u1z = Chr[2];
+            //double u1z = Chr[2];
             /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
-            double u2x = Chr[3];
+            //double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
+            //double u2x = Chr[3];
             //double u2y = Chr[4];
-            double u2z = Chr[5];
+            //double u2z = Chr[5];
             /* P wave */
             double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
             double u3x = Chr[6];
@@ -1067,15 +1067,15 @@ static int sampleyz3(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
             dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
 
             /* slow S wave */
-            double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
+            //double v1t = sqrt(ww[0])*dt; // v_{s2}*k*dt
             //double u1x = Chr[0];
-            double u1y = Chr[1];
-            double u1z = Chr[2];
+            //double u1y = Chr[1];
+            //double u1z = Chr[2];
             /* fast S wave */
-            double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
+            //double v2t = sqrt(ww[1])*dt; // v_{s1}*k*dt
             //double u2x = Chr[3];
-            double u2y = Chr[4];
-            double u2z = Chr[5];
+            //double u2y = Chr[4];
+            //double u2z = Chr[5];
             /* P wave */
             double v3t = sqrt(ww[2])*dt; // v_{p}*k*dt
             //double u3x = Chr[6];

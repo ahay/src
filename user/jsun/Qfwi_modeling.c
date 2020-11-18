@@ -29,7 +29,7 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	int sx, rx, sz, rz, rectx, rectz;
 	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
 
-	float dx2, dz2, dt2, dt;
+	float dx2, dz2, dt2;
 	float **vv, **dd;
 	float **p0, **p1, **p2, **term, **tmparray, *rr;
 
@@ -55,7 +55,6 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
 	dt2=acpar->dt*acpar->dt;
-	dt=acpar->dt;
 
 	vv = sf_floatalloc2(padnz, padnx);
 	dd=sf_floatalloc2(nt, nr);
