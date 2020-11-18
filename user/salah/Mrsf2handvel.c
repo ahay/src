@@ -21,8 +21,8 @@
 int main (int argc, char* argv[])
 {
     int n1,n2,n3, i1,i2,i3,skip;
-    float **xy, o1,d1,o2,d2,o3,d3;
-    sf_file in, out;
+    float **xy, o1,d1,o2,d2;
+    sf_file in;
 
     sf_init (argc,argv);
     in = sf_input("in");
