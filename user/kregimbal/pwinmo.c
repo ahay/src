@@ -43,7 +43,7 @@ void inmo_init(const float velocity /* velocity */,
 	       bool nmo1 /* constant vel nmo */)
 /*< initialization >*/
 {
-    int it, ih, mode;
+    int it, ih;
     float f, h, *coord, *vel;
     const int nw=4;
 
