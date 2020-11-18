@@ -24,9 +24,9 @@ int main (int argc, char *argv[])
 {
     int nz, nx, iz, ix, izz, subsample, k, nderiv, nsmooth, smoothlen;
     float  z0, dz, x0, dx, c, deldistx, deltimex, refvelmid, velmid, dvdx0mid, dvdt0mid, deldistmid,deltimemid;
-    float *depth, **vel, **dvdx0, **dvdt0, **refvel, **deltime, **deldist, **delv, *currentx, *currentt, *currentv, *dcurrentx, *dcurrentt, *dcurrentv;
+    float **vel, **dvdx0, **dvdt0, **refvel, **deltime, **deldist, **delv, *currentx, *currentt, *currentv, *dcurrentx, *dcurrentt, *dcurrentv;
     sf_triangle smooth;
-    sf_file in, dveldx0, dveldt0, refvelocity, out, outdeltime, outdeldist, outdelv;
+    sf_file in, dveldx0, dveldt0, refvelocity, outdeltime, outdeldist, outdelv;
 
     sf_init(argc, argv);
     in          = sf_input("in"); /* velocity squared from preliminary dix inversion */
@@ -34,7 +34,6 @@ int main (int argc, char *argv[])
     dveldt0     = sf_input("dvdt0"); /* from derivative in of velocity squared time-domian t0 + from preliminary dix inversion */
     refvelocity = sf_input("refvelocity"); /* ref velocity squared from preliminary dix inversion */
     
-    out        = sf_output("out");
     outdeltime = sf_output("outdt0"); /* dt0*/
     outdeldist = sf_output("outdx0"); /* dx0*/
     outdelv    = sf_output("outdv");  /* dv*/
@@ -54,7 +53,6 @@ int main (int argc, char *argv[])
     dvdx0 = sf_floatalloc2 (nz,nx);
     dvdt0 = sf_floatalloc2 (nz,nx);
     
-    depth = sf_floatalloc (nz);
     refvel = sf_floatalloc2 (nz,nx);
     deltime = sf_floatalloc2(nz,nx);
     deldist = sf_floatalloc2(nz,nx);

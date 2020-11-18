@@ -52,7 +52,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 /*< Compute traveltime attributes >*/
 {
     float  *xx, *xxnew, *F, *dk, *xxtem, *zk,*ck_inv, **ans;
-    float tt, tx_s, tx_r, ty, tz_s, tz_r, tn, at, an, v_1r, v_r, alpha, theta, dip;
+    float tt, tx_r, ty, tz_s, tz_r, tn, at, an, v_1r, v_r, alpha, theta, dip;
     int q=0; /* Counter for big loop*/
     int b3=0; /* To check whether the ray is tracable*/
 	
@@ -207,7 +207,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	dk[n+1] = 0.0;
 	
 	float dktemp;
-	int t,a,b1,b2,b3,b4; /* Counter*/
+	int t,a,b1,b2,b4; /* Counter*/
 	for (a=0; a<n; a++) {
 	    b1=0;
 	    b2=0;
@@ -352,7 +352,6 @@ mark: /* Mark point for goto*/
 			
 	    if (c==0) {
 		at = fabsf(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
-		tx_s = T_hat_k_k(f.T_k_k,f.T_k_zk); /* x-direction on the surface*/
 		tz_s = T_hat_k(f.T_k_zk);
 	    }
 			
