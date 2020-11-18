@@ -305,7 +305,9 @@ fdm2d fdutil_init(bool verb_,
 		  int ompchunk_)
 /*< old fdutil >*/
 {
-    fdutil2d_init(verb_,free_,az_,ax_,nb_,ompchunk_);
+    fdm2d fdm;
+    fdm = fdutil2d_init(verb_,free_,az_,ax_,nb_,ompchunk_);
+    return fdm;
 }
 
 /*------------------------------------------------------------*/

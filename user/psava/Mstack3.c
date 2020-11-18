@@ -49,9 +49,11 @@ int main(int argc, char* argv[])
     /* OMP parameters */
 #ifdef _OPENMP
     ompnth=omp_init();
+	if(!ompnth)
+		abort();
 #endif
-    
-    if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
+
+	if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getint ("axis",&axis)) axis=2;     /* stack axis */
     if(! sf_getbool("verb",&norm)) norm=true;  /* verbosity flag */
     if(! sf_getint ("nbuf",&nbuf)) nbuf=1;     /* buffer size */
