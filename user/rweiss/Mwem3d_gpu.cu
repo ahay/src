@@ -57,7 +57,6 @@ int main(int argc, char* argv[])
   bool verbose;
   /* I/O files */
   sf_file Fvel  = NULL; /* velocity file */
-  sf_file Fxig  = NULL; /* input XIG file */
   sf_file Fswf  = NULL; /* input SWF at iz=0 */
   sf_file Frwf  = NULL; /* input RWF at iz=0 */
   sf_file Fxigo = NULL; /* output xig file */
@@ -70,7 +69,6 @@ int main(int argc, char* argv[])
   sf_axis ax,ay,aw,az,ahx,ahy,anull; /* cube axes */
   
   /* Set up file objects */
-  Fxig = sf_input("in"); /* input xig */
   Fvel = sf_input("vel"); /* input velocity */
   Fswf = sf_input("swf"); sf_settype(Fswf,SF_COMPLEX);/* INPUT SWF at iz=0 */
   Frwf = sf_input("rwf"); sf_settype(Frwf,SF_COMPLEX);/* INPUT RWF at iz=0 */
@@ -397,12 +395,14 @@ int main(int argc, char* argv[])
   /**************************************************************/
   /* Handle tridiagonal solver. */
   cusparseHandle_t cusparseHandleX = 0;
-  cusparseStatus_t cusparseStatusX;
-  cusparseStatusX = cusparseCreate(&cusparseHandleX);
+  //cusparseStatus_t cusparseStatusX;
+  //cusparseStatusX = cusparseCreate(&cusparseHandleX);
+  cusparseCreate(&cusparseHandleX);
 
   cusparseHandle_t cusparseHandleY = 0;
-  cusparseStatus_t cusparseStatusY;
-  cusparseStatusY = cusparseCreate(&cusparseHandleY);
+  //cusparseStatus_t cusparseStatusY;
+  //cusparseStatusY = cusparseCreate(&cusparseHandleY);
+  cusparseCreate(&cusparseHandleY);
 
   /**************************************************************/
   /* MAIN LOOP */	
@@ -443,25 +443,29 @@ int main(int argc, char* argv[])
 			
 				setup_FD3d<<<dimGrid,dimBlock>>>
 					(SWFslice_d,v_d,ra_d,rb_d,rc_d,vel_d,ww, -caus*ab_h[4*is+0],ab_h[4*is+1],nx,ny);
-				cusparseStatusX = cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
+				//cusparseStatusX = cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
+				cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
 				copy_transp_wfld3d_for<<<dimGrid,dimBlock>>>(v_d,SWFslice_d,nx,ny);
 				//transposeDiagonal<<<dimGrid2,dimBlock2>>>(v_d,SWFslice_d,ny,nx);
 				
 				setup_FD3d<<<dimGrid,dimBlock>>>
 					(SWFslice_d,v_d,ra_d,rb_d,rc_d,vel_d,ww, -caus*ab_h[4*is+2],ab_h[4*is+3],ny,nx);
-				cusparseStatusY = cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
+				//cusparseStatusY = cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
+				cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
 				copy_transp_wfld3d_adj<<<dimGrid,dimBlock>>>(v_d,SWFslice_d,nx,ny);
 				//transposeDiagonal<<<dimGrid2,dimBlock2>>>(v_d,SWFslice_d,nx,ny);
 
 				setup_FD3d<<<dimGrid,dimBlock>>>
 					(RWFslice_d,v_d,ra_d,rb_d,rc_d,vel_d,ww,-acaus*ab_h[4*is+0],ab_h[4*is+1],nx,ny);
-				cusparseStatusX = cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
+				//cusparseStatusX = cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
+				cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
 				copy_transp_wfld3d_for<<<dimGrid,dimBlock>>>(v_d,RWFslice_d,nx,ny);
 				//transposeDiagonal<<<dimGrid2,dimBlock2>>>(v_d,RWFslice_d,ny,nx);
 				
 				setup_FD3d<<<dimGrid,dimBlock>>>
 					(RWFslice_d,v_d,ra_d,rb_d,rc_d,vel_d,ww,-acaus*ab_h[4*is+2],ab_h[4*is+3],ny,nx);
-				cusparseStatusY = cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
+				//cusparseStatusY = cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
+				cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
 				copy_transp_wfld3d_adj<<<dimGrid,dimBlock>>>(v_d,RWFslice_d,nx,ny);
 				//transposeDiagonal<<<dimGrid2,dimBlock2>>>(v_d,RWFslice_d,nx,ny);
 				
