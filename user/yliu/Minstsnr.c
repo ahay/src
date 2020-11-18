@@ -22,7 +22,7 @@
 
 int main (int argc, char* argv[]) 
 {
-    int n1,n2,n3,n12; /*n1 is trace length, n2 is the number of traces*/
+    int n1,n2,n12; /*n1 is trace length, n2 is the number of traces*/
     int i,j,k,l,m,h;
     float *s, *n, *output, max, min;
 
@@ -37,7 +37,6 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histint(en,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(en,"n2",&n2)) sf_error("No n2= in input");
-    n3 = sf_leftsize(in,2);
     n12 = n1*n2;
     
     s = sf_floatalloc(n12);
