@@ -15,10 +15,10 @@ int main(int argc, char* argv[])
 {
     sf_init(argc,argv);
     sf_file Fin,Fout;
-    long long int n1,n2,n3;
+    long long int n1,n2;
     float d1,o1,d2,o2;
     Fin=sf_input ("in" );
-    sf_axis a1,a2,a3;
+    sf_axis a1,a2;
     a1 = sf_iaxa(Fin,1); n1 = sf_n(a1); d1=sf_d(a1);o1=sf_o(a1); 
     a2=sf_iaxa(Fin,2);n2=sf_n(a2);d2=sf_d(a2);o2=sf_o(a2);
     fprintf(stderr,"%lld %lld %f %f %f %f\n",n1,n2,d1,d2,o1,o2);
