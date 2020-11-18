@@ -144,8 +144,6 @@ int main(int argc, char* argv[])
 
     sf_file time, dist, dept, lent, imagt, distY;
     
-    float l1, l2, l3, l4, w;
-
     sf_init(argc,argv);
 
     dist = sf_input("in");
@@ -271,12 +269,6 @@ int main(int argc, char* argv[])
 	    {
 		z = z0 + iz*dz;
 
-		l1 = dist_to (z, p_tr_time1, p_src1, p_srcY1);
-		l2 = dist_to (z,p_tr_time2, p_src2, p_srcY2);
-		l3 = dist_to (z,p_tr_time3, p_src3, p_srcY3);
-		l4 = dist_to (z,p_tr_time4, p_src4, p_srcY4);
-
-		w = l1 + l2 + l3 + l4;
 		*p_tr_time1 = fmaxf(fmaxf(*p_tr_time1,*p_tr_time2), fmaxf(*p_tr_time3, *p_tr_time4));
 	    }
 	}

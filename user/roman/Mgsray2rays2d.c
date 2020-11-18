@@ -36,7 +36,7 @@ const float INIT_VALUE = 1e10;
 float ISIGN(float X) 
 {
     if (X + 1e-6f > 0.f)
-	return 1.f;
+		return 1.f;
 	return -1.f;
 }
 int bc_padd(int ix, int nx)
