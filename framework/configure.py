@@ -2020,7 +2020,7 @@ def cxx(context):
                 api.append('c++')
                 context.env['API'] = api
 
-            if CXX[-3:]=='g++':
+            if CXX[-3:]=='g++' or CXX[-4:]=='icpc':
                 oldflag = context.env.get('CXXFLAGS')
                 for flag in ['-std=c++11 -U__STRICT_ANSI__ -Wall -pedantic',
                              '-std=c++0x -U__STRICT_ANSI__ -Wall -pedantic',
