@@ -6,6 +6,8 @@ sudo: false
 addons:
   apt:
     packages:
+      - libblas-dev
+      - liblapack-dev
       - swig
       - python-numpy
 
