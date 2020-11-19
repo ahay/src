@@ -27,10 +27,10 @@
 
 int main(int argc, char* argv[])
 {
-	sf_file in, out, dip1, dip2;
+	sf_file in, out, dip1, dip2 = NULL;
 	int n1, n2, n3, n4, lag1, lag2, nw;
 	int i3, i4;
-	float **u1, **p,**q;
+	float **u1, **p,**q=NULL;
 	bool twod, verb, isdip;
 
 	sf_init(argc, argv);

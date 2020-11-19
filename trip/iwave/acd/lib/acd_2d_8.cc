@@ -21,7 +21,11 @@ void acd_2d_8(float ** uc,
   int e0=e[0];
 #endif
   for (i1=s[1]; i1<=e[1]; i1++) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 #ifdef SCALAR_LL
     for (i0=s0; i0<=e0; i0++) {
 #else
@@ -42,7 +46,11 @@ void acd_2d_8(float ** uc,
   }
   /* boundary conditions - note that uc[-1][i]=0 etc. */
   if (lbc[1]) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 #ifdef SCALAR_LL
     for (i0=s0;i0<=e0;i0++) {
 #else
@@ -54,7 +62,11 @@ void acd_2d_8(float ** uc,
     }
   }
   if (rbc[1]) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 #ifdef SCALAR_LL
     for (i0=s0;i0<=e0;i0++) {
 #else
@@ -66,7 +78,11 @@ void acd_2d_8(float ** uc,
     }
   }
   if (lbc[0]) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
     for (i1=s[1];i1<=e[1];i1++) {
       up[i1][s[0]-2]=-up[i1][s[0]+0];
       up[i1][s[0]-3]=-up[i1][s[0]+1];
@@ -74,7 +90,11 @@ void acd_2d_8(float ** uc,
     }
   }
   if (rbc[0]) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
     for (i1=s[1];i1<=e[1];i1++) {
       up[i1][e[0]+2]=-up[i1][e[0]-0];
       up[i1][e[0]+3]=-up[i1][e[0]-1];

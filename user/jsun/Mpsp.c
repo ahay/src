@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     int nx1, nz1; /*domain of interest*/
     int it;
     float *vel,**dat,**dat_v,**wvfld,*img; /*velocity profile*/
-    sf_file Fi,Fo,Fd,Fd_v,snaps; /* I/O files */
+    sf_file Fi,Fo,Fd,Fd_v=NULL,snaps; /* I/O files */
     sf_axis az,ax; /* cube axes */
 
     sf_init(argc,argv);

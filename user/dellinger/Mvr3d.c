@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
     /* density of gridding (How many tiles to cover 90 degree of longitude in initial tiling.) */
     if (!sf_getint ("inc2", &iinc2)) iinc2 = iinc;
     /* tiles bigger than 90 deg / iinc2 in any dimension will be subdivided to fit */
-    if (!sf_getints ("what", what, 3)) { what[0]=1; what[1]=2; what[3]=2; }
+    if (!sf_getints ("what", what, 3)) { what[0]=1; what[1]=2; what[2]=2; }
     /* which surfaces to do, fastest to slowest */
     if (!sf_getbool ("which", &which)) which=true;
     /* if y, plot impulse response; if n, plot slowness surface */

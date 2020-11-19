@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
   off_t n_in[SF_MAX_DIM];
   int iaxis;
   int dim_output;
-  int *indx_of_keys;
+  int *indx_of_keys=NULL;
   bool label_argparmread,n_argparmread,o_argparmread,d_argparmread;
   char parameter[13];
   char* label[SF_MAX_DIM];

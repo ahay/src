@@ -46,8 +46,8 @@ int main(int argc, char* argv[])
 	int cpuid, numprocs;
 	MPI_Comm comm=MPI_COMM_WORLD;
 
-    sf_file dat, flt, mat, adj1, adj2;
-	FILE *swap0, *swap1, *swap2;
+    sf_file dat, flt, mat, adj1=NULL, adj2=NULL;
+	FILE *swap0, *swap1=NULL, *swap2=NULL;
 
     sf_init(argc,argv);
 	MPI_Init(&argc, &argv);
@@ -384,13 +384,16 @@ int main(int argc, char* argv[])
 		swap2=fopen("temswap2.bin", "rb");
 		for(is=0; is<ns; is++){
 			fseeko(swap0, is*nr*n12*sizeof(float), SEEK_SET);
-			fread(f[0][0], sizeof(float), nr*n12, swap0);
-			sf_floatwrite(f[0][0], nr*n12, flt);
+			if (!fread(f[0][0], sizeof(float), nr*n12, swap0))
+				abort();
+			sf_floatwrite(f[0][0], nr * n12, flt);
 			fseeko(swap1, is*nd*sizeof(float), SEEK_SET);
-			fread(d[0], sizeof(float), nd, swap1);
+			if (!fread(d[0], sizeof(float), nd, swap1))
+				abort();
 			sf_floatwrite(d[0], nd, adj1);
 			fseeko(swap2, is*nd*sizeof(float), SEEK_SET);
-			fread(p[0], sizeof(float), nd, swap2);
+			if (!fread(p[0], sizeof(float), nd, swap2))
+				abort();
 			sf_floatwrite(p[0], nd, adj2);
 		}
 		fclose(swap0); fclose(swap1); fclose(swap2);

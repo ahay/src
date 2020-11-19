@@ -596,7 +596,7 @@ static int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
         double c44 = C44[i]; double c55 = C55[i]; double c66 = C66[i];
         double ss1 = sin(Q1[i]); double cc1 = cos(Q1[i]);
         double ss2 = sin(Q2[i]); double cc2 = cos(Q2[i]);
-        double c14,c15,c16,c24,c25,c26,c34,c35,c36,c45,c46,c56;
+        double c14=0,c15=0,c16=0,c24=0,c25=0,c26=0,c34=0,c35=0,c36=0,c45=0,c46=0,c56=0;
         if (tric) {
             c14 = C14[i]; c15 = C15[i]; c16 = C16[i];
             c24 = C24[i]; c25 = C25[i]; c26 = C26[i];

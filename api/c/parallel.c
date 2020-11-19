@@ -350,7 +350,7 @@ void sf_join(sf_file out /* output file */,
 	in = ins[job];
 	
 	for (i=1; i <= dim; i++) {
-	    (void) snprintf(key,3,"n%d",i);
+	    (void) snprintf(key,3,"n%d",i%10u);
 	    if (!sf_histint(in,key,&ni) || (i != axis && ni != n[i-1]))
 		sf_error("%s mismatch: need %d",key,(int) n[i-1]);
 	    if (i == axis) naxis[job] = ni;

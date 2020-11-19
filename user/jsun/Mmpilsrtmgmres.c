@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     sf_file left, right, leftb, rightb;
     sf_file Fsrc, Frcd/*source and record*/;
     sf_file Fimg;
-    sf_file Fstart;
+    sf_file Fstart=NULL;
 
     /*axis*/
     sf_axis at, ax, az, as;

@@ -505,7 +505,7 @@ void gauss_newton(float *grad, float *direction)
 	int iter;
 	float r2, r3, pHp, alpha, beta;
 	float *r, *p, *Hp;
-	FILE *fp;
+	FILE *fp=NULL;
 
 	/* initialize solution */
 	memset(direction, 0., nzx*sizeof(float));

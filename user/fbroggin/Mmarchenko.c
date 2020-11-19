@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
     bool verb, conj, twin, pandq, Gtot, Htot;
 
-    float *pplus0, *pplus, *pplustemp, *Pplus, *Pplus_trace, *pminus, *Pminus, *Refl, *Gp, *Gm, *G, *H;
+    float *pplus0, *pplus, *pplustemp, *Pplus, *Pplus_trace, *pminus, *Pminus, *Refl, *Gp, *Gm, *G=NULL, *H=NULL;
     float *qplus, *qplustemp, *Qplus, *Qplus_trace, *qminus, *Qminus;
     float *window, *window_all, *taper, pi;
     int *tw;
@@ -432,7 +432,11 @@ int main(int argc, char* argv[]) {
 		    /*------------------------------------------------------------*/
 		    /* Loop over frequencies */
 		    /*------------------------------------------------------------*/
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 		    for (it = 0; it < 2 * nf; it = it + 2) {
 
 			/*(x + yi)(u + vi) = (xu - yv) + (xv + yu)i*/
@@ -470,7 +474,11 @@ int main(int argc, char* argv[]) {
     shared(pminus,qminus,pplus,qplus,pplus0,window)
 #endif
 	    for (ix = 0; ix < ntr; ix++) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 		for (it = 0; it < nt; it++) {
 		    pplus[it + ix * nt] = pplus0[it + ix * nt] - scale * window[it + ix * nt] * pminus[it + ix * nt];
 		    qplus[it + ix * nt] = pplus0[it + ix * nt] + scale * window[it + ix * nt] * qminus[it + ix * nt];
@@ -493,7 +501,11 @@ int main(int argc, char* argv[]) {
     shared(Gp,Gm,G,H,pminus,qminus,pplustemp,qplustemp,pplus0,ivs)
 #endif
 	for (ix = 0; ix < ntr; ix++) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 	    for (it = 0; it < nt; it++) {
 		Gp[it + ix * nt + ivs * ntr * nt] = 0.5 * (pplustemp[it + ix * nt] + scale * pminus[it + ix * nt] + qplustemp[it + ix * nt] - scale * qminus[it + ix * nt]);
 		Gm[it + ix * nt + ivs * ntr * nt] = 0.5 * (pplustemp[it + ix * nt] + scale * pminus[it + ix * nt] - qplustemp[it + ix * nt] + scale * qminus[it + ix * nt]);

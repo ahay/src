@@ -34,7 +34,7 @@ int main(int argc, char * argv[])
     int size, i, nth;
     bool sw,logsc;
     sf_file in, out;
-    float *dat0,*dat,den,scale,rescale;
+    float *dat0,*dat,den,scale,rescale=0;
     float max_all,perc,thres,var_thres,var_all,var;
     sf_axis az, ax, at;
 

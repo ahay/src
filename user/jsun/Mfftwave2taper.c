@@ -29,12 +29,12 @@ int main(int argc, char* argv[])
     int it,iz,im,ik,ix,i,j,snap,taper;     /* index variables */
     int nt,nz,nx,m2,nk,nzx,nz2,nx2,nzx2,n2,pad1,nkz,nth;
     float c, old;
-    float dt,dx,dz,dkx,dkz,kx0,kz0,kx,kz,ktmp,kx_trs,kz_trs,thresh;
+    float dt,dx,dz,dkx=0,dkz=0,kx0=0,kz0=0,kx,kz,ktmp,kx_trs,kz_trs,thresh;
 
     float  *ww,*rr;      /* I/O arrays*/
     sf_complex *cwave, *cwavem;
     float **wave, *curr, *prev;
-    float *ktp;
+    float *ktp=NULL;
 
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */

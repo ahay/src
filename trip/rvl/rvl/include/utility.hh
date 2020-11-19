@@ -249,7 +249,7 @@ namespace RVL {
     /** Report state of object to ostream. */
     virtual ostream & write(ostream & str) const = 0;
 
-      virtual ~Writeable() {};
+    virtual ~Writeable() noexcept(false) {};
 
     /** Report state of object to RVLException. */
     void write(RVLException & e) const {

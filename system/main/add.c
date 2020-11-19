@@ -479,7 +479,7 @@ check_compat (sf_datatype type      /* data type */,
 	if (sf_gettype(in) != type) 
 	    sf_error ("type mismatch: need %d",type);
 	for (id=1; id <= dim; id++) {
-	    (void) snprintf(key,3,"n%d",id);
+	    (void) snprintf(key,3,"n%d",id%10u);
 	    if (!sf_histint(in,key,&ni) || ni != n[id-1])
 #if defined(__cplusplus) || defined(c_plusplus)
 		sf_error("%s mismatch: need %ld",key,
@@ -488,7 +488,7 @@ check_compat (sf_datatype type      /* data type */,
 	        sf_error("%s mismatch: need %lld",key,
 			 (long long int) n[id-1]);
 #endif
-	    (void) snprintf(key,3,"d%d",id);
+	    (void) snprintf(key,3,"d%d",id%10u);
 	    if (sf_histfloat(ins[0],key,&d)) {
 		if (!sf_histfloat(in,key,&di) || 
 		    (fabsf(di-d) > tol*fabsf(d)))
@@ -496,7 +496,7 @@ check_compat (sf_datatype type      /* data type */,
 	    } else {
 		d = 1.;
 	    }
-	    (void) snprintf(key,3,"o%d",id);
+	    (void) snprintf(key,3,"o%d",id%10u);
 	    if (sf_histfloat(ins[0],key,&o) && 
 		(!sf_histfloat(in,key,&oi) || 
 		 (fabsf(oi-o) > tol*fabsf(d))))

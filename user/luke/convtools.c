@@ -703,7 +703,7 @@ float* conv_convolve_ker_translate( float *arrayin, float *X, int *N, float *D, 
 	/* and remainder of translation for interpolation */
 	float* TRem = conv_index_coords_remainder( TInd, conv_float_array_subtract( O, X, ndim), D, O, ndim);
 	/* index in kernel prior to shifting */
-	int* KIndpre;
+	int* KIndpre = NULL;
 	/* index corresponding to position on kernel */
 	int* KInd = sf_intalloc(ndim);
 	/* array index shifted by kernel */

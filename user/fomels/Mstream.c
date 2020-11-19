@@ -21,7 +21,7 @@
 int main(int argc, char* argv[])
 {
     bool inv, adj, linear, kn;
-    int n1, n2, na, i1, i2, ia, *mask;
+    int n1, n2, na, i1, i2, ia, *mask=NULL;
     float dd, da, dn, rn, eps;
     float *d, *a, *r, *d2, *r2;
     sf_file inp, pef, out, pat, known;

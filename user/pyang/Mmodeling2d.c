@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
     float dx, dz, fm, dt, dtx, dtz, amp, tmp, totaltime=0	;
     float *trans, *wlt, *dobs, *bndr, **vv, **p0, **p1, **p2, **ptr=NULL;
     clock_t start, end;
-    sf_file vinit, shots, check, time;
+    sf_file vinit, shots, check=NULL, time;
 
     /* initialize Madagascar */
     sf_init(argc,argv);

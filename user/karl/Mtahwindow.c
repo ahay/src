@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
   int ns_out;
   int indx_ns; /*trace header index of ns key */
   char* keyname;
-  int indx_key; /*trace header index of key identified by user's key parm */
+  int indx_key=0; /*trace header index of key identified by user's key parm */
   int key_min; /*minimum for header 'user key parameter to output */
   int key_max; /*maximum for header 'user key parameter to output' */
   int keyvalue; /* value of the header key on this trace */

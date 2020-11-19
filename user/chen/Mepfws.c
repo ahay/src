@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     sf_file in, out;
 	float *u1;
 	char *filter;
-	void *h;
+	void *h=NULL;
 
     sf_init(argc, argv);
 

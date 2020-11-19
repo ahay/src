@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	sf_file Ffvel, Ffden, Fbvel, Fbden;
 	sf_file Fsrc, Frcd, Fimg1, Fimg2;
 	sf_file FGx, FGz, Fsxx, Fsxz, Fszx, Fszz;
-	sf_file Ftmpfwf, Ftmpbwf;
+	sf_file Ftmpfwf=NULL, Ftmpbwf=NULL;
 
 	sf_axis at, ax, az, atau;
 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	int snapturn, tmpint;
 
 	float **fvel, **bvel;
-	float ***fwf, ***record, **localrec;
+	float ***fwf, ***record=NULL, **localrec;
 	float ***img1, **img2, ***mig1, **mig2;
 	float *tmpsxx, *tmpsxz, *tmpszx, *tmpszz;
 

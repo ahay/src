@@ -456,7 +456,7 @@ int main(int argc, char* argv[])
 {
     bool verb,correct;
     int nt,nz,nx,m2,nk,nzx,nz2,nx2,n2,pad1;
-    int snap, wfnt;
+    int snap, wfnt=0;
     float dt, wfdt;
     char *mode;
 

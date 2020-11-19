@@ -790,8 +790,10 @@ static void injectBornVelocitySource2d(wfl_struct_t * const wfl, mod_struct_t co
 
   float dt = acq->dt;
 
-  fread(wfl->v1a,sizeof(float),n12,wfl->Fprgrd1);
-  fread(wfl->v2a,sizeof(float),n12,wfl->Fprgrd2);
+  if (!fread(wfl->v1a,sizeof(float),n12,wfl->Fprgrd1))
+    abort();
+  if (!fread(wfl->v2a, sizeof(float), n12, wfl->Fprgrd2))
+    abort();
 
   for (long i2=0; i2<modN2; i2++){
     for (long i1=0; i1<modN1; i1++){
@@ -818,9 +820,12 @@ static void injectBornVelocitySource3d(wfl_struct_t * const wfl, mod_struct_t co
 
   float dt = acq->dt;
 
-  fread(wfl->v1a,sizeof(float),nelem,wfl->Fprgrd);
-  fread(wfl->v2a,sizeof(float),nelem,wfl->Fprgrd);
-  fread(wfl->v3a,sizeof(float),nelem,wfl->Fprgrd);
+  if (!fread(wfl->v1a,sizeof(float),nelem,wfl->Fprgrd))
+    abort();
+  if (!fread(wfl->v2a, sizeof(float), nelem, wfl->Fprgrd))
+    abort();
+  if (!fread(wfl->v3a, sizeof(float), nelem, wfl->Fprgrd))
+    abort();
 
   for (long i3=0; i3<modN3; i3++){
     for (long i2=0; i2<modN2; i2++){
@@ -851,7 +856,8 @@ void injectBornPressureSource2d(wfl_struct_t * const wfl, mod_struct_t const *mo
 
   float dt = acq->dt;
 
-  fread(wfl->bwfl,n12,sizeof(float),wfl->Fpvdiv);
+  if (!fread(wfl->bwfl,n12,sizeof(float),wfl->Fpvdiv))
+    abort();
 
   for (long i2=0; i2<modN2; i2++){
     for (long i1=0; i1<modN1; i1++){
@@ -883,7 +889,8 @@ void injectBornPressureSource3d(wfl_struct_t * const wfl, mod_struct_t const *mo
 
   float dt = acq->dt;
 
-  fread(wfl->bwfl,nelem,sizeof(float),wfl->Fpvdiv);
+  if (!fread(wfl->bwfl,nelem,sizeof(float),wfl->Fpvdiv))
+    abort();
 
   for (long i3=0; i3<modN3; i3++){
     for (long i2=0; i2<modN2; i2++){

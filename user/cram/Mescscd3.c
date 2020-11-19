@@ -281,7 +281,7 @@ int main (int argc, char* argv[]) {
     /* Server network variables */
     char *ip = NULL;
     int rc, on = 1, ijob, bsiz;
-    int listen_sd, new_sd, njobs = 0;
+    int listen_sd=0, new_sd, njobs = 0;
     struct sockaddr_in serv_addr, client_addr;
     struct timeval timeout;
     fd_set sset;
@@ -423,8 +423,10 @@ int main (int argc, char* argv[]) {
         pid = fork ();
         if (pid < 0)
             sf_error ("fork() failed, errno=%d", errno);
-        if (0 == pid)
-            lockf (tmpfile, F_LOCK, 0);
+        if (0 == pid) {
+            if (lockf (tmpfile, F_LOCK, 0) == -1)
+                abort();
+        }
         else
             sleep (1);
     } else
@@ -549,8 +551,9 @@ int main (int argc, char* argv[]) {
     clen = sizeof(client_addr);
 
     /* Release the child before starting the server loop */
-    lockf (tmpfile, F_ULOCK, 1);
-    close (tmpfile);
+    if (lockf (tmpfile, F_ULOCK, 1) == -1)
+        abort();
+    close(tmpfile);
     free (str);
     fclose (stderr);
 

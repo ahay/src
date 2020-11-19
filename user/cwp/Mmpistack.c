@@ -178,9 +178,9 @@ int main(int argc, char **argv){
     sf_datatype type = sf_gettype(tfile);
     
     float *fsarray = NULL;
-    float *frarray = NULL; float *foarray;
+    float *frarray = NULL; float *foarray = NULL;
     int   *isarray = NULL;
-    int   *irarray = NULL; int   *ioarray;
+    int   *irarray = NULL; int   *ioarray = NULL;
     
     switch (type) {
         case SF_FLOAT:

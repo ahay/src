@@ -143,10 +143,18 @@ namespace TSOpt {
                 if (taper_type){ // offset
                     if (x < taper_min) wttmp = cosfun2((taper_min-x)/wt);
                     else if (x > taper_max) wttmp = cosfun2((x - taper_max)/wt);
-#pragma ivdep                    
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                     for (int i=0;i<nt-itw;i++)
                         trout.data[i] = trin.data[i]*wtmp*wttmp;
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                     for (int i=nt-itw;i<nt;i++)
                         trout.data[i] = trin.data[i]*wtmp*wttmp*cosfun(float(nt-i)/(itw+0.0f));
 
@@ -154,10 +162,18 @@ namespace TSOpt {
                 else { // taper geophone position
                     if (gx < taper_min) wttmp = cosfun2((taper_min-gx)/wt);
                     else if (gx > taper_max) wttmp = cosfun2((gx - taper_max)/wt);
-#pragma ivdep                    
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                     for (int i=0;i<nt-itw;i++)
                         trout.data[i] = trin.data[i]*wtmp*wttmp;
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                     for (int i=nt-itw;i<nt;i++)
                         trout.data[i] = trin.data[i]*wtmp*wttmp*cosfun(float(nt-i)/(itw+0.0f));
                 }
@@ -170,10 +186,18 @@ namespace TSOpt {
                     if (x < taper_min) wttmp = cosfun2((taper_min-x)/wt);
                     else if (x > taper_max) wttmp = cosfun2((x - taper_max)/wt);
 		    wttmp = wttmp * sxt_wt;
-#pragma ivdep                    
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                     for (int i=0;i<nt-itw;i++)
                         trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                     for (int i=nt-itw;i<nt;i++)
                         trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm)*cosfun(float(nt-i)/(itw+0.0f));
                 }
@@ -181,10 +205,18 @@ namespace TSOpt {
                     if (gx < taper_min) wttmp = cosfun2((taper_min-gx)/wt);
                     else if (gx > taper_max) wttmp = cosfun2((gx - taper_max)/wt);
                     wttmp = wttmp * sxt_wt;
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                     for (int i=0;i<nt-itw;i++)
                         trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                     for (int i=nt-itw;i<nt;i++)
                         trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm)*cosfun(float(nt-i)/(itw+0.0f));
                 }
@@ -230,7 +262,11 @@ namespace TSOpt {
             memcpy(trout.data,trin.data,nt*sizeof(float));
             trout.data[0]=0.0f;
             for (int j=0;j<nint;j++) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                 for (int i=1;i<nt;i++) trout.data[i]
                     = trout.data[i-1]+trin.data[i-1]*dt;
             }
@@ -275,7 +311,11 @@ namespace TSOpt {
             memcpy(trout.data,trin.data,nt*sizeof(float));
             trout.data[nt-1]=0.0f;
             for (int j=0;j<nint;j++) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
                 for (int i=nt-2;i>-1;i--) trout.data[i] 
                     = trout.data[i+1]+trin.data[i+1]*dt;
             }

@@ -43,7 +43,7 @@ namespace RVL {
   public:
     LocalEvaluation() {}
     LocalEvaluation(const LocalEvaluation<DataType> &) {}
-    virtual ~LocalEvaluation() {}
+    virtual ~LocalEvaluation() noexcept(false) {}
     /** Eval method for LDCs */    
     virtual void operator()(LocalDataContainer<DataType> & target,
 			    vector<LocalDataContainer<DataType> const *> & sources) = 0;
@@ -69,7 +69,7 @@ namespace RVL {
   public:
     UnaryLocalEvaluation() {}
     UnaryLocalEvaluation(const UnaryLocalEvaluation<DataType> &) {}
-    virtual ~UnaryLocalEvaluation() {}
+    virtual ~UnaryLocalEvaluation() noexcept(false) {}
 
     /** Evaluation method for LDCs */
     virtual void operator () (LocalDataContainer<DataType> & target) = 0;
@@ -103,7 +103,7 @@ namespace RVL {
   public:
     UnaryLocalFunctionObject() {}
     UnaryLocalFunctionObject(const UnaryLocalFunctionObject<DataType> &) {}
-    virtual ~UnaryLocalFunctionObject() {}
+    virtual ~UnaryLocalFunctionObject() noexcept(false) {}
   };
 
   /** Binary local evaluation mixin. */
@@ -113,7 +113,7 @@ namespace RVL {
   public:
     BinaryLocalEvaluation() {}
     BinaryLocalEvaluation(const BinaryLocalEvaluation<DataType> &) {}
-    virtual ~BinaryLocalEvaluation() {}
+    virtual ~BinaryLocalEvaluation() noexcept(false) {}
     /** Evaluation method for LDCs */
     using LocalEvaluation<DataType>::operator();
     virtual void operator () (LocalDataContainer<DataType> & target,
@@ -147,7 +147,7 @@ namespace RVL {
   public:
     BinaryLocalFunctionObject() {}
     BinaryLocalFunctionObject(const BinaryLocalFunctionObject<DataType> &) {}
-    virtual ~BinaryLocalFunctionObject() {}
+    virtual ~BinaryLocalFunctionObject() noexcept(false) {}
   };
 
   /** Ternary local evaluation mixin. */

@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
     int m2, n2, nk, nth=1;
     float dt, dx, dz, ox;
     sf_complex **img, **dat, **lt, **rt, ***wvfld, *ww;
-    sf_file data, image, left, right, snaps, src;
+    sf_file data, image, left, right, snaps, src=NULL;
     double time=0.,t0=0.,t1=0.;
     geopar geop;
 

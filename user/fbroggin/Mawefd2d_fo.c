@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
     sf_file Fvel; /* velocity  */
     sf_file Fden; /* density   */
     sf_file Fdat; /* pressure data */
-    sf_file Fdatvz; /* vertical particle velocity data */
-    sf_file Fwfl; /* wavefield */
+    sf_file Fdatvz = NULL; /* vertical particle velocity data */
+    sf_file Fwfl = NULL; /* wavefield */
 
     /* Cube axes */
     sf_axis at,az,ax;
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 
     /* FDM structure */
     fdm2d    fdm;
-    sponge   spo;
+    sponge   spo = NULL;
 
     /* I/O arrays */
     float  *ww;           /* wavelet   */
@@ -97,11 +97,11 @@ int main(int argc, char* argv[])
     float cax,cbx,caz,cbz;
 
     /* Wavefield cut params */
-    sf_axis   acz,acx;
+    sf_axis   acz = NULL,acx = NULL;
     int       nqz,nqx;
     float     oqz,oqx;
     float     dqz,dqx;
-    float     *uc;
+    float     *uc = NULL;
     
     float scal;
     
@@ -410,7 +410,11 @@ shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 		#pragma omp for private (ix, iz) schedule(runtime)
 		#endif
 		for (ix=ioXx; ix<fdm->nxpad-NOP+1; ix++) {
-		#pragma ivdep
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 			for (iz=ioXz; iz<fdm->nzpad-NOP; iz++) {
 				vx[ix*fdm->nzpad+iz] -= rox[ix*fdm->nzpad+iz]*(
 						cax*(p[ix*fdm->nzpad+iz]     - p[(ix-1)*fdm->nzpad+iz]) +
@@ -425,7 +429,11 @@ shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 		#pragma omp for private (ix, iz) schedule(runtime)
 		#endif
 		for (ix=ioZx; ix<fdm->nxpad-NOP; ix++) {
-		#pragma ivdep		
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 			for (iz=ioZz; iz<fdm->nzpad-NOP+1; iz++) {
 				vz[ix*fdm->nzpad+iz] -= roz[ix*fdm->nzpad+iz]*(
 						caz*(p[ix*fdm->nzpad+iz]   - p[ix*fdm->nzpad+iz-1]) +
@@ -466,9 +474,12 @@ shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 		#ifdef _OPENMP
 		#pragma omp	for private (ix, iz) schedule(runtime)
 		#endif
-		#pragma ivdep
 		for (ix=ioPx; ix<fdm->nxpad-NOP; ix++) {
-		#pragma ivdep
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 			for (iz=ioPz; iz<fdm->nzpad-NOP; iz++) {
 				p[ix*fdm->nzpad+iz] -= vel2ro[ix*fdm->nzpad+iz]*(
 						cax*(vx[(ix+1)*fdm->nzpad+iz] - vx[ix*fdm->nzpad+iz]) +

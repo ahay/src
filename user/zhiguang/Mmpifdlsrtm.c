@@ -218,8 +218,8 @@ int main(int argc, char* argv[])
     float *sendbuf, *recvbuf;
     double tstart, tend, duration, *sendbuf2;
  
-    float ***dd, **localdd, **mm, **localmm, **vv;
-    sf_file in, out, vel, wavelet;
+    float ***dd=NULL, **localdd, **mm, **localmm, **vv;
+    sf_file in, out=NULL, vel, wavelet;
     
     sf_init(argc, argv);
 

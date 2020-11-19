@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
     bool adj, inv, shape;
     int ix, iz, n, niter, rect1, rect2;
     float dx, dz, eps1;
-    float *s, *np, *pp, *b;
+    float *s, *np, *pp=NULL, *b=NULL;
 
     sf_file Fp, Fs, Fnp;
 

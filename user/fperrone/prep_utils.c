@@ -499,8 +499,10 @@ void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
   for (long it=0; it<nt; it++){
     if (para->outputScatteredWfl)
       sf_floatread(pp,nelem,wfl->Fswfl);
-    else
-      fread(pp,sizeof(float),nelem,para->Fswfl);
+    else {
+      if (!fread(pp,sizeof(float),nelem,para->Fswfl))
+        abort();
+    }
 
     for (long i2=0; i2<n2; i2++){
       for (long i1=0; i1<n1; i1++){
@@ -565,8 +567,10 @@ void make_pv_from_pres_3d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
   for (long it=0; it<nt; it++){
     if (para->outputScatteredWfl)
       sf_floatread(pp,n1*n2,wfl->Fswfl);
-    else
-      fread(pp,sizeof(float),n1*n2,para->Fswfl);
+    else {
+      if (!fread(pp,sizeof(float),n1*n2,para->Fswfl))
+        abort();
+    }
 
     for (long i3=0; i3<n3; i3++){
       for (long i2=0; i2<n2; i2++){
@@ -712,8 +716,10 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
     // read the background wavefield
     if (para->outputBackgroundWfl)
       sf_floatread(pp,n1*n2,wfl->Fwfl);
-    else
-      fread(pp,sizeof(float),n1*n2,para->Fbwfl);
+    else {
+      if (!fread(pp,sizeof(float),n1*n2,para->Fbwfl))
+        abort();
+    }
 
     for (long i2=0; i2<n2; i2++){
       for (long i1=2; i1<n1-3; i1++){
@@ -778,8 +784,10 @@ void make_born_velocity_sources_3d(wfl_struct_t * const wfl,
     // read the background wavefield
     if (para->outputBackgroundWfl)
       sf_floatread(pp,nelem,wfl->Fwfl);
-    else
-      fread(pp,sizeof(float),nelem,para->Fbwfl);
+    else {
+      if (!fread(pp,sizeof(float),nelem,para->Fbwfl))
+        abort();
+    }
 
     for (long i3=0; i3<n3; i3++){
     for (long i2=0; i2<n2; i2++){
@@ -925,11 +933,13 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
   }
   else{
     // read the background wavefield
-    fread(snapc,sizeof(float),nelem,para->Fbwfl);
+    if (!fread(snapc,sizeof(float),nelem,para->Fbwfl))
+      abort();
 
     for (long it=0; it<nt-1; it++){
       // read the background wavefield
-      fread(snapn,sizeof(float),nelem,para->Fbwfl);
+      if (!fread(snapn,sizeof(float),nelem,para->Fbwfl))
+        abort();
 
       // compute the divergence of the particle velocity from the pressure field
       for (long i=0; i<nelem; i++){
@@ -1007,11 +1017,13 @@ void make_born_pressure_sources_3d(wfl_struct_t * const wfl,
   }
   else{
     // read the background wavefield
-    fread(snapc,sizeof(float),nelem,para->Fbwfl);
+    if (!fread(snapc,sizeof(float),nelem,para->Fbwfl))
+      abort();
 
     for (long it=0; it<nt-1; it++){
       // read the background wavefield
-      fread(snapn,sizeof(float),nelem,para->Fbwfl);
+      if (!fread(snapn,sizeof(float),nelem,para->Fbwfl))
+        abort();
 
       // compute the divergence of the particle velocity from the pressure field
       for (long i=0; i<nelem; i++){
@@ -1068,16 +1080,20 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
   rewind(para->Fpv1);
   rewind(para->Fpv2);
 
-  fread(v1r,sizeof(float),n1*n2*nt,para->Fpv1);
-  fread(v2r,sizeof(float),n1*n2*nt,para->Fpv2);
+  if (!fread(v1r,sizeof(float),n1*n2*nt,para->Fpv1))
+    abort();
+  if (!fread(v2r, sizeof(float), n1 * n2 * nt, para->Fpv2))
+    abort();
 
   for (int it=0; it<nt; it++){
     float* w1p = v1r + (nt-1-it)*n1*n2;
     float* w2p = v2r + (nt-1-it)*n1*n2;
 
     // source side gradient of pressure
-    fread(v1a,sizeof(float),n1*n2,wfl->Fprgrd1);
-    fread(v2a,sizeof(float),n1*n2,wfl->Fprgrd2);
+    if (!fread(v1a,sizeof(float),n1*n2,wfl->Fprgrd1))
+      abort();
+    if (!fread(v2a, sizeof(float), n1 * n2, wfl->Fprgrd2))
+      abort();
 
     for (long i=0; i<n1*n2; i++){
       v1a[i] *= -1.*w1p[i]; // flipping time flips the sign of the velocity
@@ -1138,14 +1154,20 @@ void stack_velocity_part_3d(wfl_struct_t * const wfl,
     fseek(para->Fpv2,off,SEEK_SET);
     fseek(para->Fpv3,off,SEEK_SET);
 
-    fread(v1r,sizeof(float),nelem,para->Fpv1);
-    fread(v2r,sizeof(float),nelem,para->Fpv2);
-    fread(v3r,sizeof(float),nelem,para->Fpv3);
+    if (!fread(v1r, sizeof(float), nelem, para->Fpv1))
+      abort();
+    if (!fread(v2r, sizeof(float), nelem, para->Fpv2))
+      abort();
+    if (!fread(v3r, sizeof(float), nelem, para->Fpv3))
+      abort();
 
     // source side gradient of pressure
-    fread(v1a,sizeof(float),nelem,wfl->Fprgrd);
-    fread(v2a,sizeof(float),nelem,wfl->Fprgrd);
-    fread(v3a,sizeof(float),nelem,wfl->Fprgrd);
+    if (!fread(v1a, sizeof(float), nelem, wfl->Fprgrd))
+      abort();
+    if (!fread(v2a, sizeof(float), nelem, wfl->Fprgrd))
+      abort();
+    if (!fread(v3a, sizeof(float), nelem, wfl->Fprgrd))
+      abort();
 
     for (long i=0; i<nelem; i++){
       v1a[i] *= -1.*v1r[i]; // flipping time flips the sign of the velocity
@@ -1204,14 +1226,18 @@ void stack_pressure_part_2d(sf_file Fvpert,
   // set
   memset(vimg,0,nelem*sizeof(float));
 
-  fread(srcwfl,sizeof(float),nelem*nt,wfl->Fpvdiv);
-  for (long it=0; it<nt; it++){
+  if (!fread(srcwfl,sizeof(float),nelem*nt,wfl->Fpvdiv))
+    abort();
+  for (long it = 0; it < nt; it++)
+  {
     float *wp = srcwfl + (nt-1-it)*nelem;
 
     if (para->outputScatteredWfl)
       sf_floatread(tmp,nelem,wfl->Fswfl);
-    else
-      fread(tmp,sizeof(float),nelem,para->Fswfl);
+    else {
+      if (!fread(tmp,sizeof(float),nelem,para->Fswfl))
+        abort();
+    }
 
     for (long i=0; i<nelem; i++){
       double const v = mod->vmod[i];
@@ -1231,15 +1257,18 @@ void stack_pressure_part_2d(sf_file Fvpert,
       rewind(para->Fswfl);
 
     float *rimg = sf_floatalloc(nelem);
-    fread(rimg,sizeof(float),nelem,para->Fpv1);
+    if (!fread(rimg,sizeof(float),nelem,para->Fpv1))
+      abort();
 
     for (long it=0; it<nt; it++){
       float *wp = srcwfl + (nt-1-it)*nelem;
 
       if (para->outputScatteredWfl)
         sf_floatread(tmp,nelem,wfl->Fswfl);
-      else
-        fread(tmp,sizeof(float),nelem,para->Fswfl);
+      else {
+        if (!fread(tmp,sizeof(float),nelem,para->Fswfl))
+          abort();
+      }
 
       for (long i=0; i<nelem; i++){
         double const v = mod->vmod[i];
@@ -1291,12 +1320,15 @@ void stack_pressure_part_3d(sf_file Fvpert,
   for (long it=0; it<nt; it++){
     long off = (nelem*(nt-1-it))*sizeof(float);
     fseek(wfl->Fpvdiv,off,SEEK_SET);
-    fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv);
+    if (!fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv))
+      abort();
 
     if (para->outputScatteredWfl)
       sf_floatread(tmp,nelem,wfl->Fswfl);
-    else
-      fread(tmp,sizeof(float),nelem,para->Fswfl);
+    else {
+      if (!fread(tmp,sizeof(float),nelem,para->Fswfl))
+        abort();
+    }
 
     for (long i=0; i<nelem; i++){
       double const v = mod->vmod[i];
@@ -1316,17 +1348,21 @@ void stack_pressure_part_3d(sf_file Fvpert,
       rewind(para->Fswfl);
 
     float *rimg = sf_floatalloc(nelem);
-    fread(rimg,sizeof(float),nelem,para->Fpv1);
+    if (!fread(rimg,sizeof(float),nelem,para->Fpv1))
+      abort();
 
     for (long it=0; it<nt; it++){
       long off = (nelem*(nt-1-it))*sizeof(float);
       fseek(wfl->Fpvdiv,off,SEEK_SET);
-      fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv);
+      if (!fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv))
+        abort();
 
       if (para->outputScatteredWfl)
         sf_floatread(tmp,nelem,wfl->Fswfl);
-      else
-        fread(tmp,sizeof(float),nelem,para->Fswfl);
+      else { 
+        if (!fread(tmp,sizeof(float),nelem,para->Fswfl))
+          abort();
+      }
 
       for (long i=0; i<nelem; i++){
         double const v = mod->vmod[i];

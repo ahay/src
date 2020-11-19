@@ -47,7 +47,7 @@ main(int argc, char **argv){
   sf_file Fin,Fout;
   int n1,n2,fin_name_str_len,fout_name_str_len;
   float d1,d2,o1,o2;
-  char *in_dat_name,*out_dat_name;
+  char *in_dat_name=NULL,*out_dat_name=NULL;
   int n1local,n2local;
   int n1local_start,n2local_start;
 

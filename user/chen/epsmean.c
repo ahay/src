@@ -46,7 +46,7 @@ void* epsmean_init(int n1, int nfw)
 static float mean_var(int n, float* x, float* mean)
 {
 	int i;
-	float u, v;
+	float u, v=0.;
 	
 	for(i=0, u=0.0; i<n; i++)
 		u += x[i];

@@ -124,8 +124,9 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 		swap=fopen("temswap.bin", "rb");
 		for(is=0; is<acpar->ns; is++){
 			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			fread(dd[0], sizeof(float), nr*nt, swap);
-			sf_floatwrite(dd[0], nr*nt, Fdat);
+			if (!fread(dd[0], sizeof(float), nr*nt, swap))
+				abort();
+			sf_floatwrite(dd[0], nr * nt, Fdat);
 		}
 		fclose(swap);
 		remove("temswap.bin");
@@ -250,8 +251,9 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 		swap=fopen("temswap.bin", "rb");
 		for(is=0; is<acpar->ns; is++){
 			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			fread(dd[0], sizeof(float), nr*nt, swap);
-			sf_floatwrite(dd[0], nr*nt, Fdat);
+			if (!fread(dd[0], sizeof(float), nr*nt, swap))
+				abort();
+			sf_floatwrite(dd[0], nr * nt, Fdat);
 		}
 		fclose(swap);
 		remove("temswap.bin");

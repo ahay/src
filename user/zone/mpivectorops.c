@@ -28,7 +28,7 @@ void vector_sub(int count1, float *inp /*y_old*/,
 /*<Run Newton's method for finding a good set of intersection points y>*/
 
 {
-	int n; /*number of interfaces*/	
+	int n=0; /*number of interfaces*/	
 	int i/*,j*/; /*counter*/
 	
 	if (count1 != count2) {
@@ -53,7 +53,7 @@ void vector_sub3d(int count1, float **inp /*y_old*/,
 /*<Subtract vectors of the form x[N][2]>*/
 
 {
-	int n; /*number of interfaces*/	
+	int n=0; /*number of interfaces*/	
 	int i,j; /*counter*/
 	
 	if (count1 != count2) {
@@ -86,7 +86,7 @@ void vector_sub3d_v(int count1, float *inp /*y_old*/,
 /*<Subtract vectors of the form x[2]>*/
 
 {
-	int n; 
+	int n=0; 
 	int i; /*counter*/
 	
 	if (count1 != count2) {

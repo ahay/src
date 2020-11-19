@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     sf_file inp, out;
     /* PWD parameters */
     int nw, nj1;
-    float *pp, *pwdata;
+    float *pp=NULL, *pwdata;
     sf_file dip,outpwdcheck,outdipcheck;
     /* kirchhoff params */
     bool half, verb,normalize,debug;

@@ -15,7 +15,11 @@ void acd_2d_4(float ** uc,
   int s0=s[0];
   int e0=e[0];
   for (i1=s[1]; i1<=e[1]; i1++) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
     for (i0=s0; i0<=e0; i0++) {
       float lap = c0*uc[i1][i0] +
         c1[0]*(uc[i1][i0+1] + uc[i1][i0-1]) +
@@ -28,13 +32,21 @@ void acd_2d_4(float ** uc,
   }
   /* boundary conditions - note that uc[-1][i]=0 etc. */
   if (lbc[1]) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
     for (i0=s0;i0<=e0;i0++) {
       up[s[1]-2][i0]=-up[s[1]][i0];
     }
   }
   if (rbc[1]) {
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
     for (i0=s0;i0<=e0;i0++) {
       up[e[1]+2][i0]=-up[e[1]][i0];
     }

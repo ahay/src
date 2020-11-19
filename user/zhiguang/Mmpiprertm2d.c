@@ -266,8 +266,9 @@ void prertm2_oper(bool adj, float **mm)
         if(cpuid==0){
             for(is=0; is<ns; is++){
                 fseeko(swap, is*nr*nt*sizeof(float), 0);
-                fread(dd[0], sizeof(float)*nt, nr, swap);
-                sf_floatwrite(dd[0], nr*nt, out);
+                if (!fread(dd[0], sizeof(float)*nt, nr, swap))
+                    abort();
+                sf_floatwrite(dd[0], nr * nt, out);
             }
             fclose(swap);
             remove("temswap.bin");                     

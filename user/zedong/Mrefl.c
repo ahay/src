@@ -24,7 +24,8 @@ int main(int argc, char* argv[])
     float *vels=(float *)malloc(sizeof(float)*m);
     char* filename=sf_histstring(Fin,"in");
     FILE *fp=fopen(filename,"rb");
-    fread(vels,sizeof(float),m,fp);
+    if (!fread(vels,sizeof(float),m,fp))
+        abort();
     fclose(fp);
     int i2,i3,i1;
     //fp=fopen("a.dat","wb");

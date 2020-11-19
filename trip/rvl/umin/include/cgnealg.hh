@@ -157,7 +157,7 @@ namespace RVLUmin {
      
     }
 
-    ~CGNEStep() {}
+    ~CGNEStep() noexcept(false) {}
 
   protected:
 
@@ -287,7 +287,7 @@ namespace RVLUmin {
      
     }
 
-    ~PCGNEStep() {}
+    ~PCGNEStep() noexcept(false) {}
 
   protected:
 
@@ -525,7 +525,7 @@ namespace RVLUmin {
       }
     }
 
-    ~CGNEAlg() {
+    ~CGNEAlg() noexcept(false) {
       delete step;
     }
 

@@ -232,14 +232,14 @@ int main(int argc, char *argv[])
 
 	/*wavenumber domain tapering*/
 	int taper;
-	float *ktp;
+	float *ktp=NULL;
 	float ktmp,kx_trs,kz_trs,thresh;
 	float dkx,dkz,kx0,kz0;
 	float kx,kz;
 	int nkz;
 
 	sf_complex c, **lt, **rt;
-	sf_complex *ww, **dd, ***dd3;
+	sf_complex *ww, **dd, ***dd3=NULL;
 	float ***img1, **img2, ***mig1, **mig2;
     float *rr, **ccr, **sill, ***fwf, ***bwf;
 	sf_complex *cwave, *cwavem, **wave, *curr;
@@ -247,7 +247,7 @@ int main(int argc, char *argv[])
 	sf_axis at, ax, az, atau;
 
 	sf_file Fdat, Fsrc, Fimg1, Fimg2;
-	sf_file Ffwf, Fbwf, Fvel;
+	sf_file Ffwf=NULL, Fbwf=NULL, Fvel;
 	sf_file Fleft, Fright;
 
 	int cpuid, numprocs, nth, nspad, iturn;

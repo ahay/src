@@ -47,7 +47,7 @@ namespace RVL {
     
     Product() {}
     Product(const Product<T> &) {}
-    virtual ~Product() {}
+    virtual ~Product() noexcept(false) {}
 
     virtual size_t getSize() const = 0;
 
@@ -65,7 +65,7 @@ namespace RVL {
     
     ROProduct() {}
     ROProduct(const ROProduct<T> &) {}
-    virtual ~ROProduct() {}
+    virtual ~ROProduct() noexcept(false) {}
 
     virtual size_t getSize() const = 0;
     virtual T const & operator[](size_t i) const = 0;

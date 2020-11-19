@@ -111,7 +111,7 @@ namespace RVL {
 
     ProductDataContainer() {}
     ProductDataContainer(const ProductDataContainer &) {}
-    virtual ~ProductDataContainer() {}
+    virtual ~ProductDataContainer() noexcept(false) {}
 
     void eval( FunctionObject & f,
 	       std::vector<DataContainer const *> & x) {

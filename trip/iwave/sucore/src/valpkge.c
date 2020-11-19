@@ -285,28 +285,34 @@ void scanfval(register cwp_String type, Value *valp)
 {
 	switch(*type) {
 	case 's':
-		(void) scanf("%s", (char *) valp);
-	break;
+		if (!scanf("%s", (char *) valp))
+			abort();
+		break;
 	case 'h':
 	case 'u':
 	case 'U':
-		(void) scanf("%hd", (short *) valp);
-	break;
+		if (!scanf("%hd", (short *) valp))
+			abort();
+		break;
 	case 'i':
 	case 'p':
 	case 'P':
-		(void) scanf("%d", (int *) valp);
-	break;
+		if (!scanf("%d", (int *) valp))
+			abort();
+		break;
 	case 'l':
 	case 'v':
-		(void) scanf("%ld", (long int *)  valp);
-	break;
+		if (!scanf("%ld", (long int *)  valp))
+			abort();
+		break;
 	case 'f':
-		(void) scanf("%f", (float *) valp);
-	break;
+		if (!scanf("%f", (float *) valp))
+			abort();
+		break;
 	case 'd':
-		(void) scanf("%lf", (double *) valp);
-	break;
+		if(!scanf("%lf", (double *) valp))
+			abort();
+		break;
 	default:
 		suerr("scanfval: unknown type %s", type);
 	}

@@ -114,7 +114,7 @@ off_t sf_leftsize (sf_file file, int dim)
     char key[3];
 
     for (size=1; dim < SF_MAX_DIM; dim++, size *= ni) {
-	(void) snprintf(key,3,"n%d",dim+1);
+	(void) snprintf(key,3,"n%d",(dim+1)%10u);
 	if (!sf_histlargeint(file,key,&ni)) break;
     }
     return size;
@@ -231,7 +231,7 @@ off_t sf_shiftdim(sf_file in, sf_file out, int axis)
 
     n3 = 1;
     for (j=axis; j < SF_MAX_DIM; j++) {
-	sprintf(key2,"n%d",j+1);
+	sprintf(key2,"n%d",(j+1)%10u);
 	sprintf(key1,"n%d",j);
 	if (!sf_histint(in,key1,&ni)) {
 	    sf_putint(out,key2,1);
@@ -240,20 +240,20 @@ off_t sf_shiftdim(sf_file in, sf_file out, int axis)
 	sf_putint(out,key2,ni);
 	n3 *= ni;
 	
-	sprintf(key2,"o%d",j+1);
+	sprintf(key2,"o%d",(j+1)%10u);
 	sprintf(key1,"o%d",j);
 	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
-	sprintf(key2,"d%d",j+1);
+	sprintf(key2,"d%d",(j+1)%10u);
 	sprintf(key1,"d%d",j);
 	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
-	sprintf(key2,"label%d",j+1);
+	sprintf(key2,"label%d",(j+1)%10u);
 	sprintf(key1,"label%d",j);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
 
-	sprintf(key2,"unit%d",j+1);
+	sprintf(key2,"unit%d",(j+1)%10u);
 	sprintf(key1,"unit%d",j);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
@@ -272,7 +272,7 @@ off_t sf_shiftdim2(sf_file in, sf_file out, int axis)
 
     n3 = 1;
     for (j=axis; j < SF_MAX_DIM; j++) {
-	sprintf(key2,"n%d",j+2);
+	sprintf(key2,"n%d",(j+2)%100u);
 	sprintf(key1,"n%d",j);
 	if (!sf_histint(in,key1,&ni)) {
 	     sf_putint(out,key2,1);
@@ -281,20 +281,20 @@ off_t sf_shiftdim2(sf_file in, sf_file out, int axis)
 	sf_putint(out,key2,ni);
 	n3 *= ni;
 	
-	sprintf(key2,"o%d",j+2);
+	sprintf(key2,"o%d",(j+2)%100u);
 	sprintf(key1,"o%d",j);
 	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
-	sprintf(key2,"d%d",j+2);
+	sprintf(key2,"d%d",(j+2)%100u);
 	sprintf(key1,"d%d",j);
 	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
-	sprintf(key2,"label%d",j+2);
+	sprintf(key2,"label%d",(j+2)%10u);
 	sprintf(key1,"label%d",j);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
 
-	sprintf(key2,"unit%d",j+2);
+	sprintf(key2,"unit%d",(j+2)%100u);
 	sprintf(key1,"unit%d",j);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
@@ -356,7 +356,7 @@ off_t sf_unshiftdim(sf_file in, sf_file out, int axis)
     n3 = 1;
     for (j=axis; j < SF_MAX_DIM; j++) {
 	sprintf(key2,"n%d",j);
-	sprintf(key1,"n%d",j+1);
+	sprintf(key1,"n%d",(j+1)%10u);
 	if (!sf_histint(in,key1,&ni)) {
 	    sf_putint(out,key2,1);
 	    break;
@@ -365,20 +365,20 @@ off_t sf_unshiftdim(sf_file in, sf_file out, int axis)
 	n3 *= ni;
 	
 	sprintf(key2,"o%d",j);
-	sprintf(key1,"o%d",j+1);
+	sprintf(key1,"o%d",(j+1)%10u);
 	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
 	sprintf(key2,"d%d",j);
-	sprintf(key1,"d%d",j+1);
+	sprintf(key1,"d%d",(j+1)%10u);
 	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
 	sprintf(key2,"label%d",j);
-	sprintf(key1,"label%d",j+1);
+	sprintf(key1,"label%d",(j+1)%10u);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
 
 	sprintf(key2,"unit%d",j);
-	sprintf(key1,"unit%d",j+1);
+	sprintf(key1,"unit%d",(j+1)%10u);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
     }
@@ -397,10 +397,10 @@ off_t sf_unshiftdim2(sf_file in, sf_file out, int axis)
     n3 = 1;
     for (j=axis; j < SF_MAX_DIM; j++) {
 	sprintf(key2,"n%d",j);
-	sprintf(key1,"n%d",j+2);
+	sprintf(key1,"n%d",(j+2)%10u);
 	if (!sf_histint(in,key1,&ni)) {
 	    sf_putint(out,key2,1);
-	    sprintf(key2,"n%d",j+1);
+	    sprintf(key2,"n%d",(j+1)%10u);
 	    sf_putint(out,key2,1);
 	    break;
 	}
@@ -408,20 +408,20 @@ off_t sf_unshiftdim2(sf_file in, sf_file out, int axis)
 	n3 *= ni;
 	
 	sprintf(key2,"o%d",j);
-	sprintf(key1,"o%d",j+2);
+	sprintf(key1,"o%d",(j+2)%10u);
 	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
 	sprintf(key2,"d%d",j);
-	sprintf(key1,"d%d",j+2);
+	sprintf(key1,"d%d",(j+2)%10u);
 	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
 	sprintf(key2,"label%d",j);
-	sprintf(key1,"label%d",j+2);
+	sprintf(key1,"label%d",(j+2)%10u);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
 
 	sprintf(key2,"unit%d",j);
-	sprintf(key1,"unit%d",j+2);
+	sprintf(key1,"unit%d",(j+2)%10u);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
     }

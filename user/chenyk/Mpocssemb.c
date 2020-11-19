@@ -31,12 +31,12 @@ int main(int argc, char* argv[])
 
 
   int nt, nx, it, ix, niter, iter, ntfft, nxfft,np, ip, ikt, ikx, iktn, ikxn, ifsnr; /* iktn, ikxn, iNyquist*/
-  float dt, dx, pmin, pmax, dp, p, cmax, sembpmax, num, den;
-  float *sembp, *mask, *gy, *fden, *fshift, *SNR;
-  float **fdata, **taup, **odata, **tdata, **odatat, **semb; /* tdata is the true data */
+  float dt, dx, pmin, pmax, dp=0, p, cmax, sembpmax, num, den;
+  float *sembp=NULL, *mask, *gy, *fden, *fshift, *SNR=NULL;
+  float **fdata, **taup=NULL, **odata, **tdata=NULL, **odatat, **semb=NULL; /* tdata is the true data */
   kiss_fft_cpx **cdata, **cdatat;
   char *type;
-  sf_file inp, outp, m, spec1, spec2, trued, snr; 
+  sf_file inp, outp, m, spec1=NULL, spec2=NULL, trued, snr=NULL; 
 
 
   sf_init(argc,argv);

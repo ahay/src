@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     sf_file wht, fwht, src, tgt, mch;
     sf_file w0, wf0;
     /*sf_file for w, wf, lsmig snapshot*/
-    sf_file snap_w, snap_wf, snap_lsmig;
+    sf_file snap_w = NULL, snap_wf = NULL, snap_lsmig = NULL;
     /* For fft2 */
     bool isCmplx = false;
     int pad = 1;

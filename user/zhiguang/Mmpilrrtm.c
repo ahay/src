@@ -685,9 +685,9 @@ int main(int argc, char* argv[])
 	sf_file Fvel;
 	sf_file left, right, leftb, rightb;
 	sf_file Fsrc, Frcd/*source and record*/;
-	sf_file Ftmpwf;
+	sf_file Ftmpwf=NULL;
 	sf_file Fimg;
-	sf_file mask;
+	sf_file mask=NULL;
 
 	/*axis*/
 	sf_axis at, ax, az, as;
@@ -711,7 +711,7 @@ int main(int argc, char* argv[])
 
 	/*Data*/
 	sf_complex ***wavefld;
-	sf_complex ***record, **tmprec, **img, **imgsum;
+	sf_complex ***record, **tmprec, **img, **imgsum=NULL;
 	float **sill;
 
 	/*source*/

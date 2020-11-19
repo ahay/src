@@ -71,7 +71,7 @@ float aal_pick(float ti, float deltat,
 int main(int argc, char* argv[])
 {
     int nt, nx, ns, nz, ix, is, iz, ir, i, it;
-    float *trace, **mod, **dat, **v;
+    float *trace, **mod=NULL, **dat=NULL, **v;
     float z, dx, ti, x0, t0, dt, z0, dz, vi, aal, ft, f,g;
 	float s, s0, ds, t1, t2;
 	bool adj;

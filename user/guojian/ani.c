@@ -314,7 +314,7 @@ void dph3d(float phi,float ep,float dl,float w_vp,float f,float dkx,float dky,fl
     float kx,ky;
     float pshift;
     int imx,imy,weitmx,weitmy;
-    float cc,bb,dkzpweitm,dkzpweitm1,nn,kx1,ky1,tmpr,scale,kx2,ky2,dkzp0;
+    float cc,bb=0,dkzpweitm,dkzpweitm1,nn,kx1,ky1,tmpr,scale,kx2,ky2,dkzp0;
     sf_complex phab;
     for(imy=0;imy<my;imy++){ 
 	ky=imy*dky;
@@ -381,7 +381,7 @@ void dph3d(float phi,float ep,float dl,float w_vp,float f,float dkx,float dky,fl
 
 int weit(float phi,float ep,float dl,float w_vp,float f,float dkx,int m)
 {
-    int weitm,im;
+    int weitm=0,im;
     sf_complex  kz1,kzp1;
     float kx,weight;
 
@@ -968,7 +968,7 @@ float kycoe3d(float phi,float ep,float dl,float w_vp,float f, float kx,float kz)
     float sinphi,cosphi,fm1,epdl,sin2phi,cos2phi,sin4phi;
     float A,B,C,D,E,F;
     float b0,b2,b4;
-    float b24ac,ab,ky,ky2;
+    float b24ac,ab,ky=0,ky2;
     sinphi=-sinf(phi); cosphi=cosf(phi);
     fm1=f-1; epdl=ep-dl; sin2phi=-sinf(2.0*phi); cos2phi=cosf(2.0*phi); sin4phi=-sinf(4.0*phi);
     //printf("sin=%f\n",sinphi);

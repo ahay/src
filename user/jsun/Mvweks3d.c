@@ -123,16 +123,16 @@ int main(int argc, char* argv[])
     /* stress/strain tensor */ 
     float ***tzz,***txx,***tyy,***txy,***tyz,***tzx; /* strain then stress (in-place) */
     float    szz,   sxx,   syy,   sxy,   syz,   szx; /* tmp var for storing stress */
-    float ***tzz0,***txx0,***tyy0,***txy0,***tyz0,***tzx0; /* strain history */
-    float ***tzz1,***txx1,***tyy1,***txy1,***tyz1,***tzx1; /* strain derivative */
-    float ***txyz0,***txyz1; /* temprary var */
+    float ***tzz0=NULL,***txx0=NULL,***tyy0=NULL,***txy0=NULL,***tyz0=NULL,***tzx0=NULL; /* strain history */
+    float ***tzz1=NULL,***txx1=NULL,***tyy1=NULL,***txy1=NULL,***tyz1=NULL,***tzx1=NULL; /* strain derivative */
+    float ***txyz0=NULL,***txyz1=NULL; /* temprary var */
 
     /*------------------------------------------------------------*/
     /* spatial derivatives from pseudo-spectral method            */
     /*------------------------------------------------------------*/
-    float ***xdx, ***xdy, ***xdz;
-    float ***ydx, ***ydy, ***ydz;
-    float ***zdx, ***zdy, ***zdz;
+    float ***xdx=NULL, ***xdy=NULL, ***xdz=NULL;
+    float ***ydx=NULL, ***ydy=NULL, ***ydz=NULL;
+    float ***zdx=NULL, ***zdy=NULL, ***zdz=NULL;
 
     /*------------------------------------------------------------*/
     /* linear interpolation weights/indices                       */

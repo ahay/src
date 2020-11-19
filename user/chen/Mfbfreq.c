@@ -58,11 +58,11 @@ int main(int argc, char*argv[])
 	d1 = 0.5/n1;
 	for(j1=1; j1<=nd; j1++)
 	{
-		sprintf(tmp, "n%d", j1);
+		sprintf(tmp, "n%d", j1%100u);
 		sf_putint(out, tmp, 2*n1+1);
-		sprintf(tmp, "o%d", j1);
+		sprintf(tmp, "o%d", j1%100u);
 		sf_putfloat(out, tmp, o1);
-		sprintf(tmp, "d%d", j1);
+		sprintf(tmp, "d%d", j1%100u);
 		sf_putfloat(out, tmp, d1);
 		sprintf(tmp, "n%d", j1+nd);
 		sf_putint(out, tmp, nf);

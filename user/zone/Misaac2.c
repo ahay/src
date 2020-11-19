@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 {
 	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus, count, q=0/* Counter for the bog loop*/;
 	float x, dt, t0, bmin, bmax, tt;
-	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *xxtem, *zk,*ck_inv, **aniso, **aniso_inp; 
+	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial=NULL, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *xxtem, *zk,*ck_inv, **aniso, **aniso_inp; 
 	double tol;
 	bool  debug;
 	sf_file refl, xrefl, vti;
@@ -469,7 +469,7 @@ int main(int argc, char* argv[])
 		xxtem[0] = xx[0]; /*Fixed source*/
 		xxtem[nr2+1] = xx[nr2+1]; /*Fixed receiver*/
 		int t,a,b1,b2,b3; /* Counter*/
-		float dktemp;
+		float dktemp=0;
 		for (a=0; a<nr2; a++) {
 			b1=0;
 			b2=0;

@@ -1023,7 +1023,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     sf_complex **trace2=NULL, **trace3=NULL, *cc=NULL, *tmp_inp=NULL;
     float *wvfld_visc_f=NULL, *wvfld_disp_f=NULL, *ratio_f=NULL, *tmp_out=NULL;
     kiss_fft_cfg *cfg1=NULL, *icfg1=NULL, *cfg2=NULL, *icfg2=NULL, *cfg3=NULL, *icfg3=NULL;
-    int n3,n2,n1,i3,i2,i1,nth;
+    int n3=0,n2=0,n1=0,i3,i2,i1,nth;
     float wt;
 
     /*misc*/

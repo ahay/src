@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     float *p_len_min_neg, *p_tr_time_neg, *p_src_neg;
     float *p_len_min_pos, *p_tr_time_pos, *p_src_pos;
 */
-    int is_prev_sign, is_sign;
+    int is_prev_sign, is_sign=0;
     float **len_minpath, **tr_time_minpath, **tr_time_pos, ***tr_time_z0, **t_eik, **front, 
 	front_t0, front_dt, front_eps;
     int k, front_nt;

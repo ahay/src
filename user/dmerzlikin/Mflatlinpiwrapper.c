@@ -11,18 +11,18 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nt2, nx, i1, i2, n122;
+    int nt, nt2, nx, i1, i2, n122=0;
     bool adj, sm, domod;
     float dt, dt2, dx, ot, ot2, ox, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr;
-    float * data, * output, * datat2, * outputt2, * smooth, * model;
+    float * data, * output, * datat2, * outputt2, * smooth=NULL, * model;
     sf_file inp, out;
     /* smoothing variables */
     int nrep, dim, dim1, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM], i0, i, j, nvar;
     bool diff[SF_MAX_DIM], box[SF_MAX_DIM];
     int irep;
     char key[6];
-    sf_triangle tr;
+    sf_triangle tr=NULL;
     /* kirchhoff params */
     bool hd;
     int sw;

@@ -1301,13 +1301,13 @@ int main(int argc, char* argv[])
     float dai;                   /* inverse da, angle */
 
     float ***t, ***t_a0;                    /* escape variable */
-    float ***tsol;                 /* escape variable (converged) */ 
+    float ***tsol=NULL;                 /* escape variable (converged) */ 
     int *** t_esc; /* flags: ESC_UP or DOWN or LEFT or RIGHT */
 
     float **s,**sx,**sz;           /* slowness, gradients */
-    float *cvg;                    /* convergence values */
+    float *cvg=NULL;               /* convergence values */
 
-    float cvt,tol,cvs;   
+    float cvt=0,tol,cvs=0;   
 
 
 
@@ -1316,7 +1316,7 @@ int main(int argc, char* argv[])
 
     char *cvgcefile = NULL;
 
-    sf_file in,out,slow,slowz,slowx,cvgce;
+    sf_file in,out,slow,slowz,slowx,cvgce=NULL;
 
     sf_init(argc,argv);
 

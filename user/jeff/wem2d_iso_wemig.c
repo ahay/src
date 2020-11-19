@@ -140,7 +140,7 @@ void wem2d_iso_wemig(bool adj,
 		     float ***xig)
 /*< Imaging kernel >*/
 {
-    int iw,ix,iz,ith,ih,rind,sind;
+    int iw,ix,iz,ith,ih=0,rind,sind;
     int id=0;
     float sarg,rarg;
     sarg = 1.f;

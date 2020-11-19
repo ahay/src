@@ -407,7 +407,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fmod, sf_file Fgrad, 
 	float fcost;
 	float *x, *direction, *grad, *direction2;
 	sf_gradient gradient;
-	FILE *fp;
+	FILE *fp=NULL;
 	sf_file Ftangent;
 
 	/* initialize */

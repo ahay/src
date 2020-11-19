@@ -386,10 +386,10 @@ if (is2D){
     float **vz;
 
     /* pressure: u = U @ t-1 */
-    float **um; 
+    float **um = NULL; 
     /* velocity: v = U @ t-1 */
-    float **vmx;
-    float **vmz;
+    float **vmx = NULL;
+    float **vmz = NULL;
 
 	/* PML structures */
 	PML2D pml=NULL;

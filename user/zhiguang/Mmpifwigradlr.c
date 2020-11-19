@@ -76,76 +76,98 @@ int main(int argc, char* argv[])
 
 	float dr, r0, ds, s0, dz, x0, dx;
 	float w0, fcost=0., gamma;
-	float kx,kz,k2,*kk1, *kk2;
+	float kx,kz,k2,*kk1=NULL, *kk2=NULL;
 	float kz0, kx0, dkz, dkx;
-	float *rr, *vv, *qq, *grad;
+	float *rr, *vv=NULL, *qq=NULL, *grad=NULL;
 	float *sendbuf, *recvbuf;
 	float a1, a2, v, q;
 
-	sf_complex wf, forw, adjt;
-	sf_complex c, **lt, **rt, **ltb, **rtb;
-	sf_complex *ww, **pp, **dd;
-	sf_complex *cwave, *cwavem, **wave, **wave2, *curr, ***wfl;
-	sf_complex *cfrac, *cfrac1, *cfrac2;
+	sf_complex wf, forw = sf_cmplx(0, 0), adjt = sf_cmplx(0, 0);
+	sf_complex c, **lt, **rt, **ltb=NULL, **rtb=NULL;
+	sf_complex *ww, **pp, **dd=NULL;
+	sf_complex *cwave, *cwavem, **wave, **wave2=NULL, *curr, ***wfl=NULL;
+	sf_complex *cfrac=NULL, *cfrac1=NULL, *cfrac2=NULL;
 
 	sf_axis at, ax, az;
 
-	sf_file Fsrc, Fvel, Fq, Fleft, Fright, Fleftb, Frightb, Fdat, Fmisfit, Fgrad;
+	sf_file Fsrc, Fvel, Fq=NULL, Fleft, Fright, Fleftb=NULL, Frightb=NULL, Fdat, Fmisfit=NULL, Fgrad=NULL;
 	sf_file Fwav, Fwav2, Fres;
-	FILE *swap;
-	
-	MPI_Comm comm=MPI_COMM_WORLD;
+	FILE *swap=NULL;
 
-  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-	
+	MPI_Comm comm = MPI_COMM_WORLD;
+
+	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
 	sf_init(argc, argv);
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &cpuid);
 	MPI_Comm_size(comm, &numprocs);
 
-	if(!sf_getint("function", &function)) function=3;
+	if (!sf_getint("function", &function))
+		function = 3;
 	/* if 1, forward modeling; if 2, only calculate misfit; if 3, calculate gradient */
 
-	Fvel=sf_input("Fvel"); /* velocity model */
-	Fsrc=sf_input("Fsrc"); /* wavelet */
-	Fleft=sf_input("Fleft"); /* left matrix */
-	Fright=sf_input("Fright"); /* left matrix */
-	if(function==1){
-		swap=fopen("tempswap.bin","wb+");
-		Fdat=sf_output("Fdat");
-	}else{
-		Fdat=sf_input("Fdat");
-		Fmisfit=sf_output("Fmisfit");
+	Fvel = sf_input("Fvel");	 /* velocity model */
+	Fsrc = sf_input("Fsrc");	 /* wavelet */
+	Fleft = sf_input("Fleft");	 /* left matrix */
+	Fright = sf_input("Fright"); /* left matrix */
+	if (function == 1)
+	{
+		swap = fopen("tempswap.bin", "wb+");
+		Fdat = sf_output("Fdat");
 	}
-	if(function==3){
-		Fleftb=sf_input("Fleftb");
-		Frightb=sf_input("Frightb");
-		Fq=sf_input("Fq");
-		Fgrad=sf_output("Fgrad");
+	else
+	{
+		Fdat = sf_input("Fdat");
+		Fmisfit = sf_output("Fmisfit");
 	}
-  
-	Fwav=sf_output("Fwav");
-	Fwav2=sf_output("Fwav2");
-	Fres=sf_output("Fres");
+	if (function == 3)
+	{
+		Fleftb = sf_input("Fleftb");
+		Frightb = sf_input("Frightb");
+		Fq = sf_input("Fq");
+		Fgrad = sf_output("Fgrad");
+	}
+
+	Fwav = sf_output("Fwav");
+	Fwav2 = sf_output("Fwav2");
+	Fres = sf_output("Fres");
 	/*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-	ax=sf_iaxa(Fvel, 2); rnx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax);
-	az=sf_iaxa(Fvel, 1); rnz=sf_n(az); dz=sf_d(az);
-	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); 
+	ax = sf_iaxa(Fvel, 2);
+	rnx = sf_n(ax);
+	dx = sf_d(ax);
+	x0 = sf_o(ax);
+	az = sf_iaxa(Fvel, 1);
+	rnz = sf_n(az);
+	dz = sf_d(az);
+	at = sf_iaxa(Fsrc, 1);
+	nt = sf_n(at);
 
-	if(!sf_getint("ns", &ns)) sf_error("shot number required"); /* shot number */
-	if(!sf_getfloat("ds", &ds)) sf_error("shot interval required"); /* shot interval */
-	if(!sf_getfloat("s0", &s0)) sf_error("shot origin required"); /* shot origin */
-	if(!sf_getint("sz", &sz)) sz=5; /* source depth */
-	if(!sf_getint("nr", &nr)) nr=rnx; /* number of receiver */
-	if(!sf_getfloat("dr", &dr)) dr=dx; /* receiver interval */
-	if(!sf_getfloat("r0", &r0)) r0=x0; /* receiver origin */
-	if(!sf_getint("rz", &rz)) rz=5; /* receiver depth */
+	if (!sf_getint("ns", &ns))
+		sf_error("shot number required"); /* shot number */
+	if (!sf_getfloat("ds", &ds))
+		sf_error("shot interval required"); /* shot interval */
+	if (!sf_getfloat("s0", &s0))
+		sf_error("shot origin required"); /* shot origin */
+	if (!sf_getint("sz", &sz))
+		sz = 5; /* source depth */
+	if (!sf_getint("nr", &nr))
+		nr = rnx; /* number of receiver */
+	if (!sf_getfloat("dr", &dr))
+		dr = dx; /* receiver interval */
+	if (!sf_getfloat("r0", &r0))
+		r0 = x0; /* receiver origin */
+	if (!sf_getint("rz", &rz))
+		rz = 5; /* receiver depth */
 
-	if(!sf_getbool("verb", &verb)) verb=false; /* verbosity flag */
-	if(!sf_getbool("scomp", &scomp)) scomp=false; /* source wavefield compensation flag */
-	if(!sf_getbool("adjtest", &adjtest)) adjtest=false; /* test of adjointness */
+	if (!sf_getbool("verb", &verb))
+		verb = false; /* verbosity flag */
+	if (!sf_getbool("scomp", &scomp))
+		scomp = false; /* source wavefield compensation flag */
+	if (!sf_getbool("adjtest", &adjtest))
+		adjtest = false; /* test of adjointness */
 	if(!sf_getint("pad1", &pad1)) pad1=1;
 	/* padding factor on the first axis */
 	if(!sf_getint("nb", &nb)) sf_error("Need nb=");
@@ -683,8 +705,9 @@ int main(int argc, char* argv[])
 			swap=fopen("tempswap.bin","r");
 			for(is=0; is<ns; is++){
 				fseeko(swap, is*nr*nt*sizeof(float complex), SEEK_SET);
-				fread(pp[0], sizeof(float complex), nr*nt, swap);
-				sf_complexwrite(pp[0], nr*nt, Fdat);
+				if (!fread(pp[0], sizeof(float complex), nr*nt, swap))
+					abort();
+				sf_complexwrite(pp[0], nr * nt, Fdat);
 			}
 			fclose(swap);
 			remove("tempswap.bin");

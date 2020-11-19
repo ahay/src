@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     int n[3];
     float p, tol, pclip, t0, t1, beta, thr,m;
     char *mode;
-    float *din, *mask, *dout;	
+    float *din, *mask=NULL, *dout;	
     sf_complex *dprev,*dcurr,*dtmp;
     sf_file Fin,Fout, Fmask;
 

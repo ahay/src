@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
     int i1, iw, ir, im, k;
     int n1, nw, nr, nd, n12, rect1, m1, mm, tshift, **index;
     float **d, **dd, **p, **pp, **f1, **f2, **f, **g1, **g2,   *str, **smooth, ***a, ***a1, **b, **tmp, meand, meanp, d1, o1, dw, w0, w, dr, r0;
-    sf_file dat, flt, mat, adj1, adj2;
+    sf_file dat, flt, mat, adj1=NULL, adj2=NULL;
 
     sf_init(argc,argv);
 

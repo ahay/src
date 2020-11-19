@@ -552,7 +552,11 @@ void sponge2d_apply(float *a,
 	private(ib,ix,w)
 	#endif
 	for(ix=0; ix<fdm->nxpad; ix++) {
-		#pragma ivdep
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 		for(ib=0; ib<fdm->nb+fdm->nop; ib++) {
 			w = spo->w[fdm->nb+fdm->nop-ib-1];
 		    a[ix*fdm->nzpad+ib] *= w; /*    top sponge */
@@ -565,7 +569,11 @@ void sponge2d_apply(float *a,
     private(ib,ix,w)
 	#endif
 	for(ix=0; ix<fdm->nxpad; ix++) {
-		#pragma ivdep	
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 		for(ib=0; ib<fdm->nb+fdm->nop-1; ib++) {
 			w = spo->w[fdm->nb+fdm->nop-ib-2];
 		    a[ix*fdm->nzpad+fdm->nzpad-ib-1] *= w; /* bottom sponge */
@@ -579,7 +587,11 @@ void sponge2d_apply(float *a,
 	#endif
     for(ib=0; ib<fdm->nb+fdm->nop; ib++) {
 		w = spo->w[fdm->nb+fdm->nop-ib-1];
-		#pragma ivdep
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 		for(iz=0; iz<fdm->nzpad; iz++) {
 		    a[ib*fdm->nzpad+iz] *= w; /*   left sponge */
 		    b[ib*fdm->nzpad+iz] *= w; /*   left sponge */
@@ -593,7 +605,11 @@ void sponge2d_apply(float *a,
 	#endif
     for(ib=0; ib<fdm->nb+fdm->nop-1; ib++) {
 		w = spo->w[fdm->nb+fdm->nop-ib-2];
-		#pragma ivdep
+#ifdef __INTEL_COMPILER
+#pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
 		for(iz=0; iz<fdm->nzpad; iz++) {
 		    a[(fdm->nxpad-ib-1)*fdm->nzpad+iz] *= w; /*  right sponge */
 		    b[(fdm->nxpad-ib-1)*fdm->nzpad+iz] *= w; /*  right sponge */

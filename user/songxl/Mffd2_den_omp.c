@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     float **a, **b1, **b2; 
     kiss_fft_cpx **uk, **ukx, **ukz, **ctracex, **ctracez, tmpc;
     //kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
-    sf_file out, vel, source, den, snaps;
+    sf_file out, vel, source, den, snaps=NULL;
     float ax, az, factor;
     int nbl, nbr, nbt, nbb;
     float ct, cb, cl, cr;

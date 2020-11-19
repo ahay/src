@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     /*I/O*/
     sf_file Ffvel, Ffden, Fbvel, Fbden;
     sf_file Fsrc,/*wave field*/ Frcd/*record*/;
-    sf_file Ftmpwf, Ftmpbwf;
+    sf_file Ftmpwf=NULL, Ftmpbwf=NULL;
     sf_file Fimg1, Fimg2;
     sf_file FGx, FGz, Fsxx, Fsxz, Fszx, Fszz;
 

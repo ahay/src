@@ -1012,7 +1012,7 @@ int main(int argc, char* argv[])
     int type;
     char *mode;
     int nt,nz,nx,m2,nk,nzx,nz2,nx2,n2,pad1;
-    int snap,wfnt;
+    int snap,wfnt=0;
     float dt,wfdt;
 
     float  *rr;          /* I/O arrarys */
@@ -1032,8 +1032,10 @@ int main(int argc, char* argv[])
     if(!sf_getbool("correct",&correct)) correct=false; /*jingwei's correction*/
     if(!sf_getint("type",&type)) type=0; /*type of propagation; 0 means no correction applied, and mode takes effect, 9 enables jjsf*/
     if (type==0) mode=sf_getstring("mode"); /* default mode is pspi */
+	else
+		mode = NULL;
 
-    /* setup I/O files */
+	/* setup I/O files */
     Fw = sf_input ("in" );
     Fo = sf_output("out");
     Fr = sf_input ("ref");

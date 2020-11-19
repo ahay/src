@@ -228,14 +228,14 @@ int main(int argc, char *argv[])
 	struct timeval tim;
 	
 	sf_complex c, **lt, **rt;
-	sf_complex *ww, **dd, ***dd3;
-	float *rr, **temsnap;
+	sf_complex *ww, **dd, ***dd3=NULL;
+	float *rr, **temsnap=NULL;
 	sf_complex *cwave, *cwavem, **wave, *curr;
 
 	sf_axis at, ax, az;
 
 	sf_file Fdat, Fsrc;
-	sf_file Fwfld, Fvel;
+	sf_file Fwfld=NULL, Fvel;
 	sf_file Fleft, Fright;
 
 	int cpuid, numprocs, nth, iturn, nspad;

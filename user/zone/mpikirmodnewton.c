@@ -52,7 +52,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 /*< Compute traveltime attributes >*/
 {
     float  *xx, *xxnew, *F, *dk, *xxtem, *zk,*ck_inv, **ans;
-    float tt, tx_r, ty, tz_s, tz_r, tn, at, an, v_1r, v_r, alpha, theta, dip;
+    float tt, tx_r=0, ty, tz_s=0, tz_r=0, tn=0, at, an, v_1r=0, v_r=0, alpha, theta, dip=0;
     int q=0; /* Counter for big loop*/
     int b3=0; /* To check whether the ray is tracable*/
 	
@@ -206,7 +206,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	dk[0] = 0.0; /*To prevent trash data*/
 	dk[n+1] = 0.0;
 	
-	float dktemp;
+	float dktemp=0;
 	int t,a,b1,b2,b4; /* Counter*/
 	for (a=0; a<n; a++) {
 	    b1=0;
@@ -297,7 +297,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     /* END OF MAIN LOOP--------------------------------------------------------------------------------*/	
 	
     /* Write Compute traveltime-----------------------------------------------------*/
-    float ck_in, ck_in_temp,S1,S3;
+    float ck_in, ck_in_temp=0,S1,S3;
     int c1,c2,c3,c4,c5;
     int c; /* Counter*/
 	

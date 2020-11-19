@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     int ifperc;			/* if use percentile thresholding */
     float *dat=NULL;		/* float array*/
     float *adat=NULL; 		/* float array (for absolute value )*/
-    float *diff;		/* float array (for difference )*/
+    float *diff=NULL;	/* float array (for difference )*/
     float t;			/* threshold value */
     float tau;			/* regularization term : t= 3/2tau^(2/3) */ 
     float thr;			/* input threshold value (redundent) */

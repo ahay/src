@@ -904,11 +904,11 @@ void gradient_vq(float *x, float *fcost, float *grad)
 void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_q array, sf_fwi_q fwipar, sf_optim optpar, bool verb1)
 /*< fwi >*/
 {
-	int i, iter=0, flag, nm, type;
+	int i, iter=0, flag, nm=0, type=0;
 	float fcost, threshold[4];
-	float *x, *direction, *grad;
-	sf_gradient gradient;
-	FILE *fp;
+	float *x=NULL, *direction, *grad;
+	sf_gradient gradient=NULL;
+	FILE *fp=NULL;
 
 	/* initialize */
 	gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, verb1);

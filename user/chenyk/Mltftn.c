@@ -28,9 +28,9 @@ int main(int argc, char* argv[])
     int i1, n1, iw, nt, nw, i2, n2, rect0, rectf, niter, n12, n1w;
     int m[SF_MAX_DIM], *rect;
     float t, d1, w, w0, dw, mean=0.0f, alpha;
-    float *trace, *kbsc, *mkbsc, *sscc, *mm, *ww;
+    float *trace, *kbsc, *mkbsc, *sscc=NULL, *mm, *ww;
     sf_complex *outp, *cbsc;
-    sf_file in, out, mask, weight, basis;
+    sf_file in, out, basis;
    
     sf_init(argc,argv);
     in = sf_input("in");
@@ -267,18 +267,18 @@ int main(int argc, char* argv[])
     
     
     if (NULL != sf_getstring("mask")) { /* data weight */
-	mask = sf_input("mask");
+	//mask = sf_input("mask");
 	mm = sf_floatalloc(n1);	
     } else {
-	mask = NULL;
+	//mask = NULL;
 	mm = NULL;
     }
 
     if (NULL != sf_getstring("weight")) { /* model weight */
-	weight = sf_input("weight");
+	//weight = sf_input("weight");
 	ww = sf_floatalloc(n1w);
     } else {
-	weight = NULL;
+	//weight = NULL;
 	ww = NULL;
     }
 

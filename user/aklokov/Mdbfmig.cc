@@ -34,13 +34,13 @@ int main (int argc, char* argv[]) {
     if ( SF_FLOAT != sf_gettype (piFile) ) sf_error ("Need float input: partial-images file");
     /* partial-images file */
 
-    sf_file xEscFile;
+    sf_file xEscFile = NULL;
     if ( NULL != sf_getstring("escx") ) {
 	/* escape-positions file */
 	xEscFile  = sf_input ("escx");
     }
 
-    sf_file tEscFile;
+    sf_file tEscFile = NULL;
     if ( NULL != sf_getstring("esct") ) {
 	/* escape-time file */
 	tEscFile  = sf_input ("esct");

@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     int ix, iz, it, itau;
     int nx, nz, ntau, nt, pad, htau;
     float dt, dtau, dx, dz, idz2, idx2;
-    float tau0, tau, sign;
+    float tau0, tau, sign = 0.;
     
     float ***dd, ***mm, ***dertau, ***der0, **vv;
     float **cur, **nxt, **dercur, **dernxt, **tmp;

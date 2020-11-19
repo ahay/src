@@ -44,7 +44,6 @@ int main(int argc, char* argv[])
     int uts, its, mts;
     sf_timer timer;
     char *order;
-    SuiteSparse_long status;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -209,25 +208,25 @@ int main(int argc, char* argv[])
 		   npml, pad1, pad2,
 		   Ti, Tj, Tx, Tz);
 	    
-	    status = umfpack_zl_triplet_to_col (n, n, nz, 
-					      Ti, Tj, Tx, Tz, 
-					      Ap, Ai, Ax, Az, Map);
+	    umfpack_zl_triplet_to_col (n, n, nz, 
+			Ti, Tj, Tx, Tz, 
+			Ap, Ai, Ax, Az, Map);
 	    
 	    /* LU */
-	    status = umfpack_zl_symbolic (n, n, 
-					Ap, Ai, Ax, Az, 
-					&Symbolic, Control, NULL);
+	    umfpack_zl_symbolic (n, n, 
+			Ap, Ai, Ax, Az, 
+			&Symbolic, Control, NULL);
 
-	    status = umfpack_zl_numeric (Ap, Ai, Ax, Az, 
-				       Symbolic, &Numeric[0], 
-				       Control, NULL);
+	    umfpack_zl_numeric (Ap, Ai, Ax, Az, 
+	        Symbolic, &Numeric[0], 
+		    Control, NULL);
 
 	    /* save Numeric */
 #ifdef _OPENMP
-	    status = umfpack_zl_save_numeric (Numeric[0], append);
+	    umfpack_zl_save_numeric (Numeric[0], append);
 	    
 	    for (its=1; its < uts; its++) {
-		status = umfpack_zl_load_numeric (&Numeric[its], append);
+		umfpack_zl_load_numeric (&Numeric[its], append);
 	    }
 	    
 	    if (!save) {
@@ -235,12 +234,12 @@ int main(int argc, char* argv[])
 		(void) remove ("numeric.umf");
 	    }
 #else
-	    if (save) status = umfpack_zl_save_numeric (Numeric[0], append);
+	    if (save) umfpack_zl_save_numeric (Numeric[0], append);
 #endif
 	} else {
 	    /* load Numeric */
 	    for (its=0; its < uts; its++) {
-		status = umfpack_zl_load_numeric (&Numeric[its], append);
+		umfpack_zl_load_numeric (&Numeric[its], append);
 	    }
 	}
 
@@ -262,10 +261,10 @@ int main(int argc, char* argv[])
 	    
 	    fdpad(npml,pad1,pad2, f[is],Bx[its],Bz[its]);
 
-	    status = umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
-				       NULL, NULL, NULL, NULL, 
-				       Xx[its], Xz[its], Bx[its], Bz[its], 
-				       Numeric[its], Control, NULL);	    
+	    umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
+		    NULL, NULL, NULL, NULL, 
+			Xx[its], Xz[its], Bx[its], Bz[its], 
+			Numeric[its], Control, NULL);	    
 	    	    
 	    fdcut(npml,pad1,pad2, f[is],Xx[its],Xz[its]);
 	}

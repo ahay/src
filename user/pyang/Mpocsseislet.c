@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
     bool verb;
     int iter, niter, n1, n2, nthr, i1, i2,order;
     float pscale, p, pclip, thr, eps;
-    float *dobs, *drec, *dtmp, *tmp, *mask, **dip;
+    float *dobs, *drec, *dtmp, *tmp, *mask=NULL, **dip;
     char *type, *mode;
     sf_file Fin, Fout, Fmask, Fdip;
 

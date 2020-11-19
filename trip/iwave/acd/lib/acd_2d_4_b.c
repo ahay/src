@@ -33,7 +33,11 @@ void acd_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **csq,
             upb[i1][s[0] - 2] = 0.0;
         }
     if (rbc[1])
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
         for (i0 = e0; i0 > s0-1; --i0) {
 	  /*
             tmp0b = upb[e[1] + 2][i0];
@@ -44,7 +48,11 @@ void acd_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **csq,
 	  upb[e[1] + 2][i0] = 0.0;
         }
     if (lbc[1])
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
         for (i0 = e0; i0 > s0-1; --i0) {
 	  /*
             tmpb = upb[s[1] - 2][i0];
@@ -79,7 +87,11 @@ void acd_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **csq,
             upb[i1][i0] = -upb[i1][i0];
         }
 #else
+#ifdef __INTEL_COMPILER
 #pragma ivdep
+#else
+#pragma GCC ivdep
+#endif
         for (i0 = s0+2; i0 <=e0+2; i0++) {
             lap=(c0*uc[i1][i0-2]+
 		 c1[0]*(uc[i1][i0-1]+uc[i1][i0-3])+
