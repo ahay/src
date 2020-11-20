@@ -34,7 +34,6 @@
 static int nx, nz, nxz, nt, ng, wfnt, wfinv, ntau, nxb, nzb, nxzb;
 static int spx, spz, ginv, gp;
 static int lenx, lenz, nfd, pmlsize, srcrange;
-int ix, iz; 
 static int it, is, itau, iturn;
 static int *sxx, *sxz, *szx, *szz;
 
@@ -80,6 +79,7 @@ int main(int argc, char *argv[])
 
 	int shtbgn, shtinv, shtnmb, shtpad, shtnmb0;
 	int snapturn, tmpint;
+	int ix, iz;
 
 	float **fvel, **bvel;
 	float ***fwf, ***record=NULL, **localrec;
@@ -367,6 +367,7 @@ int sglfdfor2(float ***fwf, float **rcd, bool verb)
 {
 	float **txxn1, **txxn0, **vxn1, **vxn0, **vzn1, **vzn0;
 	int wfit;
+	int ix, iz;
 
 	txxn1=sf_floatalloc2(nzb, nxb);
 	txxn0=sf_floatalloc2(nzb, nxb);
@@ -448,6 +449,7 @@ int sglfdback2(float ***mig1, float **mig2, float ***fwf, float **localrec, bool
 	float **txxn1, **txxn0, **vxn1, **vxn0, **vzn1, **vzn0;
 	float **sill, **ccr, ***bwf;
 	int wfit, htau;
+	int ix, iz;
 	float tau;
 
 	sill=sf_floatalloc2(nz, nx);
@@ -548,7 +550,8 @@ int sglfdback2(float ***mig1, float **mig2, float ***fwf, float **localrec, bool
 
 void init()
 {
-	fdenx=sf_floatalloc2(nzb, nxb);
+	int ix, iz;
+	fdenx = sf_floatalloc2(nzb, nxb);
 	fdenz=sf_floatalloc2(nzb, nxb);
 
 	for(ix=0; ix<nxb; ix++){
@@ -648,6 +651,7 @@ float ldz(float **data, int i, int j)
 
 void explsource(float **data)
 {
+	int ix, iz;
 	float phi;
 	if(srcdecay){
 		for(ix=-srcrange; ix<=srcrange; ix++){
@@ -664,6 +668,7 @@ void explsource(float **data)
 
 void pml_vxz(float **vxn1, float **vzn1, float **vxn0, float **vzn0, float **txxn0)
 {
+	int ix, iz;
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
 #endif
@@ -700,6 +705,7 @@ void pml_vxz(float **vxn1, float **vzn1, float **vxn0, float **vzn0, float **txx
 
 void pml_vxzb(float **vxn1, float **vzn1, float **vxn0, float **vzn0, float **txxn0)
 {
+	int ix, iz;
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
 #endif
@@ -736,6 +742,7 @@ void pml_vxzb(float **vxn1, float **vzn1, float **vxn0, float **vzn0, float **tx
 
 void pml_txx(float **txxn1, float **vxn1, float **vzn1)
 {
+	int ix, iz;
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
 #endif
@@ -774,6 +781,7 @@ void pml_txx(float **txxn1, float **vxn1, float **vzn1)
 
 void pml_txxb(float **txxn0, float **vxn1, float **vzn1)
 {
+	int ix, iz;
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
 #endif
