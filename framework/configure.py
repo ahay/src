@@ -284,7 +284,7 @@ def cc(context):
     if not res:
         need_pkg('libc')
     if CC.rfind('gcc') >= 0 and \
-           CC.rfind('pgcc') < 0:
+           CC.rfind('pgcc') < 0 or CC.rfind('icc') >= 0:
         oldflag = context.env.get('CFLAGS')
         for flag in ('-x c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
