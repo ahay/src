@@ -34,6 +34,8 @@
     sf_init(argc,argv);bool verb;
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
 
+    int iter, ix, it, ix1, ix2;
+
     /* I/O files */
     sf_file Frec=sf_input("in");/*seismic record*/
     sf_file Fvel=sf_input("vel"); /*velocity model*/
@@ -70,31 +72,31 @@
 
     float pert=1.0; //float damping_factor=1e-9;
 
-    for (int iter = 0; iter < niter; ++iter)
+    for (iter = 0; iter < niter; ++iter)
     {
           acoustic1D(vel_ini,src,dx,nx,dt,nt,sx,rx,rec_ini,rec_all_ini);
 
-          for (int ix = 0; ix < nx; ++ix)
+          for (ix = 0; ix < nx; ++ix)
           {
-            for (int ix = 0; ix < nx; ++ix) vel_pert[ix]=vel_ini[ix]; 
+            for (ix = 0; ix < nx; ++ix) vel_pert[ix]=vel_ini[ix]; 
             vel_pert[ix]=vel_pert[ix]+pert;//adding pert
             acoustic1D(vel_pert,src,dx,nx,dt,nt,sx,rx,rec_pert,rec_all_ini);// pert response=>rec_pert
-            for (int it = 0; it < nt; ++it) Jac[ix][it]=(rec_pert[it]-rec_ini[it])/pert;//obtain jacobian Matrix
+            for (it = 0; it < nt; ++it) Jac[ix][it]=(rec_pert[it]-rec_ini[it])/pert;//obtain jacobian Matrix
           }
 
-          for (int ix = 0; ix < nx; ++ix)
+          for (ix = 0; ix < nx; ++ix)
           {
           	gradient[ix]=0.0;
-          	for (int it = 0; it < nt; ++it) gradient[ix]=gradient[ix]+Jac[ix][it]*(rec[it]-rec_ini[it]);// calc gradient
+          	for (it = 0; it < nt; ++it) gradient[ix]=gradient[ix]+Jac[ix][it]*(rec[it]-rec_ini[it]);// calc gradient
           } 
             
             
 
-          for (int ix1 = 0; ix1 < nx; ++ix1)
-            for (int ix2 = 0; ix2 < nx; ++ix2)
+          for (ix1 = 0; ix1 < nx; ++ix1)
+            for (ix2 = 0; ix2 < nx; ++ix2)
               {
               	 Hessian_app[ix1][ix2]=0.0;
-              	 for (int it = 0; it < nt; ++it) Hessian_app[ix1][ix2]=Hessian_app[ix1][ix2]+Jac[ix1][it]*Jac[ix2][it];//calc Hessian app
+              	 for (it = 0; it < nt; ++it) Hessian_app[ix1][ix2]=Hessian_app[ix1][ix2]+Jac[ix1][it]*Jac[ix2][it];//calc Hessian app
                  if (ix1==ix2) Hessian_app[ix1][ix2]=Hessian_app[ix1][ix2]+damp;
               }
 
@@ -103,8 +105,8 @@
 		  sgesv_(&nx, &NRHS, Hessian_app[0], &nx, IPIV, gradient, &nx, &INFO);//gradient=Hessian_app\gradient
  
 
-        for (int ix = 0; ix < nx; ++ix) vel_ini[ix]=vel_ini[ix]+gradient[ix]; //updating the velocity
-        float error_sum=0;for (int it = 0; it < nt; ++it)  error_sum=error_sum+(rec_ini[it]-rec[it])*(rec_ini[it]-rec[it]); 
+        for (ix = 0; ix < nx; ++ix) vel_ini[ix]=vel_ini[ix]+gradient[ix]; //updating the velocity
+        float error_sum=0;for (it = 0; it < nt; ++it)  error_sum=error_sum+(rec_ini[it]-rec[it])*(rec_ini[it]-rec[it]); 
         sf_warning("iter=%d   ,error_sum=%f\n",iter,error_sum);
 
       /* code */

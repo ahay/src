@@ -216,30 +216,31 @@ void print_param(in_para_struct_t in_para)
 static float* build_extended_model_2d(float const *mod, long n1, long n2, int next)
 {
 
+  long i1, i2, j1, j2;
   long n1ext = n1+2*next;
   long n2ext = n2+2*next;
   long nelem = n1ext*n2ext;
   float* extd = sf_floatalloc(nelem);
 
   // core
-  for (long i2=next,j2=0; i2<next+n2; i2++,j2++){
-    for (long i1=next,j1=0; i1<next+n1; i1++,j1++){
+  for (i2=next,j2=0; i2<next+n2; i2++,j2++){
+    for (i1=next,j1=0; i1<next+n1; i1++,j1++){
       float const v = mod[j1+j2*n1];
       extd[i1+i2*n1ext] = v;
     }
   }
 
   // extend laterally
-  for (long i2=0;i2<next;i2++){
-    for (long i1=0,j1=next; i1<n1; i1++,j1++){
+  for (i2=0;i2<next;i2++){
+    for (i1=0,j1=next; i1<n1; i1++,j1++){
       extd[j1+i2*n1ext] = extd[j1+next*n1ext];
       extd[j1+(n2ext-1-i2)*n1ext] = extd[j1+(n2ext-1-next)*n1ext];
     }
   }
 
   // extend up and down
-  for (long i2=0;i2<n2ext;i2++){
-    for (long i1=0; i1<next; i1++){
+  for (i2=0;i2<n2ext;i2++){
+    for (i1=0; i1<next; i1++){
       extd[i1+i2*n1ext] = extd[next+i2*n1ext];
       extd[(n1ext-1-i1)+i2*n1ext] = extd[(n1ext-1-next)+i2*n1ext];
     }
@@ -251,6 +252,7 @@ static float* build_extended_model_2d(float const *mod, long n1, long n2, int ne
 
 static float* build_extended_model_3d(float const *mod, long n1, long n2, long n3, int next)
 {
+  long i1, i2, i3, j1, j2, j3;
   long n1ext = n1+2*next;
   long n2ext = n2+2*next;
   long n3ext = n3+2*next;
@@ -258,9 +260,9 @@ static float* build_extended_model_3d(float const *mod, long n1, long n2, long n
   float* extd = sf_floatalloc(nelem);
 
   // core
-  for (long i3=next,j3=0; i3<next+n3; i3++,j3++){
-    for (long i2=next,j2=0; i2<next+n2; i2++,j2++){
-      for (long i1=next,j1=0; i1<next+n1; i1++,j1++){
+  for (i3=next,j3=0; i3<next+n3; i3++,j3++){
+    for (i2=next,j2=0; i2<next+n2; i2++,j2++){
+      for (i1=next,j1=0; i1<next+n1; i1++,j1++){
         float const v = mod[j1+n1*(j2+n2*j3)];
         extd[i1+n1ext*(i2+n2ext*i3)] = v;
       }
@@ -268,9 +270,9 @@ static float* build_extended_model_3d(float const *mod, long n1, long n2, long n
   }
 
   // extend left and right
-  for (long i3=next; i3<next+n3; i3++){
-    for (long i2=0; i2<next; i2++){
-      for (long i1=next; i1<next+n1; i1++){
+  for (i3=next; i3<next+n3; i3++){
+    for (i2=0; i2<next; i2++){
+      for (i1=next; i1<next+n1; i1++){
         extd[i1+n1ext*(        i2+n2ext*i3)] = extd[i1+n1ext*(        next+n2ext*i3)];
         extd[i1+n1ext*(n2ext-1-i2+n2ext*i3)] = extd[i1+n1ext*(n2ext-1-next+n2ext*i3)];
       }
@@ -278,9 +280,9 @@ static float* build_extended_model_3d(float const *mod, long n1, long n2, long n
   }
 
   // extend front and back
-  for (long i3=0; i3<next; i3++){
-    for (long i2=0; i2<n2ext; i2++){
-      for (long i1=next; i1<next+n1; i1++){
+  for (i3=0; i3<next; i3++){
+    for (i2=0; i2<n2ext; i2++){
+      for (i1=next; i1<next+n1; i1++){
         extd[i1+n1ext*(i2+n2ext*(        i3))] = extd[i1+n1ext*(i2+n2ext*(        next))];
         extd[i1+n1ext*(i2+n2ext*(n3ext-1-i3))] = extd[i1+n1ext*(i2+n2ext*(n3ext-1-next))];
       }
@@ -288,9 +290,9 @@ static float* build_extended_model_3d(float const *mod, long n1, long n2, long n
   }
 
   // extend up and down
-  for (long i3=0; i3<n3ext; i3++){
-    for (long i2=0; i2<n2ext; i2++){
-      for (long i1=0; i1<next; i1++){
+  for (i3=0; i3<n3ext; i3++){
+    for (i2=0; i2<n2ext; i2++){
+      for (i1=0; i1<next; i1++){
         extd[        i1+n1ext*(i2+n2ext*i3)] = extd[        next+n1ext*(i2+n2ext*i3)];
         extd[n1ext-1-i1+n1ext*(i2+n2ext*i3)] = extd[n1ext-1-next+n1ext*(i2+n2ext*i3)];
       }
@@ -307,6 +309,7 @@ void prepare_model_2d(mod_struct_t* mod,
                       sf_file Fvmod, sf_file Fdmod)
 /*< Sets up the specified model cube >*/
 {
+  long i;
 
   mod->n1 = sf_n(axvel[0]);
   mod->n2 = sf_n(axvel[1]);
@@ -321,7 +324,7 @@ void prepare_model_2d(mod_struct_t* mod,
   sf_floatread(mod->vmod,nelem,Fvmod);
 
   double vave = 0;
-  for (int i=0; i<nelem; i++)
+  for (i=0; i<nelem; i++)
     vave += mod->vmod[i];
   vave /= (nelem);
   if (para.verb) sf_warning("\tVelocity Model average value = %g",vave);
@@ -330,7 +333,7 @@ void prepare_model_2d(mod_struct_t* mod,
   sf_floatread(mod->dmod,nelem,Fdmod);
 
   double dave = 0;
-  for (int i=0; i<nelem; i++)
+  for (i=0; i<nelem; i++)
     dave += mod->dmod[i];
   dave /= (nelem);
   if (para.verb) sf_warning("\tDensity Model average value = %g",dave);
@@ -345,7 +348,7 @@ void prepare_model_2d(mod_struct_t* mod,
 
   // compute incompressibility and buoyancy
   long nelemext = (n1+2*nabc)*(n2+2*nabc);
-  for (long i=0; i<nelemext; i++){
+  for (i=0; i<nelemext; i++){
     float v = mod->incomp[i];
     float d = mod->buoy[i];
     mod->incomp[i] = v*v*d;
@@ -360,6 +363,7 @@ void prepare_model_3d(mod_struct_t* mod,
                       sf_file Fvmod, sf_file Fdmod)
 /*< Sets up the specified model cube >*/
 {
+  long i;
   mod->n1 = sf_n(axvel[0]);
   mod->n2 = sf_n(axvel[1]);
   mod->n3 = sf_n(axvel[2]);
@@ -376,7 +380,7 @@ void prepare_model_3d(mod_struct_t* mod,
   sf_floatread(mod->vmod,nelem,Fvmod);
 
   double vave = 0;
-  for (int i=0; i<nelem; i++)
+  for (i=0; i<nelem; i++)
     vave += mod->vmod[i];
   vave /= (nelem);
   if (para.verb) sf_warning("\tVelocity Model average value = %g",vave);
@@ -385,7 +389,7 @@ void prepare_model_3d(mod_struct_t* mod,
   sf_floatread(mod->dmod,nelem,Fdmod);
 
   double dave = 0;
-  for (int i=0; i<nelem; i++)
+  for (i=0; i<nelem; i++)
     dave += mod->dmod[i];
   dave /= (nelem);
   if (para.verb) sf_warning("\tDensity Model average value = %g",dave);
@@ -401,7 +405,7 @@ void prepare_model_3d(mod_struct_t* mod,
 
   // compute incompressibility and buoyancy
   long nelemext = (n1+2*nabc)*(n2+2*nabc)*(n3+2*nabc);
-  for (long i=0; i<nelemext; i++){
+  for (i=0; i<nelemext; i++){
     float v = mod->incomp[i];
     float d = mod->buoy[i];
     mod->incomp[i] = v*v*d;
@@ -479,6 +483,7 @@ void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
   long nelem = n1*n2;
   long nb = wfl->nabc;
   long nt = acq->ntdat;
+  long it, i1, i2;
 
   float dt = acq->dt;
   float d1 = wfl->d1;
@@ -496,7 +501,7 @@ void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
   else
     rewind(para->Fswfl);
 
-  for (long it=0; it<nt; it++){
+  for (it=0; it<nt; it++){
     if (para->outputScatteredWfl)
       sf_floatread(pp,nelem,wfl->Fswfl);
     else {
@@ -504,23 +509,23 @@ void make_pv_from_pres_2d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
         abort();
     }
 
-    for (long i2=0; i2<n2; i2++){
-      for (long i1=0; i1<n1; i1++){
+    for (i2=0; i2<n2; i2++){
+      for (i1=0; i1<n1; i1++){
         float k = mod->incomp[i1+nb  +(i2+nb)*(n1+2*nb)];
         pp[i1  +i2*n1] *= k*dt;
       }
     }
 
-    for (long i2=0; i2<n2; i2++){
-      for (long i1=2; i1<n1-3; i1++){
+    for (i2=0; i2<n2; i2++){
+      for (i1=2; i1<n1-3; i1++){
         v1[i1+i2*n1] -= (C1*(pp[i1+1+i2*n1] - pp[i1  +i2*n1])+
                          C2*(pp[i1+2+i2*n1] - pp[i1-1+i2*n1])+
                          C3*(pp[i1+3+i2*n1] - pp[i1-2+i2*n1]))/d1;
       }
     }
 
-    for (long i2=2; i2<n2-3; i2++){
-      for (long i1=0; i1<n1; i1++){
+    for (i2=2; i2<n2-3; i2++){
+      for (i1=0; i1<n1; i1++){
         v2[i1+i2*n1] -= (C1*(pp[i1+(i2+1)*n1] - pp[i1+(i2  )*n1])+
                          C2*(pp[i1+(i2+2)*n1] - pp[i1+(i2-1)*n1])+
                          C3*(pp[i1+(i2+3)*n1] - pp[i1+(i2-2)*n1]))/d2;
@@ -544,6 +549,7 @@ void make_pv_from_pres_3d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
   long nelem = n1*n2*n3;
   long nb = wfl->nabc;
   long nt = acq->ntdat;
+  long it, i1, i2, i3;
 
   float dt = acq->dt;
   float d1 = wfl->d1;
@@ -564,7 +570,7 @@ void make_pv_from_pres_3d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
   else
     rewind(para->Fswfl);
 
-  for (long it=0; it<nt; it++){
+  for (it=0; it<nt; it++){
     if (para->outputScatteredWfl)
       sf_floatread(pp,n1*n2,wfl->Fswfl);
     else {
@@ -572,18 +578,18 @@ void make_pv_from_pres_3d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
         abort();
     }
 
-    for (long i3=0; i3<n3; i3++){
-      for (long i2=0; i2<n2; i2++){
-        for (long i1=0; i1<n1; i1++){
+    for (i3=0; i3<n3; i3++){
+      for (i2=0; i2<n2; i2++){
+        for (i1=0; i1<n1; i1++){
           float k = mod->incomp[i1+nb +(n1+2*nb)*((i2+nb)+(n2+2*nb)*(i3+nb))];
           pp[i1 + n1*(i2+ n2*i3)] *= k*dt;
         }
       }
     }
 
-    for (long i3=0; i3<n3; i3++){
-      for (long i2=0; i2<n2; i2++){
-        for (long i1=2; i1<n1-3; i1++){
+    for (i3=0; i3<n3; i3++){
+      for (i2=0; i2<n2; i2++){
+        for (i1=2; i1<n1-3; i1++){
           v1[i1+(i2+i3*n2)*n1] -= ( C1*(pp[i1+1+(i2+i3*n2)*n1] - pp[i1  +(i2+i3*n2)*n1])+
                                     C2*(pp[i1+2+(i2+i3*n2)*n1] - pp[i1-1+(i2+i3*n2)*n1])+
                                     C3*(pp[i1+3+(i2+i3*n2)*n1] - pp[i1-2+(i2+i3*n2)*n1]))/d1;
@@ -591,9 +597,9 @@ void make_pv_from_pres_3d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
       }
     }
 
-    for (long i3=0; i3<n3; i3++){
-      for (long i2=2; i2<n2-3; i2++){
-        for (long i1=0; i1<n1; i1++){
+    for (i3=0; i3<n3; i3++){
+      for (i2=2; i2<n2-3; i2++){
+        for (i1=0; i1<n1; i1++){
           v2[i1+(i2+i3*n2)*n1] -= ( C1*(pp[i1+(i2+1+i3*n2)*n1] - pp[i1+(i2  +i3*n2)*n1])+
                                     C2*(pp[i1+(i2+2+i3*n2)*n1] - pp[i1+(i2-1+i3*n2)*n1])+
                                     C3*(pp[i1+(i2+3+i3*n2)*n1] - pp[i1+(i2-2+i3*n2)*n1]))/d2;
@@ -601,9 +607,9 @@ void make_pv_from_pres_3d(wfl_struct_t * const wfl, mod_struct_t * const mod, ac
       }
     }
 
-    for (long i3=2; i3<n3-3; i3++){
-      for (long i2=0; i2<n2; i2++){
-        for (long i1=0; i1<n1; i1++){
+    for (i3=2; i3<n3-3; i3++){
+      for (i2=0; i2<n2; i2++){
+        for (i1=0; i1<n1; i1++){
           v3[i1+(i2+i3*n2)*n1] -= ( C1*(pp[i1+(i2+(i3+1)*n2)*n1] - pp[i1+(i2+ i3   *n2)*n1])+
                                     C2*(pp[i1+(i2+(i3+2)*n2)*n1] - pp[i1+(i2+(i3-1)*n2)*n1])+
                                     C3*(pp[i1+(i2+(i3+3)*n2)*n1] - pp[i1+(i2+(i3-2)*n2)*n1]))/d3;
@@ -630,9 +636,10 @@ void born_velocity_sources_2d(wfl_struct_t * const wfl,
   long n2 = mod->n2;
   long nelem = n1*n2;
   long simN1 = wfl->simN1;
+  long i1, i2, j1, j2;
 
-  for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
-    for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+  for (i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+    for (i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
       wfl->vbuf1[j1+j2*n1] = (wfl->v1a[i1+i2*simN1]);
       wfl->vbuf2[j1+j2*n1] = (wfl->v2a[i1+i2*simN1]);
     }
@@ -654,13 +661,14 @@ void born_velocity_sources_3d(wfl_struct_t * const wfl,
   long nelem = n1*n2*n3;
   long simN1 = wfl->simN1;
   long simN2 = wfl->simN2;
+  long i1, i2, i3, j1, j2, j3;
   float dt = acq->dt;
 
   float *vbuf= sf_floatalloc(nelem);
 
-  for (long i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
-    for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
-      for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+  for (i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
+    for (i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+      for (i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
         float irodt = dt*mod->buoy[i1+simN1*(i2+i3*simN2)];
         vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v1c[i1+simN1*(i2+i3*simN2)] - wfl->v1p[i1+simN1*(i2+i3*simN2)])/irodt;
       }
@@ -668,9 +676,9 @@ void born_velocity_sources_3d(wfl_struct_t * const wfl,
   }
   fwrite(vbuf,sizeof(float),nelem,wfl->Fprgrd);
 
-  for (long i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
-    for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
-      for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+  for (i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
+    for (i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+      for (i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
         float irodt = dt*mod->buoy[i1+simN1*(i2+i3*simN2)];
         vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v2c[i1+simN1*(i2+i3*simN2)] - wfl->v2p[i1+simN1*(i2+i3*simN2)])/irodt;
       }
@@ -678,9 +686,9 @@ void born_velocity_sources_3d(wfl_struct_t * const wfl,
   }
   fwrite(vbuf,sizeof(float),nelem,wfl->Fprgrd);
 
-  for (long i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
-    for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
-      for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+  for (i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
+    for (i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+      for (i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
         float irodt = dt*mod->buoy[i1+simN1*(i2+i3*simN2)];
         vbuf[j1+n1*(j2+j3*n2)] = -(wfl->v3c[i1+simN1*(i2+i3*simN2)] - wfl->v3p[i1+simN1*(i2+i3*simN2)])/irodt;
       }
@@ -703,6 +711,7 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
   long n2 = mod->n2;
 
   long nt = acq->ntdat;
+  long it, i1, i2;
   float d1 = mod->d1;
   float d2 = mod->d2;
 
@@ -712,7 +721,7 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
   float *v1a= sf_floatalloc(n1*n2);
   float *v2a= sf_floatalloc(n1*n2);
 
-  for (long it=0; it<nt; it++){
+  for (it=0; it<nt; it++){
     // read the background wavefield
     if (para->outputBackgroundWfl)
       sf_floatread(pp,n1*n2,wfl->Fwfl);
@@ -721,16 +730,16 @@ void make_born_velocity_sources_2d(wfl_struct_t * const wfl,
         abort();
     }
 
-    for (long i2=0; i2<n2; i2++){
-      for (long i1=2; i1<n1-3; i1++){
+    for (i2=0; i2<n2; i2++){
+      for (i1=2; i1<n1-3; i1++){
         v1a[i1+i2*n1] = (C1*(pp[i1+1+i2*n1] - pp[i1  +i2*n1])+
                          C2*(pp[i1+2+i2*n1] - pp[i1-1+i2*n1])+
                          C3*(pp[i1+3+i2*n1] - pp[i1-2+i2*n1]))/d1;
       }
     }
 
-    for (long i2=2; i2<n2-3; i2++){
-      for (long i1=0; i1<n1; i1++){
+    for (i2=2; i2<n2-3; i2++){
+      for (i1=0; i1<n1; i1++){
         v2a[i1+i2*n1] = (C1*(pp[i1+(i2+1)*n1] - pp[i1+i2    *n1])+
                          C2*(pp[i1+(i2+2)*n1] - pp[i1+(i2-1)*n1])+
                          C3*(pp[i1+(i2+3)*n1] - pp[i1+(i2-2)*n1]))/d2;
@@ -769,6 +778,7 @@ void make_born_velocity_sources_3d(wfl_struct_t * const wfl,
   long nelem = n1*n2*n3;
 
   long nt = acq->ntdat;
+  long it, i1, i2, i3;
   float d1 = mod->d1;
   float d2 = mod->d2;
   float d3 = mod->d3;
@@ -780,7 +790,7 @@ void make_born_velocity_sources_3d(wfl_struct_t * const wfl,
   float *v2a= sf_floatalloc(nelem);
   float *v3a= sf_floatalloc(nelem);
 
-  for (long it=0; it<nt; it++){
+  for (it=0; it<nt; it++){
     // read the background wavefield
     if (para->outputBackgroundWfl)
       sf_floatread(pp,nelem,wfl->Fwfl);
@@ -789,9 +799,9 @@ void make_born_velocity_sources_3d(wfl_struct_t * const wfl,
         abort();
     }
 
-    for (long i3=0; i3<n3; i3++){
-    for (long i2=0; i2<n2; i2++){
-      for (long i1=2; i1<n1-3; i1++){
+    for (i3=0; i3<n3; i3++){
+    for (i2=0; i2<n2; i2++){
+      for (i1=2; i1<n1-3; i1++){
         v1a[i1+n1*(i2+i3*n2)] = (C1*(pp[i1+1+n1*(i2+i3*n2)] - pp[i1  +n1*(i2+i3*n2)])+
                                  C2*(pp[i1+2+n1*(i2+i3*n2)] - pp[i1-1+n1*(i2+i3*n2)])+
                                  C3*(pp[i1+3+n1*(i2+i3*n2)] - pp[i1-2+n1*(i2+i3*n2)]))/d1;
@@ -799,9 +809,9 @@ void make_born_velocity_sources_3d(wfl_struct_t * const wfl,
     }
     }
 
-    for (long i3=0; i3<n3; i3++){
-    for (long i2=2; i2<n2-3; i2++){
-      for (long i1=0; i1<n1; i1++){
+    for (i3=0; i3<n3; i3++){
+    for (i2=2; i2<n2-3; i2++){
+      for (i1=0; i1<n1; i1++){
         v2a[i1+n1*(i2+i3*n2)] = (C1*(pp[i1+n1*((i2+1)+i3*n2)] - pp[i1+n1*( i2   +i3*n2)])+
                                  C2*(pp[i1+n1*((i2+2)+i3*n2)] - pp[i1+n1*((i2-1)+i3*n2)])+
                                  C3*(pp[i1+n1*((i2+3)+i3*n2)] - pp[i1+n1*((i2-2)+i3*n2)]))/d2;
@@ -809,9 +819,9 @@ void make_born_velocity_sources_3d(wfl_struct_t * const wfl,
     }
     }
 
-    for (long i3=2; i3<n3-3; i3++){
-      for (long i2=0; i2<n2; i2++){
-        for (long i1=0; i1<n1; i1++){
+    for (i3=2; i3<n3-3; i3++){
+      for (i2=0; i2<n2; i2++){
+        for (i1=0; i1<n1; i1++){
           v3a[i1+n1*(i2+i3*n2)] = (C1*(pp[i1+1+n1*(i2+(i3+1)*n2)] - pp[i1+1+n1*(i2+ i3   *n2)])+
                                    C2*(pp[i1+1+n1*(i2+(i3+2)*n2)] - pp[i1+1+n1*(i2+(i3-1)*n2)])+
                                    C3*(pp[i1+1+n1*(i2+(i3+3)*n2)] - pp[i1+1+n1*(i2+(i3-2)*n2)]))/d3;
@@ -848,10 +858,11 @@ void born_pressure_sources_2d(wfl_struct_t * const wfl,
   long n2 = mod->n2;
   long simN1 = wfl->simN1;
   long nelem = n1*n2;
+  long i1, i2, j1, j2;
 
   // compute the divergence of the particle velocity from the pressure field
-  for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
-    for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+  for (i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+    for (i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
     wfl->bwfl[j1+j2*n1] = (wfl->v1a[i1+i2*simN1] + wfl->v2a[i1+i2*simN1]);
     }
   }
@@ -870,13 +881,14 @@ void born_pressure_sources_3d(wfl_struct_t * const wfl,
   long simN1 = wfl->simN1;
   long simN2 = wfl->simN2;
   long nelem = n1*n2*n3;
+  long i1, i2, i3, j1, j2, j3;
 
   float idt = 1./acq->dt;
 
   // compute the divergence of the particle velocity from the pressure field
-  for (long i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
-    for (long i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
-      for (long i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
+  for (i3=wfl->nabc,j3=0; j3<n3; i3++,j3++){
+    for (i2=wfl->nabc,j2=0; j2<n2; i2++,j2++){
+      for (i1=wfl->nabc,j1=0; j1<n1; i1++,j1++){
         float const v = mod->vmod[j1+n1*(j2+j3*n2)];
         float const r = mod->dmod[j1+n1*(j2+j3*n2)];
         float const scale = idt/(v*v*r);
@@ -901,6 +913,7 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
   long nelem = n1*n2;
 
   long nt = acq->ntdat;
+  long it, i;
   float dt = acq->dt;
 
   wfl->Fpvdiv = sf_tempfile(&(wfl->pvtmpfilename),"w+");
@@ -912,12 +925,12 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
     // read the background wavefield
     sf_floatread(snapc,nelem,wfl->Fwfl);
 
-    for (long it=0; it<nt-1; it++){
+    for (it=0; it<nt-1; it++){
       // read the background wavefield
       sf_floatread(snapn,nelem,wfl->Fwfl);
 
       // compute the divergence of the particle velocity from the pressure field
-      for (long i=0; i<nelem; i++){
+      for (i=0; i<nelem; i++){
         float const v = mod->vmod[i];
         float const r = mod->dmod[i];
         float const scale = 1.f/(v*v*r)/dt;
@@ -936,13 +949,13 @@ void make_born_pressure_sources_2d(wfl_struct_t * const wfl,
     if (!fread(snapc,sizeof(float),nelem,para->Fbwfl))
       abort();
 
-    for (long it=0; it<nt-1; it++){
+    for (it=0; it<nt-1; it++){
       // read the background wavefield
       if (!fread(snapn,sizeof(float),nelem,para->Fbwfl))
         abort();
 
       // compute the divergence of the particle velocity from the pressure field
-      for (long i=0; i<nelem; i++){
+      for (i=0; i<nelem; i++){
         float const v = mod->vmod[i];
         float const r = mod->dmod[i];
         float const scale = 1.f/(v*v*r)/dt;
@@ -985,6 +998,7 @@ void make_born_pressure_sources_3d(wfl_struct_t * const wfl,
   long nelem = n1*n2*n3;
 
   long nt = acq->ntdat;
+  long it, i;
   float dt = acq->dt;
 
   wfl->Fpvdiv = sf_tempfile(&(wfl->pvtmpfilename),"w+");
@@ -996,12 +1010,12 @@ void make_born_pressure_sources_3d(wfl_struct_t * const wfl,
     // read the background wavefield
     sf_floatread(snapc,nelem,wfl->Fwfl);
 
-    for (long it=0; it<nt-1; it++){
+    for (it=0; it<nt-1; it++){
       // read the background wavefield
       sf_floatread(snapn,nelem,wfl->Fwfl);
 
       // compute the divergence of the particle velocity from the pressure field
-      for (long i=0; i<nelem; i++){
+      for (i=0; i<nelem; i++){
         float const v = mod->vmod[i];
         float const r = mod->dmod[i];
         float const scale = 1.f/(v*v*r)/dt;
@@ -1020,13 +1034,13 @@ void make_born_pressure_sources_3d(wfl_struct_t * const wfl,
     if (!fread(snapc,sizeof(float),nelem,para->Fbwfl))
       abort();
 
-    for (long it=0; it<nt-1; it++){
+    for (it=0; it<nt-1; it++){
       // read the background wavefield
       if (!fread(snapn,sizeof(float),nelem,para->Fbwfl))
         abort();
 
       // compute the divergence of the particle velocity from the pressure field
-      for (long i=0; i<nelem; i++){
+      for (i=0; i<nelem; i++){
         float const v = mod->vmod[i];
         float const r = mod->dmod[i];
         float const scale = 1.f/(v*v*r)/dt;
@@ -1067,6 +1081,7 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
   long nt = acq->ntdat;
   long n1 = mod->n1;
   long n2 = mod->n2;
+  long i, it;
 
   float dt = acq->dt;
 
@@ -1085,7 +1100,7 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
   if (!fread(v2r, sizeof(float), n1 * n2 * nt, para->Fpv2))
     abort();
 
-  for (int it=0; it<nt; it++){
+  for (it=0; it<nt; it++){
     float* w1p = v1r + (nt-1-it)*n1*n2;
     float* w2p = v2r + (nt-1-it)*n1*n2;
 
@@ -1095,12 +1110,12 @@ void stack_velocity_part_2d(wfl_struct_t * const wfl,
     if (!fread(v2a, sizeof(float), n1 * n2, wfl->Fprgrd2))
       abort();
 
-    for (long i=0; i<n1*n2; i++){
+    for (i=0; i<n1*n2; i++){
       v1a[i] *= -1.*w1p[i]; // flipping time flips the sign of the velocity
       v2a[i] *= -1.*w2p[i];
     }
 
-    for (long i=0; i<n1*n2; i++){
+    for (i=0; i<n1*n2; i++){
       double r = mod->dmod[i];
       double scale = dt/(r*r);
       rimg[i] += (float) scale*(v1a[i]+v2a[i]);
@@ -1132,6 +1147,7 @@ void stack_velocity_part_3d(wfl_struct_t * const wfl,
   long n2 = mod->n2;
   long n3 = mod->n3;
   long nelem = n1*n2*n3;
+  long i, it;
 
   float dt = acq->dt;
 
@@ -1148,7 +1164,7 @@ void stack_velocity_part_3d(wfl_struct_t * const wfl,
   rewind(para->Fpv2);
   rewind(para->Fpv3);
 
-  for (int it=0; it<nt; it++){
+  for (it=0; it<nt; it++){
     long off = (nelem*(nt-1-it))*sizeof(float);
     fseek(para->Fpv1,off,SEEK_SET);
     fseek(para->Fpv2,off,SEEK_SET);
@@ -1169,13 +1185,13 @@ void stack_velocity_part_3d(wfl_struct_t * const wfl,
     if (!fread(v3a, sizeof(float), nelem, wfl->Fprgrd))
       abort();
 
-    for (long i=0; i<nelem; i++){
+    for (i=0; i<nelem; i++){
       v1a[i] *= -1.*v1r[i]; // flipping time flips the sign of the velocity
       v2a[i] *= -1.*v2r[i];
       v3a[i] *= -1.*v3r[i];
     }
 
-    for (long i=0; i<nelem; i++){
+    for (i=0; i<nelem; i++){
       double r = mod->dmod[i];
       double scale = dt/(r*r);
       rimg[i] += (float) scale*(v1a[i]+v2a[i]+v3a[i]);
@@ -1211,6 +1227,7 @@ void stack_pressure_part_2d(sf_file Fvpert,
   long n1 = mod->n1;
   long n2 = mod->n2;
   long nelem=n1*n2;
+  long it, i;
 
   float dt = acq->dt;
 
@@ -1228,7 +1245,7 @@ void stack_pressure_part_2d(sf_file Fvpert,
 
   if (!fread(srcwfl,sizeof(float),nelem*nt,wfl->Fpvdiv))
     abort();
-  for (long it = 0; it < nt; it++)
+  for (it = 0; it < nt; it++)
   {
     float *wp = srcwfl + (nt-1-it)*nelem;
 
@@ -1239,7 +1256,7 @@ void stack_pressure_part_2d(sf_file Fvpert,
         abort();
     }
 
-    for (long i=0; i<nelem; i++){
+    for (i=0; i<nelem; i++){
       double const v = mod->vmod[i];
       double const r = mod->dmod[i];
       double scale = 2.f*v*r*dt;
@@ -1260,7 +1277,7 @@ void stack_pressure_part_2d(sf_file Fvpert,
     if (!fread(rimg,sizeof(float),nelem,para->Fpv1))
       abort();
 
-    for (long it=0; it<nt; it++){
+    for (it=0; it<nt; it++){
       float *wp = srcwfl + (nt-1-it)*nelem;
 
       if (para->outputScatteredWfl)
@@ -1270,7 +1287,7 @@ void stack_pressure_part_2d(sf_file Fvpert,
           abort();
       }
 
-      for (long i=0; i<nelem; i++){
+      for (i=0; i<nelem; i++){
         double const v = mod->vmod[i];
         double const scale = v*v*dt;
         rimg[i] += (float) scale*tmp[i]*wp[i];
@@ -1302,6 +1319,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
   long n2 = mod->n2;
   long n3 = mod->n3;
   long nelem=n1*n2*n3;
+  long it, i;
 
   float dt = acq->dt;
 
@@ -1317,7 +1335,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
   // set
   memset(vimg,0,nelem*sizeof(float));
 
-  for (long it=0; it<nt; it++){
+  for (it=0; it<nt; it++){
     long off = (nelem*(nt-1-it))*sizeof(float);
     fseek(wfl->Fpvdiv,off,SEEK_SET);
     if (!fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv))
@@ -1330,7 +1348,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
         abort();
     }
 
-    for (long i=0; i<nelem; i++){
+    for (i=0; i<nelem; i++){
       double const v = mod->vmod[i];
       double const r = mod->dmod[i];
       double scale = 2.f*v*r*dt;
@@ -1351,7 +1369,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
     if (!fread(rimg,sizeof(float),nelem,para->Fpv1))
       abort();
 
-    for (long it=0; it<nt; it++){
+    for (it=0; it<nt; it++){
       long off = (nelem*(nt-1-it))*sizeof(float);
       fseek(wfl->Fpvdiv,off,SEEK_SET);
       if (!fread(srcwfl,sizeof(float),nelem,wfl->Fpvdiv))
@@ -1364,7 +1382,7 @@ void stack_pressure_part_3d(sf_file Fvpert,
           abort();
       }
 
-      for (long i=0; i<nelem; i++){
+      for (i=0; i<nelem; i++){
         double const v = mod->vmod[i];
         double const scale = v*v*dt;
         rimg[i] += (float) scale*tmp[i]*srcwfl[i];
@@ -1405,6 +1423,7 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
                              sf_file Fsou, sf_file Frec, sf_file Fwav)
 /*< Read the acquisition geometry from files >*/
 {
+  long isou, irec;
   //
   if (sf_n(axsou[0])!=2)
     sf_error("Wrong number of coordinates in the source file!");
@@ -1412,7 +1431,7 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
   // shot coordinates
   acq->ns = sf_n(axsou[1]);
   acq->scoord = sf_floatalloc(2*acq->ns);
-  for (long isou=0; isou<acq->ns; isou++)
+  for (isou=0; isou<acq->ns; isou++)
     sf_floatread(acq->scoord+2*isou,2,Fsou);
 
   //
@@ -1422,7 +1441,7 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
   // receiver coordinates
   acq->nr = sf_n(axrec[1]);
   acq->rcoord = sf_floatalloc(2*acq->nr);
-  for (long irec=0; irec<acq->nr; irec++)
+  for (irec=0; irec<acq->nr; irec++)
     sf_floatread(acq->rcoord+2*irec,2,Frec);
 
   // wavelet parameters
@@ -1454,7 +1473,7 @@ void prepare_acquisition_2d( acq_struct_t* acq, in_para_struct_t para,
 
   acq->wav = sf_floatalloc(nwavsamp);
   memset(acq->wav,0,nwavsamp*sizeof(float));
-  for (int isou=0; isou<nsouwav; isou++)
+  for (isou=0; isou<nsouwav; isou++)
     sf_floatread(acq->wav+isou*acq->ntdat,acq->nt,Fwav);
 
 }
@@ -1464,6 +1483,7 @@ void prepare_acquisition_3d( acq_struct_t* acq, in_para_struct_t para,
     sf_file Fsou, sf_file Frec, sf_file Fwav)
 /*< Read the acquisition geometry from files >*/
 {
+  long isou, irec;
   //
   if (sf_n(axsou[0])!=3)
     sf_error("Wrong number of coordinates in the source file!");
@@ -1471,7 +1491,7 @@ void prepare_acquisition_3d( acq_struct_t* acq, in_para_struct_t para,
   // shot coordinates
   acq->ns = sf_n(axsou[1]);
   acq->scoord = sf_floatalloc(3*acq->ns);
-  for (long isou=0; isou<acq->ns; isou++)
+  for (isou=0; isou<acq->ns; isou++)
     sf_floatread(acq->scoord+3*isou,3,Fsou);
 
   //
@@ -1481,7 +1501,7 @@ void prepare_acquisition_3d( acq_struct_t* acq, in_para_struct_t para,
   // receiver coordinates
   acq->nr = sf_n(axrec[1]);
   acq->rcoord = sf_floatalloc(3*acq->nr);
-  for (long irec=0; irec<acq->nr; irec++)
+  for (irec=0; irec<acq->nr; irec++)
     sf_floatread(acq->rcoord+3*irec,3,Frec);
 
   // wavelet parameters
@@ -1514,7 +1534,7 @@ void prepare_acquisition_3d( acq_struct_t* acq, in_para_struct_t para,
 
   acq->wav = sf_floatalloc(nwavsamp);
   memset(acq->wav,0,nwavsamp*sizeof(float));
-  for (int isou=0; isou<nsouwav; isou++)
+  for (isou=0; isou<nsouwav; isou++)
     sf_floatread(acq->wav+isou*acq->ntdat,acq->nt,Fwav);
 
 }
@@ -1526,6 +1546,7 @@ void prepare_born_acquisition_2d(acq_struct_t * const acq,
                                  in_para_struct_t in_para)
 /*< preparation of the acquisition for born operator >*/
 {
+  long it;
   prepare_acquisition_2d(acq, in_para, axsou, axrec, axwav, Fsou, Frec,Fwav);
 
   if (in_para.adj){
@@ -1534,7 +1555,7 @@ void prepare_born_acquisition_2d(acq_struct_t * const acq,
     long nt = acq->ntdat;
 
     acq->dat = sf_floatalloc(nr*nt);
-    for(long it=0; it<nt; it++){
+    for(it=0; it<nt; it++){
       float* wp = acq->dat + (nt-1-it)*nr;
       sf_floatread(wp,nr,Fsdat);
     }
@@ -1549,6 +1570,7 @@ void prepare_born_acquisition_3d(acq_struct_t * const acq,
                                  in_para_struct_t in_para)
 /*< preparation of the acquisition for born operator >*/
 {
+  long it;
   prepare_acquisition_3d(acq, in_para, axsou, axrec, axwav, Fsou, Frec,Fwav);
 
   if (in_para.adj){
@@ -1557,7 +1579,7 @@ void prepare_born_acquisition_3d(acq_struct_t * const acq,
     long nt = acq->ntdat;
 
     acq->dat = sf_floatalloc(nr*nt);
-    for(long it=0; it<nt; it++){
+    for(it=0; it<nt; it++){
       float* wp = acq->dat + (nt-1-it)*nr;
       sf_floatread(wp,nr,Fsdat);
     }
@@ -1608,6 +1630,8 @@ static double kwin(double x, double xmax){
 void set_sr_interpolation_coeffs_2d(acq_struct_t * const acq, wfl_struct_t const * wfl)
 /*< interpolation coefficients for source injection and receiver extraction >*/
 {
+  long isou, irec;
+  long i, ii;
   long nsous = acq->ns;
   long nrecs = acq->nr;
 
@@ -1621,20 +1645,20 @@ void set_sr_interpolation_coeffs_2d(acq_struct_t * const acq, wfl_struct_t const
   acq->hicksRcv1 = sf_floatalloc(8*nrecs);
   acq->hicksRcv2 = sf_floatalloc(8*nrecs);
 
-  for (long isou=0; isou<nsous; isou++){
+  for (isou=0; isou<nsous; isou++){
     float x1s = acq->scoord[2*isou+1]; // z coordinate
     float x2s = acq->scoord[2*isou  ]; // x coordinate
     long ix1s = (x1s-o1)/d1;
     long ix2s = (x2s-o2)/d2;
     float rem1 = (x1s - (ix1s*d1+o1))/d1;
     float rem2 = (x2s - (ix2s*d2+o2))/d2;
-    for (int i=-3,ii=0; i<=4; i++,ii++){
+    for (i=-3,ii=0; i<=4; i++,ii++){
       acq->hicksSou1[ii+isou*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
       acq->hicksSou2[ii+isou*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
     }
 
     if (wfl->freesurf){
-      for (int i=-3,ii=0; i<=4; i++,ii++){
+      for (i=-3,ii=0; i<=4; i++,ii++){
         int si = ix1s+i;
         if ( si <= wfl->nabc){
           int di = wfl->nabc-si;
@@ -1648,20 +1672,20 @@ void set_sr_interpolation_coeffs_2d(acq_struct_t * const acq, wfl_struct_t const
 
   }
 
-  for (long irec=0; irec<nrecs; irec++){
+  for (irec=0; irec<nrecs; irec++){
     float x1r = acq->rcoord[2*irec+1]; // z coordinate
     float x2r = acq->rcoord[2*irec  ]; // x coordinate
     long ix1r = (x1r-o1)/d1;
     long ix2r = (x2r-o2)/d2;
     float rem1 = (x1r - (ix1r*d1+o1))/d1;
     float rem2 = (x2r - (ix2r*d2+o2))/d2;
-    for (int i=-3,ii=0; i<=4; i++,ii++){
+    for (i=-3,ii=0; i<=4; i++,ii++){
       acq->hicksRcv1[ii+irec*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
       acq->hicksRcv2[ii+irec*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
     }
 
     if (wfl->freesurf){
-      for (int i=-3,ii=0; i<=4; i++,ii++){
+      for (i=-3,ii=0; i<=4; i++,ii++){
         int si = ix1r+i;
         if ( si <= wfl->nabc){
           int di = wfl->nabc-si;
@@ -1679,6 +1703,8 @@ void set_sr_interpolation_coeffs_2d(acq_struct_t * const acq, wfl_struct_t const
 void set_sr_interpolation_coeffs_3d(acq_struct_t * const acq, wfl_struct_t const * wfl)
 /*< interpolation coefficients for source injection and receiver extraction >*/
 {
+  long isou, irec;
+  long i, ii;
   long nsous = acq->ns;
   long nrecs = acq->nr;
 
@@ -1696,7 +1722,7 @@ void set_sr_interpolation_coeffs_3d(acq_struct_t * const acq, wfl_struct_t const
   acq->hicksRcv2 = sf_floatalloc(8*nrecs);
   acq->hicksRcv3 = sf_floatalloc(8*nrecs);
 
-  for (long isou=0; isou<nsous; isou++){
+  for (isou=0; isou<nsous; isou++){
     float x1s = acq->scoord[3*isou+2]; // z coordinate
     float x3s = acq->scoord[3*isou+1]; // y coordinate
     float x2s = acq->scoord[3*isou  ]; // x coordinate
@@ -1707,14 +1733,14 @@ void set_sr_interpolation_coeffs_3d(acq_struct_t * const acq, wfl_struct_t const
     float rem1 = (x1s - (ix1s*d1+o1))/d1;
     float rem2 = (x2s - (ix2s*d2+o2))/d2;
     float rem3 = (x3s - (ix3s*d3+o3))/d3;
-    for (int i=-3,ii=0; i<=4; i++,ii++){
+    for (i=-3,ii=0; i<=4; i++,ii++){
       acq->hicksSou1[ii+isou*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
       acq->hicksSou2[ii+isou*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
       acq->hicksSou3[ii+isou*8] = sinc(i-rem3)*kwin(i-rem3,4.5);
     }
 
     if (wfl->freesurf){
-      for (int i=-3,ii=0; i<=4; i++,ii++){
+      for (i=-3,ii=0; i<=4; i++,ii++){
         int si = ix1s+i;
         if ( si <= wfl->nabc){
           int di = wfl->nabc-si;
@@ -1727,7 +1753,7 @@ void set_sr_interpolation_coeffs_3d(acq_struct_t * const acq, wfl_struct_t const
 
   }
 
-  for (long irec=0; irec<nrecs; irec++){
+  for (irec=0; irec<nrecs; irec++){
     float x1r = acq->rcoord[3*irec+2]; // z coordinate
     float x3r = acq->rcoord[3*irec+1]; // y coordinate
     float x2r = acq->rcoord[3*irec  ]; // x coordinate
@@ -1738,14 +1764,14 @@ void set_sr_interpolation_coeffs_3d(acq_struct_t * const acq, wfl_struct_t const
     float rem1 = (x1r - (ix1r*d1+o1))/d1;
     float rem2 = (x2r - (ix2r*d2+o2))/d2;
     float rem3 = (x3r - (ix3r*d3+o3))/d3;
-    for (int i=-3,ii=0; i<=4; i++,ii++){
+    for (i=-3,ii=0; i<=4; i++,ii++){
       acq->hicksRcv1[ii+irec*8] = sinc(i-rem1)*kwin(i-rem1,4.5);
       acq->hicksRcv2[ii+irec*8] = sinc(i-rem2)*kwin(i-rem2,4.5);
       acq->hicksRcv3[ii+irec*8] = sinc(i-rem3)*kwin(i-rem3,4.5);
     }
 
     if (wfl->freesurf){
-      for (int i=-3,ii=0; i<=4; i++,ii++){
+      for (i=-3,ii=0; i<=4; i++,ii++){
         int si = ix1r+i;
         if ( si <= wfl->nabc){
           int di = wfl->nabc-si;

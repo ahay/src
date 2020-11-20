@@ -38,12 +38,14 @@ void acoustic1D(float *vel,float *src,float dx,int nx,float dt, int nt, int sx, 
 
     //sf_error("test");
 
+    int ix, it;
+
     float *prev=sf_floatalloc(nx);
     float *curr=sf_floatalloc(nx);
     float *next=sf_floatalloc(nx);
 
     //float **record_all=sf_floatalloc2(nt,nx);
-    for (int ix = 0; ix < nx; ++ix)
+    for (ix = 0; ix < nx; ++ix)
     {
       prev[ix]=0.0;
       curr[ix]=0.0;
@@ -52,15 +54,15 @@ void acoustic1D(float *vel,float *src,float dx,int nx,float dt, int nt, int sx, 
     }
 
     //float *record=sf_floatalloc(nt);
-    for (int it = 0; it < nt; ++it)
+    for (it = 0; it < nt; ++it)
     {
       record[it]=0.0;
     }
 
 
-    for (int it = 0; it < nt; ++it)
+    for (it = 0; it < nt; ++it)
     {
-      for (int ix = 1; ix < nx-1; ++ix)
+      for (ix = 1; ix < nx-1; ++ix)
       {
         next[ix]=2*curr[ix]-prev[ix]+vel[ix]*vel[ix]*dt*dt*(curr[ix+1]+curr[ix-1]-2*curr[ix])/dx/dx;
       }
@@ -70,7 +72,7 @@ void acoustic1D(float *vel,float *src,float dx,int nx,float dt, int nt, int sx, 
       float rleft=vel[0]*dt/dx;    next[0]=(rleft*(next[1]-(prev[1]-prev[0]))-(prev[1]-2*curr[1]+next[1]+prev[0]-2*curr[0]))/(1+rleft);
       float rright=vel[nx-1]*dt/dx;next[nx-1]=(rright*(next[nx-2]+(prev[nx-1]-prev[nx-2]))-(prev[nx-2]-2*curr[nx-2]+next[nx-2]+prev[nx-1]-2*curr[nx-1]))/(1+rright);
 
-     for (int ix = 0; ix < nx; ++ix)
+     for (ix = 0; ix < nx; ++ix)
       {
         prev[ix]=curr[ix];
         curr[ix]=next[ix];

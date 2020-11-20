@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
     sf_init(argc,argv);bool verb;
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
 
+    int iter, ix;
+
     /* I/O files */
     sf_file Frec=sf_input("in");/*seismic record*/
     sf_file Fvel=sf_input("vel"); /*velocity model*/
@@ -57,7 +59,7 @@ int main(int argc, char *argv[])
     float *vel_ini_pert=sf_floatalloc(nx);
     float alpha=1.0;
 
-     for (int iter = 0; iter < niter; ++iter)
+     for (iter = 0; iter < niter; ++iter)
     {
 
       // step 1. calc gradient with adjoint state method
@@ -70,19 +72,19 @@ int main(int argc, char *argv[])
     //sf_floatwrite(gradient,nx,Fgradient);
       ///////////step 2. calc step length
 
-      for (int ix = 0; ix< nx; ++ix) vel_ini_pert[ix]=vel_ini[ix]+alpha*gradient[ix];
+      for (ix = 0; ix< nx; ++ix) vel_ini_pert[ix]=vel_ini[ix]+alpha*gradient[ix];
       float* gradient_pert=adjoint_gradient(vel_ini_pert,src,dx,nx,dt,nt,sx,rx,rec,0);
      // sf_warning("gradient_pert[100]=%f",gradient_pert[100]);
 
       float num_sum=0.0,deno_sum=0.0;
-      for (int ix = 0; ix < nx; ++ix)
+      for (ix = 0; ix < nx; ++ix)
       {
         num_sum=num_sum+gradient[ix]*gradient[ix];
         deno_sum=deno_sum+(gradient_pert[ix]-gradient[ix])*gradient[ix];
       } 
       alpha=-alpha*num_sum/deno_sum;//step length
       ///end of step 2
-      for (int ix = 0; ix < nx; ++ix) vel_ini[ix]=vel_ini[ix]+alpha*gradient[ix]; //updating the velocity
+      for (ix = 0; ix < nx; ++ix) vel_ini[ix]=vel_ini[ix]+alpha*gradient[ix]; //updating the velocity
       
 
       /* code */
