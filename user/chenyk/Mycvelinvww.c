@@ -114,7 +114,7 @@ for(i=0;i<n;i++)
 x[i]=0.0;
 }
 
-float ddot(int n, float *x, float *y)
+float my_ddot(int n, float *x, float *y)
 {
 int i;
 float dot=0;
@@ -186,23 +186,23 @@ void cgstep( int iter, int n, float *x, float *g, float *s, int m, float *rr, fl
   		s[i]=0.0;
    	for(i=0;i<m;i++)
   		ss[i]=0.0; 
-  	dot=ddot(m,gg,gg);
+  	dot=my_ddot(m,gg,gg);
   	if(dot==0)
   	{	sf_warning("cgstep: grad vanishes identically");
   		return;
   	}		
-  	den=ddot(m,gg,rr);
-  	num=ddot(m,gg,gg);
+  	den=my_ddot(m,gg,rr);
+  	num=my_ddot(m,gg,gg);
   	alfa=den/num;
   	beta=0.0;
   }else{
   	/*search plane by solving 2-by-2*/
-  	gdg=ddot(m,gg,gg);	/*G . (R - G*alfa - S*beta) = 0*/
-  	sds=ddot(m,ss,ss);	/*S . (R - G*alfa - S*beta) = 0*/
-  	gds=ddot(m,gg,ss);
+  	gdg=my_ddot(m,gg,gg);	/*G . (R - G*alfa - S*beta) = 0*/
+  	sds=my_ddot(m,ss,ss);	/*S . (R - G*alfa - S*beta) = 0*/
+  	gds=my_ddot(m,gg,ss);
   	determ=gdg * sds - gds * gds + 1.e-15;
-  	gdr=ddot(m,gg,rr);
-  	sdr=ddot(m,ss,rr);
+  	gdr=my_ddot(m,gg,rr);
+  	sdr=my_ddot(m,ss,rr);
   	alfa=( sds * gdr - gds * sdr ) / determ;
   	beta=(-gds * gdr + gdg * sdr ) / determ;
   }

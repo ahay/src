@@ -34,7 +34,8 @@
 static int nx, nz, nxz, nt, ng, wfnt, wfinv, ntau, nxb, nzb, nxzb;
 static int spx, spz, ginv, gp;
 static int lenx, lenz, nfd, pmlsize, srcrange;
-static int ix, iz, it, is, itau, iturn;
+int ix, iz; 
+static int it, is, itau, iturn;
 static int *sxx, *sxz, *szx, *szz;
 
 static float dt, wfdt, dtau, tau0;
