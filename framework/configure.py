@@ -286,7 +286,9 @@ def cc(context):
     if CC.rfind('gcc') >= 0 and \
            CC.rfind('pgcc') < 0 or CC.rfind('icc') >= 0:
         oldflag = context.env.get('CFLAGS')
-        for flag in ('-x c -std=gnu99 -Wall -pedantic',
+        for flag in ('-x c -std=gnu17 -Wall -pedantic',
+                     '-x c -std=gnu11 -Wall -pedantic',
+                     '-x c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
                      '-std=gnu9x -Wall -pedantic',
                      '-Wall -pedantic'):
@@ -2022,8 +2024,9 @@ def cxx(context):
 
             if CXX[-3:]=='g++' or CXX[-4:]=='icpc':
                 oldflag = context.env.get('CXXFLAGS')
-                for flag in ['-std=c++11 -U__STRICT_ANSI__ -Wall -pedantic',
-                             '-std=c++0x -U__STRICT_ANSI__ -Wall -pedantic',
+                for flag in ['-std=gnu++17 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=gnu++11 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=gnu++0x -U__STRICT_ANSI__ -Wall -pedantic',
                              '-Wall -pedantic']:
                     context.Message("checking if %s accepts '%s' ... " % (CXX,flag))
                     context.env['CXXFLAGS'] = oldflag + ' ' + flag
