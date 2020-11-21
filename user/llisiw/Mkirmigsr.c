@@ -305,8 +305,8 @@ int main(int argc, char* argv[])
 	    }
 
 #ifdef _OPENMP
-#pragma omp parallel for private(iz,ix,t1,t2,ti,tx,ithr)
 	    ithr = omp_get_thread_num();
+#pragma omp parallel for private(iz,ix,t1,t2,ti,tx,ithr)
 #else 
 	    ithr = 0;
 #endif
