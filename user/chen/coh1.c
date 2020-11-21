@@ -104,8 +104,8 @@ void coh1_close()
 }
 
 
-#define MIN(a,b)  (a)<(b)?(a):(b)
-#define MAX(a,b)  (a)>(b)?(a):(b)
+#define MY_MIN(a,b)  (a)<(b)?(a):(b)
+#define MY_MAX(a,b)  (a)>(b)?(a):(b)
 void coh1_2d(float **d)
 /*< two-d coherence >*/
 {
@@ -128,7 +128,7 @@ void coh1_2d(float **d)
 	{
 		for(i1=0; i1<n1; i1++)
 		{
-			k = dipscan(nw, MAX(-i1, -lag1), MIN(n1-i1-1, lag1),
+			k = dipscan(nw, MY_MAX(-i1, -lag1), MY_MIN(n1-i1-1, lag1),
 				u1[i2-1][i1], u1[i2]+i1, v[i2]);
 			d[i2-1][i1] = sqrt(v[i2][k]);
 		}
@@ -173,10 +173,10 @@ void coh1_3d(float **d)
 	{
 		for(i1=0; i1<n1; i1++)
 		{
-			k1 = dipscan(nw, MAX(-i1, -lag1), MIN(n1-i1-1, lag1),
+			k1 = dipscan(nw, MY_MAX(-i1, -lag1), MY_MIN(n1-i1-1, lag1),
 				u1[i2-1][i1], u1[i2]+i1, v[i2]);
 			t1 = v[i2][k1];
-			k2 = dipscan(nw, MAX(-i1, -lag2), MIN(n1-i1-1, lag2),
+			k2 = dipscan(nw, MY_MAX(-i1, -lag2), MY_MIN(n1-i1-1, lag2),
 				u1[i2-1][i1], u0[i2-1]+i1, v[i2]);
 			d[i2-1][i1] = sqrt(t1*v[i2][k2]);
 		}

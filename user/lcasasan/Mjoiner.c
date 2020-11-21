@@ -68,7 +68,7 @@ int main (int argc, char* argv[])
     /* reading the number of gahters in data*/
     n3 = sf_leftsize(in,2);	
 
-    if ((n3==0)) n3=1;
+    if (n3==0) n3=1;
 	
     /* sf_warning("I'm here nw=%d",nw); */
     for (i3=0;i3<n3;i3++) { /*gahters loop */	

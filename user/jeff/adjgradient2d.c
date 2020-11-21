@@ -345,13 +345,13 @@ static void adjgradient2d_rwetaper_init(void)
 	
     /* Left boundary */
     for (ix = 0; ix < nxtap; ix++){
-	j1 = abs(nxtap-ix-1.f);
+	j1 = abs(nxtap-ix-1);
 	tap[ix] = cos ( SF_PI/2.f*j1/(nxtap-1.f) );
     }
   
     /* Right boundary */
     for (ix = 0; ix < nxtap; ix++){
-	j1 = abs(nxtap-ix-1.f);
+	j1 = abs(nxtap-ix-1);
 	tap[nx-ix-1] = cos (SF_PI/2.f*j1/(nxtap-1.f) );
     }	
 

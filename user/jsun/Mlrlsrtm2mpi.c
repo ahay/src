@@ -300,7 +300,7 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 /*< low-rank one-step forward modeling >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nxb,nzb,gpz,gpx,gpl,snpint,dt,nth=1,wfit;
+    int nxb,nzb,gpz,gpx,gpl,snpint,dt,wfit;
     int nt,nz,nx, nk, nz2, nx2, nzx2;
     sf_complex c;
     sf_complex *cwave, *cwavem;
@@ -322,7 +322,8 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 #ifdef _OPENMP
 #pragma omp parallel  
 {
-    nth = omp_get_num_threads();
+  int nth;
+  nth = omp_get_num_threads();
 }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

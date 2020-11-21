@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 
 
   int nt, nx, it, ix, niter, iter, ntfft, nxfft,np, ip, ikt, ikx, iktn, ikxn, ifsnr; /* iktn, ikxn, iNyquist*/
-  float dt, dx, pmin, pmax, dp=0, p, cmax, sembpmax, num, den;
+  float dt, dx, pmin, pmax = 0.0, dp=0, p, cmax, sembpmax, num, den;
   float *sembp=NULL, *mask, *gy, *fden, *fshift, *SNR=NULL;
   float **fdata, **taup=NULL, **odata, **tdata=NULL, **odatat, **semb=NULL; /* tdata is the true data */
   kiss_fft_cpx **cdata, **cdatat;
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 
   		if(!sf_getfloat("pmin",&pmin)) pmin=-2;
         /* minimum p */		
-  		if(!sf_getfloat("pmax",&pmin)) pmax=2;
+  		if(!sf_getfloat("pmax",&pmax)) pmax=2;
         /* maximum p */			
   		if(!sf_getint("np",&np)) np=nx;
         /* number of p */

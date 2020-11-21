@@ -80,7 +80,7 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     
     /* tmp variable */
     int wfit;
-    int nth;
+    int nth = 1;
 
     nx = geop->nx;
     nz = geop->nz;

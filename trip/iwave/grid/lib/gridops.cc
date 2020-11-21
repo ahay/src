@@ -85,9 +85,9 @@ namespace TSOpt {
       RASN(fac,RPNT_1);
 #if RARR_MAX_NDIM > 0
       if (dimx==1) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
@@ -113,9 +113,9 @@ namespace TSOpt {
           else if (i[1] > e[1]-eiw[1]-width[1]) 
                  fac[1] = cosfun3((i[1]-e[1]+eiw[1]+width[1])/width[1]);
                else fac[1] = 1.0f; // iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]-siw[1]+1))/ireal(width[1]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]-eiw[1]+1-i[1]))/ireal(width[1]))));
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	  for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
@@ -148,9 +148,9 @@ namespace TSOpt {
           else if (i[1] > e[1]-eiw[1]-width[1]) 
                  fac[1] = cosfun3((i[1]-e[1]+eiw[1]+width[1])/width[1]);
                else fac[1] = 1.0f; // iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]-siw[1]+1))/ireal(width[1]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]-eiw[1]+1-i[1]))/ireal(width[1]))));
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s[0]+siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
@@ -386,9 +386,9 @@ namespace TSOpt {
       RASN(fac,RPNT_1);
 #if RARR_MAX_NDIM > 0
       if (dimx==1) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	for (i[0]=s[0];i[0]<=e[0];i[0]++) {
@@ -406,9 +406,9 @@ namespace TSOpt {
       if (dimx==2) {
 	for (i[1]=s[1];i[1]<=e[1];i[1]++) {
 	  fac[1] = iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]+1))/ireal(iw[1]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]+1-i[1]))/ireal(iw[1]))));
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	  for (i[0]=s[0];i[0]<=e[0];i[0]++) {
@@ -429,9 +429,9 @@ namespace TSOpt {
 	  fac[2] = iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[2]-s[2]+1))/ireal(iw[2]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[2]+1-i[2]))/ireal(iw[2]))));
 	  for (i[1]=s[1];i[1]<=e[1];i[1]++) {
 	    fac[1] = fac[2]*iwave_min(iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(i[1]-s[1]+1))/ireal(iw[1]))),iwave_min(REAL_ONE,iwave_max(REAL_ZERO,(ireal(e[1]+1-i[1]))/ireal(iw[1]))));
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s[0];i[0]<=e[0];i[0]++) {
@@ -637,9 +637,9 @@ namespace TSOpt {
 
       if (dir==0 && rax.ndim==1) {
 	rax._s1[e0[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	for (i[0]=s0[0];i[0]<e0[0];i[0]++) 
@@ -651,9 +651,9 @@ namespace TSOpt {
       else if (dir==0 && rax.ndim==2) {
 	for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	  rax._s2[i[1]][e0[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	  for (i[0]=s0[0];i[0]<e0[0];i[0]++) 
@@ -676,11 +676,12 @@ namespace TSOpt {
 	for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	    rax._s3[i[2]][i[1]][e0[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
+	  for (i[0]=s0[0];i[0]<e0[0];i[0]++) 
 	    for (i[0]=s0[0];i[0]<e0[0];i[0]++) 
 	      rax._s3[i[2]][i[1]][i[0]] = (ray._s3[i[2]][i[1]][i[0]+1]-ray._s3[i[2]][i[1]][i[0]])*fac;
 	  }
@@ -690,11 +691,12 @@ namespace TSOpt {
 	for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) { 
 	    rax._s3[i[2]][e0[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
+	  for (i[0]=s0[0];i[0]<e0[0];i[0]++) 
 	    for (i[1]=s0[1];i[1]<e0[1];i[1]++) {
 	      rax._s3[i[2]][i[1]][i[0]] = (ray._s3[i[2]][i[1]+1][i[0]]-ray._s3[i[2]][i[1]][i[0]])*fac;
 	    }	
@@ -706,9 +708,9 @@ namespace TSOpt {
 	for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 	    rax._s3[e0[2]][i[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[2]=s0[2];i[2]<e0[2];i[2]++) {
@@ -725,9 +727,9 @@ namespace TSOpt {
 	  for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	      rax._s4[i[3]][i[2]][i[1]][e0[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0];i[0]<e0[0];i[0]++) 
@@ -742,9 +744,9 @@ namespace TSOpt {
 	  for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) { 
 	      rax._s4[i[3]][i[2]][e0[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[1]=s0[1];i[1]<e0[1];i[1]++) {
@@ -760,9 +762,9 @@ namespace TSOpt {
 	  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) { 
 	      rax._s4[i[3]][e0[2]][i[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[2]=s0[2];i[2]<e0[2];i[2]++) {
@@ -779,9 +781,9 @@ namespace TSOpt {
 	  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) { 
 	      rax._s4[e0[3]][i[2]][i[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[3]=s0[3];i[3]<e0[3];i[3]++) {
@@ -801,9 +803,9 @@ namespace TSOpt {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 		rax._s5[i[4]][i[3]][i[2]][i[1]][e0[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0];i[0]<e0[0];i[0]++) 
@@ -820,9 +822,9 @@ namespace TSOpt {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) { 
 		rax._s5[i[4]][i[3]][i[2]][e0[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[1]=s0[1];i[1]<e0[1];i[1]++) {
@@ -840,9 +842,9 @@ namespace TSOpt {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) { 
 		rax._s5[i[4]][i[3]][e0[2]][i[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[2]=s0[2];i[2]<e0[2];i[2]++) {
@@ -860,9 +862,9 @@ namespace TSOpt {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) { 
 		rax._s5[i[4]][e0[3]][i[2]][i[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[3]=s0[3];i[3]<e0[3];i[3]++) {
@@ -881,9 +883,9 @@ namespace TSOpt {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) { 
 		rax._s5[e0[4]][i[3]][i[2]][i[1]][i[0]] = REAL_ZERO;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[4]=s0[4];i[4]<e0[4];i[4]++) {
@@ -951,9 +953,9 @@ namespace TSOpt {
       if (dir==0 && rax.ndim==1) {
 	rax._s1[s0[0]] = -ray._s1[s0[0]]*fac;
 	rax._s1[e0[0]] = ray._s1[e0[0]-1]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	for (i[0]=s0[0]+1;i[0]<e0[0];i[0]++) 
@@ -965,9 +967,9 @@ namespace TSOpt {
 	for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	  rax._s2[i[1]][s0[0]] = -ray._s2[i[1]][s0[0]]*fac;
 	  rax._s2[i[1]][e0[0]] = ray._s2[i[1]][e0[0]-1]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	  for (i[0]=s0[0]+1;i[0]<e0[0];i[0]++) {
@@ -993,9 +995,9 @@ namespace TSOpt {
 	  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	    rax._s3[i[2]][i[1]][s0[0]] = -ray._s3[i[2]][i[1]][s0[0]]*fac;
 	    rax._s3[i[2]][i[1]][e0[0]] = ray._s3[i[2]][i[1]][e0[0]-1]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0]+1;i[0]<e0[0];i[0]++) {
@@ -1010,9 +1012,9 @@ namespace TSOpt {
 	  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 	    rax._s3[i[2]][s0[1]][i[0]] = -ray._s3[i[2]][s0[1]][i[0]]*fac;
 	    rax._s3[i[2]][e0[1]][i[0]] = ray._s3[i[2]][e0[1]-1][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[1]=s0[1]+1;i[1]<e0[1];i[1]++) {
@@ -1027,9 +1029,9 @@ namespace TSOpt {
 	  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 	    rax._s3[s0[2]][i[1]][i[0]] = -ray._s3[s0[2]][i[1]][i[0]]*fac;
 	    rax._s3[e0[2]][i[1]][i[0]] = ray._s3[e0[2]-1][i[1]][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[2]=s0[2]+1;i[2]<e0[2];i[2]++) {
@@ -1047,9 +1049,9 @@ namespace TSOpt {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 	      rax._s4[i[3]][i[2]][i[1]][s0[0]] = -ray._s4[i[3]][i[2]][i[1]][s0[0]]*fac;
 	      rax._s4[i[3]][i[2]][i[1]][e0[0]] = ray._s4[i[3]][i[2]][i[1]][e0[0]-1]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0]+1;i[0]<e0[0];i[0]++) {
@@ -1066,9 +1068,9 @@ namespace TSOpt {
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 	      rax._s4[i[3]][i[2]][s0[1]][i[0]] = -ray._s4[i[3]][i[2]][s0[1]][i[0]]*fac;
 	      rax._s4[i[3]][i[2]][e0[1]][i[0]] = ray._s4[i[3]][i[2]][e0[1]-1][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[1]=s0[1]+1;i[1]<e0[1];i[1]++) {
@@ -1085,9 +1087,9 @@ namespace TSOpt {
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 	      rax._s4[i[3]][s0[2]][i[1]][i[0]] = -ray._s4[i[3]][s0[2]][i[1]][i[0]]*fac;
 	      rax._s4[i[3]][e0[2]][i[1]][i[0]] = ray._s4[i[3]][e0[2]-1][i[1]][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[2]=s0[2]+1;i[2]<e0[2];i[2]++) {
@@ -1105,9 +1107,9 @@ namespace TSOpt {
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 	      rax._s4[s0[3]][i[2]][i[1]][i[0]] = -ray._s4[s0[3]][i[2]][i[1]][i[0]]*fac;
 	      rax._s4[e0[3]][i[2]][i[1]][i[0]] = ray._s4[e0[3]-1][i[2]][i[1]][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[3]=s0[3]+1;i[3]<e0[3];i[3]++) {
@@ -1128,9 +1130,9 @@ namespace TSOpt {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
 		rax._s5[i[4]][i[3]][i[2]][i[1]][s0[0]] = -ray._s5[i[4]][i[3]][i[2]][i[1]][s0[0]]*fac;
 		rax._s5[i[4]][i[3]][i[2]][i[1]][e0[0]] = ray._s5[i[4]][i[3]][i[2]][i[1]][e0[0]-1]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0]+1;i[0]<e0[0];i[0]++) {
@@ -1149,9 +1151,9 @@ namespace TSOpt {
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 		rax._s5[i[4]][i[3]][i[2]][s0[1]][i[0]] = -ray._s5[i[4]][i[3]][i[2]][s0[1]][i[0]]*fac;
 		rax._s5[i[4]][i[3]][i[2]][e0[1]][i[0]] = ray._s5[i[4]][i[3]][i[2]][e0[1]-1][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[1]=s0[1]+1;i[1]<e0[1];i[1]++) {
@@ -1170,9 +1172,9 @@ namespace TSOpt {
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 		rax._s5[i[4]][i[3]][s0[2]][i[1]][i[0]] = -ray._s5[i[4]][i[3]][s0[2]][i[1]][i[0]]*fac;
 		rax._s5[i[4]][i[3]][e0[2]][i[1]][i[0]] = ray._s5[i[4]][i[3]][e0[2]-1][i[1]][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[2]=s0[2]+1;i[2]<e0[2];i[2]++) {
@@ -1191,9 +1193,9 @@ namespace TSOpt {
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 		rax._s5[i[4]][s0[3]][i[2]][i[1]][i[0]] = -ray._s5[i[4]][s0[3]][i[2]][i[1]][i[0]]*fac;
 		rax._s5[i[4]][e0[3]][i[2]][i[1]][i[0]] = ray._s5[i[4]][e0[3]-1][i[2]][i[1]][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[3]=s0[3]+1;i[3]<e0[3];i[3]++) {
@@ -1213,9 +1215,9 @@ namespace TSOpt {
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 		rax._s5[s0[4]][i[3]][i[2]][i[1]][i[0]] = -ray._s5[s0[4]][i[3]][i[2]][i[1]][i[0]]*fac;
 		rax._s5[e0[4]][i[3]][i[2]][i[1]][i[0]] = ray._s5[e0[4]-1][i[3]][i[2]][i[1]][i[0]]*fac;
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[4]=s0[4]+1;i[4]<e0[4];i[4]++) {
@@ -1398,9 +1400,9 @@ namespace TSOpt {
 	if (rax.ndim==2) {
 	  if (ext) {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1409,9 +1411,9 @@ namespace TSOpt {
 	    }
 	  }
 	  else {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1426,9 +1428,9 @@ namespace TSOpt {
 	  if (ext) {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1438,9 +1440,9 @@ namespace TSOpt {
 	    }
 	  }
 	  else {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1456,9 +1458,9 @@ namespace TSOpt {
 	    for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 	      for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1469,9 +1471,9 @@ namespace TSOpt {
 	    }
 	  }
 	  else {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1488,9 +1490,9 @@ namespace TSOpt {
 	      for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 		for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1502,9 +1504,9 @@ namespace TSOpt {
 	    }
 	  }
 	  else {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1527,9 +1529,9 @@ namespace TSOpt {
 	  if (ext) {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1540,9 +1542,9 @@ namespace TSOpt {
 	  }
 	  else {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1559,9 +1561,9 @@ namespace TSOpt {
 	    for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 	      for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1573,9 +1575,9 @@ namespace TSOpt {
 	  }
 	  else {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1593,9 +1595,9 @@ namespace TSOpt {
 	      for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 		for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1608,9 +1610,9 @@ namespace TSOpt {
 	  }
 	  else {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1635,9 +1637,9 @@ namespace TSOpt {
 	    for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 	      for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1650,9 +1652,9 @@ namespace TSOpt {
 	  else {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1671,9 +1673,9 @@ namespace TSOpt {
 	      for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 		for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1687,9 +1689,9 @@ namespace TSOpt {
 	  else {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1775,9 +1777,9 @@ namespace TSOpt {
 	if (rax.ndim==2) {
 	  if (ext) {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1786,9 +1788,9 @@ namespace TSOpt {
 	    }
 	  }
 	  else {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1803,9 +1805,9 @@ namespace TSOpt {
 	  if (ext) {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1815,9 +1817,9 @@ namespace TSOpt {
 	    }
 	  }
 	  else {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1833,9 +1835,9 @@ namespace TSOpt {
 	    for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 	      for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1846,9 +1848,9 @@ namespace TSOpt {
 	    }
 	  }
 	  else {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1865,9 +1867,9 @@ namespace TSOpt {
 	      for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 		for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1879,9 +1881,9 @@ namespace TSOpt {
 	    }
 	  }
 	  else {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1904,12 +1906,12 @@ namespace TSOpt {
 	  if (ext) {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
-		for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
+	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 		  ray._s2[i[1]][i[0]] += fac* rax._s3[i[2]][i[1]][i[0]];
 		}
 	      }
@@ -1917,12 +1919,12 @@ namespace TSOpt {
 	  }
 	  else {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
-	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
+	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 		ray._s2[i[1]][i[0]] = rax._s3[0][i[1]][i[0]];
 	      }
 	    }
@@ -1936,12 +1938,12 @@ namespace TSOpt {
 	    for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 	      for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
-		  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
+	    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 		    ray._s2[i[1]][i[0]] += fac* rax._s4[i[3]][i[2]][i[1]][i[0]];
 		  }
 		}
@@ -1950,9 +1952,9 @@ namespace TSOpt {
 	  }
 	  else {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1970,9 +1972,9 @@ namespace TSOpt {
 	      for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 		for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -1985,9 +1987,9 @@ namespace TSOpt {
 	  }
 	  else {
 	    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -2012,9 +2014,9 @@ namespace TSOpt {
 	    for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 	      for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		  for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -2027,9 +2029,9 @@ namespace TSOpt {
 	  else {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -2048,9 +2050,9 @@ namespace TSOpt {
 	      for (i[3]=s0[3];i[3]<=e0[3];i[3]++) {
 		for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 		  for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		    for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
@@ -2064,9 +2066,9 @@ namespace TSOpt {
 	  else {
 	    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
 	      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {

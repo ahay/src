@@ -96,8 +96,8 @@ void coh1dip_close()
 }
 
 
-#define MIN(a,b)  (a)<(b)?(a):(b)
-#define MAX(a,b)  (a)>(b)?(a):(b)
+#define MY_MIN(a,b)  (a)<(b)?(a):(b)
+#define MY_MAX(a,b)  (a)>(b)?(a):(b)
 void coh1dip_2d(float **d, float **p)
 /*< two-d coherence >*/
 {
@@ -121,8 +121,8 @@ void coh1dip_2d(float **d, float **p)
 		for(i1=0; i1<n1; i1++)
 		{
 			k = i1 + p[i2-1][i1]+0.5;
-			k = MAX(k, 0);
-			k = MIN(k, n1-1);
+			k = MY_MAX(k, 0);
+			k = MY_MIN(k, n1-1);
 			d[i2-1][i1] = sqrt(coh1dip(nw, u1[i2-1][i1], u1[i2][k]));
 		}
 	}

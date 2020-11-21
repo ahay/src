@@ -29,7 +29,6 @@ int main(int argc, char* argv[])
     bool verb, cmplx;
     int it,iz,im,ik,ix,i,j, snap;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
-    int nth;
     float c, old, dt;
 
     bool abc;
@@ -98,6 +97,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel
     {
+      int nth;
       nth = omp_get_num_threads();
       /* omp_set_num_threads(nth); */
     }

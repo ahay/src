@@ -23,8 +23,8 @@
 
 #include <rsf.h>
 
-#define MAX(a,b) (a > b ? a : b)
-#define MIN(a,b) (a < b ? a : b)
+#define MY_MAX(a,b) (a > b ? a : b)
+#define MY_MIN(a,b) (a < b ? a : b)
 
 int main(int argc, char* argv[])
 {
@@ -193,8 +193,8 @@ int main(int argc, char* argv[])
 			if ( (2.*tshift) > ((2*itshift+1)*dt) ) itshift += 1;
 
                         /* loop over samples of beam */
-			istart = MAX(itshift,0);
-			istop = MIN(nt+itshift,nt);
+			istart = MY_MAX(itshift,0);
+			istop = MY_MIN(nt+itshift,nt);
 			for (it = istart; it < istop; it++){
                             /* sum the shifted input into the beam */
 			    beam += data[iy][ix][it-itshift];

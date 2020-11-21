@@ -107,7 +107,6 @@ int main(int argc, char* argv[])
   float wfdt;
   int ix,it,is;
   int nzx,nzx1,nzx2,nz2,nx2,nk,n2; /*fft related*/
-  int nth;
 
   float **rcdz, **rcdx;
   float *imgpp, *imgps, *imgsp, *imgss;
@@ -253,6 +252,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel
   {
+    int nth;
     nth = omp_get_num_threads(); /* omp_set_num_threads(nth); */
   }
   sf_warning(">>>>>>>>>>OpenMP: Using %d threads<<<<<<<<<<", nth);
@@ -822,7 +822,7 @@ int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz,
 #endif
       for(ix=-1;ix<=1;ix++) {
 	for(iz=-1;iz<=1;iz++) {
-	  if(fabs(ix)+fabs(iz)==2) {
+	  if(abs(ix)+abs(iz)==2) {
 	    j = isz+iz+nz2*(isx+ix);
 	    uz2[j]+=iz*Ricker(t, f0, t0, A);
 	    ux2[j]+=ix*Ricker(t, f0, t0, A);
@@ -836,7 +836,7 @@ int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz,
 #endif
       for(ix=-1;ix<=1;ix++) {
         for(iz=-1;iz<=1;iz++) {
-	  if(fabs(ix)+fabs(iz)==2) {
+	  if(abs(ix)+abs(iz)==2) {
 	    j = isz+iz+nz2*(isx+ix);
 	    if(ix==-1&&iz==1)  
 	      uz2[j]+=sqrt(2.0)*Ricker(t, f0, t0, A);

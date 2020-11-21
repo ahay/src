@@ -552,9 +552,9 @@ void sponge2d_apply(float *a,
 	private(ib,ix,w)
 	#endif
 	for(ix=0; ix<fdm->nxpad; ix++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for(ib=0; ib<fdm->nb+fdm->nop; ib++) {
@@ -569,9 +569,9 @@ void sponge2d_apply(float *a,
     private(ib,ix,w)
 	#endif
 	for(ix=0; ix<fdm->nxpad; ix++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for(ib=0; ib<fdm->nb+fdm->nop-1; ib++) {
@@ -587,9 +587,9 @@ void sponge2d_apply(float *a,
 	#endif
     for(ib=0; ib<fdm->nb+fdm->nop; ib++) {
 		w = spo->w[fdm->nb+fdm->nop-ib-1];
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for(iz=0; iz<fdm->nzpad; iz++) {
@@ -605,9 +605,9 @@ void sponge2d_apply(float *a,
 	#endif
     for(ib=0; ib<fdm->nb+fdm->nop-1; ib++) {
 		w = spo->w[fdm->nb+fdm->nop-ib-2];
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for(iz=0; iz<fdm->nzpad; iz++) {

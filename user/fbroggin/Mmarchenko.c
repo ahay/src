@@ -432,9 +432,9 @@ int main(int argc, char* argv[]) {
 		    /*------------------------------------------------------------*/
 		    /* Loop over frequencies */
 		    /*------------------------------------------------------------*/
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		    for (it = 0; it < 2 * nf; it = it + 2) {
@@ -474,9 +474,9 @@ int main(int argc, char* argv[]) {
     shared(pminus,qminus,pplus,qplus,pplus0,window)
 #endif
 	    for (ix = 0; ix < ntr; ix++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 		for (it = 0; it < nt; it++) {
@@ -501,9 +501,9 @@ int main(int argc, char* argv[]) {
     shared(Gp,Gm,G,H,pminus,qminus,pplustemp,qplustemp,pplus0,ivs)
 #endif
 	for (ix = 0; ix < ntr; ix++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (it = 0; it < nt; it++) {

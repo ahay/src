@@ -17,7 +17,7 @@
 #define TAPERG(kmag) exp(-(kmag*kmag)/1.5)/2.
 
 #define  MAX2(a,b)   a>b? a: b
-#define  MAX(a,b,c)  MAX2(a,b) >c ? MAX2(a,b) :c
+#define  MY_MAX(a,b,c)  MAX2(a,b) >c ? MAX2(a,b) :c
 /*------------------------------------------------------------*/
 /*2D*/
 typedef struct wfs *wfs2d;
@@ -149,7 +149,7 @@ void wfsepK3(float ***pxdel, float ***pydel, float *** pzdel,
     ny = sf_n(ay);
     nz = sf_n(az);
     sf_warning("%d,%d,%d",nx,ny,nz);
-    maxn=MAX(nx,ny,nz);
+    maxn=MY_MAX(nx,ny,nz);
     /*initialize here*/
 
     for(jy=0;jy<ny;jy++){

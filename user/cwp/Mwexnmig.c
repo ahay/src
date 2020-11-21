@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
 
     int nhx, nhy, nhz, nht, nc;
     int nhx2,nhy2,nhz2,nht2;
-    float dht, oht, dhx, dhy, dhz;
+    float dht = 0., oht, dhx = 0., dhy = 0., dhz = 0.;
 
     sf_axis amx,amy,az;
     sf_axis alx,aly;

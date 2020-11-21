@@ -28,7 +28,7 @@ float ccr(int nt, int size, int offset, float pad, float *dat);
 int main(int argc, char * argv[])
 {
     
-    int nt, i,nth,size;
+    int nt, i,size;
     sf_file in, out;
     float *dat0,*dat,pad;
     sf_axis at;
@@ -44,7 +44,8 @@ int main(int argc, char * argv[])
 #ifdef _OPENMP
 #pragma omp parallel
     {
-      nth = omp_get_num_threads();
+        int nth;
+        nth = omp_get_num_threads();
     }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

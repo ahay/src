@@ -34,7 +34,6 @@
 int main(int argc, char* argv[])
 {
     bool verb,buf;
-    int ompnth=1;
 
     sf_file Fs,Fr,Fi,Fc;           /* I/O files */
     sf_axis ax,ay,az,at,ac,aa;     /* cube axes */
@@ -67,6 +66,7 @@ int main(int argc, char* argv[])
 
     /* OMP parameters */
 #ifdef _OPENMP
+    int ompnth=1;
     ompnth=omp_init();
     if(!ompnth)
         abort();

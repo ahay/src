@@ -99,7 +99,9 @@ CWP: Jack Cohen
 #define S_IFLNK __S_IFLNK
 #endif
 
+#ifndef __APPLE__
 #include <sys/sysmacros.h>
+#endif
 
 /* determine type of file (DISK, PIPE, ...) */
 FileType filestat(int fd)

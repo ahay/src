@@ -20,7 +20,7 @@
 
 int main (int argc, char* argv[])
 {
-    int n1,n2,n3, i1,i2,i3,skip;
+    int n1,n2,n3 = 0, i1,i2,i3,skip;
     float **xy, o1,d1,o2,d2;
     sf_file in;
 

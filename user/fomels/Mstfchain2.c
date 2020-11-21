@@ -25,7 +25,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i, n, nw, n2, iter, niter, liter, snap, nt, nx;
+    int i, n, nw, n2, iter, niter = 0, liter, snap, nt, nx;
     int rect1, rect2, frect1, frect2;
     float dt,dx,x0; 
     float l2_r, l2_r_new, alpha;
@@ -76,6 +76,12 @@ int main(int argc, char* argv[])
     if (!sf_getint("frect1",&frect1)) frect1=1;
     if (!sf_getint("frect2",&frect2)) frect2=1;
     /* smoothing in frequency */
+
+    if (!sf_getint("niter",&niter)) niter=0;
+    /* number of iterations */
+    if (!sf_getint("liter",&liter)) liter=50;
+    /* number of linear iterations */
+    //alpha=100.0;
 
 
     /* I/O Setup for snapshot */
@@ -178,11 +184,6 @@ int main(int argc, char* argv[])
 
 
 
-    if (!sf_getint("niter",&niter)) niter=0;
-    /* number of iterations */
-    if (!sf_getint("liter",&liter)) liter=50;
-    /* number of linear iterations */
-    //alpha=100.0;
 
     for (iter=0; iter < niter; iter++) {
 	sf_warning("Start %d",iter);

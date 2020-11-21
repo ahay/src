@@ -522,9 +522,9 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
 
 	int s00=s0[0]; int e00=e0[0];
 	for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 	    for (i[0]=s00;i[0]<=e00;i[0]++) {

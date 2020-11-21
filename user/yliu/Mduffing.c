@@ -64,11 +64,6 @@ int main(int argc,char *argv[])
 	sfile = NULL;
     }
     
-    if (NULL != sfile){
-	
-	if (!sf_histint(sfile,"n1",&sn1)) sf_error("No n1= in s");
-	if (n1>sn1) sf_error("insufficient lenth of external force");
-    }
 
     sf_setformat(out,"native_complex");
     
@@ -77,6 +72,11 @@ int main(int argc,char *argv[])
     if (!sf_histfloat(in,"o1",&o1)) sf_error("No o1= in input");
     /*check n1*/
     n2 = sf_leftsize(in,1);
+
+    if (NULL != sfile){
+	if (!sf_histint(sfile,"n1",&sn1)) sf_error("No n1= in s");
+	if (n1>sn1) sf_error("insufficient lenth of external force");
+    }
 
     if(!sf_getfloat("gamma",&gamma)) gamma=0.75;
     /*strength of external force*/

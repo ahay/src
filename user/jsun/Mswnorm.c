@@ -31,7 +31,7 @@ int main(int argc, char * argv[])
 {
 
     int nz, nx, nt, nzx, nzxt;
-    int size, i, nth;
+    int size, i;
     bool sw,logsc;
     sf_file in, out;
     float *dat0,*dat,den,scale,rescale=0;
@@ -46,7 +46,8 @@ int main(int argc, char * argv[])
 #ifdef _OPENMP
 #pragma omp parallel
     {
-      nth = omp_get_num_threads();
+        int nth;
+        nth = omp_get_num_threads();
     }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     for(i=0;i<n2;i++)
     for(j=0;j<n2;j++)
     {
-        if((abs(j-i)%2==0)&&(fabs(j-i)*d2)<=maxoffset)
+        if((abs(j-i)%2==0)&&(abs(j-i)*d2)<=maxoffset)
         {
             ntrace++;
         }
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     for(i=0;i<n2;i++)
     for(j=0;j<n2;j++)
     {
-        if((abs(j-i)%2==0)&&(fabs(j-i)*d2)<=maxoffset)
+        if((abs(j-i)%2==0)&&(abs(j-i)*d2)<=maxoffset)
         {
             float s=o2+i*d2;
             float r=o2+j*d2;

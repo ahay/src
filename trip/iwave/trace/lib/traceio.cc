@@ -2337,18 +2337,18 @@ void tapermutetraces(tracegeom * tg,
     int iet = (int)(wtime/tg->dt);
     float wt=0,wttime=1.0f;
     if (width > 0) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
         for (itr=0;itr<width;itr++) {
            wt = costap((width-itr)/float(width));
            (tg->buf)[it+itr*tg->nt]*=wt;
         }
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
         for (itr=tg->ntraces-width;itr<tg->ntraces;itr++) {
@@ -2361,9 +2361,9 @@ void tapermutetraces(tracegeom * tg,
 //	fprintf(stderr," tg->dt=%f \n",tg->dt);
 //	fprintf(stderr," it=%d \n",it);
         wttime = costap((it-tg->nt+iet+1)/float(iet));
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
         for (itr=0; itr<tg->ntraces; itr++) {

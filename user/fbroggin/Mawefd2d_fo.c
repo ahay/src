@@ -410,9 +410,9 @@ shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 		#pragma omp for private (ix, iz) schedule(runtime)
 		#endif
 		for (ix=ioXx; ix<fdm->nxpad-NOP+1; ix++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 			for (iz=ioXz; iz<fdm->nzpad-NOP; iz++) {
@@ -429,9 +429,9 @@ shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 		#pragma omp for private (ix, iz) schedule(runtime)
 		#endif
 		for (ix=ioZx; ix<fdm->nxpad-NOP; ix++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 			for (iz=ioZz; iz<fdm->nzpad-NOP+1; iz++) {
@@ -475,9 +475,9 @@ shared (fdm, expl, verb, dabc, cs, cr, spo, dd, uc, ww)
 		#pragma omp	for private (ix, iz) schedule(runtime)
 		#endif
 		for (ix=ioPx; ix<fdm->nxpad-NOP; ix++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
 			for (iz=ioPz; iz<fdm->nzpad-NOP; iz++) {

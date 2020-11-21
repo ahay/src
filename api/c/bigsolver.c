@@ -46,7 +46,7 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 		     float* x           /* estimated model */, 
 		     const float* dat   /* data */, 
 		     int niter          /* number of iterations */, 
-		     float eps          /* regularization parameter */, 
+		     double eps          /* regularization parameter */, 
 		     ...                /* variable number of arguments */) 
 /*< Generic preconditioned linear solver.
  ---
@@ -375,7 +375,7 @@ void sf_csolver_prec (sf_coperator oper   /* linear operator */,
 		      sf_complex* x           /* estimated model */, 
 		      const sf_complex* dat   /* data */, 
 		      int niter          /* number of iterations */, 
-		      float eps          /* regularization parameter */, 
+		      double eps          /* regularization parameter */, 
 		     ...                /* variable number of arguments */) 
 /*< Generic preconditioned linear solver.
  ---
@@ -778,7 +778,7 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 		    float* x           /* estimated model */, 
 		    const float* dat   /* data */, 
 		    int niter          /* number of iterations */, 
-		    float eps          /* regularization parameter */, 
+		    double eps          /* regularization parameter */, 
 		    ...                /* variable number of arguments */) 
 /*< Generic regularized linear solver.
   ---
@@ -1044,7 +1044,7 @@ void sf_csolver_reg (sf_coperator oper   /* linear operator */,
 		     sf_complex* x           /* estimated model */, 
 		     const sf_complex* dat   /* data */, 
 		     int niter          /* number of iterations */, 
-		     float eps          /* regularization parameter */, 
+		     double eps          /* regularization parameter */, 
 		    ...                /* variable number of arguments */) 
 /*< Generic regularized linear solver.
   ---

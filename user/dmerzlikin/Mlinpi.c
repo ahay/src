@@ -18,7 +18,6 @@ int main(int argc, char* argv[])
     float * data, * output, * datat2, * outputt2, * model;
     sf_file inp, out;
     /* kirchhoff params */
-    float elapsed, tstart, tend;
 
     //MADAGASCAR C API
     /* initialize */
@@ -90,6 +89,7 @@ int main(int argc, char* argv[])
     t2warp_init(nt,nt2,nx*ny,ot,dt,ot2,dt2,epst2);
 
     #ifdef _OPENMP
+    float tstart;
     tstart = omp_get_wtime();
     #endif
 	
@@ -107,6 +107,7 @@ int main(int argc, char* argv[])
     }
     
     #ifdef _OPENMP
+    float tend, elapsed;
     tend = omp_get_wtime();
     elapsed = tend - tstart;
     sf_warning("elapsed=%f [s]",elapsed);

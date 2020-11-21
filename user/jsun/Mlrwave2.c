@@ -242,7 +242,7 @@ int main(int argc, char* argv[])
 {
     bool adj,timer,verb;
     int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, wfnt;
-    int m2, n2, nk, nth=1;
+    int m2, n2, nk;
     float dt, dx, dz, ox;
     sf_complex **img, **dat, **lt, **rt, ***wvfld, *ww;
     sf_file data, image, left, right, snaps, src=NULL;
@@ -372,8 +372,9 @@ int main(int argc, char* argv[])
 
 #ifdef _OPENMP
 #pragma omp parallel
-{   
-    nth = omp_get_num_threads();
+{
+	int nth;
+	nth = omp_get_num_threads();
 }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

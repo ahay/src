@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 {
     bool mig,timer;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, n0;
-    int im, i, j, m2, it1, it2, its, ik, n2, nk, nth=1;
+    int im, i, j, m2, it1, it2, its, ik, n2, nk;
     float dt, dx, dz,x0;
     sf_complex *curr, **img, **dat, **lft, **rht, **wave, *cwave, *cwavem=NULL, c;
     sf_complex *currm=NULL;
@@ -159,8 +159,9 @@ int main(int argc, char* argv[])
 
 #ifdef _OPENMP
 #pragma omp parallel
-{   
-    nth = omp_get_num_threads();
+{
+	int nth;
+	nth = omp_get_num_threads();
 }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

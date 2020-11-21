@@ -17,9 +17,9 @@ void acd_3d_4(float *** uc,
   
   for (i2=s[2]; i2<=e[2]; i2++) {
     for (i1=s[1]; i1<=e[1]; i1++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
       for (i0=s0; i0<=e0; i0++) {
@@ -39,9 +39,9 @@ void acd_3d_4(float *** uc,
   /* boundary conditions - note that uc[-1][i]=0 etc. */
   if (lbc[2]) {
     for (i1=s[1];i1<=e[1];i1++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
       for (i0=s0;i0<=e0;i0++) {
@@ -51,9 +51,9 @@ void acd_3d_4(float *** uc,
   }
   if (rbc[2]) {
     for (i1=s[1];i1<=e[1];i1++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
       for (i0=s0;i0<=e0;i0++) {
@@ -63,9 +63,9 @@ void acd_3d_4(float *** uc,
   }
   if (lbc[1]) {
     for (i2=s[2];i2<=e[2];i2++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
       for (i0=s0;i0<=e0;i0++) {
@@ -75,9 +75,9 @@ void acd_3d_4(float *** uc,
   }
   if (rbc[1]) {
     for (i2=s[2];i2<=e[2];i2++) {
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
       for (i0=s0;i0<=e0;i0++) {

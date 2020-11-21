@@ -20,9 +20,9 @@ void acd_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **csq,
 
     float lap;
     for (i1 = s[1]; i1 <= e[1]; i1++)
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
         for (i0 = s0; i0 <= e0; i0++) {
@@ -43,9 +43,9 @@ void acd_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **csq,
         }
     /* boundary conditions - note that uc[-1][i]=0 etc. */
     if (lbc[1])
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
         for (i0 = s0; i0 <= e0; i0++) {
@@ -53,9 +53,9 @@ void acd_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **csq,
             up[s[1] - 2][i0] = -up[s[1]][i0];
         }
     if (rbc[1])
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
         for (i0 = s0; i0 <= e0; i0++) {
@@ -63,9 +63,9 @@ void acd_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **csq,
             up[e[1] + 2][i0] = -up[e[1]][i0];
         }
     if (lbc[0])
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
         for (i1 = s[1]; i1 <= e[1]; ++i1) {
@@ -73,9 +73,9 @@ void acd_2d_4_d(float **uc, float **ucd, float **up, float **upd, float **csq,
             up[i1][s[0] - 2] = -up[i1][s[0]];
         }
     if (rbc[0])
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
-#else
+#elif defined(__GNUC__) && !defined(__clang__)
 #pragma GCC ivdep
 #endif
         for (i1 = s[1]; i1 <= e[1]; ++i1) {

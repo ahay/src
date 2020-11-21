@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     bool verb, cmplx;        
     int it,iz,im,ik,ix,i,j,snap,taper;     /* index variables */
-    int nt,nz,nx,m2,nk,nzx,nz2,nx2,nzx2,n2,pad1,nkz,nth;
+    int nt,nz,nx,m2,nk,nzx,nz2,nx2,nzx2,n2,pad1,nkz;
     float c, old;
     float dt,dx,dz,dkx=0,dkz=0,kx0=0,kz0=0,kx,kz,ktmp,kx_trs,kz_trs,thresh;
 
@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel
     {
+      int nth;
       nth = omp_get_num_threads();
     }
     if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);

@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 	sf_file Ffwf=NULL, Fbwf=NULL, Fvel;
 	sf_file Fleft, Fright;
 
-	int cpuid, numprocs, nth, nspad, iturn;
+	int cpuid, numprocs, nspad, iturn;
     float *sendbuf, *recvbuf;
 	sf_complex *sendbufc, *recvbufc;
 	MPI_Comm comm=MPI_COMM_WORLD;
@@ -264,7 +264,8 @@ int main(int argc, char *argv[])
 #ifdef _OPENMP
 #pragma omp parallel
 	{
-		nth=omp_get_num_threads();
+		int nth;
+		nth = omp_get_num_threads();
 	}
 	sf_warning(">>> Using %d threads <<<", nth);
 #endif

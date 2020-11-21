@@ -29,7 +29,7 @@ int main(int argc, char * argv[])
 {
     
     int fz,fx,nz0,nz,nx0,nx,nt0,nt,nzx0,nzx,nzxt0,nzxt;
-    int it,iz,ix,nth,size;
+    int it,iz,ix,size;
     float thres,term;
     bool sw;
     sf_file in, out;
@@ -50,7 +50,8 @@ int main(int argc, char * argv[])
 #ifdef _OPENMP
 #pragma omp parallel
     {
-      nth = omp_get_num_threads();
+        int nth;
+        nth = omp_get_num_threads();
     }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

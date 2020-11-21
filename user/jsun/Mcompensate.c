@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     bool verb,cmplx;
     int i; /* index variables */
-    int nz,nx,nzx,nth;
+    int nz,nx,nzx;
     float perc,vmax,eps;
 
     /* I/O arrays*/
@@ -64,7 +64,8 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel
     {
-      nth = omp_get_num_threads();
+        int nth;
+        nth = omp_get_num_threads();
     }
     if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

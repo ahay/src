@@ -133,7 +133,6 @@ void piintface_lop (bool adj, bool add, int fnx, int fny, float* x, float* y)
 /*< Apply Chain of Operators >*/
 {
 
-    float tstart, tend, elapsed;
     int i, ch=0;
 
     if((nt*nx*ny != n12) || (fnx != n12) || (fny != n12)) sf_error("Wrong dimensions");
@@ -164,6 +163,7 @@ void piintface_lop (bool adj, bool add, int fnx, int fny, float* x, float* y)
     }
 
     #ifdef _OPENMP
+    float tstart
     tstart = omp_get_wtime();
     #endif
 
@@ -344,6 +344,7 @@ void piintface_lop (bool adj, bool add, int fnx, int fny, float* x, float* y)
     }/* adj */
 
     #ifdef _OPENMP
+    float tend, elapsed;
     tend = omp_get_wtime();
     elapsed = tend - tstart;
     sf_warning("elapsed=%f [s]",elapsed);

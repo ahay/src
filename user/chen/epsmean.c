@@ -61,8 +61,8 @@ static float mean_var(int n, float* x, float* mean)
 }	
 
 
-#define MAX(a,b) ((a)<(b) ? (b) : (a))
-#define MIN(a,b) ((a)>(b) ? (b) : (a))
+#define MY_MAX(a,b) ((a)<(b) ? (b) : (a))
+#define MY_MIN(a,b) ((a)>(b) ? (b) : (a))
 void epsmean(void *h, float *x, int d)
 /*< eps by mean filter >*/
 {
@@ -84,8 +84,8 @@ void epsmean(void *h, float *x, int d)
 	// selection
 	for(i1=0; i1 < p->n; i1++)
 	{
-		min = MAX(i1-p->nfw, 0);
-		max = MIN(i1, p->n-p->nfw-1);
+		min = MY_MAX(i1-p->nfw, 0);
+		max = MY_MIN(i1, p->n-p->nfw-1);
 		j2 = min;
 		for(j1=min+1; j1 <= max; j1++) 
 		if(p->e[j1] < p->e[j2]) j2 = j1;

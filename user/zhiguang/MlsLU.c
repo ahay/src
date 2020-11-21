@@ -21,8 +21,8 @@
 #include <omp.h>
 #endif
 
-#define MAX(a,b) ((a)>(b)? a : b)
-#define MIN(a,b) ((a)<(b)? a : b)
+#define MY_MAX(a,b) ((a)>(b)? a : b)
+#define MY_MIN(a,b) ((a)<(b)? a : b)
 #define SWAP(a,b) {dum=(a); (a)=(b); (b)=dum;}
 #define TINY 1.e-18
 
@@ -33,9 +33,9 @@ void bandAx(float **a, int n, int m1, int m2, float *x, float *b)
 
 	for (i=1; i<=n; i++){
 		k=i-m1-1;
-		tmploop=MIN(m1+m2+1,n-k);
+		tmploop=MY_MIN(m1+m2+1,n-k);
 		b[i]=0.;
-		for (j=MAX(1,1-k); j<=tmploop; j++)
+		for (j=MY_MAX(1,1-k); j<=tmploop; j++)
 			b[i] += a[i][j]*x[j+k];
 	}
 }
