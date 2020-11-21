@@ -208,11 +208,17 @@ int main(int argc, char* argv[])
 	sf_floatread(out[0],nzx,mig);
     }
 
+    /* fork to get number of threads*/
 #ifdef _OPENMP
-    nthr = omp_get_num_threads();
+#pragma omp parallel
+    {
+    	nthr = omp_get_num_threads();
+    }
 #else
     nthr = 1;
 #endif
+
+    sf_warning(">>Using %d threads<<\n", nthr);
 
     if (adj) {
 	traces = (float**) sf_alloc(nt,sizeof(float*));
@@ -220,7 +226,7 @@ int main(int argc, char* argv[])
 	traces = sf_floatalloc2(nt,nthr);
     }
 
-    for (is=0; is < ns; is++) { /* shot */
+    for (is=0; is < ns; is++){ /* shot */
 	s = s0+is*ds;
 	sf_warning("shot %d of %d;",is+1,ns);
 
@@ -289,6 +295,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 
+
 	    if (adj) {
 		/* read trace */
 		sf_floatread (trace,nt,dat);
@@ -305,12 +312,12 @@ int main(int argc, char* argv[])
 	    }
 
 #ifdef _OPENMP
-	    ithr = omp_get_thread_num();
 #pragma omp parallel for private(iz,ix,t1,t2,ti,tx,ithr)
 #else 
 	    ithr = 0;
 #endif
 	    for (i=0; i < nzx; i++) { 
+	    ithr = omp_get_thread_num(); // little inefficiency
 		iz = i%nz;
 		ix = (i-iz)/nz;
 
@@ -340,6 +347,7 @@ int main(int argc, char* argv[])
 		tx = SF_MAX(fabsf(stablex[i]*ds),fabsf(rtablex[i]*dh));
 		pick(adj,ti,tx*aal,out[cig ? ih : 0]+i,traces[ithr]);
 	    }
+
 
 	    if (!adj) {
 		for (i=0; i < nt; i++) {
