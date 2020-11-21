@@ -76,7 +76,7 @@ void epsmean(void *h, float *x, int d)
 	for(i1=0; i1 < p->n; i1++)
 	{
 		min = i1;
-		max = MIN(i1+p->nfw, p->n-1);
+		max = MY_MIN(i1+p->nfw, p->n-1);
 		l = max - min + 1;
 		p->e[i1] = mean_var(l, p->u+min, p->v+i1);
 	}

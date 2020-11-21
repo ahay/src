@@ -55,7 +55,7 @@ void epsmedian(void *h, float *x, int d)
     for(i1=0; i1 < p->n; i1++)
     {
         min = i1;
-        max = MIN(i1+p->nfw, p->n-1);
+        max = MY_MIN(i1+p->nfw, p->n-1);
         l = max - min + 1;
     	for(j1=min; j1 <= max; j1++)
     	p->u[j1-min] = x[j1*d];

@@ -371,9 +371,9 @@ int main(int argc, char* argv[])
     sf_fileclose(right);
 
 #ifdef _OPENMP
+	int nth;
 #pragma omp parallel
 {
-	int nth;
 	nth = omp_get_num_threads();
 }
     sf_warning(">>>> Using %d threads <<<<<", nth);

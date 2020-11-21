@@ -158,9 +158,9 @@ int main(int argc, char* argv[])
     }
 
 #ifdef _OPENMP
+	int nth;
 #pragma omp parallel
 {
-	int nth;
 	nth = omp_get_num_threads();
 }
     sf_warning(">>>> Using %d threads <<<<<", nth);

@@ -66,9 +66,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
 #ifdef _OPENMP
+    int nth;
 #pragma omp parallel
     {
-        int nth;
         nth = omp_get_num_threads();
     }
     if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);

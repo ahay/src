@@ -250,9 +250,9 @@ int main(int argc, char* argv[])
   sf_warning("==   Lowrank two-step elastic wave propagator   ==");
   sf_warning("==================================================");
 #ifdef _OPENMP
+  int nth;
 #pragma omp parallel
   {
-    int nth;
     nth = omp_get_num_threads(); /* omp_set_num_threads(nth); */
   }
   sf_warning(">>>>>>>>>>OpenMP: Using %d threads<<<<<<<<<<", nth);

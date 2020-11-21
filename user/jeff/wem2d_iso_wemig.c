@@ -238,7 +238,8 @@ void wem2d_iso_wemig(bool adj,
 	    for (iz = nz-1; iz > -1; iz--) {
 
 		/* Spray xig out to all frequencies */
-		XLOOP( txig[iz][id][ix][ih] = xig[iz][ix][ih]; );
+		for (ih = 0; ih < nh; ih++)
+			XLOOP(txig[iz][id][ix][ih] = xig[iz][ix][ih];);
 
 		/* Adjoint Imaging Condition */
 		//for (ix=0; ix<nx; ix++) {

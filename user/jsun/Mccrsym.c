@@ -42,9 +42,9 @@ int main(int argc, char * argv[])
     if (!sf_getfloat("pad",&pad)) pad=SF_EPS; /* pad for stable devision */
 
 #ifdef _OPENMP
+    int nth;
 #pragma omp parallel
     {
-        int nth;
         nth = omp_get_num_threads();
     }
     sf_warning(">>>> Using %d threads <<<<<", nth);

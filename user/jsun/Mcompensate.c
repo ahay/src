@@ -62,9 +62,9 @@ int main(int argc, char* argv[])
     sf_oaxa(Fres,at,3);
     
 #ifdef _OPENMP
+    int nth;
 #pragma omp parallel
     {
-        int nth;
         nth = omp_get_num_threads();
     }
     if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);

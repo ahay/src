@@ -32,8 +32,7 @@ int main(void)
     float xll=1.705,yll=1.37,xur=11.945,yur=8.87, plotfat=1.;
     float xstart,zstart,xend,zend,xscale,zscale, y=0.5;
     float xmin,zmin,xmax,zmax,slop,surface=0.;
-    float d=1.4,xs,zs,xr,zr,xc,xr1,zr1;
-    float xs1,zs1,d1;
+    float d=1.4,xs,zs,xr,zr,xc;
     float degrad,theta=30.,tanth,sinth,costh;
 
 #ifdef REFLKINE
@@ -50,7 +49,11 @@ int main(void)
     float xval[NARCS2][NANGLES], zval[NARCS2][NANGLES];
 #endif
 
-/*		 			Origin is at midpoint */
+#if defined(TUCHEL) || defined(REFLEXPT)
+    float xs1, zs1, d1, xr1, zr1;
+#endif
+
+    /*		 			Origin is at midpoint */
     degrad = acosf(-1.)/180.;
     theta *= degrad;
     tanth = tanf(theta);
@@ -70,11 +73,13 @@ int main(void)
     zr = zs + d*costh; 
     xc = xr;					/* Migrated location */
 
+#if defined(TUCHEL) || defined(REFLEXPT)
     xs1= y + d/2.;				/* Second shotpoint */
     zs1= surface;
     d1 = d + (xs1-xs)*sinth;			/* Second Reflection point */
     xr1= xs1 - d1*sinth; 			
     zr1= zs1 + d1*costh; 
+#endif
 
 #ifdef REFLEXPT
     xsp = y  - 2*d*sinth;			/* Image shotpoint */

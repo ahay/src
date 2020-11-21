@@ -163,7 +163,7 @@ void piintface_lop (bool adj, bool add, int fnx, int fny, float* x, float* y)
     }
 
     #ifdef _OPENMP
-    float tstart
+    float tstart;
     tstart = omp_get_wtime();
     #endif
 

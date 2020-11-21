@@ -62,25 +62,22 @@ int main (int argc, char* argv[])
     /* if y, convert output to Hertz */
 
     mean=0.;
-    for (i=i2=0; i2 < n2; i2++) {
+    for (i=0, i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
-	for (i1=0; i1 < 1; i1++) {
-	    num[i] = 0.;
-	    den[i] = 0.;
-	    i++;
-	}
+    num[0] = 0.;
+    den[0] = 0.;
+    i++;
+
 	for (i1=1; i1 < n1-1; i1++) {
 	    num[i] = 0.5*(trace[i1-1]+trace[i1+1]);
 	    den[i] = trace[i1];
 	    mean += den[i]*den[i];
 	    i++;
 	}
-	for (i1=n1-1; i1 < n1; i1++) {
-	    num[i] = 0.;
-	    den[i] = 0.;
-	    i++;
-	}
+    num[n1-1] = 0.;
+    den[n1-1] = 0.;
+    i++;
     }
     mean = sqrtf(n12/mean);
     

@@ -208,11 +208,11 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
     dt = geop->dt;
 
 #ifdef _OPENMP
-#pragma omp parallel  
-{
-    int nth
-    nth = omp_get_num_threads();
-}
+    int nth;
+#pragma omp parallel
+    {
+        nth = omp_get_num_threads();
+    }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif
     
