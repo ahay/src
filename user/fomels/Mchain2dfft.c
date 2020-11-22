@@ -26,15 +26,13 @@
 
 int main(int argc, char* argv[])
 {
-    int i, n, nk, n2, iter, niter, liter, snap, nt, nx, nt1, nt2, nx2;
+    int i, n, nk, n2, iter, niter, liter, nt, nx, nt1, nt2, nx2;
     int rect1, rect2, frect1, frect2; 
     float dt,dx,x0;
     float l2_r,l2_r_new,alpha;
-    float *w, *dw, *x, *y, *r, *p, *lsmig,*r_new, *w_prev;
+    float *w, *dw, *x, *y, *r, *p, *r_new, *w_prev;
     sf_file wht, fwht, src, tgt, mch;
     sf_file w0, wf0;
-    /*sf_file for w, wf, lsmig snapshot*/
-    sf_file snap_w = NULL, snap_wf = NULL, snap_lsmig = NULL;
     /* For fft2 */
     bool isCmplx = false;
     int pad = 1;
@@ -83,74 +81,8 @@ int main(int argc, char* argv[])
 
     x = sf_floatalloc(n); 
     y = sf_floatalloc(n);
-    lsmig = sf_floatalloc(n); /* decon image */
     r = sf_floatalloc(3*n);
     r_new = sf_floatalloc(3*n);
-
-
-    /* I/O Setup for snapshot */
-
-    if (!sf_getint("snap",&snap)) snap=0;
-    /* interval for snapshots */
-
-    if (snap > 0) {
-    snap_w = sf_output("wsnap");
-    /* time weight movie */
-    snap_wf = sf_output("wfsnap");
-    /* frequency weight movie */
-
-    snap_lsmig = sf_output("lsmigsnap");
-    /* Deconvolved image movie */
-
-    
-    /* time/space weight */
-    sf_putint(snap_w,"n1",nt);
-    sf_putfloat(snap_w,"d1",dt);
-    sf_putfloat(snap_w,"o1",0.);
-    sf_putstring(snap_w,"label1","Depth");
-
-    sf_putint(snap_w,"n2",nx);
-    sf_putfloat(snap_w,"d2",dx);
-    sf_putfloat(snap_w,"o2",x0);
-    sf_putstring(snap_w,"label2","Distance");
-    
-    sf_putint(snap_w,"n3",niter);
-    sf_putfloat(snap_w,"d3",1.0);
-    sf_putfloat(snap_w,"o3",0.0);
-
-    /* frequency weight */
-    sf_putint(snap_wf,"n1",nt2);
-    sf_putfloat(snap_wf,"d1",dt);
-    sf_putfloat(snap_wf,"o1",0.);
-    sf_putstring(snap_wf,"label1","Vertical wavenumber");
-
-    sf_putint(snap_wf,"n2",nx2);
-    sf_putfloat(snap_wf,"d2",dx);
-    sf_putfloat(snap_wf,"o2",x0);
-    sf_putstring(snap_wf,"label2","Horizontal wavenumber");
-
-    sf_putint(snap_wf,"n3",niter);
-    sf_putfloat(snap_wf,"d3",1.0);
-    sf_putfloat(snap_wf,"o3",0.0);
-
-    /* decon image */
-
-    sf_putint(snap_lsmig,"n1",nt);
-    sf_putfloat(snap_lsmig,"d1",dt);
-    sf_putfloat(snap_lsmig,"o1",0.);
-    sf_putstring(snap_lsmig,"label1","Depth");
-
-    sf_putint(snap_lsmig,"n2",nx);
-    sf_putfloat(snap_lsmig,"d2",dx);
-    sf_putfloat(snap_lsmig,"o2",x0);
-    sf_putstring(snap_lsmig,"label2","Distance");
-
-
-    sf_putint(snap_lsmig,"n3",niter);
-    sf_putfloat(snap_lsmig,"d3",1.0);
-    sf_putfloat(snap_lsmig,"o3",0.0);
-    }
-
 
 
     if (!sf_getint("rect1",&rect1)) rect1=1;
@@ -232,26 +164,8 @@ int main(int argc, char* argv[])
 
     }
     sf_warning("Pass now !");
-    
 
 
-
-
-    /* Snapshot of w, wf, deconvolved inmage */
-
-    if(NULL != snap_w){
-        sf_floatwrite(w+2*n, n, snap_w);
-    }
-    if(NULL != snap_wf){
-        sf_floatwrite(w+3*n, nk, snap_wf);        
-    }
-
-    if(NULL != snap_lsmig){
-    /* y is first migration (target) matched by m2 (src) */
-
-        sfchain2d_deconimg(y , lsmig, w+2*n, w+3*n);
-        sf_floatwrite(lsmig, n, snap_lsmig);        
-    }
 
 
 
