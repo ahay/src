@@ -24,7 +24,7 @@ int main (int argc, char* argv[])
 {
     bool opt, comp, phase, verb;
     double n1;
-    float nw1, b, a, dw, pi;
+    float b, a, pi;
     int nt, nw, i, j, N, m1, M, k, f;                    
     float *TDEx,*TDEy,*TDHx,*TDHy,*outp,*ExHyres,*EyHxres,*ExHypha,*EyHxpha;
     float *bb, *pp, *qq, *dd;
@@ -90,8 +90,6 @@ int main (int argc, char* argv[])
 	nt = opt? 2*kiss_fft_next_fast_size((nw+1)/2): nw;
 	
 	if (nt%2) nt++;
-	nw1 = nt/2+1;
-	dw = 128./nt; 
 	m1=n1;
 	if(m1%nw) N=m1/nw+1;
 	else N=m1/nw;

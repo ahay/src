@@ -59,8 +59,8 @@ int main(int argc, char **argv)
 	float *dpx1, *dpx2, *dpz1, *dpz2;
 
 	/* input data */
-	float **vp, **vs, **rho, **vppml, **vspml, **rhopml, **rhopmlx, **rhopmlz, **lambda, **mu, **lambda2mu, muxy, muxz, muyz,  vpmax, vpmin;
-	float **datx, **datz, **datpx, **datpz, **datsx, **datsz, **data;
+	float **vp, **vs, **rho, **vppml, **vspml, **rhopml, **rhopmlx, **rhopmlz, **lambda, **mu, **lambda2mu, vpmax, vpmin;
+	float **datx, **datz, **datpx, **datpz, **datsx, **datsz;
 
 	/* low rank finite scheme */
 	float ***Gpx, ***Gpz, ***Gsx, ***Gsz;

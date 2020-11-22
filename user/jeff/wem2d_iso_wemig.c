@@ -140,7 +140,7 @@ void wem2d_iso_wemig(bool adj,
 		     float ***xig)
 /*< Imaging kernel >*/
 {
-    int iw,ix,iz,ith,ih,rind,sind;
+    int iw,ix,iz,ith,ih=0,rind,sind;
     int id=0;
     float sarg,rarg;
     sarg = 1.f;
@@ -238,7 +238,8 @@ void wem2d_iso_wemig(bool adj,
 	    for (iz = nz-1; iz > -1; iz--) {
 
 		/* Spray xig out to all frequencies */
-		XLOOP( txig[iz][id][ix][ih] = xig[iz][ix][ih]; );
+		for (ih = 0; ih < nh; ih++)
+			XLOOP(txig[iz][id][ix][ih] = xig[iz][ix][ih];);
 
 		/* Adjoint Imaging Condition */
 		//for (ix=0; ix<nx; ix++) {
@@ -306,13 +307,13 @@ static void wem2d_iso_rwetaper_init(void)
 	
     /* Left boundary */
     for (ix = 0; ix < nxtap; ix++){
-	j1 = abs(nxtap-ix-1.f);
+	j1 = abs(nxtap-ix-1);
 	tap[ix] = cos ( SF_PI/2.f*j1/(nxtap-1.f) );
     }
   
     /* Right boundary */
     for (ix = 0; ix < nxtap; ix++){
-	j1 = abs(nxtap-ix-1.f);
+	j1 = abs(nxtap-ix-1);
 	tap[nx-ix-1] = cos (SF_PI/2.f*j1/(nxtap-1.f) );
     }	
 

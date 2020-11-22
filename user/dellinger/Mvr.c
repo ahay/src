@@ -61,11 +61,11 @@ int main(int argc, char* argv[])
     float           c11, c13, c33, c44, c66;
     float           alf, bet, gam;
     float           ww, dwds;
-    float           normr, normd, normc, scale;
-    float           root, root2;
+    float           normr=0, normd=0, normc, scale;
+    float           root, root2=0;
     float           temp;
     struct polar   *vrp, *vrsh, *vrsv, *dp, *dsh, *dsv;
-    float          *pp, *psv;
+    float          *pp=NULL, *psv=NULL;
     int             num, num2, ii;
     char           *title;
     char            junk[100];

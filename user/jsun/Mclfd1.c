@@ -23,7 +23,7 @@
 int main(int argc, char* argv[]) 
 {
     int tmp, nz, nt, iz, it, ik;
-    int LEN,LEN2;
+    int LEN;
     int *s1;
     float dt, dz;
     sf_complex *nxt, *old, *cur, *wav;
@@ -75,10 +75,8 @@ int main(int argc, char* argv[])
         //for (iz=LEN/2; iz<LEN; iz++) s1[iz]= iz - LEN/2;
         //for (iz=0; iz<LEN; iz++) s1[iz]= (iz%2==0) ? iz/2 : -iz/2;
         for (iz=0; iz<LEN; iz++) s1[iz]= (iz%2==0) ? iz/2-(LEN/2-1) : -(iz/2-(LEN/2-1));
-        LEN2 = LEN/2;
     } else {
         for (iz=0; iz<LEN; iz++) s1[iz]= iz;
-        LEN2 = LEN;
     }
     for (iz=0; iz<LEN; iz++) sf_warning("s1=%d",s1[iz]); 
     

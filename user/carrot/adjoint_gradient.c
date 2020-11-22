@@ -26,6 +26,7 @@ float* adjoint_gradient(float *vel_ini,float *src,float dx,int nx,float dt, int 
 /*<calculate gradient by adjoint state method>*/
 {
 
+  int it, ix;
 
   float *rec_ini=sf_floatalloc(nt);float **rec_all_ini=sf_floatalloc2(nt,nx);
      // sf_warning("nx=%d, dx=%g, nt=%d, dt=%g, sx=%d, rx=%d",nx,dx,nt,dt,sx,rx);
@@ -36,22 +37,22 @@ float* adjoint_gradient(float *vel_ini,float *src,float dx,int nx,float dt, int 
 
 
   acoustic1D(vel_ini,src,dx,nx,dt,nt,sx,rx,rec_ini, rec_all_ini);
-  float *rec_res=sf_floatalloc(nt);for (int it = 0; it < nt; ++it) rec_res[nt-1-it]=rec[it]-rec_ini[it];//reverse source
+  float *rec_res=sf_floatalloc(nt);for (it = 0; it < nt; ++it) rec_res[nt-1-it]=rec[it]-rec_ini[it];//reverse source
 
 
   float *rec_adjoint=sf_floatalloc(nt);float **rec_all_adjoint=sf_floatalloc2(nt,nx);
   acoustic1D(vel_ini,rec_res,dx,nx,dt,nt,sx,rx,rec_adjoint, rec_all_adjoint);
 
   float *gradient=sf_floatalloc(nx);
-  for (int ix = 0; ix < nx; ++ix)
+  for (ix = 0; ix < nx; ++ix)
   {
     gradient[ix]=0.0;
-    for (int it = 1; it < nt-1; ++it) gradient[ix]=gradient[ix]+(rec_all_ini[ix][it+1]+rec_all_ini[ix][it-1]-2*rec_all_ini[ix][it])/dt/dt*rec_all_adjoint[ix][nt-1-it]; 
+    for (it = 1; it < nt-1; ++it) gradient[ix]=gradient[ix]+(rec_all_ini[ix][it+1]+rec_all_ini[ix][it-1]-2*rec_all_ini[ix][it])/dt/dt*rec_all_adjoint[ix][nt-1-it]; 
     gradient[ix]=2*gradient[ix]/(vel_ini[ix]*vel_ini[ix]*vel_ini[ix]);
   }
 
 
-  float error_sum=0.0;for (int it = 0; it < nt; ++it)  error_sum=error_sum+(rec_ini[it]-rec[it])*(rec_ini[it]-rec[it]); 
+  float error_sum=0.0;for (it = 0; it < nt; ++it)  error_sum=error_sum+(rec_ini[it]-rec[it])*(rec_ini[it]-rec[it]); 
   if (flag==1) sf_warning("error_sum=%f\n",error_sum);
 
 

@@ -115,10 +115,10 @@ int main(int argc, char* argv[])
 	int nx, nc, i, j, k, order;
 	float x0, dx, x, c0, dc;
 	float fder1, fder1b ,fder,f2der;
-	float **rfl, **dip, **curv, **slo, **vn2, **drfl, **dslo, *t1k_1k_k, *t1k_k_k, *tk_k_k1, *tk_k_k, *dxdh, **vn2het, **t0sum;
+	float **rfl, **dip=NULL, **curv=NULL, **slo, **vn2, **drfl, **dslo, *t1k_1k_k, *t1k_k_k, *tk_k_k1, *tk_k_k, *dxdh, **vn2het, **t0sum;
 	bool dipcurv;  
 	  
-	sf_file refl, vnmo, slow, vnmohet, t0, dipf, curvf;	
+	sf_file refl, vnmo, slow, vnmohet, t0, dipf=NULL, curvf=NULL;	
 	sf_init(argc,argv); /* initialize - always call first */
 
 	

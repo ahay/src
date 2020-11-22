@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     /*For MPI-----------------*/
     MPI_Init(&argc,&argv);
     int size, rank;
-    int tstart,tstop;
+    int tstart=0,tstop;
 
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD,&size);
@@ -55,20 +55,26 @@ int main(int argc, char* argv[])
     /* For newton-------------*/
     int niter, vstatus, order, count, count1, count2, count3;
     double tolerance;
-    float **rr, **rd;
-    int *updown;
+    float **rr=NULL, **rd=NULL;
+    int *updown=NULL;
     bool newton, debug, fwdxini;
-    velocity2 vn; 
-    /*------------------------*/
+    velocity2 vn;
+	vn.v = NULL;
+	vn.xref = NULL;
+	vn.zref = NULL;
+	vn.gx = NULL;
+	vn.gz = NULL;
+	vn.aniso = NULL;
+	/*------------------------*/
 
-    int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
+	int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
     float **rfl, **rgd, **crv, **dip, *trace, *trace2;
     float **time, **ampl, **delt, freq, theta, ava, amp, obl;
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0;
-    const char *type, *type2;
+    const char *type=NULL, *type2=NULL;
     bool twod, verb, adj, lin, cmp, absoff;
     surface inc, ref;
-    velocity vel, vel2;
+    velocity vel=NULL, vel2=NULL;
     ktable ts, tg, **tss, **tgs;
     sf_file data, refl, curv, modl, vti;
 	

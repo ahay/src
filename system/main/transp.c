@@ -86,28 +86,28 @@ int main(int argc, char* argv[])
 
     /* swap axis */
     snprintf(key1,3,"n%d",dim1);
-    snprintf(key2,3,"n%d",dim2);
+    snprintf(key2,3,"n%d",dim2%10u);
     sf_putint(out,key1,n[dim2-1]);
     sf_putint(out,key2,n[dim1-1]);
  
     snprintf(key1,3,"d%d",dim1);
-    snprintf(key2,3,"d%d",dim2);
+    snprintf(key2,3,"d%d",dim2%10u);
     if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
     if (sf_histfloat(in,key2,&f)) sf_putfloat(out,key1,f);
 
     snprintf(key1,3,"o%d",dim1);
-    snprintf(key2,3,"o%d",dim2);
+    snprintf(key2,3,"o%d",dim2%10u);
     if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
     if (sf_histfloat(in,key2,&f)) sf_putfloat(out,key1,f);
 
     snprintf(key1,7,"label%d",dim1);
-    snprintf(key2,7,"label%d",dim2);
+    snprintf(key2,7,"label%d",dim2%10u);
 
     if (NULL != (val= sf_histstring(in,key1))) sf_putstring(out,key2,val);
     if (NULL != (val= sf_histstring(in,key2))) sf_putstring(out,key1,val);
 
     snprintf(key1,6,"unit%d",dim1);
-    snprintf(key2,6,"unit%d",dim2);
+    snprintf(key2,6,"unit%d",dim2%10u);
 
     if (NULL != (val= sf_histstring(in,key1))) sf_putstring(out,key2,val);
     if (NULL != (val= sf_histstring(in,key2))) sf_putstring(out,key1,val);

@@ -50,7 +50,7 @@ int main (int argc, char* argv[])
     float fudge = 0.f;
     float rms = 0.f;
     int panelSize, taperSize, ix, iz, iy, ind, idI, idX, indt, cube;
-    float CONVRATIO, temp, dipI, dipX, curZ, ksi, curDip1, curDip2, dipLeft1, dipRight1, dipLeft2, dipRight2;
+    float dipI, dipX, curZ, curDip1, curDip2, dipRight1, dipRight2;
     float R1, R2, L1, L2, one, secondLeft1, secondRight1, secondLeft2, secondRight2, taper;
     float fixd, X, Y, radius, radiusC, slope, sqrt2rms;
 
@@ -151,9 +151,6 @@ int main (int argc, char* argv[])
     sf_seek (rmsFile, 0, SEEK_SET);		
     sf_floatread (rmsPanel, panelSize1, rmsFile);
 
-    CONVRATIO = SF_PI / 180.f;
-
-    temp = 0.f;
 //define cubesize for shift
     cube = xNum_ * yNum_ * zNum_;
 
@@ -171,8 +168,6 @@ for (iy = 0; iy < yNum_; ++iy){
 	    curZ = zStart_ + iz * zStep_;
 	    if (! (curZ - dz > 0) ) continue; // out from data
 
-	    ksi = curZ / (curZ - dz); 			
-
 
             for (idX = 0; idX < dipNum2_; ++idX){
                 curDip2 = dipStart2_ + idX * dipStep2_;
@@ -184,9 +179,7 @@ for (iy = 0; iy < yNum_; ++iy){
 //		int indDip = (idX * dipNum1_ + idI) * zNum_ + iz;
 
 
-		dipLeft1  = 0.f;
 		dipRight1 = 0.f;
-		dipLeft2  = 0.f;
 		dipRight2 = 0.f;
 
 		if (isDepthDep) { // depth-dependent taper 

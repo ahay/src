@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     size_t bufsiz;
 
     float f, fmin, fmax, amax;
-    double fsum, fsqr, frms, fmean, fvar, fstd;
+    double fsum, fsqr, frms, fmean=0, fvar, fstd;
 
     float dou[1];
     

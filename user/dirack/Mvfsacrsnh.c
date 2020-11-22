@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 	float cnew[3]; // Temporary parameters vector - actual iteration
 	float c[3]; // Temporary parameters vector - last iteration
 	float *otm; // Optimazed parameters
-	float otrn, otrnip, otbeta, otsemb; // Optimazed parameters - actual iteration
+	float otrn=0., otrnip=0., otbeta=0., otsemb=0.; // Optimazed parameters - actual iteration
 	float deltaE, PM; // Metrópolis criteria
 	float Em0=0; // Major semblance
 	float u; // Random number

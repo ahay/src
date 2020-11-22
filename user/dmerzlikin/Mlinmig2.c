@@ -22,10 +22,10 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nx, ny, n1, ntr, apt, i;
+    int nt, nx, ntr, apt;
     char *antialias;
     float *trace, *out, rho, angle;
-    float dx, dy, ox, oy, dt,ot;
+    float dx, ox, dt,ot;
     float *vel;
     bool adj, doomp, ps, hd, dd;
     sf_file in, mig, fvel;

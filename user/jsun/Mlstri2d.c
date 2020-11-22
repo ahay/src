@@ -26,17 +26,17 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,adj,abc,inv,prec,sw,ctr;  /* execution flags */
-    int nt, nx, nz, depth, nb, n2, nt2; /* dimensions */
-    int tmp, ngeo, **geo;               /* total number of geophones, and their locations */
-    int niter, ngrp, size;              /* # of iters, groups, sw size */
-    int rectz, rectx, rectt,repeat;     /* smoothing pars */
-    int stack,is,it,ix,iz,ig,tsize;     /* local stacking length */
-    float ox, oz, dx, dz, dt, cb;       /* intervals */
-    float perc, hard;                   /* hard thresholding and division padding */
-    float **dd, **vv, ***ww, ***mwt;    /* arrays */
+    bool verb,adj,abc,inv,prec,sw,ctr;      /* execution flags */
+    int nt, nx, nz, depth, nb, n2, nt2;     /* dimensions */
+    int tmp, ngeo, **geo;                   /* total number of geophones, and their locations */
+    int niter, ngrp, size;                  /* # of iters, groups, sw size */
+    int rectz, rectx, rectt,repeat;         /* smoothing pars */
+    int stack,is,it,ix,iz,ig,tsize;         /* local stacking length */
+    float ox, oz, dx, dz, dt, cb;           /* intervals */
+    float perc, hard;                       /* hard thresholding and division padding */
+    float **dd, **vv, ***ww, ***mwt=NULL;   /* arrays */
     float ***ww2=NULL;
-    sf_file in, out, vel, weight, geop; /* I/O files */
+    sf_file in, out, vel, weight = NULL, geop;     /* I/O files */
 
     /* initialize Madagascar */
     sf_init(argc,argv);

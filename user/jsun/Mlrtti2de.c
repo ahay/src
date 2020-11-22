@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
   int nzx,nzx2,nz2,nx2,nk,nkz,nkx,pad1,n2,m2p,m2s; /*fft related*/
 
   bool cmplx,sep;
-  int nth;
 
   bool abc;
   int nbt,nbb,nbl,nbr; /* abc width */
@@ -105,6 +104,7 @@ int main(int argc, char* argv[])
   sf_warning("nt=%d dt=%f",nt,dt);
 
 #ifdef _OPENMP
+      int nth;
 #pragma omp parallel
     {
       nth = omp_get_num_threads();
@@ -255,7 +255,7 @@ int main(int argc, char* argv[])
 #endif
       for(ix=-1;ix<=1;ix++) {
 	for(iz=-1;iz<=1;iz++) {
-	  if(fabs(ix)+fabs(iz)==2) {
+	  if(abs(ix)+abs(iz)==2) {
 	    j = isz+iz+nz2*(isx+ix);
 	    uz[j]+=iz*Ricker(t, f0, t0, A);
 	    ux[j]+=ix*Ricker(t, f0, t0, A);
@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
 #endif
       for(ix=-1;ix<=1;ix++) {
         for(iz=-1;iz<=1;iz++) {
-	  if(fabs(ix)+fabs(iz)==2) {
+	  if(abs(ix)+abs(iz)==2) {
 	    j = isz+iz+nz2*(isx+ix);
 	    if(ix==-1&&iz==1)  
 	      uz[j]+=sqrt(2.0)*Ricker(t, f0, t0, A);

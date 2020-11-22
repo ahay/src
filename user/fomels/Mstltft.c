@@ -26,7 +26,6 @@ int main(int argc, char* argv[])
 {
     bool inv, verb;
     int i1, n1, iw, nt, nw, i2, n2, n12, n1w;
-    int m[SF_MAX_DIM];
     float t, d1, w, w0, dw, mean=0.0f, lam;
     float *trace, **kbsc, *mkbsc, **sscc, *mm, *ww;
     sf_complex *outp, *cbsc;
@@ -79,10 +78,6 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("lambda",&lam)) lam=1.0f;
 	/* smoothing parameter */
 
-	for(i2=0; i2 < SF_MAX_DIM; i2 ++) {
-	    m[i2] = 1;
-	}
-	m[0] = n1;
     } else {
 	n2 = sf_leftsize(in,2);
 	if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");

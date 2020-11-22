@@ -285,18 +285,14 @@ void shot_ker_depth_onestep(sf_complex *wld_z,float *v_z,float w,int signn, stru
 
 void li_filter(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_par,int signn)
 {
-    int nx,ny;
-    float fkx,fky,dkx,dky,dz;
+    int nx;
+    float fkx,dkx,dz;
     int ix,iy;
-    float kx,kz2,phsft,pio2,kx2;
+    float kx,kz2,phsft,kx2;
     float a,b;
-    float rotate,pfiltercut;
-    rotate=ker_par.rotate;
-    pfiltercut=60.0;
-    pio2=SF_PI*2.0;
-    nx=ker_par.nx; ny=ker_par.ny;
-    fkx=ker_par.fkx; fky=ker_par.fky;
-    dkx=ker_par.dkx; dky=ker_par.dky;
+    nx=ker_par.nx; 
+    fkx=ker_par.fkx;
+    dkx=ker_par.dkx; 
     dz=ker_par.dz; a=ker_par.fda; b=ker_par.fdb;
     for(iy=0;iy<1;iy++){
 	for(ix=0;ix<nx;ix++){  
@@ -321,21 +317,17 @@ void li_filter(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_par,i
 void li_filter_new(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_par,int signn)
 /*< LI filter >*/
 {
-    int nx,ny;
-    float fkx,fky,dkx,dky,dz;
+    int nx;
+    float fkx,dkx,dz;
     int ix,iy;
-    float kx,kz2,phsft,pio2,kx2;
+    float kx,kx2;
     float a,b;
-    float rotate,pfiltercut;
     float deltx2,dx,dx2,aterm,bterm,tr;
     sf_complex leftterm,rightterm;
 
-    rotate=ker_par.rotate;
-    pfiltercut=60.0;
-    pio2=SF_PI*2.0;
-    nx=ker_par.nx; ny=ker_par.ny;
-    fkx=ker_par.fkx; fky=ker_par.fky;
-    dkx=ker_par.dkx; dky=ker_par.dky;
+    nx=ker_par.nx; 
+    fkx=ker_par.fkx; 
+    dkx=ker_par.dkx; 
     dz=ker_par.dz; a=ker_par.fda; b=ker_par.fdb;
     dx=ker_par.dx; dx2=dx*dx; tr=ker_par.tx;
     for(iy=0;iy<1;iy++){
@@ -343,7 +335,6 @@ void li_filter_new(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_p
 	    kx=fkx+ix*dkx;
 	    kx2=(kx*kx)/(w_v0_z*w_v0_z);
 	    if (kx2 <=1) {
-		kz2=1.0-kx2;
 		deltx2=2.0*(cos(kx*dx)-1.0)/dx2;
 		bterm=tr*dx2+b/(w_v0_z*w_v0_z);
 		aterm=-a*dz/(2.0*w_v0_z);
@@ -353,8 +344,6 @@ void li_filter_new(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_p
 
 	    } else{
 		if (kx2>2) kx2=2.0;
-		kz2=fabs(kx2- 1);
-		phsft=dz*w_v0_z*(sqrt(kz2));
 		//wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*exp(-phsft);
 		wld_z[i2(iy,ix,nx)]=0.0;  
 	    }
@@ -367,9 +356,8 @@ void shot_phase_shift(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ke
 {
     int nx,ny;
     float fkx,fky,dkx,dky,dz;
-    int ix,iy,ikz2;
-    float kx,ky,kz2,phsft,pio2;
-    pio2=SF_PI*2.0;
+    int ix,iy;
+    float kx,ky,kz2,phsft;
     nx=ker_par.nx; ny=ker_par.ny; 
     fkx=ker_par.fkx; fky=ker_par.fky; 
     dkx=ker_par.dkx; dky=ker_par.dky;
@@ -393,7 +381,6 @@ void shot_phase_shift(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ke
 	    else{
 		if (kz2>2) kz2=2.0;
 		kz2=kz2-1;
-		ikz2=(int)(kz2/ker_par.dqrt);
 		phsft=dz*w_v0_z*(sqrt(kz2));
 		wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*exp(-phsft);
 	    }     
@@ -407,9 +394,7 @@ void shot_ker_ssf(sf_complex *wld_z,float w_v0_z,float w,float *v_z, struct shot
 {   
     int nx,ny,ix,iy;
     float phsft,dz;
-    float pio2;
 
-    pio2=SF_PI*2.0;
     nx=ker_par.nx; ny=ker_par.ny; dz=ker_par.dz;
   
     for(iy=0;iy<ny;iy++){
@@ -425,17 +410,16 @@ void shot_ker_fd(sf_complex *wld_z,float *ca,float *cb,struct shot_ker_par_type 
 {
 
     int nx,ny,iy;
-    float tx,ty,ax,ay,bx,by;
-    sf_complex *ux,*vx,*uy,*vy;
-    float *cax,*cbx,*cay,*cby;
+    float tx,ax,bx;
+    sf_complex *ux,*vx;
+    float *cax,*cbx;
 
-    ax=-signn*ker_par.ax; ay=-signn*ker_par.ay; 
-    bx=ker_par.bx; by=ker_par.by; 
+    ax=-signn*ker_par.ax; 
+    bx=ker_par.bx; 
     nx=ker_par.nx; ny=ker_par.ny;
-    tx=ker_par.tx; ty=ker_par.ty;
+    tx=ker_par.tx;
 
     ux=ker_par.ux; vx=ker_par.vx; cax=ker_par.cax; cbx=ker_par.cbx;
-    uy=ker_par.uy; vy=ker_par.vy; cay=ker_par.cay; cby=ker_par.cby;
 
     for(iy=0;iy<ny;iy++){
 	rowc(wld_z,ux,iy,nx,1);  //ux=wld_z(iy,:)
@@ -595,12 +579,10 @@ void shot_ker_depth_onestep_ani_phaseshift(sf_complex *wld_z,float *v_z,float w,
 
 
 void shot_ker_depth_onestep_vti_phaseshift(sf_complex *wld_z,float w_v0_z,float ep,float dl,int signn, struct shot_ker_par_type ker_par){
-    int op,nref,nx,ny,is2d;
-    sf_complex  *tmp_fft,*add_wld,*tmp_wld;
-    float *v0_z,*v_zw,*v_zw0;
-    nref=ker_par.nref;  nx=ker_par.nx;  ny=ker_par.ny;  is2d=ker_par.is2d;  op=ker_par.op; //! op:1:ssf 2:fd 3:ffd
-    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw; v_zw0=ker_par.v_zw0;
-    tmp_fft=ker_par.tmp_fft; add_wld=ker_par.add_wld; tmp_wld=ker_par.tmp_wld;
+    int nx;
+    sf_complex  *tmp_fft;
+    nx=ker_par.nx;  //! op:1:ssf 2:fd 3:ffd
+    tmp_fft=ker_par.tmp_fft; 
 
     rowc(wld_z,tmp_fft,0,nx,1);  //tmp_fft=wld_z(1,:);
     kissfft(tmp_fft,nx,+1);
@@ -619,21 +601,19 @@ void shot_ker_depth_onestep_impulse(sf_complex *wld_z,float *v_z,float w,int sig
 /*< onestep impulse >*/
 {
     int op,nref,nx,ny,is2d;
-    float dref;
-    sf_complex  *tmp_fft,*add_wld,*tmp_wld;
+    sf_complex  *tmp_fft;
     int ix,iy;
     float w_v0_z,maxvz,minvz;
-    float *v0_z,*v_zw,*v_zw0;
+    float *v0_z,*v_zw;
     nref=ker_par.nref;  nx=ker_par.nx;  ny=ker_par.ny;  is2d=ker_par.is2d;  op=ker_par.op; //! op:1:ssf 2:fd 3:ffd
-    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw; v_zw0=ker_par.v_zw0;
-    add_wld=ker_par.add_wld; tmp_wld=ker_par.tmp_wld;
+    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw;
     tmp_fft=sf_complexalloc(nx*2);
-    maxvz=maxval(v_z,nx*ny); minvz=minval(v_z,nx*ny);  dref=(maxvz-minvz)/(nref+1);
+    maxvz=maxval(v_z,nx*ny); minvz=minval(v_z,nx*ny); 
     if ( fabs(maxvz-minvz)<50.0 ) { ///?????????????wait
 	nref=1;  v0_z[0]=0.5*(maxvz+minvz);
     }
     else{
-	v0_z[0]=minvz;  v0_z[nref-1]=maxvz;  dref=(v0_z[nref-1]-v0_z[0])/(float)(nref-1); v0_z[1]=(minvz+maxvz)*0.5;  
+	v0_z[0]=minvz;  v0_z[nref-1]=maxvz;  v0_z[1]=(minvz+maxvz)*0.5;  
     }
 
     for (iy=0;iy<ny;iy++)
@@ -673,22 +653,20 @@ void shot_ker_depth_onestep_fd2(sf_complex *wld_z,float *v_z,float w,int signn,
 {
     int op,nref,nx,ny,is2d;
 
-    float dref;
-    sf_complex  *tmp_fft,*add_wld,*tmp_wld;
+    sf_complex  *tmp_fft;
     int ix,iy;
     float w_v0_z,maxvz,minvz;
-    float *v0_z,*v_zw,*v_zw0;
+    float *v0_z,*v_zw;
     nref=ker_par.nref;  nx=ker_par.nx;  ny=ker_par.ny;  is2d=ker_par.is2d;  op=ker_par.op; //! op:1:ssf 2:fd 3:ffd
-    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw; v_zw0=ker_par.v_zw0;
-    add_wld=ker_par.add_wld; tmp_wld=ker_par.tmp_wld;
+    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw;
     tmp_fft=sf_complexalloc(nx*2);
 
-    maxvz=maxval(v_z,nx*ny); minvz=minval(v_z,nx*ny);  dref=(maxvz-minvz)/(nref+1);
+    maxvz=maxval(v_z,nx*ny); minvz=minval(v_z,nx*ny);  
     if ( fabs(maxvz-minvz)<50.0 ) { ///?????????????wait
 	nref=1;  v0_z[0]=0.5*(maxvz+minvz);
     }
     else{
-	v0_z[0]=minvz;  v0_z[nref-1]=maxvz;  dref=(v0_z[nref-1]-v0_z[0])/(float)(nref-1); v0_z[1]=(minvz+maxvz)*0.5;  
+	v0_z[0]=minvz;  v0_z[nref-1]=maxvz;  v0_z[1]=(minvz+maxvz)*0.5;  
     }
     for (iy=0;iy<ny;iy++)
 	for(ix=0;ix<nx;ix++)
@@ -728,19 +706,14 @@ void li_filter_fd2(sf_complex *wld_z,float w_v0_z,float a1,float b1,float a2,flo
 		   struct shot_ker_par_type ker_par,int signn)
 /*< Li filter >*/
 {
-    int nx,ny;
-    float fkx,fky,dkx,dky,dz;
+    int nx;
+    float fkx,dkx,dz;
     int ix,iy;
-    float kx,kz2,phsft,pio2,kx2;
-    float a,b;
-    float rotate,pfiltercut;
-    rotate=ker_par.rotate;
-    pfiltercut=60.0;
-    pio2=SF_PI*2.0;
-    nx=ker_par.nx; ny=ker_par.ny;
-    fkx=ker_par.fkx; fky=ker_par.fky;
-    dkx=ker_par.dkx; dky=ker_par.dky;
-    dz=ker_par.dz; a=ker_par.fda; b=ker_par.fdb;
+    float kx,kz2,phsft,kx2;
+    nx=ker_par.nx; 
+    fkx=ker_par.fkx; 
+    dkx=ker_par.dkx; 
+    dz=ker_par.dz;
     for(iy=0;iy<1;iy++){
 	for(ix=0;ix<nx;ix++){  //do ix=1,nx
 	    kx=fkx+ix*dkx;
@@ -902,10 +875,9 @@ void shot_phase_shift_ani(sf_complex *wld_z,float w_v0_z,float ep,float dl,float
     float fkx,fky,dkx,dky,dz;
   
     int ix,iy;
-    float kx,ky,phsft,pio2;
+    float kx,ky,phsft;
     sf_complex kz1;
     sf_complex *kza;
-    pio2=SF_PI*2.0;
     nx=ker_par.nx; ny=ker_par.ny; 
     fkx=ker_par.fkx; fky=ker_par.fky; 
     dkx=ker_par.dkx; dky=ker_par.dky;
@@ -996,15 +968,14 @@ void shot_phase_shift_vti(sf_complex *wld_z,float w_v0_z,float ep,float dl,
 			  struct shot_ker_par_type ker_par,int signn)
 /*< phase shift VTI >*/
 {
-    int nx,ny;
-    float fkx,fky,dkx,dky,dz; 
+    int nx;
+    float fkx,dkx,dz; 
     int ix,iy;
-    float kx,kz2,phsft,pio2;
+    float kx,kz2,phsft;
 
-    pio2=SF_PI*2.0;
-    nx=ker_par.nx; ny=ker_par.ny; 
-    fkx=ker_par.fkx; fky=ker_par.fky; 
-    dkx=ker_par.dkx; dky=ker_par.dky;
+    nx=ker_par.nx; 
+    fkx=ker_par.fkx; 
+    dkx=ker_par.dkx; 
     dz=ker_par.dz;
     iy=0;
     for (ix=0;ix<nx;ix++){

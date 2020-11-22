@@ -26,7 +26,7 @@ int main (int argc, char *argv[])
     int n123, niter, order, nj1,nj2, i, j, liter, dim;
     int n[SF_MAX_DIM], rect[3], nr, ir; 
     float p0, *u, *p, pmin, pmax, eps;
-    float **allu, **allp, d1, d2, d3, o1, o2, o3, *sendbuf, *recvbuf;
+    float **allu=NULL, **allp=NULL, d1, d2, d3, o1, o2, o3, *sendbuf, *recvbuf;
     bool verb, **mm;
     sf_file in, out, mask, dip0;
 

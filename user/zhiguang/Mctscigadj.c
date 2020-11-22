@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     int ix, iz, it, itau;
     int nx, nz, ntau, nt, pad, htau;
     float dt, dtau, dx, dz, idz2, idx2;
-    float tau0, tau, sign;
+    float tau0, tau, sign = 0.;
     
     float ***dd, ***mm, ***dertau, ***der0, **vv;
     float **cur, **nxt, **dercur, **dernxt, **tmp;
@@ -158,8 +158,8 @@ int main(int argc, char *argv[])
             padvv[ix+pad+nx][iz]=padvv[pad+nx-1][iz];
         }
 	
-	
-	htau=(ntau-1)/2;
+
+    htau=(ntau-1)/2;
 	if(adj){ /* migration */
 		
 		for(itau=0; itau<ntau; itau++){

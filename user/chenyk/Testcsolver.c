@@ -58,9 +58,9 @@ int main(void)
     b[0].r=2; b[0].i=14;    b[1].r=2; b[1].i=18;    b[2].r=0; b[2].i=24;  
 
     for(j=0;j<3;j++)
-        sf_warning("a[%d][0]=%.3f+i%.3f, a[%d][1]=%.3f+i%.3f, a[%d][2]=%.3f+i%.3f",j,a[j][0].r,a[j][0].i,j,a[j][1].r,a[j][1].i,j,a[j][2].r,a[j][2].i);
+      sf_warning("a[%d][0]=%.3f+i%.3f, a[%d][1]=%.3f+i%.3f, a[%d][2]=%.3f+i%.3f", j, a[j][0].r, a[j][0].i, j, a[j][1].r, a[j][1].i, j, a[j][2].r, a[j][2].i);
 
-	sf_warning("b[0]=%.3f+i%.3f, b[1]=%.3f+i%.3f, b[2]=%.3f+i%.3f",b[0].r,b[0].i,b[1].r,b[1].i,b[2].r,b[2].i);
+    sf_warning("b[0]=%.3f+i%.3f, b[1]=%.3f+i%.3f, b[2]=%.3f+i%.3f",b[0].r,b[0].i,b[1].r,b[1].i,b[2].r,b[2].i);
 
     csolve_init(a,b,N);
     

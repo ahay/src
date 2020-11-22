@@ -80,7 +80,7 @@ void tree_build(bool debug)
 {
     int i, k, iz, ix, ia, kx, kz, ka;
     float x, z, a, b, v, v0, p[2], g0[2], g[2], s, sx, sz, sp, t=0., *vk;
-    bool onx, onz, onp;
+    bool onz, onp;
     Node node;
 
     for (kz=0; kz < nz; kz++) {
@@ -164,7 +164,6 @@ void tree_build(bool debug)
 		}
 	    
 		onz = sf_cell_snap (&z,&iz,eps);
-		onx = sf_cell_snap (&x,&ix,eps);
 		onp = sf_cell_snap (&b,&ia,eps);
 		
 		sf_eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);

@@ -51,7 +51,7 @@ int main (int argc, char* argv[])
     /* allocate secondary input reference shifts array*/
     float* shifts_f     = sf_floatalloc(n1);
 	/* optional 2d shifts array */
-	float* large_shifts ;
+	float* large_shifts=NULL;
 	/* and read from file if needed */
 	if (multishft == 2){
 		large_shifts = sf_floatalloc(n1*n2);

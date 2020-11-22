@@ -27,10 +27,10 @@ int main(int argc, char*argv[])
 {
 	sf_file in,  out;
 	int i1, i2, i3, n1, n2, n3;
-	float lamda, **u1, **u2, **u3, sigma;
+	float lamda, **u1, **u2=NULL, **u3=NULL, sigma;
 	bool twod;
 	kernel op;
-	void *h1, *h2;
+	void *h1, *h2=NULL;
 	char *str;
 
 	sf_init(argc, argv);

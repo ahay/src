@@ -11,7 +11,7 @@
 int main(int argc, char* argv[])
 {
     int nt, nt2, nx, ny, n12, i, j, initer, oniter, niter, repeat, dsnaps;
-    bool adj, sm, domod, dopi, doanisodiff, dothr, thrflag, doomp, snaps, ch=false;
+    bool adj, sm, domod, dopi, doanisodiff, dothr, thrflag, doomp, snaps;
     float dt, dx,dy, ot, ox,oy, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr, thr;
     float *data, *modl, *modl0;
@@ -22,11 +22,9 @@ int main(int argc, char* argv[])
     float anisoeps, *vx, *vy;
     sf_file dip, azin, dipImage;
     /* Kirchhoff params */
-    bool verb;
     float *vel, rho;
     float angle;
     sf_file velFile, fvx, fvy, snapsf;
-    float elapsed, tstart, tend;
     char *antialias;
     const char* mode;
 

@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	sf_axis ax, az, atau;
 	sf_file tgather, cgather, left, right;
 
-	int cpuid, numprocs, nth;
+	int cpuid, numprocs;
 	float *sendbuf, *recvbuf;
 	MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -79,9 +79,10 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(comm, &numprocs);
 
 #ifdef _OPENMP
+	int nth;
 #pragma omp parallel
 	{
-		nth=omp_get_num_threads();
+		nth = omp_get_num_threads();
 	}
 	sf_warning(">>> Using %d threads <<<", nth);
 #endif

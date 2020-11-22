@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     float **dd, **mm, **vv;
     float **u0, **u1, **u2, **tmp; /* temporary arrays */
 
-    sf_file in, out, vel, wave; /* I/O files */
+    sf_file in, out, vel, wave=NULL; /* I/O files */
 
     /* initialize Madagascar */
     sf_init(argc,argv);

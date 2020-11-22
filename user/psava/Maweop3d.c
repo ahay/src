@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 
     /* FDM structure */
     fdm3d    fdm=NULL;
-    abcone3d abc=NULL;
+    // abcone3d abc=NULL;
     sponge   spo=NULL;
 
     /* I/O arrays */
@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
     sf_floatread(tt[0][0],nz*nx*ny,Fvel );    expand3d(tt,vp,fdm);
 
     if(dabc) {
-        abc = abcone3d_make(NOP,dt,vp,fsrf,fdm); /* one-way abc setup */
+        // abc = abcone3d_make(NOP,dt,vp,fsrf,fdm); /* one-way abc setup */
         spo = sponge_make(fdm->nb);              /* sponge abc setup */
     }
 

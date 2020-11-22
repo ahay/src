@@ -48,7 +48,6 @@ static float kh0,kx0,kz0;
 static float dx,dz,dh,ox,oz,oh;
 static double minv,maxv,maxvs2pvr2;
 static float freqmax;
-static int equation;
 
 
 static int 

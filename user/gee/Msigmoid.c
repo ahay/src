@@ -50,13 +50,18 @@ int main (int argc, char* argv[])
     if (!sf_getint ("large",&large)) large=5*n1;
     /* reflectivity series */
 
-    if (!sf_getfloat("o1",&o1)) o1=0.; sf_putfloat(mod,"o1",o1);
-    if (!sf_getfloat("o2",&o2)) o2=0.; sf_putfloat(mod,"o2",o2);
+    if (!sf_getfloat("o1",&o1)) o1=0.; 
+    if (!sf_getfloat("o2",&o2)) o2=0.; 
     /* origin */
     
-    if (!sf_getfloat("d1",&d1)) d1=0.004; sf_putfloat(mod,"d1",d1);
-    if (!sf_getfloat("d2",&d2)) d2=0.032; sf_putfloat(mod,"d2",d2);
+    if (!sf_getfloat("d1",&d1)) d1=0.004; 
+    if (!sf_getfloat("d2",&d2)) d2=0.032; 
     /* sampling */
+
+	sf_putfloat(mod,"o1",o1);
+	sf_putfloat(mod,"o2",o2);
+	sf_putfloat(mod,"d1",d1);
+	sf_putfloat(mod,"d2",d2);
 
     if (!sf_getbool("reflectivity",&reflectivity)) reflectivity=true;
     /* if output reflectivity (otherwise output impedance model) */

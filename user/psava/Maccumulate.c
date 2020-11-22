@@ -51,7 +51,8 @@ int main(int argc, char* argv[])
     a2=sf_iaxa(Fin,2); if(verb) sf_raxa(a2); 
     a3=sf_iaxa(Fin,3); if(verb) sf_raxa(a3); 
     if(axis>3) 
-	a4=sf_iaxa(Fin,4); if(verb) sf_raxa(a4); 
+	    a4=sf_iaxa(Fin,4); 
+    if(verb) sf_raxa(a4); 
     aa=sf_maxa(1,0,1); sf_setlabel(aa,"");  sf_setunit (aa,""); 
     
     /*------------------------------------------------------------*/

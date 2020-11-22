@@ -48,7 +48,7 @@ int main (int argc, char* argv[])
 	float* accumulate = sf_floatalloc(n1*n2);
 	/* initialize the accumulation array, wit zeros if directional 
 	   and with the negative errors if symmetric */
-	float* accumulate_f ;
+	float* accumulate_f = NULL;
 	/* see if we are accumulating forward */
 		if (dir >= 0){ 
 			/* allocate forward error array */

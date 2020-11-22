@@ -53,6 +53,7 @@ Date: February 2020
 static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   long n1 = wfl->simN1;
   long n2 = wfl->simN2;
+  long i, i1, i2;
   sf_warning("DOT PRODUCT TEST: ");
 
   sf_warning("Zero the source function..");
@@ -66,8 +67,8 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   float *x = sf_floatalloc(n1*n2);
   memset(x,0,n1*n2*sizeof(float));
 
-  for (long i2=NOP; i2<n2-NOP; i2++){
-    for (long i1=NOP; i1<n1-NOP; i1++){
+  for (i2=NOP; i2<n2-NOP; i2++){
+    for (i1=NOP; i1<n1-NOP; i1++){
       float v= .1*(drand48()-.5);
       wfl->pp[IDX2D(i1,i2)] = v;
       x[IDX2D(i1,i2)] = v;
@@ -84,8 +85,8 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   sf_warning("set a random wavefield y..");
   float *y = sf_floatalloc(n1*n2);
   memset(y,0,n1*n2*sizeof(float));
-  for (long i2=NOP; i2<n2-NOP; i2++){
-    for (long i1=NOP; i1<n1-NOP; i1++){
+  for (i2=NOP; i2<n2-NOP; i2++){
+    for (i1=NOP; i1<n1-NOP; i1++){
       float v= .1*(drand48()-.5);
       wfl->pp[IDX2D(i1,i2)] = v;
       y[IDX2D(i1,i2)] = v;
@@ -100,7 +101,7 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   sf_warning("Dot-products check..");
   double yAx = 0.;
   double xAty= 0.;
-  for (long i=0; i<n1*n2; i++)
+  for (i=0; i<n1*n2; i++)
   {
     yAx  += y[i]*Ax[i];
     xAty += x[i]*Aty[i];

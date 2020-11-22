@@ -46,10 +46,12 @@ void seplowrank3domp(float *ldata,float *rdata,float *fmid, float *p, int *ijkx,
 
 #endif
        float *wp;
+       int i, im, im2;	
+       float sum1, sum2;
 
         wp = sf_floatalloc(m*n2);
 
-#ifdef SF_HAS_FFT
+#ifdef SF_HAS_FFTW
        xin=sf_complexalloc(m);
        xout=sf_complexalloc(n);
        xx=sf_complexalloc(n);

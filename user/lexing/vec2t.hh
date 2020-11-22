@@ -129,10 +129,14 @@ template <class F> inline Vec2T<F> ewrnd(const Vec2T<F>&a) { //round
 
 //---------------INOUT
 template <class F> istream& operator>>(istream& is, Vec2T<F>& a) {
-  for(int i=0; i<2; i++) is>>a[i]; return is;
+  for (int i = 0; i < 2; i++)
+    is >> a[i];
+  return is;
 }
-template <class F> ostream& operator<<(ostream& os, const Vec2T<F>& a) { 
-  for(int i=0; i<2; i++) os<<a[i]<<" "; return os;
+template <class F> ostream& operator<<(ostream& os, const Vec2T<F>& a) {
+  for (int i = 0; i < 2; i++)
+    os << a[i] << " ";
+  return os;
 }
 
 //---------------------------------------------------------

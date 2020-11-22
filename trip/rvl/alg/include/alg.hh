@@ -68,7 +68,7 @@ namespace RVLAlg {
   public:
 
     Algorithm() {}
-    virtual ~Algorithm() {}
+    virtual ~Algorithm() noexcept(false) {}
 
     /** 
 	This is the only required member function.  When called
@@ -154,7 +154,7 @@ namespace RVLAlg {
   */
   class Terminator {
   public: 
-    virtual ~Terminator() {}
+    virtual ~Terminator() noexcept(false) {}
     virtual bool query() = 0;
   };
 

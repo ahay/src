@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
 	
     if (!sf_histint(index_FILE,"n1",&nindex)) sf_error("No n1= in index file");
 	
-    if (!n2==nindex) sf_error("Error index file lenght nindex=%d differs from input n2=%d",nindex,n2);
+    if (!(n2==nindex)) sf_error("Error index file lenght nindex=%d differs from input n2=%d",nindex,n2);
 	
     column = sf_floatalloc(n1);
 	
@@ -68,7 +68,7 @@ int main (int argc, char* argv[])
     /* reading the number of gahters in data*/
     n3 = sf_leftsize(in,2);	
 
-    if ((n3==0)) n3=1;
+    if (n3==0) n3=1;
 	
     /* sf_warning("I'm here nw=%d",nw); */
     for (i3=0;i3<n3;i3++) { /*gahters loop */	

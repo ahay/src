@@ -96,12 +96,11 @@ int main(int argc, char* argv[])
   int ns_out;
   int indx_ns; /*trace header index of ns key */
   char* keyname;
-  int indx_key; /*trace header index of key identified by user's key parm */
+  int indx_key=0; /*trace header index of key identified by user's key parm */
   int key_min; /*minimum for header 'user key parameter to output */
   int key_max; /*maximum for header 'user key parameter to output' */
   int keyvalue; /* value of the header key on this trace */
   int *reject=NULL; /*list of bad user key headers*/
-  char** list_of_strings;
   int numreject;
   int ireject;
   bool rejecttrace;
@@ -167,7 +166,6 @@ int main(int argc, char* argv[])
   
   if(verbose>0)fprintf(stderr,"get the parameter reject\n");
   numreject=0;
-  list_of_strings=sf_getnstring("reject",&numreject);
   if(numreject>0){
     reject=sf_intalloc(numreject);
     sf_getints("reject",reject,numreject);

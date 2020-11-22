@@ -44,7 +44,7 @@ int main (int argc, char* argv[]) {
     size_t i, j, is, ih, nh;
     float sx, sy, gx, gy;
     float gxmin, gxmax, gymin, gymax;
-    int iz, ix, iy, nz, nx, ny, nb, na, nt, np, nc = 1;
+    int iz, ix, iy, nz, nx, ny, nb, na, nt, np;
     float dt, db, da, t0, b0, a0, dbx, dby, dxm, dym;
     float dz, z0, dx, x0, dy, y0, zd, z, x, y, zf, vconst = 1.5;
     float oazmin = 180.0, oazmax = 180.0, dazmin = 180.0, dazmax = 180.0;
@@ -180,7 +180,9 @@ int main (int argc, char* argv[]) {
     }
 
 #ifdef _OPENMP
-    if (!sf_getint ("nc", &nc)) nc = 0;
+    int nc = 1;
+    if (!sf_getint("nc", &nc))
+        nc = 0;
     /* Number of threads to use for ray tracing (OMP_NUM_THREADS by default) */
     if (nc)
         omp_set_num_threads (nc); /* User override */

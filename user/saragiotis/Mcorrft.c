@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 {
     int  i1,i2,i3,iw, n1,n2,n3,n12, m2=0,m12=0, nm2; 
 	int  n[SF_MAX_DIM],m[SF_MAX_DIM], dim,mdim, axis, nfft,nw;
-    float d2,dy2, o2,oy2, dw, scale,shift;
+    float d2,dy2, o2,oy2, scale,shift;
     float *x,*x1, *y=NULL,*y1=NULL, *z,*z1, tmp;
 	char key[3];
 	sf_complex *fft1,*fft2=NULL, *ce=NULL;
@@ -108,7 +108,6 @@ int main(int argc, char* argv[])
 	// set up FFT 
 	nfft  = 2*kiss_fft_next_fast_size((nm2+1)/2);
 	nw    = nfft/2+1;
-	dw    = 1./(nfft*d2);
 	scale = 1./nfft;
 	cfg   = kiss_fftr_alloc(nfft,0,NULL,NULL);
 	icfg  = kiss_fftr_alloc(nfft,1,NULL,NULL);

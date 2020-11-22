@@ -1707,7 +1707,7 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fmod, sf_file Fgrad, 
 	float fcost, threshold[2];
 	float *x, *direction, *grad;
 	sf_gradient gradient;
-	FILE *fp;
+	FILE *fp=NULL;
 
 	/* initialize */
 	gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, verb1);

@@ -194,8 +194,10 @@ void c2r_sinc(
 
     dr = sqrtf(az.d*az.d + ax.d*ax.d);
     
-    if(! sf_getint("nsz",&nsz)) nsz=1; if(verb) sf_warning("nsz=%d",nsz);
-    if(! sf_getint("nsx",&nsx)) nsx=1; if(verb) sf_warning("nsx=%d",nsx);
+    if(! sf_getint("nsz",&nsz)) nsz=1; 
+	if(verb) sf_warning("nsz=%d",nsz);
+    if(! sf_getint("nsx",&nsx)) nsx=1; 
+	if(verb) sf_warning("nsx=%d",nsx);
     
     /* loop over RC */
     for(it=0;it<at.n;it++) {

@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
 	int scalet, snap, snapshot, fnx, fnz, fnzx, nk, nb;
 	int rectx, rectz, repeat, gpz, n, m, pad1, trunc, spx, spz;
 
-	float dt, t0, z0, dz, x0, dx, s0, ds, wfdt, srctrunc;
+	float dt, z0, dz, dx, s0, ds, wfdt, srctrunc;
     float dtau, tau0, tau;
 
 	int nr, ndr, nr0;
@@ -232,14 +232,14 @@ int main(int argc, char *argv[])
 
 	/*wavenumber domain tapering*/
 	int taper;
-	float *ktp;
+	float *ktp=NULL;
 	float ktmp,kx_trs,kz_trs,thresh;
 	float dkx,dkz,kx0,kz0;
 	float kx,kz;
 	int nkz;
 
 	sf_complex c, **lt, **rt;
-	sf_complex *ww, **dd, ***dd3;
+	sf_complex *ww, **dd, ***dd3=NULL;
 	float ***img1, **img2, ***mig1, **mig2;
     float *rr, **ccr, **sill, ***fwf, ***bwf;
 	sf_complex *cwave, *cwavem, **wave, *curr;
@@ -247,10 +247,10 @@ int main(int argc, char *argv[])
 	sf_axis at, ax, az, atau;
 
 	sf_file Fdat, Fsrc, Fimg1, Fimg2;
-	sf_file Ffwf, Fbwf, Fvel;
+	sf_file Ffwf=NULL, Fbwf=NULL, Fvel;
 	sf_file Fleft, Fright;
 
-	int cpuid, numprocs, nth, nspad, iturn;
+	int cpuid, numprocs, nspad, iturn;
     float *sendbuf, *recvbuf;
 	sf_complex *sendbufc, *recvbufc;
 	MPI_Comm comm=MPI_COMM_WORLD;
@@ -262,9 +262,10 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(comm, &numprocs);
 
 #ifdef _OPENMP
+	int nth;
 #pragma omp parallel
 	{
-		nth=omp_get_num_threads();
+		nth = omp_get_num_threads();
 	}
 	sf_warning(">>> Using %d threads <<<", nth);
 #endif
@@ -316,8 +317,8 @@ int main(int argc, char *argv[])
         Fbwf=sf_output("Fbwf");
 	}
 
-	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); t0=sf_o(at);
-    ax=sf_iaxa(Fvel, 2); vnx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax);
+	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); 
+    ax=sf_iaxa(Fvel, 2); vnx=sf_n(ax); dx=sf_d(ax); 
 	az=sf_iaxa(Fvel, 1); rnz=sf_n(az); dz=sf_d(az); z0=sf_o(az);
     if(!sf_histint(Fdat, "n1", &nt2)) sf_error("Need n1= in input!");
 	/* number of time samples; nt is the length of the whole source wavelet */

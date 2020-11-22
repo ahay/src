@@ -29,12 +29,6 @@ static std::valarray<double> ks;
 static float dt,dx;
 static int mode;
 
-static float sinc(float x)
-{
-    if (fabs(x)<=SF_EPS) return 1.0;
-    return sinf(x)/(x+SF_EPS);
-}
-
 int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 {
     int nr = rs.size();

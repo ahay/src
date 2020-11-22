@@ -154,10 +154,14 @@ template <class F> inline bool allloe(const Vec3T<F>& a, const Vec3T<F>& b) {
 
 //---------------INOUT
 template <class F> istream& operator>>(istream& is, Vec3T<F>& a) {
-  for(int i=0; i<3; i++) is>>a[i]; return is;
+  for (int i = 0; i < 3; i++)
+    is >> a[i];
+  return is;
 }
-template <class F> ostream& operator<<(ostream& os, const Vec3T<F>& a) { 
-  for(int i=0; i<3; i++) os<<a[i]<<" "; return os;
+template <class F> ostream& operator<<(ostream& os, const Vec3T<F>& a) {
+  for (int i = 0; i < 3; i++)
+    os << a[i] << " ";
+  return os;
 }
 
 //---------------------------------------------------------

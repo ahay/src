@@ -1,5 +1,5 @@
 /*
-  Copyright © 2007, Colorado School of Mines,
+  Copyright ï¿½ 2007, Colorado School of Mines,
   All rights reserved.
   
   
@@ -186,8 +186,8 @@ Author:		Dave Hale, Colorado School of Mines, 06/08/90
 		{
 
 		       if(byte_perpixel==1)
-                        ((unsigned char *)data)[j] =((unsigned char *)data)[jline+width-1];
-                        if(byte_perpixel==2)
+			   	    ((unsigned char *)data)[j] =((unsigned char *)data)[jline+width-1];
+                    if(byte_perpixel==2)
 			{
                        /* ((unsigned short *)data)[j] =((unsigned short *)data)[jline+width-1];*/
 			 ((unsigned char *)data)[j*2+0] =((unsigned char *)data)[(jline+width-1)*2+0];

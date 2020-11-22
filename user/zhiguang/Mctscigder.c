@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 	
 	
 	/* calculate derivative and save it into ***der1 */
-	htau=(ntau-1)/2+0.5;
+    htau=(ntau-1)/2+0.5;
 	
 	  // when tau <0
 	for(itau=0; itau<htau; itau++){	

@@ -59,10 +59,10 @@ float bilateral(float *trace    /* input */,
 			expf(-0.5*(output[ns+is]-output[ns])
 			     *(output[ns+is]-output[ns])/(bx*bx+FLT_EPSILON));
 		} else {
-		    t += output[ns+is]*(1.-fabsf(1.*is)/(ns+FLT_EPSILON))
+		    t += output[ns+is]*(1.-fabsf(1.f*is)/(ns+FLT_EPSILON))
 			*expf(-bx*(output[ns+is]-output[ns])
 			      *(output[ns+is]-output[ns]));
-		    norm += (1.-fabsf(1.*is)/(ns+FLT_EPSILON))
+		    norm += (1.-fabsf(1.f*is)/(ns+FLT_EPSILON))
 			*expf(-bx*(output[ns+is]-output[ns])
 			      *(output[ns+is]-output[ns]));
 		}	

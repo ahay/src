@@ -26,8 +26,8 @@
 
 #include "filter.h"
 
-#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
-#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
+#define MY_MIN(X,Y) ((X) < (Y) ? (X) : (Y))
+#define MY_MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 void hanning_win (int n, int flag, float* w) 
 /*<Hanning window >*/{
 
@@ -210,8 +210,8 @@ void median_filter (const float* x, int xLen, int N, float* y) {
                for (i = -N; i <= N; i++)
                {
                        ind = k+i;
-                       ind = MAX (ind, 0);
-                       ind = MIN (ind,xLen-1);
+                       ind = MY_MAX (ind, 0);
+                       ind = MY_MIN (ind,xLen-1);
                        TMP[i+N] = x[ind];
                        // *** printf("\n\t%d) x(%d)=%f ", i, ind, TMP[i+N]);
                }

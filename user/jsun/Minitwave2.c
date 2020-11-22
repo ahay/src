@@ -456,11 +456,11 @@ int main(int argc, char* argv[])
 {
     bool verb,correct;
     int nt,nz,nx,m2,nk,nzx,nz2,nx2,n2,pad1;
-    int snap, wfnt;
+    int snap, wfnt=0;
     float dt, wfdt;
     char *mode;
 
-    sf_complex **ini, **cc, **dd;
+    sf_complex **ini, **cc;
     
     sf_file Fi,Fo,Fs;    /* I/O files */
     sf_axis az,ax,at;    /* cube axes */
@@ -535,7 +535,6 @@ int main(int argc, char* argv[])
 
     ini=sf_complexalloc2(nz,nx);
     cc=sf_complexalloc2(nz,nx);
-    dd=sf_complexalloc2(nz,nx);
 
     sf_complexread(ini[0],nzx,Fi);
     sf_fileclose(Fi);

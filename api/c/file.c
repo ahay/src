@@ -1449,7 +1449,7 @@ void sf_longread (/*@out@*/ off_t* arr, size_t size, sf_file file)
     switch (file->form) {
 	case SF_ASCII:
 	    for (i = 0; i < size; i++) {
-		if (EOF==fscanf(file->stream,"%lld",arr+i))
+		if (EOF==fscanf(file->stream,"%lld",(long long *)(arr+i)))
 		    sf_error ("%s: trouble reading ascii:",__FILE__);
 	    }
 	    break;

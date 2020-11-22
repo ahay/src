@@ -249,11 +249,11 @@ static void check_compat (int esize, int nin, int nopen, sf_file *ins,
 	if (!sf_histint(in,"esize",&ni) || ni != esize)
 	    sf_error ("esize mismatch: need %d",esize);
 	for (id=1; id <= dim; id++) {
-	    (void) snprintf(key,3,"n%d",id);
+	    (void) snprintf(key,3,"n%d",id%10u);
 	    if (!sf_histint(in,key,&ni) || (id != axis && ni != n[id-1]))
 		sf_error("%s mismatch: need %d",key,(int) n[id-1]);
 	    if (id == axis) naxis[i] = ni;
-	    (void) snprintf(key,3,"d%d",id);
+	    (void) snprintf(key,3,"d%d",id%10u);
 	    if (sf_histfloat(ins[0],key,&d)) {
 		if (!sf_histfloat(in,key,&di) || 
 		    (id != axis && fabsf(di-d) > tol*fabsf(d)))
@@ -261,7 +261,7 @@ static void check_compat (int esize, int nin, int nopen, sf_file *ins,
 	    } else {
 		d = 1.;
 	    }
-	    (void) snprintf(key,3,"o%d",id);
+	    (void) snprintf(key,3,"o%d",id%10u);
 	    if (sf_histfloat(ins[0],key,&o) && 
 		(!sf_histfloat(in,key,&oi) || 
 		 (id != axis && fabsf(oi-o) > tol*fabsf(d))))

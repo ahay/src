@@ -31,7 +31,7 @@ int main (int argc, char* argv[]) {
 	// check that the input is float 
     if ( SF_FLOAT != sf_gettype (xEscFile) ) sf_error ("Need float input: escape-positions file");
     /* escape-positions file */
-	sf_file tEscFile;
+	sf_file tEscFile=NULL;
     if ( NULL != sf_getstring("esct") ) {
 		/* escape-time file */
 		tEscFile  = sf_input ("esct");
@@ -39,7 +39,7 @@ int main (int argc, char* argv[]) {
 // OUTPUT FILES
     sf_file xResFile = sf_output ("out");
 	/*x-values*/
-	sf_file zResFile;
+	sf_file zResFile=NULL;
     if ( NULL != sf_getstring ("zres") ) {
 		zResFile  = sf_output ("zres");
     }

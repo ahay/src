@@ -56,7 +56,7 @@ namespace RVL {
 
     ProductSpace() {}
     ProductSpace(const ProductSpace<Scalar> &) {}
-    virtual ~ProductSpace() {}
+    virtual ~ProductSpace() noexcept(false) {}
 
     virtual bool isCompatible(DataContainer const & dc) const {
       try {

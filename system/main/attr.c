@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 	    }
 	    fsum += f;
 	    fsqr += (double) f*f;
-	    if (lval != 2 || lval != 0) flval += pow(fabs(f),lval);
+	    if (lval != 2 && lval != 0) flval += pow(fabs(f),lval);
 	    if (0. == f) nzero++;
 	    if (SF_COMPLEX==type) {
 		if (crealf(c) > crealf(cmax1)) {

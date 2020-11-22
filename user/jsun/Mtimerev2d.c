@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 {
     bool verb,abc;                  /* execution flags */
     int ix, iz, it, ig;             /* index variables */
-    int nt, wfnt, nx, nz, depth, nb, n2, snap, ngrp, counter;
+    int nt, wfnt=0, nx, nz, depth, nb, n2, snap, ngrp, counter;
     float ox, oz, dx, dz, dt, dt2, idz2, idx2, cb;
     int nxpad, nzpad;
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     float **dd, **vv, ***ww, ***wf;
     float **u0, **u1, **u2, **tmp;
 
-    sf_file in, out, vel, wave;     /* I/O files */
+    sf_file in, out, vel, wave=NULL;     /* I/O files */
 
     /* initialize Madagascar */
     sf_init(argc,argv);

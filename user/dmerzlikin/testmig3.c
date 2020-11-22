@@ -72,17 +72,16 @@ void testmig3_lop (bool adj, bool add, int fnx, int fny, float* x, float* y)
 /*< Apply Kirchhoff Migration/Modeling >*/
 {
 
-    float tstart, tend, elapsed;
     int i, ch=0;
-    float *model, *datat2, *outputt2, *data, *output, *pwddata;
 
     if((nt*nx*ny != n12) || (fnx != n12) || (fny != n12)) sf_error("Wrong dimensions");
 
     /* ADJNULL OPERATOR IS APPLIED IN MIG3LOP */
 
     #ifdef _OPENMP
+    float tstart;
     tstart = omp_get_wtime();
-    #endif
+#endif
 
     mig3_lop (adj,add, nt,nx,ny, dt,dx,dy, ot,ox,oy,
 		y /* zero-offset */,
@@ -115,6 +114,7 @@ void testmig3_lop (bool adj, bool add, int fnx, int fny, float* x, float* y)
     }/* if */
 
     #ifdef _OPENMP
+    float tend, elapsed;
     tend = omp_get_wtime();
     elapsed = tend - tstart;
     sf_warning("testmig3: elapsed=%f [s]",elapsed);

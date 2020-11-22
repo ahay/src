@@ -685,7 +685,7 @@ void gradient_pas_init(sf_file Fdat, sf_file Fsrc, sf_file Fmwt, sf_mpi *mpipar,
 {
         float **dwt=NULL,***mwt,***wwt;
         int it,ix,iz,iturn,is,rdn;
-        char filename[20]="tempbin",srdn[10];
+        char filename[20]="tempbin",srdn[100000];
         FILE *temp;
 
 	verb=verb1;

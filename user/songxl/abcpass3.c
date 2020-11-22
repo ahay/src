@@ -79,8 +79,7 @@ void bd3_decay(float ***a /*3-D matrix*/)
 /*< boundary decay>*/
 {
     int iz, ix, ih;
-    int nzb, nxb, nhb;
-    nzb = nz+nbt+nbb;
+    int nxb, nhb;
     nxb = nx+nxl+nxr;
     nhb = nh+nhl+nhr;
     if(nbt){

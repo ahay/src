@@ -48,7 +48,7 @@ int main (int argc, char* argv[]){
 	if (!sf_getfloat("k",&k))   k = 1;
 	/* stiffness relative to attraction*/
 	float kink;
-	float kink2;
+	float kink2=0;
 	if (!sf_getfloat("kink",&kink)) kink=1;
 	/* resistance to kinks  */
 	float lr;

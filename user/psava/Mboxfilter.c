@@ -26,7 +26,7 @@
 int main(int argc, char* argv[])
 {
     bool verb,stat;
-    int ompnth=1,ompith;
+    int ompnth=1,ompith = 0;
 
     sf_file Fx=NULL; /* input  */
     sf_file Fy=NULL; /* output */

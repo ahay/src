@@ -323,15 +323,19 @@ int main (int argc, char *argv[])
 	    
 	    /* longitude */
 	    if(!sf_getint  ("nha",&nha)) nha=180;
-	    if(!sf_getfloat("oha",&oha)) oha=0;   oha *= SF_PI/180;
-	    if(!sf_getfloat("dha",&dha)) dha=2.0; dha *= SF_PI/180;
+	    if(!sf_getfloat("oha",&oha)) oha=0;   
+	    if(!sf_getfloat("dha",&dha)) dha=2.0; 
+        oha *= SF_PI/180;
+        dha *= SF_PI/180;
 	    if(nz==1) { nha=1; oha=0.;       dha=SF_PI;}
 	    aha = sf_maxa(nha,oha,dha); sf_setlabel(aha,"ha");
 
 	    /* latitude */
 	    if(!sf_getint  ("nhb",&nhb)) nhb=180;
-	    if(!sf_getfloat("ohb",&ohb)) ohb=0;   ohb *= SF_PI/180;
-	    if(!sf_getfloat("dhb",&dhb)) dhb=2.0; dhb *= SF_PI/180;
+	    if(!sf_getfloat("ohb",&ohb)) ohb=0;   
+	    if(!sf_getfloat("dhb",&dhb)) dhb=2.0; 
+        ohb *= SF_PI/180;
+        dhb *= SF_PI/180;
 	    if(nx==1) { nhb=1; ohb=SF_PI/2.; dhb=SF_PI;}
 	    if(ny==1) { nhb=1; ohb=0.;       dhb=SF_PI;}
 	    ahb = sf_maxa(nhb,ohb,dhb); sf_setlabel(ahb,"hb");

@@ -39,7 +39,7 @@ void cal_div(float **p1, float **term);
 
 int main(int argc, char* argv[])
 {
-	bool verb, wfl;
+	bool verb;
 	int ix, iz, is, ir, it, ib;
 	int ns, nr, sx, rx, sz, rz, rectx, rectz;
 	int ds_v, dr_v, s0_v, r0_v;
@@ -263,9 +263,10 @@ int main(int argc, char* argv[])
             swap=fopen("temswap.bin", "rb");
             for(is=0; is<ns; is++){
                 fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-                fread(dd[0], sizeof(float), nr*nt, swap);
-                sf_floatwrite(dd[0], nr*nt, Fdat);
-            }
+                if (!fread(dd[0], sizeof(float), nr*nt, swap))
+					abort();
+				sf_floatwrite(dd[0], nr * nt, Fdat);
+			}
             fclose(swap);
             remove("temswap.bin");
         }

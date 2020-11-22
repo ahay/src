@@ -554,17 +554,14 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     /*geopar variables*/
     int nx, nz;
     int nxb, nzb;
-    float dx, dz, ox, oz;
     int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
     int snpint;
-    int top, bot, lft, rht; /*abc boundary*/
+    int top, lft; /*abc boundary*/
     int nt;
     float dt;
-    float trunc; 
     bool adj; /* migration(adjoint) flag */
     bool verb; /* verbosity flag */
     bool illum; /* source illumination flag*/
-    int m2, m2b, pad1;
     /*pointers*/
     float *rr;
     /*extras*/
@@ -598,14 +595,11 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     gpz = geop->gpz;
     /*gpx = geop->gpx;*/
     gpl = geop->gpl;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft; 
     nt = geop->nt;
     dt = geop->dt;
-    trunc = geop->trunc;
     adj = geop->adj; verb = geop->verb; illum = geop->illum;
-    m2 = geop->m2; m2b = geop->m2b; pad1 = geop->pad1;
     rr = geop->rr;
     roll = geop->roll;
     rectz=geop->rectz;
@@ -752,17 +746,13 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     /*geopar variables*/
     int nx, nz;
     int nxb, nzb;
-    float dx, dz, ox, oz;
     int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
     int snpint;
-    int top, bot, lft, rht; /*abc boundary*/
+    int top, lft; /*abc boundary*/
     int nt;
     float dt;
-    float trunc; 
-    bool adj; /* migration(adjoint) flag -> not used in this case */
     bool verb; /* verbosity flag */
     bool illum; /* source illumination flag*/
-    int m2, m2b, pad1;
     /*pointers*/
     float *rr;
     /*extras*/
@@ -802,14 +792,11 @@ int psqrtm_sbs(sf_complex*** record, sf_complex** imgsum, geopar geop, bool sdiv
     gpz = geop->gpz;
     /*gpx = geop->gpx;*/
     gpl = geop->gpl;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft;
     nt = geop->nt;
     dt = geop->dt;
-    trunc = geop->trunc;
-    adj = geop->adj; verb = geop->verb; illum = geop->illum;
-    m2 = geop->m2; m2b = geop->m2b; pad1 = geop->pad1;
+    verb = geop->verb; illum = geop->illum;
     rr = geop->rr;
     roll = geop->roll;
     rectz=geop->rectz;
@@ -1007,17 +994,13 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     /*geopar variables*/
     int nx, nz;
     int nxb, nzb;
-    float dx, dz, ox, oz;
     int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
     int snpint;
-    int top, bot, lft, rht; /*abc boundary*/
+    int top, lft; /*abc boundary*/
     int nt;
     float dt;
-    float trunc; 
-    bool adj; /* migration(adjoint) flag -> not used in this case */
     bool verb; /* verbosity flag */
     bool illum; /* source illumination flag*/
-    int m2, m2b, pad1;
     /*pointers*/
     float *rr;
     /*extras*/
@@ -1040,7 +1023,7 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     sf_complex **trace2=NULL, **trace3=NULL, *cc=NULL, *tmp_inp=NULL;
     float *wvfld_visc_f=NULL, *wvfld_disp_f=NULL, *ratio_f=NULL, *tmp_out=NULL;
     kiss_fft_cfg *cfg1=NULL, *icfg1=NULL, *cfg2=NULL, *icfg2=NULL, *cfg3=NULL, *icfg3=NULL;
-    int n3,n2,n1,i3,i2,i1,nth;
+    int n3=0,n2=0,n1=0,i3,i2,i1,nth = 1;
     float wt;
 
     /*misc*/
@@ -1064,14 +1047,11 @@ int psqrtm_com(sf_complex*** record, sf_complex** imgsum, geopar geop, bool freq
     gpz = geop->gpz;
     /*gpx = geop->gpx;*/
     gpl = geop->gpl;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft; 
     nt = geop->nt;
     dt = geop->dt;
-    trunc = geop->trunc;
-    adj = geop->adj; verb = geop->verb; illum = geop->illum;
-    m2 = geop->m2; m2b = geop->m2b; pad1 = geop->pad1;
+    verb = geop->verb; illum = geop->illum;
     rr = geop->rr;
     roll = geop->roll;
     rectz=geop->rectz;
@@ -2085,17 +2065,12 @@ int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop)
     /*geopar variables*/
     int nx, nz;
     int nxb, nzb;
-    float dx, dz, ox, oz;
     int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
     int snpint;
-    int top, bot, lft, rht; /*abc boundary*/
+    int top, lft; /*abc boundary*/
     int nt;
     float dt;
-    float trunc; 
-    bool adj; /* migration(adjoint) flag -> not used in this case */
     bool verb; /* verbosity flag */
-    bool illum; /* source illumination flag*/
-    int m2, m2b, pad1;
     /*pointers*/
     float *rr;
     /*extras*/
@@ -2129,14 +2104,11 @@ int psqrtm_dec(sf_complex*** record, sf_complex** imgsum, geopar geop)
     gpz = geop->gpz;
     /*gpx = geop->gpx;*/
     gpl = geop->gpl;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft;
     nt = geop->nt;
     dt = geop->dt;
-    trunc = geop->trunc;
-    adj = geop->adj; verb = geop->verb; illum = geop->illum;
-    m2 = geop->m2; m2b = geop->m2b; pad1 = geop->pad1;
+    verb = geop->verb;
     rr = geop->rr;
     roll = geop->roll;
     rectz=geop->rectz;
@@ -2267,17 +2239,13 @@ int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ft
     /*geopar variables*/
     int nx, nz;
     int nxb, nzb;
-    float dx, dz, ox, oz;
     int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
     int snpint;
-    int top, bot, lft, rht; /*abc boundary*/
+    int top, lft; /*abc boundary*/
     int nt;
     float dt;
-    float trunc; 
-    bool adj; /* migration(adjoint) flag -> not used in this case */
     bool verb; /* verbosity flag */
     bool illum; /* source illumination flag*/
-    int m2, m2b, pad1;
     /*pointers*/
     float *rr;
     /*extras*/
@@ -2311,14 +2279,11 @@ int psrtm_mov(sf_complex*** record, sf_complex** imgsum, geopar geop, sf_file Ft
     gpz = geop->gpz;
     /*gpx = geop->gpx;*/
     gpl = geop->gpl;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft; 
     nt = geop->nt;
     dt = geop->dt;
-    trunc = geop->trunc;
-    adj = geop->adj; verb = geop->verb; illum = geop->illum;
-    m2 = geop->m2; m2b = geop->m2b; pad1 = geop->pad1;
+    verb = geop->verb; illum = geop->illum;
     rr = geop->rr;
     roll = geop->roll;
     rectz=geop->rectz;

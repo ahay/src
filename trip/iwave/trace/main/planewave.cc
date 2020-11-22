@@ -138,8 +138,9 @@ int main(int argc, char ** argv) {
 
     // preclean
     string cln = "/bin/rm -f " + pwsrc + " " + pwhdr + ";";
-    system(cln.c_str());
-    // loop over plane waves 
+    if (system(cln.c_str()) == -1)
+      abort();
+    // loop over plane waves
     // note need to convert from ms to s in sunull, suplane commands
     for (int ip=0; ip<np; ip++) {
       // create header file
@@ -151,7 +152,8 @@ int main(int argc, char ** argv) {
       hcmd <<"| " << sushw <<" key=scalco a=-1000 | "<< sushw <<" key=scalel a=-1000 | " << sushw << " key=delrt a="<<ot;
       hcmd <<" >> " << pwhdr <<";";
       cerr << "ip="<<ip<<"\ncmd="<<hcmd.str()<<"\n";
-      system(hcmd.str().c_str());
+      if (system(hcmd.str().c_str()) == -1)
+        abort();
       std::stringstream scmd;
       scmd << suplane << " nt="<<nts<<" ntr="<<nxs<<" dt="<< dt*.001 <<" npl=1 ct1="<<nts/2+1<<" len1="<<nxs<<" dip1="<<(op+ip*dp)*dxs << " cx1="<<nxs/2+1;
       scmd << "| " << sushw << " key=gelev a="<<-zs*1000 << " | " << sushw <<" key=scalel a=-1000 ";
@@ -160,7 +162,8 @@ int main(int argc, char ** argv) {
       scmd << "| " << sushw <<" key=scalco a=-1000 | " << sushw <<" key=offset a=0 | " << sushw <<" key=delrt a=" << ots;
       scmd << "| " << suconv << " sufile=" << src << " >> " << pwsrc <<";";
       cerr << "ip="<<ip<<"\ncmd="<<scmd.str()<<"\n";
-      system(scmd.str().c_str());
+      if (system(scmd.str().c_str()) == -1)
+        abort();
     }
 
     fclose(fp);

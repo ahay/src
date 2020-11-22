@@ -65,8 +65,6 @@ void sf_divnep (float* num, float* den,  float* rat, float eps)
 {
     int i;
     double norm;
-    double t_start, t_end, t_count;
-    double td_start, td_end, td_count;
     if (eps > 0.0f) {
 
 #ifdef _OPENMP

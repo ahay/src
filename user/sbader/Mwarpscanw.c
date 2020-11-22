@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 { 
     bool shift, verb, cheb, sign, ren, den;
     int n1, m[4], ntr, n2, order, ng, rect[4], niter, n2g, dim, nr, nd;
-    float **inp, **oth, o1, d1, o2, d2, g0, dg, g1, o, d, **rergy, **dergy, *rat1, or, dr, od, dd;
+    float **inp, **oth, o1, d1, o2, d2, g0, dg, g1, o, d, **rergy=NULL, **dergy=NULL, *rat1, or, dr, od, dd;
     sf_file in, warped, other, renergy, denergy;
 
     sf_init (argc, argv);

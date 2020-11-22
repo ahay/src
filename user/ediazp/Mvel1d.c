@@ -41,14 +41,13 @@ int main (int argc, char* argv[])
 
     int i1,i2,j1,j2;
 
-    int n1,n2,n3;
-    float o1,o2,o3;
-    float d1,d2,d3;
+    int n1,n2;
+    float o1;
+    float d1;
     
-    sf_axis ax1,m1,m2,m3;
+    sf_axis ax1,m1,m2;
 
     int n1d;     // samples of 1d function
-    float o1d;   // origin of 1d function (has to be zero)
     float d1d;   // 1D function smapling (has to be the same as d1)
 
     float vel;
@@ -78,16 +77,14 @@ int main (int argc, char* argv[])
     
    /* parameters from input file*/
     ax1=sf_iaxa(in,1);
-    n1d=sf_n(ax1); o1d=sf_o(ax1); d1d=sf_d(ax1);
+    n1d=sf_n(ax1); d1d=sf_d(ax1);
 
 
     m1=sf_iaxa(mask1,1);
     m2=sf_iaxa(mask1,2);
-    m3=sf_iaxa(mask1,3);
 
     n1=sf_n(m1);  o1=sf_o(m1); d1=sf_d(m1); 
-    n2=sf_n(m2);  o2=sf_o(m2); d2=sf_d(m2); 
-    n3=sf_n(m3);  o3=sf_o(m3); d3=sf_d(m3); 
+    n2=sf_n(m2); 
 
 	sf_oaxa(out,m1,1);
 	sf_oaxa(out,m2,2);

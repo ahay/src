@@ -21,7 +21,6 @@
 
 int main(int argc, char *argv[])
 {
-    char *mode;
     int n1, n2, i1, i2;
     float **din, **dout;
     sf_file Fin, Fout;

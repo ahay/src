@@ -24,11 +24,11 @@
 
 int main(int argc, char* argv[])
 {
-    int niter, i, repeat, i1, i2, i3, n12, n123, n23, n1,n2,n3;
+    int niter, repeat, n12, n123, n1,n2,n3;
     int nw, nj1, nj2;
     bool sm, adj, test;
     float *data, *data2, eps, *vx, *vy;
-    float *pp1, *pp2, *pwddata;
+    float *pp1, *pp2;
     sf_file in, out, fvx, fvy, dip;
 
     sf_init(argc,argv);
@@ -77,7 +77,6 @@ int main(int argc, char* argv[])
 
     n12 = n1*n2;
     n123 = n12*n3;
-    n23 = n2*n3;
 
     /* Allocate and read data */
     data = sf_floatalloc(n123);

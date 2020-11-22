@@ -41,7 +41,7 @@ namespace RVL {
   template<typename DataType>
   class LocalConstEval {
   public:
-    virtual ~LocalConstEval() {}
+    virtual ~LocalConstEval() noexcept(false) {}
     /** Eval method for LDCs */    
     virtual void operator()(vector<LocalDataContainer<DataType> const *> & sources) = 0;
   };
@@ -80,7 +80,7 @@ namespace RVL {
   class BinaryLocalConstEval
     : public LocalConstEval<DataType>  {
   public:
-    virtual ~BinaryLocalConstEval() {}
+    virtual ~BinaryLocalConstEval() noexcept(false) {}
 
     /** Evaluation method for LDCs */
     virtual void operator () (LocalDataContainer<DataType> const & source1,
@@ -223,7 +223,7 @@ namespace RVL {
       : FunctionObjectScalarRedn<ValType>(val) {}
     BinaryLocalFunctionObjectScalarRedn(BinaryLocalFunctionObjectScalarRedn<DataType,ValType> const & f) 
       : FunctionObjectScalarRedn<ValType>(f) {}
-    virtual ~BinaryLocalFunctionObjectScalarRedn() {}
+    virtual ~BinaryLocalFunctionObjectScalarRedn() noexcept(false) {}
   };
 
   template<typename DataType, typename ValType>

@@ -32,10 +32,8 @@ int main(int argc, char* argv[])
     float ***slice, ***slice0, ***tstr, ***pstr, ***xstr, *vrms;
     float ***slicekappa1, ***slicekappa2, ***slicekappa3, ***slicerootin;
     float kappa1, kappa2, kappa3, alpha=-9999.9, beta=-9999.9; //coefficients
-    float smax;
-    float pwarp1, pwarp2, pwarp3;
     double root2d = -9999.9;
-    float root2, droot2dp=-9999.9;
+    float root2;
     float s0,s,ds;
     float dtds, dpds, dxds;
     sf_file in, out, vel, kappa1file, kappa2file, kappa3file, rootin;
@@ -337,8 +335,6 @@ int main(int argc, char* argv[])
 				if (root2 >= 0.0){// expression under root is positive 
 
 				root2 = sqrt(root2);
-
-				droot2dp = p*(2.0-s)*vrms[it]*vrms[it]/(root2 + epsr);
 
 				/* dF/dp */
 				//kappa1 = - (   (1.0 - root2) + epsr )/ (   ( 2.0 - s )*(1.0 - (s - 1.0)*root2)  + epsr  );

@@ -22,7 +22,7 @@
 
 int main (int argc, char *argv[])
 {
-    int n1,n2,n3, n12,n123, i1,i2,i3, index;
+    int n1,n2,n3, n12, i1,i2,i3, index;
     float *pxpx, *pxpy, *pypy;
     float *l1, *l2, *uv, *uh, *vv, *vh;
     float T, D, norm, swap;
@@ -50,7 +50,6 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n2",&n2)) n2=1;
     if (!sf_histint(in,"n3",&n3)) n3=1;
     n12 = n1*n2;
-    n123 = n12*n3;
 
     if (!sf_getfloat("eps",&eps)) eps=0.00001; // tolerance
     if (!sf_getbool("normalize",&normalize)) normalize=false; // normalize eigen vectors
@@ -122,7 +121,10 @@ int main (int argc, char *argv[])
 
 				norm = sqrt(uv[index]*uv[index] + uh[index]*uh[index]);
 				
-				if (norm != 0.0 && normalize) uv[index] /= norm; uh[index] /= norm;
+				if (norm != 0.0 && normalize) {
+					uv[index] /= norm; 
+					uh[index] /= norm;
+				}
 
 				/* components of the smallest eigen value eigen vector */
 				/*vv[index] = l2[index] - pypy[index];
