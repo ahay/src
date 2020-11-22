@@ -28,6 +28,8 @@ In programs:
 
 In the build system:
 
+* Get rid of warnings during installation
+
 ===Changes in defaults and interfaces===
 
 ==Release 3.1 (2020-11-08)==
