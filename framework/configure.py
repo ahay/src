@@ -284,7 +284,7 @@ def cc(context):
     if not res:
         need_pkg('libc')
     if CC.rfind('gcc') >= 0 and \
-           CC.rfind('pgcc') < 0 or CC.rfind('icc') >= 0:
+           CC.rfind('pgcc') < 0:
         oldflag = context.env.get('CFLAGS')
         for flag in ('-x c -std=gnu17 -Wall -pedantic',
                      '-x c -std=gnu11 -Wall -pedantic',
@@ -310,6 +310,34 @@ def cc(context):
             context.Result(res)
             if not res:
                 context.env['CFLAGS'] = oldflag
+    # icc
+    if CC.rfind('icc') >= 0:
+        oldflag = context.env.get('CFLAGS')
+        for flag in ('-x c -std=gnu11 -Wall -pedantic',
+                     '-x c -std=gnu99 -Wall -pedantic',
+                     '-std=gnu99 -Wall -pedantic',
+                     '-std=gnu89 -Wall -pedantic',
+                     '-Wall -pedantic'):
+            context.Message("checking if icc accepts '%s' ... " % flag)
+            context.env['CFLAGS'] = oldflag + ' ' + flag
+            res = context.TryCompile(text,'.c')
+            context.Result(res)
+            if res:
+                break
+        if not res:
+            context.env['CFLAGS'] = oldflag
+        # large file support
+        (status,lfs) = getstatusoutput('getconf LFS_CFLAGS')
+        if not status and lfs:
+            oldflag = context.env.get('CFLAGS')
+            context.Message("checking if icc accepts '%s' ... " % lfs)
+            context.env['CFLAGS'] = oldflag + ' ' + lfs
+            res = context.TryCompile(text,'.c')
+            context.Result(res)
+            if not res:
+                context.env['CFLAGS'] = oldflag
+
+
 
     # Mac OS X include path, library path, and link flags
     if plat['OS'] == 'darwin':
@@ -2022,7 +2050,7 @@ def cxx(context):
                 api.append('c++')
                 context.env['API'] = api
 
-            if CXX[-3:]=='g++' or CXX[-4:]=='icpc':
+            if CXX[-3:]=='g++':
                 oldflag = context.env.get('CXXFLAGS')
                 for flag in ['-std=gnu++17 -U__STRICT_ANSI__ -Wall -pedantic',
                              '-std=gnu++11 -U__STRICT_ANSI__ -Wall -pedantic',
@@ -2036,6 +2064,23 @@ def cxx(context):
                         break
                 if not res:
                     context.env['CXXFLAGS'] = oldflag
+            if CXX[-4:]=='icpc':
+                oldflag = context.env.get('CXXFLAGS')
+                for flag in ['-std=c++17 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=gnu++14 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=c++11 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=gnu++0x -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-Wall -pedantic']:
+                    context.Message("checking if %s accepts '%s' ... " % (CXX,flag))
+                    context.env['CXXFLAGS'] = oldflag + ' ' + flag
+                    res = context.TryCompile(text,'.cc')
+                    context.Result(res)
+                    if res:
+                        break
+                if not res:
+                    context.env['CXXFLAGS'] = oldflag
+
+
 
 # Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
