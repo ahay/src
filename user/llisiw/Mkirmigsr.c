@@ -313,11 +313,13 @@ int main(int argc, char* argv[])
 
 #ifdef _OPENMP
 #pragma omp parallel for private(iz,ix,t1,t2,ti,tx,ithr)
-#else 
-	    ithr = 0;
 #endif
-	    for (i=0; i < nzx; i++) { 
-	    ithr = omp_get_thread_num(); // little inefficiency
+	    for (i=0; i < nzx; i++) {
+#ifdef _OPENMP		
+		ithr = omp_get_thread_num();
+#else 
+		ithr = 0;
+#endif  
 		iz = i%nz;
 		ix = (i-iz)/nz;
 

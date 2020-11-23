@@ -28,6 +28,38 @@ In programs:
 
 In the build system:
 
+===Changes in defaults and interfaces===
+
+==Release 3.1.1 (2020-11-22)==
+
+===Additions and enhancements===
+
+To the reproducible documents collection:
+
+To SCons:
+
+To documentation:
+
+To APIs:
+
+To the Python package:
+
+To programs:
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+In the build system:
+
 * Get rid of warnings during installation
 
 ===Changes in defaults and interfaces===
