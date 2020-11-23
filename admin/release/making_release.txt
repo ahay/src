@@ -1,27 +1,32 @@
-1. Creating a branch
+1. Creating a new branch and check it out
 
-svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-3.0 -m 'new release'
+git checkout -b madagascar-3.1
+git push origin madagascar-3.1
 
-2. Check out the branch
+or
 
-svn co https://github.com/ahay/src/branches/madagascar-3.0
+svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-3.1 -m 'new release'
+svn co https://github.com/ahay/src/branches/madagascar-3.1
+cd madagascar-3.0
 
-3. cd madagascar-3.0
+2. Edit VERSION.txt to remove -git
 
-4. Edit VERSION.txt to remove -git
+3. Remove junk
 
-5. Remove junk
+git rm -r book/Grave user/nobody
+
+or
 
 svn delete book/Grave and user/nobody
 
-6. Make sure the book directory structure is consistent
+4. Make sure the book directory structure is consistent
 
 cd book
 ls */*/*/*/SConstruct
 
 should not return anything
 
-7. Remove book directories without reproducible examples
+5. Remove book directories without reproducible examples
 
 import os, glob
 
@@ -29,12 +34,11 @@ for dir in glob.glob('*/*/[a-z]*/'):
     if os.path.isdir(dir):
        proj = os.path.join(dir,'.rsfproj')
        if not os.path.isfile(proj):
-          print 'no project in ',dir
+          print('no project in ', dir)
 
-8. Compile
+6. Compile
 
-cd madagascar-3.0
-export RSFROOT=$HOME/mad30
+export RSFROOT=$HOME/mad31
 
 remove instances of previous RSFROOT from PATH and PYTHONPATH
 
@@ -42,33 +46,39 @@ remove instances of previous RSFROOT from PATH and PYTHONPATH
 make install
 source env.sh
 
-9. Remove programs without examples
+7. Remove programs without examples
 
-python admin/cleanup.py > list.txt
+python admin/release/cleanup.py > list.txt
 
 edit list.txt
 
+git rm `cat list.txt'
+
+or 
+
 svn remove `cat list.txt`
 
-10. Clean individual directories
+8. Clean individual directories
 
 cd system/generic
 
-python ../../admin/nomain.py > list.txt
+python ../../admin/release/nomain.py > list.txt
+git rm `cat list.txt`
 svn remove `cat list.txt`
 
-python ../../admin/printmains.py
+python ../../admin/release/printmains.py
 
 edit SConstruct
 
-python ../../admin/doth.py > list.txt
+python ../../admin/release/doth.py > list.txt
+git rm `cat list.txt`
 svn remove `cat list.txt`
 
 scons
 
-11. Compile again from the top directory
+9. Compile again from the top directory
 
-12. Edit $PYTHONPATH/rsf/prog.py
+10. Edit $PYTHONPATH/rsf/prog.py
 
 replace
 
@@ -84,46 +94,51 @@ import rsf.use
 
 Try running sfdoc
 
-13. Announce at RSF-devel
+11. Announce at RSF-devel
 
-14. Test compilation
+12. Test compilation
 
-15. Create a branch of the core
+13. Create a branch of the core
 
-svn copy  https://github.com/ahay/src/branches/madagascar-3.0 https://github.com/ahay/src/branches/madagascar-core-3.0 -m 'new core release'
+git checkout -b madagascar-core-3.1 madagascar-3.1
+git push origin madagascar-core-3.1
 
-svn co https://github.com/ahay/src/branches/madagascar-core-3.0
+svn copy  https://github.com/ahay/src/branches/madagascar-3.1 https://github.com/ahay/src/branches/madagascar-core-3.1 -m 'new core release'
+svn co https://github.com/ahay/src/branches/madagascar-core-3.1
+cd madagascar-core-3.1
 
-cd madagascar-core-3.0
+14. Clean core
 
-16. Clean core
+git rm -r system/seismic trip
+git rm -r book/bei book/geo384w
+
+or
 
 svn delete system/seismic trip
-
 svn delete book/bei book/geo384w (and everything else seismic-related
 in book)
 
-python admin/cleanup.py > list.txt
+python admin/release/cleanup.py > list.txt
 
-17. Make framework
+15. Make framework
 
-cd madagascar-3.0/build/framework
+cd madagascar-3.1/build/framework
 
 cp ../../framework/setup.py .
 
 python setup.py sdist
 
-cp dist/madagascar-framework-3.0.tar.gz ~
+cp dist/madagascar-framework-3.1.tar.gz ~
 
-18. tar and upload to sourceforge.net
+16. tar and upload to sourceforge.net
 
-19. Announce on the blog
+17. Announce on the blog
 
-20. Edit $RSFSRC/VERSION.txt to 3.0-svn
+18. Edit $RSFSRC/VERSION.txt to 3.2-git
 
-21. Edit $RSFSRC/NEWS.txt to record the time of the release. Add
+19. Edit $RSFSRC/NEWS.txt to record the time of the release. Add
 release notes to http://www.ahay.org/wiki/Release_Notes
 
-22. Edit  https://en.wikipedia.org/wiki/Madagascar_%28software%29 to update release information
+20. Edit  https://en.wikipedia.org/wiki/Madagascar_%28software%29 to update release information
 
 
