@@ -26,7 +26,7 @@
 #include <omp.h>
 #endif
 
-const static float c1=1.125, c2=-1./24.;
+static float c1=1.125, c2=-1./24.;
 static int nb, nz, nx, nt, nzpad, nxpad;
 static float dz, dx, _dz, _dx, dt, fm;
 
@@ -138,7 +138,7 @@ void forward_Txx_Tzz_Txz(float **Txx, float **Tzz, float **Txz,
 #ifdef _OPENMP
 #pragma omp parallel for default(none)					\
     private(i1,i2,DiffVz_z, DiffVx_z, DiffVz_x, DiffVx_x,tmpxx, tmpzz,tmpxz,tmp) \
-    shared(Vx,Vz,Txx,Tzz,Txz,Rxx, Rzz, Rxz, taup,taus,tauo, vp,vs,nxpad,nzpad,dt,_dx,_dz)
+    shared(Vx,Vz,Txx,Tzz,Txz,Rxx, Rzz, Rxz, taup,taus,tauo, vp,vs,nxpad,nzpad,dt,_dx,_dz, c1, c2)
 #endif
     for(i2=1; i2<nxpad-2; i2++)
 	for(i1=1; i1<nzpad-2; i1++)
@@ -174,7 +174,7 @@ void forward_Vx_Vz(float **Vx, float **Vz,
 #ifdef _OPENMP
 #pragma omp parallel for default(none)				\
     private(i1,i2,DiffTzz_z, DiffTzx_x, DiffTxx_x, DiffTzx_z)	\
-    shared(Vx,Vz,Txx,Tzz,Txz,rho, nxpad,nzpad,dt,_dx,_dz)
+    shared(Vx,Vz,Txx,Tzz,Txz,rho, nxpad,nzpad,dt,_dx,_dz, c1, c2)
 #endif
     for(i2=2; i2<nxpad-1; i2++)
 	for(i1=2; i1<nzpad-1; i1++)
