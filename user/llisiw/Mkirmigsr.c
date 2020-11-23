@@ -317,7 +317,9 @@ int main(int argc, char* argv[])
 	    ithr = 0;
 #endif
 	    for (i=0; i < nzx; i++) { 
+#ifdef _OPENMP
 	    ithr = omp_get_thread_num(); // little inefficiency
+#endif
 		iz = i%nz;
 		ix = (i-iz)/nz;
 
