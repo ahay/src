@@ -7,8 +7,8 @@ import bldutil
 # 1. C main programs
 progs = '''
 Testaniso Testeb Testelastic2d Testfd2d Testfd3d Testspml checkptdemo
-excitationic fbrec2d fpocs2d fpocs3d fwi2d istseislet lsinterp2d lsprtm2d 
-lsrtm2d mcaseislet modeling2d mshots mwni2d myradon2 mysnr pocs ps2d rtm2d 
+excitationic fbrec2d fwi2d istseislet lsprtm2d 
+lsrtm2d mcaseislet modeling2d mshots myradon2 mysnr rtm2d 
 rtmadcig rtmva2d viscoa2d viscoe2d
 '''
 # lsprtm2d
