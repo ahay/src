@@ -26,7 +26,6 @@ targets.c = '''
 
 # F90 mains
 targets.f90 = '''
-helloworld intv2rms intv2avg findmaximum fdac2d
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

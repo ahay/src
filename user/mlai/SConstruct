@@ -37,7 +37,6 @@ targets.f90 = '''
 
 # Python mains that do not need SWIG+numpy
 targets.py = '''
-medianbalance
 '''
 
 # scatterplot

@@ -3,28 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-intervalVTI
-smoothderLS
-spitz
-spitzbl
-spitzns
-spitzblns
-pwdnorm
-smoothder1
-smoothder2
-smoothcur
-pmig1
-joiner
-findmax1
-findintval
-multmask
-match1d
-lomatch
-Testcdstep
-test1_matchl1
-test2_matchl1
-bil1_new
-lpfL1
+intervalVTI smoothderLS
 '''
 
 

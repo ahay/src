@@ -15,12 +15,12 @@ except:
 
 # C mains
 progs = '''
-minmax listminmax sizes
+listminmax minmax sizes
 '''
 
 # Python mains that do not need SWIG+numpy
 py_meta = '''
-figlist booklist testlist
+booklist figlist testlist
 '''
 
 # Python modules that do not need SWIG+numpy
