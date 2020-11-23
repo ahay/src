@@ -44,7 +44,7 @@ if sparsepath and sparselibs:
 
 if not sparsepath or not sparselibs:
     for filec in Split('''
-        fdprep fdprep25 fdprep5 fdprep9 fdprep9o fwisparse2d sparsesolver 
+        fdprep fdprep25 fdprep5 fdprep9 fdprep9o sparsesolver 
         '''):
         source = File(filec+'.c')
         inc = env.RSF_Include(source,prefix='')
