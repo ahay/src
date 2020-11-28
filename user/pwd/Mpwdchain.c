@@ -1,4 +1,4 @@
-/* Nonstationary Prony by chain of PEFs */
+/* Multiple dip estimation by chain of PWDs */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -121,10 +121,11 @@ int main(int argc, char* argv[])
 
 	for (iter=0; iter < niter; iter++) {
 	    pwdchain_apply(y1,r);
-	    
+
+	    /*
 	    for (i=0; i < n*nc; i++) {
 		r[i] = -r[i];
-	    }
+		} */
 
 	    sf_conjgrad(NULL, pwdchain_lop, smooth1_lop,p,dx,r,liter);
 
