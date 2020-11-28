@@ -67,7 +67,7 @@ def pickTensorCoord3D(cippicks3D,cprob3D,tensor3D,rmax,jmem='2g'):
 #################################################################
 ## transposes the picks by dims (picks are stored in 2D array)
 ##
-def transpPicksDims2D(opicks,ipicks):
+def transpPicksDims2D(opicks,ipicks,plane='12'):
 	opn1 = ipicks+'-n1'
 	opn2 = ipicks+'-n2'
 	Flow(opn1,ipicks,'window f2=0 n2=1')
