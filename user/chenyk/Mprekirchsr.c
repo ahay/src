@@ -71,8 +71,8 @@ float aal_pick(float ti, float deltat,
 int main(int argc, char* argv[])
 {
     int nt, nx, ns, nz, ix, is, iz, ir, i, it;
-    float *trace, **mod, **dat, **v;
-    float z, dx, ti, tx, x0, t0, dt, z0, dz, vi, aal, ft, f,g;
+    float *trace, **mod=NULL, **dat=NULL, **v;
+    float z, dx, ti, x0, t0, dt, z0, dz, vi, aal, ft, f,g;
 	float s, s0, ds, t1, t2;
 	bool adj;
     sf_file inp,outp, vel;
@@ -155,25 +155,25 @@ int main(int argc, char* argv[])
 					ft=(ti-t0)/dt;
 					it=floorf(ft);
 					
-					/* tx = |dt/dx| */
-					tx = fabsf((ix-ir)*dx)/(vi*vi*(t1+dt))+
-				 	 	 fabsf((ix-is)*dx)/(vi*vi*(t2+dt));
-
 					if(adj)
 					{
 						f=it+1-ft;
 						g=ft-it;
-						if (f<0) f=0; if(f>1) f=1; if (g<0) g=0; if (g>1) g=1;
+						if (f<0) f=0; 
+						if(f>1) f=1; 
+						if (g<0) g=0; 
+						if (g>1) g=1;
 						//sf_warning("f=%g,g=%g",f,g);
 						mod[ix][iz] += trace[it]*f + trace[it+1]*g;
-						//mod[ix][iz] += //trace[it];
-							    		//aal_pick(ti,tx*dx*aal,trace,nt,dt,t0);
 					}
 					else
 					{
 						f=it+1-ft;
 						g=ft-it;
-						if (f<0) f=0; if(f>1) f=1; if (g<0) g=0; if (g>1) g=1;
+						if (f<0) f=0; 
+						if(f>1) f=1; 
+						if (g<0) g=0; 
+						if (g>1) g=1;
 						dat[ix][it] += trace[iz]*f;		
 						dat[ix][it+1] += trace[iz]*g;
 					}

@@ -15,10 +15,10 @@
 #define TAPERG(kmag,sigma) exp(-(kmag*kmag)/(1.5*sigma*sigma)  )/2.
 
 #define  MAX2(a,b)   a>b? a: b
-#define  MAX(a,b,c)  (MAX2(a,b)) >c ? (MAX2(a,b)) :c
+#define  MY_MAX(a,b,c)  (MAX2(a,b)) >c ? (MAX2(a,b)) :c
 
 #define  MIN2(a,b)   a<b? a: b
-#define  MIN(a,b,c)  (MIN2(a,b)) <c ? (MIN2(a,b)) :c
+#define  MY_MIN(a,b,c)  (MIN2(a,b)) <c ? (MIN2(a,b)) :c
 
 /*------------------------------------------------------------*/
 /*2D*/
@@ -418,7 +418,7 @@ void wfsep3(float ***xdel, float ***ydel, float *** zdel,
     }
   
 
-    sigma=(MIN(nx,ny,nz)) / (MAX(nx,ny,nz));
+    sigma=(MY_MIN(nx,ny,nz)) / (MY_MAX(nx,ny,nz));
    
 /*------------------------------------------------------------*/
     /* 

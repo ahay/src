@@ -367,8 +367,6 @@ int main (int argc, char* argv[]) {
     const int dagSize  = gp.zNum * gp.dipNum;  // * gp.sdipNum; - for 3D migration
 	// scattering-angle-gather size
     const int acigSize = gp.zNum * gp.scatNum;
-	// multi-gather size
-    const int mcigSize = gp.zNum * gp.scatNum * gp.dipNum;
 
 	// MEMORY ALLOCATION
 
@@ -384,7 +382,7 @@ int main (int argc, char* argv[]) {
 	float* image = sf_floatalloc (gp.zNum);
 
     // set migrator
-    VSPTimeMigrator2D* migrator;
+    VSPTimeMigrator2D* migrator=NULL;
     if (rp.is3D) {
 //		migrator = new VSPTimeMigrator3D (); // not ready yet
     } else {

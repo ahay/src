@@ -25,7 +25,7 @@ using namespace std;
 static std::valarray<float> vs;
 static std::valarray<double> kx,kz;
 static float dt,ct,cb,cl,cr;
-static int nkz,nz,nx,nbt,nbb,nbl,nbr,abc;
+static int nz,nx,nbt,nbb,nbl,nbr,abc;
 static bool rev;
 
 int sample(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)

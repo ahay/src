@@ -28,7 +28,7 @@ void anisogradient (bool adj, bool add,
 		      int nx, int ng, float* x, float* g)
 /*< gradient operator not for external use >*/
 {
-    int i1,i2,i3,i;
+    int i2,i3,i;
 
     //sf_warning("in the gradient x[100]=%g g[100]=%g",x[100],g[100]);
 

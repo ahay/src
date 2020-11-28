@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     float dt, dx;
     float *old, *nxt, *cur, *sig, *v;
     sf_file in, out, vel;
-    int im,im2,im3,im4,im5,ip,ip2,ip3,ip4,ip5;
+    int im,im2,ip,ip2;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -68,14 +68,8 @@ int main(int argc, char* argv[])
 	for (ix=0; ix < nx; ix++) {
             im  =(ix-1+nx)%nx; 
             im2 =(ix-2+nx)%nx; 
-            im3 =(ix-3+nx)%nx; 
-            im4 =(ix-4+nx)%nx; 
-            im5 =(ix-5+nx)%nx; 
             ip = (ix+1+nx)%nx;
             ip2 =(ix+2+nx)%nx;
-            ip3 =(ix+3+nx)%nx;
-            ip4 =(ix+4+nx)%nx;
-            ip5 =(ix+5+nx)%nx;
 	    nxt[ix] = dt*dt/(12.0*dx*dx)*(-30.0*cur[ix] +16.0* (cur[im]+cur[ip]) - (cur[im2]+cur[ip2]))*v[ix]*v[ix] 
                       +2.0*cur[ix]- old[ix];
 	}

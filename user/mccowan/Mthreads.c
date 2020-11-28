@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     int         amps=0;
     int         input_number_samples=0;
     int         digi=0, ntimes=0, onetwo;
-    float       a,b=1.0;
+    float       b = 0.0;
     float       *temp1=NULL, *temp2=NULL, *temp;
 
     unsigned int delay=1000;
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 		if (fixed_up == 0) {
 
 		    sf_warning("\npreparing trace %d", nread); 
-		    for(k=0; k<10000; k++) a=sqrt(b);
+		    for(k=0; k<10000; k++) (void)sqrt(b);
      
 		    fixed_up = 1;
 		    nfilled = 0;
@@ -248,7 +248,7 @@ void peer_mig(tpool_t tpool)
 {
     int  i,j,me,ntimes;
     int  *working;
-    float a,b;
+    float b;
     mig_work_order_t *my_work_order;
 
 /* Routine to start off a peer thread */
@@ -304,7 +304,7 @@ void peer_mig(tpool_t tpool)
 
 	for(i=0; i<ntimes; i++) {
 	    b=(float)i;
-	    for(j=0; j<ntimes; j++)  a=sqrt(b);
+	    for(j=0; j<ntimes; j++)  (void)sqrt(b);
 	}
 	working[me] = 0;                                    /* me finish working */
 

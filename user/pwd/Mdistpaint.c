@@ -29,7 +29,7 @@ int main (int argc, char *argv[])
     bool verb;
     int n1,n2,n3, i1,i2,i3, i0, order;
     float d2, eps, scaleFac, **u, **p, **fault, *trace;
-    sf_file out, dip, flt, seed;
+    sf_file out, dip, flt=NULL, seed=NULL;
 
     sf_init(argc,argv);
     dip = sf_input("in");

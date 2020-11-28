@@ -56,7 +56,7 @@ step_forward_2d(float** restrict u0, float** restrict u1, float** restrict vel,
   float c0 = fdcoef_d2[0];
   float* cz = &fdcoef_d2[0];
   float* cx = &fdcoef_d2[nop];
-  float *bz, *bx;
+  float *bz = NULL, *bx = NULL;
   float du_z = 0.f, du_x = 0.f;
   float drho_z = 0.f, drho_x = 0.f;
   float lap;
@@ -172,7 +172,7 @@ step_forward_3d(float*** restrict u0, float*** restrict u1,
   float* cz = &fdcoef_d2[0];
   float* cx = &fdcoef_d2[nop];
   float* cy = &fdcoef_d2[nop + nop];
-  float *bz, *bx, *by;
+  float *bz = NULL, *bx = NULL, *by = NULL;
   float drho_dot_du;
   float du_z = 0.f, du_x = 0.f, du_y = 0.f;
   float drho_z = 0.f, drho_x = 0.f, drho_y = 0.f;

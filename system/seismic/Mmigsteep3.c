@@ -42,15 +42,22 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&ot)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
 
-    if (!sf_getint("n2",&nx))   sf_error("Need n2="); sf_putint(mig,"n2",nx);
-    if (!sf_getfloat("d2",&dx)) sf_error("Need d2="); sf_putfloat(mig,"d2",dx);
-    if (!sf_getfloat("o2",&ox)) sf_error("Need o2="); sf_putfloat(mig,"o2",ox);
+    if (!sf_getint("n2",&nx))   sf_error("Need n2="); 
+    if (!sf_getfloat("d2",&dx)) sf_error("Need d2="); 
+    if (!sf_getfloat("o2",&ox)) sf_error("Need o2="); 
+	sf_putint(mig,"n2",nx);
+	sf_putfloat(mig,"d2",dx);
+	sf_putfloat(mig,"o2",ox);
 
-    if (!sf_getint("n3",&ny))   sf_error("Need n3="); sf_putint(mig,"n3",ny);
-    if (!sf_getfloat("d3",&dy)) sf_error("Need d3="); sf_putfloat(mig,"d3",dy);
-    if (!sf_getfloat("o3",&oy)) sf_error("Need o3="); sf_putfloat(mig,"o3",oy);
+    if (!sf_getint("n3",&ny))   sf_error("Need n3="); 
+    if (!sf_getfloat("d3",&dy)) sf_error("Need d3="); 
+    if (!sf_getfloat("o3",&oy)) sf_error("Need o3="); 
+	sf_putint(mig,"n3",ny);
+	sf_putfloat(mig,"d3",dy);
+	sf_putfloat(mig,"o3",oy);
 
-    if (!sf_getint("n1",&n1))   sf_error("Need n1="); sf_putint(mig,"n1",n1);
+    if (!sf_getint("n1",&n1))   sf_error("Need n1="); 
+	sf_putint(mig,"n1",n1);
 
     if (!sf_getfloat("vel",&vel)) sf_error("Need vel=");
     /* migration velocity */

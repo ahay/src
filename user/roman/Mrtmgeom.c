@@ -71,7 +71,6 @@ int main(int argc, char ** argv) {
     int nsam;              /* number of samples in shot record */
     float rz, rx, s;       /* precomputed coefficients */
     float vmax, vmin;      /* max and min velocity */ 
-    float two;             /* two */
     
     int k_scale = 0, num_cfl = 0;
     geomB * arrB = (geomB*)0;
@@ -120,7 +119,6 @@ int main(int argc, char ** argv) {
     rz=ri.dt*ri.dt/(ri.dz*ri.dz);
     rx=ri.dt*ri.dt/(ri.dx*ri.dx);
     s =2.0*(rz+rx);
-    two=2.0;
     nz=ri.nz;
 
     /* initialize image field */

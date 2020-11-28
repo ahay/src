@@ -37,12 +37,12 @@ int main(int argc, char* argv[])
     int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, isx, isz, tl, sht;
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI, o1, o2, kx0, kz0, v0;
     float **new_p, **cur_p, **new_uz, **cur_uz,  **new_ux, **cur_ux,  **ukr, **v, **d, *wav;
-    float k, kmax, tmp, *tmparray, dt2, dz2, dx2, dth, dxh, dzh, v02;
+    float k, tmp, *tmparray, dt2, dz2, dx2, dth, dxh, dzh, v02;
     float **a, **b1, **b2; 
     kiss_fft_cpx **uk, **ukx, **ukz, **ctracex, **ctracez, tmpc;
     //kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
-    sf_file out, vel, source, den, snaps;
-    float ax, az, factor, knx, knz;
+    sf_file out, vel, source, den, snaps=NULL;
+    float ax, az, factor;
     int nbl, nbr, nbt, nbb;
     float ct, cb, cl, cr;
     float **fsinc,*fsinx,*fsinz,*fcosx,*fcosz;
@@ -116,11 +116,7 @@ int main(int argc, char* argv[])
     kx0 = -0.5/dx;
     dkz = 1./(nkz*dz);
     kz0 = -0.5/dz;
-    knx = 0.5/dx;
-    knz = 0.5/dz;
 
-    kmax = (0.5/dx > 0.5/dz)?0.5/dx*2*pi : 0.5/dz*2*pi;
- 
     #ifdef _OPENMP
     #pragma omp parallel
    {nth = omp_get_num_threads();}

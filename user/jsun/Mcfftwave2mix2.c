@@ -26,14 +26,13 @@ int main(int argc, char* argv[])
     char *mode;
     int it,iz,im,ik,ix,i,j;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
-    float dt;
     sf_complex c;
 
     float  *rr;      /* I/O arrays*/
     sf_complex *ww, *cwave, *cwavem;
 
     sf_complex **wave,**wave2, *curr, *currm;
-    float *rcurr;
+    float *rcurr = NULL;
     
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
@@ -61,7 +60,7 @@ int main(int argc, char* argv[])
 	sf_settype(Fo,SF_FLOAT);
 
     /* Read/Write axes */
-    at = sf_iaxa(Fw,1); nt = sf_n(at); dt=sf_d(at);
+    at = sf_iaxa(Fw,1); nt = sf_n(at); 
     az = sf_iaxa(Fr,1); nz = sf_n(az); 
     ax = sf_iaxa(Fr,2); nx = sf_n(ax); 
 

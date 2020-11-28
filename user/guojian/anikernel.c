@@ -177,12 +177,12 @@ void  get_convlv_coe(float w_vp,float ep,float dl,struct shot_ker_ani_type *ani_
 {
     int i_w_vp,i_ep,i_dl;
     float w_w_vp, w_ep,w_dl;
-    int n,n_ep,n_dl,n_w_vp;
+    int n,n_ep,n_dl;
     float w00,w01,w10,w11,w000,w001,w010,w011,w100,w101,w110,w111;
     sf_complex *conapp,*conapm,*contablepp,*contablepm;
     sf_complex *p000,*p001,*p010,*p011,*p100,*p101,*p110,*p111;
     conapp=ani_par->conapp; conapm=ani_par->conapm; contablepp=ani_par->contablepp;  contablepm=ani_par->contablepm;
-    n=ani_par->n; n_ep=ani_par->n_ep; n_dl=ani_par->n_dl; n_w_vp=ani_par->n_w_vp;
+    n=ani_par->n; n_ep=ani_par->n_ep; n_dl=ani_par->n_dl; 
     i_w_vp=(int)((w_vp-ani_par->o_w_vp)/ani_par->d_w_vp);  w_w_vp=(w_vp-ani_par->o_w_vp)/ani_par->d_w_vp-(float)(i_w_vp);
     i_ep=(int)((ep-ani_par->o_ep)/ani_par->d_ep);          w_ep=(ep-ani_par->o_ep)/ani_par->d_ep - (float)(i_ep);
     i_dl=(int)((dl-ani_par->o_dl)/ani_par->d_dl);          w_dl=(dl-ani_par->o_dl)/ani_par->d_dl-(float)(i_dl);

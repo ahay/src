@@ -470,7 +470,7 @@ void sf_esc_fgrid2_compute (sf_esc_fgrid2 esc_fgrid)
             if (esc_fgrid->verb)
                 sf_warning ("Iteration %d: L1(%s)=%g, change=%g", iter + 1,
                             sf_esc_point2_str[i], gcvt[i], old_gcvt[i]);
-            if (fabsf (old_gcvt[i]) > esc_fgrid->thresh)
+            if (fabs (old_gcvt[i]) > esc_fgrid->thresh)
                 stop = false;
             old_gcvt[i] = gcvt[i];
             gcvt[i] = 0.0;
@@ -497,7 +497,7 @@ void sf_esc_fgrid2_compute (sf_esc_fgrid2 esc_fgrid)
                 if (esc_fgrid->verb)
                     sf_warning ("Iteration %d: L1(%s)=%g, change=%g", iter + 1,
                                 sf_esc_point2_str[i], gcvt[i], old_gcvt[i]);
-                if (fabsf (old_gcvt[i]) > esc_fgrid->thresh)
+                if (fabs (old_gcvt[i]) > esc_fgrid->thresh)
                     stop = false;
                 old_gcvt[i] = gcvt[i];
                 gcvt[i] = 0.0;

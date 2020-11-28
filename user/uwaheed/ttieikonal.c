@@ -172,7 +172,7 @@ void sf_run_fast_sweep (float *t, float *vz, float *vx,
                         int shoty, int shotz)
 /*< run sweeps >*/
 {
-    int i, j ,k = 0, l = 0;
+    int i, j, l = 0;
 
     for (l = 0; l < niter; l++) {
 

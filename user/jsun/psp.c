@@ -346,8 +346,6 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
     /*survey parameters*/
     int   nx, nz;
     float dx, dz;
-    int   n_srcs;
-    int   *spx, *spz;
     int   gpz, gpx, gpl;
     int   gpz_v, gpx_v, gpl_v;
     int   snap;
@@ -359,9 +357,8 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
     int nbt, nbb, nbl, nbr;
     float ct,cb,cl,cr;
     /*source parameters*/
-    int src; /*source type*/
     int nt;
-    float dt,*f0,*t0,*A;
+    float dt;
     /*misc*/
     bool verb, ps;
     float vref;
@@ -383,9 +380,6 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
     nz    = par->nz;
     dx    = par->dx;
     dz    = par->dz;
-    n_srcs= par->n_srcs;
-    spx   = par->spx;
-    spz   = par->spz;
     gpz   = par->gpz;
     gpx   = par->gpx;
     gpl   = par->gpl;
@@ -404,12 +398,8 @@ int psp2(float **wvfld1, float **wvfld, float **dat, float **dat_v, float *img, 
     cb    = par->cb;
     cl    = par->cl;
     cr    = par->cr;
-    src   = par->src;
     nt    = par->nt;
     dt    = par->dt;
-    f0    = par->f0;
-    t0    = par->t0;
-    A     = par->A;
     verb  = par->verb;
     ps    = par->ps;
     vref  = par->vref;
@@ -635,10 +625,7 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
     /*survey parameters*/
     int   nx, nz;
     float dx, dz;
-    int   n_srcs;
-    int   *spx, *spz;
     int   gpz, gpx, gpl;
-    int   gpz_v, gpx_v, gpl_v;
     int   snap;
     /*fft related*/
     bool  cmplx;
@@ -648,9 +635,8 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
     int nbt, nbb, nbl, nbr;
     float ct,cb,cl,cr;
     /*source parameters*/
-    int src; /*source type*/
     int nt;
-    float dt,*f0,*t0,*A;
+    float dt;
     /*misc*/
     bool verb, ps;
     float vref;
@@ -672,15 +658,9 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
     nz    = par->nz;
     dx    = par->dx;
     dz    = par->dz;
-    n_srcs= par->n_srcs;
-    spx   = par->spx;
-    spz   = par->spz;
     gpz   = par->gpz;
     gpx   = par->gpx;
     gpl   = par->gpl;
-    gpz_v = par->gpz_v;
-    gpx_v = par->gpx_v;
-    gpl_v = par->gpl_v;
     snap  = par->snap;
     cmplx = par->cmplx;
     pad1  = par->pad1;
@@ -693,12 +673,8 @@ int psp3(float **wvfld, float **wvfld1, float **dat, float **dat1, float *img, f
     cb    = par->cb;
     cl    = par->cl;
     cr    = par->cr;
-    src   = par->src;
     nt    = par->nt;
     dt    = par->dt;
-    f0    = par->f0;
-    t0    = par->t0;
-    A     = par->A;
     verb  = par->verb;
     ps    = par->ps;
     vref  = par->vref;
@@ -1262,10 +1238,7 @@ int psp5(int split, float **wvfld1, float **wvfld, float **dat, float *img, floa
     /*survey parameters*/
     int   nx, nz;
     float dx, dz;
-    int   n_srcs;
-    int   *spx, *spz;
     int   gpz, gpx, gpl;
-    int   gpz_v, gpx_v, gpl_v;
     int   snap;
     /*fft related*/
     bool  cmplx;
@@ -1275,9 +1248,8 @@ int psp5(int split, float **wvfld1, float **wvfld, float **dat, float *img, floa
     int nbt, nbb, nbl, nbr;
     float ct,cb,cl,cr;
     /*source parameters*/
-    int src; /*source type*/
     int nt;
-    float dt,*f0,*t0,*A;
+    float dt;
     /*misc*/
     bool verb, ps;
     float vref;
@@ -1300,15 +1272,9 @@ int psp5(int split, float **wvfld1, float **wvfld, float **dat, float *img, floa
     nz    = par->nz;
     dx    = par->dx;
     dz    = par->dz;
-    n_srcs= par->n_srcs;
-    spx   = par->spx;
-    spz   = par->spz;
     gpz   = par->gpz;
     gpx   = par->gpx;
     gpl   = par->gpl;
-    gpz_v = par->gpz_v;
-    gpx_v = par->gpx_v;
-    gpl_v = par->gpl_v;
     snap  = par->snap;
     cmplx = par->cmplx;
     pad1  = par->pad1;
@@ -1321,12 +1287,8 @@ int psp5(int split, float **wvfld1, float **wvfld, float **dat, float *img, floa
     cb    = par->cb;
     cl    = par->cl;
     cr    = par->cr;
-    src   = par->src;
     nt    = par->nt;
     dt    = par->dt;
-    f0    = par->f0;
-    t0    = par->t0;
-    A     = par->A;
     verb  = par->verb;
     ps    = par->ps;
     vref  = par->vref;

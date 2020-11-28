@@ -28,8 +28,8 @@ int main(int argc, char* argv[])
     int n1, n2, npml, pad1, pad2, ns, nw;
     float d1, d2, ds, os, dw, ow, pclip;
     double omega;
-    sf_file in, out, vout, misfit, source, receiver, record, dip;
-    char *order, *type;
+    sf_file in, out, vout=NULL, misfit, source, receiver, record, dip;
+    char *order, *type = NULL;
     int uts, mts, iw, niter, par;
     float **v, **vnew, **slope=NULL, **recloc, *error;
     sf_complex ***f, ***obs;

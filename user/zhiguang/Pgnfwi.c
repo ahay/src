@@ -505,7 +505,7 @@ void gauss_newton(float *grad, float *direction)
 	int iter;
 	float r2, r3, pHp, alpha, beta;
 	float *r, *p, *Hp;
-	FILE *fp;
+	FILE *fp=NULL;
 
 	/* initialize solution */
 	memset(direction, 0., nzx*sizeof(float));
@@ -563,11 +563,8 @@ void gauss_newton(float *grad, float *direction)
 void gnfwi(sf_file Fdat, sf_file Finv, sf_file Ferr, sf_file Fmod, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_s array, sf_fwi_s fwipar, sf_optim optpar, bool verb1)
 /*< fwi >*/
 {
-	int i, iter=0, flag;
-	float fcost, *x, *grad, *direction, *direction2;
+	float fcost, *x, *grad, *direction;
 	sf_gradient gradient;
-	FILE *fp;
-	sf_file Ftangent;
 
 	/* initialize */
 	gradient_init(Fdat, mpipar, soupar, acpar, array, fwipar, verb1);

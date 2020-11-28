@@ -52,7 +52,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 /*< Compute traveltime attributes >*/
 {
     float  *xx, *xxnew, *F, *dk, *xxtem, *zk,*ck_inv, **ans;
-    float tt, tx_s, tx_r, ty, tz_s, tz_r, tn, at, an, v_1r, v_r, alpha, theta, dip;
+    float tt, tx_r=0, ty, tz_s=0, tz_r=0, tn=0, at, an, v_1r=0, v_r=0, alpha, theta, dip=0;
     int q=0; /* Counter for big loop*/
     int b3=0; /* To check whether the ray is tracable*/
 	
@@ -206,8 +206,8 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	dk[0] = 0.0; /*To prevent trash data*/
 	dk[n+1] = 0.0;
 	
-	float dktemp;
-	int t,a,b1,b2,b3,b4; /* Counter*/
+	float dktemp=0;
+	int t,a,b1,b2,b4; /* Counter*/
 	for (a=0; a<n; a++) {
 	    b1=0;
 	    b2=0;
@@ -297,7 +297,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     /* END OF MAIN LOOP--------------------------------------------------------------------------------*/	
 	
     /* Write Compute traveltime-----------------------------------------------------*/
-    float ck_in, ck_in_temp,S1,S3;
+    float ck_in, ck_in_temp=0,S1,S3;
     int c1,c2,c3,c4,c5;
     int c; /* Counter*/
 	
@@ -351,8 +351,7 @@ mark: /* Mark point for goto*/
 	    tt = tt + T_hat_k(f.T_k);
 			
 	    if (c==0) {
-		at = fabsf(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
-		tx_s = T_hat_k_k(f.T_k_k,f.T_k_zk); /* x-direction on the surface*/
+		at = fabs(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
 		tz_s = T_hat_k(f.T_k_zk);
 	    }
 			
@@ -397,7 +396,7 @@ mark: /* Mark point for goto*/
 		ck_in= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_in_temp*T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1));
 	    }
 			
-	    at = at*fabsf(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1));
+	    at = at*fabs(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1));
 	    ck_in_temp = ck_in;
 	}	
 		

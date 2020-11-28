@@ -55,7 +55,7 @@ int main(int argc, char **argv){
     int RANK;
     int PROCS;
     
-    bool verb, useprefix,seq;
+    bool verb, seq;
 
     int mode;
     char **filenames = NULL;
@@ -178,9 +178,9 @@ int main(int argc, char **argv){
     sf_datatype type = sf_gettype(tfile);
     
     float *fsarray = NULL;
-    float *frarray = NULL; float *foarray;
+    float *frarray = NULL; float *foarray = NULL;
     int   *isarray = NULL;
-    int   *irarray = NULL; int   *ioarray;
+    int   *irarray = NULL; int   *ioarray = NULL;
     
     switch (type) {
         case SF_FLOAT:
@@ -211,6 +211,7 @@ int main(int argc, char **argv){
         case SF_UCHAR:
         case SF_CHAR:
         case SF_SHORT:
+        default:
             sf_error("Unknown data type, must be int or float");
             break;
     }
@@ -268,6 +269,7 @@ int main(int argc, char **argv){
                 case SF_CHAR:
                 case SF_SHORT:
                 case SF_COMPLEX:
+                default:
                     break;
             }
             
@@ -320,6 +322,7 @@ int main(int argc, char **argv){
                 case SF_CHAR:
                 case SF_SHORT:
                 case SF_COMPLEX:
+                default:
                     break;
             }
             
@@ -350,6 +353,7 @@ int main(int argc, char **argv){
             case SF_CHAR:
             case SF_SHORT:
             case SF_COMPLEX:
+            default:
                 break;
         }
         
@@ -369,8 +373,10 @@ int main(int argc, char **argv){
             free(isarray);
             free(irarray);
             break;
+        default:
+            break;
     }
-    
+
     sf_fileclose(tfile);
 
     if (seq) free(prefix);

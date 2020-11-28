@@ -20,16 +20,11 @@
 
 #include <rsf.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #define BOUND(i,n) (i<0) ? 0 : ( (i>n-1) ? n-1 : i );
 
 int main(int argc, char* argv[])
 {
     bool verb;
-    int ompnth=1;
 
     sf_file Fcub=NULL; /* CUB */
     sf_file Fcip=NULL; /* CIP */
@@ -50,10 +45,6 @@ int main(int argc, char* argv[])
     /* init RSF */
     sf_init(argc,argv);    
     
-#ifdef _OPENMP
-    ompnth=omp_init(); /* OMP parameters */
-#endif
-
     if(! sf_getbool("verb",&verb)) verb=false;	/* verbosity flag */
 
     Fcub=sf_input ( "in");

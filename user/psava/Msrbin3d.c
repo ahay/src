@@ -40,8 +40,8 @@ int main (int argc, char* argv[])
     float*trc;
 
     int *e1, *e2;
-    int j1=NULL,j2=NULL;
-    int k1=NULL,k2=NULL;
+    int j1=0,j2=0;
+    int k1,k2;
     off_t iseek,start;
 
     /*------------------------------------------------------------*/

@@ -150,8 +150,8 @@ int main (int argc, char* argv[]) {
     if ( SF_FLOAT != sf_gettype (piFile) ) sf_error ("Need float input: constant-dip partial images");
     /* constant-dip partial images */
 
-	sf_file velFile;
-	bool  isVelKMS;
+	sf_file velFile = NULL;
+	bool  isVelKMS = true;
     if ( NULL != sf_getstring("vel") ) {
 	/* velocity model file (velocity in km/s) */ 
 		velFile = sf_input ("vel");
@@ -167,7 +167,7 @@ int main (int argc, char* argv[]) {
 // Output files
     sf_file resFile = sf_output ("out");
 
-    sf_file sembFile;
+    sf_file sembFile = NULL;
     if ( NULL != sf_getstring("semb") ) {
 	/* output file containing semblance */ 
 		sembFile  = sf_output ("semb"); 

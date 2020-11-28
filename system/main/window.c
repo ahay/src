@@ -146,18 +146,18 @@ int main (int argc, char *argv[])
 
     for (i=i0=0; i0 < dim; i0++) {
 	if (squeeze && 1==m[i0]) continue;
-	snprintf(key,3,"n%d",i+1);
+	snprintf(key,3,"n%d",(i+1)%10u);
 	sf_putlargeint(out,key,m[i0]);
-	snprintf(key,3,"o%d",i+1);
+	snprintf(key,3,"o%d",(i+1)%10u);
 	sf_putfloat(out,key,o[i0]);
-	snprintf(key,3,"d%d",i+1);
+	snprintf(key,3,"d%d",(i+1)%10u);
 	sf_putfloat(out,key,d[i0]);
 	if (NULL != label[i0]) {
-	    snprintf(key,7,"label%d",i+1);
+	    snprintf(key,7,"label%d",(i+1)%10u);
 	    sf_putstring(out,key,label[i0]);
 	}
 	if (NULL != unit[i0]) {
-	    snprintf(key,7,"unit%d",i+1);
+	    snprintf(key,7,"unit%d",(i+1)%10u);
 	    sf_putstring(out,key,unit[i0]);
 	}
 	i++;
@@ -166,18 +166,18 @@ int main (int argc, char *argv[])
     if (squeeze) {
 	for (i0=0; i0 < dim; i0++) {
 	    if (1 != m[i0]) continue;
-	    snprintf(key,3,"n%d",i+1);
+	    snprintf(key,3,"n%d",(i+1)%10u);
 	    sf_putlargeint(out,key,m[i0]);
-	    snprintf(key,3,"o%d",i+1);
+	    snprintf(key,3,"o%d",(i+1)%10u);
 	    sf_putfloat(out,key,o[i0]);
-	    snprintf(key,3,"d%d",i+1);
+	    snprintf(key,3,"d%d",(i+1)%10u);
 	    sf_putfloat(out,key,d[i0]);
 	    if (NULL != label[i0]) {
-		snprintf(key,7,"label%d",i+1);
+		snprintf(key,7,"label%d",(i+1)%10u);
 		sf_putstring(out,key,label[i0]);
 	    }
 	    if (NULL != unit[i0]) {
-		snprintf(key,6,"unit%d",i+1);
+		snprintf(key,6,"unit%d",(i+1)%10u);
 		sf_putstring(out,key,unit[i0]);
 	    }
 	    i++;

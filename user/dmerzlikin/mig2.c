@@ -44,23 +44,17 @@ void mig2_lop (bool adj /* adjoint flag */,
 /*< Apply >*/
 {
 
-    int nn, iy, ix, iz, iyc, ixc, izc, indexc;
-    int mythread, nothreads, ch=0, chomp=0, deltat, ch2=0, ch3=0, ch4=0;
-    float *pp, *qq, *trace_temp;
-    float x_in, y_in, ftm, ftp, imp, xtemp, ytemp, veltemp, vel, amp;
-    float sq, ti, tx, tm, tp, x,y, z, t;
-    float rx, ry, ft;
-    int it, itp, itm, itrx, itry, index, checkomp=0;
+    int nn, ix, iz;
+    int nothreads, ch=0, chomp=0;
+    float *pp, *trace_temp;
+    float x_in, ftm, ftp, imp, xtemp, veltemp, vel, amp;
+    float sq, ti, tx, tm, tp, x, z, t;
+    float rx, ft;
+    int it, itp, itm, itrx, index, checkomp=0;
 
     /* add flag is enabled when starting model is given */
     /* refer to api/c/bigsolver.c 1392: "line oper (false, true, nx, ny, x, rr);"*/
     sf_adjnull(adj,add,nt*nx,nt*nx,out,trace);
-
-    /* looking for artifacts */
-    izc = 225;
-    ixc = 175;
-    iyc = 0;
-    indexc = iyc*nx*nt + ixc*nt + izc;
 
 /* _____________________________________________________________________________________________________________________________________________________ */
 //sf_warning("checking sample (%d,%d,%d)",izc,ixc,iyc);
@@ -192,16 +186,17 @@ void mig2_lop (bool adj /* adjoint flag */,
 		#pragma omp parallel
 		{
 #ifdef _OPENMP
-			mythread = omp_get_thread_num();
     			nothreads = omp_get_num_threads();
 #else
-			mythread = 0;
 			nothreads = 1;
 #endif			
 
 			#pragma omp single
 			{
-    			if(!chomp) sf_warning("Using %d threads",nothreads); chomp=1;
+    			if(!chomp) {
+					sf_warning("Using %d threads",nothreads); 
+					chomp=1;
+				}
 			}
 
 			float *trace_thread;

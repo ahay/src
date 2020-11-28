@@ -60,9 +60,9 @@ int main(int argc, char* argv[])
     sf_axis asx,asy,arx,ary,ac;    /* sou, rec-x, rec-y, component */ 
 
     /* dimension, index and interval */
-    int     nt,nz,nx,ny,ns,nr,nc,nb;
+    int     nt,ns,nr,nc,nb;
     int     it,iz,ix,iy;
-    float   dt,dz,dx,dy;
+    float   dt;
     int     nxyz, nk;
 
     /* FDM and KSP structure */ //!!!JS
@@ -159,9 +159,6 @@ int main(int argc, char* argv[])
     ary = sf_iaxa(Frec,3); sf_setlabel(ary,"ry"); if(verb) sf_raxa(ary); /* receivers y */
 
     nt = sf_n(at); dt = sf_d(at);
-    nz = sf_n(az); dz = sf_d(az);
-    nx = sf_n(ax); dx = sf_d(ax);
-    ny = sf_n(ay); dy = sf_d(ay);
 
     ns = sf_n(asx)*sf_n(asy);
     nr = sf_n(arx)*sf_n(ary);

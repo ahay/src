@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
     if(!sf_getbool("cmplx",&complx)) complx=true; /* outputs complex wavefield */
 //    if(!complx)
-    float *rcurr;
+    float *rcurr = NULL;
 
     /* setup I/O files */
     Fw = sf_input ("in" );

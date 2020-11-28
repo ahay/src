@@ -43,13 +43,13 @@ int main(int argc, char* argv[])
 {
     float EPS=100*FLT_EPSILON;
 	bool verb, inv, norm;    
-    int i1,i2, n1, n2, n12, n3;    
+    int i1,i2, n1, n2;    
     int order, ntraces;  /* input parameters */
     float o1, d1, o2, d2; /* data parameters */   
-	float dw,f[2],fs;     /* bandwitch real and normalized f = fs * k */ 
+	float f[2];     /* bandwitch real and normalized f = fs * k */ 
     int   k[2];
 	/* fft */
-    int ny,nt,nyL,ntL,Ntot,Nint;	 
+    int ny,nt,nyL,ntL,Ntot;	 
     kiss_fftr_cfg cfg,cfgL;	
 	
 	float *p,*pL,*p_out;
@@ -73,10 +73,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
     
-	fs = (1.0 / d1);
     //sf_warning("sampling frequency fs=%f",fs);
-    n12 = n1*n2;
-    n3 = sf_leftsize(in,2); /*number of gathers in the line*/
 
     if (!sf_getint("order",&order)) order=3;
     /* linear PEF order*/
@@ -94,7 +91,6 @@ int main(int argc, char* argv[])
 
 
 	Ntot = (ntraces+1)*(n2-1)+1; /* total number of traces after interpolation */
-	Nint = Ntot-n2; 			/*   number of new traces */
 
  
     if (!sf_getbool("verb",&verb)) verb = false;
@@ -110,8 +106,6 @@ int main(int argc, char* argv[])
 
     ny = nt/2+1;
     nyL = ny*(ntraces+1);
-	/* frequency spacing in fft domain */
-    dw = 1./(nt*d1);
 
     p = sf_floatalloc(nt);
     pL = sf_floatalloc(ntL);

@@ -35,11 +35,11 @@ int main(int argc, char* argv[])
     float *num, *den, *rat, eps;
     char key[6];
     sf_file fnum, fden, frat;
-    double td_start, td_end, td_count;
-    double t_start, t_end, t_count;
+/*
 #ifdef _OPENMP   
     t_start = omp_get_wtime();
 #endif
+*/
     sf_init(argc,argv);
     fnum = sf_input("in");
     fden = sf_input("den");
@@ -69,8 +69,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.0f;
     /* regularization */
-
-    int nthr;
 /*
 Initalizes threads, good for if timing, but unneded usually
 #ifdef _OPENMP

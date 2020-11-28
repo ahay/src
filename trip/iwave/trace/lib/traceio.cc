@@ -1606,17 +1606,28 @@ void destroy_tracegeom(tracegeom * tg) {
   /* setnull_tracegeom(tg); */
 
   /* moved from setnull, which is a default constructor */
-  if (tg->buf) userfree_(tg->buf); tg->buf=NULL;
-  if (tg->ntr) userfree_(tg->ntr); tg->ntr=NULL;
-  if (tg->recoff) userfree_(tg->recoff); tg->recoff=NULL;
-  if (tg->src) userfree_(tg->src); tg->src=NULL;
-  if (tg->ig) userfree_(tg->ig); tg->ig=NULL;
-  if (tg->rg) userfree_(tg->rg); tg->rg=NULL;
-  if (tg->tracl) userfree_(tg->tracl); tg->tracl=NULL;
-  if (tg->tracr) userfree_(tg->tracr); tg->tracr=NULL;
-  if (tg->tracf) userfree_(tg->tracf); tg->tracf=NULL;
-  if (tg->fldr) userfree_(tg->fldr); tg->fldr=NULL;
-  if (tg->troff) userfree_(tg->troff); tg->troff=NULL;
+  if (tg->buf) userfree_(tg->buf); 
+  tg->buf=NULL;
+  if (tg->ntr) userfree_(tg->ntr); 
+  tg->ntr=NULL;
+  if (tg->recoff) userfree_(tg->recoff); 
+  tg->recoff=NULL;
+  if (tg->src) userfree_(tg->src); 
+  tg->src=NULL;
+  if (tg->ig) userfree_(tg->ig); 
+  tg->ig=NULL;
+  if (tg->rg) userfree_(tg->rg); 
+  tg->rg=NULL;
+  if (tg->tracl) userfree_(tg->tracl); 
+  tg->tracl=NULL;
+  if (tg->tracr) userfree_(tg->tracr); 
+  tg->tracr=NULL;
+  if (tg->tracf) userfree_(tg->tracf); 
+  tg->tracf=NULL;
+  if (tg->fldr) userfree_(tg->fldr); 
+  tg->fldr=NULL;
+  if (tg->troff) userfree_(tg->troff); 
+  tg->troff=NULL;
 
 #ifdef IWAVE_USE_MPI
   MPI_Type_free(&(tg->p));
@@ -2326,12 +2337,20 @@ void tapermutetraces(tracegeom * tg,
     int iet = (int)(wtime/tg->dt);
     float wt=0,wttime=1.0f;
     if (width > 0) {
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(__GNUC__) && !defined(__clang__)
+#pragma GCC ivdep
+#endif
         for (itr=0;itr<width;itr++) {
            wt = costap((width-itr)/float(width));
            (tg->buf)[it+itr*tg->nt]*=wt;
         }
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(__GNUC__) && !defined(__clang__)
+#pragma GCC ivdep
+#endif
         for (itr=tg->ntraces-width;itr<tg->ntraces;itr++) {
            wt = costap((itr-tg->ntraces+width+1)/float(width));
            (tg->buf)[it+itr*tg->nt]*=wt;
@@ -2342,7 +2361,11 @@ void tapermutetraces(tracegeom * tg,
 //	fprintf(stderr," tg->dt=%f \n",tg->dt);
 //	fprintf(stderr," it=%d \n",it);
         wttime = costap((it-tg->nt+iet+1)/float(iet));
+#if defined(__INTEL_COMPILER)
 #pragma ivdep
+#elif defined(__GNUC__) && !defined(__clang__)
+#pragma GCC ivdep
+#endif
         for (itr=0; itr<tg->ntraces; itr++) {
             (tg->buf)[it+itr*tg->nt]*=wttime;
         }

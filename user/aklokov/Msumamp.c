@@ -32,7 +32,7 @@ int main (int argc, char* argv[])
     float top, bottom;
     int pind, i3, i2, ind;
     float t, stack;
-    sf_file dataFile, hTopFile, hBotFile, stackFile;
+    sf_file dataFile, hTopFile=NULL, hBotFile=NULL, stackFile;
 
 // Initialize RSF 
     sf_init (argc,argv);

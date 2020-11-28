@@ -29,9 +29,9 @@ int main(int argc, char* argv[])
 {
   int i1,i2,i3,n1,n2,n3,order,iter,niter,verb; /*l means long trace*/
   float dt,thr,eps,lambda,sum;
-  float *times, **tracesin, **tracesout, **misfit, **tracestmp, **dips;
-  char *mode,*type,*thrtype;
-  bool unit=false, inv=true, ifinit;	
+  float *times, **tracesin, **tracesout, **misfit=NULL, **tracestmp=NULL, **dips=NULL;
+  char *mode,*type,*thrtype=NULL;
+  bool unit=false, inv=true, ifinit=true;	
   sf_file in=NULL, out=NULL, shottime=NULL, dip=NULL, init=NULL;
 	    
 	

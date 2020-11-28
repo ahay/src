@@ -113,7 +113,7 @@ int main(int argc, char **argv){
     float **delays;         // array of time shifts
     float **ampls;          // array of amplitude weights
     //variables that are *xo or *yo are output cube parameters 
-    int ns,ne,os,ds,de,oe,nx,ny,nw,nxi,nyi,iox,ioy,idx,idy;
+    int ns,ne,os,ds,nx,ny,nw,nxi,nyi,iox,ioy,idx,idy;
     float ow,dw,dyi,dxi,oyi,oxi,dy,dx,ox,oy;
     sf_axis ax,ay,aw,as,ae,axi,ayi;
     
@@ -165,7 +165,7 @@ int main(int argc, char **argv){
     as = sf_iaxa(Fencode,1); 
     ns = sf_n(as); ds = (int)sf_d(as); os = (int)sf_o(as);
     ae = sf_iaxa(Fencode,2);
-    ne = sf_n(ae); de = (int)sf_d(ae); oe = (int)sf_o(ae);
+    ne = sf_n(ae);
     
     sf_file Faxes;
     char tname[256];

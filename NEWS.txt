@@ -1,6 +1,119 @@
+==Release 3.2 (TBD)==
+
 ===Additions and enhancements===
 
 To the reproducible documents collection:
+
+To SCons:
+
+To documentation:
+
+To APIs:
+
+To the Python package:
+
+To programs:
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+In the build system:
+
+===Changes in defaults and interfaces===
+
+==Release 3.1.1 (2020-11-22)==
+
+===Additions and enhancements===
+
+To the reproducible documents collection:
+
+To SCons:
+
+To documentation:
+
+To APIs:
+
+To the Python package:
+
+To programs:
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+In the build system:
+
+* Get rid of warnings during installation
+
+===Changes in defaults and interfaces===
+
+==Release 3.1 (2020-11-08)==
+
+===Additions and enhancements===
+
+To the reproducible documents collection:
+
+* zju/sosvmf: Deblending of simultaneous-source data using a structure-oriented
+  space-varying median filter (Chen, Zu, Wang, and Chen)
+* zju/q: Multi-channel quality factor Q estimation (Chen)
+* tccs/dealiase: De-aliased seismic data interpolation using seislet transform
+  with low-frequency constraint (Gan, Wang, Chen, Zhang, and Jin)
+* tccs/dmssa: Damped multichannel singular spectrum analysis for 3D random noise
+  attenuation (Huang, Wang, Chen, Li, and Gan)
+* tccs/demulemd: Multiple reflections noise attenuation using adaptive
+  randomized-order empirical mode decomposition (Che, Xie, Zu, Gan, and Chen)
+* tccs/halfthr: Irregular seismic data reconstruction using a
+  percentile-half-thresholding algorithm (Chen, Chen, Shi, and Wang)
+* tccs/dipseis: Dip-separated structural filtering using seislet transform and
+  adaptive empirical mode decomposition based dip filter (Chen)
+* tccs/dealiase2: One-step slope estimation for dealiased seismic data
+  reconstruction via iterative seislet thresholding (Liu, Cao, Gan, Chen, Zu,
+  and Jin)
+* tccs/strsvd: Structure-oriented singular value decomposition for random noise
+  attenuation of seismic data (Gan, Chen, Zu, Qu, and Zhong)
+* tccs/drr3d: An open-source Matlab code package for improved rank-reduction 3D
+  seismic data denoising and reconstruction (Chen, Huang, Zhang, and Chen)
+* tccs/asa: Application of spectral decomposition using regularized
+  non-stationary autoregression to random noise attenuation (Yang, Wang, Chen,
+  Wu, Qu, Yuan, and Gan)
+* tccs/sswtapp: Probing the subsurface karst features using time-frequency
+  decomposition (Chen)
+* zju/optnoise: Plane-wave orthogonal polynomial transform for
+  amplitude-preserving noise attenuation (Chen, Huang, Zhou, Liu, and Zhang)
+* tccs/sgk: Fast dictionary learning for noise attenuation of multidimensional
+  seismic data (Chen)
+* zju/qrtm: CuQ-RTM: A CUDA-based code package for stable and efficient
+  Q-compensated reverse time migration (Wang, Zhou, Zhao, Zhang, Zhao, Yu, and
+  Chen)
+* tccs/cd: Compressive sensing for seismic data reconstruction via fast
+  projection onto convex sets based on seislet transform (Gan, Wang, Chen, Chen,
+  Chen, Huang, and Chen)
+* tccs/svscan: Velocity analysis of simultaneous-source data using
+  high-resolution semblance - coping with the strong noise (Gan, Wang, Chen, Qu,
+  and Zu)
+* tccs/pcastack: Application of principal component analysis in weighted
+  stacking of seismic data (Xie, Chen, Zhang, Zu, and Chen)
+* tccs/enhemd: Enhancing seismic reflections using empirical mode decomposition
+  in the flattened domain (Chen, Zhang, Gan, and Zhang)
+* tccs/npm: Data-driven time-frequency analysis of seismic data using
+  non-stationary Prony method (Wu, Fomel, and Chen)
 
 To SCons:
 
@@ -17,6 +130,23 @@ To programs:
 * sfacoustic1D_FWI_ptb: 1-D acoustic FWI with Perturbation method
 * sfacoustic1D_FWI_adj: 1-D acoustic FWI with adjoint state method
 * sfviewbin: quick view of binary data (1D/2D/3D)
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+In the build system:
+* Support installation on CentOS 8 and Ubuntu 20.10
+
+===Changes in defaults and interfaces===
 
 ==Release 3.0 (2019-09-09)==
 

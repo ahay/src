@@ -28,17 +28,16 @@
 #endif
 int main(int argc, char* argv[]) 
 {
-    int nx, nz, nt, ix, iz, it, nbt, nbb, nxl, nxr,  nxb, nyb, nzb, isx, isz;
-    float dt, dx, dy, dz, o1, o2, o3;
+    int nx, nz, nt, ix, iz, it, nbt, nbb, nxl, nxr,  nxb, nzb, isx, isz;
+    float dt, dx, dz, o1, o2;
     float **upold,  **upcur, **wpold, **wpcur, *wav;
     float **usold, **uscur, **wsold, **wscur, **tmp;
     float **uu,**ww;
     float  **vp, vp0, **vs, vs0, **vtmp ;
     float ***aa, czt, czb, cxl, cxr; /* top, bottom, left, right */
-    float ax, az, factor;
     sf_file fwavup, fwavwp, fwavus, fwavws, fwavu, fwavw, fvelp, fvels, fsource ;
     int opt, snap, nsnap;    /* optimal padding */
-    int nkxz,nkxx,nkzz;
+    int nkxx,nkzz;
      
     sf_init(argc,argv);
     fvelp = sf_input("vp");   /* velocity */
@@ -238,7 +237,7 @@ int main(int argc, char* argv[])
     /* propagation in time */
     pamstep2e_init(nzb,nxb,dz,dx,opt);
 
-    nkxz=fft2_init(true,1,nzb,nxb,&nkzz,&nkxx);
+    fft2_init(true,1,nzb,nxb,&nkzz,&nkxx);
     for (it=0; it < nt; it++) {
 	fprintf(stderr, "\b\b\b\b\b%d", it);
 

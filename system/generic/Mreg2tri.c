@@ -108,8 +108,10 @@ int main(int argc, char* argv[])
 	InsertNode (q);
 	b1 = (BBox[0]-o1)/d1; e1 = (BBox[1]-o1)/d1;
 	b2 = (BBox[2]-o2)/d2; e2 = (BBox[3]-o2)/d2;
-	if (b1 < 0) b1 = 0; if (e1 > n1) e1 = n1;
-	if (b2 < 0) b2 = 0; if (e2 > n2) e2 = n2;
+	if (b1 < 0) b1 = 0; 
+    if (e1 > n1) e1 = n1;
+	if (b2 < 0) b2 = 0; 
+    if (e2 > n2) e2 = n2;
 	for (i2 = b2; i2 < e2; i2++) {
 	    for (i1 = b1; i1 < e1; i1++) {
 		i = i1+i2*n1;

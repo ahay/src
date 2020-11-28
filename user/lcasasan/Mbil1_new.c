@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     bool verb;
 	int nd, n1, niter, liter, iter, id, ib, nb;
     float *n, *d,*dd, *r, *b,*btmp, **A, **Atmp, perc;
-    double eb,en;
+    double eb = 0.0,en = 0.0;
   //  double ad, bd, aa, bb, a0, b0, da, db, ab, det;
     sf_file inp, reg, out;
 

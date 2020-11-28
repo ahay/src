@@ -49,7 +49,7 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	
 	for(int b=0; b<nc; b++) {
 	    int j = cs[b];
-	    double r;
+	    double r = 0;
 	    double x0 = kx[j];
 	    double z0 = kz[j];
 	    // rotation of coordinates

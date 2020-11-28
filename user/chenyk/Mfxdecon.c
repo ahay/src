@@ -89,10 +89,16 @@ int main(int argc, char *argv[])
     if(!sf_getbool("verb",&verb)) verb=false;
     /* flag to get advisory messages */
 	
-    if(!sf_histint(in, "n1", &n1))  sf_error("No n1 in input");  if (verb) sf_warning("n1 = %i",n1);
-    if(!sf_histfloat(in, "d1", &dt)) sf_error("No d1 in input"); if (verb) sf_warning("dt= %f",dt);
-    if(!sf_histint(in,"n2",&n2))   sf_error("No n2 in input");   if (verb) sf_warning("n2= %f",n2);
-    if(!sf_histint(in,"n3",&n3))   n3=1; if (verb) sf_warning("n3= %f",n3);
+    if(!sf_histint(in, "n1", &n1))  sf_error("No n1 in input");  
+    if(!sf_histfloat(in, "d1", &dt)) sf_error("No d1 in input"); 
+    if(!sf_histint(in,"n2",&n2))   sf_error("No n2 in input");   
+    if(!sf_histint(in,"n3",&n3))   n3=1; 
+	if (verb){
+		sf_warning("n1 = %i", n1);
+		sf_warning("dt = %f", dt);
+		sf_warning("n2 = %f", n2);
+		sf_warning("n3 = %f", n3);
+	} 
 
     if(!sf_getfloat("taper",&taper)) taper=.1;
     /* length of taper */

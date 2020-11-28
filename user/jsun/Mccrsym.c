@@ -28,7 +28,7 @@ float ccr(int nt, int size, int offset, float pad, float *dat);
 int main(int argc, char * argv[])
 {
     
-    int nt, i,nth,size;
+    int nt, i,size;
     sf_file in, out;
     float *dat0,*dat,pad;
     sf_axis at;
@@ -42,9 +42,10 @@ int main(int argc, char * argv[])
     if (!sf_getfloat("pad",&pad)) pad=SF_EPS; /* pad for stable devision */
 
 #ifdef _OPENMP
+    int nth;
 #pragma omp parallel
     {
-      nth = omp_get_num_threads();
+        nth = omp_get_num_threads();
     }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

@@ -22,9 +22,9 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ix, it, isx;
     float dt, dx;
-    float *old, *nxt, *cur, *sig, *a, *b1, *b2, *b3, *b4, *b5;
+    float *old, *nxt, *cur, *sig, *a, *b1, *b2;
     sf_file in, out, Gmatrix, vel;
-    int im,im2,im3,im4,im5,ip,ip2,ip3,ip4,ip5;
+    int im,im2,ip,ip2;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -53,9 +53,6 @@ int main(int argc, char* argv[])
     a = sf_floatalloc(nx);
     b1 = sf_floatalloc(nx);
     b2 = sf_floatalloc(nx);
-    b3 = sf_floatalloc(nx);
-    b4 = sf_floatalloc(nx);
-    b5 = sf_floatalloc(nx);
     
  
     sf_floatread(a,nx,Gmatrix);
@@ -80,14 +77,8 @@ int main(int argc, char* argv[])
 	for (ix=0; ix < nx; ix++) {
             im = ix-1 < 0? ix-1+nx:ix-1; 
             im2 = ix-2 < 0? ix-2+nx:ix-2; 
-            im3 = ix-3 < 0? ix-3+nx:ix-3; 
-            im4 = ix-4 < 0? ix-4+nx:ix-4; 
-            im5 = ix-5 < 0? ix-5+nx:ix-5; 
             ip = ix+1 > nx-1? ix+1-nx:ix+1;
             ip2 = ix+2 > nx-1? ix+2-nx:ix+2;
-            ip3 = ix+3 > nx-1? ix+3-nx:ix+3;
-            ip4 = ix+4 > nx-1? ix+4-nx:ix+4;
-            ip5 = ix+5 > nx-1? ix+5-nx:ix+5;
 
 	    nxt[ix] = ( 0.5* (cur[im]+cur[ip])*b1[ix] +  0.5*(cur[im2]+cur[ip2])*b2[ix]) 
                        - old[ix] + 2.0*cur[ix];

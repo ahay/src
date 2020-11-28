@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     float *coord, *inp, *out, *oth, *der, *warp;
     float *ampl=NULL, *damp=NULL, o1, d1, o2, d2, error, mean, *num, *den;
     bool verb, noamp;
-    char key[6];
+    char key[8];
     sf_bands spl;
     sf_file in, warped, other, warpin, warpout, amplout=NULL;
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 	if (n[i] > 1) {
 	    snprintf(key,6,"rect%d",i+1);
 	    if (!sf_getint(key,rect+i)) rect[i]=1;
-	    snprintf(key,6,"arect%d",i+1);
+	    snprintf(key,7,"arect%d",i+1);
 	    if (!sf_getint(key,rect2+i)) rect2[i]=1;
 	} else {
 	    rect[i]=1;

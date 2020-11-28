@@ -21,7 +21,7 @@
 
 int main(int argc, char* argv[])
 {
-	sf_file in, out, fmag;
+	sf_file out, fmag;
 	int n1,n2,ns,nw,i,j,k,iw;
 	int srcz, srcx0, srcdx;
 	int isource, nsource, dsource;
@@ -30,7 +30,6 @@ int main(int argc, char* argv[])
 	float ***f;
 
 	sf_init(argc, argv);
-	in = NULL; 
 	out = sf_output("out");
 
 	if (!sf_getint("n1",&n1)) n1=1;

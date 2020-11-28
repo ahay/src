@@ -381,7 +381,7 @@ static void sf_cram_point3_aaz_spread (float ac, float azc, float a, float az,
     float rot[3]; 
     rot[0] = fabsf (azc - az);
     rot[1] = fabsf (azc - (az + (float) SF_PI));
-    rot[3] = fabsf (azc - (az - (float) SF_PI));
+    rot[2] = fabsf (azc - (az - (float) SF_PI));
     /* Find smallest rotation between the two azimuths */
     if (rot[0] <= rot[1] && rot[0] <= rot[2]) {
         *dz += rot[0];

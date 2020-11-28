@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
     sf_axis ay,ax,at;
     int iy,ix,it;
     int ny,nx,nt;
-    float idx,dx,idy,dy,idt,dt, scale;
+    float idx,dx,idy,dy, scale;
     const char *what;    
     float xuu,yuu,zuu,xvv,yvv,zvv,***valx, ***valy, ***valz,km,kg,**slicex, **slicey, **slicez;
     float xu,yu,zu,xv,yv,zv,n1,n2,n3,nn1,nn2,nn3,ee,ff,gg,e,f,g;
@@ -43,7 +43,7 @@ int main (int argc, char *argv[])
     zhor=sf_input("zh");
     cur=sf_output("out");
 
-    at=sf_iaxa(xhor,1); nt=sf_n(at); dt=sf_d(at);
+    at=sf_iaxa(xhor,1); nt=sf_n(at); 
     ay=sf_iaxa(xhor,2); ny=sf_n(ay); dy=sf_d(ay);  
     ax=sf_iaxa(xhor,3); nx=sf_n(ax); dx=sf_d(ax);
    
@@ -58,7 +58,6 @@ int main (int argc, char *argv[])
 
     idx=1.0/dx;
     idy=1.0/dy;
-    idt=1.0/dt;
 
     valx =sf_floatalloc3(nt,ny,nx);
     valy =sf_floatalloc3(nt,ny,nx);

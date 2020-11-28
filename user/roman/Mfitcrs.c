@@ -236,14 +236,13 @@ int main(int argc, char* argv[])
     float t0, t02;
     float * m_mids, *h_halfoffset;
   
-    sf_file in,out,out_tcrs = NULL,out_tcrs_params = NULL;
+    sf_file in,out_tcrs = NULL,out_tcrs_params = NULL;
     char * out_tcrs_file = 0;
     float crs_a0[3], crs_a[3];
  
     sf_init(argc,argv);
 
     in = sf_input("in");
-    out = sf_output("out");
 
  
     /* read input file parameters */

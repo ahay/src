@@ -13,7 +13,7 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nt2, nx, i1, i2, n12, i, j;
+    int nt, nt2, nx;
     bool adj, sm, domod;
     float dt, dt2, dx, ot, ot2, ox, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr;
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     float **v, rho, *off;
     float h0, dh, aal, angle;
     int ix, ih, nh2;
-    sf_file vel, gather, offset;
+    sf_file vel, offset;
 
     //MADAGASCAR C API
     /* initialize */
@@ -93,12 +93,6 @@ int main(int argc, char* argv[])
 	
 	sf_putint(out,"n3",nh);
     }	
-
-    if (NULL != sf_getstring("gather")) {
-	gather = sf_output("gather");
-    } else {
-	gather = NULL;
-    }
 
     if (!sf_getfloat("antialias",&aal)) aal = 1.0;
     /* antialiasing */
@@ -169,8 +163,6 @@ int main(int argc, char* argv[])
     /* new axis length */
     if (!sf_getint("pad",&nt2)) nt2=nt; /* output time samples */
 	
-    n12 = nt2*nx;   
-
     data = sf_floatalloc(nt*nx);
     model = sf_floatalloc(nt*nx);
     datat2 = sf_floatalloc(nt2*nx); 

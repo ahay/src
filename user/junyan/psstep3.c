@@ -265,7 +265,6 @@ void psstep3(float ***old /*previous step*/,
     int ix, ikx, iy, iky, ikz, iz;
     float kx, ky, kz, tmpdt, pi=SF_PI;
 	float kx0,ky0,kz0,kxyz2;
-	int nkxx,nkyy, nkzz, nkxyz;
 
 	kx0 =-0.5/dx;
 	ky0 =-0.5/dy;

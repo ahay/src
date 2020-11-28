@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 	mask = sf_output("maskout");	
 	sf_settype(mask,SF_INT);
 	
-	sprintf(varname,"n%d",dim+1);
+	sprintf(varname,"n%d",(dim+1)%10u);
 	sf_putint(mask,varname,ns);
 
 	for (is=0; is < ns; is++) {

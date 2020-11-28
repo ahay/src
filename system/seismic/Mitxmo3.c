@@ -30,11 +30,13 @@ int main (int argc, char* argv[])
     bool inv,cij;
     int it,ipx, ipy, nt,nx, ny, npx, npy;
     float dt, t0, px, px0, px2, py, py0, py2 , v, sx, st, sy, ft, dpx, dpy, eps, x0, dx, y0, dy;
-    float vp, vn1, vn2, eta1, eta2, eta3, etaxy, f1, f2, dxx, dyy, dtt;
+    float vn1, vn2, eta1, eta2, eta3, etaxy, f1, f2, dxx, dyy, dtt;
     float c11, c22, c33, c44, c55, c66, c12, c13, c23;
-    float ***tp, *vel, *c_11, *c_22, *c_33, *c_44, *c_55, *c_66, *c_12, *c_13, *c_23, ***txy, ***t, ***x, ***y;
-    sf_file inp, out;
-    sf_file C11,C22,C33,C44,C55,C66,C12,C13,C23, velocity;
+	float ***tp, *vel = NULL;
+	float *c_11 = NULL, *c_22 = NULL, *c_33 = NULL, *c_44 = NULL, *c_55 = NULL, *c_66 = NULL; 
+	float *c_12 = NULL, *c_13 = NULL, *c_23 = NULL, ***txy, ***t, ***x, ***y;
+	sf_file inp, out;
+    sf_file C11=NULL,C22=NULL,C33=NULL,C44=NULL,C55=NULL,C66=NULL,C12=NULL,C13=NULL,C23=NULL, velocity=NULL;
 
     sf_init (argc,argv);
 
@@ -171,7 +173,7 @@ int main (int argc, char* argv[])
 		sf_floatread (vel,nt,velocity);
    }
 /*  #pragma omp parallel for default(shared)				\
-    private(ipy,py,ipx,px,st,sx,sy,it,c11,c22,c33,c44,c55,c66,c12,c13,c23,vp,vn2,vn1,eta1,eta2,eta3,etaxy,f1,f2,dyy,dxx,dtt,v,py2,px2,ft) */
+    private(ipy,py,ipx,px,st,sx,sy,it,c11,c22,c33,c44,c55,c66,c12,c13,c23,vn2,vn1,eta1,eta2,eta3,etaxy,f1,f2,dyy,dxx,dtt,v,py2,px2,ft) */
     for (ipy = 0; ipy < npy; ipy++) {
 	    py = py0 + ipy*dpy;
 	    py2 = py*py;
@@ -189,7 +191,6 @@ int main (int argc, char* argv[])
                     c66 = c_66[it]; c12 = c_12[it]; c13 = c_13[it]; c23 = c_23[it];
                     
                     /* Pseudoacoustic parameters*/
-                    vp = sqrtf(c33);
                     vn2 = sqrtf((c33*c55 + c13*(c13 + 2*c55))/(c33 - c55));
                     vn1 = sqrtf((c33*c44 + c23*(c23 + 2*c44))/(c33 - c44));
                     eta1 = (c22*(c33 - c44))/(2*c33*c44 + 2*c23*(c23 + 2*c44))-0.5;

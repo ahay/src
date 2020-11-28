@@ -236,8 +236,8 @@ void read3dfile(int verbose, float* trace, sf_file auxfile,
   file_offset=(indx_iline*num_xlines+indx_xline)*num_times*sizeof(float);
   if(verbose>2){
     fprintf(stderr,"dxline=%f,diline=%f,indx_xline=%lld, indx_iline=%lld\n",
-	            dxline   ,diline   ,indx_xline   , indx_iline);
-    fprintf(stderr,"file_offset=%lld\n",file_offset);
+	            dxline   ,diline   ,(long long)indx_xline   , (long long)indx_iline);
+    fprintf(stderr,"file_offset=%lld\n",(long long)file_offset);
   }
   sf_seek(auxfile,file_offset,SEEK_SET);
   if(verbose>2){

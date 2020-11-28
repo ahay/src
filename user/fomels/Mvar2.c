@@ -21,7 +21,7 @@
 int main (int argc, char* argv[])
 {
     int id, id2, nd, ix, nx, three, *fold;
-    float *vari, **xy, distance, dx;
+    float *vari, **xy, distance, dx, diff;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -61,23 +61,20 @@ int main (int argc, char* argv[])
 
     /* loop through data pairs */
     for (id=0; id < nd; id++) {
-	for (id2=id; id2 < nd; id2++) {
+	for (id2=id+1; id2 < nd; id2++) {
 	    distance = hypotf(xy[id][0]-xy[id2][0],
 			      xy[id][1]-xy[id2][1]);
 	    ix = floorf(distance/dx);
 	    if (ix < nx) {
+		diff = xy[id][2]-xy[id2][2];
+		vari[ix] += diff*diff;
 		fold[ix]++;
-		vari[ix] += 
-		    (xy[id][2]-xy[id2][2])*
-		    (xy[id][2]-xy[id2][2]);
 	    }
 	}
     }
 
     for (ix=0; ix < nx; ix++) {
-	if (fold[ix] > 1) {
-	    vari[ix] *= 0.5/fold[ix];
-	}
+	if (fold[ix] > 0) vari[ix] *= 0.5/fold[ix];
     }
     
     sf_floatwrite (vari,nx,out);

@@ -142,7 +142,6 @@ void pamstep2e(float **upold /*previous step*/,
     int ix, ikx, ikz, iz;
     float kx, kz, tmpdt, pi=SF_PI;
 	float kx0,kz0,kxz2;
-	int nkxx, nkzz, nkxz;
 
 	kx0 =-0.5/dx;
 	kz0 =-0.5/dz;

@@ -41,8 +41,8 @@ void mig3_lop (bool adj /* adjoint flag */,
 /*< Apply >*/
 {
 
-    int nn, iy, ix, iz, iyc, ixc, izc, indexc;
-    int mythread, nothreads, ch=0, chomp=0, deltat, ch2=0, ch3=0, ch4=0;
+    int iy, ix, iz;
+    int nothreads, ch=0, chomp=0;
     float *pp, *qq, *trace_temp;
     float x_in, y_in, ftm, ftp, imp, xtemp, ytemp, veltemp, vel;
     float sq, ti, tx, tm, tp, x,y, z, t;
@@ -52,12 +52,6 @@ void mig3_lop (bool adj /* adjoint flag */,
     /* add flag is enabled when starting model is given */
     /* refer to api/c/bigsolver.c 1392: "line oper (false, true, nx, ny, x, rr);"*/
     sf_adjnull(adj,add,nt*nx*ny,nt*nx*ny,out,trace);
-
-    /* looking for artifacts */
-    izc = 225;
-    ixc = 175;
-    iyc = 0;
-    indexc = iyc*nx*nt + ixc*nt + izc;
 
 /* _____________________________________________________________________________________________________________________________________________________ */
 //sf_warning("checking sample (%d,%d,%d)",izc,ixc,iyc);
@@ -155,16 +149,17 @@ void mig3_lop (bool adj /* adjoint flag */,
 		#pragma omp parallel
 		{
 #ifdef _OPENMP
-			mythread = omp_get_thread_num();
     			nothreads = omp_get_num_threads();
 #else
-			mythread = 0;
 			nothreads = 1;
 #endif
 
 			#pragma omp single
 			{
-    			if(!chomp) sf_warning("Using %d threads",nothreads); chomp=1;
+    			if(!chomp) {
+					sf_warning("Using %d threads", nothreads);
+					chomp = 1;
+				}
 			}
 
 			float *trace_thread;
@@ -338,19 +333,30 @@ void mig3_lop (bool adj /* adjoint flag */,
 
 			for (iy=0; iy < ny; iy++) {
 	    			y = oy + iy*dy - y_in;
-	    			ry = fabsf(y*dy) * vel;
-	    			y *= y * vel;
+	    			//ry = fabsf(y*dy) * vel;
+	    			//y *= y * vel;
 	    
             			for (ix=0; ix < nx; ix++) {
 					x = ox + ix*dx - x_in;
-					rx = fabsf(x*dx) * vel;
-					x *= x * vel;
-					x += y;
+					//rx = fabsf(x*dx) * vel;
+					//x *= x * vel;
+					//x += y;
 
 					for (iz=0; iz < nt; iz++) {
 		    				z = ot + iz*dt;              
 
-		    				t = z*z + x; 
+							veltemp = v[iy*nx*nt + ix*nt + iz]/2.0;
+							vel = 2./v[iy*nx*nt + ix*nt + iz]; 
+							vel *= vel;
+
+							ry = fabsf(y*dy) * vel;
+							//y *= y * vel;
+
+							rx = fabsf(x*dx) * vel;
+							//x *= x * vel;
+							//x += y;
+
+		    				t = z*z + x*x*vel + y*y*vel; 
 		    				if (t <= 0.) continue;
               
 		    				sq = t*t; 

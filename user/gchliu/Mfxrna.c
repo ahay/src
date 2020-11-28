@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     sf_complex *d1,**d,*sh, *f, *one;
     char *ty;
     float mean,*mk;
-    sf_file dat, flt, mask, pre, zshift, zdata;
+    sf_file dat, flt, mask=NULL, pre, zshift, zdata;
 
     sf_init(argc,argv);
 

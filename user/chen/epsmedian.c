@@ -42,8 +42,8 @@ void* epsmedian_init(int n1, int nfw)
 	return p;
 }
 
-#define MAX(a,b) ((a)<(b) ? (b) : (a))
-#define MIN(a,b) ((a)>(b) ? (b) : (a))
+#define MY_MAX(a,b) ((a)<(b) ? (b) : (a))
+#define MY_MIN(a,b) ((a)>(b) ? (b) : (a))
 void epsmedian(void *h, float *x, int d)
 /*< eps by median filter >*/
 {
@@ -55,7 +55,7 @@ void epsmedian(void *h, float *x, int d)
     for(i1=0; i1 < p->n; i1++)
     {
         min = i1;
-        max = MIN(i1+p->nfw, p->n-1);
+        max = MY_MIN(i1+p->nfw, p->n-1);
         l = max - min + 1;
     	for(j1=min; j1 <= max; j1++)
     	p->u[j1-min] = x[j1*d];
@@ -71,8 +71,8 @@ void epsmedian(void *h, float *x, int d)
     // selection
     for(i1=0; i1 < p->n; i1++)
     {
-        min = MAX(i1-p->nfw, 0);
-        max = MIN(i1, p->n-p->nfw-1);
+        min = MY_MAX(i1-p->nfw, 0);
+        max = MY_MIN(i1, p->n-p->nfw-1);
         j2 = min;
         for(j1=min+1; j1 <= max; j1++) 
         if(p->e[j1] < p->e[j2]) j2 = j1;

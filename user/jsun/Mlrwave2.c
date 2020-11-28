@@ -58,23 +58,17 @@ typedef struct Geopar {
 int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_complex **rt, sf_complex *ww, geopar geop, int pad1, bool verb, int snap, sf_complex ***wvfld)
 /*< zero-offset exploding reflector modeling/migration >*/
 {
-    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2,  wfnt, wfit;
+    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, wfit;
     int im, i, j, m2, ik, nk;
-    float dt, dx, dz, ox;
     sf_complex *curr, **wave, *cwave, *cwavem, c;
     sf_complex *currm;
 
     nx  = geop->nx;
     nz  = geop->nz;
-    dx  = geop->dx;
-    dz  = geop->dz;
-    ox  = geop->ox;
     nt  = geop->nt;
-    dt  = geop->dt;
     snap= geop->snap;
     nzx2= geop->nzx2;
     m2  = geop->m2;
-    wfnt= geop->wfnt;
 
     nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
     if (nk!=geop->nk) sf_error("nk discrepancy!");
@@ -248,10 +242,10 @@ int main(int argc, char* argv[])
 {
     bool adj,timer,verb;
     int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, wfnt;
-    int m2, n2, nk, nth=1;
+    int m2, n2, nk;
     float dt, dx, dz, ox;
     sf_complex **img, **dat, **lt, **rt, ***wvfld, *ww;
-    sf_file data, image, left, right, snaps, src;
+    sf_file data, image, left, right, snaps, src=NULL;
     double time=0.,t0=0.,t1=0.;
     geopar geop;
 
@@ -377,9 +371,10 @@ int main(int argc, char* argv[])
     sf_fileclose(right);
 
 #ifdef _OPENMP
+	int nth;
 #pragma omp parallel
-{   
-    nth = omp_get_num_threads();
+{
+	nth = omp_get_num_threads();
 }
     sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

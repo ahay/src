@@ -49,6 +49,7 @@ Date: November 2020
 #include "bench_utils.h"
 
 static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
+  long i, i1, i2, i3;
   long n1 = wfl->simN1;
   long n2 = wfl->simN2;
   long n3 = wfl->simN3;
@@ -66,9 +67,9 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   float *x = sf_floatalloc(nelem);
   memset(x,0,nelem*sizeof(float));
 
-  for (long i3=NOP; i3<n3-NOP; i3++){
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP; i1<n1-NOP; i1++){
+  for (i3=NOP; i3<n3-NOP; i3++){
+    for (i2=NOP; i2<n2-NOP; i2++){
+      for (i1=NOP; i1<n1-NOP; i1++){
         float v= .1*(drand48()-.5);
         wfl->pp[IDX3D(i1,i2,i3)] = v;
         x[IDX3D(i1,i2,i3)] = v;
@@ -86,9 +87,9 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   sf_warning("set a random wavefield y..");
   float *y = sf_floatalloc(nelem);
   memset(y,0,nelem*sizeof(float));
-  for (long i3=NOP; i3<n3-NOP; i3++){
-    for (long i2=NOP; i2<n2-NOP; i2++){
-      for (long i1=NOP; i1<n1-NOP; i1++){
+  for (i3=NOP; i3<n3-NOP; i3++){
+    for (i2=NOP; i2<n2-NOP; i2++){
+      for (i1=NOP; i1<n1-NOP; i1++){
         float v= .1*(drand48()-.5);
         wfl->pp[IDX3D(i1,i2,i3)] = v;
         y[IDX3D(i1,i2,i3)] = v;
@@ -104,7 +105,7 @@ static void dpt(wfl_struct_t *wfl, acq_struct_t * acq, mod_struct_t * mod){
   sf_warning("Dot-products check..");
   double yAx = 0.;
   double xAty= 0.;
-  for (long i=0; i<nelem; i++)
+  for (i=0; i<nelem; i++)
   {
     yAx  += y[i]*Ax[i];
     xAty += x[i]*Aty[i];

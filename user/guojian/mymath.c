@@ -295,7 +295,7 @@ void uptrisolver(float* r,sf_complex* conap,int n)
 sf_complex chooseproot(sf_complex *allroot)
 /*< choose positive root >*/
 {
-    sf_complex  z1,z2,z3,z4,x1,x2;
+    sf_complex  z1,z2,z3,z4,x1;
     sf_complex  z[4],xx1,xx2,tmpxx,zz[2];
     int i,j,k;
     float  absi,absx;
@@ -380,7 +380,7 @@ sf_complex chooseproot(sf_complex *allroot)
 
     }
   
-    x1=zz[0]; x2=zz[1];
+    x1=zz[0];
     return x1;
 }
 

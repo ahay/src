@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 /*    float *tmpx,*tmpy,*tmpz,*tmpw;*/
    
     int ix,iy,iz,nx,nz,ny,nn,nnn;
-    float dx,dz,dy,ox,oz,oy;
+    float dx,dz,dy;
     float dw;
  
     int n1,n2,n3,n4;
@@ -91,10 +91,6 @@ int main(int argc, char* argv[])
     nx=sf_n(ax);
     ny=sf_n(ay);
 
-    oz=sf_o(az);
-    ox=sf_o(ax);
-    oy=sf_o(ay);
-    
     dz=sf_d(az);
     dx=sf_d(ax);
     dy=sf_d(ay);

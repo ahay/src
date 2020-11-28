@@ -21,14 +21,13 @@
 
 int main(int argc, char* argv[])
 {
-    sf_file in, out;
+    sf_file out;
     int n1,n2,i,j;
     int recz, recx0, recdx;
     float d1,d2;
     float **f;
 
     sf_init(argc, argv);
-    in = NULL; 
     out = sf_output("out");
 
     if (!sf_getint("n1",&n1)) n1=1;

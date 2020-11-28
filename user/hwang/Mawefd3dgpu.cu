@@ -87,7 +87,7 @@ __global__ void step_forward_kernel(float* d_u0, float* d_u1,
                                     int nzpad, int nxpad, int nypad, bool cden);
 
 #define gpu_errchk(ans) { gpu_assert((ans),__FILE__,__LINE__); }
-inline void gpu_assert(cudaError_t err, char* file, int line, bool abort=true) {
+inline void gpu_assert(cudaError_t err, const char* file, int line, bool abort=true) {
   if (err != cudaSuccess) {
     fprintf(stderr,"CUDA error: %s %s %d\n",cudaGetErrorString(err),file,line);
     if (abort)  exit(err);

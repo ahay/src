@@ -20,7 +20,7 @@ public:
   {
     /* return 0 if between x1 and x2, -1 if outside and closer to x1,
      * 1 if outside and closer to x2 */
-    int i;
+    int i = 0;
 
     if (Almost::between (x, x1, x2))
       i = 0;

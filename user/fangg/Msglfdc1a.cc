@@ -30,12 +30,6 @@ static std::valarray<double> ks;
 static float dt, dx;
 static float taper;
 
-static float sinc(float x)
-{
-    if (fabs(x)<=SF_EPS) return 1.0;
-    return sinf(x)/(x+SF_EPS);
-}
-
 int samplex(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();

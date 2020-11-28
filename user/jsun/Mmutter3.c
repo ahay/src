@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     sf_axis asx,asy,arx,ary,ac;    /* sou, rec-x, rec-y, component */ 
 
     /* dimension, index and interval */
-    int nt,nx,ny,ns,nr,nc;
+    int nt,ns,nr,nc;
 
     /* data and mute structure */
     dat3d dat=NULL;
@@ -100,8 +100,6 @@ int main(int argc, char* argv[])
     ary = sf_iaxa(Frec,3); sf_setlabel(ary,"ry"); if(verb) sf_raxa(ary); /* receivers y */
 
     nt = sf_n(at);
-    nx = sf_n(ax);
-    ny = sf_n(ay);
 
     nc = sf_n(ac);
 

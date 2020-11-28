@@ -29,7 +29,7 @@
 static sf_complex *cwaveu, *cwavew, *cwavem;
 static float **uxx, **uzz, **uxzp, **uxzs, **wxx, **wzz, **wxzp, **wxzs, **uutmp, **wwtmp, **wave;
 float **Cuxxl, **Cuxxr, **Cwxzpl, **Cwxzpr,  **Cuxzpl, **Cuxzpr, **Cwzzl, **Cwzzr, **Cuzzl, **Cuzzr, **Cwxzsl, **Cwxzsr, **Cwxxl, **Cwxxr, **Cuxzsl, **Cuxzsr;
-static int nx, nz, nk, nx2, nz2, M1, M2, M3, M4, M5, M6, M7, M8,  nxzb2, opt;
+static int nx, nz, nk, nx2, nz2, M1, M2, M3, M4, M5, M6, M7, M8,  nxzb2;
 
 void lowrankelastic_init2(int nzb, int nxb, int nkxz, int nkzz, int nkxx, int m1, int m2, int m3, int m4, int m5, int m6, int m7, int m8, int nxzb, float **cuxxl, float **cuxxr, float **cwxzpl, float **cwxzpr, float **cuxzpl, float **cuxzpr, float **cwzzl, float **cwzzr, float **cuzzl, float **cuzzr, float **cwxzsl, float **cwxzsr, float **cwxxl, float **cwxxr, float **cuxzsl, float **cuxzsr)
 /*< 2D lowrank elastic initiazation >*/
@@ -198,7 +198,7 @@ void opamstep2e(float **upold /*previous step*/,
 		float dt /*time step size*/)
 /*< Optimized PAM step>*/
 {
-    int ix, ikx, ikz, iz;
+    int ix, iz;
 
     for (ix=0; ix < nx; ix++){ 
         for (iz=0; iz < nz; iz++){ 

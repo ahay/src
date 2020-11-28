@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
     float tmp;
     float *wlt, *bndr;
     float **rho, **tau, **tauo, **v0, **vv, **p, **r, **vz, **vx, **aver;
-    sf_file Fv, Frho, Ftau, Ftauo, Fw, Fpx, Fpz;
+    sf_file Fv, Frho, Ftau, Ftauo, Fw, Fpx=NULL, Fpz=NULL;
 
     sf_init(argc,argv);
 #ifdef _OPENMP

@@ -30,8 +30,8 @@ int main(int argc, char* argv[])
     char *unit, *type;
     bool adj, cig, cmp;
     off_t nzx;
-    int nt, nx, sny, rny, ns, nh, nz, i, ix, iz, ih, is, ist, iht, ng;
-    float *trace, **out, **stbl, **rtbl, *stable, *rtable, **stblx, **rtblx, *stablex, *rtablex;
+    int nt, nx, sny, rny, ns, nh, nz, i, ix, iz, ih, is, ist, iht, ng, ithr, nthr;
+    float *trace, **traces, **out, **stbl, **rtbl, *stable, *rtable, **stblx, **rtblx, *stablex, *rtablex;
     float ds, s0, x0, sy0, sdy, ry0, rdy, s, h, h0, dh, dx, ti, t0, t1, t2, dt, z0, dz, tau;
     float aal, tx, aper;
     sf_file dat, mig, stim, sder, rtim, rder;
@@ -208,7 +208,25 @@ int main(int argc, char* argv[])
 	sf_floatread(out[0],nzx,mig);
     }
 
-    for (is=0; is < ns; is++) { /* shot */
+    /* fork to get number of threads*/
+#ifdef _OPENMP
+#pragma omp parallel
+    {
+    	nthr = omp_get_num_threads();
+    }
+#else
+    nthr = 1;
+#endif
+
+    sf_warning(">>Using %d threads<<\n", nthr);
+
+    if (adj) {
+	traces = (float**) sf_alloc(nt,sizeof(float*));
+    } else {
+	traces = sf_floatalloc2(nt,nthr);
+    }
+
+    for (is=0; is < ns; is++){ /* shot */
 	s = s0+is*ds;
 	sf_warning("shot %d of %d;",is+1,ns);
 
@@ -277,20 +295,31 @@ int main(int argc, char* argv[])
 		}
 	    }
 
+
 	    if (adj) {
 		/* read trace */
 		sf_floatread (trace,nt,dat);
 		doubint(nt,trace);
+		for (ithr=0; ithr < nthr; ithr++) {
+			traces[ithr] = trace;
+		}
 	    } else {
-		for (i=0; i < nt; i++) {
-		    trace[i]=0.;
+		for (ithr=0; ithr < nthr; ithr++) {
+		    for (i=0; i < nt; i++) {
+			traces[ithr][i]=0.;
+		    }
 		}
 	    }
 
 #ifdef _OPENMP
-#pragma omp parallel for private(iz,ix,t1,t2,ti,tx)
+#pragma omp parallel for private(iz,ix,t1,t2,ti,tx,ithr)
 #endif
-	    for (i=0; i < nzx; i++) { 
+	    for (i=0; i < nzx; i++) {
+#ifdef _OPENMP		
+		ithr = omp_get_thread_num();
+#else 
+		ithr = 0;
+#endif  
 		iz = i%nz;
 		ix = (i-iz)/nz;
 
@@ -318,10 +347,19 @@ int main(int argc, char* argv[])
 		ti = t1+t2+tau;
 
 		tx = SF_MAX(fabsf(stablex[i]*ds),fabsf(rtablex[i]*dh));
-		pick(adj,ti,tx*aal,out[cig ? ih : 0]+i,trace);
+		pick(adj,ti,tx*aal,out[cig ? ih : 0]+i,traces[ithr]);
 	    }
 
+
 	    if (!adj) {
+		for (i=0; i < nt; i++) {
+		    trace[i] = 0.0f;
+		}
+		for (ithr=0; ithr < nthr; ithr++) {
+		    for (i=0; i < nt; i++) {
+			trace[i] += traces[ithr][i];
+		    }
+		}		
 		doubint(nt,trace);
 		sf_floatwrite (trace,nt,dat);
 	    }

@@ -296,7 +296,7 @@ void timerev_close()
 void ctimerev(int ngrp, float ***ww, float **dd)
 /*< correlative time reversal imaging condition >*/
 {
-    int ix, iz, it, ig, counter, *beg, *end;
+    int ix, iz, it, ig, counter, *beg=NULL, *end=NULL;
 
 #ifdef _OPENMP
 #pragma omp parallel for default(shared) private(it,ix,iz)

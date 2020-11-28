@@ -166,7 +166,7 @@ int main (int argc, char* argv[])
 	float* warped = sf_floatalloc(N[1]);
 	
 	/* set up optional shifts output */
-	sf_file _shifts;
+	sf_file _shifts=NULL;
 	/* and the switch */
 	int shswitch ;
     if ( NULL != sf_getstring("shifts") ) {

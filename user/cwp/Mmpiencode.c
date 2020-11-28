@@ -78,7 +78,7 @@ int main(int argc, char **argv){
     float *weights;          // subset of ampls that corresponds to a single shot
     float *phase_shifts;          // subset of phase that corresponds to a single shot
     
-    int ns,ne,os,ds,de,oe,nx,ny,nw;
+    int ns,ne,os,ds,nx,ny,nw;
     float dw,ow;
     sf_axis ax,ay,aw,as,ae;
     
@@ -111,7 +111,7 @@ int main(int argc, char **argv){
     as = sf_iaxa(Fencode,1); 
     ns = sf_n(as); ds = (int)sf_d(as); os = (int)sf_o(as);
     ae = sf_iaxa(Fencode,2);
-    ne = sf_n(ae); de = (int)sf_d(ae); oe = (int)sf_o(ae);
+    ne = sf_n(ae);
     
     /* Read the axes from a single shot record for future reference */
     sf_file Faxes;

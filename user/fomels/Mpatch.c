@@ -113,7 +113,7 @@ int main (int argc, char *argv[])
 	}
 
 	for (j=0; j < dim; j++) {
-	    snprintf(key,4,"n%d",dim+j+1);
+	    snprintf(key,4,"n%d",(dim+j+1)%100u);
 	    sf_putint(out,key,p[j]);
 	}
     }

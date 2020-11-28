@@ -721,7 +721,7 @@ int main(int argc, char* argv[])
 
     /*Data*/
     sf_complex ***wavefld;
-    sf_complex ***record, **tmprec, **img, **imgsum;
+    sf_complex ***record, **tmprec, **img, **imgsum=NULL;
     float **sill;
 
     /*source*/

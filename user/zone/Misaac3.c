@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 {
 	int nr1, nr2, nr3, N, ir1, ir2, ir3, nt, nt2,nt3, order, niter, vstatus, count, q=0/* Counter for the bog loop*/;
 	float x, y, dt, t0, bmin, bmax, xbmin, xbmax, ybmin, ybmax, tt;
-	float ***rr, ***temp_rr, ***rd1, ***rd2, **ans, **xx, **xxnew, *xinitial, *yinitial, *updown, *v_inp, *gx_inp, *gy_inp, *gz_inp, *xref_inp, *yref_inp, *zref_inp ,*v, *gx, *gy, *gz, *xref, *yref, *zref, **F, **dk, **xxtem, **zk,***ck_inv, **aniso, **aniso_inp; 
+	float ***rr, ***temp_rr, ***rd1, ***rd2, **ans, **xx, **xxnew, *xinitial=NULL, *yinitial=NULL, *updown, *v_inp, *gx_inp, *gy_inp, *gz_inp, *xref_inp, *yref_inp, *zref_inp ,*v, *gx, *gy, *gz, *xref, *yref, *zref, **F, **dk, **xxtem, **zk,***ck_inv, **aniso, **aniso_inp; 
 	float **t1_temp,**t2_temp,**t3_temp,**t4_temp,*t5_temp,*t6_temp,**t7_temp,*t8_temp,*t9_temp;
 	double tol;
 	bool debug;

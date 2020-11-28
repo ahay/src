@@ -121,7 +121,8 @@ void fslice_get(fslice sl, int i2, void* data)
     extern int fseeko(FILE *stream, off_t offset, int whence);
 
     fseeko(sl->file,i2*(sl->n1),SEEK_SET);
-    fread(data,sl->n1,1,sl->file);
+    if (!fread(data,sl->n1,1,sl->file))
+        abort();
 }
 
 void fslice_put(fslice sl, int i2, void* data)

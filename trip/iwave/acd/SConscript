@@ -91,16 +91,15 @@ for n in deplist:
     testbuildpath=os.path.abspath(os.path.expandvars(os.path.join(buildpath,n)))
     testlibdir=testpath+'/lib'
     testlib='lib'+os.path.basename(testpath)+'.a'
-    #    print 'testing for '+testlibdir
     # only test for lib dir - lib may not yet be built! 
     if os.path.exists(testlibdir):
         liblist.append(testlib)
         # Madagascar branch
-    if root:
-        libdirlist.append(testbuildpath + '/lib')
-        # Standalone branch
-    else:
-        libdirlist.append(testpath + '/lib')
+        if root:
+            libdirlist.append(testbuildpath + '/lib')
+            # Standalone branch
+        else:
+            libdirlist.append(testpath + '/lib')
 
 # add other possibly nonstandard sources of headers
 # it is ALWAYS PRESUMED that header files live in final leaves

@@ -29,7 +29,7 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 	int sx, rx, sz, rz, rectx, rectz;
 	int nz, nx, nzx, padnz, padnx, padnzx, nt, nr, nb, wnt;
 
-	float dx2, dz2, dt2, dt;
+	float dx2, dz2, dt2;
 	float **vv, **dd, **mm;
 	float **p0, **p1, **p2, **term, **tmparray, *rr, ***wave;
 	float *sendbuf, *recvbuf;
@@ -55,7 +55,6 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
 	dt2=acpar->dt*acpar->dt;
-	dt=acpar->dt;
 
 	/* memory allocation */
 	vv = sf_floatalloc2(padnz, padnx);

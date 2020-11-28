@@ -28,7 +28,7 @@
 static sf_complex *cwave, *cwavem;
 static float **uu1, **uu2, **uu3, **uu4, **uu5, **uu6, **uu7, **curtmp, **wave;
 static float **Cxxl, **Cxxr, **Czzl, **Czzr, **Cxxxxl, **Cxxxxr, **Czzzzl, **Czzzzr, **Cxzzzl,  **Cxzzzr, **Cxxxzl, **Cxxxzr, **Cxxzzl, **Cxxzzr;
-static int nx, nz, nk, nx2, nz2, m2, nxzb2, opt;
+static int nx, nz, nk, nx2, nz2, m2, nxzb2;
 
 
 void lowrank_init2(int nzb, int nxb, int nkxz, int nkzz, int nkxx, int m, int nxzb, float **cxxl, float **cxxr, float **czzl, float **czzr, float **cxxxxl, float **cxxxxr, float **czzzzl, float **czzzzr, float **cxzzzl, float **cxzzzr, float **cxxxzl, float **cxxxzr, float **cxxzzl, float **cxxzzr)

@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int n1, n2, n12, id, i3, n3, rect[2], niter, n[2];
+    int n1, n2, n12, i3, n3, rect[2], niter, n[2];
     float **wav, **dip, **num, **den, eps;
     sf_file inp, out;
 

@@ -13,7 +13,7 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nt2, nx, i1, i2, n12, i, j, nx2;
+    int nt, nt2, nx, i, j, nx2;
     bool adj, sm, domod;
     float dt, dt2, dx, ot, ot2, ox, epst2;
     float v_1, v_2, v_3, v_4, eps, passthr;
@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     sf_file inp, out;
     /* PWD parameters */
     int nw, nj1;
-    float *pp, *pwdata, *pwdataext;
+    float *pp = NULL, *pwdata, *pwdataext = NULL;
     sf_file dip,outpwdcheck,outdipcheck;
     /* kirchhoff params */
     bool half, verb,normalize,debug;
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     float **v, rho, *off;
     float h0, dh, aal, angle;
     int ix, ih, nh2;
-    sf_file vel, gather, offset;
+    sf_file vel, offset;
     /* regularization weight */
     float reg;
     /* files needed for the extended operator */
@@ -112,12 +112,6 @@ int main(int argc, char* argv[])
 	sf_putint(out,"n3",nh);
     }	
 
-    if (NULL != sf_getstring("gather")) {
-	gather = sf_output("gather");
-    } else {
-	gather = NULL;
-    }
-
     if (!sf_getfloat("antialias",&aal)) aal = 1.0;
     /* antialiasing */
 
@@ -187,8 +181,6 @@ int main(int argc, char* argv[])
     /* new axis length */
     if (!sf_getint("pad",&nt2)) nt2=nt; /* output time samples */
 	
-    n12 = nt2*nx;   
-
     /*^^^*/
     /* extended operator arrays */
     dataext = sf_floatalloc(nt*nx);    
@@ -264,10 +256,10 @@ int main(int argc, char* argv[])
 		allpass32d_lop(adj,false,nt*nx,nt*nx,data,pwdata);
                 allpass32d_lop(adj,false,nt*nx,nt*nx,dataext,pwdataext);
 
-		/*if (debug){
+		if (debug){
 			sf_floatwrite(pwdata,nt*nx,outpwdcheck);
 			sf_floatwrite(pp,nt*nx,outdipcheck);
-		}*/
+		}
 		
 		//change the address
 		for(i=0;i<nt*nx;i++){

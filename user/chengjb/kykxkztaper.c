@@ -211,7 +211,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
 {
         int   i, j, ik, jk;
         float rkx, rkz, k2;
-        float *taperx, *taperz;
+        float *taperx=NULL, *taperz=NULL;
         int order=8;
 
          for( i=-hnkx; i<=hnkx ; i++ )
