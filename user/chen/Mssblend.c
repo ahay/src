@@ -23,9 +23,12 @@ int main(int argc, char*argv[])
 {
 	sf_file in, delay, out ;
 	int n1, nt, nr, ns;
-	int ir, is, inx, jt;
+	int ir, is, jt, inx;
 	int *pdelay, nn[SF_MAX_DIM], ndim;
-	float **pi, *po, alpha;
+	float **pi, *po;
+#ifndef NO_BLAS
+	float alpha;
+#endif
 
 	sf_init(argc, argv);
 
@@ -60,7 +63,11 @@ int main(int argc, char*argv[])
 	sf_putint(out, "n1", nt);
 	sf_unshiftdim(in,out,2);
 
-	alpha = 1.0; inx =1;
+#ifndef NO_BLAS
+	inx =1;
+	alpha = 1.0; 
+#endif
+	
 	for(ir=0; ir<nr; ir++)
 	{
 		sf_floatread(pi[0], ns*n1, in);
