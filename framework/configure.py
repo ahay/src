@@ -386,7 +386,8 @@ def ar(context):
 
 pkg['libs'] = {'fedora':'libtirpc-devel (Setup...Libs)',
                'cygwin':'libtirpc-devel (Setup...Libs)',
-               'centos':'libtirpc-devel (Setup...Libs)'}
+               'centos':'libtirpc-devel (Setup...Libs)',
+               'ubuntu':'libtirpc-dev (Setup...Libs)'}
 
 # Failing this check stops the installation.
 def libs(context):
