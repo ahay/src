@@ -4,6 +4,10 @@
 
 To the reproducible documents collection:
 
+* zju/diffrlrra: Separation and imaging of seismic diffractions using a 
+  localized rank-reduction method with adaptively selected ranks (Wang, Liu, and 
+  Chen)
+
 To SCons:
 
 To documentation:
