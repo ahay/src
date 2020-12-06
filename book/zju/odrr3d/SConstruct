@@ -1,0 +1,5 @@
+from rsf.tex import *
+import os, sys
+os.environ['PSTEXPENOPTS']='color=y fat=3 fatmult=1.5'
+# End('paper', use='amsmath,amssymb,morefloats,algorithm,algpseudocode', color='ALL')
+End('paper', use='amsmath,amssymb,morefloats', color='ALL')

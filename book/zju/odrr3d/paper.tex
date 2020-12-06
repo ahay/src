@@ -1,0 +1,397 @@
+\published{Geophysical Prospecting, 68, 2783-2807, (2020)}
+
+\title{Seismic signal enhancement based on the lowrank methods}
+\author{Min Bai\footnotemark[1]\footnotemark[2], Guangtan Huang\footnotemark[1], Hang Wang\footnotemark[1], and Yangkang Chen\footnotemark[1]}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+%\author{Yangkang Chen\footnotemark[1] et al.}
+
+\ms{GP-2020} %\ms{GJI-2018}
+
+\address{
+\footnotemark[1]School of Earth Sciences\\
+Zhejiang University\\
+Hangzhou, Zhejiang Province, China, 310027\\
+baimin2016@126.com \\
+\footnotemark[2]
+Key Laboratory of Exploration Technology for Oil and Gas Resources of Ministry of Education\\
+Yangtze University\\
+Wuhan, Hubei Province, China, 430100 \\
+}
+
+\lefthead{Bai et al., 2020}
+\righthead{LR methods}
+
+\DeclareRobustCommand{\dlo}[1]{}
+\DeclareRobustCommand{\wen}[1]{#1}
+
+\maketitle
+
+
+\begin{abstract}
+Based on the fact that the Hankel matrix constructed by noise-free seismic data is lowrank (LR), LR approximation (or rank-reduction) methods have been widely used for removing noise from seismic data. Due to the linear-event assumption of the traditional LR approximation method, it is difficult to define a rank that optimally separates the data subspace into signal and noise subspaces. For preserving the most useful signal energy, a relatively large rank threshold is often chosen, which inevitably leaves residual noise. To reduce the energy of residual noise, we propose an optimally damped rank-reduction method. The optimal damping is applied via two steps. In the first step, a set of optimal damping weights is derived. In the second step, we derive an optimal singular-value damping operator. We review several traditional lowrank methods and compare their performance with the new one. We also compare these lowrank methods with two sparsity-promoting transform methods. Examples demonstrate that the proposed optimally damped rank-reduction method could get significantly cleaner denoised images compared with the state-of-the-art methods.  \par
+\end{abstract}
+
+\section{Introduction}
+Random noise can seriously affect the stability and precision of seismic data processing and imaging steps including inversion-based migration, full waveform inversion, AVO inversion, and \dlo{also }post-stack seismic interpretation\dlo{, and thus}\wen{. Thus,} \dlo{the removal of it}\wen{its removal} is \old{indispensable}\new{very important} \cite[]{galbraith1991,block3d2017,zhaoqiang2018,shucai2020}. 
+
+\dlo{In the past decades, many algorithms have been proposed to attenuate the random noise in the seismic data. One widely used seismic denoising strategy is based on transforming the noisy data into another domain in order to concisely represent the signal with a few number of selected components that capture the useful information.}  The sparse transform based denoising methods assume the seismic data to be sparse in the transform domain and the spreading noise in the transform domain can be suppressed by applying a thresholding operation. These \wen{methods} include\dlo{ approaches} \dlo{that are}\wen{those} based on the \wen{Fourier transform \cite[]{fourier1986}}, Radon transform \cite[]{beylkin1987discrete}, seislet transform \cite[]{fomel2010seislet,yangkang2018eseis}, curvelet transform \cite[]{candes20061}, wavelet transform \cite[]{gilles2013,mostafa2016geo}, dreamlet transform \cite[]{huang2018damped}, dictionary-learning based sparse transform \cite[]{yanhui2016,amir2017sp,amir2017geo,shaohuan2019dl}. \dlo{Another type of methods utilizes the predictable property of seismic data}\wen{Prediction based methods are another group of popular denoising methods}, such as \dlo{the }time-space domain prediction method \cite[]{abma1995}, frequency-space predictive filtering \cite[]{canales1984}, regularized non-stationary prediction method \cite[]{guochang2012,guochang2013}, and the polynomial fitting method \cite[]{guochang20112}. The decomposition based denoising methods consider the separability of seismic signal and random noise and attempt to extract useful information from the principal components of the noisy data. Typical methods include the empirical-mode decomposition (EMD) related methods \cite[]{huangemd}, e.g., the ensemble EMD \cite[]{eemd}, complete ensemble empirical-mode decomposition \cite[]{epsceemd}, improved complete ensemble empirical-mode decomposition \cite[]{epsceemd}, \dlo{etc.} singular-value decomposition (SVD) related methods \cite[]{bekara2007}, \wen{and} non-stationary decomposition with regularization \cite[]{li2018multidimensional}. 
+
+\dlo{In this paper we’re going to improve on the multi-spatial-dimensional Cadzow filter}\wen{In this paper, we aim to improve on the multi-dimensional Cadzow filter} applied to constant-frequency slices \cite[]{cadzow1988,trickett2008}, also referred to as multichannel singular spectrum analysis (MSSA) \cite[]{mssa,stephen2013,curveletieee2016}. This filter
+has been widely adopted for seismic data processing due to its \dlo{superb}\wen{good} performance \cite[]{ginolhac2013performance,gao2017five,wang2018hankel}. This algorithm is based on lowrank (LR) matrix approximation. \dlo{Among the denoising approaches, the lowrank (LR) approximation and optimization based approaches have been widely adopted for seismic data denoising because of their superb performance ?. }The \dlo{basic}\wen{main requirement}\dlo{ assumption} of the LR methods is the low rank of the frequency-domain Hankel matrix. \dlo{The rank of such Hankel matrix equals to the number of distinct dips}\wen{The rank of the Hankel matrix equals the number of distinct dips}  \cite[]{mssa,yangkang2016irr5d,wang2020low}. However, the real seismic data are complicated, where the linear-events assumption is not met. To apply the LR methods, one needs to divide the field data into small time-space windows for separate processing \cite[]{zhangdong2017,shaohuan2017gji}. Nevertheless, it will cause another problem in local processing window\wen{s}, i.e., if we use a fixed rank for all the local windows, then it is \dlo{very }possible that this rank is too large for some windows (so that the LR approximation keeps too much noise) and is too small for some other windows (such that the method loses the useful information). Thus, to optimize the denoising performance, it is desirable to find the appropriate rank for each local window. The rank can also be adaptively selected according to the ratio of two consecutive singular-values \cite[]{wujuan2018jge}. However, all these strategies work only when the data structure is not complex and may not be applicable when noise is extremely strong.
+
+In practice, the predefined rank is usually set large enough to preserve the useful signals without damaging weak and curving energy. The selection of a large rank \wen{could} leave significant \dlo{amount of }residual noise in the filtered data. One possible solution is to use a threshold to further suppress the residual noise after the rank-reduction step. This second-step thresholding can be understood conveniently in the framework of nuclear norm minimization \wen{\cite[]{yatong2017nuclear}}. This strategy brings another challenging question on how to optimally choose the threshold for damping the residual noise. Considering that the thresholding step can be interpreted as a re-weighting process for the singular-values, we apply an adaptive singular-value weighting method following \cite{optshrink2013}. This weighting method is an adaptive to shrinkage the singular values as compared with the direct truncation strategy. \cite{aharchaou2017singular} introduced this adaptive weighting method to seismic data reconstruction problems. Some other alternatives to the presented approach in this paper, such as  those automated methods in \cite[]{gavish2014optimal} or \cite{trickett2015preserving}. One can further improve the optimal weighting based rank-reduction method by cascading the weighting strategy into the damed rank-reduction framework. The \dlo{resulted}\wen{resulting} algorithm is referred to as the optimal damped rank-reduction \wen{(ODRR)} method. It has the potential to make the damped rank-reduction method effective for a wide range of rank selection in an adaptive way.  We use different synthetic and field seismic datasets to show the \dlo{superiority}\wen{advantages} of the presented algorithm.
+
+
+ 
+\section{Theory}
+\dlo{It is known that the following optimization model can be applied to express the noise suppression problem $\hat{\mathbf{x}} = \arg \min_{\mathbf{x}} \parallel \mathbf{y} - \mathbf{x} \parallel_2^2,\text{subject to}\quad \mathbf{C}(\mathbf{x}) \le t$}
+
+\dlo{where $\mathbf{y}$ denotes the noisy data, $\mathbf{x}$ denotes the noise-free data. $\hat{\mathbf{x}}$ denotes the estimation of the noise-free data, and $\mathbf{C}$ denotes a constraint for the model, i.e., the noise-free data. The constraint $\mathbf{C}(\mathbf{x})\le t$ represents the priori knowlege of the model. }
+
+\dlo{We can also denoise data data by minimizing the constraint operator of the model, given that the data misfit is bounded by a limit $\epsilon$: $\hat{\mathbf{x}} = \arg \min_{\mathbf{x}} \mathbf{C}(\mathbf{x}) , \text{subject to} \quad \parallel \mathbf{y} - \mathbf{x} \parallel_2^2 \le \epsilon.$}
+
+\dlo{Because it is difficult to have priori information for both data misfit and model constraint, in realistic situations, it is more flexible to use the following unconstrained model to denoise seismic data: $\hat{\mathbf{x}} = \arg \min_{\mathbf{x}} \parallel \mathbf{y} - \mathbf{x} \parallel_2^2 + \lambda  \mathbf{C}(\mathbf{x})$ where we use a regularization parameter $\lambda$ to balance the data misfit and model constraint. }
+
+\subsection{Hankel matrix embedding}
+The rank-reduction based methods discussed in this paper \dlo{construct a block Hankel matrix from a 2D spatial matrix (Inline and Xline) in the frequency domain}\wen{deal with a block Hankel matrix (Inline and Xline) in the frequency-space domain}. Let $\mathbf{D}(t,x,y)$ (of size $N_t\times N_x\times N_y$) represent a 3D seismic dataset. \dlo{Consider a block of 3D data $\mathbf{D}(t,x,y)$ of $N_t$ by $N_x$ by $N_y$ samples. } First, we transform $\mathbf{D}(t,x,y)$ in time-space domain to $\mathbf{D}(w,x,y)(w=1\cdots N_w)$ in the frequency-space domain. At a given frequency $w_0$ slice, the 2D data can be expressed as \cite[]{mssa}:
+\begin{equation}
+\label{eq:mssa3d}
+\mathbf{D}(w_0)=\left(\begin{array}{cccc}
+D(1,1) & D(1,2) & \cdots &D(1,N_y) \\
+D(2,1) & D(2,2)  &\cdots &D(2,N_y) \\
+\vdots & \vdots &\ddots &\vdots \\
+D(N_x,1)&D(N_x,2) &\cdots&D(N_x,N_y)
+\end{array}
+\right).
+\end{equation}
+\dlo{In the following context}\wen{From here on}, $w_0$ is omitted for notational convenience. \dlo{Then, a}\wen{A} Hankel matrix is \wen{then} constructed from \dlo{each row of }$\mathbf{D}$. We first construct a Hankel matrix $\mathbf{R}_i$ as:
+\new{\begin{equation}
+\label{eq:data}
+\mathbf{R}_i=\left(\begin{array}{cccc}
+D(i,1) & D(i,2) & \cdots &D(i,m) \\
+D(i,2) & D(i,3)  &\cdots &D(i,m+1) \\
+\vdots & \vdots &\ddots &\vdots \\
+D(i,N_y-m+1)&D(i,N_y-m+2) &\cdots&D(i,N_y)
+\end{array}
+\right),
+\end{equation}}
+and then construct the block Hankel matrix as:
+\begin{equation}
+\label{eq:hankel2}
+\mathbf{M}=\left(\begin{array}{cccc}
+\mathbf{R}_1 &\mathbf{R}_2 & \cdots &\mathbf{R}_n \\
+\mathbf{R}_2 &\mathbf{R}_3 &\cdots &\mathbf{R}_{n+1} \\
+\vdots & \vdots &\ddots &\vdots \\
+\mathbf{R}_{N_x-n+1}&\mathbf{R}_{N_x-n+2} &\cdots&\mathbf{R}_{N_x}
+\end{array}
+\right).
+\end{equation}
+\wen{Parameters} $m$ and $n$ are chosen to make $\mathbf{R}_i$ and $\mathbf{M}$ close to square matrices, e.g., $m=N_y-\lfloor\frac{N_y}{2}\rfloor$ and $n=N_x-\lfloor\frac{N_x}{2}\rfloor$. The symbol $\lfloor\cdot \rfloor$ outputs the integer of an input value. The matrix $\mathbf{M}$ is of size $I\times J$, with $I=(N_y-m+1)(N_x-n+1)$, $J=mn$. The block Hankel matrix $\mathbf{M}$ is considered to be lowrank \cite[]{trickett2008,mssa,weilin2016dmssa,yangkang2019nc}\wen{, i.e., it can be approximated by a small number of eigen-images}. 
+
+\wen{\subsection{Rank-reduction method}
+Regularization can be implemented as a rank-based constraint \wen{\cite[]{trickett2008,mssa,jinkun2015}}:
+\begin{equation}
+\label{eq:regu2}
+\begin{split}
+\hat{\mathbf{X}} &= \arg \min_{\mathbf{x}} \parallel\mathbf{D}-\mathbf{X} \parallel_F^2, \\ \text{subject to}&\quad \text{rank} (\mathcal{H}(\mathbf{X})) =N,
+\end{split}
+\end{equation}
+%or in an unconstrained version as
+%\begin{equation}
+%\label{eq:regu2}
+%\hat{\mathbf{X}} = \arg \min_{\mathbf{X}} \parallel\mathbf{D}-\mathbf{X} \parallel_F^2 + %\epsilon^2\text{rank} (\mathcal{H}(\mathbf{X})),
+%\end{equation}
+\wen{where} $\parallel\cdot\parallel_F$ denotes the Frobenius norm. $\mathbf{D}$ denotes a matrix constructed \dlo{by}\wen{from} the frequency slice corresponding to $w_0$. $\mathbf{X}$ denotes the noise-free data to be estimated. $\hat{\mathbf{X}}$ denotes the estimated signal. $\mathcal{H}(\mathbf{X})$ denotes the Hankel matrix constructed from $\mathbf{X}$. Let $\mathbf{M}=\mathcal{H}(\mathbf{D})$, the singular value decomposition of $\mathbf{M}$ can be expressed as 
+\begin{equation}
+\label{eq:svd}
+\mathbf{M} = \mathbf{U}\boldsymbol{\Sigma}\mathbf{V}^H,
+\end{equation}
+where $\mathbf{U}$ and $\mathbf{V}$ are referred to as the left and right singular vector matrices, respectively. $\boldsymbol{\Sigma}$ is the singular value matrix. $(\cdot)^H$ denotes complex tranpose. According to equation \ref{eq:regu2}, the rank of the signal component that is embedded in the Hankel matrix $\mathbf{M}$ is assumed to be $N$. The traditional rank-reduction method based on the truncated singular value decomposition (TSVD) \cite[]{mssa} can be briefly expressed as
+\begin{equation}
+\label{eq:tsvd}
+\hat{\mathbf{S}} = \mathbf{U}_N\boldsymbol{\Sigma}_N\mathbf{V}_N^H,
+\end{equation}
+which is a solution to equation \ref{eq:regu2} according to the Eckart-Young-Mirsky theorem \cite[]{eckart1936approximation}. $\hat{\mathbf{S}}$ denotes the denoised signal. $\mathbf{U}_N$ and $\mathbf{V}_N$ are matrices composed of the left $N$ singular vectors in $\mathbf{U}$ and $\mathbf{V}$, respectively. $\boldsymbol{\Sigma}_N$ is the truncated singular value matrix with the first $N$ singular values preserved.  Although theoretically $N$ equals to the number of distinct dipping components, it is practically defined as a relatively large number considering data complexity, otherwise signal energy can be damaged. The algorithm workflow for the traditional rank-reduction method (RR) is outlined in Algorithm 1. $\mathcal{A}$ in the algorithm workflow denotes an averaging operator along anti-diagonals.}
+
+\wen{\subsection{Damped rank-reduction method}
+The estimated signal using the TSVD method, however, \dlo{is still containing}\wen{still contains} non-negligible residual noise components, as explained in \cite{weilin2016dmssa}. The problem of residual noise can be solved to some extent by further applying a thresholding operator to the singular value matrix according to the nuclear-norm minimization model \cite[]{yatong2017nuclear}:
+\begin{equation}
+\label{eq:nuclear}
+\hat{\mathbf{S}} =\mathbf{U}_N\mathcal{T}(\boldsymbol{\Sigma}_N,\tau)\mathbf{V}_N^H,
+\end{equation}
+where $\mathcal{T}$ denotes the thresholding operator for the singular-values, and $\tau$ denotes the threshold of the operator. Defining an optimal threshold $\tau$, however, is often challenging because a constant threshold is inadequate to handle an inhomogeneous distribution of noise energy. \cite{weilin2016dmssa} developed a more elegant way to shrinkage the singular values by deriving a damping operator:
+\begin{align}
+\label{eq:damp}
+\mathbf{P} &= \mathbf{I} - \boldsymbol{\Gamma}, \\
+\label{eq:damp2}
+\boldsymbol{\Gamma} &= \hat{\sigma}^K\left(\boldsymbol{\Sigma_N}\right)^{-K},
+\end{align}
+where $\mathbf{P}$ is called the damping matrix, $\mathbf{I}$ is an identity matrix, and $\boldsymbol{\Gamma}$ is referred to as the damping threshold matrix. $\hat{\sigma}$ is the $(N+1)$th singular value in the un-truncated singular matrix $\boldsymbol{\Sigma}$. \new{$K$ in equation \ref{eq:damp2} is called the damping factor}, which is used to control the strength of the damping operator. In a special case, when $K\rightarrow \infty$, $\mathbf{P}\rightarrow\mathbf{I}$, indicating that the damped rank-reduction method reverts to the traditional rank-reduction method. The mathematical details to derive the damping operator can be found in \cite{weilin2016dmssa} and \cite{weilin2017dlsp}. The damping operator is used to shrinkage the singular values in the TSVD formula to reduce the residual noise:
+\begin{equation}
+\label{eq:drr}
+\hat{\mathbf{S}} = \mathbf{U}_N\mathbf{P}\boldsymbol{\Sigma}_N\mathbf{V}_N^H.
+\end{equation}
+Compared with the thresholding method in equation \ref{eq:nuclear}, where a rigid threshold $\tau$ is used to shrinkage the singular values, the damping operator applies variable thresholds to different singular values. According to equation \ref{eq:damp}, the threshold decreases as the residual noise becomes less dominant, i.e., the singular value becomes larger. The algorithm workflow for the damped rank-reduction method (DRR) is outlined in Algorithm 2.}
+
+\wen{\subsection{Optimally damped rank-reduction method}
+A shortcoming of the traditional rank-eduction and damped rank-reduction methods is that the output perfomance is quite sensitive to the input parameter $N$. The rank parameter varies greatly for different datasets, especially for field datasets. In order to alleviate the influence of the rank parameter, we take advantage of an adaptive singular-value weighting algorithm developed by \cite{Benaych2012The} and \cite{optshrink2013}. An adaptive singular-value weighting matrix can be obtained by solving the following problem:
+\begin{equation}
+\label{eq:opt}
+\hat{\boldsymbol{\omega}}=\arg\min_{\boldsymbol{\omega}} \parallel \sum_{i=1}^{N} \sigma_i\mathbf{u}_i^S(\mathbf{v}_i^S)^H - \omega_i\sigma_i\mathbf{u}_i\mathbf{v}_i^H \parallel_F,
+\end{equation}
+where $\mathbf{u}_i^S$ and $\mathbf{v}_i^S$ denote $i$th left and right singular vectors corresponding to the estimated signal component, $\sigma_i$ denotes the $i$th singular value in $\boldsymbol{\Sigma}$. $\boldsymbol{\omega}$ is the adaptive weight vector, which can be used to construct the adaptive weighting matrix $\hat{\mathbf{W}}=\text{diag}(\hat{\boldsymbol{\omega}})$. The solution to the optimization problem can be obtained as:
+\begin{equation}
+\label{eq:optw}
+\hat{w}_i=\left(-\frac{2}{\sigma_i}\frac{\mathcal{D}(\sigma_i;\boldsymbol{\Sigma})}{\mathcal{D}'(\sigma_i;\boldsymbol{\Sigma})}\right).
+\end{equation}
+where $\mathcal{D}$ represents a transform expressed as:
+\begin{equation}
+\label{eq:D1}
+\mathcal{D}(\sigma;\boldsymbol{\Sigma})= \frac{1}{N^2} \text{Tr}\left(\sigma(\sigma^2\mathbf{I}-\boldsymbol{\Sigma}\boldsymbol{\Sigma}^H)^{-1}\right) \text{Tr}\left(\sigma(\sigma^2\mathbf{I}-\boldsymbol{\Sigma}^H\boldsymbol{\Sigma})^{-1}\right),
+\end{equation}
+and $\mathcal{D}'$ denotes its derivative. \dlo{Its expression can be found in.}\wen{The expression of $\mathcal{D}'$  can be expressed as:} 
+\wen{
+\begin{equation}
+\label{eq:D2}
+\begin{split}
+D'(\sigma;\boldsymbol{\Sigma})&= 2\left[\frac{1}{N} \text{Tr}\left(\sigma(\sigma^2\mathbf{I}-\boldsymbol{\Sigma}^2)^{-1}\right)\right]\left[\frac{1}{N} \text{Tr}\left((\sigma^2\mathbf{I}-\boldsymbol{\Sigma}^2)^{-1}-2\sigma(\sigma^2\mathbf{I}-\boldsymbol{\Sigma}^2)^{-2}\sigma\right)\right] \\
+&=\frac{2}{N^2}\left[ \text{Tr}\left(\sigma(\sigma^2\mathbf{I}-\boldsymbol{\Sigma}^2)^{-1}\right)\right]\left[ \text{Tr}\left((\sigma^2\mathbf{I}-\boldsymbol{\Sigma}^2)^{-1}-2\sigma^2(\sigma^2\mathbf{I}-\boldsymbol{\Sigma}^2)^{-2}\right)\right].
+\end{split}
+\end{equation}
+}
+The symbol $\text{Tr}(\cdot)$ denotes the trace of the input. \wen{The trace of a square matrix $\mathbf{X}$ is defined to be the sum of elements on the main diagonal of $\mathbf{X}$.}
+\wen{
+\begin{equation}
+\label{eq:tr}
+\text{Tr}(\mathbf{X}) = \sum_{i=1}^{N}X_{i,i},
+\end{equation}
+where $X_{i,i}$ denotes the main diagonal elements of $\mathbf{X}$.
+}
+
+ The adaptive weighting operator can be applied to make the traditional rank-reduction method adaptive:
+\begin{equation}
+\label{eq:opts}
+\hat{\mathbf{S}}=\mathbf{U}_N\hat{\mathbf{W}}\boldsymbol{\Sigma}_N\mathbf{V}_N^H.
+\end{equation}
+To incorporate the adaptive weighting operator into the damped rank-reduction framework, we can introduce intermediate variables as 
+\begin{align}
+\label{eq:svds_qu}
+\mathbf{U}_N^{Q} = \mathbf{U}_N,\\
+\label{eq:svds_qs}
+\boldsymbol{\Sigma}_N^{Q} = \hat{\mathbf{W}}\boldsymbol{\Sigma}_N,\\
+\label{eq:svds_qv}
+\mathbf{V}_N^{Q} = \mathbf{V}_N,
+\end{align}
+then equation \ref{eq:opts} turns into 
+\begin{equation}
+\label{eq:opts2}
+\hat{\mathbf{S}}=\mathbf{U}_N^{Q}\boldsymbol{\Sigma}_N^{Q}\mathbf{V}_N^{Q}.
+\end{equation}
+It can be derived that the damping formula (equation \ref{eq:damp}) also holds for equation \ref{eq:opts2} but with the damping threshold matrix expressed as
+\begin{equation}
+\label{eq:dampt}
+\boldsymbol{\Gamma} = \hat{\sigma}^K\left(\boldsymbol{\Sigma_N^Q}\right)^{-K},
+\end{equation}
+where the subscript $N$ denotes a sufficiently large rank parameter, as required by the derivations detailed in \cite{yangkang2019gji5d}.  The resulted final form of the optimally damped rank-reduction method then can be expressed as 
+\begin{equation}
+\label{eq:odrr}
+\hat{\mathbf{S}} = \mathbf{U}_N\mathbf{P}\hat{\mathbf{W}}\boldsymbol{\Sigma}_N\mathbf{V}_N^H.
+\end{equation}
+The algorithm workflow for the optimally damped rank-reduction method (ODRR) is outlined in Algorithm 3. Due to the existence of a weighting matrix in the proposed method, it is more convenient to choose the input rank parameter $N$ empirically in practice. As mentioned previously, the rank parameter $N$ is in practice set to a relatively large value to forestall damaging the signal. But in the proposed algorithm, even if a large $N$ is used, the algorithm can adaptively shrink the singular-values. Thus, \dlo{the}\wen{its} performance is not sensitive to the input rank parameter, in contrast to other related approaches \cite[]{mssa}. Because of the insensitivity, one can use a sufficiently large $N$ in processing complicated datasets without leaving strong residual noise in the result. The convenience in tuning parameters makes the rank-reduction related methods more computationally feasible in large-scale data processing, e.g., the 5D reconstruction problem \cite[]{yangkang2019gji5d}, since one no longer needs to tune the parameters many times while one trial is already computationally demanding.  A glossary describing the main mathematical notations are presented in Table \ref{tbl:glo}. The three methods are all variations of how the singular-values are thresholded. Simply speaking, the DRR method improves the RR method by introducing a damping operation and the ODRR method improves DRR method by further introducing a weighting operation.}
+
+\AtEndDocument{
+\begin{table}[ht!]
+\caption{Glossary of \dlo{the }main mathematical notations \wen{used} in this paper.}
+\begin{center}
+     \begin{tabular}{|c|c|} 
+	  \hline Symbols  &  Meanings \\ 
+	  \hline $\mathbf{D}(t/w,x,y)$  & 3D noisy seismic data \\
+	  \hline $\mathbf{D}(w_0)$ or $\mathbf{D}$  & \dlo{brief}\wen{abbreviated} notation of 2D frequency slice \\
+	  \hline $\mathbf{R}_i$ &  $i$th Hankel matrix\\
+	  \hline $\mathbf{M}$ &  block Hankel matrix\\
+	  \hline $\mathbf{S}$ & signal\dlo{ and noise} component\\
+	  \hline $\hat{\mathbf{S}}$ & estimated signal component\\
+%	  \hline $\mathbf{N}$ & \dlo{signal and }noise component\\
+	  \hline $\mathbf{U}$ & left singular vector matrix\\
+	  \hline $\boldsymbol{\Sigma}$ & singular-value matrix\\
+	  \hline $\mathbf{V}$ & right singular vector matrix\\
+	  \hline $\hat{\mathbf{W}}$ & weighting matrix \\
+	  \hline  $\mathbf{P}$ &  damping matrix\\
+	  \hline $\boldsymbol{\Gamma}$ & damping threshold matrix\\	 
+	  	  	  \hline $\mathbf{Q}$ & temporary variable\\	
+	  	  	  	  \hline $\mathcal{D}$ & D-transform\\	
+	  \hline $\mathcal{H}$ &  Hankelization operator\\
+	  \hline $\mathcal{T}$ &  thresholding operator\\
+	  \hline $\mathcal{A}$ &  averaging operator\\
+		 \hline $N$ & rank\\	
+		\hline  $K$ & damping factor\\	
+          \hline
+    \end{tabular} 
+\end{center}
+\label{tbl:glo}
+\end{table}
+
+\begin{table}[ht!]
+\caption{Comparison of SNRs in dB for different rank-reduction based methods. \wen{RR denotes the \dlo{traditional }rank-reduction method. DRR denotes the damped rank-reduction method. \dlo{Proposed}\wen{ODRR} denotes the optimally damped rank-reduction method.}}
+\begin{center}
+     \begin{tabular}{|c|c|c|c|c|} 
+	  \hline Tests  &  Noisy (dB) & RR (dB)  &  DRR (dB)  &  \dlo{Proposed}\wen{ODRR} (dB) \\ 
+	  \hline \wen{Linear synthetic} (N=3) & -8.39 & 6.57 & 10.29 & 11.27 \\
+      \hline \wen{Linear synthetic} (N=6) & -8.39 & 3.45 & 8.35 & 10.86\\
+	  \hline \wen{Hyperbolic synthetic (N=10)} & -2.17 & 8.27 & 9.58 & 9.65 \\
+      \hline \wen{Hyperbolic synthetic (N=20)} & -2.17 & 7.04 & 10.08 & 11.00\\
+          \hline
+    \end{tabular} 
+\end{center}
+\label{tbl:snrs}
+\end{table}
+
+
+\begin{table}[ht!]
+\caption{\wen{Comparison of computational costs in seconds for different rank-reduction based methods.}}
+\begin{center}
+     \begin{tabular}{|c|c|c|c|c|c|c|} 
+	  \hline Tests  & FK (s) & RR (s)  &  DRR (s) &  \dlo{Proposed}\wen{ODRR} (s) \\ 
+	  \hline \dlo{First example}\wen{Linear synthetic} (N=3) & 0.13 & 2.27 & 2.45 & 2.43 \\
+      \hline \dlo{First example}\wen{Linear synthetic} (N=6) & 0.17  &3.02 & 3.04 & 3.17 \\
+	  \hline \dlo{Second example}\wen{Hyperbolic synthetic} (N=10)   &0.43 &1.69 & 1.71 & 1.83 \\
+      \hline \dlo{Second example}\wen{Hyperbolic synthetic} (N=20)   &0.49 & 2.75 & 2.69 & 2.83\\
+          \hline
+    \end{tabular} 
+\end{center}
+\label{tbl:times}
+\end{table}
+}
+
+% Algorithm is not available in Madagascar online version (please refer to the journal version)
+%\wen{
+%  \begin{algorithm}
+%   \caption{Seismic denoising \dlo{seismic data via}\wen{based on} rank-reduction method. }
+%   \textbf{Require:} Input \dlo{seismic }data $\mathbf{D}(t,x,y)$ and predefined rank $N$.
+%    \begin{algorithmic}[1]
+%    \State \textbf{Fourier transform along the time axis}: $\text{FFT}\left(\mathbf{D}(t,x,y)\right)\rightarrow \mathbf{D}(\omega,x,y)$, \wen{for a frequency slice $\omega$}
+%        \For{$w$ = $1,\cdots,N_{\omega}$}
+%     \State \textbf{Construct block Hankel matrix}: $\mathcal{H}(\mathbf{D}(\omega))\rightarrow \mathbf{M}$
+%     \State \textbf{Singular value decomposition}: $\text{SVD}(\mathbf{M},N)\rightarrow [\mathbf{U},\boldsymbol{\Sigma},\mathbf{V}]$
+%     \State \textbf{Rank reduction}: $\mathbf{U}\boldsymbol{\Sigma}\mathbf{V}^T\rightarrow \hat{\mathbf{S}}$
+%     \State \textbf{Averaging}: $\mathcal{A}(\hat{\mathbf{S}})\rightarrow \hat{\mathbf{D}}(\omega)$
+%        \EndFor 
+%         \State \textbf{Inverse Fourier transform}: $\text{IFFT}\left(\hat{\mathbf{D}}(\omega,x,y)\right)\rightarrow \hat{\mathbf{D}}(t,x,y)$
+%\end{algorithmic}
+%\label{alg:alg1}
+%\end{algorithm}
+%  \begin{algorithm}
+%   \caption{Seismic denoising based on the damped rank-reduction method. }
+%   \textbf{Require:} \wen{Input seismic data $\mathbf{D}(t,x,y)$, predefined rank $N$, and damping factor $K$.}
+%    \begin{algorithmic}[1]
+%    \State \textbf{Fourier transform along the time axis}: $\text{FFT}\left(\mathbf{D}(t,x,y)\right)\rightarrow \mathbf{D}(\omega,x,y)$, \wen{for a frequency slice $\omega$}
+%        \For{$w$ = $1,\cdots,N_{\omega}$}
+%     \State \textbf{Construct block Hankel matrix}: $\mathcal{H}(\mathbf{D}(\omega))\rightarrow \mathbf{M}$
+%     \State \textbf{Singular value decomposition}: $\text{SVD}(\mathbf{M},N)\rightarrow [\mathbf{U},\boldsymbol{\Sigma},\mathbf{V}]$
+%     \State \textbf{Rank reduction with the damping operation}: $\mathbf{U}\mathbf{P}\boldsymbol{\Sigma}\mathbf{V}^T\rightarrow \hat{\mathbf{S}}$
+%     \State \textbf{Averaging}: $\mathcal{A}(\hat{\mathbf{S}})\rightarrow \hat{\mathbf{D}}(\omega)$
+%        \EndFor 
+%         \State \textbf{Inverse Fourier transform}: $\text{IFFT}\left(\hat{\mathbf{D}}(\omega,x,y)\right)\rightarrow \hat{\mathbf{D}}(t,x,y)$
+%\end{algorithmic}
+%\label{alg:alg2}
+%\end{algorithm}
+%  \begin{algorithm}
+%   \caption{Seismic denoising based on the optimally damped rank-reduction method. }
+%   \textbf{Require:} \wen{Input seismic data $\mathbf{D}(t,x,y)$, predefined rank $N$, and damping factor $K$.}
+%    \begin{algorithmic}[1]
+%    \State \textbf{Fourier transform along the time axis}: $\text{FFT}\left(\mathbf{D}(t,x,y)\right)\rightarrow \mathbf{D}(\omega,x,y)$, \wen{for a frequency slice $\omega$}
+%        \For{$w$ = $1,\cdots,N_{\omega}$}
+%     \State \textbf{Construct block Hankel matrix}: $\mathcal{H}(\mathbf{D}(\omega))\rightarrow \mathbf{M}$
+%     \State \textbf{Singular value decomposition}: $\text{SVD}(\mathbf{M},N)\rightarrow [\mathbf{U},\boldsymbol{\Sigma},\mathbf{V}]$
+%     \State \textbf{Rank reduction with both weighting and damping operations}: $\mathbf{U}\mathbf{P}\hat{\mathbf{W}}\boldsymbol{\Sigma}\mathbf{V}^T\rightarrow \hat{\mathbf{S}}$
+%     \State \textbf{Averaging}: $\mathcal{A}(\hat{\mathbf{S}})\rightarrow \hat{\mathbf{D}}(\omega)$
+%        \EndFor 
+%         \State \textbf{Inverse Fourier transform}: $\text{IFFT}\left(\hat{\mathbf{D}}(\omega,x,y)\right)\rightarrow \hat{\mathbf{D}}(t,x,y)$
+%\end{algorithmic}
+%\label{alg:alg3}
+%\end{algorithm}}
+
+
+
+
+\wen{\section{Results}}
+In this section, several \dlo{typical}synthetic and \dlo{real}\wen{field} data examples will be used to test the validity of the proposed method. We will use examples containing both crossing linear events and hyperbolic events to test the sensitivity of methods to different data structures. \wen{For synthetic examples}, we use the \wen{signal-to-noise} ratio (SNR) metric for quantitative evaluation, which is defined as follows:
+\wen{\begin{equation}
+\label{eq:snr}
+\text{SNR(dB)}=10\log_{10}\frac{\Arrowvert \mathbf{S} \Arrowvert_F^2}{\Arrowvert \mathbf{S} -\hat{\mathbf{S}}\Arrowvert_F^2}.
+\end{equation}}
+where $\hat{\mathbf{S}}$ and $\mathbf{S}$ denote the estimated signal and exact solution, respectively. \dlo{Besides}\wen{In addition},  we use the local similarity attribute \cite[]{yangkang2015ortho} to measure the \dlo{damages}\wen{damage} that a denoising method \dlo{causes}\wen{can cause} to seismic data. \dlo{Generally speaking}\wen{In general}, higher local similarity between the denoised data and removed noise indicates \dlo{larger damages}\wen{greater damages}. The local similarity attribute \dlo{lets one quantify}\wen{allows to quantify} the effectiveness of a denoising algorithm on datasets \dlo{for which one does not have ground truth}\wen{when the exact solution is unknown}. The local similarity can also measure the local orthogonality between the separated signal and noise components \cite[]{yangkang2015ortho}. Here, we assume that the signal and noise components should be locally \dlo{orthogonally}\wen{orthogonal}, which is \dlo{revealed}\wen{indicated} by low anomalies in the local similarity maps. Processing pre-stack seismic data is much more challenging than that for post-stack seismic data. \dlo{There can be subtle diffraction signals that could be attenuated as noise and potentially damage images along faults. Here, we only consider processing of post-stack seismic data.} Subtle diffraction signals could be treated \dlo{by the algorithm as noise}\wen{as noise by the algorithm} and be attenuated, potentially damaging images along faults. \wen{ In this paper, we only focus on the denoising of post-stack seismic data, but further work could focus on noise attenuation of pre-stack data.}
+
+\wen{\subsection{Synthetic examples}}
+The first example is shown in Figure \ref{fig:syn3d-c,syn3d-n} \dlo{, where (a) is the clean data and (b) is the noisy data}\wen{including both clean and noisy data}.\dlo{ We add some random noise to the clean data (Figure \ref{fig:syn3d-c}) to simulate the noisy data.} The noisy data has an SNR of -8.39 dB. In this test, we compare the denoising performance of four different methods\dlo{, i.e.,}\wen{:} the frequency-wavenumber (FK) domain thresholding method \cite[]{arazthesis,abma2015}, the \dlo{traditional }rank-reduction method (RR), the damped rank-reduction method (DRR), and the proposed method \wen{(ODRR)}. \wen{In this example, we do not use local windows. We use the Ricker wavelet with a dominant frequency of 40 Hz to generate the clean data. We add Gaussian white noise with variance of 0.2 (as compared with the normalized clean data).  } Since the proposed method is an improved version of the DRR method, we compare the proposed method \dlo{of}\wen{with}\dlo{ the} two other rank-reduction methods. Since the FK method is one of most commonly used \dlo{methods}\wen{approaches} to attenuate high-frequency high-wavenumber random noise, we also treat it as a competing method for \dlo{the}\wen{this} comparison. Figure \ref{fig:syn3d-fk,syn3d-lr,syn3d-dlr,syn3d-olr,syn3d-n-fk,syn3d-n-lr,syn3d-n-dlr,syn3d-n-olr,syn3d-simi1,syn3d-simi2,syn3d-simi3,syn3d-simi4} shows denoised data using \wen{different methods.} The top row of Figure \ref{fig:syn3d-fk,syn3d-lr,syn3d-dlr,syn3d-olr,syn3d-n-fk,syn3d-n-lr,syn3d-n-dlr,syn3d-n-olr,syn3d-simi1,syn3d-simi2,syn3d-simi3,syn3d-simi4} shows the \dlo{four denoised data using four methods}\wen{the dataset denoised by the four methods}\dlo{ and}\wen{, while} the \dlo{bottom}\wen{middle} row of Figure \ref{fig:syn3d-fk,syn3d-lr,syn3d-dlr,syn3d-olr,syn3d-n-fk,syn3d-n-lr,syn3d-n-dlr,syn3d-n-olr,syn3d-simi1,syn3d-simi2,syn3d-simi3,syn3d-simi4} \dlo{shows}\wen{presents} the noise \dlo{reduced}\wen{extracted} by the four methods. In this test, we preserve the 10\% largest coefficients for the FK method to obtain Figure \ref{fig:syn3d-fk}. We use \wen{a rank of} $N=3$ for all three rank-reduction based methods. By observing Figure \ref{fig:syn3d-fk}, it is clear that the FK thresholding causes strong artifacts around the edges. Both FK thresholding\dlo{ method} and the \dlo{traditional }rank-reduction \dlo{method}\wen{methods} \dlo{cause}\wen{leaves} a large amount of residual noise in the denoised results. \dlo{The damped rank-reduction method and the proposed method both obtain pleasant results but the proposed method is a little better because it removes slightly more noise.} \wen{The calculated SNRs of the four methods are 6.03 dB for the FK thresholding method, 6.57 dB for the rank-reduction method, 10.29 dB for the damped rank-reduction method, and 11.27 dB for the proposed method.} It is clear that the SNR comparison quantitatively \dlo{confirm}\wen{confirms} our initial observation that the proposed method obtains the best result among the four methods. \dlo{It is wroth mentioning that in}\wen{In} this test we use a very simple synthetic example that contains three planar components. In the rank-reduction method, it can be proved that the number of the planar/linear events is equal to the \dlo{appealing rank}\wen{input rank parameter}, i.e., $N=3$ in this test \cite[]{Trickett2009,mssa}. Because we know the ground truth in this test, we \dlo{choose $N=3$}\wen{the same rank} for all methods, and the proposed method obtains the best performance but is slightly better than the damped method. However, in the case of the more \dlo{complicated}\wen{complex} data, where the exact number of events \wen{with distinct dips} is unknown, we prefer to choose a more conservative rank \dlo{for fear of losing}\wen{to avoid losing} too many useful details. \dlo{In a more realistic case, it is interesting to know how the proposed method behaves compared with the competing methods.}\wen{The bottom row of Figure \ref{fig:syn3d-fk,syn3d-lr,syn3d-dlr,syn3d-olr,syn3d-n-fk,syn3d-n-lr,syn3d-n-dlr,syn3d-n-olr,syn3d-simi1,syn3d-simi2,syn3d-simi3,syn3d-simi4} shows the comparison of local similarity, where we can find that the local similarity of the ODRR method is much smaller.} \wen{The spectrum comparison when $N=3$ is plotted in Figure \ref{fig:syn3d-c-fkk,syn3d-n-fkk,syn3d-fk-fkk,syn3d-lr-fkk,syn3d-dlr-fkk,syn3d-olr-fkk}, which further verify the best performance of the proposed method. }
+
+Next, based on the same example, we use a larger rank $N=6$. We also use a more conservative threshold value for the FK thresholding method, e.g., we preserve the 20\% largest coefficients in the transformed domain. The results of the four methods are shown in the top row of Figure \ref{fig:syn3d-6-fk,syn3d-6-lr,syn3d-6-dlr,syn3d-6-olr,syn3d-6-n-fk,syn3d-6-n-lr,syn3d-6-n-dlr,syn3d-6-n-olr,syn3d-6-simi1,syn3d-6-simi2,syn3d-6-simi3,syn3d-6-simi4}. The \dlo{bottom}\wen{middle} row of Figure \ref{fig:syn3d-6-fk,syn3d-6-lr,syn3d-6-dlr,syn3d-6-olr,syn3d-6-n-fk,syn3d-6-n-lr,syn3d-6-n-dlr,syn3d-6-n-olr,syn3d-6-simi1,syn3d-6-simi2,syn3d-6-simi3,syn3d-6-simi4} shows the corresponding noise cubes. It is clear that the denoised results of FK thresholding method, rank-reduction method, damped rank-reduction method are all noisier than \dlo{those}\wen{the corresponding results presented} in Figure \ref{fig:syn3d-fk,syn3d-lr,syn3d-dlr,syn3d-olr,syn3d-n-fk,syn3d-n-lr,syn3d-n-dlr,syn3d-n-olr,syn3d-simi1,syn3d-simi2,syn3d-simi3,syn3d-simi4}. However, the result from the proposed method, as shown in Figure \ref{fig:syn3d-6-olr}, is less affected\dlo{ and is even untouched}. \wen{The calculated SNRs in this case are 4.31 dB for the FK method, 3.45 dB for the RR method, 8.35 dB for the DRR method, and 10.86 dB for the proposed method. The differences of SNR with respect to the previous example for the three methods are 1.72 dB for the FK thresholding method, 3.12 dB for the rank-reduction method, 1.94 dB for the damped rank-reduction method, and 0.41 dB for the proposed method.} Comparison \dlo{in SNR}\wen{of SNRs} demonstrates that while the other three methods are sensitive to the input parameter, the proposed method is much less sensitive\wen{, because it can still find the appropriate rank by using weights}. The bottom row of Figure \ref{fig:syn3d-6-fk,syn3d-6-lr,syn3d-6-dlr,syn3d-6-olr,syn3d-6-n-fk,syn3d-6-n-lr,syn3d-6-n-dlr,syn3d-6-n-olr,syn3d-6-simi1,syn3d-6-simi2,syn3d-6-simi3,syn3d-6-simi4} shows the comparison of local similarity, where we \dlo{can }find that the local similarity of the presented method is distinctly smaller. \wen{The spectrum comparison when $N=6$ is plotted in Figure \ref{fig:syn3d-6-c-fkk,syn3d-6-n-fkk,syn3d-6-fk-fkk,syn3d-6-lr-fkk,syn3d-6-dlr-fkk,syn3d-6-olr-fkk}, which further verify the best performance of the proposed method.}
+
+For a better comparison, we extract the 5th Xline slice from Figures \ref{fig:syn3d-c,syn3d-n} and \ref{fig:syn3d-6-fk,syn3d-6-lr,syn3d-6-dlr,syn3d-6-olr,syn3d-6-n-fk,syn3d-6-n-lr,syn3d-6-n-dlr,syn3d-6-n-olr,syn3d-6-simi1,syn3d-6-simi2,syn3d-6-simi3,syn3d-6-simi4} and show the slices in Figure \ref{fig:syn3d-6-c-s,syn3d-6-fk-s,syn3d-6-lr-s,syn3d-6-dlr-s,syn3d-6-olr-s,syn3d-6-n-s,syn3d-6-n-fk-s,syn3d-6-n-lr-s,syn3d-6-n-dlr-s,syn3d-6-n-olr-s,syn3d-6-simi1-s,syn3d-6-simi2-s,syn3d-6-simi3-s,syn3d-6-simi4-s}. \dlo{It is more obvious  to show that the proposed method \dlo{gets}\wen{produces} the cleanest result while not causing any signal damage.}\wen{In this display, it is even more evident that the proposed method produces the cleanest result while minimizing \dlo{any }signal damage.} Figure \ref{fig:snrs} plots the SNR diagrams of \wen{the} different \dlo{approaches}\wen{methods} with respect to the input parameters. \dlo{The input parameter for the rank-reduction based methods is the selected rank, and the input parameter for the transform based methods is the percentage of sparse coefficients.}\wen{The input parameters for the rank-reduction based methods and transform based methods are the selected rank and the percentage of sparse coefficients, respectively. } \wen{When the rank is chosen large enough, e.g., larger than 8, the} proposed method is less sensitive in all methods. The two transform based methods are also sensitive to the percentage of \wen{selected} coefficients. 
+
+\wen{To test the performance of the proposed method in denoising high-frequency band. We create a slightly different example shown in Figure \ref{fig:syn3dhf-c,syn3dhf-n}. We increase the dominant frequency of the Ricker wavelet to 60 Hz and then extract the frequency band of 60-100 Hz. We also extract the same frequency band of the Gaussian white noise, and add the high-frequency noise to the clean data to generate the noisy data. The denoising comparison of different methods for the high-frequency band is shown in Figure \ref{fig:syn3dhf-fk,syn3dhf-lr,syn3dhf-dlr,syn3dhf-olr,syn3dhf-n-fk,syn3dhf-n-lr,syn3dhf-n-dlr,syn3dhf-n-olr,syn3dhf-simi1,syn3dhf-simi2,syn3dhf-simi3,syn3dhf-simi4}. The spectrum comparison is shown in Figure \ref{fig:syn3dhf-c-fkk,syn3dhf-n-fkk,syn3dhf-fk-fkk,syn3dhf-lr-fkk,syn3dhf-dlr-fkk,syn3dhf-olr-fkk}. This test demonstrates the lowrank methods also work well in high-frequency band. }
+
+The next example is a synthetic dataset with hyperbolic events. \wen{In this example, we use the Ricker wavelet with a dominant frequency of 10 Hz to generate the clean data. We add Gaussian white noise with variance of 0.2 (as compared with the normalized clean data).} The clean and noisy data are shown in Figures \ref{fig:hyp3d-c} and \ref{fig:hyp3d-n}, respectively. The SNR of the noisy data is \dlo{4.29}\wen{-2.17} dB. We apply FK thresholding method and the three rank-reduction based methods to this example and show the results in Figure \ref{fig:hyp3d-fk,hyp3d-lr,hyp3d-dlr,hyp3d-olr,hyp3d-n-fk,hyp3d-n-lr,hyp3d-n-dlr,hyp3d-n-olr,hyp3d-simi1,hyp3d-simi2,hyp3d-simi3,hyp3d-simi4}. For the FK thresholding method, we preserve 20\% largest coefficients in the transformed domain. For all the rank-reduction based methods, we use \dlo{$N=3$}\wen{$N=10$}. Since the hyperbolic events no longer \dlo{meet}\wen{satisfy} the assumption, i.e., \dlo{bing}\wen{being} lowrank, the hyperbolic events in this example are \dlo{obviously }over-smoothed when \dlo{$N=3$}\wen{$N=10$}. It is also clear that both FK thresholding and the rank-reduction \dlo{method}\wen{methods} have significant residual noise. The damped rank-reduction method and the proposed method are both very clean, but the proposed method is slightly smoother. In this example, because of the hyperbolic events and \dlo{the}\wen{their} small rank, the removed noise cubes as shown in the bottom row of Figure \ref{fig:hyp3d-fk,hyp3d-lr,hyp3d-dlr,hyp3d-olr,hyp3d-n-fk,hyp3d-n-lr,hyp3d-n-dlr,hyp3d-n-olr,hyp3d-simi1,hyp3d-simi2,hyp3d-simi3,hyp3d-simi4} contain \dlo{small}\wen{a small amount of} spatially coherent energy, which indicates \dlo{the }signal leakage \cite[]{yangkang2015ortho}.  The calculated SNRs in this example are \dlo{10.86}\wen{7.05} dB for the FK thresholding method, \dlo{11.05}\wen{8.27} dB for the \dlo{traditional }rank-reduction method, \dlo{11.08}\wen{9.58} dB for the damped rank-reduction method, and \dlo{11.64}\wen{9.65} dB for the \dlo{new method}\wen{proposed method}. \wen{In this example, we do not use local windows to locally pretend that hyperbolic events act as linear events. When applying local windows, \dlo{more}\wen{additional} parameters (e.g., the window size) need to be compared and considered. To avoid the this step, we can use a relatively large rank to avoid the signal damage.} From the comparison of local similarity, significant \dlo{damages are}\wen{damage is} highlighted as \dlo{the }high similarity anomalies. \dlo{Then we}\wen{We} increase the rank from \dlo{$N=3$}\wen{$N=10$} to \dlo{$N=9$}\wen{$N=20$} and show the results in Figure \ref{fig:hyp3d-20-fk,hyp3d-20-lr,hyp3d-20-dlr,hyp3d-20-olr,hyp3d-20-n-fk,hyp3d-20-n-lr,hyp3d-20-n-dlr,hyp3d-20-n-olr,hyp3d-20-simi1,hyp3d-20-simi2,hyp3d-20-simi3,hyp3d-20-simi4}. For the FK thresholding method, we increase the threshold percentage from 20\% to 40\%. We find that in this test, both FK thresholding method and the \dlo{traditional }rank-reduction method \dlo{cause}\wen{leave} more residual noise while the results from the damped rank-reduction method and the proposed method are still very smooth.  However, when \dlo{$N=9$}\wen{$N=20$}, \dlo{none of the rank-reduction methods cause damages to useful signals}\wen{the rank-reduction methods do not produce significant damage to useful signals} \wen{but they also do not attenuate the noise very well}. In addition, when \dlo{$N=9$}\wen{$N=20$}, the proposed method becomes obviously smoother than the damped rank-reduction method. The comparison \dlo{if}\wen{is} more noticeable when observing the local similarity maps. The calculated SNRs in this example are \dlo{13.43}\wen{5.85} dB for the FK thresholding method, \dlo{15.36}\wen{7.04} dB for the \dlo{traditional }rank-reduction method, \dlo{20.06}\wen{10.08} dB for the damped rank-reduction method, and \dlo{21.25}\wen{11.00} dB for the proposed method.  \wen{Figure \ref{fig:hyp3d-20-c-s,hyp3d-20-fk-s,hyp3d-20-lr-s,hyp3d-20-dlr-s,hyp3d-20-olr-s,hyp3d-20-n-s,hyp3d-20-n-fk-s,hyp3d-20-n-lr-s,hyp3d-20-n-dlr-s,hyp3d-20-n-olr-s,hyp3d-20-simi1-s,hyp3d-20-simi2-s,hyp3d-20-simi3-s,hyp3d-20-simi4-s} shows a} single slice comparison of this example (5th Xline slice) when \dlo{$N=9$}\wen{$N=20$}, where it is more \dlo{salient}\wen{noticeable} that the proposed method obtains the best result.  \dlo{Besides, the}\wen{The} SNRs for all the aforementioned tests are \wen{given} in Table \ref{tbl:snrs} for a detailed comparison. %\wen{Based on this example, we test the performance of different methods in the presence of band-limited noise. The added noise has been bandpass filtered within the frequency range of 0-40 Hz. The calculated SNRs of the noisy data, FK method, RR method, DRR method, and the proposed method are 9.15 dB, 19.97 dB, 21.21 dB, and 21.91 dB, respectively. Though the proposed method is derived based on the assumption of white noise, it can also adapt to band-limited noise.}
+Figure \ref{fig:snrs_hyp2} plots the SNR diagrams of \wen{the} different \dlo{approaches}\wen{methods} with respect to the input parameters for the hyperbolic example. When the rank is sufficiently large, e.g., larger than 18, the proposed approach is clearly more insensitive to the rank when compared to the other rank-reduction based methods \wen{due to the calculation of adaptive weights for the singular-values}. \dlo{We}\wen{Table \ref{tbl:times}} compares the computational costs for all these tests. \dlo{ The three rank-reduction methods have similar computational costs, while the proposed method is slightly more expensive.}\wen{All three methods are comprable but the proposed method is slightly more expensive.}
+
+\inputdir{syn3d}
+\multiplot{2}{syn3d-c,syn3d-n}{width=0.4\textwidth}{Synthetic \wen{data} examples with linear/\dlo{planer}\wen{planar} events. (a) Clean \dlo{synthetic }data. (b) Noisy\dlo{ synthetic} data. \wen{The events shown on the outside of the cube are situated at the blue lines within the cube.}}
+\multiplot{12}{syn3d-fk,syn3d-lr,syn3d-dlr,syn3d-olr,syn3d-n-fk,syn3d-n-lr,syn3d-n-dlr,syn3d-n-olr,syn3d-simi1,syn3d-simi2,syn3d-simi3,syn3d-simi4}{width=0.18\textwidth}{Denoising comparison ($N=3$). \dlo{(a) Result using the FK thresholding method. (b) Result using the rank-reduction method. (c) Result using the damped rank-reduction method. (d) Result using the proposed method. (e) Removed noise using the FK thresholding method. (f) Removed noise using the rank-reduction method. (g) Removed noise using the damped rank-reduction method. (h) Removed noise using the proposed method.}\wen{Top row: denoised results using (a) FK method with 10\% largest coefficients, (b) rank-reduction method, (c) damped rank-reduction method, and (d) the proposed method. Middle row: separated noise corresponding to the top row. Bottom row: local similarity corresponding to the top row. }}
+\multiplot{6}{syn3d-c-fkk,syn3d-n-fkk,syn3d-fk-fkk,syn3d-lr-fkk,syn3d-dlr-fkk,syn3d-olr-fkk}{width=0.3\textwidth}{\wen{Spectrum comparison ($N=3$). FK spectrum of (a) clean data, (b) noisy data, (c) FK method, (d) rank-reduction method, (e) damped rank-reduction method, and (f) the proposed method.}}
+
+\inputdir{syn3d_N6}
+\multiplot{12}{syn3d-6-fk,syn3d-6-lr,syn3d-6-dlr,syn3d-6-olr,syn3d-6-n-fk,syn3d-6-n-lr,syn3d-6-n-dlr,syn3d-6-n-olr,syn3d-6-simi1,syn3d-6-simi2,syn3d-6-simi3,syn3d-6-simi4}{width=0.18\textwidth}{Denoising comparison ($N=6$). \dlo{(a) Result using the FK thresholding method. (b) Result using the rank-reduction method. (c) Result using the damped rank-reduction method. (d) Result using the proposed method. (e) Removed noise using the FK thresholding method. (f) Removed noise using the rank-reduction method. (g) Removed noise using the damped rank-reduction method. (h) Removed noise using the proposed method.}\wen{Top row: denoised results using (a) FK method with 20\% largest coefficients, (b) rank-reduction method, (c) damped rank-reduction method, and (d) the proposed method. Middle row: separated noise corresponding to the top row. Bottom row: local similarity corresponding to the top row. }}
+\multiplot{6}{syn3d-6-c-fkk,syn3d-6-n-fkk,syn3d-6-fk-fkk,syn3d-6-lr-fkk,syn3d-6-dlr-fkk,syn3d-6-olr-fkk}{width=0.3\textwidth}{\wen{Spectrum comparison ($N=6$). FK spectrum of (a) clean data, (b) noisy data, (c) FK method, (d) rank-reduction method, (e) damped rank-reduction method, and (f) the proposed method.}}
+\multiplot{12}{syn3d-6-c-s,syn3d-6-fk-s,syn3d-6-lr-s,syn3d-6-dlr-s,syn3d-6-olr-s,syn3d-6-n-s,syn3d-6-n-fk-s,syn3d-6-n-lr-s,syn3d-6-n-dlr-s,syn3d-6-n-olr-s,syn3d-6-simi1-s,syn3d-6-simi2-s,syn3d-6-simi3-s,syn3d-6-simi4-s}{width=0.18\textwidth}{\wen{2D slice view of denoising}\dlo{Denoising} comparison ($N=6$). (a) Clean data. \dlo{(b) Result using the FK thresholding method. (c) Result using the rank-reduction method. (d) Result using the damped rank-reduction method. (e) Result using the proposed method. (f) Noisy data. (g) Removed noise using the FK thresholding method. (h) Removed noise using the rank-reduction method. (i) Removed noise using the damped rank-reduction method. (j) Removed noise using the proposed method.}\wen{(b)-(e): denoised results using FK method, (b) rank-reduction method, (c) damped rank-reduction method, and the proposed method, respectively. (f) Noisy data. (g)-(j) Separated noise corresponding to (b)-(e), respectively. (k)-(n) Local similarity corresponding to (b)-(e), respectively. }}
+
+\inputdir{.}
+\plot{snrs}{width=0.8\textwidth}{\dlo{SNR diagrams of different approaches with respect to the input parameters the linear synthetic example, i.e., selected rank for the rank-reduction based methods and percentage of sparse coefficients for the transform based methods.}\wen{SNR diagrams of different lowrank approaches with respect to the selected rank parameters for the linear synthetic example.} }
+
+\inputdir{syn3d_hf}
+\multiplot{2}{syn3dhf-c,syn3dhf-n}{width=0.4\textwidth}{\wen{Synthetic \wen{data} examples with linear/\dlo{planer}\wen{planar} events  for the high-frequency denoising test (60-100 Hz). (a) Clean \dlo{synthetic }data. (b) Noisy\dlo{ synthetic} data. \wen{The events shown on the outside of the cube are situated at the blue lines within the cube.}}}
+\multiplot{12}{syn3dhf-fk,syn3dhf-lr,syn3dhf-dlr,syn3dhf-olr,syn3dhf-n-fk,syn3dhf-n-lr,syn3dhf-n-dlr,syn3dhf-n-olr,syn3dhf-simi1,syn3dhf-simi2,syn3dhf-simi3,syn3dhf-simi4}{width=0.18\textwidth}{\wen{Denoising comparison ($N=6$)  for the high-frequency denoising test (60-100 Hz). \dlo{(a) Result using the FK thresholding method. (b) Result using the rank-reduction method. (c) Result using the damped rank-reduction method. (d) Result using the proposed method. (e) Removed noise using the FK thresholding method. (f) Removed noise using the rank-reduction method. (g) Removed noise using the damped rank-reduction method. (h) Removed noise using the proposed method.}\wen{Top row: denoised results using (a) FK method with 10\% largest coefficients, (b) rank-reduction method, (c) damped rank-reduction method, and (d) the proposed method. Middle row: separated noise corresponding to the top row. Bottom row: local similarity corresponding to the top row. }}}
+\multiplot{6}{syn3dhf-c-fkk,syn3dhf-n-fkk,syn3dhf-fk-fkk,syn3dhf-lr-fkk,syn3dhf-dlr-fkk,syn3dhf-olr-fkk}{width=0.3\textwidth}{\wen{Spectrum comparison ($N=6$) for the high-frequency denoising test (60-100 Hz). FK spectrum of (a) clean data, (b) noisy data, (c) FK method, (d) rank-reduction method, (e) damped rank-reduction method, and (f) the proposed method.}}
+
+\inputdir{hyp3d}
+\multiplot{2}{hyp3d-c,hyp3d-n}{width=0.4\textwidth}{Synthetic \wen{data} examples with hyperbolic events. (a) Clean \dlo{synthetic }data. (b) Noisy\dlo{ synthetic} data. \wen{The gray scales for all of the images shown in Figures \ref{fig:hyp3d-c,hyp3d-n}-\ref{fig:hyp3d-20-c-s,hyp3d-20-fk-s,hyp3d-20-lr-s,hyp3d-20-dlr-s,hyp3d-20-olr-s,hyp3d-20-n-s,hyp3d-20-n-fk-s,hyp3d-20-n-lr-s,hyp3d-20-n-dlr-s,hyp3d-20-n-olr-s,hyp3d-20-simi1-s,hyp3d-20-simi2-s,hyp3d-20-simi3-s,hyp3d-20-simi4-s} are the same.}}
+\multiplot{12}{hyp3d-fk,hyp3d-lr,hyp3d-dlr,hyp3d-olr,hyp3d-n-fk,hyp3d-n-lr,hyp3d-n-dlr,hyp3d-n-olr,hyp3d-simi1,hyp3d-simi2,hyp3d-simi3,hyp3d-simi4}{width=0.18\textwidth}{Denoising comparison (\dlo{$N=3$}\wen{$N=10$}). \dlo{(a) Result  using the FK thresholding method. (b) Result using the rank-reduction method. (c) Result using the damped rank-reduction method. (d) Result using the proposed method. (d) Removed noise using the FK thresholding method. (e) Removed noise using the rank-reduction method. (f) Removed noise using the damped rank-reduction method. (g) Removed noise using the proposed method.}\wen{The top row: denoised results using (a) FK method, (b) rank-reduction method, (c) damped rank-reduction method, and (d) the proposed method. The middle row: separated noise corresponding to the top row. The bottom row: local similarity corresponding to the top row.}}
+\multiplot{6}{hyp3d-c-fkk,hyp3d-n-fkk,hyp3d-fk-fkk,hyp3d-lr-fkk,hyp3d-dlr-fkk,hyp3d-olr-fkk}{width=0.3\textwidth}{\wen{Spectrum comparison ($N=10$). FK spectrum of (a) clean data, (b) noisy data, (c) FK method, (d) rank-reduction method, (e) damped rank-reduction method, and (f) the proposed method.}}
+
+\inputdir{hyp3d_N20}
+\multiplot{12}{hyp3d-20-fk,hyp3d-20-lr,hyp3d-20-dlr,hyp3d-20-olr,hyp3d-20-n-fk,hyp3d-20-n-lr,hyp3d-20-n-dlr,hyp3d-20-n-olr,hyp3d-20-simi1,hyp3d-20-simi2,hyp3d-20-simi3,hyp3d-20-simi4}{width=0.18\textwidth}{Denoising comparison (\dlo{$N=10$}\wen{$N=20$}). \dlo{(a) Result using the FK thresholding method. (b) Result using the rank-reduction method. (c) Result using the damped rank-reduction method. (d) Result using the proposed method. (d) Removed noise using the FK thresholding method. (e) Removed noise using the rank-reduction method. (f) Removed noise using the damped rank-reduction method. (g) Removed noise using the proposed method.}\wen{The top row: denoised results using (a) FK method, (b) rank-reduction method, (c) damped rank-reduction method, and (d) the proposed method. The middle row: separated noise corresponding to the top row. The bottom row: local similarity corresponding to the top row.}}
+\multiplot{6}{hyp3d-20-c-fkk,hyp3d-20-n-fkk,hyp3d-20-fk-fkk,hyp3d-20-lr-fkk,hyp3d-20-dlr-fkk,hyp3d-20-olr-fkk}{width=0.3\textwidth}{\wen{Spectrum comparison ($N=20$). FK spectrum of (a) clean data, (b) noisy data, (c) FK method, (d) rank-reduction method, (e) damped rank-reduction method, and (f) the proposed method.}}
+\multiplot{14}{hyp3d-20-c-s,hyp3d-20-fk-s,hyp3d-20-lr-s,hyp3d-20-dlr-s,hyp3d-20-olr-s,hyp3d-20-n-s,hyp3d-20-n-fk-s,hyp3d-20-n-lr-s,hyp3d-20-n-dlr-s,hyp3d-20-n-olr-s,hyp3d-20-simi1-s,hyp3d-20-simi2-s,hyp3d-20-simi3-s,hyp3d-20-simi4-s}{width=0.18\textwidth}{Denoising comparison (\dlo{$N=10$}\wen{$N=20$}). (a) Clean data. \wen{(b)-(e): denoised results using FK method, (b) rank-reduction method, (c) damped rank-reduction method, and the proposed method, respectively. (f) Noisy data. (g)-(j) Separated noise corresponding to (b)-(e), respectively. (k)-(n) Local similarity corresponding to (b)-(e), respectively. }}
+
+\inputdir{.}
+\plot{snrs_hyp2}{width=0.8\textwidth}{\dlo{SNR diagrams of different approaches with respect to the input parameters for the hyperbolic synthetic example, i.e., selected rank for the rank-reduction based methods \wen{(solid lines)} and percentage of sparse coefficients for the transform based methods \wen{(dashed lines)}.}\wen{SNR diagrams of different lowrank approaches with respect to the selected rank parameters for the hyperbolic synthetic example.} }
+
+\wen{\subsection{Field data example}}
+\wen{Next we apply the proposed method to the real migrated 3D land seismic dataset shown in Figure \ref{fig:r3d}. }\dlo{Next, we apply the proposed method to real 3D seismic data. }\dlo{The real seismic dataset is shown in Figure \ref{fig:r3d}} The 3D seismic image \dlo{is from a land data after}\wen{corresponds to a land dataset after} time migration. \wen{The field dataset goes through a normal seismic processing workflow, e.g., muting the dead traces, ground roll removal, surface-consistent deconvolution, pre-stack noise attenuation by the FX method, NMO-based velocity analysis, and kirchhoff time migration.} \dlo{The shallow structures are simple plane layers (above 1 s) and the deep structures are complex curved layers (below 1 s). }The temporal sampling \dlo{rate}\wen{interval} is 4 ms. \dlo{There are 200 Inline traces and 50 Xline traces. The Inline \dlo{sampling rate}\wen{trace spacing} is 5m and the Xline \dlo{sampling rate}\wen{trace spacing} is 10m. } There are 200 inlines and 50 crosslines\dlo{ traces}, with trace spacings of 5 m and 10 m, respectively. Figure \ref{fig:r3d-seis,r3d-seis-n,r3d-simi3,r3d-lr,r3d-lr-n,r3d-simi1,r3d-olr,r3d-olr-n,r3d-simi2} shows the denoising comparison \wen{using different methods}. From the previous synthetic examples, we \dlo{have known}\wen{understand} the differences for different rank-reduction related methods\dlo{, so in this example, we examine the denoising}\wen{. Therefore, in this example we examine the denoising} performance using the seislet transform \cite[]{fomel2010seislet}. The seislet transform is deemed to be the sparsest transform for seismic data. The denoised data using the seislet thresholding method, the \dlo{traditional }rank-reduction method, and the proposed method are shown in the left column of Figure \ref{fig:r3d-seis,r3d-seis-n,r3d-simi3,r3d-lr,r3d-lr-n,r3d-simi1,r3d-olr,r3d-olr-n,r3d-simi2}\wen{, respectively}. The middle column of Figure \ref{fig:r3d-seis,r3d-seis-n,r3d-simi3,r3d-lr,r3d-lr-n,r3d-simi1,r3d-olr,r3d-olr-n,r3d-simi2} shows the corresponding noise cubes of the three methods. Since for the \dlo{real}\wen{field} data example\dlo{,} \dlo{we do not have ground-truth solution (clean data)}\wen{we do not have the pure signal} for calculating the SNR, we \wen{can only} \dlo{utilize}\wen{use} the local similarity metric to evaluate the denoising performance. The general criterion is that the local similarity between the denoised data and removed noise should be negligible \dlo{provided that the removed noise \wen{does not include part of the signal}}\wen{provided that there is no signal leakage in the removed noise}. The local similarity cubes corresponding to the three methods are shown in the right column of Figure \ref{fig:r3d-seis,r3d-seis-n,r3d-simi3,r3d-lr,r3d-lr-n,r3d-simi1,r3d-olr,r3d-olr-n,r3d-simi2}. To make the removed noise comparably strong, we preserve 8\% largest coefficients in the seislet domain. We use rank $N=21$ for the \dlo{traditional }rank-reduction method and use rank $N=30$ for the proposed method. Comparison of the local similarity shows that the \dlo{thresholding}\wen{seislet transform} and the rank-reduction methods both cause significant signal leakage, while the proposed method is almost damage-free for the useful signals. It is clear that \wen{ when removing the same amount of random noise}, it is able to preserve the most \dlo{useful}\wen{signal} energy for the proposed method. \dlo{In}\wen{At} the same time, the \dlo{proposed}\wen{new} method can get a \dlo{much }smoother result than the rank-reduction method, and same smoothness level compared with the seislet thresholding method. \wen{The spectrum comparison for the field data example is plotted in Figure \ref{fig:r3d-fk,r3d-seis-fk,r3d-lr-fk,r3d-olr-fk}, where the proposed method preserves more signal spectra than the seislet method, but removes more noise spectra than the rank-reduction method.} \wen{The zoomed comparison in Figure \ref{fig:r3d-z,r3d-seis-z0,r3d-lr-z,r3d-olr-z0} makes this even more obvious.} 
+\plot{r3d}{width=0.5\textwidth}{Real 3D seismic data. \wen{The green box highlights the zooming area for detailed comparison.}}
+\multiplot{9}{r3d-seis,r3d-seis-n,r3d-simi3,r3d-lr,r3d-lr-n,r3d-simi1,r3d-olr,r3d-olr-n,r3d-simi2}{width=0.22\textwidth}{Denoising comparison. (a) Result using the seislet thresholding method.  (b) Removed noise corresponding to (a). (c) Local similarity between (a) and (b). (d) Removed noise using the rank-reduction method. (e) Removed noise corresponding to (d). (f) Local similarity between (d) and (e).  (g) Result using the proposed method.  (h) Removed noise using the proposed method. (i) Local similarity between (g) and (h). }
+\multiplot{4}{r3d-fk,r3d-seis-fk,r3d-lr-fk,r3d-olr-fk}{width=0.4\textwidth}{Spectrum comparison for the field data example. Spectrum of (a) real seismic data, (b) result using the seislet thresholding method, (c) result using the rank-reduction method, and (d) result using the proposed method. }
+\multiplot{4}{r3d-z,r3d-seis-z0,r3d-lr-z,r3d-olr-z0}{width=0.4\textwidth}{Zoomed denoising comparison for the \dlo{real}\wen{field} data example. (a) Real seismic data. (b) Result using the seislet thresholding method. (c) Result using the rank-reduction method. (d) Result using the proposed method. \wen{The arrows highlight the difference between (b) and (d).}}
+
+\section{Conclusions}
+The rank-reduction method for seismic noise suppression based on the nuclear norm minimization requires a carefully selected threshold value. We have developed an optimal weighting strategy to obtain better shrinkage of the singular-values, bypassing the need for manual selection of the rank \dlo{a}\wen{as a} priori \wen{information}. Considering the issue of residual noise after the optimal rank-reduction method, we further \dlo{derive a theoretically}\wen{introduce an} optimal way to damp the remaining noise. The proposed method can separate \wen{the} noise subspace and the signal subspace in an optimal way. Detailed \dlo{analysis}\wen{analyses} on the proposed algorithm via two synthetic datasets and one \dlo{real}\wen{field} example demonstrate that the proposed method can obtain better denoising performance regarding the noise removal and signal preservation \wen{than the widely used methods in terms of SNR and local similarity measurements}. More importantly, because of the optimally damped singular-values, the proposed method is an adaptive method, i.e., the performance is not sensitive to the predefined rank parameter.
+
+\section{DATA AVAILABILITY STATEMENT}
+Datasets and source codes associated with this research will be made available online (www.ahay.org) in the format of reproducible research.
+
+
+%\section{Acknowledgements}
+%We  thank Dong Zhang, Weilin Huang, and Wei Chen for constructive comments.  The research is supported by the starting fund from Zhejiang University and ``Thousand Youth Talents Plan of China''. 
+
+\bibliographystyle{seg}
+\bibliography{odrr}
+
+
+
+
+
+
+
+
+

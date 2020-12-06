@@ -9,6 +9,8 @@ To the reproducible documents collection:
   Chen)
 * tccs/drr5d: Simultaneous denoising and reconstruction of 5D seismic data via 
   damped rank-reduction method (Chen, Zhang, Jin, Chen, Zu, Huang, and Gan)
+* zju/odrr3d: Seismic signal enhancement based on the lowrank methods (Bai, 
+  Huang, Wang, and Chen)
 
 To SCons:
 
