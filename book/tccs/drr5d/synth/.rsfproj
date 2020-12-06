@@ -1,0 +1,3 @@
+uses=['sfput', 'sfwindow', 'sfbyte', 'sfgrey3', 'sfcat', 'sfgraph', 'sfadd', 'sfmath', 'sfsimilarity']
+data=[]
+size=   40886640
