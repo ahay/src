@@ -13,6 +13,8 @@ To the reproducible documents collection:
   Huang, Wang, and Chen)
 * zju/odrr5d: Five-dimensional seismic data reconstruction using the optimally 
   damped rank-reduction method (Chen, Bai, Guan, Zhang, Zhang, and Wang)
+* zju/dtv: New paper: Full waveform inversion and joint migration inversion with 
+  an automatic directional total variation constraint (Qu, Verschuur, and Chen)
 
 To SCons:
 
