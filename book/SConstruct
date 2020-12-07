@@ -88,6 +88,13 @@ zju/odrr3d/hyp3d_N20
 zju/odrr3d/syn3d
 zju/odrr3d/syn3d_hf
 zju/odrr3d/syn3d_N6
+zju/odrr5d/hankel
+zju/odrr5d/hyper
+zju/odrr5d/snrs_rank
+zju/odrr5d/snrs_ratio
+zju/odrr5d/snrs_sigma
+zju/odrr5d/synth
+zju/odrr5d/synth2
 '''
 
 all =  ARGUMENTS.get('all', 'n')
