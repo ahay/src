@@ -11,6 +11,8 @@ To the reproducible documents collection:
   damped rank-reduction method (Chen, Zhang, Jin, Chen, Zu, Huang, and Gan)
 * zju/odrr3d: Seismic signal enhancement based on the lowrank methods (Bai, 
   Huang, Wang, and Chen)
+* zju/odrr5d: Five-dimensional seismic data reconstruction using the optimally 
+  damped rank-reduction method (Chen, Bai, Guan, Zhang, Zhang, and Wang)
 
 To SCons:
 

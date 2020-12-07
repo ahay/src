@@ -1,0 +1,68 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+
+def Graph(data,other):
+	Result(data,'graph label1="Noise variance" label2="SNR (dB)" unit2= unit1="s" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 title="" wherexlabel=b wheretitle=t plotfat=10 %s' %other)
+	
+def Graphplot(data,other):
+	Plot(data,'graph label1="Sampling ratio in percent" unit1="" label2="SNR" unit2=dB labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 title="" wherexlabel=b wheretitle=t plotfat=10 %s' %other)
+	
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'SNRS_RATIO'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+   sys.stderr.write('\nCannot find Matlab.\n')
+   sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('synth_drr_rs-0',[os.path.join(matROOT,matfun+'.m')],
+    '''MATLABPATH=%(matlabpath)s %(matlab)s 
+    -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}');quit"
+    '''%vars(),stdin=0,stdout=-1)
+
+Flow('ratio','synth_drr_rs-0','put n1=9 n2=3 d1=1 d2=1 o1=1 o2=1 | window n2=1 | math output="input*100"')
+Flow('snr1','synth_drr_rs-0','put n1=9 n2=3 d1=1 d2=1 o1=1 o2=1 | window n2=1 f2=1')
+Flow('snr2','synth_drr_rs-0','put n1=9 n2=3 d1=1 d2=1 o1=1 o2=1 | window n2=1 f2=2')
+Flow('snr3','synth_drr_rs-0','put n1=9 n2=3 d1=1 d2=1 o1=1 o2=1 | window n2=1 f2=3')
+
+Flow('snr1s','ratio snr1','cmplx ${SOURCE} ${SOURCES[1]}')
+Flow('snr2s','ratio snr2','cmplx ${SOURCE} ${SOURCES[1]}')
+Flow('snr3s','ratio snr3','cmplx ${SOURCE} ${SOURCES[1]}')
+
+Flow('snr1st','snr1s','cp')
+Flow('snr2st','snr2s','cp')
+Flow('snr3st','snr3s','cp')
+
+Graphplot('snr1s','min2=0 max2=20 symbol="o" symbolsz=10 plotcol=3 ')
+Graphplot('snr2s','min2=0 max2=20 symbol="v" symbolsz=10 plotcol=5 wantaxis=n')
+Graphplot('snr3s','min2=0 max2=20 symbol="*" symbolsz=10 plotcol=6 wantaxis=n')
+
+Graphplot('snr1st','min2=0 max2=20   plotcol=3 wantaxis=n')
+Graphplot('snr2st','min2=0 max2=20   plotcol=5 wantaxis=n')
+Graphplot('snr3st','min2=0 max2=20   plotcol=6 wantaxis=n')
+
+Plot('label1',None,
+	'''
+	box x0=8.5 y0=4.1 label="RR" xt=0.5 yt=-0.5 length=1 
+	''')
+Plot('label2',None,
+	'''
+	box x0=5.1 y0=5 label="DRR" xt=-0.5 yt=0.5 length=1 
+	''')
+Plot('label3',None,
+	'''
+	box x0=6.5 y0=6.8 label="ORR" xt=-0.5 yt=0.5 length=1 
+	''')
+			
+Result('snr-r','snr1s snr2s snr3s snr1st snr2st snr3st label1 label2 label3','Overlay')
+
+
+End()
