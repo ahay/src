@@ -1,4 +1,4 @@
-/* Soft cllip the data.
+/* Soft clip the data.
 Uses softplus function
 Performs lower clipping then upper clipping if both specified
 
