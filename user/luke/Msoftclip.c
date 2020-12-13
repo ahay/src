@@ -50,14 +50,14 @@ int main(int argc, char* argv[])
 	
 	bool clipping_upper = true ;
 
-    if (!sf_getfloat("upper",&upper)) {upper=+FLT_MAX; clipping_upper = false;}
+    if (!sf_getfloat("upper",&upper)) {upper=0.0; clipping_upper = false;}
     /* upper clip value */
 	
 	bool clipping_lower = true;
-    if (!sf_getfloat("lower",&lower)) {lower=-FLT_MAX; clipping_lower=false;}
+    if (!sf_getfloat("lower",&lower)) {lower=0.0; clipping_lower=false;}
     /* lower clip value */
 	
-    if (!sf_getfloat("sharp",&sharp)) sharp = 1.0;
+    if (!sf_getfloat("sharp",&sharp)) sharp = 1.0/fmin(fabsf(upper),fabsf(lower));
     /* sharpness */	
 	if( sharp <= 0.0 ){
 		sf_error("Sharpness must be > 0 ");
