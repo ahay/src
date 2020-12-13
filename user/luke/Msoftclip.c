@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("lower",&lower)) {lower=0.0; clipping_lower=false;}
     /* lower clip value */
 	
-    if (!sf_getfloat("sharp",&sharp)) sharp = 1.0/fmin(fabsf(upper),fabsf(lower));
+    if (!sf_getfloat("sharp",&sharp)) sharp = 1.0/fmax(fabsf(upper),fabsf(lower));
     /* sharpness */	
 	if( sharp <= 0.0 ){
 		sf_error("Sharpness must be > 0 ");
