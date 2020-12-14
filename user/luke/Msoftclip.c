@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 	
     if (!sf_getfloat("sharp",&sharp)) sharp = 1.0/fmax(fabsf(upper),fabsf(lower))**2;
 	
-	if (sharp != sharp){ sharp = 1.0}
+	if (sharp != sharp){ sharp = 1.0;}
     /* sharpness */	
 	if( sharp <= 0.0 ){
 		sf_error("Sharpness must be > 0 ");
