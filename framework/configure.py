@@ -624,6 +624,15 @@ def x11(context):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
+# try this:
+#git clone https://gitlab.freedesktop.org/xorg/lib/libxaw.git
+#cd libXaw
+#./autogen.sh
+#./configure --prefix=build/X
+#make install
+# set XINC to build/X/include and XLIBPATH to build/X/lib and test again
+   
+
 def check_pen(env,pen):
     if pen == 'xtpen' and (env.get('XINC') and env.get('XLIBPATH')):
         return 1
