@@ -25,9 +25,9 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int i, ic, n, nc, n2, iter, niter, liter, rect, it, nt;
-    float f;
-    sf_complex *xn, *x1, *y1, *dx, *r, *p;
+    int i, ic, n, nc, n2, iter, niter, liter, rect, it, nt, nr, k;
+    float f, step, rsum, rsum2;
+    sf_complex *xn, *x1, *y1, *dx, *r, *x0;
     sf_file inp, out, pef;
 
     sf_init(argc,argv);
@@ -43,19 +43,21 @@ int main(int argc, char* argv[])
 
     sf_putint(pef,"n2",nc);
     sf_shiftdim(inp, pef, 2);
-    
+
+    nr = nc*n;
     n2 = (2*nc-1)*n;
+    
 
     xn = sf_complexalloc(n2);
     dx = sf_complexalloc(n2);
-    p  = sf_complexalloc(n2);
+    x0 = sf_complexalloc(n2);
     
     x1 = sf_complexalloc(n);
 
     y1 = sf_complexalloc(n);
 
-    pchain_init(n,nc,x1,xn,xn+n*nc);
-    r = sf_complexalloc(n*nc);
+    pchain_init(n,nc,x1,xn,xn+nr);
+    r = sf_complexalloc(nr);
 
     if (!sf_getbool("verb",&verb)) verb=(bool) (1 == nt);
     /* verbosity flag */
@@ -91,25 +93,56 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	sf_cconjgrad_init(n2, n2, n*nc, n*nc, 1., 1.e-6, verb, false);
+	sf_cconjgrad_init(n2, n2, nr, nr, 1., 1.e-6, verb, false);
 
 	for (iter=0; iter < niter; iter++) {
 	    pchain_apply(y1,r);
-	    
-	    for (i=0; i < n*nc; i++) {
+	    rsum = 0.0f;
+	    for (i=0; i < nr; i++) {
 		r[i] = -r[i];
+		rsum += cabsf(r[i]*conjf(r[i]));
 	    }
 
-	    sf_cconjgrad(NULL, pchain_lop, csmooth1_lop,p,dx,r,liter);
+	    sf_cconjgrad(NULL, pchain_lop, csmooth1_lop,x0,dx,r,liter);
 
 	    for (i=0; i < n2; i++) {
-		xn[i] += dx[i];
+		x0[i] = xn[i];
+	    }
+
+	    /* line search */
+	    step = 1.0f;
+	    for (k=0; k < 8; k++) {
+		for (i=0; i < n2; i++) {
+		    xn[i] = x0[i] + step*dx[i];
+		}
+		
+		pchain_apply(y1,r);		
+		rsum2 = 0.0f;
+		for (i=0; i < nr; i++) {
+		    r[i] = -r[i];
+		    rsum2 += cabsf(r[i]*conjf(r[i]));
+		}
+		
+		if (rsum2 < rsum) break;
+		
+		step *= 0.5;
+	    }
+
+	    /* variable projection */
+	    if (nc > 1) {
+		sf_csolver(pchainx_lop,sf_ccgstep,n2-nr,nr,dx+nr,r,liter,
+			  "verb",true,"end");
+		sf_ccgstep_close();
+		
+		for (i=nr; i < n2; i++) {
+		    xn[i] += dx[i];
+		}
 	    }
 	}
 
 	sf_cconjgrad_close();
 
-	sf_complexwrite(xn,n*nc,pef);
+	sf_complexwrite(xn,nr,pef);
 
 	pchain(y1);
 

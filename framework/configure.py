@@ -131,6 +131,7 @@ def check_all(context):
     cc  (context)
     ar  (context)
     libs(context)
+    rpc(context) # FDNSI
     c99 (context) # FDNSI
     x11 (context) # FDNSI
     opengl(context) # FDNSI
@@ -384,20 +385,27 @@ def ar(context):
         context.Result(context_failure)
         need_pkg('ar')
 
-pkg['libs'] = {'fedora':'libtirpc-devel (Setup...Libs)',
-               'cygwin':'libtirpc-devel (Setup...Libs)',
-               'centos':'libtirpc-devel (Setup...Libs)',
-               'ubuntu':'libtirpc-dev (Setup...Libs)'}
-
-# Failing this check stops the installation.
+# Checking for the math library.
 def libs(context):
-    context.Message("checking for libraries ... ")
     LIBS = path_get(context,'LIBS','m')
     DYNLIB = context.env.get('DYNLIB')
     if not DYNLIB or DYNLIB[0].lower() == 'n':
         context.env['DYNLIB'] = ''
     else:
         context.env['DYNLIB'] = 'd'
+
+    if plat['OS'] == 'darwin':
+        LIBS.append('mx')
+
+    context.env['LIBS'] = LIBS
+
+# Checking for RPC library. Failing this doesn't stop the installation
+def rpc(context):
+    context.Message("checking for rpc ... ")
+    oldlibs = path_get(context,'LIBS')
+    oldpath = path_get(context, 'CPPPATH')
+    LIBS = oldlibs[:]
+    CPPPATH = oldpath[:]
 
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
@@ -406,11 +414,8 @@ def libs(context):
          (plat['distro'] == 'centos' and int(plat['version'][0]) >= 8) or \
 	 plat['distro'] == 'fedora' or \
          (plat['distro'] == 'ubuntu' and int(plat['version'][:2]) >= 20):
-        context.env['CPPPATH'] = path_get(context,'CPPPATH',
-                                          '/usr/include/tirpc')
+        CPPPATH.append('/usr/include/tirpc')
         LIBS.append('tirpc')
-    elif plat['OS'] == 'darwin':
-        LIBS.append('mx')
     elif plat['OS'] == 'interix':
         LIBS.append('rpclib')
     text = '''
@@ -420,13 +425,19 @@ def libs(context):
     return 0;
     }\n'''
 
+    context.env['LIBS'] = LIBS
     res = context.TryLink(text,'.c')
     if res:
         context.Result(str(LIBS))
-        context.env['LIBS'] = LIBS
+        context.env['HAVE_RPC'] = True
     else:
         context.Result(context_failure)
-        need_pkg('libs')
+        LIBS = oldlibs
+        CPPPATH = oldpath
+        context.env['LIBS'] = oldlibs
+        context.env['CPPPATH'] = oldpath
+        context.env['HAVE_RPC'] = False
+        
 
 pkg['c99'] = {'fedora':'glibc-headers'}
 
@@ -2449,6 +2460,7 @@ def options(file):
     opts.Add('ENV','SCons environment')
     opts.Add('RSFROOT','Top Madagascar installation directory')
     opts.Add('AR','Static library archiver')
+    opts.Add('HAVE_RPC','Remote Procedure Call library')
     opts.Add('JPEG','The libjpeg library')
     opts.Add('OPENGL','OpenGL libraries')
     opts.Add('OPENGLFLAGS','Flags for linking OpenGL libraries')

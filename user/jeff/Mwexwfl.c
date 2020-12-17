@@ -25,7 +25,6 @@
 #include "omputil.h"
 #endif
 
-#include "newfile.h"
 #include "wex.h"
 #include "wextap.h"
 #include "wexssr.h"

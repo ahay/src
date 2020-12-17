@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     int i, n, nw, n2, rect, frect, iter, niter, liter;
-    float *w, *dw, *x, *y, *r, *p;
+    float *w, *dw, *x, *y, *r, *p; /* *num, *den; */
     sf_file wht, fwht, src, tgt, mch;
 
     sf_init(argc,argv);
@@ -50,19 +50,20 @@ int main(int argc, char* argv[])
     y = sf_floatalloc(n);
     r = sf_floatalloc(3*n);
 
+    /*
+    num = sf_floatalloc(nw);
+    den = sf_floatalloc(nw);
+    */
+
     if (!sf_getint("rect",&rect)) rect=1;
     /* smoothing in time */
     if (!sf_getint("frect",&frect)) frect=1;
     /* smoothing in frequency */
 
-    twosmooth_init(n,nw,rect,frect,2*n);
-
     sf_floatread(x,n,src);
     sf_floatread(y,n,tgt);
 
     sfchain_init(n,nw,w+2*n,w+3*n,w,w+n,x);
-
-    sf_conjgrad_init(n2, n2, 3*n, 3*n, 1., 1.e-6, true, false);
 
     p = sf_floatalloc(n2);
 
@@ -79,6 +80,24 @@ int main(int argc, char* argv[])
     if (!sf_getint("liter",&liter)) liter=50;
     /* number of linear iterations */
 
+    /* smart initialization */
+    
+    /*    sf_divn_init(1, n, &n, &rect, liter, true);
+    sf_divne (y, x, w+2*n, 0.0f);
+    for (i=2*n; i < 3*n; i++) {
+	w[i] = sqrtf(fabsf(w[i]));
+    }
+    sf_divn_close(); */
+
+    /*
+    sfchain_div(y,num,den);
+    sf_divn_init(1, nw, &nw, &frect, liter, true);
+    sf_divne (num, den, w+3*n, 0.0f);
+    sf_divn_close(); */
+    
+    sf_conjgrad_init(n2, n2, 3*n, 3*n, 1., 1.e-6, true, false);
+    twosmooth_init(n,nw,rect,frect,2*n);
+    
     for (iter=0; iter < niter; iter++) {
 	sfchain_res(y,r);
 	
@@ -87,6 +106,14 @@ int main(int argc, char* argv[])
 	for (i=0; i < n2; i++) {
 	    w[i] += dw[i];
 	}
+
+	/* variable projection 
+	sfchain_res(y,r);
+	sf_solver(sfchainx_lop,sf_cgstep,2*n,3*n,dw,r,liter,"verb",true,"end");
+	sf_cgstep_close();
+	for (i=0; i < 2*n; i++) {
+	    w[i] += dw[i];
+	    } */
     }
 
     sf_floatwrite(w+2*n,n,wht);

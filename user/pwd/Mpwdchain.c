@@ -142,7 +142,8 @@ int main(int argc, char* argv[])
 	    for (i=0; i < n2; i++) {
 		x0[i] = xn[i];
 	    }
-
+	    
+            /* line search */
 	    step = 1.0f;
 	    for (k=0; k < 8; k++) {
 		for (i=0; i < n2; i++) {
@@ -165,6 +166,8 @@ int main(int argc, char* argv[])
 	    /* variable projection */
 	    if (nc > 1) {
 		sf_solver(pwdchainx_lop,sf_cgstep,n2-nr,nr,dx+nr,r,liter,"verb",true,"end");
+		sf_cgstep_close();
+		
 		for (i=nr; i < n2; i++) {
 		    xn[i] += dx[i];
 		}
