@@ -1,0 +1,92 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+
+def Grey(data,other):
+	Result(data,
+       '''
+       grey label2=X label1="Y" unit1= unit2= clip=3 title=
+       screenratio=1 color=j allpos=y gainall=y maxval=3 minval=0 %s'''%other)
+
+## Load data
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Hankel'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+   sys.stderr.write('\nCannot find Matlab.\n')
+   sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('H_clean-0 H_obs-0 H_rr-0 H_drr-0 H_odrr-0 H_rr10-0 H_drr10-0 H_odrr10-0',[os.path.join(matROOT,matfun+'.m')],
+    '''MATLABPATH=%(matlabpath)s %(matlab)s 
+    -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}','${TARGETS[6]}','${TARGETS[7]}');quit"
+    '''%vars(),stdin=0,stdout=-1)
+
+   
+Flow('H_clean','H_clean-0','put n1=1296 n2=625 d1=1 d2=1 o1=1 o2=1')
+Flow('H_obs','H_obs-0','put n1=1296 n2=625 d1=1 d2=1 o1=1 o2=1')
+Flow('H_rr1','H_rr-0','put n1=1296 n2=625 d1=1 d2=1 o1=1 o2=1')
+Flow('H_drr1','H_drr-0','put n1=1296 n2=625 d1=1 d2=1 o1=1 o2=1')
+Flow('H_odrr1','H_odrr-0','put n1=1296 n2=625 d1=1 d2=1 o1=1 o2=1')
+Flow('H_rr10','H_rr10-0','put n1=1296 n2=625 d1=1 d2=1 o1=1 o2=1')
+Flow('H_drr10','H_drr10-0','put n1=1296 n2=625 d1=1 d2=1 o1=1 o2=1')
+Flow('H_odrr10','H_odrr10-0','put n1=1296 n2=625 d1=1 d2=1 o1=1 o2=1')
+
+Grey('H_clean','title="Clean"')
+Grey('H_obs','title="Observed"')
+Grey('H_rr1','title="RR (1 iteration)"')
+Grey('H_drr1','title="DRR (1 iteration)"')
+Grey('H_odrr1','title="ORR (1 iteration)"')
+Grey('H_rr10','title="RR (10 iterations)"')
+Grey('H_drr10','title="DRR (10 iterations)"')
+Grey('H_odrr10','title="ORR (10 iterations)"')
+
+Flow('H-z-clean','H_clean','window f1=0 n1=36 f2=0 n2=25')
+Flow('H-z-obs','H_obs','window f1=0 n1=36 f2=0 n2=25')
+Flow('H-z-rr10','H_rr10','window f1=0 n1=36 f2=0 n2=25')
+Flow('H-z-drr10','H_drr10','window f1=0 n1=36 f2=0 n2=25')
+Flow('H-z-odrr10','H_odrr10','window f1=0 n1=36 f2=0 n2=25')
+Flow('H-z-rr1','H_rr1','window f1=0 n1=36 f2=0 n2=25')
+Flow('H-z-drr1','H_drr1','window f1=0 n1=36 f2=0 n2=25')
+Flow('H-z-odrr1','H_odrr1','window f1=0 n1=36 f2=0 n2=25')
+
+Grey('H-z-clean','title=Clean')
+Grey('H-z-obs','title=Observed')
+Grey('H-z-rr10','title="RR (10 iterations)"')
+Grey('H-z-drr10','title="DRR (10 iterations)"')
+Grey('H-z-odrr10','title="ORR (10 iterations)"')
+Grey('H-z-rr1','title="RR (1 iteration)"')
+Grey('H-z-drr1','title="DRR (1 iteration)"')
+Grey('H-z-odrr1','title="ORR (1 iteration)"')
+
+## Creating framebox
+x=0
+y=0
+w=25
+w1=36
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=1 max1=625 min2=1 max2=1296 pad=n plotfat=15 plotcol=7 screenratio=1
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+Result('H_clean-0','Fig/H_clean.vpl frame','Overlay')	
+Result('H_obs-0','Fig/H_obs.vpl frame','Overlay')
+Result('H_rr1-0','Fig/H_rr1.vpl frame','Overlay')
+Result('H_drr1-0','Fig/H_drr1.vpl frame','Overlay')
+Result('H_odrr1-0','Fig/H_odrr1.vpl frame','Overlay')
+Result('H_rr10-0','Fig/H_rr10.vpl frame','Overlay')
+Result('H_drr10-0','Fig/H_drr10.vpl frame','Overlay')
+Result('H_odrr10-0','Fig/H_odrr10.vpl frame','Overlay')
+
+
+End()

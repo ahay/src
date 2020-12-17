@@ -1,0 +1,585 @@
+\published{Geophysical Journal International, 206, 1695-1717, (2016)}
+
+\title{Simultaneous denoising and reconstruction of 5D seismic data via damped rank-reduction method}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Yangkang Chen\footnotemark[1], Dong Zhang\footnotemark[2], Zhaoyu Jin\footnotemark[3], Xiaohong Chen\footnotemark[2], Shaohuan Zu\footnotemark[2], Weilin Huang\footnotemark[2] , and Shuwei Gan\footnotemark[2]}
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+Email: ykchen@utexas.edu \\
+\footnotemark[2] State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200 \\
+zhangdongconan@163.com\&chenxh@cup.edu.cn \& shaohuanzu@gmail.com \&  cup\_hwl@126.com\&gsw19900128@126.com  \\ 
+\footnotemark[3]School of Geosciences \\
+University of Edinburgh \\
+Edinburgh,UK, EH9 3JW \\
+s1263999@sms.ed.ac.uk
+}
+
+\lefthead{GJI - Chen et al.}
+\righthead{5D interpolation}
+
+\maketitle
+
+\begin{abstract}
+The Cadzow rank-reduction method can be effectively utilized in simultaneously denoising and reconstructing 5D seismic data that depends on four spatial dimensions. The classic version of Cadzow rank-reduction method arranges the 4D spatial data into a level-four block Hankel/Toeplitz matrix and then applies truncated singular value decomposition (TSVD) for rank-reduction. When the observed data is extremely noisy, which is often the feature of real seismic data, traditional TSVD cannot be adequate for attenuating the noise and reconstructing the signals. The reconstructed data tends to contain a significant amount of residual noise using the traditional TSVD method, which can be explained by the fact that the reconstructed data space is a mixture of both signal subspace and noise subspace. In order to better decompose the block Hankel matrix into signal and noise  components, we introduce\new{d} a damping operator into the traditional TSVD formula, which we call the damped rank-reduction method. The damped rank-reduction method  can obtain a perfect reconstruction performance even when the observed data has extremely low signal-to-noise ratio (SNR).  %The improvement is achieved by introducing a damping factor into the traditional rank-reduction formula following the recent research advances on damped multichannel singular spectrum analysis (MSSA). 
+The feasibility of the improved 5D seismic data reconstruction method \old{is}\new{was} validated via both 5D synthetic and field data examples. We present\new{ed} comprehensive analysis of the data examples and obtain\new{ed} valuable experience and guidelines in better utilizing the proposed method in practice. Since the proposed method is convenient to implement and can achieve immediate improvement, we suggest its wide application in the industry. 
+\end{abstract}
+
+
+\section{Introduction}
+Field obstacles and economic costs in seismic acquisition often result in irregular and incomplete seismic field data \cite[]{chiu2014}. Seismic interpolation is such a processing step to provide the regularly sampled seismic data for the following workflows like high-resolution processing, wave-equation migration, multiple suppression, amplitude-versus-offset (AVO) or amplitude-versus-azimuth (AVAZ) analysis, and time-lapse studies, thus plays a fundamental role in seismic data processing \cite[]{porsani1999,abma2005,abma2006,juefu2010,chengbo2012,yangkang2015shape,shuwei20164,shuwei20153}. 
+
+During the past several decades of continuous research from both academia and industry, there have been many effective methods for seismic data interpolation. In prediction based approaches, a prediction error filter is designed such that the predicted data and the existing data has the minimum misfit by solving a least-squares linear inverse problem \cite[]{spitz1991,fomel2002pwd}. Considering that the irregularly sampled seismic data with large number of missing traces usually suffers from the aliasing problem, the prediction error filter is obtained by solving the inverse problem from low-frequency data that is less aliasing and then applied to high-frequency components \cite[]{mostafa2007}. The sparse transform based interpolation assumes that the seismic data is sparse in a certain transformed domain. By iteratively thresholding the transformed domain of the incomplete seismic data, one can gradually attenuate the artifacts in the sparse domain that are caused by the missing traces in the time-space domain, and then gradually recover the missing information \cite[]{yangkang2014halfthr,shuwei2015seg,shuwei20153,benfengpocs,benfeng2015}. An important component in this type of methods is the sparse transform. Generally speaking, sparse transforms can be divided into two categories \cite[]{yangkang2016dsd}: analytical transforms, which have fixed basis, and learning-based dictionaries, which iteratively update the basis. A number of fixed basis sparse transforms have been proposed in the literature for restoring seismic data, which include Fourier transform \cite[]{sacchi,duijndam,yangkang2014halfthr}, Radon transform \cite[]{trad,yu,wangradon}, curvelet transform \cite[]{herrmann,shahidi,liuwei2015,liuwei20162} and seislet transform \cite[]{fomel2010seislet,yangkang20142,shuwei20153}. The learning-based approach usually utilizes machine learning techniques to construct the dictionary. Another group of methods is based on wave equation. The wave equation theory inherently connects the seismic trace recorded at a specific location from a known shot position to all the other traces assuming the subsurface velocity model is known. Thus, it depends on a prior information that is usually difficult to obtain and it is also limited by the large computational cost aroused from solving the wave equation \cite[]{ronen,canning1996,fomel2003}. 
+
+Recently, rank-reduction based seismic interpolation algorithms become popular \cite[]{trickett2009,mssa,jianjun2015}.  The rank-reduction methods for seismic data reconstruction can be divided into two main categories. The first category applies rank-reduction to multilevel block Hankel/Toeplitz matrices formed from the entries of the tensor. In other words, multidimensional seismic data is rearranged into a block Hankel or Toeplitz matrix, and a rank-reduction algorithm is used to improve the signal-to-noise ratio (SNR) and to reconstruct the data. Such algorithm is usually named as the Cadzow method \cite[]{trickett2009} or multichannel singular spectrum analysis (MSSA) method \cite[]{mssa,weilin2015,weilin}. The other category of rank-reduction methods encompasses techniques that are based on dimensionality reduction of multi-linear arrays or tensors. In this case, the multichannel seismic data is viewed as a multi-linear array, and dimensionality reduction techniques are directly applied to the multi-linear array \cite[]{jianjun2015}. Simply speaking, rank-reduction methods are based on the fact that missing traces and random noise will increase the rank of a matrix or tensor. By applying a rank-reduction step, such as truncated singular value decomposition (TSVD), we can intuitively reduce the negative effects caused by the missing traces and random noise. It is worth noting that rank-reduction or low-rank matrix recovery is closely related to sparse transform and compressed sensing (CS) theory because of their utilization of low-dimensional signal structures \cite[]{recht,power,Yaniv}. Specifically, \cite{recht} discussed the bridge between CS and low-rank matrix recovery. \new{Considering that the multi-dimensional seismic data usually contains significant amount of random noise. A lof of efforts have been put in the area of simultaneous interpolation and denoising of seismic data. \cite{mssa} introduced a POCS-like iteration into the MSSA algorithm with a variable "alpha" to weight the addition of original data with estimated signal. While this method is effective in attenuating noise while interpolating seismic records, the mathematical relationship between "alpha" and the SNR was not properly understood.  Following \cite{mssa}, the weighting strategy was also adopted by \cite{kreimer2012}.  Recently the connection between parameter "alpha" and a trade-off parameter "mu" was made in \cite{jianjun2015}. \cite{sternfels2015} solved the simultaneous interpolation and denoising problem via convex optimization, where the problem was formulated as a regularized inverse problem with a sparsity promotion term and solved using the alternating direction method of multipliers (ADMM) algorithm.} 
+
+In recent years, 5D seismic interpolation has become popular since it takes all physical dimensions of seismic data into consideration for the interpolation, which brings us a stronger constraint when inverting a highly underdetermined inverse problem and thus helps us obtain a much improved reconstruction performance in the case of high missing-traces ratio compared with 2D and 3D interpolation \cite[]{liubin2004,kreimer2013,chiu2014,jianjun2015}.
+The rank-reduction based seismic interpolation has been shown to be an effective method for 5D seismic data interpolation \cite[]{jianjun2015}. Our recent study shows that when the observed data is extremely noisy, which is often the feature of real seismic data, the reconstructed data using the rank-reduction based algorithm still contains significant residual noise. The residual noise is caused from the fact that the rank-reduced signal space via TSVD is a mixture of signal and noise subspace.  We propose an effective method for improving the traditional Cadzow rank-reduction method by modifying the TSVD formula. In order to better decompose the noisy data space into signal and noise subspace, we propose to apply a damping operator to the block Hankel matrix after TSVD.  The damping operator is controlled by adjusting an introduced parameter called damping factor. In the special case, when the damping factor is sufficiently large, the improved rank-reduction method reverts the traditional Cadzow rank-reduction method. The proposed method is compared with the traditional method via both synthetic and field  5D seismic dataset and is demonstrated to obtain much better performance. 
+
+\section{Theory}
+\subsection{Block Hankel matrix formulation for 5D seismic data}
+Consider a block of 5D data $\mathbf{D}_{time}(t,hx,hy,x,y)(t=1\cdots N_t)$, where $hx$, $hy$, $x$, $y$ denote $x$ and $y$ offsets and $x$ and $y$ midpoints. The rank-reduction method operates on the 5D seismic data in the following way: first, rank-reduction method transforms $\mathbf{D}_{time}(t,hx,hy,x,y)$ into $\mathbf{D}_{freq}(w,hx,hy,x,y)(w=1\cdots N_w)$ of complex values in the frequency domain. In the condition that the spatial variables are regularly sampled, each observation at a given frequency slice can be represented via a 4D spatial hypercube $\mathbf{D}_{k1,k2,k3,k4}$ with $k_i=1\cdots X_i$, $i=1,2,3,4$. In order to make our target matrices close to square matrices, parameters $Y_i$ are defined as $\lfloor \frac{X_i}{2} \rfloor +1$, $i=1,2,3,4$. \new{\cite{jianjun20152} outlined the usefulness of square Hankel matrices in rank reduction based regularization and described why square matrices are preferred.} The symbol $\lfloor\cdot\rfloor$ denotes the integer part of its argument. %As we have already known, SSA transforms the 1D time series into a level-one Hankel matrix while MSSA transforms the 2D frequency slice of a 3D seismic dataset into a level-two block Hankel matrix \cite[]{oropezamssa}.
+The 4D spatial hypercube $\mathbf{D}_{k1,k2,k3,k4}$ can be embedded in a level-four block Hankel matrix as follows. We have to address in advance that each frequency slice of data is operated the exactly same way. We first embed the seismic data in a level-one Hankel matrix using all data components in the first dimension of the tensor $\mathbf{D}_{k1,k2,k3,k4}$ at a given frequency $w_0$. This generates the following Hankel matrices,
+\begin{equation}
+\label{eq:levelone}
+\mathbf{M}_{k2,k3,k4}^{(1)}=\left(\begin{array}{cccc}
+D_{1,k2,k3,k4} & D_{2,k2,k3,k4} & \cdots &D_{X_1-Y_1+1,k2,k3,k4} \\
+D_{2,k2,k3,k4} & D_{3,k2,k3,k4}  &\cdots &D_{X_1-Y_1+2,k2,k3,k4} \\
+\vdots & \vdots &\ddots &\vdots \\
+D_{Y_1,k2,k3,k4}&D_{Y_1+1,k2,k3,k4} &\cdots&D_{X_1,k2,k3,k4}
+\end{array}
+\right).
+\end{equation}
+
+Matrices in Equation \ref{eq:levelone} are of size $Y_1 \times (X_1-Y_1+1)$. These matrices are embedded in a level-two block Hankel matrix:
+\begin{equation}
+\label{eq:leveltwo}
+\mathbf{M}_{k3,k4}^{(2)}=\left(\begin{array}{cccc}
+M_{1,k3,k4}^{(1)} & M_{2,k3,k4}^{(1)} & \cdots &M_{X_2-Y_2+1,k3,k4}^{(1)} \\
+M_{2,k3,k4}^{(1)} & M_{3,k3,k4}^{(1)}  &\cdots &M_{X_2-Y_2+2,k3,k4}^{(1)} \\
+\vdots & \vdots &\ddots &\vdots \\
+M_{Y_2,k3,k4}^{(1)}&M_{Y_2+1,k3,k4}^{(1)} &\cdots&M_{X_2,k3,k4}^{(1)}
+\end{array}
+\right).
+\end{equation}
+
+Matrices in Equation \ref{eq:leveltwo} are of size $(Y_1 Y_2) \times (X_1-Y_1+1)(X_2-Y_2+1)$. These matrices are now embedded in a level-three block Hankel matrix:
+\begin{equation}
+\label{eq:levelthree}
+\mathbf{M}_{k4}^{(3)}=\left(\begin{array}{cccc}
+M_{1,k4}^{(2)} & M_{2,k4}^{(2)} & \cdots &M_{X_3-Y_3+1,k4}^{(2)} \\
+M_{2,k4}^{(2)} & M_{3,k4}^{(2)}  &\cdots &M_{X_3-Y_3+2,k4}^{(2)} \\
+\vdots & \vdots &\ddots &\vdots \\
+M_{Y_3,k4}^{(2)}&M_{Y_3+1,k4}^{(2)} &\cdots&M_{X_3,k4}^{(2)}
+\end{array}
+\right).
+\end{equation}
+
+Matrices in Equation \ref{eq:levelthree} are of size $(Y_1 Y_2 Y_3) \times (X_1-Y_1+1)(X_2-Y_2+1)(X_3-Y_3+1)$. At last, these matrices are embedded in our final target level-four block Hankel matrix:
+\begin{equation}
+\label{eq:levelfour}
+\mathbf{M}^{(4)}=\left(\begin{array}{cccc}
+M_{1}^{(3)} & M_{2}^{(3)} & \cdots &M_{X_4-Y_4+1}^{(3)} \\
+M_{2}^{(3)} & M_{3}^{(3)}  &\cdots &M_{X_4-Y_4+2}^{(3)} \\
+\vdots & \vdots &\ddots &\vdots \\
+M_{Y_4}^{(3)}&M_{Y_4+1}^{(3)} &\cdots&M_{X_4}^{(3)}
+\end{array}
+\right).
+\end{equation}
+
+Equation \ref{eq:levelfour} is the target matrix of our problem. The size of level-four block Hankel matrix $\mathbf{M}^{(4)}$ is $(Y_1 Y_2 Y_3 Y_4) \times (X_1-Y_1+1)(X_2-Y_2+1)(X_3-Y_3+1)(X_4-Y_4+1)$. If $X_i$ is an odd integer, the size of $\mathbf{M}^{(4)}$ is $(Y_1 Y_2 Y_3 Y_4) \times(Y_1 Y_2 Y_3 Y_4) $.
+
+\subsection{Rank-reduction method for 5D seismic data restoration}
+The transformation of the 4D data hypercube at a single frequency into a level-four block Hankel matrix can be represented in operator notation as follows:
+\begin{equation}
+\label{eq:hankelopt}
+\mathbf{M}^{(4)}=\mathcal{H}\mathbf{D},
+\end{equation}
+where $\mathcal{H}$ denotes the Hankelization operator.  To avoid notational clutter, we omit the argument $k1,k2,k3,k4$ of $\mathbf{D}_{k1,k2,k3,k4}$ for convenience. In general, the level-four block Hankel matrix $\mathbf{M}^{(4)}$ can be represented as:
+\begin{equation}
+\label{eq:M}
+\mathbf{M}^{(4)}=\mathbf{S}+\mathbf{N},
+\end{equation}
+where $\mathbf{S}$ and $\mathbf{N}$ denote the level-four block Hankel matrices of signal and random noise, respectively. Here, missing signal can be regarded as  a condition where signal and noise are summed to zero, and is distributed randomly due to the irregular sampling. Therefore, missing data represents itself by the noise-like characteristics. 
+
+We assume that $\mathbf{M}^{(4)}$ and $\mathbf{N}$ have full rank. The size of $\mathbf{M}^{(4)}$ is $I\times J,\quad J<I$. $rank(\mathbf{M}^{(4)})$=$rank(\mathbf{N})=J$, $I=Y_1 Y_2 Y_3 Y_4$, $J=(X_1-Y_1+1)(X_2-Y_2+1)(X_3-Y_3+1)(X_4-Y_4+1)$, and $\mathbf{S}$ has deficient rank, $rank(\mathbf{S})=K<J$. The singular value decomposition (SVD) of $\mathbf{M}^{(4)}$ can be represented as:
+\begin{equation}
+\label{eq:svdm}
+\mathbf{M}^{(4)} = [\mathbf{U}_1^{M^{(4)}}\quad \mathbf{U}_2^{M^{(4)}}]\left[\begin{array}{cc}
+\Sigma_1^{M^{(4)}} & \mathbf{0}\\
+\mathbf{0} & \Sigma_2^{M^{(4)}}
+\end{array}
+\right]\left[\begin{array}{c}
+(\mathbf{V}_1^{M^{(4)}})^H\\
+(\mathbf{V}_2^{M^{(4)}})^H
+\end{array}
+\right],
+\end{equation}
+where $\Sigma_1^{M^{(4)}}$ ($K\times K$) and $\Sigma_2^{M^{(4)}}$ ($(I-K)\times(J-K)$) are diagonal matrices and contain, respectively, larger singular values and smaller singular values. $\mathbf{U}_1^{M^{(4)}}$ ($I\times K$), $\mathbf{U}_2^{M^{(4)}}$ ($I\times (I-K)$), $\mathbf{V}_1^{M^{(4)}}$ ($J\times K$) and $\mathbf{V}_2^{M^{(4)}}$ ($J\times (J-K)$) denote the associated matrices with singular vectors. The symbol $[\cdot]^H$ denotes the conjugate transpose of a matrix. Generally, the signal is more energy-concentrated and correlative than the random noise. Thus, the larger singular values and their associated singular vectors represent the signal, while the smaller values and their associated singular vectors represent the random noise. We substitute $\Sigma_2^{M^{(4)}}$ with $\mathbf{0}$ to achieve the goal of attenuating random noise while recovering the missing data during the first iteration in reconstruction process as follows:
+\begin{equation}
+\label{eq:tsvd}
+\tilde{\mathbf{M}}^{(4)} = \mathbf{U}_1^{M^{(4)}}\Sigma_1^{M^{(4)}}(\mathbf{V}_1^{M^{(4)}})^H.
+\end{equation}
+Equation \ref{eq:tsvd} is referred to as the TSVD, which is used in the conventional rank-reduction approach for 5D seismic data interpolation.
+
+Nevertheless, $\tilde{\mathbf{M}}^{(4)}$ is actually still contaminated  with residual random noise. Following \cite{weilin}, here we briefly clarify the reason why the $\tilde{\mathbf{M}}^{(4)}$ is still corrupted with some residual random noise. We first consider the SVD of the signal component $\mathbf{S}$ in a way similar to equation \ref{eq:svdm}: 
+\begin{equation}
+\label{eq:svds}
+\mathbf{S} = [\mathbf{U}_1^{S}\quad \mathbf{U}_2^{S}]\left[\begin{array}{cc}
+\Sigma_1^{S} & \mathbf{0}\\
+\mathbf{0} & \Sigma_2^{S}
+\end{array}
+\right]\left[\begin{array}{c}
+(\mathbf{V}_1^{S})^H\\
+(\mathbf{V}_2^{S})^H
+\end{array}
+\right].
+\end{equation}
+Different from $\tilde{\mathbf{M}}^{(4)}$, the signal matrix should be of deficient rank, then $\Sigma_2^S$ is a zero diagonal matrix, and $\mathbf{S}$ can be denoted in a concise form:
+\begin{equation}
+\label{eq:signal}
+\mathbf{S}=\mathbf{U}_1^S\Sigma_1^S(\mathbf{V}_1^S)^H.
+\end{equation}
+Combining equations \ref{eq:M}, \ref{eq:svds}, and \ref{eq:signal}, it straightforwardly derive the following equation:
+\begin{equation}
+\label{eq:contra}
+\tilde{\mathbf{M}}^{(4)} = \mathbf{S} + \mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N}.
+\end{equation}
+The appendix A gives a detailed derivation for obtaining equation \ref{eq:contra}, which we call exact formulation of the block Hankel matrix. From equation \ref{eq:contra}, we can intuitively know that TSVD result $\tilde{\mathbf{M}}^{(4)}$ still contains significant random noise $\mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N}$, or in other words, the traditional TSVD can only decompose the data space into a mixture of signal and noise subspace. 
+
+\subsection{Damped rank-reduction method for 5D seismic data restoration}
+\cite{weilin} introduced a damping factor into TSVD to effectively attenuate the residual random noise for 3D dataset. Here, we further extend this damped algorithm to rank-reduction method for 5D seismic data interpolation in the presence of random noise. Since the missing data at each frequency slice can be regarded as the random noise, the derivation is similar to \cite{weilin} except for the extra reconstruction process based on the weighted projection onto convex set (POCS) like method in a level-four block Hankel matrix. Appendix B
+gives a detailed introduction on how to derive a damped TSVD in order to reduce the residual noise
+existing in the rank-reduced matrix $\tilde{\mathbf{M}}^{(4)}$ . Here, we just conclude the approximation of $\mathbf{S}$ as follows:
+\begin{align}
+\label{eq:S4_m}
+\mathbf{S} & = \mathbf{U}_1^{M^{(4)}} \Sigma_1^{M^{(4)}}\mathbf{T}(\mathbf{V}_1^{M^{(4)}})^H,\\
+\label{eq:T2_m}
+\mathbf{T} & =\mathbf{I}-(\Sigma_1^{M^{(4)}})^{-N}\hat{\delta}^N,
+\end{align}
+where $\hat{\delta}$ denotes the maximum element of $\Sigma_2^{M^{(4)}}$ and $N$ denotes the damping factor. It is worth mentioning that the greater the $N$, the weaker the damping is, and equation \ref{eq:S4_m} degrades to equation \ref{eq:tsvd} when $N\rightarrow +\infty$.
+
+The damped TSVD of rank-reduction algorithm for 5D seismic data interpolation can be represented in operator notation as follows:
+\begin{equation}
+\label{eq:rankrdopt}
+\mathbf{S}=\mathcal{R}_d\mathbf{M}^{(4)}.
+\end{equation}
+where we use $\mathcal{R}_d$ as the rank-reduction operator using the damped TSVD (equations \ref{eq:S4_m} and \ref{eq:T2_m}) while $\mathcal{R}$ is used for conventional TSVD. According to our experience, the damped TSVD is powerful for attenuating random noise while interpolating missing data. However, it is still SVD-based algorithm that takes the largest portion of computational time. The randomized singular value decomposition (RSVD) strategy \cite[]{rokhlin,halko11,mssa} can be used to accelerate the proposed method for better efficiency. Specifically according to our numerical tests, RSVD can save at least 45\% computational cost compared with the classic TSVD, and cost saving is different with data dimensions, the bigger the dimension is, the faster the RSVD is. Thus RSVD can increase the efficiency significantly.
+
+The filtered data is recovered with random noise attenuated and missing traces reconstructed by properly averaging along the anti-diagonals of the low-rank matrix $\mathbf{S}$ obtained via the damped TSVD:\\
+\begin{equation}
+\label{eq:dmssaopt}
+\hat{\mathbf{D}}=\mathcal{A}\mathbf{S}=\mathcal{A}\mathcal{R}_d\mathbf{M}^{(4)}=\mathcal{A}\mathcal{R}_d\mathcal{H}\mathbf{D}=\mathcal{F}_d\mathbf{D}.
+\end{equation}
+$\mathcal{A}$ denotes the averaging operator. The operator $\mathcal{F}_d$ represents improved rank-reduction filter. If $\mathcal{R}_d$ is substituted by the traditional TSVD operator $\mathcal{R}$, $\mathcal{F}$ can represent conventional rank-reduction filter similarly.
+
+In this paper, we pay our attention to the reconstruction of noisy data. Our final goal is to recover the useful signal from the observed noisy and incomplete data. It is worth mentioning that this type of problem often arises in the field of collaborative filtering ($\mathbf{CF}$). Similarly to those arising in the field of $\mathbf{CF}$, seismic data reconstruction can be interpreted as a matrix completion problem. Missing traces in seismic data will introduce missing value in the observed data $\mathbf{D}_{k1,k2,k3,k4}$. The corresponding level-four block Hankel matrix $\mathbf{M}^{(4)}$ is expected to have rank $K$. Random noise and missing data will increase the rank of $\mathbf{M}^{(4)}$. Consequently, rank-reduction via the damped TSVD with the damping factor can be implemented to recover the useful signal and to reconstruct the missing records for 5D seismic volumes.
+
+The modified weighted \old{POCS like}\new{POCS-like} algorithm based on conventional rank-reduction method for 5D seismic data interpolation can be shown as
+$\mathbf{D}_n=a_n \mathbf{D}_{obs} + (1-a_n\mathcal{S})\circ \mathcal{F}\mathbf{D}_{n-1},\quad n=1,2,3,\cdots,n_{max}$.
+Revised by the improved rank-reduction filter $\mathcal{F}_d$, therefore our proposed improved rank-reduction algorithm for simultaneous 5D seismic data reconstruction and denoising can be formulated as follows:
+\begin{equation}
+\label{eq:dmssapocs}
+\mathbf{D}_n=a_n \mathbf{D}_{obs} + (1-a_n\mathcal{S})\circ \mathcal{F}_d\mathbf{D}_{n-1},\qquad n=1,2,3,\cdots,n_{max}
+\end{equation}
+where $\mathbf{D}_0=\mathbf{D}_{obs}$. $a_n$ is an iteration-dependent scalar that linearly decreases from $a_1=1$ to $a_{n_{max}}=0$. $\mathcal{S}$ denotes the sampling factor. $\mathcal{S}$ equals 1 at the observation point while 0 at the missing traces. Symbol $\circ$ denotes the Hadamard product (entry-wise product) of two matrices with the same size. 
+
+A complete and detailed algorithm workflow of the proposed damped rank-reduction algorithm for 5D seismic data reconstruction and denoising is provided as follows: %We adopt the following algorithm for reconstructing 5D noisy seismic data with missing traces:
+\begin{algorithm}{Improved 5D seismic data rank-reduction algorithm}{\mathcal{S},\mathcal{F}_d,\mathbf{D}_{obs},a_n,\epsilon,n_{max},F}
+  \mathbf{D}_{obs}(f,hx,hy,x,y) \= \mathbf{D}_{obs}(t,hx,hy,x,y) \text{by 1D forward FFT} \\
+  \mathbf{D}_0 \= \mathbf{D}_{obs} \\
+  \begin{FOR}{f \= 1, 2, \ldots, F} \\	
+      \begin{FOR}{n \= 1, 2, \ldots, n_{max}} \\
+          \mathbf{D}_n^f \= a_n \mathbf{D}_{obs}^f + (1-a_n) \mathcal{S} \mathcal{F}_d \mathbf{D}_{n-1}^f + (1-\mathcal{S}) \mathcal{F}_d \mathbf{D}_{n-1}^f\\
+      \begin{IF}{\Arrowvert \mathbf{D}_n^f - \mathbf{D}_{n-1}^f \Arrowvert_F^2 \leq \epsilon} 
+      \RETURN \mathbf{D}_n^f
+      \end{IF}     
+      \end{FOR} \\
+      \RETURN \mathbf{D}_N^f
+   \end{FOR}\\ 
+  \RETURN \mathbf{D}_{recoverd}\\
+  \mathbf{D}_{recoverd}(t,hx,hy,x,y) \= \mathbf{D}_{recoverd}(f,hx,hy,x,y) \text{by 1D inverse FFT}
+\end{algorithm}
+The iteration terminates after all $F$ frequencies are finished. For each frequency slice, the algorithm stops when either a maximum number of iterations $n_{max}$ is reached or $\Arrowvert \mathbf{D}_n - \mathbf{D}_{n-1}\Arrowvert_F^2 \leq \epsilon$, where $\parallel \cdot \parallel_F$ denotes the Frobenius norm and $\epsilon$ denotes a small tolerance value.%the iteration terminates after $n_{max}$ iterations or upon reaching convergence to the specified tolerance $tol$.
+
+\section{Examples}
+We apply the proposed improved rank-reduction method on a 5D synthetic seismic dataset, as shown in Figures \ref{fig:synth-clean-xy,synth-noisy-xy,synth-obs-xy,synth-rr-xy,synth-drr-xy} and \ref{fig:synth-clean-hxhy,synth-noisy-hxhy,synth-obs-hxhy,synth-rr-hxhy,synth-drr-hxhy}. Figure \ref{fig:synth-clean-xy,synth-noisy-xy,synth-obs-xy,synth-rr-xy,synth-drr-xy} shows the performance in one common offset gather ($hx=5,hy=5$) and Figure \ref{fig:synth-clean-hxhy,synth-noisy-hxhy,synth-obs-hxhy,synth-rr-hxhy,synth-drr-hxhy} shows the performance in one common midpoint gather ($x=5,y=5$). Figures \ref{fig:synth-clean-xy} and \ref{fig:synth-clean-hxhy} show the true data. Figures \ref{fig:synth-noisy-xy} and \ref{fig:synth-noisy-hxhy} show the noisy data by adding some bandlimited noise to the clean data. The noise is so strong that the useful signals can be hardly detected. Figures \ref{fig:synth-obs-xy} and \ref{fig:synth-obs-hxhy} show the observed incomplete and noisy data. 70\% of total traces are missing in this example. The signal-to-noise ratio (SNR) of the observed data is exetremely low and we can hardly see any coherent useful events in the observed data. Figures \ref{fig:synth-rr-xy} and \ref{fig:synth-rr-hxhy} show the reconstructed data using traditional method, which is quite acceptable since almost all useful signals are recovered and the noise has been greatly suppressed. However, there is still some residual noise in the reconstructed data, which can be explained by the non-optimal decomposition via traditional TSVD as analyzed in the theoretic section. Figures \ref{fig:synth-drr-xy} and \ref{fig:synth-drr-hxhy} show the reconstructed data using the proposed method. In this example, the rank $K=3$ and the damping factor $N=3$, and we use 10 weighted \old{POCS like}\new{POCS-like} iterations. It is obvious that the proposed method obtains a much cleaner result, and to some extent, the recovery of the useful signals are nearly perfect.  Figure \ref{fig:synth-rr-xy-e,synth-drr-xy-e} shows two reconstruction error cubes in common offset domain (the difference between the true data and the recovered data) using the traditional and the proposed approaches, respectively. Similarly, Figure \ref{fig:synth-rr-hxhy-e,synth-drr-hxhy-e} shows the reconstruction error cubes in common midpoint domain. Both Figures \ref{fig:synth-rr-xy-e,synth-drr-xy-e} and \ref{fig:synth-rr-hxhy-e,synth-drr-hxhy-e} clearly show that the proposed approach can obtain the least reconstruction error, while the error in the traditional approach is mainly due to the residual noise. In order to compare the amplitude between different datasets in detail, we conduct a single trace amplitude comparison for each data cubes shown in Figure \ref{fig:synth-clean-hxhy,synth-noisy-hxhy,synth-obs-hxhy,synth-rr-hxhy,synth-drr-hxhy}. The single trace is chosen as the middle trace in each cubes of Figure \ref{fig:synth-clean-hxhy,synth-noisy-hxhy,synth-obs-hxhy,synth-rr-hxhy,synth-drr-hxhy}. The comparison is presented in Figure \ref{fig:synth-ss}. The black
+line is from the clean data. The red line is from the noisy data. The observed data in this case is zero and thus cannot be seen from the figure. The blue line corresponds to the traditional rank-reduction method. The green line corresponds to the proposed method. It is apparent that the green line is very close to the black line while the blue line deviates from the black line too much in most areas. This trace amplitude comparison  further confirms the superior performance of the proposed algorithm. 
+
+In order to show how the rank-reduced block Hankel matrix looks like and to more intuitively demonstrate the influence of the introduced damping operator to the target level-four block Hankel matrix in the first 5D seismic data example, we plot the 26 Hz block Hankel matrix for different  cases in Figures \ref{fig:H_clean-0,H_obs-0,H_rr10-0,H_drr10-0}, \ref{fig:H-z-clean,H-z-obs,H-z-rr10,H-z-drr10}, and \ref{fig:H_rr1-0,H_drr1-0,H-z-rr1,H-z-drr1}. Figure \ref{fig:H_clean-0} shows the 26 Hz block Hankel matrix for the clean data.  Figure \ref{fig:H_obs-0} shows the 26 Hz block Hankel matrix for the observed data, which is very different from that of the true data due to the 70\% missing traces. Figure \ref{fig:H_rr10-0} shows rank-reduced block Hankel matrix via the traditional TSVD after 10 iterations.  The rank-reduced block Hankel matrix via the damped TSVD is shown in Figure \ref{fig:H_drr10-0}. Figures \ref{fig:H_rr10-0} and \ref{fig:H_drr10-0} are both close to the true block Hankel matrix and are very similar to each other. If we look carefully or zoom in the figure a bit, we can see that the block Hankel matrix via the traditional TSVD is much rougher than the Hankel matrix via the damped TSVD. Considering that each subfigure in Figure \ref{fig:H_clean-0,H_obs-0,H_rr10-0,H_drr10-0} is a 1296$\times$625 matrix, which contains a lot of information, we zoom one block Hankel matrix, as highlighted by the black frame boxes in Figure \ref{fig:H_clean-0,H_obs-0,H_rr10-0,H_drr10-0} and make a more detailed comparison in Figure \ref{fig:H-z-clean,H-z-obs,H-z-rr10,H-z-drr10}. Figure \ref{fig:H-z-clean,H-z-obs,H-z-rr10,H-z-drr10} clearly shows that the rank-reduced block Hankel matrix via traditional TSVD still contains some artifacts, especially on the right bottom side, when compared with the true block Hankel matrix. The block Hankel matrix from the proposed approach is, however, much smoother, and closer to the true block Hankel matrix. We also show the comparison of two block Hankel matrices using rank-reduction methods after the first iteration and their zoomed matrices in Figure \ref{fig:H_rr1-0,H_drr1-0,H-z-rr1,H-z-drr1}. It can be observed that even after 1 iteration, the rank-reduced block Hankel matrix via the damped TSVD is much smoother, which indicates that more noise in each frequency slice
+is suppressed. Please note that all figures in Figures \ref{fig:H_clean-0,H_obs-0,H_rr10-0,H_drr10-0}, \ref{fig:H-z-clean,H-z-obs,H-z-rr10,H-z-drr10}, and \ref{fig:H_rr1-0,H_drr1-0,H-z-rr1,H-z-drr1} use the same plotting scale. It can also be seen that the block Hankel matrix after 1 iteration is far from the true block Hankel matrix, however, during the weighted \old{POCS like}\new{POCS-like} iterations, the block Hankel matrix is gradually converging to the true block Hankel matrix.
+
+In order to numerically compare the denoising performance, we use the commonly used SNR defined as follows to quantitatively measure the performance \cite[]{yangkang2015ortho,wencheng2015asa,shuwei2015}:
+\begin{equation}
+\label{eq:dsnr}
+SNR=10\log_{10}\frac{\Arrowvert \mathbf{s} \Arrowvert_2^2}{\Arrowvert \mathbf{s} -\hat{\mathbf{s}}\Arrowvert_2^2}.
+\end{equation}
+where $\mathbf{s}$ denotes the vectorized clean data and $\hat{\mathbf{s}}$ denotes the vectorized reconstructed data. In this example, the SNRs of the observed data, the reconstructed result via the traditional rank-reduction method, and the reconstructed result via the damped rank-reduction method are -4.59 dB, 8.22 dB, and 11.62dB, respectively. The SNR comparison shows that the damped rank-reduction can result in a huge reconstruction improvement.  In addition to SNR comparison, we also use the local similarity to measure the reconstruction performance. As claimed in \cite{yangkang2015ortho}, reconstruction performance via local similarity has several advantages than the commonly used SNR measure, such as the local measurement of the reconstruction performance. Since the local similarity is seldom used in evaluating seismic data reconstruction, we provide a brief review of the theory of local similarity in Appendix C. The range of local similarity is between 0 and 1.  The higher local similarity corresponds to the better reconstruction performance. Figure \ref{fig:synth-noisy-xy-simi,synth-obs-xy-simi,synth-rr-xy-simi,synth-drr-xy-simi} shows the local similarity comparison in common offset domain and Figure \ref{fig:synth-noisy-hxhy-simi,synth-obs-hxhy-simi,synth-rr-hxhy-simi,synth-drr-hxhy-simi} shows the local similarity comparison in common midpoint domain. Figures \ref{fig:synth-noisy-xy-simi}, \ref{fig:synth-obs-xy-simi}, \ref{fig:synth-rr-xy-simi}, and \ref{fig:synth-drr-xy-simi} show the local similarity between the true data and the noisy data, observed data, result from the traditional method, and result from the proposed method, respectively, in common offset domain. Figures \ref{fig:synth-noisy-hxhy-simi}, \ref{fig:synth-obs-hxhy-simi}, \ref{fig:synth-rr-hxhy-simi}, and \ref{fig:synth-drr-hxhy-simi} show the counterpart comparisons in common midpoint domain. Because of the strong random noise in the noisy data, the local similarity between noisy data and the true data is relatively low. It is surprising that the local similarity successfully captures the position of the useful signals, which is however not possible from the original amplitude cubes. A potential application of such byproduct in future research may be utilizing the detected useful signals from the noisy data as a prior information that can be put into the inversion framework to improve the final inversion performance. The local similarity between the observed data and the true data correlates well with the position of the available traces, since all missing traces have a zero local similarity with the true data. The local similarity between the result from traditional rank-reduction method is much higher than that of the noisy data and the similarity value is approaching 1, which is the highest possible value of local similarity. The proposed approach can make the local similarity between the result and true data even higher, as can be seen from Figures \ref{fig:synth-noisy-xy-simi,synth-obs-xy-simi,synth-rr-xy-simi,synth-drr-xy-simi} and \ref{fig:synth-noisy-hxhy-simi,synth-obs-hxhy-simi,synth-rr-hxhy-simi,synth-drr-hxhy-simi} that the similarity color that corresponds to the proposed method is redder than that of the traditional approach. 
+
+In order to demonstrate the reconstruction performance of the two rank-reduction methods with respect to noise level. We conduct 6 experiments of the 5D data reconstruction based on the first synthetic example, in which we use different noise level in different experiments. We plot the final SNRs using two different approaches after 10 iterations with respect to the noise variances in Figure \ref{fig:snr-n}. The red line shows the SNR diagram of the proposed approach and green line shows the SNR diagram of the traditional approach. The noise variance of 6 experiments are 0.05, 0,1, 0.25, 0.5, 0.75, and 1. Please note that all presented examples above are based on the noise variance 0.25. It can be intuitively inferred that noise variance above 0.25 can make the data even noisier. From Figure \ref{fig:snr-n}, it is clear that the proposed approach is always superior than the traditional approach in terms of SNR. It is more important to observe that as the noise level increases, the difference in terms of SNR of the two approaches also increases. It offers us a practical guideline that the proposed approach can be best utilized in the condition of strong noise corruption (or in other words on observed data with low SNR), which is usually the feature of most land seismic data. In order to demonstrate the reconstruction performance with respect to sampling ratio of the observed data, we did 8 experiments with different sampling ratios. The SNRs using two approaches after 10 iterations with respect to the sampling ratios are shown in Figure \ref{fig:snr-r}. Red line denotes the proposed approach and green line denotes the traditional approach. The proposed approach is always better than the traditional approach and as the sampling ratio increases (in other words we get more and more available traces), the difference between the proposed and traditional approaches increases too. 
+
+In order to test the effectiveness of the rank-reduction method on data containing curved events and to compare the performances of different methods in this case, we then use the second example to show the performance. In Figure \ref{fig:hyper-clean2d-1,hyper-obs2d-1,hyper-rr2d-1,hyper-drr2d-1}, we show a common midpoint gather comparison of the second synthetic example. Here we reshape the 3D data cube into a 2D matrix and compare the performance based on the 2D matrix. Figure \ref{fig:hyper-clean2d-1} shows the clean data. Figure \ref{fig:hyper-obs2d-1} shows the observed data with 70\% missing traces and strong random noise. The useful signals are hardly seen from the observed data. After reconstruction using the traditional rank-reduction method with 10 \old{POCS like}\new{POCS-like} iterations, we obtain the reconstructed result as shown in Figure \ref{fig:hyper-rr2d-1}. The result using the proposed approach is shown in Figure \ref{fig:hyper-drr2d-1}. The reconstruction result using the traditional method seems to have significant residual noise and even causes  artifacts in some parts of the data. The data highlighted by the green frame boxes are zoomed and shown in Figure \ref{fig:hyper-z-clean,hyper-z-obs,hyper-z-rr,hyper-z-drr}, where we can have a better view to compare the performance in detail and to see how the proposed method helps recover almost the true model.  The data highlighted by the black frame boxes are zoomed and shown in Figure \ref{fig:hyper-z1-clean,hyper-z1-obs,hyper-z1-rr,hyper-z1-drr}, where we can see the artifacts caused by the traditional approach clearly and see the almost perfect performance from the proposed approach.  We apply the proposed approach with $K=12$ and $N=3$ for this example. In this dataset, the original SNR of the observed is 0.34 dB. The SNR of the result from traditional rank-reduction approach is 13.56 dB while the SNR of the reconstruction result from the proposed damped rank-reduction method approach is 17.23 dB. In this example, we also calculate the local similarity between different datasets and the clean dataset and show them in Figure \ref{fig:hyper-obs-simi,hyper-rr-simi,hyper-drr-simi}. Figure \ref{fig:hyper-obs-simi} shows the local similarity between the observed data and the clean data. Figure \ref{fig:hyper-rr-simi} shows the local similarity between the result from traditional method and the clean data and Figure \ref{fig:hyper-drr-simi} shows the local similarity between the result from the proposed method and the clean data. The local similarity vividly demonstrates that the proposed approach can obtain the most similar result to the true model. 
+
+
+The next example is a field data example. The data has been binned onto a regular grid and a common offset gather of the field data is shown in Figure \ref{fig:field-obs2d-0}. Although we are only allowed to show a small portion of the field data and to give a limited discussion based on the performance, the comparison between traditional and proposed rank-reduction methods is adequate to show the superior performance of our proposed method. In the example, about 80\% traces are missing from the regular grids. It is obvious that the traditional rank-reduction method obtains a very successful recovery of the missing data, as shown in Figure \ref{fig:field-rr2d0-0}. However, there are still some residual noise in the reconstructed data, since we use a relatively large $K=15$ to account for the curved events. We apply the proposed approach with $K=15$ and $N=3$ and obtain an almost perfect reconstruction performance, as shown in Figure \ref{fig:field-drr2d-0}. The events become more coherent and the data becomes much cleaner. We zoom a part from each subfigure in Figure \ref{fig:field-obs2d-0,field-rr2d0-0,field-drr2d-0} and show the comparison in Figure \ref{fig:z-obs,z-rr,z-drr}. The zoomed data are highlighted by the red frame boxes shown in Figure \ref{fig:field-obs2d-0,field-rr2d0-0,field-drr2d-0}. The zoomed sections shown in Figure \ref{fig:z-obs,z-rr,z-drr} show a clearer comparison between the traditional and the proposed methods, and confirm that the proposed method can obtain a very clean and spatially coherent reconstruction result. 
+
+\new{The selection of rank affects the performance of the traditional rank-reduction based approaches greatly in that smaller value of rank will cause significant damages to the useful signals while larger value of rank will cause serious residual noise left in the reconstructed data. However, it is even impossible to choose an optimal value of rank to stand for the exact signals in practice.  In order to preserve as many useful signals as possible, we tend to set a relatively higher value of rank. The proposed approach relieves the dependence of the rank-reduction method on the rank selection since we can use a safe value of rank without compromising the SNR of the final reconstructed data by damping the residual noise that is caused from the increase of rank. In a nutshell, the proposed approach is less sensitive to the value of rank.}
+
+\inputdir{synth}
+\multiplot{5}{synth-clean-xy,synth-noisy-xy,synth-obs-xy,synth-rr-xy,synth-drr-xy}{width=0.29\textwidth}{Common offset 3D cubes comparison ($hx=5,hy=5$). (a) Clean synthetic data. (b) Noisy synthetic data. (c) Observed synthetic data (with 70\% missing traces). (d) Reconstructed data using the traditional approach. (e) Reconstructed data using the proposed approach. }
+
+\multiplot{2}{synth-rr-xy-e,synth-drr-xy-e}{width=0.29\textwidth}{Reconstruction error comparison of common offset 3D cubes ($hx=5,hy=5$). (a) Reconstruction error using the traditional approach. (b) Reconstruction error using the proposed approach. }
+
+\multiplot{5}{synth-clean-hxhy,synth-noisy-hxhy,synth-obs-hxhy,synth-rr-hxhy,synth-drr-hxhy}{width=0.29\textwidth}{Common midpoint 3D cubes comparison ($x=5,y=5$). (a) Clean synthetic data. (b) Noisy synthetic data. (c) Observed synthetic data (with 70\% missing traces). (d) Reconstructed data using the traditional approach. (e) Reconstructed data using the proposed approach. }
+
+\multiplot{2}{synth-rr-hxhy-e,synth-drr-hxhy-e}{width=0.29\textwidth}{Reconstruction error comparison of common midpoint 3D cubes ($x=5,y=5$). (a) Reconstruction error using the traditional approach. (b) Reconstruction error using the proposed approach. }
+	
+\plot{synth-ss}{width=0.9\columnwidth}{Comparison of the middle trace amplitude of each cubes in Figure \ref{fig:synth-clean-hxhy,synth-noisy-hxhy,synth-obs-hxhy,synth-rr-hxhy,synth-drr-hxhy}. The black line is from the clean data.  The red line is from the noisy data. The observed data in this case is zero and thus cannot be seen from the figure.%The yellow long-dashed line corresponds to $fl=10$ Hz. 
+	The blue line corresponds to the traditional rank-reduction method. The green line corresponds to the proposed method. Note that the black and green lines are very close to each other, thus the reconstruction error using the proposed approach is much less than the traditional method for most parts.}
+	
+
+\inputdir{hankel}
+\multiplot{4}{H_clean-0,H_obs-0,H_rr10-0,H_drr10-0}{width=0.45\textwidth}{26 Hz block Hankel matrix comparison. (a) Hankel matrix of the clean data. (b) Hankel matrix of the noisy data. (c) Hankel matrix of traditional method after 10 iterations. (d) Hankel matrix of the proposed method after 10 iterations. Please note the erratic artifacts shown in (c), which cannot be handled using the traditional rank-reduction method. The Hankel matrix of the proposed approach is, however, much closer to the true Hankel matrix.}
+
+\multiplot{4}{H-z-clean,H-z-obs,H-z-rr10,H-z-drr10}{width=0.45\textwidth}{A close up look of the Hankel matrix (corresponding to the block Hankel matrix highlighted by the green frame box in Figure \ref{fig:H_clean-0,H_obs-0,H_rr10-0,H_drr10-0}.  (a) Hankel matrix of the clean data. (b) Hankel matrix of the noisy data. (c) Hankel matrix of traditional method after 10 iterations. (d) Hankel matrix of the proposed method after 10 iterations. }
+
+
+\multiplot{4}{H_rr1-0,H_drr1-0,H-z-rr1,H-z-drr1}{width=0.45\textwidth}{26 Hz block Hankel matrix comparison after 1 iteration between two approaches. (a) Hankel matrix of traditional method after 1 iteration. (b) Hankel matrix of the proposed method after 1 iteration. (c)\&(d) A close up look of the two frame boxes in (a) and (b).  }
+
+
+\inputdir{synth}
+\multiplot{4}{synth-noisy-xy-simi,synth-obs-xy-simi,synth-rr-xy-simi,synth-drr-xy-simi}{width=0.32\textwidth}{Local similarity comparison of common offset 3D cubes comparison ($hx=5,hy=5$). (a) Noisy synthetic data. (b) Observed synthetic data (with 70\% missing traces). (c) Reconstructed data using the traditional approach. (d) Reconstructed data using the proposed approach. }
+	
+\multiplot{4}{synth-noisy-hxhy-simi,synth-obs-hxhy-simi,synth-rr-hxhy-simi,synth-drr-hxhy-simi}{width=0.32\textwidth}{Local similarity comparison of common midpoint 3D cubes ($x=5,y=5$). (a) Noisy synthetic data. (b) Observed synthetic data (with 70\% missing traces). (c) Reconstructed data using the traditional approach. (d) Reconstructed data using the proposed approach. }
+
+\inputdir{snrs_sigma}
+\plot{snr-n}{width=\textwidth}{SNR diagrams of the different approaches with respect to the noise level (variance value). Note that the proposed approach outperforms the traditional methods more and more as the noise level increases.}	
+
+\inputdir{snrs_ratio}
+\plot{snr-r}{width=\textwidth}{SNR diagrams of the different approaches with respect to the sampling ratio (in percent). }	
+
+%\begin{figure}[htb!]
+%  \centering    
+%    \subfigure[]{\includegraphics[width=0.29\textwidth]{synth/Fig/synth-noisy-xy-simi}
+%    \label{fig:synth-noisy-xy-simi}}
+%    \subfigure[]{\includegraphics[width=0.29\textwidth]{synth/Fig/synth-obs-xy-simi}
+%    \label{fig:synth-obs-xy-simi}}   
+%    \subfigure[]{\includegraphics[width=0.29\textwidth]{synth/Fig/synth-rr-xy-simi}
+%    \label{fig:synth-rr-xy-simi}}   
+%    \subfigure[]{\includegraphics[width=0.29\textwidth]{synth/Fig/synth-drr-xy-simi}
+%    \label{fig:synth-drr-xy-simi}}           
+%	\caption{Local similarity comparison of common offset 3D cubes comparison %($hx=5,hy=5$). (a) Noisy synthetic data. (b) Observed synthetic data (with 70\% missing traces). (c) Reconstructed data using the traditional approach. (d) Reconstructed data using the proposed approach.}
+ %  \label{fig:synth-noisy-xy-simi,synth-obs-xy-simi,synth-rr-xy-simi,synth-drr-xy-simi}
+%\end{figure}	
+
+%\begin{figure}[htb!]
+%  \centering    
+%    \subfigure[]{\includegraphics[width=0.29\textwidth]{synth/Fig/synth-noisy-hxhy-simi}
+%    \label{fig:synth-noisy-hxhy-simi}}
+%    \subfigure[]{\includegraphics[width=0.29\textwidth]{synth/Fig/synth-obs-hxhy-simi}
+%    \label{fig:synth-obs-hxhy-simi}}   
+%    \subfigure[]{\includegraphics[width=0.29\textwidth]{synth/Fig/synth-rr-hxhy-simi}
+%    \label{fig:synth-rr-hxhy-simi}}   
+%    \subfigure[]{\includegraphics[width=0.29\textwidth]{synth/Fig/synth-drr-hxhy-simi}
+%    \label{fig:synth-drr-hxhy-simi}}           
+%	\caption{Local similarity comparison of common midpoint 3D cubes ($x=5,y=5$). (a) Noisy synthetic data. (b) Observed synthetic data (with 70\% missing traces). (c) Reconstructed data using the traditional approach. (d) Reconstructed data using the proposed approach.}	
+   %\label{fig:synth-noisy-hxhy-simi,synth-obs-hxhy-simi,synth-rr-hxhy-simi,synth-drr-hxhy-simi}
+%\end{figure}	
+
+\inputdir{hyper}
+\multiplot{4}{hyper-clean2d-1,hyper-obs2d-1,hyper-rr2d-1,hyper-drr2d-1}{width=0.8\textwidth}{Common midpoint gather comparison (reshaped into a 2D matrix). (a) Clean synthetic data with curved events. (b) Observed synthetic data (with 70\% missing traces and strong noise). (c) Reconstructed data using the traditional approach. (d) Reconstructed data using the proposed approach. }
+
+\multiplot{4}{hyper-z-clean,hyper-z-obs,hyper-z-rr,hyper-z-drr}{width=0.45\textwidth}{Zoomed sections from Figure \ref{fig:hyper-clean2d-1,hyper-obs2d-1,hyper-rr2d-1,hyper-drr2d-1} (the green frame box). (a) Clean data. (b) Observed data. (b) Reconstructed data using the traditional approach. (c) Reconstructed data using the proposed approach.}
+
+\multiplot{4}{hyper-z1-clean,hyper-z1-obs,hyper-z1-rr,hyper-z1-drr}{width=0.45\textwidth}{Zoomed sections from Figure \ref{fig:hyper-clean2d-1,hyper-obs2d-1,hyper-rr2d-1,hyper-drr2d-1} (the black frame box). (a) Clean data. (b) Observed data. (b) Reconstructed data using the traditional approach. (c) Reconstructed data using the proposed approach. Note the strong artifacts caused from the traditional approach.}
+
+\multiplot{3}{hyper-obs-simi,hyper-rr-simi,hyper-drr-simi}{width=0.8\textwidth}{Local similarity comparison with respect to the clean data. (a) Similarity of the Observed synthetic data. (b) Similarity of the reconstructed data using the traditional approach. (c) Similarity of the reconstructed data using the proposed approach.}
+
+\inputdir{./}
+\multiplot{3}{field-obs2d-0,field-rr2d0-0,field-drr2d-0}{width=\textwidth}{Common offset gather comparison (reshaped into a 2D matrix). (a) Observed field data (with 80\% missing traces). (b) Reconstructed data using the traditional approach. (c) Reconstructed data using the proposed approach. }
+
+
+\multiplot{3}{z-obs,z-rr,z-drr}{width=0.45\textwidth}{Zoomed sections from Fig \ref{fig:field-obs2d-0,field-rr2d0-0,field-drr2d-0}. (a) Observed field data. (b) Reconstructed data using the traditional approach. (c) Reconstructed data using the proposed approach.}
+
+
+%\multiplot{3}{field-obs2d-h,field-rr2d-h,field-drr2d-h}{width=0.8\textwidth}{Common midpoint 3D cubes comparison. (a) Observed field data (with 80\% missing traces). (b) Reconstructed data using the traditional approach. (c) Reconstructed data using the proposed approach. }
+
+
+%\section{Discussions}
+
+%The improvement in terms of signal-to-noise ratio of finally interpolated and denoised data is tremendous, not trivial. The damping factor, in other words "stability factor", is indeed very effective and in a very simple mathematical form.  The implementation of the proposed method is super convenient. Given the traditional 5D or 3D rank-reduction codes, one can test our algorithm in seconds. 
+
+%5D seismic data interpolation and denoising has been a newly emerging research field thanks to the SAIG consortium. While most researches (SAIG) from the academia are focusing on the acceleration, we actually add more flavors to it. We investigate the problem from a different perspective, and investigate the performance in the case of extremely low signal-to-noise ratio, in which case signals are hardly seen from the data. The method is proposed to solve the noise problem in traditional rank-reduction method. The noise problem is one of the biggest problems (to some extent the biggest)  existing in land seismic data processing. Unlike those seismic data from modern marine seismic acquisition, which usually have high SNR,  the raw data from land acquisition is almost full of garbage. Our proposed approach aims to provide a beginning step in the new paradigm which is intended to extract information from extremely noisy seismic dataset.  
+
+
+
+\section{Conclusion}
+Traditional rank-reduction method cannot obtain acceptable result for 5D seismic data denoising and reconstruction when the signal-to-noise ratio (SNR) is extremely low. The traditional truncated singular value decomposition (TSVD) formula will cause residual noise in the seismic data after iterative reconstruction since the denoised data space is a mixture of the signal subspace and noise subspace. In order to better decompose the noisy data into signal and noise components, we introduce a damping operator into the traditional TSVD formula to dampen the singular values that contain significant information of residual noise.   %We have proposed an improved method that slightly modifies the traditional TSVD formula. 
+The improvement via the damped rank-reduction method is shown to be very appealing from both 5D synthetic and field data examples and can be achieved conveniently following the introduced damped TSVD formula. As shown from the comprehensive analysis of different 5D seismic data examples, we get some extra insightful conclusions in addition to the reconstruction result itself. First, the block Hankel matrix after damped rank-reduction is smoother than that of traditional rank-reduction, which is caused by damping the singular values and matches with the overall superior performance of the proposed approach well when the block Hankel matrix is transformed back to time-space domain. Second, the advantage of the proposed rank-reduction method over the traditional method becomes more dominant as the noise level in the observed data increases, which makes the proposed approach very attractive in processing 5D land seismic data.  We suggest to replace the current 5D seismic data interpolation framework with our proposed framework for better dealing with the highly noisy incomplete dataset.
+
+
+\section{Acknowledgments}
+We would like to thank Shan Qu, Jiang Yuan, Mauricio Sacchi, \new{Jean Virieux and Aaron Stanton} for constructive suggestions that improved the manuscript greatly. We are grateful to developers of the Madagascar software package for providing corresponding codes for testing the algorithms and preparing the figures. This work is partially supported by National Basic Research Program of China (Grant NO: 2013 CB228602), National Natural Science Foundation of China (Grant No.41274137), National Science and Technology of Major Projects of China (Grant No. 2011ZX05019-006), National Engineering Laboratory of Offshore Oil Exploration, and the Texas Consortium for Computational Seismology (TCCS).
+ 
+\newpage
+\appendix
+\section{Appendix A: EXACT FORMULATION OF THE BLOCK HANKEL MATRIX}
+The block Hankel matrix $\mathbf{M}^{(4)}$ can be expressed as
+\begin{equation}
+\label{eq:M_a}
+\mathbf{M}^{(4)}=\mathbf{S}+\mathbf{N},
+\end{equation}
+where $\mathbf{S}$ and $\mathbf{N}$ denote signal component and the random noise component that are both in $\mathbf{M}^{(4)}$, respectively. The singular value decomposition (SVD) of $\mathbf{S}$ can be represented as:
+\begin{equation}
+\label{eq:svds_a}
+\mathbf{S} = [\mathbf{U}_1^{S}\quad \mathbf{U}_2^{S}]\left[\begin{array}{cc}
+\Sigma_1^{S} & \mathbf{0}\\
+\mathbf{0} & \Sigma_2^{S}
+\end{array}
+\right]\left[\begin{array}{c}
+(\mathbf{V}_1^{S})^H\\
+(\mathbf{V}_2^{S})^H
+\end{array}
+\right].
+\end{equation}
+Because of the deficient rank, the matrix $\mathbf{S}$ can be written as
+\begin{equation}
+\label{eq:S_a}
+\mathbf{S}=\mathbf{U}_1^S\Sigma_1^S(\mathbf{V}_1^S)^H.
+\end{equation}
+Because equation \ref{eq:svds_a} is a SVD of the signal matrix $\mathbf{S}$, the left matrix in equation \ref{eq:svds_a} is a unitary matrix:
+\begin{equation}
+\label{eq:unit}
+\mathbf{I}=\mathbf{U}^S(\mathbf{U}^S)^H=[\mathbf{U}_1^S\quad \mathbf{U}_2^S]\left[\begin{array}{c} 
+(\mathbf{U}_1^S)^H \\
+(\mathbf{U}_2^S)^H 
+\end{array}
+\right].
+\end{equation}
+Combining equations \ref{eq:M_a}, \ref{eq:S_a}, and \ref{eq:unit}, we can derive:
+\begin{equation}
+\label{eq:factorapp}
+\begin{split}
+\mathbf{M}^{(4)}&=\mathbf{S}+[\mathbf{U}_1^S\quad \mathbf{U}_2^S]\left[\begin{array}{c} 
+(\mathbf{U}_1^S)^H \\
+(\mathbf{U}_2^S)^H
+\end{array}
+\right]\mathbf{N} \\
+&=\mathbf{U}_1^S\Sigma_1^S(\mathbf{V}_1^S)^H + \left( 
+\mathbf{U}_1^S(\mathbf{U}_1^S)^H+\mathbf{U}_2^S(\mathbf{U}_2^S)^H
+\right)\mathbf{N}\\
+&=\mathbf{U}_1^S \left(
+(\mathbf{U}_1^S)^H\mathbf{N}+\Sigma_1^S(\mathbf{V}_1^S)^H
+\right)+\mathbf{U}_2^S(\mathbf{U}_2^S)^H\mathbf{N}\\
+&=\mathbf{U}_1^S\left(
+\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S
+\right)^H + \mathbf{U}_2^S(\mathbf{N}^H\mathbf{U}_2^S)^H\\
+&= [\mathbf{U}_1^S \quad \mathbf{U}_2^S]\left[\begin{array}{cc} 
+\mathbf{I} & \mathbf{0}\\
+\mathbf{0} & \mathbf{I}
+\end{array}
+\right]\left[\begin{array}{c} 
+(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)^H\\
+(\mathbf{N}^H\mathbf{U}_2^S)^H
+\end{array}
+\right],
+\end{split}
+\end{equation}
+%where $\Sigma_1$ and $\Sigma_2$ are introduced  matrices and are diagonal and positive definite.
+we can further derive equation \ref{eq:factorapp} and factorize $\mathbf{M}^{(4)}$ as follows:
+\begin{equation}
+\label{eq:factorm}
+\mathbf{M}^{(4)} = [\mathbf{U}_1^S \quad \mathbf{U}_2^S]\left[\begin{array}{cc} 
+\Sigma_{1} & \mathbf{0}\\
+\mathbf{0} & \Sigma_{2}
+\end{array}
+\right]\left[\begin{array}{c} 
+(\Sigma_{1})^{-1}(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)^H\\
+(\Sigma_{2})^{-1}(\mathbf{N}^H\mathbf{U}_2^S)^H
+\end{array}
+\right],
+\end{equation} 
+where $\Sigma_1$ and $\Sigma_2$ denote diagonal and positive definite matrices. Please note that $\mathbf{M}^{(4)}$ is constructed such that it is close to a square matrix \cite[]{mssa}, and thus the $\Sigma_1$ and $\Sigma_2$ are assumed to be square matrices for derivation convenience.  We observe that the left matrix has orthonormal columns and the middle matrix is diagonal. It can be shown that the right matrix also has orthonormal columns.  Thus, equation \ref{eq:factorm} is an SVD of $\mathbf{M}^{(4)}$. According to the TSVD method, we let $\Sigma_2$ be $\mathbf{0}$ and then the following equation holds:
+\begin{equation}
+\label{eq:tsvd2}
+\begin{split}
+\tilde{\mathbf{M}}^{(4)} &= \mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N} + \mathbf{U}_1^S\Sigma_1^S(\mathbf{V}_1^S)^H \\
+ &=\mathbf{S} + \mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N}.
+\end{split}
+\end{equation}
+
+
+
+
+
+
+
+
+\newpage
+\appendix
+\section{Appendix B: Damped TSVD formula}
+We first reformulate equation \ref{eq:tsvd2} as
+\begin{equation}
+\label{eq:tsvd22}
+\mathbf{S} = \mathbf{M}^{(4)} -\mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N}.
+\end{equation}
+Inserting equation \ref{eq:tsvd} into equation \ref{eq:tsvd22}, we can further derive 
+\begin{equation}
+\label{eq:tsvd222}
+\begin{split}
+\mathbf{S} = \mathbf{U}_1^{M^{(4)}}\Sigma_1^{M^{(4)}}(\mathbf{V}_1^{M^{(4)}})^H -\mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N}.
+\end{split}
+\end{equation}
+The SVD of $\mathbf{M}^{(4)}$ can be expressed as
+\begin{equation}
+\label{eq:svdm_a}
+\mathbf{M}^{(4)} = [\mathbf{U}_1^{M^{(4)}}\quad \mathbf{U}_2^{M^{(4)}}]\left[\begin{array}{cc}
+\Sigma_1^{M^{(4)}} & \mathbf{0}\\
+\mathbf{0} & \Sigma_2^{M^{(4)}}
+\end{array}
+\right]\left[\begin{array}{c}
+(\mathbf{V}_1^{M^{(4)}})^H\\
+(\mathbf{V}_2^{M^{(4)}})^H
+\end{array}
+\right].
+\end{equation}
+
+Because equations \ref{eq:svdm_a} and \ref{eq:factorm} are both SVDs of $\mathbf{M}^{(4)}$, we let
+\begin{align}
+\label{eq:equal1}
+\mathbf{U}_1^S&=\mathbf{U}_1^{M^{(4)}}, \\
+\label{eq:equal3}
+\Sigma_1&=\Sigma_1^{M^{(4)}}, \\
+\label{eq:equal2}
+(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)(\Sigma_1)^{-1}&=\mathbf{V}_1^{M^{(4)}}.
+\end{align}
+
+Inserting equations \ref{eq:equal1} and \ref{eq:equal2} into equation \ref{eq:tsvd222}, we can derive:
+\begin{equation}
+\label{eq:S22}
+\mathbf{S} =\mathbf{U}_1^{M^{(4)}}\left\{\Sigma_1^{M^{(4)}}(\mathbf{V}_1^{M^{(4)}})^H- \left[\Sigma_1(\mathbf{V}_1^{M^{(4)}})^H-\Sigma_1^S(\mathbf{V}_1^S)^H\right]\right\}.
+\end{equation}
+For simplification, we assume that there exist such $\mathbf{A}$ and $\mathbf{B}$ that $\mathbf{V}_1^S=\mathbf{V}_1^{M^{(4)}}\mathbf{A}$ and $\Sigma_1= \Sigma_1^{M^{(4)}}\mathbf{B}$. $\mathbf{A}$ is a square matrix and $\mathbf{B}$ is a diagonal matrix. Then we can simplify $\mathbf{S}$ as:
+\begin{align}
+\label{eq:S3}
+\mathbf{S} &= \mathbf{U}_1^{M^{(4)}}\Sigma_1^{M^{(4)}}\mathbf{T}\left(\mathbf{V}_1^{M^{(4)}}\right)^H.\\
+\label{eq:T}
+\mathbf{T} &= \mathbf{I} - \mathbf{B}\left(\mathbf{I}-(\Sigma_1)^{-1}\Sigma_1^S\mathbf{A}^H\right),
+\end{align}
+where $\mathbf{I}$ is a unit matrix and here we name $\mathbf{T}$ the damping operator.
+
+From equation \ref{eq:equal3}, $\mathbf{B}=\mathbf{I}$.
+%\begin{equation}
+%\label{eq:Bder}
+%\end{equation}
+From equation \ref{eq:equal2}, it is straightforward to derive
+\begin{equation}
+\label{eq:Ader0}
+\begin{split}
+\mathbf{V}_1^S&=(\mathbf{V}_1^{M^{(4)}}-\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1})\Sigma_1(\Sigma_1^S)^{-1}\\
+&\approx \mathbf{V}_1^{M^{(4)}}(\mathbf{I}-(\mathbf{V}_1^{M^{(4)}})^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1})\Sigma_1(\Sigma_1^S)^{-1}
+\end{split}
+\end{equation}
+where $(\mathbf{V}_1^{M^{(4)}})^{o}$ satisfies that $\parallel\mathbf{I}-\mathbf{V}_1^{M^{(4)}}(\mathbf{V}_1^{M^{(4)}})^{o} \parallel\rightarrow 0$. Considering $\mathbf{V}_1^S=\mathbf{V}_1^{M^{(4)}}\mathbf{A}$, then the following relation holds
+\begin{equation}
+\label{eq:Ader}
+\begin{split}
+\mathbf{A}&\approx (\mathbf{I}-(\mathbf{V}_1^{M^{(4)}})^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1})\Sigma_1(\Sigma_1^S)^{-1}\\
+&=(\mathbf{I}-\Gamma)\Sigma_1(\Sigma_1^S)^{-1},
+\end{split}
+\end{equation}
+where $\Gamma=(\mathbf{V}_1^{M^{(4)}})^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1}$.
+
+Inserting equation \ref{eq:Ader} and  $\mathbf{B}=\mathbf{I}$  into equation \ref{eq:T}, we can obtain a simplified formula:
+\begin{equation}
+\label{eq:T1}
+\mathbf{T} = \mathbf{I}-\Gamma.
+\end{equation}
+
+Combing equations \ref{eq:S3} and \ref{eq:T1}, we can conclude that the true signal is a damped version of the previous TSVD method (equation \ref{eq:tsvd}), with the damping operator defined by equation \ref{eq:T1}. Right now, there is still one unknown parameter needed to be defined: $\Gamma$. Although we have a potential selection  $\Gamma=(\mathbf{V}_1^{M^{(4)}})^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1}$, as defined during the derivation of $\mathbf{A}$, we cannot calculate it because we do not know $\mathbf{N}$ and $\mathbf{U}_1^S$. A very pleasant denoising performance can be obtained when $\Gamma$ is chosen as
+\begin{equation}
+\label{eq:Gamma}
+\Gamma \approx \hat{\delta}^N\left(\Sigma_1^{M^{(4)}}\right)^{-N},
+\end{equation}
+where $\hat{\delta}$ denotes the maximum element of $\Sigma_2^{M^{(4)}}$ and $N$ denotes the damping factor. We use such approximation because of three reasons. (1) $\hat{\delta}$ reflects the energy of random noise and $ \Sigma_1^{M^{(4)}} $ contains the information of signal. (2) Because the diagonal  elements of $ \Sigma^{M^{(4)}} $ are in a descending order, $\hat{\delta} $  is certainly smaller than every diagonal element of $ \Sigma_1^{M^{(4)}} $, and  $ \hat{\delta}/\delta_1<\hat{\delta}/\delta_2<\cdots<\hat{\delta}/\delta_K $, where $\delta_i$ denotes $i$th diagonal entry in $\Sigma_1^{M^{(4)}}$. (3) $\hat{\delta}$ is zero in the zero random noise situation. Besides, we introduce the parameter $ N $ to control the strength of damping operator, the greater the $ N $, the weaker the damping, and the damped MSSA reverts to the basic MSSA when $ N\to\infty $.
+
+
+Combining equations \ref{eq:S3}, \ref{eq:T1}, and \ref{eq:Gamma}, we conclude the approximation of $\mathbf{S}$ as:
+\begin{align}
+\label{eq:S4}
+\mathbf{S} & = \mathbf{U}_1^{M^{(4)}} \Sigma_1^{M^{(4)}}\mathbf{T}(\mathbf{V}_1^{M^{(4)}})^H,\\
+\label{eq:T2}
+\mathbf{T} & =\mathbf{I}-(\Sigma_1^{M^{(4)}})^{-N}\hat{\delta}^N.
+\end{align} 
+
+\newpage
+\appendix
+\section{Appendix C: Review of local similarity}
+We begin our review based on 1D vectors $\mathbf{a}$ and $\mathbf{b}$. A common way to measure the similarity between two signals is to calculate the correlation coefficient,
+\begin{equation}
+\label{eq:corr}
+c=\frac{\mathbf{a}^T\mathbf{b}}{\parallel \mathbf{a} \parallel_2 \parallel \mathbf{b} \parallel_2},
+\end{equation}
+where $c$ is the correlation coefficient, $\mathbf{a}^T\mathbf{b}$ denotes the dot product of $\mathbf{a}$ and $\mathbf{b}$. $\parallel \cdot \parallel_2$ denotes the $L_2$ norm of the input vector. The correlation coefficient $c$ can measure the correlation, or in other words similarity, between two vectors within the selected window in a global manner. However, in some specific applications, a local measurement for the similarity is more demanded. In order to 
+measure the local similarity of two vectors, it is straightforwardly to apply local windows to the target vectors: 
+\begin{equation}
+\label{eq:localcorr}
+c(i) =  \frac{\mathbf{a}_i^T\mathbf{b}_i}{\parallel \mathbf{a}_i \parallel_2 \parallel \mathbf{b}_i \parallel_2},
+\end{equation}
+where $\mathbf{a}_i$ and $\mathbf{b}_i$ denote the localized vectors centered on the $i$th entry of input long vectors $\mathbf{a}$ and $\mathbf{b}$, respectively. The windowing is sometime troublesome, since the measured similarity is largely dependent on the windowing length and the measured local similarity might be discontinuous because of the separate calculations in windows. To avoid the negative performance caused by local windowing calculations, \cite{fomel2007localattr} proposed an elegant way for calculating smooth local similarity via solving two inverse problems. 
+
+Let us first rewrite equation \ref{eq:corr} in a different form. Getting the absolute value of both sides of equation \ref{eq:corr}, considering $\mathbf{a}^T\mathbf{b}=\mathbf{b}^T\mathbf{a}$, we have
+\begin{equation}
+\label{eq:absc}
+|c|=\sqrt{ \frac{(\mathbf{a}^T\mathbf{b})(\mathbf{b}^T\mathbf{a})}{\parallel \mathbf{a} \parallel_2^2 \parallel\mathbf{b} \parallel_2^2} }=
+\sqrt{\frac{\mathbf{a}^T\mathbf{b}}{\mathbf{a}^T\mathbf{a}} \frac{\mathbf{b}^T\mathbf{a}}{\mathbf{b}^T\mathbf{b}}} % = \sqrt{\left|\frac{\mathbf{a}^T\mathbf{b}}{\mathbf{a}^T\mathbf{a}}\right|}\sqrt{\left|\frac{\mathbf{b}^T\mathbf{a}}{\mathbf{b}^T\mathbf{b}}\right|}
+\end{equation}
+We let $c_1=\frac{\mathbf{a}^T\mathbf{b}}{\mathbf{a}^T\mathbf{a}}$ and $c_2=\frac{\mathbf{b}^T\mathbf{a}}{\mathbf{b}^T\mathbf{b}}$, equation \ref{eq:absc} turns to 
+\begin{equation}
+\label{eq:cc}
+|c|=\sqrt{c_1c_2}.
+\end{equation}
+It is obvious that scalars $c_1$ and $c_2$ come from two least-squares inverse problem:
+\begin{align}
+\label{eq:ls1}
+c_1 = \arg \min_{\tilde{c}} \parallel \mathbf{a}-\mathbf{b}\tilde{c} \parallel_2^2 \\
+\label{eq:ls2}
+c_2 = \arg\min_{\tilde{c}} \parallel \mathbf{b}-\mathbf{a}\tilde{c} \parallel_2^2 
+\end{align}
+The local similarity attribute is based on equations \ref{eq:ls1} and \ref{eq:ls2}, but is in a localized version: 
+\begin{align}
+\label{eq:local1}
+\mathbf{c}_1 &=\arg\min_{\tilde{\mathbf{c}}_1}\Arrowvert \mathbf{a}-\mathbf{B}\tilde{\mathbf{c}}_1 \Arrowvert_2^2, \\
+\label{eq:local2}
+\mathbf{c}_2 &=\arg\min_{\tilde{\mathbf{c}}_2}\Arrowvert \mathbf{b}-\mathbf{A}\tilde{\mathbf{c}}_2 \Arrowvert_2^2,
+\end{align}
+where $\mathbf{A}$ is a diagonal operator composed from the elements of $\mathbf{a}$: $\mathbf{A}=diag(\mathbf{a})$ and $\mathbf{B}$ is a diagonal operator composed from the elements of $\mathbf{b}$: $\mathbf{B}=diag(\mathbf{b})$.
+Equations \ref{eq:local1} and \ref{eq:local2} are solved via shaping regularization
+\begin{align}
+\label{eq:local3}
+\mathbf{c}_1 &= [\lambda_1^2\mathbf{I} + \mathcal{T}(\mathbf{B}^T\mathbf{B}-\lambda_1^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{B}^T\mathbf{a},\\
+\label{eq:local4}
+\mathbf{c}_2 &= [\lambda_2^2\mathbf{I} + \mathcal{T}(\mathbf{A}^T\mathbf{A}-\lambda_2^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{A}^T\mathbf{b},
+\end{align}
+where $\mathbf{\mathcal{T}}$ is a smoothing operator, and $\lambda_1$ and $\lambda_2$ are two parameters controlling the physical dimensionality and enabling fast convergence when inversion is implemented iteratively. These two parameters can be chosen as $\lambda_1  = \Arrowvert\mathbf{B}^T\mathbf{B}\Arrowvert_2$ and $\lambda_2  = \Arrowvert\mathbf{A}^T\mathbf{A}\Arrowvert_2$ \cite[]{fomel2007localattr}.
+
+After the $\mathbf{c}_1$ and $\mathbf{c}_2$ are solved, the localized version of $|c|$ is
+\begin{equation}
+\label{eq:lsimi}
+\mathbf{c} = \sqrt{\mathbf{c}_1\circ\mathbf{c}_2},
+\end{equation}
+where $\mathbf{c}$ is the output local similarity and $\circ$ denotes element-wise product.
+
+To calculate the 2D and 3D versions of local similarity, as used in demonstrating the reconstruction performance in the main contents of the paper, one needs to first reshape a 2D matrix or a 3D tensor into a 1D vector and then to use the formula shown above to calculate the local similarity vector. Since the local similarity is of the same size of the input two vectors, it can be easily reshaped into the 2D or 3D form for display purposes.  
+
+
+\bibliographystyle{seg}
+\bibliography{drr}
+

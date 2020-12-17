@@ -55,6 +55,11 @@ tccs/diffr/chan3d
 tccs/diffr/gom
 tccs/drr3d/synth
 tccs/drr3d/field
+tccs/drr5d/hankel
+tccs/drr5d/hyper
+tccs/drr5d/snrs_ratio
+tccs/drr5d/snrs_sigma
+tccs/drr5d/synth
 tccs/avo/avo2
 tccs/opwd/wrap
 tccs/emdpf/fxdecon
@@ -78,6 +83,18 @@ zju/optnoise/flat
 zju/optnoise/prestack
 zju/optnoise/poststack
 zju/optnoise/slope
+zju/odrr3d/hyp3d
+zju/odrr3d/hyp3d_N20
+zju/odrr3d/syn3d
+zju/odrr3d/syn3d_hf
+zju/odrr3d/syn3d_N6
+zju/odrr5d/hankel
+zju/odrr5d/hyper
+zju/odrr5d/snrs_rank
+zju/odrr5d/snrs_ratio
+zju/odrr5d/snrs_sigma
+zju/odrr5d/synth
+zju/odrr5d/synth2
 '''
 
 all =  ARGUMENTS.get('all', 'n')

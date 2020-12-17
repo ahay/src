@@ -1,0 +1,162 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from math import pi
+
+# data place:
+# /media/CHENYK2/SeismicDataYangkang/drr5d/data/
+
+# Data size: 101*32*32*5*5
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=0.4 |
+       grey3 flat=n frame1=40 frame2=2 frame3=5 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time" unit1=s title=
+       screenratio=1.6 color=g %s'''%other)
+
+def Grey(data,other):
+	Result(data,
+       '''
+       grey label2=Trace label1="Time" unit1=s clip=0.6 title=
+       screenratio=0.2 color=g max1=0.4 %s'''%other)
+
+def Greys(data,other):
+	Result(data,
+       '''
+       grey gainpanel=all allpos=y label2=Trace label1="Time" unit1=s clip=1.2 title=
+       screenratio=0.3 color=j max1=0.4 scalebar=y %s minval=0 maxval=1.2'''%other)
+
+## Load data
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Hyper'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+   sys.stderr.write('\nCannot find Matlab.\n')
+   sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('hyper-clean-0 hyper-noisy-0 hyper-obs-0 hyper-rr-0 hyper-drr-0',[os.path.join(matROOT,matfun+'.m')],
+    '''MATLABPATH=%(matlabpath)s %(matlab)s 
+    -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}');quit"
+    '''%vars(),stdin=0,stdout=-1)
+    
+Flow('hyper-clean','hyper-clean-0','put n2=32 n3=32 n4=5 n5=5 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('hyper-noisy','hyper-noisy-0','put n2=32 n3=32 n4=5 n5=5 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('hyper-obs','hyper-obs-0','put n2=32 n3=32 n4=5 n5=5 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('hyper-rr','hyper-rr-0','put n2=32 n3=32 n4=5 n5=5 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('hyper-drr','hyper-drr-0','put n2=32 n3=32 n4=5 n5=5 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+
+Flow('hyper-clean-xy','hyper-clean','window n2=1 n3=1 f2=16 f3=16')
+Flow('hyper-noisy-xy','hyper-noisy','window n2=1 n3=1 f2=16 f3=16')
+Flow('hyper-obs-xy','hyper-obs','window n2=1 n3=1 f2=16 f3=16')
+Flow('hyper-rr-xy','hyper-rr','window n2=1 n3=1 f2=16 f3=16')
+Flow('hyper-drr-xy','hyper-drr','window n2=1 n3=1 f2=16 f3=16')
+
+Grey3('hyper-clean-xy','title=Clean')
+Grey3('hyper-noisy-xy','title=Noisy')
+Grey3('hyper-obs-xy','title=Observed ')
+Grey3('hyper-rr-xy','title=Traditional')
+Grey3('hyper-drr-xy','title=Proposed')
+
+Flow('hyper-clean-hxhy','hyper-noisy','window n4=1 n5=1 f4=3 f5=3')
+Flow('hyper-noisy-hxhy','hyper-noisy','window n4=1 n5=1 f4=3 f5=3')
+Flow('hyper-obs-hxhy','hyper-obs','window n4=1 n5=1 f4=3 f5=3')
+Flow('hyper-rr-hxhy','hyper-rr','window n4=1 n5=1 f4=3 f5=3')
+Flow('hyper-drr-hxhy','hyper-drr','window n4=1 n5=1 f4=3 f5=3')
+
+Grey3('hyper-clean-hxhy','title=Noisy frame1=50')
+Grey3('hyper-noisy-hxhy','title=Noisy frame1=50')
+Grey3('hyper-obs-hxhy','title=Observed frame1=50')
+Grey3('hyper-rr-hxhy','title=Traditional frame1=50')
+Grey3('hyper-drr-hxhy','title=Proposed frame1=50')
+
+
+Flow('hyper-clean2d','hyper-clean','window n4=1 n5=1 f4=3 f5=3| put n2=1024 n3=1')
+Flow('hyper-noisy2d','hyper-noisy','window n4=1 n5=1 f4=3 f5=3| put n2=1024 n3=1')
+Flow('hyper-obs2d','hyper-obs','window n4=1 n5=1 f4=3 f5=3| put n2=1024 n3=1')
+Flow('hyper-rr2d','hyper-rr','window n4=1 n5=1 f4=3 f5=3| put n2=1024 n3=1')
+Flow('hyper-drr2d','hyper-drr','window n4=1 n5=1 f4=3 f5=3| put n2=1024 n3=1')
+Grey('hyper-clean2d','title=Clean')
+Grey('hyper-noisy2d','title=Noisy')
+Grey('hyper-obs2d','title=Observed')
+Grey('hyper-rr2d','title=Traditional')
+Grey('hyper-drr2d','title=Proposed')
+
+Flow('hyper-z-clean','hyper-clean2d','window f2=384 n2=256 min1=0.05 max2=0.15')
+Flow('hyper-z-obs','hyper-obs2d','window f2=384 n2=256 min1=0.05 max2=0.15')
+Flow('hyper-z-rr','hyper-rr2d','window f2=384 n2=256 min1=0.05 max2=0.15')
+Flow('hyper-z-drr','hyper-drr2d','window f2=384 n2=256 min1=0.05 max2=0.15')
+Grey('hyper-z-clean','title=Observed screenratio=0.75')
+Grey('hyper-z-obs','title=Observed screenratio=0.75')
+Grey('hyper-z-rr','title=Traditional  screenratio=0.75')
+Grey('hyper-z-drr','title=Proposed screenratio=0.75')
+
+Flow('hyper-z1-clean','hyper-clean2d','window f2=1 n2=150 min1=0.02 max2=0.25')
+Flow('hyper-z1-obs','hyper-obs2d','window f2=1 n2=150 min1=0.02 max2=0.25')
+Flow('hyper-z1-rr','hyper-rr2d','window f2=1 n2=150 min1=0.02 max2=0.25')
+Flow('hyper-z1-drr','hyper-drr2d','window f2=1 n2=150 min1=0.02 max2=0.25')
+Grey('hyper-z1-clean','title=Observed screenratio=0.75')
+Grey('hyper-z1-obs','title=Observed screenratio=0.75')
+Grey('hyper-z1-rr','title=Traditional  screenratio=0.75')
+Grey('hyper-z1-drr','title=Proposed screenratio=0.75')
+
+
+## Creating framebox
+x=384
+y=0.05
+w=256
+w1=0.35
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=1 max1=1024 min2=0 max2=0.4 pad=n plotfat=15 plotcol=3 screenratio=0.2
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+	
+## Creating framebox
+x=1
+y=0.02
+w=150
+w1=0.38
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=1 max1=1024 min2=0 max2=0.4 pad=n plotfat=15 plotcol=7 screenratio=0.2
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+		
+Result('hyper-clean2d-0','Fig/hyper-clean2d.vpl frame','Overlay')	
+Result('hyper-rr2d-0','Fig/hyper-rr2d.vpl frame','Overlay')
+Result('hyper-drr2d-0','Fig/hyper-drr2d.vpl frame','Overlay')
+Result('hyper-obs2d-0','Fig/hyper-obs2d.vpl frame','Overlay')
+
+Result('hyper-clean2d-1','Fig/hyper-clean2d.vpl frame frame1','Overlay')	
+Result('hyper-rr2d-1','Fig/hyper-rr2d.vpl frame frame1','Overlay')
+Result('hyper-drr2d-1','Fig/hyper-drr2d.vpl frame frame1','Overlay')
+Result('hyper-obs2d-1','Fig/hyper-obs2d.vpl frame frame1','Overlay')
+
+
+Flow('hyper-noisy-simi','hyper-clean2d hyper-noisy2d','similarity other=${SOURCES[1]} rect1=3 rect2=1')
+Flow('hyper-obs-simi','hyper-clean2d hyper-obs2d','similarity other=${SOURCES[1]} rect1=3 rect2=1')
+Flow('hyper-rr-simi','hyper-clean2d hyper-rr2d','similarity other=${SOURCES[1]} rect1=3 rect2=1')
+Flow('hyper-drr-simi','hyper-clean2d hyper-drr2d','similarity other=${SOURCES[1]} rect1=3 rect2=1')
+
+Greys('hyper-noisy-simi','title=Noisy')
+Greys('hyper-obs-simi','title=Observed')
+Greys('hyper-rr-simi','title=Traditional')
+Greys('hyper-drr-simi','title=Proposed')
+End()
