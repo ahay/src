@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	sf_floatread(data,n12,inp);
 
 	sf_solver_reg(sf_copy_lop,sf_cgstep,mmmult_lop,n12,n12,n12,
-		      model,data,niter,eps,"verb",true);
+		      model,data,niter,eps,"verb",true,"end");
 	sf_cgstep_close();
 
 	sf_floatwrite(model,n12,out);
