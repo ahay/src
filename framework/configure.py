@@ -404,8 +404,8 @@ def rpc(context):
     context.Message("checking for rpc ... ")
     oldlibs = path_get(context,'LIBS')
     oldpath = path_get(context, 'CPPPATH')
-    LIBS = oldlibs.copy()
-    CPPPATH = oldpath.copy()
+    LIBS = oldlibs[:]
+    CPPPATH = oldpath[:]
 
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
