@@ -25,7 +25,6 @@
 #include "omputil.h"
 #endif
 
-#include "newfile.h"
 #include "wexeic.h"
 #include "wexutl.h"
 /*^*/

@@ -44,6 +44,10 @@ env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+
+rpc = env.get('HAVE_RPC')
+if rpc:
+    env.Prepend(CPPDEFINES=['SF_HAS_RPC'])
     
 sobjs = []
 
