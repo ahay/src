@@ -1,12 +1,26 @@
 from rsf.proj import *
-from rsf.recipes.beg import server
+# from rsf.recipes.beg import server
 
 # fetch data and resample from m to km
-Fetch(['overthrust.vites.h','overthrust.vites'],'overthrust',server)
+# Fetch(['overthrust.vites.h','overthrust.vites'],'overthrust',server)
 
-Flow('overthrust',['overthrust.vites.h','overthrust.vites'],
+tgz = 'Overthrust_3D_CD1.tar.gz'
+
+Fetch(tgz,'seg_eage_models_cd',
+      server='https://s3.amazonaws.com',
+      top='open.source.geoscience/open_data')
+
+overthrust = ['./Overthrust_3D_CD1/3-D_Overthrust_Model_Disk1/3D-Velocity-Grid/overthrust.vites.h',
+              './Overthrust_3D_CD1/3-D_Overthrust_Model_Disk1/3D-Velocity-Grid/overthrust.vites'] 
+
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+
+Flow(overthrust,tgz,
+     zcat + ' $SOURCE | tar -xvf - $TARGETS',stdin=0,stdout=-1,suffix='')
+
+Flow('overthrust',overthrust,
      '''
-     (cat ${SOURCES[0]} ; echo data_format=xdr_float) |
+     (cat ${SOURCES[0]} ; echo in=${SOURCES[1]} data_format=xdr_float) |
      dd form=native |
      scale dscale=0.001 |
      put label1=X label2=Y label3=Z unit1=km unit2=km unit3=km
