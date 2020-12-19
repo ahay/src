@@ -1,6 +1,6 @@
 /* Flip a matrix */
 /*
-  Copyright (C) 2015 Xi'an Jiaotong University
+  Copyright (C) 2012 University of Texas at Austin
    
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -43,9 +43,6 @@ int main(int argc, char *argv[])
     	{
    		dout[i2][i1]=din[n2-1-i2][i1];
     	}
-    
-
-
     sf_floatwrite(dout[0],n1*n2,Fout);
 
     exit(0);
