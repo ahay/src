@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 	    /* variable projection */
 	    if (nc > 1) {
 		sf_csolver(pchainx_lop,sf_ccgstep,n2-nr,nr,dx+nr,r,liter,
-			  "verb",true,"end");
+			  "verb",verb,"end");
 		sf_ccgstep_close();
 		
 		for (i=nr; i < n2; i++) {
