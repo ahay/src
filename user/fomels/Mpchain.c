@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     bool verb;
     int i, ic, n, nc, n2, iter, niter, liter, rect, it, nt, nr, k;
     float f, step, rsum, rsum2;
-    sf_complex *xn, *x1, *y1, *dx, *r, *x0;
+    sf_complex *xn, *x1, *y1, *dx, *r, *p, *x0;
     sf_file inp, out, pef;
 
     sf_init(argc,argv);
@@ -51,6 +51,7 @@ int main(int argc, char* argv[])
     xn = sf_complexalloc(n2);
     dx = sf_complexalloc(n2);
     x0 = sf_complexalloc(n2);
+    p  = sf_complexalloc(n2);
     
     x1 = sf_complexalloc(n);
 
@@ -71,29 +72,33 @@ int main(int argc, char* argv[])
 
     csmooth1_init(n,nc,rect);
 
+    /* initialize */
+    for (i=0; i < n; i++) {
+	y1[i] = sf_cmplx(0.0f,0.0f);
+    }
+
+    for (ic=0; ic < nc; ic++) {
+	f = SF_PI*ic/nc;
+	for (i=0; i < n; i++) {
+	    xn[ic*n+i] =  cexpf(sf_cmplx(0.0f,f)); 
+	    /* distribute around the unit circle */
+	}
+    }
+    for (ic=0; ic < nc-1; ic++) {
+	for (i=0; i < n; i++) {
+	    xn[(nc+ic)*n+i] = sf_cmplx(0.0f,0.0f); 
+	}
+    }
+
+    for (i=0; i < n2; i++) {
+	p[i]=0.0f;
+    }
+    
     for (it=0; it < nt; it++) {
 	sf_warning("trace %d of %d;",it+1,nt);
 	sf_complexread(x1,n,inp);
-	
-	/* initialize */
-	for (i=0; i < n; i++) {
-	    y1[i] = sf_cmplx(0.0f,0.0f);
-	}
-	
-	for (ic=0; ic < nc; ic++) {
-	    f = SF_PI*ic/nc;
-	    for (i=0; i < n; i++) {
-		xn[ic*n+i] =  cexpf(sf_cmplx(0.0f,f)); 
-		/* distribute around the unit circle */
-	    }
-	}
-	for (ic=0; ic < nc-1; ic++) {
-	    for (i=0; i < n; i++) {
-		xn[(nc+ic)*n+i] = sf_cmplx(0.0f,0.0f); 
-	    }
-	}
 
-	sf_cconjgrad_init(n2, n2, nr, nr, 1., 1.e-6, verb, false);
+	sf_cconjgrad_init(n2, n2, nr, nr, 1., 1.e-6, verb, true);
 
 	for (iter=0; iter < niter; iter++) {
 	    pchain_apply(y1,r);
@@ -103,7 +108,7 @@ int main(int argc, char* argv[])
 		rsum += cabsf(r[i]*conjf(r[i]));
 	    }
 
-	    sf_cconjgrad(NULL, pchain_lop, csmooth1_lop,x0,dx,r,liter);
+	    sf_cconjgrad(NULL, pchain_lop, csmooth1_lop,p,dx,r,liter);
 
 	    for (i=0; i < n2; i++) {
 		x0[i] = xn[i];
