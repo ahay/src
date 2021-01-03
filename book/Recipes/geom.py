@@ -233,7 +233,7 @@ def horizontal2d(cc,zcoord,custom,par,jx=1,fx=0):
          '''
          %scat axis=2 space=n %s %s | 
          transp | 
-         put o1=0 d1=1 o2=0 d2=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         put o1=0 d1=1 label1="" unit1="" o2=0 d2=1 label2="" unit2="">${TARGETS[0]};
          '''%(M8R,ccx,ccz) +
          '''     
          %srm %s %s %s
@@ -533,7 +533,7 @@ def segment2d(cc,
          '''
          %scat axis=2 space=n %s %s |
          transp |
-         put o1=0 d1=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         put o1=0 d1=1 label1="" unit1="" o2=0 d2=1 label2="" unit2="">${TARGETS[0]};
          '''%(M8R,ccx,ccz) +
          '''
          %srm %s %s %s
@@ -580,7 +580,7 @@ def segment3d(cc,
          '''
          %scat axis=2 space=n %s %s %s|
          transp |
-         put o1=0 d1=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         put o1=0 d1=1 label1="" unit1="" o2=0 d2=1 label2="" unit2="">${TARGETS[0]};
          '''%(M8R,ccx,ccy,ccz) +
          '''
          %srm %s %s %s %s
