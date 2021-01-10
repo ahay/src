@@ -63,6 +63,8 @@ corop
 pwave3d
 ocor3d
 findmax
+map2cloud2D
+map2cloud3D
 '''
 
 dynlib = env.get('DYNLIB','')
