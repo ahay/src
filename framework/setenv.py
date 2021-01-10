@@ -104,7 +104,7 @@ def shell_script(target, source=None, env=None):
                     else:
                         myrc += 'setenv %s %s:${%s}\n' % (par,value,par)
                     myrc += 'else\n'
-                myrc += 'setenv %s %s:\n' % (par,value)
+                myrc += 'setenv %s %s\n' % (par,value)
                 if redefine:
                     myrc += 'endif\n'
         else:
