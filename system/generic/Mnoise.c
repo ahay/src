@@ -1,3 +1,27 @@
+/* Add random noise to the data.
+
+July 2011 program of the month:
+http://ahay.org/blog/2011/07/03/program-of-the-month-sfnoise/
+*/
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2021 Colorado School of Mines
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 #include <time.h>
 
@@ -9,9 +33,10 @@ int main (int argc, char* argv[])
   size_t  nbuf, nsiz;
   int     seed;
   size_t  i;
-  bool    normal, rep, isreal;
+  bool    normal, rep;
   sf_file in, out;
 
+  bool isreal;      /* true for float; false for complex */
   float      *datR; /*    real data */
   sf_complex *datC; /* complex data */
   float      re,im;
@@ -21,8 +46,6 @@ int main (int argc, char* argv[])
   out = sf_output("out");
 
   /* ------------------------------------------------------------ */
-  //if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-
   if (SF_FLOAT == sf_gettype(in))
     isreal = true;
   else
@@ -167,5 +190,3 @@ int main (int argc, char* argv[])
 
   exit(0);
 }
-
-/* 	$Id$	 */
