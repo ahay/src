@@ -46,6 +46,12 @@ copyright holder.
 #include "linop.hh"
 #include "table.hh"
 
+#if __cplusplus >= 201103L  // We are using C++11 or a later version
+#define NOEXCEPT_FALSE noexcept(false)
+#else
+#define NOEXCEPT_FALSE
+#endif
+
 using namespace RVLAlg;
 
 namespace RVLUmin {
@@ -157,7 +163,7 @@ namespace RVLUmin {
      
     }
 
-    ~CGNEStep() noexcept(false) {}
+    ~CGNEStep() NOEXCEPT_FALSE {}
 
   protected:
 
@@ -287,7 +293,7 @@ namespace RVLUmin {
      
     }
 
-    ~PCGNEStep() noexcept(false) {}
+    ~PCGNEStep() NOEXCEPT_FALSE {}
 
   protected:
 
@@ -525,7 +531,7 @@ namespace RVLUmin {
       }
     }
 
-    ~CGNEAlg() noexcept(false) {
+    ~CGNEAlg() NOEXCEPT_FALSE {
       delete step;
     }
 

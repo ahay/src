@@ -891,8 +891,11 @@ namespace RVL {
           val(fref.getRange()), applied(false),
           deriv(f->createDerivEvaluation(*this)),
           deriv2(f->createDeriv2Evaluation(*this)) {}
-
+#if __cplusplus >= 201103L // We are using C++11 or a later version
     virtual ~OperatorEvaluation() noexcept(false)
+#else
+    virtual ~OperatorEvaluation()
+#endif
     {
       try
       {

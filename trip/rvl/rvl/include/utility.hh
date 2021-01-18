@@ -249,8 +249,12 @@ namespace RVL {
     /** Report state of object to ostream. */
     virtual ostream & write(ostream & str) const = 0;
 
-    virtual ~Writeable() noexcept(false) {};
-
+#if __cplusplus >= 201103L  // We are using C++11 or a later version
+      virtual ~Writeable() noexcept(false) {};
+#else
+      virtual ~Writeable() {};
+#endif
+      
     /** Report state of object to RVLException. */
     void write(RVLException & e) const {
       std::ostringstream ss;

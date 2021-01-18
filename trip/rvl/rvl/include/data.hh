@@ -109,7 +109,11 @@ namespace RVL {
 	what is intended, so let the compiler do it. */
     ScalarRedn(Scalar _val) 
       : val(_val) {}
+#if __cplusplus >= 201103L                // We are using C++11 or a later version      
     virtual ~ScalarRedn() noexcept(false) {}
+#else
+    virtual ~ScalarRedn() {}
+#endif
 
     /** post-construction (re)initialization - default is undefined,
 	so pure virtual */
@@ -131,7 +135,11 @@ namespace RVL {
     FunctionObjectScalarRedn(ValType val): ScalarRedn<ValType>(val) {}
     FunctionObjectScalarRedn(FunctionObjectScalarRedn<ValType> & f)
       : ScalarRedn<ValType>(f) {}
+#if __cplusplus >= 201103L  // We are using C++11 or a later version
     virtual ~FunctionObjectScalarRedn() noexcept(false) {}
+#else
+    virtual ~FunctionObjectScalarRedn() {}
+#endif
   };
 
 

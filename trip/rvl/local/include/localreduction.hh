@@ -35,13 +35,19 @@ copyright holder.
 
 #include "localdata.hh"
 
+#if __cplusplus >= 201103L // We are using C++11 or a later version
+#define NOEXCEPT_FALSE noexcept(false)
+#else
+#define NOEXCEPT_FALSE
+#endif
+
 namespace RVL {
   
   /** Local FOCE */
   template<typename DataType>
   class LocalConstEval {
   public:
-    virtual ~LocalConstEval() noexcept(false) {}
+    virtual ~LocalConstEval() NOEXCEPT_FALSE {}
     /** Eval method for LDCs */    
     virtual void operator()(vector<LocalDataContainer<DataType> const *> & sources) = 0;
   };
@@ -80,7 +86,7 @@ namespace RVL {
   class BinaryLocalConstEval
     : public LocalConstEval<DataType>  {
   public:
-    virtual ~BinaryLocalConstEval() noexcept(false) {}
+    virtual ~BinaryLocalConstEval() NOEXCEPT_FALSE {}
 
     /** Evaluation method for LDCs */
     virtual void operator () (LocalDataContainer<DataType> const & source1,
@@ -223,7 +229,7 @@ namespace RVL {
       : FunctionObjectScalarRedn<ValType>(val) {}
     BinaryLocalFunctionObjectScalarRedn(BinaryLocalFunctionObjectScalarRedn<DataType,ValType> const & f) 
       : FunctionObjectScalarRedn<ValType>(f) {}
-    virtual ~BinaryLocalFunctionObjectScalarRedn() noexcept(false) {}
+    virtual ~BinaryLocalFunctionObjectScalarRedn() NOEXCEPT_FALSE {}
   };
 
   template<typename DataType, typename ValType>

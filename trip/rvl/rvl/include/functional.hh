@@ -609,8 +609,11 @@ namespace RVL {
           grad(fref.getDomain()),
           cg(grad), gapplied(false), gnormapplied(false),
           hess(*this) { grad.zero(); }
-
+#if __cplusplus >= 201103L // We are using C++11 or a later version
     virtual ~FunctionalEvaluation() noexcept(false)
+#else
+    virtual ~FunctionalEvaluation()
+#endif
     {
       try
       {
