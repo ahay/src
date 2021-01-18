@@ -1,0 +1,4 @@
+from rsf.tex import*
+
+# version, with incorporated edits from proofs
+End(use='amsmath',hires='ALL',color='ALL')

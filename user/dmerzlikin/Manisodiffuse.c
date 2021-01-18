@@ -1,4 +1,6 @@
-/* Anisotropic diffusion by regularized inversion. Applied in 3D in a slice by slice fashion: set of
+/* Anisotropic diffusion by regularized inversion. 
+
+Applied in 3D in a slice by slice fashion: set of
 2D diffusions for a fixed time sample. */
 /*
   Copyright (C) 2008 University of Texas at Austin

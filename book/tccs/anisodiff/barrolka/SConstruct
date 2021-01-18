@@ -1,0 +1,527 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+import math
+
+dist = 4.3
+
+# plotting functions
+# f2=214 f3=300
+def plotcube(title='',cl=82,extra='',f1=12,f2=214,f3=130):
+	 return '''
+		byte gainpanel=all clip=%d |
+		grey3 title="%s" d2num=0.08 n2tic=2 o2num=1.7
+		frame1=%d frame2=%d frame3=%d flat=y point1=.3 point2=.6
+		wanttitle=n screenratio=0.5
+		%s
+		'''%(cl,title,f1,f2,f3,extra)
+
+# downloading the data
+
+segy = 'snt_barrolka_raw_unmigrated_stk_21_11_2013.segy'
+
+Fetch(segy,'barrolka',server)
+
+Flow('data tdata data.asc data.bin',segy,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''')
+
+# Inline data range 2000-2687.  Inlines traverse NW-->SE.                  
+# Xline data range 9997-10414.  Xlines  traverse SW-->NE.                   
+# Bin size 25 x 25 m
+# windowing out data between 1-2s, which is the most interesting region for diffractions
+# double checking the above information
+# binning the data into 3D array
+
+Flow('stack0','data',
+     '''
+     intbin xk=iline yk=xline | pow pow1=2 |
+     window min1=1 max1=2 |
+     put 
+     label2=Inline    o2=0 d2=0.025 unit2=km 
+     label3=Crossline o3=0 d3=0.025 unit3=km 
+     ''')
+
+# windowing
+
+time1=1.65#1.63
+time2=1.8#1.73
+
+#0-10
+xline1=0.0
+xline2=10.425#5#10.0#4.0
+
+#0-16
+iline1=0#0.0#4.0#0.0#4.0
+iline2=17.175#12#16.0#12.0#16.0#12.0
+
+Flow('stack','stack0','window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g'%(time1,time2,iline1,iline2,xline1,xline2))
+
+#Result('stack',plotcube('Stack'))
+
+Result('stack-barrolka','stack',plotcube('Stack'))
+
+# downloading velocity
+
+velsegy = 'snt_barrolka_rms_migration_vels_proc_datum_29_02_2012.segy'
+
+Fetch(velsegy,'barrolka',server)
+
+Flow('vdata vtdata vdata.asc vdata.bin',velsegy,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''')
+
+# bin velocity file and convert from [m/s] to [km/s]
+
+Flow('velocity0','vdata',
+     '''
+     intbin xk=iline yk=xline |
+     math output="input/1000" |
+     put 
+     label2=Inline    o2=0 d2=0.025 unit2=km 
+     label3=Crossline o3=0 d3=0.025 unit3=km 
+     ''')
+
+Flow('velocity','velocity0','window min1=%g max1=%g min2=%g max2=%g min3=%g max3=%g'%(time1,time2,iline1,iline2,xline1,xline2))
+
+#Result('velocity',
+#       '''
+#       byte gainpanel=all color=j allpos=y clip=0.01 bias=3.0 |
+#       grey3 title=Velocity
+#       frame1=22 frame2=214 frame3=300 flat=y point1=.6 point2=.7
+#       ''')
+
+# Kirchhoff Migration
+
+Flow('mig3','stack velocity','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=40')
+
+Result('mig3-barrolka','mig3',plotcube('Migration',1210.326))
+
+# Target horizon slices
+
+Fetch('PC35Sand_PhaseRot90.ilclt','barrolka',server)
+
+Flow('horizon','PC35Sand_PhaseRot90.ilclt','echo n1=3 n2=283965 data_format=ascii_float in=$SOURCE | dd form=native',stdin=0)
+
+Flow('head','horizon','window n1=2 | dd type=int')
+
+Flow('horizon2 mask','horizon head',
+     '''
+     window n1=1 f1=2 squeeze=n | intbin head=${SOURCES[1]} mask=${TARGETS[1]} xkey=0 ykey=1 | window | scale dscale=0.001
+     ''')
+
+Flow('horizon-fill','horizon2 mask',
+	'''
+	lapfill mask=${SOURCES[1]} grad=y verb=y
+	''')
+
+# %(iline1,iline2,xline1,xline2))
+
+Result('horizon-fill','grey color=j mean=y scalebar=y title=Horizon minval=1.6')
+
+# Horizon slice ts=target slice
+
+Flow('horizon-slice','horizon-fill',
+	'''
+	spray axis=1 n=1 |
+	window f2=%d n2=%d f3=%d n3=%d squeeze=n 
+	'''%(iline1/0.025,(iline2-iline1)/0.025+1,xline1/0.025,(xline2-xline1)/0.025+1))
+
+Flow('mig3-ts',[ 'mig3','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('mig3-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+# image domain dip
+Flow('dip-mig3','mig3','fdip n4=2 rect1=60 rect2=30 rect3=30 order=2')
+
+Flow('mig3-pwd','mig3 dip-mig3','pwd dip=${SOURCES[1]}')
+
+#Flow('mig3-xpwd-ts',[ 'mig3-pwd','horizon-slice'],'window n4=1 | inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('mig3-xpwd-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+#Flow('mig3-ypwd-ts',[ 'mig3-pwd','horizon-slice'],'window n4=1 f4=1 | inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('mig3-ypwd-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+# Structure Tensor
+
+# data domain
+Flow('dip','stack','fdip rect1=60 rect2=30 rect3=30 order=2 verb=y')
+
+# inline and crossline pwd
+Flow('pwd',['stack','dip'],'pwd dip=${SOURCES[1]}')
+
+Flow('xpwd','pwd','window n4=1')
+Flow('ypwd','pwd','window n4=1 f4=1')
+
+# migrate
+Flow('xpwd-mig3','xpwd velocity','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=40')
+Flow('ypwd-mig3','ypwd velocity','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=40')
+
+#Flow('xpwd-mig3-ts',[ 'xpwd-mig3','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('xpwd-mig3-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+#Flow('ypwd-mig3-ts',[ 'ypwd-mig3','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('ypwd-mig3-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+# putting together tensor components
+Flow('pr-pxpx','xpwd-mig3','math output="input*input"')
+
+Flow('pr-pxpy','xpwd-mig3 ypwd-mig3','math K=${SOURCES[1]} output="input*K"')
+
+Flow('pr-pypy','ypwd-mig3','math output="input*input"')
+
+# edge preserving smoothing
+Flow('sm-pr-pxpx','pr-pxpx dip-mig3','pwspray2 dip=${SOURCES[1]} ns2=3 ns3=3 order=4 | transp | median')
+
+Flow('sm-pr-pxpy','pr-pxpy dip-mig3','pwspray2 dip=${SOURCES[1]} ns2=3 ns3=3 order=4 | transp | median')
+
+Flow('sm-pr-pypy','pr-pypy dip-mig3','pwspray2 dip=${SOURCES[1]} ns2=3 ns3=3 order=4 | transp | median')
+
+# decomposition
+in1pr = 'sm-pr-pxpx'
+in2pr = 'sm-pr-pxpy'
+in3pr = 'sm-pr-pypy'
+
+out='l1'
+out2='l2'
+uhor='uh'
+uver='uv'
+vhor='vh'
+vver='vv'
+
+Flow([out+'PR','uxPR','uyPR',out2+'PR','vxPR','vyPR'],[in1pr,in2pr,in3pr],
+	'''
+	pwdtensorh in2=${SOURCES[1]} in3=${SOURCES[2]} eps=0.0
+	ux=${TARGETS[1]} uy=${TARGETS[2]} out2=${TARGETS[3]}
+	vx=${TARGETS[4]} vy=${TARGETS[5]} normalize=n
+	''')
+
+Flow('az-PR','vxPR dip-mig3','math output="(180/%g)*asin(input)" | pwsmooth3 dip=${SOURCES[1]} ns2=10 ns3=10'%(math.pi))
+
+Flow('vx','vxPR dip-mig3','pwsmooth3 dip=${SOURCES[1]} ns2=10 ns3=10')
+
+Flow('vy','vyPR dip-mig3','pwsmooth3 dip=${SOURCES[1]} ns2=10 ns3=10')
+
+Flow('az-PR-ts',[ 'az-PR','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+# run azpwd
+
+#Flow('azpwd','stack dip az-PR','azpwd dip=${SOURCES[1]} az=${SOURCES[2]}')
+
+#Flow('azpwd-mig3','azpwd velocity','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=40')
+
+#Flow('azpwd-mig3-ts',[ 'azpwd-mig3','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('azpwd-mig3-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+#Flow('pwddiffuse','azpwd-mig3 vx vy dip-mig3',
+#	'''
+#	pwddiffuse
+#	test=n adj=n
+#	vx=${SOURCES[1]} vy=${SOURCES[2]} dip=${SOURCES[3]}
+#	niter=10 repeat=1 eps=10
+#	''')
+
+#Flow('pwddiffuse-ts',[ 'pwddiffuse','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('pwddiffuse-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+# creating the data for inversion
+
+Flow('xspr-notmig','stack dip stack','pwspray2 dip=${SOURCES[1]} ns2=15 ns3=1 | stack | math K=${SOURCES[2]} output="K-input"')
+
+Result('xspr-notmig',plotcube('Stack no Refl',52))
+
+Result('xspr-notmig-barrolka','xspr-notmig',plotcube('Stack no Refl',52))
+
+#Flow('yspr-notmig','stack dip stack','pwspray2 dip=${SOURCES[1]} ns2=1 ns3=15 | stack | math K=${SOURCES[2]} output="K-input"')
+
+Flow('xspr-mig3','xspr-notmig velocity','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=40')
+
+#Flow('yspr-mig3','yspr-notmig velocity','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=40')
+
+Flow('xspr-mig3-ts',[ 'xspr-mig3','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('xspr-mig3-barrolka','xspr-mig3',plotcube('Migr no Refl',1200))
+
+Result('xspr-mig3-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+#Flow('yspr-mig3-ts',[ 'yspr-mig3','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('yspr-mig3-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+Flow('linpi-data','xspr-notmig','linpi v_1=2.5 v_2=2.9 v_3=3.3 v_4=3.7 fftDo=n')
+
+Flow('linpi-data-ts',[ 'linpi-data','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('linpi-data-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+# weak
+thrw = 4#6
+epsw = 10
+niterw = 20
+
+Flow('modl-test snaps-test','linpi-data dip az-PR vx vy velocity dip-mig3',
+	'''
+	lspiazpwdmig32 v_1=2.5 v_2=2.9 v_3=3.3 v_4=3.7 fftDo=n vel=${SOURCES[5]} dipim=${SOURCES[6]} apt=40
+	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]}
+	domod=y dopi=y sm=y initer=2 oniter=20 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	'''%(thrw,epsw,niterw))
+
+#Flow('modl-test0 snaps-test0','linpi-data dip az-PR vx vy velocity dip-mig3',
+#	'''
+#	lspiazpwdmig3 v_1=2.5 v_2=2.9 v_3=3.3 v_4=3.7 fftDo=n vel=${SOURCES[5]} dipim=${SOURCES[6]} apt=40
+#	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+#	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]}
+#	domod=y dopi=y sm=y initer=2 oniter=1 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+#	'''%(thrw,epsw,niterw))
+
+Flow('check-snaps','snaps-test vx vy dip-mig3',
+	'''
+	window n4=1 | 
+	thr mode=hard thr=4 |
+	pwddiffuse
+	test=n adj=n
+	vx=${SOURCES[1]} vy=${SOURCES[2]} dip=${SOURCES[3]}
+	niter=20 repeat=1 eps=20
+	''')
+
+#Flow('check-snaps0','snaps-test0 vx vy dip-mig3',
+#	'''
+#	window n4=1 | 
+#	thr mode=hard thr=4 |
+#	anisodiffuse
+#	test=n adj=n
+#	vx=${SOURCES[1]} vy=${SOURCES[2]} dip=${SOURCES[3]}
+#	niter=10 repeat=1 eps=10
+#	''')
+
+Flow('snap-ss','snaps-test vx vy dip-mig3',
+	'''
+	window n4=1 f4=19 | 
+	thr mode=hard thr=4 |
+	pwddiffuse
+	test=n adj=n
+	vx=${SOURCES[1]} vy=${SOURCES[2]} dip=${SOURCES[3]}
+	niter=500 repeat=1 eps=20
+	''')
+
+""" |
+	pwddiffuse
+	test=n adj=n sm=n
+	vx=${SOURCES[1]} vy=${SOURCES[2]} dip=${SOURCES[3]}
+	niter=10 repeat=1 eps=10
+"""
+
+#Flow('snaps-test-ts',[ 'snaps-test','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('snaps-test-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+#Flow('check-snaps-ts',[ 'check-snaps','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('check-snaps-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+#Flow('check-snaps0-ts',[ 'check-snaps0','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('check-snaps0-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+#Flow('snap-ss-ts',[ 'snap-ss','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('snap-ss-ts','grey wanttitle=n transp=n yreverse=n')
+
+Flow('modl-test-ts',[ 'modl-test','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+Result('modl-test-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+# here we follow the following workflow
+# 1. extract vx, vy and az along the target horizon slice, which was picked by the interpreter
+# 2. smooth using regular sfsmooth - effectively we will smooth along the target horizon
+# 3. spray to dimensions of a stack -> at each time sample we will have the smoothed vx, vy and az from the target
+
+#
+#Flow('az-ts','vxPR horizon-slice',
+#	'''
+#	math output="(180/%g)*asin(input)" |
+#	inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window |
+#	smooth rect1=10 rect2=10 |
+#	spray axis=1 n=%d o=%g | math output=180
+#	'''%(math.pi,round((time2-time1)/0.004) + 1,time1))
+
+#Flow('az-ts','vxPR horizon-slice',
+#	'''
+#	math output="(180/%g)*asin(input)" |
+#	inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window |
+#	smooth rect1=10 rect2=10 |
+#	spray axis=1 n=%d o=%g
+#	'''%(math.pi,round((time2-time1)/0.004) + 1,time1))
+
+#Flow('az-ts-ts',[ 'az-ts','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Flow('vx-ts','vxPR horizon-slice',
+#	'''
+#	inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window |
+#	smooth rect1=10 rect2=10 |
+#	spray axis=1 n=%d o=%g
+#	'''%(round((time2-time1)/0.004) + 1,time1))
+
+#Flow('vy-ts','vyPR horizon-slice',
+#	'''
+#	inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window |
+#	smooth rect1=10 rect2=10 |
+#	spray axis=1 n=%d o=%g
+#	'''%(round((time2-time1)/0.004) + 1,time1))
+
+#Flow('azpwd-ts','stack dip az-ts','azpwd dip=${SOURCES[1]} az=${SOURCES[2]}')
+
+#Flow('azpwd-ts-mig3','azpwd-ts velocity','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=40')
+
+#Flow('azpwd-ts-mig3-ts',['azpwd-ts-mig3','horizon-slice'],'inttest1 coord=${SOURCES[1]} nw=4 interp=spline | window')
+
+#Result('azpwd-ts-mig3-ts','grey wanttitle=n transp=n yreverse=n screenratio=0.6')
+
+"""
+Flow('modl-ts snaps-ts','linpi-data dip az-ts vx-ts vy-ts velocity dip-mig3',
+	'''
+	lspiazpwdmig32 v_1=2.5 v_2=2.9 v_3=3.3 v_4=3.7 fftDo=n vel=${SOURCES[5]} dipim=${SOURCES[6]} apt=40
+	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]}
+	domod=y dopi=y sm=y initer=2 oniter=20 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	'''%(thrw,epsw,niterw))
+
+Flow('modl-ts0 snaps-ts0','linpi-data dip az-ts vx-ts vy-ts velocity dip-mig3',
+	'''
+	lspiazpwdmig3 v_1=2.5 v_2=2.9 v_3=3.3 v_4=3.7 fftDo=n vel=${SOURCES[5]} dipim=${SOURCES[6]} apt=40
+	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]}
+	domod=y dopi=y sm=y initer=2 oniter=1 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	'''%(thrw,epsw,niterw))
+"""
+
+# going back to data domain linpi-data dip az-PR vx vy velocity dip-mig3
+Flow('modl-test-zo','modl-test dip az-PR velocity',
+	'''
+	piazpwdmig3 v_1=2.5 v_2=2.9 v_3=3.3 v_4=3.7 fftDo=n vel=${SOURCES[3]} apt=40
+	dip=${SOURCES[1]} az=${SOURCES[2]}
+	domod=y dopi=n sm=y adj=n doomp=y
+	''')
+
+#Result('modl-test-zo',plotcube('ZO no hw#',52))
+
+Result('modl-test',plotcube('Diffractivity no hw#',22))
+
+# use our result as the initial model
+Flow('d0','modl-test-zo xspr-notmig','add scale=-1,1 ${SOURCES[1]}')
+
+# path-summation is disabled to restore wavenumbers
+Flow('y y-snaps','d0 dip az-PR vx vy velocity dip-mig3',
+	'''
+	lspiazpwdmig32 v_1=2.5 v_2=2.9 v_3=3.3 v_4=3.7 fftDo=n vel=${SOURCES[5]} dipim=${SOURCES[6]} apt=40
+	dothr=n thr=0.0 mode=hard doanisodiff=n anisoeps=0.0 niter=1 repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]}
+	domod=y dopi=n sm=y initer=2 oniter=1 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	''')
+
+# we utilize snaps since regularization should be applied on the sum only
+
+# weak
+thrr=thrw - 0.5
+epsr=epsw
+niterr=niterw
+
+Flow('diffractivity','y-snaps modl-test vx vy dip-mig3',
+	'''
+	add scale=1,1 ${SOURCES[1]} |
+	thr thr=%g mode=hard |
+	pwddiffuse test=n adj=n
+	vx=${SOURCES[2]} vy=${SOURCES[3]} dip=${SOURCES[4]}
+	eps=%g niter=%d repeat=1 verb=n
+	'''%(thrr,epsr,niterr))
+
+Result('diffractivity',plotcube('Hw# restoration',32))
+
+Flow('diffractions','diffractivity dip az-PR velocity',
+	'''
+	piazpwdmig3 v_1=2.5 v_2=2.9 v_3=3.3 v_4=3.7 fftDo=n vel=${SOURCES[3]} apt=40
+	dip=${SOURCES[1]} az=${SOURCES[2]}
+	domod=y dopi=n sm=y adj=n doomp=y
+	''')
+
+Result('diffractions',plotcube('Diffractions',60))
+
+Flow('noise','xspr-notmig diffractions','add scale=1,-1 ${SOURCES[1]}')
+
+Result('noise',plotcube('Noise',60))
+
+Flow('noise-ortho diffractions-ortho','noise diffractions',
+	'''
+	ortho rect1=10 rect2=20 rect3=20 niter=60 sig=${SOURCES[1]} sig2=${TARGETS[1]}
+	''')
+
+Result('noise-ortho-barrolka','noise-ortho',plotcube('Noise',60))
+
+Result('diffractions-ortho-barrolka','diffractions-ortho',plotcube('Diffractions',60))
+
+Result('linpi-data-barrolka','linpi-data',plotcube('Path Summation'))
+
+# horrible test - run velocity continuation - look at the diffraction behaviour
+
+Flow('one-line','diffractions','window n3=1 f3=130')
+
+Flow('one-line-ft','one-line','cosft sign2=1')
+
+Flow('vczo-1st-step','one-line-ft','vczo nv=%g dv=%g v0=%g | window' %(1,2.5,0.0))
+
+Flow('vczo-ft','vczo-1st-step',
+                   '''
+                   vczo nv=%g dv=%g v0=%g
+                   '''% (50,0.02,2.5),split=[2,'omp'],reduce='cat axis=3' )
+
+Flow('vczo','vczo-ft','cosft sign3=-1 | transp plane=23')
+
+# building convergence curve
+
+Flow('snap0','snaps-test vx vy dip-mig3',
+	'''
+	window n4=1 | 
+	thr mode=hard thr=%g |
+	pwddiffuse
+	test=n adj=n
+	vx=${SOURCES[1]} vy=${SOURCES[2]} dip=${SOURCES[3]}
+	niter=%d repeat=1 eps=%g
+	'''%(thrw,niterw,thrw))
+
+l2ms = []
+
+for i in range(1,20):
+
+	Flow('snap%d'%i,'snaps-test vx vy dip-mig3',
+	'''
+	window n4=1 f4=%d | 
+	thr mode=hard thr=%g |
+	pwddiffuse
+	test=n adj=n
+	vx=${SOURCES[1]} vy=${SOURCES[2]} dip=${SOURCES[3]}
+	niter=%d repeat=1 eps=%g
+	'''%(i,thrw,niterw,thrw))
+
+	Flow('l2m-%d'%i,['snap%d'%i,'snap%d'%(i-1)],
+	'''
+	math K=${SOURCES[1]} output="sqrt((input-K)*(input-K))" |
+	stack axis=3 | stack | stack axis=1
+	''')
+
+	l2ms.append('l2m-%d'%i)
+
+Result('convergence',l2ms,
+	'''
+	cat ${SOURCES[1:19]} axis=1 | window |
+	scale axis=2 | put unit1= unit2= label2=Model_Residual | graph wanttitle=n
+	''')
+
+End()
