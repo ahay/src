@@ -121,8 +121,10 @@ static char* gettmpdatapath (void);
 static bool readpathfile (const char* filename, char* datapath);
 static void sf_input_error(sf_file file, const char* message, const char* name);
 
+#ifndef SF_HAS_RPC
 static void convert2(int nbuf, const char* buf1, char* buf2);
 static void convert4(int nbuf, const char* buf1, char* buf2);
+#endif
 
 void sf_file_error(bool err)
 /*< set error on opening files >*/
@@ -1968,6 +1970,8 @@ bool sf_endian (void)
     return little_endian;
 }
 
+#ifndef SF_HAS_RPC
+
 static void convert2(int nbuf, const char* buf1, char* buf2)
 /* change byte oder of 2-byte int */
 {	
@@ -1978,6 +1982,7 @@ static void convert2(int nbuf, const char* buf1, char* buf2)
 		buf2[i+1] = buf1[i];
 	}
 }
+
 
 static void convert4(int nbuf, const char* buf1, char* buf2)
 /* change byte oder of 4-byte number*/
@@ -1992,5 +1997,6 @@ static void convert4(int nbuf, const char* buf1, char* buf2)
 	}
 }
 
-/* 	$Id$	 */
+#endif
+
 

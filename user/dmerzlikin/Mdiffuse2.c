@@ -51,7 +51,8 @@ static void gradient (bool adj, bool add,
 int main(int argc, char* argv[])
 {
     int niter, i, repeat;
-    float *data, eps, dot1[2], dot2[2];
+    float *data, eps;
+    double dot1[2], dot2[2];
     sf_file in, out;
 
     sf_init(argc,argv);
