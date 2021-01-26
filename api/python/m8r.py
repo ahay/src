@@ -1431,7 +1431,7 @@ class Filter(object):
         mysrcs = self.srcs[:]
         if isinstance(srcs,tuple):
             mysrcs.extend(srcs)
-        elif srcs:
+        elif isinstance(srcs,np.ndarray) or srcs:
             mysrcs.append(srcs)
 
         if self.stdout:
@@ -1444,6 +1444,12 @@ class Filter(object):
             command = self.command
 
         (first,pipe,second) = command.partition('|')
+
+        numpy = False
+        for n, src in enumerate(mysrcs):
+            if isinstance(src,np.ndarray):
+                mysrcs[n] = File(src)
+                numpy = True
 
         if mysrcs:
             command = ' '.join(['< ',str(mysrcs[0]),first]+
@@ -1458,7 +1464,11 @@ class Filter(object):
             if self.plot:
                 return Vplot(out,temp=True)
             else:
-                return File(out,temp=True)
+                outfile = File(out,temp=True)
+                if numpy:
+                    return outfile[:]
+                else:
+                    return outfile
     def __call__(self,*args,**kw):
         if args:
             self.stdout = args[0]
