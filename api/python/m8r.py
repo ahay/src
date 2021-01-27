@@ -249,7 +249,7 @@ class File(object):
             # copy file (name is ignored)
             self.__init__(tag.tag)
             tag.close()
-        elif _swig_ and isinstance(tag,np.ndarray):
+        elif isinstance(tag,np.ndarray):
             # numpy array
             if not name:
                 name = Temp()
@@ -261,7 +261,7 @@ class File(object):
             out.write(tag)
             out.close()
             self.__init__(out,temp=True)
-        elif _swig_ and isinstance(tag,list):
+        elif isinstance(tag,list):
             self.__init__(np.array(tag,'f'),name)
         else:
             self.tag = tag
