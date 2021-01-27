@@ -1114,6 +1114,7 @@ class Output(_File):
             return None
 
         else:
+            self.tag=tag
             self.temp=None
             if src==None :
                 if first_input==None:
