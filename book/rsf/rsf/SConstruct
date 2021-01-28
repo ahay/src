@@ -25,6 +25,8 @@ Paper('abstract',lclass='eage',
 
 #Paper('dummy')
 
+Paper('matplotlib',options='short')
+
 Depends2('install',map(lambda x: x+'.install',
                        Split('api format install tour demo')))
 
