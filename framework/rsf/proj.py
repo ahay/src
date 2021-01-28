@@ -613,8 +613,14 @@ class Project(Environment):
             source = target
         target2 = os.path.join(self.resdir,target)
         if 'matplotlib' in flow:
+            pngflow = flow + ' format=png'
+            pngsuffix = '.png'
+            kw.update({'suffix':pngsuffix})
+            pngplot = self.Plot(*(target,source,pngflow), **kw)
+            
             flow += ' format=pdf'
             suffix = '.pdf'
+            
         kw.update({'suffix':suffix})
         plot = self.Plot(*(target2,source,flow), **kw)
         target2 = target2 + suffix
@@ -644,8 +650,9 @@ class Project(Environment):
         self.Alias(target + '.lock',locked)
         self.lock.append(locked)
 
-        self.Command(target + '.flip',target2,
-                     '%s $SOURCE %s' % (self.sfpen,locked))
+        if suffix == vpsuffix:
+            self.Command(target + '.flip',target2,
+                        '%s $SOURCE %s' % (self.sfpen,locked))
         test = self.Test('.test_'+target,target2,
                          figdir=self.figs,bindir=self.bindir)
         self.test.append(test)

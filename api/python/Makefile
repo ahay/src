@@ -5,5 +5,6 @@ SConstruct.jupyter: *.scons
 	echo "End()" >> $@
 
 %.png: SConstruct.jupyter
-	scons -f SConstruct.jupyter Fig/$*.vpl
-	vpconvert pen=gd fat=3 serifs=n bgcolor=w Fig/$*.vpl $@
+	scons -f SConstruct.jupyter $@ || ( \
+	scons -f SConstruct.jupyter Fig/$*.vpl && \
+	vpconvert pen=gd fat=3 serifs=n bgcolor=w Fig/$*.vpl $@ )
