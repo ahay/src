@@ -177,7 +177,7 @@ down = '''
 53986
 '''
 
-down = map(int,down.split())
+down = [int(x) for x in down.split()]
 ind = arange(len(down))
 width=0.75
 

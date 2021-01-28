@@ -94,8 +94,11 @@ def test(target=None,source=None,env=None):
                     figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
     print("Comparing %s and %s" % (locked,src))
     if os.path.isfile(locked):
-        diff = os.system(' '.join([os.path.join(bindir,sfprefix+'vplotdiff'),
+        if locked.endswith(vpsuffix):
+            diff = os.system(' '.join([os.path.join(bindir,sfprefix+'vplotdiff'),
                                    locked,src]))
+        else:
+            diff = 0
         return diff
     else:
         print('No locked file "%s" ' % locked)
@@ -599,7 +602,8 @@ class Project(Environment):
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
         if view:
-            flow = flow + ' | %s pixmaps=y' % self.sfpen
+            if suffix==vpsuffix and not 'matplotlib' in flow:
+                flow = flow + ' | %s pixmaps=y' % self.sfpen
             kw.update({'stdout':-1})
         kw.update({'suffix':suffix})
         return self.Flow(*(target,source,flow), **kw)
@@ -608,12 +612,27 @@ class Project(Environment):
             flow = source
             source = target
         target2 = os.path.join(self.resdir,target)
+        if 'matplotlib' in flow:
+            flow += ' format=pdf'
+            suffix = '.pdf'
         kw.update({'suffix':suffix})
         plot = self.Plot(*(target2,source,flow), **kw)
         target2 = target2 + suffix
-        view = self.Command(target + '.view',plot,self.sfpen + " $SOURCES",
-                            src_suffix=vpsuffix)
-        self.view.append(view)
+        if suffix == vpsuffix:
+            viewer = self.sfpen
+        elif suffix == '.pdf':
+            viewer = WhereIs('acroread') or WhereIs('kpdf') \
+              or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') \
+              or WhereIs('open')
+        elif suffix == '.eps':
+            viewer = WhereIs('evince') or WhereIs('gv') or WhereIs('open')
+        else:
+            viewer = None
+
+        if viewer:
+            view = self.Command(target + '.view',plot,viewer + " $SOURCES",
+                                src_suffix=suffix)
+            self.view.append(view)
 
         prnt = self.Command(target + '.print',plot,
                             self.pspen + " printer=%s $SOURCES" % printer,
