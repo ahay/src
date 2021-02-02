@@ -1,6 +1,8 @@
 /* Forward interpolation (1-D).
 
-Takes data(t) and warp(s) and outputs interp(s)=data(warp(s)). */
+adj=0: data(t) and warp(s) and outputs interp(s)=data(warp(s)).
+
+adj=1: interp(s) -> data(t) */
 /*
   Copyright (C) 2021 University of Texas at Austin
 
@@ -24,7 +26,7 @@ Takes data(t) and warp(s) and outputs interp(s)=data(warp(s)). */
 int main(int argc, char* argv[])
 {
     sf_map4 mo;
-    bool each;
+    bool adj, each;
     int nt, n1, i2, n2, nw;
     float o1, d1, t0, dt, eps;
     float *trace, *str, *trace2;
@@ -36,11 +38,20 @@ int main(int argc, char* argv[])
     warp = sf_input("warp");
 
     if (sf_gettype(in) != SF_FLOAT) sf_error("Need float input");
-    
+  
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+  
     /* get dimensions */
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-    if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+    if (adj) {
+	if (!sf_getint("n1",&n1)) sf_error("No n1= in input");
+	if (!sf_getfloat("d1",&d1)) d1=1.;
+	if (!sf_getfloat("o1",&o1)) o1=0.;
+    } else {
+	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+	if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+    }
 
     /* warp may have different dimensions */
     if (!sf_histint(warp,"n1",&nt)) sf_error("No n1= in warp");
@@ -48,9 +59,15 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(warp,"o1",&t0)) t0=o1;
 
     /* change dimensions */
-    sf_putint(out,"n1",nt);
-    sf_putfloat(out,"d1",dt);
-    sf_putfloat(out,"o1",t0);
+    if (adj) {
+	sf_putint(out,"n1",n1);
+	sf_putfloat(out,"d1",d1);
+	sf_putfloat(out,"o1",o1);
+    } else {
+	sf_putint(out,"n1",nt);
+	sf_putfloat(out,"d1",dt);
+	sf_putfloat(out,"o1",t0);
+    }
 
     n2 = sf_leftsize(in,1);
     nw = sf_leftsize(warp,1);
@@ -80,9 +97,15 @@ int main(int argc, char* argv[])
 	    sf_stretch4_define (mo,str);
 	}
 
-	sf_floatread(trace2,n1,in);
-	sf_stretch4_invert (false,mo,trace,trace2);
-	sf_floatwrite (trace,nt,out);
+	if (adj) {
+	    sf_floatread(trace,nt,in);
+	    sf_stretch4_invert_adj (false,mo,trace,trace2);
+	    sf_floatwrite (trace2,n1,out);
+	} else {
+	    sf_floatread(trace2,n1,in);
+	    sf_stretch4_invert (false,mo,trace,trace2);
+	    sf_floatwrite (trace,nt,out);
+	}
     }
 
     exit(0);
