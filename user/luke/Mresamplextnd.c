@@ -31,7 +31,6 @@ float resample(float **u, int n1, int n2, float x1, float x2)
 	b1 = 1.0 - a1;
 	a2 = x2-y2;
 	b2 = 1.0 - a2;
-
 	return (b2*(b1*u[y2][y1]+a1*u[y2][y1+1]) +
 			a2*(b1*u[y2+1][y1]+a1*u[y2+1][y1+1]));
 }
@@ -95,12 +94,12 @@ int main(int argc, char*argv[])
 		{
 			x2 = (i2*d2 + o2 - o[1])/d[1];
 			if (x2 < 0.0) x2 = 0.0;
-			if (x2 > (float)n[1]-1) x2 = (float)n[1]-1;
+			if (x2 > (float)n[1]-1.01) x2 = (float)n[1]-1.01;
 			for(i1=0; i1<n1; i1++)
 			{
 				x1 = (i1*d1 + o1 - o[0])/d[0];
 				if (x1 < 0.0) x1 = 0.0;
-				if (x1 > (float)n[0]-1) x1=(float)n[0]-1;
+				if (x1 > (float)n[0]-1.01) x1=(float)n[0]-1.01;
 				obuf[i2][i1] = resample(ibuf, n1, n2, x1, x2);
 			}
 		}
