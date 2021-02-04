@@ -95,12 +95,12 @@ int main(int argc, char*argv[])
 		{
 			x2 = (i2*d2 + o2 - o[1])/d[1];
 			if (x2 < 0.0) x2 = 0.0;
-			if (x2 > (float)n2) x2 = (float)n2;
+			if (x2 > (float)n[1]-1) x2 = (float)n[1]-1;
 			for(i1=0; i1<n1; i1++)
 			{
 				x1 = (i1*d1 + o1 - o[0])/d[0];
 				if (x1 < 0.0) x1 = 0.0;
-				if (x1 > (float)n1) x1=(float)n1;
+				if (x1 > (float)n[0]-1) x1=(float)n[0]-1;
 				obuf[i2][i1] = resample(ibuf, n1, n2, x1, x2);
 			}
 		}
