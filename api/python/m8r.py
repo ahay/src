@@ -34,34 +34,10 @@ try:
 except:
     _swig_ = False
 
-#kls suggestions on testing:
-# I used
-# cd $RSFSRC/book/data/eastcoast32/madagascar
-# cp $RSFSRC/api/python/m8r.py .
-# cp $RSFSRC/api/python/m8rtest .
-# scons view or scons zoomfoldplot.view
-# python m8r.py
-# ./m8rtest
-# the first test get_tah and put_tah with sftahfix_hdr_17.py  sftahloadgeom.py
-# the second test runs the tests at the end of this file after:
-#    if __name__ == "__main__":
-# the third uses doctest to run additional tests
-#
-# then I uncommented the line:
-#     _swig_ = False
-# and repeated the tests.  This checks the path without swig.
-# then I made sure m8r.py was in /Users/karl/RSFSRC/api/python
-# cd $RSFSRC
-# scons install
-# To test sfnderiv and some other Sava programs.
-# cd $RSFSRC/book/rsf/rsf/sfnderiv
-# scons -c
-# scons
-# This tests a range of python programs.  You might change some details.
-#  Karl
-#_swig_ = False   #kls allow temporary test of with old major path in the code
-#sys.stderr.write('reset _swig_=%s\n'%repr(_swig_))
-#sys.stderr.write('local copy m8r.py\n')   
+def no_swig():
+    'disable swig for testing'
+    _swig_ = False
+
 first_input=None
 
 import rsf.doc
@@ -88,148 +64,76 @@ def view(name):
         print ('No IPython Image support')
         return None
 
-if _swig_:
-    class Par(object):
-        '''parameter table'''
-        def __init__(self,argv=sys.argv):
-            # old code c_rsf.sf_init(len(argv),argv)
-            # c_rsf.sf_init needs 'utf-8' (bytes) not unicode
-            # This uses python 'list comprehension' rather than 'for' loop
-            c_rsf.sf_init(len(argv),[arg.encode('utf-8') for arg in argv])
+class Par(object):
+    '''parameter table'''
+    def __init__(self,argv=sys.argv):
+        # c_rsf.sf_init needs 'utf-8' (bytes) not unicode
+        if _swig_:
+            c_rsf.sf_init(len(argv),
+                            [arg.encode('utf-8') for arg in argv])
             self.prog = c_rsf.sf_getprog()
-            for type in ('int','float','bool'):
-                setattr(self,type,self.__get(type))
-                setattr(self,type+'s',self.__gets(type))
-        def __get(self,type):
+        else:
+            self.pars = _Simtab()
+            self.prog = argv[0]
+            
+            for arg in argv[1:]:
+                if arg[:4] == 'par=':
+                    parfile = open(arg[4:],'r')
+                    self.pars.input(parfile)
+                    parfile.close()
+                else:
+                    self.pars.put(argv)
+            
+        for type in ('int','float','bool'):
+            setattr(self,type,self.__get(type))
+            setattr(self,type+'s',self.__gets(type))
+    def __get(self,type):
+        if _swig_:
             func = getattr(c_rsf,'sf_get'+type)
-            def _get(key,default=None):
+        else:
+            func = getattr(self.pars,'get'+type)
+        def _get(key,default=None):
+            if sys.version_info[0] < 3:
                 # c function only knows utf-8 (ascii).  translate the unicode
-                if sys.version_info[0] >= 3:
-                    get,par = func(key)
-                else:
-                    get,par = func(key.encode('utf-8'))
-                if get:
-                    return par
-                elif default != None:
-                    return default
-                else:
-                    return None
-            return _get
-        def __gets(self,type):
-            func = getattr(c_rsf,'get'+type+'s')
-            def _gets(key,num,default=None):
-                pars = func(key,num)
-                if pars:
-                    return pars
-                elif default:
-                    return default
-                else:
-                    return None
-            return _gets
-        def string(self,key,default=None):
-            # c function only knows utf-8 (ascii).  translate the unicode
-            if sys.version_info[0] >= 3:
-                par = c_rsf.sf_getstring(key)
-            else:
-                par = c_rsf.sf_getstring(key.encode('utf-8'))
-            if par:
+                key = key.encode('utf-8')
+            get,par = func(key)
+            if get:
                 return par
+            elif default != None:
+                return default
+            else:
+                return None
+        return _get
+    def __gets(self,type):
+        if _swig_:
+            func = getattr(c_rsf,'get'+type+'s')
+        else:
+            func = getattr(self.pars,'get'+type)
+        def _gets(key,num,default=None):
+            pars = func(key,num)
+            if pars:
+                return pars
             elif default:
                 return default
             else:
                 return None
-else:
-    class Par(object):
-        '''parameter table'''
-        def __init__(self,argv=sys.argv):
-            self.noArrays = True
-            self.prog = argv[0]
-            self.__args = self.__argvlist2dict(argv[1:])
-        def __argvlist2dict(self,argv):
-            """Eliminates duplicates in argv and makes it a dictionary"""
-            argv = self.__filter_equal_sign(argv)
-            args = {}
-            for a in argv:
-                key = a.split('=')[0]
-                args[key] = a.replace(key+'=','')
-            return args
-
-        def __filter_equal_sign(self,argv):
-            """Eliminates "par = val", "par= val" and "par =val" mistakes."""
-            argv2 = []
-            # Could not use the simpler 'for elem in argv'...argv.remove because
-            # lonely '=' signs are treated weirdly. Many things did not work as
-            # expected -- hence long and ugly code. Test everything.
-            for i in range( len(argv) ):
-                if argv[i] != '=':
-                    if argv[i].find('=') != 0:
-                        if argv[i].find('=') != -1:
-                            if argv[i].find('=') != len(argv[i])-1:
-                                argv2.append(argv[i])
-            return argv2
-
-        def __get(self, key, default=None):
-            """Obtains value of argument from dictionary"""
-            if self.__args.has_key(key):
-                return self.__args[key]
-            else:
-                return default
-
-        # call without default then test if return is None is error
-        # on a required parameter.  cannot tell difference between illegal
-        # int value and value not input.
-        def int(self,key,default=None):
-            """Returns integer argument given to program"""
-            try:
-                val=self.__args[key]
-            except:
-                return default
-
-            try:
-                return int(val)
-            except:
-                sys.stderr.write('program reading command line arg %s\n'%key)
-                sys.stderr.write('parsing %s=%s\n'%(key,val))
-                sys.stderr.write('right of = sign must be an int\n')
-                sys.stderr.write('error - exiting program\n')
-                quit()
-
-        def string(self, key, default=None):
-            """Returns string argument given to program"""
-            try:
-                return self.__args[key]
-            except:
-                return default
-
-        def float(self,key,default=None):
-            """Returns float argument given to program"""
-            try:
-                val=self.__args[key]
-            except:
-                return default
-
-            try:
-                return float(val )
-            except:
-                sys.stderr.write('program reading command line arg %s\n'%key)
-                sys.stderr.write('parsing %s=%s\n'%(key,val))
-                sys.stderr.write('right of = sign must be a float\n')
-                sys.stderr.write('error - exiting program\n')
-                quit()
-
-        def bool(self,key,default=None):
-            """Returns bool argument given to program"""
-            try:
-                val = self.__args[key]
-            except:
-                return default
-            val = str(val).lower()
-            if val[0] == 'y' or val == 'true':
-                return True
-            elif val[0] =='n' or val == 'false':
-                return False
-            else:
-                return None
+        return _gets
+    def string(self,key,default=None):
+        if sys.version_info[0] < 3:
+            # c function only knows utf-8 (ascii).  translate the unicode
+            key = key.encode('utf-8')
+        
+        if _swig_:
+            par = c_rsf.sf_getstring(key)
+        else:
+            par = self.pars.getstring(key)
+    
+        if par:
+            return par
+        elif default:
+            return default
+        else:
+            return None
 
 # default parameters for interactive runs
 par = Par(['python','-'])
@@ -380,12 +284,10 @@ class File(object):
         return self.narray
 
     def __array_wrap__(self,array,context=None):
-        sys.stderr.write('in __array_wrap__n')
         inp = Input(self)
         inp.read(array)
         return inp
     def __getitem__(self,i):
-        #sys.stderr.write('in __getitem__n')
         array = self.__array__()
         return array[i]
     def __setitem__(self,index,value):
@@ -560,14 +462,20 @@ class _File(File):
         if _swig_:
             c_rsf.sf_fileclose(self.file)
         else:
-            self.f.close()
+            if self.f != sys.stdin and \
+              self.f != sys.stdout and \
+              self.f != None:
+                self.f.close()
+            self.f = None
     def __del__(self):
-        # check if user call to flush or close already cleaned up
         if _swig_:
             c_rsf.sf_fileclose(self.file)
         else:
-            if not self.f.closed:
-                self.close()
+            if self.f != sys.stdin and \
+              self.f != sys.stdout and \
+              self.f != None:
+                self.f.close()
+            self.f = None
         File.close(self) # this removes file if it is temporary
 
     def settype(self,type):
@@ -1095,8 +1003,7 @@ class Output(_File):
                 self.file = c_rsf.sf_output(self.tag)
             else:
                 self.file = c_rsf.sf_output(self.tag.encode('utf-8'))
-            if src==None and first_input!=None:
-                #sys.stderr.write("set src=first_input\n")
+            if src==None and first_input:
                 src=first_input
             if src: # clone source file
                 if hasattr(src,'file'):
@@ -1115,7 +1022,7 @@ class Output(_File):
 
         else:
             self.tag=tag
-            self.temp=None
+            self.temp=False
             if src==None :
                 if first_input==None:
                     self.header=""
@@ -1249,7 +1156,8 @@ class Output(_File):
                     self.put('data_format','native_complex')
                 if data.dtype==np.int32:
                     self.put('data_format','native_int')
-                self.flushheader(first_input)
+                if first_input:
+                    self.flushheader(first_input)
             # kls should check array data type matches file data_format
             data.tofile(self.f)
 
@@ -1297,15 +1205,6 @@ class Output(_File):
             temp.tofile(self.f)
             trace.tofile(self.f)
             header.tofile(self.f)
-
-    def close(self):
-        if _swig_:
-            c_rsf.sf_fileclose(self.file)
-            _File.close(self)
-        else:
-            self.f.flush()
-            if not self.pipe:
-                self.f.close()
 
     def flushheader(self,src):
         # write the header (saved from the previous (input) file
@@ -1362,7 +1261,7 @@ class Filter(object):
     'Madagascar filter'
     plots = ('grey','contour','graph','contour3',
              'dots','graph3','thplot','wiggle','grey3')
-    diagnostic = ('attr','disfil')
+    diagnostic = ('attr','disfil','headerattr')
     def __init__(self,name,prefix='sf',srcs=[],
                  run=False,checkpar=False,pipe=False):
         rsfroot = rsf.prog.RSFROOT
@@ -1578,19 +1477,89 @@ class Vplot(object):
         convert(self.name,name,format,pen,self.penopts+args,verb=False)
 
 class _Wrap(object):
-     def __init__(self, wrapped):
-         self.wrapped = wrapped
-     def __getattr__(self, name):
-         try:
-             return getattr(self.wrapped, name)
-         except AttributeError:
-             if name in rsf.doc.progs.keys() or 'sf'+name in rsf.doc.progs.keys():
-                 return Filter(name)
-             else:
-                 raise
+    'helper class to wrap all Madagascar programs as Filter objects'
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+    def __getattr__(self, name):
+        try:
+            return getattr(self.wrapped, name)
+        except AttributeError:
+            if name in rsf.doc.progs.keys() or \
+              'sf'+name in rsf.doc.progs.keys():
+                return Filter(name)
+            else:
+                raise
 
 sys.modules[__name__] = _Wrap(sys.modules[__name__])
 
+if not _swig_ :
+
+    class _Simtab(object):
+        'simbol table'
+        def __init__(self):
+            self.table = dict()
+        def enter(self,key,val):
+            'add key=val to the table'
+            self.table[key] = val
+        def get(self,key):
+            return self.table.get(key)
+        def getint(self,key):
+            val = self.get(key)
+            if val:
+                return True,int(val)
+            return False,None
+        def getfloat(self,key):
+            val = self.get(key)
+            if val:
+                return True,float(val)
+            return False,None
+        def getfloats(self,key,n):
+            val = self.get(key)
+            if val:
+                vals = val.split(',')
+                nval = len(vals)
+                # set array to length n
+                if n < nval:
+                    vals = vals[:n]
+                elif n > nval:
+                    vals.extend((n-nval)*[vals[nval-1]])
+                return True,[float(v) for v in vals]
+            return False,None
+        def getstring(self,key):
+            return self.get(key)
+        def getbool(self,key):
+            val = self.get(key)
+            if val:
+                if val[0] == 'y' or val[0] == 'Y' or val[0] == '1':
+                    return True,True
+            else:
+                return True,False
+            return False,None
+        def put(self,keyval):
+            if '=' in keyval:
+                key,val = keyval.split('=')
+                self.enter(key,val)
+        def string(self,string):
+            'extract parameters from a string'
+            for word in string.split():
+                self.put(word)
+        def input(self,filep,out=None):
+            'extract parameters from header file'
+            for line in filep.readlines():
+                # check code for the header end
+                if line[:3] == '\x0c\x0c\x04':
+                    break
+                if out:
+                    out.write(line)
+                self.string(line)
+            if out:
+                out.flush()
+        def output(self,filep):
+            'output parameters to a file'
+            for key in self.table.keys():
+                filep.write('\t%s=%s\n',key,self.table[key])
+        def expand(self,other):
+            self.table.update(other.table)
 
 if __name__ == "__main__":
 
@@ -1599,24 +1568,16 @@ if __name__ == "__main__":
 #      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
 
     # Testing getpar
-    sys.stderr.write('testing getpar par=Par...\n')
-#    this is original Par.  none of this works with _swig_=True
-#    par = Par(["prog","a=5","b=as","a=100","par=%s" % sys.argv[0]])
-    sys.stderr.write('sys.argv=%s\n'%sys.argv)
     par = Par(["prog","a=5","b=as","a=100","float=5.625",
                "true=y"]) #,"par=%s" % sys.argv[0]])
-    sys.stderr.write('start test asserts\n')
     assert 100 == par.int("a")
     assert not par.int("c")
     assert 10 == par.int("c",10)
     assert 5.625 == par.float("float")
     assert par.bool("true")
-    sys.stderr.write('label=%s\n'%par.string("label"))
     #assert "Time (sec)" == par.string("label")
     #assert "Time (sec)" == par.string("label","Depth")
-    sys.stderr.write('nolabel=%s\n'%repr(par.string("nolabel")))
     assert not par.string("nolabel")
-    sys.stderr.write('nolabel,Depth=%s\n'%repr(par.string("nolabel","Depth")))
     assert "Depth" == par.string("nolabel","Depth")
     # no function for this   par.close()
     # Testing file
@@ -1638,10 +1599,7 @@ if __name__ == "__main__":
     assert 'Time' == input.string("label1")
     n2 = 10
     output.put('n2',n2)
-#    assert 10 == output.int('n2') No Output.int. Why get from output? karl
     output.put('label2','Distance (kft)')
-#    input.put("n",[100,100]) # No Input.put.  Why put to input? karl
-#    assert [100,100] == input.ints("n",2)
     trace = np.zeros(n1,'f')
     input.read(trace)
     for i in range(n2):
