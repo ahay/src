@@ -15,6 +15,8 @@ To the reproducible documents collection:
   damped rank-reduction method (Chen, Bai, Guan, Zhang, Zhang, and Wang)
 * zju/dtv: Full waveform inversion and joint migration inversion with 
   an automatic directional total variation constraint (Qu, Verschuur, and Chen)
+* tccs/anisodiff: Least-squares diffraction imaging using shaping
+  regularization by anisotropic smoothing (Merzlikin, Fomel, Wu)
 
 To SCons:
 
