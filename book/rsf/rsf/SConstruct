@@ -3,7 +3,27 @@ from rsf.tex import *
 Paper('tour',use='listings,color,hyperref')
 #Paper('format',use='hyperref')
 #Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
-Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
+Paper('demo',use='hyperref,listings,inconsolata',
+      include=r'''
+\newcommand{\RSF}{../../..}
+\lstdefinelanguage{julia}
+{
+  keywordsprefix=\@,
+  morekeywords={
+    exit,whos,edit,load,is,isa,isequal,typeof,tuple,ntuple,uid,hash,finalizer,convert,promote,
+    subtype,typemin,typemax,realmin,realmax,sizeof,eps,promote_type,method_exists,applicable,
+    invoke,dlopen,dlsym,system,error,throw,assert,new,Inf,Nan,pi,im,begin,while,for,in,return,
+    break,continue,macro,quote,let,if,elseif,else,try,catch,end,bitstype,ccall,do,using,module,
+    import,export,importall,baremodule,immutable,local,global,const,Bool,Int,Int8,Int16,Int32,
+    Int64,Uint,Uint8,Uint16,Uint32,Uint64,Float32,Float64,Complex64,Complex128,Any,Nothing,None,
+    function,type,typealias,abstract
+  },
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]',
+  morestring=[b]" 
+}
+      ''')
 #Paper('adding',options='short',use='hyperref')
 
 Paper('abstract',lclass='eage',

@@ -53,7 +53,7 @@ represent the propagating wavefield at various time steps.
 \lstinputlisting[frame=single]{\rsfafdm}
 \normalsize
 
-\begin{itemize}
+\begin{enumerate}
 \item Declare input, output and auxiliary file tags:
 \texttt{Fw} for input wavelet, 
 \texttt{Fv} for velocity,
@@ -122,7 +122,7 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \lstinputlisting[firstline=92,lastline=102,frame=single]{\rsfafdm}
 \normalsize
 
-\end{itemize}
+\end{enumerate}
 
 % ------------------------------------------------------------
 \newpage
@@ -139,7 +139,7 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \item Declare input, output and auxiliary file cubes 
 (of type \texttt{CUB}).
 \tiny
-\lstinputlisting[firstline=19,lastline=22,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=21,lastline=24,frame=single]{\rsfafdm}
 \normalsize
 
 \item Declare, read and write RSF cube axes:
@@ -147,51 +147,51 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \texttt{ax} space axis,
 \texttt{az} depth axis.
 \tiny
-\lstinputlisting[firstline=25,lastline=32,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=27,lastline=29,frame=single]{\rsfafdm}
 \normalsize
 
 \item Declare multi-dimensional 
 \texttt{valarrays} for input, output and read data.
 \tiny
-\lstinputlisting[firstline=39,lastline=41,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=41,lastline=43,frame=single]{\rsfafdm}
 \normalsize
 
 \item Declare multi-dimensional 
 \texttt{valarrays} for temporary storage.
 \tiny
-\lstinputlisting[firstline=44,lastline=47,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=46,lastline=49,frame=single]{\rsfafdm}
 \normalsize
 
 \item Initialize multidimensional \texttt{valarray} 
 index counter (of type \texttt{VAI}).
 \tiny
-\lstinputlisting[firstline=50,lastline=50,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=52,lastline=52,frame=single]{\rsfafdm}
 \normalsize
 
 \item Loop over time.
 \tiny
-\lstinputlisting[firstline=54,lastline=54,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=56,lastline=56,frame=single]{\rsfafdm}
 \normalsize
 
 \item Compute Laplacian: $\Delta U$.
 \tiny
-\lstinputlisting[firstline=58,lastline=67,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=60,lastline=69,frame=single]{\rsfafdm}
 \normalsize
 
 \item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
 \tiny
-\lstinputlisting[firstline=70,lastline=70,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=72,lastline=72,frame=single]{\rsfafdm}
 \normalsize
 
 \item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
 \tiny
-\lstinputlisting[firstline=73,lastline=73,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=75,lastline=75,frame=single]{\rsfafdm}
 \normalsize
 
 \item Time step: 
 $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \tiny
-\lstinputlisting[firstline=76,lastline=78,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=78,lastline=80,frame=single]{\rsfafdm}
 \normalsize
 
 \end{enumerate}
@@ -206,7 +206,7 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \normalsize
 \newpage
 
-\begin{itemize}
+\begin{enumerate}
 \item Declare input, output and auxiliary file tags.
 \tiny
 \lstinputlisting[firstline=11,lastline=11,frame=single]{\rsfafdm}
@@ -222,63 +222,172 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 
 \item Declare multi-dimensional arrays for input, output and computations.
 \tiny
-\lstinputlisting[firstline=16,lastline=17,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=18,lastline=19,frame=single]{\rsfafdm}
 \normalsize
 
 \item Open files for input/output.
 \tiny
-\lstinputlisting[firstline=23,lastline=26,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=25,lastline=28,frame=single]{\rsfafdm}
 \normalsize
 
 \item Read axes from input files; write axes to output file.
 \tiny
-\lstinputlisting[firstline=29,lastline=30,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=31,lastline=37,frame=single]{\rsfafdm}
 \normalsize
 
 \item Allocate arrays and read wavelet, velocity and reflectivity.
 \tiny
-\lstinputlisting[firstline=37,lastline=39,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=44,lastline=46,frame=single]{\rsfafdm}
 \normalsize
 
 \item Allocate temporary arrays.
 \tiny
-\lstinputlisting[firstline=42,lastline=45,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=49,lastline=52,frame=single]{\rsfafdm}
 \normalsize
 
 \item Loop over time.
 \tiny
-\lstinputlisting[firstline=48,lastline=48,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=55,lastline=55,frame=single]{\rsfafdm}
 \normalsize
 
 \item Compute Laplacian: $\Delta U$.
 \tiny
-\lstinputlisting[firstline=52,lastline=61,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=58,lastline=63,frame=single]{\rsfafdm}
 \normalsize
 
 \item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
 \tiny
-\lstinputlisting[firstline=64,lastline=64,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=66,lastline=66,frame=single]{\rsfafdm}
 \normalsize
 
 \item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
 \tiny
-\lstinputlisting[firstline=67,lastline=67,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=69,lastline=69,frame=single]{\rsfafdm}
 \normalsize
 
 \item Time step: 
 $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \tiny
-\lstinputlisting[firstline=70,lastline=72,frame=single]{\rsfafdm}
+\lstinputlisting[firstline=72,lastline=74,frame=single]{\rsfafdm}
 \normalsize
 
-\end{itemize}
+\end{enumerate}
 
 % ------------------------------------------------------------
-%
-%\bibliographystyle{segnat}
-%\bibliography{api}
+\newpage
+\section{Python program}
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\renewcommand{\rsfafdm}{\RSF/api/python/test/afdm.py}
 
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: t
-%%% End: 
+\tiny
+\lstinputlisting[frame=single]{\rsfafdm}
+\normalsize
+\newpage
+
+\sideplot{wavepython}{width=\textwidth}{Wave propagation snapshot.}
+
+\begin{enumerate}
+\item Open files for input/output.
+\tiny
+\lstinputlisting[firstline=15,lastline=18,frame=single]{\rsfafdm}
+\normalsize
+
+\item Read axes from input files; write axes to output file.
+\tiny
+\lstinputlisting[firstline=21,lastline=27,frame=single]{\rsfafdm}
+\normalsize
+
+\item Allocate arrays and read wavelet, velocity and reflectivity.
+\tiny
+\lstinputlisting[firstline=34,lastline=36,frame=single]{\rsfafdm}
+\normalsize
+
+\item Allocate temporary arrays.
+\tiny
+\lstinputlisting[firstline=39,lastline=42,frame=single]{\rsfafdm}
+\normalsize
+
+\item Loop over time.
+\tiny
+\lstinputlisting[firstline=45,lastline=45,frame=single]{\rsfafdm}
+\normalsize
+
+\item Compute Laplacian: $\Delta U$.
+\tiny
+\lstinputlisting[firstline=49,lastline=54,frame=single]{\rsfafdm}
+\normalsize
+
+\item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
+\tiny
+\lstinputlisting[firstline=57,lastline=57,frame=single]{\rsfafdm}
+\normalsize
+
+\item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
+\tiny
+\lstinputlisting[firstline=60,lastline=60,frame=single]{\rsfafdm}
+\normalsize
+
+\item Time step: 
+$U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
+\tiny
+\lstinputlisting[firstline=63,lastline=65,frame=single]{\rsfafdm}
+\normalsize
+
+\end{enumerate}
+
+\begin{comment}
+
+% ------------------------------------------------------------
+\newpage
+\section{Julia program}
+\lstset{language=julia,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\renewcommand{\rsfafdm}{\RSF/api/julia/test/afdm.jl}
+
+\tiny
+\lstinputlisting[frame=single]{\rsfafdm}
+\normalsize
+\newpage
+
+\begin{enumerate}
+\item Open files for input/output and read wavelet, velocity and reflectivity.
+\tiny
+\lstinputlisting[firstline=13,lastline=15,frame=single]{\rsfafdm}
+\normalsize
+
+
+\item Allocate temporary arrays.
+\tiny
+\lstinputlisting[firstline=49,lastline=52,frame=single]{\rsfafdm}
+\normalsize
+
+\item Loop over time.
+\tiny
+\lstinputlisting[firstline=54,lastline=54,frame=single]{\rsfafdm}
+\normalsize
+
+\item Compute Laplacian: $\Delta U$.
+\tiny
+\lstinputlisting[firstline=58,lastline=62,frame=single]{\rsfafdm}
+\normalsize
+
+\item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
+\tiny
+\lstinputlisting[firstline=65,lastline=65,frame=single]{\rsfafdm}
+\normalsize
+
+\item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
+\tiny
+\lstinputlisting[firstline=68,lastline=68,frame=single]{\rsfafdm}
+\normalsize
+
+\item Time step: 
+$U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
+\tiny
+\lstinputlisting[firstline=71,lastline=73,frame=single]{\rsfafdm}
+\normalsize
+
+\end{enumerate}
+
+\end{comment}
+
+
