@@ -50,7 +50,7 @@ jobs:
 
     - run: 
         name: Test
-	no_output_timeout: 30m
+        no_output_timeout: 30m
         command: |
           source env.sh 
           cd book 
