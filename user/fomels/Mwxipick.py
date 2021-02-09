@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pythonw
 'Simple interactive picking'
 
 ##   Copyright (C) 2010 University of Texas at Austin
@@ -57,7 +57,7 @@ def hist(func,var,default=None):
     command = '< %s %s %s parform=n' % (byte,sfget,var)
     devnull = open(os.devnull,"w")
     pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
-    val = pipe.stdout.read().rstrip()
+    val = pipe.stdout.read().rstrip().decode('utf-8')
     if val:
         return func(val)
     else:
@@ -87,7 +87,7 @@ class Canvas(wx.Window):
     def __init__(self,parent,ID):
         wx.Window.__init__(self,parent,ID,size=(width,height))
         self.SetBackgroundColour('black')
-        self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
+        self.SetCursor(wx.Cursor(wx.CURSOR_CROSS))
 
         image = self.rsf2image(0)
         self.image = image.ConvertToBitmap()
@@ -99,9 +99,9 @@ class Canvas(wx.Window):
         self.black = wx.Brush('black')
         self.Bind(wx.EVT_PAINT,self.OnPaint)
         self.Bind(wx.EVT_LEFT_DOWN,self.OnClick)
-        self.Bind(wx.EVT_RIGHT_DOWN,self.Delete)
-        self.Bind(wx.EVT_MIDDLE_DOWN,self.SelectPick)
-        self.Bind(wx.EVT_MIDDLE_UP,self.Drop)
+#        self.Bind(wx.EVT_RIGHT_DOWN,self.Delete)
+#        self.Bind(wx.EVT_MIDDLE_DOWN,self.SelectPick)
+#        self.Bind(wx.EVT_MIDDLE_UP,self.Drop)
         
         self.SetFrame()
 
@@ -160,12 +160,12 @@ class Canvas(wx.Window):
     def UnscalePick(self,pick):
         ys = pick[0]
         xs = pick[1]
-        x = x0+(xs-self.o2)/self.xscale
-        y = y0+(ys-self.o1)/self.yscale
+        x = int(x0+(xs-self.o2)/self.xscale)
+        y = int(y0+(ys-self.o1)/self.yscale)
         return (x,y)
     def DrawPicks(self,i3):
         for pick in picks[i3].values():
-            (x,y) = self.UnscalePick(pick[0])
+            x,y = self.UnscalePick(pick[0])
             self.dc.SetPen(self.pen)
             self.dc.SetBrush(pick[1])
             self.dc.DrawCircle(x,y,r)
@@ -173,17 +173,17 @@ class Canvas(wx.Window):
         self.brush = wx.Brush(color)
     def OnClick(self,event):
         global npick, r
-        self.dc.SetPen(self.pen)
-        self.dc.SetBrush(self.brush)
-        x,y = event.GetPositionTuple()
+        x,y = event.GetPosition().Get()
         if x >= x0 and y >= y0 and x <= x1 and y <= y1:
             npick += 1
             tag = 'pick%d' % npick
+            self.dc.SetPen(self.pen)
+            self.dc.SetBrush(self.brush)
             self.dc.DrawCircle(x,y,r)
             picks[i3][tag]=[self.ScalePick(x,y),self.brush]
         event.Skip()
     def SelectPick(self,event):
-        x,y = event.GetPositionTuple()
+        x,y = event.GetPosition().Get()
         for p in picks[i3].keys():
             xp,yp = self.UnscalePick(picks[i3][p][0])
             if (x-xp)*(x-xp)+(y-yp)*(y-yp) < 9:
@@ -191,7 +191,7 @@ class Canvas(wx.Window):
                 break
         event.Skip()
     def Drop(self,event):
-        x,y = event.GetPositionTuple()
+        x,y = event.GetPosition().Get()
         p = self.selected
         if p:
             picks[i3][p][0] = self.ScalePick(x,y)
@@ -199,7 +199,7 @@ class Canvas(wx.Window):
         self.selected = None
         event.Skip()
     def Delete(self,event):
-        x,y = event.GetPositionTuple()
+        x,y = event.GetPosition().Get()
         for p in picks[i3].keys():
             xp,yp = self.UnscalePick(picks[i3][p][0])
             if (x-xp)*(x-xp)+(y-yp)*(y-yp) < 9:
@@ -267,7 +267,7 @@ class MainFrame(wx.Frame):
         self.label.SetLabel('%d of %d' % (i3+1,n3))
         self.sketch.Redraw(i3)
     def OnSketchMotion(self,event):
-        x,y = event.GetPositionTuple()
+        x,y = event.GetPosition().Get()
         position = self.sketch.Position(x,y)
         self.status.SetStatusText(position,0)
         event.Skip()

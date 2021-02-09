@@ -19,9 +19,9 @@
 import sys
 
 try:
-    from Tkinter import *
+    from tkinter import *
 except:
-    sys.stderr.write('Please install Tkinter!\n\n')
+    sys.stderr.write('Please install tkinter!\n\n')
     sys.exit(1)
     
 from signal import *

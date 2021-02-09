@@ -227,7 +227,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
 #ifdef SF_HAS_RPC
     file->op = XDR_DECODE;
 #endif
-	little_endian = sf_endian();
+    little_endian = sf_endian();
 	
     format = sf_histstring(file,"data_format");
     if (NULL == format) {
@@ -349,7 +349,7 @@ sf_file sf_output (/*@null@*/ const char* tag)
 #ifdef SF_HAS_RPC
     file->op = XDR_ENCODE;
 #endif
-	little_endian = sf_endian();
+    little_endian = sf_endian();
 	
     if (NULL == infiles) {
 	infiles = (sf_file *) sf_alloc(1,sizeof(sf_file));

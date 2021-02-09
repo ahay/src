@@ -20,10 +20,10 @@ import sys, os, atexit, tempfile, subprocess
 from rsf.prog import RSFROOT
 
 try:
-    from Tkinter import *
-    from tkColorChooser import askcolor
+    from tkinter import *
+    from tkinter.colorchooser import askcolor
 except:
-    sys.stderr.write('Please install Tkinter!\n\n')
+    sys.stderr.write('Please install tkinter!\n\n')
     sys.exit(1)
 
 if os.isatty(sys.stdin.fileno()):

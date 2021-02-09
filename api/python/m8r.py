@@ -36,21 +36,14 @@ except:
 
 def no_swig():
     'disable swig for testing'
+    global _swig_
     _swig_ = False
-
-first_input=None
 
 import rsf.doc
 import rsf.prog
 import rsf.path
 import datetime
 import tempfile
-
-###
-# Define the octal representations for End Of Line and
-#   End Of Transmission
-SF_EOL=0o14
-SF_EOT=0o04
 
 def view(name):
     'for use in Jupyter notebooks'
@@ -87,6 +80,8 @@ class Par(object):
         for type in ('int','float','bool'):
             setattr(self,type,self.__get(type))
             setattr(self,type+'s',self.__gets(type))
+    def getprog(self):
+        return self.prog
     def __get(self,type):
         if _swig_:
             func = getattr(c_rsf,'sf_get'+type)
@@ -146,6 +141,7 @@ class Temp(str):
         return str.__new__(cls,tempfile.mktemp(dir=Temp.tmpdatapath))
 
 class File(object):
+    'generic RSF file object'
     attrs = ['rms','mean','norm','var','std','max','min','nonzero','samples']
     def __init__(self,tag,temp=False,name=''):
         'Constructor'
@@ -272,12 +268,6 @@ class File(object):
                 # gets only the real part of complex arrays ##kls
 
                 f=Input(self.filename)
-
-                if False: #change to  'if True' to get this diagnostic print
-                    sys.stderr.write('self.filename=%s\n'%self.filename)
-                    sys.stderr.write('f.filename=%s\n'%f.filename)
-                    sys.stderr.write('f.f=%s\n'%f.f)
-
                 self.narray=np.memmap(f.string('in'),dtype=f.datatype,
                                       mode='r+',
                                       shape=f.shape())
@@ -397,47 +387,21 @@ class File(object):
         self.close()
 
 class _File(File):
-    type = ['uchar','char','int','float','complex']
-    form = ['ascii','xdr','native']
+    types = ['uchar','char','int','float','complex']
+    forms = ['ascii','xdr','native']
     def __init__(self,tag):
         if _swig_:
             if not self.file:
                 raise TypeError('Use Input or Output instead of File')
             File.__init__(self,tag)
-            self.type = _File.type[c_rsf.sf_gettype(self.file)]
-            self.form = _File.form[c_rsf.sf_getform(self.file)]
+            self.type = _File.types[c_rsf.sf_gettype(self.file)]
+            self.form = _File.forms[c_rsf.sf_getform(self.file)]
         else:
+            self.type = self.file.gettype()
+            self.form = self.file.getform()
             if not self.f:
                 raise TypeError('Use Input or Output instead of File')
             File.__init__(self,tag)
-            try:
-                data_format=self.vd['data_format']
-                if data_format=='native_float':
-                    self.type='float'
-                    self.form='native'
-                    esize=4
-                elif data_format=='native_complex':
-                    self.type='complex'
-                    self.form='native'
-                    esize=8
-                elif data_format=='native_int':
-                    self.type='int'
-                    self.form='native'
-                    esize=4
-                else:
-                    sys.stderr.write('error reading from input file.\n')
-                    sys.stderr.write('data_format=%s\n'%data_format)
-                    sys.stderr.write('filename=%s.\n'%self.filename)
-                    sys.stderr.write('data_format must be native_float, '+
-                                     'native_complex or native_int\n')
-                    sys.stderr.write('error - exiting program\n')
-                    quit()
-            except:
-                sys.stderr.write('error reading from input file.\n')
-                sys.stderr.write('data_format is not defined\n')
-                sys.stderr.write('filename=%s.\n'%self.filename)
-                sys.stderr.write('error - exiting program\n')
-                quit()
         if self.type=='float':
             self.datatype=np.float32
         elif self.type=='complex':
@@ -445,58 +409,45 @@ class _File(File):
         elif self.type=='int':
             self.datatype=np.int32
         else:
-            sys.stderr.write('error reading from input file.\n')
-            sys.stderr.write('self.type=%s\n'%self.type)
-            sys.stderr.write('filename=%s.\n'%self.filename)
-            sys.stderr.write('self.type must be native_float, '+
-                             'native_complex or native_int\n')
-            sys.stderr.write('error - exiting program\n')
-            quit()
-
+            sys.stderr.write('unsupported type\n')
+            sys.exit(1)
+ 
     def tell(self):
         if _swig_:
             return c_rsf.sf_tell(self.file)
         else:
-            return self.f.tell()
+            return self.file.tell()
     def close(self):
         if _swig_:
             c_rsf.sf_fileclose(self.file)
         else:
-            if self.f != sys.stdin and \
-              self.f != sys.stdout and \
-              self.f != None:
-                self.f.close()
-            self.f = None
+            self.file.fileclose()
     def __del__(self):
         if _swig_:
             c_rsf.sf_fileclose(self.file)
         else:
-            if self.f != sys.stdin and \
-              self.f != sys.stdout and \
-              self.f != None:
-                self.f.close()
-            self.f = None
+            self.file.fileclose()
         File.close(self) # this removes file if it is temporary
-
     def settype(self,type):
         if _swig_:
             for i in xrange(len(_File.type)):
                 if type == _File.type[i]:
                     self.type = type
-                c_rsf.sf_settype (self.f,i)
+                    c_rsf.sf_settype(self.file,i)
+                    break
         else:
-            sys.stderr.write('function settype only available with swig')
-            sys.exit(1)
-
+            self.file.settype(type)
+            self.type = type
     def setformat(self,format):
         if _swig_:
-            c_rsf.sf_setformat(self.f,format)
+            c_rsf.sf_setformat(self.file,format)
         else:
-            sys.stderr.write('function setformat only available with swig')
-            sys.exit(1)
-
+            self.file.setformat(format)
     def __get(self,func,key,default):
-        get,par = func(self.f,key)
+        if _swig_:
+            get,par = func(self.file,key)
+        else:
+            get,par = func(key)
         if get:
             return par
         elif default:
@@ -504,7 +455,10 @@ class _File(File):
         else:
             return None
     def __gets(self,func,key,num,default):
-        pars = func(self.f,key,num)
+        if _swig_:
+            pars = func(self.file,key,num)
+        else:
+            pars = func(key,num)
         if pars:
             return pars
         elif default:
@@ -512,25 +466,43 @@ class _File(File):
         else:
             return None
     def string(self,key):
-        return c_rsf.sf_histstring(self.f,key)
+        if _swig_:
+            return c_rsf.sf_histstring(self.file,key)
+        else:
+            return self.file.histstring(key)
     def int(self,key,default=None):
-        return self.__get(c_rsf.sf_histint,key,default)
+        if _swig_:
+            return self.__get(c_rsf.sf_histint,key,default)
+        else:
+            return self.__get(self.file.int,key,default)
     def float(self,key,default=None):
-        return self.__get(c_rsf.sf_histfloat,key,default)
+        if _swig_:
+            return self.__get(c_rsf.sf_histfloat,key,default)
+        else:
+            return self.__get(self.file.float,key,default)
     def ints(self,key,num,default=None):
-        return self.__gets(c_rsf.histints,key,num,default)
+        if _swig_:
+            return self.__gets(c_rsf.histints,key,num,default)
+        else:
+            return self.__gets(self.file.ints,key,num,default)
     def bytes(self):
-        return c_rsf.sf_bytes(self.f)
+        if _swig_:
+            return c_rsf.sf_bytes(self.file)
+        else:
+            return self.file.bytes()
     def put(self,key,val):
-        if isinstance(val,int):
-            c_rsf.sf_putint(self.f,key,val)
-        elif isinstance(val,float):
-            c_rsf.sf_putfloat(self.f,key,val)
-        elif isinstance(val,str):
-            c_rsf.sf_putstring(self.f,key,val)
-        elif isinstance(val,list):
-            if isinstance(val[0],int):
-                c_rsf.sf_putints(self.f,key,val)
+        if _swig_:
+            if isinstance(val,int):
+                c_rsf.sf_putint(self.file,key,val)
+            elif isinstance(val,float):
+                c_rsf.sf_putfloat(self.file,key,val)
+            elif isinstance(val,str):
+                c_rsf.sf_putstring(self.file,key,val)
+            elif isinstance(val,list):
+                if isinstance(val[0],int):
+                    c_rsf.sf_putints(self.file,key,val)
+        else:
+            self.file.put(key,val)
     def axis(self,i):
         ax = {}
         ax['n'] = self.int("n%d"   % i)
@@ -551,201 +523,31 @@ class _File(File):
 class Input(_File):
     def __init__(self,tag='in'):
         '''
-        Open an rsf file for reading.  This creartes the dictionary of meta data
-        from the input file headers (aka history).
+        Open an RSF file for reading.  
         '''
-        global first_input
-        if _swig_:
-            if isinstance(tag,File):
-                # copy file
-                self.__init__(tag.tag)
-                #self.copy = True
-            else:
-                # c function only knows utf-8 (ascii).  translate the unicode
-                if sys.version_info[0] >= 3:
-                    self.file = c_rsf.sf_input(tag)
-                else:
-                    self.file = c_rsf.sf_input(tag.encode('utf-8'))
-                _File.__init__(self,tag)
-                #self.copy = False
+        if isinstance(tag,File):
+            # copy file
+            self.__init__(tag.tag)
         else:
-            self.temp=None
-            self.filename=tag
-            if tag == 'in':
-                #sys.stderr.write("set self.f=sys.stdin\n")
-                self.f=sys.stdin
+            if sys.version_info[0] < 3:
+                # c function only knows utf-8 (ascii).  translate the unicode
+                tag = tag.encode('utf-8')
+            if _swig_:
+                self.file = c_rsf.sf_input(tag)
             else:
-                try:
-                    self.f = open(str(tag),'rb')
-                except:
-                    sys.stderr.write("Cannot read from \"%s\"\n" % tag)
-                    sys.exit(1)
-            # Strip off the header.  Save it as self.header so it can be
-            # copied to an output file
-
-            end_of_file_reading_header=False
-            self.header=""
-            while True:
-                #sys.stderr.write('self.f.readline\n')
-                if tag=='in' and hasattr(self.f,'buffer'):
-                    line=self.f.buffer.readline(3)
-                else:
-                    line=self.f.readline(3)
-                line=line.decode('utf-8')
-                #sys.stderr.write('line=%s\n'%repr(line))
-                #try:
-                #    line=self.f.readline(3)
-                #except:
-                #    end_of_file_reading_header=True
-                #    break
-                if len(line)==0:
-                    end_of_file_reading_header=True
-                    break
-                if (len(line)==3 and
-                    SF_EOL==ord(line[0]) and
-                    SF_EOL==ord(line[1]) and
-                    SF_EOT==ord(line[2])):
-                    break
-                if ('\n' !=line[0] and
-                    '\n' !=line[1] and
-                    '\n'  !=line[2]):
-                    # There must be more on this line
-                    if tag=='in' and  hasattr(self.f,'buffer'):
-                        restofline = self.f.buffer.readline()
-                    else:
-                        restofline = self.f.readline()
-                    restofline =restofline.decode('utf-8')
-                else:
-                    restofline=""
-                self.header=self.header+line+restofline
-                #sys.stderr.write('whole line=%s\n'%repr(line+restofline))
-
-            self.__create_variable_dictionary(self.header)
-
-            if end_of_file_reading_header:
-                self.f.close()  # close input file is not stdin
-                self.filename=self.string("in")
-                self.f = open(self.filename,'r')
-
-            # need to remember fileloc of beginning of data
-            try:
-                self.datastart=self.f.tell()
-                self.pipe=False
-            except:
-                self.datastart=0
-                self.pipe=True
-            #sys.stderr.write('self.datastart=%d\n'%self.datastart)
-
-            # example:
-            # f = open("temp", "rb")
-            # f.seek(256, os.SEEK_SET)
-            # read the rest of the file into numpy array :
-            # x = np.fromfile(f, dtype=np.int)
-
-            try:
-                data_format=self.vd['data_format']
-                if data_format=='native_float':
-                    self.type='float'
-                    self.form='native'
-                    self.esize=4
-                    self.datatype=np.float32
-                elif data_format=='native_complex':
-                    self.type='complex'
-                    self.form='native'
-                    self.esize=8
-                    self.datatype=np.complex64
-                elif data_format=='native_int':
-                    self.type='int'
-                    self.form='native'
-                    self.esize=4
-                    self.datatype=np.int32
-                else:
-                    sys.stderr.write('error reading from input file.\n')
-                    sys.stderr.write('data_format=%s\n' % data_format)
-                    sys.stderr.write('filename=%s.\n' % self.filename)
-                    sys.stderr.write('data_format must be native_float, '+
-                                     'native_complex or native_int\n')
-                    sys.stderr.write('error - exiting program\n')
-                    quit()
-            except:
-                sys.stderr.write('error reading from input file.\n')
-                sys.stderr.write('data_format is not defined\n')
-                sys.stderr.write('filename=%s.\n' % self.filename)
-                sys.stderr.write('error - exiting program\n')
-                quit()
-                #kls write code to compute self.shape
-        File.__init__(self,tag)
+                self.file = _RSF(tag,True)
+        _File.__init__(self,tag)
         self.copy = False
-
-        if first_input==None:
-            first_input=self
-
-
-    def __create_variable_dictionary(self, header):
-        'Parse RSF header into a dictionary of variables'
-        self.vd={} # variable dictionary
-        ilist = header.split()
-        # kls this code should be shared with
-        # Par.__argvlist2dic__.  I think codes trap different errors.
-        pos = 0
-        squot = "'"
-        dquot = '"'
-        while pos < len(ilist):
-            if '=' in ilist[pos]:
-                tokenlist = ilist[pos].split('=')
-                lhs = tokenlist[0]
-                rhs = tokenlist[1]
-                quotmark = None
-                if len(rhs) != 0 and rhs[0] in (squot, dquot):
-                    if rhs[0] == squot:
-                        quotmark = squot
-                    else:
-                        quotmark = dquot
-                    if rhs[-1] == quotmark:
-                        rhs_out = rhs.strip(quotmark)
-                        pos += 1
-                    else:
-                        rhs_out = rhs.lstrip(quotmark)
-                        while pos < len(ilist):
-                            pos += 1
-                            rhs_out += ' '
-                            if ilist[pos][-1] == quotmark:
-                                rhs_out += ilist[pos][:-1]
-                                break
-                            else:
-                                rhs_out += ilist[pos]
-                else:
-                    rhs_out = rhs
-                    pos += 1
-                self.vd[lhs] = rhs_out
-            else:
-                pos += 1
-
     def read(self,data=[],shape=None,datatype=None):
-        '''
-        The read function will read an input file into an array and return the 
-        array.  The best way to call the function is with no parameters to read the 
-        whole file into memory.  The datatype is defined by the input file to be float,
-        integer, or conplex.  If you want to read part of the file, specify the shape.  
-        Example to read the whole file:
-            input_rsf=m8r.Input("myfile.rsf")
-            myndarray=input_rsf.read()
-        Example to read one trace:
-            n1=input_rsf("n1")
-            mytrace=input_rsf(shape=(n1))
-        Example to read a 2d slice:
-            n1=input_rsf("n1")
-            n2=input_rsf("n2")
-            mytrace=input_rsf(shape=(n2,n1))
-        To be backward conpatible you can create an array and pass it as.  This will
-        define the number of entries you want to read and the dataformat. 
-        '''
         if len(data) == 0:
+            allocate = True
             if shape==None:
                 shape=self.shape()
             if datatype==None:
                 datatype=self.datatype
             data=np.zeros(shape,dtype=datatype)
+        else:
+            allocate = False
         shape=data.shape
         datacount=data.size
         if _swig_:
@@ -758,385 +560,27 @@ class Input(_File):
             else:
                 raise TypeError('Unsupported file type %s' % self.type)
         else:
-            data=data.reshape(datacount)
-            # This works in python2
-            #data[:]=np.fromfile(self.f,dtype=self.datatype,count=datacount)
-
-            #Tried these without luck in python3
-            #data[:]=np.frombuffer(self.f,dtype=self.datatype,count=datacount)
-
-            if hasattr(self.f,'buffer'):
-               buf = self.f.buffer.read(datacount*self.esize)
-            else:
-               buf = self.f.read(datacount*self.esize)
-            data[:] = np.frombuffer(buf, dtype=self.datatype)
-
-            data=data.reshape(shape)
-        return data
-
-    def gettrace(self):
-        '''
-        Read one trace from the file.
-        '''
-        datacount=self.shape()[-1]
-        return self.read(shape=(datacount))
-
-    def getalldata(self):
-        '''
-        read all the input data into memory.  This is the same as read().
-        '''
-        return self.read()
-
-    def get_tah(self):
-        '''
-        read one trace and header.  Usually sftahread or sftahsort is used
-        to read a trace from obe rsf file and trace header from another rsf file
-        and concatinate them and write them to standard output.  Later programs 
-        can then read trace_and_header data (tah).  gettah returns three objects.
-        A boolean that is Ture is end-of-file was encounterred, the trace, and the 
-        trace header.  If end of file is encounterred the traces and header will be
-        null
-        '''
-        if _swig_:
-            type_input_record='tah '.encode('utf-8')
-            bytesread=c_rsf.sf_try_charread2(type_input_record,4,self.file)
-            if bytesread !=4:
-                    return (True,None,None)
-        else:
-            temp=np.fromfile(self.f,dtype='int8',count=4)
-            if temp.size !=4:
-                return (True,None,None)
-            type_input_record=temp.tostring().decode()
-
-        #read the length of the trace+header
-        if _swig_:
-            fromfilearray=np.zeros(1,dtype=np.int32)
-            c_rsf.sf_intread(np.reshape(fromfilearray,(fromfilearray.size,)),
-                             self.file)
-        else:
-            fromfilearray=np.fromfile(self.f,dtype=np.int32,count=1);
-        if fromfilearray.size != 1:
-            return (True, None, None)
-        input_record_length=fromfilearray[0]
-
-        n1_traces=self.int('n1_traces')
-
-        if _swig_:
-            if self.type=='float':
-                self.datatype=np.float32
-            elif self.type == 'complex':
-                self.datatype=np.complex64
+            if self.type == 'float':
+                self.file.floatread(np.reshape(data,(data.size,)))
             elif self.type == 'int':
-                self.datatype=np.int32
+                self.file.intread(np.reshape(data,(data.size,)))
             else:
                 raise TypeError('Unsupported file type %s' % self.type)
-            trace=np.zeros(n1_traces,dtype=self.datatype)
-            if self.datatype == np.complex64:
-                c_rsf.sf_complexread(np.reshape(trace,(trace.size,)),
-                                   self.file)
-            elif self.datatype == np.float32:
-                c_rsf.sf_floatread(np.reshape(trace,(trace.size,)),
-                                   self.file)
-            else:
-                c_rsf.sf_intread(np.reshape(trace,(trace.size,)),
-                                   self.file)
-        else:
-            trace=np.fromfile(self.f,dtype=self.datatype,count=n1_traces)
-        if trace.size != n1_traces:
-            return (True, None, None)
-
-        header_format=self.string('header_format')
-        esize=self.int('esize')
-
-        headertype="unknown"
-        if (header_format == 'native_float' and
-            esize == 4):
-            headertype=np.float32
-
-        if (header_format == 'native_complex' and
-            esize == 8):
-            headertype=np.complex64
-
-        if (header_format == 'native_int' and
-            esize == 4):
-            headertype=np.int32
-
-        n1_headers=self.int('n1_headers')
-        if headertype != "unknown":
-            if _swig_:
-                header=np.zeros(n1_headers,dtype=headertype)
-                if headertype == np.complex64:
-                    c_rsf.sf_complexread(np.reshape(header,(header.size,)),
-                                         self.file)
-                elif headertype == np.float32:
-                    c_rsf.sf_realread(np.reshape(header,(header.size,)),
-                                       self.file)
-                else:
-                    c_rsf.sf_intread(np.reshape(header,(header.size,)),
-                                       self.file)
-            else:
-                #sys.stderr.write('Input.read size=%s\n'%str(n1_headers))
-                header=np.fromfile(self.f,dtype=headertype,count=n1_headers)
-            if header.size != n1_headers:
-                return (True, None, None)
-
-        else:
-            sys.stderr.write('error reading from input file.\n')
-            sys.stderr.write('headertype unknown\n')
-            sys.stderr.write('filename=%s.\n'%self.filename)
-            sys.stderr.write('data_format='+repr(header_format)+'\n')
-            sys.stderr.write('esize='+repr(esize)+'\n')
-            sys.stderr.write('error - exiting program\n')
-            quit()
-
-        return (False,trace,header)
-
-    def get_segy_keyindx(self,keyname):
-        '''
-        return the index of a segy header keyname.  
-        '''
-        standard_segy_key=['tracl', 'tracr', 'fldr', 'tracf', 'ep',
-                           'cdp', 'cdpt', 'trid', 'nvs', 'nhs',
-                           'duse', 'offset', 'gelev', 'selev', 'sdepth',
-                           'gdel', 'sdel', 'swdep', 'gwdep', 'scalel',
-                           'scalco', 'sx', 'sy', 'gx', 'gy',
-                           'counit', 'wevel', 'swevel', 'sut', 'gut',
-                           'sstat', 'gstat', 'tstat', 'laga', 'lagb',
-                           'delrt', 'muts', 'mute', 'ns', 'dt',
-                           'gain', 'igc', 'igi', 'corr', 'sfs',
-                           'sfe', 'slen', 'styp', 'stas', 'stae',
-                           'tatyp', 'afilf', 'afils', 'nofilf', 'nofils',
-                           'lcf', 'hcf', 'lcs', 'hcs', 'year',
-                           'day', 'hour', 'minute', 'sec', 'timbas',
-                           'trwf', 'grnors', 'grnofr', 'grnlof', 'gaps',
-                           'otrav', 'cdpx', 'cdpy', 'iline', 'xline',
-                           'shnum', 'shsca', 'tval', 'tconst4', 'tconst2',
-                           'tunits','device', 'tscalar', 'stype', 'sendir',
-                           'unknown','smeas4','smeas2', 'smeasu', 'unass1',
-                           'unass2']
-        # first look for keyname in the standard_segy_key list.  If not
-        # found, look in the input file header. If user invests new header
-        # name or misspells name and there is conflict with input file
-        # header parm names, there will be confusion.
-        try:
-            keyindx=standard_segy_key.index(keyname)
-        except:
-            keyindx=self.int(name)
-        return keyindx
-
-    def string(self, nm):
-        '''
-        look up nm from the rsf file header (aka history) and return the string value
-        '''
-        if _swig_:
-            if sys.version_info[0] >= 3:
-                return c_rsf.sf_histstring(self.file,nm)
-            # c function only knows about utf-8 (ascii).  translate the unicode
-            else:
-                return c_rsf.sf_histstring(self.file,nm.encode('utf-8'))
-        else:
-            try:
-                return self.vd[nm]
-            except:
-                return None
-
-    def int(self, nm):
-        '''
-        look up nm from the rsf file header (aka history) and return the integer value
-        '''
-        if _swig_:
-            # c function only knows about utf-8 (ascii).  translate the unicode
-            if sys.version_info[0] >= 3:
-                get,par = c_rsf.sf_histint(self.file,nm)
-            else:
-                get,par = c_rsf.sf_histint(self.file,nm.encode('utf-8'))
-            if get:
-                return par
-            else:
-                return None
-            #return self.__get(c_rsf.sf_histint,nm,None)
-        else:
-            try:
-                return int(self.vd[nm])
-            except:
-                return None
-
-
-    def float(self, nm):
-        '''
-        look up nm from the input file header (aka history) and return the floating point value 
-        '''
-        if _swig_:
-            # c function only knows about utf-8 (ascii).  translate the unicode
-            if sys.version_info[0] >= 3:
-                get,par = c_rsf.sf_histfloat(self.file,nm)
-            else:
-                get,par = c_rsf.sf_histfloat(self.file,nm.encode('utf-8'))
-            if get:
-                return par
-            else:
-                return None
-        else:
-            try:
-                return float(self.vd[nm])
-            except:
-                return None
-
-    def close(self):
-        '''
-           close the file.
-        '''
-        # kls
-        #if not self.copy:
-        #    c_rsf.sf_fileclose(self.f)
-        _File.close(self)
-
+        if allocate:
+            return data
+            
 class Output(_File):
-    def __init__(self,tag='out',src=None):
+    def __init__(self,tag='out'):
+        if sys.version_info[0] < 3:
+        # c function only knows utf-8 (ascii).  translate the unicode
+            tag = tag.encode('utf-8')
         if _swig_:
-            self.tag = tag
-            self.temp = False
-            self.srcfile=None
-            self.headerflushed = False
-            # c function only knows about utf-8 (ascii).  translate the unicode
-            if sys.version_info[0] >= 3:
-                self.file = c_rsf.sf_output(self.tag)
-            else:
-                self.file = c_rsf.sf_output(self.tag.encode('utf-8'))
-            if src==None and first_input:
-                src=first_input
-            if src: # clone source file
-                if hasattr(src,'file'):
-                   srcfile = src.file
-                   srctype = src.type
-                else:
-                   srcfile = c_rsf.sf_input(src.file)
-                   srctype = c_rsf.sf_gettype(srcfile)
-                c_rsf.sf_settype(self.file,_File.type.index(srctype))
-                self.srcfile=srcfile
-                self.headerflushed = False
-                if not hasattr(src,'file'):
-                    c_rsf.sf_fileclose(srcfile)
-            _File.__init__(self,self.tag)
-            return None
-
+            self.file = c_rsf.sf_output(tag)
         else:
-            self.tag=tag
-            self.temp=False
-            if src==None :
-                if first_input==None:
-                    self.header=""
-                else:
-                    self.header=first_input.header
-            else:
-                self.header=src.header
-
-            # create dictionary from src file
-            if tag == 'out':
-                self.f=sys.stdout
-                self.pipe=self.is_pipe()
-                self.filename=self.getfilename()
-                if self.filename==None:
-                    # cannot find the fine name. Probably in another directory
-                    # make up a temporary name
-                    datapath = os.environ.get('DATAPATH','.')
-                    temp_fd,temp_name =tempfile.mkstemp('',
-                                                        sys.argv[0],
-                                                        dir=datapath)
-                    os.close(temp_fd)
-                    self.filename=temp_name[len(datapath):]
-                    #sys.stderr.write("temp_name=%s\n"%temp_name)
-                    #sys.stderr.write("filename=%s\n"%self.filename)
-            else:
-                self.filename=tag
-                self.f=open(self.filename,'w')
-                self.pipe=False
-            if not self.pipe:
-                if self.filename == '/dev/null':
-                    self.filename = 'stdout'
-                    self.pipe=True
-                else:
-                    datapath = os.environ.get('DATAPATH','.')
-                    # prepend datapath and append @ to filename
-                    self.filename=datapath+'/'+self.filename+'@'
-                    #self.stream=sys.stdout.fileno()
-
-            self.headerflushed = False
-
-            # create a variable dictionary
-            self.vd={}
-            #sys.stderr.write('end Output.__init__ self.pipe=%s\n'%self.pipe)
-
-    def tell(self):
-        if _swig_:
-            return c_rsf.sf_tell(self.file)
-        else:
-            sys.stderr.write('in m8r.py Output.tell\n')
-            sys.stderr.write('I do not think this function is required.\n')
-            sys.stderr.write('you can just use self.f.tell()\n')
-            return self.f.tell()
-
-    def is_pipe(self):
-        try:
-            self.f.tell()
-            return False
-        except:
-            return True
-
-    def getfilename(self):
-        f_fstat=os.fstat(self.f.fileno())
-        #sys.stderr.write('f_fstat=%s\n'%repr(f_fstat))
-
-        for filename in os.listdir('.'):
-            if os.path.isfile(filename):
-                if os.stat(filename).st_ino == f_fstat.st_ino:
-                    return filename
-
-        f_dev_null=open('/dev/null','w');
-        f_dev_stat=os.fstat(f_dev_null.fileno())
-        if f_dev_stat.st_ino == f_fstat.st_ino:
-            return '/dev/null'
-
-        return None
-
-    def put(self,key,val):
-        if _swig_:
-            # c function only knows utf-8 (ascii).  translate the unicode
-            if isinstance(val,int):
-                if sys.version_info[0] >= 3:
-                    c_rsf.sf_putint(self.file,key,val)
-                else:
-                    c_rsf.sf_putint(self.file,key.encode('utf-8'),val)
-            elif isinstance(val,float):
-                if sys.version_info[0] >= 3:
-                    c_rsf.sf_putfloat(self.file,key,val)
-                else:
-                    c_rsf.sf_putfloat(self.file,key.encode('utf-8'),val)
-            elif isinstance(val,str):
-                if sys.version_info[0] >= 3:
-                    c_rsf.sf_putstring(self.file,key,val)
-                else:
-                    c_rsf.sf_putstring(self.file,key.encode('utf-8'),
-                                                 val.encode('utf-8'))
-            elif isinstance(val,list):
-                if isinstance(val[0],int):
-                    if sys.version_info[0] >= 3:
-                        c_rsf.sf_putints(self.file,key,val)
-                    else:
-                        c_rsf.sf_putints(self.file,key.encode('utf-8'),val)
-        else:
-            # repr make string representation of an object
-            if isinstance(val,str):
-                #make sure string is inclosed in ".." in the .rsf file
-                self.vd[key]='"'+val+'"'
-            else:
-                self.vd[key]="%s"%repr(val)
-
+            self.file = _RSF(tag,False)
+        _File.__init__(self,tag)
     def write(self,data):
         if _swig_:
-            if (self.headerflushed == False and self.srcfile!=None):
-               c_rsf.sf_fileflush(self.file,self.srcfile)
-               self.headerflushed = True
             if self.type == 'float':
                 c_rsf.sf_floatwrite(np.reshape(data.astype(np.float32),(data.size,)),self.file)
             elif self.type == 'complex':
@@ -1147,92 +591,13 @@ class Output(_File):
             else:
                 raise TypeError('Unsupported file type %s' % self.type)
         else:
-            if not self.headerflushed:
-                #sys.stderr.write('Output.write add datatype to file header\n')
-                #sys.stderr.write('data.dtype=%s\n'%repr(data.dtype))
-                if data.dtype==np.float32:
-                    self.put('data_format','native_float')
-                if data.dtype==np.complex64:
-                    self.put('data_format','native_complex')
-                if data.dtype==np.int32:
-                    self.put('data_format','native_int')
-                if first_input:
-                    self.flushheader(first_input)
-            # kls should check array data type matches file data_format
-            data.tofile(self.f)
-
-    def put_tah(self,trace,header):
-        if _swig_:
-            tah=np.array([543711604],dtype=np.int32)
-            c_rsf.sf_intwrite(tah,self.file);
-            sizeofint=4
-            input_record_length=sizeofint*(trace.size+header.size)
-            c_rsf.sf_intwrite(np.array([input_record_length],dtype=np.int32),
-                              self.file)
-            c_rsf.sf_floatwrite(trace,self.file)
-            if header.dtype==np.int32:
-                c_rsf.sf_intwrite(header,self.file)
+            if self.type == 'float':
+                self.file.floatwrite(np.reshape(data.astype(np.float32),(data.size,)),self.file)
+            elif self.type == 'int':
+                self.type.intwrite(np.reshape(data.astype(np.int32),(data.size,)),self.file)
             else:
-                c_rsf.sf_floatwrite(header,self.file)
-        else:
-            if not self.headerflushed:
-                if trace.dtype==np.float32:
-                    self.put('data_format','native_float'.encode('utf-8'))
-                if trace.dtype==np.complex64:
-                    sys.stderr.write('error: python Output.put_tah does\n')
-                    sys.stderr.write('       support complex traces\n')
-                    # if you want to add this fix esize below
-                    quit()
-                    self.put('data_format','native_complex'.encode('utf-8'))
-                if trace.dtype==np.int32:
-                    self.put('data_format','native_int'.encode('utf-8'))
-
-                if header.dtype==np.float32:
-                    self.put('header_format','native_float'.encode('utf-8'))
-                if header.dtype==np.complex64:
-                    sys.stderr.write('error: cannot use complex headrs\n')
-                    quit()
-                    self.put('header_format','native_complex'.encode('utf-8'))
-                if header.dtype==np.int32:
-                    self.put('header_format','native_int'.encode('utf-8'))
-                self.flushheader(first_input)
-            # check array data type matches file data_format
-            #temp=np.array([116,  97, 104,  32], dtype=np.int8)
-            temp=np.array('tah ',dtype=str)
-            temp.tofile(self.f)
-            esize=4 # limitted to 4 byte entries
-            temp=np.array([(trace.size+header.size)*esize],dtype=np.int32)
-            temp.tofile(self.f)
-            trace.tofile(self.f)
-            header.tofile(self.f)
-
-    def flushheader(self,src):
-        # write the header (saved from the previous (input) file
-        self.f.write(self.header)
-        self.headerflushed = True
-
-        # write the command name and parameters
-        self.f.write('\n# execute: ')
-        for arg in sys.argv:
-            self.f.write(arg+' ')
-        self.f.write('\n')
-        self.f.write('# time=%s\n'%datetime.datetime.now())
-        self.f.write('\n')
-
-        # write the dictionary
-        for key in self.vd:
-            self.f.write("%s=%s\n"%(key,self.vd[key]))
-
-        if self.pipe:
-            self.f.write('in="stdout"\n')
-            self.f.write('in="stdin"\n')
-            self.f.write("%s%s%s"%(chr(SF_EOL),chr(SF_EOL),chr(SF_EOT)))
-        else:
-            self.f.write('in="%s"\n'%self.filename)
-            self.f.flush()
-            self.f.close()
-            self.f=open(self.filename,"w")
-
+                raise TypeError('Unsupported file type %s' % self.type)
+                
 dataserver = os.environ.get('RSF_DATASERVER',
                             'http://www.reproducibility.org')
 
@@ -1494,8 +859,328 @@ sys.modules[__name__] = _Wrap(sys.modules[__name__])
 
 if not _swig_ :
 
+    infiles = [None]
+    little_endian = (sys.byteorder == 'little')
+    
+    class _RSF(object):
+        'rsf file (emulates api/c/file.c)'
+        def __init__(self,input,tag=None):
+            self.pars = _Simtab()
+            for type in ('int','float','bool'):
+                setattr(self,type,self.__get(type))
+                setattr(self,type+'s',self.__gets(type))
+            if input: # input file
+                # set data stream
+                if tag==None or tag=='in':
+                    self.stream = sys.stdin
+                    filename = None
+                else:
+                    filename = par.string(tag)
+                    if filename==None:
+                        filename = tag
+                    self.stream = open(filename,'r+')
+                # temporary file for header
+                self.headname = Temp() 
+                self.head = open(self.headname,'w+')
+                # read parameters
+                self.pars.input(self.stream,self.head)
+                # keep track of input files
+                global infiles
+                if filename==None:
+                    infiles[0] = self
+                else:
+                    infiles.append(self)
+                # get dataname
+                filename = self.string('in')
+                if filenam==None:
+                    self.input_error('No in= in file',tag)
+                self.dataname = filename
+                # special case of in=stdin
+                if filename != 'stdin':
+                    self.stream = open(filename,'r+b')
+                # set format
+                format = self.string('data_format','ascii_format')
+                self.setformat(format)
+            else: # output file
+                if tag==None or tag=='out':
+                    self.stream = sys.stdout
+                    headname = None
+                else:
+                    headname = par.string(tag)
+                    if headname==None:
+                        headname = tag
+                    self.stream = open(headname,'w+')
+                # check if piping
+                try:
+                    t = self.stream.tell()
+                    self.pipe = False
+                except:
+                    self.pipe = True
+                if self.stream == sys.stdout:
+                    dataname = par.string('out',par.string('--out'))
+                else:
+                    dataname = None
+                if self.pipe:
+                    self.dataname = 'stdout'
+                elif dataname==None:
+                    path = rsf.path.datapath()
+                    name = self.getfilename()
+                    if name != None:
+                        if name=='/dev/null':
+                            self.dataname = 'stdout'
+                        else:
+                            self.dataname = os.path.join(path,name+'@')
+                    else:
+                        # invent a name
+                        name = os.path.join(path,par.getprog()+'XXXXXX')
+                        fd, file.dataname = tempfile.mkstemp(name)
+                        fd.close()
+                else:
+                    self.dataname = dataname
+
+                self.put('in',self.dataname)
+
+                if None != infiles[0]:
+                    format = infiles[0].string('data_format','native_float')
+                    self.setformat(format)
+
+                self.rw = par.bool('--readwrite',False)
+                self.dryrun = par.bool('--dryrun',False)                    
+        def input_error(self,message,name):
+            print(message,name,file=sys.stderr)
+            sys.exit(1)
+        def getfilename(self):
+            'find the name of the file to which we are writing'
+            found_stdout = False
+
+            f = '/dev/null'
+            if os.fstat(1)[1] == os.stat(f)[1]:
+                found_stdout = True
+            else:        
+                for f in os.listdir('.'):
+                    # Comparing the unique file ID stored by the OS for the file stream
+                    # stdout with the known entries in the file table:
+                    if os.path.isfile(f) and os.fstat(1)[1] == os.stat(f)[1]:
+                        found_stdout = True
+                        break
+
+            if found_stdout:
+                return f
+            else:
+                return None
+        def gettype(self):
+            return self.type
+        def getform(self):
+            return self.form
+        def settype(self,type):
+            self.type = type
+        def setform(self,form):
+            self.form = form
+            if form == 'ascii':
+                if None != self.dataname:
+                    self.put('esize',0) # for compatibility with SEPlib
+                self.aformat = None
+                self.eformat = None
+                self.aline = 8
+        def setpars(self):
+            'get parameters from the command line'
+            self.pars = pars
+            inp = par.string('in')
+            self.put('in',inp)
+        def expandapars(self):
+            self.pars.expand(pars)
+        def setformat(self,dataformat):
+            done = False
+            for type in ('float','int','complex','uchar','short','long','double'):
+                if type in dataformat:
+                    self.settype(type)
+                    done = True
+                    break
+            if not done:
+                if 'byte' in dataformat:
+                    self.settype('uchar')
+                else:
+                    self.settype('char')
+            if dataformat[:6]=='ascii_':
+                self.setform('ascii')
+            elif dataformat[:4]=='xdr_':
+                self.setform('xdr')
+            else:
+                self.setform('native')
+        def __get(self,type):
+            func = getattr(self.pars,'get'+type)
+            def _get(key,default=None):
+                if sys.version_info[0] < 3:
+                    # c function only knows utf-8 (ascii).  translate the unicode
+                    key = key.encode('utf-8')
+                get,par = func(key)
+                if get:
+                    return par
+                elif default != None:
+                    return default
+                else:
+                    return None
+            return _get
+        def __gets(self,type):
+            func = getattr(self.pars,'get'+type)
+            def _gets(key,num,default=None):
+                pars = func(key,num)
+                if pars:
+                    return pars
+                elif default:
+                    return default
+                else:
+                    return None
+            return _gets
+        def fileflush(self,src):
+            import pwd, socket, time
+            if None==self.dataname:
+                return
+            if None != src and None != src.head:
+                src.head.seek(0)
+                for line in src.head.readlines():
+                    self.stream.write(line)
+
+            user = os.getuid()
+            username = pwd.getpwuid(user)[0]
+            self.stream.write("%s\t%s:\t%s@%s\t%s\n" % \
+                           (par.getprog(),
+                            os.getcwd(),
+                            username,
+                            socket.gethostname(),
+                            time.ctime()))
+            self.put('data_format','_'.join(self.form,self.type))
+            self.pars.output(self.stream)
+            self.stream.flush()
+
+            if self.dataname == 'stdout':
+                # keep stream, write the header end code
+                self.stream.write("\tin=\"stdin\"\n\n%c%c%c" % ('\x0c','\x0c','\x04'))
+            else:                   
+                self.stream = open(self.dataname,'w+b')
+
+            self.dataname = None
+            if self.dryrun:
+                sys.exit(0)
+        def fflush(self):
+            self.stream.flush()
+        def putint(self,key,par):
+            if None==self.filename:
+                print('putint to a closed file',file=sys.stderr)
+                sys.exit(1)
+            val = '%d' % par
+            self.pars.enter(key,val)
+        def putints(self,key,par,n):
+            if None==self.filename:
+                print('putints to a closed file',file=sys.stderr)
+                sys.exit(1)
+            val = ''
+            for i in range(n-1):
+                val += '%d,' % par[i]
+            val += '%d' % par[n-1]
+            self.pars.enter(key,val)
+        def putfloat(self,key,par):
+            if None==self.filename:
+                print('putfloat to a closed file',file=sys.stderr)
+                sys.exit(1)
+            val = '%g' % par
+            self.pars.enter(key,val)
+        def putfloats(self,key,par,n):
+            if None==self.filename:
+                print('putfloats to a closed file',file=sys.stderr)
+                sys.exit(1)
+            val = ''
+            for i in range(n-1):
+                val += '%g,' % par[i]
+            val += '%g' % par[n-1]
+            self.pars.enter(key,val)
+        def putstring(self,key,par):
+            if None==self.filename:
+                print('putstring to a closed file',file=sys.stderr)
+                sys.exit(1)
+            val = '\"%s\"' % par
+            self.pars.enter(key,val)
+        def intwrite(self,arr):
+            if None != self.dataname:
+                self.fileflush(infiles[0])
+                
+            if self.form=='ascii':
+                if self.aformat == None:
+                    aformat = '%d '
+                else:
+                    aformat = self.aformat
+                if self.eformat == None:
+                    eformat = '%d '
+                else:
+                    eformat = self.aformat
+                size = arr.size
+                farr = arr.flatten()
+                left = size    
+                while left > 0:
+                    if self.aline < left:
+                        nbuf = self.aline
+                    else:
+                        nbuf = left
+                    last = size-left+nbuf-1
+                    for i in range(size-left,last):
+                        self.stream.write(aformat % farr[i])
+                    self.stream.write(eformat % farr[last])
+                    self.stream.write("\n")
+                    left -= nbuf
+            else:
+                self.stream.write(arr.tobytes())
+        def intread(self,arr):
+            if self.form=='ascii':
+                arr[:] = numpy.loadtxt(self.stream,dtype='int32',count=arr.size)
+            else:
+                arr[:] = numpy.fromfile(self.stream,dtype='int32',count=arr.size)
+        def floatwrite(self,arr):
+            if None != self.dataname:
+                self.fileflush(infiles[0])
+                
+            if self.form=='ascii':
+                if self.aformat == None:
+                    aformat = '%g '
+                else:
+                    aformat = self.aformat
+                if self.eformat == None:
+                    eformat = '%g '
+                else:
+                    eformat = self.aformat
+                size = arr.size
+                farr = arr.flatten()
+                left = size    
+                while left > 0:
+                    if self.aline < left:
+                        nbuf = self.aline
+                    else:
+                        nbuf = left
+                    last = size-left+nbuf-1
+                    for i in range(size-left,last):
+                        self.stream.write(aformat % farr[i])
+                    self.stream.write(eformat % farr[last])
+                    self.stream.write("\n")
+                    left -= nbuf
+            else:
+                self.stream.write(arr.tobytes())
+        def floatread(self,arr):
+            if self.form=='ascii':
+                arr[:] = numpy.loadtxt(self.stream,dtype='float32',count=arr.size)
+            else:
+                arr[:] = numpy.fromfile(self.stream,dtype='float32',count=arr.size)
+        def tell(self):
+            return self.stream.tell()
+        def bytes(self):
+            if self.dataname=='stdin':
+                return -1
+            if self.dataname==None:
+                st = os.fstat(self.stream.fileno())
+            else:
+                st = os.stat(self.dataname)
+            return st.st_size
+
     class _Simtab(object):
-        'simbol table'
+        'simbol table (emulates api/c/simtab.c)'
         def __init__(self):
             self.table = dict()
         def enter(self,key,val):
@@ -1560,13 +1245,14 @@ if not _swig_ :
                 filep.write('\t%s=%s\n',key,self.table[key])
         def expand(self,other):
             self.table.update(other.table)
+ 
 
 if __name__ == "__main__":
 
 #      a=100 Xa=5
 #      float=5.625 cc=fgsg
 #      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
-
+    
     # Testing getpar
     par = Par(["prog","a=5","b=as","a=100","float=5.625",
                "true=y"]) #,"par=%s" % sys.argv[0]])

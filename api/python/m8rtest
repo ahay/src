@@ -44,7 +44,7 @@
 0
 >>> f = m8r.Input('spike.rsf')
 >>> a = numpy.zeros((3,5),dtype='float32')
->>> f.read(a)
+>>> f.read(a); a
 array([[0., 0., 1., 0., 0.],
        [0., 0., 1., 0., 0.],
        [0., 0., 1., 0., 0.]], dtype=float32)

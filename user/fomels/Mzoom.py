@@ -20,9 +20,9 @@ import sys, os, subprocess, atexit, tempfile
 import rsf.prog
 
 try:
-    from Tkinter import *
+    from tkinter import *
 except:
-    sys.stderr.write('Please install Tkinter!\n\n')
+    sys.stderr.write('Please install tkinter!\n\n')
     sys.exit(1)
 
 if len(sys.argv) < 2:
