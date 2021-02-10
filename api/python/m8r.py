@@ -656,6 +656,9 @@ class Input(_File):
             self.__init__(tag.tag)
         else:
             if _swig_:
+                if python2:
+                    # c function only knows utf-8 (ascii).  translate the unicode
+                    tag = tag.encode('utf-8')
                 self.file = c_rsf.sf_input(tag)
             else:
                 self.file = _RSF(True,tag)
@@ -695,6 +698,9 @@ class Output(_File):
     def __init__(self,tag='out',data_format=None):
         self.file = None
         if _swig_:
+            if python2:
+                # c function only knows utf-8 (ascii).  translate the unicode
+                tag = tag.encode('utf-8')
             self.file = c_rsf.sf_output(tag)
         else:
             self.file = _RSF(False,tag)
