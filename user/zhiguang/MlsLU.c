@@ -301,7 +301,7 @@ int main(int argc, char* argv[])
 				for (i1=0; i1<n1; i1++){
 					str[i1]=(i1*d1+o1)*(iw*dw+w0);
 				}
-				sf_stretch4_define(mo, str);
+				sf_stretch4_define(mo, str, false);
 				sf_stretch4_apply(false, mo, d[ir], dd[iw]);
 			}
 			sf_stretch4_close(mo);

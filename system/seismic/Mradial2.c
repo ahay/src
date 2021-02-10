@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 		for (iv=0; iv < nv; iv++) {
 		    r[iv] = (v0+iv*dv)*(t-tp);
 		}
-		sf_stretch4_define (mo,r);
+		sf_stretch4_define (mo,r,false);
 
 		if (inv) {
 		    sf_stretch4_apply (false,mo,modl,data);

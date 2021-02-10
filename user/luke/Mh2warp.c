@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 		}
     }
 	/* define the stretch */
-    sf_stretch4_define (mo,h2);
+    sf_stretch4_define (mo,h2,false);
 	/* allocate output array in transposed coords */
 	float* arrOutT = sf_floatalloc(out_n2*n1);
 	

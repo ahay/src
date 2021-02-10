@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         {
             for (i1 = 0; i1 < n1; i1++)
                 time[i2][i1] = o1 + d1 * i1;
-            sf_stretch4_define(mo, str[i2]);
+            sf_stretch4_define(mo, str[i2],false);
             sf_stretch4_apply(false, mo, time[i2], sinv[i2]);
         }
 

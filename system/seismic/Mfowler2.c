@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    sf_stretch4_define (mo,wstr);
+	    sf_stretch4_define (mo,wstr,false);
 	    
 	    sf_floatread(stak,nw,inp);
 	    sf_stretch4_apply (false,mo,stak,migr);

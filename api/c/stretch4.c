@@ -84,7 +84,9 @@ sf_map4 sf_stretch4_init (int n1, float o1, float d1 /* regular axis */,
     return str;
 }
 
-void sf_stretch4_define (sf_map4 str, const float* coord /* [nd] */)
+void sf_stretch4_define (sf_map4 str,
+			 const float* coord /* [nd] */,
+			 bool der /* derivative flag */)
 /*< set coordinates >*/
 {
     int id, ix, i1, n1, i, j, i2;
@@ -119,7 +121,11 @@ void sf_stretch4_define (sf_map4 str, const float* coord /* [nd] */)
 	str->m[id] = false; 
 	w = str->w[id];
 
-	sf_spline4_int(rx,w);
+	if (der) {
+	    sf_spline4_der(rx,w);
+	} else {
+	    sf_spline4_int(rx,w);
+	}
 	
 	i1 = SF_MAX(0,-ix);
 	i2 = SF_MIN(4,n1-ix);
@@ -334,9 +340,9 @@ void sf_cstretch4_invert (sf_map4 str,
 }
 
 void sf_stretch4_invert (bool add /* add flag */,
-		      sf_map4 str, 
-		      float* ord /* [nd] */, 
-		      float* mod /* [n1] */)
+			 sf_map4 str, 
+			 float* ord /* [nd] */, 
+			 float* mod /* [n1] */)
 /*< convert model to ordinates by spline interpolation >*/
 {
     int id, it, i, nt, i1, i2;
@@ -369,9 +375,9 @@ void sf_stretch4_invert (bool add /* add flag */,
 }
 
 void sf_stretch4_invert_adj (bool add /* add flag */,
-			  sf_map4 str, 
-			  float* ord /* [nd] */, 
-			  float* mod       /* [n1] */)
+			     sf_map4 str, 
+			     float* ord /* [nd] */, 
+			     float* mod       /* [n1] */)
 /*< convert ordinates to model by adjoint spline interpolation >*/
 {
     int id, it, i, nt, i1, i2;

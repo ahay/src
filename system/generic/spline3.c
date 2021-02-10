@@ -25,7 +25,7 @@ static int n;
 static float *h, *a, *b, *c, *d, **coeff, *x, x0, dx, *fp;
 static sf_tris slv;
 
-void spine3_init(int n1     /* trace length */,
+void spline3_init(int n1     /* trace length */,
 		 float *fp1 /* end-point derivatives */) 
 /*< initialize >*/
 {
@@ -44,7 +44,7 @@ void spine3_init(int n1     /* trace length */,
     slv = sf_tridiagonal_init (NULL==fp? n-2: n);
 }
 
-void spine3_init1(int n1, float o1, float d1)
+void spline3_init1(int n1, float o1, float d1)
 /*< initialize for regular trace interpolation >*/ 
 {
     n = n1;

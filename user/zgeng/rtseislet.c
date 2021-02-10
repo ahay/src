@@ -37,7 +37,7 @@ static void predict_forw(bool adj, float *trace, int i, int j)
     rtnew  = sf_floatalloc(n);
 
     /* Forward interpolate T0(x1,tau0(x,t)) */
-    sf_stretch4_define(mo, rt[i]);
+    sf_stretch4_define(mo, rt[i],false);
     sf_stretch4_invert(false, mo, rtnew, sinv[i + j]);
 
     /* Clean Shift */
@@ -50,7 +50,7 @@ static void predict_forw(bool adj, float *trace, int i, int j)
     }
 
     /* Predict */
-    sf_stretch4_define(mo, rtnew);
+    sf_stretch4_define(mo, rtnew,false);
     sf_stretch4_apply(false, mo, trace, trace2);
 
     sf_copy_lop(false, false, n, n, trace2, trace);
@@ -66,7 +66,7 @@ static void predict_back(bool adj, float *trace, int i, int j)
     rtnew  = sf_floatalloc(n);
 
     /* Forward interpolate T0(x1,tau0(x,t)) */
-    sf_stretch4_define(mo, rt[i + j]);
+    sf_stretch4_define(mo, rt[i + j],false);
     sf_stretch4_invert(false, mo, rtnew, sinv[i]);
 
     /* Clean Shift */
@@ -79,7 +79,7 @@ static void predict_back(bool adj, float *trace, int i, int j)
     }
 
     /* Predict */
-    sf_stretch4_define(mo, rtnew);
+    sf_stretch4_define(mo, rtnew,false);
     sf_stretch4_apply(false, mo, trace, trace2);
 
     sf_copy_lop(false, false, n, n, trace2, trace);

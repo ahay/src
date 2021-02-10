@@ -352,7 +352,7 @@ int main (int argc, char* argv[])
             } /* END tau t loop */
 
 	    if (map) {
-		sf_stretch4_define (nmo,TAU0);
+		sf_stretch4_define (nmo,TAU0,false);
 	    
 		sf_stretch4_apply (false,nmo,v1,v1); sf_floatwrite (v1,nt,velN);	    
 		sf_stretch4_apply (false,nmo,v2,v2); sf_floatwrite (v2,nt,velH);

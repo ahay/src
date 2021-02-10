@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 	t2[i2] = t0*expf(t);
     }    
 
-    sf_stretch4_define (mo,t2);
+    sf_stretch4_define (mo,t2,false);
     
     for (i3=0; i3 < n3; i3++) {
 	if (inv) {

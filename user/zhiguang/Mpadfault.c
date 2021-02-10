@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 		
 		// inverse interpolation
 		n22=nl[ig];
-		sf_stretch4_define(mo, ff[ig]);
+		sf_stretch4_define(mo, ff[ig], false);
 		sf_stretch4_invert(false, mo, pp[n22], trace);
 		
 		//for (i1=n1-5; i1<n1; i1++) pp[n22][i1]=pp[n22][n1-6]; // stabilization

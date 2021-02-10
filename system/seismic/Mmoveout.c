@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	    amp[nw+iw+1] = 0.0;
 	}
 
-	sf_stretch4_define (mo,str);
+	sf_stretch4_define (mo,str,false);
 	sf_stretch4_apply (false,mo,amp,trace);
 	sf_floatwrite (trace,n1,out);
     }

@@ -26,7 +26,7 @@ adj=1: interp(s) -> data(t) */
 int main(int argc, char* argv[])
 {
     sf_map4 mo;
-    bool adj, each;
+    bool adj, der, each;
     int nt, n1, i2, n2, nw;
     float o1, d1, t0, dt, eps;
     float *trace, *str, *trace2;
@@ -41,6 +41,9 @@ int main(int argc, char* argv[])
   
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
+
+    if (!sf_getbool("der",&der)) adj=false;
+    /* derivative flag */
   
     /* get dimensions */
     if (adj) {
@@ -94,7 +97,7 @@ int main(int argc, char* argv[])
 	if (each || 0==i2) {
 	    /* define interpolation weights */
 	    sf_floatread(str,nt,warp);
-	    sf_stretch4_define (mo,str);
+	    sf_stretch4_define (mo,str,der);
 	}
 
 	if (adj) {

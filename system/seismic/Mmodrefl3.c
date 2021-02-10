@@ -153,10 +153,10 @@ int main(int argc, char* argv[])
 		aps[i1-1] = rc[1];
 	    }
 
-	    sf_stretch4_define (map,tpp);
+	    sf_stretch4_define (map,tpp,false);
 	    sf_stretch4_apply (false,map,app,pp[ip]);
 
-	    sf_stretch4_define (map,tps);
+	    sf_stretch4_define (map,tps,false);
 	    sf_stretch4_apply (false,map,aps,ps[ip]);
 	}
 

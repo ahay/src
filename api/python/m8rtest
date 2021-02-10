@@ -44,18 +44,17 @@
 0
 >>> f = m8r.Input('spike.rsf')
 >>> a = numpy.zeros((3,5),dtype='float32')
->>> f.read(a); a
-array([[0., 0., 1., 0., 0.],
-       [0., 0., 1., 0., 0.],
-       [0., 0., 1., 0., 0.]], dtype=float32)
+>>> f.read(a)
+>>> a[0][0]
+0.0
+>>> a[1][2]
+1.0
 >>> f2 = m8r.File(a,name='a.rsf')
 >>> f2.mean()
 0.2
 >>> b = m8r.spike(k1=2)[a]
->>> b
-array([[0., 1., 0., 0., 0.],
-       [0., 1., 0., 0., 0.],
-       [0., 1., 0., 0., 0.]], dtype=float32)
+>>> b[2][1]
+1.0
 '''
 
 import doctest

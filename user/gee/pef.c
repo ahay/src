@@ -34,5 +34,3 @@ void find_pef(int nd       /* data size */,
     sf_cgstep_close();
 }
 
-/* 	$Id$	 */
-

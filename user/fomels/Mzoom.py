@@ -78,7 +78,7 @@ def hist(inp,func,var,default=None):
     command = '< %s %s %s parform=n' % (inp,sfget,var)
     devnull = open(os.devnull,"w")
     pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
-    val = pipe.stdout.read().rstrip()
+    val = pipe.stdout.read().rstrip().decode('utf-8')
     if val:
         return func(val)
     else:
@@ -140,10 +140,10 @@ def display(event):
     if x >= x0 and y >= y0 and x <= x1 and y <= y1:
         x = o2+(x-x0)*xscale
         y = o1+(y-y0)*yscale
-	coords.set("(%s = %g %s, %s = %g %s)" % (label1,y,unit1,
-                                                 label2,x,unit2))
+        coords.set("(%s = %g %s, %s = %g %s)" % (label1,y,unit1,
+                                             label2,x,unit2))
     else:
-	coords.set("")
+        coords.set("")
 
 def startwin(event):
     global xstart, ystart

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import numpy
 import m8r
 
@@ -22,3 +23,4 @@ for i2 in range(n2): # loop over traces
     trace = numpy.clip(trace,-clip,clip)
     output.write(trace)
 
+sys.exit(0)

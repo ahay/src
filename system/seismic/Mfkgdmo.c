@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
 	}
 
 	map[ib] = sf_stretch4_init (nh, h0, dh, nh, eps);
-	sf_stretch4_define (map[ib],hstr);
+	sf_stretch4_define (map[ib],hstr,false);
     }	
 	
     for (ik=0; ik < nk; ik++) {

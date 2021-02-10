@@ -77,7 +77,7 @@ def hist(func,var,default=None):
     command = '< %s %s %s parform=n' % (byte,sfget,var)
     devnull = open(os.devnull,"w")
     pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
-    val = pipe.stdout.read().rstrip()
+    val = pipe.stdout.read().rstrip().decode('utf-8')
     if val:
         return func(val)
     else:
@@ -263,6 +263,7 @@ def addpick(event):
         canvas.tag_bind(tag,'<B2-Motion>',movepick)
         canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
         canvas.tag_bind(tag,'<Button-3>',deletepick)
+        canvas.tag_bind(tag,'<Control-Button-1>',deletepick)
         picks[i3][tag]=scalepick(x,y)
 
 image = rsf2image(0)
