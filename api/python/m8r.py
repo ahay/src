@@ -527,7 +527,11 @@ class _File(File):
             sys.stderr.write('unsupported type\n')
             sys.exit(1)
         File.__init__(self,tag)
- 
+
+        for type in ('int','float'):
+            setattr(self,type,self.__get(type))
+        for type in ('int',):
+            setattr(self,type+'s',self.__gets(type))
     def tell(self):
         if _swig_:
             return c_rsf.sf_tell(self.file)
@@ -560,48 +564,55 @@ class _File(File):
             c_rsf.sf_setformat(self.file,format)
         else:
             self.file.setformat(format)
-    def __get(self,func,key,default):
+    def __get(self,type):
         if _swig_:
-            get,par = func(self.file,key)
+            func = getattr(c_rsf,'sf_hist'+type)
         else:
-            get,par = func(key)
-        if get:
-            return par
-        elif default:
-            return default
-        else:
-            return None
-    def __gets(self,func,key,num,default):
+            func = getattr(self.file,type)
+        def _get(key,default=None):
+            if _swig_:
+                if python2:
+                    # c function only knows utf-8 (ascii).  translate the unicode
+                    key = key.encode('utf-8')
+                get,par = func(self.file,key)
+            else:
+                get,par = func(key)   
+            if get:
+                return par
+            elif default:
+                return default
+            else:
+                return None
+        return _get
+    def __gets(self,type):
         if _swig_:
-            pars = func(self.file,key,num)
+            func = getattr(c_rsf,'sf_hist'+type+'s')
         else:
-            pars = func(key,num)
-        if pars:
-            return pars
-        elif default:
-            return default
-        else:
-            return None
+            func = getattr(self.file,type)
+        def _gets(key,num,default=None):
+            if _swig_:
+                if python2:
+                    # c function only knows utf-8 (ascii).  translate the unicode
+                    key = key.encode('utf-8')
+                pars = func(self.file,key,num)
+            else:
+                pars = func(key,num)
+ 
+            if pars:
+                return pars
+            elif default:
+                return default
+            else:
+                return None
+        return _gets
     def string(self,key):
         if _swig_:
+            if python2:
+                # c function only knows utf-8 (ascii).  translate the unicode
+                key = key.encode('utf-8')
             return c_rsf.sf_histstring(self.file,key)
         else:
             return self.file.string(key)
-    def int(self,key,default=None):
-        if _swig_:
-            return self.__get(c_rsf.sf_histint,key,default)
-        else:
-            return self.__get(self.file.int,key,default)
-    def float(self,key,default=None):
-        if _swig_:
-            return self.__get(c_rsf.sf_histfloat,key,default)
-        else:
-            return self.__get(self.file.float,key,default)
-    def ints(self,key,num,default=None):
-        if _swig_:
-            return self.__gets(c_rsf.histints,key,num,default)
-        else:
-            return self.__gets(self.file.ints,key,num,default)
     def bytes(self):
         if _swig_:
             return c_rsf.sf_bytes(self.file)
@@ -609,6 +620,9 @@ class _File(File):
             return self.file.bytes()
     def put(self,key,val):
         if _swig_:
+            if python2:
+                # c function only knows utf-8 (ascii).  translate the unicode
+                key = key.encode('utf-8')
             if isinstance(val,int):
                 c_rsf.sf_putint(self.file,key,val)
             elif isinstance(val,float):
