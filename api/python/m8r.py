@@ -18,7 +18,9 @@ from __future__ import division
 from __future__ import absolute_import
 from __future__ import unicode_literals
 '''
-   how do you write selfdoc for m8r?
+Python interface to Madagascar. Serves dual purpose:
+- an ability to manipulate RSF file objects (File class), figures (Vplot class) and Madagascar programs (Filter class) in a script environment.
+- an ability to write Madagascar programs in Python (using Par, Input, and Output classes).
 '''
 
 import os, sys, tempfile, re, subprocess, urllib, datetime
@@ -28,9 +30,14 @@ import rsf.doc
 import rsf.prog
 import rsf.path
 
+# There are two parallel implementations:
+# - one is using calls to C functions from api/c with SWIG interface
+# - the other is pure Python
+# Find out which one we have
 try:
     import c_m8r as c_rsf
     _swig_ = True
+    # to switch off SWIG, use no_swig() function defined below
 except:
     _swig_ = False
 
@@ -40,18 +47,21 @@ def view(name):
     'for use in Jupyter notebooks'
     try:
         from IPython.display import Image
+    except:
+        print ('No IPython Image support.')
+        return None
+    try:
         png = name+'.png'
         makefile = os.path.join(rsf.prog.RSFROOT,'include','Makefile')
         os.system('make -f %s %s' % (makefile,png))
         return Image(filename=png)
     except:
-        print ('No IPython Image support')
+        print ('Failed to generate image, see command line for errors.')
         return None
 
 class _Simtab(dict):
-    'simbol table (emulates api/c/simtab.c)'
-    def __init__(self):
-        dict.__init__(self)
+    'symbol table (emulates api/c/simtab.c)'
+    # inherited from dict, because it is basically a dictionary
     def enter(self,key,val):
         'add key=val to the table'
         self[key] = val
@@ -130,6 +140,11 @@ class _Simtab(dict):
             self.put(word)
     def input(self,filep,out=None):
         'extract parameters from header file'
+        # Special code b'\x0c\x0c\x04', if encountered, signifies
+        # the end of the header and the start of the data.
+        # With each new line, we will try to read the first three
+        # bytes and compare them to the code before reading the
+        # rest of the line.
         while True:
             try:
                 if python2:
@@ -153,6 +168,7 @@ class _Simtab(dict):
                     break
                 if out:
                     out.write(line)
+                # extract parameters
                 self.string(line)
             except:
                 break
@@ -167,8 +183,8 @@ class Par(object):
     '''command-line parameter table'''
     def __init__(self,argv=sys.argv):
         global par
-        # c_rsf.sf_init needs 'utf-8' (bytes) not unicode
         if _swig_:
+            # c_rsf.sf_init needs 'utf-8' (bytes) not unicode
             c_rsf.sf_init(len(argv),
                             [arg.encode('utf-8') for arg in argv])
             self.prog = c_rsf.sf_getprog()
@@ -178,6 +194,7 @@ class Par(object):
             
             for arg in argv[1:]:
                 if arg[:4] == 'par=':
+                    # extract parameters from parameter file
                     parfile = open(arg[4:],'r')
                     self.pars.input(parfile)
                     parfile.close()
@@ -185,18 +202,21 @@ class Par(object):
                     self.pars.put(arg)
             
         for type in ('int','float','bool'):
+            # create methods int, float, bool
             setattr(self,type,self.__get(type))
+            # create methods ints, floats, bools
             setattr(self,type+'s',self.__gets(type))
         par = self
     def getprog(self):
         return self.prog
     def __get(self,type):
+        # factory for parameter extraction
         if _swig_:
             func = getattr(c_rsf,'sf_get'+type)
         else:
             func = getattr(self.pars,'get'+type)
         def _get(key,default=None):
-            if python2:
+            if python2 and _swig_:
                 # c function only knows utf-8 (ascii).  translate the unicode
                 key = key.encode('utf-8')
             get,par = func(key)
@@ -208,11 +228,15 @@ class Par(object):
                 return None
         return _get
     def __gets(self,type):
+        # factory for parameter extraction
         if _swig_:
             func = getattr(c_rsf,'get'+type+'s')
         else:
             func = getattr(self.pars,'get'+type)
         def _gets(key,num,default=None):
+            if python2 and _swig_:
+                # c function only knows utf-8 (ascii).  translate the unicode
+                key = key.encode('utf-8')
             pars = func(key,num)
             if pars:
                 return pars
@@ -237,6 +261,7 @@ class Par(object):
         else:
             return None
 
+# set default parameters for interactive scripts
 par = Par(['python','-'])
 
 def no_swig():
