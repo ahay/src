@@ -145,25 +145,23 @@ class _Simtab(dict):
         # With each new line, we will try to read the first three
         # bytes and compare them to the code before reading the
         # rest of the line.
+        if python2:
+            stream = filep
+        else:
+            stream = filep.buffer
         while True:
             try:
-                if python2:
-                    line3 = filep.read(3)
-                else:
-                    line3 = filep.buffer.read(3)
+                line3 = stream.read(3)
                 # skip new lines
                 while line3[:1] == b'\n':
-                    if python2:
-                        line3 = line3[1:] + filep.read(1)
-                    else:
-                        line3 = line3[1:] + filep.buffer.read(1)
+                    line3 = line3[1:] + stream.read(1)
                 # check code for the header end
                 if line3 == b'\x0c\x0c\x04':
                     break
-                if python2:
-                    line = line3+filep.readline()
-                else:
-                    line = str(line3+filep.buffer.readline(),'utf-8')
+                line = line3+stream.readline()
+                if not python2:
+                    # bytes to string
+                    line = str(line,'utf-8')
                 if len(line) < 1:
                     break
                 if out:
@@ -228,11 +226,11 @@ class Par(object):
                 return None
         return _get
     def __gets(self,type):
-        # factory for parameter extraction
+        # factory for parameter extraction for lists
         if _swig_:
-            func = getattr(c_rsf,'get'+type+'s')
+            func = getattr(c_rsf,'sf_get'+type+'s')
         else:
-            func = getattr(self.pars,'get'+type)
+            func = getattr(self.pars,'get'+type+'s')
         def _gets(key,num,default=None):
             if python2 and _swig_:
                 # c function only knows utf-8 (ascii).  translate the unicode
@@ -272,6 +270,7 @@ def no_swig():
         
 class Temp(str):
     'Temporaty file name'
+    # inherits from string
     datapath = rsf.path.datapath()
     tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
     def __new__(cls):
@@ -286,7 +285,6 @@ class File(object):
         if isinstance(tag,File):
             # copy file (name is ignored)
             self.__init__(tag.tag)
-            tag.close()
         elif isinstance(tag,np.ndarray):
             # numpy array
             dtype = tag.dtype
@@ -295,28 +293,36 @@ class File(object):
             elif dtype=='int32':
                  dformat='native_int'
             else:
-                print('Unsupported format',dtype,file=sys.stderr)
-                sys.exit(12)
+                raise TypeError('Unsupported format: %s' % dtype)
             if not name:
                 name = Temp()
             out = Output(name,data_format=dformat)
             shape = tag.shape
             dims = len(shape)
             for axis in range(1,dims+1):
+                # in numpy, axis order is reversed
                 out.put('n%d' % axis,shape[dims-axis])
             out.write(tag)
             out.close()
             self.__init__(out,temp=True)
         elif isinstance(tag,list):
-            self.__init__(np.array(tag,'f'),name)
+            # convert list to numpy array before importing
+            if type(tag[0]) == int:
+                dtype='int32'
+            elif type(tag[0]) == float:
+                dtype='float32'
+            else:
+                raise TypeError('Unsupported format %s' % type(tag[0]))
+            array = np.array(tag,dtype)
+            self.__init__(array,True,name)
         else:
             self.tag = tag
-        self.filename=self.tag
         self.narray = []
         for filt in Filter.plots + Filter.diagnostic:
-            # run things like file.grey() or file.sfin()
+            # run things like file.grey() or file.attr()
             setattr(self,filt,Filter(filt,srcs=[self],run=True))
         for attr in File.attrs:
+            # extract atrributes 
             setattr(self,attr,self.want(attr))
     def __str__(self):
         'String representation'
@@ -411,7 +417,7 @@ class File(object):
             else:
                 # gets only the real part of complex arrays ##kls
                 if not hasattr(self,'file'):
-                    f=Input(self.filename)
+                    f=Input(self.tag)
                 else:
                     f=self.file
                 self.narray=np.memmap(f.string('in'),dtype=f.datatype,
@@ -482,7 +488,6 @@ class File(object):
             raise RuntimeError('trouble running sfget')
         return result
     def shape(self):
-        # axes are reversed for consistency with numpy
         s = []
         dim = 1
         for i in range(1,10):
@@ -495,6 +500,7 @@ class File(object):
         # s=(1500,240,1,1)
         while s[-1]==1 and len(s)>1:
             s=s[:-1]
+        # axes are reversed for consistency with numpy
         s.reverse()
         return tuple(s)
     def reshape(self,shape=None):
@@ -531,10 +537,13 @@ class File(object):
             Filter('rm',run=True)(0,self)
 
 class _File(File):
+    'umbrella class for RSF files that can read and write' 
     types = ['uchar','char','int','float','complex']
     forms = ['ascii','xdr','native']
     def __init__(self,tag):
         if not self.file:
+            # can only be used by Input and Output
+            # that define self.file
             raise TypeError('Use Input or Output instead of File')
         if _swig_:
             self.type = _File.types[c_rsf.sf_gettype(self.file)]
@@ -549,8 +558,7 @@ class _File(File):
         elif self.type=='int':
             self.datatype=np.int32
         else:
-            sys.stderr.write('unsupported type\n')
-            sys.exit(1)
+            raise TypeError('Unsupported type %s' % self.type)
         File.__init__(self,tag)
 
         for type in ('int','float'):
@@ -1061,7 +1069,7 @@ class _RSF(object):
             # get dataname
             filename = self.string('in')
             if filename==None:
-                self.input_error('No in= in file',tag)
+                raise TypeError('No in= in file "%s" ' % tag)
             self.dataname = filename
             # keep stream in the special case of in=stdin
             if filename != 'stdin':
@@ -1116,9 +1124,6 @@ class _RSF(object):
 
             self.rw = par.bool('--readwrite',False)
             self.dryrun = par.bool('--dryrun',False)                    
-    def input_error(self,message,name):
-        print(message,name,file=sys.stderr)
-        sys.exit(1)
     def getfilename(self):
         'find the name of the file to which we are writing'
         found_stdout = False
@@ -1211,14 +1216,12 @@ class _RSF(object):
         self.stream.flush()
     def putint(self,key,par):
         if None==self.dataname:
-            print('putint to a closed file',file=sys.stderr)
-            sys.exit(1)
+            raise TypeError('putint to a closed file')
         val = '%d' % par
         self.pars.enter(key,val)
     def putints(self,key,par,n):
         if None==self.dataname:
-            print('putints to a closed file',file=sys.stderr)
-        sys.exit(1)
+            raise TypeError('putints to a closed file')
         val = ''
         for i in range(n-1):
             val += '%d,' % par[i]
@@ -1226,14 +1229,12 @@ class _RSF(object):
         self.pars.enter(key,val)
     def putfloat(self,key,par):
         if None==self.dataname:
-            print('putfloat to a closed file',file=sys.stderr)
-            sys.exit(1)
+            raise TypeError('putfloat to a closed file')
         val = '%g' % par
         self.pars.enter(key,val)
     def putfloats(self,key,par,n):
         if None==self.dataname:
-            print('putfloats to a closed file',file=sys.stderr)
-            sys.exit(1)
+            raise TypeError('putfloats to a closed file')
         val = ''
         for i in range(n-1):
             val += '%g,' % par[i]
@@ -1241,8 +1242,7 @@ class _RSF(object):
         self.pars.enter(key,val)
     def putstring(self,key,par):
         if None==self.dataname:
-            print('putstring to a closed file',file=sys.stderr)
-            sys.exit(1)
+            raise TypeError('putstring to a closed file')
         val = '\"%s\"' % par
         self.pars.enter(key,val)
     def intwrite(self,arr):
