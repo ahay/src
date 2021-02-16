@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
 
-    if (!sf_getbool("der",&der)) adj=false;
+    if (!sf_getbool("der",&der)) der=false;
     /* derivative flag */
   
     /* get dimensions */
