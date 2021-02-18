@@ -29,8 +29,8 @@ int main(int argc, char* argv[])
     int i, n, nk, n2, iter, niter, liter, nt, nx, nt1, nt2, nx2;
     int rect1, rect2, frect1, frect2; 
     float dt,dx,x0;
-    float l2_r,l2_r_new,alpha;
-    float *w, *dw, *x, *y, *r, *p, *r_new, *w_prev;
+    float l2_r,alpha;
+    float *w, *dw, *x, *y, *r, *p; /* *r_new, *w_prev; */
     sf_file wht, fwht, src, tgt, mch;
     sf_file w0, wf0;
     /* For fft2 */
@@ -77,12 +77,12 @@ int main(int argc, char* argv[])
 
     w = sf_floatalloc(n2); 
     dw = sf_floatalloc(n2);
-    w_prev = sf_floatalloc(n2);
+/*    w_prev = sf_floatalloc(n2); */
 
     x = sf_floatalloc(n); 
     y = sf_floatalloc(n);
     r = sf_floatalloc(3*n);
-    r_new = sf_floatalloc(3*n);
+/*    r_new = sf_floatalloc(3*n); */
 
 
     if (!sf_getint("rect1",&rect1)) rect1=1;

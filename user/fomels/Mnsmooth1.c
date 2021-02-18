@@ -23,15 +23,21 @@
 
 int main (int argc, char* argv[]) 
 {
-    int **sft, nrep, irep, n1, n2, i1, i2, rect1;
-    float* data, **rct;
+    int nrep, irep, n1, n2, i1, i2, rect1, shift;
+    float* data, **rct, **sft;
     ntriangle tr;
-    sf_file in, out, rect;
+    sf_file in, out, rect, sift;
 
     sf_init (argc, argv);
     in = sf_input ("in");
     out = sf_output ("out");
     rect = sf_input("rect");
+
+    if (NULL != sf_getstring("sift")) {
+	sift = sf_input("sift");
+    } else {
+	sift = NULL;
+    }
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
@@ -41,22 +47,32 @@ int main (int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(rect)) sf_error("Need float rect");
     rct = sf_floatalloc2(n1,n2);
-    sft = sf_intalloc2(n1,n2);
+    sft = sf_floatalloc2(n1,n2);
 
     if (!sf_getint("repeat",&nrep)) nrep=1;
     /* repeat filtering several times */
 
+    if (NULL == sift) {
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		sft[i2][i1] = 0.0f;
+	    }
+	}
+    } else {
+	sf_floatread(sft[0],n1*n2,sift);
+    }
+
     sf_floatread(rct[0],n1*n2,rect);
-    
+
     rect1=1;
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    if (rct[i2][i1] > rect1) rect1=ceilf(rct[i2][i1]);
-	    sft[i2][i1] = 0;
+	    shift = SF_ABS(ceilf(rct[i2][i1]+sft[i2][i1]));
+	    if (shift > rect1) rect1=shift;
 	}
     }
 
-    tr = ntriangle_init (rect1,n1);
+    tr = ntriangle_init (rect1+1,n1);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
@@ -67,8 +83,7 @@ int main (int argc, char* argv[])
 	
 	sf_floatwrite(data,n1,out);
     }
-
+    
     exit (0);
 }
 
-/* 	$Id: Msmooth.c 691 2004-07-04 19:28:08Z fomels $	 */

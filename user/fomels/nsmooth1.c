@@ -20,8 +20,8 @@
 
 #include "ntriangle.h"
 
-static int n1, n2, *sft;
-static float **rct, *trace;
+static int n1, n2;
+static float **rct, *trace, *sft;
 static ntriangle tr;
 
 void nsmooth1_init(int ns /* number of samples in a trace */,
@@ -35,13 +35,13 @@ void nsmooth1_init(int ns /* number of samples in a trace */,
     n2 = nt;
     rct = rect;
     
-    sft = sf_intalloc(n1);
+    sft = sf_floatalloc(n1);
 
     rect1=1;
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    if (rct[i2][i1] > rect1) rect1=ceilf(rct[i2][i1]);
-	    sft[i1] = 0;
+	    sft[i1] = 0.0f;
 	}
     }
 

@@ -24,16 +24,16 @@
 
 #include "ntriangle.h"
 
-static int *n, s[SF_MAX_DIM], nd, dim, **tsft, nrep;
+static int *n, s[SF_MAX_DIM], nd, dim, nrep;
 static ntriangle *tr;
-static float *tmp, **tlen;
+static float *tmp, **tlen, **tsft;
 
-void ntrianglen_init (int ndim  /* number of dimensions */, 
-		      int *nbox /* triangle radius [ndim] */, 
-		      int *ndat /* data dimensions [ndim] */,
+void ntrianglen_init (int ndim    /* number of dimensions */, 
+		      int *nbox   /* triangle radius [ndim] */, 
+		      int *ndat   /* data dimensions [ndim] */,
 		      float **len /* triangle lengths [ndim][nd] */,
-                      int **sft /* triangle shifts [ndim][nd] */,
-		      int repeat /* repeated smoothing */)
+                      float **sft /* triangle shifts [ndim][nd] */,
+		      int repeat  /* repeated smoothing */)
 /*< initialize >*/
 {
     int i;

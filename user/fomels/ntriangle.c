@@ -40,9 +40,9 @@ static void fold2 (int o, int d, int nx, int nb, int np,
 		   float *x, const float* tmp);
 static void doubint (int nx, float *x, bool der);
 static void triple (int o, int d, int nx, int nb, 
-		    const float* t, const int* s, float* x, const float* tmp);
+		    const float* t, const float* s, float* x, const float* tmp);
 static void triple2 (int o, int d, int nx, int nb, 
-		     const float* t, const int* s, const float* x, float* tmp);
+		     const float* t, const float* s, const float* x, float* tmp);
 
 ntriangle ntriangle_init (int nbox /* maximum triangle length */, 
 			  int ndat /* data length */)
@@ -116,7 +116,7 @@ static void fold2 (int o, int d, int nx, int nb, int np,
 	    x[o+(nx-1-i)*d] += tmp[j-1-i];
     }
 }
-    
+
 static void doubint (int nx, float *xx, bool der)
 {
     int i;
@@ -140,33 +140,51 @@ static void doubint (int nx, float *xx, bool der)
 }
 
 static void triple (int o, int d, int nx, int nb, 
-		    const float* t,
-		    const int* s,
+		    const float* t, /* triangle radius */
+		    const float* s, /* shift */
 		    float* x, const float* tmp)
 {
     int i, nt, nt1, ns;
-    float tt, wt, wt1;
+    float tt, ss, wt, wt1, w, wp, wm, c, cp, cn;
 
     for (i=0; i < nx; i++) {
 	tt = t[i];
 	nt = floorf(tt);
 	nt1 = nt+1;
-	ns = nb + s[i];
+	ss = s[i];
+	ns = roundf(ss);
+	ss -= ns;
+	ns += nb;
 	wt  = (nt1*nt1-tt*tt)/(nt*nt*(nt+nt1));
 	wt1 = (tt*tt-nt*nt)/(nt1*nt1*(nt+nt1));
-	x[o+i*d] = 2*(wt+wt1)*tmp[i+ns] - 
+	c = 2*(wt+wt1)*tmp[i+ns] - 
 	    (tmp[i+ns-nt1] + tmp[i+ns+nt1])*wt1 - 
 	    (tmp[i+ns-nt]  + tmp[i+ns+nt ])*wt;
+	if (ss == 0.0f) {
+	    x[o+i*d] = c;
+	} else {
+	    cp = 2*(wt+wt1)*tmp[i+ns+1] - 
+		(tmp[i+ns-nt1+1] + tmp[i+ns+nt1+1])*wt1 - 
+		(tmp[i+ns-nt +1] + tmp[i+ns+nt +1])*wt;
+	    cn = 2*(wt+wt1)*tmp[i+ns-1] - 
+		(tmp[i+ns-nt1-1] + tmp[i+ns+nt1-1])*wt1 - 
+		(tmp[i+ns-nt -1] + tmp[i+ns+nt -1])*wt;
+	    w = (1.0f-ss)*(1.0f+ss);
+	    wp = ss*(1.0f-ss)/2;
+	    wm = ss*(1.0f+ss)/2;
+	    x[o+i*d] = c*w+cp*wp+cn*wm;
+	}	
     }
 }
 
+
 static void triple2 (int o, int d, int nx, int nb, 
-		     const float* t,
-		     const int* s,
+		     const float* t, /* triangle radius */
+		     const float* s, /* shift */
 		     const float* x, float* tmp)
 {
     int i, nt, nt1, ns;
-    float tt, wt, wt1;
+    float tt, ss, wt, wt1, w, wp, wm;
 
     for (i=0; i < nx + 2*nb; i++) {
 	tmp[i] = 0;
@@ -176,23 +194,48 @@ static void triple2 (int o, int d, int nx, int nb,
 	tt = t[i];
 	nt = floorf(tt);
 	nt1 = nt+1;
-	ns = nb + s[i];
+	ss = s[i];
+	ns = roundf(ss);
+	ss -= ns;
+	ns += nb;
 	wt  = x[o+i*d]*(nt1*nt1-tt*tt)/(nt*nt*(nt+nt1));
 	wt1 = x[o+i*d]*(tt*tt-nt*nt)/(nt1*nt1*(nt+nt1));
-	tmp[i+ns-nt1] -= wt1; 
-	tmp[i+ns-nt]  -= wt; 
-	tmp[i+ns]     += 2*(wt+wt1);
-	tmp[i+ns+nt]  -= wt;
-	tmp[i+ns+nt1] -= wt1;
+	if (ss == 0.0f) {
+	    tmp[i+ns-nt1] -= wt1; 
+	    tmp[i+ns-nt]  -= wt; 
+	    tmp[i+ns]     += 2*(wt+wt1);
+	    tmp[i+ns+nt]  -= wt;
+	    tmp[i+ns+nt1] -= wt1;
+	} else {
+	    w = (1.0f-ss)*(1.0f+ss);
+	    wp = ss*(1.0f-ss)/2;
+	    wm = ss*(1.0f+ss)/2;
+	    tmp[i+ns-nt1]   -= wt1*w; 
+	    tmp[i+ns-nt]    -= wt*w; 
+	    tmp[i+ns]       += 2*(wt+wt1)*w;
+	    tmp[i+ns+nt]    -= wt*w;
+	    tmp[i+ns+nt1]   -= wt1*w;
+	    tmp[i+ns-nt1+1] -= wt1*wp; 
+	    tmp[i+ns-nt+1]  -= wt*wp; 
+	    tmp[i+ns+1]     += 2*(wt+wt1)*wp;
+	    tmp[i+ns+nt+1]  -= wt*wp;
+	    tmp[i+ns+nt1+1] -= wt1*wp;
+	    tmp[i+ns-nt1-1] -= wt1*wm; 
+	    tmp[i+ns-nt-1]  -= wt*wm; 
+	    tmp[i+ns-1]     += 2*(wt+wt1)*wm;
+	    tmp[i+ns+nt-1]  -= wt*wm;
+	    tmp[i+ns+nt1-1] -= wt1*wm;
+	}    
     }
 }
 
-void nsmooth (ntriangle tr /* smoothing object */, 
-	      int o, int d /* sampling */, 
-	      bool der     /* derivative flag */, 
+
+void nsmooth (ntriangle tr   /* smoothing object */, 
+	      int o, int d   /* sampling */, 
+	      bool der       /* derivative flag */, 
 	      const float *t /* triangle lengths */, 
-	      const int *s /* triangle shifts */,
-	      float *x     /* data (smoothed in place) */)
+	      const float *s /* triangle shifts */,
+	      float *x       /* data (smoothed in place) */)
 /*< smooth >*/
 {
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp); 
@@ -200,12 +243,12 @@ void nsmooth (ntriangle tr /* smoothing object */,
     triple (o,d,tr->nx,tr->nb,t,s,x,tr->tmp);
 }
 
-void nsmooth2 (ntriangle tr /* smoothing object */, 
-	       int o, int d /* sampling */, 
-	       bool der     /* derivative flag */, 
+void nsmooth2 (ntriangle tr   /* smoothing object */, 
+	       int o, int d   /* sampling */, 
+	       bool der       /* derivative flag */, 
 	       const float *t /* triangle lengths */,
-	       const int *s /* triangle shifts */,
-	       float *x     /* data (smoothed in place) */)
+	       const float *s /* triangle shifts */,
+	       float *x       /* data (smoothed in place) */)
 /*< alternative smooth >*/
 {
     triple2 (o,d,tr->nx,tr->nb,t,s,x,tr->tmp);
@@ -219,4 +262,3 @@ void  ntriangle_close(ntriangle tr)
     free (tr->tmp);
     free (tr);
 }
-
