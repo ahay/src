@@ -320,10 +320,16 @@ class File(object):
         self.narray = []
         for filt in Filter.plots + Filter.diagnostic:
             # run things like file.grey() or file.attr()
-            setattr(self,filt,Filter(filt,srcs=[self],run=True))
+            setattr(self,filt,self.__filter(filt))
         for attr in File.attrs:
             # extract atrributes 
             setattr(self,attr,self.want(attr))
+    def __filter(self,filt):
+        'apply self-filter'
+        def _filter(**kw):
+            command = Filter(filt)(**kw)
+            return command.apply(self)
+        return _filter
     def __str__(self):
         'String representation'
         if self.tag:
@@ -336,7 +342,7 @@ class File(object):
             raise TypeError('Cannot find tag')
     def sfin(self):
         'Output of sfin'
-        return Filter('in',run=True)(0,self)
+        return Filter('in',stdout=False).apply(self)
     def want(self,attr):
         'Attributes from sfattr'
         def wantattr():
@@ -354,51 +360,48 @@ class File(object):
         return wantattr
     def real(self):
         'Take real part'
-        re = Filter('real')
-        return re[self]
+        return Filter('real').apply(self)
     def cmplx(self,im):
-        c = Filter('cmplx')
-        return c[self,im]
+        return Filter('cmplx').apply(self,im)
     def imag(self):
         'Take imaginary part'
-        im = Filter('imag')
-        return im[self]
+        return Filter('imag').apply(self)
     def __add__(self,other):
         'Overload addition'
-        add = Filter('add')
-        return add[self,other]
+        return Filter('add').apply(self,other)
     def __sub__(self,other):
         'Overload subtraction'
         sub = Filter('add')(scale=[1,-1])
-        return sub[self,other]
+        return sub.apply(self,other)
     def __mul__(self,other):
         'Overload multiplication'
         try:
             mul = Filter('scale')(dscale=float(other))
-            return mul[self]
+            return mul.apply(self)
         except:
-            mul = Filter('mul')(mode='product')
-            return mul[self,other]
+            mul = Filter('mul')
+            return mul.apply(self,other)
     def __div__(self,other):
         'Overload division'
         try:
             div = Filter('scale')(dscale=1.0/float(other))
-            return div[self]
+            return div.apply(self)
         except:
-            div = Filter('add')(mode='divide')
-            return div[self,other]
+            div = Filter('div')
+            return div.apply(self,other)
     def __neg__(self):
         neg = Filter('scale')(dscale=-1.0)
-        return neg[self]
+        return neg.apply(self)
     def dot(self,other):
         'Dot product'
         # incorrect for complex numbers
-        prod = self.__mul__(other)
-        stack = Filter('stack')(norm=False,axis=0)[prod]
+        prod = self * other
+        stack = Filter('stack')(norm=False,axis=0).apply(prod)
         return stack[0]
     def cdot2(self):
         'Dot product with itself'
-        stack = Filter('math')(output="\"input*conj(input)\"").real.stack(norm=False,axis=0)[self]
+        filt = Filter('math')(output="\"input*conj(input)\"").real.stack(norm=False,axis=0)
+        stack = filt.apply(self)
         return stack[0]
     def dot2(self):
         'Dot product with itself'
@@ -528,13 +531,13 @@ class File(object):
                 puts[ni] = shape[i]
         put = Filter('put')
         put.setcommand(puts)
-        return put[self]
+        return put.apply(self)
     def __len__(self):
         return self.size()
     def __del__(self):
         # remove temporary files
         if hasattr(self,'temp') and self.temp:
-            Filter('rm',run=True)(0,self)
+            Filter('rm',stdin=0,stdout=0).apply(self)
 
 class _File(File):
     'umbrella class for RSF files that can read and write' 
@@ -561,6 +564,8 @@ class _File(File):
             raise TypeError('Unsupported type %s' % self.type)
         File.__init__(self,tag)
 
+        # create methods line int, float, and ints
+        # for extracting parameters
         for type in ('int','float'):
             setattr(self,type,self.__get(type))
         for type in ('int',):
@@ -584,8 +589,8 @@ class _File(File):
         File.__del__(self) # this removes file if it is temporary
     def settype(self,type):
         if _swig_:
-            for i in range(len(_File.type)):
-                if type == _File.type[i]:
+            for i,filetype in enumerate(_File.type):
+                if type == filetype:
                     self.type = type
                     c_rsf.sf_settype(self.file,i)
                     break
@@ -802,12 +807,13 @@ class Filter(object):
     plots = ('grey','contour','graph','contour3',
              'dots','graph3','thplot','wiggle','grey3')
     diagnostic = ('attr','disfil','headerattr')
-    def __init__(self,name,prefix='sf',srcs=[],
-                 run=False,checkpar=False,pipe=False):
-        rsfroot = rsf.prog.RSFROOT
+    def __init__(self,name,prefix='sf',stdin=True,stdout=True):
         self.plot = False
-        self.stdout = True
+        self.stdin = stdin
+        self.stdout = stdout
+        self.checkpar = False
         self.prog = None
+        rsfroot = rsf.prog.RSFROOT
         if rsfroot:
             lp = len(prefix)
             if name[:lp] != prefix:
@@ -816,16 +822,13 @@ class Filter(object):
             prog = os.path.join(rsfroot,'bin',name)
             if os.path.isfile(prog):
                 self.plot   = name[lp:] in Filter.plots
-                self.stdout = name[lp:] not in Filter.diagnostic
+                if self.stdout and name[lp:] in Filter.diagnostic:
+                    self.stdout = False
                 name = prog
-        self.srcs = srcs
-        self.run=run
         self.command = name
-        self.checkpar = checkpar
-        self.pipe = pipe
         if self.prog:
+            # self documentation
             self.__doc__ =  self.prog.text(None)
-
     def getdoc():
         '''for IPython'''
         return self.__doc__
@@ -836,12 +839,16 @@ class Filter(object):
         '''for IPython'''
         return None
     def __str__(self):
+        'convert to string'
         return self.command
     def __or__(self,other):
         'pipe overload'
-        self.command = '%s | %s' % (self,other)
-        return self
+        new = other.copy()
+        new.command = '%s | %s' % (self,other)
+        new.stdin = self.stdin
+        return new
     def setcommand(self,kw,args=[]):
+        'set parameters'
         parstr = []
         for (key,val) in kw.items():
             if key[:2] == '__': # convention to handle -- parameters
@@ -866,13 +873,22 @@ class Filter(object):
         self.command = ' '.join([self.command,
                                  ' '.join(map(str,args)),
                                  ' '.join(parstr)])
-    def __getitem__(self,srcs):
+    def apply(self,*srcs):
         'Apply to data'
-        mysrcs = self.srcs[:]
-        if isinstance(srcs,tuple):
-            mysrcs.extend(srcs)
-        elif isinstance(srcs,np.ndarray) or srcs:
-            mysrcs.append(srcs)
+
+        # crude handle of stdin=0, fix later
+        first = srcs[0]
+        if isinstance(first,np.ndarray) or isinstance(first,File):
+            mysrcs = list(srcs)
+        else:
+            mysrcs = []
+
+        # handle numpy input
+        numpy = False
+        for n, src in enumerate(mysrcs):
+            if isinstance(src,np.ndarray):
+                mysrcs[n] = File(src)
+                numpy = True
 
         if self.stdout:
             if isinstance(self.stdout,str):
@@ -884,17 +900,15 @@ class Filter(object):
             command = self.command
 
         (first,pipe,second) = command.partition('|')
-
-        numpy = False
-        for n, src in enumerate(mysrcs):
-            if isinstance(src,np.ndarray):
-                mysrcs[n] = File(src)
-                numpy = True
-
         if mysrcs:
-            command = ' '.join(['< ',str(mysrcs[0]),first]+
-                                list(map(str,list(mysrcs[1:]))) +
-                               [pipe,second])
+            if self.stdin:
+                command = ' '.join(['< ',str(mysrcs[0]),first] +
+                                   [str(x) for x in mysrcs[1:]] +
+                                   [pipe,second])
+            else:
+                command = ' '.join([first]+
+                                   [str(x) for x in mysrcs] +
+                                   [pipe,second])
 
         fail = os.system(command)
         if fail:
@@ -909,23 +923,27 @@ class Filter(object):
                     return outfile[:]
                 else:
                     return outfile
+    def __getitem__(self,srcs):
+        'overload square brackets'
+        return self.apply(srcs)
     def __call__(self,*args,**kw):
+        'brackets set parameters'
         if args:
             self.stdout = args[0]
-            self.run = True
-        elif not kw and not self.pipe:
-            self.run = True
-        self.setcommand(kw,args[1:])
-        if self.run:
-            return self[0]
-        else:
-            return self
-    def __getattr__(self,attr):
-        'Making pipes'
-        other = Filter(attr)
-        self.pipe = True
-        self.command = '%s | %s' % (self,other)
+            if len(args) > 1:
+                self.stdin = args[1]
+        self.setcommand(kw)
         return self
+    def __getattr__(self,attr):
+        'overload dot'
+        return (self | Filter(attr))
+
+def pipe(filters):
+    'pipe filters'
+    filt = filters[0]
+    for other in filters[1:]:
+        filt = filt | other
+    return filt
 
 def Vppen(plots,args):
     name = Temp()
