@@ -23,6 +23,7 @@
 
 int main (int argc, char* argv[]) 
 {
+    bool adj;
     int nrep, irep, n1, n2, i1, i2, rect1, shift;
     float* data, **rct, **sft;
     ntriangle tr;
@@ -32,6 +33,9 @@ int main (int argc, char* argv[])
     in = sf_input ("in");
     out = sf_output ("out");
     rect = sf_input("rect");
+
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* Adjoint flag */
 
     if (NULL != sf_getstring("sift")) {
 	sift = sf_input("sift");
@@ -78,7 +82,11 @@ int main (int argc, char* argv[])
 	sf_floatread(data,n1,in);
 
 	for (irep=0; irep < nrep; irep++) {
-	    nsmooth2 (tr,0,1,false,rct[i2],sft[i2],data);
+	    if (adj) {
+		nsmooth (tr,0,1,false,rct[i2],sft[i2],data);
+	    } else {
+		nsmooth2 (tr,0,1,false,rct[i2],sft[i2],data);
+	    }
 	}
 	
 	sf_floatwrite(data,n1,out);

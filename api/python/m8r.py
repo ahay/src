@@ -938,7 +938,7 @@ class Filter(object):
         'overload dot'
         return (self | Filter(attr))
 
-def pipe(filters):
+def Pipe(filters):
     'pipe filters'
     filt = filters[0]
     for other in filters[1:]:
@@ -946,8 +946,11 @@ def pipe(filters):
     return filt
 
 def Vppen(plots,args):
+    'combining plots'
     name = Temp()
-    os.system('vppen %s %s > %s' % (args,' '.join(map(str,plots)),name))
+    os.system('vppen %s %s > %s' % (args,
+                                    ' '.join([str(plot) for plot in plots]),
+                                    name))
     return Vplot(name,temp=True)
 
 def Overlay(*plots):
@@ -989,8 +992,10 @@ class Vplot(object):
     def __str__(self):
         return self.name
     def __mul__(self,other):
+        'Overload multiplicaton'
         return Overlay(self,other)
     def __add__(self,other):
+        'Overload addition'
         return Movie(self,other)
     def show(self):
         'Show on screen'
@@ -1049,8 +1054,6 @@ class _Wrap(object):
                 raise
 
 sys.modules[__name__] = _Wrap(sys.modules[__name__])
-
-# Helper classes for the case of no SWIG
 
 little_endian = (sys.byteorder == 'little')
     
