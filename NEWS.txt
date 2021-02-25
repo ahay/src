@@ -16,7 +16,7 @@ To the reproducible documents collection:
 * zju/dtv: Full waveform inversion and joint migration inversion with 
   an automatic directional total variation constraint (Qu, Verschuur, and Chen)
 * tccs/anisodiff: Least-squares diffraction imaging using shaping
-  regularization by anisotropic smoothing (Merzlikin, Fomel, Wu)
+  regularization by anisotropic smoothing (Merzlikin, Fomel, and Wu)
 
 To SCons:
 
