@@ -2763,6 +2763,22 @@ int main(int argc,char *argv[])
 	//  (this process is designed for synthetic example)
 	//========================================================
 
+	// This is a debugging part, here we add an additional forward simulation to avoid random error in the first shot, 
+	// which may be caused by the cufft initialization, we are still trying to find this bug, if you find this bug please email me.
+	is=0;		
+	vp_type = 1; 				
+	Save_Not=0;	
+	cuda_visco_PSM_2d_forward
+	(
+		beta1, beta2,
+		nt, ntx, ntz, ntp, nx, nz, L, dx, dz, dt,
+		vp, Gamma, avervp, averGamma, f0, Omega0, ricker,
+		myid, is, ss, plan, GPU_N, rnmax, nrx_obs, N_cp, t_cp,
+		kx_cut, kz_cut, sigma, Order, taper_ratio, kfilter, kstabilization,
+		Sto_Rec, vp_type, Save_Not, Filtertype
+	);
+
+
 	for(iss=0; iss<eachsid; iss++)	// each GPU card compute eachside shots 
 	{		
 		is=offsets+iss*GPU_N;		// current shot index
@@ -2968,7 +2984,20 @@ int main(int argc,char *argv[])
 	MPI_Bcast(vp, ntp, MPI_FLOAT, 0, comm);
 	MPI_Bcast(Gamma, ntp, MPI_FLOAT, 0, comm);
 
-
+	// This is a debugging part, here we add an additional forward simulation to avoid random error in the first shot, 
+	// which may be caused by the cufft initialization, we are still trying to find this bug, if you find this bug please email me.
+	is=0;
+	vp_type = 2;			
+	Save_Not=0;
+	cuda_visco_PSM_2d_forward
+	(
+		beta1_c, beta2_c,
+		nt, ntx, ntz, ntp, nx, nz, L, dx, dz, dt,
+		vp, Gamma, avervp, averGamma, f0, Omega0, ricker,
+		myid, is, ss, plan, GPU_N, rnmax, nrx_obs, N_cp, t_cp,
+		kx_cut, kz_cut, sigma, Order, taper_ratio, kfilter, kstabilization,
+		Sto_Rec, vp_type, Save_Not, Filtertype
+	);
 
 	for(int iss=0; iss<eachsid; iss++)  
 	{

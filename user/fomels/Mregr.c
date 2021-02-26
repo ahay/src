@@ -43,7 +43,8 @@ static void fit(bool adj, bool add, int nm, int nd, float *m, float *d)
 int main(int argc, char* argv[])
 {
     bool verb;
-    int nc, nd, n1, niter, n1iter, method;
+    char ni[5];
+    int i, nc, nd, n1, niter, n1iter, method, dim;
     float *c, *d, perc;
     sf_file inp, reg, out;
 
@@ -52,12 +53,18 @@ int main(int argc, char* argv[])
     reg = sf_input("reg");
     out = sf_output("out");
 
-    if (!sf_histint(inp,"n1",&nd)) sf_error("No n1= in input");
-    if (!sf_histint(reg,"n1",&n1) || n1 != nd)
-	sf_error("Need n1=%d in reg",nd);
-    if (!sf_histint(reg,"n2",&nc)) nc=1;
+    if (!sf_getint("dim",&dim)) dim=1;
+    /* number of dimensions */
+    nc = sf_leftsize(reg,dim);
+    nd = sf_filesize(inp);
+    n1 = sf_filesize(reg)/nc;
 
+    if (n1 != nd) sf_error("Dimension mismatch");
     sf_putint(out,"n1",nc);
+    for (i=2; i <= dim; i++) {
+	sprintf(ni,"n%d",i);
+	sf_putint(out,ni,1);
+    }
     
     d = sf_floatalloc(nd);
     c = sf_floatalloc(nc);
