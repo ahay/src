@@ -13,10 +13,10 @@ This directory will collect materials for a comprehensive Madagascar documentati
 6. **api** Developing Madagascar programs 
 7. **python** Python interface to Madagascar
 8. **parallel** Parallel processing in Madagascar
-9. Machine learning in Madagascar
+[9. Machine learning in Madagascar]
 10. Migration gallery
 11. Seismic field data processing
-12. TRIP libraries
+[12. TRIP libraries]
 13. **latex** Writing reproducible papers, books, and reports
 14. **unity** Madagascar  community
 - Schools and workshops
