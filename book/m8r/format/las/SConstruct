@@ -1,0 +1,19 @@
+from rsf.proj import *
+
+# download well-log data
+Fetch('L-30.las','1406_Make_a_synthetic',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials-2014/master')
+
+# Convert to RSF
+Flow('L-30','L-30.las','las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+
+# Plot density
+Result('rhob','L-30',
+       '''
+       headermath output=RHOB segy=n | 
+       window min2=4000 max2=13000 |
+       graph title=Density
+       ''')
+
+End()

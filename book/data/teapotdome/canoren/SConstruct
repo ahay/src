@@ -822,7 +822,7 @@ vnmo=(9026.08,10581.7,10955.5,11225,11572.8,12097,15179.9,15758.0)
 Flow('nmostack/vnmo.asc',None,
      '''
      echo %s n1=%d n2=2 data_format=ascii_float in=$TARGET
-     ''' % (' '.join(map(str,tnmo)+map(str,vnmo)),len(tnmo)))
+     ''' % (' '.join([str(x) for x in tnmo]+[str(x) for x in vnmo]),len(tnmo)))
 
 # Apply a time window to the CMP gather.
 Flow('nmostack/gatherwin','tvmf/gather_tvmf','window max1=2.0')

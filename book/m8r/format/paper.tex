@@ -330,7 +330,7 @@ parameter) to distinguish between different data types:
 \texttt{esize=4} corresponds to floating point data, while
 \texttt{esize=8} corresponds to complex data. The typical type
 handling mechanism in RSF is different: 
-data types are determined from the value of the <tt>data\_format</tt> parameter.
+data types are determined from the value of the \texttt{data\_format} parameter.
 \item The default data form in SEPlib programs is
 typically XDR and not native as it is in RSF. 
 \item It is possible to pipe the
@@ -338,7 +338,7 @@ output of Madagascar programs to SEPlib:
 \begin{verbatim}
 bash$ sfspike n1=1 | Attr want=min
 \end{verbatim}
-(output should be: <tt>minimum value = 1 at 1</tt>).
+(output should be: \texttt{minimum value = 1 at 1}).
 However, piping the output of SEPlib programs to Madagascar (or, for that matter, any
 other non-SEPlib programs) will result in an unterminated process. For example, the command
 \begin{verbatim}
@@ -546,9 +546,97 @@ bash$ cat file.csv
 4.8,9.1,7.3
 \end{verbatim}
 
+Some CSV files contain headers with definitions for different columns.
+\begin{verbatim}
+bash$ cat file.csv
+height,width,weight
+1.0,1.5,3.0
+4.8,9.1,7.3
+\end{verbatim}
+To read a file like that, use \texttt{header=} parameter in \texttt{sfcsv2rsf}, as follows:
+\begin{verbatim}
+bash$ sfcsv2rsf < file.csv header=y > file.rsf
+\end{verbatim}
+After that, different columns can be accessed by keywords.
+\begin{verbatim}
+bash$ < file.rsf sfheaderattr segy=n
+3 headers, 2 traces
+*******************************************************************************
+     key                    min                       max                 mean
+-------------------------------------------------------------------------------
+height      0              1 @ 0                   4.8 @ 1                 2.9
+width       1            1.5 @ 0                   9.1 @ 1                 5.3
+weight      2              3 @ 0                   7.3 @ 1                5.15
+*******************************************************************************
+
+\end{verbatim}
+
 \subsection{Reading LAS files}
 
-The LAS format...
+LAS (Log ASCII Standard) is a text format used for storing
+well-logging data \cite[]{las}. LAS files can be converted to the RSF format using
+\texttt{sflas2rsf} utility.
+
+Let us try an example file from one of the SEG tutorials:
+\begin{verbatim}
+bash$ tutorials=https://raw.githubusercontent.com/seg/tutorials-2014/master
+bash$ wget $tutorials/1406_Make_a_synthetic/L-30.las
+\end{verbatim}
+Converting to RSF, we can detect 15 different logs:
+\begin{verbatim}
+bash$ sflas2rsf L-30.las L-30.rsf
+(base) sergey@DESKTOP-80QRDA0:~/all/fomels/nnint$ sfin L-30.rsf
+L-30.rsf:
+    in="/home/sergey/RSFROOT/data/L-30.rsf@"
+    esize=4 type=float form=native
+    n1=15          d1=?           o1=?
+    n2=25621       d2=0.5         o2=1140
+        384315 elements 1537260 bytes
+\end{verbatim}
+Individual logs are accessible by their keys and can be used in programs such as \texttt{sfheadermath}.
+\begin{verbatim}
+bash$ < L-30.rsf sfheaderattr segy=n desc=y
+15 headers, 25621 traces
+*******************************************************************************
+     key                    min                       max                 mean
+-------------------------------------------------------------------------------
+DEPTH       0           1140 @ 0                 13950 @ 25620            7545
+[Depth]
+CALD        1           -999 @ 0                19.811 @ 3909         -140.356
+[Caliper Caliper - Density]
+CALS        2           -999 @ 0                 14.84 @ 23096         7.43849
+[Caliper Caliper - Sonic]
+DEPT        3           1140 @ 0                 13950 @ 25620            7545
+[Depth]
+DRHO        4           -999 @ 0                 0.254 @ 23667         -149.67
+[Drho Delta Rho]
+DT          5           -999 @ 0               199.263 @ 1462          90.0167
+[Sonic Delta-T]
+GRD         6           -999 @ 0               178.416 @ 21788        -100.952
+[GammaRay Gamma Ray - Density]
+GRS         7           -999 @ 0               140.148 @ 23376         53.8002
+[GammaRay Gamma Ray - Sonic]
+ILD         8           -999 @ 0               2022.95 @ 20            34.5917
+[DeepRes Deep Induction Standard Processed Resistivity]
+ILM         9           -999 @ 0               2196.26 @ 20661         40.5595
+[MedRes Medium Induction Standard Processed Resistivity]
+LL8        10           -999 @ 0               2097.76 @ 20213         35.6343
+[ShalRes Latero-Log 8]
+NPHILS     11           -999 @ 0                  0.45 @ 23039        -776.522
+[Neutron Neutron Porosity - Ls Mtx]
+NPHISS     12           -999 @ 0                 0.615 @ 5215         -373.244
+[Neutron Neutron Porosity - Ss Mtx]
+RHOB       13           -999 @ 0                 2.811 @ 23941        -147.773
+[Density Bulk Density]
+SP         14           -999 @ 0               -19.065 @ 20570        -105.029
+[SP Spontaneous Potential]
+*******************************************************************************
+bash$ < L-30.rsf sfheadermath output=RHOB segy=n > RHOB.rsf
+bash$ < RHOB.rsf sfwindow min2=4000 max2=13000 | sfgraph title=Density
+\end{verbatim}
+
+\inputdir{las}
+\plot{rhob}{width=\textwidth}{Density log.}
 
 \bibliographystyle{seg}
 \bibliography{format,SEG,SEP2}
