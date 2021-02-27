@@ -24,14 +24,15 @@ t[i] -> t[o+i*d]; s[i]->s[o+i*d] in triple */
 
 #include "cntriangle.h"
 
-#ifndef _ntriangle_h
+#ifndef _cntriangle_h
 
-typedef struct Ntriangle *ntriangle;
+typedef struct CNtriangle *cntriangle;
 /* abstract data type */
 /*^*/
+
 #endif
 
-struct Ntriangle {
+struct CNtriangle {
     sf_complex *tmp;
     int np, nb, nx;
 };
@@ -46,13 +47,13 @@ static void ctriple (int o, int d, int nx, int nb,
 static void ctriple2 (int o, int d, int nx, int nb, 
 		     const float* t, const int* s, const sf_complex* x, sf_complex* tmp);
 
-ntriangle cntriangle_init (int nbox /* maximum triangle length */, 
+cntriangle cntriangle_init (int nbox /* maximum triangle length */, 
 			  int ndat /* data length */)
 /*< initialize >*/
 {
-    ntriangle tr;
+    cntriangle tr;
 
-    tr = (ntriangle) sf_alloc(1,sizeof(*tr));
+    tr = (cntriangle) sf_alloc(1,sizeof(*tr));
 
     tr->nx = ndat;
     tr->nb = nbox;
@@ -237,7 +238,7 @@ static void ctriple2 (int o, int d, int nx, int nb,
     }
 }
 
-void cnsmooth (ntriangle tr /* smoothing object */, 
+void cnsmooth (cntriangle tr /* smoothing object */, 
 	      int o, int d /* sampling. o: starting index, d: stride in samples for 1/2/3rd dimension; all refer to a correct index in a 1D vector  */, 
 	      bool der     /* derivative flag */, 
 	      const float *t /* triangle lengths */, 
@@ -250,7 +251,7 @@ void cnsmooth (ntriangle tr /* smoothing object */,
     ctriple (o,d,tr->nx,tr->nb,t,s,x,tr->tmp);
 }
 
-void cnsmooth2 (ntriangle tr /* smoothing object */, 
+void cnsmooth2 (cntriangle tr /* smoothing object */, 
 	       int o, int d /* sampling */, 
 	       bool der     /* derivative flag */, 
 	       const float *t /* triangle lengths */,
@@ -263,7 +264,7 @@ void cnsmooth2 (ntriangle tr /* smoothing object */,
     cfold2 (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }
 
-void  cntriangle_close(ntriangle tr)
+void  cntriangle_close(cntriangle tr)
 /*< free allocated storage >*/
 {
     free (tr->tmp);

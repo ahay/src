@@ -25,7 +25,7 @@
 #include "cntriangle.h"
 
 static int *n, s[SF_MAX_DIM], nd, dim, **tsft, nrep;
-static ntriangle *tr;
+static cntriangle *tr;
 static sf_complex *tmp;
 static float **tlen;
 
@@ -42,7 +42,7 @@ void cntrianglen_init (int ndim  /* number of dimensions */,
     n = ndat;
     dim = ndim;
 
-    tr = (ntriangle*) sf_alloc(dim,sizeof(ntriangle));
+    tr = (cntriangle*) sf_alloc(dim,sizeof(cntriangle));
     
     nd = 1;
     for (i=0; i < dim; i++) {

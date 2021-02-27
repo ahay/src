@@ -309,7 +309,7 @@ tr_list2 = [
 reg = [(re.compile(x[0]),x[1],x[2]) for x in tr_list2]
 
 bibitem = re.compile(r'\\bibitem\[([^\]]+)\]{([^}]+)}\s*\n(.+)$',re.DOTALL)
-it_in = re.compile(r'{\\it in}')
+it_in = re.compile(r'{\\it(shape)? in}')
 bf = re.compile(r'{\\bf (\w+)}')
 blank = re.compile(r'\n')
 tilde = re.compile(r'[~]')
