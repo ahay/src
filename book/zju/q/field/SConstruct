@@ -55,7 +55,7 @@ w=40
 w1=0.15
 
 Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
-	string.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+	" ".join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
 Plot('frame','frame.asc',
 	'''
 	dd type=complex form=native |
@@ -91,8 +91,8 @@ fhi=1/dt/2
 flo=0
 k1=int(t1/dt)
 k2=int(t2/dt)
-print k1
-print k2
+print(k1)
+print(k2)
 
 for var in range(N):
 	s=0.01
