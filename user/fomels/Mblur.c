@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     bool adj, inv, spk;
     int n, n1, n2, niter, rect, nc, ic, nr;
-    float *x, *y, *p, eps, perc, rect2;
+    float *x, *y, *p, eps, perc, fact, rect2;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -61,7 +61,11 @@ int main(int argc, char* argv[])
     
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
-    sf_sharpen_init(n,perc);
+
+    if (!sf_getfloat("fact",&fact)) fact=0.5;
+    /* factor for sharpening */
+    
+    sf_sharpen_init(n,perc,fact);
 
     x = sf_floatalloc(n);
     y = sf_floatalloc(n);

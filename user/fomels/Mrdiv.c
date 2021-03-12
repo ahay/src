@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 {
     bool verb;
     int id, nd, niter, niter2, iter, iter2;
-    float *num, *den, *rat, *tmp, *num2, eps, perc;
+    float *num, *den, *rat, *tmp, *num2, eps, perc, fact;
     double norm, norm0=1.0, norm2=1.0;
     sf_file fnum, fden, frat;
 
@@ -57,10 +57,13 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
 
+    if (!sf_getfloat("fact",&fact)) fact=0.5;
+    /* factor for sharpening */
+
     sf_floatread(num,nd,fnum);
     sf_floatread(den,nd,fden);
 
-    sf_sharpen_init(nd,perc);
+    sf_sharpen_init(nd,perc,fact);
 
     for (id=0; id < nd; id++) {
 	rat[id] = 0.;

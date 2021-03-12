@@ -68,7 +68,7 @@ int main (int argc, char* argv[])
     yk = sf_floatalloc(n12);
     simi = sf_floatalloc(n12);
 
-    sf_sharpen_init(n12,perc);
+    sf_sharpen_init(n12,perc,0.5);
 
     for (i2=0; i2 < n3; i2++) {
 	if (verb) sf_warning("Slice %d of %d",i2+1,n2);

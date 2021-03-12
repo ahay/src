@@ -72,21 +72,21 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding parameter, default is linear */
 
-	    sf_sharpen_init(n12,perc);
+	    sf_sharpen_init(n12,perc,0.5);
 	    dd2 = sf_floatalloc(n12);
 	    break;
 	case 'p':
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding parameter, default is linear */
 
-	    sf_sharpen_init(n12,perc);
+	    sf_sharpen_init(n12,perc,0.5);
 	    dd2 = sf_floatalloc(n12);
 	    break;
 	case 'b':
 	    if (!sf_getint("nbreg",&nbreg)) nbreg=1;
 	    /* number of iterations for Bregman iteration */
 	    
-	    sf_sharpen_init(n12,perc);
+	    sf_sharpen_init(n12,perc,0.5);
 	    dd2 = sf_floatalloc(n12);
 	    dd3 = sf_floatalloc(n12);
 	    break;
@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
 			if(iperc<0.) iperc=0.;
 		    }
 		    /* Thresholding */
-		    sf_sharpen_init(n12,iperc);
+		    sf_sharpen_init(n12,iperc,0.5);
 		    sf_sharpen(mm);
 		    sf_weight_apply(n12,mm);
 		    sf_sharpen_close();
@@ -243,7 +243,7 @@ int main(int argc, char* argv[])
 			if(iperc<0.) iperc=0.;
 		    }
 		    /* Thresholding */
-		    sf_sharpen_init(n12,iperc);
+		    sf_sharpen_init(n12,iperc,0.5);
 		    sf_sharpen(mm);
 		    sf_weight_apply(n12,mm);
 		    sf_sharpen_close();

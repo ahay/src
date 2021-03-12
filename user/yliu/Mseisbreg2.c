@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 	mask = NULL;
     }
 
-    sf_sharpen_init(n12,perc);
+    sf_sharpen_init(n12,perc,0.5);
     seislet_init(n1,n2,true,true,eps,order,type[0]);
     seislet_set(pp);
     

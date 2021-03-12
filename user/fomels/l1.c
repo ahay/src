@@ -25,6 +25,7 @@ static float *n, *r;
 void l1_init(int nd1    /* data size */,
 	     int niter1 /* number of iterations */,
 	     float perc /* thresholding percent */,
+	     float fact /* thresholding factor */,
 	     bool verb1  /* verbosity flag */)
 /*< initialize >*/
 {
@@ -34,7 +35,7 @@ void l1_init(int nd1    /* data size */,
 
     n = sf_floatalloc(nd);
     r = sf_floatalloc(nd);
-    sf_sharpen_init(nd,perc);
+    sf_sharpen_init(nd,perc,fact);
 }
 
 void l1_close(void)

@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     bool adj, verb, *known;
     const char *type, *oper;
     sf_complex *z0, *x, *y, *y2=NULL;
-    float *m=NULL, perc, eps;
+    float *m=NULL, perc,fact, eps;
     sf_coperator coper=NULL;
     sf_file in, out, root, mask=NULL;
 
@@ -101,8 +101,10 @@ int main(int argc, char* argv[])
 
 		    if (!sf_getfloat("perc",&perc)) perc=50.;
 		    /* percentage for thresholding (used when oper=t and niter > 0) */
+		    if (!sf_getfloat("fact",&fact)) fact=0.5;
+		    /* factor for thresholding (used when oper=t and niter > 0) */
 
-		    sf_sharpen_init(n1,perc);
+		    sf_sharpen_init(n1,perc,fact);
 
 		    for (i1=0; i1 < n1; i1++) {
 			x[i1] = sf_cmplx(0.,0.);

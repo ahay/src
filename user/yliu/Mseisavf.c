@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 
 		/* Variable thresholding */
 		for (it=0; it < nt; it++) {
-		    sf_sharpen_init(n1,thr[it]);
+		    sf_sharpen_init(n1,thr[it],0.5);
 		    for (ip=0; ip < n1; ip++) {
 			q1[ip] = qq[it*n1+ip];
 		    }			

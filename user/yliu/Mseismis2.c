@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding operator, default is linear */
 	    
-	    sf_sharpen_init(n12,perc);
+	    sf_sharpen_init(n12,perc,0.5);
 	    seislet_init(n1,n2,true,true,eps,order,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    break;
@@ -119,13 +119,13 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding operator, default is linear */
 
-	    sf_sharpen_init(n12,perc);
+	    sf_sharpen_init(n12,perc,0.5);
 	    seislet_init(n1,n2,true,true,eps,order,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    break;
 
 	case 'b':
-	    sf_sharpen_init(n12,perc);
+	    sf_sharpen_init(n12,perc,0.5);
 	    seislet_init(n1,n2,true,true,eps,order,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    dd3 = sf_floatalloc(n12);
@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
 				pow(niter,ordert);
 			    if(iperc<0.) iperc=0.;
 			}
-			sf_sharpen_init(n12,iperc);
+			sf_sharpen_init(n12,iperc,0.5);
 			sf_sharpen(mm);
 			sf_weight_apply(n12, mm);
 			sf_sharpen_close();
@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
 				pow(niter,ordert);
 			    if(iperc<0.) iperc=0.;
 			}
-			sf_sharpen_init(n12,iperc);
+			sf_sharpen_init(n12,iperc,0.5);
 			sf_sharpen(mm);
 			sf_weight_apply(n12, mm);
 			sf_sharpen_close();
