@@ -287,13 +287,15 @@ class File(object):
             self.__init__(tag.tag)
         elif isinstance(tag,np.ndarray):
             # numpy array
-            dtype = tag.dtype
-            if dtype=='float32':
+            dtype = tag.dtype.kind
+            if dtype=='f':
                 dformat='native_float'
-            elif dtype=='int32':
-                 dformat='native_int'
+            elif dtype=='i':
+                dformat='native_int'
+            elif dtype=='u':
+                dformat='native_uchar'
             else:
-                raise TypeError('Unsupported format: %s' % dtype)
+                raise TypeError('Unsupported type: %s' % dtype)
             if not name:
                 name = Temp()
             out = Output(name,data_format=dformat)
@@ -548,12 +550,7 @@ class _File(File):
             # can only be used by Input and Output
             # that define self.file
             raise TypeError('Use Input or Output instead of File')
-        if _swig_:
-            self.type = _File.types[c_rsf.sf_gettype(self.file)]
-            self.form = _File.forms[c_rsf.sf_getform(self.file)]
-        else:
-            self.type = self.file.gettype()
-            self.form = self.file.getform()
+        self.type_form()
         if self.type=='float':
             self.datatype=np.float32
         elif self.type=='complex':
@@ -570,6 +567,13 @@ class _File(File):
             setattr(self,type,self.__get(type))
         for type in ('int',):
             setattr(self,type+'s',self.__gets(type))
+    def type_form(self):
+        if _swig_:
+            self.type = _File.types[c_rsf.sf_gettype(self.file)]
+            self.form = _File.forms[c_rsf.sf_getform(self.file)]
+        else:
+            self.type = self.file.gettype()
+            self.form = self.file.getform()
     def tell(self):
         if _swig_:
             return c_rsf.sf_tell(self.file)
@@ -602,6 +606,7 @@ class _File(File):
             c_rsf.sf_setformat(self.file,format)
         else:
             self.file.setformat(format)
+        self.type_form()
     def __get(self,type):
         if _swig_:
             func = getattr(c_rsf,'sf_hist'+type)
@@ -756,9 +761,10 @@ class Output(_File):
             self.file = c_rsf.sf_output(tag)
         else:
             self.file = _RSF(False,tag)
-            if data_format:
-                self.file.setformat(data_format)
+
         _File.__init__(self,tag)
+        if data_format:
+                self.setformat(data_format)
     def write(self,data):
         if _swig_:
             if self.type == 'float':
@@ -768,6 +774,8 @@ class Output(_File):
                                       self.file)
             elif self.type == 'int':
                 c_rsf.sf_intwrite(np.reshape(data.astype(np.int32),(data.size,)),self.file)
+            elif self.type == 'uchar':
+                c_rsf.sf_ucharwrite(np.reshape(data.astype(np.uint8),(data.size,)),self.file)
             else:
                 raise TypeError('Unsupported file type %s' % self.type)
         else:
@@ -775,6 +783,8 @@ class Output(_File):
                 self.file.floatwrite(np.reshape(data.astype(np.float32),(data.size,)))
             elif self.type == 'int':
                 self.type.intwrite(np.reshape(data.astype(np.int32),(data.size,)))
+            elif self.type == 'uchar':
+                self.type.ucharwrite(np.reshape(data.astype(np.uint8),(data.size,)))
             else:
                 raise TypeError('Unsupported file type %s' % self.type)
                 
@@ -1099,7 +1109,7 @@ class _RSF(object):
             # set format
             data_format = self.string('data_format')
             if not data_format:
-                data_format = 'ascii_format'
+                data_format = 'ascii_float'
             self.setformat(data_format)
         else: # output file
             if tag==None or tag=='out':
