@@ -557,6 +557,8 @@ class _File(File):
             self.datatype=np.complex64
         elif self.type=='int':
             self.datatype=np.int32
+        elif self.type=='uchar':
+            self.datatype=np.uint8
         else:
             raise TypeError('Unsupported type %s' % self.type)
         File.__init__(self,tag)
