@@ -1150,9 +1150,12 @@ class _RSF(object):
             self.putstring('in',self.dataname)
 
             if None != _RSF.infiles[0]:
-                format = _RSF.infiles[0].string('data_format','native_float')
-                self.setformat(format)
-
+                data_format = _RSF.infiles[0].string('data_format','native_float')
+            else:
+                data_format = 'native_float' 
+                
+            self.setformat(data_format)
+            
             self.rw = par.bool('--readwrite',False)
             self.dryrun = par.bool('--dryrun',False)                    
     def getfilename(self):
