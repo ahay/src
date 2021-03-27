@@ -782,9 +782,9 @@ class Output(_File):
             if self.type == 'float':
                 self.file.floatwrite(np.reshape(data.astype(np.float32),(data.size,)))
             elif self.type == 'int':
-                self.type.intwrite(np.reshape(data.astype(np.int32),(data.size,)))
+                self.file.intwrite(np.reshape(data.astype(np.int32),(data.size,)))
             elif self.type == 'uchar':
-                self.type.ucharwrite(np.reshape(data.astype(np.uint8),(data.size,)))
+                self.file.ucharwrite(np.reshape(data.astype(np.uint8),(data.size,)))
             else:
                 raise TypeError('Unsupported file type %s' % self.type)
                 
@@ -1279,6 +1279,17 @@ class _RSF(object):
             raise TypeError('putstring to a closed file')
         val = '\"%s\"' % par
         self.pars.enter(key,val)
+    def ucharwrite(self,arr):
+        if None != self.dataname:
+            self.fileflush(_RSF.infiles[0])
+                
+        try:
+            self.stream.buffer.write(arr.tobytes())
+        except:
+            if python2:
+                self.stream.write(arr.tostring())
+            else:
+                self.stream.write(arr.tobytes())
     def intwrite(self,arr):
         if None != self.dataname:
             self.fileflush(_RSF.infiles[0])
