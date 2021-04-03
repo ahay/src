@@ -855,9 +855,9 @@ class Filter(object):
         return self.command
     def __or__(self,other):
         'pipe overload'
-        new = other.copy()
+        new = self.copy()
         new.command = '%s | %s' % (self,other)
-        new.stdin = self.stdin
+        new.stdout = other.stdout
         return new
     def setcommand(self,kw,args=[]):
         'set parameters'
@@ -946,16 +946,14 @@ class Filter(object):
                 self.stdin = args[1]
         self.setcommand(kw)
         return self
+    def pipe(self,other):
+        new = self.copy()
     def __getattr__(self,attr):
-        'overload dot'
-        return (self | Filter(attr))
-
-def Pipe(filters):
-    'pipe filters'
-    filt = filters[0]
-    for other in filters[1:]:
-        filt = filt | other
-    return filt
+        'overload dot: piping'
+        new = Filter(attr)
+        new.command = '%s | %s' % (self,new)
+        new.stdin = self.stdin
+        return new
 
 def Vppen(plots,args):
     'combining plots'

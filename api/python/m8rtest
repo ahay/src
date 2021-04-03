@@ -10,6 +10,7 @@
 >>> par.int("c",10)
 10
 >>> spike = m8r.spike(n1=10)[0]
+>>> filtered = m8r.put(d1=0.1).bandpass(fhi=1).apply(spike)
 >>> spike.mean()
 1.0
 >>> spike[0]
