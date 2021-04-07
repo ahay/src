@@ -4,11 +4,35 @@ The final results of a data analysis project are often represented by figures. M
 
 \section{Vplot history}
 
+Vplot was developed in 1980s at the Stanford Exploration Project
+\cite[]{{Cole.sep.60.349,Dellinger.sep.61.327}. At that time, there
+  was no universal format for graphics files and no univeral libraries
+  for representing graphics on hardware devices, such as monitors or
+  printers. The purpose of the Vplot was to provide such a format so
+  that the same plots could be easily transferred between devices.
+
+  The man page for Vplot says
+  \begin{quote}
+    Vplot originally stood for `vector plot', but this name is now insufficient because  vplot
+       supports not only vectors, but also filled areas (either raster patterns or hatched), text
+       (Hershey fonts), and raster images  (including  grey-scale  dithered  ones  on  monochrome
+       devices such as laser printers).
+    \end{quote}
+
+    Joe Dellinger was the main developer of Vplot, other major contributors at
+    Stanford were Steve Cole and Dave Nichols, with additional
+    contributions by Ray Abma, Stew Levin, David Lumley, and Hector
+    Urdaneta. After Vplot was adopted by Madagascar, new filter
+    programs (called ``pens'') for converting Vplot files to other
+    formats were added.
+
 \section{Vplot format}
 
-\subsection{python interface}
+\subsection{Python interface}
 
 \subsection{sfpldb and sfplas}
+
+\subsection{sfvplotdiff and reproducibility testing}
 
 \section{Graphics programs}
 
@@ -46,7 +70,5 @@ The final results of a data analysis project are often represented by figures. M
 
 \section{Vplot and interactivity}
 
-
-
-
-
+\bibliographystyle{seg}
+\bibliography{SEP2}
