@@ -1,7 +1,4 @@
 from rsf.tex import *
 
-<<<<<<< HEAD
 End(lclass='georeport',options='book',use='hyperref')
-=======
-End(lclass='georeport',options='book',use='color,listings,hyperref')
->>>>>>> 1c4aba030e289e4181d3622c5e82dfe038dbf1b9
+
