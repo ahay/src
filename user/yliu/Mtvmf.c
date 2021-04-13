@@ -25,7 +25,8 @@
 
 int main (int argc, char* argv[]) 
 {
-    int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
+    int n1,n2,n3; /*n1 is trace length, n2 is the number of traces, */
+                  /* n3 is the number of 3th axis */
     int i,j,k,kk,ii;
     int nfw;    /*nfw is the reference filter-window length*/
     int tempnfw;  /*temporary variable*/
