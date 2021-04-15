@@ -64,13 +64,16 @@ def get_geolocation(address=""):
 #        print("Fail to get country code")
         return None
 
-country = get_geolocation()
-if country == "CN":
-#    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
-    dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
-else:
-    dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
+def get_dataserver():
+    'Set the default data server'
+    country = get_geolocation()
+    if country == "CN":
+        #    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
+        dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
+    else:
+        dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 
+dataserver = None
 libs = os.environ.get('LIBS',"")
 
 resdir = None
@@ -682,6 +685,7 @@ class Project(Environment):
         os.system('%s files=n su=%d *%s >> %s' % (sizes,su,suffix,infofile))
         return 0
     def Fetch(self,files,dir,private=None,server=dataserver,top='data',usedatapath=True):
+        global dataserver
         if private:
             self.data.append('PRIVATE')
         elif server=='local':
@@ -689,6 +693,9 @@ class Project(Environment):
         else:
             if not type(files) is list:
                 files = files.split()
+            if server == None:
+                dataserver = get_dataserver()
+                server = dataserver
             for fil in files:
                 if server != dataserver:
                     if top:
