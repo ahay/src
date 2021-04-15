@@ -57,11 +57,11 @@ def get_geolocation(address=""):
         url = "http://ip-api.com/json/" + address
 
     try:
-        response = urllib_request.urlopen(url)
+        response = urllib_request.urlopen(url,timeout=5)
         data = json.load(response)
         return data['countryCode']
     except:
-        print("Fail to get country code")
+#        print("Fail to get country code")
         return None
 
 country = get_geolocation()
