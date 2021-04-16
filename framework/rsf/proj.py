@@ -302,7 +302,6 @@ class Project(Environment):
 
         libdir = os.path.join(root,'lib')
         incdir = os.path.join(root,'include')
-print("********************",incdir)
 
         self.Append(ENV={'RSFROOT':root,
                          'DATAPATH':self.path,
@@ -618,10 +617,10 @@ print("********************",incdir)
             pngsuffix = '.png'
             kw.update({'suffix':pngsuffix})
             pngplot = self.Plot(*(target,source,pngflow), **kw)
-            
+
             flow += ' format=pdf'
             suffix = '.pdf'
-            
+
         kw.update({'suffix':suffix})
         plot = self.Plot(*(target2,source,flow), **kw)
         target2 = target2 + suffix
