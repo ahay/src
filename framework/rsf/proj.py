@@ -299,6 +299,7 @@ class Project(Environment):
 
         libdir = os.path.join(root,'lib')
         incdir = os.path.join(root,'include')
+print("********************",incdir)
 
         self.Append(ENV={'RSFROOT':root,
                          'DATAPATH':self.path,

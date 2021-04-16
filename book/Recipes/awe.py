@@ -9,6 +9,7 @@ def myid(n): return '_'+reduce(add,['%d'%random.randint(0,9) for i in range(n)])
 # ------------------------------------------------------------
 def param(par):
     if(not par.has_key('nb')):       par['nb']=0
+#    if not ('nb' in par): par['nb'] = 0
     if(not par.has_key('nbell')):    par['nbell']=5
 
     if(not par.has_key('snap')):     par['snap']='y'
