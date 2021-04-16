@@ -73,21 +73,35 @@ the Madagascar convention, the source LaTeX file
   \end{document}
 \end{lstlisting}
   
-Several optional arguments can be supplied to the \texttt{Paper()} command:
+Several optional arguments can be supplied to the \texttt{Paper()} command. Some of them are:
 \begin{description}
-\item[source=] specifies
-\item[lclass=] specifies
-\item[scons=] specifies
-\item[use=] specifies
-\item[include=] specifies
-\item[options=] specifies
+%\item[source=] specifies
+\item[lclass=] specifies the LaTeX class. For example, \texttt{lclass=segabs} can be used for SEG abstracts.
+%\item[scons=] specifies
+\item[use=] specifies additional packages to include with \texttt{\\usepackage}. For example, \texttt{use=hyperref} can be used to add the \texttt{hyperref} package for hypertext links.
+\item[include=] specifies additional commands to include in the preamble of the \LaTeX file.
+\item[options=] specifies additional options for the \LaTeX class.
 \end{description}
 Some additional arguments control the placement of reproducible
 figures and are described in the next section.
 
-End()...
+The \texttt{SConstruct} file for paper processing may end with
+\begin{verbatim}
+End()
+\end{verbatim}
+which is equivalent to setting \texttt{paper.tex} as the default
+\LaTeX file. The name can be changed by giving \texttt{paper=} command
+to \texttt{End()}. All other agruments to \texttt{End()} are passed to
+  \verb#Paper('paper')#. The \texttt{End()} command is not strictly
+  necessary, but it can be convenient, because it enables command-line
+  commands like \texttt{scons pdf}, \texttt{scons read}, etc. to be
+  applied to the default file without the need to spell out its name
+  every time.
 
 \subsection{Including reproducible results}
+
+A typical directory structure...
+  
 
 \subsection{Multiple outputs}
 
@@ -106,8 +120,9 @@ Claerbout's vision of reproducible research \cite[]{sep}.
 \bibliographystyle{seg}
 \bibliography{latex}
 
-\appendix
-\section{Appendix: The source of this document}
+% Add latex.bib !
 
-\verbatiminput{paper.tex}
+%\appendix
+%\section{Appendix: The source of this document}
+%\verbatiminput{paper.tex}
 
