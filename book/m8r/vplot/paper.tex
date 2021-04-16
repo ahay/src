@@ -1,0 +1,109 @@
+\chapter{Vplot graphics}
+
+The final results of a data analysis project are often represented by figures. Madagascar includes a versatile plotting library for generating scientific illustrations called Vplot. Vplot defines a data format for storing figures. Figures stored in that format can be displayed on the screen or transformed into other formats for inclusion in scientific papers, presentation slides, or other documents.
+
+\section{Vplot history}
+
+Vplot was developed in 1980s at the Stanford Exploration Project
+(SEP). At that time, there was no universal format for graphics files
+and no univeral libraries for representing graphics on hardware
+devices, such as monitors or printers. The purpose of the Vplot was to
+provide such a format so that the same plots could be easily
+transferred between devices
+\cite[]{Cole.sep.60.349,Dellinger.sep.61.327}.
+
+
+The \texttt{man} page for Vplot says
+  \begin{quote}
+    Vplot originally stood for `vector plot', but this name is now
+    insufficient because vplot supports not only vectors, but also
+    filled areas (either raster patterns or hatched), text (Hershey
+    fonts), and raster images (including grey-scale dithered ones on
+    monochrome devices such as laser printers).
+    \end{quote}
+
+Joe Dellinger was the main developer of Vplot, other major
+contributors at Stanford were Steve Cole and Dave Nichols, with
+additional contributions by other SEP students. After Vplot was
+adopted by Madagascar, new filter programs (called ``pens'') for
+converting Vplot files to other formats were added.
+
+\section{Vplot format}
+\inputdir{test}
+
+Vplot breaks all graphics into primitives that are encoded in the file
+in a mixed text and binary form. The source of the Vplot library is
+contained in the Madagascar source tree under
+\texttt{\$RSFSRC/plot/lib} with example main functions in
+\texttt{\$RSFSRC/plot/test}.
+
+For example, here is a portion of a function that draws a diamond
+shape to reproduce a figure (Figure~\ref{fig:croshyp}) from \cite[]{bei}:
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[firstline=106,lastline=128,frame=single,title=\$RSFSRC/plot/test/croshyp.c]{\RSF/plot/test/croshyp.c}
+
+The function calls are easy to decipher: \texttt{vp\_umove} sets the
+starting point (in predefined ``user'' coordinates),
+\texttt{vp\_udraw} draws a line to the next point. Four lines form a
+diamond shape.
+
+\sideplot{croshyp}{width=\textwidth}{A figure reproduced from (Claerbout, 2006)
+  shows an example of using Vplot library.}
+
+A documentation of the programming interface to different functions in
+the library can be obtained by running \texttt{man libvplot}.
+
+\subsection{Python interface}
+
+It is also possible to generate Vplot files from Python using the
+Python interface to the library defined in \texttt{vplot} module.
+
+For example, here is an equivalent (slighly more concise) Python code
+for generating a diamond shape in Figure ~\ref{fig:croshyp}:
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[firstline=32,lastline=42,frame=single,title=\$RSFSRC/plot/test/croshyp.py]{\RSF/plot/test/croshyp.py}
+
+\subsection{sfpldb and sfplas}
+
+\subsection{sfvplotdiff and reproducibility testing}
+
+\section{Graphics programs}
+
+\subsection{sfdots}
+
+\subsection{sfgraph}
+
+\subsection{sfgraph3}
+
+\subsection{sfwiggle}
+
+\subsection{sfbargraph}
+
+\subsection{sfcontour}
+
+\subsection{sfcontour3}
+
+\subsection{sfthplot}
+
+\subsection{sfgrey}
+
+\subsection{sfgrey3}
+
+\subsection{sfgrey4}
+
+\subsection{sfbox}
+
+\section{Pen programs}
+
+\subsection{xtpen}
+
+\subsection{oglpen}
+
+\subsection{pspen}
+
+\section{Vplot and interactivity}
+
+\bibliographystyle{seg}
+\bibliography{SEP2,vplot}

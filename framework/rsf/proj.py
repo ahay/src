@@ -57,11 +57,11 @@ def get_geolocation(address=""):
         url = "http://ip-api.com/json/" + address
 
     try:
-        response = urllib_request.urlopen(url)
+        response = urllib_request.urlopen(url,timeout=5)
         data = json.load(response)
         return data['countryCode']
     except:
-        print("Fail to get country code")
+#        print("Fail to get country code")
         return None
 
 country = get_geolocation()
@@ -94,8 +94,11 @@ def test(target=None,source=None,env=None):
                     figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
     print("Comparing %s and %s" % (locked,src))
     if os.path.isfile(locked):
-        diff = os.system(' '.join([os.path.join(bindir,sfprefix+'vplotdiff'),
+        if locked.endswith(vpsuffix):
+            diff = os.system(' '.join([os.path.join(bindir,sfprefix+'vplotdiff'),
                                    locked,src]))
+        else:
+            diff = 0
         return diff
     else:
         print('No locked file "%s" ' % locked)
@@ -600,7 +603,8 @@ print("********************",incdir)
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
         if view:
-            flow = flow + ' | %s pixmaps=y' % self.sfpen
+            if suffix==vpsuffix and not 'matplotlib' in flow:
+                flow = flow + ' | %s pixmaps=y' % self.sfpen
             kw.update({'stdout':-1})
         kw.update({'suffix':suffix})
         return self.Flow(*(target,source,flow), **kw)
@@ -609,12 +613,33 @@ print("********************",incdir)
             flow = source
             source = target
         target2 = os.path.join(self.resdir,target)
+        if 'matplotlib' in flow:
+            pngflow = flow + ' format=png'
+            pngsuffix = '.png'
+            kw.update({'suffix':pngsuffix})
+            pngplot = self.Plot(*(target,source,pngflow), **kw)
+            
+            flow += ' format=pdf'
+            suffix = '.pdf'
+            
         kw.update({'suffix':suffix})
         plot = self.Plot(*(target2,source,flow), **kw)
         target2 = target2 + suffix
-        view = self.Command(target + '.view',plot,self.sfpen + " $SOURCES",
-                            src_suffix=vpsuffix)
-        self.view.append(view)
+        if suffix == vpsuffix:
+            viewer = self.sfpen
+        elif suffix == '.pdf':
+            viewer = WhereIs('acroread') or WhereIs('kpdf') \
+              or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') \
+              or WhereIs('open')
+        elif suffix == '.eps':
+            viewer = WhereIs('evince') or WhereIs('gv') or WhereIs('open')
+        else:
+            viewer = None
+
+        if viewer:
+            view = self.Command(target + '.view',plot,viewer + " $SOURCES",
+                                src_suffix=suffix)
+            self.view.append(view)
 
         prnt = self.Command(target + '.print',plot,
                             self.pspen + " printer=%s $SOURCES" % printer,
@@ -626,8 +651,9 @@ print("********************",incdir)
         self.Alias(target + '.lock',locked)
         self.lock.append(locked)
 
-        self.Command(target + '.flip',target2,
-                     '%s $SOURCE %s' % (self.sfpen,locked))
+        if suffix == vpsuffix:
+            self.Command(target + '.flip',target2,
+                        '%s $SOURCE %s' % (self.sfpen,locked))
         test = self.Test('.test_'+target,target2,
                          figdir=self.figs,bindir=self.bindir)
         self.test.append(test)

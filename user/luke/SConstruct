@@ -10,7 +10,7 @@ progs = '''
 dagap3  dagap3e  dagap3a dagapex angmig2 angmigM covariance2d divnp ovczop 
 dtw dtw-apply dtw-errors dtw-accumulate dtw-track dtw-flatten dtw2 dtw-interp
 translate convolve transconv lskernel pathmin pathmin-mov h2warp softclip normalize
-surface-consistent
+surface-consistent resamplextnd
 '''
 ccprogs = '''
 '''

@@ -76,29 +76,25 @@ int main(int argc, char* argv[])
     for (i=0; i < n; i++) {
 	y1[i] = sf_cmplx(0.0f,0.0f);
     }
-
-    for (ic=0; ic < nc; ic++) {
-	f = SF_PI*ic/nc;
-	for (i=0; i < n; i++) {
-	    xn[ic*n+i] =  cexpf(sf_cmplx(0.0f,f)); 
-	    /* distribute around the unit circle */
-	}
-    }
-    for (ic=0; ic < nc-1; ic++) {
-	for (i=0; i < n; i++) {
-	    xn[(nc+ic)*n+i] = sf_cmplx(0.0f,0.0f); 
-	}
-    }
-
-    for (i=0; i < n2; i++) {
-	p[i]=0.0f;
-    }
     
     for (it=0; it < nt; it++) {
 	sf_warning("trace %d of %d;",it+1,nt);
 	sf_complexread(x1,n,inp);
 
-	sf_cconjgrad_init(n2, n2, nr, nr, 1., 1.e-6, verb, true);
+	for (ic=0; ic < nc; ic++) {
+	    f = SF_PI*ic/nc;
+	    for (i=0; i < n; i++) {
+		xn[ic*n+i] =  cexpf(sf_cmplx(0.0f,f)); 
+		/* distribute around the unit circle */
+	    }
+	}
+	for (ic=0; ic < nc-1; ic++) {
+	    for (i=0; i < n; i++) {
+		xn[(nc+ic)*n+i] = sf_cmplx(0.0f,0.0f); 
+	    }
+	}
+
+	sf_cconjgrad_init(n2, n2, nr, nr, 1., 1.e-6, verb, false);
 
 	for (iter=0; iter < niter; iter++) {
 	    pchain_apply(y1,r);

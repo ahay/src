@@ -175,9 +175,13 @@ down = '''
 53284
 53585
 53986
+54983
+55371
+55642
+55864
 '''
 
-down = map(int,down.split())
+down = [int(x) for x in down.split()]
 ind = arange(len(down))
 width=0.75
 

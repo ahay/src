@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 	if (n3 > 1) {
-	    for (i2=0; i2 < n2*jump; i2++) {
+	    for (i2=0; i2 < n2*jump*(jump-1); i2++) {
 		sf_floatwrite(zero,n1,out);
 		sf_floatwrite(zero,n1,mask);
 	    }

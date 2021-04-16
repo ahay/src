@@ -1,0 +1,19 @@
+from rsf.proj import *
+ 
+Flow('welcome',None,
+     'spike n1=1000 k1=300 | bandpass fhi=2 phase=1')
+
+# view=1: display on the screen without generating a figure
+Plot('welcome',
+     '''
+     matplotlib plot title="Welcome to Madagascar" 
+     grid=y linewidth=3 
+     ''',view=1) 
+ 
+Result('welcome',
+       '''
+       matplotlib plot title="Welcome to Madagascar" 
+       grid=y linewidth=3 
+       ''')
+
+End()

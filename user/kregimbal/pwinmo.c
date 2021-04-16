@@ -84,7 +84,7 @@ void inmo_init(const float velocity /* velocity */,
 	    }
 	}
 
-	sf_stretch4_define (nmo[ih],stretch);
+	sf_stretch4_define (nmo[ih],stretch,false);
     }
 
     coord = sf_floatalloc(nt);

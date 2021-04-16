@@ -51,6 +51,7 @@ int main (int argc, char **argv)
     float *tt;                /* trace */
     sf_complex *cc;           /* complex trace */
     float perc;               /* percentage for sharpening */
+    float fact;               /* factor for sharpening */
     kiss_fftr_cfg forw=NULL, invs=NULL;
     kiss_fft_cfg cfor=NULL, cinv=NULL;
     sf_file in, out, offset;
@@ -142,7 +143,9 @@ int main (int argc, char **argv)
 	    /* inversion tolerance */
 	    if (!sf_getfloat("perc",&perc)) perc=50.0;
 	    /* percentage for sharpening */
-	    sf_sharpen_init(np,perc);
+	    if (!sf_getfloat("fact",&fact)) fact=0.5;
+	    /* percentage for sharpening */
+	    sf_sharpen_init(np,perc,fact);
 	}
     }
 

@@ -66,6 +66,8 @@ function run_afdm()
 
         # scale by velocity
         ud = @. ud * vv * vv
+
+	# time step
         up = @. 2f0uo - um + ud * dt2
         um = uo
         uo = up

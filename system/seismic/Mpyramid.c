@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 	for (i=0; i < nx; i++) {
 	    str[i] = iw*(x0+i*dx);
 	}
-	sf_stretch4_define (mo,str);
+	sf_stretch4_define (mo,str,false);
 
 	if (inv) {
 	    sf_complexread(ctrace2,nu,in);

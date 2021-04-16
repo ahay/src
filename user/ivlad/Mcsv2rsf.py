@@ -139,4 +139,6 @@ def main(par):
 ##############################################
 
 if __name__ == '__main__':
+    if len(sys.argv)==1: # fix for python3
+        sys.argv.append('-')
     ivlad.run(main)

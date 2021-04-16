@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	if (each || 0==i2) {
 	    sf_floatread(str,nt,warp);
-	    sf_stretch4_define (mo,str);
+	    sf_stretch4_define (mo,str,false);
 	}
 
 	if (inv) {

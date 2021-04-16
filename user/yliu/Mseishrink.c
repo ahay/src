@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 	    dd2[i1] = dd[i1];
 	}
 	if (1==nperc) {
-	    sf_sharpen_init(n12,perc);
+	    sf_sharpen_init(n12,perc,0.5);
 	    seislet_lop(true,false,n12,n12,mm,dd);
 	    if (dwt) {
 		for (i2=0; i2 < n2; i2++) {
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 		if (perc > 100.) perc=100.;
 		if (verb)
 		    sf_warning("Percentage %2.1f of 100",perc);
-		sf_sharpen_init(n12,perc);
+		sf_sharpen_init(n12,perc,0.5);
 		seislet_lop(true,false,n12,n12,mm,dd);
 		if (dwt) {
 		    for (i2=0; i2 < n2; i2++) {
@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
 	    sf_warning("Key thresholding is percentage=%2.1f",perc);
 
 	    /* Shrinkage with key thresholding */
-	    sf_sharpen_init(n12,perc);
+	    sf_sharpen_init(n12,perc,0.5);
 	    seislet_lop(true,false,n12,n12,mm,dd);
 	    if (dwt) {
 		for (i2=0; i2 < n2; i2++) {

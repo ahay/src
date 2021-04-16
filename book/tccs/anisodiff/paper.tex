@@ -1,10 +1,10 @@
+\published{Geophysics, v. 85, S313-S325, (2020)}
+
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
 \title{Least-squares diffraction imaging using shaping regularization by anisotropic smoothing}
 
-\author{Dmitrii Merzlikin\footnotemark[1], dmitrii.merzlikin@utexas.edu, \\
-	Sergey Fomel\footnotemark[2], sergey.fomel@beg.utexas.edu, \\
-        Xinming Wu\footnotemark[3], xinmwu@ustc.edu.cn}
+\author{Dmitrii Merzlikin\footnotemark[1], Sergey Fomel\footnotemark[2], and Xinming Wu\footnotemark[3]}
 
 \address{
 \footnotemark[1]Formerly Bureau of Economic Geology \\
@@ -32,7 +32,7 @@ University of Science and Technology of China \\
 Hefei, China \\
 }
 
-\lefthead{Merzlikin, Fomel \& Wu}
+\lefthead{Merzlikin et al.}
 \righthead{Anisotropic Smoothing Diffraction Imaging}
 
 \maketitle
@@ -321,6 +321,7 @@ operator $\mathbf{D}$ (step 6) and in the anisotropic smoothing operator $\mathb
 }}
 
 \section{Synthetic Data Example}
+\inputdir{simple3d}
 
 We test the approach on a synthetic data example\old{.}
 \new{with a reflectivity model is shown in Figure~\ref{fig:burden}.
@@ -335,7 +336,7 @@ After 3D Kirchhoff migration diffractions become focused and a channel-like stru
 appear to be somewhat blurred and masked by the reflections. We follow the workflow described above. Data to be fit by the inversion is shown in Figure~\ref{fig:linpi-data}.
 We use the following parameters for the inversion: $\lambda=100$, $\epsilon=10$, $N=5$ and $K=1$. In total we use $20$ iterations - 5 inner by 4 outer.
 The inversion result is shown in Figure~\ref{fig:modl}. Edges are highlighted and denoised.   
-\inputdir{simple3d}
+
 %\plot{zo3}{width=0.8\columnwidth}{Zigzag zero-offset synthetic.}
 %\plot{mig3}{width=0.8\columnwidth}{3D Kirchhoff migration of the Zigzag zero-offset synthetic (Figure~\ref{fig:zo3}).} 
 %\plot{linpi-data}{width=0.8\columnwidth}{AzPWD and 
@@ -344,10 +345,8 @@ The inversion result is shown in Figure~\ref{fig:modl}. Edges are highlighted an
 %\multiplot{4}{zo3,mig3,linpi-data,modl}{width=0.8\columnwidth}{(a) Zigzag zero-offset synthetic; (b) 3D Kirchhoff migration of the Zigzag zero-offset synthetic (Figure~\ref{fig:zo3});
 %(c) AzPWD and path-summation integral migration applied to the Zigzag zero-offset synthetic (Figure~\ref{fig:zo3}); (d) Inversion result: edge diffractions are highlighted and denoised.}
 
-\new{
 \plot{burden}{width=0.9\columnwidth}{Reflectivity model for the synthetic data example. Reflectivity corresponds to density
 contrasts while the velocity is kept constant at $2.0\ \text{km/s}$ throughout the volume.}
-}
 
 \multiplot{2}{zo3,mig3}{width=0.8\columnwidth}{(a) Zigzag zero-offset synthetic; (b) 3D Kirchhoff time migration of the zigzag zero-offset synthetic (Figure~\ref{fig:zo3}).
 \new{While focusing of both reflections and edge diffractions can be observed in (b), channel edges are masked by specular energy

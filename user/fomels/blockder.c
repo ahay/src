@@ -38,7 +38,7 @@ void blockder_init(int n1, int n2       /* data size */,
 
     doubint_init(n1);
     tmp = sf_floatalloc(n);
-    sf_sharpen_init(n,perc);
+    sf_sharpen_init(n,perc,0.5);
     sf_sharpen(block);
     sf_weight2_init(1,n,weight);
 

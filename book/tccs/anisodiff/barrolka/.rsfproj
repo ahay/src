@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfintbin', 'sfpow', 'sfwindow', 'sfput', 'sfbyte', 'sfgrey3', 'sfmath', 'sflinmig3', 'sfdd', 'sfscale', 'sflapfill', 'sfgrey', 'sfspray', 'sfinttest1', 'sffdip', 'sfpwd', 'sfpwspray2', 'sftransp', 'sfmedian', 'sfpwdtensorh', 'sfpwsmooth3', 'sfstack', 'sflinpi', 'sflspiazpwdmig32', 'sfthr', 'sfpwddiffuse', 'sfpiazpwdmig3', 'sfadd', 'sfortho', 'sfcosft', 'sfvczo', 'sfomp', 'sfcat', 'sfgraph']
+data=['PRIVATE', 'PRIVATE', 'PRIVATE']
+size= 7145674032

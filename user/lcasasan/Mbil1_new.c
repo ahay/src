@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("perc",&perc)) perc=90.0;
     /* percentage for sharpening */
 
-    sf_sharpen_init(nd,perc);
+    sf_sharpen_init(nd,perc,0.5);
 
     /* initialize model (filter) with zero */
     for (ib=0; ib < nb; ib++) {

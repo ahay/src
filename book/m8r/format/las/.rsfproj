@@ -1,0 +1,3 @@
+uses=['sflas2rsf', 'sfheadermath', 'sfwindow', 'sfgraph']
+data=['https://raw.githubusercontent.com/seg/tutorials-2014/master/1406_Make_a_synthetic/L-30.las']
+size=    1537260

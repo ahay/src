@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     int i, niter, nfft, nw, nk, n1, n2, n12;
     int i1, i2, i3, n3, iter; 
     float dw, /* dk, */ d1, o1, d2, o2, wt, wk, shift;
-    float *dd, *dd2=NULL, *d, *dd3=NULL, *m, perc;
+    float *dd, *dd2=NULL, *d, *dd3=NULL, *m, perc,fact;
     float ddif;
     float *err=NULL, *refd=NULL, *temp=NULL;
     bool verb, *known, error;
@@ -102,9 +102,11 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_getfloat("perc",&perc)) perc=99.;
-    /* percentage for soft-thresholding */ 
+    /* percentage for soft-thresholding */
+    if (!sf_getfloat("fact",&fact)) fact=0.5;
+    /* factor for soft-thresholding */
     
-    sf_sharpen_init(nw*nk,perc);
+    sf_sharpen_init(nw*nk,perc,fact);
     dd2 = sf_floatalloc(n12);
     dd3 = sf_floatalloc(n12);
     

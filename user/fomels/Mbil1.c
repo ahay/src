@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int nd, n1, niter;
-    float *d, *a, *b, alfa, beta, perc;
+    float *d, *a, *b, alfa, beta, perc, fact;
     sf_file inp, reg, out;
 
     sf_init(argc,argv);
@@ -52,8 +52,10 @@ int main(int argc, char* argv[])
     /* number of POCS iterations */
     if (!sf_getfloat("perc",&perc)) perc=90.0;
     /* percentage for sharpening */
+    if (!sf_getfloat("fact",&fact)) fact=0.5;
+    /* factor for sharpening */
 
-    l1_init(nd,niter,perc,true);
+    l1_init(nd,niter,perc,fact,true);
 
     bil1(d,a,b,&alfa,&beta);
     

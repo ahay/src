@@ -575,9 +575,9 @@ def get_stdout_nm():
     for f in os.listdir('.'):
         # Comparing the unique file ID stored by the OS for the file stream
         # stdout with the known entries in the file table:
-        if os.fstat(1)[1] == os.stat(f)[1]:
-            found_stdout = True
-            break
+       if os.path.isfile(f) and os.fstat(1)[1] == os.stat(f)[1]:
+           found_stdout = True
+           break
 
     if found_stdout:
         return f

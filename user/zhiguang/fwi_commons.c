@@ -1549,7 +1549,7 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 //			}
 //			
 //			for(ir=0; ir<nr; ir++){
-//				sf_stretch4_define(mo,str);
+//				sf_stretch4_define(mo,str,false);
 //				sf_stretch4_apply(false,mo,dd[ir],ref[iw][ir]);
 //			}
 //		}

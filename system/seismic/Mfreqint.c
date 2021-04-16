@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 {
     bool inv;
     int nd, n1, i2, n2, nw, n1w, niter, i, ncycle;
-    float *w0=NULL, d1, o1, *crd=NULL, eps, perc;
+    float *w0=NULL, d1, o1, *crd=NULL, eps, perc,fact;
     char *type=NULL;
     sf_complex *pp=NULL, *qq=NULL, *mm=NULL, *z0=NULL, *q=NULL;
     sf_file in=NULL, out=NULL, w=NULL, coord=NULL;
@@ -85,7 +85,11 @@ int main(int argc, char *argv[])
 
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
-    sf_sharpen_init(n1w,perc);
+
+    if (!sf_getfloat("fact",&fact)) fact=0.5;
+    /* factor for sharpening */
+    
+    sf_sharpen_init(n1w,perc,fact);
 
     pp = sf_complexalloc(nd);
     crd = sf_floatalloc(nd);

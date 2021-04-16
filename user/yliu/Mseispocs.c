@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int i, niter, nw, n1, n2, n12, i1, i3, n3, iter, order; 
-    float *mm, *dd, *dd2=NULL, **pp, *m=NULL, eps, perc, *sknown;
+    float *mm, *dd, *dd2=NULL, **pp, *m=NULL, eps, perc,fact, *sknown;
     char *type;
     bool verb, *dknown;
     sf_file in, out, dip, mask=NULL, convex=NULL;
@@ -76,7 +76,10 @@ int main(int argc, char* argv[])
 	convex = NULL;
 	if (!sf_getfloat("perc",&perc)) perc=90.;
         /* percentage for smooth */
-	sf_sharpen_init(n12,perc);
+	if (!sf_getfloat("fact",&fact)) fact=0.5;
+        /* percentage for smooth */
+	
+	sf_sharpen_init(n12,perc,fact);
     }
 
     if (NULL != mask) {

@@ -61,7 +61,7 @@ void sf_multidivnL1_init(int nw       /* number of components */,
     prec = (bool) (NULL != aa);
     if (prec) sf_helicon_init(aa);
 
-    sf_sharpen_init(n,perc);
+    sf_sharpen_init(n,perc,0.5);
      /* initialization of sharpening regularization*/
 
     num_tmp = sf_floatalloc(n);

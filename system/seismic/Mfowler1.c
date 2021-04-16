@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 		vstr[iv] = v/hypotf(1.0f,v*p);
 	    }	
 
-	    sf_stretch4_define (mo,vstr);
+	    sf_stretch4_define (mo,vstr,false);
 	    sf_stretch4_apply (false,mo,stack,stack2);
 
 	    sf_floatwrite(stack2,nv,out);

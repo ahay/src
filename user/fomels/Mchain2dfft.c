@@ -118,9 +118,12 @@ int main(int argc, char* argv[])
     sf_floatread(w+2*n, n, w0);
     sf_floatread(w+3*n, nk, wf0);
    
-
     for (iter=0; iter < niter; iter++) {
     sf_warning("Start %d",iter);
+
+    for (i=0; i < n2; i++) {
+        w_prev[i] = w[i];
+        }
     alpha=1.0;
 
     sfchain2d_res(y,r);

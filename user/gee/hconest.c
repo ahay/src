@@ -52,5 +52,3 @@ void hconest_lop(bool adj, bool add, int na, int ny, float *a, float *y)
 	}
     }
 }
-
-/* 	$Id$	 */

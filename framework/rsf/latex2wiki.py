@@ -278,10 +278,10 @@ tr_list2 = [
     #	(r"\$(.*?)\$",(lambda :r"<math>\1</math>"),dummy),
     (r"%.*$",None, dummy),
     (r"\\r{(.*?)}", (lambda : r"\\mathrm{\1}"), dummy),
-    (r"\\d ", (lambda : r"\\,\mathrm{d} "), dummy),
+    (r"\\d ", (lambda : r"\\mathrm{d} "), dummy),
     (r"\\i ", (lambda : r"\\mathrm{i} "), dummy),
     (r"\\i\\", (lambda : r"\\mathrm{i}\\"), dummy),
-    (r"\\e\^", (lambda : r"\\mathrm{e}^"), dummy),
+    (r"\\e\^", (lambda : r"\\mathrm{e}\^"), dummy),
     (r"\\begin{align[*]?}", (lambda :r"<center><math>\\begin{matrix}"), toggle_math),
     (r"\\end{align[*]?}", (lambda :r"\\end{matrix}</math></center>"), toggle_math),
     (r"\\begin{aligned[*]?}", None, dummy),
@@ -309,7 +309,7 @@ tr_list2 = [
 reg = [(re.compile(x[0]),x[1],x[2]) for x in tr_list2]
 
 bibitem = re.compile(r'\\bibitem\[([^\]]+)\]{([^}]+)}\s*\n(.+)$',re.DOTALL)
-it_in = re.compile(r'{\\it in}')
+it_in = re.compile(r'{\\it(shape)? in}')
 bf = re.compile(r'{\\bf (\w+)}')
 blank = re.compile(r'\n')
 tilde = re.compile(r'[~]')

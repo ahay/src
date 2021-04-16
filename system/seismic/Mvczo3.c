@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 	t2[i2] = sqrtf(t);
     }    
 
-    sf_stretch4_define (str,t2);
+    sf_stretch4_define (str,t2,false);
 
     for (iy=0; iy < ny; iy++) {
 	if (verb) sf_warning("wavenumber %d of %d;", iy+1,ny);

@@ -66,11 +66,11 @@ void find_matchL1(int nd   /* data size */,
     for (i=0; i < nmodel; i++)
     	model[i]=0.0;
 
-    sf_sharpen_init(nd,perc);
+    sf_sharpen_init(nd,perc,0.5);
     /* initialization of sharpening regularization*/
 
 
-    sf_sharpen_init(nd,perc);
+    sf_sharpen_init(nd,perc,0.5);
 
     for (iter=0; iter < niter; iter++) {
     	sf_solver(fit,sf_cgstep,nmodel,nd,model,dd,liter,"x0",model,"verb",false,"end");

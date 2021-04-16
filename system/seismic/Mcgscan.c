@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     int nt, n3, nx, nv, i3, ntx, ntv, ic, nc;
     int niter, miter, psun1, psun2;
     bool adj;
-    float o1,d1, x0,dx, v0,dv, anti, s1,s0,ds, perc;
+    float o1,d1, x0,dx, v0,dv, anti, s1,s0,ds, perc,fact;
     float *cmp=NULL, *vscan=NULL, *error=NULL, *mask=NULL;
     sf_file in=NULL, out=NULL, err=NULL, msk=NULL;
 
@@ -138,7 +138,10 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("perc",&perc)) perc=50.0;
 	/* percentage for sharpening */
 
-	sf_sharpen_init(ntv,perc);
+	if (!sf_getfloat("fact",&fact)) fact=0.5;
+	/* factor for sharpening */
+
+	sf_sharpen_init(ntv,perc,fact);
 	if (NULL == mask) mask = sf_floatalloc(ntv);
 	sf_conjgrad_init(ntv,ntv,ntx,ntx,1.0,1.e-6,true,false);
     }
