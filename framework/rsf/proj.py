@@ -620,10 +620,10 @@ class Project(Environment):
             pngsuffix = '.png'
             kw.update({'suffix':pngsuffix})
             pngplot = self.Plot(*(target,source,pngflow), **kw)
-            
+
             flow += ' format=pdf'
             suffix = '.pdf'
-            
+
         kw.update({'suffix':suffix})
         plot = self.Plot(*(target2,source,flow), **kw)
         target2 = target2 + suffix
