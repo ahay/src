@@ -1140,7 +1140,7 @@ def blas(context):
                                         ['/usr/lib64/atlas/',
                                          '/usr/lib/atlas/']):
                     context.env['LIBPATH'].append(atlas_dir)
-                LIBS.pop()
+                LIBS.pop() # cblas
                 LIBS.append('f77blas')
                 LIBS.append('atlas')
                 res = context.TryLink(text,'.c')
@@ -1150,9 +1150,9 @@ def blas(context):
                     context.env['BLAS'] = 'cblas'
                 else:
                     # try tatlas (threaded atlas + BLAS)
-                    LIBS.pop()
-                    LIBS.pop()
-                    LIBS.pop()
+                    LIBS.pop() # atlas
+                    LIBS.pop() # f77blas
+                    LIBS.pop() # blas
                     LIBS.append('tatlas')
                     res = context.TryLink(text,'.c')
                     if res:
@@ -1160,12 +1160,22 @@ def blas(context):
                         context.env['LIBS'] = LIBS
                         context.env['BLAS'] = 'tatlas'
                     else:
-                        context.Result(context_failure)
-                        context.env['CPPDEFINES'] = \
-                           path_get(context,'CPPDEFINES','NO_BLAS')
-                        LIBS.pop()
-                        context.env['BLAS'] = None
-                        need_pkg('blas', fatal=False)
+                        LIBS.pop() # tatlas
+                        LIBS.append('cblas')
+                        LIBS.append('atlas')
+                        res = context.TryLink(text,'.c')
+                        if res:
+                            context.Result(res)
+                            context.env['LIBS'] = LIBS
+                            context.env['BLAS'] = 'cblas'
+                        else:
+                            LIBS.pop() # atlas
+                            LIBS.pop() # cblas
+                            context.Result(context_failure)
+                            context.env['CPPDEFINES'] = \
+                              path_get(context,'CPPDEFINES','NO_BLAS')
+                            context.env['BLAS'] = None
+                            need_pkg('blas', fatal=False)
 
 pkg['lapack'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
                  'ubuntu': 'liblapack-dev',
@@ -1201,8 +1211,8 @@ def lapack(context):
             context.env['LAPACK'] = mylibs
         else:
             # some systems require cblas and atlas
-            LIBS.pop()
-            LIBS.pop()
+            LIBS.pop() # blas
+            LIBS.pop() # lapack
             mylibs = ['f77blas','cblas','atlas']
             LIBS.extend(mylibs)
             res = context.TryLink(text,'.c')
@@ -1211,9 +1221,9 @@ def lapack(context):
                 context.env['LAPACK'] = mylibs
             else:
                 # try tatlas (threaded atlas + BLAS)
-                LIBS.pop()
-                LIBS.pop()
-                LIBS.pop()
+                LIBS.pop() # atlas
+                LIBS.pop() # cblas
+                LIBS.pop() # f77blas
                 LIBS.append('tatlas')
                 res = context.TryLink(text,'.c')
                 if res:
