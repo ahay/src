@@ -12,7 +12,16 @@ accumulated back into one data stream. Madagascar provides a number of
 convenient tools for running serial code into a data parallel fashion
 without the need to resolve to low-level programming.
 
-\section{Posix threads}
+\section{POSIX threads}
+
+POSIX threads (or pthreads) is a protocol for concurrent execution of
+multiple flows of work, defined as threads \cite[]{pthreads}. Although
+Madagascar does not have general-purpose programs based on pthreads,
+it provides examples of using pthreads in individual programs.
+
+Program \texttt{sfthreads}, written by Dough McCowan, is a simple test
+program for testing parallel execution with pthreads applied to the
+Kirchhoff migration kernel.
 
 \section{OpenMP programming and sfomp}
 
