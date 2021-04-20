@@ -1168,6 +1168,7 @@ def blas(context):
                         need_pkg('blas', fatal=False)
 
 pkg['lapack'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
+                 'ubuntu': 'liblapack-dev',
                  'rhel':'blas-devel + atlas-devel',
                  'centos':'lapack-devel'}
 
