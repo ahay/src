@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
     char ni[5];
     int i, nc, nd, n1, niter, n1iter, method, dim;
     float *c, *d, perc, fact;
+    char *type;
     sf_file inp, reg, out;
 
     sf_init(argc,argv);
@@ -93,8 +94,11 @@ int main(int argc, char* argv[])
 
 	    if (!sf_getfloat("fact",&fact)) fact=0.5;
 	    /* percentage for sharpening */
-	    
-	    l1_init(nd,n1iter,perc,fact,verb);
+
+	    if (NULL == (type = sf_getstring("type"))) type="threshold";
+    /* thresholding type */
+
+	    l1_init(nd,n1iter,perc,fact,type,verb);
 	    
 	    sf_solver(fit,l1step,nc,nd,c,d,niter,"verb",verb,"end");
 	    break;

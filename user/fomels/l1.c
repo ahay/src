@@ -18,24 +18,39 @@
 */
 #include <rsf.h>
 
+#include "threshold.h"
+
 static bool verb;
 static int nd, niter;
 static float *n, *r;
+static char type;
 
 void l1_init(int nd1    /* data size */,
 	     int niter1 /* number of iterations */,
 	     float perc /* thresholding percent */,
 	     float fact /* thresholding factor */,
+	     const char *type1 /* thresholding type */,
 	     bool verb1  /* verbosity flag */)
 /*< initialize >*/
 {
     nd=nd1;
     niter=niter1;
     verb=verb1;
+    type=type1[0];
 
     n = sf_floatalloc(nd);
     r = sf_floatalloc(nd);
-    sf_sharpen_init(nd,perc,fact);
+
+    switch(type) {
+	case 's':
+	    sf_sharpen_init(nd,perc,fact);
+	    break;
+	case 't':
+	    threshold_init(nd,fact);
+	    break;
+	default:
+	    sf_error("unknown thresholding \"%s\"",type1);
+    }
 }
 
 void l1_close(void)
@@ -43,7 +58,17 @@ void l1_close(void)
 {
     free(n);
     free(r);
-    sf_sharpen_close();
+
+    switch(type) {
+	case 's':
+	    sf_sharpen_close();
+	    break;
+	case 't':
+	    threshold_close();
+	    break;
+	default:
+	    break;
+    }
 }
 
 void unil1(const float *d, const float *a, float *alfa)
@@ -75,8 +100,19 @@ void unil1(const float *d, const float *a, float *alfa)
 	}
 	/* Threshold n */
 	/* ----------- */
-	sf_sharpen(n);
-	sf_weight_apply(nd,n);
+
+	switch(type) {
+	    case 's':
+		sf_sharpen(n);
+		sf_weight_apply(nd,n);
+		break;
+	    case 't':
+		threshold_set(n);
+		threshold(n);
+		break;
+	    default:
+		break;
+	}
 
 	if (verb) sf_warning("%d %g",iter,alf);
     }
@@ -121,8 +157,19 @@ void bil1(const float *d, const float *a, const float *b,
 	}
 	/* Threshold n */
 	/* ----------- */
-	sf_sharpen(n);
-	sf_weight_apply(nd,n);
+
+	switch(type) {
+	    case 's':
+		sf_sharpen(n);
+		sf_weight_apply(nd,n);
+		break;
+	    case 't':
+		threshold_set(n);
+		threshold(n);
+		break;
+	    default:
+		break;
+	}
 
 	if (verb) sf_warning("%d %g %g",iter,alf,bet);
     }
