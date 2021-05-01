@@ -272,6 +272,15 @@ class Project(Environment):
 
         self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','madagascar','figs'))
 
+        try:
+            sys.path.append(os.path.abspath(os.path.join(root,'share','madagascar','etc')))
+            import config
+            self.OMP = config.OMP
+            self.MPI = config.MPICC
+        except:
+            self.OMP=False
+            self.MPI=False
+
         cwd = os.getcwd()
         self.cwd = cwd
 
@@ -505,17 +514,19 @@ class Project(Environment):
                 reduction = reduce
 
             if split[1] == 'omp' or split[1] == 'mpi':
-                splitpar = 'split=%d ' % split[0]
-                if reduce == 'add':
-                    splitpar += ' join=0'
-                else:
-                    join = re.search('cat\s+axis=(\d)',reduce)
-                    if join:
-                        splitpar += ' join=%s' % join.group(1)
-                flow = '|'.join([' '.join([split[1],splitpar,x]) for x in flow.split('|')])
-                for k in split[2]:
-                    # par=${SOURCES[k]} -> _par=${SOURCES[k]}
-                    flow = re.sub(r'(\S+=\${SOURCES\[%d\]})' % k,'_\\1',flow)
+                if (split[1] == 'omp' and self.OMP) or \
+                   (split[1] == 'mpi' and self.MPI):
+                    splitpar = 'split=%d ' % split[0]
+                    if reduce == 'add':
+                        splitpar += ' join=0'
+                    else:
+                        join = re.search('cat\s+axis=(\d)',reduce)
+                        if join:
+                            splitpar += ' join=%s' % join.group(1)
+                    flow = '|'.join([' '.join([split[1],splitpar,x]) for x in flow.split('|')])
+                    for k in split[2]:
+                        # par=${SOURCES[k]} -> _par=${SOURCES[k]}
+                        flow = re.sub(r'(\S+=\${SOURCES\[%d\]})' % k,'_\\1',flow)
             elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
