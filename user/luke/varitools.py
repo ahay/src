@@ -2,9 +2,15 @@ from __future__ import print_function
 
 import m8r
 import numpy as np
-import numba
 import math as m
 import sys
+
+try:
+    import numba
+except:
+    sys.stderr.write('Please install numba!\n\n')
+    sys.exit(1)
+
 # gradient functions
 
 @numba.jit(parallel=True,nopython=True)
