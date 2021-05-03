@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import m8r
 import numpy as np
 import numba
