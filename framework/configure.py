@@ -243,7 +243,7 @@ def identify_platform(context):
         # commands hthrough os.system to find distro/version
         # Not known if what follows works everywhere:
         plat_nm = os.uname()[4]
-        if plat_nm == 'x86_64':
+        if plat_nm == 'x86_64' or plat_nm == 'arm64':
             plat['arch'] = '64bit'
         elif plat_nm == 'i686':
             plat['arch'] = '32bit'

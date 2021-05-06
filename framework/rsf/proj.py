@@ -69,9 +69,9 @@ def get_dataserver():
     country = get_geolocation()
     if country == "CN":
         #    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
-        return os.environ.get('RSF_DATASERVER','http://www.ahay.org')
+        return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
     else:
-        return os.environ.get('RSF_DATASERVER','http://www.ahay.org')
+        return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
 
 dataserver = None
 libs = os.environ.get('LIBS',"")
