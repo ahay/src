@@ -314,12 +314,13 @@ def variational_velocity(semb, dsembv, vo, rho, lmbda, epsilon, dX, oX, nX,
 
     # initialize frame tracker
     frames = 0 # no longer counting starting model
-
+    it1 = 0
+    rho0 = rho
     for it in range(niter):
         g = compute_grad(v, semb, dsembv, dX, oX, lmbda, epsilon)
         if lbfgs_bool:
             # nested loop LBFGS
-            if it > 0:
+            if it1 > 0:
                 q = np.array(g)
                 y = numb_add2(g,-g_old)
                 s = numb_add2(v,-v_old)
@@ -356,6 +357,17 @@ def variational_velocity(semb, dsembv, vo, rho, lmbda, epsilon, dX, oX, nX,
         # line search in newton search direction
         if line_bool:
             step, cost = search(v, semb, dX, oX, nX, lmbda, epsilon, z , rho*rhoscl, rho, rho*rhoscl)
+            if lbfgs_bool:
+               if cost+eps > oldcost:
+                  print("Cost of %g Diverging on LBFGS, trying to reset search direction"%cost,file=sys.stderr)
+                  # reset 
+                  syr_lst = []
+                  z = np.array(g)
+                  g_old = np.array(g)
+                  v_old = np.array(v)
+                  it1 = 0
+                  rho = rho0
+                  step, cost = search(v, semb, dX, oX, nX, lmbda, epsilon, z , rho*rhoscl, rho, rho*rhoscl)
         else:
             step = rho
             cost = compute_cost(numb_add2(v,-rho*z), semb, dX, oX, lmbda, epsilon)   
@@ -384,7 +396,7 @@ def variational_velocity(semb, dsembv, vo, rho, lmbda, epsilon, dX, oX, nX,
             if verb:
                 print("Terminating for step size",file=sys.stderr)
             break
-
+        it1 = it1+1
     return v, costlst, frames#, movie_lst_step, movie_lst_vel
 
 
