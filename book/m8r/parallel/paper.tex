@@ -109,7 +109,7 @@ split, the second parameter tells SCons to user \texttt{sfomp} for the
 splitting, and the third (optional) parameter lists the numbers of the
 source files that need splitting (starting from zero). Splitting all
 of the source files is the default behavior, therefore the
-\texttt{[0,1]} list in the last example is actually not needed.
+\texttt{[0,1]} list in the last example is actually redundant.
 
 \section{MPI programming and sfmpi}
 
@@ -166,6 +166,13 @@ Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
      split=[3,'mpi',[0,1]])
 \end{lstlisting}
 
+The first parameter in the \texttt{split=} list indicates the axis to
+split, the second parameter tells SCons to user \texttt{sfmpi} for the
+splitting, and the third (optional) parameter lists the numbers of the
+source files that need splitting (starting from zero). Splitting all
+of the source files is the default behavior, therefore the
+\texttt{[0,1]} list in the last example is actually redundant.
+
 %\section{GPU programming}
 
 \section{Parallel processing in SCons: pscons}
@@ -191,9 +198,36 @@ figures out the number of cores on the current node and runs
 
 In the case of data-parallel processing, independent targets may not
 exist initially. However, we can create them by breaking the input
-data into different files and processing them separately...
+data into different files and processing them separately.
 
-Pros and cons (new targets, data tolerance)...
+In \texttt{SConstruct}, the desire to split the data for data-parallel
+processing can be indicated with \texttt{split=} parameter.
+
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+Flow('output','input','bandpass fhi=50',
+     split=[2,1001])
+Flow('transp','original','transp',
+     split=[2,1001],join='cat axis=1')
+Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
+     split=[3,1001,[0,1]])
+\end{lstlisting}
+
+In the example above, the first parameter in the \texttt{split=} list indicates the axis to
+split, and the second parameter indicates the size of that axis. When
+using \texttt{pscons} instead of \texttt{scons}, SCons is going to
+create intermediate targets corresponding to splitted output and
+generate them by running the flow in parallel on multiple cores.
+
+The disadvantage of this approach is in creating multiple intermediate
+files that are not cleaned automatically and can be cleaned by running
+\texttt{pscons -c}. However, this feature can be also advantageous for
+checkpointing. If the parallel execution is interrupted, it can be
+restarted  by running \texttt{pscons} again without the need to
+regenerate the intermediate files that were generated during the
+previous run.
+
+pscons over multiple nodes...
 
 \section{Parallel processing on shared clusters: sfbatch}
 

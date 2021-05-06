@@ -62,7 +62,11 @@ void threshold(float *data)
 
     for (i=0; i < n; i++) {
 	d = data[i];
-	if (d > dmin && d < dmax) {
+	if (d < dmin) {
+	    data[i] -= dmin;
+	} else if (d > dmax) {
+	    data[i] -= dmax;
+	} else {
 	    data[i] = 0.0f;
 	}
     }
