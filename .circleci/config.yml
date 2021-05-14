@@ -105,12 +105,12 @@ jobs:
           source env.sh
 
     - run:
-      name: Test
-      command: |
-        source env.sh
-        cd framework/rsf
-        pip install coverage
-        coverage run -m unittest discover test
+        name: Test
+        command: |
+          source env.sh
+          cd framework/rsf
+          pip install coverage
+          coverage run -m unittest discover test
 
     - codecov/upload:
       file: '.coverage'
