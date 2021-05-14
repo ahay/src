@@ -113,3 +113,4 @@ jobs:
 
     - codecov/upload:
         file: '.coverage'
+        token: 390faad3-dd9e-4053-8c7a-617edaf2e2f0

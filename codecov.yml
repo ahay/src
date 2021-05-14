@@ -6,3 +6,5 @@ coverage:
     project:
       default:
         threshold: 0%
+        branches:
+          - unittest
