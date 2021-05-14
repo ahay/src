@@ -113,4 +113,4 @@ jobs:
           coverage run -m unittest discover test
 
     - codecov/upload:
-      file: '.coverage'
+        file: '.coverage'
