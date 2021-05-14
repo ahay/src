@@ -7,14 +7,14 @@ workflows:
   version: 2
   build:
     jobs:
-      - python36
-      - python27
+      - python3
+      - python2
       - unittest
 
 jobs:
-  python36: &test-template
+  python3: &test-template
     docker:
-    - image: circleci/python:3.6
+    - image: circleci/python:3.8
     working_directory: ~/ahay/src
     parallelism: 1
     #shell: /bin/bash --login
@@ -66,7 +66,7 @@ jobs:
     - store_artifacts:
         path: /tmp/circleci-artifacts
 
-  python27:
+  python2:
     <<: *test-template
     docker:
     - image: circleci/python:2.7
