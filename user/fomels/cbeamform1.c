@@ -1,4 +1,4 @@
-/* Beam forming with triangle 1smoothing. */
+/* Beam forming with triangle smoothing: complex data. */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -20,10 +20,12 @@
 #include <rsf.h>
 /*^*/
 
-static int n1,n2, rect;
-static float *t;
+#include "ctriangle2.h"
 
-void beamform1_init(int nrep    /* repeat smoothing */,
+static int n1,n2, rect;
+static sf_complex *t;
+
+void cbeamform1_init(int nrep    /* repeat smoothing */,
 		    int m1,
 		    int m2      /* data dimensions */,
 		    int rect1   /* triangle radius */)
@@ -33,28 +35,28 @@ void beamform1_init(int nrep    /* repeat smoothing */,
     n2=m2;
     rect=rect1;
 
-    t = sf_floatalloc(n1*n2);
-    sf_triangle2_init(1,rect,n1,n2,nrep);
+    t = sf_complexalloc(n1*n2);
+    ctriangle2_init(1,rect,n1,n2,nrep);
 }
 
-void beamform1_close(void)
+void cbeamform1_close(void)
 /*< free allocated storage >*/
 {
     free(t);
-    sf_triangle2_close();
+    ctriangle2_close();
 }
 
-void beamform1_lop(bool adj, bool add, int nc, int nd, float* c, float* d)
+void cbeamform1_lop(bool adj, bool add, int nc, int nd, sf_complex* c, sf_complex* d)
 /*< linear operator >*/
 {
     int i1, ic, id;
 
     if (nd != n1*n2) sf_error("%s: wrong size",__FILE__);
 
-    sf_adjnull(adj,add,nc,nd,c,d);
+    sf_cadjnull(adj,add,nc,nd,c,d);
 
     if (adj) {
-	sf_triangle2_lop(true,false,nd,nd,t,d);
+	ctriangle2_lop(true,false,nd,nd,t,d);
 	for (ic=id=0; id < n2; id++) {
 	    if (0==id%rect) {
 		for (i1=0; i1 < n1; i1++) {
@@ -72,11 +74,11 @@ void beamform1_lop(bool adj, bool add, int nc, int nd, float* c, float* d)
 		ic++;
 	    } else {
 		for (i1=0; i1 < n1; i1++) {
-		    t[id*n1+i1] = 0.;
+		    t[id*n1+i1] = sf_cmplx(0.,0.);
 		}
 	    }
 	}
-	sf_triangle2_lop(false,true,nd,nd,t,d);
+	ctriangle2_lop(false,true,nd,nd,t,d);
     }
 }
 
