@@ -1,5 +1,6 @@
 codecov:
   require_ci_to_pass: yes
+  max_report_age: off
 
 coverage:
   status:
@@ -8,3 +9,5 @@ coverage:
         threshold: 0%
         branches:
           - unittest
+fixes:
+  - "/home/circleci/RSFROOT/lib/python3.8/site-packages/::/ahay/src/framework/"
