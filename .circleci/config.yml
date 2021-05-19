@@ -1,16 +1,20 @@
-## Customize the test machine
-version: 2
+version: 2.1
+
+orbs:
+  codecov: codecov/codecov@1.0.2
+
 workflows:
   version: 2
   build:
     jobs:
-      - python36
-      - python27
+      - python3
+      - python2
+      - unittest
 
 jobs:
-  python36: &test-template
+  python3: &test-template
     docker:
-    - image: circleci/python:3.6
+    - image: circleci/python:3.8
     working_directory: ~/ahay/src
     parallelism: 1
     #shell: /bin/bash --login
@@ -62,7 +66,52 @@ jobs:
     - store_artifacts:
         path: /tmp/circleci-artifacts
 
-  python27:
+  python2:
     <<: *test-template
     docker:
     - image: circleci/python:2.7
+
+  unittest:
+    <<: *test-template
+    steps:
+    - checkout
+
+    - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+
+    - run: 
+        name: Install Packages
+        command: |
+          sudo apt-get update
+          sudo apt-get install python-pip
+          sudo pip install numpy scipy
+          sudo apt-get install libblas-dev liblapack-dev swig
+
+    - run:
+        name: Setup Environment Variables
+        command: |
+          echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
+          echo 'export RSFFIGS="$HOME/RSFROOT/figs"' >> $BASH_ENV
+    
+    - run: 
+        name: Checkout figs
+        command : |
+          git clone --depth 1 https://github.com/ahay/figs.git $RSFFIGS    
+
+    - run: 
+        name: Compile
+        command: |
+          ./configure 
+          make install 
+          source env.sh
+
+    - run:
+        name: Test
+        command: |
+          source env.sh
+          pip install coverage
+          coverage run -m unittest discover framework/rsf/test
+          coverage xml
+
+    - codecov/upload:
+        file: coverage.xml
+        token: 390faad3-dd9e-4053-8c7a-617edaf2e2f0
