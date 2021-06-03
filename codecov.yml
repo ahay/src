@@ -1,0 +1,13 @@
+codecov:
+  require_ci_to_pass: yes
+  max_report_age: off
+
+coverage:
+  status:
+    project:
+      default:
+        threshold: 0%
+        branches:
+          - master
+fixes:
+  - "/home/circleci/RSFROOT/lib/python3.8/site-packages/::/ahay/src/framework/"

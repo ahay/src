@@ -17,26 +17,41 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <rsf.h>
+
 static int n;
+static int nw;
 static float lam;
 
-void stdiv_init(int nd       /* data size */, 
-		float lambda /* smoothing parameter */)
+void stdiv_init(int nd /* data size */,
+                int nw2 /* window size */,
+                float lambda /* smoothing parameter */)
 /*< initialize >*/
 {
     n = nd;
-    lam = lambda*lambda;
+    nw = nw2;
+    lam = lambda * lambda;
 }
 
-void stdiv (const float* num, const float* den,  float* rat)
+void stdiv(const float *num, const float *den, float *rat)
 /*< smoothly divide rat=num/den >*/
 {
-    int i;
+    int i, j, current;
     float prev;
 
-    prev=0.0f;
-    for (i=0; i < n; i++) {
-	rat[i] = (num[i]*den[i]+lam*prev)/(den[i]*den[i]+lam);
-	prev=rat[i];
-    }    
+    prev = 0.0f;
+    for (i = 0; i < n; i++)
+    {
+        for (j = 0; j < nw; j++)
+        {
+            current = i - nw/2. + j;
+            if (current < 0 )
+                prev = 0.0f;
+            else if (current >= n)
+                break;
+            else
+                prev = (num[current] * den[current] + lam * prev) / (den[current] * den[current] + lam);
+        }
+        rat[i] = prev;
+    }
 }

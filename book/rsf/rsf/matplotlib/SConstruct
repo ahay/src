@@ -12,8 +12,9 @@ Plot('welcome',
  
 Result('welcome',
        '''
-       matplotlib plot title="Welcome to Madagascar" 
-       grid=y linewidth=3 
+       matplotlib plot title="Welcome to Madagascar欢迎" 
+       xlabel="Time (s)" ylabel=Amplitude
+       grid=y linewidth=3
        ''')
 
 End()
