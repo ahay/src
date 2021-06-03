@@ -22,10 +22,10 @@
 
 int main (int argc, char *argv[])
 {
-    bool verb;
-    int n1,n2,n3, n12, i1,i2,i3, order, i, n;
-    float **u, **p, **next, *left, *right, *trace;
-    float eps, r;
+    bool verb, edge;
+    int n1,n2,n3, n12, i1,i2,i3, order, i, n, nclip;
+    float **u, **p, **next, *left, *right, *trace, **weight;
+    float eps, r, pclip, a;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -42,12 +42,25 @@ int main (int argc, char *argv[])
     /* verbosity */
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
+    if (!sf_getbool("edge",&edge)) edge=false;
+    /* preserve edges */
     
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
 
     if (!sf_getint("rect",&n)) n=0;
     /* smoothing radius */
+
+    if (!sf_getfloat("pclip",&pclip)) pclip=50.;
+    /* percentage clip for the gradient */    
+    
+    nclip = (int) n12*pclip*0.01;
+    if (nclip < 1) {
+	nclip = 1;
+    } else if (nclip > n12) {
+	nclip = n12;
+    }
+    nclip--;
 
     predict_init (n1, n2, eps*eps, order, 1, false);
 
@@ -58,6 +71,16 @@ int main (int argc, char *argv[])
     trace = sf_floatalloc(n1);
     left = sf_floatalloc(n1);
     right =  sf_floatalloc(n1);
+    if (edge) {
+	weight = sf_floatalloc2(n1,n2);
+	for (i2=0; i2 < n2; i2++) { 
+	    for  (i1=0; i1 < n1; i1++) {
+		weight[i2][i1] = 1.0f;
+	    }
+	}
+    } else {
+	weight = NULL;
+    }
 
     for (i3=0; i3 < n3; i3++) {
 	if (verb) fprintf(stderr,"cmp %d of %d\n",i3+1,n3);
@@ -79,9 +102,12 @@ int main (int argc, char *argv[])
 			left[i1] = u[i2-1][i1];
 		    }
 		    predict_step(false,true,left,p[i2-1]);
+		    for  (i1=0; i1 < n1; i1++) {
+			left[i1] -= trace[i1];
+		    }
 		} else {
 		    for  (i1=0; i1 < n1; i1++) {
-			left[i1] = trace[i1];
+			left[i1] = 0.0f;
 		    }
 		}
 		    
@@ -91,20 +117,44 @@ int main (int argc, char *argv[])
 			right[i1] = u[i2+1][i1];
 		    }
 		    predict_step(false,false,right,p[i2]);
+		    for  (i1=0; i1 < n1; i1++) {
+			right[i1] -= trace[i1];
+		    }
 		} else {
 		    for  (i1=0; i1 < n1; i1++) {
-			right[i1] = trace[i1];
+			right[i1] = 0.0f;
 		    }
 		}
-		
-		for  (i1=0; i1 < n1; i1++) {
-		    next[i2][i1] = (1-2*r)*trace[i1]+r*(left[i1]+right[i1]);
+
+		if (edge) {
+		    for  (i1=0; i1 < n1; i1++) {
+			next[i2][i1] = trace[i1]+r*weight[i2][i1]*(left[i1]+right[i1]);
+			weight[i2][i1] = left[i1]*left[i1] + right[i1]*right[i1];
+		    }
+		} else {
+		    for  (i1=0; i1 < n1; i1++) {
+			next[i2][i1] = trace[i1]+r*(left[i1]+right[i1]);
+		    }
 		}
 	    }
 
 	    for (i2=0; i2 < n2; i2++) { 
 		for  (i1=0; i1 < n1; i1++) {
 		    u[i2][i1] = next[i2][i1];
+		}
+	    }
+
+	    if (edge) {
+		for (i2=0; i2 < n2; i2++) { 
+		    for  (i1=0; i1 < n1; i1++) {
+			next[i2][i1] = weight[i2][i1];
+		    }
+		}
+		a = sf_quantile(nclip,n12,next[0]);
+		for (i2=0; i2 < n2; i2++) { 
+		    for  (i1=0; i1 < n1; i1++) {
+			weight[i2][i1] = 1.0f/(1.0f+weight[i2][i1]/a); 
+		    }
 		}
 	    }
 	}
