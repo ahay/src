@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 		if (!sf_getfloat("perc",&perc)) perc=90.;
 		/* threshold percentage for robust inversion */
 
-		if (!sf_getfloat("fact",&fact)) fact=0.5;
+		if (!sf_getfloat("fact",&fact)) fact=1.5;
 		/* threshold factor for robust inversion */
 		
 		if (!sf_getint("nliter",&nliter)) nliter=10;
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 		/* regularization parameter for robust inversion */
 
 		if (NULL == (type = sf_getstring("type"))) type="threshold";
-    /* thresholding type */
+		/* thresholding type */
 
 		l1_init(ntx,nliter,perc,fact,type,true);
 		sf_solver_reg(velxf,l1step,sf_copy_lop,nts,nts,ntx,modl,data,niter,eps,"verb",true,"end");

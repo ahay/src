@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     /* number of POCS iterations */
     if (!sf_getfloat("perc",&perc)) perc=90.0;
     /* percentage for sharpening */
-    if (!sf_getfloat("fact",&fact)) fact=0.5;
+    if (!sf_getfloat("fact",&fact)) fact=1.5;
     /* factor for sharpening */
 
     l1_init(nd,niter,perc,fact,type,true);

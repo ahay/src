@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("perc",&perc)) perc=90.0;
 	    /* percentage for sharpening */
 
-	    if (!sf_getfloat("fact",&fact)) fact=0.5;
+	    if (!sf_getfloat("fact",&fact)) fact=1.5;
 	    /* percentage for sharpening */
 
 	    if (NULL == (type = sf_getstring("type"))) type="threshold";
