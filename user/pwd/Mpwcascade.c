@@ -23,7 +23,7 @@
 int main (int argc, char *argv[])
 {
     bool verb, edge;
-    int n1,n2,n3, n12, i1,i2,i3, order, i, n, nclip;
+    int n1,n2,n3, n12, i1,i2,i3, order, i, n, nclip, ic, nc;
     float **u, **p, **next, *left, *right, *trace, **weight;
     float eps, r, pclip, a;
     sf_file inp, out, dip;
@@ -52,7 +52,10 @@ int main (int argc, char *argv[])
     /* smoothing radius */
 
     if (!sf_getfloat("pclip",&pclip)) pclip=50.;
-    /* percentage clip for the gradient */    
+    /* percentage clip for the gradient */
+
+    if (!sf_getint("cycle",&nc)) nc=1;
+    /* number of cycles */
     
     nclip = (int) n12*pclip*0.01;
     if (nclip < 1) {
@@ -87,73 +90,75 @@ int main (int argc, char *argv[])
 	sf_floatread(u[0],n12,inp);
 	sf_floatread(p[0],n12,dip);
 
-	for (i=1; i < n; i++) {
-	    r = 2*sinf(2*SF_PI*i/n);
-	    r = 1/(r*r);
-	
-	    for (i2=0; i2 < n2; i2++) { /* loop over traces */	
-		for  (i1=0; i1 < n1; i1++) {
-		    trace[i1] = u[i2][i1];
+	for (ic=0; ic < nc; ic++) {
+	    for (i=1; i < n; i++) {
+		r = 2*sinf(2*SF_PI*i/n);
+		r = 1/(r*r);
+		
+		for (i2=0; i2 < n2; i2++) { /* loop over traces */	
+		    for  (i1=0; i1 < n1; i1++) {
+			trace[i1] = u[i2][i1];
+		    }
+		    
+		    /* prediction from the left */
+		    if (i2 > 0) {
+			for  (i1=0; i1 < n1; i1++) {
+			    left[i1] = u[i2-1][i1];
+			}
+			predict_step(false,true,left,p[i2-1]);
+			for  (i1=0; i1 < n1; i1++) {
+			    left[i1] -= trace[i1];
+			}
+		    } else {
+			for  (i1=0; i1 < n1; i1++) {
+			    left[i1] = 0.0f;
+			}
+		    }
+		    
+		    /* prediction from the right */
+		    if (i2 < n2-1) {
+			for  (i1=0; i1 < n1; i1++) {
+			    right[i1] = u[i2+1][i1];
+			}
+			predict_step(false,false,right,p[i2]);
+			for  (i1=0; i1 < n1; i1++) {
+			    right[i1] -= trace[i1];
+			}
+		    } else {
+			for  (i1=0; i1 < n1; i1++) {
+			    right[i1] = 0.0f;
+			}
+		    }
+
+		    if (edge) {
+			for  (i1=0; i1 < n1; i1++) {
+			    next[i2][i1] = trace[i1]+r*weight[i2][i1]*(left[i1]+right[i1]);
+			    weight[i2][i1] = left[i1]*left[i1] + right[i1]*right[i1];
+			}
+		    } else {
+			for  (i1=0; i1 < n1; i1++) {
+			    next[i2][i1] = trace[i1]+r*(left[i1]+right[i1]);
+			}
+		    }
 		}
 
-		/* prediction from the left */
-		if (i2 > 0) {
+		for (i2=0; i2 < n2; i2++) { 
 		    for  (i1=0; i1 < n1; i1++) {
-			left[i1] = u[i2-1][i1];
-		    }
-		    predict_step(false,true,left,p[i2-1]);
-		    for  (i1=0; i1 < n1; i1++) {
-			left[i1] -= trace[i1];
-		    }
-		} else {
-		    for  (i1=0; i1 < n1; i1++) {
-			left[i1] = 0.0f;
-		    }
-		}
-		    
-		/* prediction from the right */
-		if (i2 < n2-1) {
-		    for  (i1=0; i1 < n1; i1++) {
-			right[i1] = u[i2+1][i1];
-		    }
-		    predict_step(false,false,right,p[i2]);
-		    for  (i1=0; i1 < n1; i1++) {
-			right[i1] -= trace[i1];
-		    }
-		} else {
-		    for  (i1=0; i1 < n1; i1++) {
-			right[i1] = 0.0f;
+			u[i2][i1] = next[i2][i1];
 		    }
 		}
 
 		if (edge) {
-		    for  (i1=0; i1 < n1; i1++) {
-			next[i2][i1] = trace[i1]+r*weight[i2][i1]*(left[i1]+right[i1]);
-			weight[i2][i1] = left[i1]*left[i1] + right[i1]*right[i1];
+		    for (i2=0; i2 < n2; i2++) { 
+			for  (i1=0; i1 < n1; i1++) {
+			    next[i2][i1] = weight[i2][i1];
+			}
 		    }
-		} else {
-		    for  (i1=0; i1 < n1; i1++) {
-			next[i2][i1] = trace[i1]+r*(left[i1]+right[i1]);
-		    }
-		}
-	    }
-
-	    for (i2=0; i2 < n2; i2++) { 
-		for  (i1=0; i1 < n1; i1++) {
-		    u[i2][i1] = next[i2][i1];
-		}
-	    }
-
-	    if (edge) {
-		for (i2=0; i2 < n2; i2++) { 
-		    for  (i1=0; i1 < n1; i1++) {
-			next[i2][i1] = weight[i2][i1];
-		    }
-		}
-		a = sf_quantile(nclip,n12,next[0]);
-		for (i2=0; i2 < n2; i2++) { 
-		    for  (i1=0; i1 < n1; i1++) {
-			weight[i2][i1] = 1.0f/(1.0f+weight[i2][i1]/a); 
+		    a = sf_quantile(nclip,n12,next[0]);
+		    for (i2=0; i2 < n2; i2++) { 
+			for  (i1=0; i1 < n1; i1++) {
+			    weight[i2][i1] = 1.0f/(1.0f+weight[i2][i1]/a); 
+			}
 		    }
 		}
 	    }
