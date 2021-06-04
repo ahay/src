@@ -170,8 +170,8 @@ static void triple (int o, int d, int nx, int nb,
 		(tmp[i+ns-nt1-1] + tmp[i+ns+nt1-1])*wt1 - 
 		(tmp[i+ns-nt -1] + tmp[i+ns+nt -1])*wt;
 	    w = (1.0f-ss)*(1.0f+ss);
-	    wp = ss*(ss-1.0f)/2;
-	    wm = ss*(ss+1.0f)/2;
+	    wp = ss*(ss+1.0f)/2;
+	    wm = ss*(ss-1.0f)/2;
 	    x[o+i*d] = c*w+cp*wp+cn*wm;
 	}	
     }
@@ -208,8 +208,8 @@ static void triple2 (int o, int d, int nx, int nb,
 	    tmp[i+ns+nt1] -= wt1;
 	} else {
 	    w = (1.0f-ss)*(1.0f+ss);
-	    wp = ss*(ss-1.0f)/2;
-	    wm = ss*(ss+1.0f)/2;
+	    wp = ss*(ss+1.0f)/2;
+	    wm = ss*(ss-1.0f)/2;
 	    tmp[i+ns-nt1]   -= wt1*w; 
 	    tmp[i+ns-nt]    -= wt*w; 
 	    tmp[i+ns]       += 2*(wt+wt1)*w;
