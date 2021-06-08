@@ -158,7 +158,7 @@ def check_all(context):
         matlab(context)
     if 'octave' in api:
         octave(context)
-    if 'java' in api:        
+    if 'java' in api:
         java(context)
     if 'chapel' in api:
         chapel(context)
