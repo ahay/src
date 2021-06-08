@@ -998,7 +998,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             type = par[1]
             default = par[2]
             desc = par[3]
-            range = ''    
+            range = ''
         else: # c
             type = par[0]
             parname = par[1]
