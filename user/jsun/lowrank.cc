@@ -32,7 +32,7 @@ static vector<int> lidx, ridx;
 static ZpxNumMat mid;
 static vector<int> ms, ns, js;
 
-static int (*sample)(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
+static int (*mysample)(vector<int>& rs, vector<int>& cs, ZpxNumMat& res);
 
 static int sample_iso(vector<int>& rs, vector<int>& cs, ZpxNumMat& res)
 {
@@ -109,7 +109,7 @@ void lowrank_init(int jump,
     // media
     switch(media) {
         case 1:
-            sample = &sample_tti;
+            mysample = &sample_tti;
             kzs.resize(n); kxs.resize(n); kys.resize(n);
             for (int iy=0; iy < dft->nky; iy++) {
                 float ky = dft->oky+iy*dft->dky;
@@ -125,7 +125,7 @@ void lowrank_init(int jump,
             }
             break;
         default:
-            sample = &sample_iso;
+            mysample = &sample_iso;
             ks.resize(n);
             for (int iy=0; iy < dft->nky; iy++) {
                 float ky = dft->oky+iy*dft->dky;
@@ -170,8 +170,8 @@ int lowrank_rank()
 
     srand48(seed);
 
-    //iC( ddlowrank(m,n,sample,(double)eps,npk,lidx,ridx,mid) );
-    iC( ddlowrank(ms,ns,js,sample,(double)eps,npk,lidx,ridx,mid) );
+    //iC( ddlowrank(m,n,mysample,(double)eps,npk,lidx,ridx,mid) );
+    iC( ddlowrank(ms,ns,js,mysample,(double)eps,npk,lidx,ridx,mid) );
 
     nrank = mid.n();
     return nrank;
@@ -190,7 +190,7 @@ void lowrank_mat(sf_complex **lt, sf_complex **rt)
 	nidx[k] = k;    
 
     ZpxNumMat lmat(m,m2);
-    iC ( sample(midx,lidx,lmat) );
+    iC ( mysample(midx,lidx,lmat) );
 
     ZpxNumMat lmat2(m,n2);
     iC( zzgemm(1.0, lmat, mid, 0.0, lmat2) );
@@ -202,7 +202,7 @@ void lowrank_mat(sf_complex **lt, sf_complex **rt)
             lt[i][k] = sf_cmplx(real(ldat[i*m+k]),imag(ldat[i*m+k]));
 
     ZpxNumMat rmat(n2,n);
-    iC ( sample(ridx,nidx,rmat) );
+    iC ( mysample(ridx,nidx,rmat) );
     zpx *rdat = rmat.data();
 
     for (int k=0; k < n; k++)
