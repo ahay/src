@@ -1,0 +1,19 @@
+import sys, os
+sys.path.append('../../framework')
+import bldutil
+
+modules = ['m8r']
+
+try: # distribution version
+    Import('env root libdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+
+for module in modules:
+    env.Install('../../lib',module+'.chpl')
+
+if root:
+    for module in modules:
+        env.Install(libdir,module+'.chpl')

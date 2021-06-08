@@ -1,0 +1,22 @@
+import rsf.proj
+
+proj = rsf.proj.Project()
+
+# Builder for chapel code with rsf interface
+chprsf = Builder(action = '$CHPL $CHPLFLAGS -I$INCDIR -L$LIBDIR -M$LIBDIR -l$LIBS $SOURCES $OPT -o $TARGET')
+proj.Append(BUILDERS = {'chprsf' : chprsf})
+
+# Build programs
+proj.chprsf('clip.exe', Split('clip.chpl'), CHPL=proj.get('CHPL_HOST_COMPILER'), INCDIR=proj.get('CPPPATH'), LIBDIR=proj.get('LIBPATH'), LIBS='rsf', OPT='')
+
+proj.chprsf('afdm.exe', Split('afdm.chpl'), CHPL=proj.get('CHPL_HOST_COMPILER'), INCDIR=proj.get('CPPPATH'), LIBDIR=proj.get('LIBPATH'), LIBS='rsf', OPT='')
+
+# Test programs
+proj.Flow('test.attr','clip.exe',
+          '''
+          spike n1=1000 n2=100 n3=10 nsp=1 k1=500 |
+          ./$SOURCE clip=0.5 | attr
+          ''',stdin=0)
+
+proj.End()
+

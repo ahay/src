@@ -881,6 +881,19 @@ inpout['c'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
 version['c'] = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
 chars['c'] = ' '
 
+comment['chpl'] = re.compile(r'\/\/(?P<comment>[^\n]+)\n')
+inpout['chpl'] = re.compile(r'\s*var\s+(?P<name>\w+)\s*\:\s*'
+                             '(?:RSF\.)?sf_file\s*=\s*'
+                             '(?:RSF\.)?sf_(?P<io>input|output)'
+                             '\s*\(\s*\"?(?P<tag>\w+)\"?\s*\)')
+param['chpl'] = re.compile(r'\s*config\s+(?:const|var)\s+(?P<name>\w+)'
+                            '\s*\:\s*(?P<type>bool|int|uint|real|imag|'
+                            'complex|string)'
+                            '(?:\([0-9]+\))?\s*\=\s*\"?'
+                            '(?P<default>[^\;\"]+)\"?\s*\;'
+                            '\s*\/\/(?P<desc>[^\n]+)')
+version['chpl'] = re.compile(r'\/\/\s*\$Id\:\s*(.+\S)\s*\$/')
+
 
 def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             rsfplotprefix='vp',rsfplotsuffix='vpl',known_version='unknown',strip = None):
@@ -897,7 +910,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     elif lang[0] =='f':
         name = re.sub('\.f\d*$','',name)
     else:
-        name = re.sub('\.c(c|u)?$','',name)
+        name = re.sub('\.c(c|u|hpl)?$','',name)
     cname = re.sub('\-','',name)
     src = open(file,"r")   # open source
     text = ''.join(src.readlines())
@@ -980,6 +993,12 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             default = par[2]
             range = par[3]
             desc = par[4]
+        elif lang == 'chpl':
+            parname = par[0]
+            type = par[1]
+            default = par[2]
+            desc = par[3]
+            range = ''    
         else: # c
             type = par[0]
             parname = par[1]

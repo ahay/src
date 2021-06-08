@@ -158,8 +158,10 @@ def check_all(context):
         matlab(context)
     if 'octave' in api:
         octave(context)
-    if 'java' in api:
+    if 'java' in api:        
         java(context)
+    if 'chapel' in api:
+        chapel(context)
     mpi (context) # FDNSI
     pthreads (context) # FDNSI
     omp (context) # FDNSI
@@ -2014,7 +2016,8 @@ def api_options(context):
     api = [x.lower() for x in path_get(context,'API')]
 
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
-                         'f90', 'python', 'matlab', 'octave', 'java']
+                         'f90', 'python', 'matlab', 'octave', 'java',
+                         'chapel']
 
     for option in api:
         if not option in valid_api_options:
@@ -2425,6 +2428,20 @@ def java(context):
         context.Result(context_failure)
         need_pkg('minesjtk', fatal=False)
 
+def chapel(context):
+    context.Message("checking for chapel ... ")
+    CHPL = context.env.get('CHPL_HOST_COMPILER',WhereIs('chpl'))
+    context.env['CHPL_HOST_COMPILER'] = CHPL;
+    #print(CHPL)
+    if not CHPL:
+        context.Result(context_failure)
+        need_pkg('chapel', fatal = False)
+        if 'chapel' in api:
+            api.remove('chapel')
+            context.env['API'] = api
+    else:
+        context.Result(CHPL)
+
 def gcc(context):
     '''Handle dynamic gcc libraries.'''
     libdirs = os.environ.get('LD_LIBRARY_PATH','').split(':')
@@ -2566,6 +2583,8 @@ def options(file):
     opts.Add('JAVAC','The Java compiler')
     opts.Add('JAVA_HOME','Location of jdk')
     opts.Add('MINESJTK','Location of edu_mines_jtk.jar')
+    opts.Add('CHPL_HOST_COMPILER', 'Chapel compiler')
+    opts.Add('CHPLFLAGS','Chapel compiler flags','--fast')
     opts.Add('CUDA_TOOLKIT_PATH','Location of CUDA toolkit')
     opts.Add('NVCC','NVIDIA C compiler')
     opts.Add('CUDAFLAGS','NVCC flags')

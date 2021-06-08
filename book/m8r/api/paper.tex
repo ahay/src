@@ -417,6 +417,84 @@ The Julia script does not require compilation. Simply make sure that
 \texttt{\$RSFROOT/lib} is in \texttt{JULIA\_LOAD\_PATH} and
 \texttt{LD\_LIBRARY\_PATH}.
 
+\section{Chapel interface}
+
+\renewcommand{\rsfclip}{\RSF/api/chapel/test/clip.chpl}
+
+The Chapel clip program is listed bellow:
+
+\lstinputlisting[frame=single]{\rsfclip}
+
+This code follows the C code pattern, so if you understand
+that code you can understand the chapel one.
+
+\lstinputlisting[firstline=2,lastline=2,frame=single]{\rsfclip}
+We start by including the Chapel-Madagascar API with a use clause.
+
+\lstinputlisting[firstline=11,lastline=11,frame=single]{\rsfclip}
+This line inits the connection with Madagascar using the parameters
+used to run the program.
+
+\lstinputlisting[firstline=14,lastline=15,frame=single]{\rsfclip}
+We declare two Madagascar files. One is initialized to the standard
+input ("in") and the other to the standard output ("out").
+
+\lstinputlisting[firstline=18,lastline=19,frame=single]{\rsfclip}
+For this example we check that the input data is real. If not, the
+program halts with an error message. Integer
+and complex data should be transformed to real data before being
+feeded to this program.
+
+\lstinputlisting[firstline=22,lastline=27,frame=single]{\rsfclip}
+Next, we consult the number of samples along the first data axis
+in \texttt{n1}. In the same way, the sum of the number of samples
+of all other axes is stored in \texttt{n2}. We are going to process
+the data in a doubly nested loop of \texttt{n2} chunks of
+\texttt{n1} samples each one.
+
+\lstinputlisting[firstline=30,lastline=32,frame=single]{\rsfclip}
+The desired clip value is obtained from the command line and stored
+in \texttt{clip}. If there was no clip parameter in the command line
+the program halts with an error message. Other way of getting
+command line parameters is to declare \texttt{clip} as Chapel
+config variable, however, the first way is closer to the 
+Madagascar style.
+
+\lstinputlisting[firstline=35,lastline=35,frame=single]{\rsfclip}
+We allocate enough space to process \texttt{n1} samples at once.
+
+\lstinputlisting[firstline=38,lastline=49,frame=single]{\rsfclip}
+The processing loop is a doubly nested loop as mentioned before.
+It reads each trace with \texttt{n1} samples and each sample is
+compared with the clip value. After that, the processed trace is
+written to the output file. 
+
+\lstinputlisting[firstline=52,lastline=53,frame=single]{\rsfclip}
+It is always recommended to close the opened files after using
+them.
+
+\lstinputlisting[firstline=56,lastline=56,frame=single]{\rsfclip}
+Finally, we close the connection to Madagascar.
+
+\subsection{Compiling}
+
+To compile this Chapel code use the following command:
+
+\begin{verbatim}
+chpl --fast -I$RSFROOT/include -L$RSFROOT/lib -M$RSFROOT/lib -lrsf clip.chpl
+\end{verbatim}
+
+\noindent
+You must change \texttt{chpl} to the Chapel compiler in your system. The
+flag \texttt{--fast} is optional but it enables code optimization. There
+are many more Chapel flags that you can consult by invoking the compiler
+without artumrnts. After \texttt{-I} it should be the location of the 
+C file \texttt{rsf.h} that the Chapel API wraps up. The flag \texttt{-lrsf}
+is for linking the Madagascar C library \texttt{librsf} and the path after
+\texttt{-L} indicates the location of this library. The path after
+\texttt{-M} is where the Chapel API file \texttt{m8r.chpl} is located.
+Finally, \texttt{clip.chpl} is the Chapel source file.
+
 \section{Installation} 
 
 To install the interface to a particular language, use \texttt{API=}
