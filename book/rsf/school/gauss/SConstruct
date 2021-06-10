@@ -53,7 +53,7 @@ Flow('gg',None,
 # plot 2D Gaussian function
 Result('gg',
        '''
-       grey title="2D Gaussian" 
+       grey title="" 
        pclip=100 screenratio=%(ratio)g
        %(labelattr)s
        '''%par)
