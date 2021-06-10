@@ -10,8 +10,8 @@
   psava@mines.edu
 }
 \date{}
-\logo{}
-\large
+\logo{WSI}
+\Large
 
 % ------------------------------------------------------------
 \def\mycode#1#2{
@@ -29,10 +29,10 @@
 \begin{frame} \frametitle{exploding reflector model}
 
   \cit{reflectors are treated as collections of simultaneous sources}
-  
+
   \plot{expref}{width=\textwidth}{}
   \talkcite{Jon Claerbout, Basic Earth Imaging}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -40,7 +40,7 @@
 \begin{frame} \frametitle{acoustic wave propagation}
 
   \[
-  \frac{1}{v^2} \dtwo{\UU}{t} - 
+  \frac{1}{v^2} \dtwo{\UU}{t} -
   \rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} = f
   \]
 
@@ -49,7 +49,7 @@
   \item $v\ofx$: velocity
   \item $\rho\ofx$: density
   \end{itemize}
-  
+
   \sep
   \begin{columns}[t]
     \column{.5\textwidth} \cen{modeling}
@@ -58,7 +58,7 @@
     \column{.5\textwidth} \cen{migration}
     \cit{backward propagation}
   \end{columns}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -113,8 +113,8 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons modl.view}} 
-  \plot{modl}{width=\textwidth}{} 
+\begin{frame}
+  \plot{modl}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons modl.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -123,8 +123,8 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons ss.view}}
-  \plot{ss}{width=\textwidth}{} 
+\begin{frame}
+  \plot{ss}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons ss.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -145,11 +145,11 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons rH.view}}
-  \plot{rH}{width=\textwidth}{} 
+\begin{frame}
+  \plot{rH}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons rH.view}}}
 \end{frame}
-\begin{frame} \frametitle{\texttt{scons rV.view}}
-  \plot{rV}{width=\textwidth}{} 
+\begin{frame}
+  \plot{rV}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons rV.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -164,8 +164,8 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons dens.view}}
-  \plot{dens}{width=\textwidth}{} 
+\begin{frame}
+  \plot{dens}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons dens.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -186,11 +186,11 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons vstr.view}}
-  \plot{vstr}{width=\textwidth}{} 
+\begin{frame}
+  \plot{vstr}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons vstr.view}}}
 \end{frame}
-\begin{frame} \frametitle{\texttt{scons vsmo.view}}
-  \plot{vsmo}{width=\textwidth}{} 
+\begin{frame}
+  \plot{vsmo}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons vsmo.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -199,8 +199,8 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons wav.view}}
-  \plot{wav}{width=\textwidth}{} 
+\begin{frame}
+  \plot{wav}{width=\textwidth}{\klabel{10}{10}{\texttt{scons wav.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -255,11 +255,11 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons datH.view}}
-  \plot{datH}{width=\textwidth}{} 
+\begin{frame}
+  \plot{datH}{width=\textwidth}{\klabel{10}{5}{\texttt{scons datH.view}}}
 \end{frame}
-\begin{frame} \frametitle{\texttt{scons wigH.view}}
-  \plot{wigH}{width=\textwidth}{} 
+\begin{frame}
+  \plot{wigH}{width=\textwidth}{\klabel{10}{5}{\texttt{scons wigH.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -268,11 +268,11 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons datV.view}}
-  \plot{datV}{width=\textwidth}{} 
+\begin{frame}
+  \plot{datV}{width=\textwidth}{\klabel{10}{5}{\texttt{scons datV.view}}}
 \end{frame}
-\begin{frame} \frametitle{\texttt{scons wigV.view}}
-  \plot{wigV}{width=\textwidth}{} 
+\begin{frame}
+  \plot{wigV}{width=\textwidth}{\klabel{10}{5}{\texttt{scons wigV.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -290,14 +290,14 @@
 \end{frame}
 \cwpnote{}
 
-\begin{frame} \frametitle{\texttt{scons imgH.view}}
-  \plot{imgH}{width=\textwidth}{} 
+\begin{frame}
+  \plot{imgH}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons imgH.view}}}
 \end{frame}
-\begin{frame} \frametitle{\texttt{scons imgV.view}}
-  \plot{imgV}{width=\textwidth}{} 
+\begin{frame}
+  \plot{imgV}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons imgV.view}}}
 \end{frame}
-\begin{frame} \frametitle{\texttt{scons imgA.view}}
-  \plot{imgA}{width=\textwidth}{} 
+\begin{frame}
+  \plot{imgA}{width=\textwidth}{\ylabel{10}{5}{\texttt{scons imgA.view}}}
 \end{frame}
 
 % ------------------------------------------------------------
@@ -310,30 +310,16 @@
 \begin{frame}
 
   \big{\url{http://www.ahay.org}}
-  
+
   \vfill
 
   \big{\texttt{\$RSF/book/rsf/school}}
 
   \vfill
-  
+
   \begin{center}
     \pgfuseimage{logo}
   \end{center}
-  
-\end{frame}
-\cwpnote{}
-
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{assignment}
-
-\postit{
-  \cit{Modify the acquisition parameters \\
-    to explore the seismic illumination \\
-    at different locations in the subsurface.}
-  }
 
 \end{frame}
 \cwpnote{}
-
