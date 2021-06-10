@@ -390,4 +390,97 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 
 \end{comment}
 
+% ------------------------------------------------------------
+\newpage
+\section{Chapel program}
+\lstset{numbers=left,numberstyle=\tiny,showstringspaces=false}
+\renewcommand{\rsfafdm}{\RSF/api/chapel/test/afdm.chpl}
+
+\tiny
+\lstinputlisting[frame=single]{\rsfafdm}
+\normalsize
+\newpage
+
+\begin{enumerate}
+\item Init Madagascar.
+\tiny
+\lstinputlisting[firstline=13,lastline=13,frame=single]{\rsfafdm}
+\normalsize
+
+\item Open files for input/output
+\tiny
+\lstinputlisting[firstline=17,lastline=21,frame=single]{\rsfafdm}
+\normalsize
+
+\item Read input axes information: length and sampling.
+\tiny
+\lstinputlisting[firstline=24,lastline=29,frame=single]{\rsfafdm}
+\normalsize
+
+\item Setup output axes.
+\tiny
+\lstinputlisting[firstline=31,lastline=36,frame=single]{\rsfafdm}
+\normalsize
+
+\item Allocate space and read input datasets: source wavelet, 
+	velocity and reflectivity.
+\tiny
+\lstinputlisting[firstline=43,lastline=45,frame=single]{\rsfafdm}
+\normalsize
+
+\item Allocate wavefield arrays.
+\tiny
+\lstinputlisting[firstline=48,lastline=51,frame=single]{\rsfafdm}
+\normalsize
+
+\item Loop over time.
+\tiny
+\lstinputlisting[firstline=54,lastline=54,frame=single]{\rsfafdm}
+\normalsize
+
+\item Compute Laplacian: $\Delta U$. Uses data parallellism.
+\tiny
+\lstinputlisting[firstline=57,lastline=63,frame=single]{\rsfafdm}
+\normalsize
+
+\item Inject source wavelet: $\left[ \Delta U - f(t) \right]$. 
+	Uses data parallelism.
+\tiny
+\lstinputlisting[firstline=66,lastline=68,frame=single]{\rsfafdm}
+\normalsize
+
+\item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$. Uses
+	data parallelism.
+\tiny
+\lstinputlisting[firstline=71,lastline=73,frame=single]{\rsfafdm}
+\normalsize
+
+\item Time step:
+$U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$.
+Uses data parallelism.
+\tiny
+\lstinputlisting[firstline=76,lastline=80,frame=single]{\rsfafdm}
+\normalsize
+
+\item Interchange wavefields.
+\tiny
+\lstinputlisting[firstline=83,lastline=84,frame=single]{\rsfafdm}
+\normalsize
+
+\item Write current wavefield state to output.
+\tiny
+\lstinputlisting[firstline=87,lastline=87,frame=single]{\rsfafdm}
+\normalsize
+
+\item Close input and output files.
+\tiny
+\lstinputlisting[firstline=91,lastline=94,frame=single]{\rsfafdm}
+\normalsize
+
+\item Stops Madagascar.
+\tiny
+\lstinputlisting[firstline=97,lastline=97,frame=single]{\rsfafdm}
+\normalsize	
+
+\end{enumerate}
 

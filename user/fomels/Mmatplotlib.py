@@ -34,6 +34,8 @@ plot = sys.argv[1]
 pformat = 'png'
 grid = False
 title= ''
+xlabel= ''
+ylabel= ''
 
 # build parameter dictionary
 args = {}
@@ -47,6 +49,10 @@ for a in sys.argv[2:]:
             grid = True
     elif key == 'title':
         title = val
+    elif key == 'xlabel':
+        xlabel =val
+    elif key == 'ylabel':
+        ylabel =val
     else:
         args[key] = val
 
@@ -79,10 +85,16 @@ else:
     sys.stderr.write('Unrecognized plotting function "%s" \n\n' % plot)
     sys.exit(2)
 
+
+
 if grid:
     plt.grid()
 if title:
     plt.title(title)
+if xlabel:
+    plt.xlabel(xlabel)
+if ylabel:
+    plt.ylabel(ylabel)
 
 # check if standard output
 if sys.stdout.isatty():

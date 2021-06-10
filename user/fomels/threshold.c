@@ -26,7 +26,7 @@ void threshold_init(int n1, float scale)
 /*< initialize >*/
 {
     n = n1;
-    s = 1.0f+scale;
+    s = scale;
     
     ww = sf_floatalloc(n);
 }
