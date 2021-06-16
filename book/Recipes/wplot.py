@@ -109,7 +109,7 @@ def param(par):
     par['mapheight']=11*par['mapratio']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1. ' + ' '
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1.0 ' + ' '
 
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
@@ -153,7 +153,7 @@ def igrey3d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1.5 yll=1.5
+    xll=1.5 yll=1.0
     %s
     '''%(par['lz'],par['uz'],
          par['lx'],par['ux'],
@@ -170,7 +170,7 @@ def icont3d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1.5 yll=1.5
+    xll=1.5 yll=1.0
     %s
     '''%(par['lz'],par['uz'],
          par['lx'],par['ux'],
@@ -187,7 +187,7 @@ def igrey4d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1.5 yll=1.5
+    xll=1.5 yll=1.0
     %s
     '''%(par['lz'],par['uz'],
          par['lx'],par['ux'],
@@ -260,7 +260,7 @@ def dgrey3d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1.5 yll=1.5
+    xll=1.5 yll=1.0
     %s
     '''%(par['lt'],par['ut'],
          par['lx'],par['ux'],
