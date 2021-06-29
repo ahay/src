@@ -82,5 +82,114 @@ for col in colors.keys():
            color=%s title="%s (color=%s)"
            transp=n wantaxis=n screenratio=1 titlesz=8
            ''' % (col,colors[col],col))
-    
+
+#############################################################
+# Crameri, F., G.E. Shephard, and P.J. Heron (2020), 
+# The misuse of colour in science communication, Nature 
+# Communications, 11, 5444. doi:10.1038/s41467-020-19160-7
+# https://www.fabiocrameri.ch/colourmaps/
+#############################################################
+
+# Sequential color maps
+sequential = {
+    'batlow': 'sequential',
+    'batlowW': 'sequential',
+    'batlowK': 'sequential',
+    'devon': 'sequential',
+    'lajolla': 'sequential',
+    'bamako': 'sequential',
+    'davos': 'sequential',
+    'bilbao': 'sequential',
+    'nuuk': 'sequential',
+    'oslo': 'sequential',
+    'grayC': 'sequential',
+    'hawaii': 'sequential',
+    'lapaz': 'sequential',
+    'tokyo': 'sequential',
+    'buda': 'sequential',
+    'acton': 'sequential',
+    'turku': 'sequential',
+    'imola': 'sequential'
+}
+
+for col,type in sequential.items():
+    Result(col,'mona',
+           '''
+           grey allpos=y pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)"
+           transp=n wantaxis=n screenratio=1 titlesz=8
+           ''' % (col,col+' '+type,col))
+
+# Diverging color maps
+diverging = {
+    'broc': 'diverging',
+    'cork': 'diverging',
+    'vik': 'diverging',
+    'lisbon': 'diverging',
+    'tofino': 'diverging',
+    'berlin': 'diverging',
+    'roma': 'diverging',
+    'bam': 'diverging',
+    'vanimo': 'diverging'
+}
+
+for col,type in diverging.items():
+    # Centered around the mean to simulate divergence
+    Result(col,'mona',
+           '''
+           grey allpos=n pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)" mean=y
+           transp=n wantaxis=n screenratio=1 titlesz=8
+           ''' % (col,col+' '+type,col))
+
+# Multi-sequential color maps
+multiseq = {
+    'oleron': 'multi-sequential',
+    'bukavu': 'multi-sequential',
+    'fes': 'multi-sequential'
+}
+
+for col,type in multiseq.items():
+    Result(col,'mona',
+           '''
+           grey allpos=n pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)" mean=y
+           transp=n wantaxis=n screenratio=1 titlesz=8
+           ''' % (col,col+' '+type,col))
+
+# Cyclic color maps
+cyclic = {
+    'romaO': 'cyclic',
+    'bamO': 'cyclic',
+    'brocO': 'cyclic',
+    'corkO': 'cyclic',
+    'vikO': 'cyclic'
+}
+
+for col,type in cyclic.items():
+    Result(col,'mona',
+           '''
+           grey allpos=y pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)" mean=n
+           transp=n wantaxis=n screenratio=1 titlesz=8
+           ''' % (col,col+' '+type,col))
+
+#####################################################
+# Other palettes
+#####################################################
+
+other = {
+    'inferno': '',
+    'magma': '',
+    'plasma': '',
+}
+
+for col,type in other.items():
+    Result(col,'mona',
+           '''
+           grey allpos=y pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)" mean=n
+           transp=n wantaxis=n screenratio=1 titlesz=8
+           ''' % (col,col+' '+type,col))
+
 End()
