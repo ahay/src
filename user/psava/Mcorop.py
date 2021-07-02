@@ -22,7 +22,7 @@ dt = Fopr.float("d1")
 lt = Fopr.string("label1")
 ut = Fopr.string("unit1")
 
-nn = Fopr.size(1)*Fopr.size(2)*Fopr.size(3) # number of traces
+nn = Fopr.size(1) # number of traces
 
 opr = np.zeros(nt,'f') # allocate opr array
 
