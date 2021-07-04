@@ -260,7 +260,6 @@ def getmigvel(velo,par,local=0):
 # ------------------------------------------------------------
 def getstrvel(velo,par,local=0):
 
-    print local
     if(local):
         strvelfile = 'DATA/sigsbee/sigsbee2a_stratigraphy.sgy'
 	Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
