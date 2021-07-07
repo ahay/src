@@ -262,20 +262,20 @@ def getstrvel(velo,par,local=0):
 
     if(local):
         strvelfile = 'DATA/sigsbee/sigsbee2a_stratigraphy.sgy'
-	Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
-        	None,
-         	'''
-         	segyread
-         	tape=%s
-        	tfile=${TARGETS[1]}
-         	hfile=${TARGETS[2]}
-         	bfile=${TARGETS[3]}
-         	'''%strvelfile,stdin=0)
+        Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
+             None,
+             '''
+             segyread
+             tape=%s
+             tfile=${TARGETS[1]}
+             hfile=${TARGETS[2]}
+             bfile=${TARGETS[3]}
+             '''%strvelfile,stdin=0)
     else:
         strvelfile = 'sigsbee2a_stratigraphy.sgy'
         Fetch(strvelfile,'sigsbee')
 
-    	Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
+        Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
         strvelfile,
         	'''
         	segyread
