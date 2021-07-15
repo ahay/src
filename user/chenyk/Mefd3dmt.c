@@ -4,7 +4,7 @@ Revised in July, 2021
 Currently still in a draft version
 
 DEMO:
-https://github.com/chenyk1990/tutorials/blob/main/demo/aps3d/SConstruct
+https://github.com/chenyk1990/tutorials/blob/main/demo/efd3dmt/SConstruct
 */
 
 #include <rsf.h>
