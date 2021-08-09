@@ -670,23 +670,35 @@ class _File(File):
                 key = key.encode('utf-8')
             if isinstance(val,int):
                 c_rsf.sf_putint(self.file,key,val)
+            elif isinstance(val,np.int32) or isinstance(val,np.int64):
+                c_rsf.sf_putint(self.file,key,int(val))
             elif isinstance(val,float):
                 c_rsf.sf_putfloat(self.file,key,val)
             elif isinstance(val,str):
                 c_rsf.sf_putstring(self.file,key,val)
+            elif isinstance(val,unicode):
+                c_rsf.sf_putstring(self.file,key,str(val))
             elif isinstance(val,list):
                 if isinstance(val[0],int):
                     c_rsf.sf_putints(self.file,key,val)
+            else:
+                raise TypeError('Unsupported type in put: %s' % type(val))
         else:
             if isinstance(val,int):
                 self.file.putint(key,val)
+            elif isinstance(val,np.int32) or isinstance(val,np.int64):
+                self.file.putint(key,int(val))
             elif isinstance(val,float):
                 self.file.putfloat(key,val)
             elif isinstance(val,str):
                 self.file.putstring(key,val)
+            elif isinstance(val,unicode):
+                self.file.putstring(key,str(val))
             elif isinstance(val,list):
                 if isinstance(val[0],int):
                     self.file.putints(key,val)
+            else:
+                raise TypeError('Unsupported type in put: %s' % type(val))
     def axis(self,i):
         ax = {}
         ax['n'] = self.int("n%d"   % i)
