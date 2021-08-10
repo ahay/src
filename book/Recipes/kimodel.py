@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # kimodel.py  (Madagascar Recipe)
@@ -41,8 +41,7 @@ def arr2str(array,sep=' '):
 	
 	:param array: tuple to be converted
 	'''
-	return string.join(map(str,array),sep)
-
+	return sep.join(map(str,array))
 
 def multiLayerModel(
 	interfaces,
@@ -75,8 +74,7 @@ def multiLayerModel(
 	     echo %s
 	     n1=%d n2=%d o1=0 d1=%g
 	     data_format=ascii_float in=$TARGET
-	     ''' % (string.join(map(arr2str,layers),' '),
-		    n1,n2,xmax/(n1-1)))
+	     ''' % (' '.join(map(arr2str,layers)),n1,n2,xmax/(n1-1)))
 	Flow('layers','layers.asc','dd form=native')
 
 	d = 0.0101 # non-round for reproducibility
