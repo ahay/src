@@ -52,7 +52,7 @@ Plot('wav_ex',cgrey(par),view=1)
 times=['0.2','0.6','0.8']
 cntr=0
 for itime in ['200','600','800']:
-    print time
+    print(time)
     fig1 = 'atime'+itime
     fig2 = 'btime'+itime
     fig = 'time'+itime
