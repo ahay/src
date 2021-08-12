@@ -18,7 +18,7 @@
 */
 
 #include <rsf.h>
-#include "pwsmooth.h"
+#include "pwsmooth3.h"
 
 int main(int argc, char* argv[])
 {
@@ -107,3 +107,4 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
+
