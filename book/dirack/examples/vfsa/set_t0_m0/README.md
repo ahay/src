@@ -4,7 +4,7 @@ In this usage example we use the same gaussian reflector model as input and kirc
 
 ### How to run it?
 
-* Run 'scons' in this directory (it may take some time):
+- Run 'scons' in this directory (it may take some time):
 
 ```sh
 ~$ scons

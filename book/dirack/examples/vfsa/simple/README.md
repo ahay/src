@@ -28,4 +28,4 @@ Common Reflection Surface (CRS) parameters (RN, RNIP, and BETA) from a reflectio
 These parameters are obtained by fiting the non-hyperbolic CRS traveltime surface in the reflection data cube using the semblance between them
 as the optimization criterion. The CRS paramters (RN, RNIP and BETA) that produced the minimum error will be the optimized ones. 
 
-* For more details please check out ["What is VFSA?"](https://github.com/Dirack/vfsa/wiki/Very-Fast-Simulated-Anneling-(VFSA)) and ["What is non-hyperbolic CRS?"](https://github.com/Dirack/vfsa/wiki/Non-hyperbolic-CRS) in our Wiki.
+- For more details please check out ["What is VFSA?"](https://github.com/Dirack/vfsa/wiki/Very-Fast-Simulated-Anneling-(VFSA)) and ["What is non-hyperbolic CRS?"](https://github.com/Dirack/vfsa/wiki/Non-hyperbolic-CRS) in our Wiki.
