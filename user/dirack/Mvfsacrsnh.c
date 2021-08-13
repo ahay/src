@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 						/* calculate VFSA temperature for this iteration */
 						temp=getVfsaIterationTemperature(q,c0,temp0);
 										
-						/* ter disturbance */
+						/* parameter disturbance */
 						disturbParameters(temp,cnew,c);
 																				
 						RN = cnew[0];
