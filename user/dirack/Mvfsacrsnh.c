@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 
 	semb0=0;
 
-	/* Save optimized ters in ' file */
+	/* Save optimized parameters in ' file */
 	otm=sf_floatalloc2(8,nm0*nt0);
 
 	for(l=0;l<nm0;l++){
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 						#pragma omp critical(evaluate_best_semblance)
 						{
 
-							/* VFSA ters convergence condition */		
+							/* VFSA parameters convergence condition */		
 							if(fabs(semb) > fabs(semb0) ){
 								otsemb = semb;
 								otrn = RN;
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 								semb0 = semb;			
 							}
 
-							/* VFSA ters update condition */
+							/* VFSA parameters update condition */
 							deltaE = -semb - Em0;
 							
 							/* Metrópolis criteria */
@@ -218,7 +218,7 @@ int main(int argc, char* argv[])
 				otm[l*nt0+k][6] = t0;
 				otm[l*nt0+k][7] = m0;
 			
-				/* Show optimized ters on screen before save them */
+				/* Show optimized parameters on screen before save them */
 				if(verb) sf_warning("(%d/%d): RN=%f, RNIP=%f, BETA=%f, SEMB=%f\r\r",l*nt0+k+1,nm0*nt0,otrn,otrnip,otbeta,otsemb);
 
 			}
