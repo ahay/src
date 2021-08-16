@@ -14,7 +14,7 @@ workflows:
 jobs:
   python3: &test-template
     docker:
-    - image: circleci/python:3.8
+    - image: cimg/python:3.9
     working_directory: ~/ahay/src
     parallelism: 1
     #shell: /bin/bash --login
@@ -69,7 +69,7 @@ jobs:
   python2:
     <<: *test-template
     docker:
-    - image: circleci/python:2.7
+    - image: cimg/python:2.7
 
   unittest:
     <<: *test-template
