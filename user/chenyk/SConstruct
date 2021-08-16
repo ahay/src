@@ -15,8 +15,9 @@ orthol orthon smoothn warpscann dipn efd3dmt aps3d sint2 sint3
 ccprogs = 'diffcxx'
 
 # mutter3
-
-mpiprogs='petsctest'
+mpiprogs='''
+afdfwi2d_mpi afdfwi3d_mpi 
+'''
 
 cprogs = '''
 cqrtm
@@ -117,22 +118,25 @@ for prog in ccmains:
 ######################################################################
 # Compiling mpi programs ("MPILIB MPICPP" is user defined.)
 ######################################################################
-
 mpicc  = env.get('MPICC')
-mpimains = Split(mpiprogs)
+mpicxx = env.get('MPICXX')
+mpi_src = Glob('Q[a-z]*.c')
+for source in mpi_src:
+    inc = env.RSF_Include(source,prefix='')
+    env.Ignore(inc,inc)
+    if mpicc:
+        obj = env.StaticObject(source,CC=mpicc)
+        env.Depends(obj,inc)
 
-mpilib = os.environ.get("MPILIB")
-mpicpp = os.environ.get("MPICPP")
- 
+mpimains = Split(mpiprogs)
 for prog in mpimains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    if petsclib and mpicc and mpilib:
-        prog = env.Program(prog,
-                    [x + '.c' for x in sources],
-                    CPPPATH=[mpicpp]+env.get('CPPPATH'),
-                    LIBPATH=[mpilib]+env.get('LIBPATH'),
-                    CC=mpicc,LIBS=[libs,'X11'])
+    if mpicc:
+        env.StaticObject('M'+prog+'.c',CC=mpicc)
+        #for distributed FFTW3
+        #prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc,LIBS=env.get('LIBS')+['fftw3f_mpi'])
+        prog = env.Program(prog,[x + '.o' for x in sources],CC=mpicc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     if root:
@@ -205,6 +209,7 @@ if root:
 	
 	docs += [env.Doc(prog,'M' + prog) for prog in mains]  + \
            [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in ccmains] + \
+           [env.Doc(prog,'M' + prog) for prog in mpimains] + \
 		[env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains]
 	env.Depends(docs,'#/framework/rsf/doc.py')	
 	doc = env.RSF_Docmerge(main,docs)
