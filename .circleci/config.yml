@@ -30,7 +30,7 @@ jobs:
         name: Install Packages
         command: |
           sudo apt-get update
-          sudo apt-get install python-pip
+          sudo apt-get install python3-pip
           sudo pip install numpy scipy
           sudo apt-get install libblas-dev liblapack-dev swig
 
@@ -82,7 +82,7 @@ jobs:
         name: Install Packages
         command: |
           sudo apt-get update
-          sudo apt-get install python-pip
+          sudo apt-get install python3-pip
           sudo pip install numpy scipy
           sudo apt-get install libblas-dev liblapack-dev swig
 
