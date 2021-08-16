@@ -8,7 +8,6 @@ workflows:
   build:
     jobs:
       - python3
-      - python2
       - unittest
 
 jobs:
