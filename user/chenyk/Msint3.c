@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 	lam = sqrtf(lam/n123);
-
+	
 	/* read dip */
 	sf_floatread(pp[0][0][0],n123*2,dip);
 
