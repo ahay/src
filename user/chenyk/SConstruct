@@ -16,7 +16,7 @@ ccprogs = 'diffcxx'
 
 # mutter3
 mpiprogs='''
-afdfwi2d_mpi afdfwi3d_mpi 
+mpiafdfwi2d mpiafdfwi3d
 '''
 
 cprogs = '''

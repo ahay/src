@@ -8,13 +8,12 @@ workflows:
   build:
     jobs:
       - python3
-      - python2
       - unittest
 
 jobs:
   python3: &test-template
     docker:
-    - image: circleci/python:3.8
+    - image: cimg/python:3.9
     working_directory: ~/ahay/src
     parallelism: 1
     #shell: /bin/bash --login
@@ -30,7 +29,7 @@ jobs:
         name: Install Packages
         command: |
           sudo apt-get update
-          sudo apt-get install python-pip
+          sudo apt-get install python3-pip
           sudo pip install numpy scipy
           sudo apt-get install libblas-dev liblapack-dev swig
 
@@ -66,11 +65,6 @@ jobs:
     - store_artifacts:
         path: /tmp/circleci-artifacts
 
-  python2:
-    <<: *test-template
-    docker:
-    - image: circleci/python:2.7
-
   unittest:
     <<: *test-template
     steps:
@@ -82,7 +76,7 @@ jobs:
         name: Install Packages
         command: |
           sudo apt-get update
-          sudo apt-get install python-pip
+          sudo apt-get install python3-pip
           sudo pip install numpy scipy
           sudo apt-get install libblas-dev liblapack-dev swig
 
