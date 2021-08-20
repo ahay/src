@@ -148,6 +148,10 @@ for prog in mpimains:
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
 
+import os
+mpicc = os.environ.get('MPICC')
+mpilib = os.environ.get('MPILIB')
+
 cuda_mains = Split(cprogs)
 for prog in cuda_mains:
     if CTP and NVCC and mpicc and mpicpp and mpilib:
