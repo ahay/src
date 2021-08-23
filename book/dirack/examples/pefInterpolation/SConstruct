@@ -111,3 +111,13 @@ pef('multiLayerDataCube',
 	rect1=rect1,
 	rect2=rect2
 )
+
+slices = []
+for f2 in range(3):
+    slice = 'slice%d' % f2
+    Flow(slice,'interpolatedDataCube','window n2=1 f2=%d' % f2)
+    Plot(slice,'grey title="Slice %d" ' % (f2+1))
+    slices.append(slice)
+Result('interpolatedDataCube',slices,'SideBySideAniso')
+
+End()

@@ -68,5 +68,7 @@ Flow('crsParameters','dataCube',
 	vfsacrsnh om0=%g dm0=%g nm0=%d ot0=%g dt0=%g nt0=%d v0=%g verb=y repeat=%d
 	''' % (om0,dm0,nm0,ot0,dt0,nt0,v0,repeat))
 
+Result('crsParameters','transp | dots label1=')
+
 End()
 

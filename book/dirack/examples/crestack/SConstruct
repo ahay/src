@@ -138,9 +138,9 @@ creStack(parametersCube,
          repeat,
          aperture)
 
-Plot('stackedSection',
-	'''
-	wiggle transp=y yreverse=y title="CRE Stacked Section" poly=y
-	''')
+Result('stackedSection',
+	   '''
+	   wiggle transp=y yreverse=y title="CRE Stacked Section" poly=y
+	   ''')
 
 End()
