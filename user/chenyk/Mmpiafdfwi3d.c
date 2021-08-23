@@ -1,6 +1,6 @@
-/* 2D Visco-acoustic Forward Modeling, FWI, and RTM based on SLS model */
+/* 3D Visco-acoustic Forward Modeling, FWI, and RTM based on SLS model */
 /*
- Copyright (C) 2016 University of Texas at Austin
+ Copyright (C) 2021 University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -72,10 +72,13 @@ typedef struct sf_source{
 typedef struct sf_acquisition{
 	// model dimension
 	int nx;
+	int ny;
 	int nz;
 	float dx;
+	float dy;
 	float dz;
 	float x0;
+	float y0;
 	float z0;
 	// wavelet dimension
 	int nt;
@@ -87,22 +90,36 @@ typedef struct sf_acquisition{
 	float *bc;
 	// padding
 	int padnx;
+	int padny;
 	int padnz;
 	float padx0;
+	float pady0;
 	float padz0;
 	// acquisition type
 	int acqui_type;
 	// shot
-	int ns;
-	float ds;
-	float s0;
+	int ns;   /*make sure the 2D version also works*/
+	float ds; /*make sure the 2D version also works*/
+	float s0; /*make sure the 2D version also works*/
+	int nsx;
+	float dsx;
+	float s0x;
+	int nsy;
+	float dsy;
+	float s0y;
 	int sz;
 	int ds_v;
 	int s0_v;
 	// receiver
-	int nr;
-	float dr;
-	float r0;
+	int nr;		/*make sure the 2D version also works*/
+	float dr;	/*make sure the 2D version also works*/
+	float r0;	/*make sure the 2D version also works*/
+	int nrx;
+	float drx;
+	float r0x;
+	int nry;
+	float dry;
+	float r0y;
 	int rz;
 	int dr_v;
 	int *r0_v;
@@ -196,8 +213,8 @@ const float c0=-205./72, c1=8./5, c2=-1./5, c3=8./315, c4=-1./560;
 void preparation(sf_file Fv, sf_file Fq, sf_file Fw, sf_acqui acpar, sf_sou soupar, sf_vec array)
 /*< read data, initialize variables and prepare acquisition geometry >*/
 {
-	int i, nb, nzx;
-	float sx, xend, rbegin, rend;
+	int i, nb, nzxy;
+	float sx, xend, rbeginx, rendx, rbeginy, rendy;
 	float *taue, tmp;
 
 	int nplo=3, nphi=3, nt;
@@ -223,46 +240,76 @@ void preparation(sf_file Fv, sf_file Fq, sf_file Fw, sf_acqui acpar, sf_sou soup
 	acpar->s0_v=acpar->s0/acpar->dx+0.5+nb;
 	acpar->sz += nb;
 
-	acpar->dr_v=acpar->dr/acpar->dx+0.5;
-	acpar->r0_v=sf_intalloc(acpar->ns);
-	acpar->r02=sf_intalloc(acpar->ns);
-	acpar->nr2=sf_intalloc(acpar->ns);
+	acpar->dr_vx=acpar->drx/acpar->dx+0.5;
+	acpar->dr_vy=acpar->dry/acpar->dy+0.5;
+	acpar->r0_vx=sf_intalloc(acpar->nsx);
+	acpar->r02x=sf_intalloc(acpar->nsx);
+	acpar->nr2x=sf_intalloc(acpar->nsx);
+	
+	acpar->r0_vy=sf_intalloc(acpar->nsy);
+	acpar->r02y=sf_intalloc(acpar->nsy);
+	acpar->nr2y=sf_intalloc(acpar->nsy);
 	acpar->rz += nb;
 	xend=acpar->x0+(acpar->nx-1)*acpar->dx;
+	yend=acpar->y0+(acpar->ny-1)*acpar->dy;
+	
+	/*The following part is confusing, pending modification*/
+	/*
+	r0_v[x,y]: absolue receiver position [x,y]
+	r02 [x,y]: relative receiver position [x,y]
+	nr2 [x,y]: absolute&relative receiver position [x,y]
+	*/
 	if(acpar->acqui_type==1){
-		for(i=0; i<acpar->ns; i++){
-			acpar->r0_v[i]=(acpar->r0-acpar->x0)/acpar->dx+0.5+nb;
-			acpar->r02[i]=0;
-			acpar->nr2[i]=acpar->nr;
+		for(i=0; i<acpar->nsx; i++){
+			acpar->r0_vx[i]=(acpar->r0x-acpar->x0)/acpar->dx+0.5+nb;	
+			acpar->r0_vy[i]=(acpar->r0y-acpar->y0)/acpar->dy+0.5+nb;
+			acpar->r02x[i]=0;
+			acpar->r02y[i]=0;
+			acpar->nr2x[i]=acpar->nrx;
+			acpar->nr2y[i]=acpar->nry;
 		}
 	}else{
-		for(i=0; i<acpar->ns; i++){
-			sx=acpar->s0+acpar->ds*i;
-			rbegin=(sx+acpar->r0 <acpar->x0)? acpar->x0 : sx+acpar->r0;
-			rend=sx+acpar->r0 +(acpar->nr-1)*acpar->dr;
-			rend=(rend < xend)? rend : xend;
-			acpar->r0_v[i]=rbegin/acpar->dx+0.5+nb;
-			acpar->r02[i]=(rbegin-sx-acpar->r0)/acpar->dx+0.5;
-			acpar->nr2[i]=(rend-rbegin)/acpar->dx+1.5;
+		for(isy=0; isy<acpar->nsy; isy++){
+		for(isx=0; isx<acpar->nsx; isx++){
+			sx=acpar->s0x+acpar->dsx*isx;
+			sy=acpar->s0y+acpar->dsy*isy;
+			
+			rbeginx=(sx+acpar->r0x <acpar->x0)? acpar->x0 : sx+acpar->r0x;
+			rendx=sx+acpar->r0x +(acpar->nrx-1)*acpar->drx;
+			rendx=(rendx < xend)? rendx : xend;
+			
+			rbeginy=(sy+acpar->r0y <acpar->y0)? acpar->y0 : sy+acpar->r0y;
+			rendy=sy+acpar->r0y +(acpar->nry-1)*acpar->dry;
+			rendy=(rendy < yend)? rendy : yend;
+				
+			acpar->r0_vx[i]=rbeginx/acpar->dx+0.5+nb;
+			acpar->r02x[i]=(rbeginx-sx-acpar->r0x)/acpar->dx+0.5;
+			acpar->nr2x[i]=(rendx-rbeginx)/acpar->dx+1.5;
+			
+			acpar->r0_vy[i]=rbeginy/acpar->dy+0.5+nb;
+			acpar->r02y[i]=(rbeginy-sy-acpar->r0y)/acpar->dy+0.5;
+			acpar->nr2y[i]=(rendy-rbeginy)/acpar->dy+1.5;
+		}
 		}
 	}
-
+	/*The above part is confusing, pending modification*/
+	
 	/* read model parameters */
-	nzx=acpar->nz*acpar->nx;
+	nzxy=acpar->nz*acpar->nx*acpar->ny;
 	nt=acpar->nt;
-	array->vv=sf_floatalloc(nzx);
-	array->qq=sf_floatalloc(nzx);
-	array->tau=sf_floatalloc(nzx);
-	array->taus=sf_floatalloc(nzx);
+	array->vv=sf_floatalloc(nzxy);
+	array->qq=sf_floatalloc(nzxy);
+	array->tau=sf_floatalloc(nzxy);
+	array->taus=sf_floatalloc(nzxy);
 	array->ww=sf_floatalloc(nt);
-	taue=sf_floatalloc(nzx);
+	taue=sf_floatalloc(nzxy);
 
-	sf_floatread(array->vv, nzx, Fv);
-	sf_floatread(array->qq, nzx, Fq);
+	sf_floatread(array->vv, nzxy, Fv);
+	sf_floatread(array->qq, nzxy, Fq);
 	sf_floatread(array->ww, nt, Fw);
 
 	/* calculate tau */
-	for(i=0; i<nzx; i++){
+	for(i=0; i<nzxy; i++){
 		tmp=sqrtf(array->qq[i]*array->qq[i]+1);
 		taue[i]=(tmp+1)/(2.*SF_PI*acpar->f0*array->qq[i]);
 		array->taus[i]=(tmp-1)/(2.*SF_PI*acpar->f0*array->qq[i]);
@@ -293,52 +340,65 @@ void preparation(sf_file Fv, sf_file Fq, sf_file Fw, sf_acqui acpar, sf_sou soup
 	free(taue);
 }
 
-void pad2d(float *vec, float **array, int nz, int nx, int nb)
+void pad3d(float *vec, float ***array, int nz, int nx, int ny, int nb)
 /*< convert a vector to an array >*/
 {
-	int ix, iz;
-	
+	int ix, iy, iz;
+
+	for(iy=0; iy<ny; iy++){
 	for(ix=0; ix<nx; ix++){
 		for(iz=0; iz<nz; iz++){
-			array[ix+nb][iz+nb]=vec[ix*nz+iz];
+			array[iy+nb][ix+nb][iz+nb]=vec[iy*nx*nz+ix*nz+iz];
 		}
 	}
-
+	
+	for (iy=nb; iy<ny+nb; iy++){
     for (ix=nb; ix<nx+nb; ix++){
 		for (iz=0; iz<nb; iz++){
-			array[ix][iz]=array[ix][nb];
-			array[ix][iz+nz+nb]=array[ix][nz+nb-1];
+			array[iy][ix][iz]=array[[iy]ix][nb];
+			array[iy][ix][iz+nz+nb]=array[iy][ix][nz+nb-1];
 		}
 	}
 
+    for (iy=nb; iy<ny+nb; iy++){
 	for (ix=0; ix<nb; ix++){
 		for (iz=0; iz<nz+2*nb; iz++){
-			array[ix][iz]=array[nb][iz];
-			array[ix+nx+nb][iz]=array[nx+nb-1][iz];
+			array[iy][ix][iz]=array[iy][nb][iz];
+			array[iy][ix+nx+nb][iz]=array[iy][nx+nb-1][iz];
 		}
+	}
+	}
+	
+    for (iy=0; iy<nb; iy++){
+	for (ix=0; ix<nx+2*nb; ix++){
+		for (iz=0; iz<nz+2*nb; iz++){
+			array[iy][ix][iz]=array[nb][ix][iz];
+			array[iy+ny+nb][ix][iz]=array[ny+nb-1][ix][iz];
+		}
+	}
 	}
 }
 
-void source_map(int sx, int sz, int rectx, int rectz, int padnx, int padnz, int padnzx, float *rr)
+void source_map(int sy, int sx, int sz, int recty, int rectx, int rectz, int padny, int padnx, int padnz, int padnzxy, float *rr)
 /*< generate source map >*/
 {
 	int i, j, i0;
-	int n[2], s[2], rect[2];
-	bool diff[2], box[2];
+	int n[3], s[3], rect[3];
+	bool diff[3], box[3];
 	sf_triangle tr;
 
-	n[0]=padnz; n[1]=padnx;
-	s[0]=1; s[1]=padnz;
-	rect[0]=rectz; rect[1]=rectx;
-	diff[0]=false; diff[1]=false;
-	box[0]=false; box[1]=false;
+	n[0]=padnz; n[1]=padnx; n[2]=padny;
+	s[0]=1; s[1]=padnz; s[2]=padnz*padnx;
+	rect[0]=rectz; rect[1]=rectx; rect[2]=recty;
+	diff[0]=false; diff[1]=false; diff[2]=false;
+	box[0]=false; box[1]=false; box[2]=false;
 
-	for (i=0; i<padnzx; i++)
+	for (i=0; i<padnzxy; i++)
 		rr[i]=0.;
-	j=sx*padnz+sz;
+	j=sy*padnx*padnz+sx*padnz+sz;
 	rr[j]=1.;
 
-	for (i=0; i<2; i++){
+	for (i=0; i<3; i++){
 		if(rect[i] <=1) continue;
 		tr=sf_triangle_init(rect[i], n[i], box[i]);
 		for(j=0; j<padnzx/n[i]; j++){
@@ -349,53 +409,96 @@ void source_map(int sx, int sz, int rectx, int rectz, int padnx, int padnz, int 
 	}
 }
 
-void laplace(float **p1, float **term, int padnx, int padnz, float dx2, float dz2)
+void laplace(float ***p1, float ***term, int padny, int padnx, int padnz, float dy2, float dx2, float dz2)
 /*< laplace operator >*/
 {
-	int ix, iz;
-
+	int ix,iy,iz;
+	
+ for (iy=4; iy<padny-4; iy++){
 	for (ix=4; ix<padnx-4; ix++){
 		for (iz=4; iz<padnz-4; iz++){
-			term[ix][iz] = 
-				(c0*p1[ix][iz]
-				+c1*(p1[ix+1][iz]+p1[ix-1][iz])
-				+c2*(p1[ix+2][iz]+p1[ix-2][iz])
-				+c3*(p1[ix+3][iz]+p1[ix-3][iz])
-				+c4*(p1[ix+4][iz]+p1[ix-4][iz]))/dx2 
-				+(c0*p1[ix][iz]
-				+c1*(p1[ix][iz+1]+p1[ix][iz-1])
-				+c2*(p1[ix][iz+2]+p1[ix][iz-2])
-				+c3*(p1[ix][iz+3]+p1[ix][iz-3])
-				+c4*(p1[ix][iz+4]+p1[ix][iz-4]))/dz2;
+			term[iy][ix][iz] = 
+				(c0*p1[iy][ix][iz]
+				+c1*(p1[iy+1][ix][iz]+p1[iy-1][ix][iz])
+				+c2*(p1[iy+2][ix][iz]+p1[iy-2][ix][iz])
+				+c3*(p1[iy+3][ix][iz]+p1[iy-3][ix][iz])
+				+c4*(p1[iy+4][ix][iz]+p1[iy-4][ix][iz]))/dy2 
+				+(c0*p1[iy][ix][iz]
+				+c1*(p1[iy][ix+1][iz]+p1[iy][ix-1][iz])
+				+c2*(p1[iy][ix+2][iz]+p1[iy][ix-2][iz])
+				+c3*(p1[iy][ix+3][iz]+p1[iy][ix-3][iz])
+				+c4*(p1[iy][ix+4][iz]+p1[iy][ix-4][iz]))/dx2 
+				+(c0*p1[iy][ix][iz]
+				+c1*(p1[iy][ix][iz+1]+p1[iy][ix][iz-1])
+				+c2*(p1[iy][ix][iz+2]+p1[iy][ix][iz-2])
+				+c3*(p1[iy][ix][iz+3]+p1[iy][ix][iz-3])
+				+c4*(p1[iy][ix][iz+4]+p1[iy][ix][iz-4]))/dz2;
 		}
 	}
 }
 
-void apply_sponge(float **p, float *bc, int padnx, int padnz, int nb)
-/*< apply absorbing boundary condition >*/
+void apply_sponge(float ***a /*3-D matrix*/, float *bndr, int nypad, int nxpad, int nzpad, int nb) 
+/*< boundary decay (simple ABC but stable and works)>*/
 {
-	int ix, iz;
-
-	for (ix=0; ix<padnx; ix++){
-		for(iz=0; iz<nb; iz++){	// top ABC
-			p[ix][iz]=bc[iz]*p[ix][iz];
-		}
-		for(iz=padnz-nb; iz<padnz; iz++){ // bottom ABC			
-			p[ix][iz]=bc[padnz-iz-1]*p[ix][iz];
-		} 
-	}
-
-	for (iz=0; iz<padnz; iz++){
-		for(ix=0; ix<nb; ix++){ // left ABC			
-			p[ix][iz]=bc[ix]*p[ix][iz];
-		}
-		for(ix=padnx-nb; ix<padnx; ix++){ // right ABC			
-			p[ix][iz]=bc[padnx-ix-1]*p[ix][iz];
-		}
-	}
+    int i;
+    int iz, iy, ix;
+	
+    /* top */
+    for (iz=0; iz < nb; iz++) {  
+        for (ix=0; ix < nxpad; ix++) {
+        for (iy=0; iy < nypad; iy++) {
+	  a[iy][ix][iz] *= bndr[iz];
+        }
+        }
+    }
+    
+    /* bottom */
+    for (iz=0; iz < nb; iz++) {  
+        for (ix=0; ix < nxpad; ix++) {
+        for (iy=0; iy < nypad; iy++) {
+	  a[iy][ix][nzpad-1-iz] *= bndr[iz];
+        }
+    }
+    }
+      
+    /* left x*/
+    for (iz=0; iz < nzpad; iz++) {  
+        for (ix=0; ix < nb; ix++) {
+        for (iy=0; iy < nypad; iy++) { 
+	  a[iy][ix][iz] *= bndr[ix];
+        }
+        }
+    }
+    
+    /* right x*/
+    for (iz=0; iz < nzpad; iz++) {  
+        for (ix=0; ix < nb; ix++) {
+        for (iy=0; iy < nypad; iy++) {     
+          a[iy][nxpad-1-ix][iz] *= bndr[ix];
+        }
+        }
+    }
+        
+    /* left y*/
+    for (iz=0; iz < nzpad; iz++) {  
+       for (ix=0; ix < nxpad; ix++) {
+        for (iy=0; iy < nb; iy++) { 
+	  a[iy][ix][iz] *= bndr[iy];
+        }
+        }
+    }
+        
+    /* right y*/
+    for (iz=0; iz < nzpad; iz++) {  
+       for (ix=0; ix < nxpad; ix++) {
+        for (iy=0; iy < nb; iy++) {    
+          a[nypad-1-iy][ix][iz] *= bndr[iy];
+        }
+        }
+    }
 }
 
-void residual_weighting(float **ww, int nt, int nr, int wtn1, int wtn2, int woffn1, int woffn2, bool oreo)
+void residual_weighting(float ***ww, int nt, int nrx, int nry, int wtn1, int wtn2, int woffn1, int woffn2, bool oreo)
 /*< data residual weighting >*/
 {
 	int it, ir;
@@ -468,7 +571,7 @@ void residual_weighting(float **ww, int nt, int nr, int wtn1, int wtn2, int woff
         }
 }
 
-void gradient_smooth2(int rectx, int rectz, int nx, int nz, int waterz, float scaling, float *grad)
+void gradient_smooth2(int recty, int rectx, int rectz, int ny, int nx, int nz, int waterz, float scaling, float *grad)
 /*< smooth gradient, zero bathymetry layer and normalization >*/
 {
 	int i, j, i0, nzx;
@@ -636,8 +739,8 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
 
 	float dx2, dz2, dt2;
-	float **vv, **dd;
-	float **p0, **p1, **p2, **term, **tmparray, *rr;
+	float ***vv, ***dd;
+	float ***p0, ***p1, ***p2, ***term, ***tmparray, *rr;
 
 	FILE *swap;
 
@@ -646,9 +749,11 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	swap=fopen("temswap.bin", "wb+");
 
 	padnz=acpar->padnz;
+	padny=acpar->padny;
 	padnx=acpar->padnx;
-	padnzx=padnz*padnx;
+	padnzxy=padnz*padnx*padny;
 	nz=acpar->nz;
+	ny=acpar->ny;
 	nx=acpar->nx;
 	nt=acpar->nt;
 	nr=acpar->nr;
@@ -656,31 +761,33 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	sz=acpar->sz;
 	rz=acpar->rz;
 	rectx=soupar->rectx;
+	recty=soupar->recty;
 	rectz=soupar->rectz;
 
 	dx2=acpar->dx*acpar->dx;
+	dxy=acpar->dy*acpar->dy;
 	dz2=acpar->dz*acpar->dz;
 	dt2=acpar->dt*acpar->dt;
 
-	vv = sf_floatalloc2(padnz, padnx);
-	dd=sf_floatalloc2(nt, nr);
+	vv = sf_floatalloc3(padnz, padnx, padny);
+	dd=sf_floatalloc3(nt, nrx, nry);
 
-	p0=sf_floatalloc2(padnz, padnx);
-	p1=sf_floatalloc2(padnz, padnx);
-	p2=sf_floatalloc2(padnz, padnx);
-	term=sf_floatalloc2(padnz, padnx);
+	p0=sf_floatalloc2(padnz, padnx, padny);
+	p1=sf_floatalloc2(padnz, padnx, padny);
+	p2=sf_floatalloc2(padnz, padnx, padny);
+	term=sf_floatalloc2(padnz, padnx, padny);
 	rr=sf_floatalloc(padnzx);
 
 	/* padding and convert vector to 2-d array */
-	pad2d(array->vv, vv, nz, nx, nb);
+	pad3d(array->vv, vv, nz, nx, ny, nb);
 
 	for(is=mpipar->cpuid; is<acpar->ns; is+=mpipar->numprocs){
 		sf_warning("###### is=%d ######", is+1);
 
-		memset(dd[0], 0., nr*nt*sizeof(float));
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
+		memset(dd[0][0], 0., nr*nt*sizeof(float));
+		memset(p0[0][0], 0., padnzx*sizeof(float));
+		memset(p1[0][0], 0., padnzx*sizeof(float));
+		memset(p2[0][0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
 		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
@@ -715,12 +822,12 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 			tmparray=p0; p0=p1; p1=p2; p2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, acpar->bc, padnx, padnz, nb);
-			apply_sponge(p1, acpar->bc, padnx, padnz, nb);
+			apply_sponge(p0, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, acpar->bc, padny, padnx, padnz, nb);
 		} // end of time loop
 
 		fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-		fwrite(dd[0], sizeof(float), nr*nt, swap);
+		fwrite(dd[0][0], sizeof(float), nr*nt, swap);
 	}// end of shot loop
 	fclose(swap);
 	MPI_Barrier(comm);
@@ -730,9 +837,9 @@ void forward_modeling_a(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 		swap=fopen("temswap.bin", "rb");
 		for(is=0; is<acpar->ns; is++){
 			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			if (!fread(dd[0], sizeof(float), nr*nt, swap))
+			if (!fread(dd[0][0], sizeof(float), nr*nt, swap))
 				abort();
-			sf_floatwrite(dd[0], nr * nt, Fdat);
+			sf_floatwrite(dd[0][0], nr * nt, Fdat);
 		}
 		fclose(swap);
 		remove("temswap.bin");
@@ -802,12 +909,12 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 	for(is=mpipar->cpuid; is<acpar->ns; is+=mpipar->numprocs){
 		sf_warning("###### is=%d ######", is+1);
 
-		memset(dd[0], 0., nr*nt*sizeof(float));
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-		memset(r1[0], 0., padnzx*sizeof(float));
-		memset(r2[0], 0., padnzx*sizeof(float));
+		memset(dd[0][0], 0., nr*nt*sizeof(float));
+		memset(p0[0][0], 0., padnzx*sizeof(float));
+		memset(p1[0][0], 0., padnzx*sizeof(float));
+		memset(p2[0][0], 0., padnzx*sizeof(float));
+		memset(r1[0][0], 0., padnzx*sizeof(float));
+		memset(r2[0][0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
 		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
@@ -841,13 +948,13 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 			tmparray=r1; r1=r2; r2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, acpar->bc, padnx, padnz, nb);
-			apply_sponge(p1, acpar->bc, padnx, padnz, nb);
-			apply_sponge(r1, acpar->bc, padnx, padnz, nb);
+			apply_sponge(p0, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(r1, acpar->bc, padny, padnx, padnz, nb);
 		} // end of time loop
 
 		fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-		fwrite(dd[0], sizeof(float), nr*nt, swap);
+		fwrite(dd[0][0], sizeof(float), nr*nt, swap);
 	}// end of shot loop
 	fclose(swap);
 	MPI_Barrier(comm);
@@ -856,10 +963,10 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 	if(mpipar->cpuid==0){
 		swap=fopen("temswap.bin", "rb");
 		for(is=0; is<acpar->ns; is++){
-			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			if (!fread(dd[0], sizeof(float), nr*nt, swap))
+			fseeko(swap, is*nry*nrx*nt*sizeof(float), SEEK_SET);
+			if (!fread(dd[0][0], sizeof(float), nr*nt, swap))
 				abort();
-			sf_floatwrite(dd[0], nr * nt, Fdat);
+			sf_floatwrite(dd[0][0], nry*nrx*nt, Fdat);
 		}
 		fclose(swap);
 		remove("temswap.bin");
@@ -1254,8 +1361,8 @@ void timerev_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
         for (it=tr->nt-1; it>-1; it--){
            
             /* 4 - apply abc */
-            if (tr->abc) abc_apply(u1[0],tr);
-            if (tr->abc) abc_apply(u0[0],tr);
+            if (tr->abc) abc_apply(u1[0][0],tr);
+            if (tr->abc) abc_apply(u0[0][0],tr);
 
             /* 3 - image source */
 #ifdef _OPENMP
@@ -1318,8 +1425,8 @@ void timerev_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
                     u1[ix+tr->nb][iz+tr->nb] += ww[it][ix][iz]*vvpad[ix+tr->nb][iz+tr->nb];
 
             /* 4 - apply abc */
-            if (tr->abc) abc_apply(u0[0],tr);
-            if (tr->abc) abc_apply(u1[0],tr);
+            if (tr->abc) abc_apply(u0[0][0],tr);
+            if (tr->abc) abc_apply(u1[0][0],tr);
 
         } /* it loop */
         
@@ -1398,8 +1505,8 @@ void ctimerev(int ngrp, float ***ww, float **dd)
             }
             /* rotate pointers */
             tmp=u0; u0=u1; u1=u2; u2=tmp;
-            if (tr->abc) abc_apply(u1[0],tr);
-            if (tr->abc) abc_apply(u0[0],tr);
+            if (tr->abc) abc_apply(u1[0][0],tr);
+            if (tr->abc) abc_apply(u0[0][0],tr);
 
             /* inject data */
 #ifdef _OPENMP
@@ -1678,18 +1785,20 @@ void gradient_init(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, 
 	/* data residual weights */
 	wtn1=(wt1-acpar->t0)/dt+0.5;
 	wtn2=(wt2-acpar->t0)/dt+0.5;
-	woffn1=(woff1-acpar->r0)/acpar->dr+0.5;
-	woffn2=(woff2-acpar->r0)/acpar->dr+0.5;
-	weight=sf_floatalloc2(nt, nr);
-	residual_weighting(weight, nt, nr, wtn1, wtn2, woffn1, woffn2, fwipar->oreo);
+	woffn1x=(woff1x-acpar->r0x)/acpar->drx+0.5;
+	woffn2x=(woff2x-acpar->r0x)/acpar->drx+0.5;
+	woffn1y=(woff1y-acpar->r0y)/acpar->dry+0.5;
+	woffn2y=(woff2y-acpar->r0y)/acpar->dry+0.5;
+	weight=sf_floatalloc2(nt, nrx, nry);
+	residual_weighting(weight, nt, nr, wtn1, wtn2, woffn1x, woffn2x, woffn1y, woffn2y, fwipar->oreo);
 
 	/* padding and convert vector to 2-d array */
-	vv = sf_floatalloc2(padnz, padnx);
-	tau= sf_floatalloc2(padnz, padnx);
-	taus=sf_floatalloc2(padnz, padnx);
-	pad2d(array->vv, vv, nz, nx, nb);
-	pad2d(array->tau, tau, nz, nx, nb);
-	pad2d(array->taus, taus, nz, nx, nb);
+	vv = sf_floatalloc2(padnz, padnx, padny);
+	tau= sf_floatalloc2(padnz, padnx, padny);
+	taus=sf_floatalloc2(padnz, padnx, padny);
+	pad3d(array->vv, vv, nz, nx, ny, nb);
+	pad3d(array->tau, tau, nz, nx, ny, nb);
+	pad3d(array->taus, taus, nz, nx, ny, nb);
 
 	return;
 }
@@ -1724,10 +1833,10 @@ void gradient_av(float *x, float *fcost, float *grad)
 	for(is=cpuid; is<ns; is+=numprocs){
 		if(cpuid==0) sf_warning("###### is=%d ######", is+1);
 
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-		memset(pp[0], 0., nr*nt*sizeof(float));
+		memset(p0[0][0], 0., padnzx*sizeof(float));
+		memset(p1[0][0], 0., padnzx*sizeof(float));
+		memset(p2[0][0], 0., padnzx*sizeof(float));
+		memset(pp[0][0], 0., nr*nt*sizeof(float));
 		
 		sx=s0_v+is*ds_v;
 		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
@@ -1787,8 +1896,8 @@ void gradient_av(float *x, float *fcost, float *grad)
 			tmparray=p0; p0=p1; p1=p2; p2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, bc, padnx, padnz, nb);
-			apply_sponge(p1, bc, padnx, padnz, nb);
+			apply_sponge(p0, bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, bc, padny, padnx, padnz, nb);
 		} // end of time loop
 
 		/* check */
@@ -1812,10 +1921,10 @@ void gradient_av(float *x, float *fcost, float *grad)
 		iturn++;
 
 		/* initialization */
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-                memset(term[0], 0., padnzx*sizeof(float));
+		memset(p0[0][0], 0., padnzx*sizeof(float));
+		memset(p1[0][0], 0., padnzx*sizeof(float));
+		memset(p2[0][0], 0., padnzx*sizeof(float));
+                memset(term[0][0], 0., padnzx*sizeof(float));
 		
 		/* backward propagation */
 		for(it=nt-1; it>=0; it--){
@@ -1866,8 +1975,8 @@ void gradient_av(float *x, float *fcost, float *grad)
 			tmparray=p0; p0=p1; p1=p2; p2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, bc, padnx, padnz, nb);
-			apply_sponge(p1, bc, padnx, padnz, nb);
+			apply_sponge(p0, bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, bc, padny, padnx, padnz, nb);
 		} // end of time loop
 	}// end of shot loop
 	MPI_Barrier(comm);
@@ -1956,14 +2065,14 @@ void gradient_v(float *x, float *fcost, float *grad)
 	for(is=cpuid; is<ns; is+=numprocs){
 		if(cpuid==0) sf_warning("###### is=%d ######", is+1);
 
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-		memset(r1[0], 0., padnzx*sizeof(float));
-		memset(r2[0], 0., padnzx*sizeof(float));
-		memset(pp[0], 0., nr*nt*sizeof(float));
-		memset(term[0], 0., padnzx*sizeof(float));
-		memset(tmp[0], 0., padnzx*sizeof(float));
+		memset(p0[0][0], 0., padnzx*sizeof(float));
+		memset(p1[0][0], 0., padnzx*sizeof(float));
+		memset(p2[0][0], 0., padnzx*sizeof(float));
+		memset(r1[0][0], 0., padnzx*sizeof(float));
+		memset(r2[0][0], 0., padnzx*sizeof(float));
+		memset(pp[0][0], 0., nr*nt*sizeof(float));
+		memset(term[0][0], 0., padnzx*sizeof(float));
+		memset(tmp[0][0], 0., padnzx*sizeof(float));
 		
 		sx=s0_v+is*ds_v;
 		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
@@ -2017,9 +2126,9 @@ void gradient_v(float *x, float *fcost, float *grad)
 			tmparray=r1; r1=r2; r2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, bc, padnx, padnz, nb);
-			apply_sponge(p1, bc, padnx, padnz, nb);
-			apply_sponge(r1, bc, padnx, padnz, nb);
+			apply_sponge(p0, bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, bc, padny, padnx, padnz, nb);
+			apply_sponge(r1, bc, padny, padnx, padnz, nb);
 		} // end of time loop
 
 		/* check */
@@ -2037,13 +2146,13 @@ void gradient_v(float *x, float *fcost, float *grad)
 		iturn++;
 
 		/* initialization */
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-		memset(r1[0], 0., padnzx*sizeof(float));
-		memset(r2[0], 0., padnzx*sizeof(float));
-		memset(term[0], 0., padnzx*sizeof(float));
-		memset(tmp[0], 0., padnzx*sizeof(float));
+		memset(p0[0][0], 0., padnzx*sizeof(float));
+		memset(p1[0][0], 0., padnzx*sizeof(float));
+		memset(p2[0][0], 0., padnzx*sizeof(float));
+		memset(r1[0][0], 0., padnzx*sizeof(float));
+		memset(r2[0][0], 0., padnzx*sizeof(float));
+		memset(term[0][0], 0., padnzx*sizeof(float));
+		memset(tmp[0][0], 0., padnzx*sizeof(float));
 		
 		/* backward propagation */
 		for(it=nt-1; it>=0; it--){
@@ -2111,9 +2220,9 @@ void gradient_v(float *x, float *fcost, float *grad)
 			tmparray=r1; r1=r2; r2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, bc, padnx, padnz, nb);
-			apply_sponge(p1, bc, padnx, padnz, nb);
-			apply_sponge(r1, bc, padnx, padnz, nb);
+			apply_sponge(p0, bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, bc, padny, padnx, padnz, nb);
+			apply_sponge(r1, bc, padny, padnx, padnz, nb);
 		} // end of time loop
 	}// end of shot loop
 	MPI_Barrier(comm);
@@ -2535,8 +2644,8 @@ void gradient_pas_av(float *x, float *fcost, float *grad)
                 tmparray=p0; p0=p1; p1=p2; p2=tmparray;
 
                 /* boundary condition */
-                apply_sponge(p0, bc, padnx, padnz, nb);
-                apply_sponge(p1, bc, padnx, padnz, nb);
+                apply_sponge(p0, bc, padny, padnx, padnz, nb);
+                apply_sponge(p1, bc, padny, padnx, padnz, nb);
             } // end of time loop
 
             /* check */
@@ -2636,8 +2745,8 @@ void gradient_pas_av(float *x, float *fcost, float *grad)
                 tmparray=p0; p0=p1; p1=p2; p2=tmparray;
 
                 /* boundary condition */
-                apply_sponge(p0, bc, padnx, padnz, nb);
-                apply_sponge(p1, bc, padnx, padnz, nb);
+                apply_sponge(p0, bc, padny, padnx, padnz, nb);
+                apply_sponge(p1, bc, padny, padnx, padnz, nb);
             } // end of time loop
 
             iturn++;
@@ -2990,63 +3099,80 @@ void pfwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_file Fmwt, sf_file Fsrc,
 void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec array, bool verb)
 /*< acoustic rtm >*/
 {
-	int ix, iz, is, ir, it, wit;
+	int ix, iz, iy, is, ir, it, wit;
 	int sx, rx, sz, rz, rectx, rectz;
 	int nz, nx, nzx, padnz, padnx, padnzx, nt, nr, nb, wnt;
 
 	float dx2, dz2, dt2;
-	float **vv, **dd, **mm;
-	float **p0, **p1, **p2, **term, **tmparray, *rr, ***wave;
+	float ***vv, ***dd, ***mm;
+	float ***p0, ***p1, ***p2, ***term, ***tmparray, *rr, ***wave;
 	float *sendbuf, *recvbuf;
 
 	MPI_Comm comm=MPI_COMM_WORLD;
 
 	nz=acpar->nz;
 	nx=acpar->nx;
-	nzx=nz*nx;
+	ny=acpar->ny;
+	nzxy=nz*nx*ny;
 	padnz=acpar->padnz;
 	padnx=acpar->padnx;
-	padnzx=padnz*padnx;
-	nr=acpar->nr;
+	padny=acpar->padny;
+	padnzxy=padnz*padnx*padny;
+	nrx=acpar->nrx;
+	nry=acpar->nry;
 	nb=acpar->nb;
 	sz=acpar->sz;
 	rz=acpar->rz;
+	recty=soupar->recty;
 	rectx=soupar->rectx;
 	rectz=soupar->rectz;
 
 	nt=acpar->nt;
 	wnt=(nt-1)/acpar->interval+1;
 
+	dy2=acpar->dy*acpar->dy;
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
 	dt2=acpar->dt*acpar->dt;
 
 	/* memory allocation */
-	vv = sf_floatalloc2(padnz, padnx);
-	dd=sf_floatalloc2(nt, nr);
-	mm=sf_floatalloc2(nz, nx);
+	vv = sf_floatalloc3(padnz, padnx, padny);
+	dd=sf_floatalloc3(nt, nrx, nry);
+	mm=sf_floatalloc3(nz, nx, ny);
 
-	p0=sf_floatalloc2(padnz, padnx);
-	p1=sf_floatalloc2(padnz, padnx);
-	p2=sf_floatalloc2(padnz, padnx);
-	term=sf_floatalloc2(padnz, padnx);
-	rr=sf_floatalloc(padnzx);
-	wave=sf_floatalloc3(nz, nx, wnt);
+	p0=sf_floatalloc3(padnz, padnx, padny);
+	p1=sf_floatalloc3(padnz, padnx, padny);
+	p2=sf_floatalloc3(padnz, padnx, padny);
+	term=sf_floatalloc3(padnz, padnx, padny);
+	rr=sf_floatalloc(padnzxy);
+	wave=sf_floatalloc3(nz, nx, ny, wnt);
 
 	/* padding and convert vector to 2-d array */
-	pad2d(array->vv, vv, nz, nx, nb);
+	pad3d(array->vv, vv, nz, nx, ny, nb);
 
-	memset(mm[0], 0., nzx*sizeof(float));
-
+	memset(mm[0][0], 0., nzx*sizeof(float));
+	
+	int isx, isy;
 	for(is=mpipar->cpuid; is<acpar->ns; is+=mpipar->numprocs){
-		sf_warning("###### is=%d ######", is+1);
+		/*The following is a typical 1D->2D index transformation in C, Aug 23, 2021*/
+    	isy=ceilf((is+1)/acpar->nsx);
+    	isx=fmod(is+1,acpar->nsx);
+    	if isx==0
+        	isx=acpar->nsx;
+    	end
+    	isy=isy-1;isx=isx-1; 
+		/*The following is a typical 1D->2D index transformation in C*/
 
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
+		sf_warning("###### is=%d ######", is+1);
+		sf_warning("###### isx=%d ######", isx+1);
+		sf_warning("###### isy=%d ######", isy+1);
+		
+		memset(p0[0], 0., padnzxy*sizeof(float));
+		memset(p1[0], 0., padnzxy*sizeof(float));
+		memset(p2[0], 0., padnzxy*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
-		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
+		source_map(sy, sx, sz, recty, rectx, rectz, padny, padnx, padnz, padnzxy, rr);
 
 		wit=0;
 		/* forward propagation */
@@ -3055,72 +3181,81 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 
 			/* save wavefield */
 			if(it%acpar->interval==0){
+			for(iy=0; iy<ny; iy++)
 				for(ix=0; ix<nx; ix++)
 					for(iz=0; iz<nz; iz++)
-						wave[wit][ix][iz]=p1[ix+nb][iz+nb];
+						wave[wit][iy][ix][iz]=p1[iy+nb][ix+nb][iz+nb];
 				wit++;
 			}
 
 			/* laplacian operator */
-			laplace(p1, term, padnx, padnz, dx2, dz2);
+			laplace(p1, term, padny, padnx, padnz, dy2, dx2, dz2);
 			
 			/* load source */
+			for(iy=0; iy<padny; iy++){
 			for(ix=0; ix<padnx; ix++){
 				for(iz=0; iz<padnz; iz++){
-					term[ix][iz] += rr[ix*padnz+iz]*array->ww[it];
+					term[iy][ix][iz] += rr[iy*padnx*padnz+ix*padnz+iz]*array->ww[it];
 				}
 			}
-
+			}
+			
 			/* update */
+			for(iy=0; iy<padny; iy++){
 			for(ix=0; ix<padnx; ix++){
 				for(iz=0; iz<padnz; iz++){
-					p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*vv[ix][iz]*dt2*term[ix][iz];
+					p2[iy][ix][iz]=2*p1[iy][ix][iz]-p0[iy][ix][iz]+vv[iy][ix][iz]*vv[iy][ix][iz]*dt2*term[iy][ix][iz];
 				}
+			}
 			}
 			
 			/* swap wavefield pointer of different time steps */
 			tmparray=p0; p0=p1; p1=p2; p2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, acpar->bc, padnx, padnz, nb);
-			apply_sponge(p1, acpar->bc, padnx, padnz, nb);
+			apply_sponge(p0, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, acpar->bc, padny, padnx, padnz, nb);
 		} // end of time loop
 
 		/* check */
 		if(wit != wnt) sf_error("Incorrect number of wavefield snapshots");
 		/* read data */
-		sf_seek(Fdat, is*nr*nt*sizeof(float), SEEK_SET);
-		sf_floatread(dd[0], nr*nt, Fdat);
+		sf_seek(Fdat, is*nrx*nry*nt*sizeof(float), SEEK_SET);
+		sf_floatread(dd[0], nry*nrx*nt, Fdat);
 		/* initialization */
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
+		memset(p0[0], 0., padnzxy*sizeof(float));
+		memset(p1[0], 0., padnzxy*sizeof(float));
+		memset(p2[0], 0., padnzxy*sizeof(float));
 		
 		/* backward propagation */
 		for(it=nt-1; it>=0; it--){
 			if(verb) sf_warning("Backward propagation is=%d; it=%d;", is+1, it);
 
 			/* laplacian operator */
-			laplace(p1, term, padnx, padnz, dx2, dz2);
+			laplace(p1, term, padnx, padnzy, dy2, dx2, dz2);
 			
 			/* load data */
-			for(ir=0; ir<acpar->nr2[is]; ir++){
-				rx=acpar->r0_v[is]+ir*acpar->dr_v;
-				term[rx][rz] += dd[acpar->r02[is]+ir][it];
+			for(iry=0; iry<acpar->nr2y[isy][isx]; iry++){
+			for(irx=0; irx<acpar->nr2x[isy][isx]; irx++){
+				rx=acpar->r0_vx[isy][isx]+irx*acpar->dr_vx;
+				term[ry][rx][rz] += dd[acpar->r02y[isy][isx]+iry][acpar->r02x[isy][isx]+irx][it];
 			}
 
 			/* update */
+			for(iy=0; iy<padny; iy++){
 			for(ix=0; ix<padnx; ix++){
 				for(iz=0; iz<padnz; iz++){
-					p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*vv[ix][iz]*dt2*term[ix][iz];
+					p2[iy][ix][iz]=2*p1[iy][ix][iz]-p0[iy][ix][iz]+vv[iy][ix][iz]*vv[iy][ix][iz]*dt2*term[iy][ix][iz];
 				}
 			}
-
+			}
+			
 			/* calculate image */
 			if(it%acpar->interval==0){
+			for(iy=0; iy<ny; iy++)
 				for(ix=0; ix<nx; ix++)
 					for(iz=0; iz<nz; iz++)
-						mm[ix][iz] += wave[wit-1][ix][iz]*p1[ix+nb][iz+nb];
+						mm[iy][ix][iz] += wave[wit-1][iy][ix][iz]*p1[iy+nb][ix+nb][iz+nb];
 				wit--;
 			}
 			
@@ -3128,22 +3263,22 @@ void rtm_a(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 			tmparray=p0; p0=p1; p1=p2; p2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, acpar->bc, padnx, padnz, nb);
-			apply_sponge(p1, acpar->bc, padnx, padnz, nb);
+			apply_sponge(p0, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, acpar->bc, padny, padnx, padnz, nb);
 		} // end of time loop
 	}// end of shot loop
 	MPI_Barrier(comm);
 
 	if(mpipar->cpuid==0){
 		sendbuf=MPI_IN_PLACE;
-		recvbuf=mm[0];
+		recvbuf=mm[0][0];
 	}else{
-		sendbuf=mm[0];
+		sendbuf=mm[0][0];
 		recvbuf=NULL;
 	}
 	MPI_Reduce(sendbuf, recvbuf, nzx, MPI_FLOAT, MPI_SUM, 0, comm);
 
-	if(mpipar->cpuid==0) sf_floatwrite(mm[0], nzx, Fimg);
+	if(mpipar->cpuid==0) sf_floatwrite(mm[0][0], nzx, Fimg);
 	MPI_Barrier(comm);
 }
 
@@ -3152,7 +3287,7 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 {
 	int ix, iz, is, ir, it, wit;
 	int sx, rx, sz, rz, rectx, rectz;
-	int nz, nx, nzx, padnz, padnx, padnzx, nt, nr, nb, wnt;
+	int nz, nx, nzx, padnz, padnx, padny, padnzx, nt, nr, nb, wnt;
 
 	float dx2, dz2, dt2, dt;
 	float **vv, **tau, **taus, **dd, **mm;
@@ -3203,16 +3338,16 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 	pad2d(array->tau, tau, nz, nx, nb);
 	pad2d(array->taus, taus, nz, nx, nb);
 
-	memset(mm[0], 0., nzx*sizeof(float));
+	memset(mm[0][0], 0., nzx*sizeof(float));
 
 	for(is=mpipar->cpuid; is<acpar->ns; is+=mpipar->numprocs){
 		sf_warning("###### is=%d ######", is+1);
 
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-		memset(r1[0], 0., padnzx*sizeof(float));
-		memset(r2[0], 0., padnzx*sizeof(float));
+		memset(p0[0][0], 0., padnzx*sizeof(float));
+		memset(p1[0][0], 0., padnzx*sizeof(float));
+		memset(p2[0][0], 0., padnzx*sizeof(float));
+		memset(r1[0][0], 0., padnzx*sizeof(float));
+		memset(r2[0][0], 0., padnzx*sizeof(float));
 		
 		sx=acpar->s0_v+is*acpar->ds_v;
 		source_map(sx, sz, rectx, rectz, padnx, padnz, padnzx, rr);
@@ -3257,22 +3392,22 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 			tmparray=r1; r1=r2; r2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, acpar->bc, padnx, padnz, nb);
-			apply_sponge(p1, acpar->bc, padnx, padnz, nb);
-			apply_sponge(r1, acpar->bc, padnx, padnz, nb);
+			apply_sponge(p0, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(r1, acpar->bc, padny, padnx, padnz, nb);
 		} // end of time loop
 
 		/* check */
 		if(wit != wnt) sf_error("Incorrect number of wavefield snapshots");
 		/* read data */
 		sf_seek(Fdat, is*nr*nt*sizeof(float), SEEK_SET);
-		sf_floatread(dd[0], nr*nt, Fdat);
+		sf_floatread(dd[0][0], nry*nrx*nt, Fdat);
 		/* initialization */
-		memset(p0[0], 0., padnzx*sizeof(float));
-		memset(p1[0], 0., padnzx*sizeof(float));
-		memset(p2[0], 0., padnzx*sizeof(float));
-		memset(r1[0], 0., padnzx*sizeof(float));
-		memset(r2[0], 0., padnzx*sizeof(float));
+		memset(p0[0][0], 0., padnzx*sizeof(float));
+		memset(p1[0][0], 0., padnzx*sizeof(float));
+		memset(p2[0][0], 0., padnzx*sizeof(float));
+		memset(r1[0][0], 0., padnzx*sizeof(float));
+		memset(r2[0][0], 0., padnzx*sizeof(float));
 		
 		/* backward propagation */
 		for(it=nt-1; it>=0; it--){
@@ -3312,23 +3447,23 @@ void rtm(sf_file Fdat, sf_file Fimg, sf_mpi *mpipar, sf_sou soupar, sf_acqui acp
 			tmparray=r1; r1=r2; r2=tmparray;
 
 			/* boundary condition */
-			apply_sponge(p0, acpar->bc, padnx, padnz, nb);
-			apply_sponge(p1, acpar->bc, padnx, padnz, nb);
-			apply_sponge(r1, acpar->bc, padnx, padnz, nb);
+			apply_sponge(p0, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(p1, acpar->bc, padny, padnx, padnz, nb);
+			apply_sponge(r1, acpar->bc, padny, padnx, padnz, nb);
 		} // end of time loop
 	}// end of shot loop
 	MPI_Barrier(comm);
 
 	if(mpipar->cpuid==0){
 		sendbuf=MPI_IN_PLACE;
-		recvbuf=mm[0];
+		recvbuf=mm[0][0];
 	}else{
-		sendbuf=mm[0];
+		sendbuf=mm[0][0];
 		recvbuf=NULL;
 	}
-	MPI_Reduce(sendbuf, recvbuf, nzx, MPI_FLOAT, MPI_SUM, 0, comm);
+	MPI_Reduce(sendbuf, recvbuf, nzxy, MPI_FLOAT, MPI_SUM, 0, comm);
 
-	if(mpipar->cpuid==0) sf_floatwrite(mm[0], nzx, Fimg);
+	if(mpipar->cpuid==0) sf_floatwrite(mm[0][0], nzxy, Fimg);
 	MPI_Barrier(comm);
 }
 
@@ -3377,10 +3512,13 @@ int main(int argc, char* argv[])
 
 	if(!sf_histint(Fv, "n1", &acpar->nz)) sf_error("No n1= in Fv");
 	if(!sf_histint(Fv, "n2", &acpar->nx)) sf_error("No n2= in Fv");
+	if(!sf_histint(Fv, "n3", &acpar->ny)) sf_error("No n3= in Fv");
 	if(!sf_histfloat(Fv, "d1", &acpar->dz)) sf_error("No d1= in Fv");
 	if(!sf_histfloat(Fv, "d2", &acpar->dx)) sf_error("No d2= in Fv");
+	if(!sf_histfloat(Fv, "d3", &acpar->dy)) sf_error("No d3= in Fv");
 	if(!sf_histfloat(Fv, "o1", &acpar->z0)) sf_error("No o1= in Fv");
 	if(!sf_histfloat(Fv, "o2", &acpar->x0)) sf_error("No o2= in Fv");
+	if(!sf_histfloat(Fv, "o3", &acpar->y0)) sf_error("No o3= in Fv");
 	if(!sf_histint(Fw, "n1", &acpar->nt)) sf_error("No n1= in Fw");
 	if(!sf_histfloat(Fw, "d1", &acpar->dt)) sf_error("No d1= in Fw");
 	if(!sf_histfloat(Fw, "o1", &acpar->t0)) sf_error("No o1= in Fw");
@@ -3395,9 +3533,12 @@ int main(int argc, char* argv[])
 	if(!sf_getfloat("ds", &acpar->ds)) sf_error("shot interval required"); /* shot interval */
 	if(!sf_getfloat("s0", &acpar->s0)) sf_error("shot origin required"); /* shot origin */
 	if(!sf_getint("sz", &acpar->sz)) acpar->sz=5; /* source depth */
-	if(!sf_getint("nr", &acpar->nr)) acpar->nr=acpar->nx; /* number of receiver */
-	if(!sf_getfloat("dr", &acpar->dr)) acpar->dr=acpar->dx; /* receiver interval */
-	if(!sf_getfloat("r0", &acpar->r0)) acpar->r0=acpar->x0; /* receiver origin */
+	if(!sf_getint("nrx", &acpar->nrx)) acpar->nrx=acpar->nx; /* number of receiver */
+	if(!sf_getint("nry", &acpar->nry)) acpar->nry=acpar->ny; /* number of receiver */
+	if(!sf_getfloat("drx", &acpar->drx)) acpar->drx=acpar->dx; /* receiver interval */
+	if(!sf_getfloat("dry", &acpar->dry)) acpar->dry=acpar->dy; /* receiver interval */
+	if(!sf_getfloat("r0x", &acpar->r0x)) acpar->r0x=acpar->x0; /* receiver origin */
+	if(!sf_getfloat("r0y", &acpar->r0y)) acpar->r0y=acpar->y0; /* receiver origin */
 	if(!sf_getint("rz", &acpar->rz)) acpar->rz=1; /* receiver depth */
 
 	if(!sf_getfloat("f0", &acpar->f0)) sf_error("reference frequency required"); /* reference frequency */
@@ -3406,6 +3547,7 @@ int main(int argc, char* argv[])
 	if(!sf_getfloat("fhi", &soupar->fhi)) soupar->fhi=0.5/acpar->dt; 
 	if(!sf_getfloat("flo", &soupar->flo)) soupar->flo=0.; 
 	soupar->rectx=2; 
+	soupar->recty=2; 
 	soupar->rectz=2; 
 
 	/* get prepared */
@@ -3423,17 +3565,27 @@ int main(int argc, char* argv[])
 		sf_putfloat(Fdat, "o1", acpar->t0);
 		sf_putstring(Fdat, "label1", "Time");
 		sf_putstring(Fdat, "unit1", "s");
-		sf_putint(Fdat, "n2", acpar->nr);
-		sf_putfloat(Fdat, "d2", acpar->dr);
-		sf_putfloat(Fdat, "o2", acpar->r0);
-		sf_putstring(Fdat, "label2", "Receiver");
+		sf_putint(Fdat, "n2", acpar->nrx);
+		sf_putfloat(Fdat, "d2", acpar->drx);
+		sf_putfloat(Fdat, "o2", acpar->r0x);
+		sf_putstring(Fdat, "label2", "Receiver in X");
 		sf_putstring(Fdat, "unit2", "km");
-		sf_putint(Fdat, "n3", acpar->ns);
-		sf_putfloat(Fdat, "d3", acpar->ds);
-		sf_putfloat(Fdat, "o3", acpar->s0);
-		sf_putstring(Fdat, "label3", "Shot");
+		sf_putint(Fdat, "n3", acpar->nry);
+		sf_putfloat(Fdat, "d3", acpar->dry);
+		sf_putfloat(Fdat, "o3", acpar->r0y);
+		sf_putstring(Fdat, "label3", "Receiver in Y");
 		sf_putstring(Fdat, "unit3", "km");
-
+		sf_putint(Fdat, "n4", acpar->nsx);
+		sf_putfloat(Fdat, "d4", acpar->dsx);
+		sf_putfloat(Fdat, "o4", acpar->s0x);
+		sf_putstring(Fdat, "label4", "Shot in X");
+		sf_putstring(Fdat, "unit4", "km");
+		sf_putint(Fdat, "n5", acpar->nsy);
+		sf_putfloat(Fdat, "d5", acpar->dsy);
+		sf_putfloat(Fdat, "o5", acpar->s0y);
+		sf_putstring(Fdat, "label5", "Shot in Y");
+		sf_putstring(Fdat, "unit5", "km");
+		
 		if(media==1) forward_modeling_a(Fdat, &mpipar, soupar, acpar, array, verb);
 		else forward_modeling(Fdat, &mpipar, soupar, acpar, array, verb);
 
@@ -3448,13 +3600,19 @@ int main(int argc, char* argv[])
 		fwipar->grad_type=1;
 		fwipar->misfit_type=1;
 		fwipar->opt_type=1;
-                if(!sf_getfloat("wt1", &fwipar->wt1)) fwipar->wt1=acpar->t0;
-                if(!sf_getfloat("wt2", &fwipar->wt2)) fwipar->wt2=acpar->t0+(acpar->nt-1)*acpar->dt;
-                if(!sf_getfloat("woff1", &fwipar->woff1)) fwipar->woff1=acpar->r0;
-                if(!sf_getfloat("woff2", &fwipar->woff2)) fwipar->woff2=acpar->r0+(acpar->nr-1)*acpar->dr;
-                if(!sf_getbool("oreo", &fwipar->oreo)) fwipar->oreo=false; /* keep oreo or keep cream */
+		if(!sf_getfloat("wt1", &fwipar->wt1)) 
+fwipar->wt1=acpar->t0;
+		if(!sf_getfloat("wt2", &fwipar->wt2)) fwipar->wt2=acpar->t0+(acpar->nt-1)*acpar->dt;
+		if(!sf_getfloat("woffx1", &fwipar->woffx1)) 
+fwipar->woffx1=acpar->r0x;
+		if(!sf_getfloat("woffx2", &fwipar->woffx2)) fwipar->woffx2=acpar->r0x+(acpar->nrx-1)*acpar->drx;
+		if(!sf_getfloat("woffy1", &fwipar->woffy1)) 
+fwipar->woffy1=acpar->r0y;
+		if(!sf_getfloat("woffy2", &fwipar->woffy2)) fwipar->woffy2=acpar->r0y+(acpar->nry-1)*acpar->dry;
+		if(!sf_getbool("oreo", &fwipar->oreo)) fwipar->oreo=false; /* keep oreo or keep cream */
 		if(!sf_getint("waterz", &fwipar->waterz)) fwipar->waterz=51; /* water layer depth */
 		if(!sf_getint("grectx", &fwipar->rectx)) fwipar->rectx=3; /* gradient smoothing radius in x */
+		if(!sf_getint("grecty", &fwipar->recty)) fwipar->recty=3; /* gradient smoothing radius in x */
 		if(!sf_getint("grectz", &fwipar->rectz)) fwipar->rectz=3; /* gradient smoothing radius in z */
 
 		Fdat=sf_input("Fdat"); /* input data */
@@ -3471,7 +3629,12 @@ int main(int argc, char* argv[])
 			sf_putint(Finv, "n2", acpar->nx);
 			sf_putfloat(Finv, "d2", acpar->dx);
 			sf_putfloat(Finv, "o2", acpar->x0);
-			sf_putstring(Finv, "label2", "Distance");
+			sf_putstring(Finv, "label2", "Distance in X");
+			sf_putstring(Finv, "unit2", "km");
+			sf_putint(Finv, "n3", acpar->ny);
+			sf_putfloat(Finv, "d3", acpar->dy);
+			sf_putfloat(Finv, "o3", acpar->y0);
+			sf_putstring(Finv, "label3", "Distance in Y");
 			sf_putstring(Finv, "unit2", "km");
 			if(fwipar->grad_type==3) sf_putint(Finv, "n3", 2);
 		}
@@ -3483,9 +3646,14 @@ int main(int argc, char* argv[])
 		sf_putint(Fgrad, "n2", acpar->nx);
 		sf_putfloat(Fgrad, "d2", acpar->dx);
 		sf_putfloat(Fgrad, "o2", acpar->x0);
-		sf_putstring(Fgrad, "label2", "Distance");
+		sf_putstring(Fgrad, "label2", "Distance in X");
 		sf_putstring(Fgrad, "unit2", "km");
-		if(fwipar->grad_type==3) sf_putint(Fgrad, "n3", 2);
+		sf_putint(Fgrad, "n3", acpar->ny);
+		sf_putfloat(Fgrad, "d3", acpar->dy);
+		sf_putfloat(Fgrad, "o3", acpar->y0);
+		sf_putstring(Fgrad, "label3", "Distance in Y");
+		sf_putstring(Fgrad, "unit3", "km");
+		if(fwipar->grad_type==3) sf_putint(Fgrad, "n4", 2);
 
 		if(!fwipar->onlygrad){
 			optpar=(sf_optim)sf_alloc(1, sizeof(*optpar));
@@ -3521,9 +3689,14 @@ int main(int argc, char* argv[])
 		sf_putint(Fimg, "n2", acpar->nx);
 		sf_putfloat(Fimg, "d2", acpar->dx);
 		sf_putfloat(Fimg, "o2", acpar->x0);
-		sf_putstring(Fimg, "label2", "Distance");
+		sf_putstring(Fimg, "label2", "Distance in X");
 		sf_putstring(Fimg, "unit2", "km");
-
+		sf_putint(Fimg, "n3", acpar->ny);
+		sf_putfloat(Fimg, "d3", acpar->dy);
+		sf_putfloat(Fimg, "o3", acpar->y0);
+		sf_putstring(Fimg, "label3", "Distance in Y");
+		sf_putstring(Fimg, "unit3", "km");
+		
 		if(media==1) rtm_a(Fdat, Fimg, &mpipar, soupar, acpar, array, verb);
 		else rtm(Fdat, Fimg, &mpipar, soupar, acpar, array, verb);
 
@@ -3548,12 +3721,15 @@ int main(int argc, char* argv[])
                         fwipar->opt_type=1;
                         if(!sf_getfloat("wt1", &fwipar->wt1)) fwipar->wt1=acpar->t0;
                         if(!sf_getfloat("wt2", &fwipar->wt2)) fwipar->wt2=acpar->t0+(acpar->nt-1)*acpar->dt;
-                        if(!sf_getfloat("woff1", &fwipar->woff1)) fwipar->woff1=acpar->r0;
-                        if(!sf_getfloat("woff2", &fwipar->woff2)) fwipar->woff2=acpar->r0+(acpar->nr-1)*acpar->dr;
+                        if(!sf_getfloat("woffx1", &fwipar->woffx1)) fwipar->woffx1=acpar->r0x;
+                        if(!sf_getfloat("woffx2", &fwipar->woffx2)) fwipar->woffx2=acpar->r0x+(acpar->nrx-1)*acpar->drx;
+                        if(!sf_getfloat("woffy1", &fwipar->woffy1)) fwipar->woffy1=acpar->r0y;
+                        if(!sf_getfloat("woffy2", &fwipar->woffy2)) fwipar->woffy2=acpar->r0y+(acpar->nry-1)*acpar->dry;
                         if(!sf_getbool("oreo", &fwipar->oreo)) fwipar->oreo=false; /* keep oreo or keep cream */
                         if(!sf_getint("waterz", &fwipar->waterz)) fwipar->waterz=0; /* water layer depth */
                         if(!sf_getint("waterzb", &fwipar->waterzb)) fwipar->waterzb=0; /* water layer depth from bottom up */
                         if(!sf_getint("grectx", &fwipar->rectx)) fwipar->rectx=3; /* gradient smoothing radius in x */
+                        if(!sf_getint("grecty", &fwipar->recty)) fwipar->recty=3; /* gradient smoothing radius in y */
                         if(!sf_getint("grectz", &fwipar->rectz)) fwipar->rectz=3; /* gradient smoothing radius in z */
 
                         if(!fwipar->onlygrad) Finv=sf_output("output"); /* FWI result */
@@ -3569,9 +3745,14 @@ int main(int argc, char* argv[])
                             sf_putint(Finv, "n2", acpar->nx);
                             sf_putfloat(Finv, "d2", acpar->dx);
                             sf_putfloat(Finv, "o2", acpar->x0);
-                            sf_putstring(Finv, "label2", "Distance");
+                            sf_putstring(Finv, "label2", "Distance in X");
                             sf_putstring(Finv, "unit2", "km");
-                            /*if(fwipar->grad_type==3) sf_putint(Finv, "n3", 2);*/
+                            sf_putint(Finv, "n3", acpar->ny);
+                            sf_putfloat(Finv, "d3", acpar->dy);
+                            sf_putfloat(Finv, "o3", acpar->y0);
+                            sf_putstring(Finv, "label3", "Distance in Y");
+                            sf_putstring(Finv, "unit3", "km");
+                            /*if(fwipar->grad_type==3) sf_putint(Finv, "n4", 2);*/
                         }
                         sf_putint(Fgrad, "n1", acpar->nz);
                         sf_putfloat(Fgrad, "d1", acpar->dz);
@@ -3581,9 +3762,14 @@ int main(int argc, char* argv[])
                         sf_putint(Fgrad, "n2", acpar->nx);
                         sf_putfloat(Fgrad, "d2", acpar->dx);
                         sf_putfloat(Fgrad, "o2", acpar->x0);
-                        sf_putstring(Fgrad, "label2", "Distance");
+                        sf_putstring(Fgrad, "label2", "Distance in X");
                         sf_putstring(Fgrad, "unit2", "km");
-                        /*if(fwipar->grad_type==3) sf_putint(Fgrad, "n3", 2);*/
+                        sf_putint(Fgrad, "n3", acpar->ny);
+                        sf_putfloat(Fgrad, "d3", acpar->dy);
+                        sf_putfloat(Fgrad, "o3", acpar->y0);
+                        sf_putstring(Fgrad, "label3", "Distance in Y");
+                        sf_putstring(Fgrad, "unit3", "km");
+                        /*if(fwipar->grad_type==3) sf_putint(Fgrad, "n4", 2);*/
 
                         if(!fwipar->onlygrad){
                             optpar=(sf_optim)sf_alloc(1, sizeof(*optpar));
@@ -3610,18 +3796,27 @@ int main(int argc, char* argv[])
                         sf_putint   (Fsrc, "n2", acpar->nx);
                         sf_putfloat (Fsrc, "o2", acpar->x0);
                         sf_putfloat (Fsrc, "d2", acpar->dx);
-                        sf_putstring(Fsrc, "label2", "Distance");
+                        sf_putstring(Fsrc, "label2", "Distance in X");
                         sf_putstring(Fsrc, "unit2" , "km");
-                        sf_putint   (Fsrc, "n3", acpar->nt);
-                        sf_putfloat (Fsrc, "o3", acpar->t0);
-                        sf_putfloat (Fsrc, "d3", acpar->dt);
-                        sf_putstring(Fsrc, "label3", "Time");
-                        sf_putstring(Fsrc, "unit3" , "s");
-                        sf_putint   (Fsrc, "n4", acpar->ns);
-                        sf_putfloat (Fsrc, "d4", 1.0f);
-                        sf_putfloat (Fsrc, "o4", 0.0f);
-                        sf_putstring(Fsrc, "label4", "Stage");
-
+                        sf_putint   (Fsrc, "n3", acpar->ny);
+                        sf_putfloat (Fsrc, "o3", acpar->y0);
+                        sf_putfloat (Fsrc, "d3", acpar->dy);
+                        sf_putstring(Fsrc, "label3", "Distance in Y");
+                        sf_putstring(Fsrc, "unit2" , "km");
+                        sf_putint   (Fsrc, "n4", acpar->nt);
+                        sf_putfloat (Fsrc, "o4", acpar->t0);
+                        sf_putfloat (Fsrc, "d4", acpar->dt);
+                        sf_putstring(Fsrc, "label4", "Time");
+                        sf_putstring(Fsrc, "unit4" , "s");
+                        sf_putint   (Fsrc, "n5", acpar->nsx);
+                        sf_putfloat (Fsrc, "d5", 1.0f);
+                        sf_putfloat (Fsrc, "o5", 0.0f);
+                        sf_putstring(Fsrc, "label5", "Stage in X");
+                        sf_putint   (Fsrc, "n6", acpar->nsy);
+                        sf_putfloat (Fsrc, "d6", 1.0f);
+                        sf_putfloat (Fsrc, "o6", 0.0f);
+                        sf_putstring(Fsrc, "label6", "Stage in Y");
+                        
                         Fmwt=sf_output("Fmwt"); /* output data */
                         sf_putint   (Fmwt, "n1", acpar->nz);
                         sf_putfloat (Fmwt, "o1", acpar->z0);
@@ -3631,23 +3826,29 @@ int main(int argc, char* argv[])
                         sf_putint   (Fmwt, "n2", acpar->nx);
                         sf_putfloat (Fmwt, "o2", acpar->x0);
                         sf_putfloat (Fmwt, "d2", acpar->dx);
-                        sf_putstring(Fmwt, "label2", "Distance");
+                        sf_putstring(Fmwt, "label2", "Distance in X");
                         sf_putstring(Fmwt, "unit2" , "km");
-                        sf_putint   (Fmwt, "n3", acpar->nt);
-                        sf_putfloat (Fmwt, "o3", acpar->t0);
-                        sf_putfloat (Fmwt, "d3", acpar->dt);
-                        sf_putstring(Fmwt, "label3", "Time");
-                        sf_putstring(Fmwt, "unit3" , "s");
+                        sf_putint   (Fmwt, "n3", acpar->ny);
+                        sf_putfloat (Fmwt, "o3", acpar->y0);
+                        sf_putfloat (Fmwt, "d3", acpar->dy);
+                        sf_putstring(Fmwt, "label3", "Distance in Y");
+                        sf_putstring(Fmwt, "unit3" , "km");
+                        sf_putint   (Fmwt, "n4", acpar->nt);
+                        sf_putfloat (Fmwt, "o4", acpar->t0);
+                        sf_putfloat (Fmwt, "d4", acpar->dt);
+                        sf_putstring(Fmwt, "label4", "Time");
+                        sf_putstring(Fmwt, "unit4" , "s");
                     } else {
                         Fsrc=sf_input("Fsrc");
-                        if(!sf_histint(Fsrc, "n4", &ntmp)) ntmp=1;
+                        if(!sf_histint(Fsrc, "n5", &ntmp)) ntmp=1;
                         if (ntmp!=acpar->ns) sf_error("Shot dimension mismatch!");
                     }
 
                 } else { /* modeling */
                     Fsrc=sf_input("Fsrc");
-                    if(!sf_histint(Fsrc, "n4", &acpar->ns)) acpar->ns=1;
-
+                    if(!sf_histint(Fsrc, "n4", &acpar->nsx)) acpar->nsx=1;
+                    if(!sf_histint(Fsrc, "n5", &acpar->nsy)) acpar->nsy=1;
+                    
                     Fdat=sf_output("output"); /* output data */
                     sf_putint   (Fdat, "n1", acpar->nt);
                     sf_putfloat (Fdat, "o1", acpar->t0);
@@ -3657,12 +3858,21 @@ int main(int argc, char* argv[])
                     sf_putint   (Fdat, "n2", acpar->nx);
                     sf_putfloat (Fdat, "o2", acpar->x0);
                     sf_putfloat (Fdat, "d2", acpar->dx);
-                    sf_putstring(Fdat, "label2", "Distance");
+                    sf_putstring(Fdat, "label2", "Distance in X");
                     sf_putstring(Fdat, "unit2" , "km");
-                    sf_putint   (Fdat, "n3", acpar->ns);
-                    sf_putfloat (Fdat, "d3", 1.0f);
-                    sf_putfloat (Fdat, "o3", 0.0f);
-                    sf_putstring(Fdat, "label3", "Stage");
+                    sf_putint   (Fdat, "n3", acpar->ny);
+                    sf_putfloat (Fdat, "o3", acpar->y0);
+                    sf_putfloat (Fdat, "d3", acpar->dy);
+                    sf_putstring(Fdat, "label3", "Distance in Y");
+                    sf_putstring(Fdat, "unit3" , "km");
+                    sf_putint   (Fdat, "n4", acpar->nsx);
+                    sf_putfloat (Fdat, "d4", 1.0f);
+                    sf_putfloat (Fdat, "o4", 0.0f);
+                    sf_putstring(Fdat, "label4", "Stage in X");
+                    sf_putint   (Fdat, "n5", acpar->nsy);
+                    sf_putfloat (Fdat, "d5", 1.0f);
+                    sf_putfloat (Fdat, "o5", 0.0f);
+                    sf_putstring(Fdat, "label5", "Stage in Y");
                 }
 
                 if (paspar->inv) {

@@ -16,8 +16,8 @@ ccprogs = 'diffcxx'
 
 # mutter3
 mpiprogs='''
-mpiafdfwi2d mpiafdfwi3d
-'''
+mpiafdfwi2d 
+'''#mpiafdfwi3d (not finished yet)
 
 cprogs = '''
 cqrtm
