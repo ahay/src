@@ -64,6 +64,12 @@ jobs:
     - store_artifacts:
         path: /tmp/circleci-artifacts
 
+
+  python2:
+    <<: *test-template
+    docker:
+    - image: cimg/python:2.7
+
   unittest:
     <<: *test-template
     steps:
