@@ -69,6 +69,7 @@ jobs:
     <<: *test-template
     docker:
     - image: cimg/python:2.7
+    
 
   unittest:
     <<: *test-template
@@ -81,8 +82,7 @@ jobs:
         name: Install Packages
         command: |
           sudo apt-get update
-          sudo apt-get install python3-pip
-          sudo pip install numpy scipy
+          pip install numpy scipy
           sudo apt-get install libblas-dev liblapack-dev swig
 
     - run:
