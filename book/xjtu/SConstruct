@@ -9,5 +9,5 @@ Papers(copyr='Xi\'an Jiaotong University',
        fig=('primer/marmfwi','vsnap','width=\\textwidth')
        )
        
-End(use='amsmath,amsfonts,amssymb,hyperref,listings,xcolor')
+End(use='algorithm,algorithmic,amsmath,amsfonts,amssymb,hyperref,listings,xcolor')
 
