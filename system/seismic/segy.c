@@ -49,6 +49,7 @@ enum {
 typedef unsigned char byte;
 
 static bool little_endian = false;
+static int segy_ns_byte = SF_SEGY_NS;
 
 static byte EBCtoASC[256] = {
     0x00,0x01,0x02,0x03,0xCF,0x09,0xD3,0x7F,
@@ -588,16 +589,22 @@ void set_segyformat (char* bhead, int format)
     insert2(format,bhead+SF_SEGY_FORMAT);
 }
 
+void set_segyns_byte(int byte)
+/*< sets the byte number for SEGY_NS >*/
+{
+    segy_ns_byte = byte;
+}
+
 int segyns (const char* bhead)
 /*< extracts ns (number of samples) from binary header >*/
 {
-    return convert2(bhead+SF_SEGY_NS);
+    return convert2(bhead+segy_ns_byte);
 }
 
 void set_segyns(char* bhead, int ns)
 /*< set ns (number of samples) in binary header >*/
 {
-    insert2(ns,bhead+SF_SEGY_NS);
+    insert2(ns,bhead+segy_ns_byte);
 }
 
 float segydt (const char* bhead)
