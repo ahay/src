@@ -67,6 +67,33 @@ for generating a diamond shape in Figure ~\ref{fig:croshyp}:
 
 \subsection{sfpldb and sfplas}
 
+Vplot files use a mixture of binary and text code, which is not easy
+to decipher, Two convenient programs, \texttt{sfpldb} and
+\texttt{sfplas}, allow the user to convert a Vplot file to a pure text representation and back to Vplot.
+
+For a quick demonstration, let us create an example Vplot file:
+\begin{verbatim}
+bash$ sfspike n1=10 k1=5 | sfsmooth rect1=3 | sfgraph title=Example > test.vpl
+\end{verbatim}
+
+Suppose that we want to change the axis label from ``Time (s)'' to ``Distance (km)'' without regenerating the file. This can be done by
+\begin{enumerate}
+\item converting the Vplot file to a text file
+\begin{verbatim}
+bash$ < test.vpl sfpldb > test.txt
+\end{verbatim}
+\item editing the text file \texttt{test.txt}
+\item converting back to Vplot
+\begin{verbatim}
+bash$ < test.txt sfplas > test2.vpl
+\end{verbatim}
+\end{enumerate}
+
+Aternatively, we can do it using a Unix pipe and \texttt{sed} text editor, as follows:
+\begin{verbatim}
+bash$ < test.vpl sfpldb | sed s/Time\ \(s\)/Distance\ \(km\)/ | sfplas > test2.vpl
+\end{verbatim}
+
 \subsection{sfvplotdiff and reproducibility testing}
 
 \section{Graphics programs}

@@ -33,8 +33,7 @@ for i in range(nlays):
     inp = 'inp%d' % (i+1)
     Flow(inp+'.asc',None,
          'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
-         (string.join(map(lambda x: string.join(map(str,x)),layers[i]),
-                      ' '),
+         ( ' '.join([str(x) for layer in layers[i] for x in layer]),
           len(layers[i])))
 
 Flow('lay1','inp1.asc','dd form=native | spline %(dim1)s fp=0,0' % par)

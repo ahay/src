@@ -204,7 +204,6 @@ def retrieve(target=None,source=None,env=None):
                 else:
                     localfile=file
                 try:
-                    print("Downloading data from {}".format(server))
                     urllib_request.urlretrieve(rdir,localfile)
                     if not os.stat(localfile)[6]:
                         print('Could not download file "%s" ' % localfile)
