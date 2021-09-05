@@ -16,8 +16,11 @@
 
 from __future__ import print_function, division, absolute_import
 import os, re, glob, string, types, pwd, shutil
-import io, token, tokenize, cgi, sys, keyword
-
+import io, token, tokenize, sys, keyword
+if sys.version_info[:2] >= (3, 2):
+    from html import escape
+else:
+    from cgi import escape
 import rsf.conf, rsf.path, rsf.latex2wiki
 import rsf.doc
 import rsf.prog
@@ -626,7 +629,7 @@ def colorize(target=None,source=None,env=None):
 
           # send text
           out.write('<span class="%s">' % style)
-          out.write(cgi.escape(toktext))
+          out.write(escape(toktext))
           out.write('</span>')
 
      try:
