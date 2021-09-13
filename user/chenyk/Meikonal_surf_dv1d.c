@@ -1,5 +1,5 @@
 /* Fast marching eikonal solver (3-D) and record the traveltimes on the surface. 
-It supports massive 3D ray tracing for ML purposes.
+It supports massive 3D ray tracing with different 1D velocity perturbation for estimating both event location and velocity structure using ML.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -30,10 +30,10 @@ int main (int argc,char* argv[])
 {
     int i1, i2, i3, b1, b2, b3, n1, n2, n3, i, nshot, ndim, is, order, n23, n123, *p;
     float br1, br2, br3, o1, o2, o3, d1, d2, d3, slow;
-    float **s, **ss, *t, *tt, *v;
+    float **s, **ss, *t, *tt, *v, *dv1d, *v0;
     char *sfile;
     bool isvel, sweep, plane[3];
-    sf_file vel, time, shots;
+    sf_file vel, time, shots, deltav;
 
     sf_init (argc, argv);
     vel = sf_input("in");
@@ -84,6 +84,8 @@ int main (int argc,char* argv[])
     sfile = sf_getstring("shotfile");
     /* File with shot locations (n2=number of shots, n1=3) */
 
+	deltav = sf_input("dv");
+
     if(NULL != sfile) {
 	shots = sf_input("shotfile");
 
@@ -126,24 +128,35 @@ int main (int argc,char* argv[])
 
     n123 = n1*n2*n3;
     n23 = n2*n3;
+    
     t  = sf_floatalloc (n123);
     tt  = sf_floatalloc (n23);
+    v0  = sf_floatalloc (n123);
     v  = sf_floatalloc (n123);
+    dv1d  = sf_floatalloc (n1);
     p  = sf_intalloc   (n123);
 
-    sf_floatread(v,n123,vel);
-    if (isvel) {
-	/* transform velocity to slowness squared */
-	for(i = 0; i < n123; i++) {
-	    slow = v[i];
-	    v[i] = 1./(slow*slow);
-	}
-    } 
+	sf_floatread(v0,n123,vel);
     
     if (!sweep) fastmarch_init (n3,n2,n1);
  
     /* loop over shots */
     for( is = 0; is < nshot; is++) {
+    /*read 1D delta v and spray it into a 2D/3D matrix/cube and add it to the input v*/
+    sf_floatread(dv1d,n1,deltav);
+	for(i1=0;i1<n1;i1++)
+		for(i2=0;i2<n2;i2++)
+			for(i3=0;i3<n3;i3++)
+			   v[i1+i2*n1+i3*n2*n1]=v0[i1+i2*n1+i3*n2*n1]+dv1d[i1]; 
+				
+	if (isvel) {
+	/* transform velocity to slowness squared */
+	for(i = 0; i < n123; i++) {
+	    slow = v[i];
+	    v[i] = 1./(slow*slow);
+		}
+    } 
+    
 	sf_warning("shot %d of %d;",is+1,nshot);
 	if (sweep) {
 	    continue;
