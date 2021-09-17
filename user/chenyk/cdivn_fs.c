@@ -21,12 +21,10 @@ with frequency-dependent smoothing */
 #include "cdivn_fs.h"
 #include "cdivn.h" /*for the repeat_smooth and weight operations*/
 
-
-static int *n, s[SF_MAX_DIM], nd, dim;
+static int *n, s[SF_MAX_DIM], nd, dim; 
 static sf_ctriangle tr0; /*triangle smoother in frequency*/
 static sf_ctriangle *tr;
 static sf_complex *tmp;
-
 
 static sf_complex *p;
 static int nf; /*nf is the dimension of frequency*/
@@ -45,18 +43,18 @@ void cmultidivn_fs_init(int nw            /* number of components */,
 
     nf = ndat[0];
     n2 = n*nw;
-    
     smooth_fs_init(ndim, nbox0, nbox, ndat);
     crepeat_init(n,nw,smooth_fs_lop);
     sf_cconjgrad_init(n2, n2, n, n, 1., 1.e-6, verb, false);
     p = sf_complexalloc (n2);
-    cweight2_init(nw,n,den);
-    
+    cweight2_init(nw,n,den);    
 }
+
 
 void cmultidivn_fs_close (void)
 /*< free allocated storage >*/
 {
+	smooth_fs_close();
     sf_cconjgrad_close();
     cweight2_close();
     free (p);
@@ -122,7 +120,7 @@ void smooth_fs_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comple
 	    tmp[i] = x[i];
 	}
     }
-// 	sf_warning("LOOP 0");
+
 	/*for frequency*/
 	if (NULL != tr0) {
 	    for (j=0; j < nd/n[0]; j++) {
@@ -130,18 +128,17 @@ void smooth_fs_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comple
 		sf_csmooth (tr0, i0, s[0], false, false, tmp);
 	    }
 	}
-// 	sf_warning("LOOP 00");
+
     /*for x and y*/
     for (i=1; i < dim; i++) {
-	if (NULL != tr[i*nf+k]) {
 	    for (j=0; j < nd/n[i]; j++) {
 	    k=j%nf;
+	    if (NULL != tr[i*nf+k]) {
 		i0 = sf_first_index (i,j,dim,n,s);
 		sf_csmooth (tr[i*nf+k], i0, s[i], false, false, tmp);
 	    }
 	}
     }
-// 	sf_warning("LOOP 1");
 	
     if (adj) {
 	for (i=0; i < nd; i++) {
@@ -162,5 +159,16 @@ void smooth_fs_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comple
     }    
 }
 
-
+void smooth_fs_close (void)
+/*< free allocated storage >*/
+{
+	int i;
+	for(i=0;i<nf*dim;i++)
+		if (NULL != tr[i]) 
+		sf_ctriangle_close(tr[i]);
+	if (NULL != tr0) 	
+		sf_ctriangle_close(tr0);
+	free(n);
+	free(tmp);
+}
 

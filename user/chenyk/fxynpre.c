@@ -1,6 +1,6 @@
 /* FX Regularized Nonstationary Autoregression subroutine 
 
-Reference: Wang et al. (2021), Non-stationary predictive filtering for seismic random noise suppression - A tutorial, Geophysics, doi: 10.1190/geo2020-0368.1. 
+Reference: Wang et al. (2021), Non-stationary predictive filtering for seismic random noise suppression - A tutorial, Geophysics, 86(3), W21–W30. 
 */
 /*
   Copyright (C) 2016 Yangkang Chen
@@ -135,17 +135,11 @@ void fxynpre0(float **dtime /*input and output data*/,
     /*inverse transform*/
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
-	cmultidivn_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+	cmultidivn_close();  
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
     
 }
 
@@ -279,32 +273,24 @@ void fxynpre(float **dtime /*input and output data*/,
     {
 	dfft[i2][i1] = sf_crmul(dfft[i2][i1],mean);
     }
-    
     cmultidivn_fs ((sf_complex *) dfft[0], (sf_complex *) dfftfilt[0][0],niter);
-	
     for(is=0;is<ns;is++)
     for(i2=0;i2<n2;i2++)
     for(i1=0;i1<nw;i1++)
 	{
 	    dfftshift[is][i2][i1] = sf_crmul(dfftshift[is][i2][i1],1./mean);
 	}
-
 	cweight2_lop(false,false,n12,nd,(sf_complex *) dfftfilt[0][0], (sf_complex *) dfftpre[0]);
-
+	
     /*inverse transform*/
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivn_fs_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
+    
     
 }
 
