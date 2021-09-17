@@ -30,7 +30,7 @@ void fxynpre0(float **dtime /*input and output data*/,
 /*<Non-stationary predictive filtering in 3D (without frequency-dependent smoothing)>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -89,11 +89,15 @@ void fxynpre0(float **dtime /*input and output data*/,
     n12=nd*ns;
     
     m[0]=nw;m[1]=nx;m[2]=ny;
-
+	if(ny==1)	/*2D denoising*/
+		dim=2;
+	else		/*3D denoising*/
+		dim=3;
+	
 	sf_warning("nsx=%d,nsy=%d,ns=%d",nsx,nsy,ns);
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
-    cmultidivn_init(ns, 3, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivn_init(ns, dim, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
     mean = 0.;
@@ -163,7 +167,7 @@ void fxynpre(float **dtime /*input and output data*/,
 /*<Non-stationary predictive filtering in 3D with frequency-dependent smoothing>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -222,7 +226,10 @@ void fxynpre(float **dtime /*input and output data*/,
     n12=nd*ns;
     
     m[0]=nw;m[1]=nx;m[2]=ny;
-
+	if(ny==1)	/*2D denoising*/
+		dim=2;
+	else		/*3D denoising*/
+		dim=3;
 
 	int **rct;float quad;
 	rct=sf_intalloc2(2,nw);
@@ -246,7 +253,7 @@ void fxynpre(float **dtime /*input and output data*/,
 
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
-    cmultidivn_fs_init(ns, 3, nd, m, rect[0], rct, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivn_fs_init(ns, dim, nd, m, rect[0], rct, (sf_complex *) dfftshift[0][0], verb); 
     /*frequency-dependent smoothing*/
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
@@ -311,7 +318,7 @@ void fxynpre1(float **dtime /*input and output data*/,
 /*<Non-stationary predictive filtering in 3D>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -370,9 +377,12 @@ void fxynpre1(float **dtime /*input and output data*/,
     n12=nd*ns;
     
     m[0]=nw;m[1]=nx;m[2]=ny;
-
+	if(ny==1)	/*2D denoising*/
+		dim=2;
+	else		/*3D denoising*/
+		dim=3;
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
-    cmultidivn_rnar_init(ns, 3, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivn_rnar_init(ns, dim, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
     if(verb) sf_warning("rect[0]=%d,rect[1]=%d,rect[2]=%d",rect[0],rect[1],rect[2]);
     
 
@@ -447,7 +457,7 @@ void fxynpre3(float **dtime /*input and output data*/,
 /*<Non-stationary predictive filtering in 3D with arbitrary smoothing strategies>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -506,7 +516,10 @@ void fxynpre3(float **dtime /*input and output data*/,
     n12=nd*ns;
     
     m[0]=nw;m[1]=nx;m[2]=ny;
-
+	if(ny==1)	/*2D denoising*/
+		dim=2;
+	else		/*3D denoising*/
+		dim=3;
 
 // 	int **rct;
 // 	rct=sf_intalloc2(2,nw);
@@ -524,7 +537,7 @@ void fxynpre3(float **dtime /*input and output data*/,
 	
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
-    cmultidivnn_init(ns, 3, nd, m, rect, rct, sft, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivnn_init(ns, dim, nd, m, rect, rct, sft, (sf_complex *) dfftshift[0][0], verb); 
     /*frequency-dependent smoothing*/
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
@@ -599,7 +612,7 @@ void fxypre(float **dtime /*input and output data*/,
 /*<Stationary predictive filtering in 3D>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;

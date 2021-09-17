@@ -162,12 +162,14 @@ void smooth_fs_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comple
 void smooth_fs_close (void)
 /*< free allocated storage >*/
 {
-	int i;
+/*	int i;
 	for(i=0;i<nf*dim;i++)
+	{
 		if (NULL != tr[i]) 
-		sf_ctriangle_close(tr[i]);
-	if (NULL != tr0) 	
-		sf_ctriangle_close(tr0);
+			sf_ctriangle_close(tr[i]);
+	}*/ 	/*what's wrong with it, only for 2D denoising ???*/
+	free(tr);
+	if (NULL != tr0) sf_ctriangle_close(tr0);
 	free(n);
 	free(tmp);
 }
