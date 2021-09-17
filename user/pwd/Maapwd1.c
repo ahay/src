@@ -1,6 +1,6 @@
-/* Chain of PWDs - linear operator */
+/* Amplitude-adjusted PWD - linear operator */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2021 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,12 +19,12 @@
 
 #include <rsf.h>
 
-#include "pwdchain.h"
+#include "aapwd.h"
 
 int main(int argc, char* argv[])
 {
     bool adj, drift, forx;
-    int m1, m2, n, nc, n2, n1, nw;
+    int m1, m2, n, n1, n2;
     float *xn, *x1, *dx, *r;
     sf_file inp, out, dip, sig;
 
@@ -37,11 +37,8 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(dip,"n1",&m1)) sf_error("No n1= in dip");
     if (!sf_histint(dip,"n2",&m2)) sf_error("No n2= in dip");
-    if (!sf_histint(dip,"n3",&nc)) sf_error("No n3= in dip");
 
     n = m1*m2;
-
-    n2 = 2*nc-1;
 
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
@@ -52,27 +49,25 @@ int main(int argc, char* argv[])
     if (!sf_getbool("forx",&forx)) forx=false;
     /* for x only */
 
-    if (!sf_getint("order",&nw)) nw=1; /* PWD order */
+    n2 = forx? 1:3;
     
     if (adj) {
-	sf_putint(out,"n3",forx? nc-1: n2);
+	sf_putint(out,"n3",n2);
     } else {
-	sf_putint(out,"n3",nc);
+	sf_putint(out,"n3",2);
     }
 
-    n2 *= n; 
-    n1 = nc*n;
-     
+    n2 = n2*n; 
+    n1 = 2*n;
+
     x1 = sf_floatalloc(n);
     sf_floatread(x1,n,sig);
 
-    xn = sf_floatalloc(n2);
-    sf_floatread(xn,n1,dip);
+    xn = sf_floatalloc(3*n);
+    sf_floatread(xn,n,dip);
 
-    pwdchain_init(m1,m2,nw,nc,drift,x1,xn,xn+n*nc);
+    aapwd_init(m1,m2,1,drift,x1,xn,xn+n,xn+2*n);
     
-    if (forx) n2=n1-n;
-
     dx = sf_floatalloc(n2);
     r =  sf_floatalloc(n1);
 
@@ -83,9 +78,9 @@ int main(int argc, char* argv[])
     } 
 
     if (forx) {
-	pwdchainx_lop(adj,false,n2,n1,dx,r);
+	aapwdx_lop(adj,false,n2,n1,dx,r);
     } else {
-	pwdchain_lop(adj,false,n2,n1,dx,r);
+	/* aapwd_lop(adj,false,n2,n1,dx,r); */
     }
 
     if (adj) {

@@ -1,6 +1,6 @@
-/* Chain of PWD operators */
+/* Amplitude-adjusted PWD */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2021 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,100 +20,66 @@
 #include <rsf.h>
 #include "allp3.h"
 
-static int n, nc;
-static float *x0, *xn, *pn, *tmp;
-static allpass *ap;
+static int n;
+static float *s, *p, *a, *x, *tmp;
+static allpass ap;
 
-void pwdchain_init(int n1,
-		   int n2     /* data size */, 
-		   int nw     /* filter order */,
-		   int nc1    /* number of chain elements */,	
-		   bool drift /* if shift filter */,
-		   float *x1  /* [n] input */,
-		   float *pn1 /* [n*nc] dips */,
-		   float *xn1 /* [n*(nc-1)] layers */)
+void aapwd_init(int n1,
+		int n2     /* data size */, 
+		int nw     /* filter order */,
+		bool drift /* if shift filter */,
+		float *s1  /* [n] input */,
+		float *p1  /* [n] dip */,
+		float *a1  /* [n] amplitude */,
+    		float *x1  /* [n] intermediate */)
 /*< initialize >*/
 {
-    int ic;
-
     n = n1*n2;
-    nc = nc1;
-    x0 = x1;
-    xn = xn1;
-    pn = pn1;
+    s = s1;
+    p = p1;
+    a = a1;
+    x = x1;
 
     tmp = sf_floatalloc(n);
 
-    ap = (allpass*) sf_alloc(nc,sizeof(*ap));
-    for (ic=0; ic < nc; ic++) {
-	ap[ic] = allpass_init (nw,1,n1,n2,1,drift,pn+ic*n);
-    }
+    ap = allpass_init (nw,1,n1,n2,1,drift,p);
 }
 
-void pwdchain_close(void)
+void aapwd_close(void)
 /*< free allocated storage >*/
 {
-    int ic;
-
     free(tmp);
-
-    for (ic=0; ic < nc; ic++) {
-	allpass_close(ap[ic]);
-    }
     free(ap);
 }
 
-void pwdchain_apply(const float *x2, float *y)
+void aapwd_apply(const float *x2, float *y)
 /*< apply the matrix operator >*/
 {
-    int ic, i;
-    float *xc, *yc;
+    int i;
 
-    if (nc > 1) {
-	allpass1(false, false, ap[0], xn, y);
-	for (i=0; i < n; i++) {
-	    y[i] = x2[i] - y[i];
-	}
-	for (ic=1; ic < nc-1; ic++) {
-	    yc = y+ic*n;
-	    xc = xn+ic*n;
-	    allpass1(false, false, ap[ic], xc, yc);
-	    for (i=0; i < n; i++) {
-		yc[i] = xc[i-n] - yc[i];
-	    }
-	}
-	yc = y+(nc-1)*n;
-	xc = xn+(nc-1)*n;
-	allpass1(false, false, ap[nc-1], x0, yc);
-	for (i=0; i < n; i++) {
-	    yc[i] = xc[i-n] - yc[i];
-	}
-    } else {
-	allpass1(false, false, ap[0], x0, y);
-	for (i=0; i < n; i++) {
-	    y[i] = x2[i] - y[i];
-	}
+    allpass1(false, false, ap, x, y);
+    for (i=0; i < n; i++) {
+	y[i] = x2[i] - y[i];
+    }
+    for (i=0; i < n; i++) {
+	y[n+i] = x[i] - a[i]*s[i];
     }
 }
 
-void pwdchain(float *y)
+void aapwd(float *y)
 /*< apply the chain >*/
 {
-    int i, ic;
+    int i;
 
     for (i=0; i < n; i++) {
-	tmp[i] = x0[i];
+	tmp[i] = a[i]*s[i];
     }
-    for (ic=nc-1; ic >= 0; ic--) {
-	allpass1(false, false, ap[ic], tmp, y);
-	for (i=0; i < n; i++) {
-	    tmp[i] = y[i];
-	}
-    }
+    allpass1(false, false, ap, tmp, y);
 }
 
+/*
 void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
-/*< linear operator >*/
+[*< linear operator >*]
 {
     int ic, i, j, k;
 
@@ -128,7 +94,7 @@ void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		x[i+n*nc] -= tmp[i];
 	    }
 	    for (ic=1; ic < nc-1; ic++) {
-		allpass1t(false, false, ap[ic], tmp, y+ic*n);
+		allpass1t(false, false, ap[ic], tmp, y);
 		for (i=0; i < n; i++) {		    
 		    j = ic*n+i;
 		    k = j+n*nc;
@@ -142,7 +108,7 @@ void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		x[k-n] += y[j];
 	    } 
 	} 
-	/* delta A */ 
+	[* delta A *] 
 	for (ic=0; ic < nc-1; ic++) {
 	    allpass1(false, true, ap[ic], xn+ic*n, tmp);
 	    for (i=0; i < n; i++) {
@@ -150,7 +116,7 @@ void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		x[j] += y[j]*tmp[i];
 	    }
 	} 
-	allpass1(false, true, ap[nc-1], x0, tmp);
+	allpass1(false, true, ap[nc-1], s, tmp);
 	for (i=0; i < n; i++) {
 	    j = (nc-1)*n+i;
 	    x[j] += y[j]*tmp[i];
@@ -175,63 +141,44 @@ void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		y[j] += x[k-n];
 	    } 
 	} 
-	/* delta A */
-	for (ic=0; ic < nc-1; ic++) {
-	    allpass1(false, true, ap[ic], xn+ic*n, tmp);	    
-	    for (i=0; i < n; i++) {
-		j = ic*n+i;
+	[* delta A *]
+	allpass1(false, true, ap, x, tmp);	    
+	for (i=0; i < n; i++) {
 		y[j] += x[j]*tmp[i];
 	    }
 	} 
-	allpass1(false, true, ap[nc-1], x0, tmp);
+	allpass1(false, true, ap[nc-1], s, tmp);
 	for (i=0; i < n; i++) {
 	    j = (nc-1)*n+i;
 	    y[j] += x[j]*tmp[i];
 	} 
     }
-} 
+} */
 
-void pwdchainx_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+void aapwdx_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
 /*< linear operator for x only >*/
 {
-    int ic, i, j;
+    int i;
 
-    if (nx != (nc-1)*n || ny != nc*n) sf_error("%s: Wrong size",__FILE__);
+    if (nx != n || ny != 2*n) sf_error("%s: Wrong size",__FILE__);
 
     sf_adjnull(adj,add,nx,ny,x,y);
 
     if (adj) {
-	allpass1t(false, false, ap[0], tmp, y);
+	allpass1t(false, false, ap, tmp, y);
 	for (i=0; i < n; i++) {
 	    x[i] -= tmp[i];
 	}
-	for (ic=1; ic < nc-1; ic++) {
-	    allpass1t(false, false, ap[ic], tmp, y+ic*n);
-	    for (i=0; i < n; i++) {
-		j = ic*n+i;
-		x[j-n] += y[j];
-		x[j] -= tmp[i];
-	    }
-	} 
 	for (i=0; i < n; i++) {
-	    j = (nc-1)*n+i;
-	    x[j-n] += y[j];
+	    x[i] += y[i+n];
 	} 
     } else {
-	allpass1(false, false, ap[0], x, tmp);
+	allpass1(false, false, ap, x, tmp);
 	for (i=0; i < n; i++) {
 	    y[i] -= tmp[i];
 	}
-	for (ic=1; ic < nc-1; ic++) {
-	    allpass1(false, false, ap[ic], x+ic*n, tmp);
-	    for (i=0; i < n; i++) {
-		j = ic*n+i;
-		y[j]  += x[j-n] - tmp[i];
-	    }
-	} 
 	for (i=0; i < n; i++) {
-	    j = (nc-1)*n+i;
-	    y[j] += x[j-n];
+	    y[i+n] += x[i];
 	} 
     }
 } 
