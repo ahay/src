@@ -1,0 +1,22 @@
+from rsf.proj import *
+
+dat = 'Ai_inline362_horizons.dat'
+
+Fetch(dat,'data',
+      server='https://raw.githubusercontent.com/',
+      top='seg/tutorials-2017/master/1710_Colored_inversion/')
+Flow('ai',dat,
+     '''
+     echo n1=185 n2=951 in=$SOURCE data_format=ascii_float 
+     o1=408 d1=4 o2=300 d2=1 label1=Time unit1=ms label2=X-BIN | 
+     dd form=native | window f1=2
+     ''')
+
+Result('ai',
+       '''
+       grey bias=5000000 clip=800000 
+       color=inferno wanttitle=n parallel2=n
+       scalebar=y minval=4200000 maxval=5800000 bartype=h
+       ''')
+
+End()
