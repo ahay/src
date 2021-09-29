@@ -1,10 +1,12 @@
 from rsf.proj import *
 
+# Extract acoustic impedance 
+
 dat = 'Ai_inline362_horizons.dat'
 
 Fetch(dat,'data',
       server='https://raw.githubusercontent.com/',
-      top='seg/tutorials-2017/master/1710_Colored_inversion/')
+      top='seg/tutorials-2017/master/1710_Colored_inversion')
 Flow('ai',dat,
      '''
      echo n1=185 n2=951 in=$SOURCE data_format=ascii_float 
@@ -18,5 +20,27 @@ Result('ai',
        color=inferno wanttitle=n parallel2=n
        scalebar=y minval=4200000 maxval=5800000 bartype=h
        ''')
+
+# Extract impedance from log
+
+las = 'F02-1_logs.las'
+
+Fetch(las,'Lasfiles',
+      server='https://raw.githubusercontent.com/',
+      top='seg/tutorials-2017/master/1710_Colored_inversion/data/All_wells_RawData')
+
+
+Flow('log',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+Flow('AI-log','log','headermath output=AI segy=n')
+Flow('DEPTH-log','log','headermath output=DEPTH segy=n')
+
+Result('AI-log','DEPTH-log AI-log',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph transp=y title=Impedance parallel2=n
+       yreverse=y label1=Depth unit1=m label2=AI
+       ''')
+
+# Convert depth to time
 
 End()

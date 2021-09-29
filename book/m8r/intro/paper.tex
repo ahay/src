@@ -1,50 +1,57 @@
 \chapter{Introduction}
 
-Welcome to the world of Madagascar, the open-source package for
-multidimensional data analysis! This book...
+This book provides documentation for Madagascar, a popular open-source
+package for geophysical data analysis. Madagascar is a community
+project that has involved dozens of developers from around the
+world\footnote{According to OpenHub, a cite that analyzes open-source
+  projects, 144 people from around the world contributed to the
+  Madagascar development over the years:
+  \url{https://www.openhub.net/p/m8r}.}. Rather than being simply a
+collection of computational tools, it is also a repository of
+knowledge, which contains complete research papers with reproducible
+examples. The repository grows while the reproducibility of previously
+published research is continuously tested.
+
+Before we dive into details of Madagascar and explain how to use, let
+us first review the basic principles behind this project.
 
 \section{What is Madagascar?}
 
 The Madagascar software package is designed for analysis of
 large-scale multidimensional data, such as those occurring in
 exploration geophysics. Madagascar provides a framework for
-reproducible research. By âreproducible researchâ we
-refer to the discipline of attaching software codes and data to
-computational results reported in publications. The package contains a
-collection of (a) computational modules, (b) data-processing scripts,
-and (c) research papers. Madagascar is distributed on SourceForge
-under a GPL v2 license https://sourceforge.net/projects/rsf/. By
-October 2013, more than 70 people from different organizations around
-the world have contributed to the project, with increasing
-year-to-year activity. The Madagascar website is http://www.ahay.org/.
+reproducible research. By \emph{reproducible research} we refer to the
+discipline of attaching software codes and data to computational
+results reported in research publications \cite[]{fomel2008guest}. The
+Madagascar package contains a collection of (a) computational modules,
+(b) data-processing scripts, and (c) research papers. The Madagascar
+website is \url{http://www.ahay.org/}.
 
-Reproducible research, as defined by Jon Claerbout [1], refers to the
-discipline of attaching software code and data to scientific
-publications, in order to enable independent verification and
-replication of computational experiments. The so-called
-``Claerbout's principle'' [2,3] states that
-``An article about computational science in a scientific
-publication is not the scholarship itself, it is merely advertising of
-the scholarship. The actual scholarship is the complete software
-development environment and the complete set of instructions which
-generated the figures.'' The Madagascar software package
-implements a computational environment that is designed both for
-conducting computational experiments in the area of large-scale
-geophysical data analysis and for attaching links to software code and
-data in scientific publications in order to enable reproducible
-research. As of October 2013, Madagascar includes more than 120
-scientific papers and book chapters complete with software codes
-necessary for independent verification and replication of
-computational results (see
-$http://www.ahay.org/wiki/Reproducible_Documents$).  The work on the
-Madagascar project started in 2003, and the beta version of the
-package was publicly released in June 2006. Since then, many people
-have joined the project and contributed to the code. The 1.0 version
-was released in 2010 and tested by an open community. The community
-stays in touch using mailing lists, social networks, and annual
-meetings.  Although the main applications have focused so far on
-applied geophysics and exploration seismology in particular, the core
-package is suitable for other scientific fields that require
+The concept of reproducible research goes back to 1990 and was
+pioneered by \cite{Claerbout.sep.67.139}. ``Claerbout's principle'',
+as formulated by \cite{buckheit1995wavelab}, states that ``An article
+about computational science in a scientific publication is not the
+scholarship itself, it is merely advertising of the scholarship. The
+actual scholarship is the complete software development environment
+and the complete set of instructions which generated the figures.''
+The Madagascar software package implements a computational environment
+that is designed both for conducting computational experiments in the
+area of large-scale geophysical data analysis and for attaching links
+to software code and data in scientific publications in order to
+enable reproducible research. As of October 2021, Madagascar includes
+nearly 300 scientific papers and book chapters complete with software
+codes necessary for independent verification and replication of
+computational results\footnote{See
+  \url{https://www.reproducibility.org/wiki/Reproducible_Documents}.}.
+
+The work on the Madagascar project started in 2003, and the beta
+version of the package was publicly released in June 2006. Since then,
+many people have joined the project and contributed to the code. The
+1.0 version was released in 2010 and tested by an open community. The
+community stays in touch using mailing lists, social networks, and
+annual meetings.  Although the main applications have focused so far
+on applied geophysics and exploration seismology in particular, the
+core package is suitable for other scientific fields that require
 reproducible analysis of large-scale multidimensional data.
 
 \section{Madagascar design principles}
@@ -119,12 +126,17 @@ SConstruct scripts from level 2 and low-level programs from level 1 in
 order to let the reader verify the details of the computational
 experiment and reproduce it.
 
+\nocite{fomel2013madagascar}
+
 \inputdir{.}
-\plot{architecture}{width=0.9\textwidth}{Madagascar Software Architecture.}
+\plot{architecture}{width=0.9\textwidth}{Madagascar Software Architecture (reproduced from \protect\cite[]{fomel2013madagascar}.)}
 
 \section{History of the project}
 
 \section{Book conventions}
 
 \subsection{Note on reproducibility}
+
+\bibliographystyle{seg}
+\bibliography{intro,SEP2}
 
