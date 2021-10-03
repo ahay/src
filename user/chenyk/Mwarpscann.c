@@ -153,24 +153,22 @@ int main(int argc, char* argv[])
 		SFT[i] = sf_input(key);
 		if (SF_INT != sf_gettype(SFT[i])) sf_error("Need int %s",key);
 	    } else {
-		sft[i] = NULL;
+		SFT[i] = NULL;
 	    }
 	} else {
-	    rct[i] = NULL;
-	    sft[i] = NULL;
+	    RCT[i] = NULL;
+	    SFT[i] = NULL;
 	}
     }
-       
+
 	/*reading the non-stationary smoothing radii*/
     for (i=0; i < dim; i++) {
 	box[i] = 1;
 	if (NULL != RCT[i]) {
 	    rct[i] = sf_floatalloc (n2g);
 	    sft[i] = sf_intalloc (n2g);
-
 	    sf_floatread(rct[i],n2g,RCT[i]);
 	    sf_fileclose(RCT[i]);
-
 	    if (NULL != SFT[i]) {
 		sf_intread(sft[i],n2g,SFT[i]);
 		sf_fileclose(SFT[i]);
@@ -179,7 +177,6 @@ int main(int argc, char* argv[])
 		    sft[i][i1] = 0;
 		}
 	    }
-		
 	    for (i1=0; i1 < n2g; i1++) {
 		b = ceilf(rct[i][i1])+SF_ABS(sft[i][i1]);
 		if (b > box[i]) box[i] = b;
@@ -190,7 +187,7 @@ int main(int argc, char* argv[])
 	}
     }  
     }
-    
+
     if(mode==0)
     {
     	sf_warning("Traditional Time-shift Analysis");
@@ -203,7 +200,7 @@ int main(int argc, char* argv[])
     	sf_warning("box[0]=%d,box[1]=%d,box[2]=%d,box[3]=%d",box[0],box[1],box[2],box[3]);
     	warpscann_init(n1,o1,d1,n2,o2,d2,ng,g0,dg,ntr,order,dim,m,box,rct,sft,niter,shift,verb);
     }
-    
+
     sf_floatread(inp[0],n1*ntr,in);
     sf_floatread(oth[0],n2*ntr,other);
 
