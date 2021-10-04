@@ -672,10 +672,15 @@ void fxypre(float **dtime /*input and output data*/,
     
     m[0]=nw;m[1]=1;m[2]=1;
 
+	if(ny==1)	/*2D denoising*/
+		dim=1;
+	else		/*3D denoising*/
+		dim=2;
+		
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
     
     rect[1]=1;rect[2]=1;
-    cmultidivns_init(ns, 2, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivns_init(ns, dim, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
     mean = 0.;
