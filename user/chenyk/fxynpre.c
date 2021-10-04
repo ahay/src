@@ -719,7 +719,7 @@ void fxypre(float **dtime /*input and output data*/,
     /*inverse transform*/
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
-	cmultidivn_close();    
+	cmultidivns_close();    
     free(dfftfilt[0]);
     free(dfftfilt);
     free(dfftshift[0][0]);
