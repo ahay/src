@@ -158,7 +158,7 @@ void fxynpre(float **dtime /*input and output data*/,
 		int nsx,
 		int nsy,
 		int *rect,
-		float Nfrac, /*starting varying from nw/Nfrac*F_nyquist*/
+		float Nfrac, /*starting varying from 1/Nfrac*F_nyquist*/
 		float Ntimes, /*largest radius is Ntimes of the ref radius*/
 		float pow,   /*sharp rate of the varying curve, the lower the sharper*/
 		bool sym, 
