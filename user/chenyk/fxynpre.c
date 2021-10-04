@@ -680,7 +680,8 @@ void fxypre(float **dtime /*input and output data*/,
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
     
     rect[1]=1;rect[2]=1;
-    cmultidivns_init(ns, dim, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
+    if(verb) sf_warning("rect[0]=%d,rect[1]=%d,rect[2]=%d",rect[0],rect[1],rect[2]);
+    cmultidivns_init(ns, 1, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
     mean = 0.;
