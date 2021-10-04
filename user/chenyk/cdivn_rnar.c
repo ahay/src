@@ -51,6 +51,7 @@ void cmultidivn_rnar_init(int nw            /* number of components */,
 void cmultidivn_rnar_close (void)
 /*< free allocated storage >*/
 {
+	smooth_rnar_close();
     sf_cconjgrad_close();
     cweight2_close();
     free (p);
@@ -85,6 +86,21 @@ void smooth_rnar_init (int ndim  /* number of dimensions */,
     }
 
     tmp = sf_complexalloc (nd);
+}
+
+void smooth_rnar_close(void)
+/*< free allocated storage >*/
+{
+    int i;
+
+	free(n);
+    free (tmp);
+
+    for (i=0; i < dim; i++) {
+	if (NULL != tr[i]) sf_ctriangle_close (tr[i]);
+    }
+
+    free(tr);
 }
 
 
