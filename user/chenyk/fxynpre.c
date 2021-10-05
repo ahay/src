@@ -425,17 +425,11 @@ void fxynpre1(float **dtime /*input and output data*/,
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivn_rnar_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
-    
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
+
 }
 
 void fxynpre3(float **dtime /*input and output data*/, 
@@ -582,16 +576,10 @@ void fxynpre3(float **dtime /*input and output data*/,
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivnn_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
     
 }
 
@@ -720,15 +708,10 @@ void fxypre(float **dtime /*input and output data*/,
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivns_close();    
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+    free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
     
 }
 

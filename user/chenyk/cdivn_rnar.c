@@ -125,8 +125,8 @@ void smooth_rnar_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comp
 	}
     }
 
-    /*only for x and y*/
-    for (i=1; i < dim; i++) {
+    /*only for x and y when rect[0]=1 (rect1=1 in command line)*/
+    for (i=0; i < dim; i++) {
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim,n,s);
