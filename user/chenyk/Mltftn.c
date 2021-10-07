@@ -1,7 +1,7 @@
 /* Non-stationary local time-frequency transform (NLTFT). 
 */
 /*
-  Copyright (C) 2020 Zhejiang University & University of Texas at Austin
+  Copyright (C) 2021 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
     sf_warning("m[0]=%d,m[1]=%d,m[2]=%d",m[0],m[1],m[2]);
 
 	/*reading the non-stationary smoothing radii*/
-    for (i=0; i <= dim1+1; i++) {
+    for (i=0; i < dim+1; i++) {
 	if (NULL != rects[i]) {
 	  if(i==0) {ii=dim1;}
 	  else
