@@ -30,7 +30,7 @@ void csmooth1_init(int n1   /* data size */,
 {
     n = n1;
     nc = nc1;
-    tr = sf_ctriangle_init (nb,n);
+    tr = sf_ctriangle_init (nb,n,false);
     tmp = sf_complexalloc(n);
 }
 
@@ -57,7 +57,7 @@ void csmooth1_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_complex
 	    }
 	}
 
-	sf_csmooth (tr, 0, 1, false, false, tmp);
+	sf_csmooth (tr, 0, 1, false, tmp);
 
 	for (i=0; i < n; i++) {
 	    if (adj) {
