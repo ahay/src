@@ -26,16 +26,24 @@ publications, such as \emph{Geophysics} articles, SEG (Society of
 Exploration Geophysicists) Annual Meeting abstracts, etc. SEG\TeX is
 an open-source project maintained by a group of volunteers. It
 integrates well with Madagascar to support the practice of
-\emph{reproducible research}, as formulated by Jon Claerbout: ...
+\emph{reproducible research}, as formulated by Jon Claerbout:
+attaching software and data to the results of computational
+experiments to allow the reader to verify all computations reported in
+the paper using their own computer
+\cite[]{fomel2008guest}. Computational reproducibility is not the goal
+in itself but the means by which previous research can be extended
+further. It effectively turns all reported computational results into
+benchmarks and challenges future authors to try performing analagous
+computations with more efficiency and accuracy \cite[]{fomel2014reproducible}.
 
 \LaTeX processing scripts included with Madagascar can turn a single
-document into multiple outputs: paper in a journal, chapter in a book,
-an expanded abstract for a conference, etc. It can also produce
-multiple output formats, namely PDF and HTML.
+document into multiple outputs: a paper in a journal, a chapter in a
+book, an expanded abstract for a conference, etc. It can also produce
+multiple output formats, most importantly PDF and HTML.
 
 \section{SCons processing}
 
-Handling \LaTeX documents in Madagascar is made easier with customized
+To enable handling of \LaTeX documents, Madagascar provides special
 SCons rules provided in \texttt{rsf.tex} package (for handling
 individual papers) and \texttt{rsf.book} package (for handling books
 and reports).
@@ -55,13 +63,14 @@ scons article.pdf
 \end{verbatim}
 the paper will be processed to generate a PDF document.
 
-According to
-the Madagascar convention, the source LaTeX file
-(\texttt{article.tex}) does not contain the usual preamble
-\texttt{\\documentclass} information, as well as
-\texttt{\\begin{document}} and \texttt{\\end{document}} commands. This
-  is done so that the same paper could be easily integrated into a
-  collection of papers in a report or as a chapter in a book. Running \texttt{scons article.pdf} generates an intermediate file \texttt{article.ltx}, which contains the following preamble:
+According to the Madagascar convention, the source LaTeX file
+(\texttt{article.tex}) contains neither the usual preamble
+\texttt{\\documentclass}, nor
+\texttt{\\begin{document}}--\texttt{\\end{document}} commands. This is
+done so that the same paper could be easily integrated into a
+collection of papers in a report or as a chapter in a book. Running
+\texttt{scons article.pdf} generates an intermediate file
+\texttt{article.ltx}, which contains the following preamble:
 \lstset{language=tex,showstringspaces=false,frame=single}
 \begin{lstlisting}
   \documentclass[10pt]{geophysics}
@@ -91,12 +100,12 @@ End()
 \end{verbatim}
 which is equivalent to setting \texttt{paper.tex} as the default
 \LaTeX file. The name can be changed by giving \texttt{paper=} command
-to \texttt{End()}. All other agruments to \texttt{End()} are passed to
-  \verb#Paper('paper')#. The \texttt{End()} command is not strictly
-  necessary, but it can be convenient, because it enables command-line
-  commands like \texttt{scons pdf}, \texttt{scons read}, etc. to be
-  applied to the default file without the need to spell out its name
-  every time.
+to \texttt{End()}. All other agruments to \texttt{End()} are
+effectively interpreted as \verb#Paper('paper')#. The \texttt{End()}
+command is not strictly necessary, but it can be convenient, because
+it enables command-line commands like \texttt{scons pdf},
+\texttt{scons read}, etc. to be applied to the default file without
+the need to spell out the name of the paper file every time.
 
 \subsection{Including reproducible results}
 
@@ -111,17 +120,23 @@ book1/
         project2/
             SConstruct [from rsf.proj import *]
 \end{verbatim}
+
 To include the results from the project directories into the paper,
-run \texttt{scons lock} in each project directory. This command
+run first \texttt{scons lock} in each project directory. This command
 generates results figures (specified by \texttt{Result()} in the
 project \texttt{SConstruct}) files and then copies them to a separate
-location. The figures and all intermediate files can be then cleaned
-by running \texttt{scons -c}. The safe directory for locked figures
-can be defined by \texttt{RSFFIGS} environmental variable. By default,
-it is set to \texttt{\$RSFROOT/share/madagascar/figs}. To generate and
-lock all figures at once, you can run \texttt{sftour scons lock} from
-the paper directory. Analogously, the intermediate files can be
-cleaned by running \texttt{sftour scons -c}.
+location. The figures and all intermediate files can be then safely
+removed from the current directories and data directories by running
+\texttt{scons -c}. The safe directory for locked figures can be
+defined by \texttt{RSFFIGS} environmental variable. By default, it is
+set to \texttt{\$RSFROOT/share/madagascar/figs}.
+
+To generate and lock all figures at once, you can run \texttt{sftour
+  scons lock} from the paper directory. Analogously, all intermediate
+files in project directories can be cleaned by running \texttt{sftour
+  scons -c}. The \texttt{sftour} scripts simply visits all
+subdirectories (whose names start with a lower-case letter) and
+executes the specified command in each subdirectory.
   
 Note that, when the paper is generated by \LaTeX in the paper
 directory, the figures are picked from the locked directory and not
@@ -133,7 +148,8 @@ are locked not to be touched again. Second, storing figures separately
 allows for testing and maintaining reproducibility over time. Papers
 included in Madagascar store their reproducible figures in a separate
 repository\footnote{\url{https://github.com/ahay/figs}}, which is used
-for a systematic testing of reproducibility.
+for a systematic testing of reproducibility, implemented through
+continuous integration \cite[]{duvall2007continuous}.
 
 \subsection{Multiple outputs}
 
@@ -144,7 +160,32 @@ different formats.
 
 \subsubsection{Multiple styles}
 
+To control the document class and the document style, use options of the \texttt{Paper} or \texttt{End} command in the paper-level \texttt{SConstruct} file, such as  \texttt{lclass=} and \texttt{use=}.
+
+For example,
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  Paper('article',lclass='segabs')
+\end{lstlisting}
+produces an SEG expanded abstract, while
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  Paper('article',lclass='geophysics',options='manuscript',include='hyperref')
+\end{lstlisting}
+produces a Geophysics paper in the manuscript style using \textt{hyperref} package for hypertext links.
+
+\LaTeX\ can also be used effectively for generating presentation slides. For example, the following will create slides using the \texttt{beamer} package and configuring it to use the \texttt{Madrid} theme:
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+Paper('school10',lclass='beamer',
+      include=r'''
+      \usetheme{Madrid}
+      ''')
+\end{lstlisting}    
+
 \subsubsection{Multiple formats}
+
+PDF, HTML
 
 \section{Including papers into books and reports}
 
