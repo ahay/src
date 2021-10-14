@@ -51,6 +51,7 @@ void cmultidivn_rnar_init(int nw            /* number of components */,
 void cmultidivn_rnar_close (void)
 /*< free allocated storage >*/
 {
+	smooth_rnar_close();
     sf_cconjgrad_close();
     cweight2_close();
     free (p);
@@ -87,6 +88,21 @@ void smooth_rnar_init (int ndim  /* number of dimensions */,
     tmp = sf_complexalloc (nd);
 }
 
+void smooth_rnar_close(void)
+/*< free allocated storage >*/
+{
+    int i;
+
+	free(n);
+    free (tmp);
+
+    for (i=0; i < dim; i++) {
+	if (NULL != tr[i]) sf_ctriangle_close (tr[i]);
+    }
+
+    free(tr);
+}
+
 
 void smooth_rnar_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_complex* y)
 /*< linear operator >*/
@@ -109,8 +125,8 @@ void smooth_rnar_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comp
 	}
     }
 
-    /*only for x and y*/
-    for (i=1; i < dim; i++) {
+    /*only for x and y when rect[0]=1 (rect1=1 in command line)*/
+    for (i=0; i < dim; i++) {
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim,n,s);

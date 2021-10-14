@@ -158,7 +158,7 @@ void fxynpre(float **dtime /*input and output data*/,
 		int nsx,
 		int nsy,
 		int *rect,
-		float Nfrac, /*starting varying from nw/Nfrac*F_nyquist*/
+		float Nfrac, /*starting varying from 1/Nfrac*F_nyquist*/
 		float Ntimes, /*largest radius is Ntimes of the ref radius*/
 		float pow,   /*sharp rate of the varying curve, the lower the sharper*/
 		bool sym, 
@@ -425,17 +425,11 @@ void fxynpre1(float **dtime /*input and output data*/,
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivn_rnar_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
-    
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
+
 }
 
 void fxynpre3(float **dtime /*input and output data*/, 
@@ -582,16 +576,10 @@ void fxynpre3(float **dtime /*input and output data*/,
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivnn_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
     
 }
 
@@ -672,10 +660,16 @@ void fxypre(float **dtime /*input and output data*/,
     
     m[0]=nw;m[1]=1;m[2]=1;
 
+	if(ny==1)	/*2D denoising*/
+		dim=1;
+	else		/*3D denoising*/
+		dim=2;
+		
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
     
     rect[1]=1;rect[2]=1;
-    cmultidivns_init(ns, 2, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
+    if(verb) sf_warning("rect[0]=%d,rect[1]=%d,rect[2]=%d",rect[0],rect[1],rect[2]);
+    cmultidivns_init(ns, 1, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
     mean = 0.;
@@ -713,16 +707,11 @@ void fxypre(float **dtime /*input and output data*/,
     /*inverse transform*/
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
-	cmultidivn_close();    
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+	cmultidivns_close();    
+    free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
     
 }
 
