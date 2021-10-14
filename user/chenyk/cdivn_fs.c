@@ -88,12 +88,12 @@ void smooth_fs_init (int ndim  /* number of dimensions */,
 	nd *= ndat[i];
     }
 	/*for frequency*/
-	tr0 = (nbox0 > 1)? sf_ctriangle_init (nbox0,ndat[0]): NULL; /*smoother for frequency*/
+    tr0 = (nbox0 > 1)? sf_ctriangle_init (nbox0,ndat[0],false): NULL; /*smoother for frequency*/
 	/*for x and y*/
     for (i=1; i < dim; i++) {
 	    for (j=0; j < nd/n[i]; j++) {
 	    k=j%nf;
-	    tr[i*nf+k] = (nbox[i-1][k] > 1)? sf_ctriangle_init (nbox[i-1][k],ndat[i]): NULL;
+	    tr[i*nf+k] = (nbox[i-1][k] > 1)? sf_ctriangle_init (nbox[i-1][k],ndat[i],false): NULL;
 	    }
     }
     tmp = sf_complexalloc (nd);
@@ -125,7 +125,7 @@ void smooth_fs_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comple
 	if (NULL != tr0) {
 	    for (j=0; j < nd/n[0]; j++) {
 		i0 = sf_first_index (0,j,dim,n,s);
-		sf_csmooth (tr0, i0, s[0], false, false, tmp);
+		sf_csmooth (tr0, i0, s[0], false, tmp);
 	    }
 	}
 
@@ -135,7 +135,7 @@ void smooth_fs_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comple
 	    k=j%nf;
 	    if (NULL != tr[i*nf+k]) {
 		i0 = sf_first_index (i,j,dim,n,s);
-		sf_csmooth (tr[i*nf+k], i0, s[i], false, false, tmp);
+		sf_csmooth (tr[i*nf+k], i0, s[i], false, tmp);
 	    }
 	}
     }

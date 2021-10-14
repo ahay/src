@@ -32,8 +32,8 @@ void ctriangle2_init (int nbox1, int nbox2 /* triangle size */,
     nd = n1*n2;
     nr = nrep;
 
-    tr1 = (nbox1>1)? sf_ctriangle_init (nbox1,ndat1): NULL;
-    tr2 = (nbox2>1)? sf_ctriangle_init (nbox2,ndat2): NULL;
+    tr1 = (nbox1>1)? sf_ctriangle_init (nbox1,ndat1,false): NULL;
+    tr2 = (nbox2>1)? sf_ctriangle_init (nbox2,ndat2,false): NULL;
     tmp = sf_complexalloc (nd);
 }
 
@@ -56,7 +56,7 @@ void ctriangle2_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_compl
 	if (NULL != tr1) {
 	    for (i2=0; i2 < n2; i2++) {
 		for (ir=0; ir < nr; ir++) {
-		    sf_csmooth (tr1, i2*n1, 1, false, false, tmp);
+		    sf_csmooth (tr1, i2*n1, 1, false, tmp);
 		}
 	    }
 	}
@@ -64,7 +64,7 @@ void ctriangle2_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_compl
 	if (NULL != tr2) {
 	    for (i1=0; i1 < n1; i1++) {
 		for (ir=0; ir < nr; ir++) {
-		    sf_csmooth (tr2, i1, n1, false, false, tmp);
+		    sf_csmooth (tr2, i1, n1, false, tmp);
 		}
 	    }
 	}
@@ -80,7 +80,7 @@ void ctriangle2_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_compl
 	if (NULL != tr2) {
 	    for (i1=0; i1 < n1; i1++) { 
 		for (ir=0; ir < nr; ir++) {
-		    sf_csmooth (tr2, i1, n1, false, false, tmp);
+		    sf_csmooth (tr2, i1, n1, false, tmp);
 		}
 	    }
 	}
@@ -88,7 +88,7 @@ void ctriangle2_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_compl
 	if (NULL != tr1) {
 	    for (i2=0; i2 < n2; i2++) { 
 		for (ir=0; ir < nr; ir++) {
-		    sf_csmooth (tr1, i2*n1, 1, false, false, tmp);
+		    sf_csmooth (tr1, i2*n1, 1, false, tmp);
 		}
 	    }
 	}

@@ -79,7 +79,7 @@ void smooth_rnar_init (int ndim  /* number of dimensions */,
     tr = (sf_ctriangle*) sf_alloc(dim,sizeof(sf_ctriangle));
     nd = 1;
     for (i=0; i < dim; i++) {
-	tr[i] = (nbox[i] > 1)? sf_ctriangle_init (nbox[i],ndat[i]): NULL;
+	tr[i] = (nbox[i] > 1)? sf_ctriangle_init (nbox[i],ndat[i],false): NULL;
 	s[i] = nd;
 	n[i] = ndat[i];
 	nd *= ndat[i];
@@ -130,7 +130,7 @@ void smooth_rnar_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_comp
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim,n,s);
-		sf_csmooth (tr[i], i0, s[i], false, false, tmp);
+		sf_csmooth (tr[i], i0, s[i], false, tmp);
 	    }
 	}
     }
