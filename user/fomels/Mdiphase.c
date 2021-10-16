@@ -140,12 +140,11 @@ int main (int argc, char* argv[])
 	num[i] *= mean;
 	den[i] *= mean;
     }
-	
+
     sf_divn_init(dim, n12, n, rect, niter, true);
     sf_divn (num, den, phase);
     sf_divn_close();
 
-    mean=0.;
     for (i=i2=0; i2 < n2; i2++) {
 	if (verb) sf_warning("slice %d of %d;",i2+1,n2);
 
@@ -164,7 +163,6 @@ int main (int argc, char* argv[])
     
     if (verb) sf_warning(".");
 
-    
     sf_divn_init(dim, n12, n, rect, niter, true);
     sf_divn (num, den, phase);
     sf_divn_close();    
