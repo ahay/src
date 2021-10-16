@@ -10,7 +10,7 @@ zerotrace hilbert cdivdir cabs cemd1 cemd2 snr2 snr3 snrcyk preerror
 threshold1 tsmf fxdecon simidenoise bin2rsf rsf2bin halfthr hradon
 suplane simidenoise1 rmtrace prekirch psmig pocssemb afd2d
 prekirchsr simpostkirch presr nlm1 nlm2 dblendseis svmf genshotscyk dip_fb dipn_fb selfblend ycvelxf ycvelinvww afd2domp low addtrace matlr pnmomf expd ltfts ltftn fxynpre fxynpre2
-orthol orthon smoothn warpscann dipn efd3dmt aps3d sint2 sint3 eikonal_surf eikonal_surf_dv1d txt2rsf rsf2txt
+orthol orthon smoothn warpscann dipn efd3dmt aps3d sint2 sint3 eikonal_surf eikonal_surf_dv1d txt2rsf rsf2txt npef5 npef5_recon
 '''
 ccprogs = 'diffcxx'
 
