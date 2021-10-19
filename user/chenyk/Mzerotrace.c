@@ -1,7 +1,7 @@
 /* Zero part of traces in order to make aliasing */
 
 /*
-  Copyright (C) 2013 University of Texas at Austin
+  Copyright (C) 2013 Yangkang Chen, University of Texas at Austin
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-  int  i1, i2, ijump, ilast, njump, jump, last, n1, n2;
+  int  i1, i2, i3, ijump, ilast, njump, jump, last, n1, n2, n3;
   float **dd, d1, o1, d2, o2, beg;
   sf_file in, out;
   
@@ -48,14 +48,17 @@ int main(int argc, char* argv[])
 
   dd=sf_floatalloc2(n1, n2);
 
-  sf_floatread(dd[0],n1*n2,in);
+  n3 = sf_leftsize(in,2); 
+  for(i3=0;i3<n3;i3++)
+{  sf_floatread(dd[0],n1*n2,in);
+
 
   for(ijump=0;ijump<njump;ijump++)
      for(ilast=0;ilast<last;ilast++)
 	 { i2=beg+ijump*jump+ilast;
 	     for(i1=0;i1<n1;i1++)
 		dd[i2][i1]=0;}
-  sf_floatwrite(dd[0],n1*n2,out);
+  sf_floatwrite(dd[0],n1*n2,out);}
   exit(0);
 }
 
