@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, drift;
+    bool verb, drift, proj;
     int i, ic, m1, m2, n, nc, n2, iter, niter, liter, rect1, rect2, it, nt, nw, nr, k;
     float *xn, *x1, *y1, *dx, *r, lam, scale, step, rsum, rsum2, *x0;
     sf_file inp, out, dip, dipin;
@@ -64,6 +64,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("drift",&drift)) drift=false;
     /* if shift filter */
+
+    if (!sf_getbool("vp",&proj)) proj=false;
+    /* if use variable projection */
 
     nr = n*nc;
     
@@ -164,7 +167,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* variable projection */
-	    if (nc > 1) {
+	    if (nc > 1 && proj) {
 		sf_solver(pwdchainx_lop,sf_cgstep,n2-nr,nr,dx+nr,r,liter,"verb",true,"end");
 		sf_cgstep_close();
 		

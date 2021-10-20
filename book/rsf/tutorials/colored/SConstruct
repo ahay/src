@@ -31,16 +31,37 @@ Fetch(las,'Lasfiles',
 
 
 Flow('log',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
-Flow('AI-log','log','headermath output=AI segy=n')
-Flow('DEPTH-log','log','headermath output=DEPTH segy=n')
+Flow('AI-log','log','headermath output=AI segy=n | window')
+Flow('DEPTH-log','log','headermath output=DEPTH segy=n | window')
 
 Result('AI-log','DEPTH-log AI-log',
        '''
-       cmplx ${SOURCES[1]} | window |
+       cmplx ${SOURCES[1]} | 
        graph transp=y title=Impedance parallel2=n
        yreverse=y label1=Depth unit1=m label2=AI
        ''')
 
 # Convert depth to time
+
+td = 'F02-1_TD.txt'
+
+Fetch(td,'DT_model',
+      server='https://raw.githubusercontent.com/',
+      top='seg/tutorials-2017/master/1710_Colored_inversion/data/All_wells_RawData')
+
+Flow('td',td,'echo n1=2 n2=7440 data_format=ascii_float in=$SOURCE | dd form=native',stdin=0)
+
+# linear interpolation
+Flow('time','td','transp | linear n1=6001 d1=0.5 o1=0')
+Flow('TIME-log','time DEPTH-log','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+
+Result('AI-log-time','TIME-log AI-log',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph transp=y title=Impedance parallel2=n
+       yreverse=y label1=Time unit1=ms label2=AI
+       ''')
+
+# Log spectrum
 
 End()
