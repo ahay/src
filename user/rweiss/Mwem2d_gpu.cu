@@ -52,6 +52,8 @@ int main(int argc, char* argv[])
   bool wantwf,wantillum;
   int nxtap;
   bool verbose;
+  size_t pbuffersize;
+
   /* I/O files */
   sf_file Fvel  = NULL; /* velocity file */
   sf_file Fxig  = NULL; /* input XIG file */
@@ -331,23 +333,31 @@ int main(int argc, char* argv[])
     /* Set up FD coefficients for SWF and solve using CUSPARSE*/
     /* FIRST STEP*/
     setup_FD<<<dimGrid,dimBlock>>>(swf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-caus*aabb_h[0],aabb_h[1],nx,nw,iz);
-    cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+    cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
+    cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
+    /* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
     copy_wfld<<<dimGrid,dimBlock>>>(v_d,swf_d,nx,nw);
     
     /* SECOND STEP*/
     setup_FD<<<dimGrid,dimBlock>>>(swf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-caus*aabb_h[2],aabb_h[3],nx,nw,iz);
-    cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+    cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
+    cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
+    /* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
     copy_wfld<<<dimGrid,dimBlock>>>(v_d,swf_d,nx,nw);
     
     /* Set up FD coefficients for RWF and solve using CUSPARSE*/
     /* FIRST STEP*/
     setup_FD<<<dimGrid,dimBlock>>>(rwf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[0],aabb_h[1],nx,nw,iz);
-    cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+    cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
+    cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
+    /* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
     copy_wfld<<<dimGrid,dimBlock>>>(v_d,rwf_d,nx,nw);
     
     /* SECOND STEP*/
     setup_FD<<<dimGrid,dimBlock>>>(rwf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
-    cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+    cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
+    cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
+    /* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
     copy_wfld<<<dimGrid,dimBlock>>>(v_d,rwf_d,nx,nw);
     
     /* High-angle filter FFT to kx */
