@@ -73,7 +73,7 @@ int main (int argc, char* argv[])
       box[i] = 1;
       if (NULL != rect[i]) {
       rct[i] = sf_floatalloc (n1);
-      sft[i] = sf_intalloc (n1);
+      sft[i] = sf_floatalloc (n1);
 
       sf_floatread(rct[i],n1,rect[i]);
       sf_fileclose(rect[i]);

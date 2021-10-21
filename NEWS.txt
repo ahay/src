@@ -29,6 +29,7 @@ To the Python package:
 To programs:
 
 * user/tharit: New contributor (Tharit Tangkijwanichakul)
+* user/reem: New contributor (Reem Alomar)
 
 ===Bug fixes===
 
