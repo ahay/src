@@ -1,0 +1,714 @@
+from rsf.proj import *
+#from rsf.recipes.tpx import FPX
+import math
+
+# define FPX so that we can use transpose with larger memsize
+def FPX(fpx,data,
+        np,               # number of slopes
+        nw,               # number of frequencies
+        p0=-1,            # first slope
+        dp=None,          # slope increment
+        v0=0,             # velocity continuation
+        m=1000            # transpose memsize
+        ):
+
+    if not dp:
+        dp=-2.0*p0/(np-1)
+
+    # TX -> FX
+    fx = 'fx-'+data
+    if (v0 > 0):
+        Flow(fx,data,
+             '''
+             fft1 | window n1=%d | fft3 axis=2 | 
+             vczo2 v0=0 nv=1 dv=%g | 
+             window | fft3 axis=2 inv=y
+             ''' % (nw,v0))
+    else:
+        Flow(fx,data,'fft1 | window n1=%d' % nw)
+
+    # FX -> XPF
+    xpf = 'xpf-'+data
+    basis = 'basis-'+data
+    Flow([xpf,basis],fx,
+         '''
+         transp memsize=%i|
+         cltft basis=${TARGETS[1]} dip=y 
+         p0=%g dp=%g np=%d 
+         rect=3 niter=1000 verb=n
+         ''' % (m,p0,dp,np),split=[1,nw],
+         reduce='cat axis=3')
+    
+    Flow(fpx,[xpf,basis],
+         'mul ${SOURCES[1]} | transp plane=13 memsize=%i'%m,
+         split=[2,np])
+
+def TPX(tpx,data,
+        nt,               # number of time samples
+        np,               # number of slopes
+        nw=0,             # number of frequencies
+        p0=-1,            # first slope
+        dp=None,          # slope increment
+        m=1000            # transpose memsize
+        ):
+
+    fpx = 'fpx-'+data
+
+    nt2=nt
+    if nt2%2:
+        nt2 += 1
+    nw0=nt2/2+1
+    if not nw:
+        nw = nw0
+        
+    FPX(fpx,data,np,nw,p0,dp,m)
+
+    Flow(tpx,fpx,
+         '''
+         pad n1=%d | fft1 inv=y
+         ''' % nw0,split=[3,'omp'])
+    
+
+
+##################################
+# Usefule plotting functions
+##################################
+
+def velplot(title,label1='Depth',unit1='km',max1=2):
+    return '''
+    window max1=%g |
+    grey color=j allpos=y title="%s" scalebar=y
+    barlabel=Velocity barunit=km/s
+    label1="%s" unit1="%s" label2=Lateral unit2=km
+    barreverse=y pclip=100 
+    ''' % (max1,title,label1,unit1)
+
+def graph(transp,o2,d2,n2,col,fat,extra=''):
+    return '''
+    window max1=2 |
+    graph transp=%d yreverse=y pad=n min2=%g max2=%g
+    plotcol=%d plotfat=%d wantaxis=n wanttitle=n %s
+    ''' % (transp,o2,o2+(n2-1)*d2,col,fat,extra)
+
+def graphw(min1,max1,transp,o2,d2,n2,col,fat,extra=''):
+    return '''
+    window min1=%g max1=%g |
+    graph transp=%d yreverse=y pad=n min2=%g max2=%g
+    plotcol=%d plotfat=%d wantaxis=n wanttitle=n %s
+    ''' % (min1,max1,transp,o2,o2+(n2-1)*d2,col,fat,extra)
+
+def wiggle(title):
+    return  '''
+    window max1=2 j2=2 |
+    wiggle transp=y yreverse=y poly=y 
+    title="%s" label2=Offset unit2=km zplot=0.5
+    wherexlabel=t wheretitle=b labelsz=12 titlesz=15
+    ''' % title
+
+Flow('modl',None,
+     '''
+     spike n1=1501 o1=-10 d1=0.02 n2=4
+     nsp=4 k2=1,2,3,4 mag=0.4,0.7,1,1.5
+     ''')
+Flow('refl',None,
+     '''
+     spike n1=1501 n2=4 nsp=4 k2=1,2,3,4
+     mag=0.0909091,0.1428570,0.1111110,0.2000000
+     ''')
+Flow('mod1','modl','window min1=0')
+
+################################################################
+#1.25 too shallow
+#2.0 works perfectly
+#1.75 - little little problems on the last offset
+#Flow('rmodl','modl',
+#     '''
+#     pad n2=100 | noise rep=y seed=112012
+#     type=n mean=1.25 range=1
+#     ''')
+Flow('rmodl','modl',
+     '''
+     pad n2=100 | noise rep=y seed=112012
+     type=n mean=2.0 range=1
+     ''')
+################################################################
+
+Flow('amodl','modl rmodl','cat axis=2 ${SOURCES[1]}')
+
+Flow('rrefl','modl',
+     '''
+     pad n2=100 | noise rep=y seed=122012 |
+     math output="input^3"
+     ''')
+Flow('prefl','rrefl','clip2 lower=10')
+Flow('mrefl','rrefl','clip2 upper=-10')
+################################################################
+#Flow('drefl','prefl mrefl','add scale=0.01,0.01 ${SOURCES[1]}')
+Flow('drefl','prefl mrefl','add scale=0.01,0.01 ${SOURCES[1]}')
+################################################################
+
+Flow('arefl','refl drefl','cat axis=2 ${SOURCES[1]}')
+
+Flow('unif','mod1','unif2 n1=101 d1=0.02 v00=5,6,8,10,15')
+#Result('modl','unif',velplot('Velocity Model',max1=2))
+
+Flow('mod2','unif','math output=1.5+2*x1')
+
+Plot('modl','mod2',velplot('Velocity Model',max1=2))
+Plot('modla','mod1',graph(0,0,0.02,101,0,20,'scalebar=y'))
+Plot('modlb','mod1',graph(0,0,0.02,101,7,5,'scalebar=y'))
+Result('modl2','modl modla modlb','Overlay')
+
+#Flow('data','amodl arefl',
+#     '''
+#     kirmod nt=600 dt=0.004 freq=25 refl=${SOURCES[1]}
+#     nh=51  dh=0.05 h0=0  
+#     ns=501 ds=0.02 s0=0 cmp=y
+#     vel=1.5 gradz=1 type=v |
+#     put label2=Offset unit2=km label3=Midpoint unit3=km
+#     ''',split=[1,1501],reduce='add')
+nx = 501
+dx = 0.02
+ox = 0
+nt = 600
+dt = 0.004
+ot = 0
+nh = 24
+dh = 0.05
+oh = 0
+
+
+nz = 2001
+dz = 0.002
+zo = 0
+# create representation of model
+nrefl = 100
+modllst = []
+# make velocity model for conversion
+
+for i in range(nrefl):
+	Flow('diffr-model-ampl-%i'%i,'drefl',
+	     '''
+	     window n2=1 f2=%i |
+	     spray axis=1 n=%i d=%g o=%g
+	     '''%(i,nz,dz,zo))
+	Flow('diffr-model-%i'%i,'rmodl diffr-model-ampl-%i'%i,
+	     '''
+	     window n2=1 f2=%i |
+	     unif2 n1=%i d1=%g o1=%g v00=2,1|
+	     ai2refl | 
+	     mul ${SOURCES[1]}
+	     '''%(i,nz,dz,zo))
+	modllst.append('diffr-model-%i'%i)
+Flow('diffr-model',modllst,'cat axis=3 d=1 o=0 ${SOURCES[1:%i]} | stack axis=3'%(len(modllst)))
+Flow('velo-model-depth','diffr-model','math output="2+x1"')
+Flow('diffr-model-t','diffr-model velo-model-depth',
+     'depth2time dt=%g t0=%g nt=%i velocity=${SOURCES[1]}'%(dt,ot,nt))
+Flow('diffr-response','diffr-model-t','ricker2 | smooth rect2=2| scale dscale=-1')
+
+Flow('diffr-p','rmodl drefl',
+     '''
+     kirmod nt=600 dt=0.004 freq=25 refl=${SOURCES[1]}
+     nh=24  dh=0.05 h0=0  
+     ns=501 ds=0.02 s0=0 cmp=y
+     vel=2.0 gradz=1 type=v |
+     put label2=Offset unit2=km label3=Midpoint unit3=km |
+     window | pow pow1=1 
+     ''',split=[1,1501],reduce='add')
+# add bandpassed noise
+# working well with range=.002 var=2e-6
+# when mute added, working with range=.002 var=5e-6
+#trying to increase
+Flow('diffr','diffr-p',
+   'noise range=.002 var=1e-5 rep=y | bandpass flo=10 fhi=60 | add  ${SOURCES[0]}')
+#vel=1.5 type=c |
+#gradz=1 and type=v
+Result('diffr','transp plane=23 | grey gainpanel=all min1=0.5 max1=2.0 min2=1.0 max2=9.0 wanttitle=n')
+Result('diffr0-n','diffr','window n2=1 min2=0 | grey gainpanel=all min1=0.8 max1=1.6 min2=1.0 max2=9.0 title="Noisy Diffraction Data"')
+pmin1 = 0.8
+pmax1 = 1.6
+pmin2 = 1.0
+pmax2 = 9.0
+point1 = .8
+point2 = .7
+Result('diffr3-n','diffr',
+   '''
+   transp plane=23 |
+   window min1=%g max1=%g
+   min2=%g max2=%g |
+   byte gainpanel=a |
+   grey3 flat=n
+   title="Noisy Diffraction Data"
+   frame1=%i frame2=%i frame3=%i
+   point1=%g point2=%g
+   '''%(pmin1,pmax1,pmin2,pmax2,
+       .5*(pmax1-pmin1)/dt,(3.62-pmin2)/dx,0,
+       point1,point2))
+
+# Making offsets to be half offsets
+# creating CMP_Y additional dimension for
+# sfpreconstkirchhoff
+
+# Padding is extremely important
+# Looks like if you have edge effects slope decomp
+# might be wrong
+
+#| pad end1=100
+Flow('tiffr','diffr','costaper nw1=400 nw3=40')
+
+#Result('diffr','transp plane=23 | grey gainpanel=all min1=0.5 max1=2.0 min2=1.0 max2=9.0 wanttitle=n')
+#Result('tiffr','transp plane=23 | grey gainpanel=all wanttitle=n')
+
+# dh=0.05 => 0.025
+Flow('data','tiffr',
+            '''
+            spray axis=4 n=1 |
+            put label4=CMP_Y |
+            transp plane=23 |
+            transp plane=34 |
+            put d4=0.025 
+            ''')
+
+# VC range
+
+v0=2.0#1.5
+nv=151
+dv=0.01
+
+# first step
+# 4th dimension is offset
+# 3rd dimension is CMP_Y n3=1
+
+Flow('mig_no_halfint','data','preconstkirch aal=y zero=n vel=%g' %v0, split=[4,24])
+
+# correct phase
+
+Flow('mig','mig_no_halfint','transp plane=24 | transp plane=34 | halfint inv=y adj=y | transp plane=23 | transp plane=34')
+#Result('mig','window | grey gainpanel=all min1=0.5 max1=2.0 min2=1.0 max2=9.0 wanttitle=n')
+#Result('mig_nw','mig','window | grey gainpanel=all wanttitle=n')
+
+# slope decomposition
+
+pad=1000
+padft=501#0
+nw=231#501
+
+# get rid of CMP_Y by simple window command
+Flow('warp','mig','window | t2warp pad=%i'%(pad))
+Flow('diffr-response-warp','diffr-response','window | t2warp pad=%i'%(pad))
+#Flow('warp','mig','window n4=1 | t2warp pad=%i'%(pad))
+
+# Padding is extremely important
+# Looks like if you have edge effects slope decomp
+# might be wrong
+# so it is a really good idea to check the spectrum
+# a really good way to plot spectrum
+#<warp.rsf sffft1 | sfmath output="abs(input)" | sfreal | sfgraph | sfpen
+
+# I slope decompose all the offsets at once
+np=351
+#<mig.rsf sfwindow min1=0.8 max1=1.2 min2=3.5 max2=5.0 f4=-1 | sfgrey | sfpen
+p0=-1.7
+dp = -p0/((np-1)/2)
+FPX('fpx','warp',np=np,p0=p0,nw=nw,v0=0.0,m=10000)
+#FPX('fpx','warp',np=np,p0=p0,nw=501,v0=0.0)
+FPX('diffr-response-fpx','diffr-response-warp',np=np,p0=p0,nw=nw,v0=0.0,m=10000)
+Flow('diffr-response-txp','diffr-response-fpx','pad n1=%i|fft1 inv=y | t2warp inv=y'%padft)
+# check slope decomposition
+offset_num = 0#20
+Flow('txp','fpx','pad n1=%i | fft1 inv=y | t2warp inv=y | transp plane=23 memsize=1000'%padft)
+#Result('txp','window n4=1 f4=%d | grey gainpanel=all min1=0.5 max1=2.0 min2=1.0 max2=9.0 title="Slope Decomposed Data offset#=%d" '%(offset_num,offset_num))
+#Result('migcomp','txp','stack axis=3 | grey title="Stacked Slope Decomposed Data"')
+
+# PSOVC
+
+# if you use psovcp instead of psovc you can avert transp highlighted by ^^^
+
+                                                                     #^^^
+#Flow('f_hall_pk','fpx','fft3 axis=3 | transp plane=24 memsize=1000 | transp plane=34 memsize=1000')
+Flow('f_hall_kp','fpx','fft3 axis=3 | transp plane=24 memsize=30000')
+#Flow('f_hs_pk','fpx','sfwindow n4=1 f4=%d | fft3 axis=3 | transp plane=24 memsize=1000 | transp plane=34 memsize=1000'%(offset_num))
+
+#sfwindow n4=1 min4=0.5
+#Flow('f_hs_kp','fpx','sfwindow n4=1 f4=%d | fft3 axis=3 | transp plane=24 memsize=1000'%(offset_num))
+
+#####################################################################################################
+# checking the amplitudes
+#<fpx.rsf sfstack | sffft1 inv=y | sfattr
+#<fpx.rsf sfwindow n4=1 | sfstack | sffft1 inv=y | sfattr
+# amplitudes have one order
+# l2 norm is higher for full offset - not sure if it matters
+# l2 for zo = 0.004
+# l2 for all offsets = 0.018
+# l2 is dependent on the # of coefficients
+#####################################################################################################
+
+# parallelezation is done for k - lateral wavenumber
+#Flow('vc_f_hall_pk_psovc','f_hall_pk','psovc nv=%d dv=%g v0=%g' % (nv,dv,v0),split=[4,1024])
+Flow('vc_f_hall_kp_psovc','f_hall_kp','psovcp nv=%d dv=%g v0=%g' % (nv,dv,v0),split=[4,np])
+#Flow('vc_f_hs_pk_psovc','f_hs_pk','psovc nv=%d dv=%g v0=%g' % (nv,dv,v0),split=[4,1024])
+#Flow('vc_f_hs_kp_psovc','f_hs_kp','psovcp nv=%d dv=%g v0=%g' % (nv,dv,v0),split=[4,np])
+
+#Result('vc_psovc','grey gainpanel=all min1=0.5 max1=2.0 min2=1.0 max2=9.0 wanttitle=n')
+#Result('vc_psovc15','vc_psovc','window n3=1 min3=1.5 | grey gainpanel=all min1=0.5 max1=2.0 min2=1.0 max2=9.0 wanttitle=n')
+#Result('vc_psovc_hs','grey gainpanel=all min1=0.5 max1=2.0 min2=1.0 max2=9.0 wanttitle=n')
+#Result('vc_psovc_hs15','vc_psovc_hs','window n3=1 min3=1.5 | grey gainpanel=all min1=0.5 max1=2.0 min2=1.0 max2=9.0 wanttitle=n')
+
+### semblance estimation #####################################################
+#^^^
+#Flow('fvkp_hs','vc_f_hs_pk_psovc',
+#     '''
+#     transp memsize=50000 plane=34
+#     ''')
+
+# export OMP_NUM_THREADS=1 and memsize=100 for fft1 or you will get memory allocation problem and overhead 
+# not sure how to make it optimal for parallel
+#Flow('tvxp_hs','fvkp_hs','fft3 axis=3 inv=y | pad n1=%i | fft1 memsize=100 inv=y | t2warp inv=y'%padft,split=[4,np])
+#Flow('tvxp_hs','fvkp_hs','fft3 axis=3 inv=y | pad n1=%i | fft1 memsize=100 inv=y | t2warp inv=y')
+Flow('tvxp','vc_f_hall_kp_psovc',
+   '''
+   fft3 axis=3 inv=y | 
+   pad n1=%i | 
+   fft1 memsize=100 inv=y | 
+   t2warp inv=y
+   '''%padft,split=[4,np])
+# the operation below takes a very long time (~6.5 hrs)
+# doesnt seem to make too much of a difference either
+#Flow('tpxv-taper','tvxp','transp plane=24 memsize=10000 | costaper nw2=60')
+#Flow('tvx2_hs','tvxp_hs','mul $SOURCE | stack axis=4 norm=n')
+#Flow('tvx2','tpxv-taper','mul $SOURCE | stack axis=2 | transp plane=23 memsize=10000')
+# normalize so max is 1
+Flow('tvxp-n','tvxp','norm apply=${SOURCE} ')
+Flow('tvx2','tvxp-n','mul $SOURCE | stack axis=4 ')
+
+# Flow('tvx_hs','tvxp_hs','stack axis=4 norm=n')
+#Flow('tvx','tpxv-taper','stack axis=2 | transp plane=23 memsize=10000')
+
+Flow('tvx','tvxp-n','stack axis=4 ')
+
+# rect3 since x is the third dimension
+# rect1 since t is the first dimension
+#Flow('semb_hs','tvx_hs tvx2_hs',
+#     '''
+#     mul ${SOURCES[0]} |
+#     divn den=${SOURCES[1]} niter=50 rect3=1000 rect1=5 |
+#     clip2 lower=0
+#     ''')
+
+
+# new stuff by luke for probibilistic diffraction imaging.
+
+drect1 = 5 # t 10 was a little much
+drect2 = 3 # v 5
+drect3 = 3 # x
+#drect1 = 2 # t
+#drect2 = 2 # v
+#drect3 = 2 # x
+
+Flow('mask','tvx',
+   '''
+   window n3=1 | 
+   math output=1 | 
+   mutter x0=2.0 inner=y v0=0.5 half=n t0=0.5  |
+   mutter x0=2.2 inner=n v0=0.7 half=n t0=-0.5 |
+   smooth rect1=5 rect2=5 |
+   spray axis=3 n=501 d=.02 o=0
+   ''')
+Flow('semb-pre','tvx tvx2 mask',
+     '''
+     mul ${SOURCES[0]} |
+     divnp den=${SOURCES[1]} rect1=%i rect2=%i rect3=%i |
+     add mode=p ${SOURCES[2]} | 
+     clip2 lower=0
+     '''%(drect1,drect2,drect3))
+#Flow('semb-pre','tvx tvx2',
+#     '''
+#     mul ${SOURCES[0]} |
+#     divnp den=${SOURCES[1]} rect1=%i rect2=%i rect3=%i |
+#     clip2 lower=0
+#     '''%(drect1,drect2,drect3))
+# normalize semblance
+Flow('semb-a','semb-pre','stack axis=2 ')
+Flow('semb-agc','semb-a','agc rect1=50 rect2=200')
+Flow('semb-fact','semb-agc semb-a','divn den=${SOURCES[1]} rect1=%i rect2=%i'%(drect1,drect3))
+
+Flow('semb-c','semb-pre',
+   "softclip upper=`<${SOURCE} $RSFROOT/bin/sfscale dscale=3| $RSFROOT/bin/sfattr want=std | awk '{print $4}'`")
+
+Flow('semb','semb-c',
+   """
+   clip2 lower=0  
+   """)
+
+#Flow('semb','semb-fact semb-pre','spray axis=2 n=%i o=%g d=%g |add mode=p ${SOURCES[1]} | costaper nw2=25'%(nv,v0+dv,dv))
+# unsued muting (for now)
+#     mutter x0=2.0 inner=y v0=0.5 half=n t0=0.25  |
+#     mutter x0=2.2 inner=n v0=0.7 half=n t0=-0.25 |
+Flow('vtrue','diffr',
+   'window n2=1 | math output="2.0*sqrt((exp(x1)-1)/x1)"')
+Flow('slice_true','tvx vtrue',
+     'slice pick=${SOURCES[1]}')
+Flow('vtrue-spray','vtrue','spray axis=3 n=%i d=%g o=%g'%(np,dp,p0))
+Flow('slice-tpx','tvxp-n vtrue-spray','slice pick=${SOURCES[1]} | transp plane=23 memsize=10000')
+vrect1 = 25   # in t
+vrect2 = 200  # in x
+# stack semb
+Flow('semb-stk','semb-pre','stack axis=2')
+# determine expectation value of velocity
+# might have to do this assuming v of z media like in ovc paper
+Flow('v-exp','semb-pre semb-stk',
+   '''
+   math output="input*x2" | 
+   stack axis=2 | 
+   divn den=${SOURCES[1]} rect1=%i rect2=%i | 
+   clip2 lower=%g
+   '''%(vrect1,vrect2,v0+dv))
+# determine the variance
+Flow('v-exp-var','v-exp semb-pre semb-stk',
+   '''
+   spray axis=2 n=%i d=%g o=%g |
+   math A=${SOURCES[1]} output="A*(input-x2)^2" |
+   stack axis=2 |
+   divn den=${SOURCES[2]} rect1=%i rect2=%i
+   '''%(nv,dv,v0+dv,vrect1,vrect2))
+Flow('v-var-spray','v-exp-var','spray axis=2 n=%i d=%g o=%g'%(nv,dv,v0+dv))
+Flow('d-vel','v-exp v-var-spray',
+   '''
+   spray axis=2 n=%i d=%g o=%g |
+   math output="(input-x2)^2" |
+   divn den=${SOURCES[1]} rect1=%i rect2=%i rect3=%i |
+   scale dscale=.5 | 
+   math output="exp(-1*input)" 
+   '''%(nv,dv,v0+dv,drect1,drect2,drect3))
+Flow('d-vel-stk','d-vel','math output="abs(input)" | stack axis=2')
+
+Flow('bay-semb','semb v-exp','slice pick=${SOURCES[1]} ')
+
+Flow('semb-dz','semb-pre',' deriv | add mode=abs')
+
+Flow('semb-dx','semb-pre',
+   '''
+   transp plane=13 memsize=10000 | 
+   deriv | 
+   add mode=abs | 
+   transp plane=13 memsize=10000
+   ''')
+
+Flow('semb-pre-eps','semb-pre',
+    '''math output="input+`<${SOURCE} $RSFROOT/bin/sfattr want=std | awk '{print $4}'`" ''')
+Flow('dsemb','semb-dz semb-dx semb-pre-eps',
+   '''
+   math A=${SOURCES[0]} B=${SOURCES[1]} output="sqrt(A*A+B*B)" |
+   divnp den=${SOURCES[2]} rect1=%i rect2=%i rect3=%i |
+   clip2 lower=0
+   '''%(drect1,drect2,drect3))
+#Flow('dsemb','semb-dz semb-dx ',
+#   'math A=${SOURCES[0]} B=${SOURCES[1]} output="sqrt(A*A+B*B)"')
+Flow('dsemb-stk','dsemb','add abs=$SOURCE | stack axis=2')
+
+
+
+# normalize over 2nd axis
+def normalize(file,nv,vo,dv,r1,r2,r3):
+    Flow(file+'-d',file,
+       'math output="abs(input)" | stack axis=2 | spray axis=2 n=%i d=%g o=%g'%(nv,dv,vo))
+    Flow(file+'-n',[file,file+'-d'],'divnp den=${SOURCES[1]} rect1=%i rect2=%i rect3=%i'%(r1,r2,r3))
+    
+normalize('d-vel',nv,v0,dv,drect1,drect2,drect3)
+# combined weights
+Flow('wts','semb-pre d-vel dsemb d-vel-d',
+   '''
+   add mode=p ${SOURCES[1]} |
+   add mode=p ${SOURCES[2]} |
+   divnp den=${SOURCES[3]} rect1=%i rect2=%i rect3=%i |
+   clip2 lower=0 
+   '''%(drect1,drect2,drect3))
+
+# make wieghted gathers
+Flow('wtd-gath','wts tvxp-n',
+   '''
+   spray axis=4 n=%i d=%g o=%g |
+   add mode=p ${SOURCES[1]} |
+   stack axis=2|
+   transp plane=23 memsize=10000
+   '''%(np,dp,p0))
+Flow('const-gath','tvxp-n','stack axis=2 | transp plane=23 memsize=10000')
+# and the ideal gather
+Flow('ideal-gath','diffr-response','scale dscale=-1| spray axis=2 n=%i d=%g o=%g'%(np,dp,p0))
+
+Flow('wtd-img','wts tvx','add mode=p ${SOURCES[1]}')
+Flow('prob-dimage','wtd-img','stack axis=2 | bandpass flo=10 ')
+
+Flow('prob-dimage-squared','prob-dimage','add mode=p ${SOURCE}')
+
+# multiply weights with images
+#Flow('prob-dimage-numer','tvx dsemb semb d-vel',
+#   '''
+#   add mode=p ${SOURCES[1]} |
+#   add mode=p ${SOURCES[2]} |
+#   add mode=p ${SOURCES[3]} |
+#   stack axis=2             
+#   ''')
+
+
+# create probibilistic diffraction image variance
+Flow('prob-dimage-var','prob-dimage wtd-img prob-dimage-squared',
+   '''
+   spray axis=2 n=%i d=%g o=%g |
+   math B=${SOURCES[1]} output="(input-B)^2" |
+   stack axis=2  |
+   divn den=${SOURCES[2]} rect1=%i rect2=%i |
+   clip2 lower=0
+   '''%(nv,dv,v0+dv,drect1,drect3))
+#Flow('prob-dimage-var','dimage-numerator-var dimage-var-denom',
+#   '''
+#   divn den=${SOURCES[1]} rect1=%i rect2=%i |
+#   sfmath output="abs(input)"
+#   '''%(drect1,drect3))
+#Flow('wtd-img','semb d-vel dsemb tvx d-vel-d',
+#   '''
+#   add mode=p ${SOURCES[1]}| 
+#   add mode=p ${SOURCES[2]}|
+#   add mode=p ${SOURCES[3]} |
+#   divnp den=${SOURCES[4]} rect1=%i rect2=%i rect3=%i 
+#   '''%(drect1,drect2,drect3))
+# figures of the I(t,v,x) by midpoint and associated weights
+wtlst = ['tvx','wts','wtd-img','semb-pre','d-vel-n','dsemb']
+titles = ['I(t,v,x)','Combined Weights','Weighted Image','W1(t,v,x)','W2(t,v,x)','W3(t,v,x)']
+gathers = ['wtd-gath','slice-tpx','const-gath','diffr-response-txp']
+gathtitles = ['Probabilistic Weight Gather','Deterministic Gather','Equal Weight Gather','Ideal Gather']
+#titles = ['i','ii','iii','iv','v']
+colorlst = [' ','j',' ','j','j','j']
+allpos = ['n','y','n','y','y','y']
+clipss = [1e-4,.075,5e-5,.4,4,.1]
+
+gmax1 = .8
+gmin1 = 1.6
+gmax2 = nv*dv+v0
+gmin2 = v0+dv
+pmin = -1
+pmax = 1
+
+for n in range(5):
+    #x = (3,5,7)[n]
+    x = (3.62,4.82,6.8,5.46,4.8)[n]#(3.75,4.9,6.8,5.5,4.8)
+    plst = []
+    plst3 = []
+    gathlst = []
+    for i in range(len(gathers)):
+        gath = gathers[i]
+        gtitle = gathtitles[i]
+        Result('synth-n-'+gath+'-%i'%n,gath,
+             '''
+             window n3=1 min3=%g|
+             grey min1=%g max1=%g title="%s"
+             label1=Time unit1=s label2=Slope unit2="s\^2\_/km" 
+             pclip=99
+             '''%(x,gmax1,gmin1,gtitle))
+    # get the velocity, graph
+    Flow('v-exp-%i'%n,'v-exp','window n2=1 min2=%g '%x)
+    Plot('v-exp-%i'%n,
+       '''
+       graph min1=%g max1=%g min2=%g max2=%g 
+       label1= label2= unit1= unit2=  title= 
+       transp=y n1tic=0 plotfat=20 plotcol=0
+       '''%(gmin1,gmax1,gmin2,gmax2))
+    # get variance
+    Flow('v-exp-var-%i'%n,'v-exp-var','window n2=1 min2=%g'%x)
+    # add +/- standard deviation to expectation velocity
+    Flow('v-exp-low-%i'%n,['v-exp-var-%i'%n,'v-exp-%i'%n],
+       'clip2 lower=0 | math A=${SOURCES[1]} output="A-sqrt(input)"')
+    Plot('v-exp-low-%i'%n,
+       '''
+       graph min1=%g max1=%g min2=%g max2=%g 
+       label1= label2= unit1= unit2=  title= 
+       transp=y n1tic=0 dash=1 plotfat=20 plotcol=7
+       '''%(gmin1,gmax1,gmin2,gmax2))
+    Flow('v-exp-high-%i'%n,['v-exp-var-%i'%n,'v-exp-%i'%n],
+       'clip2 lower=0 | math A=${SOURCES[1]} output="A+sqrt(input)"')
+    Plot('v-exp-high-%i'%n,
+       '''
+       graph min1=%g max1=%g min2=%g max2=%g 
+       label1= label2= unit1= unit2=  title= 
+       transp=y n1tic=0 dash=1 plotfat=20 plotcol=7
+       '''%(gmin1,gmax1,gmin2,gmax2))
+#    Plot('lines-pre-%i'%n,['v-exp-low-%i'%n,'v-exp-high-%i'%n,'Overlay'])
+#    Plot('lines-%i',['lines-pre-%i'%n,'v-exp-%i'%n],'Overlay')
+
+    for k in range(len(wtlst)):
+        item = wtlst[k]
+        Flow(item+'-%i'%n,item,'window n3=1 min3=%g'%x)
+        Plot(item+'-%i'%n,
+           '''
+           grey title="%s" at x=%g label2=Velocity
+           unit2="km/s" min1=.8 max1=1.6
+           color=%s allpos=%s  %g
+           '''%(titles[k],x,colorlst[k],allpos[k],clipss[k]))
+        point1d = 0.8
+        point2d = 0.5
+        Plot(item+'3-%i'%n,item,
+           '''
+           window min1=%g max1=%g  min3=%g max3=%g|
+           byte gainpanel=2 allpos=%s |
+           grey3 unit2="km/s" label2=Velocity 
+           color=%s title="%s" flat=n
+           frame1=%i frame2=%i frame3=%i 
+           point1=%g point2=%g 
+           allpos=%s
+           screenht=15 screenratio=1.2
+           titlesz=16 labelsz=8 
+           n1tic=3 o1num=2.25 d1num=0.5
+           '''%(pmin1,pmax1,pmin2,pmax2,
+                allpos[k],colorlst[k],titles[k],
+                .5*(pmax1-pmin1)/dt,nv/2-1,(x-pmin2)/dx,
+                point1d,point2d,
+                allpos[k]))
+        Result(item+'3-%i'%n,item,
+           '''
+           window min1=%g max1=%g  min3=%g max3=%g|
+           byte gainpanel=2 allpos=%s |
+           grey3 unit2="km/s" label2=Velocity 
+           color=%s title="%s" flat=n
+           frame1=%i frame2=%i frame3=%i 
+           point1=%g point2=%g 
+           allpos=%s
+           screenht=28 screenratio=2
+           larnersz=85 titlesz=16
+           '''%(pmin1,pmax1,pmin2,pmax2,
+                allpos[k],colorlst[k],titles[k],
+                .5*(pmax1-pmin1)/dt,nv/2,(x-pmin2)/dx,
+                point1,point2,
+                allpos[k]))                
+        plst.append(item+'-%i'%n)
+        plst3.append(item+'3-%i'%n)
+    Plot(plst[4]+'-o',[plst[4],'v-exp-%i'%n,'v-exp-low-%i'%n,'v-exp-high-%i'%n],'Overlay')
+    Plot(plst[1]+'-o',[plst[1],'v-exp-%i'%n,'v-exp-low-%i'%n,'v-exp-high-%i'%n],'Overlay')
+#    Plot(plst[4]+'-o',[plst[4],'lines-%i'%n],'Overlay')
+    Result('synth-weights-n-%i-a'%n,[plst[0],plst[1],plst[2]],'SideBySideAniso')
+    Result('synth-weights-n-%i-b'%n,[plst[3],plst[4]+'-o',plst[5]],'SideBySideAniso')
+    Result('synth-weights-n3-%i-a'%n,[plst3[0],plst3[1],plst3[2]],'SideBySideIso')
+    Result('synth-weights-n3-%i-b'%n,[plst3[3],plst3[4],plst3[5]],'SideBySideIso')
+    Result('synth-weights-n3a-%i'%n,plst3,'TwoRows')
+# and some image figures
+pclip1=99.9
+Plot('synth-prob-dimage','prob-dimage','grey min1=.8 max1=1.6 min2=1 max2=9 pclip=%g title="Probabilistic Weight Image"'%pclip1)
+Plot('synth-prob-dimage-var','prob-dimage-var','grey pclip=99.995 min1=.8 max1=1.6 min2=1 max2=9 title="Image Variance" color=j scalebar=y allpos=y')
+Plot('synth-top','synth-prob-dimage synth-prob-dimage-var','SideBySideAniso')
+Plot('synth-pathint-img','tvx','stack axis=2 | grey pclip=%g min1=.8 max1=1.6 min2=1 max2=9 title="Equal Weight Image"'%pclip1)
+Plot('synth-det-img','slice_true',' grey pclip=%g min1=.8 max1=1.6 min2=1 max2=9 title="True Velocity Image" '%pclip1)
+Plot('synth-bot','synth-det-img synth-pathint-img','SideBySideAniso')
+Result('synthss-n','synth-prob-dimage synth-prob-dimage-var synth-det-img synth-pathint-img','TwoRows')
+
+Result('synth-n-prob-dimage','prob-dimage',
+   'grey pclip=%g min1=.8 max1=1.6  min2=1 max2=9  title="Probabilistic Weight Image"'%pclip1)
+Result('synth-n-prob-dimage-var','prob-dimage-var',
+   'grey pclip=%g  title="Image Variance" color=j scalebar=y allpos=y'%pclip1)
+Result('synth-n-top','synth-prob-dimage synth-prob-dimage-var','SideBySideIso')
+Result('synth-n-pathint-img','tvx','stack axis=2 | grey pclip=%g min1=.8 max1=1.6 min2=1 max2=9 title="Equal Weight Image"'%pclip1)
+Result('synth-n-det-img','slice_true',' grey pclip=%g min1=.8 max1=1.6 min2=1 max2=9 title="Deterministic Image" '%pclip1)
+Result('synth-n-bot','synth-det-img synth-pathint-img','SideBySideIso')
+
+Result('synth-n-diffr-response','diffr-response',
+     'grey pclip=%g min1=.8 max1=1.6 label2=Midpoint unit2=km label1=Time unit1=s  min2=1 max2=9 title="Ideal Image"'%(pclip1))
+
+End()

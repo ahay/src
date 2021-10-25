@@ -1,0 +1,100 @@
+from rsf.tex import *
+import os
+#os.environ['PSTEXPENOPTS']='color=y fat=3 fatmult=1.5 serifs=y'
+#Command('revised.tex','paper.tex','cp $SOURCE $TARGET')
+#Paper('paper',use='amsfonts,amsmath,amssymb,url,hyperref',options='manuscript',
+   #lclass='manuscript',
+#   use='amsfonts,amsmath,amssymb,url',
+   #color='''
+      #viking-v-exp viking-v-exp-var viking-prob-dimage-var-norm 
+      #toy-weights-1-a toy-weights-1-b toys
+      #toy-weights3-1-a toy-weights3-1-b  toy-weights3a-1
+      #toy-wtd-gather-1 toy-pick-gather-1 toy-const-gather-1 toy-ideal-gather-slope-1
+      #synth-weights-2-a synth-weights-2-b
+      #synthss synthss-n
+      #nankai-v-dix nankai-v-exp 
+      #nankai-v-exp-var nankai-v-exp
+      #nankai-weights-3-a nankai-weights-3-b
+      #nankai-weights3-3-a nankai-weights3-3-b
+      #nankai-wtd-gath-3 nankai-slice-tpx-3 nankai-const-gath-3 nankai-full-slice-tpx-slope-3
+      #nankai-vc-full-slicedepthwiggles nankai-prob-dimagedepthwiggles
+      #nankai-vc-full-slicedepthwiggles-bar nankai-prob-dimagedepthwiggles-bar
+      #nankai-prob-dimage-var
+      #nankai-prob-dimage0-depth-cont nankai-vc-full-slice0-depth-cont
+      #synth-weights3-0-a synth-weights3-0-b
+      #synth-weights-n3-2-a synth-weights-n3-2-b 
+      #synth-weights3a-0 synth-weights-n3a-0 
+      #toy-ovc-box
+      #nankai-v-dix2-depth-bar vpick-semb
+      #''',
+   #hires='''viking-data viking-pwd viking-prob-dimage 
+      #viking-slice-image viking-pwd-image 
+      #toy-data toy-ex-cig toy-drefl
+      #diffr0 diffr0-n
+      #nankai-deterministic nankai-dif 
+      #nankai-full nankai-data
+      #nankai-prob-dimage
+      #nankai-prob-dimage0-depth nankai-vc-full-slice0-depth
+      #nankai-prob-dimage-depth nankai-vc-full-slice-depth
+      #diffr3 diffr3-n 
+      #toy-prob-dimage toy-pathint-img toy-det-img nankai-path-sum
+      #synth-n-pathint-img synth-n-prob-dimage synth-n-det-img
+      #synth-pathint-img synth-prob-dimage synth-det-img
+      #synth-wtd-gath-0 synth-slice-tpx-0 synth-const-gath-0 synth-diffr-response-txp-0
+      #synth-n-wtd-gath-0 synth-n-slice-tpx-0 synth-n-const-gath-0 synth-n-diffr-response-txp-0
+      #toy-w1-img toy-w2-img toy-w3-img
+      #synth-diffr-response synth-n-diffr-response
+      #nankai-vc-full-slice-depth-bar nankai-prob-dimage-depth-bar
+      #''')
+#Paper('revised',use='amsfonts,amsmath,amssymb,url,hyperref',options='manuscript,revised',
+   #lclass='manuscript',
+#   use='amsfonts,amsmath,amssymb,url',
+   #color='''
+      #viking-v-exp viking-v-exp-var viking-prob-dimage-var-norm 
+      #toy-weights-1-a toy-weights-1-b toys
+      #toy-weights3-1-a toy-weights3-1-b  toy-weights3a-1
+      #synth-weights-2-a synth-weights-2-b
+      #synthss synthss-n
+      #nankai-v-dix nankai-v-exp 
+      #nankai-v-exp-var nankai-v-exp
+      #nankai-weights-1-a nankai-weights-1-b
+      #nankai-weights3-1-a nankai-weights3-1-b
+      #nankai-vc-full-slicedepthwiggles nankai-prob-dimagedepthwiggles
+      #nankai-vc-full-slicedepthwiggles-bar nankai-prob-dimagedepthwiggles-bar
+      #nankai-prob-dimage-var
+      #nankai-prob-dimage0-depth-cont nankai-vc-full-slice0-depth-cont
+      #synth-weights3-2-a synth-weights3-2-b
+      #synth-weights-n3-2-a synth-weights-n3-2-b 
+      #synth-weights3a-2 synth-weights-n3a-2 
+      #toy-ovc-box
+      #nankai-v-dix2-depth-bar vpick-semb
+      #''',
+   #hires='''viking-data viking-pwd viking-prob-dimage 
+      #viking-slice-image viking-pwd-image 
+      #toy-data toy-ex-cig toy-drefl
+      #diffr0 diffr0-n
+      #nankai-deterministic nankai-dif 
+      #nankai-full nankai-data
+      #nankai-prob-dimage
+      #nankai-prob-dimage0-depth nankai-vc-full-slice0-depth
+      #nankai-prob-dimage-depth nankai-vc-full-slice-depth
+      #diffr3 diffr3-n 
+      #toy-prob-dimage toy-pathint-img toy-det-img nankai-path-sum
+      #synth-n-pathint-img.vpl synth-n-prob-dimage.vpl synth-n-det-img.vpl
+      #synth-pathint-img.vpl synth-prob-dimage.vpl synth-det-img.vpl
+      #toy-w1-img toy-w2-img toy-w3-img
+      #synth-diffr-response synth-n-diffr-response
+      #nankai-vc-full-slice-depth-bar nankai-prob-dimage-depth-bar
+      #''')
+End(use='amsfonts,amsmath,amssymb,url,hyperref',
+   color='ALL', hires='ALL')
+#      viking-v-exp viking-v-exp-var viking-prob-dimage-var-norm 
+#      toy-weights-1-a toy-weights-1-b toys
+#      synth-weights-2-a synth-weights-2-b
+#      synthss synthss-n
+#      ''',
+#   hires='''viking-data viking-pwd viking-prob-dimage 
+#      viking-slice-image viking-pwd-image 
+#      toy-data toy-ex-cig
+#      diffr0 diffr0-n
+#      ''')
