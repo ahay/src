@@ -36,7 +36,6 @@ Papers(copyr='The University of Texas at Austin',
                 'orthogroll': 'Yangkang Chen, Shebao Jiao, Jianwei Ma, Hanming Chen, Yatong Zhou, and Shuwei Gan',
                 'intshape': 'Yangkang Chen, Lele Zhang, and Le-wei Mo',
                 'probdif': 'Luke Decker and Sergey Fomel',
-                'dtwaniso': 'Luke Decker and Qunshan Zhang',
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
