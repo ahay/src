@@ -1,0 +1,222 @@
+from rsf.proj import *
+
+# generate a synthetic HTI Gather
+
+# first make a trace
+Flow('trace-p',None,
+     '''
+     sigmoid n1=200 d2=.002 n2=200 |
+     smooth rect1=3 diff1=1 |
+     smooth rect1=3| 
+     window n2=1 f2=100 
+     ''')
+Flow('trace','trace-p',
+     '''
+     cat axis=1 $SOURCE |
+     cat axis=1 $SOURCE |
+     costaper nw1=20 |
+     pad beg1=310 end1=250 | 
+     put label2= unit2= o1=0 
+     ''')
+# spray it over gather dimensions
+
+# how many offsets do we want to include in our gather?
+nh = 150*2
+dh = .0125/4
+ho = dh
+
+# photting
+min1 = 1.25
+max1 = 3.6
+min2 = 0
+max2 = 180
+
+# generate nmo velocity for modeling
+vo   = 2 # km/s
+dvdt = .15  # km/s^2
+
+Flow('flat-gather','trace','''
+   norm apply=${SOURCE} |
+   spray axis=2 n=%i d=%g o=%g |
+   put unit2=km label2=Offset |
+   mutter v0=%g 
+   '''%(nh,dh,ho,vo))
+Flow('nmo-vel','trace','math output="x1*%g+%g"'%(dvdt,vo))
+# use inverse nmo to model
+Flow('nmo-gathers','flat-gather nmo-vel','inmo velocity=${SOURCES[1]} h0=%g'%ho)
+# spray gathers
+padding = 0
+nd = 181+padding
+dd = 2*3.14159 / (nd-padding)
+od = -1*dd*(nd-1)/2
+aniso0 = 0
+dadt = 35
+intens0 = .05
+didt = .03
+di2dt2 = .00
+
+# table stuff
+
+# spray the nmo over angles 
+Flow('nmo-gathers-spray','nmo-gathers','spray axis=3 n=%i d=%g o=%g '%(nd,dd,od))
+# generate anisotropic angle
+Flow('anang','nmo-gathers-spray','window n2=1 | math output="%g+x1*%g"'%(aniso0,dadt))
+Flow('anintens','anang','math output="%g+%g*x1+%g*x1*x1"'%(intens0,didt,di2dt2))
+# generate anisotropic velocities
+Flow('aniso-vel',' anang anintens',
+   '''
+   math A=${SOURCES[1]}
+   output="(x1*%g+%g)*(1+A*cos(2*(x2-input*3.14159/180)))"|
+   clip2 lower=%g
+   '''%(dvdt,vo,0))
+# correct nmo
+Flow('nmo-cor','nmo-gathers-spray aniso-vel',
+   '''
+   nmo velocity=${SOURCES[1]} h0=%g |
+   mutter v0=%g
+   '''%(ho,vo))
+# generate angle vs offset table
+#Flow('angle-table','nmo-gathers','math output="3*atan(cos(x2/%g*2*3.1415/%g))"'%(dh,spw))
+Flow('ang-pre','nmo-gathers-spray',' window n2=1 | math output=x2 | clip2 lower=%g upper=%g '%(od+dh,-1*od-dh))
+
+prelst = []
+div = 1.2
+skip = nd/div
+track = 1
+htrack=0
+
+while (htrack < nh):
+    Flow('pre-%i'%track,'ang-pre','window j2=%i f2=%i | put o2=0 d2=%g'%(skip, skip/2-1, dh))
+    prelst.append('pre-%i'%track)
+    track = track+1
+    htrack = htrack + nd/skip
+    skip = skip/div
+
+    
+Flow('angle-table',prelst,'cat axis=2 ${SOURCES[1:%i]} | window n2=%i | put o2=%g '%(len(prelst),nh,ho))
+
+Flow('table-spray','angle-table','spray axis=3 n=%i d=%g o=%g'%(nd,dd,od))
+
+Flow('nmo-slice','nmo-cor angle-table',
+   '''
+   transp plane=23 memsize=1000| 
+   slice pick=${SOURCES[1]} |
+   mutter v0=%g
+   '''%(vo-2*dvdt))
+# oned
+Flow('flattened-gather gather-shifts','nmo-slice',
+   'dtw-flatten maxshift=15 strain=.2 shifts=${TARGETS[1]}')
+Flow('m-shifts','gather-shifts',
+   '''
+   math output=1 |
+   mutter v0=%g  |
+   cut max1=%g |
+   smooth rect1=10 rect2=5|
+   add mode=p ${SOURCE}
+   '''%(vo-dvdt,1))
+
+Flow('testfns','nmo-cor table-spray','math A=${SOURCES[1]} output="cos(2*(A-x3))"')
+
+Flow('numer','m-shifts testfns',
+   '''
+   spray axis=3 n=%i d=%g o=%g |  
+   add mode=p ${SOURCES[1]} | 
+   mutter v0=%g|
+   stack axis=2
+   '''%(nd,dd,od,vo))
+
+Flow('denom','testfns','add mode=p ${SOURCE} | stack axis=2')
+
+Flow('divison','numer denom','divn den=${SOURCES[1]} rect1=20 rect2=5')
+Flow('division-1','divison',' window n2=%i | put o2=0'%(nd/2+1))
+
+Flow('division-2','divison',' window f2=%i | put o2=0'%(nd/2))
+
+Flow('ready-to-pick','division-1 division-2',
+    '''
+    add mode=a ${SOURCES[1]} |
+    put d2=%g |
+    window min1=%g max1=%g
+    '''%(dd*180/3.14159,min1,max1))
+
+Flow('anisotropy','ready-to-pick','pick rect1=10 vel0=%g'%(aniso0+dadt*min1))
+
+Plot('anisotropy-i','anang',
+   '''
+   graph transp=y 
+   min1=%g max1=%g min2=%g max2=%g 
+   label1= label2= n2tic= n1tic= 
+   unit1= unit2= title= scalebar=y
+   plotfat=5 dash=1 plotcol=6
+   '''%(max1,min1,min2,max2))
+
+Plot('anisotropy-g','anisotropy',
+   '''
+   graph transp=y 
+   min1=%g max1=%g min2=%g max2=%g 
+   label1= label2= n2tic= n1tic= 
+   unit1= unit2= title= scalebar=y
+   plotfat=20 plotcol=1 
+   '''%(max1,min1,min2,max2))
+# screenratio=.6647 barwidth=0.54 crowd1=.753
+Plot('ready-to-pick','ready-to-pick',
+   '''
+   grey color=j 
+   min1=%g max1=%g min2=%g max2=%g 
+   label2="Anisotropic Azimuth" unit2="\^o\_"
+   title="Picked Anisotropy" scalebar=y barlabel="Anisotropic Intensity"
+   wheretitle=top wherexlabel=bottom
+   '''%(min1,max1,min2,max2))
+Plot('angle-table','grey color=j')
+Plot('nmo-slice','grey')
+Result('ex-gather-aniso','ready-to-pick anisotropy-g anisotropy-i','Overlay')
+min1a = 1.15
+max1a = 3.65
+Result('ex-nmo-slice','nmo-slice',
+   '''
+   window min2=.15 |
+   put d2=1 o1=0 | 
+   grey label2="Trace Index" unit2= 
+   title="Synthetic HTI Gather"  min1=%g max1=%g
+   scalebar=n barlabel=Amplitude bias=0 minval=-5e-3 maxval=5e-3 
+   wheretitle=top wherexlabel=bottom
+   '''%(min1a,max1a))
+Result('ex-flattened-gather','flattened-gather',
+   '''
+   window min2=.15 |
+   put d2=1 o1=0 | 
+   grey label2="Trace Index" unit2= 
+   title="Flattened Gather" min1=%g max1=%g 
+   scalebar=n barlabel=Amplitude bias=0 minval=-5e-3 maxval=5e-3 
+   wheretitle=top wherexlabel=bottom
+   '''%(min1a,max1a))
+Result('ex-gather-shifts','m-shifts',
+   '''
+   window min2=.15 |
+   put d2=1 o1=0 | 
+   grey label2="Trace Index" unit2= 
+   title="Gather Shifts" color=j scalebar=y barlabel="Shift" barunit=samples
+   min1=%g max1=%g wheretitle=top wherexlabel=bottom
+   '''%(min1a,max1a))
+
+gathers = ['nmo-slice','flattened-gather','flat-gather']
+gathtitle = ['Input Stack','Flattened Stack','Ideal Stack']
+stklst = []
+scrwigs = 1.75
+for i in range(len(gathers)):
+    gath = gathers[i]
+    title= gathtitle[i]
+    stk = gath+'-stk'
+    Flow(stk,gath,
+        '''
+        window min2=0.15 | put d2=1 o1=0| stack axis=2
+        ''')
+    Result('ex-'+stk,stk,
+        '''
+        graph title="%s" max1=%g min1=%g transp=y 
+        min2=%g max2=%g screenratio=%g n1tic=3 o1num=%g d1num=%g label2=Amplitude
+        '''%(title,min1a,max1a,-1,1,scrwigs,-.75,.75))
+    stklst.append(stk)
+Flow('stacks',stklst,'cat ${SOURCES[1:%i]} axis=2 '%len(stklst))
+#Result('stacks','wiggle transp=y min1=%g max1=%g'%(max1a,min1a))
+End()
