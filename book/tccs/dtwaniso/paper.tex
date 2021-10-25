@@ -1,4 +1,4 @@
-\published{Geophysics, vol 85, issue 5, 1SO-Z24 (2020)}
+\published{Geophysics, vol 85, issue 5, O71-O82 (2020)}
 
 \title{Quantifying and correcting residual azimuthal anisotropic moveout in image gathers using dynamic time warping}
 
@@ -100,7 +100,7 @@ We generate a series of stacks to illustrate the frequency content uplift result
 \multiplot{3}{ex-nmo-slice-stk,ex-flattened-gather-stk,ex-flat-gather-stk}{width=0.3\columnwidth}{Stacks corresponding to: (a) the input gather in Figure~\ref{fig:ex-nmo-slice} with residual elliptical HTI anisotropy; (b) the flattened gather in Figure~\ref{fig:ex-flattened-gather}; (c) the ideal flat gather.}
 
 \section{Field Data Example}
-\inputdir{gather-example}
+\inputdir{.}
 We show how our method is able to enhance seismic images and improve their bandwidth by applying it to a 3D field dataset that was depth imaged using Kirchhoff migration with a VTI traveltime approximation. The migration velocity field was determined using VTI tomography.  
 
 \multiplot{2}{gather-250,stack-g-250}{height=.5\columnwidth}{Gather flattening inputs:   (a)  common image gather with spiral structure; (b) the gather stack.}
@@ -124,7 +124,7 @@ Similar to the synthetic gather example, the azimuth of the principal axis  is d
 We repeat this process on all gathers within the seismic volume to enhance the stack, and determine anisotropic azimuth and intensity.  Stacking in this example involves the average of all non-zero traces at each depth point within a gather, providing equal weight to non-zero samples.
 
 
-\inputdir{flattened-volume-example}
+\inputdir{.}
 
 \multiplot{2}{stack-inlin,flat-stack-inlin}{height=.5\columnwidth}{Constant crossline slices of seismic volume visualizing: (a) the input stack; (b) the flattened stack.}
 
@@ -162,7 +162,7 @@ A second set of depth slices for input and flattened stacks are shown in Figures
 
 The anisotropic azimuth for the same depth slice as shown in Figures~\ref{fig:stack-zslice-3} and~\ref{fig:flat-stack-zslice-3} is displayed in Figure~\ref{fig:azimuth-zslice}, while Figure~\ref{fig:intensity-zslice} contains the anisotropic intensity for that depth slice.  For both of the attributes, the region between 0-6 km inline and 0-9 km crossline has relatively consistent values. Here, anisotropic azimuth values mostly range between 90-130 degrees, and anisotropic intensity values do not vary as greatly as in other portions of the depth slice.  This appears to be a relatively homogeneous portion of the slice, with relatively consistent anisotropic orientation and intensity.  Presumably, this implies that a relatively consistent fracture network orientation and distribution exists there.  Other areas of the slice, where the azimuth and intensity have greater variations, appear to indicate regions that may have a more chaotic distribution of fracture networks or other features causing elliptical HTI anisotropy.  Results are consistent with proprietary log data acquired for wells in the study area.
 
-\inputdir{principle-example}
+\inputdir{.}
 \multiplot{2}{azimuth-zslice,intensity-zslice}{height=.5\columnwidth}{Anisotropic attribute visualization from the same depth slice as in Figures~\ref{fig:stack-zslice-3} and~\ref{fig:flat-stack-zslice-3}: (a) the anisotropic azimuth, or the fastest azimuthal angle of seismic wave propagation; (b) the anisotropic intensity or relative difference between the velocities of the fastest and slowest azimuthal directions.}
 
 \section{Discussion}
