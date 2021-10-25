@@ -19,7 +19,7 @@ from rsf.tex import *
 #         ex-nmo-slice ex-flattened-gather''')
                 
 Paper('paper',use='hyperref,amsmath', lclass='geophysics',
-	color='''shifts warped-signal-f warped-signal-s 
+	color='''dtw-error dtw-accum-sh shifts warped-signal-f warped-signal-s 
 		gather-shifts-250 azrslt integral spiral 
         inputs-g outputs-g pred-shifts intensity-zslice
 		spec-zm-1 spec-zm-2 azimuth-zslice gather-anisotropic-pick
