@@ -39,7 +39,7 @@ titlesz = 6.5
 labelsz = 5
 for i in range(len(trlst)):
    item = trlst[i]
-   Flow('trace-%s'%item,'refl-%s'%item,'pad beg1=%i end1=%i | ricker1 frequency=%g| noise range=%g | bandpass fhi=40'%(pad,pad,freq,noiserng))
+   Flow('trace-%s'%item,'refl-%s'%item,'pad beg1=%i end1=%i | ricker1 frequency=%g| noise range=%g seed=2021 | bandpass fhi=40'%(pad,pad,freq,noiserng))
 #   Plot('trace-%s'%item,'window f1=%i n1=%i|graph title="%s Trace" '%(pad,n1,titlest[i]))
    Plot('trace-%s'%item,
       '''
