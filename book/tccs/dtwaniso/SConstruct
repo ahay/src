@@ -18,7 +18,7 @@ from rsf.tex import *
 #         stack_zslice_zoom_3 flat_stack_zslice_zoom_3 gather-250 flat-gather-250
 #         ex-nmo-slice ex-flattened-gather''')
                 
-Paper('paper',use='hyperref,amsmath', lclass='geophysics',
+End(use='hyperref,amsmath', lclass='geophysics',
 	color='''shifts warped-signal-f warped-signal-s 
 		gather-shifts-250 azrslt integral spiral 
         inputs-g outputs-g pred-shifts intensity-zslice
@@ -43,3 +43,4 @@ Paper('paper',use='hyperref,amsmath', lclass='geophysics',
 #		stack_zslice_zoom_2 flat_stack_zslice_zoom_2 stack_zslice_3 flat_stack_zslice_3
 #		stack_zslice_zoom_3 flat_stack_zslice_zoom_3
 #                ex-nmo-slice ex-flattened-gather''')
+
