@@ -20,7 +20,7 @@
 #include <rsf.h>
 #include "allp3.h"
 
-static int n;
+static int n, *m;
 static float *s, *p, *a, *x, *tmp;
 static allpass ap;
 
@@ -29,6 +29,7 @@ void aapwd_init(int n1,
 		int nw     /* filter order */,
 		bool drift /* if shift filter */,
 		float *s1  /* [n] input */,
+		int   *m1  /* [n] amplitude mask */,
 		float *p1  /* [n] dip */,
 		float *a1  /* [n] amplitude */,
     		float *x1  /* [n] intermediate */)
@@ -36,6 +37,7 @@ void aapwd_init(int n1,
 {
     n = n1*n2;
     s = s1;
+    m = m1;
     p = p1;
     a = a1;
     x = x1;
@@ -52,16 +54,19 @@ void aapwd_close(void)
     free(ap);
 }
 
-void aapwd_apply(const float *x2, float *y)
+void aapwd_apply(const float *x2 /* target */,
+		 float *y        /* RHS */)
 /*< apply the matrix operator >*/
 {
     int i;
 
-    allpass1(false, false, ap, x, y);
+    allpass1(false, false, ap, x, tmp);
     for (i=0; i < n; i++) {
-	y[i] = x2[i] - y[i];
+	/* t - P x */
+	y[i] = x2[i] - tmp[i];
     }
     for (i=0; i < n; i++) {
+	/* x - A s */
 	y[n+i] = x[i] - a[i]*s[i];
     }
 }
@@ -77,108 +82,85 @@ void aapwd(float *y)
     allpass1(false, false, ap, tmp, y);
 }
 
-/*
-void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
-[*< linear operator >*]
+void aapwd_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy) 
+/*< linear operator >*/
 {
-    int ic, i, j, k;
+    int i;
+    float *pi, *ai, *xi;
 
-    if (nx != (2*nc-1)*n || ny != nc*n) sf_error("%s: Wrong size",__FILE__);
+    if (nx != 3*n || ny != 2*n) sf_error("%s: Wrong size",__FILE__);
 
-    sf_adjnull(adj,add,nx,ny,x,y);
+    sf_adjnull(adj,add,nx,ny,xx,yy);
+
+    pi = xx;
+    ai = xx+n;
+    xi = xx+2*n;
 
     if (adj) {
-	if (nc > 1) {
-	    allpass1t(false, false, ap[0], tmp, y);
-	    for (i=0; i < n; i++) {
-		x[i+n*nc] -= tmp[i];
-	    }
-	    for (ic=1; ic < nc-1; ic++) {
-		allpass1t(false, false, ap[ic], tmp, y);
-		for (i=0; i < n; i++) {		    
-		    j = ic*n+i;
-		    k = j+n*nc;
-		    x[k-n] += y[j];
-		    x[k] -= tmp[i];
-		}
-	    } 
-	    for (i=0; i < n; i++) {
-		j = (nc-1)*n+i;
-		k = j+n*nc;
-		x[k-n] += y[j];
-	    } 
-	} 
-	[* delta A *] 
-	for (ic=0; ic < nc-1; ic++) {
-	    allpass1(false, true, ap[ic], xn+ic*n, tmp);
-	    for (i=0; i < n; i++) {
-		j = ic*n+i;
-		x[j] += y[j]*tmp[i];
-	    }
-	} 
-	allpass1(false, true, ap[nc-1], s, tmp);
+	/* delta x */ 
+	allpass1t(false, false, ap, tmp, yy);
 	for (i=0; i < n; i++) {
-	    j = (nc-1)*n+i;
-	    x[j] += y[j]*tmp[i];
-	} 
+	    xi[i] -= tmp[i];
+	}
+	for (i=0; i < n; i++) {
+	    xi[i] += yy[i+n];
+	}
+	/* delta A */
+	allpass1(false, true, ap, x, tmp);
+	for (i=0; i < n; i++) {
+	    /* - P' dp x */
+	    pi[i] -= tmp[i]*yy[i];
+	    /* - da s */
+	    if (m[i]) ai[i] -= s[i]*yy[i+n];
+	}
     } else {
-	if (nc > 1) {
-	    allpass1(false, false, ap[0], x+nc*n, tmp);
-	    for (i=0; i < n; i++) {
-		y[i] -= tmp[i];
-	    }
-	    for (ic=1; ic < nc-1; ic++) {
-		allpass1(false, false, ap[ic], x+(nc+ic)*n, tmp);
-		for (i=0; i < n; i++) {
-		    j = ic*n+i;
-		    k = j+n*nc;
-		    y[j]  += x[k-n] - tmp[i];
-		}
-	    } 
-	    for (i=0; i < n; i++) {
-		j = (nc-1)*n+i;
-		k = j+n*nc;
-		y[j] += x[k-n];
-	    } 
-	} 
-	[* delta A *]
-	allpass1(false, true, ap, x, tmp);	    
+	/* delta x */
+	allpass1(false, false, ap, xi, tmp);	    
 	for (i=0; i < n; i++) {
-		y[j] += x[j]*tmp[i];
-	    }
+	    /* - P dx */
+	    yy[i] -= tmp[i];
 	} 
-	allpass1(false, true, ap[nc-1], s, tmp);
 	for (i=0; i < n; i++) {
-	    j = (nc-1)*n+i;
-	    y[j] += x[j]*tmp[i];
-	} 
+	    /* dx */
+	    yy[i+n] += xi[i];
+	}
+	/* delta A */
+	allpass1(false, true, ap, x, tmp);
+	for (i=0; i < n; i++) {
+	    /* - P' dp x */
+	    yy[i] -= tmp[i]*pi[i];
+	    /* - da s */
+	    if (m[i]) yy[i+n] -= s[i]*ai[i];
+	}
     }
-} */
+} 
 
-void aapwdx_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+void aapwdx_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy) 
 /*< linear operator for x only >*/
 {
     int i;
 
     if (nx != n || ny != 2*n) sf_error("%s: Wrong size",__FILE__);
 
-    sf_adjnull(adj,add,nx,ny,x,y);
+    sf_adjnull(adj,add,nx,ny,xx,yy);
 
     if (adj) {
-	allpass1t(false, false, ap, tmp, y);
+	allpass1t(false, false, ap, tmp, yy);
 	for (i=0; i < n; i++) {
-	    x[i] -= tmp[i];
+	    xx[i] -= tmp[i];
 	}
 	for (i=0; i < n; i++) {
-	    x[i] += y[i+n];
+	    xx[i] += yy[i+n];
 	} 
     } else {
-	allpass1(false, false, ap, x, tmp);
+	allpass1(false, false, ap, xx, tmp);
 	for (i=0; i < n; i++) {
-	    y[i] -= tmp[i];
+	    /* - P dx */
+	    yy[i] -= tmp[i];
 	}
 	for (i=0; i < n; i++) {
-	    y[i+n] += x[i];
+	    /* dx */
+	    yy[i+n] += xx[i];
 	} 
     }
 } 

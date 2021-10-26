@@ -1,4 +1,4 @@
-/* Multiple dip estimation by chain of PWDs */
+/* Amplitude-adjusted plane-wave destruction */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,19 +19,20 @@
 
 #include <rsf.h>
 
-#include "pwdchain.h"
+#include "aapwd.h"
 #include "smooth1.h"
 
 int main(int argc, char* argv[])
 {
-    bool verb, drift, proj;
-    int i, ic, m1, m2, n, nc, n2, iter, niter, liter, rect1, rect2, it, nt, nw, nr, k;
+    bool verb, drift;
+    int i, m1, m2, n, n2, iter, niter, liter, rect1, rect2, it, nt, nw, nr, k, *mask;
     float *xn, *x1, *y1, *dx, *r, lam, scale, step, rsum, rsum2, *x0;
-    sf_file inp, out, dip, dipin;
+    sf_file inp, out, dip, amp, dipin, ampin, msk;
 
     sf_init(argc,argv);
     inp = sf_input("in");
     dip = sf_output("dip");
+    amp = sf_output("amp");
     out = sf_output("out");
 
     if (NULL != sf_getstring("dipin")) {
@@ -40,19 +41,27 @@ int main(int argc, char* argv[])
 	dipin = NULL;
     }
 
+    if (NULL != sf_getstring("ampin")) {
+	ampin = sf_input("ampin");
+    } else {
+	ampin = NULL;
+    }
+
+    if (NULL != sf_getstring("mask")) {
+        msk = sf_input("mask");
+	if (SF_INT != sf_gettype(msk)) sf_error("Need integer data in mask");
+    } else {
+	msk = NULL;
+    }
+
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&m1)) sf_error("No n1= in input");
     if (!sf_histint(inp,"n2",&m2)) sf_error("No n2= in input");
     n = m1*m2;
     nt = sf_leftsize(inp,2);
 
-    if (!sf_getint("nc",&nc)) nc=1; /* number of components */
-
-    sf_putint(dip,"n3",nc);
-    sf_shiftdim(inp, dip, 3);
+    n2 = 3*n;
     
-    n2 = (2*nc-1)*n;
-
     xn = sf_floatalloc(n2);
     dx = sf_floatalloc(n2);
     x0 = sf_floatalloc(n2);
@@ -60,17 +69,26 @@ int main(int argc, char* argv[])
     x1 = sf_floatalloc(n);
     y1 = sf_floatalloc(n);
 
+    mask = sf_intalloc(n);
+    if (NULL != msk) {
+	sf_intread(mask,n,msk);
+    } else {
+	for (i=0; i < m1; i++) {
+	    mask[i]=0;
+	}
+	for (i=m1; i < n; i++) {
+	    mask[i]=1;
+	}
+    }
+    
     if (!sf_getint("order",&nw)) nw=1; /* PWD order */
 
     if (!sf_getbool("drift",&drift)) drift=false;
     /* if shift filter */
-
-    if (!sf_getbool("vp",&proj)) proj=false;
-    /* if use variable projection */
-
-    nr = n*nc;
     
-    pwdchain_init(m1,m2,nw,nc,drift,x1,xn,xn+nr);
+    aapwd_init(m1,m2,nw,drift,x1,mask,xn,xn+n,xn+2*n);
+
+    nr = 2*n;
     r = sf_floatalloc(nr);
 
     if (!sf_getbool("verb",&verb)) verb=(bool) (1 == nt);
@@ -84,10 +102,10 @@ int main(int argc, char* argv[])
     if (!sf_getint("rect2",&rect2)) rect2=1;
     /* smoothing radius */
 
-     if (!sf_getfloat("lambda",&lam)) lam=1.0f;
+    if (!sf_getfloat("lambda",&lam)) lam=1.0f;
     /* scaling */
 
-    smooth1_init(m1,m2,nc,rect1,rect2);
+    smooth1_init(m1,m2,2,rect1,rect2);
 
     for (it=0; it < nt; it++) {
 	sf_warning("slice %d of %d;",it+1,nt);
@@ -107,40 +125,36 @@ int main(int argc, char* argv[])
 	}
 	
 	if (NULL != dipin) {
-	    sf_floatread(xn,nr,dipin);
+	    sf_floatread(xn,n,dipin);
 	} else {
-	    if (1==nc) {
-		for (i=0; i < n; i++) {
-		    xn[i] = 0.0f;
-		}
-	    } else {
-		for (ic=0; ic < nc; ic++) {
-		    sf_warning("dip %1d = %g",ic+1, -nw + 2.0*nw*ic/(nc-1));
-		    for (i=0; i < n; i++) {
-			xn[ic*n+i] =  -nw + 2.0*nw*ic/(nc-1);
-			/* distribute from -nw to nw */
-		    }
-		}
+	    for (i=0; i < n; i++) {
+		xn[i] = 0.0f;
 	    }
 	}
-	    
-	for (ic=0; ic < nc-1; ic++) {
+	
+	if (NULL != ampin) {
+	    sf_floatread(xn+n,n,ampin);
+	} else {
 	    for (i=0; i < n; i++) {
-		xn[(nc+ic)*n+i] = 0.0f; 
+		xn[n+i] = 1.0f;
 	    }
+	}
+
+	for (i=0; i < n; i++) {
+	    xn[2*n+i] = 0.0f;
 	}
 	
 	sf_conjgrad_init(n2, n2, nr, nr, lam, 1.e-6, verb, false);
 
 	for (iter=0; iter < niter; iter++) {
-	    pwdchain_apply(y1,r);
+	    aapwd_apply(y1,r);
 	    rsum = 0.0f;
 	    for (i=0; i < nr; i++) {
 		r[i] = -r[i];
 		rsum += r[i]*r[i];
 	    } 
 	    
-	    sf_conjgrad(NULL, pwdchain_lop, smooth1_lop,x0,dx,r,liter);
+	    sf_conjgrad(NULL, aapwd_lop, smooth1_lop,x0,dx,r,liter);
 
 	    for (i=0; i < n2; i++) {
 		x0[i] = xn[i];
@@ -153,7 +167,7 @@ int main(int argc, char* argv[])
 		    xn[i] = x0[i] + step*dx[i];
 		}
 		
-		pwdchain_apply(y1,r);
+		aapwd_apply(y1,r);
 
 		rsum2 = 0.0f;
 		for (i=0; i < nr; i++) {
@@ -165,23 +179,14 @@ int main(int argc, char* argv[])
 
 		step *= 0.5;
 	    }
-
-	    /* variable projection */
-	    if (nc > 1 && proj) {
-		sf_solver(pwdchainx_lop,sf_cgstep,n2-nr,nr,dx+nr,r,liter,"verb",true,"end");
-		sf_cgstep_close();
-		
-		for (i=nr; i < n2; i++) {
-		    xn[i] += dx[i];
-		}
-	    }
 	}
 
 	sf_cconjgrad_close();
 
-	sf_floatwrite(xn,nr,dip);
+	sf_floatwrite(xn,n,dip);
+	sf_floatwrite(xn+n,n,amp);
 
-	pwdchain(y1);
+	aapwd(y1);
 
 	for (i=0; i < n; i++) {
 	    y1[i] /= scale;

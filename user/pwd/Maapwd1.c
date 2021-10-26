@@ -24,14 +24,15 @@
 int main(int argc, char* argv[])
 {
     bool adj, drift, forx;
-    int m1, m2, n, n1, n2;
+    int i, m1, m2, n, n1, n2, *mask;
     float *xn, *x1, *dx, *r;
-    sf_file inp, out, dip, sig;
+    sf_file inp, out, dip, sig, amp;
 
     sf_init(argc,argv);
     inp = sf_input("in");
     dip = sf_input("dip");
     sig = sf_input("sig");
+    amp = sf_input("amp");
     out = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
@@ -65,8 +66,18 @@ int main(int argc, char* argv[])
 
     xn = sf_floatalloc(3*n);
     sf_floatread(xn,n,dip);
+    sf_floatread(xn+n,n,amp);
 
-    aapwd_init(m1,m2,1,drift,x1,xn,xn+n,xn+2*n);
+    mask = sf_intalloc(n);
+
+    for (i=0; i < m1; i++) {
+	mask[i]=0;
+    }
+    for (i=m1; i < n; i++) {
+	mask[i]=1;
+    }
+    
+    aapwd_init(m1,m2,1,drift,x1,mask,xn,xn+n,xn+2*n);
     
     dx = sf_floatalloc(n2);
     r =  sf_floatalloc(n1);
@@ -80,7 +91,7 @@ int main(int argc, char* argv[])
     if (forx) {
 	aapwdx_lop(adj,false,n2,n1,dx,r);
     } else {
-	/* aapwd_lop(adj,false,n2,n1,dx,r); */
+	aapwd_lop(adj,false,n2,n1,dx,r); 
     }
 
     if (adj) {

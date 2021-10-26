@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-aapwd1 beamform dealias dealias2 dijkstra dip dip2 diplet dips
+aapwd aapwd1 beamform dealias dealias2 dijkstra dip dip2 diplet dips
 dixshape explanesignoi expsignoi fdip mdip odip2 ofpwd ofpwd2 opwd2
 planemis2 planemis3 planereg2 planereg3 planesig planesignoi pmshape2
 predict pwcascade pwcoh pwd pwd1 pwdchain pwdchain1 pwdchain2 pwdix
