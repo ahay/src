@@ -64,4 +64,19 @@ Result('AI-log-time','TIME-log AI-log',
 
 # Log spectrum
 
+Flow('AI','TIME-log AI-log','cat axis=2 ${SOURCES[1]} | transp | spline n1=9700 d1=0.15 o1=45')
+
+Flow('logspec','AI','spectra | math output="log(input)" ')
+Flow('logfreq','logspec','math output=x1 | math output="log(input)" ')
+
+Result('spec','logfreq logspec',
+       '''
+       cmplx ${SOURCES[1]} | 
+       graph symbol=o label1="log(Frequency)" label2="log(Spectrum)"
+       title="Log Spectrum"
+       ''')
+
+# Seismic data
+
+
 End()
