@@ -78,5 +78,21 @@ Result('spec','logfreq logspec',
 
 # Seismic data
 
+asc = 'export_inline362.ascii'
+Fetch(asc,'data',
+      server='https://raw.githubusercontent.com/',
+      top='seg/tutorials-2017/master/1710_Colored_inversion')
+
+Flow('seismic',asc,
+     '''
+     echo in=$SOURCE data_format=ascii_float 
+     n1=465 n2=951 d1=4 
+     label1=Time unit1=ms label2=Crossline unit2=trace |
+     dd form=native
+     ''',stdin=0)
+
+Result('seismic','grey wanttitle=n')
+
+# Step 1: Fit a function
 
 End()
