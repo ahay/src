@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-ndsmooth
+ndsmooth ndix
 '''
 
 try:  # distributed version
