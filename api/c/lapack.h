@@ -165,7 +165,7 @@ void cspsvx_(char *fact, char *uplo, int *n, int *nrhs, cpx8 *ap, cpx8 *afp, int
 void csptrf_(char *uplo, int *n, cpx8 *ap, int *ipiv, int *info);
 void csptri_(char *uplo, int *n, cpx8 *ap, int *ipiv, cpx8 *work, int *info);
 void csptrs_(char *uplo, int *n, int *nrhs, cpx8 *ap, int *ipiv, cpx8 *b, int *ldb, int *info);
-int csrot_(int *n, cpx8 *cx, int *incx, cpx8 *cy, int *incy, float *c, float *s);
+int csrot_(int *n, void *cx, int *incx, void *cy, int *incy, float *c, float *s);
 void cstedc_(char *compz, int *n, float *d, float *e, cpx8 *z, int *ldz, cpx8 *work, int *lwork, float *rwork, int *lrwork, int *iwork, int *liwork, int *info);
 void cstein_(int *n, float *d, float *e, int *m, float *w, int *iblock, int *isplit, cpx8 *z, int *ldz, float *work, int *iwork, int *ifail, int *info);
 void csteqr_(char *compz, int *n, float *d, float *e, cpx8 *z, int *ldz, float *work, int *info);
