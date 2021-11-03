@@ -13,28 +13,27 @@ fields of science and engineering.
 
 \LaTeX files are text files that can be edited in regular text
 editors. Similarly to HTML and Markdown, \LaTeX is a descriptive
-language: one can learn it by example following other \LaTeX
+language: one can learn it by example following examples from other \LaTeX
 documents. As of 2021, the Madagascar package contains nearly 300
 papers and book chapters written in \LaTeX. You can find the source of
 this chapter in
 \href{https://github.com/ahay/src/blob/master/book/m8r/latex/paper.tex}
-     {\$RSFSRC/book/m8r/latex/paper.tex}
-and attached in the appendix.
+     {\$RSFSRC/book/m8r/latex/paper.tex}. It is also attached in the appendix.
 
-SEG\TeX is a collection of \LaTeX macros developed for geophysical
-publications, such as \emph{Geophysics} articles, SEG (Society of
-Exploration Geophysicists) Annual Meeting abstracts, etc. SEG\TeX is
-an open-source project maintained by a group of volunteers. It
-integrates well with Madagascar to support the practice of
-\emph{reproducible research}, as formulated by Jon Claerbout:
-attaching software and data to the results of computational
-experiments to allow the reader to verify all computations reported in
-the paper using their own computer
-\cite[]{fomel2008guest}. Computational reproducibility is not the goal
-in itself but the means by which previous research can be extended
-further. It effectively turns all reported computational results into
-benchmarks and challenges future authors to try performing analagous
-computations with more efficiency and accuracy \cite[]{fomel2014reproducible}.
+     SEG\TeX is a collection of \LaTeX macros developed for
+     geophysical publications, such as \emph{Geophysics} articles, SEG
+     Annual Meeting abstracts, etc. SEG\TeX is an open-source project
+     maintained by a group of volunteers. It integrates well with
+     Madagascar to support the practice of \emph{reproducible
+       research}, as formulated by Jon Claerbout: attaching software
+     and data to the results of computational experiments to allow the
+     reader to verify all computations reported in the paper using
+     their own computer \cite[]{fomel2008guest}. Computational
+     reproducibility is not the goal in itself but the means by which
+     previous research can be extended further. It effectively turns
+     all reported computational results into benchmarks and challenges
+     future authors to try performing analagous computations with more
+     efficiency or accuracy \cite[]{fomel2014reproducible}.
 
 \LaTeX processing scripts included with Madagascar can turn a single
 document into multiple outputs: a paper in a journal, a chapter in a
@@ -44,7 +43,7 @@ multiple output formats, most importantly PDF and HTML.
 \section{SCons processing}
 
 To enable handling of \LaTeX documents, Madagascar provides special
-SCons rules provided in \texttt{rsf.tex} package (for handling
+SCons rules defined in \texttt{rsf.tex} package (for handling
 individual papers) and \texttt{rsf.book} package (for handling books
 and reports).
 
@@ -57,20 +56,22 @@ may look like
 
   Paper('article',use='amsmath',options='10pt')
 \end{lstlisting}
-After running
+Running
 \begin{verbatim}
 scons article.pdf
 \end{verbatim}
-the paper will be processed to generate a PDF document.
+processes the paper through \LaTeX to generate a PDF document.
 
-According to the Madagascar convention, the source LaTeX file
+According to the Madagascar convention, the source \LaTeX file
 (\texttt{article.tex}) contains neither the usual preamble
 \texttt{\\documentclass}, nor
 \texttt{\\begin{document}}--\texttt{\\end{document}} commands. This is
 done so that the same paper could be easily integrated into a
-collection of papers in a report or as a chapter in a book. Running
-\texttt{scons article.pdf} generates an intermediate file
-\texttt{article.ltx}, which contains the following preamble:
+collection of papers in a report or as a chapter in a book.
+
+While running the \texttt{scons article.pdf} command, SCons generates
+an intermediate file \texttt{article.ltx}, which contains the
+following preamble:
 \lstset{language=tex,showstringspaces=false,frame=single}
 \begin{lstlisting}
   \documentclass[10pt]{geophysics}
@@ -84,14 +85,12 @@ collection of papers in a report or as a chapter in a book. Running
   
 Several optional arguments can be supplied to the \texttt{Paper()} command. Some of them are:
 \begin{description}
-%\item[source=] specifies
 \item[lclass=] specifies the LaTeX class. For example, \texttt{lclass=segabs} can be used for SEG abstracts.
-%\item[scons=] specifies
 \item[use=] specifies additional packages to include with \texttt{\\usepackage}. For example, \texttt{use=hyperref} can be used to add the \texttt{hyperref} package for hypertext links.
 \item[include=] specifies additional commands to include in the preamble of the \LaTeX file.
 \item[options=] specifies additional options for the \LaTeX class.
 \end{description}
-Some additional arguments control the placement of reproducible
+Some additional arguments control the handling of reproducible
 figures and are described in the next section.
 
 The \texttt{SConstruct} file for paper processing may end with
@@ -102,7 +101,7 @@ which is equivalent to setting \texttt{paper.tex} as the default
 \LaTeX file. The name can be changed by giving \texttt{paper=} command
 to \texttt{End()}. All other agruments to \texttt{End()} are
 effectively interpreted as \verb#Paper('paper')#. The \texttt{End()}
-command is not strictly necessary, but it can be convenient, because
+command is not strictly necessary, but it is convenient, because
 it enables command-line commands like \texttt{scons pdf},
 \texttt{scons read}, etc. to be applied to the default file without
 the need to spell out the name of the paper file every time.
@@ -112,6 +111,7 @@ the need to spell out the name of the paper file every time.
 A typical directory structure for writing reproducible papers follows the structure of \texttt{\$RSFSRC/book} directory in the Madagascar source repository:
 \begin{verbatim}
 book1/
+    SConstruct [from rsf.book import *]
     paper1/
         SConstruct [from rsf.tex import *]
         paper.tex
@@ -122,13 +122,13 @@ book1/
 \end{verbatim}
 
 To include the results from the project directories into the paper,
-run first \texttt{scons lock} in each project directory. This command
-generates results figures (specified by \texttt{Result()} in the
+first run \texttt{scons lock} in each project directory. This command
+generates result figures (specified by \texttt{Result()} in the
 project \texttt{SConstruct}) files and then copies them to a separate
 location. The figures and all intermediate files can be then safely
 removed from the current directories and data directories by running
 \texttt{scons -c}. The safe directory for locked figures can be
-defined by \texttt{RSFFIGS} environmental variable. By default, it is
+specified by \texttt{RSFFIGS} environmental variable. By default, it is
 set to \texttt{\$RSFROOT/share/madagascar/figs}.
 
 To generate and lock all figures at once, you can run \texttt{sftour
@@ -140,16 +140,17 @@ executes the specified command in each subdirectory.
   
 Note that, when the paper is generated by \LaTeX in the paper
 directory, the figures are picked from the locked directory and not
-from subdirectories. What is the purpose of this arrangement? First,
-it explicitly separates two activities: running computational
-experiments to generate figures and writing a paper or a book
-describing the results. At the end of the first activity, the figures
-are locked not to be touched again. Second, storing figures separately
-allows for testing and maintaining reproducibility over time. Papers
-included in Madagascar store their reproducible figures in a separate
+from subdirectories. This arrangement may seem counter-intituitive but
+serves a clear purpose. First, it explicitly separates two activities:
+running computational experiments to generate figures and writing a
+paper or a book describing the results. At the end of the first
+activity, the figures are locked not to be touched again. Second,
+storing figures separately allows for testing and maintaining
+reproducibility over time. Papers included in Madagascar store their
+reproducible figures in a separate
 repository\footnote{\url{https://github.com/ahay/figs}}, which is used
-for a systematic testing of reproducibility, implemented through
-continuous integration \cite[]{duvall2007continuous}.
+for a systematic testing of reproducibility, implemented in Madagascar
+through continuous integration \cite[]{duvall2007continuous}.
 
 \subsection{Multiple outputs}
 
@@ -185,22 +186,183 @@ Paper('school10',lclass='beamer',
 
 \subsubsection{Multiple formats}
 
-PDF, HTML
+The most common output format is PDF (Portable Document
+Format). Running \texttt{scons pdf} generates a PDF file from the
+\LaTeX source.
+
+Running \texttt{scons read} generates a PDF file (if it does not exist
+already) and displays it on the screen. Madagascar will search for a
+PDF displaying application trying different commands in the following
+order:
+\begin{enumerate}
+\item kpdf
+\item evince
+\item xpdf
+\item gv
+\item open 
+\end{enumerate}
+If none of these commands exist on your system, you need to install
+one of them to be able to view PDF files.
+
+Running \texttt{scons print} generates a PDF file (if it does not exist
+already) and sends it for printing to the default printer.
+
+Running \texttt{scons wiki} translates the \LaTeX file to the
+Mediawiki format \cite[]{barrett2008mediawiki}, making it suitable for posting on the Madagascar
+wiki page or other Wikipedia-style sites. The translation is crude,
+done line by line other than taking the full semantic context into
+account, but it can sufficient for the first draft in most cases.
+
+Running \texttt{scons html} generates the output in HTML format using
+\LaTeX2HTML, an old but powerful translator
+program\footnote{\url{https://www.latex2html.org/}}. This is how
+papers and book chapters included with Madagascar are published on the
+website\footnote{\url{https://www.reproducibility.org/wiki/Reproducible_Documents}}. Enabling
+Madagascar customizations to \LaTeX2HTML requires using the SEG\TeX
+package and setting the LATEX2HTML environmental variable to
+\texttt{\$TEXMF/latex2html}, where \texttt{\$TEXMF} is the location of
+SEG\TeX installation (typically, \texttt{\$HOME/texmf}.) The
+translation results not in a single file but in a directory of
+files. By default, the name of the directory is \texttt{paper_html}.
+
+Finally, running \texttt{scons install} packages the HTML version of
+the paper together with its PDF version and all the figures for
+installation on the website. By default, the packaged paper is
+installed under
+\texttt{\$RSFROOT/share/madagascar/book/bookname/papername}. As part
+of the installation, \texttt{SConstruct} files from project
+directories are converted to the HTML format to provide links for
+reproducibility.
+
+The directory structure in the installation directory make look like
+the following:
+\begin{verbatim}
+book1/
+    index.html
+    ...
+    paper1/
+        paper.pdf
+        paper_html/
+            index.html
+            ...
+        project1.html
+        project1/
+            Fig/
+              figure1.pdf
+              figure1.png
+              ...
+\end{verbatim}
+
+\subsection{Preparing papers for submission}
+
+Madagascar attempts to simplify all steps of preparing a paper for a
+publication, from numerical experiments to writing to submission. This
+section describes some of the additional convenient commands defined
+in \texttt{rsf.tex}.
+
+\subsubsection{Dummy paper}
+
+Sometimes, the figures are created before writing the paper. A
+convenient command \texttt{scons dummy.tex} would generate a dummy \LaTeX
+paper, which includes all the figures from subdirectories.
+
+\subsubsection{Separate figures}
+
+Journals often require submitting figures in separate files. To make
+this step more convenient, running \texttt{scons figs} generates
+figures in EPS (encapsulated postscript) format numbered according to
+their appearance in the paper.
+
+\subsubsection{Color figures}
+
+By default, when Vplot figures are converted to EPS and PDF formats,
+they are made black-and-white even if the original had colors. To
+preserve colors in selected figures, use \texttt{color=} option in
+\texttt{Paper} or \texttt{End} command to list the names of figures
+that should have their colors preserved. For example, the following
+\texttt{SConstruct} file
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  from rsf.tex import *
+
+  Paper('article',use='amsmath',options='10pt',
+           color='map velocity')
+\end{lstlisting}
+will preserve color in figures named \texttt{map} and
+\texttt{velocity}. You can also use \texttt{color='ALL'} to keep the
+color in all figures.
+
+\subsubsection{High-resolution figures}
+
+To story bitmap images (such as those produced by Madagascar's
+\texttt{sfgrey} command), PDF uses  a lossy compression algorithm,
+which can blur some of the finer details. To switch to lossless
+compression (which generates larger files but keeps the initial
+resolution intact), use \texttt{hires=} option in
+\texttt{Paper} or \texttt{End} command. For example, the following
+\texttt{SConstruct} file
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  from rsf.tex import *
+
+  Paper('article',use='amsmath',options='10pt',
+           color='map velocity',
+           hires='velocity image')
+\end{lstlisting}
+will preserve color in figures named \texttt{map} and
+\texttt{velocity} and will preserve high resolution in figures named
+\texttt{velocity} and \texttt{image}.
+
+\subsubsection{Non-reproducible figures}
+
+\subsubsection{Non-Madagascar figures}
 
 \section{Including papers into books and reports}
 
+The production of books and reports using Madagascar tools is
+controlled by customized SCons commands specified in the
+\texttt{rsf.book} package.
+
+An example \texttt{SConstruct} file at the book level may look like
+the following:
+\lstset{language=python,showstringspaces=false,frame=single}
+\begin{lstlisting}
+  from rsf.book import *
+
+  Book(title=''My Book'',author=''My Name'',
+          chapters=''intro theory discussion'')
+
+  End(options='book')
+\end{lstlisting}
+The \texttt{chapters=} argument in the \texttt{Book} command contains
+the list of chapter directories in the order of their appearance in
+the book.
+
+\subsection{Different kinds of books}
+
+\subsubsection{Book}
+
+\subsubsection{Report}
+
+\subsubsection{Thesis}
+
+\section{Multiple outputs}
+
+% pdf
+
+% www
+
 \section{Acknowledgments}
 
-The \LaTeX-processing scripts in Madagascar are inspired by a system developed
-earlier at SEP (Stanford Exploration Project) for implementing Jon
-Claerbout's vision of reproducible research \cite[]{sep}.
+The \LaTeX-processing scripts in Madagascar were directly inspired by
+a system developed earlier at SEP (Stanford Exploration Project) for
+implementing Jon Claerbout's vision of reproducible research
+\cite[]{sep}.
 
 \bibliographystyle{seg}
 \bibliography{latex}
 
-% Add latex.bib !
-
-%\appendix
-%\section{Appendix: The source of this document}
-%\verbatiminput{paper.tex}
+\appendix
+\section{Appendix: The source of this document}
+\verbatiminput{paper.tex}
 
