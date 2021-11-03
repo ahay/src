@@ -46,7 +46,9 @@ int main(int argc, char* argv[])
   int nxtap,hzero;
   bool verbose;
   float epsDSO,eps4D,epsNORM;
+#if (CUDART_VERSION >= 10000)
   size_t pbuffersize;
+#endif
   
   /* I/O files */
   sf_file Fxig1 = NULL; /* Baseline XIG */

@@ -338,31 +338,46 @@ int main(int argc, char* argv[])
   		//
   		/**************************************************************/
 		setup_FD<<<dimGrid,dimBlock>>>(swf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[0],aabb_h[1],nx,nw,iz);
+#if (CUDART_VERSION >= 10000)
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
 		cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
-		/* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
+#else
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+#endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,swf_d,nx,nw); /* SWF */
 		setup_FD<<<dimGrid,dimBlock>>>(swf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
+#if (CUDART_VERSION >= 10000)
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
 		cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
-		/* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
+#else
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+#endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,swf_d,nx,nw);
 
 		setup_FD<<<dimGrid,dimBlock>>>(rwf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow, -caus*aabb_h[0],aabb_h[1],nx,nw,iz);
+#if (CUDART_VERSION >= 10000)
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
 		cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
-		/* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
+#else
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+#endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,rwf_d,nx,nw); /* RWF */
 		setup_FD<<<dimGrid,dimBlock>>>(rwf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow, -caus*aabb_h[2],aabb_h[3],nx,nw,iz);
+#if (CUDART_VERSION >= 10000)
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
 		cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
-		/* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
+#else
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+#endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,rwf_d,nx,nw);
  
 		setup_FD<<<dimGrid,dimBlock>>>(swfadj_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[0],aabb_h[1],nx,nw,iz);
+#if (CUDART_VERSION >= 10000)
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
 		cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
-		/* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
+#else
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+#endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,swfadj_d,nx,nw); /* SWFADJ */
 		setup_FD<<<dimGrid,dimBlock>>>(swfadj_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
