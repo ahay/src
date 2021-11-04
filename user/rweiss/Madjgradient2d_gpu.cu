@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
   bool verbose;
 #if (CUDART_VERSION >= 10000)
   size_t pbuffersize;
-
+#endif
   
   /* I/O files */
   sf_file Fxig = NULL; /* Input XIG */
