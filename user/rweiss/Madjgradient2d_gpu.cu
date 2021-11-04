@@ -45,7 +45,9 @@ int main(int argc, char* argv[])
   float dx,dz,ow,dw;
   int nxtap;
   bool verbose;
+#if (CUDART_VERSION >= 10000)
   size_t pbuffersize;
+
   
   /* I/O files */
   sf_file Fxig = NULL; /* Input XIG */
@@ -380,20 +382,29 @@ int main(int argc, char* argv[])
 #endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,swfadj_d,nx,nw); /* SWFADJ */
 		setup_FD<<<dimGrid,dimBlock>>>(swfadj_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
+#if (CUDART_VERSION >= 10000)
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
 		cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
-		/* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
+#else
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+#endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,swfadj_d,nx,nw);
 
 		setup_FD<<<dimGrid,dimBlock>>>(rwfadj_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow, -caus*aabb_h[0],aabb_h[1],nx,nw,iz);
+#if (CUDART_VERSION >= 10000)
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
 		cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
-		/* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
+#else
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+#endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,rwfadj_d,nx,nw); /* RWFADJ */
 		setup_FD<<<dimGrid,dimBlock>>>(rwfadj_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow, -caus*aabb_h[2],aabb_h[3],nx,nw,iz);
+#if (CUDART_VERSION >= 10000)
 		cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
 		cusparseCgtsv2StridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx, &pbuffersize);
-		/* cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx); */
+#else
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+#endif
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,rwfadj_d,nx,nw);
   
    		/**************************************************************/
