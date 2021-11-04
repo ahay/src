@@ -17,7 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include "ntriangle.h"
+
 #include "ntrianglen.h"
 
 static int n0, n1, n2;

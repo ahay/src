@@ -19,7 +19,6 @@
 */
 #include <rsf.h>
 #include "divnn.h"
-#include "ntriangle.h"
 #include "ntrianglen.h"
 
 static int niter, n;
