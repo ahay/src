@@ -27,7 +27,7 @@ void nsmoothder_init(int nd     /* data size */,
         int ndim  /* number of dimensions */, 
         int *nbox /* smoothing radius [ndim] */, 
         float **rct /* triangle lengths [ndim][nd] */,
-        int **sft /* triangle shifts [ndim][nd] */,
+        float **sft /* triangle shifts [ndim][nd] */,
         int *ndat /* data size [ndim] */,
         int n1_v1, 
         int n2_v1)

@@ -19,10 +19,8 @@
 
 #include <rsf.h>
 
-#include "ntriangle.h"
-
 static int *n, s[SF_MAX_DIM], nd, dim;
-static ntriangle *tr;
+static sf_ntriangle *tr;
 static float **tlen, **tsft;
 
 void ndtrianglen_init (int ndim  /* number of dimensions */, 
@@ -37,11 +35,11 @@ void ndtrianglen_init (int ndim  /* number of dimensions */,
     dim = ndim;
     n = sf_intalloc(dim);
 
-    tr = (ntriangle*) sf_alloc(dim,sizeof(ntriangle));
+    tr = (sf_ntriangle*) sf_alloc(dim,sizeof(sf_ntriangle));
 
     nd = 1;
     for (i=0; i < dim; i++) {
-      tr[i] = (nbox[i] > 1)? ntriangle_init (nbox[i],ndat[i]): NULL;
+      tr[i] = (nbox[i] > 1)? sf_ntriangle_init (nbox[i],ndat[i]): NULL;
       s[i] = nd;
       n[i] = ndat[i];
       nd *= ndat[i];
@@ -84,14 +82,14 @@ void ndtrianglen (int ider   /* direction of the derivative */,
               t1[i1] = data[i0+i1*s1];
             }
             for (irep=0; irep < nrep-1; irep++) {
-              nsmooth2(tr[i], 0, 1, false, tlen[i], tsft[i], t1);
+              sf_nsmooth2(tr[i], 0, 1, false, tlen[i], tsft[i], t1);
             }
-            ndsmooth(tr[i],0, 1,false,tlen[i],tsft[i],t1); 
+            sf_ndsmooth(tr[i],0, 1,false,tlen[i],tsft[i],t1); 
             sf_deriv(t1,t2);
           }
 
         for (irep=0; irep < nrep; irep++) {
-          nsmooth2(tr[i], i0, s[i], false, tlen[i], tsft[i], data);
+          sf_nsmooth2(tr[i], i0, s[i], false, tlen[i], tsft[i], data);
         }
     
           if (i==ider) {
@@ -118,7 +116,7 @@ void ndtrianglen_close(void)
     int i;
 
     for (i=0; i < dim; i++) {
-      if (NULL != tr[i]) ntriangle_close (tr[i]);
+      if (NULL != tr[i]) sf_ntriangle_close (tr[i]);
     }
 
     free(tr);

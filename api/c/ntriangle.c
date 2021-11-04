@@ -16,18 +16,18 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <rsf.h>
+#include "_bool.h"
+#include "alloc.h"
 
 #ifndef _ntriangle_h
 
-typedef struct Ntriangle *ntriangle;
+typedef struct sf_Ntriangle *sf_ntriangle;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Ntriangle {
+struct sf_Ntriangle {
     float *tmp;
     int np, nb, nx;
 };
@@ -45,13 +45,13 @@ static void double1 (int o, int d, int nx, int nb,
         const float* t, const float* s, float* x, const float* tmp);
 
 
-ntriangle ntriangle_init (int nbox /* maximum triangle length */, 
-			  int ndat /* data length */)
+sf_ntriangle sf_ntriangle_init (int nbox /* maximum triangle length */, 
+			     int ndat /* data length */)
 /*< initialize >*/
 {
-    ntriangle tr;
+    sf_ntriangle tr;
 
-    tr = (ntriangle) sf_alloc(1,sizeof(*tr));
+    tr = (sf_ntriangle) sf_alloc(1,sizeof(*tr));
 
     tr->nx = ndat;
     tr->nb = nbox;
@@ -254,12 +254,12 @@ static void double1 (int o, int d, int nx, int nb,
     }
 }
 
-void nsmooth (ntriangle tr   /* smoothing object */, 
-	      int o, int d   /* sampling */, 
-	      bool der       /* derivative flag */, 
-	      const float *t /* triangle lengths */, 
-	      const float *s /* triangle shifts */,
-	      float *x       /* data (smoothed in place) */)
+void sf_nsmooth (sf_ntriangle tr   /* smoothing object */, 
+		 int o, int d   /* sampling */, 
+		 bool der       /* derivative flag */, 
+		 const float *t /* triangle lengths */, 
+		 const float *s /* triangle shifts */,
+		 float *x       /* data (smoothed in place) */)
 /*< smooth >*/
 {
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp); 
@@ -267,12 +267,12 @@ void nsmooth (ntriangle tr   /* smoothing object */,
     triple (o,d,tr->nx,tr->nb,t,s,x,tr->tmp);
 }
 
-void nsmooth2 (ntriangle tr   /* smoothing object */, 
-	       int o, int d   /* sampling */, 
-	       bool der       /* derivative flag */, 
-	       const float *t /* triangle lengths */,
-	       const float *s /* triangle shifts */,
-	       float *x       /* data (smoothed in place) */)
+void sf_nsmooth2 (sf_ntriangle tr   /* smoothing object */, 
+		  int o, int d   /* sampling */, 
+		  bool der       /* derivative flag */, 
+		  const float *t /* triangle lengths */,
+		  const float *s /* triangle shifts */,
+		  float *x       /* data (smoothed in place) */)
 /*< alternative smooth >*/
 {
     triple2 (o,d,tr->nx,tr->nb,t,s,x,tr->tmp);
@@ -280,12 +280,12 @@ void nsmooth2 (ntriangle tr   /* smoothing object */,
     fold2 (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }
 
-void ndsmooth (ntriangle tr /* smoothing derivative object */, 
-        int o, int d /* sampling. o: starting index, d: stride in samples for 1/2/3rd dimension; all refer to a correct index in a 1D vector  */, 
-        bool der     /* derivative flag */, 
-        const float *t /* triangle lengths */, 
-        const float *s /* triangle shifts */,
-        float *x     /* data (smoothed in place) */)
+void sf_ndsmooth (sf_ntriangle tr /* smoothing derivative object */, 
+		  int o, int d /* sampling. o: starting index, d: stride in samples for 1/2/3rd dimension; all refer to a correct index in a 1D vector  */, 
+		  bool der     /* derivative flag */, 
+		  const float *t /* triangle lengths */, 
+		  const float *s /* triangle shifts */,
+		  float *x     /* data (smoothed in place) */)
 
 /*< smooth derivative >*/
 {
@@ -294,7 +294,7 @@ void ndsmooth (ntriangle tr /* smoothing derivative object */,
     double1 (o,d,tr->nx,tr->nb,t,s,x,tr->tmp);
 }
 
-void  ntriangle_close(ntriangle tr)
+void  sf_ntriangle_close(sf_ntriangle tr)
 /*< free allocated storage >*/
 {
     free (tr->tmp);
