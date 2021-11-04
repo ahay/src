@@ -17,16 +17,20 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "ntrianglen.h"
-
-#include <rsf.h>
-/*^*/
+#include "_bool.h"
+#include "_defs.h"
+#include "file.h"
+#include "decart.h"
+#include "ntriangle.h"
+#include "adjnull.h"
+#include "error.h"
+#include "alloc.h"
 
 static int *n, s[SF_MAX_DIM], nd, dim, nrep;
 static sf_ntriangle *tr;
 static float *tmp, **tlen, **tsft;
 
-void ntrianglen_init (int ndim    /* number of dimensions */, 
+void sf_ntrianglen_init (int ndim    /* number of dimensions */, 
 		      int *nbox   /* triangle radius [ndim] */, 
 		      int *ndat   /* data dimensions [ndim] */,
 		      float **len /* triangle lengths [ndim][nd] */,
@@ -54,7 +58,7 @@ void ntrianglen_init (int ndim    /* number of dimensions */,
     nrep = repeat;
 }
 
-void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+void sf_ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 /*< linear operator >*/
 {
     int i, j, i0, irep;
@@ -99,7 +103,7 @@ void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }    
 }
 
-void ntrianglen_close(void)
+void sf_ntrianglen_close(void)
 /*< free allocated storage >*/
 {
     int i;

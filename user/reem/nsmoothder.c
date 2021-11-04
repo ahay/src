@@ -19,7 +19,6 @@
 */
 
 #include <rsf.h>
-#include "ntrianglen.h"
 
 static float *tmp;
 
@@ -39,7 +38,7 @@ void nsmoothder_init(int nd     /* data size */,
     
     sf_repeat_init(n1,n2,sf_causint_lop);
 
-    ntrianglen_init(ndim,nbox,ndat,rct,sft,1);
+    sf_ntrianglen_init(ndim,nbox,ndat,rct,sft,1);
 
     tmp = sf_floatalloc(nd);
     sf_conjgrad_init(nd, nd, nd, nd, 1., 1.e-8, true, false);    
@@ -61,10 +60,10 @@ void nsmoothder(int niter     /* number of iterations */,
 { 
     if (NULL != weight) {
   sf_weight_init(weight);
-  sf_conjgrad(sf_weight_lop,sf_repeat_lop,ntrianglen_lop,
+  sf_conjgrad(sf_weight_lop,sf_repeat_lop,sf_ntrianglen_lop,
         tmp,der,data,niter);
     } else {
-  sf_conjgrad(NULL,sf_repeat_lop,ntrianglen_lop,
+  sf_conjgrad(NULL,sf_repeat_lop,sf_ntrianglen_lop,
         tmp,der,data,niter);
     }
 }
