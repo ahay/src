@@ -18,11 +18,9 @@
 */
 #include <rsf.h>
 
-#include "ntriangle.h"
-
 static int n1, n2;
 static float **rct, *trace, *sft;
-static ntriangle tr;
+static sf_ntriangle tr;
 
 void nsmooth1_init(int ns /* number of samples in a trace */,
 		   int nt /* number of traces */,
@@ -46,7 +44,7 @@ void nsmooth1_init(int ns /* number of samples in a trace */,
     }
 
     trace = sf_floatalloc(n1);
-    tr = ntriangle_init (rect1,n1);
+    tr = sf_ntriangle_init (rect1,n1);
 }
 
 void nsmooth1_close(void)
@@ -54,7 +52,7 @@ void nsmooth1_close(void)
 {
     free(sft);
     free(trace);
-    ntriangle_close(tr);
+    sf_ntriangle_close(tr);
 }
 
 void nsmooth1_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
@@ -71,7 +69,7 @@ void nsmooth1_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	    for (i1=0; i1 < n1; i1++) {
 		trace[i1]=y[i1+i2*n1];
 	    }
-	    nsmooth2 (tr,0,1,false,rct[i2],sft,trace);
+	    sf_nsmooth2 (tr,0,1,false,rct[i2],sft,trace);
 	    for (i1=0; i1 < n1; i1++) {
 		x[i1+i2*n1] += trace[i1];
 	    }
@@ -79,7 +77,7 @@ void nsmooth1_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	    for (i1=0; i1 < n1; i1++) {
 		trace[i1]=x[i1+i2*n1];
 	    }
-	    nsmooth (tr,0,1,false,rct[i2],sft,trace);
+	    sf_nsmooth (tr,0,1,false,rct[i2],sft,trace);
 	    for (i1=0; i1 < n1; i1++) {
 		y[i1+i2*n1] += trace[i1];
 	    }

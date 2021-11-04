@@ -19,14 +19,12 @@
 
 #include <rsf.h>
 
-#include "ntriangle.h"
-
 int main (int argc, char* argv[]) 
 {
     bool adj;
     int nrep, irep, n1, n2, i1, i2, rect1, shift;
     float* data, **rct, **sft;
-    ntriangle tr;
+    sf_ntriangle tr;
     sf_file in, out, rect, sift;
 
     sf_init (argc, argv);
@@ -76,16 +74,16 @@ int main (int argc, char* argv[])
 	}
     }
 
-    tr = ntriangle_init (rect1+1,n1);
+    tr = sf_ntriangle_init (rect1+1,n1);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
 
 	for (irep=0; irep < nrep; irep++) {
 	    if (adj) {
-		nsmooth (tr,0,1,false,rct[i2],sft[i2],data);
+		sf_nsmooth (tr,0,1,false,rct[i2],sft[i2],data);
 	    } else {
-		nsmooth2 (tr,0,1,false,rct[i2],sft[i2],data);
+		sf_nsmooth2 (tr,0,1,false,rct[i2],sft[i2],data);
 	    }
 	}
 	
