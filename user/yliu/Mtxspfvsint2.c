@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool change, verb;
+    bool smooth, verb;
     int i1, i2, it, ix, n1, n2, n12, dim, na, i, nst, seed;
     int a[SF_MAX_DIM], n[SF_MAX_DIM];
     int *mask;
@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     
     if (!sf_getbool("verb", &verb)) verb = false;
-    if (!sf_getbool("change", &change)) change = false;
+    if (!sf_getbool("smooth", &smooth)) smooth = false;
     
     known = sf_input("known");
     if (SF_INT != sf_gettype(known)) sf_error("Need int type in known");
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 				d[(i2+ix)*n1+i1+it];
 			    da += d[(i2+ix)*n1+i1+it]*
 				(lambda2*aa[i]+lambda1*st[i2*na+i])/lambda;
-			    if(change) {
+			    if(smooth) {
 				dea +=d[(i2+ix)*n1+i1+it]*(lambda2*aa[i]*(1+epsx*(d[(i2+ix-1)*n1+i1+it]-d[(i2+ix)*n1+i1+it]))+lambda1*st[i2*na+i]*(1+epst*(d[(i2+ix)*n1+i1+it-1]-d[(i2+ix)*n1+i1+it])))/lambda;
 			    }
 			    else {
@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 			    i++;
 			}
 			else {
-			    if(change) {
+			    if(smooth) {
 				aa[i] = (lambda2*aa[i]*(1+epsx*(d[(i2+ix-1)*n1+i1+it]-d[(i2+ix)*n1+i1+it]))+lambda1*st[i2*na+i]*(1+epst*(d[(i2+ix)*n1+i1+it-1]-d[(i2+ix)*n1+i1+it])))/lambda-rn*d[(i2+ix)*n1+i1+it];
 			    }			
 			    else {
