@@ -15,7 +15,7 @@ pick31 pseudoprim pwcsemb pwd2 pwsfault pwsfault3 pwsmooth3 radonoper
 reversval rtft saltpepper sclet seisavf seisbreg2 seishrink seismis2
 seispocs seisreg2 seisxwell sharpsimi snr sphase st stft sv2d svd
 svddenoise swell testapef testcasoper testmatch threshold2 threshold3
-tslread tvmf txrna txrna2 txrna3 txspf txsorth v2d variogram
+tslread tvmf txrna txrna2 txrna3 txspf txspfvsint2 txsorth v2d variogram
 variogram2 vconvert virtualdata wavemis2 winscan wmf zcwt
 '''
 
