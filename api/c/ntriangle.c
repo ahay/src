@@ -149,10 +149,10 @@ static void triple (int o, int d, int nx, int nb,
     float tt, ss, wt, wt1, w, wp, wm, c, cp, cn;
 
     for (i=0; i < nx; i++) {
-	tt = t[i];
+	tt = t[o+i*d]; 			/*t[i]->t[o+i*d]: corrected by Yangkang, Dec 13, 2021*/
 	nt = floorf(tt);
 	nt1 = nt+1;
-	ss = s[i];
+	ss = s[o+i*d];			/*s[i]->s[o+i*d]: corrected by Yangkang, Dec 13, 2021*/
 	ns = roundf(ss);
 	ss -= ns;
 	ns += nb;
