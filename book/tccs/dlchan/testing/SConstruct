@@ -76,6 +76,20 @@ Fetch('validationmt2.zip','faults')
 Fetch('validationmt3.zip','faults')
 
 def get_data(target=None, source=None, env=None):
+    
+    import zipfile
+    with zipfile.ZipFile(str(source[0]),'r') as zipf:
+        zipf.extractall('./')
+
+    with zipfile.ZipFile(str(source[1]),'r') as zipf:
+        zipf.extractall('./')
+
+    with zipfile.ZipFile(str(source[2]),'r') as zipf:
+        zipf.extractall('./')
+
+    with zipfile.ZipFile(str(source[3]),'r') as zipf:
+        zipf.extractall('./')
+
     path = 'trainmt2/*.npz'    
 
     data = []
@@ -126,7 +140,7 @@ def get_data(target=None, source=None, env=None):
     m8r.File(data,name=str(target[2]))
     m8r.File(label,name=str(target[3])) 
 
-Command(['xtrainchan.rsf','ytrainchan.rsf','xtestchan.rsf','ytestchan.rsf'],None,
+Command(['xtrainchan.rsf','ytrainchan.rsf','xtestchan.rsf','ytestchan.rsf'],['trainmt2.zip','validationmt2.zip','trainmt3.zip','validationmt3.zip'],
        action=Action(get_data))
 
 def get_deconv_filter(shape, dtype=None):
