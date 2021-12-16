@@ -20,7 +20,7 @@
 #
 
 from rsf.proj import *
-import channels
+import rsf.recipes.channelsthin as channels
 
 # Index of result names
 
