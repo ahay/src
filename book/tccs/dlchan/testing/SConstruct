@@ -1117,7 +1117,7 @@ for file in ['full_angle']:
 Flow('mapped_full_angle','full_angle full_angle_hdr','intbin head=${SOURCES[1]} xk=iline yk=xline | put label2=Inline label3=Crossline')
 #Flow('mapped_full_angle_cut','mapped_full_angle','window min1=0.7 max1=1.704')
 Flow('mapped_full_angle_cut','mapped_full_angle','window min1=1 max1=1.4 min2=2200 max2=2400 min3=4900 max3=5200')
-Result('imageParinew3','mapped_full_angle_cut','sfbyte gainpanel=all bar=bar.rsf | sfgrey3 frame1=100 frame2=100 frame3=100 flat=y title="Field data" barlabel=Amplitude label1=Time unit1=s label2=Inline unit2= label3=Crossline unit3= scalebar=y')
+Result('imageParinew3','mapped_full_angle_cut','sfbyte gainpanel=all bar=bar.rsf | sfgrey3 point1=0.2 frame1=100 frame2=100 frame3=100 flat=y title="Field data" barlabel=Amplitude label1=Time unit1=s label2=Inline unit2= label3=Crossline unit3= scalebar=y')
 
 Flow('mapped_full_angle_cut_patch','mapped_full_angle_cut','transp plane=13 | patch w=128,128,128')
 Command(['prppredchan.rsf','prppredchanvar.rsf'],['modelchan.h5','mapped_full_angle_cut_patch.rsf'],action=Action(predict2))
