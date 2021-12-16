@@ -441,8 +441,7 @@ Result('conv2','conv2-1 conv2-2 conv2-3','OverUnderAniso')
 # $Id: SConstruct 1934 2006-06-21 15:45:20Z jennings_jim $
 #
 
-from rsf.proj import *
-import channels
+import rsf.recipes.channels as channels
 
 # Index of result names
 
