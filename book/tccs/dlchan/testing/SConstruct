@@ -74,6 +74,7 @@ Fetch('trainmt2.zip','faults')
 Fetch('trainmt3.zip','faults')
 Fetch('validationmt2.zip','faults')
 Fetch('validationmt3.zip','faults')
+Fetch('dn.sgy','faults')
 
 def get_data(target=None, source=None, env=None):
     
