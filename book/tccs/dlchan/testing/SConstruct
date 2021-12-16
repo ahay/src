@@ -70,8 +70,13 @@ def iou_coef(y_true, y_pred, smooth=1e-6):
 
 _EPSILON = tf.keras.backend.epsilon()
 
+Fetch('trainmt2.zip','faults')
+Fetch('trainmt3.zip','faults')
+Fetch('validationmt2.zip','faults')
+Fetch('validationmt3.zip','faults')
+
 def get_data(target=None, source=None, env=None):
-    path = '/home/npp423/synchan/data/trainmt2/*.npz'    
+    path = 'trainmt2/*.npz'    
 
     data = []
     label = []
@@ -82,7 +87,7 @@ def get_data(target=None, source=None, env=None):
         data.append(patches)
         label.append(labels)
 
-    path = '/home/npp423/synchan/data/trainmt3/*.npz'
+    path = 'trainmt3/*.npz'
 
     for name in glob.glob(path):
         patches = np.load(name)['patch']
@@ -97,7 +102,7 @@ def get_data(target=None, source=None, env=None):
     m8r.File(data,name=str(target[0]))
     m8r.File(label,name=str(target[1]))
 
-    pathval = '/home/npp423/synchan/data/validationmt2/*.npz'
+    pathval = 'validationmt2/*.npz'
     data = []
     label = []
     for name in glob.glob(pathval):
@@ -107,7 +112,7 @@ def get_data(target=None, source=None, env=None):
         data.append(patches)
         label.append(labels)
 
-    pathval = '/home/npp423/synchan/data/validationmt3/*.npz'
+    pathval = 'validationmt3/*.npz'
     for name in glob.glob(pathval):
         patches = np.load(name)['patch']
         labels = np.load(name)['label']
@@ -958,24 +963,23 @@ for i in depth_list_3D:
                 'transp plane=12 |'
                 + zplot3d(par,'','title="Training data"'))
 
+SConscript('thin/SConstruct')
 Flow('mt3d_40-2','thin/mt3d_40.rsf','cp')
 Result('mt3d-40-2','mt3d_40-2','transp plane=12 |'
                 + zplot3d(par,'','title="Training data"'))
+
+SConscript('label/SConstruct')
+Flow('label','ref label/reflbl.rsf','math x=${SOURCES[0]} y=${SOURCES[1]} output="x-y" | mask min=0 max=0 | dd type=float | math output="1-input"')
 Result('diff-mask2','label',
        'transp plane=13 |'
        + zplot3d(par,'','title="Training label"'))
+
 par1 = par
 par1['xpad']=128/2.
 par1['ypad']=128/2.
 Flow('prdw9','xtestchan','window n1=1 n5=1 f5=150')
 Flow('prdw9y','ytestchan','window n1=1 n5=1 f5=150')
 Result('prdw9','put unit1=m unit2=m unit3=m |' + zplot3d(par1,'','title="Training cuboid"'))
-
-
-Flow('label','ref label/reflbl.rsf','math x=${SOURCES[0]} y=${SOURCES[1]} output="x-y" | mask min=0 max=0 | dd type=float | math output="1-input"')
-#Result('diff-mask2','label',
-       #'transp plane=13 |'
-       #+ zplot3d(par,'','title="Training label"'))
 
 Flow(['dn.rsf','dn_hdr.rsf',
       'dn.thdr','dn.bhdr'],
