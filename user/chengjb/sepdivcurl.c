@@ -129,7 +129,7 @@ void sepdiv2d(float *rk, float *x, int *ijkx, int *ijkz, int nx,int nz,int m,int
 void sepdiv3d(float *rk, float *x, int *ijkx, int *ijky, int *ijkz, int nx,int ny,int nz,int m,int n, int iflag)
 /*< sepdiv3d: separating wave-modes based on divergence >*/
 {
-       int i, im, jm, ikx, iky, ikz, nxz;
+       int i, im, ikx, iky, ikz, nxz;
 
 	   nxz=nx*nz;
 #ifdef SF_HAS_FFTW  // using FFTW in Madagascar
@@ -243,7 +243,7 @@ void sepdiv3d(float *rk, float *x, int *ijkx, int *ijky, int *ijkz, int nx,int n
 void sepdiv3dD(double *rk, float *x, int *ijkx, int *ijky, int *ijkz, int nx,int ny,int nz,int m,int n, int iflag)
 /*< sepdiv3d: separating wave-modes based on divergence >*/
 {
-       int i, im, jm, ikx, iky, ikz, nxz;
+       int i, im, ikx, iky, ikz, nxz;
 
 	   nxz=nx*nz;
 #ifdef SF_HAS_FFTW  // using FFTW in Madagascar

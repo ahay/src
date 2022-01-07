@@ -22,7 +22,7 @@
 
 int main (int argc, char* argv[]) 
 {
-    int n1, n2, n3, n4, nw, wtemp, ndcs;
+    int n1, n2, n3, nw, wtemp, ndcs;
     int i, i1, i2, i3, j=0, j1, j2, lr, ud, n23;
     int o2, d2, o3, d3, *nwx, *nwy;
     
@@ -54,7 +54,6 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histint(in,"n3",&n3)) sf_error("No n3= in input");
-    n4 = sf_leftsize(in,3);
     n23 = n2*n3;
     if (!sf_histint(in,"o2",&o2)) sf_error("No o2= in input");
     if (!sf_histint(in,"o3",&o3)) sf_error("No o3= in input");

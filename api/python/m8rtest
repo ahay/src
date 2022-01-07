@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 '''
+>>> from __future__ import print_function
 >>> import m8r
 >>> par = m8r.Par(["prog","a=5","b=as","a=100"])
 >>> par.int("a")
@@ -9,6 +10,7 @@
 >>> par.int("c",10)
 10
 >>> spike = m8r.spike(n1=10)[0]
+>>> filtered = m8r.put(d1=0.1).bandpass(fhi=1).apply(spike)
 >>> spike.mean()
 1.0
 >>> spike[0]
@@ -21,7 +23,7 @@
 >>> spike3 = spike2*spike2+spike
 >>> spike3.max()
 5.0
->>> print spike3.dot(spike2)
+>>> print(spike3.dot(spike2))
 100.0
 >>> spike[5]
 1.0
@@ -44,9 +46,16 @@
 >>> f = m8r.Input('spike.rsf')
 >>> a = numpy.zeros((3,5),dtype='float32')
 >>> f.read(a)
-array([[0., 0., 1., 0., 0.],
-       [0., 0., 1., 0., 0.],
-       [0., 0., 1., 0., 0.]], dtype=float32)
+>>> a[0][0]
+0.0
+>>> a[1][2]
+1.0
+>>> f2 = m8r.File(a,name='a.rsf')
+>>> f2.mean()
+0.2
+>>> b = m8r.spike(k1=2)[a]
+>>> b[2][1]
+1.0
 '''
 
 import doctest

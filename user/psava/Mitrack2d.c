@@ -63,8 +63,10 @@ int main(int argc, char* argv[])
     if(! sf_getbool("nou",&nou)) nou=true;
 	
     /*------------------------------------------------------------*/
-    if(! sf_getfloat("ox",&ox)) ox=0.0; oo.x=ox;
-    if(! sf_getfloat("oz",&oz)) oz=0.0; oo.z=oz;
+    if(! sf_getfloat("ox",&ox)) ox=0.0; 
+	oo.x=ox;
+    if(! sf_getfloat("oz",&oz)) oz=0.0; 
+	oo.z=oz;
     if(! sf_getfloat("angMAX",&angMAX)) angMAX=90.0;
     if(! sf_getfloat("gauANG",&gauANG)) gauANG=0.3*angMAX;
     gauANG = 1./ (2.*pow(gauANG,2));

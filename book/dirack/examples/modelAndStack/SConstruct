@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# SConstruct  (Madagascar Script)
+#
+# Purpose: Kirchhoff-Newton modeling, velocity analysis,
+# NMO correction and stack.
+#
+# Site: http://www.dirackslounge.online
+# 
+# Version 1.0
+#
+# Programer: Rodolfo A. C. Neves (Dirack) 19/08/2020
+#
+# Email: rodolfo_profissional@hotmail.com
+#
+# License: GPL-3.0 <https://www.gnu.org/licenses/gpl-3.0.txt>.
+
+# Madagascar package
+from rsf.proj import *
+
+# Personal Madagascar recipes
+from rsf.recipes.kimodel import multiLayerModel as mlmod
+from rsf.recipes.kimodel import kirchhoffNewtonModeling as kinewmod
+from rsf.recipes.velocityAnalysis import velocityAnalysis as nmoStack
+
+xmax = 6.0
+zmax = 2.0
+
+layers = ((0.30,0.50,0.20,0.30),
+	  (1.65,1.85,1.55,1.65))
+
+velocities = (1.508,
+	      1.690,
+	      2.0)
+
+# Generate multi layer model
+mlmod(interfaces='interfaces',
+	dipsfile='interfacesDip',
+	modelfile='mod1',
+	xmax=xmax,
+	zmax=zmax,
+	layers=layers,
+	velocities=velocities)
+
+# Generate a modeled data cube
+kinewmod(reflectors='interfaces',
+	reflectorsDip='interfacesDip',
+	filename='multiLayerDataCube',
+	velocities=velocities,
+	nt=1001,
+	dt=0.004,
+	ns=201,
+	ds=0.025,
+	nh=161,
+	dh=0.025)
+
+# NMO Stack
+nmoStack(dataCube='multiLayerDataCube',
+	pick='vnmo',
+	stack='stackedSection',
+	vrms='vrms',
+	v0=1.5,
+	dv=0.01,
+	nv=100,
+	vel0=1.5,
+	rect1=15,
+	rect2=40,
+	rect3=3,
+	dt=0.004)
+
+# Use aliases to split building
+# Call it 'scons alias' to build
+# target identified by alias
+Alias('model','interfaces.rsf')
+Alias('kimodel','multiLayerDataCube.rsf')
+Alias('velan','stackedSection.rsf')
+
+Result('stackedSection','grey title=Stack')
+
+End()

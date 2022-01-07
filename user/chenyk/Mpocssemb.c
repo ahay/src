@@ -31,12 +31,12 @@ int main(int argc, char* argv[])
 
 
   int nt, nx, it, ix, niter, iter, ntfft, nxfft,np, ip, ikt, ikx, iktn, ikxn, ifsnr; /* iktn, ikxn, iNyquist*/
-  float dt, dx, pmin, pmax, dp, p, cmax, scalar, sembpmax, num, den;
-  float *sembp, *mask, *gy, *fden, *fshift, *SNR;
-  float **fdata, **taup, **odata, **tdata, **odatat, **semb; /* tdata is the true data */
+  float dt, dx, pmin, pmax = 0.0, dp=0, p, cmax, sembpmax, num, den;
+  float *sembp=NULL, *mask, *gy, *fden, *fshift, *SNR=NULL;
+  float **fdata, **taup=NULL, **odata, **tdata=NULL, **odatat, **semb=NULL; /* tdata is the true data */
   kiss_fft_cpx **cdata, **cdatat;
   char *type;
-  sf_file inp, outp, m, spec1, spec2, trued, snr; 
+  sf_file inp, outp, m, spec1=NULL, spec2=NULL, trued, snr=NULL; 
 
 
   sf_init(argc,argv);
@@ -52,7 +52,6 @@ int main(int argc, char* argv[])
 
   ntfft = 2*kiss_fft_next_fast_size((nt+1)/2);
   nxfft = 2*kiss_fft_next_fast_size((nx+1)/2);
-  scalar = 1./(ntfft*nxfft);
   iktn=ntfft/2; ikxn=nxfft/2;
   float dkt = 1.0/(ntfft*dt), fkt = 0.0,kt;
   float dkx = 1.0/(nxfft*dx), fkx = 0.0,kx;
@@ -72,7 +71,7 @@ int main(int argc, char* argv[])
 
   		if(!sf_getfloat("pmin",&pmin)) pmin=-2;
         /* minimum p */		
-  		if(!sf_getfloat("pmax",&pmin)) pmax=2;
+  		if(!sf_getfloat("pmax",&pmax)) pmax=2;
         /* maximum p */			
   		if(!sf_getint("np",&np)) np=nx;
         /* number of p */
@@ -155,12 +154,12 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-    	for (ix=0; ix<nxfft; ix++) // Abma Kabir FT amplitude thresholding
+      for (ix=0; ix<nxfft; ix++) // Abma Kabir FT amplitude thresholding
     		for (it=0; it<ntfft; it++)
-      			if (sf_cabsf(cdata[ix][it])<iter*1./niter*cmax) cdata[ix][it] = cmplx(0.,0.);
+      		if (sf_cabsf(cdata[ix][it])<iter*1./niter*cmax) cdata[ix][it] = cmplx(0.,0.);
 
 
-   		for (ikx=0,kx=fkx; ikx<=ikxn; ++ikx,kx+=dkx) {
+      for (ikx=0,kx=fkx; ikx<=ikxn; ++ikx,kx+=dkx) {
     		for (ikt=0,kt=fkt; ikt<=iktn; ++ikt,kt+=dkt) {
       		if (kx==0) {
         		if (sf_cabsf(cdata[ikx][ikt])<iter*1./niter*cmax) cdata[ikx][ikt] = cmplx(0.,0.);

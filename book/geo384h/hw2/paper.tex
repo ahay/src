@@ -3,7 +3,7 @@
 \title{Homework 2}
 
 \begin{abstract}
-  This homework has four parts. 
+  This homework has three parts. 
   \begin{enumerate}
   \item Theoretical and programming questions related to data attributes and digital convolution.  
   \item Analyzing a digital elevation map by applying a running average filter.
@@ -27,7 +27,7 @@ by running
 svn co https://github.com/ahay/src/trunk/book/geo384h/hw2
 \end{verbatim}
 
-\section{Data attributes}
+\section{Data attributes and convolution}
 
 You can either write your answers to theoretical questions on paper or
 edit them in the file \texttt{hw2/paper.tex}. Please show all the
@@ -103,10 +103,13 @@ by removing local outliers.
 \multiplot{2}{ave,res}{width=0.45\textwidth}{Data separated into
   signal (a) and noise (b) by applying a running median filter.}
 
-The algorithm is implemented in program \texttt{running.c}.
+The algorithm is implemented in programs below.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=running/running.c]{running/running.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=running/running.py]{running/running.py}
 
 \begin{enumerate}
 \item Change directory to \texttt{hw2/running}.
@@ -197,6 +200,8 @@ Modify the \texttt{SConstruct} file to use filter~(\ref{eq:lap9}) instead of~(\r
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=helix/SConstruct]{helix/SConstruct}
 
+\newpage
+
 \section{Completing the assignment}
 
 \begin{enumerate}
@@ -218,6 +223,5 @@ to remove intermediate files.
 scons pdf
 \end{verbatim}
 to create the final document.
-\item Submit your result (file \texttt{paper.pdf}) on paper or by
-e-mail.
+\item Submit your result (file \texttt{paper.pdf}) by e-mail.
 \end{enumerate}

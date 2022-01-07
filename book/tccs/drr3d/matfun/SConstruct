@@ -1,0 +1,63 @@
+from rsf.proj import*
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=0.4 |
+       grey3 flat=n frame1=100 frame2=5 frame3=5 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time" unit1=s title=
+       screenratio=1.4 color=g %s'''%other)
+
+def Wig(data,other):
+	Result(data,
+       '''
+       wiggle poly=y transp=y yreverse=y label2=Trace label1="Time" unit1=s clip=0.4 title=
+       screenratio=1.4 color=g %s'''%other)
+
+## Load data
+Flow('synth-clean','../data/syn_clean.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.002 d2=1 d3=1 o1=0 o2=1 o3=1')
+Flow('synth-noisy','../data/syn_noisy.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.002 d2=1 d3=1 o1=0 o2=1 o3=1')
+Flow('synth-obs','../data/syn_obs.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.002 d2=1 d3=1 o1=0 o2=1 o3=1')
+Flow('synth-mssa','../data/syn_mssa.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.002 d2=1 d3=1 o1=0 o2=1 o3=1')
+Flow('synth-dmssa','../data/syn_dmssa.bin','bin2rsf bfile=${SOURCES[0]} n1=300 n2=400 | put n2=20 n3=20 d1=0.002 d2=1 d3=1 o1=0 o2=1 o3=1')
+
+Grey3('synth-clean','title=Clean')
+Grey3('synth-noisy','title=Noisy')
+Grey3('synth-obs','title=Observed')
+Grey3('synth-mssa','title=MSSA')
+Grey3('synth-dmssa','title="Proposed (K=2)"')
+
+
+# Xline=4
+Flow('synth-s-clean','synth-clean','window n3=1 f3=4')
+Flow('synth-s-noisy','synth-noisy','window n3=1 f3=4')
+Flow('synth-s-obs','synth-obs','window n3=1 f3=4')
+Flow('synth-s-mssa','synth-mssa','window n3=1 f3=4')
+Flow('synth-s-dmssa','synth-dmssa','window n3=1 f3=4')
+
+# Inline=4
+Flow('synth-s-clean-i','synth-clean','window n2=1 f2=4')
+Flow('synth-s-noisy-i','synth-noisy','window n2=1 f2=4')
+Flow('synth-s-obs-i','synth-obs','window n2=1 f2=4')
+Flow('synth-s-mssa-i','synth-mssa','window n2=1 f2=4')
+Flow('synth-s-dmssa-i','synth-dmssa','window n2=1 f2=4')
+
+
+Wig('synth-s-clean','title=Clean')
+Wig('synth-s-noisy','title=Noisy')
+Wig('synth-s-obs','title=Observed')
+Wig('synth-s-mssa','title=MSSA')
+Wig('synth-s-dmssa','title="Proposed (K=2)"')
+
+
+Wig('synth-s-clean-i','title=Clean')
+Wig('synth-s-noisy-i','title=Noisy')
+Wig('synth-s-obs-i','title=Observed')
+Wig('synth-s-mssa-i','title=MSSA')
+Wig('synth-s-dmssa-i','title="Proposed (K=2)"')
+
+
+
+
+
+End()

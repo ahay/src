@@ -496,7 +496,7 @@ int main (int argc, char* argv[]) {
             sf_timer_start (aux_kernel_timer);
         }
         sf_gpu_ktmig_ixy<<<dimgrid, dimblock>>>(d_ixy);
-        cudaThreadSynchronize ();
+        cudaDeviceSynchronize ();
         sf_check_gpu_error ("Distance kernel invocation");
         if (verb) {
             sf_timer_stop (aux_kernel_timer);
@@ -513,14 +513,14 @@ int main (int argc, char* argv[]) {
             dimgrid = dim3 (k, 1, 1);
             if (diff) {
                 sf_gpu_ktmig_sbdiff<<<dimgrid, dimblock>>>(d_t, nt/BLOCK_SIZE);
-                cudaThreadSynchronize ();
+                cudaDeviceSynchronize ();
                 sf_check_gpu_error ("Differentiation kernels invocation");
             }
             if (aa) {
                 sf_gpu_ktmig_cint<<<dimgrid, dimblock>>>(d_t, nt/BLOCK_SIZE);
-                cudaThreadSynchronize ();
+                cudaDeviceSynchronize ();
                 sf_gpu_ktmig_acint<<<dimgrid, dimblock>>>(d_t, nt/BLOCK_SIZE);
-                cudaThreadSynchronize ();
+                cudaDeviceSynchronize ();
                 sf_check_gpu_error ("Integration kernels invocation");
             }
             if (verb) {
@@ -548,7 +548,7 @@ int main (int argc, char* argv[]) {
                 sf_gpu_ktmig_kernel<<<dimgrid, dimblock>>>(d_v, d_img, n);
             else
                 sf_gpu_ktmig_noaa_kernel<<<dimgrid, dimblock>>>(d_v, d_img, n);
-            cudaThreadSynchronize ();
+            cudaDeviceSynchronize ();
             sf_check_gpu_error ("Migration kernel invocation");
             l = l < MAX_GRID_SIZE ? 0 : l - MAX_GRID_SIZE;
             n += MAX_GRID_SIZE;

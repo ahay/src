@@ -109,6 +109,32 @@ void sfchain_apply(float *y)
     }
 }
 
+void sfchain_div(const float *t /* target      [n]  */,
+		 float *num     /* numerator   [nw] */,
+		 float *den     /* denominator [nw] */)
+/*< find numerator and denominator for wf approximation >*/
+{
+    int i, iw;
+    
+    for (i=0; i < n; i++) {
+	tmp2[i] = w[i]*s[i]*nf;
+    }
+    for (i=n; i < nf; i++) {
+	tmp2[i] = 0.0f;
+    }
+    kiss_fftr(forw, tmp2, cdata1);
+    for (i=0; i < n; i++) {
+	tmp2[i] = w[i]*t[i]/(w[i]*w[i]+10*SF_EPS);
+    }
+    for (i=n; i < nf; i++) {
+	tmp2[i] = 0.0f;
+    }
+    kiss_fftr(forw, tmp2, cdata2);
+    for (iw=0; iw < nw; iw++) {
+	den[iw] = sf_crealf(cdata1[iw])*sf_crealf(cdata2[iw])+sf_cimagf(cdata1[iw])*sf_cimagf(cdata2[iw]);
+	num[iw] = sf_crealf(cdata2[iw])*sf_crealf(cdata2[iw])+sf_cimagf(cdata2[iw])*sf_cimagf(cdata2[iw]);
+    }
+}
 
 void sfchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
 /*< linear operator >*/
@@ -162,6 +188,51 @@ void sfchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	for (i=0; i < n; i++) {
 	    y[n+i] += tmp1[i] + tmp2[i] - x[n+i];
 	    y[2*n+i] += x2[i]*x[2*n+i] + w[i]*x[n+i];
+	}
+    }
+}
+
+void sfchainx_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+/*< linear operator for only x >*/
+{
+    int i, iw;
+
+    if (nx != 2*n || ny != 3*n) sf_error("%s: Wrong size",__FILE__);
+
+    sf_adjnull(adj,add,nx,ny,x,y);
+    
+    if (adj) {
+	for (i=0; i < n; i++) {
+	    tmp1[i] = y[n+i];
+	    x[n+i] += w[i]*y[2*n+i] - y[n+i];
+	}
+	for (i=n; i < nf; i++) {
+	    tmp1[i] = 0.0f;
+	}
+	kiss_fftr(forw, tmp1, cdata1);
+	for (iw=0; iw < nw; iw++) {
+	    cdata1[iw]=sf_crmul(cdata1[iw],wf[iw]/nf);
+	}
+	kiss_fftri(invs, cdata1, tmp1);
+	for (i=0; i < n; i++) {
+	    x[i] += tmp1[i] - y[i];
+	}
+    } else {
+	for (i=0; i < n; i++) {
+	    y[i] -= x[i];
+	    tmp1[i] = x[i];
+	}
+	for (i=n; i < nf; i++) {
+	    tmp1[i] = 0.0f;
+	}
+	kiss_fftr(forw, tmp1, cdata1);
+	for (iw=0; iw < nw; iw++) {
+	    cdata1[iw]=sf_crmul(cdata1[iw],wf[iw]/nf);
+	}
+	kiss_fftri(invs, cdata1, tmp1);
+	for (i=0; i < n; i++) {
+	    y[n+i] += tmp1[i] - x[n+i];
+	    y[2*n+i] += w[i]*x[n+i];
 	}
     }
 }

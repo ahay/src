@@ -1,0 +1,46 @@
+from rsf.tex import *
+
+#Command('revised.tex','paper.tex','cp $SOURCE $TARGET')
+#Paper('paper',use='hyperref,amsmath', lclass='geophysics',
+# lclass='segabs',
+#options='manuscript,revised'
+# Command('revised-final.tex','paper-final.tex','cp $SOURCE $TARGET')
+# Paper('paper-final',use='hyperref,amsmath',options='manuscript', lclass='geophysics',
+#     color='''shifts warped-signal-f warped-signal-s
+#         gather-shifts-250 azrslt integral spiral dtw-trace-r dtw-trace-m
+#         inputs-g outputs-g pred-shifts intensity-zslice dtw-error dtw-accum-sh
+#         spec-zm-1 spec-zm-2 azimuth-zslice gather-anisotropic-pick  stack-g-250 flat-stack-g-250
+#         ex-gather-shifts ex-gather-aniso
+#         ex-nmo-slice-stk ex-flattened-gather-stk ex-flat-gather-stk''',
+#     hires='''stack_inlin flat_stack_inlin stack_inlin_zoom_1 flat_stack_inlin_zoom_1
+#         stack_inlin_zoom_2 flat_stack_inlin_zoom_2 stack_zslice_2 flat_stack_zslice_2
+#         stack_zslice_zoom_2 flat_stack_zslice_zoom_2 stack_zslice_3 flat_stack_zslice_3
+#         stack_zslice_zoom_3 flat_stack_zslice_zoom_3 gather-250 flat-gather-250
+#         ex-nmo-slice ex-flattened-gather''')
+                
+End('paper',use='hyperref,amsmath', lclass='geophysics',
+	color='''dtw-error dtw-accum-sh shifts warped-signal-f warped-signal-s 
+		gather-shifts-250 azrslt integral spiral 
+        inputs-g outputs-g pred-shifts intensity-zslice
+		spec-zm-1 spec-zm-2 azimuth-zslice gather-anisotropic-pick
+                dtw-er-accum-sh dtw-ex-traces
+                ex-gather-shifts ex-gather-aniso
+                ex-nmo-slice-stk ex-flattened-gather-stk ex-flat-gather-stk''',
+	hires='''stack_inlin flat_stack_inlin stack_inlin_zoom_1 flat_stack_inlin_zoom_1
+		stack_inlin_zoom_2 flat_stack_inlin_zoom_2 stack_zslice_2 flat_stack_zslice_2
+		stack_zslice_zoom_2 flat_stack_zslice_zoom_2 stack_zslice_3 flat_stack_zslice_3
+		stack_zslice_zoom_3 flat_stack_zslice_zoom_3
+                ex-nmo-slice ex-flattened-gather''')
+
+#End(use='hyperref,amsmath',
+#	color='''shifts warped-signal-f warped-signal-s 
+#		gather-shifts-250 azrslt integral spiral 
+#		spec-zm-1 spec-zm-2 azimuth-zslice
+#                dtw-er-accum-sh dtw-ex-traces
+#                ex-gather-shifts ex-gather-aniso''',
+#	hires='''stack_inlin flat_stack_inlin stack_inlin_zoom_1 flat_stack_inlin_zoom_1
+#		stack_inlin_zoom_2 flat_stack_inlin_zoom_2 stack_zslice_2 flat_stack_zslice_2
+#		stack_zslice_zoom_2 flat_stack_zslice_zoom_2 stack_zslice_3 flat_stack_zslice_3
+#		stack_zslice_zoom_3 flat_stack_zslice_zoom_3
+#                ex-nmo-slice ex-flattened-gather''')
+

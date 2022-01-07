@@ -34,7 +34,7 @@ double complex computepi(float kx, float ky, float w, float eps, float v_0, floa
 /*< not for external use >*/
 { 
 
-    double complex alpha, root, u_b, u_a, temp1, temp2, temp3, coeff, z; // coefficients for erfi calculation
+    double complex alpha, root, u_b, u_a, temp1, temp2, coeff, z; // coefficients for erfi calculation
     int ch=0;
 
     //Path-Integral Analytical Evaluation Method 1
@@ -119,8 +119,6 @@ void tdpi_init(int n1, int n2, int n3  /* data size */,
 /*< initialize path-summation integral and ffts >*/
 {
 
-    int nw, ch=0;
-
     on1 = n1;
     on2 = n2;
     on3 = n3;
@@ -133,7 +131,6 @@ void tdpi_init(int n1, int n2, int n3  /* data size */,
     f = sf_floatalloc(nn1*nn2*nn3);
 
     /* size should have been computed in fft3 init */
-    nw = nk;
     dw = 1./(nn1*d1);
     dkx = 1./(nn2*d2);
     k0x = -0.5/d2;

@@ -6,6 +6,7 @@
 #define _rsf_hh
 
 #include <valarray>
+#include <string>
 
 #include <complex>
 typedef std::complex<float> Complex8;
@@ -49,8 +50,8 @@ public:
     void get (const char* name, double& value) const;
     void get (const char* name,  bool& value,  bool defolt) const;
     void get (const char* name,  bool& value) const;
-//    void get (const char* name,  char* value, const char* defolt) const;
-//    void get (const char* name,  char* value) const;
+    void get (const char* name,  std::string& value, const std::string& defolt) const;
+    void get (const char* name,  std::string& value) const;
     // reading parameter arrays
     void get (const char* name, int size, int*   value, 
 	      const int*   defolt) const;

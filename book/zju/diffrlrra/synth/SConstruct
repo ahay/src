@@ -1,0 +1,446 @@
+
+from rsf.proj import *
+import math
+from rsf.prog import RSFROOT
+
+def Grey(data,other):
+    Result(data,'''
+    grey
+    label1=Time unit1=s color=g label2=Distance unit2=km clip=0.3 wanttitle=n title= screenratio=1.0 
+    %s ''' % (other))
+    
+# modelling parameters
+
+vel=3.0
+grtype='v'
+gradz = 1.0#0.5#1.0#0.5
+
+numshots = 501
+
+noisevar = 1e-08
+
+# create inclined reflections
+# shifted by 0.2 in comparison
+# to random-experiment 
+
+z = (1.0,1.2,1.4,1.6,1.8)
+a = (0.0,5,10,15,20)
+
+for ref in range(5):
+    a0 = a[ref]*math.pi/180
+
+    rdip = 'rdip%d' % ref
+    Flow(rdip,None,
+         '''
+         spike n1=1501 d1=0.02 o1=-1 label1=Distance mag=%g
+         ''' % math.tan(a0))
+
+    refl = 'refl%d' % ref
+    Flow(refl,rdip,
+         'math output="%g+x1*input"' % z[ref])
+
+    ampl = 'ampl%d' % ref
+
+    Flow(ampl,rdip,'math output=0.25')
+
+Flow('rdipi','rdip0 rdip1 rdip2 rdip3 rdip4','cat axis=2 ${SOURCES[1:5]}')
+Flow('refli','refl0 refl1 refl2 refl3 refl4','cat axis=2 ${SOURCES[1:5]}')
+Flow('ampli','ampl0 ampl1 ampl2 ampl3 ampl4','cat axis=2 ${SOURCES[1:5]}')
+#Plot('refli',
+#     '''
+#     graph min2=0 max2=3 yreverse=y plotfat=5 pad=n
+#     ''')
+
+######################################################################################
+### Kirchhoff modeling of inclined reflections #######################################
+
+Flow('data-i0','refli rdipi ampli',
+     '''
+     kirmod nt=800 dt=0.004 freq=25 dip=${SOURCES[1]} refl=${SOURCES[2]}
+     nh=1  dh=0.05 h0=0  
+     ns=%d ds=0.02 s0=0.0 cmp=y
+     vel=%g gradz=%g type=%c
+     '''%(numshots,vel,gradz,grtype))
+
+Flow('data-i','data-i0','put label2=Offset unit2=km label3=Midpoint unit3=km | window | pow pow1=1 | costaper nw1=100 | costaper nw2=100')
+
+# create diffractions
+# create horizontal reflectors for velocity analysis
+Flow('modl',None,
+     '''
+     spike n1=1501 o1=-10 d1=0.02 n2=5
+     nsp=5 k2=1,2,3,4,5 mag=0.8,1.4,2,3,4
+     ''')
+
+Flow('refl',None,
+     '''
+     spike n1=1501 n2=5 nsp=5 k2=1,2,3,4,5
+     mag=0.0909091,0.1428570,0.1111110,0.2000000,0.3
+     ''')
+
+Flow('mod1','modl','window min1=0')
+
+Flow('rmodl','modl',
+     '''
+     pad n2=100 | noise rep=y seed=112012
+     type=n mean=2.0 range=1
+     ''')
+
+Flow('depth','rmodl','pad n2=100 | math output="1.0 + (1/5)*x2"')
+
+#2.0#1.0#1.25
+
+Flow('amodl','modl rmodl','cat axis=2 ${SOURCES[1]}')
+
+Flow('rrefl','modl',
+     '''
+     pad n2=100 | noise rep=y type=y seed=122012 |
+     math output="input^9"
+     ''')
+
+Flow('prefl','rrefl','clip2 lower=9000 | math output="(input-9000)^(1/9)"')
+
+# d1 controls inline spacing, d2 - time spacing 
+Flow('diffractivity-sparse','prefl','math output="1.0" | cut d1=1.0 d2=2.5 | math output="1.0 - input"')
+
+Flow('diffractivity-dense-e','prefl','math output="1.0" | cut d1=0.4 d2=0.9 | math output="1.0 - input"')
+
+Flow('diffractivity-dense-o','prefl','math output="1.0" | cut f1=10 f2=5 d1=0.4 d2=0.9 | math output="1.0 - input"')
+
+Flow('diffractivity-dense','diffractivity-dense-e diffractivity-dense-o','add scale=1.0,1.0 ${SOURCES[1]} | cut max1=6.5 | sfcut min1=7.5')
+
+# input/4 to achieve 40% noise level with noise variance specified at the top
+Flow('diffractivity','diffractivity-dense diffractivity-sparse','add scale=1.0,1.0 ${SOURCES[1]} | math output="input/4"')
+
+Flow('mrefl','rrefl','clip2 upper=-10')
+
+Flow('drefl','prefl mrefl','add scale=0.01,0.00 ${SOURCES[1]}')
+
+Flow('arefl','refl drefl','cat axis=2 ${SOURCES[1]}')
+
+Flow('unif','mod1','unif2 n1=101 d1=0.02 v00=5,6,8,10,15')
+
+Flow('mod2','unif','math output=1.5+2*x1')
+
+### Kirchhoff modeling of diffractions
+
+Flow('diffr0','depth diffractivity',
+     '''
+     kirmod nt=800 dt=0.004 freq=25 refl=${SOURCES[1]}
+     nh=1  dh=0.05 h0=0  
+     ns=%d ds=0.02 s0=0.0 cmp=y
+     vel=%g gradz=%g type=%c
+     '''%(numshots,vel,gradz,grtype))
+
+Result('diff','diffractivity','grey pclip=100 title= min1=0')
+
+Flow('vel','depth','math output="%g+x1*%g" '%(vel,gradz))
+
+Flow('diff-t','diffractivity vel','depth2time t0=0 dt=0.004 nt=800 velocity=${SOURCES[1]}') 
+Result('diff-t','diff-t','grey pclip=100 title= min1=0')
+
+
+Flow('diffr','diffr0','put label2=Offset unit2=km label3=Midpoint unit3=km | window | pow pow1=1 | costaper nw1=100 | costaper nw2=100')
+
+######################################################################################
+### Kirchhoff modeling of horizontal reflections #####################################
+# for velocity analysis purposes (extracting RMS velocity distribution)
+
+#!# True velocity is estimated by
+#!# Conventional velocity analysis on
+#!# Four horizontal reflectors
+
+Flow('data-velan0','modl refl',
+     '''
+     kirmod nt=800 dt=0.004 freq=25 refl=${SOURCES[1]}
+     nh=51  dh=0.05 h0=0  
+     ns=%d ds=0.02 s0=0 cmp=y
+     vel=%g gradz=%g type=%c
+     '''%(numshots,vel,gradz,grtype))
+
+Flow('data-velan','data-velan0','put label2=Offset unit2=km label3=Midpoint unit3=km | window | pow pow1=1 | costaper nw1=100 | costaper nw3=100')
+
+step2consider = 0.01
+numberofvels = 301
+v1_2consider = 2.8
+vl_2consider = 2.8 + numberofvels*step2consider
+#"""
+Flow('vscan','data-velan',
+        '''
+        window n3=1 min3=5.0 |
+        vscan semblance=y half=n v0=%g nv=%d dv=%g |
+        mutter v0=0.6 x0=3.3 inner=y |
+        mutter v0=2.1 x0=3.65 t0=0.72 inner=y |
+        mutter v0=2.5 x0=3.9 t0=0.95 inner=y |
+        mutter v0=2.5 x0=4.4 t0=1.34 inner=y
+        '''%(v1_2consider,numberofvels,step2consider))
+#"""
+
+""" # scanning for gradz=0.5
+Flow('vscan','data-velan',
+        '''
+        window n3=1 min3=5.0 |
+        vscan semblance=y half=n v0=%g nv=%d dv=%g |
+        mutter v0=0.85 x0=3.0 inner=y |
+        mutter v0=2.2 x0=3.3 t0=1.25 inner=y 
+        '''%(v1_2consider,numberofvels,step2consider))
+"""
+
+"""# muting for gradz=0.5 - we seem to have less artifacts but they r still present
+        |
+        mutter v0=2.1 x0=3.65 t0=0.72 inner=y |
+        mutter v0=2.5 x0=3.9 t0=0.95 inner=y |
+        mutter v0=2.5 x0=4.4 t0=1.34 inner=y
+"""
+"""
+Plot('vscan-nm','data-velan',
+        '''
+        window n3=1 min3=5.0 |
+        vscan semblance=y half=n v0=%g nv=%d dv=%g |
+        grey allpos=n color=j title="Semblance Scan" scalebar=n bias=0.8 clip=0.4
+        '''%(v1_2consider,numberofvels,step2consider))
+
+Plot('vscan','grey allpos=n color=j title="Semblance Scan" scalebar=n bias=0.8 clip=0.4')
+"""
+Flow('pics-true','vscan','scale axis=2 | pick rect1=20 vel0=3.2')
+
+"""
+Plot('pics-true',
+     '''
+     graph pad=n transp=y yreverse=y plotcol=7 plotfat=3 wantaxis=n wanttitle=n min2=%g max2=%g
+     '''%(v1_2consider,vl_2consider))
+
+Result('vscan','vscan pics-true','Overlay')
+"""
+Flow('vtrue-ch','data-velan','window n2=1 | math output="%g*sqrt((exp((x1+0.0001)*%g)-1.0)/((x1+0.0001)*%g) + 0.06)" '%(vel,gradz,gradz))
+
+#Plot('vtrue-ch',
+#     '''
+#     graph pad=n transp=y yreverse=y plotcol=7 plotfat=3 wantaxis=n wanttitle=n min2=%g max2=%g plotcol=3
+#     '''%(v1_2consider,vl_2consider))
+
+#Result('vscan-ext','vscan-nm pics-true vtrue-ch','Overlay')
+
+Flow('veltrue-pick','pics-true','spray axis=2 n=%d d=0.02'%numshots)
+
+Flow('vtrue','veltrue-pick','window n2=1')
+
+# need to spray v(z) - mig2 takes two-dim velocity field as an input 
+
+Flow('vtrue2d','vtrue','spray axis=2 n=%d d=0.02 o=0'%numshots)
+
+### lets migrate with this velocity and check if diffractions are focused
+
+Flow('mig','diffr vtrue','kirchnew velocity=${SOURCES[1]}')
+
+Flow('mig-ch','diffr vtrue-ch','kirchnew velocity=${SOURCES[1]}')
+
+Flow('mig-fw','data vtrue','kirchnew velocity=${SOURCES[1]}')
+
+### combining models: reflections and diffractions
+
+Flow('data','diffr data-i','add scale=1,1 ${SOURCES[1]} | scale axis=2')
+
+Flow('s-dip','data','dip rect1=10 rect2=10 order=2')
+Flow('s-pwd-n','data s-dip','pwd dip=${SOURCES[1]} ')
+Flow('s-pwd-s','data s-pwd-n','add scale=1,1 ${SOURCES[1]} ')
+
+Grey('s-dip','clip=1 color=j scalebar=y barlabel="Slope"')
+Plot('label1',None,
+	'''
+	box x0=3 y0=6.2 label="Reflection slope" xt=0.5 yt=0.5 length=2.5 
+	''')
+Plot('label2',None,
+	'''
+	box x0=7 y0=5.5 label="" xt=-0.2 yt=-0.5 length=2.5 
+	''')
+Plot('label3',None,
+	'''
+	box x0=5 y0=5.5 label="Diffraction slope" xt=0.2 yt=-0.5 length=2.5 
+	''')
+Result('s-dip0','Fig/s-dip.vpl label1 label2 label3','Overlay')
+Result('data-i','grey pclip=99 title="Zero-offset Section"')
+# Result('diffr-n','grey pclip=99 title="Zero-offset Section"')
+
+Result('mig','grey pclip=99 title="Zero-offset Migration"')
+Result('mig-ch','grey pclip=99 title="Zero-offset Migration"')
+Result('mig-fw','grey pclip=99 title="Zero-offset Migration"')
+
+Result('data','grey pclip=99 title="Zero-offset Section"')
+Result('diffr','grey pclip=99 title="Diffractions"')
+
+Flow('s-diffr','diffr','cp | math output="279.93*input"')
+Flow('s-datai','data-i','cp | math output="279.93*input"')
+Flow('s-data','data','cp')
+Grey('s-diffr','title="Zero-offset data"')
+Grey('s-datai','title="Zero-offset data"')
+Grey('s-data','title="Zero-offset data"')
+Grey('s-pwd-s','title="Separated diffractions (PWD)"')
+Grey('s-pwd-n','title="Separated reflections (PWD)"')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'FXY_MSSA_WIN'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+n1=800
+n2=501
+n3=1
+d1=0.004
+d2=0.02
+d3=1
+o1=0
+o2=0
+o3=0
+lf=0
+hf=120
+N=5
+verb=0
+
+n1win=200
+n2win=100
+n3win=1
+r1=0.5
+r2=0.5
+r3=0.5
+
+put='n1=%d n2=%d n3=%d d1=%g d2=%g d3=%g o1=%g o2=%g o3=%g'%(n1,n2,n3,d1,d2,d3,o1,o2,o3)
+
+
+############################################################
+## with parameter
+############################################################
+N=2
+Flow('s-lrr-N2-0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(n1win)d,%(n2win)d,%(n3win)d,%(r1)g,%(r2)g,%(r3)g,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-lrr-N2-s','s-lrr-N2-0','put %s'%put)
+Flow('s-lrr-N2-n','s-data s-lrr-N2-s','add scale=1,-1 ${SOURCES[1]}')
+
+N=3
+Flow('s-lrr-N3-0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(n1win)d,%(n2win)d,%(n3win)d,%(r1)g,%(r2)g,%(r3)g,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-lrr-N3-s','s-lrr-N3-0','put %s'%put)
+Flow('s-lrr-N3-n','s-data s-lrr-N3-s','add scale=1,-1 ${SOURCES[1]}')
+
+N=4
+Flow('s-lrr-N4-0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(n1win)d,%(n2win)d,%(n3win)d,%(r1)g,%(r2)g,%(r3)g,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-lrr-N4-s','s-lrr-N4-0','put %s'%put)
+Flow('s-lrr-N4-n','s-data s-lrr-N4-s','add scale=1,-1 ${SOURCES[1]}')
+
+N=5
+Flow('s-lrr-N5-0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(n1win)d,%(n2win)d,%(n3win)d,%(r1)g,%(r2)g,%(r3)g,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-lrr-N5-s','s-lrr-N5-0','put %s'%put)
+Flow('s-lrr-N5-n','s-data s-lrr-N5-s','add scale=1,-1 ${SOURCES[1]}')
+
+
+N=5
+matfun = 'FXY_MSSA_WIN_AUTO'
+## Adaptive
+Flow('s-lrra0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(n1win)d,%(n2win)d,%(n3win)d,%(r1)g,%(r2)g,%(r3)g,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-lrra-s','s-lrra0','put %s'%put)
+Flow('s-lrra-n','s-data s-lrra-s','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('s-lrr-N2-s','title="Separated diffractions (LRR)"')
+Grey('s-lrr-N2-n','title="Separated reflections (LRR)"')
+
+Grey('s-lrr-N3-s','title="Separated diffractions (LRR)"')
+Grey('s-lrr-N3-n','title="Separated reflections (LRR)"')
+
+Grey('s-lrr-N4-s','title="Separated diffractions (LRR)"')
+Grey('s-lrr-N4-n','title="Separated reflections (LRR)"')
+
+Grey('s-lrr-N5-s','title="Separated diffractions (LRR)"')
+Grey('s-lrr-N5-n','title="Separated reflections (LRR)"')
+
+Grey('s-lrra-s','title="Separated diffractions (LRRA)"')
+Grey('s-lrra-n','title="Separated reflections (LRRA)"')
+
+## Global
+
+N=5
+matROOT = '../matfun/'
+matfun = 'FXY_MSSA'
+Flow('s-grr-N5-0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-grr-N5-s','s-grr-N5-0','put %s'%put)
+Flow('s-grr-N5-n','s-data s-grr-N5-s','add scale=1,-1 ${SOURCES[1]}')
+Grey('s-grr-N5-s','title="GRR (N=5)"')
+Grey('s-grr-N5-n','title="GRR (N=5)"')
+
+N=10
+matROOT = '../matfun/'
+matfun = 'FXY_MSSA'
+Flow('s-grr-N10-0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-grr-N10-s','s-grr-N10-0','put %s'%put)
+Flow('s-grr-N10-n','s-data s-grr-N10-s','add scale=1,-1 ${SOURCES[1]}')
+Grey('s-grr-N10-s','title="GRR (N=10)"')
+Grey('s-grr-N10-n','title="GRR (N=10)"')
+
+N=16
+matROOT = '../matfun/'
+matfun = 'FXY_MSSA'
+Flow('s-grr-N16-0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-grr-N16-s','s-grr-N16-0','put %s'%put)
+Flow('s-grr-N16-n','s-data s-grr-N16-s','add scale=1,-1 ${SOURCES[1]}')
+Grey('s-grr-N16-s','title="GRR (N=16)"')
+Grey('s-grr-N16-n','title="GRR (N=16)"')
+
+N=25
+matROOT = '../matfun/'
+matfun = 'FXY_MSSA'
+Flow('s-grr-N25-0',[os.path.join(matROOT,matfun+'.m'),'s-data'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(n3)d,%(d1)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('s-grr-N25-s','s-grr-N25-0','put %s'%put)
+Flow('s-grr-N25-n','s-data s-grr-N25-s','add scale=1,-1 ${SOURCES[1]}')
+Grey('s-grr-N25-s','title="GRR (N=25)"')
+Grey('s-grr-N25-n','title="GRR (N=25)"')
+
+
+Flow('s-mig-true','s-diffr vtrue','kirchnew velocity=${SOURCES[1]}')
+
+Flow('s-mig0','s-data vtrue','kirchnew velocity=${SOURCES[1]}')
+Flow('s-mig','s-lrra-n vtrue','kirchnew velocity=${SOURCES[1]}')
+Flow('s-mig-tra','s-pwd-n vtrue','kirchnew velocity=${SOURCES[1]}')
+Grey('s-mig0','title="Conventional" clip=5')
+Grey('s-mig','title="LRRA" clip=5')
+Grey('s-mig-tra','title="PWD" clip=5')
+Grey('s-mig-true','title="True" clip=5')
+
+Flow('mig-vtrue','vtrue','spray axis=2 n=501 d=0.02 o=0')
+Flow('s-mig-true-z','s-mig-true mig-vtrue','time2depth dz=0.01 nz=1000 oz=0 intime=y velocity=${SOURCES[1]} ')
+Grey('s-mig-true-z','title="True" clip=5 label1=Depth unit1=km')
+
+
+
+
+End()

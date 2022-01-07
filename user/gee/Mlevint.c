@@ -45,8 +45,10 @@ int main(int argc, char* argv[])
     /* grid sampling */
     sf_putfloat (out,"d1",d1);
 
-    if (!sf_getint("niter",&niter)) niter=1+m1*3/2; niter *= 2;
+    if (!sf_getint("niter",&niter)) niter=1+m1*3/2; 
     /* number of conjugate-gradient iterations */
+    niter *= 2;
+
     if (!sf_getfloat("eps",&eps)) eps=0.2;
     /* regularization parameter */
 

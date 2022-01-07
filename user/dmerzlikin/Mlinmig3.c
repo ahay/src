@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    int nt, nx, ny, n1, ntr, apt;
+    int nt, nx, ny, ntr, apt;
     char *antialias;
     float *trace, *out, rho, angle;
     float dx, dy, ox, oy, dt,ot;

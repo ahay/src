@@ -26,7 +26,7 @@
 int main(int argc, char* argv[])
 {
     int ns,nw,nx,nz,nh,is;
-    float ox,oz,dx,dz,ow,dw,ds,os,oh,dh;
+    float ox,oz,dx,dz,ow,dw,oh,dh;
     bool adj,add,wantwf;
     /* cube axes */
     sf_axis ax,aw,az,as,ah,anull;
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     /* Pull out individual values */
     nx = sf_n(ax); ox = sf_o(ax); dx = sf_d(ax);
     nw = sf_n(aw); ow = sf_o(aw); dw = sf_d(aw);
-    ns = sf_n(as); os = sf_o(as); ds = sf_d(as);
+    ns = sf_n(as);
     nz = sf_n(az); oz = sf_o(az); dz = sf_d(az);
 
     /* xig shift parameter */

@@ -27,7 +27,8 @@ int main(int argc, char* argv[])
     bool *mask, adj, robust;
     int it,ix,is, nt,nx,ns, ntx, nts, niter, nliter;
     float *data, *modl, *x2, *z2, *s;
-    float dt,dx,ds, x, z, ot,ox,os, perc, eps;
+    float dt,dx,ds, x, z, ot,ox,os, perc,fact, eps;
+    char *type;
     sf_file cmp, vtr;
 
     sf_init(argc,argv);
@@ -130,6 +131,9 @@ int main(int argc, char* argv[])
 	    if (robust) {
 		if (!sf_getfloat("perc",&perc)) perc=90.;
 		/* threshold percentage for robust inversion */
+
+		if (!sf_getfloat("fact",&fact)) fact=1.5;
+		/* threshold factor for robust inversion */
 		
 		if (!sf_getint("nliter",&nliter)) nliter=10;
 		/* number of POCS iterations for robust inversion */
@@ -137,7 +141,10 @@ int main(int argc, char* argv[])
 		if (!sf_getfloat("eps",&eps)) eps=1.;
 		/* regularization parameter for robust inversion */
 
-		l1_init(ntx,nliter,perc,true);
+		if (NULL == (type = sf_getstring("type"))) type="threshold";
+		/* thresholding type */
+
+		l1_init(ntx,nliter,perc,fact,type,true);
 		sf_solver_reg(velxf,l1step,sf_copy_lop,nts,nts,ntx,modl,data,niter,eps,"verb",true,"end");
 	    } else {		
 		sf_solver(velxf,sf_cgstep,nts,ntx,modl,data,niter,"verb",true,"end");

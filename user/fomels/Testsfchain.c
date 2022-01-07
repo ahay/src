@@ -32,11 +32,18 @@ int main(void) {
     sfchain_init(n,nf,w,wf,x1,x2,s);
 
     sf_dot_test(sfchain_lop, 3*n+nf, 3*n, dot1, dot2);
-    
-    sfchain_close();
+ 
 
     printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);
     printf ("%12.8f ? %12.8f\n",dot2[0],dot2[1]);
 
+    sf_dot_test(sfchainx_lop, 2*n, 3*n, dot1, dot2);
+ 
+    printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);
+    printf ("%12.8f ? %12.8f\n",dot2[0],dot2[1]);
+
+   
+    sfchain_close();
+    
     exit(0);
 }

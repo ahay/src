@@ -164,3 +164,48 @@ void pchain_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_complex* 
 	}
     }
 }
+
+void pchainx_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_complex* y) 
+/*< linear operator for intermediate results >*/
+{
+    int ic, i, j;
+
+    if (nx != (nc-1)*n || ny != nc*n) sf_error("%s: Wrong size",__FILE__);
+
+    sf_cadjnull(adj,add,nx,ny,x,y);
+
+    if (adj) {
+	for (i=1; i < n; i++) {
+	    x[i] -= y[i];
+	    x[i-1] += conjf(an[i])*y[i];
+	}
+	for (ic=1; ic < nc-1; ic++) {
+	    x[(ic-1)*n] += y[ic*n];
+	    for (i=1; i < n; i++) {
+		j = ic*n+i;
+		x[j-n] += y[j];
+		x[j]   -= y[j];
+		x[j-1] += conjf(an[j])*y[j]; 
+	    }
+	} 
+	for (i=0; i < n; i++) {
+	    j = (nc-1)*n+i;
+	    x[j-n] += y[j];
+	} 
+    } else {
+	for (i=1; i < n; i++) {
+	    y[i] -= x[i]-an[i]*x[i+n*nc-1];
+	}
+	for (ic=1; ic < nc-1; ic++) {
+	    y[ic*n] += x[(ic-1)*n];
+	    for (i=1; i < n; i++) {
+		j = ic*n+i;
+		y[j] += x[j-n] - x[j]+an[j]*x[j-1]; 
+	    }
+	} 
+	for (i=0; i < n; i++) {
+	    j = (nc-1)*n+i;
+	    y[j] += x[j-n];
+	} 
+    }
+}

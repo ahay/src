@@ -111,8 +111,11 @@ namespace RVL {
 
     ProductDataContainer() {}
     ProductDataContainer(const ProductDataContainer &) {}
+#if __cplusplus >= 201103L  // We are using C++11 or a later version
+    virtual ~ProductDataContainer() noexcept(false) {}
+#else
     virtual ~ProductDataContainer() {}
-
+#endif
     void eval( FunctionObject & f,
 	       std::vector<DataContainer const *> & x) {
       /* first create block FO either by cast or diag construction */

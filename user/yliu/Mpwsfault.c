@@ -24,7 +24,7 @@ int main (int argc, char *argv[])
 {
     bool verb;
     int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, fold, niter, nit, order;
-    float eps, perc, ***u, **p, *trace, **xk, **yk;
+    float eps, perc,fact, ***u, **p, *trace, **xk, **yk;
     sf_file inp, out, dip;
     char *type;
 
@@ -59,9 +59,12 @@ int main (int argc, char *argv[])
 	    
 	    if (!sf_getfloat("perc",&perc)) perc=98.;
 	    /* percentage for sharpen, default is 98*/
+
+	    if (!sf_getfloat("fact",&fact)) fact=0.5;
+	    /* factor for sharpen */
 	    
 	    if (perc < 0. || perc > 100.)  sf_error("Need perc in range [0.0,100.0]"); 
-	    sf_sharpen_init(n1*n2,perc);
+	    sf_sharpen_init(n1*n2,perc,fact);
 
 	    break;
 	default:

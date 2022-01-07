@@ -9,8 +9,8 @@
   psava@mines.edu
 }
 \date{}
-\logo{}
-\large
+\logo{WSI}
+\Large
 
 % ------------------------------------------------------------
 \mode<beamer> { \cwpcover }
@@ -26,7 +26,7 @@
     \uncover<3->{\alert{--reproducible numeric experiments system--}}
     \vfill
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -40,8 +40,8 @@
     \cit{to modify}
     \cit{to redistribute}
     \cit{to improve}
-    
-    \column{.5\textwidth} \cen{reproducibility} 
+
+    \column{.5\textwidth} \cen{reproducibility}
   \end{columns}
 
 \end{frame}
@@ -51,7 +51,7 @@
 \begin{frame} \frametitle{why numeric reproducibility?}
 
   \vfill
-  \cen{collaborative research} 
+  \cen{collaborative research}
   \vfill
   \cen{technology transfer}
   \vfill
@@ -59,7 +59,7 @@
   \vfill
   \cen{peer review}
   \vfill
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -73,20 +73,20 @@
     \textbf{documents} \\
     \textbf{blog} \\
     \textbf{merchandise} \\
-    \dots  
+    \dots
     \column{.75\textwidth}
     \alert{ \texttt{http://www.ahay.org} }
   \end{columns}
-  
+
   \sep
-  
+
   \begin{itemize}
   \item standard GPL license
   \item distributed development (academia/industry)
   \item version control (\texttt{git})
   \item installation and flows (\texttt{scons})
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -100,7 +100,7 @@
   \item King Abdullah University of Science and Technology
   \item \dots
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -114,9 +114,9 @@
   \item SU (Colorado School of Mines)
   \item DDS (Amoco/BP)
   \end{itemize}
-  
+
   \vfill
-  
+
   \textbf{reproducible documents}
   \begin{itemize}
   \item SEP document system
@@ -135,12 +135,12 @@
     flows \\
     \vspace{0.25in}
     programs
-    
+
     \column{.75\textwidth}
     $3$ overlapping layers
-    
+
   \end{columns}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -154,16 +154,16 @@
     flows \\
     \vspace{0.25in}
     \textbf{programs}
-    
+
     \column{.75\textwidth}
     \begin{itemize}
     \item provide basic processing modules
     \item C, C++, F90, Python, Matlab \dots
     \item communicate by pipes
     \end{itemize}
-    
+
   \end{columns}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -177,16 +177,16 @@
     \textbf{flows} \\
     \vspace{0.25in}
     programs
-    
+
     \column{.75\textwidth}
     \begin{itemize}
     \item provide processing history
     \item Python (SCons)
     \item combine processing modules
     \end{itemize}
-    
+
   \end{columns}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -200,16 +200,16 @@
     flows \\
     \vspace{0.25in}
     programs
-    
+
     \column{.75\textwidth}
     \begin{itemize}
     \item provide reproducible documents
     \item \LaTeX\; and SCons
     \item assemble text and numeric results
     \end{itemize}
-    
+
   \end{columns}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -225,13 +225,13 @@
   \item implement SMP parallelism
   \item program count: $1757$ on 8/21/2018
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{program list}
-  
+
   \mex{ {\bf sfdoc} -k .}
 
   \tiny
@@ -261,7 +261,7 @@
   \item find execution parameters
   \item find execution examples
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -305,40 +305,40 @@ USED IN
 \begin{frame} \frametitle{program execution}
   \framesubtitle{single input, single output}
 
-  \mex{ 
+  \mex{
     $<$ i.rsf
-    {\bf sfprog} 
+    {\bf sfprog}
     arguments
-    $>$ o.rsf 
+    $>$ o.rsf
   }
-  
+
   \vfill
-  
+
   \begin{itemize}
   \item sfprog = \mg program
   \item arguments = program parameters
   \item input from \texttt{stdin} ($<$)
   \item output to \texttt{stdout} ($>$)
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ 
+  \mex{
     {\bf sfspike}
     n1=100 o1=0 d1=0.01 n2=50 o2=1000 d2=10
-    $>$ f1.rsf 
+    $>$ f1.rsf
   }
-  
+
   \vfill
   \begin{itemize}
   \item standard in: none
   \item standard out: \mex{f1.rsf}
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -351,7 +351,7 @@ USED IN
   \item description of regularly-sampled format
   \item small, can be archived
   \end{itemize}
-  
+
   \textbf{binary}:
   \begin{itemize}
   \item binary file (actual data)
@@ -359,7 +359,7 @@ USED IN
   \item large, can be stored on a different file system
   \item path to binary set with environment variable \texttt{DATAPATH}
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -432,9 +432,9 @@ f1.rsf:
   \item header: \texttt{f1.rsf}
   \item binary: \texttt{in="/scratch/f1.rsf@"}
   \end{itemize}
-  
+
   \vfill
-  
+
   \textbf{axis} described by:
   \begin{itemize}
   \item $n$: number of samples
@@ -443,7 +443,7 @@ f1.rsf:
   \item $label$: axis label
   \item $unit$: axis unit
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -528,13 +528,13 @@ f2.rsf:
 % ------------------------------------------------------------
 \begin{frame} \frametitle{program execution}
   \framesubtitle{multiple inputs, multiple outputs}
-  
-  \mex{ 
-    $<$ i.rsf 
-    {\bf sfprog} 
+
+  \mex{
+    $<$ i.rsf
+    {\bf sfprog}
     arguments
-    l1=f1.rsf 
-    l2=f2.rsf 
+    l1=f1.rsf
+    l2=f2.rsf
     $>$ o.rsf }
 
   \begin{itemize}
@@ -543,7 +543,7 @@ f2.rsf:
   \item \texttt{f1.rsf} can be open for input and/or output
   \item \texttt{f2.rsf} can be open for input and/or output
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
@@ -557,15 +557,15 @@ f2.rsf:
 NAME
         sfbandpass
 DESCRIPTION
-        Bandpass filtering. 
+        Bandpass filtering.
 SYNOPSIS
         sfbandpass < in.rsf > out.rsf flo= fhi= phase=n verb=n nplo=6 nphi=6
 PARAMETERS
-        float   fhi=    High frequency in band, default is Nyquist 
-        float   flo=    Low frequency in band, default is 0 
-        int     nphi=6  number of poles for high cutoff 
-        int     nplo=6  number of poles for low cutoff 
-        bool    phase=n [y/n]   y: minimum phase, n: zero phase 
+        float   fhi=    High frequency in band, default is Nyquist
+        float   flo=    Low frequency in band, default is 0
+        int     nphi=6  number of poles for high cutoff
+        int     nplo=6  number of poles for low cutoff
+        bool    phase=n [y/n]   y: minimum phase, n: zero phase
         bool    verb=n [y/n]    verbosity flag
 SOURCE
         system/generic/Mbandpass.c
@@ -581,19 +581,19 @@ SOURCE
   \item \texttt{stdout} from one program becomes \texttt{stdin} for the next
   \item no intrinsic limit for the number of pipes
   \end{itemize}
-  
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
-  
-  \mex{ $<$ f1.rsf 
+
+  \mex{ $<$ f1.rsf
     {\bf sfwindow} n2=25 min2=1200 $|$
-    {\bf sftransp} 
+    {\bf sftransp}
     $>$ f3.rsf
   }
-  
+
   \vfill
   \mex{ {\bf sfin} f1.rsf}
 \tiny
@@ -673,14 +673,14 @@ USED IN
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ 
+  \mex{
     {\bf sfmath}
     n1=1000 output='sin(0.5*x1)'
-    $>$ s1.rsf 
+    $>$ s1.rsf
   }
-  
+
   \vfill
-  
+
   \mex{ {\bf sfin} s1.rsf}
 \tiny
 \begin{semiverbatim}
@@ -698,14 +698,14 @@ s1.rsf:
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ 
+  \mex{
     {\bf sfmath}
     n1=300 n2=200 output='sin(0.25*x1+1*x2)'
-    $>$ s2.rsf 
+    $>$ s2.rsf
   }
-  
+
   \vfill
-  
+
   \mex{ {\bf sfin} s2.rsf}
 \tiny
 \begin{semiverbatim}
@@ -751,7 +751,7 @@ s1.rsf:
 \large
 
   \vfill
-  
+
   \mex{ $<$ s1.rsf {\bf sfgraph} title='' $|$ {\bf xtpen}}
 
 \end{frame}
@@ -790,127 +790,127 @@ s2.rsf:
 % ------------------------------------------------------------
 
 % ------------------------------------------------------------
-\begin{frame}[fragile] 
+\begin{frame}[fragile]
   \frametitle{create 2D Gaussian function}
-  
+
   \mex{
     {\bf sfmath} output="exp(-(x1*x1+x2*x2)/(2*1.5*1.5))" \\
     n1=200 d1=0.1 o1=-10. n2=200 d2=0.1 o2=-10. $|$ \\
     {\bf sfput} label1=z unit1=km label2=x unit2=km $>$ gg.rsf
   }
-  
+
   \vfill
-  
+
   \mex{
     $<$ gg.rsf {\bf sfgrey} pclip=100 screenratio=1 title='' $|$
     {\bf xtpen}
   }
-  
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{gg}{width=0.69\textwidth}{}
+  \plot{gg}{height=\textheight}{}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}[fragile]
   \frametitle{extract 1D subset}
-  
+
   \mex{
     $<$ gg.rsf {\bf sfwindow} n2=1 f2=100 $>$ gg0.rsf
  }
-  
+
   \vfill
 
   \mex{
     $<$ gg0.rsf {\bf sfgraph} title='' $|$
     {\bf xtpen}
   }
-  
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{gg0}{width=0.90\textwidth}{}
+  \plot{gg0}{width=\textwidth}{}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame}[fragile] 
+\begin{frame}[fragile]
   \frametitle{create a velocity model}
-  
+
   \mex{
     $<$ gg.rsf {\bf sfmath} output="3-input" $>$ vel.rsf
   }
-  
+
   \vfill
-  
+
   \mex{
-    $<$ vel.rsf {\bf sfgrey} title='' pclip=100 screenratio=1 $|$ 
+    $<$ vel.rsf {\bf sfgrey} title='' pclip=100 screenratio=1 $|$
     {\bf xtpen}
   }
-  
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{vel}{width=0.69\textwidth}{}
+  \plot{vel}{height=\textheight}{}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame}[fragile] 
+\begin{frame}[fragile]
   \frametitle{compute traveltimes}
-  
+
   \mex{
     $<$ vel.rsf {\bf sfeikonal} zshot=-10 yshot=0 $>$ fme.rsf
   }
-  
+
   \vfill
-  
+
   \mex{
     $<$ fme.rsf {\bf sfcontour} title='' nc=200 screenratio=1 $|$
     {\bf xtpen}
   }
-  
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{fme}{width=0.69\textwidth}{}
+  \plot{fme}{height=\textheight}{}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}[fragile]
   \frametitle{compute rays and wavefronts}
-  
+
   \mex{
     $<$ vel.rsf {\bf sfhwt2d} xsou=0 zsou=-10 \\
     nt=1000 ot=0 dt=0.01 ng=1801 og=-90 dg=0.1 $>$ hwt.rsf
   }
-  
+
   \vfill
-  
+
   \mex{
     $<$ hwt.rsf {\bf sfwindow} j1=20 j2=20 $|$ \\
     {\bf sfgraph} title='' yreverse=y screenratio=1 \\
     min1=-10 max1=+10 min2=-10 max2=+10  $|$
     {\bf xtpen}
   }
-  
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{hwt}{width=0.69\textwidth}{}
+  \plot{hwt}{height=\textheight}{}
 \end{frame}
 \cwpnote{}
 
@@ -918,17 +918,16 @@ s2.rsf:
 \begin{frame}
 
   \big{\url{http://www.ahay.org}}
-  
+
   \vfill
 
   \big{\texttt{\$RSF/book/rsf/school}}
 
   \vfill
-  
+
   \begin{center}
     \pgfuseimage{logo}
   \end{center}
-  
+
 \end{frame}
 \cwpnote{}
-

@@ -44,9 +44,9 @@ void sf_csharpinv(sf_coperator oper /* inverted operator */,
     float qdif0=0., pdif0=0., qdif, pdif, pi;
 
     if (!twhole) {
-	sf_sharpen_init(np,perc);
+	sf_sharpen_init(np,perc,0.5);
     } else {
-	sf_sharpen_init(nq,perc);
+	sf_sharpen_init(nq,perc,0.5);
     }
     q0 = sf_complexalloc(nq);
     p0 = sf_complexalloc(np);
@@ -180,9 +180,9 @@ void sf_sharpinv(sf_operator oper  /* inverted operator */,
     float qdif0=0., pdif0=0., qdif, pdif, pi;
 
     if (!twhole) {
-	sf_sharpen_init(np,perc);
+	sf_sharpen_init(np,perc,0.5);
     } else {
-	sf_sharpen_init(nq,perc);
+	sf_sharpen_init(nq,perc,0.5);
     }
     q0 = sf_floatalloc(nq);
     p0 = sf_floatalloc(np);

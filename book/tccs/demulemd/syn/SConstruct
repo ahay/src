@@ -1,0 +1,97 @@
+from rsf.proj import *
+
+from rsf.prog import RSFROOT
+
+def Grey(data,other):
+	Result(data,'grey screenratio=0.9 title= clip=0.9 ')
+
+
+
+Flow('prim',None,'spike n1=100 n2=50 o1=0.0 d1=0.004 o2=0.0 d2=0.02 k1=12')
+Flow('hyper','prim','window n1=1 | math output="0.052+sqrt(0.048^2+x1*x1/16)" ')
+Flow('mult','prim hyper','datstretch inv=y datum=${SOURCES[1]}')
+Flow('cmp','prim mult','add ${SOURCES[1]}')
+Plot('cmp','grey labelsz=12 titlesz=12 title="CMP (after NMO)" ')
+
+# randomization
+Flow('off','cmp','window n1=1 | noise rep=y seed=2015')
+Flow('rand','cmp off','headersort head=${SOURCES[1]}')
+Plot('rand','grey labelsz=12 titlesz=12 title="CMP (after randomization)" ')
+
+Result('syn-in','cmp rand','SideBySideAniso')
+
+Flow('cmp3','cmp','spray axis=3 n=50 o=0 d=1 label=Sample')
+Flow('off3','cmp3','window n1=1 | noise rep=y seed=2015')
+Flow('rand3','cmp3 off3','headersort head=${SOURCES[1]}')
+Result('syn-cube','rand3',
+       '''
+       byte |
+       grey3 frame1=50 frame2=30 frame3=30 flat=n title="3-D cube"
+       ''')
+
+# Add random noise
+Flow('ncmp','cmp','noise seed=2015 var=0.001')
+Flow('nrand','ncmp off','headersort head=${SOURCES[1]}')
+
+Flow('pef lag','nrand','lopef a=3,7 w=10,50 lag=${TARGETS[1]}') 
+Flow('tx','nrand pef','decon filt=${SOURCES[1]} predictive=y')
+
+#Flow('tx','nrand','transp | mf nfw=5 | transp')
+
+# Sort back
+Flow('inv','off','math output=x1 | spray axis=1 n=1 | headersort head=$SOURCE')
+Flow('back','tx inv','headersort head=${SOURCES[1]}')
+
+Flow('dif','ncmp back','add scale=1,-1 ${SOURCES[1]}')
+
+
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun/'
+matfun = 'FXEMDM'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+n1=100
+n2=50
+dt=0.004
+lf=5
+hf=120
+N=3
+verb=1
+############################################################
+## with parameter
+############################################################
+Flow('nrand-emd-t',[os.path.join(matROOT,matfun+'.m'),'nrand'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(dt)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('nrand-emd','nrand-emd-t','put  d2=0.02 d1=0.004 o2=0 o1=0 label2=Distance unit2=km label1=Time unit1=s')
+Flow('nrand-emd-back','nrand-emd inv','headersort head=${SOURCES[1]}')
+
+Flow('emd-dif','ncmp nrand-emd-back','add scale=1,-1 ${SOURCES[1]}')
+
+
+Grey('ncmp','')
+Grey('rand','')
+Grey('back','')
+Grey('dif','')
+Grey('nrand-emd-back','')
+Grey('emd-dif','')
+
+Flow('true','cmp','cut min1=0.1')
+Flow('dif0','true ncmp','add scale=1,-1 ${SOURCES[1]}')
+Flow('dif1','true back','add scale=1,-1 ${SOURCES[1]}')
+Flow('dif2','true nrand-emd-back','add scale=1,-1 ${SOURCES[1]}')
+Flow('snr0','true dif0','snr2 noise=${SOURCES[1]}')
+Flow('snr1','true dif1','snr2 noise=${SOURCES[1]}')
+Flow('snr2','true dif2','snr2 noise=${SOURCES[1]}')
+
+
+End()

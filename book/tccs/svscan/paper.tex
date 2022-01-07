@@ -1,0 +1,213 @@
+\published{Geophysical Journal International, 204, 768-779, (2016)}
+
+\title{Velocity analysis of simultaneous-source data using high-resolution semblance - coping with the strong noise}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\author{Shuwei Gan\footnotemark[1], Shoudong Wang\footnotemark[1], Yangkang Chen\footnotemark[2], Shan Qu\footnotemark[3] and Shaohuan Zu\footnotemark[1]}
+
+\address{
+\footnotemark[1] State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200 \\
+gsw19900128@126.com \\
+\footnotemark[2]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX, USA, 78713-8924  \\
+ykchen@utexas.edu\\
+\footnotemark[3]Department of Imaging Physics \\
+Faculty of Applied Sciences \\
+Delft University of Technology, \\
+2600 CD Delft, Netherlands,   \\
+S.Qu@tudelft.nl \\
+%+86-18810415565 
+}
+
+\lefthead{Gan et al.}
+\righthead{Velocity analysis of simultaneous-source data}
+
+\maketitle
+
+\begin{abstract}
+Direct imaging of simultaneous-source (or blended) data, without the need of deblending, requires a precise subsurface velocity model. In this paper, we focus on the velocity analysis of simultaneous-source data using the NMO-based velocity picking approach. We demonstrate that it is possible to obtain a precise velocity model directly from the blended data in the common-midpoint (CMP) domain. The similarity-weighted semblance can help us obtain much better velocity spectrum with higher resolution and higher reliability compared with the traditional semblance. The similarity-weighted semblance enforces an inherent noise attenuation solely in the semblance calculation stage, thus is not sensitive to the intense interference. We use both simulated synthetic and field data examples to demonstrate the performance of the similarity-weighted semblance in obtaining reliable subsurface velocity model for direct migration of simultaneous-source data. \new{The migrated image of blended field data using prestack kirchhoff time migration (PSKTM) approach based on the picked velocity from the similarity-weighted semblance is very close to the migrated image of unblended data.}
+\end{abstract}
+
+\section{Introduction}
+Simultaneous-source shooting is a breakthrough in modern seismic acquisition, which can tremendously increase the acquisition efficiency and improve the data quality \cite[]{beasleycj1998,berkhout2008,abma2009}. In blended acquisition, more than one source is shot simultaneously, regardless of \old{their interactive}\new{the} interference. When more than one source is involved in acquisition, either a denser or a wider shot coverage can be obtained for a given constant acquisition period. The
+\emph{wider} coverage (Figure \ref{fig:demo2}) here refers to a higher acquisition efficiency while the \emph{denser} coverage (Figure \ref{fig:demo1}) refers to a better-sampled seismic dataset. The attractive benefits are compromised by the challenges in dealing with strong interference from simultaneous sources in the acquired seismic data. We can either separate the blended sources into individual ones as if they were acquired independently, which is also called deblending
+\cite[]{yangkang2014svmf,shuwei2016}, or directly migrate the blended data using \old{some} newly-developed imaging schemes \cite[]{verschuur2011,yaxun2009}. Deblending can provide similar data as the conventional acquisition and thus not require a change in post-processing and imaging algorithms, but need specific computationally expensive technique for the pre-processing \cite[]{abma2009,abma2014}. Direct imaging does not require any pre-processing steps for observed data and thus enjoys the benefit of \new{high} efficiency, but calls for a tremendously different processing workflow \cite[]{zhiguang2014,yangkang2015image}. 
+\inputdir{./}
+\multiplot{2}{demo1,demo2}{width=0.45\textwidth}{Demonstration of the simultaneous-source geometry. (a) Two-source shooting for denser coverage. (b) Two-source shooting for wider coverage. Red points denote shot positions for source 1. Green points denote shot positions for source 2. Blue points denote receiver positions. Red and green strings denote the shooting rays. Arrows denote the shooting directions. Borrowed from \cite{yangkang2014nmo}.}
+
+Because of many reported success of deblending, more and more focus is now moved towards the direct imaging of blended data.  However, one of the most important components in the direct imaging of simultaneous-source data is the macro subsurface velocity model of the targeted area. In this paper, we focus on the velocity analysis \old{problem} of the simultaneous-source data. We demonstrate that it is possible to directly apply the common velocity scanning procedures to the blended data in the common-midpoint (CMP) domain. We also propose to use the newly developed similarity-weighted semblance \cite[]{yangkang2015vel,shuwei2015vel} to perform \new{the} velocity analysis. Both synthetic and field data examples show that the similarity-weighted semblance can help obtain higher-resolution and more reliable velocity spectrum than the conventional semblance, especially in the case of simultaneous-source data. \new{The direct imaging of simultaneous-source data based on the directly picked velocity is also carried out via the prestack kirchhoff time migration (PSKTM) approach. The performance shows that the migrated image from blended data based on the picked velocity from similarity-weighted semblance is very close to the migrated image from unblended data. }
+
+\section{Method}
+\subsection{Blended acquisition and direct imaging}
+For a constant-receiver survey, the simultaneous-source data can be expressed as:
+\begin{equation}
+\label{eq:blend}
+\mathbf{d}=\Gamma\mathbf{m},
+\end{equation}
+where $\mathbf{d}$ is the blended data, $\Gamma$ is the blending operator, and $\mathbf{m}$ is the unblended data. The formulation of $\Gamma$ has been introduced in \cite{arazthesis} in detail. When considered in time domain, the $\Gamma$ corresponds to blending different shot records onto one receiver record \new{(node)} according to the shot schedules of different shots.
+\old{Considering the}\new{The} Born modeling from seismic reflectivity to the primary reflections \new{can be expressed as}:
+\begin{equation}
+\label{eq:born}
+\mathbf{m}=\mathbf{L}\mathbf{r},
+\end{equation}
+where $\mathbf{r}$ denotes the subsurface reflectivity model and $\mathbf{L}$ denotes the Born modeling operator.
+One way to remove the effect\new{s} caused by the blending operator $\Gamma$ is first solving equation \ref{eq:blend} and then solving equation \ref{eq:born}, which is referred to as \old{deblending}\new{\emph{deblending}}. The general deblending framework can be summarized as \cite[]{yangkang20142,yangkang2015pnmo}:
+\old{$\mathbf{m}_{n+1} = \mathbf{S} (\mathbf{m}_n+\lambda (\mathbf{d}-\Gamma\mathbf{m}_n))$}
+\new{
+\begin{equation}
+\label{eq:shape}
+\mathbf{m}_{n+1} = \mathbf{S} (\mathbf{m}_n+\lambda \Gamma^* (\mathbf{d}-\Gamma\mathbf{m}_n)), 
+\end{equation}}
+where $\mathbf{S}$ is \old{a coherency constraining shaping operator} \new{called the shaping operator, which is used to constrain the current model,} and $\lambda$ is the step size of the \old{updating}\new{updated} misfit. $\Gamma^*$ denotes the adjoint of $\Gamma$. $\mathbf{m}_n$ denotes the deblended data after $n$th iteration.
+
+Another way for deal\new{ing} with the simultaneous-source data is to solve the following equation for $\mathbf{r}$ directly, which is known as direct imaging of blended data,
+\begin{equation}
+\label{eq:direct}
+\mathbf{d}= \mathbf{Fr}, 
+\end{equation}
+where $\mathbf{F}=\Gamma\mathbf{L}$.
+
+Equation \ref{eq:direct} can be best solved using a least-squares (LS) based migration approach. More robust LS solvers involve adding \old{some} constraints of structural coherency when inverting $\mathbf{r}$, either in a preconditioned LS formulation \cite[]{daiwei2011,yangkang2015image} or in a shaping-regularized LS iterative framework \cite[]{fomel2007shape,zhiguang2014}.  
+
+Because of the great success of deblending reported in the literature \cite[]{abma2010,mahdad2011,beasley2012,chengbo2013,shuwei2015seg,shaohuan2015,yangkang2015dbortho} in the recent years, more and more focus is \new{currently} moving towards the direct imaging of blended data, which can be more efficient and can illuminate the surface better \cite[]{verschuur2011,berkhout2012}. \new{It is worth mentioning that the deblending step for the massive blended data requires large computational resources (mainly for the parallel processing of a huge number of common receiver gathers) and a long processing period because of the thousands of iterations used for each common receiver gather. If the direct imaging can obtain a good result, we can obtain a big saving in both computational resources and processing period.} However, a key aspect for the success of direct imaging is the macro velocity model of subsurface. Either tomography based velocity analysis or \new{Born-approximation} wave-equation based velocity inversion, requires an initial acceptable velocity model from the \old{highly-corrupted}\new{very noisy} blended data (Figure \old{1b}\new{\ref{fig:comp2}a} shows an example). In the next section, we will introduce a way for obtaining high-resolution and high-fidelity velocity spectrum from blended data, using the recently developed similarity-weighted semblance. 
+
+
+\subsection{Velocity analysis of blended data using similarity-weighted semblance}
+The conventional semblance is defined by \cite{neidell1971} as:
+\begin{equation}
+\label{eq:semb}
+C[i] = \frac{\displaystyle\sum_{j=i-M}^{i+M}\left(\sum_{k=0}^{N-1}s[j,k]\right)^2}{\displaystyle N\sum_{j=i-M}^{i+M}\sum_{k=0}^{N-1}s^2[j,k]},
+\end{equation}
+where $i$ and $j$ are time sample indices, $C[i]$ denotes the conventional semblance for time index $i$, $2M+1$ is the length of the smoothing window along the time axis, and $s[j,k]$ is the trace amplitude at time index $j$ and trace number $k$ of the NMO-corrected CMP gather.
+
+The weighted semblance introduced in \cite{yangkang2015vel} can be summarized as:
+\begin{equation}
+\label{eq:semb-weight}
+W[i] = \frac{\displaystyle\sum_{j=i-M}^{i+M}\left(\sum_{k=0}^{N-1}s[j,k]w[j,k]\right)^2}{\displaystyle \sum_{j=i-M}^{i+M}\left(\sum_{k=0}^{N-1}s^2[j,k]\sum_{k=0}^{N-1}w^2[j,k]\right)},
+\end{equation}
+where $W[i]$ denotes the weighted semblance, $w[j,k]$ denotes the weighting function for time index $j$ and trace number $k$.
+
+There have existed several weighting criteria, such as the AB semblance \cite[]{fomel20091}, offset-prior semblance \cite[]{luosimon2012}, and the similarity-weighted semblance \cite[]{yangkang2015vel}. As the similarity-weighted semblance can improve the resolution of velocity spectrum greatly, and has the possibility to subtract noise effect, we choose the local similarity \cite[]{fomel2007localattr} to weight different traces:
+\begin{equation}
+\label{eq:simiweight}
+w[j,k]=\mathcal{L}(s[j,k],r[j]),
+\end{equation}
+where $\mathcal{L}(\mathbf{x},\mathbf{y})$ denotes the local similarity between traces $\mathbf{x}$ and $\mathbf{y}$, $r[j]$ denotes the $j$th time point for a selected reference trace $\mathbf{r}$. In this paper, the reference trace is chosen as the stacked trace using a conventional stacking technique. Figure \ref{fig:synth-comp} shows a demonstration of \new{the} \old{similarity-semblance calculated} velocity spectrum \new{calculated using the similarity-weighted semblance} compared with the
+\new{velocity spectrum calculated using the traditional semblance}\old{traditional-semblance calculated velocity spectrum}. The left panel in Figure \ref{fig:synth-comp} shows a simple synthetic data with four hyperbolic events. The middle and right panels show the velocity spectrum calculated using the traditional and the proposed semblance, respectively. It is obvious that the similarity-weighted semblance is of \old{very} high resolution.
+
+%The open-source code ("Msimivscan.c") is provided as an appendix to teach the readers how we program the aforementioned algorithm. We formed our code by modifying the original template code ("Mvscan.c"). The original template code is also provided as an appendix. Both source codes can be found in the Madagascar open-source platform \cite[]{mada2013}. The only difference between the similarity-weighted semblance and conventional semblance is the weighs calculated from the local similarity between each trace and a reference trace. Thus, we only modify the original template velocity scanning code by implementing the weighting part. The difference is commented in the source code.
+
+\inputdir{class}
+\plot{synth-comp}{width=\textwidth}{A brief comparison between the similarity-weighted semblance and the conventional semblance. Left: simple synthetic data. Middle: semblance map using the conventional semblance. Right: semblance map using the similarity-weighted semblance.}
+
+It is worth \old{to mention}\new{mentioning} that, the selection of the reference trace needs several iterations in practice. It is obvious that the similarity-weighted semblance is calculated with an inherent denoising ability. The noise \old{subtraction}\new{attenuation} involved in the similarity-weighted semblance is much similar to that used in \cite{guochang2009} for attenuating random noise in the stacking process. Because of intense interference \old{involved}\new{existing} in the simultaneous-source data, conventional semblance will decrease the resolution because of the corruption by \new{the blending} interference. However, the beauty of the similarity-weighted semblance is that it enforces an inherent noise attenuation solely in the semblance calculation stage, without any extra process specifically designed for noise attenuation. The key element that enables the anti-noise ability of the similarity-weighted semblance is the local similarity based weights. In the next part, we will review the basic theory of the local similarity.
+
+\subsection{Local similarity}
+A common way to measure the similarity between two signals is to calculate the global correlation coefficient:
+\begin{equation}
+\label{eq:simi}
+\gamma=\frac{\displaystyle\sum_{i=1}^Na(i)b(i)}{\displaystyle\sqrt{\sum_{i=1}^Na^2(i)\sum_{i=1}^Nb^2(i)}},
+\end{equation}
+where \old{$r$}\new{$\gamma$} is the global correlation coefficient, $N$ denotes the number of samples of the signals $\mathbf{a}$ and $\mathbf{b}$. In order to calculate the similarity between two signals locally, one can use the localized correlation coefficient:
+\begin{equation}
+\label{eq:simi}
+\gamma_m(t)=\frac{\displaystyle\sum_{i=t-m/2}^{t+m/2} a(i) b(i)}{\sqrt{\displaystyle\sum_{i=t-m/2}^{t+m/2} a^2(i) \displaystyle\sum_{i=t-m/2}^{t+m/2} b^2(i) }},
+\end{equation}
+where $\gamma_m(t)$ denotes the local correlation coefficient, $m$ is the local window size. \\
+\cite{fomel2007localattr} designed an elegant way to calculate the local similarity: 
+\begin{align}
+\label{eq:local}
+\gamma(t) & =\sqrt{\gamma_1(t)\gamma_2(t)}, \\
+\label{eq:local1}
+\gamma_1(t)&=\arg\min_{\gamma_1(t)} \left(\sum_{t}(a(t)-\gamma_1(t)b(t)) + R(\gamma_1(t)) \right), \\
+\label{eq:local2}
+\gamma_2(t)&=\arg\min_{\gamma_2(t)} \left(\sum_{t}(b(t)-\gamma_2(t)a(t)) + R(\gamma_2(t)) \right).
+\end{align}
+Equation \ref{eq:local} represents that the local similarity can be expressed as the product of two vectors that are the solutions of two minimization problems. $R$ is a regularization operator for constraining $\gamma_1$ and $\gamma_2$. $R$ can be chosen as a local triangular smoother to enforce the smoothness of vectors $\gamma_1$ and $\gamma_2$, and then equations \ref{eq:local1} and \ref{eq:local2} can be solved using the shaping regularization \cite[]{fomel2007shape}:
+\begin{align}
+\label{eq:local3}
+\mathbf{\gamma}_1 &= [\lambda_1^2\mathbf{I} + \mathcal{S}(\mathbf{B}^T\mathbf{B}-\lambda_1^2\mathbf{I})]^{-1}\mathcal{S}\mathbf{B}^T\mathbf{a},\\
+\label{eq:local4}
+\mathbf{\gamma}_2 &= [\lambda_2^2\mathbf{I} + \mathcal{S}(\mathbf{A}^T\mathbf{A}-\lambda_2^2\mathbf{I})]^{-1}\mathcal{S}\mathbf{A}^T\mathbf{b},
+\end{align}
+where $\mathbf{A}$ is a diagonal operator composed from the elements of $\mathbf{a}$: $\mathbf{A}=diag(\mathbf{a})$ and $\mathbf{B}$ is a diagonal operator composed from the elements of $\mathbf{b}$: $\mathbf{B}=diag(\mathbf{b})$. $\mathbf{\mathcal{S}}$ is a smoothing operator, and $\lambda_1$ and $\lambda_2$ are two parameters controlling the physical dimensionality and enabling fast convergence when inversion is implemented iteratively. These two parameters can be chosen as the least-squares norms of $\mathbf{A}$ and $\mathbf{B}$ \cite[]{fomel2007localattr}.
+
+The local similarity algorithm can be used \old{to}\new{for the} \old{calculate}\new{calculation of signals} \old{the local similarity of signal} of any dimension. For 1D signals, the meanings of equations \ref{eq:local3} and \ref{eq:local4} are intuitive. For 2D or higher-dimensional signals, each signal is first reshaped into a 1D signal and then follows equations \ref{eq:local3} and \ref{eq:local4} to calculate the local similarity vector. The smoothing operator is applied to the 2D or multi-dimensional form of the original signal to enforce the smoothness in any dimension. Figures \ref{fig:trace-comp} and \ref{fig:flat-comp} show demonstrations for both 1D and 2D signals. Figures \ref{fig:trace-comp}a and \ref{fig:trace-comp}b show the same trace with different level of noise. Figure \ref{fig:trace-comp}c shows the calculated local similarity for the 1D signal. Figures \ref{fig:flat-comp}a and \ref{fig:flat-comp}b show the same flattened gather with different level of noise. Figure \ref{fig:flat-comp}c shows the calculated local similarity for the 2D signal.  From the two examples, we can conclude that the local similarity can effectively obtain smooth and reasonable measurements for both 1D and 2D signals. The peaks in the calculated local similarity indicate the position of useful wavelets correctly.
+\inputdir{simi}
+\plot{trace-comp}{width=\textwidth}{Local similarity for 1D signal. (a) \& (b) The same trace with different level of noise. (c) Calculated local similarity.}
+\plot{flat-comp}{width=\textwidth}{Local similarity for 2D signal. (a) \& (b) The same flattened gather with different level of noise. (c) Calculated local similarity.}
+
+\section{Examples}
+The first example is a synthetic example. Figure \ref{fig:simple-comp-dat} shows the unblended and blended data in the CMP domain. The blending fold is very high and thus the blended data is very noisy. \new{It should be mentioned that before the processing, we need to apply the domain transformation. That is to say: transform the data from shot domain to midpoint domain. The domain transformation corresponds to the following transformation relation: 
+\begin{equation}
+\label{eq:trans}
+\begin{split}
+\mathbf{m} &= \frac{1}{2}(\mathbf{s}+\mathbf{r}),\\
+\mathbf{h} &= \frac{1}{2}(\mathbf{s}-\mathbf{r}), 
+\end{split}
+\end{equation}
+where $\mathbf{m}$ and $\mathbf{h}$ denotes the midpoint and offset locations, $\mathbf{s}$ and $\mathbf{r}$ denotes the source and receiver locations.} Here, we leave out the domain transformation \cite[]{yangkang2014nmo} between common shot point (CSP) domain and CMP domain, and just show the data in the CMP domain. Figure \ref{fig:simple-comp-scn} shows the comparison of the velocity spectrum using conventional semblance and similarity-weighted semblance. As we know the exact velocity of this synthetic example, we can compare the velocity spectrum with the true velocity in order to judge the performance of different semblance approaches. As we can see from the comparison, the similarity-weighted semblance can obtain obviously higher resolution and more reliable spectrum. The black strings on the top of the spectrum maps denote the true velocity. The two frame boxes highlight two regions of obvious difference. From the two highlighted frame boxes, it is much clearer that the similarity-weighted semblance can get more reliable result.
+
+%We provide a Python script that can regenerate Figures \ref{fig:simple-comp-dat} and \ref{fig:simple-comp-scn} of the first example. The Python script (SConstruct) should be run in the Madagascar open-source environment \cite[]{mada2013}, which can be downloaded at $www.ahay.org$. 
+
+The second example is a field data example with multiples. Figure \ref{fig:comp-dat} shows the unblended and blended data in the CMP domain. Figure \ref{fig:comp} shows a comparison between different velocity spectrum for both unblended and blended data. Because in this case, we do not have the true velocity model, we can only use the spectrum of unblended data as a reference. The left and middle left figures in Figure \ref{fig:comp} correspond to the velocity spectrum of unblended data using conventional semblance and similarity-weighted semblance, respectively. The middle right and right figures in Figure \ref{fig:comp} correspond to the velocity spectrum of blended data using conventional semblance and similarity-weighted semblance, respectively. In this case, we also have the spectrum of multiples. It is obvious that the similarity-weighted semblance can obtain higher resolution for both unblended and blended data. Comparing the middle right and right figures, we can conclude that the similarity-weighted semblance can be more reliable for velocity picking.
+
+The third example is \new{a} numerically blended field data example in the case of high blending ratio (the interference is very strong). The numerically blended data is shown in Figure \ref{fig:comp2}a. Because of the strong blended interference, it is hard to detect the useful reflections. In this example, the conventional semblance can not obtain an acceptable velocity spectrum, as shown in Figure \ref{fig:comp2}b. The peaks in the velocity spectrum map are nearly smeared in the background
+noise. However, \old{using the proposed high-resolution similarity-weighted semblance,} we can still obtain well-behaved velocity peaks, \new{using the proposed high-resolution similarity-weighted semblance,} which distinguish themselves with the background noise. The peaks can be picked either manually or automatically. 
+
+The fourth example is a numerically blended \old{pre-stack}\new{prestack} field data. Figures \ref{fig:gulf} and \ref{fig:gulf-b} show the unblended and blended data that have been sorted from CSP gathers to CMP gathers. This example is used to simulate the independent marine-streamer simultaneous shooting (IMSSS) acquisition \cite[]{yangkang2014nmo}.
+The blending interference is so strong that the useful reflections are nearly smeared in the noise. Figure \ref{fig:vscan-gulf} shows the velocity spectrum of the unblended data using the traditional semblance. Figure \ref{fig:vscan-b} shows the velocity spectrum of the blended data using the traditional semblance. Figure \ref{fig:vscan-simi-b} shows the velocity spectrum of the blended data using the proposed high-resolution semblance. 
+It is obvious that the traditional semblance can obtain good performance for clean unblended data. However, the traditional \new{semblance} \old{can not}\new{cannot} obtain \old{an}\new{a} reasonable velocity spectrum for the blended data. Because of the strong blending interference, the traditional semblance cannot \old{form}\new{generate} \new{energy} peaks in the spectrum that can be easily picked. Fortunately, the high-resolution similarity-weighted semblance can help obtain much focused peaks in the velocity spectrum that can be picked. With the automatically picked velocity \cite[]{fomel20091} from the velocity spectrum shown in Figure \ref{fig:vscan-gulf,vscan-b,vscan-simi-b}, we can obtain their corresponding migration results. \new{Here, it is worth giving a brief introduction about the automatic velocity picking algorithm. Although the automatic velocity picking problem was mentioned by several researchers in the literature \cite[]{SEG-1999-11621165,SEG-2000-02360238,harlan,SEG-2004-16271629}, we use the approach proposed in \cite{fomel20091}. The main principle of the approach is to solve the following eikonal equation
+\begin{equation}
+\label{eq:eik}
+\left(\frac{\partial T}{\partial v}\right)^2 + \frac{1}{\alpha^2} \left(\frac{\partial T}{\partial t}\right)^2 = e^{-2w(t,v)},
+\end{equation}
+where $T$ is the traveltime, $w(t,v)$ corresponds to the semblance spectrum, and $\alpha$ denotes a scaling parameter. After obtaining a finite-difference solution of equation \ref{eq:eik}, we can extract the picking trajectory $v(t)$ by tracking backward along the traveltime gradient direction.}
+
+The migrated profiles using the prestack kirchhoff time migration (PSKTM) \new{algorithm} for different cases are shown in Figure \ref{fig:pstm,pstm-b,pstm-simi-b}. Figure \ref{fig:pstm} shows the migrated profile for unblended data using the traditional semblance method. Figures \ref{fig:pstm-b} and \ref{fig:pstm-simi-b} \old{shows}\new{show} the migrated profiles for blended data using the traditional semblance and the proposed high-resolution semblance, respectively. In this example, we can consider \old{the} Figure \ref{fig:pstm} as the true answer, and judge the performance of different approaches by comparing the migrated results with Figure \ref{fig:pstm}. We can observe huge difference between Figures \ref{fig:pstm} and \ref{fig:pstm-b}. However, Figures \ref{fig:pstm} and \ref{fig:pstm-simi-b} are more similar. We can confirm this observation by zooming a part from the original migrated profiles. Figure \ref{fig:pstmzoom,pstm-bzoom,pstm-simi-bzoom} shows the zoomed sections that correspond to the frame boxes shown in Figure \ref{fig:pstm,pstm-b,pstm-simi-b}. It is more obvious that Figures \ref{fig:pstmzoom} and \ref{fig:pstm-simi-bzoom} show very similar reflections, while Figure \ref{fig:pstm-bzoom} \old{are}\new{is} much different from the other two cases. The erroneous reflections in Figure \ref{fig:pstm-bzoom} indicate erroneous picked velocities using the traditional semblance. 
+
+\inputdir{simple}
+\plot{simple-comp-dat}{width=\columnwidth}{Synthetic data example. Left: Unblended CMP gather. Right: Blended CMP gather.}
+\plot{simple-comp-scn}{width=\columnwidth}{Left: Velocity spectrum of blended data using the conventional semblance. Right: Velocity spectrum of blended data using the high-resolution semblance.}
+\inputdir{field}
+\plot{comp-dat}{width=\columnwidth}{Field data example.  Left: Unblended CMP gather. Right: Blended CMP gather.}
+\plot{comp}{width=\columnwidth}{Left: Velocity spectrum of unblended data  using conventional semblance. Middle left: Velocity spectrum of unblended data using similarity-weighted semblance. Middle right: Velocity spectrum of blended data using the conventional semblance. Right: Velocity spectrum of blended data using the high-resolution semblance.}
+
+\inputdir{bei}
+\plot{comp2}{width=\columnwidth}{(a) Blended CMP gather with strong blending interference. (b) Velocity spectrum using the conventional semblance. (c) Velocity spectrum using the high-resolution semblance.}
+\inputdir{beicmps}
+\multiplot{2}{gulf,gulf-b}{width=0.45\textwidth}{Gulf of Mexico data example. (a) Unblended field data. (b) Numerically simulated field data. }
+
+\multiplot{3}{vscan-gulf,vscan-b,vscan-simi-b}{width=0.45\textwidth}{Comparison of velocity spectrum. (a) Velocity analysis of unblended data using the traditional approach. (b) Velocity analysis of blended data using the traditional approach. (c) Velocity analysis of blended data using the proposed approach.}
+
+\multiplot{3}{pstm,pstm-b,pstm-simi-b}{width=0.45\textwidth}{Comparison of migration results. (a) PSKTM of unblended data using the traditional picked velocities. (b) PSKTM of blended data using the traditional approach. (c) PSKTM of blended data using the proposed approach.}
+
+\multiplot{3}{pstmzoom,pstm-bzoom,pstm-simi-bzoom}{width=0.45\textwidth}{Comparison of zoomed migration results. (a) PSKTM of unblended data using the traditional approach. (b) PSKTM of blended data using the traditional approach. (c) PSKTM of blended data using the proposed approach.}
+
+\section{Conclusion}
+We have demonstrated that it is possible to use NMO-based velocity analysis approach to obtain an acceptable velocity model \old{for}\new{from} the \new{very noisy} simultaneous-source data. The similarity-weighted semblance can obtain a better velocity spectrum than the conventional semblance, with higher resolution and reliability. When the blending interference \old{becomes}\new{is} so strong that the seismic reflections can not be observed, the similarity-weighted semblance can still show plausible \new{energy} peaks in the velocity spectrum, and the peaks can \old{then} be picked easily. \old{The picked velocities from the similarity-weighted semblance can make the direct migration result of the blended data close to the unblended data, which makes the separation of simultaneous sources not necessary.} We use both simulated synthetic and field data examples to show the potential of the similarity-weighted semblance in velocity analysis of simultaneous-source data. \new{We also compare the migrated images of unblended field data, and numerically blended field data using different picked velocities. The migrated image of blended data using the picked velocity from the similarity-weighted semblance is very close to the migrated image of unblended data, which shows great potential that the separation of simultaneous sources is no longer necessary.}
+
+
+\section{Acknowledgement}
+We would like to thank Pan Deng and Keling Chen for helpful discussions about similarity-weighted semblance, Jiang Yuan, Zhaoyu Jin, Ray Abma, Min Zhou, Araz Mahdad and Sergey Fomel for inspiring discussions about simultaneous-source acquisition. \new{We also thank Ingo Grevemeyer, and two anonymous reviewers for constructive suggestions that improve the original manuscript greatly.} This work is partially supported by the National Natural Science Foundation of China (Grant No.41274137), the National Science and Technology of Major Projects of China (Grant No. 2011ZX05019-006), National Engineering Laboratory of Offshore Oil Exploration, and the Texas Consortium for Computational Seismology (TCCS). 
+
+
+
+
+\bibliographystyle{seg}
+\bibliography{vscan}
+
+
+
+
+
+
+
+
+

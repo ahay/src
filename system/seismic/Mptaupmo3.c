@@ -95,7 +95,7 @@ int main (int argc, char* argv[])
 
 		}
 
-		sf_stretch4_define (nmo,str);
+		sf_stretch4_define (nmo,str,false);
 
 		sf_stretch4_apply (false,nmo,trace,trace);
 		sf_floatwrite (trace,nt,nmod);

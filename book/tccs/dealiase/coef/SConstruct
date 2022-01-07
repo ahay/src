@@ -1,0 +1,136 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+
+def Grey(data,other): 
+	Result(data,'grey label2=Trace unit2="" label1="Time" title="" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 wherexlabel=b wheretitle=t bartype=v  clip=0.4 color=d screenratio=1.2 %s'%other)
+	
+n1=501
+n2=256
+put='n1=501 n2=256 d1=1 d2=1 o1=0 o2=0'
+
+#Create the well-known hypermoid model
+#############################################################################
+Flow('vrms',None,
+     'math d1=0.004 n1=1001 o1=0 output="4500" ')
+
+Flow('synt',None,
+     '''
+     spike d1=0.004 n1=1001 |
+     noise rep=y seed=2006 |
+     cut n1=100 | 
+     bandpass flo=4 fhi=20 |
+     spray axis=2 n=256 d=12.5 o=-1600 label=Offset unit=m 
+     ''')
+
+Flow('hyper','synt vrms',
+     'inmo velocity=${SOURCES[1]} half=y | noise seed=2007 var=1e-10 | scale axis=2 | put o2=0 d2=1 | window n1=501 | scale axis=2')
+Grey('hyper','')
+	
+## FK
+Flow('hyper-fk','hyper','fft1 | fft3 axis=2 | cabs')
+Grey('hyper-fk','min2=-0.4 clip=500 label1="Frequency" label2="Wavenumber"')
+
+## DWT
+Flow('hyper-dwt','hyper','dwt inv=y | transp | dwt inv=y|transp')
+Grey('hyper-dwt','clip=1 label2="Spatial scale" unit1= label1="Temporal scale"')
+
+## Seislet
+# Spatial seislet
+Flow('hyper-dip','hyper','bandpass fhi=40 |dip rect1=10 rect2=10 ')
+Flow('hyper-seis-t','hyper hyper-dip','seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+
+# Temporal seislet
+Flow('zero',None,'spike n1=1 mag=0')
+Flow('freq',None,'spike n1=1 mag=5')
+# hilbert transform
+Flow('hyper-hilb','hyper-seis-t','envelope hilb=y ' ) 
+
+seis=[]
+for i in range(256):
+	seis1='hyper-seis%d'%i
+	Flow(seis1,'hyper-seis-t hyper-hilb freq',
+	'''
+	cmplx ${SOURCES[1]} | window n2=1 f2=%d | 
+	freqlet freq=${SOURCES[2]} type=b '''%i)
+	seis.append(seis1)
+Flow('hyper-seiss',seis,'cat axis=2 ${SOURCES[1:%d]} | cabs'%len(seis))
+Grey('hyper-seiss','clip=10 label2="Spatial scale" label1="Temporal scale" unit1=')
+
+## Curvelet 
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Curve'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+
+n1=501
+n2=256
+#Flow('hyper-0','hyper','pad n1=512 ')
+
+flag=1 # forward Eseis transform
+############################################################
+## with parameter
+############################################################
+Flow('hyper-curv-c-t hyper-curv-img-t',[os.path.join(matROOT,matfun+'.m'),'hyper'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}',%(n1)d,%(n2)d,'${TARGETS[0]}','${TARGETS[1]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Flow('hyper-curv-img','hyper-curv-img-t','put d1=1 o1=1 d2=1 o2=1')
+Grey('hyper-curv-img','clip=1 label2="Spatial scale" label1="Temporal scale"')
+
+
+# sorting the coefficients
+Flow('seisc','hyper-seiss',
+	'''
+	put n1=128256 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort | window n1=65792''')
+Flow('fkc','hyper-fk',
+	'''
+	put n1=65792 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort  | window n1=65792''')
+Flow('dwtc','hyper-dwt',
+	'''put n1=128256 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort  | window n1=65792''')
+Flow('curvc','hyper-curv-c-t',
+	'''put n1=137125 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort  | window n1=65792''')
+
+
+# transformed domain coefficients decaying diagram
+Plot('hyper-c','seisc fkc dwtc curvc',
+'''
+cat axis=2 ${SOURCES[1:4]} |
+window n1=5000 | scale axis=1 | 
+math output="20*log(input)/log(10)"|
+graph dash=1,0,2,3 label1=n label2="a\_n\^" 
+unit2="dB" wanttitle=n  labelsz=11''')
+
+# Making frames
+Plot('label0',None,
+	'''
+	box x0=10.6 y0=5.9 label="Fourier" xt=0.5 yt=0.5
+	''')
+Plot('label1',None,
+	'''
+	box x0=7.4 y0=7.1 label="Wavelet" xt=0.5 yt=0.5 
+	''') # xt,yt relative position 0.5
+Plot('label2',None, 
+	'''
+	box x0=3.4 y0=4.4 label="Seislet" xt=0.5 yt=0.5
+	''')
+Plot('label3',None, 
+	'''
+	box  x0=8.3 y0=5.7 label="Curvelet" xt=0.5 yt=0.5
+	''')
+Result('hyper-c','hyper-c label0 label1 label2 label3','Overlay')
+
+End()

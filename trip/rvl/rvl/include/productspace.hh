@@ -56,8 +56,11 @@ namespace RVL {
 
     ProductSpace() {}
     ProductSpace(const ProductSpace<Scalar> &) {}
+#if __cplusplus >= 201103L // We are using C++11 or a later version
+    virtual ~ProductSpace() noexcept(false) {}
+#else
     virtual ~ProductSpace() {}
-
+#endif
     virtual bool isCompatible(DataContainer const & dc) const {
       try {
 	ProductDataContainer const & pdc =

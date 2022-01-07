@@ -35,7 +35,7 @@ static float likelihood(float x0,float dx,int nx,float y0,float dy,int ny, float
 /* Main */
 int main(int argc, char* argv[])
 {
-  int nx, ny, nt, npara, nmodel, nc, seed, reject, getin, saveiter;
+  int nx, ny, nt, npara, nmodel, nc, seed, reject, saveiter;
   float dx, dy, dt, x0, y0, tini, currentL, newL, sigma;
   float **t0sq, **dattime, **esttime, *rangecoef, *newcoef, *currentcoef, *drangecoef, *midcoef, **final; 
   int k1,k2,k3,k4,l;

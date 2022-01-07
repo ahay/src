@@ -1,0 +1,300 @@
+from rsf.proj import *
+def Grey(data,other):
+	Result(data,
+	'''
+	window max1=6.25 |grey transp=y poly=y wherexlabel=b wheretitle=t label2=Midpoint unit2=km clip=350 label1=Time unit1=s yreverse=y screenht=10.24 screenratio=0.4 labelsz=10 titlesz=10 labelfat=4 titlefat=4 font=2 %s
+	'''%other)
+
+def Greyzoom(data,other):
+	Result(data,
+	'''
+	grey transp=y poly=y wherexlabel=b wheretitle=t label2=Midpoint unit2=km clip=350 label1=Time unit1=s yreverse=y screenht=10.24 labelsz=10 titlesz=10 labelfat=4 titlefat=4 font=2 screenratio=0.4 %s
+	'''%other)
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte |
+       grey3 flat=n  frame1=200 frame2=30 frame3=6
+       title=Data point1=0.8 point2=0.8  %s 
+       '''%other)
+
+def Graph(data,other):
+	Result(data,'graph label1="Frequency" label2="Amplitude" unit2= unit1="Hz" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 title="" wherexlabel=b wheretitle=t %s' %other)
+
+
+# get data
+Fetch('cmps-tp.HH','blake')
+
+# CMP (common midpoint) gathers
+Flow('cmps','cmps-tp.HH',
+     'dd form=native | reverse which=2')
+Result('cmps','''
+				transp plane=23 | byte clip=350 | 
+				grey3 min1=4.5 flat=n point1=0.8 point2=0.8 
+				frame1=400 frame2=500 frame3=10 
+				title="Blake CMPs" label2=Midpoint label3=Offset unit3=km unit1=s''')
+
+# one CMP
+Flow('cmp','cmps',
+     '''
+     window f3=950 n3=1 max1=6 |
+     put o2=0.0 d2=1
+     ''')
+Plot('cmp',
+     '''
+     grey title="(a) CMP gather" 
+     unit1=s label2=Offset unit2=km
+     ''')
+
+# Near-offset section
+Result('noff','cmps',
+       '''
+       window n2=1 n3=1024 |
+       grey title="Near Offset Section" 
+       unit1=s label2=Distance unit2=km
+       ''')
+
+# offset maps
+Flow('off1',None,'math n1=24 o1=0.4 d1=0.1  output=x1')
+Flow('off2',None,'math n1=24 o1=2.8 d1=0.05 output=x1')
+Flow('off','off1 off2','cat axis=1 ${SOURCES[1]}')
+Flow('offs','off','spray n=111')
+
+# Velocity analysis
+###################
+
+vscan = '''
+vscan offset=${SOURCES[1]} 
+v0=1.4 nv=61 dv=0.005 half=n semblance=y
+'''
+pick = 'pick rect1=20 rect2=3 vel0=1.5'
+
+# compute semblance for one CMP
+Flow('vscan','cmp off',vscan)
+Plot('vscan',
+     '''
+     grey color=j allpos=y title="(b) Velocity Scan" 
+     unit1=s label2=Velocity unit2=km/s pclip=100
+     ''')
+
+# pick maximum semblance for one CMP
+Flow('pick','vscan',pick)
+Plot('pick0','pick',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=1.7 
+     plotcol=7 plotfat=10 pad=n wanttitle=n wantaxis=n
+     ''')
+Plot('pick1','pick',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=1.7 
+     plotcol=0 plotfat=1 pad=n wanttitle=n wantaxis=n
+     ''')
+Plot('vscan2','vscan pick0 pick1','Overlay')
+
+# compute semblance for every 10th CMP
+Flow('vscans','cmps offs','window j3=10 | ' + vscan)
+
+# pick max semblance for every 10th CMP
+Flow('picks0','vscans',pick)
+
+# interpolate picks on the original grid
+Flow('picks','picks0',
+     'transp | remap1 n1=1105 d1=0.05 o1=0 | transp')
+Result('picks',
+       '''
+       grey color=j scalebar=y barreverse=y 
+       allpos=y bias=1.4
+       title="Stacking Velocity" 
+       label1=Time unit1=s label2=Distance unit2=km
+       ''')
+
+# Normal moveout and stack
+##########################
+
+nmo = '''
+nmo offset=${SOURCES[1]} 
+velocity=${SOURCES[2]} half=n
+'''
+
+Flow('nmo','cmp off pick',nmo)
+Plot('nmo',
+     '''
+     grey title="(c) Normal Moveout" 
+     unit1=s label2=Offset unit2=km
+     ''')
+Result('nmo','cmp vscan2 nmo','SideBySideAniso')
+
+Flow('nmos','cmps off picks',nmo)
+
+Result('nmos','''
+				transp plane=23 | byte clip=350 | 
+				grey3 min1=4.5 flat=n point1=0.8 point2=0.8 
+				frame1=400 frame2=500 frame3=10 
+				title="NMO corrected CMPs" label2=Midpoint label3=Offset unit3=km unit1=s''')
+
+
+Flow('blake-stack','nmos','stack')
+
+
+Flow('blake-stacks', 'blake-stack','spray axis=3 n=48 | transp plane=23')
+
+Flow('blake-weight', 'nmos blake-stacks', 
+     '''similarity other=${SOURCES[1]} niter=40 rect1=5 rect2=8 rect3=20
+     ''')
+## local similarity
+Result('blake-weight',    
+       '''
+       byte allpos=y gainpanel=all |
+       grey3 flat=n frame1=490 frame2=13 frame3=60 title="" color=j 
+       label1=Time unit1=s label2=Offset label3=CMP unit2=km unit3=km point2=0.35 point1=0.55 screenratio=0.7 
+       ''')
+
+
+Flow('blake-tweight','blake-weight','threshold pclip=99.9')
+Flow('blake-tweight0','blake-weight','threshold pclip=70')
+Flow('blake-simistack0','blake-tweight0 nmos',                                                             
+     '''
+     sfmath y=${SOURCES[1]} output=input*y | stack 
+     ''')
+Flow('nor','blake-tweight0','stack | stack axis=1 | spray n=625 | transp  | put d1=0.004 o1=-4.19095e-0')
+Flow('blake-simistack','blake-simistack0 nor','sfmath y=${SOURCES[1]} output=input/y ')
+
+### TSVD + Similarity
+
+
+Flow('nmos-tsvd','nmos','svddenoise pclip=5')
+Flow('blake-simistack0-tsvd','blake-tweight nmos-tsvd',                                                             
+     '''
+     sfmath y=${SOURCES[1]} output=input*y | stack 
+     ''')
+Flow('nor-tsvd','blake-tweight','stack | stack axis=1 | spray n=625 | transp  | put d1=0.004 o1=-4.19095e-0')
+Flow('blake-simistack-tsvd','blake-simistack0-tsvd nor-tsvd','sfmath y=${SOURCES[1]} output=input/y ')
+
+
+Flow('blake-snrstack', 'nmos', 'snrstack w=20 ee=1e-1 esp=10000')
+
+#####
+ns0=7 # smoothing radius
+# structure-oriented SVD
+Flow('blake-simi','blake-simistack','cp')
+Flow('blake-simi-dip','blake-simistack','bandpass fhi=60 | dip rect1=%d rect2=%d' % (ns0,ns0))
+Result('blake-simi-dip','blake-simi-dip',
+       '''
+       grey color=j scalebar=y wanttitle=n label2=Distance
+       barlabel=Slope barunit=samples bartype=h labelfat=4
+       font=2 titlefat=4 barlabelfat=4
+       ''')
+Flow('blake-simi-spray','blake-simi blake-simi-dip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=0 o2=1
+     ''' % (ns0))
+Result('blake-simi-cube','blake-simi-spray',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte gainpanel=all clip=350|
+       grey3 wanttitle=y flat=n labelfat=4 font=2 titlefat=4
+       label2=Distance label3="Prediction" unit3=trace
+       frame1=100 frame2=50 frame3=%d point1=0.9 point2=0.8 
+       o3num=%d d3num=3 n3tic=%d  clip=0.00358515 
+       '''  % (-ns0,ns0+1,-ns0+1,5))
+
+
+Flow('blake-simi-crs','blake-simi-spray','stack axis=2')
+
+
+Grey('blake-stack','title="Equal-weight stack"')
+Grey('blake-snrstack','')
+Grey('blake-simistack','title="Similarity stack"')
+Grey('blake-simistack-tsvd','title="PCA"')
+Grey('blake-simi-crs','title="CRS stack"')
+#Result('field','stack1 snrstack simistack ','SideBySideAniso')
+
+
+
+## Creating framebox1
+x=0.4
+y=1
+w=1.2
+w1=0.8
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=4 min2=-2 max2=2 pad=n plotfat=15 plotcol=4 screenratio=0.4
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+
+Flow('zoom-1','blake-stack','window n2=1024 | window min1=5.6 max1=6.3 f2=100 n2=301')
+Flow('zoom-2','blake-simistack','window n2=1024 |window min1=5.6 max1=6.3 f2=100 n2=301')
+Flow('zoom-3','blake-simistack-tsvd','window n2=1024 |window min1=5.6 max1=6.3 f2=100 n2=301')
+
+Greyzoom('zoom-1','title="Equal-weight stack"')
+Greyzoom('zoom-2','title="Similarity stack"')
+Greyzoom('zoom-3','title="PCA"')
+
+
+labels=[]
+Plot('arrow1',None,
+	'''
+	box x0=6.6 y0=5.00 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('arrow2',None,
+	'''
+	box x0=7.6 y0=5.00 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('arrow3',None,
+	'''
+	box x0=8.6 y0=5.00 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('arrow4',None,
+	'''
+	box x0=9.6 y0=5.00 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('arrow5',None,
+	'''
+	box x0=10.6 y0=5.00 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('arrow6',None,
+	'''
+	box x0=11.6 y0=5.00 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')				
+
+labels.append('arrow1')
+labels.append('arrow2')
+labels.append('arrow3')
+labels.append('arrow4')
+labels.append('arrow5')
+labels.append('arrow6')
+	
+Result('blake-stack0',['Fig/blake-stack.vpl']+['frame']+labels,'Overlay')
+Result('blake-simistack0',['Fig/blake-simistack.vpl']+['frame']+labels,'Overlay')
+Result('blake-simistack-tsvd0',['Fig/blake-simistack-tsvd.vpl']+['frame']+labels,'Overlay')
+
+
+
+Flow('blake-stack-f','blake-stack','spectra all=y')
+Flow('blake-simistack-f','blake-simistack','spectra all=y')
+Flow('blake-simistack-tsvd-f','blake-simistack-tsvd','spectra all=y')
+#504.77
+#415.24
+#213.83
+
+Flow('field-fs','blake-stack-f blake-simistack-f blake-simistack-tsvd-f','cat axis=2 ${SOURCES[1:3]} ')
+Graph('field-fs','plotfat=10 plotcol="7,3,5"')#,4,6
+
+
+
+
+
+
+
+
+
+
+
+
+
+End()

@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     	bool verb;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
     	float thr, pclip;
-    	float *dobs_t, *thresh, *mask;
+    	float *dobs_t, *thresh, *mask=NULL;
     	char key[7];
     	fftwf_complex *mm, *dd, *dobs;
     	fftwf_plan fft1, ifft1, fftrem, ifftrem;/* execute plan for FFT and IFFT */

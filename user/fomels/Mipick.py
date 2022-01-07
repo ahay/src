@@ -20,10 +20,10 @@ import sys, os, atexit, tempfile, subprocess
 from rsf.prog import RSFROOT
 
 try:
-    from Tkinter import *
-    from tkColorChooser import askcolor
+    from tkinter import *
+    from tkinter.colorchooser import askcolor
 except:
-    sys.stderr.write('Please install Tkinter!\n\n')
+    sys.stderr.write('Please install tkinter!\n\n')
     sys.exit(1)
 
 if os.isatty(sys.stdin.fileno()):
@@ -77,7 +77,7 @@ def hist(func,var,default=None):
     command = '< %s %s %s parform=n' % (byte,sfget,var)
     devnull = open(os.devnull,"w")
     pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
-    val = pipe.stdout.read().rstrip()
+    val = pipe.stdout.read().rstrip().decode('utf-8')
     if val:
         return func(val)
     else:
@@ -192,14 +192,14 @@ canvas = Canvas(root,cursor='crosshair',
 def display(event):
     canvas = event.widget
     x = canvas.canvasx(event.x)
-    y = canvas.canvasx(event.y)    
+    y = canvas.canvasx(event.y)
     if x >= x0 and y >= y0 and x <= x1 and y <= y1:
         x = o2+(x-x0)*xscale
         y = o1+(y-y0)*yscale
-	coords.set("(%s = %g %s, %s = %g %s)" % (label1,y,unit1,
+        coords.set("(%s = %g %s, %s = %g %s)" % (label1,y,unit1,
                                                  label2,x,unit2))
     else:
-	coords.set("")
+        coords.set("")
 
 current = None
 
@@ -263,6 +263,7 @@ def addpick(event):
         canvas.tag_bind(tag,'<B2-Motion>',movepick)
         canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
         canvas.tag_bind(tag,'<Button-3>',deletepick)
+        canvas.tag_bind(tag,'<Control-Button-1>',deletepick)
         picks[i3][tag]=scalepick(x,y)
 
 image = rsf2image(0)

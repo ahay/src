@@ -1,0 +1,489 @@
+
+\published{Geophysical Journal International, 214, 2207-2223, (2018)}
+
+\title{Plane-wave orthogonal polynomial transform for amplitude-preserving noise attenuation}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Yangkang Chen \footnotemark[1], Weilin Huang \footnotemark[2], Yatong Zhou \footnotemark[3], Wei Liu \footnotemark[2], Dong Zhang \footnotemark[2]}
+\address{
+\footnotemark[1]
+School of Earth Sciences\\
+Zhejiang University\\
+Hangzhou, Zhejiang Province, China, 310027\\
+chenyk2016@gmail.com\\
+\footnotemark[2]State Key Laboratory of Petroleum Resources and Prospecting\\
+ China University of Petroleum-Beijing \\
+ Beijing, China, 102249 \\
+ cup\_hwl@126.com\\
+ \footnotemark[3]Tianjin Key Laboratory of Electronic Materials and Devices\\
+School of Electronics and Information Engineering\\
+Hebei University of Technology\\
+5340 Xiping Road, Beichen District\\
+Tianjin 300401, P.R. China
+}
+\lefthead{GJI - Chen 2017}
+\righthead{Plane-wave orthogonal polynomial transform}
+
+\begin{abstract}
+Amplitude-preserving data processing is an important and challenging topic in many scientific fields. The amplitude-variation details in seismic data are especially important because the amplitude variation is \old{usually }directly related with the subsurface wave impedance and fluid characteristics. We propose a novel seismic noise attenuation approach that is based on local plane-wave assumption of seismic events and the amplitude preserving capability of the orthogonal polynomial transform (OPT). The OPT is a way for representing spatially correlative seismic data as a superposition of polynomial basis functions, by which the random noise is distinguished from the useful energy by the high orthogonal polynomial coefficients. The seismic energy is the most correlative along the structural direction and thus the OPT is optimally performed in a flattened gather. We introduce in detail the flattening operator for creating the flattened dimension, where the OPT can be applied subsequently. The flattening operator is created by deriving a plane-wave trace continuation relation following the plane-wave equation. We demonstrate that both plane-wave trace continuation and OPT can well preserve the strong amplitude variation existing in seismic data. In order to obtain a robust slope estimation performance in the presence of noise, a robust slope estimation approach is introduced to substitute the traditional method. A group of synthetic, pre-stack and post-stack field seismic data are used to demonstrate the potential of the proposed framework in realistic applications.  
+\end{abstract}
+
+\section{Keywords}
+Seismic signal processing, noise attenuation, orthogonal polynomial transform, amplitude-preserving processing
+
+
+\maketitle
+
+
+
+\section{Introduction}
+Seismic noise attenuation is one of the most significant steps in the whole seismic data processing and imaging workflow. It has great influence to many subsequent processing tasks, such as amplitude-variation-offset inversion, reverse time migration, full waveform inversion, and automatic interpretation for oil\&gas detection \cite[]{huang2016,gao2016,zhiguang2016seg1,zhiguang2016seg2,benfengpocs,shuwei2016vscan,zeng2017fluid,asgedom2017rough,qushan2017eage,zhang2017quantitative,yangkang2018gji}. 
+
+In the past several decades, a large number of algorithms have been developed for seismic noise attenuation. Stacking the seismic data along the spatial directions, e.g., the offset direction, can enhance the energy of spatially coherent useful waveform signals as well as mitigate the spatially incoherent random noise \cite[]{guochang2009,jianyong2016eage2,wujuan2018jge1}. One of the commonly used state-of-the-art algorithms is the prediction-based method, including t-x predictive filtering \cite[]{abma1995}, f-x deconvolution \cite[]{canales1984}, the polynomial fitting based approach \cite[]{guochang20112}, and non-stationary predictive filtering \cite[]{guochang2012,guochang2013}.  This type of methods utilize the predictive property of useful signals along spatial direction to create a regression-like model for distinguishing between signal and noise. 
+
+Another type of commonly used methods are based on data decomposition. This type of methods assume that noisy seismic data can be decomposed into different components where signal and noise are separated based on their frequency difference or morphological difference \cite[]{weilin2017gji}. Empirical mode decomposition (EMD) \cite[]{huangemd,yangkang2016emd} and its improved version, e.g., ensemble empirical mode decomposition (EEMD) \cite[]{eemd},  complete ensemble empirical mode decomposition (CEEMD) \cite[]{epsceemd}, have been used intensively for reducing the noise in seismic data \cite[]{chenwei2016seg}. Variational mode decomposition was proposed by \cite{vmd2014} for substituting EMD because of its explicit control on the decomposition performance. It has been utilized  for noise attenuation in \cite{liu2017application} and for time-frequency analysis by \cite{liuwei2016vmd}.  Regularized non-stationary decomposition \cite[]{wencheng2014,guoning2016seg} is another decomposition method which is also based on a solid mathematical model. Singular value decomposition (SVD) can also be used to extract the most spatially coherent components from the multi-dimensional seismic data \cite[]{amir2017grsl}. 
+
+Sparse transform based approaches assume that multi-dimensional seismic data can be compressed in a sparse transformed domain, where the signal is represented by high-amplitude coefficients and the noise is represented by small-amplitude coefficients \cite[]{gholami2013,baimin2018jse2}. Hence, by transforming data to the sparse domain, a soft thresholding can be applied to reject those small-amplitude coefficients that correspond to noise, which is followed by an inverse transform from the thresholded coefficients to time-space domain \cite[]{yangkang2017sgk}.  This type of methods are closely connected with the compressive sensing paradigm \cite[]{lorenzi2016}. Widely used sparse transforms are Fourier transform, curvelet transform \cite[]{candes20061,herrmann2007non,herrmann2008non,yanfei2011,shaohuan2017gji}, seislet transform \cite[]{fomel2010seislet,yangkang2015eseis,shuwei2015seg1,shuwei2015seg2}, shearlet transform \cite[]{jseshearlet2016}, Radon transform \cite[]{foster1992}, and a variety of sparse wavelet transforms \cite[]{mostafa2016bssa,amir2017ieee}, e.g., synchrosqueezing \cite[]{daubechies2011,mostafa2016geo,mostafa2016jag,mostafa2017geo} or empirical wavelet transforms \cite[]{liuwei2016ewt}, etc. Recently, the adaptive dictionary learning has gained a lot of attention in the seismic data processing field \cite[]{yangkang2017sgk,wujuan2018jge2}.  The dictionary learning based sparse representation differs from the traditional sparse transforms in that the basis functions for the sparse transform are adaptively learned from the data itself, instead of being fixed in the traditional transforms.
+
+Rank reduction methods are one of the most effective methods in the seismic data processing community, which includes the Cadzow filtering \cite[]{trickett2008}, singular spectrum analysis \cite[]{vautard1992singular,wujuan2018jge,yatong2018gji}, damped  singular spectrum analysis \cite[]{yangkang2016irr5d,zhangdong2016eage,zhangdong2016seg}, and multi-step singular spectrum analysis \cite[]{zhangdong2016cseg}. There are two least-squares projection step in the damped  singular spectrum analysis method. The first step can be considered as a rank reduction method while the second step can be interpreted as a compensation step for the non-optimal performance of the rank-reduction method, i.e., the approximated signal subspace in the traditional rank-reduction framework is a mixture of both signal and noise subspaces. From a different aspect, \cite{yaru2016dblend} proposed a rank-increasing method for iteratively estimating the spike-like noise instead of estimating signals in deblending of simultaneous-source data \cite[]{shaohuan2016,shaohuan2016seg,baimin2017jse1,yatong2018jse,wujuan2018cg1,baimin2018cg,baimin2018jse1}.  
+
+Mean and median filters utilize the statistical difference between signal and noise to reject the Gaussian white noise or impulsive noise \cite[]{liuyang2009tvmf,yike2013}. In addition to these classic noise attenuation methods, some advanced denoising methods have been proposed in recent years. Time-frequency peak filtering \cite[]{kahoo2009,lin2013,hongbo2015} based approaches utilize the high-resolution property of time-frequency transform to distinguish between useful signals and random noise. Instead of developing a standalone denoising strategy, \cite{yangkang2015ortho} proposed a two-step denoising approach that tries to solve a long-existing problem in almost all denoising approaches: the signal leakage problem. By initiating a new concept called local orthogonalization, \cite{yangkang2015ortho} successfully retrieved the coherent signals from the removed noise section to guarantee no signal leakage in any denoising algorithms.
+
+
+For all the aforementioned state-of-the-art noise attenuation algorithms, none of them are specifically designed for preserving the strong amplitude-variation details in seismic data. As we know, the amplitude variations in seismic data greatly affect the subsurface oil \& gas exploration and production. Hence, the amplitude preserving capability is one of the backbone features we need to keep in mind when designing a new denoising algorithm. In this paper, we are solving the serious problem that is often neglected in traditional seismic data processing by proposing the plane-wave orthogonal polynomial transform method. Here we want to clarify that the amplitude variation we mention here refers to strong amplitude variation, not simply the edge details, or weak signals that are often mentioned in the literature. We first introduce the basic knowledge of the orthogonal polynomial transform (OPT), which is the key component that brings us the amplitude-preserving capability in the proposed framework. We then introduce the theory of plane-wave trace continuation that is used for flattening the seismic events without damaging the amplitude information. We show that both plane-wave trace continuation and OPT can well perserve the amplitude variation details in the seismic data, which accounts for the superb performance of preserving the amplitude details in the real data applications. Considering the strong influence of the slope estimation to the plane-wave flattening, we introduce a robust slope estimation method that can substitute the traditional plane-wave destruction (PWD) \cite[]{fomel2002pwd} based methods in the presence of strong noise. A group of synthetic, pre-stack and post-stack field seismic data are used for demonstrating the performance of the proposed framework. 
+
+\section{Theory}
+\subsection{Orthogonal polynomial transform}
+In a seismic profile, the amplitude of time $t$ and space $x$ can be expressed as:
+\begin{equation}
+\label{eq:ampli}
+A(t,x) = \sum_{j=0}^{M-1} C_j(t) P_j(x),
+\end{equation}
+where $\{P_j(x),j=0,1,2,\cdots,M-1 \}$ is a set of orthogonal polynomials and $M$ is the number of basis functions and $\{C_j(t),j=0,1,2,\cdots,M-1 \}$ is a set of coefficients. The $P_j(x)$ is a unit basis function that satisfies the condition:
+\begin{equation}
+\label{eq:con}
+P_j(x)P_i(x)=\delta_{ij},
+\end{equation}
+where $\delta_{ij}$ denotes the Kronecker delta. The spectrum defined by $C_j(t)$ denotes the energy distribution of the $t-x$ domain data in the orthogonal polynomials transform domain. Besides, the low-order coefficients represent the effective energy and the high-order coefficients represent the random noise energy. We provide a detailed introduction about how we construct the orthogonal polynomial basis function in Appendix A. 
+
+In a matrix-multiplication form, equation \ref{eq:ampli} can be expressed as the following equation
+\begin{equation}
+\label{eq:matrix}
+\mathbf{A} = \mathbf{C}\mathbf{P},
+\end{equation}
+where $\mathbf{A}$ is constructed from $A(t,x)$, $\mathbf{C}$ is constructed from $C_j(t)$, $\mathbf{P}$ is constructed from $P_j(x)$. $\mathbf{A}$ is known and $\mathbf{P}$ can be constructed using the way introduced in Appendix A. The unknown is $\mathbf{C}$.  $\mathbf{C}$ can be obtained by inverting the equation \ref{eq:matrix} 
+\begin{equation}
+\label{eq:inv}
+ \mathbf{C}=\mathbf{A}\mathbf{P}^H(\mathbf{P}\mathbf{P}^H)^{-1},
+\end{equation} 
+where $[\cdot]^H$ denotes matrix tranpose.
+In this paper, we choose $M=20$, which indicates that we select 20 orthogonal polynomial basis function to represent the seismic data. Hence, inverting equation $\mathbf{P}\mathbf{P}^H$ is simply inverting a $20\times 20$ matrix and is computationally efficient. 
+
+In the OPT method, we need to define the order of coefficients we want to preserve, the process of which corresponds to applying a mask operator to the orthogonal polynomial coefficients. Mask operator can be chosen to preserve low-order coefficients and reject high-order coefficients. It takes the following form:
+\begin{equation}
+\label{eq:mask}
+\mathcal{M}_{\tau}(C_j(t)) = \left\{ \begin{array}{ll}
+C_j(t)  & \text{for}\quad  j \le \tau  \\
+0	      & \text{for}\quad j > \tau
+\end{array}\right.,
+\end{equation}
+where $\mathcal{M}$ denotes the mask operator, $C_j(t)$ denotes the orthogonal polynomial coefficients at time $t$ and order $j$. 
+
+The coefficients after applying the mask operator \ref{eq:mask} become
+\begin{equation}
+\label{eq:inv}
+ \hat{\mathbf{C}}=\mathcal{M}_{\tau}(\mathbf{C}).
+\end{equation} 
+
+The useful signals can be reconstructed by 
+\begin{equation}
+\label{eq:matrix1}
+\hat{\mathbf{A}} = \hat{\mathbf{C}}\mathbf{P},
+\end{equation}
+where $\hat{\mathbf{A}}$ denotes the denoised data.
+
+%For all the examples, we preserve the 10\% of the smallest coefficients to perform the denoising. 
+
+\subsection{Plane-wave trace continuation}
+%Flattening the seismic events
+In this section, we will derive a plane-wave flattening operator so that the seismic data can be flattened locally and the OPT can then be applied to the flattened gather. 
+
+The key question here is how to map the curved events into flattened events. %There are two main steps in the flattening process. 
+We do the data mapping by a recursively predicting strategy. Each trace in a seismic gather can be predicted using neighbor traces. Given a reference trace, each trace in the gather can predict the reference trace in some ways, e.g., by recursive trace continuation. Ideally, arranging the predicted reference traces (from all other traces) into a gather constructs a flattened gather. Next, we will introduce the theory of how we predict traces following the plane-wave equation, which we call plane-wave trace continuation.
+
+For simplicity, we always treat the first trace in the gather as the reference trace. To flatten the gather, we need to predict the first trace from all other traces and arrange them together. In a brief mathematical way, predicting the first trace from the $j$th ($j\ne 1$) trace can be expressed 
+\begin{equation}
+\label{eq:recur1}
+\mathbf{d}_1=\mathbf{P}_{2,1}\mathbf{P}_{3,2}\cdots\mathbf{P}_{j,j-1}\mathbf{d}_{j} 
+\end{equation}
+where $\mathbf{P}_{p,q}$ denotes a prediction operator to predict trace $\mathbf{d}_q$ from trace $\mathbf{d}_p$. Specifically, $\mathbf{P}_{p,p-1}$ denotes the prediction between two traces from right to left. In the inverse process, the $j$th trace can be predicted in a similar recursive formula from left to right:
+%For predicting trace $\mathbf{d}_i$ from its left traces, we use a similar recursive formula:
+\begin{equation}
+\label{eq:recur2}
+\mathbf{d}_j=\mathbf{P}_{j-1,j}\cdots\mathbf{P}_{2,3}\mathbf{P}_{1,2}\mathbf{d}_{1}. 
+\end{equation}
+
+Predicting from the $j$th trace to $j+1$th trace (or from the $j+1$th trace to $j$th trace) requires solving the plane-wave equation:
+\begin{equation}
+\label{eq:plane}
+\frac{\partial u}{\partial x} + \sigma \frac{\partial u}{\partial t} = 0,
+\end{equation}
+where $u(t,x)$ is the seismic record and $\sigma$ is local slope.  In the case of the constant local slope, equation \ref{eq:plane} has the following solution:
+\begin{equation}
+\label{eq:planesolu}
+u(t,x) = f(t-\sigma),
+\end{equation}
+where $f$ is the waveform function. In the variable-slope case, we can solve equation \ref{eq:plane} by discretizing it. Let $u_p^v$ denote $u(v\Delta t,p\Delta x)$, and then we obtain:
+\begin{equation}
+\label{eq:plane1}
+\begin{split}
+&\frac{u_{p+1}^{v+1} - u_p^{v+1}}{2\Delta x} + \frac{u_{p+1}^{v} - u_p^{v}}{2\Delta x}\\
+&+\sigma^v_p \left(\frac{u_{p+1}^{v+1}-u_{p+1}^v}{2\Delta t}+
+\frac{u_{p}^{v+1}-u_{p}^v}{2\Delta t}\right) = 0.
+\end{split}
+\end{equation}
+
+%\begin{equation}
+%\label{eq:plane1}
+%\frac{1}{2}\frac{u_{p+1}^{v+1} - u_p^{v+1}+u_{p+1}^{v} - u_p^{v}}{\Delta x} + %\frac{\sigma_p^v}{2} \frac{u_{p+1}^{v+1}-u_{p+1}^v+u_{p}^{v+1}-u_{p}^v}{\Delta t} = 0.
+%\end{equation}
+
+\old{Ranging}\new{Rearranging} the terms in equation \ref{eq:plane1}, we get
+\begin{equation}
+\label{eq:plane2}
+\begin{split}
+&\left(\frac{1}{\Delta x}+\frac{\sigma_p^v}{\Delta t}\right) u_{p+1}^{v+1} + 
+\left(-\frac{1}{\Delta x}+\frac{\sigma_p^v}{\Delta t}\right)u_{p}^{v+1} +\\
+&\left(\frac{1}{\Delta x}-\frac{\sigma_p^v}{\Delta t}\right)u_{p+1}^{v}+
+\left(-\frac{1}{\Delta x}-\frac{\sigma_p^v}{\Delta t}\right)u_{p}^{v}=0.
+\end{split}
+\end{equation}
+
+Then we have the following point-to-point recursion from $u_{p}^{v}$ to $u_{p+1}^{v+1}$:
+\begin{equation}
+\label{eq:plane3}
+\begin{split}
+&u_{p+1}^{v+1}=
+\left(\frac{1}{\Delta x}+\frac{\sigma_p^v}{\Delta t}\right)^{-1}\left[\left(\frac{1}{\Delta x}-\frac{\sigma_p^v}{\Delta t}\right)u_{p}^{v+1} +\right.\\
+&\left.\left(-\frac{1}{\Delta x}+\frac{\sigma_p^v}{\Delta t}\right)u_{p+1}^{v}+
+\left(\frac{1}{\Delta x}+\frac{\sigma_p^v}{\Delta t}\right)u_{p}^{v}\right].
+\end{split}
+\end{equation}
+Equation \ref{eq:plane3} can be used for the continuation from the first trace to all other traces, in a similar way, all other traces can predict the first trace by an inverse trace continuation process. Since the trace continuation process is achieved using the local plane-wave assumption of seismic data, we call the relation in equation \ref{eq:plane3} the plane-wave trace continuation relation.
+
+Figure \ref{fig:demo_flat1_r2} shows an example of the trace prediction process. We start from the first trace in a gather, and predict each trace in the gather from the first trace, following a given local slope field.  Figure \ref{fig:demo_flat1_r2}(a) shows the initial status of the trace prediction process, where only the first trace is shown. Following the slope field shown in Figure \ref{fig:demo_flat1_r2}(b), we can predict a complete gather from the first trace using the plane-wave equation. The complete gather is shown in Figure \ref{fig:demo_flat1_r2}(c). It is clear that the morphology of the predicted gather is consistent with the local slope shown in Figure \ref{fig:demo_flat1_r2}(b). Figure \ref{fig:demo_flat1_r2}(d) shows a flattened gather from the curved events shown in Figure \ref{fig:demo_flat1_r2}(c). We flatten the events by predicting the first trace from each trace shown in Figure \ref{fig:demo_flat1_r2}(c). For a clear view of the first trace, we plot it in Figure \new{\ref{fig:demo_flat1_r2}(e)}. 
+
+We then show an example in the presence of random noise. \new{The noisy data is simulated with $\mathbf{d}=\mathbf{s}+\mathbf{n}$, where $\mathbf{s}$ is signal, i.e. the solution to a wave equation in some random medium. The signal has a certain mean and variance, and a certain spatial and
+temporal correlation structure. $\mathbf{n}$ is the noise, for which, presumably the
+expectation $\langle n \rangle$ is zero. The overall spatial variance of the noise is a certain
+number, and its covariance with the signal is zero. The noise is distributed
+in the 2D plane following a Gaussian rule and has no spatial correlation. }Figure \ref{fig:demo_flat2_r2}(a) shows the noisy reference trace. The details of the noisy trace are shown in Figure \new{\ref{fig:demo_flat2_r2}(e)}. Following a given slope field shown in \ref{fig:demo_flat2_r2}(b), we predict a complete gather from the first trace, and show the gather in Figure \ref{fig:demo_flat2_r2}(c). It can be seen that the noise is preserved during the prediction process. Figure \ref{fig:demo_flat2_r2}(d) shows the flattened gather from Figure \ref{fig:demo_flat2_r2}(c). We can conclude from this test that trace prediction can preserve any component in the starting trace. 
+
+We then use another example to show the amplitude preserving feature of the flattening operator.  Figure \ref{fig:demo_flat3}(a) shows a complete gather containing three curved events and amplitude variation along the spatial direction. Figure \ref{fig:demo_flat3}(b) shows the flattened gather from the curved events, where we can see that the amplitude variation is well preserved during the trace prediction process.
+
+
+\inputdir{./}
+\plot{demo_flat1_r2}{width=0.7\columnwidth}{Trace prediction for clean data. (a) Reference trace. (b) Slope field. (c) Predicted gather from the reference trace. (d) Flattened gather by predicting the reference trace from each trace in Figure (c). (e) First trace in  Figure (a).}
+
+\plot{demo_flat2_r2}{width=0.7\columnwidth}{Trace prediction for noisy data. (a) Reference trace. (b) Slope field. (c) Predicted gather from the reference trace. (d) Flattened gather by predicting the reference trace from each trace in Figure (c). (e) First trace in  Figure (a). Note that during trace prediction, the noise is preserved as coherent signal.}
+
+\plot{demo_flat3}{width=0.7\columnwidth}{(a) Curved events. (b) Flattened events by predicting the first trace from each trace in (a). Note that during trace prediction, the amplitude is well preserved.}
+
+\subsection{Robust slope estimation}
+Another important factor in plane-wave orthogonal polynomial transform is the local slope calculation. The accuracy of the slope estimation affects performance of the flattening operation and the following OPT.   In this part, we will introduce a robust slope estimation method that is based on the Hilbert transform \cite[]{liuyang2015}. 
+
+Rearranging equation \ref{eq:plane} we get 
+\begin{equation}
+\label{eq:sigma}
+\sigma = -\frac{\frac{\partial u}{\partial x}}{\frac{\partial u}{\partial t}}. 
+\end{equation}
+Equation \ref{eq:sigma} can be further derived such that  \old{$\sigma = -\frac{\frac{\partial u}{\partial x}}{\frac{\partial u}{\partial z}}=-\frac{\text{FFT}_x^{-1} [ H_{DX}[ \text{FFT}_x u ] ]}{\text{FFT}_t^{-1} [H_{DT}[ \text{FFT}_t u ] ]}$}
+\new{\begin{equation}
+\label{eq:sigma1}
+\begin{split}
+\sigma = -\frac{\frac{\partial u}{\partial x}}{\frac{\partial u}{\partial z}}=-\frac{F_x^{-1} [ H_{DX}[ F_x u ] ]}{F_t^{-1} [H_{DT}[ F_t u ] ]},
+\end{split}
+\end{equation}}
+where $H_{DX}$ is frequency response function of the partial derivative in the $x$ direction, and $H_{DT}$ is frequency response function of the partial derivative in the $t$ direction. \new{$F_x$ and $F_t$ denote the Fourier transform along the $x$ and $t$ directions, respectively.} It can be straightforwardly derived that 
+\begin{equation}
+\label{eq:sigma2}
+\sigma =-\frac{\mathcal{H}_x(u)}{\mathcal{H}_t(u)},
+\end{equation}
+where $\mathcal{H}_x(u)$ denotes the Hilbert transform of $u$ along $x$ direction and $\mathcal{H}_t(u)$ denotes the Hilbert transform of $u$ along $t$ direction. %The robust slope estimation method has been demonstrated previously to be more robust than the plane-wave destruction (PWD) algorithm in the case of strong noise \cite[]{fomel2002pwd}. The algorithm is used for obtaining the input local slope for the structure-oriented filters.  
+
+Figure \ref{fig:synth,synth-n,dip,dip2,dip1} shows a slope calculation test. We calculate the slope from the noisy data using the traditional PWD method and the robust slope calculation method, respectively. As a comparison, an accurate slope estimation from the clean data using the PWD algorithm is used to evaluate the robustness of different slope estimation approaches in the case of noise. Figure \ref{fig:synth} shows the clean data, and Figure \ref{fig:dip} shows the slope estimated from the clean data using the PWD algorithm, which is deemed to be the accurate slope. Figure \ref{fig:synth-n} shows the noisy data by adding some Gaussian white noise. Figure \ref{fig:dip2} shows the slope calculated using the robust slope estimation. It is salient that the slope estimated from the noisy data is fairly close to the accurate slope field. However, using the traditional PWD algorithm, it is difficult to obtain an acceptable slope estimation from the noisy data, as can be seen from the result shown in Figure \ref{fig:dip1}. From this test, we conclude that the robust slope estimation can be used to obtain robust slope estimation performance even in the presence of strong random noise. 
+
+\new{It is worth mentioning that, by equations \ref{eq:plane} and \ref{eq:sigma}, we do not consider the spatial gradient of amplitude. In the case of smooth spatial amplitude change (e.g., small spatial gradient), the slope estimation method also works, since the calculation is done locally and the small spatial gradient almost has no influence. However, in the case of sharp spatial amplitude change (e.g., large spatial gradient), the method cannot be adopted. This drawback can be hopefully overcome in the future work. In addition, the problem of spatial gradients of amplitude and the implications for non-plane wave solutions was mentioned in \cite{wielandt1993propagation}.}
+
+
+
+\inputdir{slope}
+\multiplot{6}{synth,synth-n,dip,dip2,dip1}{width=0.42\columnwidth}{Slope calculation test. (a) Clean data. (b) Noisy data. (c) Slope calculated from the clean data using PWD algorithm. (d) Slope calculated from the noisy data using the robust slope calculation algorithm. (e) Slope calculated from the noisy data using the PWD algorithm.  }
+
+\inputdir{flat}
+\multiplot{6}{flat-c,flat-kl,flat-opt,flat,flat-kl-dif,flat-opt-dif}{width=0.3\columnwidth}{Synthetic example. (a) Clean data. (b) Denoised data using  KL filtering. (c) Denoised data using  the proposed method. (d) Noisy data.  (e) Noise section corresponding to (b). (f) Noise section corresponding to (c). }
+
+\multiplot{2}{flat-ss,flat-ss-z}{width=0.45\columnwidth}{Comparison of the 20th trace amplitude of each seismic gather in Figure \ref{fig:flat-c,flat-kl,flat-opt,flat,flat-kl-dif,flat-opt-dif}. The black line is from the clean data.  The red line is from the noisy data. The blue line corresponds to the KL method. The green line corresponds to the proposed method. (a) Comparison of the whole trace. (b) Zoom-in comparison. Note that the black and green lines are very close to each other, thus the reconstruction error using the proposed approach is much less than the traditional method for most parts.}
+
+
+\inputdir{./}
+\plot{flat-snrs}{width=0.45\columnwidth}{SNR diagrams of synthetic example. }
+
+\inputdir{prestack}
+\multiplot{4}{gath0,flat-emd-rec0,flat-kl-rec0,flat-opt-rec0}{width=0.45\columnwidth}{Denoising comparison. (a) Raw noisy data.  (b) Filtered using EMD method. \old{(b) Filtered using KL method. (c) Filtered using the proposed method.}\new{(c) Filtered using KL method. (d) Filtered using the proposed method.}}
+
+\multiplot{3}{dif,dif-kl,dif-opt}{width=0.45\columnwidth}{Noise comparison. (b) Removed noise using EMD method. (b) Removed noise using KL method. (c) Removed noise using the proposed method. }
+
+
+\multiplot{4}{zooma-1z,zooma-2z,zooma-4z,zooma-5z}{width=0.45\columnwidth}{Zoomed frame box A from Figure \ref{fig:gath0,flat-emd-rec0,flat-kl-rec0,flat-opt-rec0}. (a) Zoomed noisy field data. (b) Zoomed filtered data using EMD method. (c) Zoomed filtered data using KL method. (d) Zoomed filtered data using the proposed method.}
+
+\multiplot{4}{zoomb-1,zoomb-2,zoomb-4,zoomb-5}{width=0.45\columnwidth}{Zoomed frame box B from Figure \ref{fig:gath0,flat-emd-rec0,flat-kl-rec0,flat-opt-rec0}. (a) Zoomed noisy field data. (b) Zoomed filtered data using EMD method. (c) Zoomed filtered data using KL method. (d) Zoomed filtered data using the proposed method.}
+
+
+\multiplot{4}{zoomc-1,zoomc-2,zoomc-4,zoomc-5}{width=0.45\columnwidth}{Zoomed frame box C from Figure \ref{fig:gath0,flat-emd-rec0,flat-kl-rec0,flat-opt-rec0}. (a) Zoomed noisy field data. (b) Zoomed filtered data using EMD method. (c) Zoomed filtered data using KL method. (d) Zoomed filtered data using the proposed method.}
+
+\multiplot{4}{zoomd-1,zoomd-2,zoomd-4,zoomd-5}{width=0.45\columnwidth}{Zoomed frame box D from Figure \ref{fig:gath0,flat-emd-rec0,flat-kl-rec0,flat-opt-rec0}. (a) Zoomed noisy field data. (b) Zoomed filtered data using EMD method. (c) Zoomed filtered data using KL method. (d) Zoomed filtered data using the proposed method.}
+
+
+
+\multiplot{4}{gath,flat,gath-rec,gath-dif}{width=0.45\columnwidth}{Pre-stack field data example. (a) Field data. (b) Flattened field data. (c) Reconstructed field data. (d) Reconstruction error.}
+
+
+\plot{dip}{width=0.45\columnwidth}{Local slope estimation of the pre-stack field data.}
+
+\multiplot{4}{flat0,flat-emd0,flat-kl0,flat-opt0}{width=0.45\columnwidth}{Denoising comparison in the flattened dimension. (a) Raw noisy data.  (b) Filtered using EMD method. (b) Filtered using KL method. (c) Filtered using the proposed method.}
+
+\multiplot{4}{zoom-1,zoom-2,zoom-4,zoom-5}{width=0.45\columnwidth}{Zoomed sections from Figure \ref{fig:flat0,flat-emd0,flat-kl0,flat-opt0}. (a) Zoomed noisy field data. (b) Zoomed filtered data using EMD method. (c) Zoomed filtered data using KL method. (d) Zoomed filtered data using the proposed method.}
+
+
+
+\inputdir{postack}
+\multiplot{4}{post-gath,post-emd-rec,post-kl-rec,post-opt-rec}{width=0.45\columnwidth}{First post-stack field data example. (a) Field data. (b) Filtered data using EMD method. (c) Filtered data using KL method. (d) Filtered data using the proposed method.}
+
+\multiplot{4}{post-flat,post-flat-emd,post-flat-kl,post-flat-opt}{width=0.45\columnwidth}{Comparison in the flattened domain. (a) Field data. (b) Filtered data using EMD method. (c) Filtered data using KL method. (d) Filtered data using the proposed method.}
+
+
+\inputdir{./}
+\multiplot{4}{f2,f2-fx,f2-ssa,f2-opt}{width=0.45\columnwidth}{Denoising comparison for the second post-stack field data. (a) \new{The second post-stack field data.} (b) Filtered data using $f-x$ predictive filtering. (c) Filtered data using SSA. (d) Filtered data using the proposed method.}
+
+\multiplot{3}{f2-fx-dif,f2-ssa-dif,f2-opt-dif}{width=0.45\columnwidth}{Noise comparison for the second post-stack field data. (a) Removed noise using $f-x$ predictive filtering. (b) Removed noise using SSA. (c) Removed noise using the proposed method.}
+
+\multiplot{4}{f2-f,f2-fx-f,f2-ssa-f,f2-opt-f}{width=0.45\columnwidth}{Spectra comparison. (a)\new{Spectrum of the second post-stack seismic data.} (b) Spectrum using $f-x$ predictive filtering. (c) Spectrum using SSA. (d) Spectrum using the proposed method.}
+
+\multiplot{3}{f2-fx-simi,f2-ssa-simi,f2-opt-simi}{width=0.45\columnwidth}{Comparison of local similarity between denoised data and removed noise. (a) Local similarity using $f-x$ predictive filtering. (b) Local similarity using SSA. (c) Local similarity using the proposed method.}
+
+\plot{f2-fs}{width=0.78\columnwidth}{Comparisons of the average spectrum of all the traces. The black line denotes the average spectrum of raw data. The green line corresponds to the proposed approach. The red line corresponds to $f-x$ predictive filtering method. The blue line corresponds to the SSA method.}
+
+\multiplot{6}{f2-fx2,f2-ssa2,f2-opt2,f2-fx2-dif,f2-ssa2-dif,f2-opt2-dif}{width=0.3\columnwidth}{Comparison for the second post-stack field data after adjusting the parameters. (a) Filtered data using $f-x$ predictive filtering. (b) Filtered data using SSA. (c) Filtered data using the proposed method. (d) Removed noise using $f-x$ predictive filtering. (e) Removed noise using SSA. (f) Removed noise using the proposed method. \new{In this case, the calculated RMSs for (d),(e), and (f) are 0.059, 0.071, and 0.086, respectively. Thus, the proposed method removes 21.1\% more noise than the SSA method and 38.0\% more noise than the $f-x$ predictive filtering method.}}
+
+
+\subsection{Plane-wave orthogonal polynomial transform}
+We have introduced in detail the theory of plane-wave trace continuation, i.e., how we predict an arbitrary trace in a seismic gather from a random starting trace. We have shown that by discretizing the plane-wave equation. We can derive the spatial trace continuation relation, which can be used for trace prediction. We have presented that during trace continuation, the amplitude of seismic waveforms can be well preserved. Regarding the slope estimation, which is an important factor in the plane-wave trace continuation operator, we introduce the robust slope estimation approach. We also show that the robust slope estimation approach can obtain robust slope estimation in the presence of strong noise. Considering the amplitude-preserving capability of the OPT in a flattened dimension, we can cascade the plane-wave trace continuation operator and the OPT together to obtain a two-folds amplitude-preserving performance during a complete workflow. Thus, we name the cascaded framework as the plane-wave orthogonal polynomial transform. The complete framework for noise attenuation using the plane-wave orthogonal polynomial transform is shown in Algorithm 1. 
+
+%\begin{algorithm}
+%  \caption{Plane-wave orthogonal polynomial transform}
+%  \textbf{Input:} Noisy data $\mathbf{D}$. Order of coefficients to be preserved $\tau$. \\
+%  \textbf{Output:} Denoised data $\mathcal{D}$. 
+%   \begin{algorithmic}[1]
+%     \State \textbf{Forward plane-wave flattening}: $\hat{\mathbf{D}}$=\text{PWF}($\mathbf{D}$)
+%     \State \textbf{Forward OPT}: $\mathbf{C}$ = \text{OPT}($\hat{\mathbf{D}}$) 
+%     \State \textbf{Mask}:   $\hat{\mathbf{C}}$ = $\mathcal{M}$($\mathbf{C}$,$\tau$)
+%     \State \textbf{Inverse OPT}: $\hat{\mathcal{D}}$=\text{IOPT}($\hat{\mathbf{C}}$)
+%     \State \textbf{Inverse plane-wave flattening}:$\mathcal{D}$=\text{IPWF}($\hat{\mathcal{D}}$)
+%\end{algorithmic}
+%\label{alg:alg1}
+%\end{algorithm}
+
+\begin{algorithm}{Algorithm 1: Plane-wave orthogonal polynomial transform}{\mathbf{D},\tau}
+     \textbf{Input:} \text{Noisy data} \mathbf{D}. \text{Order of coefficients to be preserved} \tau. \\
+     \textbf{Output:} \text{Denoised data} \mathcal{D}. \\
+     \textbf{Forward plane-wave flattening}: \hat{\mathbf{D}}=\text{PWF}(\mathbf{D}) \\
+     \textbf{Forward OPT}: \mathbf{C} = \text{OPT}(\hat{\mathbf{D}}) \\
+     \textbf{Mask}:   \hat{\mathbf{C}} = \mathcal{M}(\mathbf{C},\tau)\\
+     \textbf{Inverse OPT}: \hat{\mathcal{D}}=\text{IOPT}(\hat{\mathbf{C}})\\
+     \textbf{Inverse plane-wave flattening}:\mathcal{D}=\text{IPWF}(\hat{\mathcal{D}})
+\end{algorithm}
+
+
+The forward OPT corresponds to inverting $\mathbf{P}^H(\mathbf{P}\mathbf{P}^H)^{-1}$. The inverse OPT corresponds to multiplying the orthogonal polynomial coefficients by $\mathbf{P}$. In algorithm 1, the detailed implementations of the forward plane-wave flattening operator and the inverse plane-wave flattening operator are shown in algorithms 2 and 3, respectively.
+
+\begin{algorithm}{Algorithm 2: Plane-wave flattening}{\mathbf{D}}
+ \textbf{Input:} \text{Matrix containing curved events} \mathbf{D}. \\
+ \textbf{Output:} \text{Matrix containing flattened events} \hat{\mathbf{D}}. \\
+ \textbf{Setting the first trace as the reference trace.} \\
+    \begin{FOR}{n \= 1, 2, \ldots, N} \\
+    \textbf{Predict the first trace}: \hat{\mathbf{D}}(i)=\text{PWTC}(\mathbf{D}(i),1)  
+    \end{FOR}
+\end{algorithm}
+
+%\begin{algorithm}
+%  \caption{Plane-wave flattening}
+%  \textbf{Input:} Matrix containing curved events $\mathbf{D}$. \\
+%  \textbf{Output:} Matrix containing flattened events $\hat{\mathbf{D}}$. \\
+%   \textbf{Setting the first trace as the reference trace.}
+%   \begin{algorithmic}[1]
+%       \For{$n$ = $1,\cdots,N$}
+%    \State \textbf{Predict the first trace}: $\hat{\mathbf{D}}(i)$=\text{PWTC}($\mathbf{D}(i)$,1)  
+%       \EndFor
+%\end{algorithmic}
+%\label{alg:alg2}
+%\end{algorithm}
+%
+%\begin{algorithm}
+%  \caption{Inverse plane-wave flattening}
+%  \textbf{Input:} Matrix including flattened events $\mathbf{D}$. \\
+%  \textbf{Output:} Matrix including curved events $\hat{\mathbf{D}}$. \\
+%   \textbf{Setting the first trace as the reference trace.}
+%   \begin{algorithmic}[1]
+%       \For{$n$ = $1,\cdots,N$}
+%    \State \textbf{Predict the first trace}: $\hat{\mathbf{D}}(i)$=\text{PWTC}($\mathbf{D}(i),-1$)  
+%       \EndFor
+%\end{algorithmic}
+%\label{alg:alg3}
+%\end{algorithm}
+
+\begin{algorithm}{Algorithm 3: Inverse plane-wave flattening}{\mathbf{D}}
+ \textbf{Input:} \text{Matrix including flattened events} \mathbf{D}. \\
+ \textbf{Output:} \text{Matrix including curved events} \hat{\mathbf{D}}. \\
+ \textbf{Setting the first trace as the reference trace.} \\
+    \begin{FOR}{n \= 1, 2, \ldots, N} \\
+    \textbf{Predict the first trace}: \hat{\mathbf{D}}(i)=\text{PWTC}(\mathbf{D}(i),-1) 
+    \end{FOR}
+\end{algorithm}
+
+In algorithms 2 and 3, note that $N$ denotes the number of spatial traces. $1$ and $-1$ in the operator $\text{PWTC}()$ denote predicting from a trace to the first trace and predicting the first trace to another trace, respectively. $\mathbf{D}(i)$ and $\hat{\mathbf{D}}(i)$ denote the $i$th column (or trace) in the matrix 
+$\mathbf{D}$ and $\hat{\mathbf{D}}$.
+
+
+
+\section{Examples}
+The first example is a synthetic example, as shown in Figure \ref{fig:flat-c,flat-kl,flat-opt,flat,flat-kl-dif,flat-opt-dif}. We apply the \new{Karhunen-Lo{\`e}ve (KL)}\old{KL} filtering method \new{\cite[]{jones1987}} and the proposed method to a flattened dataset with strong amplitude variation. Figure \ref{fig:flat-c} shows the clean data, and Figure \ref{fig:flat} shows the noisy data. Figures \ref{fig:flat-kl} and \ref{fig:flat-opt} show the denoised data using the KL filtering method and the proposed method, respectively. Figures \ref{fig:flat-kl-dif} and \ref{fig:flat-opt-dif} show the removed random noise using two approaches. We can observe clearly from Figures \ref{fig:flat-kl} and \ref{fig:flat-opt} that the KL filtering causes significant damages to the events, while the proposed method preserves the amplitude-variation details successfully. 
+
+In order to compare the amplitude between different seismic profiles in detail, we compare the amplitude for a single trace from each section shown in Figure \ref{fig:flat-c,flat-kl,flat-opt,flat,flat-kl-dif,flat-opt-dif}. The trace is chosen as the 20th trace in each section of Figure \ref{fig:flat-c,flat-kl,flat-opt,flat,flat-kl-dif,flat-opt-dif}. The comparison is presented in Figure \ref{fig:flat-ss}. \new{A zoom-in comparison is shown in Figure \ref{fig:flat-ss-z}.} The black line is from the clean data. The red line is from the noisy data. The blue line corresponds to the KL method. The green line corresponds to the proposed method. It is apparent that the green line is very close to the black line while the blue line deviates from the black line too much in most areas. This trace amplitude comparison  further confirms the superior performance of the proposed algorithm. 
+
+In order to numerically compare the denoising performance, we use the commonly used signal-to-noise ratio (SNR) defined as follows to quantitatively measure the performance \cite[]{yangkang2015ortho}:
+\begin{equation}
+\label{eq:dsnr}
+SNR=10\log_{10}\frac{\Arrowvert \mathbf{s} \Arrowvert_2^2}{\Arrowvert \mathbf{s} -\hat{\mathbf{s}}\Arrowvert_2^2}.
+\end{equation}
+where $\mathbf{s}$ denotes the noise-free data and $\hat{\mathbf{s}}$ denotes the denoised data. \new{In addition, to quantitatively measure the noise removal in the case of no discernable signal damage, we define the metric as the root-mean-square (RMS) 
+\begin{equation}
+\label{eq:rms}
+RMS=\Arrowvert\mathbf{n}\Arrowvert_2,
+\end{equation}
+where $\mathbf{n}$ denotes the removed noise. Although the amplitude range varies a lot for different data sets, the RMS metric provides us a quantitative way to evaluate the noise removal performance for one specific data set among different denoising methods, e.g., how much better method A performs than method B.}
+
+In order to compare the performance of two methods in different noise level. We increase the variance of noise  from 0.1 to 1.0, and calculate the SNRs of denoised data of both methods and show them in Table \ref{tbl:snrs}.  To see the varied SNRs more vividly, we plot the data from Table \ref{tbl:snrs} in Figure \ref{fig:flat-snrs}. The black line shows the SNRs varying with input noise variances. The red line shows the SNRs corresponding to the KL method. The blue line shows the SNRs of the OPT method.  It is obvious that both methods obtain large SNR improvement for all noise levels and the SNRs of the OPT method are always higher than the KL method. We can also observe clearly that the difference between the proposed OPT method and the KL method increases as noise variance becomes larger, which indicates that the proposed method outperforms the KL method more when the seismic data becomes noisier. 
+
+\begin{table}[h]
+\caption{Comparison of SNRs in dB for different input noise level. The diagram corresponding to this table is shown in Figure \ref{fig:flat-snrs}.}
+\begin{center}
+    \begin{tabular}{|c|c|c|c|c|c|} 
+  \hline Noise variance & Input data (dB) & KL (dB) & OPT (dB) \\ 
+  \hline 0.1 & 2.60  & 13.08 & 17.58 \\
+  \hline 0.2 & -3.42 & 6.92 & 11.56\\
+  \hline 0.3 & -6.94 & 3.05 & 8.04 \\
+  \hline 0.4 & -9.44 & 0.19 & 5.54 \\
+  \hline 0.5 & -11.38 & -1.89&3.60\\
+  \hline 0.6 & -12.97 &-3.54&2.02\\
+  \hline 0.7 & -14.30 &-4.94&0.68\\
+  \hline 0.8 & -15.46-&-6.17&-0.48\\
+  \hline 0.9 & -16.49 &-7.26&-1.50\\
+  \hline 1.0 & -17.40 & -8.25 &-2.42\\
+         \hline
+   \end{tabular} 
+\end{center}
+\label{tbl:snrs}
+\end{table}
+
+For computational cost comparison, the KL method takes 0.62s for processing the data shown in Figure \ref{fig:flat} while the proposed algorithm takes 0.01s. The data contains 151 samples and 61 traces. The computation is done on a PC station equipped with an Intel Core i7 CPU clocked at 3.1 GHz and 16 GB of RAM. Note that both KL and OPT methods require the events to be flattened in order to obtain the best performance, thus we only compare the cost difference in the filtering stage. 
+
+The second example is a pre-stack field data example. Figure \ref{fig:gath0} shows the original data. Figures \ref{fig:flat-emd-rec0}, \ref{fig:flat-kl-rec0}, and \ref{fig:flat-opt-rec0} show the denoised data using EMD method, KL method, and the proposed method, respectively. Figures \ref{fig:dif,dif-kl,dif-opt} shows the removed noise sections using three approaches. Figure \ref{fig:dif} shows that some low-frequency energy is damaged while Figure \ref{fig:dif-opt} shows that the removed noise is stronger. \new{In this example, the calculated RMSs for Figures \ref{fig:dif}(a), \ref{fig:dif}(b), and \ref{fig:dif}(c) are 389.49, 449.22, and 506.26, respectively. Thus, the proposed method removes 12.7\% more noise than the KL method and 30.0\% more noise than the EMD method.}
+
+In order to comprehensively compare three different approaches, we zoomed four frame boxes (A,B,C,D) to show the detailed difference. Figure \ref{fig:zooma-1z,zooma-2z,zooma-4z,zooma-5z} shows the comparison from frame box A. It is obvious that the KL approach causes some residual noise while EMD and OPT approaches obtain good results, more careful observation can show that the proposed method can obtain a more coherent image. Figure \ref{fig:zoomb-1,zoomb-2,zoomb-4,zoomb-5} shows the comparison for frame box B. It is obvious that OPT method obtains the cleanest result. Figure \ref{fig:zoomc-1,zoomc-2,zoomc-4,zoomc-5} shows the comparison for frame box C. It is still obvious that OPT method can make the events more coherent and more importantly, preserve the amplitude-variation-with-offsets (AVO) details well. Figure \ref{fig:zoomd-1,zoomd-2,zoomd-4,zoomd-5} shows the comparison for frame box D. Both Figures \ref{fig:zoomd-2} and \ref{fig:zoomd-4} show obvious amplitude artifacts while the OPT result in Figure \ref{fig:zoomd-5} shows nearly zero amplitude in the zoomed section.
+
+For this example, we also demonstrate the flattening process in Figure \ref{fig:gath,flat,gath-rec,gath-dif}. Figure \ref{fig:flat} shows the flattened gather from the original data shown in Figure \ref{fig:gath} (or Figure \ref{fig:gath0}). It is clear that most events have been flattened well. Figure \ref{fig:gath-rec} shows the reconstructed data from the inverse flattening. The data is almost the same as the original data. Figure \ref{fig:gath-dif} shows the difference between the reconstructed data and the original data. The error section is almost zero everywhere, which demonstrates that the flattening process does not introduce extra error.  Figure \ref{fig:dip} shows the slope estimated from the original data.  We also show a detailed comparison between different data in the flattened dimension in Figure \ref{fig:flat0,flat-emd0,flat-kl0,flat-opt0}. A zoomed comparison among the flattened gathers after filtering is shown in Figure \ref{fig:zoom-1,zoom-2,zoom-4,zoom-5}, where we can conclude that the proposed method obtains the smoothest result while best preserving the reflection amplitude.
+
+The next example is a real post-stack seismic image shown in Figure \ref{fig:post-gath}. There are 140 spatial traces and 194 temporal samples. %The real seismic image is borrowed from an open-source seismic data analysed in \cite[]{fomel2010painting}. 
+The seismic image contains highly curved events and the amplitude along the events is not continuous, which will make the seismic interpretation difficult. After using three approaches, the EMD method, the KL method, and the proposed method, the denoised images are shown in Figures \ref{fig:post-emd-rec}, \ref{fig:post-kl-rec}, and \ref{fig:post-opt-rec}, respectively. It is obvious that the proposed OPT based filtering approach can obtain a well smoothed seismic image with the continuity and the amplitude of events enhanced greatly. The EMD based approach, however, cannot effectively smooth the seismic events, and still leaves a lot of discontinuity in the image. The KL filtering approach obtains a much better filtering performance compared with the EMD based approach, however, it is not as successful as the performance of the proposed OPT based approach. 
+
+We can find the mechanism that caused the tremendous difference of denoised images from the comparison in the flattened domain, as shown in Figure \ref{fig:post-flat,post-flat-emd,post-flat-kl,post-flat-opt}. It is even more obvious that the OPT based approach obtains a nearly perfect smoothing along the flattened images (equivalent to along the structure in the original domain). The EMD based approach can achieve some smoothing, but remains less continuous than both KL and OPT based approaches. \new{In this example, the calculated RMSs of removed noise are 0.015 for EMD method, 0.016 for KL method, and 0.019 for the proposed method. Thus, the proposed method removes 18.7\% more noise than the KL method and 25.0\% more noise than the EMD method.}
+
+The next field data example is shown in Figure \ref{fig:f2}, which is also a post-stack data and contains weak seismic reflection events.  \new{Figures \ref{fig:f2-fx}, \ref{fig:f2-ssa}, and \ref{fig:f2-opt}} show the denoised results using three different methods. For this example, we further compare the performance of the proposed method with that of the $f-x$ predictive filtering method and the singular-spectrum analysis (SSA) method \cite[]{vautard1992singular}. Figure \ref{fig:f2-fx-dif,f2-ssa-dif,f2-opt-dif} shows the corresponding noise sections. For this example, it seems that all three methods obtain much improved results and the performance of different methods is quite similar. In order to compare the performance in detail and more fairly, we plot the $F-K$ spectra of different denoised results. The $F-K$ spectrum of the raw data is shown in Figure \ref{fig:f2-f}. The $F-K$ spectra corresponding to different methods are shown in \new{Figures \ref{fig:f2-fx-f}, \ref{fig:f2-ssa-f}, and \ref{fig:f2-opt-f}}. Comparing the $F-K$ spectra of different methods and $F-K$ spectrum of the raw data, it is easy to find that both $f-x$ predictive filtering method and the proposed method preserve the useful signals well, but the $f-x$ predictive filtering method has some residual spectrum energy around the edges (large wavenumber components). SSA method causes significant damages to useful signals.
+
+In this example, we also calculate the local similarity between the denoised data and removed noise for different methods. The local similarity is an effective way to detect the lost signals in the removed noise. High local similarity indicates that in the noise section, there are significantly similar components as the useful signals, i.e., there is lost energy in the noise. The calculation of local similarity is provided in Appendix B. The local similarity maps for different methods are shown in Figure \ref{fig:f2-fx-simi,f2-ssa-simi,f2-opt-simi}, where we can clearly observe the high similarity anomalies in the $f-x$ predictive filtering and SSA results. Although there are also some similarity anomalies in the result from the proposed method, the similarity value is relatively lower than the other two methods. From this test we conclude that the proposed method causes less damage to useful energy.
+
+We also plot a comparison of the average spectrum of all the traces for different data in Figure \ref{fig:f2-fs}. The green line corresponds to the proposed approach. The red line corresponds to $f-x$ predictive filtering method.  The blue line corresponds to the SSA method. It is quite obvious that the energy preservation of the proposed method in signal frequency band (20$\sim$60 Hz) is quite successful. The proposed method mitigates more high-frequency noise than $f-x$ predictive filtering method, which confirms the observation from Figure \ref{fig:f2-f,f2-fx-f,f2-ssa-f,f2-opt-f}. We admit that the high-frequency noise of the proposed method is slightly more than the SSA method. However, the proposed method preserves more useful energy than the other two methods in the spectrum. This field data further confirms the superior performance of the presented algorithm.
+
+In this example, to compare the noise removal performance, we need to make sure the removed noise sections do not contain discernable signal energy, as required by the metric defined in equation \ref{eq:rms}, and have to adjust the parameters for the $f-x$ and SSA methods. The denoised data and the removed noise sections using the adjusted parameters are shown in Figure \ref{fig:f2-fx2,f2-ssa2,f2-opt2,f2-fx2-dif,f2-ssa2-dif,f2-opt2-dif}. In this case, the calculated RMSs for Figures \ref{fig:f2-fx2,f2-ssa2,f2-opt2,f2-fx2-dif,f2-ssa2-dif,f2-opt2-dif}(d), \ref{fig:f2-fx2,f2-ssa2,f2-opt2,f2-fx2-dif,f2-ssa2-dif,f2-opt2-dif}(e), and \ref{fig:f2-fx2,f2-ssa2,f2-opt2,f2-fx2-dif,f2-ssa2-dif,f2-opt2-dif}(f) are 0.059, 0.071, and 0.086, respectively. Thus, the proposed method removes 21.1\% more noise than the SSA method and 38.0\% more noise than the $f-x$ method.
+
+\section{Conclusions}
+The orthogonal polynomial transform (OPT) can be used to effectively separate spatially correlative signals and spatially incoherent noise without losing waveform amplitude. To create a flattened dimension where the OPT can be optimally applied, we derive a plane-wave trace continuation relation for flattening the curved seismic events. Trace prediction in the flattening process and the subsequent OPT are both demonstrated to be amplitude-preserving. The robust slope estimation approach can obtain more robust performance than the state-of-the-art plane-wave destruction (PWD) method in the presence of strong noise. The proposed framework has been applied to several synthetic, field pre-stack and post-stack seismic data and are shown to better preserve the amplitude variations than other alterative methods.
+
+\section{Acknowledgements}
+This work was supported by \new{the Starting fund at Zhejiang University}, National Natural Science Foundation of China (No. 61401307), Hebei Province Foundation of Returned oversea scholars (CL201707), Hebei Province Project of Science and Technology R \& D (11213565), and Hebei Province Natural Science Foundation (No. E2016202341). The authors would like to thank Yaru Xue, Shaohuan Zu, and Wei Chen for helpful comments and suggestions on the topic of noise attenuation.
+
+
+\section{Appendix}
+\subsection{Appendix A: Construction of polynomial transforms}
+Let $\{P_j(x)\}$, $j=0,1,\cdots,N$ denote a set of polynomials, which satisfies the orthogonality condition:
+\begin{equation}
+\label{eq:oc}
+\sum_{i=0}^{N} P_k(x_i)P_j(x_i) = \delta_{j,k}.
+\end{equation}
+It is known that as polynomials, $P_j(x_i)$ can be expressed
+\begin{equation}
+\label{eq:poly}
+P_j(x_i) = \sum_{k=0}^j a_{jk}x_i^k,
+\end{equation}
+$a_{jk}$ denotes polynomial coefficients. It is natural that $x_j$ can be expressed based on superposition of different polynomials:
+\begin{equation}
+\label{eq:poly2}
+x^j = \sum_{k=0}^j \beta_{jk} P_k(x).
+\end{equation}
+Based on equations \ref{eq:poly2} and \ref{eq:poly3}, $j$th polynomial can be expressed as lower-order polynomials
+\begin{equation}
+\label{eq:poly3}
+P_j(x_i) = \left\{ x^j - \sum_{k=0}^{j-1}\beta_{jk}P_k(x_i) \right\}/\beta_{jj},
+\end{equation}
+Get squares of equation \ref{eq:poly2} and combine with equation \ref{eq:oc}, we can obtain
+\begin{equation}
+\label{eq:poly4}
+\beta_{jj} = \sqrt{\sum_{i=0}^{N} x_i^{2j} -\sum_{k=0}^{j-1}\beta_{jk}^2}
+\end{equation}
+and 
+\begin{equation}
+\label{eq:poly5}
+\beta_{jk} = \sum_{i=0}^{N} x_i^j P_k(x_i).
+\end{equation}
+From equations \ref{eq:poly3} to \ref{eq:poly5}, we can construct the set of polynomials. We first get $\beta_{00}=\sqrt{N}$ based on equation \ref{eq:poly4}, and thus $P_0=1/\beta_{00}$, then compute $\beta_{10}$,$\beta_{11}$ to construct $P_1$. In the same way, we can construct all polynomials.
+
+\subsection{Appendix B: local similarity}
+Local similarity between vectors $\mathbf{a}$ and $\mathbf{b}$ is defined as:
+\begin{equation}
+\label{eq:local}
+\mathbf{c}=\sqrt{\mathbf{c}_1\circ\mathbf{c}_2}
+\end{equation}
+where $\circ$ denotes dot product, $\mathbf{c}_1$ and $\mathbf{c}_2$ come from two least-squares minimization problems:
+\begin{align}
+\label{eq:local1}
+\mathbf{c}_1 &=\arg\min_{\mathbf{c}_1}\Arrowvert \mathbf{a}-\mathbf{B} \mathbf{c}_1 \Arrowvert_2^2 \\
+\label{eq:local2}
+\mathbf{c}_2 &=\arg\min_{\mathbf{c}_2}\Arrowvert \mathbf{b}-\mathbf{A} \mathbf{c}_2 \Arrowvert_2^2
+\end{align}
+where $\mathbf{A}$ is a diagonal operator composed of the elements of $\mathbf{a}$, $\mathbf{B}$ is a diagonal operator composed of the elements of $\mathbf{b}$. Note that in equations \ref{eq:local}-\ref{eq:local2}, $\mathbf{a}$, $\mathbf{b}$, and $\mathbf{c}$  denote vectorized 2D matrices. Equations \ref{eq:local1} and \ref{eq:local2} can be solved using shaping regularization with a local-smoothness constraint:
+\begin{align}
+\label{eq:local3}
+\mathbf{c}_1 &= [\lambda_1^2\mathbf{I} + \mathbf{T}(\mathbf{B}^T\mathbf{B}-\lambda_1^2\mathbf{I})]^{-1}\mathbf{TB}^T\mathbf{b},\\
+\label{eq:local4}
+\mathbf{c}_2 &= [\lambda_2^2\mathbf{I} + \mathbf{T}(\mathbf{A}^T\mathbf{A}-\lambda_2^2\mathbf{I})]^{-1}\mathbf{TA}^T\mathbf{a},
+\end{align}
+where $\mathbf{T}$ is a smoothing operator and $\lambda_1$ and $\lambda_2$ are two parameters controlling the physical dimensionality and enabling fast convergence when inversion is implemented iteratively. These two parameters can be chosen as $\lambda_1  = \Arrowvert\mathbf{B}^T\mathbf{B}\Arrowvert_2$ and $\lambda_2  = \Arrowvert\mathbf{A}^T\mathbf{A}\Arrowvert_2$.
+
+
+\bibliographystyle{seg}
+\bibliography{optf}
+
+\newpage
+\listoffigures
+

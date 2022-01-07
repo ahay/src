@@ -69,8 +69,6 @@ int main(int argc, char* argv[])
     int mode;
     int nzx, nx2, nz2, n2, nk;
     int ix, iz, it, is;
-    int wfnt;
-    float wfdt;
     int niter;
 
     /*Data/Image*/
@@ -145,9 +143,6 @@ int main(int argc, char* argv[])
     nz = nzb - top - bot;
     nx = nxb - lft - rht;
     if (!roll) gpl = nx; /* global survey setting */
-    /* wavefield axis */
-    wfnt = (int)(nt-1)/snpint+1;
-    wfdt = dt*snpint;
 
     /* propagator matrices */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
@@ -312,17 +307,14 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     /*geopar variables*/
     int nx, nz;
     int nxb, nzb;
-    float dx, dz, ox, oz;
     int spx, spz, gpz, gpx, gpl; /*source/geophone location*/
     int snpint;
-    int top, bot, lft, rht; /*abc boundary*/
+    int top, lft; /*abc boundary*/
     int nt;
     float dt;
-    float trunc; 
     bool adj; /* migration(adjoint) flag */
     bool verb; /* verbosity flag */
     bool illum; /* source illumination flag*/
-    int m2, m2b, pad1;
     /*pointers*/
     float *rr;
     /*extras*/
@@ -356,14 +348,11 @@ int psrtm(sf_complex*** record, sf_complex** imgsum, geopar geop)
     gpz = geop->gpz; 
     /*gpx = geop->gpx;*/
     gpl = geop->gpl;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft;
     nt = geop->nt;
     dt = geop->dt;
-    trunc = geop->trunc;
     adj = geop->adj; verb = geop->verb; illum = geop->illum;
-    m2 = geop->m2; m2b = geop->m2b; pad1 = geop->pad1;
     rr = geop->rr;
     roll = geop->roll;
     rectz=geop->rectz;

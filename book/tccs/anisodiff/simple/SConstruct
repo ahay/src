@@ -1,0 +1,131 @@
+from rsf.proj import *
+import math
+
+# plotting params
+plotparam = ' d2num=0.5 n2tic=4 o2num=0.0 labelsz=14.0 '
+
+Flow('plane',None,'spike n1=200 n2=200 d1=0.01 d2=0.01 o1=0.0 o2=0.0 | put label1=x label2=y unit1=km unit2=km')
+
+Flow('zigzag1','plane',
+	'''
+	mutter x0=1.0 v0=2.0 |
+	mutter x0=1.0 v0=-2.0 t0=1.0 inner=n
+	''')
+
+Flow('zigzag2','zigzag1',
+	'''
+	window n1=160 | pad beg1=40 | put o1=0.0
+	''')
+
+# no noise
+Flow('zigzag0','zigzag1 zigzag2',
+	'''
+	math K=${SOURCES[1]} output="input - K" |
+	mask min=0.01 | dd type=float
+	''')
+
+# add noise
+#1e-2 1e-04 
+Flow('zigzag','zigzag0','noise var=5e-02 seed=2017')
+Flow('zigzag-thr','zigzag','thr thr=0.7')
+# | window min1=0.5 max1=1.0 min2=1.5 max2=1.9
+
+#Result('zigzag0','grey title="Zigzag"')
+
+# Triangle smoothing
+Flow('smooth','zigzag','smooth rect1=20 rect2=20')
+
+# Anisotropic diffusion
+Flow('anisod','zigzag','impl2 rect1=50 rect2=50 tau=1')
+
+niter = 60#20
+rep   = 3 #1
+eps   = 5 #5
+
+# Smoothing by regularized inversion
+Flow('diffuse','zigzag',
+     'diffuse2 niter=%d repeat=%d eps=%g'%(niter,rep,eps))
+
+# Estimating structure tensor
+
+# not stable (gradients in x and y are misaligned and smoothing zeroes them out)
+#Flow('delx','zigzag','igrad')
+#Flow('dely','zigzag','transp | igrad | transp')
+
+# does not highlight edges - non-zero grad along the "zig-zag"
+# what does it even do?
+#Flow('delx','zigzag','smooth diff1=1')
+#Flow('dely','zigzag','smooth diff2=1')
+
+Flow('delx','zigzag','smoothder | scale axis=2')
+Flow('dely','zigzag','transp | smoothder | transp | scale axis=2')
+
+Flow('delx-delx','delx','math output="input*input" | smooth rect1=5 rect2=5')
+Flow('dely-dely','dely','math output="input*input" | smooth rect1=5 rect2=5')
+Flow('delx-dely','delx dely','math K=${SOURCES[1]} output="K*input" | smooth rect1=5 rect2=5')
+Flow('dely-delx','dely delx','math K=${SOURCES[1]} output="K*input" | smooth rect1=5 rect2=5')
+#  | smooth rect1=5 rect2=5
+
+Flow('eig1 ux uy eig2 vx vy','delx-delx delx-dely dely-dely',
+	'''
+	pwdtensorh in2=${SOURCES[1]} in3=${SOURCES[2]} eps=0.0
+	ux=${TARGETS[1]} uy=${TARGETS[2]} out2=${TARGETS[3]}
+	vx=${TARGETS[4]} vy=${TARGETS[5]} normalize=n
+	''')
+
+# True with vx and vy
+Flow('vxC','vx','math output="1/sqrt(2)"')
+Flow('vyCdown','vy','math output="-1/sqrt(2)" | cut min2=0.5 max2=1.0 | cut min2=1.5')
+Flow('vyCup','vy','math output="1/sqrt(2)" | cut min2=0.0 max2=0.5 | cut min2=1.0 max2=1.5')
+Flow('zigzagMask','zigzag0','mask min=1.0 | dd type=float')
+Flow('vyCsig','vyCdown vyCup zigzagMask','add ${SOURCES[1]} | math K=${SOURCES[2]} output="input*K"')
+Flow('noiseVY','vy zigzagMask','math M=${SOURCES[1]} output="input*(1-M)"')
+#Flow('vyC','vyCsig noiseVY','add ${SOURCES[1]}')
+Flow('vyC','vyCdown vyCup','add ${SOURCES[1]} | smooth rect1=10')
+
+# Smoothing by regularized inversion
+Flow('anisodiffuse','zigzag vxC vyC',
+     'anisodiffuse2 niter=%d repeat=%d eps=%g vx=${SOURCES[1]} vy=${SOURCES[2]}'%(niter,rep,eps))
+Flow('anisodiffuse-thr','zigzag-thr vxC vyC',
+     'anisodiffuse2 niter=%d repeat=%d eps=%g vx=${SOURCES[1]} vy=${SOURCES[2]}'%(niter,rep,eps))
+
+# you might want to double check scaling - it might affet asine
+Flow('az','vx',
+	'''
+	smooth rect1=5 rect2=5 |
+	math output="(180/%g)*asin(input)" |
+	smooth rect1=5 rect2=5 |
+	math output="input"'''%(math.pi))
+
+# Display results
+for horizon in ('zigzag0','smooth','anisodiffuse','anisodiffuse-thr','diffuse'):
+    Plot(horizon,
+         '''
+         grey yreverse=n wanttitle=y title="%s"
+         '''%(horizon))
+    
+    Result(horizon+'SEG',horizon,'''
+				bandpass fhi=40 |
+				transp | 
+				bandpass fhi=40 |
+				transp |
+				grey
+				yreverse=n
+				wanttitle=n %s				
+				'''%plotparam)
+
+Result('zigzagSEG','zigzag','grey yreverse=n wanttitle=n %s'%plotparam)
+Result('zigzag-thrSEG','zigzag-thr','grey yreverse=n wanttitle=n %s'%plotparam)
+
+"""
+for horizon in ('zigzag0','zigzag','smooth','anisod','diffuse'):
+    Plot(horizon,
+         '''
+         grey yreverse=n wanttitle=y title="%s"
+         '''%(horizon))
+    edge = 'edge-'+horizon
+    Flow(edge,horizon,'canny max=98 | dd type=float')
+    Plot(edge,'grey allpos=y yreverse=n wanttitle=n')
+    Result(horizon,[horizon,edge],'SideBySideIso')
+"""
+End()

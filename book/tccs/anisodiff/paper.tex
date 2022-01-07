@@ -1,0 +1,689 @@
+\published{Geophysics, v. 85, S313-S325, (2020)}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\title{Least-squares diffraction imaging using shaping regularization by anisotropic smoothing}
+
+\author{Dmitrii Merzlikin\footnotemark[1], Sergey Fomel\footnotemark[2], and Xinming Wu\footnotemark[3]}
+
+\address{
+\footnotemark[1]Formerly Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, Texas 78713-8924, USA; \\
+presently WesternGeco \\
+Schlumberger \\
+3750 Briarpark Drive \\
+Houston, Texas 77042, USA\\
+E-mail: dmitrii.merzlikin@utexas.edu (corresponding author)
+\footnotemark[2]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, Texas 78713-8924, USA \\
+\footnotemark[3]Formerly Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, Texas 78713-8924, USA; \\
+presently School of Earth and Space Sciences \\
+University of Science and Technology of China \\
+Hefei, China \\
+}
+
+\lefthead{Merzlikin et al.}
+\righthead{Anisotropic Smoothing Diffraction Imaging}
+
+\maketitle
+
+\begin{abstract}
+We use least-squares migration to emphasize edge diffractions. The inverted forward modeling operator is the chain of three operators: Kirchhoff modeling, azimuthal plane-wave destruction and
+path-summation integral filter. Azimuthal plane-wave destruction removes reflected energy without damaging edge diffraction signatures. Path-summation integral guides the inversion towards probable diffraction locations. We combine sparsity constraints and anisotropic smoothing in the form of shaping regularization to highlight edge diffractions. Anisotropic smoothing enforces continuity
+along edges. Sparsity constraints emphasize diffractions perpendicular to edges and have a denoising effect. Synthetic and field data examples
+illustrate the effectiveness of the proposed approach in denoising and highlighting edge diffractions, such as channel edges and faults.   
+\end{abstract}
+
+\section{Introduction}
+
+Diffraction imaging is able to highlight subsurface discontinuities associated with channel edges, fracture swarms and faults.
+Since diffractions are usually weaker than reflections \cite[]{klem-musatov94} and have lower signal-to-noise ratio, robust
+diffraction extraction is of utmost importance for the imaging of subtle discontinuities.
+\new{A number of diffraction imaging methods have been developed and can be
+classified based on the separation technique being employed.
+Methods based on optimal stacking of diffracted energy and suppression
+of reflections are described by
+\cite{kanasewich88},
+\cite{landa98},
+\cite{berkovitch09},
+\cite{dell11},
+\cite{tsingas11} and
+\cite{rad14}.
+Wavefield separation methods aim to decompose conventional full-wavefield seismic records into different
+components representing reflections and diffractions \cite[]{papziner98,taner06,fomel07,schwarz2017accessing,schwarz2019coherent,dell2019ausing}.
+Decomposition can be carried out in the common-image gather domain \cite[]{reshef09,klokov12,landa15}.
+Other authors \cite[]{kozlov04,moser08,koren2011full,klokov2013selecting,mihai15} modify migration
+kernel to eliminate specular energy coming from the first Fresnel zone and image diffractions only. For the methods involving migration,
+diffraction extraction quality becomes dependent on the velocity model accuracy.}
+Numerous case studies show that diffraction images carry valuable additional information for seismic interpretation
+\cite[]{schoepp15,burnett15,sturzu15,tyiasning2016comparison,klokov2017integrated,klokov2017diffraction,merzlikin2017diffraction,
+de2017high,pelissier2017interpretation,koltanovsky2017enhancing,zelewski2017diffraction,foss2018examples,glockner2019imaging,moser2020diffraction,montazeri2020improved}.
+\old{new papers added.}
+
+Consideration of diffraction phenomena in 3D \cite[]{keller1962geometrical,klem2008edge,hoeber2010diffractions} requires taking into account edge diffractions.
+\old{Due to lateral symmetry they have both reflective (observed along the edge) and diffractive (observed perpendicular to the edge) components.}
+\new{Due to lateral symmetry they kinematically behave as reflections when observed along the edge and as diffractions when observed perpendicular to the edge \cite[]{moser2011edge}.}
+%Imaging of edge diffractions requires their signature to be properly processed.
+Thus, edge diffraction signature is neither a ``pure'' reflection nor a ``pure'' diffraction but rather a combination of both and therefore requires a special processing procedure to be emphasized.
+\cite{serfaty2017wavefield} separate reflections, tip and edge diffractions and noise using principal component analysis and deep learning.
+\cite{klokov2011point} \new{and }\old{;}\cite{bona2015using} investigate 3D signatures of different types of diffractors. 
+\cite{alonaizi13}\old{;}\new{ and }\cite{merzlikin2017unconventional} propose workflows to properly process energy diffracted on the edge. 
+\cite{keydar2019wave} propose a method for edge diffraction imaging based on time-reversal principle and the stacking operator 
+directly targeting edge diffractions. \cite{dell2019azimuthal} extract edge diffraction responses from full wavefield data by analyzing amplitude distribution
+along different azimuths on a 3D prestack time Kirchhoff migration stacking surface.
+\new{\cite{znak2019identification} develop a common-reflection-surface-based framework for distinguishing between point and edge diffractions and separating them from reflections.}
+
+Separation of reflections and diffractions can be done as a part of least-squares migration \cite[]{Nemeth99,ronen2000least}. \cite{harlan84}
+pioneer in separating diffractions from noise by comparing observed data and data modeled from a migration image in a least-squares sense.
+\cite{merzlikin2016least} perform least-squares migration chained with plane-wave destruction and path-summation integral filtering and enforce sparsity
+in a diffraction model.
+\cite{merzlikin2019least} extend the approach and simultaneously decompose the input wavefield into reflections, diffractions and noise.
+\new{\cite{decker2017enhancing} denoise diffractions by applying semblance-based weights estimated
+in dip-angle gather (DAG) domain.}
+\cite{yu2016sparse} utilize common-offset Kirchhoff least-squares migration with a sparse model regularization to emphasize diffractions.
+\cite{yu2017seismic} extract diffractions based on plane wave destruction and dictionary learning for sparse representation.
+\cite{yu2016separation} use two separate modeling operators for diffractions and reflections and impose a sparsity constraint on diffractions.
+Sparse inversion is an efficient tool to perform extraction and denoising of diffractions since scatterers have spiky and intermittent distribution. However, a simple sparsity
+constraint does not account for the signature of the energy scattered on the edge\new{, which is kinematically similar to a reflection when observed along the edge, and thus can distort it.}
+\old{, which can lead to a distortion of a reflective component of an edge diffraction.}
+
+We combine sparsity constraints and structure-oriented smoothing in the form of shaping regularization \cite[]{fomel2007shaping} to highlight edge diffractions and
+account for their signature. Structure-oriented smoothing performs smoothing along the edges emphasizing their continuity \cite[]{hale2009structure}. 
+Sparsity constraints imposed by thresholding in the model space force the model to describe the data with the fewest parameters and 
+therefore \new{denoise and emphasize edge diffraction signatures observed perpendicular to the edge. Thus, we properly account for edge diffraction kinematic behavior for
+both parallel and perpendicular to the edge directions.}
+\old{denoise and emphasize the diffracted component of an edge diffraction. Thus, we are able to emphasize both reflective and diffractive components of edge diffractions.}
+
+For forward modeling we use a chain of operators introduced by \cite{merzlikin2016least}. We extend this workflow to three-dimensions and modify reflection destruction operator
+to account for an edge diffraction signature by suppressing reflected energy perpendicular to edges. Edge orientations are determined through a plane-wave destruction based structure tensor
+\cite[]{merzlikin2017unconventional}. We start with a method introduction, then validate its performance on a synthetic, on a noisy marine field dataset and
+on a land field dataset by separating edge diffractions from reflections and noise.
+
+\section{Method}
+
+\subsection{Objective function}
+  
+To solve for a seismic diffraction image $\mathbf{m}_d$, we extend the approach developed by \cite{merzlikin2016least} to three dimensions: 
+\begin{equation}
+\label{eq:chain}
+J(\mathbf{m}_d) = \|\mathbf{d}_{PI} - \mathbf{PDL}\mathbf{m}_d\|_{2}^{2},
+\end{equation}
+\new{where $J(\mathbf{m}_d)$ is the objective function, $\mathbf{d}_{PI} = \mathbf{PDd}$ and $\mathbf{d}$ is ``observed'' data.}
+Here, forward modeling corresponds to the chain of operators: three-dimensional path-summation integral filter $\mathbf{P}$ \cite[]{merzlikin15,merzlikin17}, 
+azimuthal plane wave destruction (AzPWD) filter $\mathbf{D}$ \cite[]{merzlikin2016diffraction,merzlikin2017diffraction} and three-dimensional Kirchhoff modeling $\mathbf{L}$.
+The path-summation integral filter $\mathbf{P}$ can be treated as the probability
+of a diffraction at a certain location. Azimuthal plane wave destruction filter $\mathbf{D}$
+removes reflected energy perpendicular to the edges.
+Therefore, AzPWD
+\new{emphasizes edge diffraction signature, which when measured in the direction perpendicular to the edge
+exhibits a hyperbolic moveout and kinematically behaves as a reflection when observed along the edge.}
+\old{emphasizes diffracted component and preserves reflected component of an edge diffraction.}
+AzPWD application is the key distinction from the 2D version of the workflow \cite[]{merzlikin2016least}, in which
+plane-wave destruction filter (PWD) \cite[]{fomel02} is applied along the time-distance
+plane \cite[]{fomel07,merzlikin2018ad}.
+After weighting the data $\mathbf{d}_{PI} = \mathbf{PDd}$
+by path-summation integral $\mathbf{P}$ and AzPWD filter $\mathbf{D}$, model fitting is constrained to most probable diffraction locations.
+
+\subsection{Determination of edge diffraction orientation\old{.}}
+For AzPWD workflow \cite{merzlikin2016diffraction,merzlikin2017diffraction} show that a volume with plane-wave destruction filter
+applied in arbitrary direction $x'$ corresponding to the azimuth $\theta$ can be generated as a linear combination of
+PWDs applied in inline ($\mathbf{D}_x$) and crossline ($\mathbf{D}_y$) directions: $\mathbf{D}_{x'}\ = \mathbf{D}_{x}\,\mathrm{cos\theta}\ +\ \mathbf{D}_{y}\,\mathrm{sin\theta}$. Due to migration procedure linearity the same
+relationship holds for the images of the corresponding PWD volumes.
+Azimuth $\theta$ should be perpendicular to the edge at each location to remove reflections but\old{keep reflective components of edge diffractions.}
+\new{preserve edge diffraction signatures, which are kinematically similar to reflections when observed along the edge.}
+
+This azimuth can be determined from the structure tensor
+\cite[]{van1995estimators,weickert1997review,fehmers2003fast,hale2009structure,wu2017directional,wu2017directional2}, which is defined as
+an outer product of migrated plane-wave destruction filter volumes in inline and crossline directions \cite[]{merzlikin2016diffraction,merzlikin2017diffraction}:
+\begin{equation}
+\label{eq:structuretensor}
+\mathbf S=
+\begin{bmatrix}
+\langle p_x p_x \rangle & \langle p_x p_y \rangle \\ \langle p_x p_y \rangle & \langle p_y p_y \rangle
+\end{bmatrix}
+,
+\end{equation}
+\new{where $\langle\rangle$ denotes smoothing of structure-tensor components, which is done in the edge-preserving fashion \cite[]{liu2010nonlinear}.
+Smoothing stabilizes structure-tensor orientation determination in the presence of noise \cite[]{weickert1997review,fehmers2003fast},
+while edge-preservation keeps information related to geologic discontinuities, which otherwise would be lost due to smearing.}
+Here, $p_x$ and $p_y$ are the samples of inline
+\old{($\mathbf{D}_x$)}and crossline\old{($\mathbf{D}_y$)}
+migrated PWD volumes \new{($\mathbf{P}_x$ and $\mathbf{P}_y$)}
+at each location. PWD filter can be treated
+as a derivative along the dominant local slope \cite[]{fomel02,fomel07}. Thus, a 2D PWD-based structure tensor (equation~\ref{eq:structuretensor}) effectively represents 3D structures without
+the need for the third dimension because the orientations are determined along the horizons.
+
+Edge orientation can be determined by an eigendecomposition of a structure tensor \cite[]{fehmers2003fast,hale2009structure}:
+$\mathbf{S}\ =\ \lambda_{u} \mathbf{u}\mathbf{u}^T +\ \lambda_{v} \mathbf{v}\mathbf{v}^T$.
+If a linear feature (edge) is encountered eigenvector $\mathbf{u}$ corresponding to a larger eigenvalue $\lambda_{u}$ points in the direction perpendicular to the edge. Eigenvector $\mathbf{v}$
+of a smaller eigenvalue $\lambda_{v}$ points along the edge. Thus, azimuth $\theta$ of a direction $x'$ perpendicular to the edge can be computed from either $\mathbf{u}$ or $\mathbf{v}$.
+If no linear features are observed, there is no preferred PWD direction.
+
+The PWD-based tensor (equation~\ref{eq:structuretensor}) describes 3D structures. Its components ($p_x$ and $p_y$) are computed along the ``structural frame"
+defined by the reflecting horizons. Thus, vectors $\mathbf{u}$ and $\mathbf{v}$ ``span" the surfaces, which at each point are determined by dominant local slopes.
+Eigenvectors of a PWD-based structure tensor (equation~\ref{eq:structuretensor}) are parallel to a reflection surface at each point.  
+
+\subsection{Regularization}
+
+We use shaping regularization to constrain the model \cite[]{fomel2007shaping}. We penalize
+edge diffractions by two shaping operators: thresholding and smoothing by anisotropic diffusion.
+\old{First emphasizes
+diffracted component of an edge diffraction perpendicular to the edge and denoises diffractions by enforcing sparsity. The second one emphasizes the
+reflected component from an edge and enforces its continuity.}
+\new{Iterative application of the first operator forces the model to describe the data with the
+fewest parameters possible \cite[]{daubechies2004iterative} and therefore denoises and emphasizes edge diffraction signatures in the direction perpendicular to the edge.
+The second operator emphasizes the signatures of edge diffractions along the edge by enforcing their continuity.}  
+
+Smoothing based on anisotropic diffusion enhances flow-like structures and
+completes interrupted lines \cite[]{weickert1998anisotropic}. The input is an unfiltered
+image, smoothness of which is increasing while diffusion is proceeding in time \cite[]{fehmers2003fast}. In a discrete
+form anisotropic diffusion can be formulated as follows:
+\begin{equation}
+\label{eq:anisodiff1}
+\frac{\mathbf{U}_k-\mathbf{U}_{k-1}}{\Delta t} = - \,\mathbf{D}^T_{im}\,\mathbf{V}\,\,\mathbf{V}^T\,\mathbf{D}_{im}\,\mathbf{U}_k\;,
+\end{equation}
+where $\mathbf{U}_k$ is an image at a diffusion time step $k$ \new{with $\Delta t$ sampling interval}, $\mathbf{D}_{im}$ is a matrix operator combining PWDs in inline and crossline
+directions in the image domain and $\mathbf{V}$ is a matrix of eigenvectors $\mathbf{v}$, which are parallel
+to linear features' orientations along the dominant local slopes. Classic anisotropic diffusion partial differential equation \cite[]{weickert1998anisotropic} requires
+three-dimensional structure tensor and gradient. In equation~\ref{eq:anisodiff1}, we utilize PWD-based structure tensor instead of its
+three-dimensional counterpart based on derivatives along the coordinate axes and a combination of PWDs in inline and
+crossline directions in the image domain instead of a three-dimensional gradient.
+After terms rearrangement, equation~\ref{eq:anisodiff1} takes the form of a linear least-squares solution
+with forward modeling operator corresponding to the identity matrix:
+\begin{equation}
+\label{eq:diffuse}
+\mathbf{U}_k = \left(\mathbf{I} + \epsilon^2\,\mathbf{D}^T_{im}\,\mathbf{V}\,\,\mathbf{V}^T\,\mathbf{D}_{im}\right)^{-1}\,\mathbf{U}_{k-1}\, ,
+\end{equation}
+where $\epsilon$ corresponds to the time step $\Delta t$. At diffusion time step $k$ we update the previous image $\mathbf{U}_{k-1}$ with $N$ conjugate gradients iterations
+until the desired smoothness is achieved in the output image $\mathbf{U}_{k}$.
+Total number of diffusion time steps $K$, number of conjugate gradients iterations $N$ and parameter $\epsilon$ control the smoothness of the final result.
+
+Figure~\ref{fig:zigzag0SEG,zigzagSEG,diffuseSEG,anisodiffuseSEG,zigzag-thrSEG,anisodiffuse-thrSEG} shows anisotropic smoothing operator
+action on a zigzag pattern contaminated with Gaussian noise. Isotropic smoothing operator
+(see, e.g., \cite{weickert1998anisotropic} for details) action is equal for all the directions and thus results in sharpness loss incurred by smoothing
+across the edges (Figure~\ref{fig:diffuseSEG}). Figure~\ref{fig:anisodiffuseSEG} shows that anisotropic
+smoothing operator (equation~\ref{eq:diffuse}) preserves edges by smoothing along them
+and thus results in both S/N ratio enhancement and sharpness of the image.
+
+\new{Flow-like coherent noise patterns
+in Figure~\ref{fig:anisodiffuseSEG} are induced by using ``true''
+azimuths of edges across the whole image including both signal and noise regions.
+The result of combining both regularization operators - thresholding and anisotropic smoothing - is shown in Figure~\ref{fig:anisodiffuse-thrSEG}:
+noise and flow-like artifacts are suppressed in regions with no signal. Thus, the combination of thresholding and anisotropic smoothing
+is required for proper edge diffraction regularization.}
+
+\new{In the following examples, edge orientation estimation is done for each location individually based on a structure tensor.}
+
+\inputdir{simple}
+
+\multiplot{6}{zigzag0SEG,zigzagSEG,diffuseSEG,anisodiffuseSEG,zigzag-thrSEG,anisodiffuse-thrSEG}{width=0.3\columnwidth}{Zigzag pattern: (a) with no noise;
+(b) with Gaussian noise added; (c) corresponds to (b) processed by isotropic smoothing operator (notice
+smoothing across the edges); (d) corresponds to (b) processed by anisotropic smoothing operator (edges are highlighted and preserved).
+\new{Flow-like coherent noise patterns in (d) are induced by using ``true'' azimuths of edges
+across the whole image including both signal and noise regions. Thresholding operator action on (b) is shown in (e).
+The result of combining both regularization operators - anisotropic smoothing and thresholding - is shown in (f). 
+Noise including flow-like artifacts is attenuated.}}   
+
+\subsection{Optimization}
+
+For inversion we adopt a conjugate gradients scheme \cite[]{fomel07}:
+\begin{equation}
+\label{eq:itthr}
+\mathbf{m}_d^i\ \leftarrow\ \mathbf{H}_{\epsilon,N,K} \mathbf{T_{\lambda}} \big[ \mathbf{m}_{d}^{j}\ +\ \alpha_{j}\mathbf{s}_{j} \big],\ \mathbf{s}_{j}=-\nabla J(\mathbf{m}_{d}^{j})\ +\ \beta_{j}\mathbf{s}_{j-1}
+\end{equation}
+where $\mathbf{H}_{\epsilon,N,K}$ and $\mathbf{T_{\lambda}}$ are anisotropic-smoothing and thresholding operators,
+$-\nabla J(\mathbf{m}_{d}^{j})$ is the gradient at iteration $j$, $\mathbf{s}_{j}$ is a conjugate direction,
+$\alpha_{j}$ is an update step length , and $\beta_j$ is designed
+to guarantee that $\mathbf{s}_j$ and $\mathbf{s}_{j-1}$ are conjugate.
+After several internal iterations $j$ of the conjugate
+gradient algorithm we generate $\mathbf{m}_d^j$, to which
+we apply thresholding to drop samples corresponding to noise with values lower than the threshold $\lambda$,
+and which we then smooth along edges by applying anisotropic smoothing operator $\mathbf{H}_{\epsilon,N,K}$. Outer model shaping iterations
+are denoted by $i$. 
+
+Inversion results also depend on the numbers of inner and outer iterations:
+their tradeoff determines how often shaping regularization is applied
+and therefore controls its strength. Regularization by early stopping can also be conducted.
+The optimization strategy with 
+$\mathbf{H}_{\epsilon,N,K}$ removed corresponds to the iterative thresholding approach \cite[]{daubechies2004iterative}. 
+
+\subsection{Workflow}
+
+\new{The workflow takes stacked data as the input.} 
+To generate all the inputs necessary for the inversion we propose the following sequence of procedures:
+\begin{enumerate}
+\item estimate inline and crossline dips describing dominant local slopes associated with reflections in the stack;
+\item perform PWD filtering on the stack in inline and crossline directions;
+\item migrate the corresponding volumes;
+\item combine the migrated volumes in a structure tensor (equation~\ref{eq:structuretensor});
+\item smooth structure tensor components along structures with edge preservation;
+\item perform eigendecomposition of a structure tensor and determine orientations of edges;
+\item apply AzPWD and path-summation integral to the stacked data;
+\new{\item apply conventional full-wavefield migration to the dataset stack (same as the input to step 1);
+estimate dips and generate PWD volumes in the inline and in the crossline directions
+in the image domain ($\mathbf{D}_{\text{im}}$ in equation~\ref{eq:anisodiff1})
+for anisotropic smoothing regularization.}
+\end{enumerate} 
+
+\new{The sequence of procedures with their corresponding inputs and outputs is shown in Figure~\ref{fig:schematic}.
+In the first step, dips are estimated using PWD \cite[]{fomel07}, and two volumes - one for the inline dips and
+one for the crossline dips - are produced and further used for reflection removal in step 2.
+In the second step, based on the two input dip volumes, reflections are predicted and suppressed:
+two outputs are generated, which correspond to PWD filter application
+in the inline ($\mathbf{D}_x$)
+and in the crossline ($\mathbf{D}_y$) directions
+using the corresponding dip distributions. These two volumes with
+reflections removed are then migrated (step 3) using conventional full-wavefield migration, e.g. 3D post-stack Kirchhoff migration.
+For step 4, instead of explicitly computing structure tensor for each data sample according to equation~\ref{eq:structuretensor},
+volumes for each of its components can be pre-computed. The term $p_x p_x$ structure-tensor component volume can be
+generated by the Hadamard product between the migrated inline PWD volume ($\mathbf{P}_x$) and itself, the
+$p_y p_y$-component volume -
+by the Hadamard product between the migrated crossline PWD volume ($\mathbf{P}_y$) and itself,
+and the $p_x p_y$-component volume -
+by the Hadamard product between the migrated inline PWD volume ($\mathbf{P}_x$) and the migrated crossline PWD volume ($\mathbf{P}_y$).
+Then, in step 5, the $p_x p_x$, $p_y p_y$, and $p_x p_y$ structure-tensor component volumes
+are input to edge preserving smoothing, which outputs the $\langle p_x p_x\rangle$, $\langle p_y p_y\rangle$,
+and $\langle p_y p_y\rangle$ volumes. In step 6, structure tensor (equation~\ref{eq:structuretensor})
+eigendecomposition is performed ``on the fly'' by combining structure tensor component values
+from the $\langle p_x p_x\rangle$, $\langle p_y p_y\rangle$,
+and $\langle p_y p_y\rangle$ volumes for each data sample. The result is the smaller eigenvalue eigenvector volume,
+which is then converted to edge diffraction orientations $\mathbf{\Theta}$.
+Step 7 gives the data to be fit by the inversion (equation~\ref{eq:chain}).}
+Orientations of structures for AzPWD and for anisotropic smoothing regularization are estimated in step \old{5}\new{6}.
+In anisotropic diffusion \new{instead of derivatives in Cartesian coordinates} we use PWDs in inline and crossline directions in the image domain
+(\new{$\mathbf{D}_{\text{im}}$ in }equation~\ref{eq:anisodiff1}), dip estimation for which should be performed on a ``conventional" image
+of a full wavefield stack \new{(step 8)}.   
+\old{Step 6 gives the data to be fit by the inversion (equation~\ref{eq:chain}).} Then, we invert the data \new{for edge diffractions.} 
+
+\inputdir{.}
+\plot{schematic}{width=0.9\columnwidth}{\new{Workflow chart illustrating the sequence of procedures and the relation of their corresponding inputs and outputs. 
+Here, $\mathbf{D}_x$ and $\mathbf{D}_y$ correspond to inline and crossline PWD volumes of the input stack, $\mathbf{P}_x$
+and $\mathbf{P}_y$ correspond to inline and crossline PWD volumes after migration, $\odot$ corresponds to the Hadamard (element-wise) matrix
+product, $\langle\rangle$ corresponds to the edge-preserved smoothing, $\mathbf{\Theta}$ corresponds to the volume of edge diffraction azimuths,
+$\mathbf{P}\mathbf{D}\mathbf{L}$ corresponds to the forward modeling operator corresponding to the chain of path-summation
+integral, AzPWD and Kirchhoff modeling operators respectively; $\mathbf{d}_{PI} = \mathbf{PDd}$, where $\mathbf{d}$ corresponds to the input stack; and
+$\mathbf{H}_{\epsilon}$ and $\mathbf{T_{\lambda}}$ are anisotropic-smoothing and thresholding operators.
+The term $\mathbf{m}_d$ is the edge diffractivity we invert for: $\mathbf{m}_d^{j}$ describes model updates from internal iterations minimizing the misfit, and
+$\mathbf{m}_d^{i}$ is the result of regularization applied during external iterations. 
+Notice in step 8, inline and crossline PWDs are computed in the image domain ($\mathbf{D}_{\text{im}}$ in equation~\ref{eq:anisodiff1}), and then are used instead of Cartesian derivatives
+in anisotropic smoothing operator $\mathbf{H}_{\epsilon}$ (equation~\ref{eq:anisodiff1}). The edge diffraction azimuths $\mathbf{\Theta}$ are used in the AzPWD
+operator $\mathbf{D}$ (step 6) and in the anisotropic smoothing operator $\mathbf{H}_{\epsilon}$ to prevent smearing across the edges.
+}}
+
+\section{Synthetic Data Example}
+\inputdir{simple3d}
+
+We test the approach on a synthetic data example\old{.}
+\new{with a reflectivity model is shown in Figure~\ref{fig:burden}.
+The synthetic seismic data are generated by Kirchhoff modeling method with
+$15\ \text{Hz}$ peak-frequency Ricker wavelet, reflectivity distribution shown in Figure~\ref{fig:burden} and $2.0\ \text{km/s}$
+constant velocity model, which is further utilized in both
+migration and inversion. Zero-offset geometry with $1\ \text{m}$ sampling in both inline and crossline directions is used.}   
+\old{Zero-offset data are}\new{The synthetic data are} shown in Figure~\ref{fig:zo3}. Random noise
+\new{with a maximum amplitude of 30\% of that of the signal,}
+filtered to the signal frequency band is added to the synthetic.
+After 3D Kirchhoff migration diffractions become focused and a channel-like structure with a zigzag pattern becomes prominent (Figure~\ref{fig:mig3}). However, channel edges
+appear to be somewhat blurred and masked by the reflections. We follow the workflow described above. Data to be fit by the inversion is shown in Figure~\ref{fig:linpi-data}.
+We use the following parameters for the inversion: $\lambda=100$, $\epsilon=10$, $N=5$ and $K=1$. In total we use $20$ iterations - 5 inner by 4 outer.
+The inversion result is shown in Figure~\ref{fig:modl}. Edges are highlighted and denoised.   
+
+%\plot{zo3}{width=0.8\columnwidth}{Zigzag zero-offset synthetic.}
+%\plot{mig3}{width=0.8\columnwidth}{3D Kirchhoff migration of the Zigzag zero-offset synthetic (Figure~\ref{fig:zo3}).} 
+%\plot{linpi-data}{width=0.8\columnwidth}{AzPWD and 
+%path-summation integral migration applied to the Zigzag zero-offset synthetic (Figure~\ref{fig:zo3}).}
+%\plot{modl}{width=0.8\columnwidth}{Inversion result: edge diffractions are highlighted and denoised.}
+%\multiplot{4}{zo3,mig3,linpi-data,modl}{width=0.8\columnwidth}{(a) Zigzag zero-offset synthetic; (b) 3D Kirchhoff migration of the Zigzag zero-offset synthetic (Figure~\ref{fig:zo3});
+%(c) AzPWD and path-summation integral migration applied to the Zigzag zero-offset synthetic (Figure~\ref{fig:zo3}); (d) Inversion result: edge diffractions are highlighted and denoised.}
+
+\plot{burden}{width=0.9\columnwidth}{Reflectivity model for the synthetic data example. Reflectivity corresponds to density
+contrasts while the velocity is kept constant at $2.0\ \text{km/s}$ throughout the volume.}
+
+\multiplot{2}{zo3,mig3}{width=0.8\columnwidth}{(a) Zigzag zero-offset synthetic; (b) 3D Kirchhoff time migration of the zigzag zero-offset synthetic (Figure~\ref{fig:zo3}).
+\new{While focusing of both reflections and edge diffractions can be observed in (b), channel edges are masked by specular energy
+and appear to be blurred.}}
+
+\multiplot{2}{linpi-data,modl}{width=0.8\columnwidth}{(a) AzPWD and path-summation integral migration applied to the zigzag zero-offset synthetic (Figure~\ref{fig:zo3})
+\new{: A high diffraction probability along the channel edges can be observed}; (b) Inversion result: edge diffractions are highlighted and denoised.}
+
+\section{Field Data Example I}
+
+We test the capabilities of the proposed approach on the field dataset acquired with a high-resolution 3D (HR3D)
+marine seismic acquisition system (P-cable) in the Gulf of Mexico to characterize structure and stratigraphy of
+the shallow subsurface \cite[]{meckel2016use,klokov2017diffraction,merzlikin2017diffraction,sgreer18}.
+\new{The acquisition geometry is defined by a `cross cable' of a catenary shape with paravans (diverters) at the ends oriented perpendicular
+to the inline (transit) direction that tows twelve $25\ \text{m}$ long streamers with separation of $10-15\ \text{m}$. Source-receiver
+offsets are on order of $100-150\ \text{m}$, while the source sampling is $6.25\ \text{m}$.
+The target interval of interest in this paper is associated with the $0.222\ \text{s}$ time slice, which
+approximately corresponds to $160\ \text{m}$ depth. 
+Diffraction imaging is applied to the dataset stack preprocessed with the following procedures: 
+$40\ \text{Hz}$ low-pass filter, wavelet deconvolution, surface-consistent amplitude corrections,
+predictive deconvolution, missing trace interpolation and acquisition footprint elimination
+using F-K filtering in the image domain.} More detailed description of the acquisition geometry, geology, and interpretation of diffraction images can be found in
+\cite{klokov2017diffraction} and \cite{merzlikin2017diffraction}.
+Here we focus on the interval with a channel of high wavelength sinuosity \cite[]{merzlikin2017diffraction}.
+\new{For simplicity, constant velocity model of $1.5\ \text{km/s}$ is used for both migration and inversion.
+Higher accuracy diffraction-based velocity estimation for the same dataset is described in \cite{merzlikin2017diffraction}.}
+%Provided narrow-offset P-cable acquisition geometry and shallow unconsolidated sediments being imaged, constant velocity model
+%serves the purpose of proving method's validity.}
+
+The stacked volume is shown in Figure~\ref{fig:stack}.
+The post-stack 3D Kirchhoff time migration image of the target slice is shown in Figure~\ref{fig:mig3-slice}.
+Channel delineation is hindered by stronger reflections and acquisition footprint - horizontal lines. 
+We eliminate the footprint in inline and crossline PWD diffraction images using F-K filtering before
+combining them in a structure tensor (equation~\ref{eq:structuretensor}) and forming AzPWD linear combination \cite[]{merzlikin2017diffraction}.
+Result of AzPWD volume migration is shown in Figure~\ref{fig:xspr-prec-slice}.
+Channel and other small-scale features (e.g. fault at in-lines $2.5-3.0\ \text{km}$ and cross-lines $6.0-6.4\ \text{km}$) are highlighted but the image is still noisy.
+
+\inputdir{pcable}
+
+\plot{stack}{width=0.9\columnwidth}{\new{High-resolution 3D marine seismic dataset from the Gulf of Mexico: stacked volume.}
+\old{P-cable dataset stack.}}
+
+We follow the proposed workflow and first generate the data to be fit by the inversion (Figure~\ref{fig:linpi-data-slice}) by applying AzPWD and path-summation integral migration to the stack
+(Figure~\ref{fig:stack}). We run five outer and two inner iterations and use $\lambda=0.008$, $\epsilon=20$, $N=30$ and $K=1$. Due to
+low signal-to-noise ratio of the dataset small number of inner iterations is used to prevent leakage of noise to the diffraction image domain.
+The result of the proposed approach is shown in Figure~\ref{fig:modl-wk-100}. The channel appears to be highlighted and denoised. Most of the
+low-amplitude events are also preserved and highlighted including the fault feature (in-lines $2.5-3.0\ \text{km}$ and cross-lines $6.0-6.4\ \text{km}$).
+Discontinuities of edges intersecting each other at inlines $1.0-1.5\ \text{km}$ and crosslines $4.0-5.0\ \text{km}$ are caused by their rapidly varying orientations prohibiting smoothing
+from emphasizing different strikes simultaneously. 
+
+Figures~\ref{fig:hs-modl-wk-100-thr} and~\ref{fig:hs-modl-wk-100} show
+the diffractivity model after thresholding and after thresholding followed by anisotropic smoothing applied correspondingly. The figures
+illustrate that anisotropic smoothing merges neighbor samples and thus is necessary for edge diffraction regularization.
+\new{The result is consistent with the experiments shown in Figure~\ref{fig:zigzag0SEG,zigzagSEG,diffuseSEG,anisodiffuseSEG,zigzag-thrSEG,anisodiffuse-thrSEG}.} 
+ 
+Figure~\ref{fig:xspr-notmig,diffractions-ortho,noise-ortho} shows the stack after reflection elimination, modeled diffractions from denoised diffractivity
+shown in Figure~\ref{fig:modl-wk-100} and their difference. Denoised diffractions in Figure~\ref{fig:diffractions-ortho} show clear hyperbolic signatures. Reflection
+energy remainders after AzPWD application prominent in Figure~\ref{fig:xspr-notmig}
+(e.g.,
+$0.222\ \text{s}$ TWTT (two-way traveltime), inline $1.625\ \text{km}$ and crosslines $5.5-6.25\ \text{km}$ and
+$0.222\ \text{s}$ TWTT, inlines $2.4-2.7\ \text{km}$ and crosslines $6.25-6.5\ \text{km}$)
+are also removed.
+Difference in Figure~\ref{fig:noise-ortho} is predominated by noise,
+reflection remainders (e.g., regions mentioned above)
+and acquisition footprint and proves the effectiveness of the approach.
+
+To account for amplitude differences and for higher continuity of denoised diffractions (Figure~\ref{fig:diffractions-ortho}) in comparison to the stack with AzPWD (Figure~\ref{fig:xspr-notmig})
+signal and noise orthogonolization \cite[]{chen2015random} has been applied. Similarity between restored signal (Figure~\ref{fig:diffractions-ortho})
+and restored noise (Figure~\ref{fig:noise-ortho}) is measured. Then, signal energy, which leaked
+to the difference volume (Figure~\ref{fig:noise-ortho}) and which has high similarity with the signal events actually predicted (Figure~\ref{fig:diffractions-ortho}),
+is withdrawn from the noise volume and added to the signal estimate.   
+
+\multiplot{2}{mig3-slice,xspr-prec-slice}{width=0.9\columnwidth}{$0.222$ s time slice: (a) 3D post-stack Kirchhoff migration of the stack shown in Figure~\ref{fig:stack};
+(b) 3D post-stack Kirchhoff migration of the stack after AzPWD.
+\new{Subsurface discontinuities appear to be highlighted in (b) in comparison to (a), in which they are masked by specular energy. At the same time,
+diffraction image (b) still appears to be noisy.}}
+
+\multiplot{2}{linpi-data-slice,modl-wk-100}{width=0.9\columnwidth}{$0.222$ s time slice: (a) observed data (Figure~\ref{fig:stack}) preconditioned
+by AzPWD and path-summation integral migration; (b) inversion result (strong smoothing is used to 
+highlight the continuity of edge diffractions).
+\new{Significant improvement in signal-to-noise ratio of edge diffractions has been achieved (compare with Figure~\ref{fig:xspr-prec-slice}).}}
+
+\multiplot{2}{hs-modl-wk-100-thr,hs-modl-wk-100}{width=0.47\columnwidth}{Last iteration diffractivity model: (a)
+after thresholding; (b) after thresholding followed by anisotropic smoothing. \new{While thresholding allows for denoising, anisotropic smoothing emphasizes edge diffraction continuity and accounts for its
+kinematic behavior when observed along the edge.}}
+
+\multiplot{3}{xspr-notmig,diffractions-ortho,noise-ortho}{width=0.75\columnwidth}{(a) Stack with reflections removed; (b) Kirchhoff modeling
+of diffractivity from Figure~\ref{fig:hs-modl-wk-100}; (c) difference between (a) and (b) is predominated by noise
+\new{and, in particular, by reflection remainders
+(notice coherent events with slowly varying amplitudes, e.g.,
+$0.222\ \text{s}$ TWTT, inline $1.625\ \text{km}$ and crosslines $5.5-6.25\ \text{km}$ and
+$0.222\ \text{s}$ TWTT, inlines $2.4-2.7\ \text{km}$ and crosslines $6.25-6.5\ \text{km}$)
+and acquisition footprint}.}
+
+\section{Field Data Example II}
+
+\new{The} second field data example comes from the Cooper Basin \new{onshore}\old{in the} Western Australia.
+\new{The dataset corresponds to stacked (with $25\times25\ \text{m}$ bin size) preprocessed data acquired as a 3D land seismic survey
+with fully azimuthal distribution of offsets and a far offset of $4000\ \text{m}$.
+Preprocessing sequence includes noise attenuation, near-surface static corrections, despike, surface-consistent deconvolution,
+Q-compensation whitening and time-variant filter applied after stacking.} 
+\new{The} target horizon slice picked by the interpreter and used
+for the performance evaluation of the method corresponds to the interface between tight-gas sand and coals \cite[]{tyiasning2016comparison}.
+\new{The depth of the interface is approximately $2500\ \text{m}$. Structural complexity of the overburden can be characterized as high.}
+Detailed geological description of the area as well as the comparison of diffraction imaging results to discontinuity-type attributes is given by
+\new{\cite{tyiasning2016comparison}}\old{(Tyiasning et al., 2016)}.
+Here, we apply the developed approach to the dataset.
+\new{Prestack time migration velocity is used for both full-wavefield migration and the proposed inversion approach for edge diffraction imaging.}
+
+Figure~\ref{fig:stack-barrolka} shows a stacked volume of the dataset. We focus on the window around the target horizon, which on average corresponds to $1.72\ \text{s}$ TWTT.
+Figure~\ref{fig:mig3-ts} shows conventional image of the target horizon slice generated with 3D post-stack time Kirchhoff migration.
+We then apply reflection removal
+procedure to the stack (Figure~\ref{fig:stack-barrolka}), migrate it, and generate the image shown in Figure~\ref{fig:xspr-mig3-ts}. Smaller scale features become highlighted, e.g., 
+faults between $8-10\ \text{km}$ inlines and $0-4\ \text{km}$ crosslines. Acquisition footprint is noticeable on both of the images (Figure~\ref{fig:mig3-ts,xspr-mig3-ts}) and corresponds
+to the low-amplitude events aligned in a grid-like fashion (easy to notice between inlines $0-2\ \text{km}$ and crosslines $6-8\ \text{km}$).
+We apply the developed workflow to further highlight and denoise diffractions.
+
+\inputdir{barrolka}
+\plot{stack-barrolka}{width=0.99\columnwidth}{\new{3D sesimic dataset from the Cooper Basin onshore Western Australia: stacked volume.}
+\old{Barrolka dataset stack.}}
+
+\multiplot{2}{mig3-ts,xspr-mig3-ts}{width=0.8\columnwidth}{Target horizon slice
+(the interface between tight-gas sand and coals picked by the interpreter ($\sim1.72\ \text{s}$ TWTT)):
+(a) 3D post-stack Kirchhoff migration of the stack shown in Figure~\ref{fig:stack-barrolka};
+(b) 3D post-stack Kirchhoff migration of the stack after AzPWD.
+\new{Subsurface discontinuities appear to be highlighted in (b) in comparison to (a), in which they are masked by specular energy. At the same time,
+diffraction image (b) still has some noise present.}}
+
+First, we generate the data to be fit by the inversion - the stack weighted by a path-summation integral after reflection elimination (Figure~\ref{fig:linpi-data-ts}).
+%Image shown in Figure~\ref{fig:linpi-data-ts} represents diffraction probability.
+We run twenty outer and two inner iterations and use $\lambda=4$, $\epsilon=10$, $N=20$ and $K=1$.
+As in the previous data example we use a low number of internal iterations to avoid noise fitting in general and footprint in particular. The inversion result along the target horizon is shown 
+in Figure~\ref{fig:modl-test-ts}.
+3D cubes of the migrated stack, the
+migrated stack after reflection elimination and the inversion result are shown in Figures~\ref{fig:mig3-barrolka},~\ref{fig:xspr-mig3-barrolka} and~\ref{fig:modl-test}.
+\new{Edges masked by the specular energy on the full-wavefield image (Figure~\ref{fig:mig3-barrolka}), are highlighted on the image after
+reflection elimination (Figure~\ref{fig:xspr-mig3-barrolka}). At the same time,
+edge diffractions produced by the inversion (Figure~\ref{fig:modl-test}) appear to be clearer and have higher signal-to-noise ratio.} 
+
+Further, we apply Kirchhoff modeling to the inversion result (Figure\new{s}~\ref{fig:modl-test-ts}\new{ and~\ref{fig:modl-test}}), restore diffractions
+(\new{Figure~\ref{fig:diffractions-ortho-barrolka}}\old{Figure~\ref{fig:diffractions-ortho-barrolka}}), and subtract the result from the stack after reflection elimination
+(\new{Figure~\ref{fig:xspr-notmig-barrolka}}\old{Figure~\ref{fig:noise-ortho-barrolka}}). The result
+of subtraction shown in Figure~\ref{fig:noise-ortho-barrolka} can be treated as noise eliminated during the inversion. Signal and noise orthogonalization \cite[]{chen2015random}
+is applied to account for aperture difference between observed and restored diffractions (for instance, often only a single diffraction flank can be observed in the data
+leading to spuriously high difference or the ``noise estimate") and to bring back some of the energy accidentally leaked to the noise domain.
+
+The acquisition footprint evident in Figure~\ref{fig:noise-ortho-barrolka} suggests the
+high performance of the method. Improvement can be noticed between $6-10\ \text{km}$ inlines and $2-4\ \text{km}$ crosslines associated
+with the extraction of small-scale discontinuities. Compare the inversion result Figure~\ref{fig:modl-test-ts}
+and the result of migration shown in Figure~\ref{fig:xspr-mig3-ts}. Same subtle events are located at crossline $3.25\ \text{km}$ between inlines $7-9\ \text{km}$
+(Figures~\ref{fig:diffractions-ortho-barrolka} and~\ref{fig:xspr-notmig-barrolka}) and have a clear hyperbolic shape
+\new{(Figure~\ref{fig:diffractions-ortho-barrolka}), which appears when edge diffractions are observed perpendicular to edges}.
+Good restoration quality can also be inferred from the ``circular" structure
+between $6-8\ \text{km}$ inlines and $0-2\ \text{km}$ crosslines. Both of these areas
+have high similarity between the initial \new{diffraction} stack (Figure~\ref{fig:xspr-notmig-barrolka}) and the stack with diffractions ``restored"\new{ and denoised by inversion} (Figure~\ref{fig:diffractions-ortho-barrolka})
+leading to low amplitudes in the difference section (Figure~\ref{fig:noise-ortho-barrolka}) primarily associated with noise. These features also follow ``frowning"-focusing-``smiling"
+behaviour under migration velocity perturbation supporting their diffraction nature in the plane perpendicular to the edge.
+
+\multiplot{2}{linpi-data-ts,modl-test-ts}{width=0.8\columnwidth}{Target horizon slice
+(the interface between tight-gas sand and coals picked by the interpreter ($\sim1.72\ \text{s}$ TWTT)): (a) observed data (Figure~\ref{fig:stack-barrolka}) preconditioned
+by AzPWD and path-summation integral migration; (b) inversion result:
+\new{edge diffractions have been denoised (compare with Figure~\ref{fig:xspr-mig3-ts}).}}
+
+%\multiplot{3}{mig3-barrolka,xspr-mig3-barrolka,modl-test}{width=0.65\columnwidth}{Migration result of (a) the stack (Figure~\ref{fig:stack-barrolka}); (b) the stack after reflection elimination
+%(Figure~\ref{fig:xspr-notmig-barrolka}) and (c) the inversion result.}
+
+%\multiplot{3}{xspr-notmig-barrolka,diffractions-ortho-barrolka,noise-ortho-barrolka}{width=0.65\columnwidth}{(a) Stack with reflections removed; (b) Kirchhoff modeling
+%of diffractivity from Figure~\ref{fig:hs-modl-wk-100}; (c) difference between (a) and (b) is predominated by noise.}
+
+\plot{mig3-barrolka}{width=0.99\columnwidth}{\old{Image of the stack (Figure~\ref{fig:stack-barrolka})}
+\new{3D post-stack Kirchhoff migration of the stack shown in Figure~\ref{fig:stack-barrolka}. }}
+
+\plot{xspr-mig3-barrolka}{width=0.99\columnwidth}{\old{Image of the stack after reflection elimination
+(Figure~\ref{fig:xspr-notmig-barrolka})}
+\new{3D post-stack Kirchhoff migration of the stack (Figure~\ref{fig:stack-barrolka}) after reflection elimination and edge diffraction extraction with AzPWD.
+Subsurface discontinuities appear to be highlighted in comparison to Figure~\ref{fig:mig3-barrolka}, in which they are masked by specular energy. At the same time,
+diffraction image still has some noise present}.}
+
+\plot{modl-test}{width=0.99\columnwidth}{Inversion result.
+\new{Edge diffractions are both highlighted and denoised (compare with Figure~\ref{fig:xspr-mig3-barrolka}).}}
+
+%\multiplot{3}{xspr-notmig-barrolka,diffractions-ortho-barrolka,noise-ortho-barrolka}{width=0.65\columnwidth}{(a) Stack with reflections removed; (b) Kirchhoff modeling
+%of diffractivity from Figure~\ref{fig:hs-modl-wk-100}; (c) difference between (a) and (b) is predominated by noise.}
+
+\plot{diffractions-ortho-barrolka}{width=0.99\columnwidth}{Kirchhoff modeling of diffractivity from \old{Figure~\ref{fig:hs-modl-wk-100}}
+\new{Figure~\ref{fig:modl-test}}\old{fixed the order of figures}.
+\new{``Clean'' diffraction signatures are recovered: notice hyperbolic shapes when edge diffractions are observed perpendicular to edges.}} 
+
+\plot{xspr-notmig-barrolka}{width=0.99\columnwidth}{Stack with reflections removed\old{fixed the order of figures}.
+\new{The majority of reflections is removed, some hyperbolic signatures can be seen (compare with Figures~\ref{fig:stack-barrolka} and~\ref{fig:diffractions-ortho-barrolka}).
+Reflection remainders and noise including acquisition footprint are apparent (compare with Figure~\ref{fig:diffractions-ortho-barrolka})}.}  
+
+\plot{noise-ortho-barrolka}{width=0.99\columnwidth}{Difference between
+\old{Figures~\ref{fig:xspr-notmig-barrolka} and~\ref{fig:diffractions-ortho-barrolka}}
+\new{Figures~\ref{fig:diffractions-ortho-barrolka} and~\ref{fig:xspr-notmig-barrolka}} is predominated by noise
+\new{and thus supports the validity of denoised edge diffractions (Figure~\ref{fig:diffractions-ortho-barrolka})}.}
+
+Some features are lost in the area between $10-11\ \text{km}$ inlines and $6-8\ \text{km}$ crosslines. Event between inlines $12-14\ \text{km}$
+and crosslines $6-8\ \text{km}$ is not predicted (Figure~\ref{fig:noise-ortho-barrolka}).
+High magnitude events observed between inlines $1-3\ \text{km}$ at crossline $3.25\ \text{km}$ and between crosslines $4-5\ \text{km}$ at inline $5.35\ \text{km}$
+(Figure~\ref{fig:modl-test} and~\ref{fig:diffractions-ortho-barrolka})
+can be associated with reflections leaked to the diffraction image domain
+or can actually be edge diffractions observed in the plane not perpendicular to the edge and thus having elongated signature.
+The event located at crossline $3.25\ \text{km}$ between inlines $5-7\ \text{km}$ inversion interprets as a reflection and removes it
+from the diffraction imaging result (Figure~\ref{fig:modl-test} and~\ref{fig:diffractions-ortho-barrolka}).
+High difference values following the channel in the difference cube (Figure~\ref{fig:noise-ortho-barrolka})
+can also be associated with the reflection remainders removed from the diffraction image domain.
+
+It should be mentioned that the target horizon has a highly oscillating pattern including a high magnitude drop
+in the left part of the cube (inlines $1-3\ \text{km}$) making dip estimation for ``ideal" reflection-diffraction separation simultaneously for the whole area challenging. More careful
+dip estimation possibly with different parameters in different regions of the dataset should further improve the result. Inversion parameters can definitely be tweaked
+to improve the results but even with these trial values the majority of the edges including some subtle features
+(e.g., events at crossline $3.25\ \text{km}$ between inlines $7-9\ \text{km}$ (Figure~\ref{fig:modl-test})) hardly noticeable on
+the migrated stack after reflection elimination (Figure~\ref{fig:xspr-mig3-barrolka})
+has been extracted and highlighted. 
+
+\section{Discussion}
+
+\new{The dependency of workflow's ability to produce sharp images of edge diffractions upon the migration velocity accuracy requires further investigation.
+On one hand, the approach incorporates least-squares migration framework known to be quite sensitive towards velocity model \cite[]{Nemeth99}.
+On the other hand, path-summation integral provides a velocity-model-independent weighting of the misfit,
+which is expected to increase the method's tolerance towards velocity model errors.}
+
+% which could allow for velocity error alleviation as demonstrated by the first field data example
+
+The second field example illustrates the efficiency of the proposed approach in a complex geological environment.
+Most edge diffractions, and especially those associated with major discontinuities, are extracted and denoised. 
+Some reflection energy remainders are present but are limited to locations characterized by a peculiar reflection pattern,
+which was not picked up by the dip estimation tuned to perform reflection-diffraction separation over the whole area.
+This is the dip estimation problem, results of which can be improved, for instance, by subdividing the area into smaller fragments, and, thus,
+does not question the validity of the approach presented. The latter statement is also supported by the high performance of the developed approach when applied to \old{a synthetic
+and}the first field data example. First field data example is characterized by a low signal-to-noise ratio and is highly contaminated by the acquisition footprint. The approach
+allows \old{to}successfully \old{untangle}\new{untangling} edge diffractions from reflections and noise and provides high resolution images of subsurface discontinuities. 
+\new{We expect that in production-like environment, geological knowledge can be used to further adjust the parameter values. 
+For instance, in the first field data example
+expected channel sinuosity could guide the smoothing strength for the edges.  
+In this paper, we focus on highlighting the advantages of the method rather than on delivering final results for drilling decisions.}
+
+%\old{In general, diffraction imaging can provide additional information about subsurface discontinuities. Combination of different methods providing different information
+%about the subsurface structure is the key to successfull reservoir development. In the method proposed, key features to be extracted are associated with diffracting edges. The inversion
+%at the same time has a set of parameters - starting from dip estimation and ending with the regularization weights - which affect the results. We want to highlight
+%that utilization of the geological knowledge during the processing stage is of utmost importance for the delivery of the robust reservoir predictions. In this paper, we focus more
+%on highlighting the advantages of the method than on delivering final results for drilling decisions. We suggest treating the parameters used as trial parameters.}
+
+The natural extension of the approach is to include reflection modeling into the inversion. As demonstrated by \cite{merzlikin2019least}, both reflections and diffractions can be
+inverted for by the same forward modeling operator whereas the separation into the components can be done on the regularization level.
+Regularization of diffractions can stay the same whereas reflections, for instance, can be penalized by a strong isotropic smoothing operator along the dominant local slopes:
+specular events locally do not exhibit lateral symmetry as opposed to edges. Extension
+of the model space to include reflections can help to eliminate the reflection remainders in the diffraction image domain. 
+
+\new{High complexity of the overburden often leads to the interference between seismic events, which results in the presence of
+multiple dominant local slopes at a single data sample. While, in this case, the effectiveness of the proposed inversion
+scheme in general and of AzPWD in particular will be degraded, the performance could be improved by pre-applying 
+migration with approximate velocity model to untangle interfering events, running AzPWD, and then going back to the original
+data domain.}
+
+Anisotropic smoothing is capable of emphasizing one edge direction at once. Edges with conflicting orientations can be a challenge. The ``brute force"
+way to tackle the challenge can be scanning for various edge diffraction orientations and picking the desired ones \cite[]{merzlikin2016diffraction}. Then, inversion results
+with alternative orientations can be compared.
+\new{At the same time, if coherent noise with a consistent spatial orientation is present in the data, it can be emphasized by anisotropic smoothing.
+Structure tensor orientation determination will treat this noise as signal.
+Poor illumination and velocity model errors can also reduce the accuracy of structure-tensor based
+edge diffraction orientation determination. The latter will degrade the performance of anisotropic-smoothing
+regularization operator. We expect the problem can be alleviated by utilizing a priori information about
+geologic discontinuities' orientation, e.g. by using predominant azimuths of the faults in the region extracted
+from a geomechanical model.}
+
+\new{The workflow described in this paper is a 3D extension of the method proposed by \cite{merzlikin2016least}. In two dimensions one cannot discriminate
+between point and edge diffractions. Distribution of scatterers is spiky and intermittent, which leads to a natural choice of sparsity constraints
+on the diffractivity model. The new inversion scheme is based on two regularization operators: thresholding and anisotropic smoothing.
+While thresholding operator imposing sparsity constraints applicable to both point and edge diffractions remains to be the same as in the
+2D counterpart of the workflow, anisotropic smoothing enforces continuity along the directions picked up by the structure tensor
+and thus is only applicable to edge diffractions. Point diffractions, which are not elongated in space, will be smeared under anisotropic smoothing operator action.
+Currently, our method is biased towards edge diffractions.}
+
+Anisotropic smoothing can have spatially variable diffusion coefficient defining its strength \cite[]{weickert1998anisotropic,hale2009structure}.
+For instance, the coefficient and the direction of smoothing can depend on the linearity, which can be computed
+as a ratio of eigenvalues of the PWD-based structure tensor and which can distinguish between the edges and regions of continuous amplitude variation \cite[]{hale2009structure,wu2017directional}.
+\old{For instance, strong isotropic smoothing can be applied in areas dominated by reflections and can become anisotropic when edges are encountered}
+\new{Spatially variable diffusion coefficient could help to alleviate smearing of point diffractions.
+Point diffractions in the diffractivity model will exhibit low linearity. For these samples smoothing power can be reduced
+and thresholding will be a predominant regularization operator.}
+\old{Anisotropic smoothing can be used to regularize full wavefield images in ``conventional" least squares migration and even in iterative velocity-model building methods.}  
+
+\old{From this point of view}The proposed approach is equivalent to total variation (TV) regularization (e.g., \cite{chambolle2010introduction}),
+in which minimizing $l_1$ norm of a second derivative penalizes the model. Hessian of TV is guided by a structure tensor, \old{smoothing the updates
+to the model according to the corresponding anisotropic diffusion process}\new{which forces model smoothing to be applied along the edges with no smearing across them.
+Thus, TV regularization is similar to the one proposed in this paper and}\old{It} can also be \old{a viable option}\new{used} to penalize edge diffractions.
+TV implementation challenges are associated
+with\old{$l_1$-norm}\new{regularization term} differentiation during optimization\old{and might lead to slower convergence}\new{. While this obstacle can be accommodated by using sophisticated optimization methods
+and representing $l_1$-norm as a square root with a damper \cite[]{chan1999nonlinear,burstedde2009algorithmic,anagaw2012edge},
+shaping regularization by anisotropic diffusion appears to be a viable, simple to implement and fast to converge alternative with no approximations required.}  
+\old{The advantages of shaping regularization by anisotropic diffusion are its simplicity to implement and fast convergence.}
+\new{Anisotropic smoothing can be used to regularize full wavefield images in ``conventional" least squares migration and even in iterative velocity-model building methods.}
+
+% good TV references
+% burstedde2009algorithmic
+% anagaw2012edge
+% maharramov2015simultaneous
+
+\new{The workflow can be utilized to extract and denoise diffractions for their subsequent depth imaging. Alternatively,
+a depth imaging operator can replace Kirchhoff time migration in forward modeling to allow for depth-domain model conditioning, while
+misfit weighting by path-summation integral is still performed in time migration domain.}
+
+\new{The inversion can be extended to pre-stack domain.
+In this case, pre-stack counterparts of the chained forward modeling operators should be used:
+pre-stack path-summation integral \cite[]{merzlikin17}, pre-stack migration engine and pre-stack AzPWD.
+While expressions for the former two exist, AzPWD has not been 
+applied in the pre-stack domain. The corresponding method can be derived based on the approach developed by \cite{taner06}.}
+
+\old{In general, diffraction imaging can provide additional information about subsurface discontinuities. Combination of different methods providing different information
+about the subsurface structure is the key to successfull reservoir development. In the method proposed, key features to be extracted are associated with diffracting edges. The inversion
+at the same time has a set of parameters - starting from dip estimation and ending with the regularization weights - which affect the results. We want to highlight
+that utilization of the geological knowledge during the processing stage is of utmost importance for the delivery of the robust reservoir predictions. In this paper, we focus more
+on highlighting the advantages of the method than on delivering final results for drilling decisions. We suggest treating the parameters used as trial parameters.}     
+
+\section{Conclusions}
+
+We have developed an efficient approach to highlight and denoise edge diffractions based on least-squares migration.
+\new{The inverted operator corresponds to the chain of path-summation integral filter, AzPWD and Kirchhoff modeling operators.
+While the combination of path-summation integral filter and AzPWD emphasizes edge diffraction signatures in the data domain,
+thresholding and anisotropic smoothing precondition them in the model domain by denoising and enhancing their continuity.}
+Both \old{the}forward modeling \new{and shaping regularization operators}\old{operator, which incorporates AzPWD and path-summation integral filter,
+and regularization by thresholding and anisotropic smoothing are necessary to} guide the inversion towards restoration of edge diffractions. Synthetic and field data examples show high fidelity of the approach.
+
+The efficiency of the proposed inversion scheme comes from the workflow application in time post-stack domain and
+shaping regularization framework leading to fast convergence.
+\old{The workflow can be utilized to extract and denoise diffractions for depth imaging and can be easily extended to pre-stack domain.}
+The inversion scheme we propose can be thought of as an effective operator
+directly tailoring edge diffractions and extracting them from the full wavefield.
+
+\section{Acknowledgements}
+We are grateful to TCCS sponsors and in particular to Equinor (formerly Statoil) for financial support of this research. We thank Evgeny Landa, Andrej Bona, Timothy Meckel, Omar Ghattas
+and Luke Decker for inspiring discussions. We thank developers of and contributors to the Madagascar open source software project.
+We thank four anonymous reviewers, associate editors and Jeffrey Shragge for valuable comments and help in improving the manuscript.
+Pre-stack time migration velocity and preprocessed stack are provided by GeoFrac research consortium at the Australian School of Petroleum at the University of Adelaide.
+
+%\onecolumn
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,sources-global}

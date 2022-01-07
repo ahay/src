@@ -4,8 +4,8 @@
 
 using TSOpt::IWaveApply;
 using RVL::RVLException;
-int xargc;
-char **xargv;
+int xargc_;
+char **xargv_;
 
 IOKEY IWaveInfo::iwave_iokeys[]
 = {

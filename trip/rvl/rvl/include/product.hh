@@ -47,8 +47,11 @@ namespace RVL {
     
     Product() {}
     Product(const Product<T> &) {}
+#if __cplusplus >= 201103L // We are using C++11 or a later version
+    virtual ~Product() noexcept(false) {}
+#else
     virtual ~Product() {}
-
+#endif
     virtual size_t getSize() const = 0;
 
     virtual T & operator[](size_t i) = 0;
@@ -65,8 +68,11 @@ namespace RVL {
     
     ROProduct() {}
     ROProduct(const ROProduct<T> &) {}
+#if __cplusplus >= 201103L // We are using C++11 or a later version
+    virtual ~ROProduct() noexcept(false) {}
+#else
     virtual ~ROProduct() {}
-
+#endif
     virtual size_t getSize() const = 0;
     virtual T const & operator[](size_t i) const = 0;
 

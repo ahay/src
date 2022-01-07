@@ -1,19 +1,35 @@
 from rsf.proj import *
 import math
 
-def Sine(name,f,a=1):
+# get colormap from example
+from matplotlib import cm
+cmap = cm.YlGnBu
+cfile = open('YlGnBu_r.csv','w')
+for i in range(256):
+    cfile.write("%g,%g,%g\n"%cmap(i)[:3])
+cfile.close()
+
+# function to create sinusoids
+def Sine(name,f,a=1,n1=2501):
     Flow(name,None,
          '''
-        math n1=2501 d1=0.0001 label1=Time unit1=s 
+        math n1=%g d1=0.0001 label1=Time unit1=s 
         output="%g*sin(%g * x1)"
-        ''' % (a,2*math.pi*f))
+        ''' % (n1,a,2*math.pi*f))
 Sine('sin',261.63)
+
+
+################################################################################
+## BACKGROUND ##################################################################
+################################################################################
+
+# plot the sinusoid
 Result('sin','graph title=Sine')
 
+# plot the first 80 points
 Result('sin80','sin','window n1=80 | graph title=Sine symbol=o grid=y')
 
 # three sine curves
-
 f = [261.6, 329.6, 392.0]
 a = [1.5, 0.5, 1]
 
@@ -24,9 +40,171 @@ for k in range(3):
     sins.append(sin)
 
 Flow('sines',sins,'add ${SOURCES[1:3]}')
-Result('sines','graph title=Sines')
+Result('sines','graph title=Sines unit1=s label1=Time label2=Amplitude')
 
 # Fourier transform
+# tapering with Blackman window
+Flow('sinest','sines',
+     '''
+     math output="input*(0.42 - 0.5*cos(2*x1*%g) + 0.08*cos(4*x1*%g))"
+     ''' % (math.pi/0.25,math.pi/0.25))
+Result('sinest','graph title="Sines Tapered" ')
+
+# get the spectrum
+Flow('spectrum','sinest','spectra')
+Result('spectrum','window max1=500 | graph title=Spectrum')
+
+# filtering in the Fourier domain
+
+# remove the 329.6 Hz
+Flow('filtspectrum','spectrum','cut min1=300 max1=356')
+Result('filtspectrum','window max1=500 | graph title="Filtered Spectrum"')
+
+# view the filtered signal
+Flow('fftsinest','sinest','fft1')
+Flow('filtfft','fftsinest','cut min1=300 max1=356')
+Flow('filtsinest','filtfft','fft1 inv=y')
+Result('filtsinest','graph title="Sines Filtered" unit1=s label1=Time label2=Amplitude')
+
+# power spectral density
+Flow('psdsinest','filtfft','math output="input*conj(input)"')
+Result('psdsinest','window max1=500 | math output="abs(input)" | real | graph title="Power spectral density"')
+
+
+################################################################################
+## EXAMPLE 1 ###################################################################
+################################################################################
+
+# nonstationary signal
+Sine('sin2-1',f[0],a[0],n1=1250)
+Sine('sin2-2',f[2],a[2],n1=1251)
+
+Flow('sines2','sin2-1 sin2-2','cat ${SOURCES[1]} axis=1')
+Result('sines2','graph title="Nonstationary Sines"')
+
+# Fourier transform
+
+# tapering with Blackman window
+Flow('sinest2','sines2',
+     '''
+     math output="input*(0.42 - 0.5*cos(2*x1*%g) + 0.08*cos(4*x1*%g))"
+     ''' % (math.pi/0.25,math.pi/0.25))
+Plot('sinest2','graph title="Nonstationary Sines Tapered" unit1=s label1=Time label2=Amplitude')
+
+# get spectrum
+Flow('spectrum2','sinest2','spectra')
+Result('spectrum2','window max1=500 | graph title="Nonstationary Sines Spectrum"')
+
+## 1) S Transform
+Flow('sinest2st','sinest2','st')
+Plot('sinest2st','sinest2st YlGnBu_r.csv','math output="abs(input)" | real | byte allpos=y | grey transp=n title="S Transform" color=${SOURCES[1]} max2=1000 yreverse=n min2=0 wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s')
+Result('sinest2st','sinest2 sinest2st','OverUnderAniso')
+
+## 2) Short-time Fourier transform
+Flow('sinestft','sinest2','stft ntw=512 window=y')
+Result('sinestft','sinestft YlGnBu_r.csv','math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y min2=0 max2=1000 min1=0.025 max1=0.225')
+
+## 3) Time-frequency analysis using local attributes
+Flow('sinest2ltft500','sinest2','timefreq nw=256 dw=1 rect=500')
+Flow('sinest2ltft1000','sinest2','timefreq nw=256 dw=1 w0=256 rect=500')
+
+Flow('sinest2ltft', 'sinest2ltft500 sinest2ltft1000', 'cat ${SOURCES[1]} axis=2')  
+Plot('sinest2ltft','sinest2ltft YlGnBu_r.csv','grey transp=n title="LTFT Transform" color=${SOURCES[1]} max2=512 yreverse=n min2=0 wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Result('sinest2ltft','sinest2 sinest2ltft','OverUnderAniso')
+
+## LTFT
+Flow('sinest2fftltft','sinest2','fft1 | cltftfft w0=0 nw=2501 dw=0.0001')
+Plot('sinest2fftltft','sinest2fftltft YlGnBu_r.csv','math output="abs(input)" | real | byte allpos=y | grey transp=y title="FFT-LTFT Transform" color=${SOURCES[1]} max1=1000 yreverse=n min1=0 wherexlabel=b wheretitle=t label1=Frequency unit1=Hz label2=Time unit2=s')
+Result('sinest2fftltft','sinest2 sinest2fftltft','OverUnderAniso')
+
+
+################################################################################
+## EXAMPLE 2 ###################################################################
+################################################################################
+
+## Piano music
+# get the data
+Fetch('piano_22050Hz.txt','signals',
+        server='https://raw.githubusercontent.com',
+        top='seg/tutorials-2018/master/1806_Time-frequency')
+Flow('piano.txt','piano_22050Hz.txt','/usr/bin/tail -n +5')
+Flow('piano','piano.txt','echo in=$SOURCE n1=220500 o1=0 d1=4.5351e-5 data_format=ascii_float | dd form=native') 
+
+# stft
+Flow('pianostft','piano','stft ntw=2048 window=y')
+
+# view result
+Plot('piano','graph title="Piano music" wanttitle=n unit1=s label1=Time label2=Amplitude')
+Plot('pianostft','pianostft YlGnBu_r.csv','window j1=10 min2=0 max2=1000 | math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Result('pianostft', 'piano pianostft','OverUnderAniso')
+
+
+################################################################################
+## EXAMPLE 3 ###################################################################
+################################################################################
+
+## Human voice
+# get the data
+Fetch('seg_44100Hz.txt','signals',
+        server='https://raw.githubusercontent.com',
+        top='seg/tutorials-2018/master/1806_Time-frequency')
+Flow('seg.txt','seg_44100Hz.txt','/usr/bin/tail -n +5')
+Flow('seg','seg.txt','echo in=$SOURCE n1=28672 o1=0 d1=2.27e-5 data_format=ascii_float | dd form=native') 
+
+# stft
+Flow('segstft','seg','stft ntw=512 window=y')
+
+# view result
+Plot('seg','graph title="Human voice" wanttitle=n unit1=s label1=Time label2=Amplitude')
+Plot('segstft','segstft YlGnBu_r.csv','math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Result('segstft', 'seg segstft','OverUnderAniso')
+
+
+################################################################################
+## EXAMPLE 4 ###################################################################
+################################################################################
+
+## Bat
+# Human earing limit
+Flow('humanear',None,'spike n1=12001 d1=4.00641 o1=0 k1=4493 l1=4493 | math output="18000*input"')
+Plot('humanear','graph wanttitle=n transp=y wantaxis=n plotcol=1 lotfat=5')
+
+# get the data
+Fetch('bat_96000Hz.txt','signals',
+        server='https://raw.githubusercontent.com',
+        top='seg/tutorials-2018/master/1806_Time-frequency')
+Flow('bat.txt','bat_96000Hz.txt','/usr/bin/tail -n +6')
+Flow('bat','bat.txt','echo in=$SOURCE n1=480000 o1=0 d1=1.04e-5 data_format=ascii_float | dd form=native')
+
+# stft
+Flow('batstft','bat','stft ntw=256 window=y')
+
+# view result
+Plot('bat','graph title="Bat chirps" wanttitle=n unit1=s label1=Time label2=Amplitude')
+Plot('batstft','batstft YlGnBu_r.csv','window j1=25 | math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Plot('batsthuman','batstft humanear','Overlay')
+Result('batstft', 'bat batsthuman','OverUnderAniso')
+
+
+################################################################################
+## EXAMPLE 5 ###################################################################
+################################################################################
+
+## Tremor
+# get the data
+Fetch('tremor_100Hz.txt','signals',
+        server='https://raw.githubusercontent.com',
+        top='seg/tutorials-2018/master/1806_Time-frequency')
+Flow('tremor.txt','tremor_100Hz.txt','/usr/bin/tail -n +5')
+Flow('tremor','tremor.txt','echo in=$SOURCE n1=90001 o1=0 d1=0.01 data_format=ascii_float | dd form=native') 
+
+# stft
+Flow('tremorstft','tremor','stft ntw=256 window=y')
+
+# view result
+Plot('tremor','graph title="Tremor" unit1=s label1=Time label2=Amplitude')
+Plot('tremorstft','tremorstft YlGnBu_r.csv','window j1=10 | math output="abs(input)" | real | byte allpos=y | grey transp=n title="STFT" color=${SOURCES[1]} yreverse=n wherexlabel=b wheretitle=t label2=Frequency unit2=Hz label1=Time unit1=s allpos=y')
+Result('tremorstft', 'tremor tremorstft','OverUnderAniso')
 
 
 End()

@@ -22,9 +22,6 @@
 #include "fastmarch.h"
 #include "fatomo.h"
 
-#include "l1.h"
-#include "l1step.c"
-
 int main(int argc, char* argv[])
 {
     bool adj, velocity, l1norm, plane[3], verb;

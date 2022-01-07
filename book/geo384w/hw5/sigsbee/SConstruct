@@ -1,74 +1,42 @@
 from rsf.proj import *
-from math import pi
 
 # Download velocity model from the data server
 ##############################################
 vstr = 'sigsbee2a_stratigraphy.sgy'
 Fetch(vstr,'sigsbee')
-Flow('zvstr zvstr.asc zvstr.bin',vstr,
+Flow('zvstr',vstr,'segyread read=data')
+
+Flow('zvel','zvstr',
      '''
-     segyread read=data
-     hfile=${TARGETS[1]}
-     bfile=${TARGETS[2]}
+     put d1=0.025 o2=10.025 d2=0.025
+     label1=Depth unit1=kft label2=Lateral unit2=kft |
+     scale dscale=0.001
      ''')
 
-Flow('vel','zvstr',
+Result('zvel',
+       '''
+       window f1=200 |
+       grey title=Velocity titlesz=7 color=j
+       screenratio=0.3125 screenht=4 labelsz=5
+       mean=y
+       ''')
+
+
+# Compute approximate reflectivity
+##################################
+Flow('zref','zvel',
      '''
-     put d1=0.025 o2=10.025 d2=0.025 |
-     window f1=200 | scale dscale=0.001
-     ''')
-Plot('vel',
-     '''
-     grey wanttitle=n color=j allpos=y 
-     label1=Depth unit1=kft label2=Lateral unit2=kft
-     screenratio=0.3125 screenht=4 labelsz=4
-     ''')
-
-# Take a slice at 15 kft
-########################
-
-Flow('slice','vel','window n1=1 min1=15')
-
-Plot('line','slice',
-     '''
-     math output=15 | graph min2=5 max2=30 yreverse=y 
-     pad=n wanttitle=n wantaxis=n plotcol=7 plotfat=10
-     screenratio=0.3125 screenht=4
-     ''')
-Result('vel','vel line','Overlay')
-
-# Compute extrapolation matrix
-##############################
-
-w = 5      # frequency
-dz = 0.025 # depth step
-v0 = 9.38  # mean velocity
-
-# x-k plane
-Flow('xk','slice',
-     '''
-     spray axis=2 n=201 d=0.01 o=-1 | rtoc | 
-     put label1=x unit1=kft label2="k\_x" unit2=1/kft
+     depth2time velocity=$SOURCE nt=2501 dt=0.004 |
+     ai2refl | ricker1 frequency=10 |
+     time2depth velocity=$SOURCE
      ''')
 
-Flow('Exact','xk',
-     '''
-     math output="exp(I*(sqrt((%g/input)^2-x2^2)*%g))" 
-     ''' % (w,2*pi*dz))
-
-Flow('Split-step','xk',
-     '''
-     math output="exp(I*((%g/input+sqrt(%g^2-x2^2)-%g)*%g))" 
-     ''' % (w,w/v0,w/v0,2*pi*dz))
-
-for case in ('Exact','Split-step'):
-    Plot(case,
-         '''
-         math output="log(input)" | imag | 
-         grey transp=n title=%s allpos=y
-         labelsz=10 titlesz=12
-         ''' % case)
-Result('phase2','Exact Split-step','OverUnderAniso')
-
+Result('zref',
+       '''
+       window f1=200 |
+       grey title=Reflectivity titlesz=7
+       screenratio=0.3125 screenht=4 labelsz=5
+       ''')
+       
 
 End()

@@ -1,0 +1,212 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+import math
+#  Modified on April, 22, 2020
+## Thank Yuriy Ivanov for pointing out a bug in the program
+#  which results in slightly different curves as compared with the original publication
+#  but the technical conclusions are still solid
+## It seems that fitting ratio=Ax is a little more stable than fitting ratio=Ax+B (not sure why?)
+
+pi=math.pi
+
+def Wig(data,other): 
+	Result(data,'put d1=0.004 d2=1 o1=0 o2=1 |window j2=2 | wiggle labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 color=g grid=n poly=y transp=y yreverse=y clip=0.55  label2=Trace  unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n wheretitle=t   %s'%other)
+	
+def Grey(data,other): 
+	Result(data,'grey clip=0.7 labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wheretitle=t wherexlabel=b scalebar=n  %s'%other)
+
+def Grey1(data,other): 
+	Result(data,'window f2=560 n2=180 | put o2=0 | math output="abs(input)" | real | grey label2=Trace unit2="" label1=Time unit1="s" wherexlabel=t allpos=y color=j title= minval=-0.3 maxval=0.3 scalebar=y unit2= clip=0.3 %s'%other)
+
+def Grey2(data,other): 
+	Result(data,'window f2=560 n2=180 |put o2=0 | grey clip=0.7 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+#	Result(data,'window f2=560 n2=380 |put o2=0 | grey clip=0.7 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Grey3(data,other):
+	Result(data,'transp plane=12|byte allpos=y | grey3 flat=n color=j frame2=60 frame1=120 frame3=15 grid=n label1=Time  unit1="s" label3=Trace label2=Frequency unit2="Hz" title="" wherexlabel=b scalebar=n wheretitle=t labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 point1=0.8 point1=0.85 %s'%other)
+
+def Greyzoom(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=1.5 o2=0 | grey minval=-0.3 maxval=0.3 clip=0.3 label2=Trace color=g unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n  %s'%other)
+
+def Graph(data,other):
+	Result(data,'graph grid=n label2=Amplitude  unit2="" labelsz=8 titlesz=8 titlefat=2 labelfat=2 font=2 label1=Time unit1="s" title="" wherexlabel=b scalebar=n wheretitle=t %s'%other)
+	
+
+Flow('field','field0','cp')
+Grey('field','title="Field data" screenratio=1.8 wherexlabel=b ')
+
+Flow('field-single','field','window n2=1 f2=0')
+Graph('field-single','title="Single Trace" transp=y max1=1.5 min1=0 max2=1.1 min2=-1.1 screenratio=1.8 yreverse=y')
+
+#denoise
+Flow('field-dn','field','fxdecon lenf=4 n2w=61')
+Grey('field-dn','title="Denoised field data" screenratio=1.8 wherexlabel=b ')
+
+Flow('field-dn-n','field field-dn','add scale=1,-1 ${SOURCES[1]}')
+Grey('field-dn-n','title="Removed noise" screenratio=1.8 wherexlabel=b ')
+
+Flow('field-dn-single','field-dn','window n2=1 f2=0')
+Graph('field-dn-single','title="Denoised single Trace" transp=y max1=1.5 min1=0 max2=1.1 min2=-1.1 screenratio=1.8 yreverse=y')
+
+#framebox
+x=10
+y=0.73
+w=40
+w1=0.15
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	" ".join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=60 min2=0 max2=1.5 pad=n plotfat=15 plotcol=2 screenratio=1.8
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+Plot('label',None,
+	'''
+	box x0=3.1 y0=4.85 label="Reservoir" xt=-0.5 yt=0.5 length=0 
+	''')
+	
+#time axis	
+t1=0.71
+t2=1.18
+t2=0.9
+
+Flow('line1',None,'math n1=61 d1=1 o1=0 output="%g"'%t1)
+Flow('line2',None,'math n1=61 d1=1 o1=0 output="%g"'%t2)
+Plot('line1','graph wantaxis=n min2=0 max2=1.5 min1=0 max1=60 screenratio=1.8 wanttitle=n yreverse=y plotfat=6 dash=1')
+Plot('line2','graph wantaxis=n min2=0 max2=1.5 min1=0 max1=60 screenratio=1.8 wanttitle=n yreverse=y plotfat=6 dash=1')
+
+Result('field-0','Fig/field.vpl line1 line2 frame label','Overlay')
+
+#for Q estimation
+i=0
+sts=[]
+sts_dn=[]
+fields=[]
+N=61
+dt=0.004
+fhi=1/dt/2
+flo=0
+k1=int(t1/dt)
+k2=int(t2/dt)
+print(k1)
+print(k2)
+
+for var in range(N):
+	s=0.01
+	i=i+1
+	Flow('field-%d'%i,'field','window n2=1 f2=%d '%(i-1))
+	Flow('field-st-%d'%i,'field-%d'%i,'st fhi=%g flo=%g | cabs | transp'%(fhi,flo))
+	
+	Flow('field-dn-st-%d'%i,'field-dn','window n2=1 f2=%d| st fhi=%g flo=%g | cabs | transp'%(i-1,fhi,flo))
+		
+	fields.append('field-%d'%i)
+	sts.append('field-st-%d'%i)
+	sts_dn.append('field-dn-st-%d'%i)
+	Grey('field-st-%d'%i,'label1=Frequency unit1=Hz label2=Time unit2=s color=j clip=0.4')
+Flow('fields',fields,'cat axis=2 ${SOURCES[1:%d]} | put o2=1 d2=1'%len(fields))
+Wig('fields','screenratio=1.8 wherexlabel=b title="Synthetic Data"')
+
+#single channel
+Q1s=[]
+i=0
+Flow('freq',None,'spike d1=0.664894 n1=189 o1=0 n2=1 d2=1 o2=0 | math output="x1" | window min1=20 max1=50')
+Flow('ones','freq','math output=1')
+Flow('freq-two','freq ones','cat axis=2 ${SOURCES[1]}')
+for var in range(N):
+	s=0.01
+	i=i+1
+	Flow('field-f-t1-%d'%i,'field-st-%d'%i,'window n2=1 f2=%g '%(k1))
+	Flow('field-f-t2-%d'%i,'field-st-%d'%i,'window n2=1 f2=%g '%(k2))
+	Flow('field-f-t-%d'%i,['field-f-t1-%d'%i,'field-f-t2-%d'%i],'cat axis=2 ${SOURCES[1]}')
+#	Graph('field-f-t','label1=Frequency unit1=Hz label2=Amplitude ')
+
+	Flow('ratio-%d'%i,['field-f-t2-%d'%i,'field-f-t1-%d'%i],'divn rect1=3 den=${SOURCES[1]} eps=0.01 | math output="log(input)" |  window min1=20 max1=50')
+#Graph('field-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
+
+	Flow(['lsfit-%d'%i,'coef-%d'%i],['ratio-%d'%i,'freq-two'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	Flow('field-Q-esti-%d'%i,'coef-%d'%i,'window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
+	Q1s.append('field-Q-esti-%d'%i)
+Flow('field-Q1s-esti',Q1s,'cat axis=2 ${SOURCES[1:%d]} |window'%len(Q1s))
+Graph('field-Q1s-esti','min2=20 max2=230 label2="Quality factor" label1=Trace unit1= plotfat=10')
+
+
+#single channel (denoised)
+Q1s_dn=[]
+i=0
+for var in range(N):
+	s=0.01
+	i=i+1
+	Flow('field-dn-f-t1-%d'%i,'field-dn-st-%d'%i,'window n2=1 f2=%g '%(k1))
+	Flow('field-dn-f-t2-%d'%i,'field-dn-st-%d'%i,'window n2=1 f2=%g '%(k2))
+	Flow('field-dn-f-t-%d'%i,['field-dn-f-t1-%d'%i,'field-dn-f-t2-%d'%i],'cat axis=2 ${SOURCES[1]}')
+#	Graph('field-f-t','label1=Frequency unit1=Hz label2=Amplitude ')
+
+	Flow('ratio-dn-%d'%i,['field-dn-f-t2-%d'%i,'field-dn-f-t1-%d'%i],'divn rect1=3 den=${SOURCES[1]} eps=0.01 | math output="log(input)" |  window min1=20 max1=50')
+#Graph('field-ratio','label1=Frequency unit1=Hz label2=Regularized division ratio')
+
+	Flow(['lsfit-dn-%d'%i,'coef-dn-%d'%i],['ratio-dn-%d'%i,'freq-two'],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	Flow('field-dn-Q-esti-%d'%i,'coef-dn-%d'%i,'window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
+	Q1s_dn.append('field-dn-Q-esti-%d'%i)
+Flow('field-dn-Q1s-esti',Q1s_dn,'cat axis=2 ${SOURCES[1:%d]} |window|put d1=1 o1=1'%len(Q1s))
+Graph('field-dn-Q1s-esti','min2=0 max2=100 label2="Quality factor" label1=Trace unit1= plotfat=10')
+
+
+
+#multi channel
+Flow('field-st-N',sts,'cat axis=3 ${SOURCES[1:%d]}'%len(sts))
+Flow('field-dn-st-N',sts_dn,'cat axis=3 ${SOURCES[1:%d]}'%len(sts))
+
+Flow('field-f-t1-N','field-st-N','window n2=1 f2=%g '%(k1))
+Flow('field-f-t2-N','field-st-N','window n2=1 f2=%g '%(k2))
+Flow('field-ratio-N','field-f-t2-N field-f-t1-N','divn rect1=3 rect2=10 den=${SOURCES[1]} eps=0.1 | math output="log(input)" |  window min1=20 max1=50')
+
+Flow('field-ratio-1','field-ratio-N','window n2=1')
+Graph('field-ratio-1','label1=Frequency unit1=Hz label2=Regularized division ratio')
+
+Flow('freq-N',None,'spike d1=0.664894 n1=189 o1=0 n2=1 d2=1 o2=0 | math output="x1" | window min1=20 max1=50|spray axis=2 n=%d o=1 d=1'%N)
+
+Grey3('field-st-N','title="Time-frequency Cube"')
+Grey3('field-dn-st-N','title="Time-frequency Cube of Denoised Data"')
+
+Grey('field-f-t2-N','clip=0.4 label1=Frequency label2=Trace unit1=Hz title="Numerator" color=j allpos=y')
+Grey('field-f-t1-N','clip=0.4 label1=Frequency label2=Trace  unit1=Hz title="Denominator" color=j allpos=y')
+
+lsfits=[]
+coefs=[]
+
+i=0
+for var in range(N):
+	i=i+1
+	Flow('field-ratio-%d'%i,'field-ratio-N','window n2=1 f2=%d'%(i-1))
+	Flow('freq-%d'%i,'freq-N ones','window n2=1 f2=%d | cat axis=2 ${SOURCES[1]}'%(i-1))
+	Flow(['lsfit-N-%d'%i,'coef-N-%d'%i],['field-ratio-%d'%i,'freq-%d'%i],'lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+	lsfits.append('lsfit-N-%d'%i)
+	coefs.append('coef-N-%d'%i)
+	
+Flow('field-lsfits',lsfits,'cat axis=2 ${SOURCES[1:%d]}'%len(lsfits))
+Flow('field-coef-N',coefs,'cat axis=2 ${SOURCES[1:%d]} |window n1=1'%len(coefs))
+
+#Flow('lsfit-N coef-N','field-ratio-N freq-N','lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}')
+#Flow('field-Q-esti-N','coef-N','window n1=1 | math output="-%g*%g/input"'%(pi,t2-t1))
+Flow('field-Q-esti-N','field-coef-N','math output="-%g*%g/input"'%(pi,t2-t1))
+
+Grey('field-ratio-N','label1=Frequency unit1=Hz label2=Trace color=j scalebar=y bias=-0.6 clip=0.6')
+Grey('field-lsfits','label1=Frequency unit1=Hz label2=Trace color=j scalebar=y bias=-0.6 clip=0.6')
+
+Graph('field-coef-N','min2=-0.02 max2=-0.01 label2="Value" label1=Trace unit1= plotfat=10')
+Graph('field-Q-esti-N','min2=20 max2=230 label2="Quality factor" label1=Trace unit1= plotfat=10')
+
+#sfdisfil <field-Q-esti-N.rsf
+#sfdisfil <field-Q-esti.rsf
+
+Flow('field-comp','field-Q-esti-N field-Q1s-esti','cat axis=2 ${SOURCES[1:2]} | put o1=1')
+Graph('field-comp','min2=-50 max2=100 label2="Quality factor" label1=Trace unit1= plotfat=10')
+
+
+
+
+
+End()

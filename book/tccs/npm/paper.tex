@@ -1,0 +1,621 @@
+\published{Geophysical Prospecting, 66, 85-97 (2018)}
+  
+\title{Data-driven time-frequency analysis of seismic data using 
+non-stationary Prony method} 
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\address{
+\footnotemark[1] The College of Science\\
+China University of Petroleum\\
+Beijing, China
+\footnotemark[2] Bureau of Economic Geology,\\
+John A. and Katherine G. Jackson School of Geosciences\\
+The University of Texas at Austin\\
+University Station, Box X\\
+Austin, TX, USA, 78731-8924\\
+\footnotemark[3] Previously:  The University of Texas at Austin; Currently: Oak Ridge National Laboratory
+}
+
+\author{Guoning Wu\footnotemark[1], Sergey Fomel\footnotemark[2], Yangkang Chen\footnotemark[3]}
+
+%\footer{GEO-2016}
+%\lefthead{Wu etc.}
+\righthead{Time-frequency analysis}
+\maketitle
+
+\begin{abstract}
+The empirical mode decomposition aims to decompose the input signal 
+into a small number of components named intrinsic mode functions 
+with slowly varying amplitudes and frequencies. In spite of its simplicity
+and usefulness, however, the empirical mode decomposition lack 
+solid mathematical foundation. In this paper, we describe a method to 
+extract the intrinsic mode functions of the input signal using 
+non-stationary Prony method. The proposed method captures the 
+philosophy of the empirical mode decomposition, but use a different 
+method to compute the intrinsic mode functions. 
+Having the intrinsic mode functions obtained, we then compute 
+the spectrum of the input signal using Hilbert transform. Synthetic and field data 
+validate the proposed method can correctly compute the 
+spectrum of the input signal, and could be used in seismic data analysis to facilitate 
+interpretation.
+\end{abstract}
+
+\section{INTRODUCTION}
+
+Time-frequency analysis maps an 1D time signal into 2D time and frequency domains, 
+which can capture the non-stationary character of seismic data. Time-frequency 
+analysis is a fundamental tool for seismic data analysis and geological 
+interpretation \cite[]{Castagna2003,Reine2009,yangkang2014sswt,liuwei2016}. 
+Conventional time-frequency methods, such as short time Fourier transform \cite[]{Cohen1989}, 
+wavelet transform \cite[]{Mallat1989} and S-transform \cite[]{Stockwell1996} 
+are under the control of Heisenberg/Gabor uncertainty principle, which states 
+that we cannot have the energy arbitrarily located in both time and frequency 
+domains \cite[]{mallat}. Moreover, short time Fourier transform, wavelet transform 
+and S-transform are using a windowing process, which often brings smearing and 
+leakage \cite[]{Tary2014}. Therefore spurious frequencies are often generated, 
+which will "color" the real time-frequency map and affects the interpretation. 
+In recent years, many new methods were proposed such as matching pursuit \cite[]{Mallat1993}, 
+basis pursuit \cite[]{basispursuit}, empirical mode decomposition \cite[]{emd,emdseis}, 
+the synchrosqueezing wavelet transform \cite[]{daubechies} and its variants such as the 
+synchrosqueezing short time Fourier transform \cite[]{Oberlin2014}, 
+the synchrosqueezing S-transform \cite[]{Synchrostran}. The matching pursuit and basis pursuit methods 
+represent the energies of the input signal by the energies of atoms found using 
+different methods, which prevents smearing and leakage, creating highly 
+localized time-frequency decompositions. The efficiency of these two methods depend
+on the predefined dictionary \cite[]{Tary2014}. The empirical mode decomposition 
+method decomposes a signal into symmetric, narrow-band waveforms named intrinsic 
+mode functions to compress artificial spectra caused by sudden changes and to 
+therefore improve the time-frequency resolution \cite[]{han}. However, the empirical mode
+decomposition also suffers from mode mixing and splitting problems. 
+In order to solve the above problems, alternative methods were developed 
+based on empirical mode decomposition: ensemble empirical mode decomposition\cite[]{eemd}, 
+complete ensemble empirical mode decomposition \cite[]{ceemd}. However, these two methods, 
+like the empirical mode decomposition, are still "empirical" because 
+their sketchy mathematical justifications. The synchrosqueezing wavelet 
+transform \cite[]{daubechies} and its variants capture the philosophy of 
+empirical mode decomposition, but use a different method to compute the 
+intrinsic mode functions providing a rigorous mathematical framework.
+
+Similar to the Fourier transform, the Prony method \cite[]{prony} decomposes 
+a signal into a series of damped exponentials or sinusoids in a data-driven manner, 
+which allows for the estimation of frequencies, amplitudes, phases and damping 
+components of a signal. \citet[]{fomel2013} proposed the non-stationary Prony method (NPM)
+based on regularized non-stationary auto-regression. The NPM decomposes a signal into 
+intrinsic mode functions with controlled smoothness of amplitudes and frequencies 
+like the empirical mode decomposition does, but uses NPM instead.
+Unlike Fourier transform, the coefficients of the extracted intrinsic mode functions 
+for the Prony method do not clearly define the energy distribution for the input 
+signal in the time-frequency domain. Therefore, the NPM used by Fomel does not clearly
+define a "real" time-frequency map but a "time-component" map. In this paper, we couple the NPM 
+\cite[]{fomel2013} and the Hilbert transform to give a time-frequency decomposition. 
+The proposed method has a rigorous mathematical framework. Furthermore, 
+synthetic and real data tests confirm that the intrinsic mode functions derived by the proposed 
+method are more smooth with respect to the amplitudes and frequencies
+than the intrinsic mode functions of ensemble empirical mode decomposition \cite[]{eemd}. 
+Synthetic and real data tests also confirm that the proposed method
+has a higher time-frequency resolution than the ensemble empirical mode decomposition.
+The proposed method can be used to facilitate seismic interpretation.
+
+\section{THEORY}
+We give a short description of the theories for empirical mode decomposition, Prony, and 
+NPM. For details of the Prony and NPM see Appendix.
+\subsection{Empirical Mode Decomposition}
+Empirical mode decomposition is a data-driven method, which is a powerful 
+tool for non-stationary signal analysis \cite[]{emd}. This method decomposes 
+a signal into slowly varying time dependent amplitudes and phases components named intrinsic 
+mode functions. The time-frequency decomposition for the input signal is attributed to 
+the Hilbert transform of the intrinsic mode functions extracted by the sifting process\cite[]{han}. 
+If $s(t)$ is the input signal, the empirical mode decomposition can be written as:
+\begin{equation}
+    \label{eq:eq1}
+    s(t) =\sum_{k=1}^{K} s_k (t)= \sum_{k=1}^{K} A_k (t)\cos (\phi_k(t)),
+\end{equation}
+where $A_k(t)$ measures amplitude modulation, and $\phi_k(t)$ measures 
+phase oscillation. Each $s_k(t)$ has a narrow-band 
+waveform and an instantaneous frequency that is smooth and positive. 
+The empirical mode decomposition is powerful, but its mathematical theory is sketchy.
+
+\subsection{Prony Method}
+Prony method extracts damped complex exponential functions (or sinusoids) 
+from a given signal by solving a set of linear equations 
+\cite[]{prony,prony2003,ThomasPeter2013,Mitrofanov2015}. 
+The Prony method allows for estimation of frequencies, amplitudes and phases 
+of a signal (For details see Appendix). Assume we want to solve the problem:
+\begin{equation}
+    \label{eq:eq2}
+     x[n] = \sum_{k=1}^{M}A_k e^{(\alpha_k + j\omega_k)(n-1)\Delta t + j\phi_k},
+\end{equation}
+if let $h_k = A_k e^{j\phi_k}, z_k = e^{(\alpha_k + j\omega_k)\Delta t}$, we derive the concise form
+\begin{equation}
+    \label{eq:eq3}
+     x[n] = \sum_{k=1}^{M}h_k z_k^{n-1}.
+\end{equation}
+The above M equations can be written in a matrix form:
+\begin{equation}
+    \label{eq:eq4}
+    \left[ \begin{array}{cccc}
+        z_1^0 & z_2^0 & \cdots & z_M^0\\
+        z_1^1 & z_2^1 & \cdots & z_M^1\\
+        \vdots & \vdots & & \vdots\\
+        z_1^{M-1} & z_2^{M-1} & \cdots & z_M^{M-1}
+    \end{array} \right]
+    \left[ \begin{array}{c} h_1\\ h_2\\ \vdots \\ h_M
+    \end{array} \right] =
+    \left[ \begin{array}{c} x[1]\\ x[2]\\ \vdots \\ x[M]
+    \end{array} \right].
+\end{equation}
+The above $z_k, k=1,2, \cdots , M$ of equation~\ref{eq:eq4} 
+can be computed by solving a polynomial of the form:
+\begin{equation}
+    \label{eq:eq5}
+    \mathbf{P}(z)  = \prod_{k=1}^{M}(z-z_k),
+\end{equation}
+equation~\ref{eq:eq5} can also be written in a form:
+\begin{equation}
+    \label{eq:eq6}
+    \mathbf{P}(z) = a_0 z^M + a_1 z^{M-1} + \cdots + a_{M-1}z + a_M.
+\end{equation}
+The coefficients $a_k$ of the polynomial can be computed by solving the following equation:
+\begin{equation}
+    \label{eq:eq7}
+    \sum_{m=0}^{M}a_mx[n-m] = 0.
+\end{equation}
+We use the method proposed by \citet[]{roots} to compute the roots $z_k$ of equation~\ref{eq:eq6}. 
+If the roots are solved, 
+the $h_k$ can be computed using equation~\ref{eq:eq3}.
+Finally, the components are 
+computed based on the equation below(For details see Appendix):
+\begin{equation}
+    c_k[n] = h_kz_k^{n-1} = h_kz_k^{n-1}, k=1,2,\cdots,M.
+\end{equation}
+
+\subsection{Non-stationary Prony method}
+Equation~\ref{eq:eq7} can be written as:
+\begin{equation}
+    \label{eq:eq9}
+    \sum_{m=1}^{M}\hat{a}_m x[n-m] = x[n].
+\end{equation}
+If the $\hat{a}_m$ in equation~\ref{eq:eq9} are time dependent, then we have:
+\begin{equation}
+    \label{eq:eq10}
+    \sum_{m=1}^{M}\hat{a}_m[n] x[n-m] \approx x[n],
+\end{equation}
+which is an under-determined linear system. There are many methods for solving under-determined 
+linear system, such as Tikhonov method \cite[]{tikhonov}.
+In this paper, we apply shaping regularization \cite[]{shape,lpf} to regularize
+the under-determined linear system, and obtain (for details see Appendix):
+\begin{equation}
+    \label{eq:eq11}
+    \mathbf{\hat{a}} = \mathbf{F}^{-1}\mathbf{\eta},
+\end{equation}
+where $\mathbf{\hat{a}}$ is a vector composed of $\hat{a}_m [n]$, 
+the elements of vector $\mathbf{\eta}$ are 
+$\eta_i[n] = \mathbf{S}[x_i^* [n] x[n]] $, where $x_i[n] = x[n-i]$, $x_i^*[n]$ stands for the complex conjugate of $x_i[n]$
+and $\mathbf{S}$ is the shaping operator. 
+The elements of matrix $\mathbf{F}$ are:
+\begin{equation}
+    \label{eq:eq12}
+    {F}_{ij}[n] = \sigma^2 \delta_{ij} + \mathbf{S}[x_i^*[n]x_j[n] - \sigma^2 \delta_{ij}],
+\end{equation}
+where $\sigma$ is the regularization parameter.
+Solving equation~\ref{eq:eq11}, we obtain the 
+coefficients vector $\hat{a}_m[n]$ and form a polynomial below:
+\begin{equation}
+    \mathbf{P}(z) = z^M + \hat{a}_1[n] z^{M-1} + \cdots + \hat{a}_M[n].
+\end{equation}
+For the roots computation $\hat{z}_m[n], m=1,2,\cdot,M$ of the above polynomial, we 
+use the method proposed by \citet[]{roots}. 
+The instantaneous frequency of each different component is derived from the following equation:
+\begin{equation}
+    f_m[n] = \Re \left[ \arg \left( \frac{\hat{z}_m[n]}{2\pi \Delta t} \right) \right].
+\end{equation}
+From the instantaneous frequency, we compute the local phase according to the following equation:
+\begin{equation}
+    \Phi_m[n] = 2\pi\sum_{k=0}^{n}f_m[k]\Delta t.
+\end{equation}
+Solving the following equation using 
+regularized non-stationary regression method \cite[]{fomel2013}:
+\begin{equation}
+    \label{eq:eq13}
+    x[n] = \sum_{m=1}^{M} \hat{A}_m[n]e^{j \Phi_m[n]} =
+     \sum_{m=1}^{M} c_m[n].
+\end{equation} 
+Finally the narrow-band intrinsic mode functions $c_m[n]$ are computed based on equation~\ref{eq:eq13}
+
+\section{EXAMPLES}
+We use synthetic signals and real field data to test the proposed method.
+\subsection{Benchmark examples}
+We use a simple synthetic signal to test the proposed method. 
+Figure~\ref{fig:hsig} is a synthetic signal from \citet[]{hou}. 
+The three components of the signal are shown in Figure~\ref{fig:sigs}. 
+Figure~\ref{fig:emd} and Figure~\ref{fig:nar} show the intrinsic mode functions 
+extracted respectively by ensemble empirical mode decomposition and NPM methods. 
+From the figures, we see that the NPM method 
+accurately identifies the three components that the signal has. 
+The intrinsic mode functions derived by the NPM are 
+more smooth with respect to amplitudes and frequencies 
+compared with the intrinsic mode functions obtained by ensemble empirical mode decomposition. 
+For ensemble empirical mode decomposition, we repeat the empirical mode decomposition 25 times with different level of noises 
+to generate the ensemble empirical mode decomposition results.
+The time-frequency distributions of the input signal are the 
+Hilbert transform of the intrinsic mode functions. 
+Figure~\ref{fig:htf},~\ref{fig:htfemd} and~\ref{fig:htfnar} 
+are respectively the time-frequency distributions using local attribute \cite[]{guochang2011}, 
+ensemble empirical mode decomposition \cite[]{eemd} and the proposed method for the synthetic 
+signal of Figure~\ref{fig:hsig}. 
+Figure~\ref{fig:msig} is an another synthetic signal. 
+Figure~\ref{fig:mtf},~\ref{fig:mtfemd} and~\ref{fig:mtfnar}
+are respectively the time-frequency maps using local attribute 
+\cite[]{guochang2011}, ensemble empirical mode decomposition \cite[]{eemd} and the proposed method. 
+From the figures, we see that the energies compactly spread over the instantaneous 
+frequencies for the ensemble empirical mode decomposition. 
+However, the energies are not steadily distributed for the ensemble empirical mode decomposition. 
+The proposed method provides a steady and compact energies distribution, which 
+sharpen the time-frequency distribution.
+\inputdir{hou}
+\plot{hsig}{width=0.7\columnwidth}{Synthetic signal.}
+
+\plot{sigs}{width=0.7\columnwidth} {Components of the synthetic 
+signal of Figure~\ref{fig:hsig} .}
+\plot{emd}{width=0.7\columnwidth} {Components of the synthetic 
+signal of Figure~\ref{fig:hsig} using ensemble empirical mode decomposition.}
+\plot{nar}{width=0.7\columnwidth} {Components of the synthetic 
+signal of Figure~\ref{fig:hsig} using NPM.}
+\multiplot{3}{htf,htfemd,htfnar}{width=0.7\columnwidth}
+  {(a) Time-frequency map for synthetic signal of Figure~\ref{fig:hsig} using local attribute. 
+  (b) Time-frequency map for synthetic signal of Figure~\ref{fig:hsig} using ensemble empirical mode decomposition. 
+  (c) Time-frequency map  for synthetic signal of Figure~\ref{fig:hsig} using the proposed method.}
+
+\inputdir{mirko}
+\plot{msig}{width=0.7\columnwidth}{Synthetic signal.}
+\multiplot{3}{mtf,mtfemd,mtfnar}{width=0.7\columnwidth}
+  {(a) Time-frequency map for synthetic signal of Figure~\ref{fig:msig} using local attribute. 
+  (b) Time-frequency map for synthetic signal of Figure~\ref{fig:msig} using ensemble empirical mode decomposition. 
+  (c) Time-frequency map  for synthetic signal of Figure~\ref{fig:msig} using the proposed method.}
+
+\subsection{Field examples}
+Figure~\ref{fig:trace} is a seismic trace from marine survey. 
+Figure~\ref{fig:stf},~\ref{fig:tfemd} and~\ref{fig:tfnar} are the time-frequency 
+distributions of the trace using local attribute \cite[]{guochang2011}, 
+ensemble empirical mode decomposition and the proposed method.
+We can see that the energies distributions for ensemble empirical mode decomposition and the proposed method 
+are much like each other. Both the ensemble empirical mode decomposition and the proposed method using 
+the Hilbert transform of the intrinsic mode functions to represent the time-frequency distributions 
+for the input signal. The results confirm that they both reveal the time-frequency
+character of the input signal.
+
+\inputdir{trace}
+\plot{trace}{width=0.7\columnwidth}{Seismic trace from marine survey.}
+\multiplot{3}{stf,tfemd,tfnar}{width=0.7\columnwidth}
+  {(a) Time-frequency map for synthetic signal of Figure~\ref{fig:trace} using local attribute. 
+  (b) Time-frequency map for synthetic signal of Figure~\ref{fig:trace} using ensemble empirical mode decomposition. 
+  (c) Time-frequency map  for synthetic signal of Figure~\ref{fig:trace} using the proposed method.}
+Low-frequency anomalies are often attributed to abnormally high attenuation
+in gas-filled reservoirs and can be used as a hydrocarbon indicator \cite[]{Castagna2003}.
+The mechanisms of low-frequency anomalies associated with hydrocarbon reservoirs 
+are not clearly understood \cite[]{Ebrom2004, Kazemeini2009}.
+Figure~\ref{fig:data} is a 2D field seismic data. 
+Figure~\ref{fig:LC_TimeFreqSlice3} and~\ref{fig:LC_TimeFreqSlice6}, 
+~\ref{fig:GasSmoothSliceEmd3} and~\ref{fig:GasSmoothSliceEmd6},
+~\ref{fig:GasSmoothSliceNar3} and~\ref{fig:GasSmoothSliceNar6} are
+the 30Hz and 60Hz constant frequency slices using local attribute, ensemble empirical mode decomposition and 
+the proposed method.
+From the above figures, we see that there is a low frequency anomaly 
+in the upper left part of the data section indicated by the text boxes
+"Gas?" for the ensemble empirical mode decomposition and the proposed methods, 
+which may correspond to gas presentation.
+\inputdir{vecta-stlc}
+\plot{data}{width=0.7\columnwidth}
+{2D seismic data section.}
+
+\inputdir{vecta-nar}
+\multiplot{6}{LC_TimeFreqSlice3,LC_TimeFreqSlice6,GasSmoothSliceEmd3,GasSmoothSliceEmd6,GasSmoothSliceNar3,GasSmoothSliceNar6}{width=0.45\columnwidth}
+{
+   (a) 30Hz slice time-frequency map using local attribute method.
+   (b) 60Hz slice time-frequency map using local attribute method.
+   (c) 30Hz slice time-frequency map using ensemble empirical mode decomposition method.
+   (d) 60Hz slice time-frequency map using ensemble empirical mode decomposition method.
+   (e) 30Hz slice time-frequency map of the proposed method. 
+   (f) 60Hz slice time-frequency map of the proposed method. 
+}
+
+Figure~\ref{fig:TimeFreqCube_LC},~\ref{fig:TimeFreqCubeEmd} and~\ref{fig:TimeFreqCubeNar} are the 
+full time-frequency cubes computed respectively using local attribute, ensemble empirical mode decomposition and the proposed 
+methods. The main panels show constant frequency slices. 
+The right hand side panels show the time-frequency maps of the 150th trace. 
+The top panels show the time-frequency maps of 0.6s time-depth signal. 
+From the right and top side panels we see that there are a lot of noise in the high 
+frequency domain for the ensemble empirical mode decomposition and local attribute methods compared with the proposed method. 
+\inputdir{vecta-nar}
+\multiplot{4}{TimeFreqCube_LC,TimeFreqCubeEmd,TimeFreqCubeNar}{width=0.4\columnwidth}
+{
+   (a) Time-frequency cube using local attribute method. 
+   (b) Time-frequency cube using ensemble empirical mode decomposition method. 
+   (c) Time-frequency cube using NPM method. 
+}
+
+\section{CONCLUSION}
+We proposed to compute the time-frequency map of an input signal based on 
+NPM coupled with Hilbert spectral analysis. 
+The proposed method is an empirical mode decomposition-like method, but using NPM 
+to compute its intrinsic mode functions. Compared with the Fourier 
+transform, the proposed method is data-driven and needs much less base functions 
+to approximate the original signal. Since the NPM 
+results an under-determined linear system, we use shaping regularization to 
+regularize it. The regularization makes the intrinsic mode functions more 
+smooth with respect to the amplitudes and frequencies 
+compared with the intrinsic mode functions of the empirical mode decomposition. 
+There are many time-frequency methods, which one is the best? This is a difficult 
+question to answer. Methods are good for some type signals, maybe not good for 
+other type signals.  
+
+\citet[]{eemd_comp} pointed out that the complexity of empirical mode decomposition/ensemble
+empirical mode decomposition is $41*\mathbf{N}_E*\mathbf{N}_S*n(\log_2n)=O(n\log n)$
+, where $n$ is the data length and the parameters $\mathbf{N}_E$ and $\mathbf{N}_S$ are the
+ensemble and sifting numbers respectively. For the non-stationary Prony method, the computation
+complexity is mainly attributed to the polynomial zero-finding. We used the pseudo-zeros 
+method to compute the pseudo-spectra of the associated balanced 
+companion matrix \cite[]{roots}, which requires approximate $\mathbf{N}^3$ works, where $\mathbf{N}$
+is the polynomial degree number. Therefore, the total computation complexity is 
+$\mathbf{N}^3*\frac{n}{\mathbf{N}}=n*\mathbf{N}^2$, where $n$ is the data length.
+In this paper, we choose $\mathbf{N}=5$, and therefore the total computation complexity is approximate 
+$n*5^2 = O(n)$.
+\section{ACKNOWLEDGMENTS}
+We would like to thank Zhiguang Xue, and Junzhe Sun for their constructive 
+suggestions. The first author thanks China University of Petroleum-Beijing 
+for supporting his visiting to the Bureau of Economic Geology at UT Austin. 
+The work is partially supported by Youth Science Foundation of China 
+University of Petroleum at Beijing (Grant NO. 01jb0508) and Science Foundation 
+of China University of Petroleum-Beijing (Grant NO.2462015YQ0604).
+
+\section{Appendix A: Prony method}
+Prony method can extract damped complex exponential signals 
+from a given data by solving a set of linear equations 
+\cite[]{prony,prony2003,ThomasPeter2013,Mitrofanov2015}. 
+Assume the N complex data samples $x[1],x[2],\cdots x[N]$,
+ we approximate the data by $M$ exponential functions:
+\begin{equation}
+    \label{eqa:eq0}
+     x[n] \approx \sum_{k=1}^{M}A_k e^{(\alpha_k + j\omega_k)(n-1)\Delta t + j\phi_k},
+\end{equation}
+where $A_k$ is the amplitude, $\Delta t$ is the sampling period, 
+$\alpha_k$ is the damping factor, $\omega_k$ is the angular frequency, $\phi_k$ is 
+the initial phase.
+If we let $h_k = A_k e^{j\phi_k}, z_k = e^{(\alpha_k + j\omega_k)\Delta t}$, 
+we then derive the concise form below:
+\begin{equation}
+    \label{eqa:eq1}
+     x[n] \approx \sum_{k=1}^{M}h_k z_k^{n-1}.
+\end{equation}
+The approximation problem above can be solved based on the error minimization:
+\begin{equation}
+    \label{eqa:eq2}
+    \mathbf{min} \sum_{n=1}^{N} \left|\epsilon[n]\right|^2 = 
+    \mathbf{min}\sum_{n=1}^{N}\left | x[n] - \sum_{k=1}^{M}h_k z_k^{n-1}\right|^2.
+\end{equation}
+This turns to be a nonlinear problem. It can be solved using 
+Prony method that utilizes linear equation solutions.
+If there are as many data samples as parameters of the approximation problem,
+the above M equations\textbf{~\ref{eqa:eq1}} can be expressed:
+\begin{equation}
+    \label{eqa:eq3}
+     x[n] = \sum_{k=1}^{M}h_k z_k^{n-1}.
+\end{equation}
+\textbf{~\ref{eqa:eq3}} can be written in a matrix form as below:
+\begin{equation}
+    \label{eqa:eq4}
+    \left[ \begin{array}{cccc}
+        z_1^0 & z_2^0 & \cdots & z_M^0\\
+        z_1^1 & z_2^1 & \cdots & z_M^1\\
+        \vdots & \vdots & & \vdots\\
+        z_1^{M-1} & z_2^{M-1} & \cdots & z_M^{M-1}
+    \end{array} \right]
+    \left[ \begin{array}{c} h_1\\ h_2\\ \vdots \\ h_M
+    \end{array} \right] =
+    \left[ \begin{array}{c} x[1]\\ x[2]\\ \vdots \\ x[M]
+    \end{array} \right].
+\end{equation}
+Prony proposed to define the polynomial that has the 
+above $z_k, k=1,2, \cdots , M$ as its roots \cite[]{prony}:
+\begin{equation}
+    \label{eqa:eq5}
+    \mathbf{P}(z)  = \prod_{k=1}^{M}(z-z_k).
+\end{equation}
+Equation \textbf{~\ref{eqa:eq5}} can be rewritten in the form below:
+\begin{equation}
+    \label{eqa:eq6}
+    \mathbf{P}(z) = a_0 z^M + a_1 z^{M-1} + \cdots + a_{M-1}z + a_M.
+\end{equation}
+Shifting the index on equation\textbf{~\ref{eqa:eq3}} from $n$ to $n-m$
+, and multiplying by parameter $a[m]$, then we derive:
+\begin{equation}
+    \label{eqa:eq7}
+    \sum_{m=0}^{M}a_mx[n-m] = \sum_{k=1}^{M}h_kz_k^{n-M-1}
+    \sum_{m=0}^M a[m]z_{k}^{M-m}.
+\end{equation}
+Notice $z_k, k=1,2,\cdots, M$ are roots of equation\textbf{~\ref{eqa:eq6}},
+then equation\textbf{~\ref{eqa:eq7}} be written as:
+\begin{equation}
+    \label{eqa:eq8}
+    \sum_{m=0}^{M}a_mx[n-m] = 0.
+\end{equation}
+Solving equation\textbf{~\ref{eqa:eq8}} for the polynomial coefficients.
+In subsequent steps we compute the frequencies, damping factors 
+and the phases according to Algorithm 1. 
+After all the parameters are computed, we then
+compute the components of the input signal. For details see 
+Algorithm 1 as follows:
+%\begin{algorithm}
+%   \caption{Prony method} 
+%   \label{pro:pronyalgorithm}
+% \begin{algorithmic}[1]
+%     \State \textit{Find coefficients:} $\displaystyle a_k,k=1,2,\cdots,M \gets \sum_{m=0}^{M}a_mx[n-m] = 0.$
+%     \State \textit{Find roots:} $\displaystyle z_k,k=1,2,\cdots,M \gets \sum_{m=0}^{M}a_mz^{M-m}= 0.$
+%     \State \textit{Compute frequencies:} $\displaystyle
+%     \omega_k, k=1,2,\cdots,M \gets \Re\left\{\mathbf{arg}\left(\frac{z_k}{(k-1)\Delta t}\right)\right\}, k=1,2,\cdots,M.$
+%     \State \textit{Compute:} $\displaystyle
+%     A_k e^{\alpha_k (n-1)\Delta t + j\phi_k}, k=1,2,\cdots,M \gets 
+%     x[n] = \sum_{k=1}^{M}A_k e^{(\alpha_k + j\omega_k)(n-1)\Delta t + j\phi_k}.$
+%     \State \textit{Compute components:} $\displaystyle
+%     A_k e^{(\alpha_k + j\omega_k)(n-1)\Delta t + j\phi_k}.$
+% \end{algorithmic}
+%\end{algorithm}
+
+\begin{algorithm}{Algorithm 1: Prony method}{}
+     \text{Find coefficients:}  \\
+     \displaystyle a_k,k=1,2,\cdots,M \gets \sum_{m=0}^{M}a_mx[n-m] = 0. \\
+     \text{Find roots:} \displaystyle z_k,k=1,2,\cdots,M \gets \sum_{m=0}^{M}a_mz^{M-m}= 0.\\
+     \text{Compute frequencies:} \\  
+     \displaystyle
+     \omega_k, k=1,2,\cdots,M \gets \Re\left\{\mathbf{arg}\left(\frac{z_k}{(k-1)\Delta t}\right)\right\}, k=1,2,\cdots,M.\\
+     \text{Compute:} \displaystyle \\
+     A_k e^{\alpha_k (n-1)\Delta t + j\phi_k}, k=1,2,\cdots,M \gets  \\
+     x[n] = \sum_{k=1}^{M}A_k e^{(\alpha_k + j\omega_k)(n-1)\Delta t + j\phi_k}.\\
+     \text{Compute components:} \\
+     \displaystyle  
+     A_k e^{(\alpha_k + j\omega_k)(n-1)\Delta t + j\phi_k}. \\
+\end{algorithm}
+
+
+\section{Appendix B: non-stationary Prony method and shaping regularization}
+The equation\textbf{~\ref{eqa:eq8}} can be rewritten as
+\begin{equation}
+    \label{eqa:eq9}
+\sum_{m=1}^{M}\hat{a}_m x[n-m] = x[n].
+\end{equation}
+If the $\hat{a}_m, m=1,2,\cdots,M$ in equation\textbf{~\ref{eqa:eq9}} are time dependent, then we have
+\begin{equation}
+    \label{eqa:eq10}
+    \sum_{m=1}^{M}\hat{a}_m[n] x[n-m] \approx x[n],
+\end{equation}
+which is under-determined. There many methods for the solving 
+under-determined linear system. For example, \citet[]{tikhonov} 
+used the regularization method for making the under-determined 
+problem well-posed by adding constraints on the estimated model.
+\subsection{Shaping regularization}
+\citet[]{shape,lpf} introduces shaping regularization in inversion problem, 
+which regularizes the under-determined linear system by mapping the model
+to the space of acceptable models.
+Consider a linear system given as $\mathbf{Fx = \mathbf{b}}$,
+where $\mathbf{F}$ is the forward-modeling map, $\mathbf{x}$
+is the model vector, and $\mathbf{b}$ is the data vector.
+Tikhonov regularization method amounts to minimize the least square problem bellow 
+\cite[]{tikhonov}:
+\begin{equation}
+    \label{eqa:eq11}
+    \mathbf{min} \|\mathbf{Fx}-\mathbf{b}\|^2+\epsilon^2\|\mathbf{Dx}\|^2,
+\end{equation}
+where $\mathbf{D}$ is the regularization operator, and $\epsilon$ is a scalar parameter.
+The solution for equation\textbf{~\ref{eqa:eq11}} is:
+\begin{equation}
+    \label{eqa:eq12}
+    \mathbf{\hat{x}} = \left(\mathbf{F}^T\mathbf{F}+\epsilon^2 \mathbf{D}^T\mathbf{D}\right)^{-1}\mathbf{F}^T\mathbf{b},
+\end{equation}
+Where $\mathbf{\hat{x}}$ is the least square approximated of $\mathbf{x}$, $\mathbf{F}^T$
+is the adjoint operator.
+If the forward operator $\mathbf{F}$ is simply the identity operator, the solution of 
+equation\textbf{~\ref{eqa:eq12}} is the form below:
+\begin{equation}
+    \label{eqa:eq13}
+    \mathbf{\hat{x}} = \left(\mathbf{I}+\epsilon^2 \mathbf{D}^T\mathbf{D}\right)^{-1}\mathbf{b},
+\end{equation}
+which can be viewed as a smoothing process. If we let:
+\begin{equation}
+    \label{eqa:eq14}
+    \mathbf{S} = \left(\mathbf{I}+\epsilon^2 \mathbf{D}^T\mathbf{D}\right)^{-1},
+\end{equation}
+or 
+\begin{equation}
+    \label{eqa:eq15}
+    \epsilon^2 \mathbf{D}^T\mathbf{D} = \mathbf{S}^{-1} - \mathbf{I}.
+\end{equation}
+Substituting equation \textbf{~\ref{eqa:eq15}} into equation \textbf{~\ref{eqa:eq12}}
+yields a solution by shaping regularization:
+\begin{equation}
+    \label{eqa:eq16}
+    \mathbf{\hat{x}} = \left(\mathbf{F}^T\mathbf{F}+\mathbf{S}^{-1}-\mathbf{I}\right)^{-1}\mathbf{F}^T\mathbf{b}
+     = \left[\mathbf{I} + \mathbf{S}\left(\mathbf{F}^T\mathbf{F}-\mathbf{I}\right)\right]^{-1}\mathbf{SF}^T\mathbf{b}.
+\end{equation}
+The forward operator $\mathbf{F}$ may has physical units that require scaling. Introducing 
+scaling $\lambda$ into $\mathbf{F}$, equation \textbf{\ref{eqa:eq16}} be written as:
+\begin{equation}
+    \label{eqa:eq17}
+    \mathbf{\hat{x}} = \left[\lambda^2\mathbf{I} + \mathbf{S}\left(\mathbf{F}^T\mathbf{F}-\lambda^2\mathbf{I}\right)\right]^{-1}\mathbf{SF}^T\mathbf{b}.
+\end{equation}
+If $\mathbf{S}=\mathbf{HH}^T$ with square and invertible $\mathbf{H}$. Equation \textbf{~\ref{eqa:eq17}} can be written as:
+\begin{equation}
+    \label{eqa:eq18}
+    \mathbf{\hat{x}} = \mathbf{H}\left[\lambda^2\mathbf{I} + \mathbf{H}^T\left(\mathbf{F}^T\mathbf{F}-\lambda^2\mathbf{I}\right)\mathbf{H}\right]^{-1}\mathbf{H}^T\mathbf{F}^T\mathbf{b}.
+\end{equation}
+The conjugate gradient algorithm can be used for the solution of the equation\textbf{~\ref{eqa:eq18}}.
+
+\subsection{Non-stationary Prony method}
+Equation \textbf{\ref{eqa:eq10}} can be written as a matrix form:
+\begin{equation}
+    \label{eqa:eq19}
+    \sum_{m=1}^{M}\mathbf{\hat{a}}_m(t)\mathbf{x}_m(t) \approx \mathbf{d}(t),
+\end{equation}
+where $\mathbf{d}(t) = \mathbf{x}(t)$, $\mathbf{x}_m(t) = \mathbf{x}(t-m\Delta t)$ is the time shift
+of the input signal $\mathbf{x}(t)$ and $\mathbf{\hat{a}}_m(t)$ is the time-dependant coefficients.
+We solve the under-determined linear system by using the shaping regularization method.
+The solution is the form below:
+\begin{equation}
+    \label{eqa:eq20}
+    \mathbf{a = F^{-1}\eta},
+\end{equation}
+where $\mathbf{a}$ is a vector of $\hat{a}(t)$, the elements of vector $\mathbf{\eta}$ is:
+\begin{equation}
+    \label{eqa:eq21}
+    \mathbf{\eta}_i(t) = \mathbf{S}\left[\mathbf{x}_i^*(t)\mathbf{d}(t)\right],
+\end{equation}
+the elements of the matrix $\mathbf{F}$ is:
+\begin{equation}
+    \label{eqa:eq22}
+    \mathbf{F}_{ij}= \sigma^2 \mathbf{\delta}_{ij} + S[\mathbf{x}_i^*(t)\mathbf{x}_j(t) - \sigma^2 \mathbf{\delta}_{ij}]
+\end{equation}
+where $\sigma$ is the regularization parameter, $\mathbf{S}$ is a shaping operator,
+and $\mathbf{x}_i^*(t)$ stands for the complex conjugate of $\mathbf{x}_i(t)$.
+We can use the conjugate gradient method to find the solution of the linear system.
+The NPM \cite[]{fomel2013} can be summarized as follows:
+%\begin{algorithm}
+%   \caption{non-stationary Prony method} 
+%   \label{pro:nopronyalgorithm}
+% \begin{algorithmic}[1]
+%     \State \textit{Find time dependent coefficients using auto-regression method:} 
+%       $\displaystyle \hat{a}_k[n],k=1,\cdots,M \gets \sum_{m=0}^{M}\hat{a}_m[n]x[n-m] = 0.$
+%     \State \textit{Find time dependent roots:} 
+%        $\displaystyle \hat{z}_k[n],k=1,2,\cdots,M \gets \sum_{m=0}^{M}\hat{a}_m[n]z^{M-m}= 0.$
+%     \State \textit{Compute time dependent frequencies:}
+%        $\displaystyle \hat{\omega}_k[n], k=1,\cdots,M\gets\Re\left\{\mathbf{arg}\left(\frac{\hat{z}_k[n]}{\Delta t}\right)\right\}, k=1,\cdots,M.$
+%     \State \textit{Compute the time dependent phase:} 
+%      $\displaystyle \hat{\phi}_k[n] = \sum_{k=0}^{n}\hat{\omega}_k[n]\Delta t.$ 
+%     \State \textit{Compute components using auto-regression method:} 
+%       $\displaystyle \hat{c}_m[n], m=1,\cdots M \gets \mathbf{x}[n] \approx \sum_{m=1}^M \hat{A}_m[n]e^{j\hat{\phi}_m[n]}=\sum_{m=1}^M\hat{c}_m[n]$
+% \end{algorithmic}
+%\end{algorithm}
+
+
+\begin{algorithm}{Algorithm 2: non-stationary Prony method}{}
+     \text{Find time dependent coefficients using auto-regression method:}  \\
+     \displaystyle \hat{a}_k[n],k=1,\cdots,M \gets \sum_{m=0}^{M}\hat{a}_m[n]x[n-m] = 0. \\
+     \text{Find time dependent roots:}  \\
+     \displaystyle \hat{z}_k[n],k=1,2,\cdots,M \gets \sum_{m=0}^{M}\hat{a}_m[n]z^{M-m}= 0.\\
+     \text{Compute time dependent frequencies:}  \\
+     \displaystyle \hat{\omega}_k[n], k=1,\cdots,M\gets\Re\left\{\mathbf{arg}\left(\frac{\hat{z}_k[n]}{\Delta t}\right)\right\}, k=1,\cdots,M.\\
+     \text{Compute the time dependent phase:}   \\
+     \displaystyle \hat{\phi}_k[n] = \sum_{k=0}^{n}\hat{\omega}_k[n]\Delta t.\\
+     \text{Compute components using auto-regression method:}   \\
+     \displaystyle \hat{c}_m[n], m=1,\cdots M \gets \mathbf{x}[n] \approx \sum_{m=1}^M \hat{A}_m[n]e^{j\hat{\phi}_m[n]}=\sum_{m=1}^M\hat{c}_m[n]
+\end{algorithm}
+
+
+
+
+
+After we decompose the input signal into narrow-band components, 
+we compute the time-frequency distribution of the input signal 
+using the Hilbert transform of the intrinsic mode functions.
+
+\newpage
+\bibliographystyle{seg}
+\bibliography{npm}
+

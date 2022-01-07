@@ -23,7 +23,8 @@
 int main(int argc, char* argv[])
 {
     int nd, n1, niter;
-    float *d, *a, *b, alfa, beta, perc;
+    float *d, *a, *b, alfa, beta, perc, fact;
+    char *type;
     sf_file inp, reg, out;
 
     sf_init(argc,argv);
@@ -36,6 +37,8 @@ int main(int argc, char* argv[])
 	sf_error("Need n1=%d in reg",nd);
     if (!sf_histint(reg,"n2",&n1) || n1 != 2)
 	sf_error("Need n2=2 in reg");
+    if (NULL == (type = sf_getstring("type"))) type="threshold";
+    /* thresholding type */
 
     sf_putint(out,"n1",2);
     
@@ -52,8 +55,10 @@ int main(int argc, char* argv[])
     /* number of POCS iterations */
     if (!sf_getfloat("perc",&perc)) perc=90.0;
     /* percentage for sharpening */
+    if (!sf_getfloat("fact",&fact)) fact=1.5;
+    /* factor for sharpening */
 
-    l1_init(nd,niter,perc,true);
+    l1_init(nd,niter,perc,fact,type,true);
 
     bil1(d,a,b,&alfa,&beta);
     

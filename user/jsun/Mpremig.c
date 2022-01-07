@@ -56,14 +56,14 @@ int main(int argc, char* argv[])
     pspar par;
     int nx1, nz1; /*domain of interest*/
     float *vel,***dat,***dat_v,**wvfld1,**wvfld,*img,*imgs; /*velocity profile*/
-    sf_file Fi,Fo,Fv,Fd_v,snaps; /* I/O files */
+    sf_file Fi,Fo,Fv,Fd_v=NULL,snaps; /* I/O files */
     sf_axis az,ax; /* cube axes */
     int shtbgn,shtend,shtnum,shtint;
     int ix,iz,is,which;
     bool justrec;
 
     bool diff;
-    sf_file Fi1;
+    sf_file Fi1=NULL;
     float ***dat1;
 
     sf_init(argc,argv);

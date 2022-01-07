@@ -1,0 +1,203 @@
+from rsf.proj import *
+
+Flow('vrms',None,
+     'math d1=0.004 n1=1001 o1=0 output="x1*125+2000+50*sin(9*x1)" ')
+
+Flow('synt',None,
+     '''
+     spike d1=0.004 n1=1001 |
+     noise rep=y seed=2006 |
+     cut n1=100 | 
+     bandpass flo=4 fhi=20 |
+     spray axis=2 n=256 d=25 o=-3200 label=Offset unit=m 
+     ''')
+
+Flow('cmpa','synt vrms',
+     'inmo velocity=${SOURCES[1]} half=y | noise seed=2007 var=1e-10')
+
+
+############################################################
+####### Blend 
+############################################################
+## Apply dithering
+Flow('dither','cmpa',
+     '''
+     window n1=1 |
+     noise rep=y seed=122011 var=10 | math output="500*input"
+     ''')
+
+Flow('shottime1','cmpa','window n1=1 | math output=100*x1')
+Flow('shottime2','shottime1 dither','add scale=1,1 ${SOURCES[1]}')
+
+
+## Blend 
+Flow('cmp','cmpa cmpa shottime1 shottime2','blend shot_time_in=${SOURCES[3]} shot_time_out=${SOURCES[2]} |add scale=1,1 ${SOURCES[1]}' )
+
+for case in ('a',''):	
+	dat='cmp'+case
+	Result(dat,'grey wanttitle=n clip=0.74 ' )
+
+dat='cmp'
+typ='semblance'
+scn=typ+'scn'
+Flow(scn,'cmp','vscan half=y v0=2000 dv=10 nv=61 type=%s  nb=10 | clip2 lower=0' %typ)
+Plot(scn+'0',scn,
+		'''
+		grey color=j allpos=y wanttitle=n pclip=100
+		''')
+Flow(scn+'c','cmpa','vscan half=y v0=2000 dv=10 nv=61 type=%s  nb=10 | clip2 lower=0' %typ)
+Plot(scn+'c0',scn+'c',
+		'''
+		grey color=j allpos=y wanttitle=n pclip=100
+		''')		
+pik=typ+'pik'
+Flow(pik,scn,'scale axis=2 | pick  rect1=50 rect2=10 vel0=2500')
+Plot(pik,
+             '''
+             graph yreverse=y transp=y min2=2000 max2=2600 pad=n
+             Resultcol=7 Resultfat=7 wanttitle=n wantaxis=n
+             ''')
+Result(scn,[scn+'0',pik],'Overlay')
+nmo = typ + 'nmo'
+Flow(nmo,[dat,pik],'nmo half=y velocity=${SOURCES[1]} str=0.1 ')
+Result(nmo,
+			'''
+			grey wanttitle=n
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74
+			''' )
+
+nmomf = typ + 'nmomf'
+Flow(nmomf,nmo,'transp | mf nfw=13 | transp')
+Result(nmomf,
+			'''
+			grey wanttitle=n 
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74
+			''' )
+inmo = typ + 'inmo'
+Flow(inmo,[nmomf,pik],'inmo half=y velocity=${SOURCES[1]} str=0.4')
+Result(inmo,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+diffmf=typ+'diffmf'
+Flow(diffmf,['cmp',inmo],'add scale=1,-1 ${SOURCES[1]}')
+Result(diffmf,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+errormf=typ+'errormf'
+Flow(errormf,['cmpa',inmo],'add scale=1,-1 ${SOURCES[1]}')
+Result(errormf,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+
+dat='cmp'
+#Flow('ref',nmomf,'stack')
+Flow('ref','cmpa','window n2=1 f2=128')
+typ='semblance'
+scn=typ+'scn-simi'
+Flow(scn,'cmp ref','simivscan ref=${SOURCES[1]} thr=0.2  half=y v0=2000 dv=10 nv=61 type=%s nb=10| clip2 lower=0' %typ)
+Plot(scn+'0',scn,
+		'''
+		grey color=j allpos=y wanttitle=n pclip=100
+		''')
+Flow(scn+'c','cmpa ref','simivscan ref=${SOURCES[1]} thr=0.3  half=y v0=2000 dv=10 nv=61 type=%s nb=10| clip2 lower=0' %typ)
+Plot(scn+'c0',scn+'c',
+		'''
+		grey color=j allpos=y wanttitle=n pclip=100
+		''')		
+pik=typ+'pik-simi'
+Flow(pik,scn,'scale axis=2 | pick rect1=25 rect2=2 vel0=2500')
+Plot(pik,
+             '''
+             graph yreverse=y transp=y min2=2000 max2=2600 pad=n
+             Resultcol=7 Resultfat=7 wanttitle=n wantaxis=n
+             ''')
+Result(scn,[scn+'0',pik],'Overlay')
+nmo = typ + 'nmo-simi'
+Flow(nmo,[dat,pik],'nmo half=y velocity=${SOURCES[1]} str=0.1 ')
+Result(nmo,
+			'''
+			grey wanttitle=n
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74
+			''' )
+
+nmomf = typ + 'nmomf-simi'
+Flow(nmomf,nmo,'transp | mf nfw=13 | transp')
+Result(nmomf,
+			'''
+			grey wanttitle=n 
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.74
+			''' )
+inmo = typ + 'inmo-simi'
+Flow(inmo,[nmomf,pik],'inmo half=y velocity=${SOURCES[1]} str=0.4')
+Result(inmo,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+diffmf=typ+'diffmf-simi'
+Flow(diffmf,['cmp',inmo],'add scale=1,-1 ${SOURCES[1]}')
+Result(diffmf,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+errormf=typ+'errormf-simi'
+Flow(errormf,['cmpa',inmo],'add scale=1,-1 ${SOURCES[1]}')
+Result(errormf,
+			'''
+			grey wanttitle=n clip=0.74
+			''' )
+			
+Result('comp1','./Fig/cmpa.vpl ./Fig/cmp.vpl ./Fig/semblancescn.vpl','SideBySideAniso')
+Result('comp2','./Fig/semblancenmo.vpl ./Fig/semblancenmomf.vpl' ,'SideBySideAniso')
+Result('comp3','./Fig/semblanceinmo.vpl ./Fig/semblancediffmf.vpl ./Fig/semblanceerrormf.vpl' ,'SideBySideAniso')
+
+Result('comp4','./Fig/cmpa.vpl ./Fig/cmp.vpl ./Fig/semblancescn-simi.vpl','SideBySideAniso')
+Result('comp5','./Fig/semblancenmo-simi.vpl ./Fig/semblancenmomf-simi.vpl' ,'SideBySideAniso')
+Result('comp6','./Fig/semblanceinmo-simi.vpl ./Fig/semblancediffmf-simi.vpl ./Fig/semblanceerrormf-simi.vpl' ,'SideBySideAniso')
+
+
+Plot('true','vrms',
+             '''
+             graph yreverse=y transp=y min2=2000 max2=2600 pad=n plotcol=7 plotfat=7
+              wanttitle=n wantaxis=n
+             ''')
+             
+## Creating framebox
+x=2100
+y=1.5
+w=200
+w1=0.55
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=2000 max1=2600 min2=0 max2=4 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')             
+             
+x=2200
+y=2.25
+w=200
+w1=0.55
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=2000 max1=2600 min2=0 max2=4 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')  
+	             
+Result('scn1','semblancescn0 true frame1 frame2','Overlay')
+Result('scn2','semblancescn-simi0 true frame1 frame2','Overlay')
+Result('scn1-c','semblancescnc0 true','Overlay')
+Result('scn2-c','semblancescn-simic0 true','Overlay')
+Result('simple-comp-scn','Fig/scn1.vpl Fig/scn2.vpl','SideBySideAniso')
+Result('simple-comp-scn-c','Fig/scn1-c.vpl Fig/scn2-c.vpl','SideBySideAniso')
+Result('simple-comp-dat','Fig/cmpa.vpl Fig/cmp.vpl','SideBySideAniso')
+End()

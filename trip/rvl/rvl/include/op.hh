@@ -886,27 +886,36 @@ namespace RVL {
       
     }
 
-    OperatorEvaluation(const OperatorEvaluation<Scalar> & ev)
-      : wx(ev.wx), f(ev.fref.clone()), fref(ev.fref),
-	val(fref.getRange()), applied(false), 
-	deriv(f->createDerivEvaluation(*this)),
-	deriv2(f->createDeriv2Evaluation(*this)) { }
-
-    virtual ~OperatorEvaluation() {
-      try { 
-	if( deriv) {
-	  delete deriv;
-	  deriv = NULL;
-	}
-	if( deriv2) {
-	  delete deriv2;
-	  deriv2 = NULL;
-	}
-	if (f) delete f; 
+    OperatorEvaluation(const OperatorEvaluation<Scalar> &ev)
+        : wx(ev.wx), f(ev.fref.clone()), fref(ev.fref),
+          val(fref.getRange()), applied(false),
+          deriv(f->createDerivEvaluation(*this)),
+          deriv2(f->createDeriv2Evaluation(*this)) {}
+#if __cplusplus >= 201103L // We are using C++11 or a later version
+    virtual ~OperatorEvaluation() noexcept(false)
+#else
+    virtual ~OperatorEvaluation()
+#endif
+    {
+      try
+      {
+        if (deriv)
+        {
+          delete deriv;
+          deriv = NULL;
+        }
+        if (deriv2)
+        {
+          delete deriv2;
+          deriv2 = NULL;
+        }
+        if (f)
+          delete f;
       }
-      catch (RVLException & e) {
-	e<<"\ncalled from OperatorEvaluation::getDomain\n";
-	throw e;
+      catch (RVLException &e)
+      {
+        e << "\ncalled from OperatorEvaluation::getDomain\n";
+        throw e;
       }
     }
 

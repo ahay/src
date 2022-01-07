@@ -52,7 +52,7 @@ void ditime3d_init (float dipo,   float dipd,   int dipn,   // x-dip angle axis
     float CONVPARAM;
     float *pTableR, *pTableD;
     int id, ixi, id0, it, sid, sixi, sid0;
-    float curDip, a, tan_a, tan_sa, curXi, scurXi, aux_diff, curTime, a0, sa0, tan_a0, tan_sa0, aux_refl, sa;
+    float curDip, a, tan_a, tan_sa, curXi, scurXi, aux_diff, curTime, a0, sa0, tan_a0=0, tan_sa0, aux_refl, sa;
 	float curDip0, scurDip, scurDip0;
 
 	float k2, ke, k0, k1, kM;

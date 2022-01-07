@@ -315,8 +315,9 @@ static void sf_esc_scgrid3_init_rand (bool devrandom) {
         gettimeofday (&tv, 0);
         seed = tv.tv_sec + tv.tv_usec;
     } else {
-        fread (&seed, sizeof(seed), 1, drand);
-        fclose (drand);
+        if (!fread (&seed, sizeof(seed), 1, drand))
+            abort();
+        fclose(drand);
     }
     srand (seed);
 }
@@ -948,7 +949,7 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
 static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areqs,
                                         sf_esc_scgrid3_avals *avals, fd_set *sset,
                                         int mis, int ns, int n, size_t id) {
-    int i, ii = 0, is;
+    int i = 0, ii = 0, is;
     int len = 0, rc, desc_ready;
     fd_set wset;
     struct timeval timeout;
@@ -1179,7 +1180,7 @@ static void sf_esc_scgrid3_bilinear_interp (sf_esc_scgrid3 esc_scgrid,
     float v[ESC3_NUM + 3];
 
     /* Bilinear interpolation */
-    for (i = 0; i < (ESC3_NUM + 4); i++) {
+    for (i = 0; i < (ESC3_NUM + 3); i++) {
         v[i] = avals[0].vals[i]*(1.0 - inval->fb)*(1.0 - inval->fa) +
                avals[1].vals[i]*inval->fb*(1.0 - inval->fa) +
                avals[2].vals[i]*(1.0 - inval->fb)*inval->fa +

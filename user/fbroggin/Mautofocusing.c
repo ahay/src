@@ -54,13 +54,9 @@ int main(int argc, char* argv[])
 
 	bool verb,conj,twin,pandq,Gtot,Htot;
 	
-    /* OMP parameters */
-	#ifdef _OPENMP
-    int ompnth;
-	#endif 	
-	
-	float	*pplus0, *pplus, *pplusinv, *pplustemp, *Pplus, *Pplus_trace, *pminus, *Pminus, *Refl, *Gp, *Gm, *G, *H;
-	float	*qplus, *qplusinv, *qplustemp, *Qplus, *Qplus_trace, *qminus, *Qminus;
+	float	*pplus0, *pplus, *pplusinv, *pplustemp, *Pplus, *Pplus_trace, *pminus, *Pminus, *Refl; 
+	float   *Gp, *Gm, *G = NULL, *H = NULL;
+	float	*qplus, *qplustemp, *Qplus, *Qplus_trace, *qminus, *Qminus;
 	float	*window, *taper, pi;
 	int		*tw;
 
@@ -69,11 +65,11 @@ int main(int argc, char* argv[])
     sf_file FRefl;
     sf_file FGp;
     sf_file FGm;
-    sf_file FG;
-    sf_file FH;
-    sf_file Ftwin;
-    sf_file Fp;
-    sf_file Fq;
+    sf_file FG = NULL;
+    sf_file FH = NULL;
+    sf_file Ftwin = NULL;
+    sf_file Fp = NULL;
+    sf_file Fq = NULL;
 
 	char *filename1, filename2[256], filename3[256];
 	
@@ -83,7 +79,7 @@ int main(int argc, char* argv[])
     int     nt,nf,ntr,mode,nshots,niter,len;
     int     i,it,ix,ishot,iter,i0;
 	int		twc, twa, shift, n[2], rect[2], s[2];
-    float   scale,eps,dt,df,dx,ot,of,a,b,c,d,e,f;
+    float   scale,eps,a,b,c,d,e,f;
 
 	sf_triangle tr;
 
@@ -96,7 +92,7 @@ int main(int argc, char* argv[])
     /* Initialize OMP parameters */
     /*------------------------------------------------------------*/
 	#ifdef _OPENMP
-    ompnth=omp_init();
+    omp_init();
 	#endif	
 
 	/*------------------------------------------------------------*/
@@ -169,9 +165,9 @@ int main(int argc, char* argv[])
 	af = sf_iaxa(FRefl,1); sf_setlabel(af,"Frequency"); if(verb) sf_raxa(af); /* frequency */
 	ax = sf_iaxa(Fplus,2); sf_setlabel(ax,"r"); if(verb) sf_raxa(ax); /* space */
     
-	nt = sf_n(at); dt = sf_d(at); ot = sf_o(at);
-	nf = sf_n(af); df = sf_d(af); of = sf_o(af);
-	ntr = sf_n(ax); dx = sf_d(ax);
+	nt = sf_n(at); 
+	nf = sf_n(af); 
+	ntr = sf_n(ax); 
 	
 	if (verb) fprintf(stderr,"nt: %d nf: %d ntr:%d\n",nt,nf,ntr);
 
@@ -289,7 +285,7 @@ int main(int argc, char* argv[])
 		sprintf(filename3,"%03d.rsf",ishot);
 		for (i=0; i<7; i++)
 			filename2[len+i] = filename3[i];
-			filename2[len+7] = '\0';
+		filename2[len+7] = '\0';
 		if (verb) fprintf(stderr,"Loading %s in memory\n",filename2);
 	  	FRefl = sf_input(filename2);
     	sf_floatread(&Refl[ishot*2*nf*ntr],2*nf*ntr,FRefl);
@@ -399,7 +395,11 @@ int main(int argc, char* argv[])
 			#endif 	
 		  	for (ix=0; ix<ntr; ix++) {
 				/* Loop over frequencies */
-				#pragma ivdep
+#if defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(__GNUC__) && !defined(__clang__)
+#pragma GCC ivdep
+#endif
 				for (it=0; it<2*nf; it=it+2) {
 					
 					/*(x + yi)(u + vi) = (xu - yv) + (xv + yu)i*/
@@ -437,7 +437,11 @@ int main(int argc, char* argv[])
 			shared(pminus,qminus,pplus,qplus,pplus0,window)
 		#endif
 		for (ix=0; ix<ntr; ix++) {
-			#pragma ivdep
+#if defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(__GNUC__) && !defined(__clang__)
+#pragma GCC ivdep
+#endif
 			for (it=0; it<nt; it++) {
 				pplus[it+ix*nt] = pplus0[it+ix*nt] - scale*window[it+ix*nt]*pminus[it+ix*nt];
 				qplus[it+ix*nt] = pplus0[it+ix*nt] + scale*window[it+ix*nt]*qminus[it+ix*nt];
@@ -460,7 +464,11 @@ int main(int argc, char* argv[])
 		shared(Gp,Gm,G,H,pminus,qminus,pplustemp,qplustemp,pplus0)
 	#endif
 	for (ix=0; ix<ntr; ix++) {
-		#pragma ivdep
+#if defined(__INTEL_COMPILER)
+#pragma ivdep
+#elif defined(__GNUC__) && !defined(__clang__)
+#pragma GCC ivdep
+#endif
 		for (it=0; it<nt; it++) {
 			Gp[it+ix*nt] = 0.5*( pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] + qplustemp[it+ix*nt] - scale*qminus[it+ix*nt] );
 			Gm[it+ix*nt] = 0.5*( pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] - qplustemp[it+ix*nt] + scale*qminus[it+ix*nt] );

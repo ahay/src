@@ -13,7 +13,6 @@ int main (int argc, char* argv[]){
   int nz, nx, ndip;
   float dz, dx, ddip;
   float z0, x0, dip0;
-  int ompchunk = 1;
   //input dip angle gather file
   sf_file gathers_in, dips_in=NULL, fresnel_out;
   
@@ -69,7 +68,7 @@ int main (int argc, char* argv[]){
   float right_gray = 0.f;
   float current_dip = 0.f;
   float yarg = 1 /( width_gray );
-  int omp_thread = 0;
+  //int omp_thread = 0;
     //looping integers and indices
     int ix,iz,ind,idip;
   ind = 0;
@@ -102,11 +101,12 @@ int main (int argc, char* argv[]){
 
 
       for (idip = 0 ; idip < ndip ; idip++){
-
+/*
 #ifdef _OPENMP
 	    omp_thread=omp_get_thread_num();
 #pragma omp critical
 #endif
+*/
 	current_dip = idip*ddip+dip0;
 	if (current_dip > left_dip){//inside of left side
 	  if ( current_dip < right_dip ){//inside of right side

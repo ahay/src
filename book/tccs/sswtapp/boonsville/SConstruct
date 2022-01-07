@@ -1,0 +1,712 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+from math import *
+from rsf.prog import RSFROOT
+
+#DATAPATH:  https://drive.google.com/file/d/1hGVse8tH1BOrrtOmU6sa5usELa5l1AtS/view?usp=sharing
+#BOONS.SGY
+
+## reference trace
+ns=80
+
+def Grey(data,other):
+	Result(data,
+           '''
+		   	grey transp=y color=j 
+			unit1=s unit2= allpos=y scalebar=y 
+			parallel2=n labelsz=6 pclip=99 %s'''%(other))#screenratio=1
+
+def Grey0(data,other):
+	Result(data,
+           '''
+		   	scale axis=2 |grey transp=y color=j 
+			unit1=s unit2= allpos=y scalebar=y 
+			parallel2=n labelsz=6 pclip=99 %s'''%(other))#screenratio=1
+			
+def Grey33(data,other):
+	Result(data,
+           '''
+		   	put d1=0.002 o1=0 | byte clip=35000 | grey3 flat=n transp=y
+			unit1=s unit2= allpos=y  frame3=75 frame1=600 frame2=80 unit1=s unit2= unit3= framelabelcol=VP_BLACK  
+			parallel2=n labelsz=6 screenratio=1 point1=0.8 point2=0.8 %s'''%(other)) 
+
+def Greytf0(data1,data2,other):
+	Result(data1,data2,
+	  '''
+       window n3=1 f3=%d max2=180 | math output="abs(input)"  | scale axis=2 |clip2 lower=0 upper=0.01| scale axis=2| grey color=j allpos=y 
+       wanttitle=y screenratio=1.5 label2=Frequency unit2=Hz label1=Time unit1=s  %s
+       '''%(ns,other))
+       
+def Grey33f(data,other):
+	Result(data,
+           '''
+		   	put d1=0.002 o1=0 | scale axis=3| byte allpos=y bar=bar.rsf| grey3 flat=n transp=y allpos=y
+			unit1=s unit2= allpos=y  frame3=75 frame1=600 frame2=80 unit1=s unit2= unit3= framelabelcol=VP_BLACK  
+			parallel2=n labelsz=6 screenratio=1 point1=0.8 point2=0.8 minval=0 maxval=1 %s'''%(other)) 
+			
+def Grey3(data,other):
+	Result(data,
+           '''
+		   	put d3=1 |byte pclip=99 |  transp plane=23 memsize=1000 | grey3 flat=n transp=y color=j 
+			unit1=s unit2= allpos=y  frame1=100 frame2=1 frame3=20 label2=Trace label1=Time
+			label3=Frequency unit1=s unit2= unit3=Hz framelabelcol=VP_BLACK  
+			parallel2=n labelsz=6 screenratio=0.6 point1=0.8 point2=0.8 %s'''%(other)) 
+def Grey3c(data2,data1,other):
+	Result(data2,data1,
+           '''
+		   	put d3=1 |byte pclip=99 |  transp plane=23 memsize=1000 | grey3 flat=n transp=y color=j 
+			unit1=s unit2= allpos=y  frame1=100 frame2=1 frame3=20 label2=Trace label1=Time
+			label3=Frequency unit1=s unit2= unit3=Hz framelabelcol=VP_BLACK  
+			parallel2=n labelsz=6 screenratio=1 point1=0.8 point2=0.8 screenratio=0.6 %s'''%(other)) 			
+
+def Grey3c0(data2,data1,other,pc):
+	Result(data2,data1,
+           '''
+		   	put d3=1 | scale axis=3 |byte pclip=%g allpos=y bar=bar.rsf |  transp plane=23 memsize=1000 | grey3 flat=n transp=y color=j 
+			unit1=s unit2= allpos=y  frame1=100 frame2=1 frame3=20 label2=Trace label1=Time
+			label3=Frequency unit1=s unit2= unit3=Hz framelabelcol=VP_BLACK parallel2=n labelsz=6 screenratio=1 point1=0.8 point2=0.8 screenratio=1.2 %s'''%(pc,other)) 	
+			
+def Grey3tfl(data,other):
+	Result(data,
+           '''
+		   	put d3=1 |  transp plane=23 memsize=1000|byte clip=30000| grey3 flat=n transp=y color=j 
+			unit1=s unit2= allpos=y  frame1=100 frame2=1 frame3=20 label2=Trace label1=Time
+			label3=Frequency unit1=s unit2= unit3=Hz framelabelcol=VP_BLACK  
+			parallel2=n labelsz=6 screenratio=1 point1=0.8 point2=0.8 %s'''%(other)) 
+def Grey3tflc(data2,data1,other):
+	Result(data2,data1,
+           '''
+		   	put d3=1 |  transp plane=23 memsize=1000|byte clip=30000| grey3 flat=n transp=y color=j 
+			unit1=s unit2= allpos=y  frame1=100 frame2=1 frame3=20 label2=Trace label1=Time
+			label3=Frequency unit1=s unit2= unit3=Hz framelabelcol=VP_BLACK  
+			parallel2=n labelsz=6 screenratio=1 point1=0.8 point2=0.8 %s'''%(other)) 
+def Greytf(data1,data2,other):
+	Result(data1,data2,
+	  '''
+       window n3=1 f3=%d max2=180 | scale axis=2 | grey color=j allpos=y 
+       wanttitle=y screenratio=1.5 label2=Frequency unit2=Hz label1=Time unit1=s %s
+       '''%(ns,other))
+
+def Greyf(data1,data2,fmin,other):
+	Result(data1,data2,
+       '''
+       window n2=1 min2=%g | put d2=1 |  smooth rect1=3 rect2=3 |
+       sfgrey color=j allpos=y scalebar=n title="%gHZ" label2="Trace" unit2= label1=Time unit1=s pclip=99 %s
+       '''%(fmin,fmin,other))
+
+# Flow('old3d','d_mig_boonsville.segy',
+#      '''
+#      segyread bfile=/dev/null hfile=/dev/null read=data |  
+#      put n1=800 n2=133 n3=97 o1=0 d1=0.002 02=0 d2=1 o3=0 d3=1 label1="Time" unit1="s" 
+#      label2="Inline" label3="Crossline"
+#      ''')
+sgy = 'boonsvillel249.sgy'
+
+Fetch(sgy,'boonsville')
+
+seismic = 'BOONS.SGY'
+
+Fetch(seismic,'boonsegy',server)
+
+Flow('boon tboon boon.asc boon.bin',seismic,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''')
+
+Flow('boon3','boon',
+     '''
+     intbin xk=cdp yk=fldr |
+     put label1=Time unit1=s label2=Trace label3=Line
+     ''')
+Result('boon3',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=1000 frame2=100 frame3=50 title="3-D Seismic"
+       ''')
+Flow('old3d','boon3','window j1=2 | window n1=800|put n1=800 n2=133 n3=97 o1=0 d1=0.002 o2=0 d2=1 o3=0 d3=1 label1="Time" unit1="s"  ')
+Grey33('old3d','title="Boonsville 3D" frame3=75 frame1=600 frame2=80 screenratio=0.8')
+
+Flow('old','old3d','window n3=1 f3=75')
+Flow('old-0','old','cp') 
+def ref(trace):
+    out = 'ref%d' % trace
+    Flow(out+'.asc',None,
+         '''
+         echo %d 0 %d 1 n1=4 in=$TARGET data_format=ascii_float
+         ''' % (trace,trace))
+    Plot(out,out+'.asc',
+         '''
+         dd form=native type=complex | 
+         graph min1=0 max1=201 min2=0 title="" wantaxis=n scalebar=y pad=n plotfat=4 dash=2
+         ''')
+    return out
+
+
+
+Plot('old','old','grey title=" " scalebar=n label2="Distance" label1=Time unit1=s ')
+Result('old-0','old-0','grey title=" " scalebar=n label2="Trace" label1=Time unit1=s unit2= parallel2=n labelsz=6 ')
+
+x=4
+y=1.0
+w=51
+w1=0.4
+
+Flow('framez0.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('framez0','framez0.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=133 min2=0 max2=1.598 pad=n plotfat=12 plotcol=7 
+	wantaxis=n wanttitle=n yreverse=y
+	''')
+	
+Result('old','Fig/old-0.vpl trace framez0','Overlay')
+
+Flow('trace.asc',None,
+         '''
+         echo %d 0 %d 1 n1=4 in=$TARGET data_format=ascii_float
+         ''' % (ns,ns)) #ns is the trace number
+Plot('trace','trace.asc',
+         '''
+         dd form=native type=complex | 
+         graph min1=0 max1=132 min2=0 title="" wantaxis=n scalebar=n pad=n plotfat=8 dash=2
+         ''') #250 is the number of traces
+
+Result('old-1',['old','trace'],'Overlay')
+
+
+Result('spectra','old','spectra all=y | scale axis=1 | graph pad=n label2="Scaled amplitude" wanttitle=n unit2="" plotfat=4')
+
+############################### LTFT
+Flow('ltft','old',
+    '''
+    timefreq rect=8 verb=n nw=377 dw=0.665779 niter=100
+    ''')
+Flow('stft','old',
+     '''
+     stft ntw=128
+     ''')
+Result('tf-l','ltft',
+       '''
+       window n3=1 f3=%d max2=180 | scale axis=2 | 
+       grey color=j allpos=y scalebar=y wanttitle=n screenratio=1.5 
+       ''' % ns)
+       
+# Average frequency
+Flow('num-l','ltft','window max2=110 | math output="input*x2" | stack axis=2 ')
+
+Flow('num-l-1','num-l','window f1=200 | smooth rect1=1 rect2=1')
+Flow('num-l-2','num-l','window n1=200 ')
+Flow('num-l-a','num-l-2 num-l-1','cat ${SOURCES[1]} axis=1 o=0 d=0.002')
+
+Flow('den-l','ltft','window max2=110 | stack axis=2')
+Flow('lcf-l','num-l den-l','divn den=${SOURCES[1]} rect1=1  rect2=1')
+
+Result('lcf-l','lcf-l',
+       '''
+        grey allpos=y scalebar=y  clip=86  barunit=Hz  color=j title="" label2="Distance" label1=Time unit1=s
+       ''')
+
+
+############## ST
+Flow('st','old','st  | math output="abs(input)" | real ')
+
+
+########################################################################
+# INITIALIZATION for Matlab
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'lowf'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## The following function may take a while
+############################################################
+Flow('tfsswt1 tfsswt2 tfsswt3 tfsswt4 tfsswt5 tfsswt6 tfsswt',[os.path.join(matROOT,matfun+'.m'),'old'],
+    '''MATLABPATH=%(matlabpath)s %(matlab)s 
+    -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGET}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}','${TARGETS[6]}');quit"
+    '''%vars(),stdin=0,stdout=-1)
+
+nt=800
+nx=133
+dt=0.002
+dx=1
+nf=126
+df=(1.0/2.0/dt)/(nf-1)
+
+
+Flow('lowf-tfsswt1','tfsswt1','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('lowf-tfsswt2-0','tfsswt2','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('lowf-tfsswt3','tfsswt3','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('lowf-tfsswt4','tfsswt4','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('lowf-tfsswt5','tfsswt5','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('lowf-tfsswt6','tfsswt6','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d'%(0,dt,nt,0,dx,nx))
+Flow('lowf-tfsswt','tfsswt','put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d o3=%g d3=%g n3=%d'%(0,dt,nt,0,df,nf,0,dx,nx))
+
+Grey('lowf-tfsswt1','title="1~20 Hz"')
+Grey0('lowf-tfsswt2-0','title="21~40 Hz" label1=Time unit1=s label2=Trace scalebar=y')
+Grey('lowf-tfsswt3','title="41~60 Hz"')
+Grey('lowf-tfsswt4','title="61~80 Hz"')
+Grey('lowf-tfsswt5','title="81~100 Hz"')
+Grey('lowf-tfsswt6','title="101~120 Hz"')
+
+## Creating framebox for karst
+x=26
+y=1.4
+w=45
+w1=0.3
+
+Flow('frame1k.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1k','frame1k.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y scalebar=y
+	''')
+
+x=130
+y=1.4
+w=45
+w1=0.3
+
+Flow('frame2k.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2k','frame2k.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y scalebar=y
+	''')
+
+x=220
+y=1.4
+w=80
+w1=0.3
+
+Flow('frame3k.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame3k','frame3k.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y  scalebar=y
+	''')
+
+x=326
+y=1.4
+w=39
+w1=0.3
+
+Flow('frame4k.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame4k','frame4k.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y scalebar=y
+	''')
+
+x=430
+y=1.4
+w=35
+w1=0.3
+
+Flow('frame5k.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame5k','frame5k.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y scalebar=y
+	''')
+
+
+Result('lowf-tfsswt2','Fig/lowf-tfsswt2-0.vpl frame1k frame2k frame3k frame4k frame5k framez','Overlay')
+
+
+x=4
+y=1.0
+w=51
+w1=0.4
+
+Flow('framez.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('framez','framez.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=133 min2=0 max2=1.598 pad=n plotfat=12 plotcol=7 
+	wantaxis=n wanttitle=n yreverse=y scalebar=y
+	''')
+	
+	
+Flow('lowf-st-0','st','window n2=32 f2=32 | stack axis=2 norm=n ')
+Grey0('lowf-st-0','title="21~40 Hz" label2=Trace  scalebar=y')
+
+Result('lowf-st','Fig/lowf-st-0.vpl framez','Overlay')
+
+Grey3('lowf-tfsswt','title="SSWT" frame3=20')
+Grey3tfl('ltft','title="TFL" frame3=60')
+Grey3('st','title="ST" frame3=60')
+
+#60 Hz
+Grey3c('lowf-tfsswt-1','lowf-tfsswt','title="SSWT" frame3=30')
+#Grey3tflc('ltft-1','ltft','title="TFL" frame3=90')
+#Grey3c('st-1','st','title="ST" frame3=90')
+
+#80 Hz
+Grey3c('lowf-tfsswt-2','lowf-tfsswt','title="SSWT" frame3=40')
+#Grey3tflc('ltft-2','ltft','title="TFL" frame3=120')
+#Grey3c('st-2','st','title="ST" frame3=120')
+
+#30 Hz
+Grey3c('lowf-tfsswt-3','lowf-tfsswt','title="SSWT" frame3=15')
+#Grey3tflc('ltft-3','ltft','title="TFL" frame3=45')
+#Grey3c('st-3','st','title="ST" frame3=45')
+#Grey3c('st-3','st','title="ST" frame3=45')
+
+Greytf('tf-l','ltft','title="Trace 80" screenratio=1.4 min1=0 max1=1.6 min2=0 max2=175')
+
+
+Greyf('l1','ltft',20,'')
+Greyf('l2','ltft',40,'')
+Greyf('l3','ltft',60,'')
+
+Greyf('s1-0','st',25,'')
+Greyf('s2-0','st',40,'')
+Greyf('s3-0','st',60,'')
+
+Greyf('ss1-0','lowf-tfsswt',25,'')
+Greyf('ss2-0','lowf-tfsswt',40,'')
+Greyf('ss3-0','lowf-tfsswt',60,'')
+
+
+
+#### Creating horizontal tracking maps
+for i in range (12):
+	f=14+i*8
+	f2=6+i*4
+	fig='tfsswt-%g'%f
+	Flow(fig,'lowf-tfsswt','window n2=1 f2=%d'%f2)
+	Grey(fig,'label2=Trace  scalebar=n title="%g Hz"'%f)
+
+#### Creating horizontal tracking maps by adding neighboring slices
+for i in range (12):
+	f=14+i*8
+	d=4
+	f2=6+i*4
+	fig='tfsswt-sum-%g'%i
+	if i==0:
+		Flow(fig,'lowf-tfsswt','window f2=3 max2=%g | stack axis=2 norm=n | smooth rect2=5 rect1=1'%f)
+		Grey(fig,'label2=Trace  scalebar=n title="0~%g Hz"'%f)
+	if i>0 & i<11:
+		Flow(fig,'lowf-tfsswt','window n2=%d f2=%d | stack axis=2 norm=n  | smooth rect2=5 rect1=1'%(d,f2))
+		Grey(fig,'label2=Trace  scalebar=n title="%g~%g Hz"'%(f-d*2,f))
+				
+	if i==11:		
+		Flow(fig,'lowf-tfsswt','window min2=%d max2=240 | stack axis=2 norm=n  | smooth rect2=5 rect1=1'%f)
+		Grey(fig,'label2=Trace  scalebar=n title="%g~250 Hz"'%f)		
+			
+	
+## Creating framebox for low frequency anomaly
+x=2
+y=1.2
+w=45
+w1=0.3
+
+Flow('frame1l.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1l','frame1l.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+x=120
+y=1.6
+w=45
+w1=0.3
+
+Flow('frame2l.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2l','frame2l.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+x=370
+y=0.8
+w=45
+w1=0.3
+
+Flow('frame3l.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame3l','frame3l.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+x=300
+y=1.4
+w=45
+w1=0.3
+
+Flow('frame4l.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame4l','frame4l.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+x=400
+y=1.4
+w=45
+w1=0.3
+
+Flow('frame5l.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame5l','frame5l.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+Result('s1','Fig/s1-0.vpl frame1l frame2l frame3l frame4l frame5l','Overlay')
+Result('s2','Fig/s2-0.vpl frame1l frame2l frame3l frame4l frame5l','Overlay')
+Result('s3','Fig/s3-0.vpl frame1l frame2l frame3l frame4l frame5l','Overlay')
+
+Result('ss1','Fig/ss1-0.vpl frame1l frame2l frame3l frame4l frame5l','Overlay')
+Result('ss2','Fig/ss2-0.vpl frame1l frame2l frame3l frame4l frame5l','Overlay')
+Result('ss3','Fig/ss3-0.vpl frame1l frame2l frame3l frame4l frame5l','Overlay')
+
+
+## Creating framebox1
+x=415
+y=1.05
+w=50
+w1=0.2
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+## Creating framebox2
+x=402
+y=1.35
+w=50
+w1=0.2
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=3 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+## Creating framebox3
+x=22
+y=0.95
+w=30
+w1=0.2
+
+Flow('frame3.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame3','frame3.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=4 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+## Creating framebox4
+x=58
+y=1.45
+w=40
+w1=0.2
+
+Flow('frame4.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame4','frame4.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=7 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+Plot('label1',None,
+	'''
+	box x0=5.8 y0=7.1 label="Gas?" xt=-0.5 yt=0.5 length=0.8 
+	''')
+
+Plot('label2',None,
+	'''
+	box x0=5.9 y0=4.5 label="Gas?" xt=-0.5 yt=0.5 length=0.8 
+	''')
+
+### Low frequency Karsification 3D
+matfun='lowf3d'
+############################################################
+## The following function may take a while
+############################################################
+Flow('old3d2d','old3d','put n3=1 d3=1 n2=12901 d2=1')
+Flow('tfsswt1-2d tfsswt2-2d tfsswt3-2d tfsswt4-2d tfsswt5-2d tfsswt6-2d',[os.path.join(matROOT,matfun+'.m'),'old3d2d'],
+    '''MATLABPATH=%(matlabpath)s %(matlab)s 
+    -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGET}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}');quit"
+    '''%vars(),stdin=0,stdout=-1)
+Flow('tfsswt1-2d3d','tfsswt1-2d','put n3=97 d3=1 n2=133 d2=1 o3=0')
+Grey33f('tfsswt1-2d3d','title="Spectrum 3D (0~21 Hz)" flat=y frame3=75 frame1=600 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.8 point2=0.8 screenratio=1')
+
+Flow('tfsswt1-2d3d','tfsswt1-2d','put n3=97 d3=1 n2=133 d2=1 o3=0')
+Flow('tfsswt2-2d3d','tfsswt2-2d','put n3=97 d3=1 n2=133 d2=1 o3=0')
+Flow('tfsswt3-2d3d','tfsswt3-2d','put n3=97 d3=1 n2=133 d2=1 o3=0')
+Flow('tfsswt4-2d3d','tfsswt4-2d','put n3=97 d3=1 n2=133 d2=1 o3=0')
+
+Flow('tfsswt1-2d3d-0','tfsswt1-2d3d','cp')
+Flow('tfsswt2-2d3d-0','tfsswt2-2d3d','cp')
+Flow('tfsswt3-2d3d-0','tfsswt3-2d3d','cp')
+Flow('tfsswt4-2d3d-0','tfsswt4-2d3d','cp')
+
+Flow('tfsswt2-2d3d-2','tfsswt2-2d3d','cp')
+Flow('tfsswt2-2d3d-3','tfsswt2-2d3d','cp')
+Flow('tfsswt2-2d3d-4','tfsswt2-2d3d','cp')
+
+Grey33f('tfsswt1-2d3d-0','title="Spectrum 3D (1~20 Hz)" flat=n frame3=75 frame1=600 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.8 point2=0.8 screenratio=0.8 scalebar=y')
+Grey33f('tfsswt2-2d3d-0','title="Spectrum 3D (21~40 Hz)" flat=n frame3=75 frame1=600 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.8 point2=0.8 screenratio=0.8 scalebar=y')
+Grey33f('tfsswt3-2d3d-0','title="Spectrum 3D (41~60 Hz)" flat=n frame3=75 frame1=600 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.8 point2=0.8 screenratio=0.8 scalebar=y')
+Grey33f('tfsswt4-2d3d-0','title="Spectrum 3D (61~80 Hz)" flat=n frame3=75 frame1=600 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.8 point2=0.8 screenratio=0.8 scalebar=y')
+
+Grey33f('tfsswt2-2d3d','title="Spectrum 3D (21~40 Hz)" flat=y frame3=75 frame1=600 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.5 point2=0.5 screenratio=1 scalebar=y')
+Grey33f('tfsswt2-2d3d-2','title="Spectrum 3D (21~40 Hz)" flat=y frame3=45 frame1=600 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.5 point2=0.5 screenratio=1 scalebar=y')
+Grey33f('tfsswt2-2d3d-3','title="Spectrum 3D (21~40 Hz)" flat=y frame3=75 frame1=600 frame2=50 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.5 point2=0.5 screenratio=1 scalebar=y')
+Grey33f('tfsswt2-2d3d-4','title="Spectrum 3D (21~40 Hz)" flat=y frame3=75 frame1=550 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.5 point2=0.5 screenratio=1 scalebar=y')
+
+
+Grey33f('tfsswt3-2d3d','title="Spectrum 3D (41~60 Hz)" flat=y frame3=75 frame1=600 frame2=80 color=j screenratio=0.5 label1=Time unit1=s label2=Inline label3=Crossline point1=0.8 point2=0.8 screenratio=1')
+
+
+Flow('tfsswt2-time1','tfsswt2-2d','window f1=600')
+Grey('tfsswt2-time1','title="Time slice (0.6s)" label1=Inline label2=Crossline scalebar=n clip=58446.6')
+
+Flow('tfsswt2-time2','tfsswt2-2d','window f1=550')
+Grey('tfsswt2-time2','title="Time slice (0.55s)" label1=Inline label2=Crossline scalebar=n clip=58446.6')
+
+
+## from boons2
+Grey3c0('tfsswt-1','lowf-tfsswt','title="SSWT" frame3=10',99)
+Grey3c0('tfsswt-2','lowf-tfsswt','title="SSWT" frame3=20',99)
+Grey3c0('tfsswt-3','lowf-tfsswt','title="SSWT" frame3=30',99)
+
+Grey3c0('ltft-1','ltft','title="TFL" frame3=22',99.9)
+Grey3c0('ltft-2','ltft','title="TFL" frame3=45',99.9)
+Grey3c0('ltft-3','ltft','title="TFL" frame3=90',99.9)
+
+Grey3c0('st-1','st','title="ST" frame3=24',99)
+Grey3c0('st-2','st','title="ST" frame3=48',99)
+Grey3c0('st-3','st','title="ST" frame3=96',99)
+Flow('stfts','stft','cabs')
+Grey3c0('stft-1','stfts','title="STFT" frame3=4',99)
+Grey3c0('stft-2','stfts','title="STFT" frame3=8',99)
+Grey3c0('stft-3','stfts','title="STFT" frame3=16',99)
+
+
+for i in range(16):
+	f=21+i*4
+	ii=10+i*2
+	Grey3c0('sswt-%d'%i,'lowf-tfsswt','title="F=%d" frame3=%d '%(f,ii),99)
+	
+for i in range(16):
+	f=21+i*4
+	ii=(int)(33.6+i*6.4)
+	Grey3c0('st-%d'%i,'st','title="F=%d" frame3=%d '%(f,ii),99)
+
+Flow('lowf-st','st','window n2=32 f2=32 | stack axis=2 norm=n ')
+#Grey('lowf-st','title="21~40 Hz" label2=Trace  scalebar=n')
+
+x=4
+y=1.0
+w=51
+w1=0.4
+
+Flow('framez.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('framez','framez.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=133 min2=0 max2=1.598 pad=n plotfat=12 plotcol=7 
+	wantaxis=n wanttitle=n yreverse=y scalebar=y
+	''')
+	
+
+Flow('lowf-stft-0','stft','window n2=6 f2=6 | cabs|stack axis=2 norm=n ')
+Grey0('lowf-stft-0','title="21~40 Hz" label2=Trace  scalebar=y')
+
+
+
+Flow('lowf-ltft-0','ltft','window n2=30 f2=30 | stack axis=2 norm=n ')
+Grey0('lowf-ltft-0','title="21~40 Hz" label2=Trace  scalebar=y')
+
+
+Result('lowf-stft','Fig/lowf-stft-0.vpl framez','Overlay')
+Result('lowf-ltft','Fig/lowf-ltft-0.vpl framez','Overlay')
+
+Flow('old-z-0','old.rsf','window min2=4 max2=55 min1=1.0 max1=1.4')
+Flow('lowf-st-z-0','lowf-st.rsf','window min2=4 max2=55 min1=1.0 max1=1.4')
+Flow('lowf-sswt-z-0','lowf-tfsswt2-0.rsf','window min2=4 max2=55 min1=1.0 max1=1.4')
+Flow('lowf-ltft-z-0','lowf-ltft-0','window min2=4 max2=55 min1=1.0 max1=1.4')
+Flow('lowf-stft-z-0','lowf-stft-0','window min2=4 max2=55 min1=1.0 max1=1.4')
+
+Result('old-z-0','grey title="Amplitude section" scalebar=n label2="Trace" label1=Time unit1=s unit2= parallel2=n labelsz=6 ')
+Grey0('lowf-st-z-0','title="ST" label2="Trace" label1=Time unit1=s unit2= parallel2=n labelsz=6 ')
+Grey0('lowf-sswt-z-0','title="SSWT" label2="Trace" label1=Time unit1=s unit2= parallel2=n labelsz=6 ')
+Grey0('lowf-stft-z-0','title="STFT" label2="Trace" label1=Time unit1=s unit2= parallel2=n labelsz=6 ')
+Grey0('lowf-ltft-z-0','title="LTFT" label2="Trace" label1=Time unit1=s unit2= parallel2=n labelsz=6 ')
+
+Plot('label1',None,
+	'''
+	box x0=4.5 y0=4.8 label="Karsts" xt=0.5 yt=-0.5 length=2.5 
+	''')
+Plot('label2',None,
+	'''
+	box x0=9.5 y0=4.8 label="Karsts" xt=-0.5 yt=-0.5 length=2.5
+	''')
+Result('old-z','Fig/old-z-0.vpl label1 label2','Overlay')	
+Result('lowf-st-z','Fig/lowf-st-z-0.vpl label1 label2','Overlay')
+Result('lowf-sswt-z','Fig/lowf-sswt-z-0.vpl label1 label2','Overlay')
+Result('lowf-stft-z','Fig/lowf-stft-z-0.vpl label1 label2','Overlay')
+Result('lowf-ltft-z','Fig/lowf-ltft-z-0.vpl label1 label2','Overlay')
+
+
+
+
+
+
+Greytf('tf-s','st','title="ST" screenratio=1.4 min1=0 max1=1.6 min2=0 max2=175 scalebar=y')
+Greytf('tf-ss','lowf-tfsswt','title="SSWT" screenratio=1.4 min1=0 max1=1.6 min2=0 max2=175  scalebar=y minval=0 maxval=1.0')
+
+Flow('stft-a','stft','cabs')
+Greytf('tf-stft','stft-a','title="STFT" screenratio=1.4 min1=0 max1=1.6 min2=0 max2=175  scalebar=y')
+Greytf0('tf-ltft','ltft','title="LTFT" screenratio=1.4 min1=0 max1=1.6 min2=0 max2=175 pclip=98 scalebar=y')
+
+
+End()
+

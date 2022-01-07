@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
          if (NULL != mask) {
               sf_floatread(kk,n1,mask);
               for (i=0; i < n1; i++) {
-      	          known[i] = (bool) (cabsf(kk[i]) != 0.);
+      	          known[i] = (bool) (fabsf(kk[i]) != 0.);
 	          }
          }
 	

@@ -1,0 +1,116 @@
+from rsf.proj import*
+
+def Grey(data,other): 
+	Result(data,'window f2=3 |grey label2=Trace  unit2="" clip=0.8 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.2 %s '%other)
+def Greyplot(data,other): 
+	Plot(data,'window f2=3 |grey label2=Trace  unit2="" clip=0.8 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.2 %s '%other)
+def Graph(data,other):
+	Result(data,'graph label1="Iter #no" label2="SNR" unit2=dB unit1="" title="" wherexlabel=b wheretitle=t %s' %other)
+
+Flow('vrms',None,
+     'math d1=0.004 n1=1001 o1=0 output="4500" ')
+
+Flow('synt',None,
+     '''
+     spike d1=0.004 n1=1001 |
+     noise rep=y seed=2006 |
+     cut n1=100 | 
+     bandpass flo=4 fhi=20 |
+     spray axis=2 n=256 d=12.5 o=-1600 label=Offset unit=m 
+     ''')
+
+Flow('hyper','synt vrms',
+     'inmo velocity=${SOURCES[1]} half=y | noise seed=2007 var=1e-10 | scale axis=2 | put o2=0 d2=1 | window n1=501')
+Grey('hyper','')
+
+Flow('hyper-zero','hyper','zerotrace j=2 l=1')
+Grey('hyper-zero','')
+
+Flow('mask-t',None,'math n1=1 n2=256 d2=1 output="1" | zerotrace j=2 l=1')
+Flow('mask','mask-t','window |spray axis=1 n=501 d=0.004 o=0')
+Grey('mask','color=j')
+Flow('mask1','mask','math output="1-input"')
+
+Flow('fk-hyper-zero','hyper-zero','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=512')
+Flow('fk-hyper','hyper','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=512')
+Grey('fk-hyper-zero','allpos=y color=j clip=255 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5')
+Grey('fk-hyper','allpos=y color=j clip=255 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5')
+
+
+## parameters
+ddip=3
+fhi=30
+r1=10
+r2=10
+padno=256
+thr0=8
+niter=200
+mode='s'
+## POCS (thresholding in the seislet domain)
+## define forward and backward seislet transform strings####
+forw = 'seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b'
+back = 'seislet dip=${SOURCES[1]} inv=y eps=0.1 type=b'
+
+sig='hyper-zero'
+data_pocs = sig
+plots_pocs = [sig]
+diffsa_pocs =[]
+diffsb_pocs =[]
+diffs_pocs =[]
+snrs_pocs =[]
+dips_pocs=[]
+datas_pocs=[]
+snrs_pocs=[]
+## Create mask for seislet transform
+Flow('dipmask','hyper','math output=1 | pad n2=%d'%(padno))
+
+for iter in range(niter): 
+    thr=thr0+((8.-thr0)*iter*iter/((niter-1)*(niter-1)))
+    if iter % ddip ==0 :
+      dip_pocs='dip-pocs%d'%int(iter/ddip)
+      Flow(dip_pocs,[data_pocs,'dipmask'],
+      		'''
+      	bandpass fhi=%d | pad n2=%d | 
+      	dip mask=${SOURCES[1]} rect1=%d rect2=%d liter=30
+      	'''%(fhi,padno,r1,r2))
+      dips_pocs.append(dip_pocs)
+      Greyplot(dip_pocs,'clip=1 color=j')		
+    old_pocs = data_pocs
+    data_pocs = 'data-pocs%d' % iter
+    diffa_pocs = 'diffa-pocs%d'%iter
+    diffb_pocs = 'diffb-pocs%d'%iter
+    diff_pocs = 'diff-pocs%d' %iter
+    snr_pocs = 'snr-pocs%d' %iter
+    # 1. Forward seislet
+    # 2. Multiply by seislet mask
+    # 3. Inverse seislet
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data_pocs,[old_pocs,dip_pocs,'mask1',sig],
+         '''
+         %s | threshold1 ifperc=1 mode=%s thr=%g | 
+         %s | mul ${SOURCES[2]}  | 
+         add ${SOURCES[3]}
+         ''' % (forw,mode,thr,back))
+    Flow(diff_pocs,['hyper',data_pocs],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(snr_pocs,['hyper',diff_pocs],'snr2 noise=${SOURCES[1]}')
+    
+    Greyplot(data_pocs,'title="Iteration %d"' % (iter+1))
+    datas_pocs.append(data_pocs) 	
+    snrs_pocs.append(snr_pocs)
+Flow('snrs-pocs',snrs_pocs,'cat axis=1 ${SOURCES[1:%d]}'%(len(snrs_pocs)))    
+Plot('dips-pocs',dips_pocs,'Movie')    
+Plot('datas-pocs',datas_pocs,'Movie')
+
+Flow('hyper-seis',data_pocs,'cp')
+Flow('hyper-seis-dif','hyper hyper-seis','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('hyper-seis','')
+Grey('hyper-seis-dif','')
+
+Flow('fk-hyper-seis','hyper-seis','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window f1=512')
+Grey('fk-hyper-seis','allpos=y color=j clip=255 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5')
+
+Graph('snrs-pocs','')
+Result(dip_pocs,dip_pocs,'Overlay')
+End()

@@ -1,0 +1,151 @@
+from rsf.proj import *
+
+n1 = 501
+d1 = .008
+
+# padding
+pad = 20
+
+# create reflectivity for matching trace
+Flow('refl-m',None,
+   '''
+   sigmoid n1=%i n2=%i d1=%g d2=%g reflectivity=y |
+   window n2=1 f2=%i | 
+   scale axis=1 | scale dscale=2
+   '''%(n1,n1,d1,d1,n1/2))
+# generate shifts
+# how many times will it cycle
+ncycles = 1
+# calculate period
+period = (n1-1)*d1/(2*3.14159*ncycles)
+# maximum shift
+shmx = 20
+# make the shifts
+Flow('shifts-ideal','refl-m','math output="%g*sin(x1/%g)"'%(shmx,period))
+# apply shifts to reflectivity to create reference reflectivity
+Flow('refl-r','refl-m shifts-ideal','dtw-apply shifts=${SOURCES[1]}')
+# convolve the reflectivity to generate syntetic traces, add noise
+noiserng = .7
+# ricker wavelet frequency
+freq  = 20
+
+trlst = ['m','r']
+titlest = ['Matching','Reference']
+dashlst = [0,1]
+plotcol = [1,2]
+scrht = 6
+scrwd = 14
+titlesz = 6.5
+labelsz = 5
+for i in range(len(trlst)):
+   item = trlst[i]
+   Flow('trace-%s'%item,'refl-%s'%item,'pad beg1=%i end1=%i | ricker1 frequency=%g| noise range=%g seed=2021 | bandpass fhi=40'%(pad,pad,freq,noiserng))
+#   Plot('trace-%s'%item,'window f1=%i n1=%i|graph title="%s Trace" '%(pad,n1,titlest[i]))
+   Plot('trace-%s'%item,
+      '''
+      window f1=%i n1=%i|
+      graph title= label2=%s 
+      unit2= min2=-1.1 max2=1.1
+      min1=%g max1=%g
+      '''%(pad,n1,titlest[i],d1,(n1-1)*d1))
+   Result('dtw-trace-%s'%item,'trace-%s'%item,
+      '''
+      window f1=%i n1=%i|
+      graph title=%s 
+      unit2= min2=-1.3 max2=1.3
+      min1=%g max1=%g screenht=%g screenwd=%g titlesz=%g  labelsz=%g wheretitle=top label2=Amplitude
+      '''%(pad,n1,titlest[i],d1,(n1-1)*d1,scrht,scrwd,titlesz,labelsz))
+   Plot('refl-%s'%item,'graph title="%s Reflectivity" '%(titlest[i]))
+   
+# overlay traces
+Result('dtw-ex-traces',['trace-%s'%trlst[1],'trace-%s'%trlst[0]],'OverUnderAniso')
+
+# dtw parameters
+maxshift = shmx * 1.5
+strain = .25
+exp = 2
+# warp the traces back to recover shifts
+Flow('warped accum error shifts','trace-m trace-r',
+   '''
+   dtw 
+   exp=%g strain=%g maxshift=%i 
+   accum=${TARGETS[1]} 
+   error=${TARGETS[2]} 
+   shifts=${TARGETS[3]} 
+   ref=${SOURCES[1]}
+   '''%(exp,strain,maxshift))
+
+# plot results
+acumbias = 14.9
+crowd1 = .759
+screenratio = .72
+barwidth = .275
+Result('dtw-error','error',
+   '''
+   window n2=%i f2=%i |
+   put unit1=s d1=%g o1=%g unit2=s d2=%g label2=Time|
+   grey color=j allpos=y  title="Matching and Reference Signal Alignment Errors"  
+   scalebar=y barwidth=%g barlabel="Alignment Error" barunit="ampl\^2\_" wheretitle=top wherexlabel=bottom
+   screenht=%g screenwd=%g titlesz=%g  labelsz=%g 
+   '''%(n1,pad,d1,-1*maxshift*d1,d1,barwidth,scrht,scrwd,titlesz,labelsz))
+
+Plot('error',
+   '''
+   window n2=%i f2=%i |
+   put unit1=s d1=%g o1=%g unit2=s d2=%g label2=Time|
+   grey color=j allpos=y  title="Matching and Reference Signal Alignment Error" crowd1=%g screenratio=%g
+   scalebar=y barwidth=%g barlabel="Alignment Errors" barunit="ampl\^2\_" wheretitle=top wherexlabel=bottom
+   '''%(n1,pad,d1,-1*maxshift*d1,d1,crowd1,screenratio,barwidth))
+
+Plot('accum-a','accum',
+   '''
+   window n2=%i f2=%i |
+   put unit1=s d1=%g o1=%g unit2=s d2=%g label2=Time|
+   grey color=j allpos=y bias=%g title="Matching and Reference Signal Accumulated Errors"  
+   scalebar=y barwidth=%g barlabel="Accumulated Error" barunit="ampl\^2\_ samples" wheretitle=top wherexlabel=bottom
+   screenht=%g screenwd=%g titlesz=%g  labelsz=%g 
+   '''%(n1,pad,d1,-1*maxshift*d1,d1,acumbias,barwidth,scrht,scrwd,titlesz,labelsz))
+
+Plot('shifts-a','shifts',
+   '''
+   graph title= plotfat=6
+   max2=%g min2=%g max1=%g min1=%g plotcol=1
+   n1tic=0 n2tic=0 label1= unit1= label2= unit2= 
+   scalebar=y barwidth=%g barlabel=  wheretitle=top wherexlabel=bottom
+   screenht=%g screenwd=%g titlesz=%g  labelsz=%g 
+   '''%(-1*maxshift,maxshift,(n1-1)*d1,d1,barwidth,scrht,scrwd,titlesz,labelsz))
+
+Plot('shifts-ideal-a','shifts-ideal',
+   '''
+   graph title= dash=1 plotcol=4 plotfat=6
+   max2=%g min2=%g max1=%g min1=%g
+   n1tic=0 n2tic=0 label1= unit1= label2= unit2=  
+   scalebar=y barwidth=%g barlabel=  wheretitle=top wherexlabel=bottom
+   screenht=%g screenwd=%g titlesz=%g  labelsz=%g 
+   '''%(-1*maxshift,maxshift,(n1-1)*d1,d1,barwidth,scrht,scrwd,titlesz,labelsz))
+
+Plot('accum',
+   '''
+   window n2=%i f2=%i |
+   put unit1=s d1=%g o1=%g unit2=s d2=%g label2=Time|
+   grey color=j allpos=y bias=%g title="Matching and Reference Signal Accumulated Error" crowd1=%g screenratio=%g
+   scalebar=y barwidth=%g barlabel="Accumulated Errors" barunit="ampl\^2\_ spls" wheretitle=top wherexlabel=bottom
+   '''%(n1,pad,d1,-1*maxshift*d1,d1,acumbias,crowd1,screenratio,barwidth))
+Plot('shifts',
+   '''
+   graph title= plotfat=10
+   max2=%g min2=%g max1=%g min1=%g plotcol=1
+   n1tic=0 n2tic=0 label1= unit1= label2= unit2= crowd1=%g screenratio=%g
+   scalebar=y barwidth=%g barlabel=  wheretitle=top wherexlabel=bottom
+   '''%(-1*maxshift,maxshift,(n1-1)*d1,d1,crowd1,screenratio,barwidth))
+Plot('shifts-ideal',
+   '''
+   graph title= dash=1 plotcol=4 plotfat=10
+   max2=%g min2=%g max1=%g min1=%g
+   n1tic=0 n2tic=0 label1= unit1= label2= unit2= crowd1=%g screenratio=%g
+   scalebar=y barwidth=%g barlabel=  wheretitle=top wherexlabel=bottom
+   '''%(-1*maxshift,maxshift,(n1-1)*d1,d1,crowd1,screenratio,barwidth))
+Plot('accum-sh','accum shifts shifts-ideal','Overlay')
+Result('dtw-accum-sh','accum-a shifts-a shifts-ideal-a','Overlay')
+Result('dtw-er-accum-sh','error accum-sh','OverUnderAniso')
+End()

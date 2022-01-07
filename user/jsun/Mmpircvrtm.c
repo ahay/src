@@ -85,8 +85,8 @@ int main(int argc, char* argv[])
 
     /*Data*/
     sf_complex ***wvfld;
-    sf_complex ***record, **tmprec, **img, **imgsum, ***imgs;
-    sf_complex ***record2; /*data sorted for receiver mig*/
+    sf_complex ***record, **tmprec, **img, **imgsum=NULL, ***imgs=NULL;
+    sf_complex ***record2=NULL; /*data sorted for receiver mig*/
     float **sill;
 
     /*source/shots*/
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 
     /* receiver migration */
     bool rmig; /* receiver domain migration */
-    int rcvint, rcvbgn, rcvend, ir, rcvnum, rcvnum0;
+    int rcvint, rcvbgn, rcvend, ir, rcvnum=0, rcvnum0=0;
     sf_file Frcd2;
     bool mute; /*muting in the receiver domain*/
     float vref; /*reference velocity for muting*/

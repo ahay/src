@@ -46,7 +46,7 @@ void t2warp_init(int m1 /* input trace length */,
 	t2[i2] = sqrtf(t);
     } 
 
-    sf_stretch4_define (mo,t2);
+    sf_stretch4_define (mo,t2,false);
 
     free(t2);
 }

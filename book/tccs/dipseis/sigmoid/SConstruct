@@ -1,0 +1,153 @@
+from rsf.proj import* 
+from rsf.prog import RSFROOT
+
+padno=256 #padding for seislet tranform
+r1=10  		#smoothing radius
+r2=10  		#smoothing radius
+n1=200		#number of temporal samples
+n2=256 		#trace numbers
+
+## module defining
+def Grey(data,other): 
+	Result(data,
+	'''
+	grey label2=Trace unit2=""  labelfat=4 font=2 labelsz=10 titlefat=4 label1=Time unit1="s" 
+	title="" wherexlabel=b wheretitle=t clip=0.5 %s'''%other)
+
+def Greydip(data,other): 
+	Result(data,
+	'''
+	grey label2=Trace unit2=""  labelfat=4 font=2 labelsz=10 titlefat=4 label1=Time unit1="s" 
+	title="" wherexlabel=b wheretitle=t color=j clip=1 %s '''%other)
+##########################################
+#    Make synthetic test
+##########################################
+#############################################################################
+Flow('sig',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=1 n2=256 |
+     smooth rect1=3 diff1=1 | smooth rect1=3 |
+     put label2=Distance | scale axis=2
+     ''')
+#Flow('sign','sig','noise var=0.01 seed=201314')
+
+Flow('dip0','sig','bandpass fhi=60 | dip rect1=%d rect2=%d'%(r1,r2))
+Flow('slet0','sig dip0','seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+
+Flow('dip1','dip0','smooth rect1=50 rect2=50')
+Flow('dip2','dip0','smooth rect1=100 rect2=100')
+Flow('dip3','dip0','smooth rect1=250 rect2=250')
+
+Flow('slet1','sig dip1','seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+Flow('slet2','sig dip2','seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+Flow('slet3','sig dip3','seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b')
+
+Grey('sig','')
+Greydip('dip0','scalebar=y')
+Grey('slet0','')
+Grey('slet1','')
+Grey('slet2','')
+Grey('slet3','')
+Greydip('dip1','scalebar=y')
+Greydip('dip2','scalebar=y')
+Greydip('dip3','scalebar=y')
+
+# sorting the coefficients
+Flow('scoef0','slet0',
+	'''
+	put n1=51200 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort ''')
+Flow('scoef1','slet1',
+	'''
+	put n1=51200 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort ''')
+Flow('scoef2','slet2',
+	'''
+	put n1=51200 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort ''')
+Flow('scoef3','slet3',
+	'''
+	put n1=51200 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort ''')
+
+#Flow('dctcoef','dct','put d1=1 | sort | window n1=1025024')
+
+
+
+#symbol="o*ps" 
+#Plot('sigcoef-dct','sletcoef wletcoef ftcoef dctcoef',
+#'''
+#cat axis=2 ${SOURCES[1:4]} |
+#window n1=350000 | scale axis=1 | 
+#math output="20*log(input)/log(10)"|
+#graph dash=1,0,2 label1=n label2="a\_n\^" 
+#unit2="dB" wanttitle=n''')
+
+
+
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun/'
+matfun = 'Curve'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+
+n1=200
+n2=256
+
+
+############################################################
+## with parameter
+############################################################
+Flow('sig-curv-c-t sig-curv-img-t',[os.path.join(matROOT,matfun+'.m'),'sig'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}',%(n1)d,%(n2)d,'${TARGETS[0]}','${TARGETS[1]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+Flow('curvc','sig-curv-c-t',
+	'''put n1=54791 o1=1 d1=1 n2=1 
+	unit1= unit2= | sort  | window n1=25000 | scale axis=1 | math output="(input+0.05)"|scale axis=1''')
+
+	
+# transformed domain coefficients decaying diagram
+Plot('sigcoef','scoef0 scoef1 scoef2 scoef3 curvc',
+'''
+cat axis=2 ${SOURCES[1:4]} |
+window n1=25000 |cat axis=2 ${SOURCES[4]} | scale axis=1 | 
+math output="20*log(input)/log(10)"|
+graph dash=0,0,0,0 label1=n label2="a\_n\^"  
+unit2="dB" wanttitle=n  labelfat=4 font=2 labelsz=10 titlefat=4''')
+
+# Making frames
+Plot('label0',None,
+	'''
+	box x0=3.4 y0=5 label="SR=0" xt=0.5 yt=0.5
+	''')
+Plot('label1',None,
+	'''
+	box x0=5.1 y0=4.5 label="SR=50" xt=0.5 yt=0.5 
+	''') # xt,yt relative position 0.5
+Plot('label2',None, 
+	'''
+	box x0=7.8 y0=4 label="SR=100" xt=0.5 yt=0.5
+	''')
+Plot('label3',None, 
+	'''
+	box x0=11 y0=4 label="SR=250" xt=0.5 yt=0.5
+	''')
+Plot('label4',None, 
+	'''
+	box x0=6.1 y0=6.2 label="Curvelet" xt=0.5 yt=0.5
+	''')	
+Result('sigcoef','sigcoef label0 label1 label2 label3 label4','Overlay')
+#Result('sigcoef-dct','sigcoef-dct label0 label1 label2 label3',
+#	'''Overlay''')
+End()

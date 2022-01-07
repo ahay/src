@@ -1,0 +1,10 @@
+from rsf.tex import*
+import os, sys
+os.environ['PSTEXPENOPTS']='color=y fat=3 fatmult=1.5 serifs=n'
+
+env=Environment()
+if sys.platform == 'darwin':
+    env['ENV']['PATH'] = ':'.join(['/opt/local/bin',env['ENV']['PATH']])
+
+
+End(options='', hires='ALL', use='amsmath')

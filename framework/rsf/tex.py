@@ -16,8 +16,11 @@
 
 from __future__ import print_function, division, absolute_import
 import os, re, glob, string, types, pwd, shutil
-import io, token, tokenize, cgi, sys, keyword
-
+import io, token, tokenize, sys, keyword
+if sys.version_info[:2] >= (3, 2):
+    from html import escape
+else:
+    from cgi import escape
 import rsf.conf, rsf.path, rsf.latex2wiki
 import rsf.doc
 import rsf.prog
@@ -73,6 +76,7 @@ except:
 
 vpsuffix  = '.vpl'
 pssuffix  = '.eps'
+pdsuffix  = '.pdf'
 itype = os.environ.get('IMAGE_TYPE','png')
 
 rerun = re.compile(r'\bRerun')
@@ -625,7 +629,7 @@ def colorize(target=None,source=None,env=None):
 
           # send text
           out.write('<span class="%s">' % style)
-          out.write(cgi.escape(toktext))
+          out.write(escape(toktext))
           out.write('</span>')
 
      try:
@@ -750,35 +754,35 @@ Latify = Builder(action = Action(latify,
 Pdf = Builder(action=Action(latex2dvi,varlist=['latex','lclass',
                                                'options','resdir']),
               source_scanner=LaTeXS,emitter=latex_emit,
-              src_suffix='.ltx',suffix='.pdf')
+              src_suffix='.ltx',suffix=pdsuffix)
 Wiki = Builder(action=Action(latex2mediawiki),src_suffix='.ltx',suffix='.wiki')
 Figs = Builder(action=Action(copyfigs),
-               src_suffix='.pdf',emitter=listoffigs)
+               src_suffix=pdsuffix,emitter=listoffigs)
 
 if pdfread:
     Read = Builder(action = pdfread + " $SOURCES",
-                   src_suffix='.pdf',suffix='.read')
+                   src_suffix=pdsuffix,suffix='.read')
     Print = Builder(action =
                     'cat $SOURCES | %s -toPostScript | lpr' % pdfread,
-                    src_suffix='.pdf',suffix='.print')
+                    src_suffix=pdsuffix,suffix='.print')
 
 Build = Builder(action = Action(pstexpen),
                 src_suffix=vpsuffix,suffix=pssuffix)
 
 if epstopdf:
     PDFBuild = Builder(action = Action(eps2pdf),
-		       src_suffix=pssuffix,suffix='.pdf')
+		       src_suffix=pssuffix,suffix=pdsuffix)
 
 if fig2dev:
     XFig = Builder(action = fig2dev + ' -L pdf -p dummy $SOURCES $TARGETS',
-                   suffix='.pdf',src_suffix='.fig')
+                   suffix=pdsuffix,src_suffix='.fig')
 
 PNGBuild = Builder(action = Action(eps2png),
                    suffix='.'+itype,src_suffix=pssuffix)
 
 if pdftops:
     PSBuild = Builder(action = pdftops + ' -eps $SOURCE $TARGET',
-                      suffix=pssuffix,src_suffix='.pdf')
+                      suffix=pssuffix,src_suffix=pdsuffix)
 elif acroread and ps2eps:
     gs = WhereIs('gs')
     if gs:
@@ -786,15 +790,15 @@ elif acroread and ps2eps:
                           ' junk.ps && %s -q -sDEVICE=epswrite -sOutputFile=$TARGET'
                           ' -r600 -dNOPAUSE -dBATCH junk.ps && rm junk.ps' % \
                           (acroread,gs),
-                          suffix=pssuffix,src_suffix='.pdf')
+                          suffix=pssuffix,src_suffix=pdsuffix)
     else:
         PSBuild = Builder(action = '%s -toPostScript -size ledger -pairs $SOURCE'
                           ' junk.ps && %s junk.ps $TARGET && rm junk.ps' % \
                           (acroread,ps2eps),
-                          suffix=pssuffix,src_suffix='.pdf')
+                          suffix=pssuffix,src_suffix=pdsuffix)
 elif pdf2ps:
     PSBuild = Builder(action = pdf2ps + ' $SOURCE $TARGET',
-                      suffix=pssuffix,src_suffix='.pdf')
+                      suffix=pssuffix,src_suffix=pdsuffix)
 
 if latex2html:
     l2hdir = os.environ.get('LATEX2HTML','')
@@ -821,7 +825,7 @@ if latex2html:
 
 if sage:
     Sage = Builder(action = sage + ' $SOURCE && mv junk_sage.pdf $TARGET',
-                   suffix='.pdf',src_suffix='.sage',emitter=sage_emit)
+                   suffix=pdsuffix,src_suffix='.sage',emitter=sage_emit)
 
 if epstopdf:
     if mathematica:
@@ -829,7 +833,7 @@ if epstopdf:
                        '< $SOURCE >&2  > /dev/null && '
                        '%s --hires junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
                        (mathematica,epstopdf),
-                       suffix='.pdf',src_suffix='.ma')
+                       suffix=pdsuffix,src_suffix='.ma')
     if matlab:
         matlabpath = os.environ.get('MATLABPATH')
         if matlabpath:
@@ -840,16 +844,16 @@ if epstopdf:
                          '< $SOURCE >&2  > /dev/null && '
                          '%s junk_ml.eps -o=$TARGET && rm junk_ml.eps' %
                          (matlabpath,matlab,epstopdf),
-                         suffix='.pdf',src_suffix='.ml')
+                         suffix=pdsuffix,src_suffix='.ml')
     if gnuplot:
         Gnuplot = Builder(action = '%s $SOURCE > junk_gp.eps && '
                           '%s junk_gp.eps -o=$TARGET && rm junk_gp.eps' %
                           (gnuplot,epstopdf),
-                          suffix='.pdf',src_suffix='.gp')
+                          suffix=pdsuffix,src_suffix='.gp')
 
     if haspylab:
         Pylab = Builder(action = Action(pylab),
-                        suffix='.pdf',src_suffix='.py')
+                        suffix=pdsuffix,src_suffix='.py')
 
 Color = Builder(action = Action(colorize),suffix='.html')
 
@@ -951,7 +955,7 @@ class TeXPaper(Environment):
         # check figure repository
         vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+))$',
                         self.figdir+'/\\1',os.path.abspath(topdir))
-        for suffix in (vpsuffix,pssuffix):
+        for suffix in (vpsuffix,pssuffix,pdsuffix):
             for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,suffix)):
                 eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+suffix+'$',
                                   r'%s/\1/%s/\2%s' % (topdir,resdir,pssuffix),
@@ -962,7 +966,7 @@ class TeXPaper(Environment):
             vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
                             self.figdir+'/\\1',
                             os.path.abspath(os.path.realpath(pdir)))
-            for suffix in (vpsuffix,pssuffix,'.pdf'):
+            for suffix in (vpsuffix,pssuffix,pdsuffix):
                 for fig in glob.glob('%s/*%s' % (vpldir,suffix)):
                     eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+suffix+'$',
                                       r'%s/%s/\2%s' % (pdir,resdir,pssuffix),
@@ -973,14 +977,26 @@ class TeXPaper(Environment):
             resdir2 = os.path.join(self.docdir,os.path.dirname(ps))
             if fig[-3:] == vpsuffix[-3:]:
                 self.Build(ps,fig)
-            else:
+            elif fig[-3:] == pssuffix[-3:]:
                 self.InstallAs(ps,fig)
-            if epstopdf:
-                pdf = re.sub(pssuffix+'$','.pdf',ps)
+
+            hasps = True
+            pdf = re.sub(pssuffix+'$',pdsuffix,ps)
+            if fig[-3:] == pdsuffix[-3:]:
+                self.InstallAs(pdf,fig)
+                erfigs.append(pdf)
+                self.Install2(resdir2,pdf)
+                
+                if (acroread and ps2eps) or pdf2ps:
+                    self.PSBuild(ps,fig)
+                else:
+                    hasps = False
+            elif epstopdf:
                 self.PDFBuild(pdf,ps)
                 erfigs.append(pdf)
                 self.Install2(resdir2,pdf)
-            if latex2html and pstoimg:
+                
+            if hasps and latex2html and pstoimg:
                 png = re.sub(pssuffix+'$','.'+itype,ps)
                 self.PNGBuild(png,ps)
                 self.imgs.append(png)
@@ -1101,9 +1117,9 @@ class TeXPaper(Environment):
                           include=include,resdir=resdir)
         pdf = self.Pdf(target=paper,source=paper+'.ltx',
                        lclass=lclass,options=options,resdir=resdir)
-        self.Figs(target=paper+'.figs',source=paper+'.pdf')
+        self.Figs(target=paper+'.figs',source=paper+pdsuffix)
         wiki = self.Wiki(target=paper,source=[ltx,pdf])
-        pdfinstall = self.Install(self.docdir,paper+'.pdf')
+        pdfinstall = self.Install(self.docdir,paper+pdsuffix)
         self.Alias(paper+'.install',pdfinstall)
         if pdfread:
             self.Alias(paper+'.read',self.Read(paper))
@@ -1136,7 +1152,7 @@ class TeXPaper(Environment):
             source = paper
         if os.path.isfile(source+'.tex'):
             self.Paper(*(paper,source), **kw)
-            self.Alias('pdf',paper+'.pdf')
+            self.Alias('pdf',paper+pdsuffix)
             self.Alias('wiki',paper+'.wiki')
             self.Alias('read',paper+'.read')
             self.Alias('print',paper+'.print')

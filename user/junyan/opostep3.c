@@ -38,13 +38,13 @@ static float ***uuxx, ***uuyy, ***uuzz, ***uuxy, ***uuxz, ***uuyz,
 				 ***uxxxx, ***uyyyy, ***uzzzz, ***uxxxy, ***uxxxz, ***uxyyy, 
 				 ***uyyyz, ***uxzzz, ***uyzzz, ***uxxyy, ***uxxzz, ***uyyzz,
 				 ***uxxyz, ***uxyyz, ***uxyzz, ***curtmp, **wave;
-static int nx, ny, nz, nk, nx2, ny2, nz2, m2, nxyzb2, opt;
+static int nx, ny, nz, nk, nx2, ny2, nz2, m2, nxyzb2;
 
 
 void lowrank_init3(int nzb, int nxb, int nyb, int nkxyz, int nkzz, int nkxx, int nkyy, int m, int nxyzb, float **cxxl, float **cxxr, float **cyyl, float **cyyr, float **czzl, float **czzr, float **cxyl, float **cxyr, float **cxzl, float **cxzr, float **cyzl, float **cyzr, float **cxxxxl, float **cxxxxr, float **cyyyyl, float **cyyyyr, float **czzzzl, float **czzzzr, float **cxxxyl, float **cxxxyr, float **cxxxzl, float **cxxxzr, float **cxyyyl, float **cxyyyr, float **cyyyzl, float **cyyyzr, float **cxzzzl, float **cxzzzr, float **cyzzzl, float **cyzzzr, float **cxxyyl, float **cxxyyr, float **cxxzzl, float **cxxzzr, float **cyyzzl, float **cyyzzr, float **cxxyzl, float **cxxyzr, float **cxyyzl, float **cxyyzr, float **cxyzzl, float **cxyzzr)
 /*< 3D lowrank initiazation >*/
 {
-	int ix, iy, iz, ik;
+	int ix, iz, ik;
 
     nz = nzb;
 	ny = nyb;

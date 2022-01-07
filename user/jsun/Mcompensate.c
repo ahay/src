@@ -25,8 +25,8 @@
 int main(int argc, char* argv[])
 {
     bool verb,cmplx;
-    int it,i; /* index variables */
-    int nt,nz,nx,nzx,nth;
+    int i; /* index variables */
+    int nz,nx,nzx;
     float perc,vmax,eps;
 
     /* I/O arrays*/
@@ -55,16 +55,17 @@ int main(int argc, char* argv[])
     /* Read/Write axes */
     az = sf_iaxa(Fnum,1); nz = sf_n(az); 
     ax = sf_iaxa(Fnum,2); nx = sf_n(ax); 
-    at = sf_iaxa(Fnum,3); nt = sf_n(at); 
+    at = sf_iaxa(Fnum,3);
 
     sf_oaxa(Fres,az,1); 
     sf_oaxa(Fres,ax,2); 
     sf_oaxa(Fres,at,3);
     
 #ifdef _OPENMP
+    int nth;
 #pragma omp parallel
     {
-      nth = omp_get_num_threads();
+        nth = omp_get_num_threads();
     }
     if (verb) sf_warning(">>>> Using %d threads <<<<<", nth);
 #endif

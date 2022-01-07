@@ -1,0 +1,82 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+def Grey(data,other): 
+	Result(data,'real | grey clip=0.7 max1=2 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Grey1(data,other): 
+	Result(data,'math output="abs(input)" | real | grey max1=2 label2=Trace unit2="" label1=Time unit1="s" wherexlabel=t allpos=y color=j title= scalebar=y unit2= %s'%other)
+
+def Grey2(data,other): 
+	Result(data,'grey max1=2 clip=0.7 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Grey3(data,other): 
+	Result(data,'put d1=0.004 o1=0 d2=1 o2=0 | grey max1=2 clip=0.7 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Greyzoom(data,other): 
+	Result(data,'put d1=0.002 d2=1 o1=1.5 o2=0 | grey minval=-0.3 maxval=0.3 clip=0.3 label2=Trace color=g unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n  %s'%other)
+
+
+###########################################################################
+## Four horizontal events
+###########################################################################
+Flow('synth1',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=1 k1=110 p2=0 mag=1 |
+     ricker1 frequency=40  
+     ''')
+
+Flow('synth2',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=1 k1=220 p2=0 mag=1 |
+     ricker1 frequency=30 
+     ''')
+
+Flow('synth3',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=1 k1=330 p2=0 mag=1 |
+     ricker1 frequency=20 
+     ''')
+
+Flow('synth4',None,
+     '''
+     spike n1=512 n2=256 d2=1 o2=0 label2=Trace unit2=
+     nsp=1 k1=440 p2=0 mag=1 |
+     ricker1 frequency=10 
+     ''')
+Flow('synth','synth1 synth2 synth3 synth4','add scale=1,1,1,1 ${SOURCES[1:4]} | window n2=200  | scale axis=2 | noise seed=2008 var=0.1')
+#Plot('synth','grey clip=0.9 title="Input Data"')
+Grey2('synth','title="Input data"')
+
+########################################################################
+# INITIALIZATION
+########################################################################
+n1=512
+n2=200
+
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Freeusp'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('simf1 simf2 simf3 simf4',[os.path.join(matROOT,matfun+'.m'),'synth'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}',%(n1)d,%(n2)d,'${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Grey3('simf1','title="Component 1"')
+Grey3('simf2','title="Component 2"')
+Grey3('simf3','title="Component 3"')
+Grey3('simf4','title="Component 4"')
+
+End()

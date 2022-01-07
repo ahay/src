@@ -603,20 +603,27 @@ namespace RVL {
 
     }
 
-    FunctionalEvaluation(const FunctionalEvaluation<Scalar> & ev)
-      : wx(ev.wx), f(ev.fref.clone()), fref(ev.fref), 
-	applied(false),
-	grad(fref.getDomain()),
-	cg(grad), gapplied(false), gnormapplied(false),
-	hess(*this) { grad.zero(); }
-
-    virtual ~FunctionalEvaluation() { 
-      try { 
-	if (f) delete f;
+    FunctionalEvaluation(const FunctionalEvaluation<Scalar> &ev)
+        : wx(ev.wx), f(ev.fref.clone()), fref(ev.fref),
+          applied(false),
+          grad(fref.getDomain()),
+          cg(grad), gapplied(false), gnormapplied(false),
+          hess(*this) { grad.zero(); }
+#if __cplusplus >= 201103L // We are using C++11 or a later version
+    virtual ~FunctionalEvaluation() noexcept(false)
+#else
+    virtual ~FunctionalEvaluation()
+#endif
+    {
+      try
+      {
+        if (f)
+          delete f;
       }
-      catch (RVLException & e) {
-	e<<"\ncalled from FunctionEvaluation destructor\n";
-	throw e;
+      catch (RVLException &e)
+      {
+        e << "\ncalled from FunctionEvaluation destructor\n";
+        throw e;
       }
     }
 

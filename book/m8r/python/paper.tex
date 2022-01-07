@@ -1,0 +1,63 @@
+\chapter{Python interface to Madagascar}
+
+Python is a highly popular scripting programming languages. It is used by Madagascar in several contexts:
+\begin{enumerate}
+\item Like many other languages, Python can be used for writing Madagascar ``filter'' programs.
+\item Python is used by SCons, the preferred Madagascar way of
+  managing data analysis workflows. SCons scripts (\texttt{SConstruct}
+  files) are written in Python and can use the full power of the
+  language.
+\item Python can also be used for convenient scripting of operations
+  with RSF files and Madagascar programs. This is particularly
+  convenient for interfacing with other standard Python packages for
+  data analysis.
+\end{enumerate}
+This chapter focuses on the latter case.
+
+\section{File objects}
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+The \texttt{File} class in the Madagascar interface defines an RSF file object. Suppose we have a file \texttt{spike.rsf} created with
+\begin{verbatim}
+bash$ sfspike n1=5 k1=2 > spike.rsf
+\end{verbatim}
+Inside a Python script, the corresponding file object can defined as
+\begin{lstlisting}
+import m8r
+spike = m8r.File('spike.rsf')  
+\end{lstlisting}
+Of course, we can also recreate the command that produced it.
+\begin{lstlisting}
+import m8r
+spike = m8r.spike(n1=5,k1=2)[0]
+\end{lstlisting}
+Running \texttt{type(spike)} identifies \texttt{spike} as an object of
+\texttt{m8r.File} class. Printing file by running
+\texttt{print(spike)} outputs the name of the associated RSF file
+on disk.
+
+\subsection{Extracting file attributes}
+
+\subsection{Operations on files}
+
+\subsection{Plotting files}
+
+\subsection{Converting to and from numpy arrays}
+
+\subsection{Open files for input and output}
+
+\section{Filter objects}
+
+\subsection{Pipes}
+
+\section{Python interface for Vplot}
+
+\subsection{Vplot in Jupyter notebooks}
+
+\section{Working with \texttt{numpy} arrays}
+
+\section{Other scripting interfaces}
+
+\subsection{Matlab}
+
+\subsection{Julia}

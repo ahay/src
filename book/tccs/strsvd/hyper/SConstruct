@@ -1,0 +1,113 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+def Grey1(data,other):
+	Result(data,
+	  '''
+       window n2=71 f2=2 |grey label1=Time unit1=s clip=0.5 wanttitle=n label2=Trace unit2=
+       labelfat=4 font=2 titlefat=4 color=g %s 
+       '''%other)
+
+def Grey2(data,other):
+	Result(data,
+	  '''
+       put d1=0.004 o1=0 d2=1 o2=0 | window n2=71 f2=2 | grey clip=0.5 wanttitle=n label1=Time unit1=s label2=Trace unit2= labelfat=4 font=2 titlefat=4 color=g %s 
+       '''%other)
+
+Flow('hyper','hyper.bin',' echo in=$SOURCE n1=501 n2=76 data_format=native_float | put n1=501 n2=76 d1=0.004 d2=1 o1=0 o2=0')
+Flow('hyper-noise','hyper',
+     '''
+     noise seed=2008 var=0.012 |
+     saltpepper den=80 inten=0.1 seed=122009
+     ''')
+Grey1('hyper','')
+Grey1('hyper-noise','')
+
+##################
+# Synthetic test
+##################
+# FX deconvolution
+Flow('hyper-fx','hyper-noise','fxdecon n2w=76')
+Grey1('hyper-fx','title=FX')
+
+ns0=7 # smoothing radius
+# structure-oriented SVD
+
+Flow('hyper-ndip','hyper-fx','bandpass fhi=60 | dip rect1=%d rect2=%d' % (ns0,ns0))
+Result('hyper-ndip1','hyper-ndip',
+       '''
+       grey color=j scalebar=y wanttitle=n label2=Distance
+       barlabel=Slope barunit=samples bartype=h labelfat=4
+       font=2 titlefat=4 barlabelfat=4
+       ''')
+Flow('hyper-spray','hyper-noise hyper-ndip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=0 o2=1
+     ''' % (ns0))
+Result('hyper-cube','hyper-spray',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte gainpanel=all |
+       grey3 wanttitle= flat=n labelfat=4 font=2 titlefat=4
+       label2=Distance label3="Prediction" unit3=trace
+       frame1=100 frame2=50 frame3=%d point1=0.9 point2=0.8 
+       o3num=%d d3num=3 n3tic=%d  clip=0.00358515
+       '''  % (-ns0,ns0+1,-ns0+1,5))
+
+# standard mean filter
+#Flow('datameanf','spray','stack axis=2')
+#Grey1('datameanf','title=MeanF')
+
+# standard 
+#Flow('datamf','spray','transp plane=12 | mf nfw=%d | transp plane=12 | window n2=1 f2=%d'%(ns0,ns0))
+#Grey1('datamf','title=MF')
+
+
+#Flow('datasvd','spray','svddenoise pclip=4 | window n2=1 f2=%d'%ns0)
+Flow('hyper-svd','hyper-spray','svddenoise pclip=4 | stack axis=2')
+Grey1('hyper-svd','title=STRSVD')
+
+
+# global svd
+Flow('hyper-gsvd','hyper-noise','svddenoise pclip=35')
+Grey1('hyper-gsvd','title=GSVD')
+
+# local svd
+########################################################################
+# INITIALIZATION
+#######################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'synthlsvd'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+nt=501
+nx=76
+twin=50
+xwin=40
+r=1
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('hyper-lsvd',[os.path.join(matROOT,matfun+'.m'), 'hyper-noise'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(nt)d,%(nx)d,%(r)d,%(twin)d,%(xwin)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Grey2('hyper-lsvd','title=LSVD')
+
+
+# Difference sections
+Flow('hyper-n-svd','hyper-noise hyper-svd','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyper-n-fx','hyper-noise hyper-fx','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyper-n-lsvd','hyper-noise hyper-lsvd','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyper-n-gsvd','hyper-noise hyper-gsvd','add scale=1,-1 ${SOURCES[1]}')
+Grey1('hyper-n-svd','')
+Grey1('hyper-n-fx','')
+Grey1('hyper-n-lsvd','')
+Grey1('hyper-n-gsvd','')
+
+End()

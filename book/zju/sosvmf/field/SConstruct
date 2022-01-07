@@ -1,0 +1,150 @@
+from rsf.proj import *
+from math import *
+import os
+
+ns0=7
+## module defining
+def Grey(data,other): 
+	Result(data,'grey label2="Trace" label1="Time" unit1=s unit2="" labelsz=10 title="" wherexlabel=b wheretitle=t clip=0.1 screenratio=1.2 labelfat=4 font=2 %s'%other)
+
+## test for a field shot gather
+Flow('shot-n','field','cp')
+Grey('shot-n','title="Raw data"')
+Flow('sdip-n','shot-n',
+     'bandpass fhi=50 | dip rect1=%d rect2=%d'%(10,10))
+Grey('sdip-n','color=j clip=4 scalebar=y title="Local slope"')
+     
+Flow('sdip-n0','shot-n',
+     'bandpass fhi=50 | dip rect1=%d rect2=%d'%(10,10))     
+Grey('sdip-n0','color=j clip=4 scalebar=y ')
+
+
+Flow('sflat-n','shot-n sdip-n',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=1 o2=%d
+     ''' % (ns0,-ns0))
+Result('sflat-n',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Spatial grid no" label1="Temporal grid no" label3="Prediction" 
+       frame1=100 frame2=100 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="" unit3="" 
+       '''  % (-ns0,ns0+1,-ns0,3))
+
+Flow('sflat-n-mf','sflat-n','transp| mf nfw=9 | transp |put o2=-2.9 d2=0.025 v0=2.0 |mutter v0=3.8 |put o2=1 d2=1')
+#Flow('sflat-n-mft','sflat-n-mf','transp')
+#Flow('sflat-n-simi','sflat-n sflat-n-mft','transp |similarity other=${SOURCES[1]} rect1=10 rect2=10 | scale axis=2')
+Flow('sflat-n-svmf','sflat-n sflat-n-simi','transp plane=12 | svmf nfw=9 similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 | transp plane=12 |put o2=-2.9 d2=0.025 v0=2.0 |mutter v0=3.8 |put o2=1 d2=1')
+
+
+## A different way for SVMF (if you are familiar with the SVMF paper, i.e., Chen, 2015, EG)
+#Flow('sflat-n-svmf','sflat-n','transp| tsmf nfw=9 | transp |put o2=-2.9 d2=0.025 v0=2.0 |mutter v0=3.8 |put o2=1 d2=1')
+
+
+
+Result('sflat-n-mf',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Spatial grid no" label1="Temporal grid no" label3="Prediction" 
+       frame1=100 frame2=100 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="" unit3="" 
+       '''  % (-ns0,ns0+1,-ns0,3))
+Result('sflat-n-svmf',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte clip=0.5 |
+       grey3 wanttitle= flat=y labelfat=4 font=2 titlefat=4
+       label2="Spatial grid no" label1="Temporal grid no" label3="Prediction" 
+       frame1=100 frame2=100 frame3=%d point1=0.6 point2=0.6 
+       o3num=%d d3num=5 n3tic=%d  screenratio=0.7 clip=0.00358515 title="Locally flattened" unit2="" unit1="" unit3="" 
+       '''  % (-ns0,ns0+1,-ns0,3)) 
+             
+Flow('shot-somf','sflat-n','transp plane=12 | mf nfw=%d | transp plane=12 | window n2=1 f2=%d|put o2=-2.9 d2=0.025 v0=2.0 |mutter v0=3.8 |put o2=1 d2=1'%(ns0+2,ns0+2))
+
+## A different way for SVMF
+#Flow('shot-sosvmf','sflat-n','transp plane=12 | tsmf nfw=%d | transp plane=12 | window n2=1 f2=%d|put o2=-2.9 d2=0.025 v0=2.0 |mutter v0=3.8 |put o2=1 d2=1'%(ns0,ns0))
+
+Flow('sflat-n-mft','sflat-n-mf','transp')
+Flow('sflat-n-simi','sflat-n sflat-n-mft','transp |similarity other=${SOURCES[1]} rect1=10 rect2=10 | scale axis=2')
+Flow('shot-sosvmf','sflat-n sflat-n-simi','transp plane=12 | svmf nfw=%d similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 | transp plane=12 | window n2=1 f2=%d|put o2=-2.9 d2=0.025 v0=2.0 |mutter v0=3.8 |put o2=1 d2=1'%(ns0,ns0))
+
+Flow('shot-sosvmf-m','shot-sosvmf','put o2=-2.9 d2=0.025 v0=2.0 |mutter v0=3.8 |put o2=1 d2=1')
+
+
+
+Flow('shot-mf','shot-n','transp | mf nfw=%d|transp'%ns0)
+Flow('shot-mft','shot-mf','transp')
+Flow('shot-simi','shot-n shot-mft','transp |similarity other=${SOURCES[1]} rect1=10 rect2=10 | scale axis=2')
+Flow('shot-svmf','shot-n shot-simi','transp plane=12 | svmf nfw=%d similarity=${SOURCES[1]} lambda1=0.15 lambda2=0.25 lambda3=0.5 lambda4=0.75 | transp plane=12 |put o2=-2.9 d2=0.025 v0=2.0 |mutter v0=3.8 |put o2=1 d2=1'%ns0)
+
+## A different way for SVMF
+#Flow('shot-svmf','shot-n','transp | tsmf nfw=%d|transp'%ns0)
+
+Grey('shot-mf','title="MF"')
+Grey('shot-somf','title="SOMF"')       
+Grey('shot-sosvmf','title="SOSVMF"')  
+Grey('shot-sosvmf-m','title="SOSVMF"')     
+Grey('shot-svmf','title="SVMF"') 
+
+Flow('shot-mf-n','shot-n shot-mf','add scale=1,-1 ${SOURCES[1]}')
+Flow('shot-somf-n','shot-n shot-somf','add scale=1,-1 ${SOURCES[1]}')
+Flow('shot-sosvmf-n','shot-n shot-sosvmf','add scale=1,-1 ${SOURCES[1]}')
+Flow('shot-sosvmf-mn','shot-n shot-sosvmf-m','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('shot-svmf-n','shot-n shot-svmf','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('shot-mf-n','title="MF" clip=0.2')
+Grey('shot-somf-n','title="SOMF" clip=0.2')       
+Grey('shot-sosvmf-n','title="SOSVMF" clip=0.2')
+Grey('shot-sosvmf-mn','title="SOSVMF" clip=0.2')
+Grey('shot-svmf-n','title="SVMF" clip=0.2')
+
+
+Plot('label1',None,
+	'''
+	box x0=2 y0=4.4 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('label2',None,
+	'''
+	box x0=3 y0=6.2 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('label3',None,
+	'''
+	box x0=2.5 y0=5.2 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('label4',None,
+	'''
+	box x0=7.3 y0=4.4 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('label5',None,
+	'''
+	box x0=7.2 y0=4.8 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+Plot('label6',None,
+	'''
+	box x0=7.45 y0=4.0 label="" xt=-0.5 yt=0.5 length=0.5 
+	''')
+
+
+
+Result('shot-sosvmf-n-0','Fig/shot-sosvmf-n.vpl label1 label2 label3 label4 label5 label6','Overlay')
+Result('shot-somf-n-0','Fig/shot-somf-n.vpl label1 label2 label3 label4 label5 label6','Overlay')
+Result('shot-svmf-n-0','Fig/shot-svmf-n.vpl label1 label2 label3 label4 label5 label6','Overlay')
+Result('shot-mf-n-0','Fig/shot-mf-n.vpl label1 label2 label3 label4 label5 label6','Overlay')
+
+
+Flow('shot-mf-s','shot-mf shot-mf-n','similarity other=${SOURCES[1]} niter=100 rect1=5 rect2=5')
+Flow('shot-svmf-s','shot-svmf shot-svmf-n','similarity other=${SOURCES[1]} niter=100 rect1=5 rect2=5')
+Flow('shot-somf-s','shot-somf shot-somf-n','similarity other=${SOURCES[1]} niter=100 rect1=5 rect2=5')
+Flow('shot-sosvmf-s','shot-sosvmf shot-sosvmf-n','similarity other=${SOURCES[1]} niter=100 rect1=5 rect2=5')
+
+
+Grey('shot-mf-s','color=j clip=0.5 minval=0 maxval=1 scalebar=y title=MF')
+Grey('shot-svmf-s','color=j clip=0.5 minval=0 maxval=1 scalebar=y title=SVMF')
+Grey('shot-somf-s','color=j clip=0.5 minval=0 maxval=1 scalebar=y title=SOMF')
+Grey('shot-sosvmf-s','color=j clip=0.5 minval=0 maxval=1 scalebar=y title=SOSVMF')
+
+
+
+End()

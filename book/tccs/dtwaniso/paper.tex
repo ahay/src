@@ -1,0 +1,280 @@
+\published{Geophysics, vol 85, issue 5, O71-O82 (2020)}
+
+\title{Quantifying and correcting residual azimuthal anisotropic moveout in image gathers using dynamic time warping}
+
+\author{Luke Decker~\footnotemark[1] and Qunshan Zhang~\footnotemark[2]\\
+\footnotemark[1] The University of Texas at Austin~ \\ 
+\footnotemark[2] Repsol USA~}
+\lefthead{Decker and Zhang}
+\righthead{DTW for azimuthal anisotropic moveout}
+\maketitle
+\address{
+Oden Institute for Computational Engineering and Sciences \\
+The University of Texas at Austin \\
+201 E 24th St, \\
+Austin, TX 78712 \\
+decker.luke@utexas.edu
+}
+
+\begin{abstract}
+We propose and demonstrate a novel application of dynamic time warping (DTW) for correcting residual moveout in image gathers, enhancing seismic images, and determining azimuthal anisotropic orientation and relative intensity when moveout is caused by wave propagation through a media possessing elliptical horizontally transverse isotropy (HTI).  The method functions by first using DTW to determine the sequences of integer shifts that most closely match seismic traces within an image gather to the gather's stack, and then applying those shifts to flatten the gather.  Flattening shifts are fitted to an ellipse to provide an approximation for the orientation and relative strength of elliptical HTI anisotropy. We demonstrate the method on synthetic and 3D field data examples to show how it is able to (1) correct for residual azimuthal anisotropic moveout, (2) accurately recover high frequency information  and improve feature resolution in seismic images, and (3) determine the anisotropic orientation while providing a measure of relative strength of elliptic anisotropy.  We find that while the method is not intended to replace  anisotropic processing techniques for moveout correction, it has the ability to inexpensively approximate the effects of such operations while providing a representation of the elliptic HTI anisotropy present within a volume.
+
+\end{abstract}
+
+\section{Introduction}
+The upper crust of the Earth is a complex and heterogeneous media containing different rock strata with constituent bedding planes, fracture networks, faults, and other features below seismic resolution that may cause the measurement of elastic properties to change with orientation.  In such media, seismic waves propagate at different velocities depending on their direction of travel (\citealp{crampin-1981,crampin-1984b,crampin-1985,thomsen-1988}).  This phenomena is referred to as seismic anisotropy, and there is a rich tradition of geophysical literature and research focused on its modeling and processing (\citealp{crampin-1984a,helbig-1994,thomsen-2002,helbig-2005,grechka-2009,tsvankin-2010,tsvankin-2012}). 
+
+Anisotropy type is determined by the symmetries present for wave propagation as a function of orientation.  Transverse isotropy (TI) models media possessing a single axis of rotational symmetry 
+(\citealp{crampin-1986,thomsen-1988}). Vertically transverse isotropy (VTI) refers to situations where horizontal wave propagation has the same velocity regardless of azimuthal orientation.  In these circumstances velocity varies with inclination  relative to bedding.  This case is found to effectively model shales.  Allowing the symmetry axis to tilt with dipping beds gives rise to tilted transverse isotropy (TTI).  Horizontally transverse isotropy (HTI) occurs when the symmetry axis tilts fully to the horizontal.  This type of anisotropy effectively models rocks with vertically aligned fracture networks and may be used to predict the fracture network orientation (\citealp{corrigan-1996,tod-2007}).  Situations where velocity depends on both the inclination and azimuth of propagation lead to orthorhombic anisotropy and lower symmetry anisotropy systems.  In the case of orthorhombic anisotropy the medium possesses three planes of symmetry rather than symmetry axes (\citealp{crampin-1986,thomsen-1988,tsvankin-1997}).  
+
+Orthorhombic anisotropy may be completely described by nine parameters, inverting for all of which becomes a computationally expensive exercise.  This motivates the approximation of wave propagation with simpler anisotropy models possessing fewer parameters (\citealp{grechka-2005}), such as TI models which may be fully described with five  (\citealp{tsvankin-1997,tsvankin-2012}).   Stronger assumptions, namely that only vertical and horizontal velocities differ, allow approximation of p-wave anisotropy with just a single anisotropy parameter (\citealp{alkhalifah-1995}).  An approximation for HTI media wave propagation provided by \cite{grechka-1998} shows that the variation in velocity as a function of azimuth is elliptical. This type of HTI anisotropy is known as \emph{elliptical HTI anisotropy}, and occurs when the phase slowness and group velocity surfaces are ellipsoidal.  The kinematics of elliptical HTI anisotropy may be described by two anisotropy parameters plus velocity for each subsurface position \cite[]{abedi-2019}.
+
+Seismic processing techniques incorporating anisotropy, which thus involve inverting for anisotropic parameters, are more computationally expensive than those that do not (\citealp{alkhalifah-1996}).  Techniques that allow for more complex anisotropy, featuring additional parameters and thus more degrees of freedom, are still more expensive.  Nonetheless, failing to fully account for anisotropy leads to seismic images that are less focused and accurate (\citealp{helbig-2005}).  This is because many traces are migrated with what amounts to an incorrect velocity (\citealp{alkhalifah-1994,thomsen-2001}).  The sensitivity of depth domain imaging techniques to velocity perturbation further accentuates these effects in depth images (\citealp{tsvankin-2010}).  Seismic processing workflows must therefore balance the demands of accuracy and efficiency when treating anisotropy, and seismic processing practitioners are motivated to seek approximations that are able to account for anisotropy in a more efficient way (\citealp{helbig-2005,tsvankin-2010}). This desire prompted \cite{burnett-2009} to formulate a velocity - independent method for correcting azimuthal velocity variations using local travel time slopes in common midpoint (CMP) gathers.  
+We propose to use dynamic time warping to inexpensively perform the correction.
+
+The digital signal processing technique of dynamic time warping (DTW), developed by \cite{sakoe-1978} and applied to seismic imaging problems by \cite{hale-2013}, determines the set of integer shifts, $s [i ]$, for a signal sample index $i$, that most closely align a matching signal, $g [ i ]$, to a reference signal, $f [ i ]$, such that $f [ i ] \approx g [ i+s [ i ] ]$.  Constraints are applied to the process by declaring the maximum possible shift and the maximum strain, or how quickly shifts are permitted to change with respect to index $i$.   Shifts $s [i ]$ are determined by selecting a set of integer shifts obeying the imposed constraints that minimize the accumulated mismatch between the reference and matching signals over their entirety.  Because only integer shifts are considered, calculation  
+is a relatively rapid process.
+
+When used in conjunction with a seismic migration method accounting for a VTI media, DTW enables us to correct for the residual azimuthal anisotropic moveout resulting from the un-accounted for elliptical HTI anisotropy in a computationally efficient manner. The algorithm is unconcerned with the physics of wave propagation and treats this moveout correction as a less expensive integer-shift data matching problem.  If we further assume that the HTI fast axis is aligned with fracture networks present in the subsurface, determining the principal axes of the anisotropic ellipse with respect to wave propagation azimuth will provide us with a sort of average fracture network orientation over the whole ray path.  Similarly, the elongation of this ellipse provides a notion of how anisotropic the material is over the whole ray path.
+
+In the following sections this paper details how DTW may be used to create a method that compensates for residual elliptic HTI anisotropy in image gathers, resulting in enhanced seismic images and providing a measure of the orientation and relative intensity of that anisotropy, as well as the assumptions made in developing the method.  The ability of the proposed technique to successfully recover high frequency signal and the principal anisotropic axis orientation is demonstrated on a synthetic gather featuring  residual moveout caused by artificial elliptical HTI anisotropy. The method is then applied to a 3D field data set, generating sharper, more coherent images, as well as plausible information about HTI anisotropy.  Finally, the strengths and limitations of the proposed approach are discussed, as well as promising avenues for future research directions.
+
+\section{Theory}
+
+We apply the concept of dynamic time warping (DTW) to flatten residual elliptical HTI moveout in image gathers generated using a processing workflow based on a VTI travel time approximation which did not consider azimuthal anisotropy. Ideally, the processing workflow would account for HTI anisotropy.  However, that process is computationally expensive, motivating the approximation method presented here.  We begin  by first stacking an image gather by computing the average trace value.  Misalignment of traces in the initial gather acts as a low pass filter, so this stack provides the low frequency gather information.  For each trace in the gather we use DTW to determine the shifts that best align that trace with the initial low frequency gather stack, thus focusing events.  This generates a function which may be used to warp constituent traces to correct for anisotropy and flatten the gather. Flattened gathers may then be stacked to create an enhanced image.
+
+\inputdir{dtw-example}
+
+\multiplot{2}{dtw-trace-m,dtw-trace-r}{width=0.9\columnwidth}{Input (a) matching  and (b) reference traces used in DTW illustration reproduced from \cite{hale-2013}.  Both traces are generated by convolving a reflectivity model with a 20 Hz Ricker wavelet and adding  bandpassed noise.  Applying a set of sinusoidal shifts with a maximum amplitude of 20 samples to the reflectivity used to generate the matching trace creates the reflectivity used to generate the reference trace.}
+
+\multiplot{2}{dtw-error,dtw-accum-sh}{width=0.9\columnwidth}{DTW illustration reproduced from \cite{hale-2013}:  (a) Alignment errors resulting from the difference between the reference and matching trace when the reference trace is shifted by various lags; (b) Accumulated errors resulting from a symmetric error accumulation over the top panel subject to strain limitations.  Solid yellow line plots the DTW shifts calculated through strain limited backtracking of the accumulated errors.  Dotted fuchsia line plots the ideal shifts.}
+
+Our gather flattening workflow is based on the use of dynamic time warping to match pairs of seismic signals, so we first illustrate the function of DTW by reproducing an example featured in \cite{hale-2013}.  That paper provides a mathematical treatment of the DTW process as well as useful pseudocodes and advice for a successful implementation.  We begin with a synthetic reflectivity section containing $501$ $8$ ms samples and apply sinusoidal shifts with 20 samples maximum amplitude to generate a shifted reflectivity model.  Both reflectivity models are convolved with a 20 Hz Ricker wavelet and then bandpassed noise is added to create two synthetic traces.  The trace resulting from  the convolution of the wavelet with the initial reflectivity model is called the matching trace and is shown in Figure~\ref{fig:dtw-trace-m}. The trace resulting from the convolution of the wavelet with the shifted reflectivity is called the reference trace and is shown in Figure~\ref{fig:dtw-trace-r}.
+
+Alignment errors, shown in Figure~\ref{fig:dtw-error}, are determined by computing the difference between the matching and reference signals at each point in the traces after shifting the matching trace by a set of lags, shown as the vertical coordinate.  The sinusoidal path through the alignment errors panel defining the shifts is visible but difficult to follow.  To make the path more discernible we accumulate over the alignment errors, shown in Figure~\ref{fig:dtw-accum-sh}.  This involves starting on the left of the alignment errors panel, and for each lag in the initial alignment errors trace, selecting the lag in the next trace sample with minimum error subject to a strain limitation of $0.2$, meaning that the shifts may change by a maximum of one sample over five trace samples.  The minimal permissible error of that next trace is added to the error of the previous lag, leading to the term ``accumulation''.  These accumulated errors are written to the lag index in that subsequent trace, and the process is repeated, moving across the alignment errors panel to create the accumulated errors panel, Figure~\ref{fig:dtw-accum-sh}.  To remove the bias of general increase to the right in the accumulated errors panel, we accumulate from left to right and then from right to left.  Accumulation both smooths the alignment errors and makes the optimal path more apparent, forming a blue ``valley''.
+
+To compute the minimizing shifts we perform backtracking.  To begin, we select the shift corresponding to the lag with the minimal accumulated error in the far right trace of  Figure~\ref{fig:dtw-accum-sh}.  With this shift established we work backwards, picking the preceding permissible shift subject to the established strain limitations whose accumulated error value is minimal.  This generates the set of shifts plotted in yellow in Figure~\ref{fig:dtw-accum-sh}.  Ideal shifts are plotted in dashed fuchsia, and have good agreement with the calculated shifts.  Applying the calculated shifts to the matching trace will warp its values so that they match the reference trace as closely as permissible.
+
+Returning to the gather domain, suppose we average the traces within a gather to make a stack and then use DTW to match each constituent trace within that gather to the stack.  This matching operation provides a set of shifts for each trace which best align that trace to the stack. Note that although only integer shifts are considered, these shifts may vary with the trace sample index. In the presence of a HTI media, the residual moveout within a gather, and hence the flattening shifts, may be considered as periodic over $\cos (2 (\theta-\beta ) )$ where $\theta$ is gather azimuth and $\beta$ is the anisotropic fast axis orientation (\citealp{mallick-1997,grechka-1998}). We note that if our migration does not take this type of anisotropy into account, traces in a gather along the fast axis direction will be migrated with too low a velocity, and thus appear at a smaller time or shallower depth value than the stack, which represents an average trace for the gather.  Similarly, traces along the slow axis direction will be migrated with too high a velocity and will appear at a greater time or depth than the stack.  Based on how the shifts are defined in DTW, negative shifts ``push'' data downward in the positive time or depth direction, while positive shifts ``pull'' it upward in the negative time or depth direction.  Thus, the most negative shift will be aligned with the fast axis of anisotropy and the most positive shift will be aligned with the slow anisotropic axis.  If we assume that all other velocity and anisotropy corrections have been completed successfully, leaving only the component of moveout associated with elliptical HTI anisotropy, and that the anisotropic dependence on inclination $\phi$ is independent of azimuth, we may model our gather shifts as
+\begin{equation}
+\label{eq:periodicity}
+\textrm{shifts} \left( \theta,\phi,\beta \right) =   -\cos \left(2 \left( \theta-\beta \right) \right) \, R \left(\phi \right) ,
+\end{equation}
+where $R(\phi) \geq 0$ describes the dependence of the shift amplitude with inclination $\phi$.
+Therefore, by determining the phase orientation $\beta$ of the shifts, we also determine the anisotropic fast axis orientation.  In materials where anisotropy is caused by coherent fracture networks, the fast axis will be the same as the primary fracture network orientation, and thus the principal stress direction. 
+
+\inputdir{synthetic-gather}
+
+We solve for phase argument $\beta$ by integrating the test functions $u \left( \theta,\alpha \right)$ against the shifts to interrogate the data for the correct phase argument.  If we chose our test functions to have the form
+\begin{equation}
+\label{eq:test}
+u \left( \theta,\alpha \right) = -\cos \left(2 \left( \theta-\alpha \right) \right) ,
+\end{equation}
+then we may write
+\begin{equation}
+\label{eq:opt}
+\beta = \underset{\alpha \in \left[0,180 \right)}{\operatorname{arg \, max}}  \frac{  \int \int u \left(\theta,\alpha  \right) \, \textrm{shifts} \left( \theta,\phi,\beta \right) \, d\theta \, d\phi}{\int \int u \left( \theta, \alpha \right)^2 \, d\theta \, d\phi} ,
+\end{equation}
+where $\beta$, the orientation of the principal axis of anisotropy, is equal to the $\alpha$ which maximizes equation~\ref{eq:opt}.  For a proof of this, please refer to Appendix~\ref{derivation}. The difference between the maximizing and minimizing values of this integral describes the relative strength of the anisotropy, generating an attribute we call anisotropic intensity.  A mathematical treatment of anisotropic intensity is also presented in Appendix~\ref{derivation}.
+
+This method works for gathers with arbitrary sampling in $\phi$ and $\theta$, provided sufficient distribution of $\theta$ samples to avoid aliasing. Based on the way the method was constructed, it also works for gathers sampled in offset rather than inclination, and traces sampled in either depth or time.  If the shifts have a strong positive or negative bias it may be beneficial to correct them so the summation of shifts over the trace index for each time or depth within a gather is equal to zero.
+
+
+\section{Synthetic Gather Example}
+
+We use a synthetic example to demonstrate our method.  Figure~\ref{fig:ex-nmo-slice} contains an input synthetic spiral gather designed to simulate elliptical HTI anisotropy whose orientation and intensity vary with time. This gather is constructed by first taking a synthetic trace and spraying that trace into an ``ideal'' flat gather. Elliptical HTI effects are simulated by using normal moveout (NMO) modeling to generate a set of common azimuth gathers.  Each of these gathers is modeled using  a constant gradient velocity profile multiplied by an elliptic azimuthal anisotropy component in the form of \cite{mallick-1997} whose orientation varies with time.  NMO correction using the constant gradient velocity profile is applied to each of the common azimuth gathers, leaving residual moveout from the unaccounted anisotropic component of the velocity profile.  The spiral gather in Figure~\ref{fig:ex-nmo-slice} is constructed from these common azimuth gathers by selecting appropriate offset and azimuth pairs.  Although this spiral gather was constructed by applying isotropic NMO corrections to simulate an elliptical HTI medium, it effectively approximates HTI moveout in an image gather.
+
+
+Notice that the periodicity of the elliptical HTI ``wiggles'' in the gather change with trace index as a result of irregular sampling of azimuth caused by the gather's spiral structure.
+
+The input gather is stacked to create a reference trace, and DTW performed to determine the shifts which match each of the traces within the gather to the stack.  To avoid cycle skipping, a strain limit is placed on the shifts so that they are unable to change too rapidly with time.  These shifts are shown in Figure~\ref{fig:ex-gather-shifts}.  The blue bands, indicating the most negative shifts, correspond to the anisotropic principal, or fast, axis.  The red bands indicate the anisotropic slow axis.  The bands slope downward to the right, indicating the change of anisotropic axis orientation over time.  The shifts in Figure~\ref{fig:ex-gather-shifts} are applied to the traces in Figure~\ref{fig:ex-nmo-slice} to generate the flattened gather shown in Figure~\ref{fig:ex-flattened-gather}.
+
+\inputdir{synthetic-gather} 
+
+\multiplot{4}{ex-nmo-slice,ex-gather-shifts,ex-flattened-gather,ex-gather-aniso}{height=.35\columnwidth}{Synthetic example of dynamic time warping for gather flattening and determining principal anisotropic axis: (a) Synthetic gather with residual elliptical anisotropy; (b) Shifts that map the traces of Figure~\ref{fig:ex-nmo-slice} to its stack; (c)  Flattened gather resulting from applying the shifts in Figure~\ref{fig:ex-gather-shifts} to the traces in Figure~\ref{fig:ex-nmo-slice}; (d) Determining the principal HTI axis based on the shifts in Figure~\ref{fig:ex-gather-shifts}.  Background plots the value of equation~\ref{eq:opt} for different anisotropic azimuths. Solid yellow line plots the picked anisotropic azimuth which maximizes that equation at each time.  Dotted blue line plots the ideal anisotropic azimuth.  The difference between the maximizing and minimizing value of equation~\ref{eq:opt} at each time becomes the anisotropic intensity.}
+
+To determine the orientation of the principal axis, we generate a suite of test functions according to equation~\ref{eq:test} and integrate them against the gather shifts as described by equation~\ref{eq:opt}.  The result of this integral is plotted as the background color in Figure~\ref{fig:ex-gather-aniso}.  The maximum value of this integral is automatically picked at different times using the method described in \cite{fomel-2009} and plotted as a solid yellow line in Figure~\ref{fig:ex-gather-aniso}.  This value provides $\beta$, the anisotropic azimuth.  The difference between the underlying value maximizing the integral and the minimizing value provides anisotropic intensity, a measure of the anisotropic ``wiggle'' size over the gather at that time.  The ideal anisotropic azimuth is plotted as a dashed blue line in Figure~\ref{fig:ex-gather-aniso} which overlays the picked anisotropy, indicating that the method has successfully recovered its value.
+
+We generate a series of stacks to illustrate the frequency content uplift resulting from gather flattening.  Figure~\ref{fig:ex-nmo-slice-stk} contains a stack of the input gather from Figure~\ref{fig:ex-nmo-slice} featuring residual elliptical HTI moveout.  This stack is what traces are matched to during the dynamic warping process.  Figure~\ref{fig:ex-flattened-gather-stk} plots the stack of the flattened gather from Figure~\ref{fig:ex-flattened-gather}.  Notice that this stack has higher frequency content than the input stack, where the residual elliptical HTI anisotropy has acted as a low-pass filter.  For comparison, the stack of the ideal gather is shown in Figure~\ref{fig:ex-flat-gather-stk}.  This stack closely resembles that of the flattened gather, indicating that the gather flattening process has recovered high frequency information missing from the input gather's stack.  
+
+\multiplot{3}{ex-nmo-slice-stk,ex-flattened-gather-stk,ex-flat-gather-stk}{width=0.3\columnwidth}{Stacks corresponding to: (a) the input gather in Figure~\ref{fig:ex-nmo-slice} with residual elliptical HTI anisotropy; (b) the flattened gather in Figure~\ref{fig:ex-flattened-gather}; (c) the ideal flat gather.}
+
+\section{Field Data Example}
+\inputdir{.}
+We show how our method is able to enhance seismic images and improve their bandwidth by applying it to a 3D field dataset that was depth imaged using Kirchhoff migration with a VTI traveltime approximation. The migration velocity field was determined using VTI tomography.  
+
+\multiplot{2}{gather-250,stack-g-250}{height=.5\columnwidth}{Gather flattening inputs:   (a)  common image gather with spiral structure; (b) the gather stack.}
+
+We begin by flattening the gathers within the seismic volume by applying the same workflow as in our synthetic example.  Shifts that best match traces within each gather to the gather's stack are calculated and then applied.  Flattened gathers are stacked to generate an enhanced seismic image, called the flattened stack, and the shifts are integrated against a set of test functions according to equation~\ref{eq:opt} to determine the principal anisotropic axis and anisotropic intensity.
+
+Figure~\ref{fig:gather-250} contains an example of a spiral gather from this survey, and Figure~\ref{fig:stack-g-250} plots its stack, or average trace value.  Energy in the gather appears to have a periodic wiggle across the trace indexes.  The periodic moveout is caused by horizontally transverse anisotropy, where the seismic velocity is faster in one azimuthal direction than the other.  Some moveout with offset is also present, visible as a general trend upward to the right in some of the events within the gather.  This residual moveout is due to the tomography process, where the VTI velocity model is initially generated on a fine grid, and then smoothed on a coarse grid.  The smoothed coarse model is used to migrate data, which results in near and mid offset traces being properly aligned in the gather at the expense of some far offset traces.
+
+\plot{gather-shifts-250}{height=.5\columnwidth}{The shifts that most closely match traces within the input gather in Figure~\ref{fig:gather-250} to the stack shown in Figure~\ref{fig:stack-g-250}.}
+
+
+For each trace, we determine the shifts that best match that trace to the stack.  These shifts are shown in Figure~\ref{fig:gather-shifts-250}.
+Shifts are applied to traces in the input gather to create the flattened gather in Figure~\ref{fig:flat-gather-250} and its stack in Figure~\ref{fig:flat-stack-g-250}. Notice that the gather flattening process has corrected for the residual moveout with offset present in far offset traces as well as the periodic residual HTI moveout.
+
+\multiplot{2}{flat-gather-250,flat-stack-g-250}{height=.5\columnwidth}{Gather flattening outputs: (a) flattened common image gather generated by applying the shifts in  Figure~\ref{fig:gather-shifts-250} to the input gather in Figure~\ref{fig:gather-250}; (b)  the flattened gather stack.}
+
+Similar to the synthetic gather example, the azimuth of the principal axis  is determined by finding the azimuthal anisotropy orientation $\beta$ in equation~\ref{eq:periodicity} that best fits the periodic portion of gather shifts.  Then, the anisotropic intensity is determined. This process is illustrated in Figure~\ref{fig:gather-anisotropic-pick}.
+
+\plot{gather-anisotropic-pick}{height=.5\columnwidth}{Illustration of determining the anisotropic parameters on this example gather based on the shifts in Figure~\ref{fig:gather-shifts-250}.  Background plots the value of equation~\ref{eq:opt} for different anisotropic azimuths. Solid fuchsia line plots the picked anisotropic azimuth which maximizes that equation at each time.  The difference between the maximizing and minimizing value of equation~\ref{eq:opt} at each depth becomes the anisotropic intensity for this gather's spatial position.}
+
+We repeat this process on all gathers within the seismic volume to enhance the stack, and determine anisotropic azimuth and intensity.  Stacking in this example involves the average of all non-zero traces at each depth point within a gather, providing equal weight to non-zero samples.
+
+
+\inputdir{.}
+
+\multiplot{2}{stack-inlin,flat-stack-inlin}{height=.5\columnwidth}{Constant crossline slices of seismic volume visualizing: (a) the input stack; (b) the flattened stack.}
+
+
+Figure~\ref{fig:stack-inlin} contains a constant crossline seismic image generated from stacking gathers prior to flattening. Figure~\ref{fig:flat-stack-inlin} is the image that results from stacking the same gathers after flattening.  Reflection events within the flattened stack generally appear sharper, more focused, and more coherent.  Also note that events present in the flattened image have some corresponding signal in the input image -- the process has not created new structure or shapes in the data.
+
+\multiplot{3}{stack-inlin-zoom-1,flat-stack-inlin-zoom-1,spec-zm-1}{height=.35\columnwidth}{Zoomed inline slices corresponding to: (a) the input stack; (b) the flattened stack;  (c) visualizes the wavenumber spectrum of Figure~\ref{fig:stack-inlin-zoom-1}, the input stack, in blue and Figure~\ref{fig:flat-stack-inlin-zoom-1}, the flattened stack, in red.}
+
+
+Figure~\ref{fig:stack-inlin-zoom-1} contains a first zoomed panel from the lower left portion of Figure~\ref{fig:stack-inlin} and Figure~\ref{fig:flat-stack-inlin-zoom-1} contains the corresponding zoomed flattened stack from Figure~\ref{fig:flat-stack-inlin}. 
+Figures~\ref{fig:stack-inlin-zoom-1} and \ref{fig:flat-stack-inlin-zoom-1} contain zoomed inline slices of the input and flattened stacks, respectively.
+Notice how reflector discontinuities centered beneath 1.7 km are more apparent in the flattened stack.  Reflection events appear sharper and more focused.  Events in Figure~\ref{fig:flat-stack-inlin-zoom-1} have some corresponding shapes in the image shown in Figure~\ref{fig:stack-inlin-zoom-1}, illustrating how the method amplifies already present structures.  Figure~\ref{fig:spec-zm-1} contains the wavenumber spectra of the two zoomed panels. The blue line corresponds to the input stack in Figure~\ref{fig:stack-inlin-zoom-1} and the red line corresponds to the flattened stack in Figure~\ref{fig:flat-stack-inlin-zoom-1}.  The red spectrum of the flattened stack contains more energy at higher wavenumbers than the blue spectrum of the input stack.
+
+
+\multiplot{3}{stack-inlin-zoom-2,flat-stack-inlin-zoom-2,spec-zm-2}{height=.35\columnwidth}{A second set of zoomed panels originating from Figures~\ref{fig:stack-inlin} and~\ref{fig:flat-stack-inlin} corresponding to: (a) the input stack; (b) the flattened stack; (c) visualizes the wavenumber spectrum of Figure~\ref{fig:stack-inlin-zoom-2}, the input stack, in blue and Figure~\ref{fig:flat-stack-inlin-zoom-2}, the flattened stack, in red.}
+
+Figure~\ref{fig:stack-inlin-zoom-2} contains a second zoomed panel from the central portion of Figure~\ref{fig:stack-inlin} and Figure~\ref{fig:flat-stack-inlin-zoom-2} contains the corresponding zoomed panel of the flattened stack from Figure~\ref{fig:flat-stack-inlin}.  Events crossing the ``washed out'' portion of the image between 6.7-7.6 km are more coherent in the flattened stack, and an automatic picking algorithm would likely have an easier time following these more coherent horizons across the washout.  Figure~\ref{fig:spec-zm-2} contains the wavenumber spectrum of these two zoom panels.  The blue line corresponds to Figure~\ref{fig:stack-inlin-zoom-2} and the red line corresponds to Figure~\ref{fig:flat-stack-inlin-zoom-2}.  As with Figure~\ref{fig:spec-zm-1}, the spectrum of the flattened stack has greater energy at larger wavenumbers relative to the spectrum of the input stack spectrum and has increased bandwidth.
+
+
+\multiplot{2}{stack-zslice-2,flat-stack-zslice-2}{height=.5\columnwidth}{First set of constant depth slices visualizing: (a) the input stack; (b) the flattened stack.}
+
+
+
+We visualize a first set of depth slices of the input and flattened stacks in Figures~\ref{fig:stack-zslice-2} and~\ref{fig:flat-stack-zslice-2}, and zoomed sections of those slices in Figures~\ref{fig:stack-zslice-zoom-2} and~\ref{fig:flat-stack-zslice-zoom-2}.  Events in the flattened stack depth slices are significantly more coherent and focused than in the input stack slices, and the discontinuity caused by a fault running upward and to the right beginning at inline 3.5 km, crossline 0 km in Figures~\ref{fig:stack-zslice-2} and~\ref{fig:flat-stack-zslice-2} is more easily visible in the flattened stack than in the input.  Examining  close-ups of the slices in  Figures~\ref{fig:stack-zslice-zoom-2} and~\ref{fig:flat-stack-zslice-zoom-2}, we see that features which appear as smudges or blurs in the input stack appear as coherent events in the flattened stack.
+
+\multiplot{2}{stack-zslice-zoom-2,flat-stack-zslice-zoom-2}{height=.45\columnwidth}{Zoomed panels originating from Figures~\ref{fig:stack-zslice-2} and~\ref{fig:flat-stack-zslice-2} corresponding to: (a) the input stack; (b) the flattened stack.}
+
+\multiplot{2}{stack-zslice-3,flat-stack-zslice-3}{height=.5\columnwidth}{Second set of constant depth slices visualizing: (a) the input stack; (b) the flattened stack.}
+
+A second set of depth slices for input and flattened stacks are shown in Figures~\ref{fig:stack-zslice-3} and~\ref{fig:flat-stack-zslice-3}.  Again, events in the  depth slices of the flattened stack are more coherent and focused than those of the input slice.  Notice that a checkerboard artifact corresponding to the acquisition footprint is present for both the input and flattened slices in the lower left corner, highlighted in the zoomed depth slices of Figures~\ref{fig:stack-zslice-zoom-3} and \ref{fig:flat-stack-zslice-zoom-3}.  This illustrates how the process of flattening does not create new shapes in the data, but rather aligns traces so they more closely match existing shapes.  The process of gather flattening will not suppress coherent artifacts that are present in an image, as it assumes any coherent feature is signal.
+
+
+
+\multiplot{2}{stack-zslice-zoom-3,flat-stack-zslice-zoom-3}{height=.4\columnwidth}{Zoomed panels originating from Figures~\ref{fig:stack-zslice-3} and~\ref{fig:flat-stack-zslice-3} corresponding to: (a) the input stack; (b) the flattened stack.}
+
+The anisotropic azimuth for the same depth slice as shown in Figures~\ref{fig:stack-zslice-3} and~\ref{fig:flat-stack-zslice-3} is displayed in Figure~\ref{fig:azimuth-zslice}, while Figure~\ref{fig:intensity-zslice} contains the anisotropic intensity for that depth slice.  For both of the attributes, the region between 0-6 km inline and 0-9 km crossline has relatively consistent values. Here, anisotropic azimuth values mostly range between 90-130 degrees, and anisotropic intensity values do not vary as greatly as in other portions of the depth slice.  This appears to be a relatively homogeneous portion of the slice, with relatively consistent anisotropic orientation and intensity.  Presumably, this implies that a relatively consistent fracture network orientation and distribution exists there.  Other areas of the slice, where the azimuth and intensity have greater variations, appear to indicate regions that may have a more chaotic distribution of fracture networks or other features causing elliptical HTI anisotropy.  Results are consistent with proprietary log data acquired for wells in the study area.
+
+\inputdir{.}
+\multiplot{2}{azimuth-zslice,intensity-zslice}{height=.5\columnwidth}{Anisotropic attribute visualization from the same depth slice as in Figures~\ref{fig:stack-zslice-3} and~\ref{fig:flat-stack-zslice-3}: (a) the anisotropic azimuth, or the fastest azimuthal angle of seismic wave propagation; (b) the anisotropic intensity or relative difference between the velocities of the fastest and slowest azimuthal directions.}
+
+\section{Discussion}
+The workflow proposed in this paper simultaneously generates enhanced seismic images and anisotropic attributes, thus leading to two different directions for further studies depending on if one is interested primarily in correcting for residual elliptical HTI anisotropy with dynamic warping or gaining additional information from the attributes generated.  
+
+The process of dynamic warping is simply an integer shift data matching problem, which makes its application computationally efficient. 
+For our purposes it aligns one one-dimensional signal to another, seeking to make their values match as closely as possible given the constraints on rate of change and maximum shift provided. This may lead to several issues.  
+First, moveout in the input gathers must already be ``almost'' correct.  Even if the nearest peak or trough in the initial gather stack to one in the trace being matched does not actually correspond to the peak in that trace, it will still be matched to that feature.  Hence, as much moveout correction as possible should be done prior to implementing this workflow.  
+
+Second, the method as described would not function well in the presence of a polarity reversal caused by an amplitude variation with offset (AVO) anomaly. Rather than matching a polarity reversed trough to a peak, it would simply match trough to trough.  This issue could be overcome by first correcting for an AVO anomaly in the gathers, determining the shifts in those corrected gathers that would correct for elliptical HTI anisotropy, and then applying those shifts to gathers that have not had their AVO anomaly corrected.  Different types of stack could also be used as the matching trace for gather flattening, or different portions of the gather could be matched to different stacks which are seen as most representative of traces within the interval to create a superior flattening result.  
+
+Finally, it is possible for seismic events to become distorted due to shifts applied by the warping algorithm.  We did not observe this phenomenon in the field data experiment, but appropriately limiting the maximum strain and shift size parameters in the dynamic time warping algoritm is important for avoiding such distortions.
+
+Although the method proposed in this paper focuses on applications to correct residual moveout related to elliptical HTI anisotropy, the data matching process could also shift traces to perform static correction.  Residual moveout related to elliptical HTI anisotropy may be distinguished from that caused by static correction, which would appear as a constant shift applied to an entire trace. Note that because the DTW workflow treats each gather independently, static corrections computed by taking the average shift value over a trace would not necessarily be surface-consistent.  If only a few traces within a gather feature residual moveout related to static correction, those constant shifts are unlikely to have a large affect on the HTI anisotropy attributes, as they would have to be periodic over $180^\circ$ throughout the gather.  If many traces feature moveout related to static correction, it would be beneficial to apply surface consistent correction to the seismic data, as this method for determining anisotropic axis and orientation assumes that the residual moveout is caused by HTI anisotropy.
+
+Seismic images resulting from the stacking of flattened gathers contain more coherent and focused reflection events as shown in the constant crossline slices of Figures~\ref{fig:stack-inlin} and \ref{fig:flat-stack-inlin}, their zoomed sections of Figures~\ref{fig:stack-inlin-zoom-1} and ~\ref{fig:flat-stack-inlin-zoom-1}, and the depth slices of Figures~\ref{fig:stack-zslice-2} and \ref{fig:flat-stack-zslice-2}. Flattening the gathers also overcomes the effective low-pass filter created by stacking gathers with residual elliptical HTI moveout.  This is illustrated in the spectra of Figures~\ref{fig:spec-zm-1} and \ref{fig:spec-zm-2}, where the flattened stack spectra contain more energy at higher wavenumbers and greater bandwidth than the input stack spectra. Furthermore, this method does not create new structure or shape within the data, which is particularly obvious in Figures~\ref{fig:stack-zslice-zoom-3} and \ref{fig:flat-stack-zslice-zoom-3}.  These more coherent events would likely be easier for an automatic interpretation or computer vision algorithm to follow.  Therefore, the gather flattening and image enhancement process outlined here could fit well as part of an automatic interpretation workflow.
+
+Another interesting direction for further study is investigation of the  anisotropic azimuth and intensity parameters.  These are functions of shifts which correct residual elliptical HTI moveout, and as such may be thought of as an average anisotropy measure over the entirety of a ray path, similar to how root-mean-square (RMS) velocity used in time migration is a measure of the average velocity over a ray path. The method assumes that anisotropy varies slowly in the subsurface, and measures the accumulated anisotropy along a ray path reflecting at a position in the subsurface.  It approximates the subsurface elliptical HTI anisotropy field by highlighting areas where anisotropy is present, but may fail in regions where anisotropy values change rapidly.  A useful extension could involve developing a transformation from the average anisotropy measures along a raypath which this method provides to a local or interval anisotropy.  This local anisotropy could enable more accurate subsurface characterization, allowing for  representations of local features rather than tendencies throughout the volume.  A simple implementation of this could involve taking the derivative with respect to depth of a vector whose orientation and magnitude are defined by the anisotropic azimuth and intensity.  A more complex version could involve a HTI ray tracing step and solving for the attributes throughout the volume based on the anisotropic attributes tied to those ray paths.
+
+
+We have defined this paper's workflow so that each gather is independent, and thus the processing may be ran in parallel, enabling a relatively simple implementation for large data sets.  For the field data experiment in this paper, each gather has 500 traces and there are approximately 300,000 gathers within the volume.  Running the process on 200 threads, the flattening of gathers and determination of principal axes was completed in under six hours, much faster than the time required for a processing workflow that took elliptical HTI anisotropy into account.  We are not proposing a complete method for residual moveout correction, but rather a way of determining the orientation of the moveout whose correcting shifts may be modeled by an ellipse and a measure of how strong that elliptic component is.  The method described in this paper is an inexpensive approximation to more costly anisotropic processing methods, but is not intended to replace them.
+
+
+\section{Conclusions}
+We propose a workflow that uses dynamic warping to efficiently correct for residual elliptical HTI moveout present in image gathers.  The method works by calculating and applying the shifts that match each trace within an image gather to that gather's stack.  Stacking flattened gathers results in seismic images with more coherent and focused events.   Fitting the shift dependence on azimuth to an ellipse provides both the azimuth of the fast anisotropic axis, which may coincide with the orientation of the primary fracture network, and a measure of the intensity of the anisotropy.  These attributes may be used to aid in characterization of the subsurface.  The method is embarrassingly gather-parallel, enabling it to be implemented relatively easily on large data sets, with much less computational expense than would be associated with a processing workflow that takes the variation of seismic velocity with azimuth into account.
+
+\section{Acknowledgments}
+Global Geophysical data presented with permission of Geophysical Pursuit, Inc. (exclusive agent).  We are grateful to Repsol, Equinor, and Geophysical Pursuit, Inc. for the field data used in this paper, to Sergey Fomel, Randall Hendrix, Francisco Ortigosa, Fred Shirley, and Qingbo Liao for inspiring conversations, to Tom Leland and Thomas Dhanaraj for invaluable assistance, and to our editors and reviewers for helpful suggestions. We also thank TCCS sponsors for partial financial support of this work and contributors to the \texttt{Madagascar} open source software library \cite[]{madagascar}. 
+
+\append[derivation]{Determining principal axis and Anisotropic Intensity}
+
+Suppose we have a collection of gather shifts modeled by equation~\ref{eq:periodicity},
+\begin{equation} 
+\label{eq:periodicityapp}
+\textrm{shifts} \left( \theta,\phi, \beta \right) =   -\cos \left(2 \left( \theta-\beta \right) \right) \, R \left(\phi \right),
+\end{equation}
+ defined for $\theta \in \left[ 0, 360 \right)$, $\phi \in \left[\phi_{o}, \phi_{f} \right]$, $\phi_{f} > \phi_{o} \geq 0$, where $\theta$ describes the azimuth and $\phi$ the inclination within a gather. We also require that $R \left(\phi \right) \geq 0$.  This model implies that the shift dependance on azimuth and offset may be separated, and that changes in inclination will not result in shifts reversing polarity. Suppose we want to determine the value of some fixed $\bar{\beta} \in \left[ 0,180 \right)$, a phase shift aligned with the orientation of the principal axis.
+We may introduce a family of test functions according to equation~\ref{eq:test}, 
+\begin{equation}
+\label{eq:testapp}
+u \left( \theta,\alpha \right) = -\cos \left(2 \left( \theta-\alpha \right) \right),
+\end{equation}
+featuring a phase shift parameter $\alpha \in \left[0,180\right)$.  These test functions are  defined over the domain of the function $\textrm{shifts}\left( \theta,\phi \right)$.  We wish to prove equation~\ref{eq:opt}, so we may write our hypothesis as:
+\begin{equation}
+\label{eq:hypothesis}
+\begin{split}
+\Lambda(\alpha) = \frac{ \int_{\phi_{o}} ^{\phi_{f}} \int_0 ^{360} u\left(\theta,\alpha \right) \, \textrm{shifts} \left( \theta,\phi,\bar{\beta} \right) \, d\phi \, d\theta}{\int_{\phi_{o}} ^{\phi_{f}} \int_{0} ^{360} u\left(\theta, \alpha \right)^2 \, d\theta \,  d\phi } \\
+\textrm{is maximized by }\alpha = \bar{\beta} .
+\end{split}
+\end{equation}
+
+We begin by substituting equations~\ref{eq:periodicityapp} and \ref{eq:testapp} into equation~\ref{eq:hypothesis}:
+
+\begin{equation}
+\label{eq:subst}
+\Lambda(\alpha) = \frac{  \int_{\phi_{o}} ^{\phi_{f}} \int_0 ^{360} \cos \left(2 \left(\theta-\alpha \right) \right) \, \cos \left(2 \left( \theta-\bar{\beta} \right) \right) \, R \left(\phi \right) \, d\phi \, d\theta}{\int_{\phi_{o}} ^{\phi_{f}} \int_{0} ^{360} \cos^2 \left(2 \left( \theta - \alpha \right)\right) \,  d\theta \,  d\phi } .
+\end{equation}
+
+If we let $\psi = 2\left( \theta-\alpha \right)$, $\psi_{o} = -2 \alpha$, $\psi_{f} = 720 - 2 \alpha$, and through the linearity of integration we have:
+
+\begin{equation}
+\label{eq:psysub}
+\Lambda(\alpha) = \frac{  \int_{\phi_{o}} ^{\phi_{f}} R \left(\phi \right)d\phi}{\int_{\phi_{o}} ^{\phi_{f}} d\phi} \frac{\int_{\psi_o} ^{\psi_f } \cos \left(\psi \right) \, \cos \left(\psi + 2\left(\alpha - \bar{\beta} \right) \right)  \, d\psi}{\int_{\psi_o} ^{\psi_f } \cos^2 \left(\psi \right) \, d\psi } .
+\end{equation}
+
+Allowing $\Phi = \frac{  \int_{\phi_{o}} ^{\phi_{f}} R \left(\phi \right)d\phi}{\int_{\phi_{o}} ^{\phi_{f}} d\phi}$, $\gamma = 2\left(\alpha - \bar{\beta} \right)$, $\Psi = \int_{\psi_o} ^{\psi_f } \cos ^2 \left(\psi \right) \, d\psi $, and using the identity  $\cos(a+b) = \cos(a)\cos(b)-\sin(a)\sin(b)$ provides us with:
+
+\begin{equation}
+\label{eq:cosexp}
+\hat{\Lambda}(\gamma) = \frac{\Phi}{\Psi} \left( \cos(\gamma)\Psi  - \sin(\gamma) \int_{\psi_o} ^{\psi_f } \cos(\psi)\sin(\psi) \, d\psi \right).
+\end{equation}
+We note that $\Psi > 0$ because $\cos^2(\psi) > 0 $ except on a set of measure zero, and $\psi_f > \psi_o$. Furthermore, $\Phi \geq 0$ since $R \left(\phi \right) \geq 0$ and $\phi_f > \phi_o$.  $\Phi = 0$ implies that $R \left( \phi \right) = 0 \,\, \forall \phi$, or that there is no azimuthal anisotropy observable over the ray path at that time or depth in the gather.  In that case the concept of a principal anisotropic axis is meaningless and $\hat{\Lambda}(\gamma) = 0 \,\, \forall \gamma$, so we will disregard it and assume $\Phi > 0$, or that there is some observable azimuthal anisotropy present.  Furthermore, $\int_{\psi_o} ^{\psi_f } \cos(\psi) \sin(\psi) \, d\psi  = 0$ since:
+
+\begin{equation}
+\label{eq:iszero}
+\int_{\psi_o} ^{\psi_f } \cos(\psi)\sin(\psi) d\psi  = - \int_{\cos(\psi_o)} ^{\cos(\psi_f)} \xi d\xi 
+\end{equation}
+
+and $\cos(\psi_o) = \cos(\psi_o + 720) =\cos(\psi_f)$.  Therefore:
+\begin{equation}
+\label{eq:collecting}
+\hat{\Lambda}(\gamma) = \Phi \cos(\gamma). 
+\end{equation}
+To determine the $\gamma$ that maximizes $\hat{\Lambda}$ we take the first and second derivatives:
+\begin{equation}
+\label{eq:dldg}
+\frac{d \hat{\Lambda}}{d\gamma} = - \Phi \sin \left(\gamma \right)
+\end{equation}
+and
+\begin{equation}
+\label{eq:dl2dg2}
+\frac{d^2 \hat{\Lambda}}{d\gamma^2} = - \Phi \cos\left(\gamma \right).
+\end{equation}
+Equation~\ref{eq:collecting} achieves a maxima where equation~\ref{eq:dldg} is zero and equation~\ref{eq:dl2dg2} is negative.  This occurs whenever $\gamma$ is a multiple of $360$.  Due to restrictions imposed on $\alpha$ and $\bar{\beta}$, $\gamma \in \left(-180,180 \right)$, so the only permissible maximizing value within that interval is $\gamma = 0$ or equivalently $\alpha = \bar{\beta}$.  To confirm that this is indeed the maximizing value, note the limit of the second derivative of $\hat{\Lambda}(\gamma)$ in equation~\ref{eq:dl2dg2} as $\gamma \rightarrow \pm 180$ is positive, indicating that at the edges of the domain $\hat{\Lambda}(\gamma)$ approaches a minima rather than a maxima.
+
+Because the test functions $u(\theta,\alpha)$ have no dependance on $\phi$, it is trivial to show the same result holds for image gathers that are sampled in azimuth and offset rather than azimuth and inclination.
+
+This derivation allows us to provide an explicit definition of the anisotropic intensity attribute.  We defined anisotropic intensity to be the difference between the maximizing and minimizing value of equation~\ref{eq:opt}.  Examining the derivation in this appendix, we see that the maximizing value occurs at $\alpha = \bar{\beta}$.  The minimizing value occurs when equation~\ref{eq:dldg} is equal to 0 and equation~\ref{eq:dl2dg2} is positive, which happens in the limit of $\gamma \rightarrow \pm 180$. This limit is equivalent to $\alpha \rightarrow \bar{\beta} \pm 90$, with the addition or subtraction used for finding $\alpha$  defined with modulo 180 so it ``wraps'' from 180 to 0.  This result is intuitive, as we expect the anisotropic slow axis, where the minimum is attained, to be perpendicular to the anisotropic fast axis.  Thus, if we assume $\gamma$ attains the minimizing value, we may define anisotropic intensity 
+$\Upsilon$:
+\begin{equation}
+\label{eq:intensityeq2}
+\Upsilon = 2\Phi  ,
+\end{equation}
+or equivalently:
+\begin{equation}
+\label{eq:intensityeq1}
+\Upsilon = 2 \frac{  \int_{\phi_{o}} ^{\phi_{f}} R \left(\phi \right)d\phi}{\int_{\phi_{o}} ^{\phi_{f}} d\phi} ,
+\end{equation}
+so $\Upsilon$ is a measure of the average amplitude of ``wiggle'' caused by the anisotropic ellipse across the gather.  $\Upsilon = 0$ implies that no azimuthal anisotropy is present over the ray path. Increasing the average ``wiggle'' increases the value of $\Upsilon$.
+
+\onecolumn
+
+\bibliographystyle{seg}
+\bibliography{dynamic}
+

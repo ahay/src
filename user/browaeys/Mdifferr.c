@@ -44,9 +44,7 @@ int main(int argc, char* argv[])
     int iz;                        /* grid points in z */
     int ia;                        /* grid points in a */
 
-    float dxi;                     /* inverse dx */
-    float dzi;                     /* inverse dz */
-    float dai,a;                   /* inverse da, angle */
+    float a;                       /* angle */
 
     float ***t;                    /* escape variable */
     float ***err;                  /* substitution error */ 
@@ -116,10 +114,6 @@ int main(int argc, char* argv[])
     oa *= SF_PI/180.;
     da *= SF_PI/180.;
 
-    dzi = 1.0/dz;
-    dxi = 1.0/dx;
-    dai = 1.0/da;
-    
     gsray_init(nz,nx,na,
 	       oz,ox,oa,
 	       dz,dx,da);

@@ -69,9 +69,9 @@ void quartic(float **inverted, float **eff, float *twtime, int nlayer) {
 int i;
 float a11,a12,a22;
 float a1111,a1112,a1121,a1122,a1211,a1212,a1221,a1222,a2111,a2112,a2121,a2122,a2211,a2212,a2221,a2222;
-float h1111,h1112,h1121,h1122,h1211,h1212,h1221,h1222,h2111,h2112,h2121,h2122,h2211,h2212,h2221,h2222;
-float h1111old,h1112old,h1121old,h1122old,h1211old,h1212old,h1221old,h1222old,h2111old,h2112old,h2121old,h2122old,h2211old,h2212old,h2221old,h2222old;
-float h1111int,h1112int,h1121int,h1122int,h1211int,h1212int,h1221int,h1222int,h2111int,h2112int,h2121int,h2122int,h2211int,h2212int,h2221int,h2222int;
+float h1111,h1112,h1122,h1222,h2222;
+float h1111old,h1112old,h1122old,h1222old,h2222old;
+float h1111int,h1112int,h1122int,h1222int,h2222int;
 
 
 /* Loop over layers */
@@ -90,32 +90,10 @@ for (i = 0; i< nlayer; i++) {
                 
         h1112 = (-6*(pow(a12,4)*a1222 + a1112*pow(a22,4) - a1122*a12*pow(a22,2)*(a11 + 3*a22) + pow(a12,2)*a22*(2*a11*a1222 + (a1112 + 3*a1222)*a22) - pow(a12,3)*(2*a1122*a22 + (a11 + a22)*a2222))*pow(twtime[i],3))/pow(pow(a12,2) - a11*a22,4);
                 
-        h1121 = (-3*a12*(a11 + a22)*pow(pow(a12,2) - a11*a22,2)*twtime[i] + 12*(pow(a12,2)*(a11*a1122*a12 - (pow(a11,2) + pow(a12,2))*a1222) + a12*(2*pow(a11,2)*a1122 - 2*a11*a1112*a12 + 3*a1122*pow(a12,2))*a22 + (-(pow(a11,2)*a1112) + a11*a1111*a12 - 3*a1112*pow(a12,2))*pow(a22,2) + a1111*a12*pow(a22,3))*pow(twtime[i],3))/(2.*pow(pow(a12,2) - a11*a22,4));
-                
         h1122 = (-6*(-(a12*a22*(3*pow(a12,2)*a1222 - 3*a1122*a12*a22 + a1112*pow(a22,2))) - a11*a12*(pow(a12,2)*a1222 - 2*a1122*a12*a22 + a1112*pow(a22,2)) + pow(a12,4)*a2222 + pow(a11,2)*(-2*a12*a1222*a22 + a1122*pow(a22,2) + pow(a12,2)*a2222))*pow(twtime[i],3))/pow(pow(a12,2) - a11*a22,4);
                
-        h1211 = (6*(pow(a11,2)*a12*(-(a12*a1222) + a1122*a22) + a11*(-(pow(a12,2)*(2*a1112 + a1222)*a22) - a1112*pow(a22,3) + 2*a1122*a12*(pow(a12,2) + pow(a22,2))) + a12*((a1111 + a1122)*pow(a12,2)*a22 + a1111*pow(a22,3) - a1112*(pow(a12,3) + 2*a12*pow(a22,2))))*pow(twtime[i],3))/pow(pow(a12,2) - a11*a22,4);
-               
-        h1212 = (3*pow(pow(a12,2) - a11*a22,2)*(pow(a12,2) + pow(a22,2))*twtime[i] - 12*(a1122*(pow(a12,4) + a11*pow(a22,3) + 2*pow(a12,2)*a22*(a11 + a22)) - a12*(pow(a11,2)*a1222*a22 + pow(a12,2)*(a1112 + a1222)*a22 + a1112*pow(a22,3) + 2*a11*a1222*(pow(a12,2) + pow(a22,2))) + a11*pow(a12,2)*(a11 + a22)*a2222)*pow(twtime[i],3))/(2.*pow(pow(a12,2) - a11*a22,4));
-                
-        h1221 = (-6*(2*pow(a11,2)*a12*(a1122*a12 - a1112*a22) + pow(a11,3)*(-(a12*a1222) + a1122*a22) + a11*a12*(-(pow(a12,2)*(a1112 + a1222)) + (a1111 + 2*a1122)*a12*a22 - a1112*pow(a22,2)) + pow(a12,2)*(a1122*pow(a12,2) + a22*(-2*a1112*a12 + a1111*a22)))*pow(twtime[i],3))/pow(pow(a12,2) - a11*a22,4);
-             
         h1222 = (-3*a12*(a11 + a22)*pow(pow(a12,2) - a11*a22,2)*twtime[i] + 12*(2*pow(a11,2)*a12*(-(a12*a1222) + a1122*a22) - pow(a12,2)*(pow(a12,2)*a1222 - 2*a1122*a12*a22 + a1112*pow(a22,2)) + pow(a11,3)*(-(a1222*a22) + a12*a2222) + a11*a12*(a1122*(pow(a12,2) + pow(a22,2)) + a12*(-((a1112 + 2*a1222)*a22) + a12*a2222)))*pow(twtime[i],3))/(2.*pow(pow(a12,2) - a11*a22,4));
                 
-        h2111 = (-3*a12*(a11 + a22)*pow(pow(a12,2) - a11*a22,2)*twtime[i] + 12*(pow(a11,2)*a12*(-(a12*a1222) + a1122*a22) + a11*(-(pow(a12,2)*(2*a1112 + a1222)*a22) - a1112*pow(a22,3) + 2*a1122*a12*(pow(a12,2) + pow(a22,2))) + a12*((a1111 + a1122)*pow(a12,2)*a22 + a1111*pow(a22,3) - a1112*(pow(a12,3) + 2*a12*pow(a22,2))))*pow(twtime[i],3))/(2.*pow(pow(a12,2) - a11*a22,4));
-              
-        h2112 = (-6*(a1122*(pow(a12,4) + a11*pow(a22,3) + 2*pow(a12,2)*a22*(a11 + a22)) - a12*(pow(a11,2)*a1222*a22 + pow(a12,2)*(a1112 + a1222)*a22 + a1112*pow(a22,3) + 2*a11*a1222*(pow(a12,2) + pow(a22,2))) + a11*pow(a12,2)*(a11 + a22)*a2222)*pow(twtime[i],3))/pow(pow(a12,2) - a11*a22,4);
-               
-        h2121 = (3*(pow(a11,2) + pow(a12,2))*pow(pow(a12,2) - a11*a22,2)*twtime[i] + 12*(2*pow(a11,2)*a12*(-(a1122*a12) + a1112*a22) + pow(a11,3)*(a12*a1222 - a1122*a22) + a11*a12*(pow(a12,2)*(a1112 + a1222) - (a1111 + 2*a1122)*a12*a22 + a1112*pow(a22,2)) - pow(a12,2)*(a1122*pow(a12,2) + a22*(-2*a1112*a12 + a1111*a22)))*pow(twtime[i],3))/(2.*pow(pow(a12,2) - a11*a22,4));
-              
-        h2122 = (6*(2*pow(a11,2)*a12*(-(a12*a1222) + a1122*a22) - pow(a12,2)*(pow(a12,2)*a1222 - 2*a1122*a12*a22 + a1112*pow(a22,2)) + pow(a11,3)*(-(a1222*a22) + a12*a2222) + a11*a12*(a1122*(pow(a12,2) + pow(a22,2)) + a12*(-((a1112 + 2*a1222)*a22) + a12*a2222)))*pow(twtime[i],3))/pow(pow(a12,2) - a11*a22,4);
-               
-        h2211 = (6*(pow(a11,3)*a12*a1222 + a11*a12*(3*a1112*pow(a12,2) - 2*a1122*a12*a22 + 2*a1112*pow(a22,2)) - pow(a12,2)*(-(a1112*a12*a22) + a1111*(pow(a12,2) + pow(a22,2))) + pow(a11,2)*(a12*a1222*a22 - a1122*(3*pow(a12,2) + pow(a22,2))))*pow(twtime[i],3))/pow(pow(a12,2) - a11*a22,4);
-           
-        h2212 = (-3*a12*(a11 + a22)*pow(pow(a12,2) - a11*a22,2)*twtime[i] + 12*(a11*a12*(3*a1122*pow(a12,2) - 2*a12*a1222*a22 + 2*a1122*pow(a22,2)) - pow(a12,2)*(-(a1122*a12*a22) + a1112*(pow(a12,2) + pow(a22,2))) + pow(a11,3)*a12*a2222 + pow(a11,2)*(-(a1222*(3*pow(a12,2) + pow(a22,2))) + a12*a22*a2222))*pow(twtime[i],3))/(2.*pow(pow(a12,2) - a11*a22,4));
-                
-        h2221 = (-6*(-3*pow(a11,3)*a1122*a12 + pow(a11,4)*a1222 + pow(a12,3)*(a1112*a12 - a1111*a22) - a11*pow(a12,2)*(a1111*a12 + 2*a1122*a12 - 2*a1112*a22) + pow(a11,2)*a12*(3*a1112*a12 + a12*a1222 - a1122*a22))*pow(twtime[i],3))/pow(pow(a12,2) - a11*a22,4);
-               
         h2222 = (3*(pow(a11,2) + pow(a12,2))*pow(pow(a12,2) - a11*a22,2)*twtime[i] - 12*(-3*pow(a11,3)*a12*a1222 + pow(a12,3)*(a1122*a12 - a1112*a22) - a11*pow(a12,2)*(a1112*a12 + 2*a12*a1222 - 2*a1122*a22) + pow(a11,4)*a2222 + pow(a11,2)*a12*(3*a1122*a12 - a1222*a22 + a12*a2222))*pow(twtime[i],3))/(2.*pow(pow(a12,2) - a11*a22,4));
         
     
@@ -125,19 +103,8 @@ for (i = 0; i< nlayer; i++) {
         /* Subtract to get interval parameters */
         h1111int = h1111 - h1111old;
         h1112int = h1112 - h1112old;
-        h1121int = h1121 - h1121old;
         h1122int = h1122 - h1122old;
-        h1211int = h1211 - h1211old;
-        h1212int = h1212 - h1212old;
-        h1221int = h1221 - h1221old;
         h1222int = h1222 - h1222old;
-        h2111int = h2111 - h2111old;
-        h2112int = h2112 - h2112old;
-        h2121int = h2121 - h2121old;
-        h2122int = h2122 - h2122old;
-        h2211int = h2211 - h2211old;
-        h2212int = h2212 - h2212old;
-        h2221int = h2221 - h2221old;
         h2222int = h2222 - h2222old;
         
         
@@ -189,38 +156,16 @@ for (i = 0; i< nlayer; i++) {
         /* Store eff values upto i*/
         h1111old = h1111;
         h1112old = h1112;
-        h1121old = h1121;
         h1122old = h1122;
-        h1211old = h1211;
-        h1212old = h1212;
-        h1221old = h1221;
         h1222old = h1222;
-        h2111old = h2111;
-        h2112old = h2112;
-        h2121old = h2121;
-        h2122old = h2122;
-        h2211old = h2211;
-        h2212old = h2212;
-        h2221old = h2221;
         h2222old = h2222;
         
     } else { /* First layer */
 
         h1111old = h1111;
         h1112old = h1112;
-        h1121old = h1121;
         h1122old = h1122;
-        h1211old = h1211;
-        h1212old = h1212;
-        h1221old = h1221;
         h1222old = h1222;
-        h2111old = h2111;
-        h2112old = h2112;
-        h2121old = h2121;
-        h2122old = h2122;
-        h2211old = h2211;
-        h2212old = h2212;
-        h2221old = h2221;
         h2222old = h2222;
 
         inverted[i][3] = a1111;

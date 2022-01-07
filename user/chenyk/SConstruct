@@ -9,22 +9,24 @@ Testsolver1 trapepass lagrange heatexplitest heatimplitest hyperdif
 zerotrace hilbert cdivdir cabs cemd1 cemd2 snr2 snr3 snrcyk preerror
 threshold1 tsmf fxdecon simidenoise bin2rsf rsf2bin halfthr hradon
 suplane simidenoise1 rmtrace prekirch psmig pocssemb afd2d
-prekirchsr simpostkirch presr nlm1 nlm2 dblendseis svmf genshotscyk 
-afd2domp low addtrace matlr pnmomf expd
+prekirchsr simpostkirch presr nlm1 nlm2 dblendseis svmf genshotscyk dip_fb dipn_fb dipl dipln selfblend ycvelxf ycvelinvww afd2domp low addtrace matlr pnmomf expd ltfts ltftn fxynpre fxynpre2
+orthol orthon orthoa smoothn warpscann dipn efd3dmt aps3d sint2 sint3 eikonal_surf eikonal_surf_dv1d txt2rsf rsf2txt npef5 npef5_recon
 '''
 ccprogs = 'diffcxx'
 
 # mutter3
-
-mpiprogs='petsctest'
+mpiprogs='''
+mpiafdfwi2d 
+'''#mpiafdfwi3d (not finished yet)
 
 cprogs = '''
-
+cqrtm
 '''
 
 tprogs='''
-clapack cblas csolver eno1 eno2 eno3 spline fft2
+clapack cblas csolver eno1 eno2 eno3 spline fft2 
 '''
+
 pyprogs='''
 pyran
 '''
@@ -116,28 +118,29 @@ for prog in ccmains:
 ######################################################################
 # Compiling mpi programs ("MPILIB MPICPP" is user defined.)
 ######################################################################
-
 mpicc  = env.get('MPICC')
-mpimains = Split(mpiprogs)
+mpicxx = env.get('MPICXX')
+mpi_src = Glob('Q[a-z]*.c')
+for source in mpi_src:
+    inc = env.RSF_Include(source,prefix='')
+    env.Ignore(inc,inc)
+    if mpicc:
+        obj = env.StaticObject(source,CC=mpicc)
+        env.Depends(obj,inc)
 
-mpilib = os.environ.get("MPILIB")
-mpicpp = os.environ.get("MPICPP")
- 
+mpimains = Split(mpiprogs)
 for prog in mpimains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    if lapack:	
-        if mpicc and mpilib:
-            env.Prepend(CPPPATH=[mpicpp],
-                    LIBPATH=[mpilib],
-                    LIBS='')
-            prog = env.Program(prog,
-                    [x + '.c' for x in sources],
-                    CC=mpicc,LIBS=[libs,'X11'])
-        else:
-            prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
-        if root:
-            env.Install(bindir,prog)
+    if mpicc:
+        env.StaticObject('M'+prog+'.c',CC=mpicc)
+        #for distributed FFTW3
+        #prog = env.Program(prog,map(lambda x: x + '.o',sources),CC=mpicc,LIBS=env.get('LIBS')+['fftw3f_mpi'])
+        prog = env.Program(prog,[x + '.o' for x in sources],CC=mpicc)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+    if root:
+        env.Install(bindir,prog)
 
 ######################################################################
 # compiling CUDA programs
@@ -145,18 +148,25 @@ for prog in mpimains:
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
 
+import os
+mpicc = os.environ.get('MPICC')
+mpilib = os.environ.get('MPILIB')
+
 cuda_mains = Split(cprogs)
 for prog in cuda_mains:
-    if CTP and NVCC:
+    if CTP and NVCC and mpicc and mpicpp and mpilib:
         cfile = env.Command('CUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         cc = env.get('CC')
         cflags = env.get('CUDAFLAGS')
         ldflags = '-lcublas -lcufft -lcusparse'
-        if string.rfind(cc,'icc') >= 0:
+        if str.rfind(cc,'icc') >= 0:
             cflags = cflags + ' -ccbin=%s' % cc
             ldflags = '-ccbin=%s' % cc
         prog = env.Program(prog,cfile,
                            CC=NVCC,
+                           CPPPATH=[mpicpp]+env.get('CPPPATH'),
+                           LIBPATH=[mpilib]+env.get('LIBPATH'),
+                           LIBS=['mpi']+env.get('LIBS'),
                            LINKFLAGS=ldflags,
                            CFLAGS=cflags)
     else:
@@ -203,6 +213,7 @@ if root:
 	
 	docs += [env.Doc(prog,'M' + prog) for prog in mains]  + \
            [env.Doc(prog,'M%s.cc' % prog,lang='c++') for prog in ccmains] + \
+           [env.Doc(prog,'M' + prog) for prog in mpimains] + \
 		[env.Doc(prog,'M'+prog+'.py',lang='python') for prog in pymains]
 	env.Depends(docs,'#/framework/rsf/doc.py')	
 	doc = env.RSF_Docmerge(main,docs)

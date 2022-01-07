@@ -1265,7 +1265,9 @@ void actionNumReset(Widget w, XEvent *ev, String *p, Cardinal *np)
 static void gotoFrame(void)
 {
     xt_next_num = inputNumber ;
-    if( next_on == YES ) didNEXT = YES;    return;
+    if( next_on == YES ) 
+		didNEXT = YES;    
+	return;
 }
 
 void actionGoto(Widget w, XEvent *ev, String *p, Cardinal *np)

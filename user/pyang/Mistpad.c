@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
     int n1, n2, n1padded, n2padded, num, dim, n[SF_MAX_DIM], npadded[SF_MAX_DIM], ii[SF_MAX_DIM];
     int i, j, i1, i2, index, nw, iter, niter, nthr, *pad;
     float thr, pclip, normp;
-    float *dobs_t, *thresh, *mask;
+    float *dobs_t, *thresh, *mask=NULL;
     fftwf_complex *mm, *dd, *dobs;
     fftwf_plan fft1, ifft1, fftrem, ifftrem;/* execute plan for FFT and IFFT */
     sf_file in, out, Fmask;	/* mask and I/O files*/ 

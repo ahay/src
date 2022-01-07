@@ -44,7 +44,7 @@ int parsplit(char*buf, char**par)
 		{
 		case '"':
 		case '\'':
-			inquote=~inquote;
+			inquote=!inquote;
 			p1++;
 			break;
 		case ' ':

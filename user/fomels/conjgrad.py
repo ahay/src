@@ -17,7 +17,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsf.api as rsf
+import m8r
 
 def conjgrad(oper,dat,x0,niter):
     'Conjugate-gradients for minimizing |oper x - dat|^2'
@@ -26,7 +26,7 @@ def conjgrad(oper,dat,x0,niter):
     for iter in range(niter):
         g = oper(adj=1)[R]
         G = oper(adj=0)[g]
-        gn = g.dot(g)
+        gn = g.dot2()
         print "iter %d: %g" % (iter+1,gn)
         if 0==iter:
             s = g
@@ -36,25 +36,25 @@ def conjgrad(oper,dat,x0,niter):
             s = g+s*beta
             S = G+S*beta
         gnp = gn
-        alpha = -gn/S.dot(S)
+        alpha = -gn/S.dot2()
         x = x+s*alpha
         R = R+S*alpha
     return x
 
 if __name__ == "__main__":
     # test matrix and data
-    matrix = rsf.File([[1,1,1,0],
+    matrix = m8r.File([[1,1,1,0],
                        [1,2,0,0],
                        [1,3,1,0],
                        [1,4,0,1],
                        [1,5,1,1]])
-    y = rsf.File([3,3,5,7,9])
-    x0 = rsf.File([0,0,0,0])
+    y = m8r.File([3,3,5,7,9])
+    x0 = m8r.File([0,0,0,0])
     # matrix multiplication operator
-    matmult = rsf.matmult(mat=matrix)
+    matmult = m8r.matmult(mat=matrix)
 
     # Using sfconjgrad
-    x = rsf.conjgrad(mod=x0,niter=6)[y,matmult]
+    x = m8r.conjgrad(mod=x0,niter=6)[y,matmult]
     y1 = matmult[x]
     print x[:]
     print y1[:]
@@ -64,4 +64,5 @@ if __name__ == "__main__":
     y2 = matmult[x]
     print x[:]
     print y2[:]
+    
 

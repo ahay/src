@@ -1,0 +1,602 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+import math
+
+sliceval = 0.222#0.218
+
+def stackplot(name,stack,title,frame1=100,frame2=300,frame3=4,extra=''):
+    Result(name,stack,
+           '''
+	       transp plane=12 | transp plane=23 |
+           byte gainpanel=all | 
+           grey3 frame1=%d frame2=%d frame3=%d title="%s"
+           point1=0.6 point2=0.9 screenratio=0.4 wanttitle=n
+	       d2num=0.5 n2tic=4 o2num=1.0
+		   d1num=0.5 n1tic=7 o1num=4.0
+		   d3num=0.03 n3tic=2 o3num=0.21
+		   d4num=0.02 n4tic=1 o4num=0.23
+	       labelsz=14.0 crowd2=0.65 %s
+           ''' % (frame1,frame2,frame3,title,extra))
+
+def stackplotc(name,stack,title,frame1=100,frame2=300,frame3=4,extra=''):
+    Result(name,stack,
+           '''
+	   transp plane=12 | transp plane=23 |
+           byte gainpanel=all clip=0.0356745 | 
+           grey3 frame1=%d frame2=%d frame3=%d title="%s"
+           point1=0.6 point2=0.9 screenratio=0.4 wanttitle=n
+		   d2num=0.5 n2tic=4 o2num=1.0
+		   d1num=0.5 n1tic=7 o1num=4.0
+		   d3num=0.03 n3tic=2 o3num=0.21
+		   d4num=0.02 n4tic=1 o4num=0.23
+	       labelsz=14.0 crowd2=0.65 %s
+           ''' % (frame1,frame2,frame3,title,extra))
+
+def sliceplot(name,slic,title,min1=sliceval,extra=''):
+    Result(name,slic,
+           '''
+	   window n1=1 min1=%g |
+           grey title="%s" wanttitle=n
+           screenratio=0.4
+		   d1num=0.5 n1tic=8 o1num=4.0
+		   labelsz=12.0
+		   %s
+           ''' % (min1,title,extra))
+
+# | transp
+
+def halfsliceplot(name,slic,title,min1=sliceval,min2=1.4,max2=1.9,min3=5.4,max3=6.0,extra=''):
+    Result(name,slic,
+           '''
+	   put label2=iline label3=xline | window n1=1 min1=%g min2=%g max2=%g min3=%g max3=%g |
+           grey title="%s" wanttitle=n
+           screenratio=0.6
+		   d2num=0.2 n2tic=3 o2num=1.45 labelsz=14.0
+		   %s
+           ''' % (min1,min2,max2,min3,max3,title,extra))
+# 2.0
+#  | window min2=1.0 max2=2.0 min3=4.0 max3=5.0
+
+# you can either run scripts in ../p-cable-stack/ and/or comment/uncomment the line below
+#SConscript('../p-cable-stack/SConstruct')
+
+Fetch('stackfilled-filt3-packed.rsf','pcable',server)
+
+Flow('stackfilled-filt3','stackfilled-filt3-packed',
+			'''
+			math output="input" |
+			window min3=4.0 max3=7.5 min1=0.21 max1=0.24 min2=1.0 |
+			put unit2=km unit3=km unit1=s label2=iline label3=xline label1=time
+			''')
+
+stackplot('stack','stackfilled-filt3','Stack',extra='screenratio=0.7 point1=0.7 point2=0.85 labelsz=12.0')
+
+#sliceplot('stack-slice','stackfilled-filt3','Zero Offset')
+
+Flow('vel','stackfilled-filt3','math output="1.5"')
+
+Flow('mig3','stackfilled-filt3 vel','linmig3 adj=y doomp=y vel=${SOURCES[1]} antialias=t apt=40')
+
+#stackplot('mig3','mig3','3D Kirchhoff')
+
+sliceplot('mig3-slice','mig3','3D Kirchhoff')
+
+### PWD
+
+Flow('dip00','stackfilled-filt3','math output=0.0')
+
+Flow('dip0','dip00 dip00','cat axis=4 ${SOURCES[1]}')
+
+Flow('pwd','stackfilled-filt3 dip0',
+	'''
+	pwd dip=${SOURCES[1]}
+	''')
+
+Flow('xpwd-notmig','pwd',
+	'''
+	window n4=1
+	''')
+
+Flow('ypwd-notmig','pwd',
+	'''
+	window n4=1 f4=1
+	''')
+
+Flow('xpwd','xpwd-notmig vel','linmig3 adj=y doomp=y vel=${SOURCES[1]} antialias=t apt=40')
+
+Flow('ypwd','ypwd-notmig vel','linmig3 adj=y doomp=y vel=${SOURCES[1]} antialias=t apt=40')
+
+#stackplot('xpwd','xpwd','XPWD')
+
+#stackplot('ypwd','ypwd','YPWD')
+
+Flow('xspr-notmig','stackfilled-filt3 dip0 stackfilled-filt3','pwspray2 dip=${SOURCES[1]} ns2=15 ns3=1 | stack | math K=${SOURCES[2]} output="K-input"')
+
+Flow('yspr-notmig','stackfilled-filt3 dip0 stackfilled-filt3','pwspray2 dip=${SOURCES[1]} ns2=1 ns3=15 | stack | math K=${SOURCES[2]} output="K-input"')
+
+stackplotc('xspr-notmig','xspr-notmig','XPWD',frame3=6,extra='screenratio=0.7 point1=0.7 point2=0.85 labelsz=12.0')
+
+#stackplot('yspr-notmig','yspr-notmig','YPWD')
+
+Flow('xspr','xspr-notmig vel','linmig3 adj=y doomp=y vel=${SOURCES[1]} antialias=t apt=40')
+
+Flow('yspr','yspr-notmig vel','linmig3 adj=y doomp=y vel=${SOURCES[1]} antialias=t apt=40')
+
+#stackplot('xspr','xspr','XPWD')
+
+#stackplot('yspr','yspr','YPWD')
+
+### Removing footprints
+
+clipm=0.1
+
+# crossline wavenumber
+
+xlim = 79.9999
+
+num2 = 1125
+
+step2 = 0.142222
+
+# inline wavenumber
+
+start1 = -80.0001
+
+num1 = 600
+
+step1 = 0.266667
+
+# time dimension
+
+num3 = 16
+
+step3 = 0.002
+
+start3 = 0.002
+
+###DOES NOT WORK ON REFLECTIONS 
+###THERE MIGHT BE A CONSTANT COMPONENT
+
+Flow('maskart1',None,
+	'''
+	spike n1=%g d1=%g o1=%g |
+	math output="exp(-0.5*(x1*x1)) + exp(-0.05*((%g - x1)*(%g - x1))) + exp(-0.05*((%g - x1)*(%g - x1)))" |
+	clip clip=%g |
+	smooth rect1=10 |
+	math output="1 - input/%g"
+	'''%(num2,step2,-1.0*xlim,xlim,xlim,-1.0*xlim,-1.0*xlim,clipm,clipm))
+
+Flow('maskart','maskart1','rtoc | spray axis=1 n=%g d=%g o=%g | spray axis=2 n=%g d=%g o=%g'%(num3,step3,start3,num1,step1,start1))
+
+Flow('xpwd-prec','xpwd maskart',
+	'''
+	rtoc |
+	fft3 axis=2 |
+	fft3 axis=3 |
+	math K=${SOURCES[1]} output="input*K" |
+	fft3 axis=3 inv=y |
+	fft3 axis=2 inv=y |
+	real
+	''')
+
+Flow('xspr-prec','xspr maskart',
+	'''
+	rtoc |
+	fft3 axis=2 |
+	fft3 axis=3 |
+	math K=${SOURCES[1]} output="input*K" |
+	fft3 axis=3 inv=y |
+	fft3 axis=2 inv=y |
+	real
+	''')
+
+Flow('yspr-prec','yspr maskart',
+	'''
+	rtoc |
+	fft3 axis=2 |
+	fft3 axis=3 |
+	math K=${SOURCES[1]} output="input*K" |
+	fft3 axis=3 inv=y |
+	fft3 axis=2 inv=y |
+	real
+	''')
+
+Flow('ypwd-prec','ypwd maskart',
+	'''
+	rtoc |
+	fft3 axis=2 |
+	fft3 axis=3 |
+	math K=${SOURCES[1]} output="input*K" |
+	fft3 axis=3 inv=y |
+	fft3 axis=2 inv=y |
+	real
+	''')
+
+#stackplot('xpwd-prec','xpwd-prec','XPWD')
+
+#stackplot('ypwd-prec','ypwd-prec','YPWD')
+
+#stackplot('xspr-prec','xspr-prec','XPWD')
+
+sliceplot('xspr-prec-slice','xspr-prec','XPWD')
+
+#stackplot('yspr-prec','yspr-prec','YPWD')
+
+# Generating a structure tensor in a slice by slice fashion 
+
+Flow('delx','xpwd-prec','window n1=1 min1=%g'%sliceval)
+
+Flow('dely','ypwd-prec','window n1=1 min1=%g'%sliceval)
+
+Flow('delx-delx','delx','math output="input*input" | smooth rect1=10 rect2=10')
+Flow('dely-dely','dely','math output="input*input" | smooth rect1=10 rect2=10')
+Flow('delx-dely','delx dely','math K=${SOURCES[1]} output="K*input" | smooth rect1=10 rect2=10')
+Flow('dely-delx','dely delx','math K=${SOURCES[1]} output="K*input" | smooth rect1=10 rect2=10')
+
+Flow('eig10 ux0 uy0 eig20 vx0 vy0','delx-delx delx-dely dely-dely',
+	'''
+	pwdtensorh in2=${SOURCES[1]} in3=${SOURCES[2]} eps=0.0
+	ux=${TARGETS[1]} uy=${TARGETS[2]} out2=${TARGETS[3]}
+	vx=${TARGETS[4]} vy=${TARGETS[5]} normalize=n
+	''')
+
+Flow('az0','vx0',
+	'''
+	math output="(180/%g)*asin(input)" |
+	math output="input"'''%(math.pi))
+
+# Spraying to the original dimensions
+
+Flow('vx','vx0','spray axis=1 n=16 | put o1=0.21')
+
+Flow('vy','vy0','spray axis=1 n=16 | put o1=0.21')
+
+Flow('az00','az0','spray axis=1 n=16 | math output="input+90" | put o1=0.21')
+
+#Flow('az','az00 vx vy','anisodiffuse vx=${SOURCES[1]} vy=${SOURCES[2]} eps=10 niter=5 repeat=1')
+
+Flow('az','az00','smooth rect1=5 rect2=10 rect3=10')
+
+#Result('az','window n1=1 min1=0.222 | grey color=j scalebar=y allpos=y')
+
+Flow('xpwd-sm','xpwd-prec vx vy','anisodiffuse vx=${SOURCES[1]} vy=${SOURCES[2]} eps=10 niter=5 repeat=1 verb=n')
+
+Flow('ypwd-sm','ypwd-prec vx vy','anisodiffuse vx=${SOURCES[1]} vy=${SOURCES[2]} eps=10 niter=5 repeat=1 verb=n')
+
+# Linear combinations of sprays
+
+Flow('azspr','xspr-prec yspr-prec az','azspr spry=${SOURCES[1]} az=${SOURCES[2]}')
+
+#stackplot('azspr','azspr','AzSPR')
+
+Flow('azpwd0','stackfilled-filt3 az dip0','azpwd az=${SOURCES[1]} dip=${SOURCES[2]}')
+
+Flow('azpwd','stackfilled-filt3 az dip0 maskart vel',
+	'''
+	azpwd az=${SOURCES[1]} dip=${SOURCES[2]} |
+	linmig3 adj=y doomp=y vel=${SOURCES[4]} antialias=t apt=40|
+	rtoc |
+	fft3 axis=2 |
+	fft3 axis=3 |
+	math K=${SOURCES[3]} output="input*K" |
+	fft3 axis=3 inv=y |
+	fft3 axis=2 inv=y |
+	real
+	''')
+
+#stackplot('azpwd','azpwd','AzPWD')
+
+#sliceplot('azpwd-slice','azpwd','AzPWD')
+
+Flow('azpwd-sm','azpwd vx vy','anisodiffuse vx=${SOURCES[1]} vy=${SOURCES[2]} eps=10 niter=5 repeat=1 verb=n')
+
+#stackplot('azpwd-sm','azpwd-sm','AzPWD')
+#stackplot('xpwd-sm','xpwd-sm','XPWD')
+#stackplot('ypwd-sm','ypwd-sm','YPWD')
+
+# Path-summation integral evalaution on crossline spray
+
+Flow('linpi-data0','xspr-notmig','linpi v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n')
+
+Flow('linpi-data','linpi-data0 maskart',
+	'''
+	rtoc |
+	fft3 axis=2 |
+	fft3 axis=3 |
+	math K=${SOURCES[1]} output="input*K" |
+	fft3 axis=3 inv=y |
+	fft3 axis=2 inv=y |
+	real
+	''')
+
+#stackplot('linpi-data-stack','linpi-data','AzPWD')
+
+sliceplot('linpi-data-slice','linpi-data','linpi-data',sliceval)
+
+#halfsliceplot('linpi-data-hslice','linpi-data','linpi-data')
+
+# by default antialiasing is t
+"""
+Flow('modl-5 snaps-5','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=n thr=100 mode=hard doanisodiff=n anisoeps=10 niter=5 repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=5 oniter=1 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	''')
+
+Flow('modl-2 snaps-2','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=n thr=100 mode=hard doanisodiff=n anisoeps=10 niter=5 repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=2 oniter=1 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	''')
+
+Flow('modl-3 snaps-3','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=n thr=100 mode=hard doanisodiff=n anisoeps=10 niter=5 repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=3 oniter=1 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	''')
+
+Flow('modl-10 snaps-10','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=n thr=100 mode=hard doanisodiff=n anisoeps=10 niter=5 repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=10 oniter=1 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	''')
+"""
+#Flow('snaps-sm','snaps vx vy',
+#	'''
+#	window n4=1 f4=0 |
+#	thr thr=0.015 mode=hard |
+#	anisodiffuse vx=${SOURCES[1]} vy=${SOURCES[2]}
+#	eps=10 niter=10 repeat=3 verb=n
+#	''')
+
+# two sets of parameters to look at
+# strong
+thrs = 0.01
+epss = 20
+niters = 30
+
+# weak
+thrw = 0.008
+epsw = 20
+niterw = 30
+
+"""
+Flow('modl-str snaps-str','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=2 oniter=10 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	'''%(thrs,epss,niters))
+
+Flow('modl-wk snaps-wk','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=2 oniter=10 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	'''%(thrw,epsw,niterw))
+
+Flow('modl-str-100 snaps-str-100','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=2 oniter=100 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	'''%(thrs,epss,niters))
+
+Flow('modl-wk-100 snaps-wk-100','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=2 oniter=100 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	'''%(thrw,epsw,niterw))
+
+"""
+
+Flow('modl-wk-100 snaps-wk-100','linpi-data dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=y thr=%g mode=hard doanisodiff=y anisoeps=%g niter=%d repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=2 oniter=20 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	'''%(thrw,epsw,niterw))
+
+# removing anisodiffuse instabilities
+
+filtering = '''
+transp plane=12 |
+bandpass fhi=50 |
+transp plane=13 |
+bandpass fhi=50 |
+transp plane=31 |
+transp plane=21
+'''
+# bandpass fhi=50 |
+
+Flow('modl-wk-100ft','modl-wk-100',filtering)
+
+#Flow('modl-str-100ft','modl-str-100',filtering)
+
+sliceplot('modl-wk-100','modl-wk-100ft','Inversion Weak',sliceval,'pclip=97')
+
+#sliceplot('modl-str-100','modl-str-100ft','Inversion Strong')
+
+# looking at different iterations
+
+Flow('0snaps-wk-100','snaps-wk-100 vx vy',
+	'''
+	window n4=1 |
+	thr thr=%g mode=hard |
+	anisodiffuse eps=%g niter=%d repeat=1
+	vx=${SOURCES[1]} vy=${SOURCES[2]}
+	'''%(thrw,epsw,niterw) + ' | ' + filtering)
+
+Flow('00snaps-wk-100','snaps-wk-100 vx vy',
+	'''
+	window n4=1
+	''')
+
+Flow('1snaps-wk-100','snaps-wk-100 vx vy',
+	'''
+	window n4=1 f4=1 |
+	thr thr=%g mode=hard |
+	anisodiffuse eps=%g niter=%d repeat=1
+	vx=${SOURCES[1]} vy=${SOURCES[2]}
+	'''%(thrw,epsw,niterw) + ' | ' + filtering)
+
+Flow('10snaps-wk-100','snaps-wk-100 vx vy',
+	'''
+	window n4=1 f4=9 |
+	thr thr=%g mode=hard |
+	anisodiffuse eps=%g niter=%d repeat=1
+	vx=${SOURCES[1]} vy=${SOURCES[2]}
+	'''%(thrw,epsw,niterw) + ' | ' + filtering)
+"""
+Flow('100snaps-wk-100','snaps-wk-100 vx vy',
+	'''
+	window n4=1 f4=99 |
+	thr thr=%g mode=hard |
+	anisodiffuse eps=%g niter=%d repeat=1
+	vx=${SOURCES[1]} vy=${SOURCES[2]}
+	'''%(thrw,epsw,niterw) + ' | ' + filtering)
+"""
+Flow('100snaps-wk-100','snaps-wk-100 vx vy',
+	'''
+	window n4=1 f4=19 |
+	thr thr=%g mode=hard |
+	anisodiffuse eps=%g niter=%d repeat=1
+	vx=${SOURCES[1]} vy=${SOURCES[2]}
+	'''%(thrw,epsw,niterw) + ' | ' + filtering)
+
+#stackplot('0snaps-wk-100','0snaps-wk-100','ZO',100,300,6)
+
+#stackplot('1snaps-wk-100','1snaps-wk-100','ZO',100,300,6)
+
+#stackplot('10snaps-wk-100','10snaps-wk-100','ZO',100,300,6)
+
+#stackplot('100snaps-wk-100','100snaps-wk-100','ZO',100,300,6)
+
+#stackplot('00snaps-wk-100','00snaps-wk-100','ZO',100,300,6)
+
+# advantage of anisotropic smoothing
+
+halfsliceplot('hs-modl-wk-100','modl-wk-100ft','Inversion Weak')
+
+Flow('modl-wk-100ft-thr','snaps-wk-100','window n4=1 f4=19 | ' + filtering + ' | thr thr=%g mode=hard'%thrw)
+
+halfsliceplot('hs-modl-wk-100-thr','modl-wk-100ft-thr','Inversion Weak')
+
+# going back to data domain
+
+Flow('modl-wk-100ft-zo','modl-wk-100ft dip0 az vx vy vel',
+	'''
+	piazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=n sm=y adj=n doomp=y
+	''')
+
+#stackplot('modl-wk-100ft-zo','modl-wk-100ft-zo','ZO',100,300,6)
+
+# restoring w#
+
+# using our result as a starting model
+
+Flow('d0','modl-wk-100ft-zo xspr-notmig','add scale=-1,1 ${SOURCES[1]}')
+
+thrr = thrw+0.003
+epsr = epsw
+niterr = niterw
+
+# path-summation is disabled
+Flow('y y-snaps','d0 dip0 az vx vy vel',
+	'''
+	lspiazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dothr=n thr=0.0 mode=hard doanisodiff=n anisoeps=0.0 niter=1 repeat=1
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=n sm=y initer=2 oniter=1 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	''')
+
+# we utilize snaps since regularization should be applied on the sum only
+
+Flow('diffractivity','y-snaps modl-wk-100ft vx vy',
+	'''
+	add scale=1,1 ${SOURCES[1]} |
+	thr thr=%g mode=hard |
+	anisodiffuse vx=${SOURCES[2]} vy=${SOURCES[3]}
+	eps=%g niter=%d repeat=1 verb=n
+	'''%(thrr,epsr,niterr) + ' | ' + filtering)
+
+#stackplot('diffractivity','diffractivity','ZO',100,300,6)
+
+#stackplot('x0','modl-wk-100ft','ZO',100,300,6)
+
+Flow('diffractions','diffractivity dip0 az vx vy vel',
+	'''
+	piazpwdmig3 v_1=1.3 v_2=1.45 v_3=1.55 v_4=1.75 fftDo=n apt=40
+	dip=${SOURCES[1]} az=${SOURCES[2]} vx=${SOURCES[3]} vy=${SOURCES[4]} vel=${SOURCES[5]}
+	domod=y dopi=n sm=y adj=n doomp=y
+	''')
+
+#stackplotc('diffractions','diffractions','ZO',100,300,6)
+
+#stackplot('azpwd0','azpwd0','ZO',100,300,6)
+
+Flow('noise','xspr-notmig diffractions','add scale=1,-1 ${SOURCES[1]}')
+
+#stackplotc('noise','noise','ZO',100,300,6)
+
+Flow('noise-ortho diffractions-ortho','noise diffractions',
+	'''
+	ortho rect1=5 rect2=10 rect3=10 niter=30 sig=${SOURCES[1]} sig2=${TARGETS[1]}
+	''')
+
+stackplotc('noise-ortho','noise-ortho','ZO',100,300,6,extra='screenratio=0.7 point1=0.7 point2=0.85 labelsz=12.0')
+
+stackplot('diffractions-ortho','diffractions-ortho','ZO',100,300,6,extra='screenratio=0.7 point1=0.7 point2=0.85 labelsz=12.0')
+
+# plots for the 4th reviewer: asked for ``some'' frequency plots
+def FK(pad=1000):
+	return '''
+    window n2=1 f2=100 |
+	costaper nw1=5 |
+    pad end1=%d |
+	bandpass flo=40.0 fhi=200 |
+    fft1 | fft3 axis=2 |
+    window min2=-40 max2=40 |
+    math output="abs(input)" | real
+    '''%pad
+
+def F(pad=1000):
+	return '''
+    window n2=1 f2=100 |
+	costaper nw1=5 |
+    pad end1=%d |
+	bandpass flo=40.0 fhi=200 |
+    fft1 | stack | scale axis=2 |
+    math output="abs(input)" | real
+    '''%pad
+
+for d in [('stackfilled-filt3','Stack (refl + diffr + noise))'),('xspr-notmig','Stack (diffr + noise)'),('diffractions-ortho','Diffr (from inversion)')]:
+	nm,ti = d
+	Flow(nm+'-fk',nm,FK())
+	Flow(nm+'-fft',nm,F())
+    # screenratio = 0.4 vpconvert format=png pen=gd fat=3 serifs=n bgcolor=w xshift=-2.4 n1=1570 ./Fig/sf-f3-fft.vpl
+	# vpconvert format=png pen=gd fat=3 serifs=n bgcolor=w ./Fig/*-fk.vpl 
+    # vpconvert format=png pen=gd fat=3 serifs=n bgcolor=w ./Fig/*-fft.vpl
+	Result(nm+'-fk','grey title="%s"'%ti)
+	Result(nm+'-fft','graph label2="Abs A" unit2=  title="%s"'%ti)
+
+Flow('sf-f3-nw-fft','stackfilled-filt3-packed',FK(pad=0))
+Result('sf-f3-nw-fft','grey title="Stack (refl + diffr + noise) no win"')
+
+End()

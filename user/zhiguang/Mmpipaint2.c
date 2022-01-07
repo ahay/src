@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
     bool verb;
     int n1,n2,n3, i1,i2,i3, i0, order;
     float o1, d1, eps, **u, **p, *trace, *time;
-    float ***allu, ***allp, d2, d3, o2, o3, *sendbuf, *recvbuf;
+    float ***allu=NULL, ***allp=NULL, d2, d3, o2, o3, *sendbuf, *recvbuf;
     sf_file out, dip;
 
     int cpuid, numprocs, nrpad, iturn, n12;

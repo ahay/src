@@ -202,24 +202,22 @@ void shot_plane_source(float min_x,float min_y,int nx,int ny,int iw,int i_px,int
 		       sf_complex *wld,struct shot_data_par_type data_par,struct shot_plane_par_type plane_par)
 /*< plane-wave source >*/
 {
-    float x_dt,y_dt,t_x;
+    float x_dt,t_x;
     int iy,ix,isx,isy;
-    float plane_s_x,px,py,w;
-    float plane_dx,plane_dw,plane_ow,plane_opx,plane_dpx,plane_opy,plane_dpy,plane_osx,plane_dsx,plane_osy,plane_dsy;
-    int plane_npx,plane_npy,plane_nsx,plane_nsy;
+    float plane_s_x,px,w;
+    float plane_dx,plane_dw,plane_ow,plane_opx,plane_dpx,plane_osx,plane_dsx;
+    int plane_nsx,plane_nsy;
     sf_complex * wavelet=data_par.wavelet;
     plane_dw=data_par.dw; plane_ow=data_par.ow; 
-    plane_dpx=data_par.dsx; plane_opx=data_par.osx; plane_npx=data_par.nsx;
-    plane_dpy=data_par.dsy; plane_opy=data_par.osy; plane_npy=data_par.nsy;
+    plane_dpx=data_par.dsx; plane_opx=data_par.osx; 
     plane_nsx=plane_par.nsx; plane_dsx=plane_par.dsx; plane_osx=plane_par.osx;
-    plane_nsy=plane_par.nsy; plane_dsy=plane_par.dsy; plane_osy=plane_par.osy;
+    plane_nsy=plane_par.nsy; 
     plane_dx= data_par.dhx;
  
     w=(float)(iw)*plane_dw+plane_ow;
-    px=(float)(i_px)*plane_dpx+plane_opx;     py=(float)(i_py)*plane_dpy+plane_opy;
+    px=(float)(i_px)*plane_dpx+plane_opx;
     vector_value_c(wld,sf_cmplx(0.0,0.0),nx*ny);  //wld=0.0
     x_dt=plane_dsx*px;   //plane_par.dsx is dsx of point source of original dataset
-    y_dt=0;
     for(isy=0;isy<plane_nsy;isy++){  // plane_nsy  nsy of point source of original dataset
 	iy=isy;
 	for(isx=0;isx<plane_nsx;isx++){  // plane_nsx nsx of point source
@@ -245,13 +243,13 @@ void shot_plane_source_3d(float min_x,float min_y,int nx,int ny,int iw,int i_px,
     int iy,ix,isx,isy;
     float plane_s_x,plane_s_y,px,py,w;
     float plane_dx,plane_dy,plane_dw,plane_ow,plane_opx,plane_dpx,plane_opy,plane_dpy,plane_osx,plane_dsx,plane_osy,plane_dsy;
-    int plane_npx,plane_npy,plane_nsx,plane_nsy;
+    int plane_nsx,plane_nsy;
     sf_complex * wavelet=data_par.wavelet;
     sf_complex phaseshift;
     plane_dw=data_par.dw; plane_ow=data_par.ow; 
     plane_dx= data_par.dhx;  plane_dy=data_par.dhy;
-    plane_dpx=data_par.dsx; plane_opx=data_par.osx; plane_npx=data_par.nsx;
-    plane_dpy=data_par.dsy; plane_opy=data_par.osy; plane_npy=data_par.nsy;
+    plane_dpx=data_par.dsx; plane_opx=data_par.osx; 
+    plane_dpy=data_par.dsy; plane_opy=data_par.osy; 
     plane_nsx=plane_par.nsx; plane_dsx=plane_par.dsx; plane_osx=plane_par.osx;
     plane_nsy=plane_par.nsy; plane_dsy=plane_par.dsy; plane_osy=plane_par.osy;
 

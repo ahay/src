@@ -1,0 +1,3 @@
+uses=['sfsigmoid', 'sfsmooth', 'sfput', 'sfwindow', 'sfnoise', 'sfthreshold1', 'sfmask', 'sfspray', 'sfdd', 'sfmath', 'sfadd', 'sfgrey', 'sfsnr2', 'sfrtoc', 'sffft3', 'sfcabs', 'sfreal', 'sfmul', 'sfbandpass', 'sfpad', 'sfdip', 'sfseislet', 'sfcat', 'sfgraph', 'sfcp', 'sfsimilarity', 'sfbox']
+data=[]
+size=   63444892

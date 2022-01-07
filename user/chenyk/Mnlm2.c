@@ -146,7 +146,7 @@ int main (int argc, char* argv[])
 void make_kernal(int f1, int f2, float *kernal)
 /*< make kernal for NLM >*/
 {
-    	int d1,d2,i,j,nfw1,nfw2;
+    	int d1,i,j,nfw1,nfw2;
     	float value;
 	nfw1=2*f1+1;
 	nfw2=2*f2+1;

@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding parameter, default is linear */
 
-	    sf_sharpen_init(nw*nk,perc);
+	    sf_sharpen_init(nw*nk,perc,0.5);
 	    dd2 = sf_floatalloc(n12);	    
 	    break;
 
@@ -158,12 +158,12 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("ordert",&ordert)) ordert=1.;
 	    /* Curve order for thresholding parameter, default is linear */
 
-	    sf_sharpen_init(nw*nk,perc);
+	    sf_sharpen_init(nw*nk,perc,0.5);
 	    dd2 = sf_floatalloc(n12);	    
 	    break;
 
 	case 'b':
-	    sf_sharpen_init(nw*nk,perc);
+	    sf_sharpen_init(nw*nk,perc,0.5);
 	    dd2 = sf_floatalloc(n12);
 	    dd3 = sf_floatalloc(n12);
 	    break;
@@ -305,7 +305,7 @@ int main(int argc, char* argv[])
 			    iperc = perc-((perc-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
 			    if(iperc<0.) iperc=0.;
 			}
-			sf_sharpen_init(nw*nk,iperc);
+			sf_sharpen_init(nw*nk,iperc,0.5);
 			sf_csharpen(mt);
 			sf_cweight_apply(nw*nk, mt);
 			sf_sharpen_close();
@@ -453,7 +453,7 @@ int main(int argc, char* argv[])
 			    iperc = perc-((perc-1)*pow(iter,ordert)*1.)/pow(niter,ordert);
 			    if(iperc<0.) iperc=0.;
 			}
-			sf_sharpen_init(nw*nk,iperc);
+			sf_sharpen_init(nw*nk,iperc,0.5);
 			sf_csharpen(mt);
 			sf_cweight_apply(nw*nk, mt);
 			sf_sharpen_close();

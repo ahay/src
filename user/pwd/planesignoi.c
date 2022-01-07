@@ -61,10 +61,10 @@ void planesignoi_lop (bool adj, bool add, int ns, int nd, float *s, float *d)
 	}
 	allpass21_lop (true, true, ns, ns, s, tmp);
     } else {
+	allpass21_lop (false, false, ns, ns, s, tmp);
 	for (is=0; is < ns; is++) {
-	    tmp[is] = s[is];
+	    d[ns+is] += eps*tmp[is];
 	}
-	allpass21_lop (false, true, ns, ns, tmp, d+ns);
     }
 }
 

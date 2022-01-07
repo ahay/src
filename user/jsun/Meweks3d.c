@@ -111,9 +111,9 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* spatial derivatives from pseudo-spectral method            */
     /*------------------------------------------------------------*/
-    float ***xdx, ***xdy, ***xdz;
-    float ***ydx, ***ydy, ***ydz;
-    float ***zdx, ***zdy, ***zdz;
+    float ***xdx=NULL, ***xdy=NULL, ***xdz=NULL;
+    float ***ydx=NULL, ***ydy=NULL, ***ydz=NULL;
+    float ***zdx=NULL, ***zdy=NULL, ***zdz=NULL;
 
     /*------------------------------------------------------------*/
     /* linear interpolation weights/indices                       */

@@ -1,0 +1,86 @@
+\chapter{Migration Gallery}
+
+In seismic imaging, multiple algorithms exist for performing the task
+of seismic migration. The algorithms differ in accuracy and
+efficiency, which suggests a case for comparison. There are also
+multiple known synthetic benchmarks for comparing different imaging methods.
+
+The migration gallery project was born at the first Madagascar
+\emph{working workshop} in
+2013\footnote{\url{https://reproducibility.org/wiki/Austin_2013}}. The
+main idea was to organize examples of multiple algorithms in the form
+of a matrix, where rows would represent different benchmark examples
+and columns would represent different migration algorithms. This
+arrangement make it convenient to make direct comparisons of either
+efficiency or accuracy wnen new algorithms are developed or previously
+developed algorithms are tried on new data examples.
+
+\section{Importance of benchmarking}
+
+The common-task method was pioneered by DARPA (Defense Advanced
+Research Projects Agency) and applied successuflly in the field of
+Human Language Technologies \cite[]{liberman2020human}. \cite{donoho}
+calls the common-task method ``a secret sauce'' in the success of
+predictive methods, such as those developed in machine learning.
+
+The method calls for an open competition among a number of
+participants working on a common task. The key conditions is an
+objective metric used to judge the results (thus keeping the contest
+fair) and a requirement for the participants to share not only their
+results but also their methods and not only with the research sponsor
+but also with one another. Examples from different branches of science
+and technology show that a sustained application of the common-task
+method leads to measurable progress over the years, with occasional
+breakthrough inventions.
+
+The hope of the migration gallery project is to provide a platform
+where different seismic imaging methods could be compared objectively
+and improved over time, with improvements concerning either accuracy
+or efficiency of different algorithms.
+
+\section{Gallery project}
+
+Example workflows from the migration gallery are organized by dataset
+and located in \texttt{\$RSFSRC/book/data} directory. Thus, each data
+directory serves as a chapter in the ``migration gallery'' book.
+
+\section{Benchmark datasets}
+
+\subsection{Constant velocity}
+
+\subsection{$V(z)$ model}
+
+\subsection{Velocity gradient}
+
+\subsection{French model}
+
+\subsection{Marmousi}
+
+\subsection{Sigsbee}
+
+\subsection{Pluto}
+
+\subsection{Model-1994}
+
+\subsection{Statics-1994}
+
+\subsection{BP-2004}
+
+\subsection{BP-2007}
+
+\subsection{Hess VTI}
+
+\subsection{2.5D model}
+
+\subsection{Overthrust}
+
+\subsection{SEG Salt}
+
+\subsection{Teapot Dome}
+
+\section{Migration methods}
+
+\section{Conclusions}
+
+\bibliographystyle{seg}
+\bibliography{gallery}

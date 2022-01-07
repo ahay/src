@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     sf_file imask, weight, precon;
     int uts, mts, i, j;
     char *order, *cost;
-    float fx0, *x0, *x1, *g0, *g1, *s;
+    float *x0, *g0;
     float geps, gscale, lower, upper;
     int miter;
 
@@ -185,10 +185,7 @@ int main(int argc, char* argv[])
 
     /* allocate temporary memory */
     x0 = sf_floatalloc(n1*n2);
-    x1 = sf_floatalloc(n1*n2);
     g0 = sf_floatalloc(n1*n2);
-    g1 = sf_floatalloc(n1*n2);
-    s  = sf_floatalloc(n1*n2);
 
     for (j=0; j < n2; j++) {
 	for (i=0; i < n1; i++) {
@@ -209,7 +206,7 @@ int main(int argc, char* argv[])
 		 lower,upper);
     
     /* compute gradient */
-    fx0 = iwinlcg_eval(x0, mask,wght);
+    iwinlcg_eval(x0, mask,wght);
 
     iwinlcg_grad(x0, wght,prec,g0);
     if (update) iwinlcg_smooth(g0);

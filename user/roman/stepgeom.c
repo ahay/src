@@ -204,12 +204,11 @@ void step_forward_g(geomB * arrB,
     int lenB;
     
     geomB *pB;
-    float e, sum, vel, r1, sum_r1, prod; /* l2, l02 */ 
+    float e, sum, r1, sum_r1, prod; /* l2, l02 */ 
     int ix1, iz1, ix2, iz2, k, ioff1, ioff2;
     int nxnz = nx * nz;
     const float dx2 = dx*dx, dz2 = dz*dz;
 
-    vel = v[0];
     for (ix=1;ix<nx-1;ix++) {
 	for (iz=1;iz<nz-1;iz++) {
 
@@ -297,8 +296,6 @@ int step_forward_k(float * tgt_p,
 
     int 
 	k_nz = k * nz, 
-	k1_nz = (k-1) * nz,
-	k1 = k - 1,
 	kp1 = k + 1;
 
     float
@@ -342,8 +339,6 @@ int step_forward_k(float * tgt_p,
 	    k_s = 2.f * (k_rz + k_rx);
 
 	    k_nz = k * nz;
-	    k1_nz = (k-1) * nz;
-	    k1 = k - 1;
 	    kp1 = k + 1;
 
 	    /* src_ix_iz = src_p[ioff];

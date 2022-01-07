@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <assert.h>
 
 #ifdef __GNUC__
 #ifndef alloca
@@ -49,9 +50,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
+#ifdef SF_HAS_RPC
 #include <rpc/types.h>
 /* #include <rpc/rpc.h> */
 #include <rpc/xdr.h>
+#endif
 
 #include "_defs.h"
 #include "file.h"
@@ -94,12 +97,15 @@ struct sf_File {
     FILE *stream, *head; 
     char *dataname, *buf, *headname;
     sf_simtab pars;
+#ifdef SF_HAS_RPC
     XDR xdr;
     enum xdr_op op;
+#endif
     sf_datatype type;
     sf_dataform form;
     bool pipe, rw, dryrun;
 };
+
 
 /*@null@*/ static sf_file *infiles = NULL;
 static size_t nfile=0, ifile=0;
@@ -107,12 +113,18 @@ static const int tabsize=10;
 /*@null@*/ static char *aformat = NULL, *eformat = NULL;
 static size_t aline=8;
 static bool error=true;
+static bool little_endian = true;
 
 static bool getfilename (FILE *fd, char *filename);
 static char* getdatapath (void);
 static char* gettmpdatapath (void);
 static bool readpathfile (const char* filename, char* datapath);
 static void sf_input_error(sf_file file, const char* message, const char* name);
+
+#ifndef SF_HAS_RPC
+static void convert2(int nbuf, const char* buf1, char* buf2);
+static void convert4(int nbuf, const char* buf1, char* buf2);
+#endif
 
 void sf_file_error(bool err)
 /*< set error on opening files >*/
@@ -212,7 +224,10 @@ sf_file sf_input (/*@null@*/ const char* tag)
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
 	
+#ifdef SF_HAS_RPC
     file->op = XDR_DECODE;
+#endif
+    little_endian = sf_endian();
 	
     format = sf_histstring(file,"data_format");
     if (NULL == format) {
@@ -331,7 +346,10 @@ sf_file sf_output (/*@null@*/ const char* tag)
 	
     sf_putstring(file,"in",file->dataname);    
 	
+#ifdef SF_HAS_RPC
     file->op = XDR_ENCODE;
+#endif
+    little_endian = sf_endian();
 	
     if (NULL == infiles) {
 	infiles = (sf_file *) sf_alloc(1,sizeof(sf_file));
@@ -465,7 +483,9 @@ void sf_setform (sf_file file, sf_dataform form)
 	    if (NULL == file->buf) {
 		bufsiz = sf_bufsiz(file);
 		file->buf = sf_charalloc(bufsiz);
+#ifdef SF_HAS_RPC
 		xdrmem_create(&(file->xdr),file->buf,bufsiz,file->op);
+#endif
 	    }
 	    break;
 	case SF_NATIVE:
@@ -1097,19 +1117,25 @@ void sf_complexwrite (sf_complex* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(sf_complex);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(float),sizeof(float),
-				(xdrproc_t) xdr_float))
-		    sf_error ("sf_file: trouble writing xdr");
-		fwrite(file->buf,1,nbuf,file->stream);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(sf_complex);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(float),sizeof(float),
+					(xdrproc_t) xdr_float))
+				sf_error ("sf_file: trouble writing xdr");
+#else 
+			convert4(nbuf, buf-left, file->buf);
+#endif
+			fwrite(file->buf,1,nbuf,file->stream);
+			}
+			break;
+		}
 	default:
 	    fwrite(arr,sizeof(sf_complex),size,file->stream);
 	    break;
@@ -1132,20 +1158,26 @@ void sf_complexread (/*@out@*/ sf_complex* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(sf_complex);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (nbuf != fread(file->buf,1,nbuf,file->stream))
-		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(float),sizeof(float),
-				(xdrproc_t) xdr_float))
-		    sf_error ("%s: trouble reading xdr",__FILE__);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(sf_complex);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+			if (nbuf != fread(file->buf,1,nbuf,file->stream))
+				sf_error ("%s: trouble reading:",__FILE__);
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(float),sizeof(float),
+					(xdrproc_t) xdr_float))
+				sf_error ("%s: trouble reading xdr",__FILE__);
+#else
+			convert4(nbuf, file->buf, buf-left);
+#endif
+			}
+			break;
+		}
 	default:
 	    got = fread(arr,sizeof(sf_complex),size,file->stream);
 	    if (got != size) 
@@ -1175,16 +1207,22 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    buf = arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
-		    sf_error ("sf_file: trouble writing xdr");
-		fwrite(file->buf,1,nbuf,file->stream);
-	    }
-	    break;
+		if (little_endian) {
+			buf = arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
+				sf_error ("sf_file: trouble writing xdr");
+#else 
+			memcpy(file->buf, buf-left, nbuf);
+#endif
+			fwrite(file->buf,1,nbuf,file->stream);
+			}
+			break;
+		}
 	default:
 	    fwrite(arr,sizeof(char),size,file->stream);
 	    break;
@@ -1212,16 +1250,22 @@ void sf_ucharwrite (unsigned char* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
-		    sf_error ("sf_file: trouble writing xdr");
-		fwrite(file->buf,1,nbuf,file->stream);
-	    }
-	    break;
+		if (little_endian) {
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
+				sf_error ("sf_file: trouble writing xdr");
+#else 
+			memcpy(file->buf, buf-left, nbuf);
+#endif
+			fwrite(file->buf,1,nbuf,file->stream);
+			}
+			break;
+		}
 	default:
 	    fwrite(arr,sizeof(unsigned char),size,file->stream);
 	    break;
@@ -1245,17 +1289,23 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    buf = arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (nbuf != fread(file->buf,1,nbuf,file->stream))
-		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
-		    sf_error ("%s: trouble reading xdr",__FILE__);
-	    }
-	    break;
+		if (little_endian) {
+			buf = arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+			if (nbuf != fread(file->buf,1,nbuf,file->stream))
+				sf_error ("%s: trouble reading:",__FILE__);
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
+				sf_error ("%s: trouble reading xdr",__FILE__);
+#else 
+			memcpy(buf-left, file->buf, nbuf);
+#endif
+			}
+			break;
+		}
 	default:
 	    got = fread(arr,sizeof(char),size,file->stream);
 	    if (got != size) 
@@ -1304,17 +1354,23 @@ void sf_ucharread (/*@out@*/ unsigned char* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (nbuf != fread(file->buf,1,nbuf,file->stream))
-		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
-		    sf_error ("%s: trouble reading xdr",__FILE__);
-	    }
-	    break;
+		if (little_endian) {
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+			if (nbuf != fread(file->buf,1,nbuf,file->stream))
+				sf_error ("%s: trouble reading:",__FILE__);
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
+				sf_error ("%s: trouble reading xdr",__FILE__);
+#else 
+			memcpy(buf-left, file->buf, nbuf);
+#endif
+			}
+			break;
+		}
 	default:
 	    got = fread(arr,sizeof(unsigned char),size,file->stream);
 	    if (got != size) 
@@ -1349,19 +1405,25 @@ void sf_intwrite (int* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(int);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(int),sizeof(int),
-				(xdrproc_t) xdr_int))
-		    sf_error ("sf_file: trouble writing xdr");
-		fwrite(file->buf,1,nbuf,file->stream);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(int);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(int),sizeof(int),
+					(xdrproc_t) xdr_int))
+				sf_error ("sf_file: trouble writing xdr");
+#else
+			convert4(nbuf, buf-left, file->buf);
+#endif
+			fwrite(file->buf,1,nbuf,file->stream);
+			}
+			break;
+		}
 	default:
 	    fwrite(arr,sizeof(int),size,file->stream);
 	    break;
@@ -1382,20 +1444,26 @@ void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(int);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (nbuf != fread(file->buf,1,nbuf,file->stream))
-		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(int),sizeof(int),
-				(xdrproc_t) xdr_int))
-		    sf_error ("%s: trouble reading xdr",__FILE__);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(int);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+			if (nbuf != fread(file->buf,1,nbuf,file->stream))
+				sf_error ("%s: trouble reading:",__FILE__);
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(int),sizeof(int),
+					(xdrproc_t) xdr_int))
+				sf_error ("%s: trouble reading xdr",__FILE__);
+#else
+			convert4(nbuf, file->buf, buf-left);
+#endif
+			}
+			break;
+		}
 	default:
 	    got = fread(arr,sizeof(int),size,file->stream);
 	    if (got != size) 
@@ -1418,20 +1486,26 @@ void sf_shortread (/*@out@*/ short* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(int);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (nbuf != fread(file->buf,1,nbuf,file->stream))
-		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(short),sizeof(short),
-				(xdrproc_t) xdr_int))
-		    sf_error ("%s: trouble reading xdr",__FILE__);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(int);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+			if (nbuf != fread(file->buf,1,nbuf,file->stream))
+				sf_error ("%s: trouble reading:",__FILE__);
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(short),sizeof(short),
+					(xdrproc_t) xdr_int))
+				sf_error ("%s: trouble reading xdr",__FILE__);
+#else
+			convert2(nbuf, file->buf, buf-left);
+#endif
+			}
+			break;
+		}
 	default:
 	    got = fread(arr,sizeof(short),size,file->stream);
 	    if (got != size) 
@@ -1449,25 +1523,31 @@ void sf_longread (/*@out@*/ off_t* arr, size_t size, sf_file file)
     switch (file->form) {
 	case SF_ASCII:
 	    for (i = 0; i < size; i++) {
-		if (EOF==fscanf(file->stream,"%lld",arr+i))
+		if (EOF==fscanf(file->stream,"%lld",(long long *)(arr+i)))
 		    sf_error ("%s: trouble reading ascii:",__FILE__);
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(int);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (nbuf != fread(file->buf,1,nbuf,file->stream))
-		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(off_t),sizeof(off_t),
-				(xdrproc_t) xdr_int))
-		    sf_error ("%s: trouble reading xdr",__FILE__);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(int);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (nbuf != fread(file->buf,1,nbuf,file->stream))
+				sf_error ("%s: trouble reading:",__FILE__);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(off_t),sizeof(off_t),
+					(xdrproc_t) xdr_int))
+				sf_error ("%s: trouble reading xdr",__FILE__);
+#else 
+			convert4(nbuf, buf-left, file->buf);
+#endif
+			}
+			break;
+		}
 	default:
 	    got = fread(arr,sizeof(off_t),size,file->stream);
 	    if (got != size) 
@@ -1503,19 +1583,25 @@ void sf_shortwrite (short* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(short);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(short),sizeof(short),
-				(xdrproc_t) xdr_int))
-		    sf_error ("sf_file: trouble writing xdr");
-		fwrite(file->buf,1,nbuf,file->stream);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(short);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(short),sizeof(short),
+					(xdrproc_t) xdr_int))
+				sf_error ("sf_file: trouble writing xdr");
+#else 
+			convert2(nbuf, buf-left, file->buf);
+#endif
+			fwrite(file->buf,1,nbuf,file->stream);
+			}
+			break;
+		}
 	default:
 	    fwrite(arr,sizeof(short),size,file->stream);
 	    break;
@@ -1548,19 +1634,25 @@ void sf_floatwrite (float* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(float);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(float),sizeof(float),
-				(xdrproc_t) xdr_float))
-		    sf_error ("sf_file: trouble writing xdr");
-		fwrite(file->buf,1,nbuf,file->stream);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(float);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(float),sizeof(float),
+					(xdrproc_t) xdr_float))
+				sf_error ("sf_file: trouble writing xdr");
+#else 
+			convert4(nbuf, buf-left, file->buf);
+#endif
+			fwrite(file->buf,1,nbuf,file->stream);
+			}
+			break;
+		}
 	default:
 	    fwrite(arr,sizeof(float),size,file->stream);
 	    break;
@@ -1581,20 +1673,26 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(float);
-	    buf = (char*)arr+size;
-	    bufsiz = sf_bufsiz(file);
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (bufsiz < left)? bufsiz : left;
-		(void) xdr_setpos(&(file->xdr),0);
-		if (nbuf != fread(file->buf,1,nbuf,file->stream))
-		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(&(file->xdr),buf-left,
-				nbuf/sizeof(float),sizeof(float),
-				(xdrproc_t) xdr_float))
-		    sf_error ("%s: trouble reading xdr",__FILE__);
-	    }
-	    break;
+		if (little_endian) {
+			size *= sizeof(float);
+			buf = (char*)arr+size;
+			bufsiz = sf_bufsiz(file);
+			for (left = size; left > 0; left -= nbuf) {
+			nbuf = (bufsiz < left)? bufsiz : left;
+			if (nbuf != fread(file->buf,1,nbuf,file->stream))
+				sf_error ("%s: trouble reading:",__FILE__);
+#ifdef SF_HAS_RPC
+			(void) xdr_setpos(&(file->xdr),0);
+			if (!xdr_vector(&(file->xdr),buf-left,
+					nbuf/sizeof(float),sizeof(float),
+					(xdrproc_t) xdr_float))
+				sf_error ("%s: trouble reading xdr",__FILE__);
+#else 
+			convert4(nbuf, file->buf, buf-left);
+#endif
+			}
+			break;
+		}
 	default:
 	    got = fread(arr,sizeof(float),size,file->stream);
 	    if (got != size) 
@@ -1738,5 +1836,167 @@ void sf_close(void)
     ifile=nfile=0;
 }
 
-/* 	$Id$	 */
+sf_file sf_tmpfile(char *format)
+/*< Create an temporary (rw mode) file structure. Lives within the program >*/
+{ 
+
+    sf_file file;
+    char *dataname=NULL;
+    off_t len;
+
+    file = (sf_file) sf_alloc(1,sizeof(*file));
+    file->stream = sf_tempfile(&dataname,"w+b");
+        len = strlen(dataname)+1;
+        file->dataname = (char*) sf_alloc(len,sizeof(char));
+        memcpy(file->dataname,dataname,len);
+
+    if (NULL == file->stream)
+        sf_error ("%s: Trouble reading data file %s:",__FILE__,dataname);
+
+    file->buf = NULL;
+    file->pars = sf_simtab_init (tabsize);
+    file->head = NULL;
+
+    sf_putstring(file,"in",file->dataname);
+
+    if (NULL == infiles) {
+        infiles = (sf_file *) sf_alloc(1,sizeof(sf_file));
+        infiles[0] = NULL;
+        nfile=1;
+    }
+
+    if (NULL != infiles[0] &&
+        NULL != (format = sf_histstring(infiles[0],"data_format"))) {
+        sf_setformat(file,format);
+        free (format);
+    } else {
+        sf_setformat(file,"native_float");
+    }
+
+    file->headname = file->dataname;
+    file->dataname = NULL;
+
+    return file;
+}
+
+void sf_filefresh(sf_file file)
+/*< used for temporary file only to recover the dataname >*/
+{
+
+    extern int fseeko(FILE *stream, off_t offset, int whence);
+
+    file->dataname = file->headname;
+
+    if (0 > fseeko(file->stream,(off_t)0,SEEK_SET))
+        sf_error ("%s: seek problem:",__FILE__);
+}
+
+
+void sf_filecopy(sf_file file, sf_file src, sf_datatype type)
+/*< copy the content in src->stream to file->stream >*/
+{
+    off_t nleft, n;
+    char buf[BUFSIZ];
+    extern int fseeko(FILE *stream, off_t offset, int whence);
+
+    n = sf_bytes(src);
+    if (NULL != file->dataname) sf_fileflush (file,infiles[0]);
+
+    for (nleft = BUFSIZ; n > 0; n -= nleft) {
+        if (nleft > n) nleft=n;
+        switch (type) {
+            case SF_FLOAT:
+                sf_floatread  ((float*) buf,
+                               nleft/sizeof(float),src);
+                break;
+            case SF_COMPLEX:
+                sf_complexread((sf_complex*) buf,
+                               nleft/sizeof(sf_complex),src);
+                break;
+            default:
+                sf_error("%s: unsupported type %d",__FILE__,type);
+                break;
+        }
+        if (nleft != fwrite (buf,1,nleft,file->stream))
+            sf_error("%s: writing error:",__FILE__);
+    }
+}
+
+void sf_tmpfileclose (sf_file file)
+/*< close a file and free allocated space >*/
+{
+    if (NULL == file) return;
+
+    if (file->stream != stdin &&
+        file->stream != stdout &&
+        file->stream != NULL) {
+        (void) fclose (file->stream);
+        file->stream = NULL;
+    }
+
+    if (file->headname != NULL) {
+        (void) unlink (file->headname);
+        free(file->headname);
+        file->headname = NULL;
+    }
+
+    if (NULL != file->pars) {
+        sf_simtab_close (file->pars);
+        file->pars = NULL;
+    }
+
+    if (NULL != file->buf) {
+        free (file->buf);
+        file->buf = NULL;
+    }
+}
+
+bool sf_endian (void)
+/*< Endianness test, returns true for little-endian machines >*/
+{
+    bool little_endian;
+
+    union {
+	unsigned char c[4];
+	int i;
+    } test;
+
+    test.i=0;
+    test.c[0] = (unsigned char) 1;
+    
+    assert (2 == sizeof(short) && 4 == sizeof(int)); /* fix this later */
+    little_endian = (bool) (0 != (test.i << 8));
+    
+    return little_endian;
+}
+
+#ifndef SF_HAS_RPC
+
+static void convert2(int nbuf, const char* buf1, char* buf2)
+/* change byte oder of 2-byte int */
+{	
+	int i;
+
+	for (i = 0; i < nbuf; i+=2) {
+		buf2[i] = buf1[i+1];
+		buf2[i+1] = buf1[i];
+	}
+}
+
+
+static void convert4(int nbuf, const char* buf1, char* buf2)
+/* change byte oder of 4-byte number*/
+{
+	int i;
+
+	for (i = 0; i < nbuf; i+=4) {
+		buf2[i] = buf1[i+3];
+		buf2[i+1] = buf1[i+2];
+		buf2[i+2] = buf1[i+1];
+		buf2[i+3] = buf1[i];
+	}
+}
+
+#endif
+
 

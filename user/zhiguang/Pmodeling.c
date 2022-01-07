@@ -29,7 +29,7 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
 
-	float dx2, dz2, dt2, dt;
+	float dx2, dz2, dt2;
 	float **vv, **dd;
 	float **p0, **p1, **p2, **term, **tmparray, **rr;
 
@@ -55,7 +55,6 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
 	dt2=acpar->dt*acpar->dt;
-	dt=acpar->dt;
 
 	vv = sf_floatalloc2(padnz, padnx);
 	dd=sf_floatalloc2(nt, nr);
@@ -137,8 +136,9 @@ void forward_modeling(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpa
 		swap=fopen("temswap.bin", "rb");
 		for(is=0; is<acpar->ns; is++){
 			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			fread(dd[0], sizeof(float), nr*nt, swap);
-			sf_floatwrite(dd[0], nr*nt, Fdat);
+			if (!fread(dd[0], sizeof(float), nr*nt, swap))
+				abort();
+			sf_floatwrite(dd[0], nr * nt, Fdat);
 		}
 		fclose(swap);
 		remove("temswap.bin");
@@ -263,8 +263,9 @@ void forward_modeling_q(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 		swap=fopen("temswap.bin", "rb");
 		for(is=0; is<acpar->ns; is++){
 			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			fread(dd[0], sizeof(float), nr*nt, swap);
-			sf_floatwrite(dd[0], nr*nt, Fdat);
+			if (!fread(dd[0], sizeof(float), nr*nt, swap))
+				abort();
+			sf_floatwrite(dd[0], nr * nt, Fdat);
 		}
 		fclose(swap);
 		remove("temswap.bin");
@@ -288,7 +289,7 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	int nz, nx, padnz, padnx, padnzx, nt, nr, ns, nb;
 	int numprocs, cpuid, iturn, nspad;
 
-	float dx, dz, dt, idt;
+	float dx, dz, idt;
 	float **vv, **den, **v2d, **iden, **dd, *bcxp, *bczp, *bcxv, *bczv;
 	float **px, **pz, **p, **vx, **vz, **term, *rr, *sendbuf, *recvbuf, ***ddall;
 
@@ -313,7 +314,6 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 
 	dx=acpar->dx;
 	dz=acpar->dz;
-	dt=acpar->dt;
 	idt=1./acpar->dt;
 
 	numprocs=mpipar->numprocs;
@@ -460,7 +460,11 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 	free(*vv); free(vv); free(*den); free(den);
 	free(*dd); free(dd); free(*term); free(term);
 	free(*v2d); free(v2d); free(*iden); free(iden);
-	if(cpuid==0) free(**ddall); free(*ddall); free(ddall);
+	if(cpuid==0) {
+		free(**ddall); 
+		free(*ddall); 
+		free(ddall);
+	}
 }
 
 void forward_modeling_dq(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui acpar, sf_vec_dq array, int para_type, bool verb)
@@ -472,7 +476,7 @@ void forward_modeling_dq(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 
 	float dx, dz, dt, idt;
 	float **vv, **den, **v2d, **iden, **tau, **taus, **dd;
-	float **p, **vx, **vz, **r1, **r2, **term, **term1, *rr, *ww, *bc;
+	float **p, **vx, **vz, **r1, **r2, **term, **term1, *rr, *ww;
 
 	FILE *swap;
 	sf_file Fwav;
@@ -520,7 +524,6 @@ void forward_modeling_dq(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 	term=sf_floatalloc2(padnz, padnx);
 	term1=sf_floatalloc2(padnz, padnx);
 	rr=sf_floatalloc(padnzx);
-	bc=acpar->bc;
 	ww=array->ww;
 
 	/* padding and convert vector to 2-d array */
@@ -633,8 +636,9 @@ void forward_modeling_dq(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 		swap=fopen("temswap.bin", "rb");
 		for(is=0; is<acpar->ns; is++){
 			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			fread(dd[0], sizeof(float), nr*nt, swap);
-			sf_floatwrite(dd[0], nr*nt, Fdat);
+			if (!fread(dd[0], sizeof(float), nr*nt, swap))
+				abort();
+			sf_floatwrite(dd[0], nr * nt, Fdat);
 		}
 		fclose(swap);
 		remove("temswap.bin");
@@ -659,7 +663,7 @@ void forward_modeling_gn(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 	int sx, rx, sz, rz, frectx, frectz;
 	int nz, nx, padnz, padnx, padnzx, nt, nr, nb;
 
-	float dx2, dz2, dt2, dt;
+	float dx2, dz2, dt2;
 	float **vv, **dd;
 	float **p0, **p1, **p2, **term, **tmparray, *rr;
 
@@ -685,7 +689,6 @@ void forward_modeling_gn(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 	dx2=acpar->dx*acpar->dx;
 	dz2=acpar->dz*acpar->dz;
 	dt2=acpar->dt*acpar->dt;
-	dt=acpar->dt;
 
 	vv = sf_floatalloc2(padnz, padnx);
 	dd=sf_floatalloc2(nt, nr);
@@ -756,8 +759,9 @@ void forward_modeling_gn(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui a
 		swap=fopen("temswap.bin", "rb");
 		for(is=0; is<acpar->ns; is++){
 			fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
-			fread(dd[0], sizeof(float), nr*nt, swap);
-			sf_floatwrite(dd[0], nr*nt, Fdat);
+			if (!fread(dd[0], sizeof(float), nr*nt, swap))
+				abort();
+			sf_floatwrite(dd[0], nr * nt, Fdat);
 		}
 		fclose(swap);
 		remove("temswap.bin");

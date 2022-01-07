@@ -18,6 +18,11 @@ Result('dem',plot('Digital Elevation Map'))
 # Program for running average
 run = Program('running.c')
 
+# COMMENT ABOVE AND UNCOMMENT BELOW IF YOU WANT TO USE PYTHON 
+# run = Command('running.exe','running.py','cp $SOURCE $TARGET')
+# AddPostAction(run,Chmod(run,0o755))
+
+
 w = 30
 
 # !!! CHANGE BELOW !!!
@@ -48,8 +53,6 @@ for case in ('fast','slow'):
 
     time = 'time-' + case
     wind = 'wind-' + case
-
- 
     
     # loop over window size
     for w in range(3,16,2):
@@ -60,15 +63,12 @@ for case in ('fast','slow'):
         ws.append(iwind)
 
         # measure CPU time
- 
-        
-        
         Flow(iwind,None,'spike n1=1 mag=%d' % (w*w)) 
         Flow(itime,'dem %s' % run[0],
              '''
              ( (%s -f "%%S %%U"
              ./${SOURCES[1]} < ${SOURCES[0]} 
-              w1=%d w2=%d what=%s > /dev/null ) 2>&1 )
+              w1=%d w2=%d how=%s > /dev/null ) 2>&1 )
               > time.out &&
              (tail -1 time.out; 
               echo in=time0.asc n1=2 data_format=ascii_float)
@@ -90,12 +90,12 @@ for case in ('fast','slow'):
          ''')
 
 # Display CPU time
-Plot  ('time','ctime-fast ctime-slow',
-       '''
-       cat axis=1 ${SOURCES[1]} | transp |
-       graph dash=0,1 wanttitle=n
-       label2="CPU Time" unit2=s
-       label1="Window Size" unit1=
-       ''',view=1)
+Plot('time','ctime-fast ctime-slow',
+     '''
+     cat axis=1 ${SOURCES[1]} | transp |
+     graph dash=0,1 wanttitle=n
+     label2="CPU Time" unit2=s
+     label1="Window Size" unit1=
+     ''',view=1)
 
 End()

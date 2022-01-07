@@ -1,0 +1,499 @@
+
+\published{Geophysics, 81, V261-V270, (2016)}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\title{Damped multichannel singular spectrum analysis for 3D random noise attenuation}
+\author{Weilin Huang\footnotemark[1], Runqiu Wang\footnotemark[1], Yangkang Chen\footnotemark[2], Huijian Li\footnotemark[1], and Shuwei Gan\footnotemark[1]}
+
+\address{
+\footnotemark[1] State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200\\
+cup\_hwl@126.com \& wrq@cup.edu.cn \& lihuijian1117@163.com \& gsw19900128@126.com\\ 
+\footnotemark[2]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+ykchen@utexas.edu 
+}
+
+\ms{GEO-2015}
+
+\lefthead{Huang et al.}
+\righthead{Damped MSSA}
+
+\maketitle
+
+% for multiple-revision
+\DeclareRobustCommand{\dlo}[1]{}
+\DeclareRobustCommand{\wen}[1]{#1}
+  
+\begin{abstract}
+Multichannel singular spectrum analysis (MSSA) is an effective algorithm for random noise attenuation in seismic data, which decomposes the vector space of the Hankel matrix of the  noisy signal into a signal subspace and a noise subspace by the truncated singular value  decomposition (TSVD). However, this signal subspace actually still contains residual noise.  We derived a new formula of low-rank reduction, which is more powerful in  distinguishing between signal and noise compared with the traditional TSVD. By introducing a  damping factor into the traditional MSSA for damping the singular values, we proposed a new algorithm for random noise attenuation. The proposed modified MSSA is named as the damped MSSA. The denoising performance is controlled by the damping factor and the proposed approach reverts to the traditional MSSA approach when the damping factor is sufficiently large. Application of the damped MSSA algorithm on synthetic and field seismic data demonstrates a superior performance compared with the conventional MSSA algorithm.
+\end{abstract}
+
+\section{Introduction}
+High signal-to-noise ratio (SNR) is necessary \old{to many tasks}\new{for many procedures} in seismic exploration such as amplitude \old{versus}\new{variation with} offset (AVO) analysis, seismic attribute analysis and microseismic monitoring. The attenuation of random noise is an important subject in improving the signal-to-noise ratio (SNR) \cite[]{yangkang20141}. \dlo{The useful signal that is smeared in the ambient random noise is often neglected and thus may cause fake discontinuity of seismic events and artifact in final migrated image.}\wen{If signal is eliminated with the noise, continuity of seismic events may be disrupted and the resulting image quality will be negatively affected.} Enhancing the useful signal while preserving edge properties of the seismic profiles by attenuating random noise can help reduce interpretation difficulties and risks for oil \& gas detection \cite[]{shuwei2015,wencheng2015asa}. 
+
+There are several classical ways for random\dlo{-} noise attenuation: prediction based noise-attenuation approaches \cite[]{abma1995,guochang20112} \wen{ such as the $f-x$ deconvolution \cite[]{canales1984,gulunay1986} and $f-xy$ deconcolution \cite[]{fxydecon,guochang2012}}, median filtering \cite[]{yike2013,yangkang2014svmf,shuwei2016}, Karhunen-Loeve transform \cite[]{jones1987}, sparse transform domain thresholding strategies \cite[]{donoho1995,neelamani2008,fomel2010seislet,yangkang20142,yangkang2016dsd} and \wen{Cadzow filtering \cite[]{trickett2008,trickett2009} or} multichannel singular spectrum analysis \cite[]{mssa,stephen2013,jianjun2013}. The principle of all these denoising approaches is to distinguish between noise and signal based on certain characteristics\wen{, such as the spatial coherency \dlo{and}\wen{or} the sparsity in a sparse transform domain}. \dlo{In order to compensate for the loss of useful energy during the noise-attenuation process,} \cite{yangkang2015ortho} proposed a two-step denoising approach in order to retrieve the lost useful information from the removed noise based on local signal-and-noise orthogonalization.
+
+In this paper, we focus\new{ed} on attenuating random noise in 3D seismic data using the multichannel singular spectrum analysis (MSSA) algorithm. MSSA is a data-driven algorithm developed from research on alternative tools for the analysis of multichannel time series, which is based on the truncated singular value decomposition (TSVD) \cite[]{golub1996} of the Hankel matrix. MSSA is also an extension of singular spectrum analysis (SSA), which is used to analyze 1D time series. Like other noise-attenuation methods, MSSA transforms the data into a domain where signal and noise \wen{are mapped} \dlo{map} onto separate subspaces and then removes the noise. However, many numerical experiments suggest that the random noise can not be completely removed using the MSSA algorithm \cite[]{weilin2015}. \old{One of the reasons}\new{One perspective} is that the TSVD can only decompose the data into a noise subspace and a signal-plus-noise subspace. \old{In order to make the MSSA algorithm more robust, a modified version is strongly required. In this paper, we propose\new{d} a damped MSSA approach that can decompose the data into the signal subspace and noise subspace, thus significantly improving the denoising performance of the traditional MSSA approach.}\new{In this paper, we analyzed how to theoretically decompose the input data into signal subspace and noise subspace and proposed a  practical solution to apply a variable damping factor to different singular values to obtain results with higher SNR.} We used both synthetic and field 3D seismic datasets to demonstrate our proposed approach.
+
+
+\section{Traditional MSSA by TSVD}
+Consider a block of 3D data $\mathbf{D}_{time}(x,y,t)$ of $N_x$ by $N_y$ by $N_t$ samples $(x=1\cdots N_x,y=1\cdots N_y,t=1\cdots N_t)$. The MSSA \cite[]{mssa} operates on the data in the following way: first, MSSA transforms $\mathbf{D}_{time}(x,y,t)$ into $\mathbf{D}_{freq}(x,y,w)(w=1\cdots N_w)$ \dlo{of}\wen{with} complex values \dlo{of}\wen{in} the frequency domain. Each frequency slice of the data, at a given frequency $w_0$, can be represented by the following matrix:
+\begin{equation}
+\label{eq:mssa}
+\mathbf{D}(w_0)=\left(\begin{array}{cccc}
+D(1,1) & D(1,2) & \cdots &D(1,N_x) \\
+D(2,1) & D(2,2)  &\cdots &D(2,N_x) \\
+\vdots & \vdots &\ddots &\vdots \\
+D(N_y,1)&D(N_y,2) &\cdots&D(N_y,N_x)
+\end{array}
+\right).
+\end{equation}
+
+To avoid notational clutter we omit the argument $w_0$. Second, MSSA constructs a Hankel matrix for each row of $\mathbf{D}$; the Hankel matrix $\mathbf{R}_i$ for row $i$ of $\mathbf{D}$ is as follows:
+\begin{equation}
+\label{eq:data}
+\mathbf{R}_i=\left(\begin{array}{cccc}
+D(i,1) & D(i,2) & \cdots &D(i,m) \\
+D(i,2) & D(i,3)  &\cdots &D(i,m+1) \\
+\vdots & \vdots &\ddots &\vdots \\
+D(i,N_x-m+1)&D(i,N_x-m+2) &\cdots&D(i,N_x)
+\end{array}
+\right).
+\end{equation}
+Then MSSA constructs a block Hankel matrix $\mathbf{M}$ for $\mathbf{R}_i$ \new{as}:
+\begin{equation}
+\label{eq:hankel2}
+\mathbf{M}=\left(\begin{array}{cccc}
+\mathbf{R}_1 &\mathbf{R}_2 & \cdots &\mathbf{R}_n \\
+\mathbf{R}_2 &\mathbf{R}_3 &\cdots &\mathbf{R}_{n+1} \\
+\vdots & \vdots &\ddots &\vdots \\
+\mathbf{R}_{N_y-n+1}&\mathbf{R}_{N_y-n+2} &\cdots&\mathbf{R}_{N_y}
+\end{array}
+\right).
+\end{equation}
+The size of $\mathbf{M}$ is $I\times J$, $I=(N_x-m+1)(N_y-n+1)$, \dlo{$J=mI$}\wen{$J=mn$}. $m$ and $n$ are predifined integers chosen such that the \wen{Hankel maxtrix $\mathbf{R}_i$ and the block Hankel matrix $\mathbf{M}$}  \dlo{block Hankel matrices $\mathbf{R}_i$ and $\mathbf{M}$} are close to square matrices, for example, $m=N_x-\lfloor\frac{N_x}{2}\rfloor$ and $n=N_y-\lfloor\frac{N_y}{2}\rfloor$, where $\lfloor\cdot\rfloor$ denotes the integer part of the \dlo{input}\wen{argument}. We assume that $I>J$. The filtered data are recovered with random noise attenuated by properly averaging along the anti-diagonals of the low-rank reduction matrix of $\mathbf{M}$ via TSVD. \old{Let us first focus on the TSVD.}\new{Next, we would like to briefly discuss the TSVD to introduce our work.} % for the purpose of random noise attenuated. 
+ In general, the matrix $\mathbf{M}$ can be represented as
+\begin{equation}
+\label{eq:M}
+\mathbf{M}=\mathbf{S}+\mathbf{N},
+\end{equation}
+where $\mathbf{S}$ and $\mathbf{N}$ denote the block Hankel matrix of signal and of random noise, respectively. We assume that $\mathbf{M}$ and $\mathbf{N}$ have full rank, $rank(\mathbf{M})$=$rank(\mathbf{N})=J$ and $\mathbf{S}$ has deficient rank, $rank(\mathbf{S})=K<J$. The singular value decomposition (SVD) of $\mathbf{M}$ can be represented as:
+\begin{equation}
+\label{eq:svdm}
+\mathbf{M} = [\mathbf{U}_1^M\quad \mathbf{U}_2^M]\left[\begin{array}{cc} 
+\Sigma_1^M & \mathbf{0}\\
+\mathbf{0} & \Sigma_2^M
+\end{array}
+\right]\left[\begin{array}{c} 
+(\mathbf{V}_1^M)^H\\
+(\mathbf{V}_2^M)^H
+\end{array}
+\right],
+\end{equation}
+where $\Sigma_1^M$ ($K\times K$) and $\Sigma_2^M$ ($(I-K)\times(J-K)$) are diagonal matrices and contain, respectively, larger singular values and smaller singular values. $\mathbf{U}_1^M$ ($I\times K$), $\mathbf{U}_2^M$ ($I\times (I-K)$), $\mathbf{V}_1^M$ ($J\times K$) and $\mathbf{V}_2^M$ ($J\times (J-K)$) denote the associated matrices with singular vectors. The symbol $[\cdot]^H$ denotes the conjugate transpose of a matrix. \old{In general}\new{Generally,} the signal is more energy-concentrated and correlative than the random noise.  Thus, the larger singular values and their associated singular vectors represent the signal, \dlo{while the smaller represent the random noise.}\wen{while the smaller values and their associated singular vectors represent the random noise.} We let $\Sigma_2^M$ be $\mathbf{0}$ to achieve the goal of attenuating random noise as follows:
+\begin{equation}
+\label{eq:tsvd}
+\tilde{\mathbf{M}} = \mathbf{U}_1^M\Sigma_1^M(\mathbf{V}_1^M)^H.
+\end{equation}
+Equation \ref{eq:tsvd} is referred to as the TSVD.
+
+\section{Damped MSSA}
+However, $\tilde{\mathbf{M}}$ is actually still mixed with residual noise. In the following part, we will first \old{introduce}\new{analyse} the reason why $\tilde{\mathbf{M}}$ also contains noise component, and then introduce the modified MSSA method by damping the singular values, which we call the damped MSSA. 
+
+The singular value decomposition (SVD) of $\mathbf{S}$ can be represented as:
+\begin{equation}
+\label{eq:svds}
+\mathbf{S} = [\mathbf{U}_1^S\quad \mathbf{U}_2^S]\left[\begin{array}{cc} 
+\Sigma_1^S & \mathbf{0}\\
+\mathbf{0} & \Sigma_2^S
+\end{array}
+\right]\left[\begin{array}{c} 
+(\mathbf{V}_1^S)^H\\
+(\mathbf{V}_2^S)^H
+\end{array}
+\right].
+\end{equation}
+The corresponding matrices in equations \ref{eq:svdm} and \ref{eq:svds} have the same size. 
+
+Because of the deficient rank, the matrix $\mathbf{S}$ can be written as
+\begin{equation}
+\label{eq:S}
+\mathbf{S}=\mathbf{U}_1^S\Sigma_1^S(\mathbf{V}_1^S)^H.
+\end{equation}
+
+Combining equations \ref{eq:M}, \ref{eq:svds}, and \ref{eq:S}, we can factorize $\mathbf{M}$ as follows:
+\begin{equation}
+\label{eq:factorm}
+\mathbf{M} = [\mathbf{U}_1^S \quad \mathbf{U}_2^S]\left[\begin{array}{cc} 
+\Sigma_{1} & \mathbf{0}\\
+\mathbf{0} & \Sigma_{2}
+\end{array}
+\right]\left[\begin{array}{c} 
+(\Sigma_{1})^{-1}(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)^H\\
+(\Sigma_{2})^{-1}(\mathbf{N}^H\mathbf{U}_2^S)^H
+\end{array}
+\right],
+\end{equation} 
+
+where $\Sigma_1$ and $\Sigma_2$ denote diagonal and positive definite matrices. \wen{Please note that M is constructed such that it is close to a square matrix \cite[]{mssa}, and thus the $\Sigma_1$ and $\Sigma_2$ are assumed to be square matrices for derivation convenience.} The appendix A provides the derivation of how we factorize $\mathbf{M}$ into the form of equation \ref{eq:factorm}. We observe that the left \dlo{and right matrices}\wen{matrix} \dlo{have}\wen{has} orthonormal columns and the middle matrix is diagonal. \wen{It can be proven that the right matrix also has orthonormal columns. The proof is provided in appendix A.} Thus, equation \ref{eq:factorm} is an SVD of $\mathbf{M}$. According to the TSVD method, we let $\Sigma_2$ be $\mathbf{0}$ and then the following equation holds:
+\begin{equation}
+\label{eq:tsvd2}
+\begin{split}
+\tilde{\mathbf{M}} &= \mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N} + \mathbf{U}_1^S\Sigma_1^S(\mathbf{V}_1^S)^H \\
+ &=\mathbf{S} + \mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N}.
+\end{split}
+\end{equation}
+
+It is clear that $\tilde{\mathbf{M}}\neq\mathbf{S}$. Because the matrices $\mathbf{U}_1^S$ and $\mathbf{N}$ are unknown, \dlo{so }we cannot use equation \ref{eq:tsvd2} directly to attenuate the residual noise. However, by combining equations \ref{eq:tsvd}, \ref{eq:factorm} and \ref{eq:tsvd2}, we can derive $\mathbf{S}$ as:
+
+\begin{equation}
+\label{eq:S2}
+\mathbf{S}=\mathbf{U}_1^M\left\{\Sigma_1^M(\mathbf{V}_1^M)^H- \left[\Sigma_1(\mathbf{V}_1^M)^H-\Sigma_1^S(\mathbf{V}_1^S)^H\right]\right\}
+\end{equation}
+The appendix B gives a detailed derivation to obtain equation \ref{eq:S2} from equations \ref{eq:tsvd}, \ref{eq:factorm} and \ref{eq:tsvd2}.
+
+For simplification, we assume that there exist\dlo{s} such $\mathbf{A}$ and $\mathbf{B}$ that $\mathbf{V}_1^S=\mathbf{V}_1^M\mathbf{A}$ and $\Sigma_1= \Sigma_1^M\mathbf{B}$. $\mathbf{A}$ is a square matrix of \dlo{$J\times J$}\wen{$K\times K$} and $\mathbf{B}$ is a diagonal matrix of \dlo{$J\times J$}\wen{$K\times K$}. Then we can simplify $\mathbf{S}$ as:
+
+\begin{align}
+\label{eq:S3}
+\mathbf{S} &= \mathbf{U}_1^M\Sigma_1^M\mathbf{T}\left(\mathbf{V}_1^M\right)^H.\\
+\label{eq:T}
+\mathbf{T} &= \mathbf{I} - \mathbf{B}\left(\mathbf{I}-(\Sigma_1)^{-1}\Sigma_1^S\mathbf{A}^H\right),
+\end{align}
+where $\mathbf{I}$ is a unit matrix and here we name $\mathbf{T}$ the damping operator. In fact, from equation \ref{eq:factorm}, we can also approximate $\mathbf{A}$ and $\mathbf{B}$ as follows:
+
+\begin{align}
+\label{eq:A}
+\mathbf{A}&\approx(\mathbf{I}-\Gamma)\Sigma_1\left(\Sigma_1^S\right)^{-1},\\
+\label{eq:B}
+\mathbf{B} &=\mathbf{I}.
+\end{align}
+where \dlo{$\Gamma=(\mathbf{V}_1^M)^H\mathbf{N}^H\mathbf{U}_1^S$} \wen{$\Gamma=(\mathbf{V}_1^M)^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1}$} is an unknown matrix\dlo{, where}\wen{.} $(\mathbf{V}_1^M)^{o}$ \wen{can be regarded as an approximate inverse of $\mathbf{V}_1^M$, which }satisfies that $\parallel\mathbf{I}-\mathbf{V}_1^M(\mathbf{V}_1^M)^{o} \parallel\rightarrow 0$. The appendix B provides the detailed derivation for obtaining equations \ref{eq:A} and \ref{eq:B}.
+
+Inserting equations \ref{eq:A} and \ref{eq:B} into equation \ref{eq:T}, we can obtain a simplified formula:
+
+\begin{equation}
+\label{eq:T1}
+\begin{split}
+\mathbf{T} &= \mathbf{I} - \mathbf{I}\left(\mathbf{I}-(\Sigma_1)^{-1}\Sigma_1^S\mathbf{A}^H\right)\\
+		 &= (\Sigma_1)^{-1}\Sigma_1^S\mathbf{A}^H \\
+		 &\approx(\Sigma_1)^{-1}\Sigma_1^S  \left((\mathbf{I}-\Gamma)\Sigma_1\left(\Sigma_1^S\right)^{-1}\right)^H \\
+		 &=\mathbf{I}-\Gamma.
+\end{split}		 
+\end{equation}
+
+Combing equations \ref{eq:S3} and \ref{eq:T1}, we can conclude that the true signal is a damped version of the previous TSVD method (equation \ref{eq:tsvd}), with the damping operator defined by equation \ref{eq:T1}. Right now, there \dlo{are}\wen{is} still one unknown parameter needed to be defined: $\Gamma$. Although we have a potential selection  $\Gamma=(\mathbf{V}_1^M)^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1}$, as defined during the derivation of $\mathbf{A}$, we cannot calculate it because we do not know $\mathbf{N}$ and $\mathbf{U}_1^S$. 
+
+\wen{
+Instead, we seek the form of $\Gamma$ from a different way. We treat $\Gamma$ as a whole instead of paying attention to each detailed component in $\Gamma=(\mathbf{V}_1^M)^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1}$. We have known that the true signal is a damped version of the TSVD method from the previous derivation, and the damping operator equals to $\mathbf{I}-\Gamma$, \old{which acts}\new{acting} on the diagonal matrix $\Sigma_1^M$. We can begin our search for an approximation of $\Gamma$ based on the following conditions:
+\begin{enumerate}
+\item As we know from the previous derivation, the truncating point of TSVD is the rank of the signal matrix $\mathbf{S}$. In other words, the rank of $\tilde{\mathbf{M}}= \mathbf{U}_1^M\Sigma_1^M(\mathbf{V}_1^M)^H$ equals to the rank of $\mathbf{S}$. The rank of $\tilde{\mathbf{M}}$ should remain unchanged when we damp $\Sigma_1^M$. Therefore, the damping operator should be a diagonal and positive definite matrix.
+\item Each element of the damping operator should be in the interval $(0,1]$.
+\item The lower the SNR is, the stronger the damping should be, because the energy of random noise in the signal-noise space is relatively \old{more}\new{stronger}. \old{Therefore the damping operator should have a positive relationship with the SNR.}
+\item In the case of zero random noise, the damping operator should be a unit matrix.
+\item Since we always hope to preserve the main components of seismic data, the damping operator should have a weaker effect on the larger singular value.
+\item The power of the damping operator can be controlled by one coefficient and the damped MSSA can revert to the traditional MSSA.
+\end{enumerate}
+From the above analysis, we \old{speculate that the $\Gamma$ should be a formula as}\new{propose to use a $\Gamma$ of the following form:}
+		\begin{equation}
+		\Gamma=
+		\left(                 
+		\begin{array}{cccc}  
+		a_1/b_1 &         &        &   \\[3mm]
+		        & a_2/b_2 &        &   \\[3mm]
+		        &         & \ddots &   \\[3mm]
+		        &         &        & a_K/b_K
+		\end{array}
+		\right),                 
+		\end{equation}
+where \old{the sequences $ \{a\} $ and $ \{b\} $ satisfy that} $ \{a\} $ contains the information of random noise, $ \{b\} $ contains the information of signal, $ a_1/b_1<a_2/b_2<\cdots<a_K/b_K $ and $ 0<a_i<b_i $, $i=1,2,\cdots,K $. 
+}
+
+\wen{We} \new{tried}\old{try} a lot \dlo{a}\wen{of} numerical experiments and found that a very pleasant denoising performance can be obtained when $\Gamma$ is chosen as
+\begin{equation}
+\label{eq:Gamma}
+\Gamma \approx \hat{\delta}^N\left(\Sigma_1^M\right)^{-N},
+\end{equation}
+where $\hat{\delta}$ denotes the maximum element of $\Sigma_2^M$ and $N$ denotes the damping factor. \wen{We use such approximation because of three reasons. (1) $\hat{\delta}$ reflects the energy of random noise and $ \Sigma_1^M $ contains the information of signal. (2) Because the diagonal  elements of $ \Sigma^M $ are in a descending order, $\hat{\delta} $  is certainly smaller than every diagonal element of $ \Sigma_1^M $, and  $ \hat{\delta}/\delta_1<\hat{\delta}/\delta_2<\cdots<\hat{\delta}/\delta_K $, where $\delta_i$ denotes $i$th diagonal entry in $\Sigma_1^M$. (3) $\hat{\delta}$ is zero in the zero random noise situation. Besides, We introduce the parameter $ N $ to control the strength of damping operator, the greater the $ N $, the weaker the damping, and the damped MSSA reverts to the basic MSSA when $ N\to\infty $.
+}
+
+Combining equations \ref{eq:S3}, \ref{eq:T1}, and \ref{eq:Gamma}, we conclude the approximation of $\mathbf{S}$ as:
+\begin{align}
+\label{eq:S4}
+\mathbf{S} & = \mathbf{U}_1^M \Sigma_1^M\mathbf{T}(\mathbf{V}_1^M)^H,\\
+\label{eq:T2}
+\mathbf{T} & =\mathbf{I}-(\Sigma_1^M)^{-N}\hat{\delta}^N.
+\end{align} 
+\dlo{The newly developed algorithm (equations \ref{eq:S4} and \ref{eq:T2}) is termed as the damped MSSA algorithm.}\wen{We call the newly developed algorithm (equations \ref{eq:S4} and \ref{eq:T2}) damped MSSA algorithm.} In the proposed algorithm, we only need to decide \old{the} two parameters: the rank $K$ and the damping factor $N$. \dlo{It is worth to be mentioned that the greater the $N$, the weaker the damping, and equation \ref{eq:S4} reverts to equation \ref{eq:tsvd} when $N\rightarrow +\infty$.} \wen{It is worth mentioning that the damping operator $\mathbf{T}$ (equation \ref{eq:T2}) also behaves as a soft-thresholding operator applied on the singular matrix $\mathbf{\Sigma_1^M}$. } The damping (thresholding) step may thus cause slight damage to useful signal while more noise is scaled down, and the final S/N can still be \old{much}\new{greatly} improved.
+
+The parameterization for the DMSSA approach is \old{very}\new{quite} convenient. Although the traditional MSSA has a rank with \old{large}\new{broad} range according to the data size and data complexity, the damping factor is usually chosen between 2-5. When damping factor is chosen as 1, the damping is very strong and will cause some useful energy loss, but when the damping factor is chosen \new{as} 2, 3, or even larger value, the compromise between preservation of useful signals and removal of random noise are much improved. The implementation of the DMSSA approach can be straightforwardly based on the MSSA framework, except for the slight difference, \dlo{that}\wen{which} introduces the damping factor. 
+
+\section{Examples}
+We first test the damped MSSA algorithm proposed in this paper on a 3D synthetic data \wen{set} which is composed of three linear events in $x-y-t$ domain. The data contain $N_x\times N_y$ traces, with $N_x=20$ and $N_y=20$. The size of the block Hankel matrix for this example is $121\times100$. The temporal length of the window is 600 ms. The sampling interval is 2ms. The clean and noisy data are shown in Figures \ref{fig:synth-clean} and \ref{fig:synth-noisy}, respectively. \wen{In this example, we add  bandlimited random noise with bandwidth close to the seismic bandwidth.} \wen{The lines indicate the displaying slices for the front, right, and top views.} After using the conventional MSSA and the damped MSSA, the results are shown in Figures \ref{fig:synth-mssa} and \ref{fig:synth-dmssa}, respectively. Figures \ref{fig:synth-n-mssa} and \ref{fig:synth-n-dmssa} show the removed noise that correspond to the conventional MSSA and the damped MSSA, respectively. Figure \ref{fig:synth-s-clean,synth-s-mssa,synth-sn-mssa,synth-s-noisy,synth-s-dmssa,synth-sn-dmssa} demonstrates the denoising comparison of the 5th crossline section of the synthetic example. Figure \ref{fig:synth-s-clean-i,synth-s-mssa-i,synth-sn-mssa-i,synth-s-noisy-i,synth-s-dmssa-i,synth-sn-dmssa-i} demonstrates the denoising comparison of the 5th inline section of the synthetic example. From Figures \ref{fig:synth-clean,synth-mssa,synth-n-mssa,synth-noisy,synth-dmssa,synth-n-dmssa}, \ref{fig:synth-s-clean,synth-s-mssa,synth-sn-mssa,synth-s-noisy,synth-s-dmssa,synth-sn-dmssa}, and \ref{fig:synth-s-clean-i,synth-s-mssa-i,synth-sn-mssa-i,synth-s-noisy-i,synth-s-dmssa-i,synth-sn-dmssa-i}, it is clear that although the traditional MSSA approach performs well and suppresses the random noise, the proposed damped MSSA approach obtains even better results. In this example, \dlo{we use}\wen{the rank} $K=3$ and \wen{the damping factor} \dlo{$N=3$}\wen{$N=4$}. \wen{Figure \ref{fig:synth-err1,synth-err2} show\wen{s} two denoising error comparison of the 5th inline section of the synthetic example. The error section denotes the difference section between the clean and denoised section. It is obvious that both MSSA and DMSSA approaches will not cause obvious damage to the useful events while the DMSSA approach cause less denoising error because of a larger amount of removed noise.} In order to test the sensitivity of the denoising performance on the damping factor $N$, we tried different $N$ and compared their performance. Figure \ref{fig:synth-s-dmssa-1,synth-s-dmssa-2,synth-s-dmssa-4,synth-s-dmssa-10,synth-s-dmssa-20,synth-s-dmssa-40} shows the denoising performance of the 5th crossline section using different $N$. It is clear that as $N$ increases, the residual noise becomes stronger and stronger. When $N=40$, the denoising performance is nearly the same as the traditional MSSA, as shown in Figure \ref{fig:synth-s-mssa}. When the $N$ is too small, say $N=1$, although the denoised section (Figure \ref{fig:synth-s-dmssa-1}) is very clean, \dlo{there causes some damages to the events.}\wen{there is some signal loss on the events.} We can increase $N$ from 1 to \dlo{3}\wen{4} to obtain a compromise between the removal of residual noise and the preservation of useful signals, as shown in Figures \ref{fig:synth-s-dmssa} and \ref{fig:synth-s-dmssa-4}.
+
+To demonstrate how the proposed algorithm works in practice, we apply the damped MSSA algorithm on two 3D post-stack field datasets. The first field data is shown in Figure \ref{fig:field}. Figures \ref{fig:field-mssa} and \ref{fig:field-dmssa} show the denoised data using the traditional and damped MSSAs, respectively. Figures \ref{fig:field-n-mssa} and \ref{fig:field-n-dmssa} show the removed noise using the traditional and damped MSSAs, respectively. In this test, in order to preserve the main features of the original data, we use a more conservative combination of $K$ and $N$ ($K=25$ and $N=5$ in this example)\dlo{, in order to preserve all the potential useful components}.  A denoising comparison of the 5th crossline section is shown in Figure \ref{fig:field-s-0,field-s-mssa-0,field-s-dmssa-0,field-sn-mssa,field-sn-dmssa}. The top row of Figure \ref{fig:field-s-0,field-s-mssa-0,field-s-dmssa-0,field-sn-mssa,field-sn-dmssa} shows the comparison between the raw data and the denoised data using the traditional MSSA and the damped MSSA. The bottom row of Figure \ref{fig:field-s-0,field-s-mssa-0,field-s-dmssa-0,field-sn-mssa,field-sn-dmssa} shows a comparison of the removed noise sections using two methods. \dlo{In can be observed}\wen{It can be observed} that the denoised section using the damped MSSA (Figure \ref{fig:field-s-dmssa-0}) is cleaner than that of the traditional MSSA (Figure \ref{fig:field-s-mssa-0}). The noise section of the damped MSSA is obviously noisier than that of the traditional MSSA, which indicates that the damped MSSA can attenuate more random noise. Since there is \wen{almost} no coherent energy in the noise sections, \dlo{both denoising results can be acceptable}\wen{both denoising results would be acceptable}, but the proposed approach obtains a better performance. Figure \ref{fig:z-field,z-mssa,z-dmssa} shows three zoomed parts from the crossline sections of the raw data and two denoised data, as highlighted by the frameboxes in Figure \ref{fig:field-s-0,field-s-mssa-0,field-s-dmssa-0,field-sn-mssa,field-sn-dmssa}, which gives us a more detailed comparison.  \wen{The MSSA approach obtains a big improvement of the image considering the signal-to-noise ratio (S/N) while the DMSSA approach obtains a even better performance. The events  using the DMSSA approach become more continuous than the MSSA approach, without remaining any random noise, and both approaches well preserve the discontinuities in the image.}
+
+The second field data example is shown in Figure \ref{fig:field2}. The reflectors in this example \dlo{have higher curvature}\wen{are more complex with steeper dips} compared with the first field data example. The two denoised results are shown in Figures \ref{fig:field2-mssa} and \ref{fig:field2-dmssa}. Figures \dlo{\ref{fig:field-sn-mssa} and \ref{fig:field-sn-dmssa}}\wen{\ref{fig:field2-n-mssa} and \ref{fig:field2-n-dmssa}} show the removed noise cubes using the traditional MSSA and the damped MSSA, respectively. It is clear that the proposed approach can remove stronger noise compared with the traditional MSSA approach, as can be see from Figure \ref{fig:field2,field2-mssa,field2-dmssa,field2-n-mssa,field2-n-dmssa}. In this example, because of the \wen{steeper dip} of reflectors, \wen{we use higher $K$ compared \old{to}\new{with} the previous field data example}. \wen{In practice, when the seismic data becomes more complicated, a higher $K$ value should be used to account for the higher rank caused by the larger number of dip components. } For this example, $K=40$ and $N=2$. The 10th crossline sections \dlo{are picked} from the raw data, \wen{the} denoised data using the traditional MSSA approach, and \wen{the} denoised data using the damped MSSA approach, are shown in Figures \ref{fig:field2-s-0}, \ref{fig:field2-s-mssa-0}, and \ref{fig:field2-s-dmssa-0}, respectively. The bottom row of Figure \ref{fig:field2-s-0,field2-s-mssa-0,field2-s-dmssa-0,z-field2,z-field2-mssa,z-field2-dmssa} shows the zoomed sections that correspond to the frameboxes in the top row. It is clear that the proposed approach can obtain smoother and cleaner reflections than the traditional MSSA approach. \wen{For all the three examples, we do not use local processing windows to apply the MSSA or DMSSA algorithm, because the data size is not big and data structure is not very complicated, which makes the performance using MSSA still acceptable.}
+
+%\inputdir{synth2}
+%\multiplot{6}{synth-clean,synth-mssa,synth-n-mssa,synth-noisy,synth-dmssa,synth-n-dmssa}{width=0.29\textwidth}{Denoising comparison of synthetic example. (a) \& (d) Clean and noisy data, respectively. (b) \& (e) Denoised data using the traditional MSSA and the damped MSSA, respectively. (c) \& (f) Removed noise using the traditional MSSA and the damped MSSA, respectively. In the example, $K=3$, \dlo{$N=3$}\wen{$N=4$}.}
+
+%\multiplot{6}{synth-s-clean,synth-s-mssa,synth-sn-mssa,synth-s-noisy,synth-s-dmssa,synth-sn-dmssa}{width=0.29\textwidth}{Denoising comparison of the 5th crossline section of the synthetic example. (a) \& (d) Clean and noisy data, respectively. (b) \& (e) Denoised data using the traditional MSSA and the damped MSSA, respectively. (c) \& (f) Removed noise using the traditional MSSA and the damped MSSA, respectively. }
+
+%\multiplot{6}{synth-s-clean-i,synth-s-mssa-i,synth-sn-mssa-i,synth-s-noisy-i,synth-s-dmssa-i,synth-sn-dmssa-i}{width=0.29\textwidth}{Denoising comparison of the 5th inline section of the synthetic example. (a) \& (d) Clean and noisy data, respectively. (b) \& (e) Denoised data using the traditional MSSA and the damped MSSA, respectively. (c) \& (f) Removed noise using the traditional MSSA and the damped MSSA, respectively. }
+
+%\multiplot{2}{synth-err1,synth-err2}{width=0.29\textwidth}{\wen{Denoising error comparison of the 5th inline section of the synthetic example. (a) Error of the traditional MSSA. (b) Error of the damped MSSA.} }
+
+%\multiplot{6}{synth-s-dmssa-1,synth-s-dmssa-2,synth-s-dmssa-4,synth-s-dmssa-10,synth-s-dmssa-20,synth-s-dmssa-40}{width=0.29\textwidth}{Demonstration of the performance with same $K=3$ and different $N$ for the 5th crossline section. (a) N=1. (b) N=2. (c) \dlo{N=3}\wen{N=4}. (d) N=10. (e) N=20. (f) N=40. }
+
+\inputdir{synth3}
+\multiplot{6}{synth-clean,synth-mssa,synth-n-mssa,synth-noisy,synth-dmssa,synth-n-dmssa}{width=0.29\textwidth}{Denoising comparison of synthetic example. (a) \& (d) Clean and noisy data, respectively. (b) \& (e) Denoised data using the traditional MSSA and the damped MSSA, respectively. (c) \& (f) Removed noise using the traditional MSSA and the damped MSSA, respectively. In the example, $K=3$, \dlo{$N=3$}\wen{$N=4$}.}
+
+\multiplot{6}{synth-s-clean,synth-s-mssa,synth-sn-mssa,synth-s-noisy,synth-s-dmssa,synth-sn-dmssa}{width=0.29\textwidth}{Denoising comparison of the 5th crossline section of the synthetic example. (a) \& (d) Clean and noisy data, respectively. (b) \& (e) Denoised data using the traditional MSSA and the damped MSSA, respectively. (c) \& (f) Removed noise using the traditional MSSA and the damped MSSA, respectively. }
+
+\multiplot{6}{synth-s-clean-i,synth-s-mssa-i,synth-sn-mssa-i,synth-s-noisy-i,synth-s-dmssa-i,synth-sn-dmssa-i}{width=0.29\textwidth}{Denoising comparison of the 5th inline section of the synthetic example. (a) \& (d) Clean and noisy data, respectively. (b) \& (e) Denoised data using the traditional MSSA and the damped MSSA, respectively. (c) \& (f) Removed noise using the traditional MSSA and the damped MSSA, respectively. }
+
+\multiplot{2}{synth-err1,synth-err2}{width=0.29\textwidth}{\wen{Denoising error comparison of the 5th inline section of the synthetic example. (a) Error of the traditional MSSA. (b) Error of the damped MSSA.} }
+
+\multiplot{6}{synth-s-dmssa-1,synth-s-dmssa-2,synth-s-dmssa-4,synth-s-dmssa-10,synth-s-dmssa-20,synth-s-dmssa-40}{width=0.29\textwidth}{Demonstration of the performance with same $K=3$ and different $N$ for the 5th crossline section. (a) N=1. (b) N=2. (c) \dlo{N=3}\wen{N=4}. (d) N=10. (e) N=20. (f) N=40. }
+
+\inputdir{field}
+\multiplot{5}{field,field-mssa,field-dmssa,field-n-mssa,field-n-dmssa}{width=0.29\textwidth}{Denoising comparison of first field data example. (a) Noisy 3D field data. (b) Denoised data using the traditional MSSA. (c) Denoised data using the damped MSSA. (d) Removed noise using the traditional MSSA. (e) Removed noise using the damped MSSA. In the example, $K=25$, $N=5$.}
+
+\multiplot{5}{field-s-0,field-s-mssa-0,field-s-dmssa-0,field-sn-mssa,field-sn-dmssa}{width=0.29\textwidth}{Denoising comparison of the 5th crossline section of field data example. (a) Noisy 3D field data. (b) Denoised data using the traditional MSSA. (c) Denoised data using the damped MSSA. (d) Removed noise using the traditional MSSA. (e) Removed noise using the damped MSSA.}
+
+\multiplot{3}{z-field,z-mssa,z-dmssa}{width=0.46\textwidth}{(a) Zoomed section from Figure \ref{fig:field-s-0}. (b) Zoomed section from Figure \ref{fig:field-s-mssa-0}. (c) Zoomed section from Figure \ref{fig:field-s-dmssa-0}.}
+
+\inputdir{./}
+\multiplot{5}{field2,field2-mssa,field2-dmssa,field2-n-mssa,field2-n-dmssa}{width=0.29\textwidth}{Denoising comparison of second field data example. (a) Noisy 3D field data. (b) Denoised data using the traditional MSSA. (c) Denoised data using the damped MSSA. (d) Removed noise using the traditional MSSA. (e) Removed noise using the damped MSSA. In the example, $K=40$, $N=2$.}
+
+\multiplot{6}{field2-s-0,field2-s-mssa-0,field2-s-dmssa-0,z-field2,z-field2-mssa,z-field2-dmssa}{width=0.29\textwidth}{Denoising comparison of the 5th crossline section of field data example. (a) Noisy 3D field data. (b) Denoised data using the traditional MSSA. (c) Denoised data using the damped MSSA. (d) Zoomed section from (a). (e) Zoomed section from (b). (f) Zoomed section from (c).}
+
+%\multiplot{6}{field2-s-0,field2-s-mssa-0,field2-s-dmssa-0,field2-sn-mssa,field2-sn-dmssa}{width=0.29\textwidth}{Denoising comparison of the 5th crossline section of field data example. (a) Noisy 3D field data. (b) Denoised data using the traditional MSSA. (c) Denoised data using the damped MSSA. (d) Removed noise using the traditional MSSA. (e) Removed noise using the damped MSSA.}
+
+%\multiplot{3}{z-field2,z-field2-mssa,z-field2-dmssa}{width=0.46\textwidth}{(a) Zoomed section from Figure \ref{fig:field2-s-0}. (b) Zoomed section from Figure \ref{fig:field2-s-mssa-0}. (c) Zoomed section from Figure \ref{fig:field2-s-dmssa-0}.}
+
+
+\section{Conclusion}
+We have proposed a novel modified multichannel singular spectrum analysis (MSSA) algorithm to attenuate random noise with a new formula of low-rank reduction, which is named as the damped MSSA algorithm. Compared with the traditional truncated singular value decomposition (TSVD) formula, we introduce\new{d} a damping factor to damp the singular values that correspond to the signal in order to attenuate the residual noise appearing in the traditional approach. %\wen{The introduced damping operator may slightly scale down some of the signal energy, but will scale down much more residual noise, and thus the new approach can result in a larger SNR. }
+\dlo{This formula is more suitable for random\dlo{-} noise attenuation compared with the traditional TSVD.} \wen{The preservation of useful signals and the removal of random noise are compromised through the introduced damping factor. While the rank in MSSA has a big range considering the data size and data complexity, the damping factor in the damped MSSA is usually chosen as an integer that is slightly larger than 1 (such as 2, 3, or 4) to obtain a sufficient improvement.} From the synthetic and field data examples, it is obvious that the proposed damped MSSA algorithm can obtain cleaner denoised image \dlo{and preserve signals better} compared with the traditional MSSA algorithm.
+
+\section{Acknowledgement}
+We would like to thank Ming Zhang, \wen{Valentina Socco, Kris Innanen\new{, Mauricio Sacchi}, and three anonymous reviewers} for constructive suggestions. This work is supported by the National Basic Research Program of China (grant NO: 2013 CB228602) and Texas Consortium for Computational Seismology (TCCS). \old{All the examples shown in this paper are reproducible in the Madagascar open-source platform.}
+
+\section{Appendix A: Factorization of the data matrix $\mathbf{M}$}
+Because equation \ref{eq:svds} is a singular value decomposition (SVD) of the signal matrix $\mathbf{S}$, the left matrix in equation \ref{eq:svds} is a unitary matrix:
+\begin{equation}
+\label{eq:unit}
+\mathbf{I}=\mathbf{U}^S(\mathbf{U}^S)^H=[\mathbf{U}_1^S\quad \mathbf{U}_2^S]\left[\begin{array}{c} 
+(\mathbf{U}_1^S)^H \\
+(\mathbf{U}_2^S)^H 
+\end{array}
+\right].
+\end{equation}
+
+Combining equations \ref{eq:M}, \ref{eq:S}, and \ref{eq:unit}, we can derive\new{:}
+\begin{equation}
+\label{eq:factorapp}
+\begin{split}
+\mathbf{M}&=\mathbf{S}+\mathbf{N} \\
+&=\mathbf{S}+\mathbf{IN}\\
+&=\mathbf{S}+[\mathbf{U}_1^S\quad \mathbf{U}_2^S]\left[\begin{array}{c} 
+(\mathbf{U}_1^S)^H \\
+(\mathbf{U}_2^S)^H
+\end{array}
+\right]\mathbf{N} \\
+&=\mathbf{U}_1^S\Sigma_1^S(\mathbf{V}_1^S)^H + \left( 
+\mathbf{U}_1^S(\mathbf{U}_1^S)^H+\mathbf{U}_2^S(\mathbf{U}_2^S)^H
+\right)\mathbf{N}\\
+&=\mathbf{U}_1^S \left(
+(\mathbf{U}_1^S)^H\mathbf{N}+\Sigma_1^S(\mathbf{V}_1^S)^H
+\right)+\mathbf{U}_2^S(\mathbf{U}_2^S)^H\mathbf{N}\\
+&=\mathbf{U}_1^S\left(
+\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S
+\right)^H + \mathbf{U}_2^S(\mathbf{N}^H\mathbf{U}_2^S)^H\\
+&= [\mathbf{U}_1^S \quad \mathbf{U}_2^S]\left[\begin{array}{cc} 
+\mathbf{I} & \mathbf{0}\\
+\mathbf{0} & \mathbf{I}
+\end{array}
+\right]\left[\begin{array}{c} 
+(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)^H\\
+(\mathbf{N}^H\mathbf{U}_2^S)^H
+\end{array}
+\right],\\
+&= [\mathbf{U}_1^S \quad \mathbf{U}_2^S]\left[\begin{array}{cc} 
+\Sigma_1 & \mathbf{0}\\
+\mathbf{0} & \Sigma_2
+\end{array}
+\right]\left[\begin{array}{c} 
+(\Sigma_1)^{-1}(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)^H\\
+(\Sigma_2)^{-1}(\mathbf{N}^H\mathbf{U}_2^S)^H
+\end{array}
+\right],
+\end{split}
+\end{equation}
+where $\Sigma_1$ and $\Sigma_2$ are introduced  matrices and are diagonal and positive definite.
+
+In order to make the right matrix orthonormal, we make two assumptions:
+\begin{itemize}
+\item The noise is close to white noise in the sense that $\mathbf{N}\mathbf{N}^H=\lambda\mathbf{I}$. 
+\item The signal is orthogonal to the noise in the sense that $\mathbf{S}\mathbf{N}^H=\mathbf{0}$.
+\end{itemize}
+
+We let $\mathbf{P}^H$ denote\dlo{s} the right matrix of the last equation in \ref{eq:factorapp}, then
+\begin{equation}
+\label{eq:vhv}
+\begin{split}
+&\mathbf{P}^H\mathbf{P} \\
+&=\left[\begin{array}{c} 
+(\Sigma_1)^{-1}(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)^H\\
+(\Sigma_2)^{-1}(\mathbf{N}^H\mathbf{U}_2^S)^H
+\end{array}
+\right]\left[\begin{array}{cc} 
+(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)(\Sigma_1)^{-1} &(\mathbf{N}^H\mathbf{U}_2^S)(\Sigma_2)^{-1}
+\end{array}\right] \\
+&=\left[\begin{array}{c} 
+(\Sigma_1)^{-1}((\mathbf{U}_1^S)^H\mathbf{N}+\Sigma_1^S(\mathbf{V}_1^S)^H)\\
+(\Sigma_2)^{-1}((\mathbf{U}_2^S)^H\mathbf{N})
+\end{array}
+\right]\left[\begin{array}{cc} 
+(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)(\Sigma_1)^{-1} &(\mathbf{N}^H\mathbf{U}_2^S)(\Sigma_2)^{-1}
+\end{array}\right]\\
+&=\left[\begin{array}{cc} 
+p_{11} & p_{12}\\
+p_{21} & p_{22}
+\end{array}
+\right]
+\end{split}
+\end{equation}
+where
+\begin{equation}
+\label{eq:p11}
+\begin{split}
+p_{11}&=(\Sigma_1)^{-1}((\mathbf{U}_1^S)^H\mathbf{N}+\Sigma_1^S(\mathbf{V}_1^S)^H) (\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)(\Sigma_1)^{-1} \\
+& =(\Sigma_1)^{-1}((\mathbf{U}_1^S)^H\mathbf{N}\mathbf{N}^H\mathbf{U}_1^S+
+\Sigma_1^S(\mathbf{V}_1^S)^H\mathbf{N}^H\mathbf{U}_1^S+ 
+(\mathbf{U}_1^S)^H\mathbf{N}\mathbf{V}_1^S\Sigma_1^S+
+\Sigma_1^S(\mathbf{V}_1^S)^H\mathbf{V}_1^S\Sigma_1^S)(\Sigma_1)^{-1}\\
+&=(\Sigma_1)^{-1} (\lambda\mathbf{I}+\mathbf{0}+\mathbf{0}+(\Sigma_1^S)^2)(\Sigma_1)^{-1}\\
+&=(\Sigma_1)^{-1} (\lambda\mathbf{I}+(\Sigma_1^S)^2)(\Sigma_1)^{-1} \\
+&=\mathbf{I}
+\end{split}
+\end{equation}
+when $\Sigma_1=\sqrt{\lambda\mathbf{I}+(\Sigma_1^S)^2}$.
+\begin{equation}
+\label{eq:p12}
+\begin{split}
+p_{12}&=(\Sigma_1)^{-1}((\mathbf{U}_1^S)^H\mathbf{N}+\Sigma_1^S(\mathbf{V}_1^S)^H) (\mathbf{N}^H\mathbf{U}_2^S)(\Sigma_2)^{-1} \\
+&=(\Sigma_1)^{-1}((\mathbf{U}_1^S)^H\mathbf{N}\mathbf{N}^H\mathbf{U}_2^S + \Sigma_1^S(\mathbf{V}_1^S)^H\mathbf{N}^H\mathbf{U}_2^S  )(\Sigma_2)^{-1} 
+\end{split}
+\end{equation}
+Since $\mathbf{U}^S$ is an orthogonal matrix, then $(\mathbf{U}_1^S)^H\mathbf{U}_2^S=\mathbf{0}$. Since $\mathbf{S}\mathbf{N}^H=\mathbf{0}$, then $\mathbf{U}_1^S\Sigma_1^S(\mathbf{V}_1^S)^H\mathbf{N}^H=\mathbf{0}$, thus $(\mathbf{V}_1^S)^H\mathbf{N}^H=\mathbf{0}$. In the same way, since $\mathbf{NS}^H=\mathbf{0}$,  thus $\mathbf{NV}_1^S=\mathbf{0}$.
+Then, 
+\begin{equation}
+\label{eq:p122}
+\begin{split}
+p_{12}&=\mathbf{0}. 
+\end{split}
+\end{equation}
+\begin{equation}
+\label{eq:p21}
+\begin{split}
+p_{21}&=(\Sigma_2)^{-1}((\mathbf{U}_2^S)^H\mathbf{N}) (\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)(\Sigma_1)^{-1}\\
+&=(\Sigma_2)^{-1}((\mathbf{U}_2^S)^H\mathbf{N})\mathbf{N}^H\mathbf{U}_1^S+(\mathbf{U}_2^S)^H\mathbf{N})\mathbf{V}_1^S\Sigma_1^S)(\Sigma_1)^{-1} \\
+&=\mathbf{0}. 
+\end{split}
+\end{equation}
+\begin{equation}
+\label{eq:p22}
+\begin{split}
+p_{22}&=(\Sigma_2)^{-1}((\mathbf{U}_2^S)^H\mathbf{N}) (\mathbf{N}^H\mathbf{U}_2^S)(\Sigma_2)^{-1} \\
+&=(\Sigma_2)^{-1}(\lambda\mathbf{I})(\Sigma_2)^{-1}\\
+&=\mathbf{I},
+\end{split}
+\end{equation}
+when $\Sigma_2=\sqrt{\lambda\mathbf{I}}$.
+Thus, we prove that $\mathbf{P}^H\mathbf{P}=\mathbf{I}$ when $\Sigma_1$ and $\Sigma_2$ are appropriately chosen, and $\mathbf{P}$ is orthonormal. 
+
+
+\section{Appendix B: Derivation for equations \ref{eq:S2}, \ref{eq:A} and \ref{eq:B}}
+We first reformulate equation \ref{eq:tsvd2} as
+\begin{equation}
+\label{eq:tsvd22}
+\mathbf{S} = \tilde{\mathbf{M}} -\mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N}.
+\end{equation}
+Inserting equation \ref{eq:tsvd} into equation \ref{eq:tsvd22}, we can further derive 
+\begin{equation}
+\label{eq:tsvd222}
+\begin{split}
+\mathbf{S} = \mathbf{U}_1^M\Sigma_1^M(\mathbf{V}_1^M)^H -\mathbf{U}_1^S(\mathbf{U}_1^S)^H\mathbf{N}.
+\end{split}
+\end{equation}
+Because equations \ref{eq:svdm} and \ref{eq:factorm} are both SVDs of $\mathbf{M}$, we let
+\begin{equation}
+\label{eq:equal1}
+\mathbf{U}_1^S=\mathbf{U}_1^M,
+\end{equation}
+and
+\begin{equation}
+\label{eq:equal3}
+\Sigma_1=\Sigma_1^M,
+\end{equation}
+and
+
+\begin{equation}
+\label{eq:equal2}
+(\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S)(\Sigma_1)^{-1}=\mathbf{V}_1^M.
+\end{equation}
+Considering $\Sigma_1= \Sigma_1^M\mathbf{B}$,
+\begin{equation}
+\label{eq:Bder}
+\mathbf{B}=\mathbf{I}.
+\end{equation}
+From equation \ref{eq:equal2},
+
+\begin{equation}
+\label{eq:Ader0}
+\begin{split}
+\mathbf{V}_1^S&=(\mathbf{V}_1^M-\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1})\Sigma_1(\Sigma_1^S)^{-1}\\
+&\approx \mathbf{V}_1^M(\mathbf{I}-(\mathbf{V}_1^M)^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1})\Sigma_1(\Sigma_1^S)^{-1}\\
+&=\mathbf{V}_1^M\mathbf{A},
+\end{split}
+\end{equation}
+where $(\mathbf{V}_1^M)^{o}$ satisfies that $\parallel\mathbf{I}-\mathbf{V}_1^M(\mathbf{V}_1^M)^{o} \parallel\rightarrow 0$.
+
+Considering $\mathbf{V}_1^S=\mathbf{V}_1^M\mathbf{A}$,
+
+\begin{equation}
+\label{eq:Ader}
+\begin{split}
+\mathbf{A}&\approx (\mathbf{I}-(\mathbf{V}_1^M)^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1})\Sigma_1(\Sigma_1^S)^{-1}\\
+&=(\mathbf{I}-\Gamma)\Sigma_1(\Sigma_1^S)^{-1},
+\end{split}
+\end{equation}
+where \dlo{$\Gamma=(\mathbf{V}_1^M)^H\mathbf{N}^H\mathbf{U}_1^S$}\wen{$\Gamma=(\mathbf{V}_1^M)^{o}\mathbf{N}^H\mathbf{U}_1^S(\Sigma_1)^{-1}$}.
+
+Inserting equations \ref{eq:equal1} and \ref{eq:equal2} into equation \dlo{\ref{eq:tsvd22}}\wen{\ref{eq:tsvd222}}, we can obtain:
+
+\begin{equation}
+\label{eq:S22}
+\begin{split}
+\mathbf{S} &= \mathbf{U}_1^M\Sigma_1^M(\mathbf{V}_1^M)^H - \mathbf{U}_1^S\left(\mathbf{U}_1^S\right)^H\mathbf{N}\\
+ &= \mathbf{U}_1^M\Sigma_1^M(\mathbf{V}_1^M)^H - \mathbf{U}_1^M\left(\mathbf{U}_1^S\right)^H\mathbf{N}\\
+&=\mathbf{U}_1^M\left[\Sigma_1^M(\mathbf{V}_1^M)^H-  (\mathbf{U}_1^S)^H\mathbf{N}\right]\\
+&=\mathbf{U}_1^M\left[\Sigma_1^M(\mathbf{V}_1^M)^H-  (\mathbf{N}^H\mathbf{U}_1^S)^H\right]\\
+&=\mathbf{U}_1^M\left[\Sigma_1^M(\mathbf{V}_1^M)^H-  (\mathbf{N}^H\mathbf{U}_1^S+\mathbf{V}_1^S\Sigma_1^S-\mathbf{V}_1^S\Sigma_1^S)^H\right]\\
+&=\mathbf{U}_1^M\left[\Sigma_1^M(\mathbf{V}_1^M)^H- (\mathbf{V}_1^M\Sigma_1-\mathbf{V}_1^S\Sigma_1^S)^H\right]\\
+&=\mathbf{U}_1^M\left\{\Sigma_1^M(\mathbf{V}_1^M)^H- \left[\Sigma_1(\mathbf{V}_1^M)^H-\Sigma_1^S(\mathbf{V}_1^S)^H\right]\right\}.
+\end{split}
+\end{equation}
+
+
+\bibliographystyle{seg}
+\bibliography{dmssa}

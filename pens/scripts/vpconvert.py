@@ -142,7 +142,7 @@ def convert(vpl,out,format,pen,args,verb=True):
         eps = tempfile.mktemp(suffix='.eps')
         rsf.vplot2eps.convert(vpl,eps,
                               options='color=y fat=1 fatmult=1.5 ' + args)
-        epstopdf = which('epstopdf') or which('a2ping')
+        epstopdf = which('epstopdf') or which('a2ping') or which('convert')
         if epstopdf:
             command = 'LD_LIBRARY_PATH=%s GS_OPTIONS="%s" %s %s --outfile=%s' \
                 % (os.environ.get('LD_LIBRARY_PATH',''),

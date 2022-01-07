@@ -33,7 +33,7 @@ void l1step( bool forget     /* restart flag */,
 	     const float* gg /* conjugate gradient [ny] */) 
 /*< Step of conjugate-gradient-like iteration. >*/
 {
-    float alfa, beta;
+    float alfa, beta, l1;
     int i;
 
     if (!Allocated) {
@@ -63,9 +63,13 @@ void l1step( bool forget     /* restart flag */,
     for (i = 0; i < nx; i++) {
 	x[i] +=  S[i];
     }
+
+    l1 = 0.0;
     for (i = 0; i < ny; i++) {
 	rr[i] += Ss[i];
+	l1 += fabsf(rr[i]);
     }
+    sf_warning("l1 step -> %g",l1);
 }
 
 void l1step_close (void) 

@@ -123,7 +123,7 @@ simple transpose. However, rotation by a different angle requires
 interpolation from the original grid to the modified grid.
 
 The task of coordinate rotation is accomplished by the C program
-\texttt{rotate.c}. Two different methods are implemented: 
+\texttt{rotate.c} (alternatively, Python script \texttt{rotate.py}.) Two different methods are implemented: 
 nearest-neighbor interpolation and bilinear interpolation.
 
 To test the accuracy of different methods, we can rotate the original
@@ -155,6 +155,9 @@ and is designed to approximate the ideal sinc-function interpolator.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=rotate/rotate.c]{rotate/rotate.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=rotate/rotate.py]{rotate/rotate.py}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=rotate/SConstruct]{rotate/SConstruct}
@@ -316,6 +319,8 @@ find out
 \item \textbf{EXTRA CREDIT} for finding a different convex set for either faster or more accurate missing data reconstruction.
 \end{enumerate}
 
+\newpage
+
 \section{Completing the assignment}
 
 \begin{enumerate}
@@ -337,8 +342,7 @@ to remove intermediate files.
 scons pdf
 \end{verbatim}
 to create the final document.
-\item Submit your result (file \texttt{paper.pdf}) on paper or by
-e-mail.
+\item Submit your result (file \texttt{paper.pdf}) by e-mail.
 \end{enumerate}
 
 \bibliographystyle{seg}

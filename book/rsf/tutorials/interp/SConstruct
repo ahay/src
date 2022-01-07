@@ -213,7 +213,8 @@ Flow('trajectory2','trajectory txy',
      '''
      window f2=2 | 
      cat ${SOURCES[1]} axis=2 order=2,1 |
-     spline n1=1000 o1=0 d1=0.01
+     put o1=0 d1=1 |
+     spline n1=1000 o1=0 d1=0.009
      ''')
 
 Flow('x2','trajectory2','window n2=1 f2=0')
@@ -226,7 +227,10 @@ Plot('yz','y2 z2','cmplx ${SOURCES[1]} | graph title=YZ')
 Result('trajectory','xy xz yz','SideBySideAniso')
 
 Flow('cubet','cube','transp plane=13 memsize=1000 | put o1=0 d1=25 o2=0 d2=12.5 o3=0 d3=-4')
+Flow('trajectoryt','trajectory2','transp')
 
-# inttest3d
+Flow('trace3','cubet trajectoryt',
+     'inttest3 coord=${SOURCES[1]} interp=lag nw=2 | put unit1= label1=Sample d1=1 o1=1')
+Result('trace3','wiggle poly=y title="Deviated Well" pclip=100')
 
 End()

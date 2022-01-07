@@ -1,0 +1,170 @@
+from rsf.proj import*
+import os
+from rsf.prog import RSFROOT
+# It might take a while
+
+
+def Grey(data, other):
+    Result(data, 'put d2=50 | grey label2=Distance  unit2="m" clip=0.5 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.2 max1=4.0 %s ' % other)
+
+
+def Grey2(data, other):
+    Result(data, 'window n2=63 | put d2=25 | grey label2=Distance  unit2="m" clip=0.5 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.2 max1=4.0 %s ' % other)
+
+
+def Greyfk(data, other):
+    Result(data, 'grey label2=Distance  unit2="m" clip=0.5 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.4 max1=4.0 %s ' % other)
+
+
+def Greyplot(data, other):
+    Plot(data, 'grey label2=Trace  unit2="" clip=0.5 label1=Time unit1="s" title="" wherexlabel=b wanttitle=n  screenratio=1.4 %s ' % other)
+
+
+def Graph(data, other):
+    Result(data, 'graph label1="Iter #no" label2="Difference" unit1="" unit2="" title="" wherexlabel=b wheretitle=t %s' % other)
+
+
+Flow('field', 'field0', 'cp')
+Grey('field', '')
+
+Flow('field-zero', 'field', 'addtrace ratio=2')
+Grey2('field-zero', '')
+
+Flow('mask-t', None, 'math n1=1 n2=32 d2=1 output="1" | addtrace ratio=2')
+Flow('mask', 'mask-t', 'window |spray axis=1 n=501 d=0.008 o=0')
+Grey('mask', 'color=j')
+Flow('mask1', 'mask', 'math output="1-input"')
+
+Flow('fk-field-zero', 'field-zero',
+     'put d2=1 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs | window min1=0 max1=25')
+Flow('fk-field', 'field',
+     'rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs  | window min1=0 max1=25')
+Greyfk('fk-field-zero', 'allpos=y color=j clip=100 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 min1=0 max1=25')
+Greyfk('fk-field', 'allpos=y color=j clip=100 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 min1=0 max1=25')
+
+##
+ddip = 5
+fhi = 5
+n1 = 501
+n2 = 64
+r1 = 10
+r2 = 10
+padno = 64
+thr0 = 10
+niter = 150
+mode = 's'
+# POCS (thresholding in the seislet domain)
+## define forward and backward seislet transform strings####
+forw = 'seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1 type=b'
+back = 'seislet dip=${SOURCES[1]} inv=y eps=0.1 type=b'
+
+Flow('field-initial', 'field',
+     'transp | remap1 o1=0 d1=0.50 n1=64| transp | scale axis=2')
+Grey2('field-initial', '')
+
+sig = 'field-zero'
+# sig='field-initial'
+data_pocs = sig
+plots_pocs = [sig]
+diffs_pocs = []
+dips_pocs = []
+datas_pocs = []
+# Create mask for seislet transform
+Flow('dipmask', 'field-zero', 'math output=1 | pad n2=%d' % (padno))
+dip_pocs = 'dip'
+Flow(dip_pocs, 'field',
+     '''
+		bandpass fhi=%d | pad n2=%d | 
+		dip  rect1=%d rect2=%d liter=30|
+		transp | remap1 o1=0 d1=0.25 n1=64 | transp
+		''' % (fhi, padno, r1, r2))
+Grey2(dip_pocs, 'clip=1 color=j')
+
+for iter in range(niter):
+    thr = thr0+((8.-thr0)*iter*iter/((niter-1)*(niter-1)))
+    if iter % ddip == 0:
+        dip_pocs = 'dip-pocs%d' % int(iter/ddip)
+        Flow(dip_pocs, [data_pocs, 'dipmask'],
+                '''
+		bandpass fhi=%d | pad n2=%d | 
+		dip mask=${SOURCES[1]} rect1=%d rect2=%d liter=30
+		''' % (fhi, padno, r1, r2))
+    dips_pocs.append(dip_pocs)
+    Greyplot(dip_pocs, 'clip=1 color=j')
+    old_pocs = data_pocs
+    data_pocs = 'data-pocs%d' % iter
+    diff_pocs = 'diff-pocs%d' % iter
+    # 1. Forward seislet
+    # 2. Multiply by seislet mask
+    # 3. Inverse seislet
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(data_pocs, [old_pocs, dip_pocs, 'mask1', sig],
+         '''
+         %s | threshold1 ifperc=1 mode=%s thr=%g | 
+         %s | mul ${SOURCES[2]}  | 
+         add ${SOURCES[3]}
+         ''' % (forw, mode, thr, back))
+    Flow(diff_pocs, [data_pocs, old_pocs],
+         'diff match=${SOURCES[1]} | math output="input/%d/%d"' % (n1, n2))
+
+    Greyplot(data_pocs, 'title="Iteration %d"' % (iter+1))
+    datas_pocs.append(data_pocs)
+    diffs_pocs.append(diff_pocs)
+Flow('diffs-pocs', diffs_pocs,
+     'cat axis=1 ${SOURCES[1:%d]} | scale axis=1 | put d1=1' % (len(diffs_pocs)))
+Plot('dips-pocs', dips_pocs, 'Movie')
+Plot('datas-pocs', datas_pocs, 'Movie')
+
+Flow('field-seis', data_pocs, 'cp')
+
+
+Grey2('field-seis', 'title="Seislet"')
+
+Flow('fk-field-seis', 'field-seis',
+     'put d2=1 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs  | window min1=0 max1=25')
+Greyfk('fk-field-seis', 'allpos=y color=j clip=100 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 min1=0 max1=25')
+
+Graph('diffs-pocs', '')
+
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Spitz'
+matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+n1 = 501
+n2 = 32
+n22 = 63
+d1 = 0.008
+d2 = 0.5
+o1 = 0
+o2 = 0
+npef = 10
+pre1 = 1
+pre2 = 1
+flow = 0.1
+fhigh = 50
+############################################################
+# with parameter
+############################################################
+Flow('field-fx-t', [os.path.join(matROOT, matfun+'.m'), 'field'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)g,%(d1)g,%(npef)d,%(pre1)g,%(pre2)g,%(flow)g,%(fhigh)g);quit"
+     ''' % vars(), stdin=0, stdout=-1)
+Flow('field-fx', 'field-fx-t', 'put d1=%g d2=%g o1=%g o2=%g' % (d1, d2, o1, o2))
+
+Grey('field-fx', 'title="Spitz"')
+
+Flow('fk-field-fx', 'field-fx',
+     'put d2=1 | rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=2| cabs  | window min1=0 max1=25')
+Greyfk('fk-field-fx', 'allpos=y color=j clip=100 label1=Frequency unit1=Hz label2=Wavenumber unit2= min2=-0.5 max2=0.5 min1=0 max1=25')
+
+End()

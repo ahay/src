@@ -89,7 +89,7 @@ void lrexp_close(void)
 void lrexp(sf_complex *img, sf_complex *dat, bool adj, sf_complex **lt, sf_complex **rt, geopar geop, sf_complex ***wvfld)
 /*< zero-offset exploding reflector modeling/migration >*/
 {
-    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfit, snap;
+    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfit=0, snap;
     int im, i, j, m2, ik, nk, pad1;
     sf_complex *curr, **wave, *cwave, *cwavem, c;
     sf_complex *currm;

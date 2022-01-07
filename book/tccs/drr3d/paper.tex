@@ -1,0 +1,246 @@
+\published{Computers \& Geosciences, 95, 59-66, (2016)}
+
+\title{An open-source Matlab code package for improved  rank-reduction 3D  seismic data denoising and reconstruction}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Yangkang Chen\footnotemark[1], Weilin Huang\footnotemark[2], Dong Zhang\footnotemark[2], and Wei Chen\footnotemark[3]}
+\address{
+\footnotemark[1]Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+Email: ykchen@utexas.edu \\
+\footnotemark[2] State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200 \\
+cup\_hwl@126.com  \&  zhangdongconan@163.com \\
+\footnotemark[3]
+School of Geophysics and Oil Resource \\
+Yangtze University\\
+Jingzhou, Hubei Province, China, 434023\\
+chenwei2014@yangtzeu.edu.cn 
+}
+
+\maketitle
+\righthead{Matlab code for MSSA}
+
+\begin{abstract}
+Simultaneous seismic data denoising and reconstruction is a currently popular research subject in modern reflection seismology. Traditional rank-reduction based 3D seismic data denoising and reconstruction algorithm will cause strong residual noise in the reconstructed data and thus affect the following processing \new{and interpretation }tasks. In this paper, we propose an improved rank reduction method by \old{slightly} modifying the truncated singular value decomposition (TSVD) formula used in the traditional method. The proposed approach can help us obtain nearly perfect reconstruction performance even in the case of low signal-to-noise ratio (SNR). The proposed \old{improved }algorithm is tested via one synthetic and field data examples. Considering that seismic data interpolation and denoising source packages are seldom in the public domain, we also provide a program template for the rank reduction based simultaneous denoising and reconstruction algorithm by providing an open-source Matlab package. 
+\end{abstract}
+
+
+\section{Introduction}
+Seismic data interpolation plays a fundamental role in seismic data processing, which provides the regularly sampled seismic data for the following workflows like high-resolution processing, wave-equation migration, multiple suppression, amplitude-versus-offset (AVO) or amplitude-versus-azimuth (AVAZ) analysis, and time-lapse studies \cite[]{chiu2014,yangkang2015shape,benfeng2015,shuwei2015seg,zhongwei2016,zhangdong2016}. Three main types of interpolation approaches have been proposed in the literature for handling with the interpolation problem. The first type of approach is based on prediction \cite[]{spitz1991,porsani1999}. A prediction operator is designed from the low-frequency components of seismic data and is applied to high-frequency components. However, the predictive filtering method can only be applied to regularly sampled seismic data. The second type is a transformed domain method \cite[]{candes20061,yangkang20142,shuwei,liuwei2015}, which is based on compressive sensing theory \cite[]{candes20062,donoho2006} to achieve a successful recovery using highly incomplete available data \cite[]{sacchi1998,wang2003,yangkang2014halfthr}.  Compressive sensing (CS) is a relatively new paradigm \cite[]{candes20062,donoho2006,donoho20061,shuwei20164,liuwei20162} in signal processing that has recently received a lot of attention. The theory indicates that the signal which is sparse under some basis may still be recovered even though the number of measurements is insufficient as required by the Shannon's criterion. \cite{mostafa2007} propose a multistep autoregressive strategy which combines the first two types of methods to reconstruct irregular seismic data. The third type is based on the wave equation. This type of method utilizes the inherent constraint of the seismic data from wave equation to interpolate seismic data, thus it depends on the known velocity model, which also becomes its limitation \cite[]{canning1996,fomel2003}. Recently, an increasing number of researchers have developed algorithms connecting the interpolation and deblending \cite[]{berkhout2008} problems for the irregular sampled simultaneous-source data \cite[]{chengbo2013}, which provides new recipes for conventional seismic interpolation problem. 
+
+Recently, rank reduction based seismic interpolation algorithms become popular \cite[]{trickett2009,oropezamssa}.  The rank reduction methods for seismic data reconstruction can be divided into two main categories. The first category applies rank reduction to multilevel block Hankel/Toeplitz matrices formed from the entries of the tensor. In other words, multidimensional seismic data are rearranged into a block Hankel or Toeplitz matrix, and a rank reduction algorithm is used to improve the signal-to-noise ratio (SNR) and to reconstruct the data. Such algorithm is usually named as the Cadzow method \cite[]{trickett2009} or multichannel singular spectrum analysis (MSSA) method \cite[]{oropezamssa}.
+The other category of rank reduction methods encompasses techniques that are based on dimensionality reduction of multi-linear arrays or tensors. In this case, the multichannel seismic data is viewed as a multi-linear array, and dimensionality reduction techniques are directly applied to the multi-linear array \cite[]{jianjun2015}. For example, \cite{kreimer2012} adopt the high-order singular value decomposition (HOSVD) to solve the 5D seismic data reconstruction problem in the frequency-space domain.  
+
+In this paper, we focus on simultaneous reconstruction and denoising of 3D seismic data using the MSSA algorithm. MSSA is a data-driven algorithm developed from research on alternative tools for the analysis of multichannel time series, which is based on the truncated singular value decomposition (TSVD) \cite[]{golub} of the Hankel matrix. MSSA is also an extension of singular spectrum analysis (SSA) \cite[]{vautard}, which is used to analyze 1D time series. Missing traces and random noise increase the rank of the appropriately constructed Hankel matrix that is composed of seismic data at a given frequency slice. To some extent, missing data in each frequency slice performs like random noise at the first iteration of weighted projection onto convex sets (POCS) \new{like framework}. Similar to other simultaneous seismic data reconstruction and denoising approaches, MSSA transforms the noisy data with missing traces into a domain where signal and noise are mapped onto separate subspaces and then removes the noise. Weighted POCS\new{-like} method, which is widely used for seismic data reconstruction and first introduced to the community of seismic exploration by \cite{abmapocs}, is in charge of the reconstruction procedure. Many numerical experiments, however, indicate that the random noise cannot be completely removed using the conventional MSSA algorithm and there still exist some reconstruction errors. The main reasons is that the traditional TSVD can only decompose the data into a noise subspace and a signal-plus-noise subspace. \cite{weilin2016} suggest using damped MSSA (DMSSA) algorithm to better decompose the data into the signal subspace and noise subspace for random noise attenuation. In order to overcome the defect mentioned above, we extend the DMSSA algorithm further to simultaneous reconstruction and denoising of 3D seismic data. We first review the theory of traditional MSSA algorithm, then we introduce the proposed DMSSA based reconstruction and denoising framework. Next, we introduce the main components in the Matlab package and correlate the interior functions with the mathematical symbols in the theory sections. Finally, one synthetic and one field data examples are used to demonstrate the performance using the proposed algorithm and the presented open-source Matlab package. The first synthetic example is reproducible from the provided Matlab package. The field data example is, however, not in the public domain, therefore we do not provide the \emph{segy} file of the field data in the package. But the field data example is just a straightforward application of the Matlab package. 
+
+\section{Rank reduction via MSSA}
+Consider a block of 3D data $\mathbf{D}_{time}(t,x,y)$ of $N_t$ by $N_x$ by $N_y$ samples $(t=1\cdots N_t,x=1\cdots N_x,y=1\cdots N_y)$. The MSSA \cite[]{oropezamssa} operates on the data in the following way: first, MSSA transforms $\mathbf{D}_{time}(t,x,y)$ into $\mathbf{D}_{freq}(w,x,y)(w=1\cdots N_w)$ of complex values of the frequency domain. Each frequency slice of the data, at a given frequency $w_0$, can be represented by the following matrix:
+\begin{equation}
+\label{eq:mssa}
+\mathbf{D}(w_0)=\left(\begin{array}{cccc}
+D(1,1) & D(1,2) & \cdots &D(1,N_x) \\
+D(2,1) & D(2,2)  &\cdots &D(2,N_x) \\
+\vdots & \vdots &\ddots &\vdots \\
+D(N_y,1)&D(N_y,2) &\cdots&D(N_y,N_x)
+\end{array}
+\right).
+\end{equation}
+
+To avoid notational clutter we omit the argument $w_0$. Second, MSSA constructs a Hankel matrix for each row of $\mathbf{D}$; the Hankel matrix $\mathbf{R}_i$ for row $i$ of $\mathbf{D}$ is as follows:
+\begin{equation}
+\label{eq:data}
+\mathbf{R}_i=\left(\begin{array}{cccc}
+D(i,1) & D(i,2) & \cdots &D(i,m) \\
+D(i,2) & D(i,3)  &\cdots &D(i,m+1) \\
+\vdots & \vdots &\ddots &\vdots \\
+D(i,N_x-m+1)&D(i,N_x-m+2) &\cdots&D(i,N_x)
+\end{array}
+\right).
+\end{equation}
+Then MSSA constructs a block Hankel matrix $\mathbf{M}$ for $\mathbf{R}_i$:
+\begin{equation}
+\label{eq:hankel2}
+\mathbf{M}=\left(\begin{array}{cccc}
+\mathbf{R}_1 &\mathbf{R}_2 & \cdots &\mathbf{R}_n \\
+\mathbf{R}_2 &\mathbf{R}_3 &\cdots &\mathbf{R}_{n+1} \\
+\vdots & \vdots &\ddots &\vdots \\
+\mathbf{R}_{N_y-n+1}&\mathbf{R}_{N_y-n+2} &\cdots&\mathbf{R}_{N_y}
+\end{array}
+\right).
+\end{equation}
+The size of $\mathbf{M}$ is $I\times J$, $I=(N_x-m+1)(N_y-n+1)$, $J=mn$. $m$ and $n$ are predifined integers chosen such that the block Hankel matrices $\mathbf{R}_i$ and $\mathbf{M}$ are close to square matrices. The transformation of the data matrix into a block Hankel matrix can be represented in operator notation as follows:
+\begin{equation}
+\label{eq:hankelopt}
+\mathbf{M}=\mathcal{H}\mathbf{D},
+\end{equation}
+where $\mathcal{H}$ denotes the Hankelization operator.
+
+In general, the block Hankel matrix $\mathbf{M}$ can be represented as:
+\begin{equation}
+\label{eq:M}
+\mathbf{M}=\mathbf{S}+\mathbf{N},
+\end{equation}
+where $\mathbf{S}$ and $\mathbf{N}$ denote the block Hankel matrix of signal and of random noise, respectively.
+%\emph{Here, missing signal can be regarded as a condition where signal and noise are summed to zero only for the first iteration of reconstruction process. After the first iteration, there are no missing data.}
+
+We assume that $\mathbf{M}$ and $\mathbf{N}$ have full rank, $rank(\mathbf{M})$=$rank(\mathbf{N})=J$ and $\mathbf{S}$ has deficient rank, $rank(\mathbf{S})=N<J$. The singular value decomposition (SVD) of $\mathbf{M}$ can be represented as:
+\begin{equation}
+\label{eq:svdm}
+\mathbf{M} = [\mathbf{U}_1^M\quad \mathbf{U}_2^M]\left[\begin{array}{cc} 
+\Sigma_1^M & \mathbf{0}\\
+\mathbf{0} & \Sigma_2^M
+\end{array}
+\right]\left[\begin{array}{c} 
+(\mathbf{V}_1^M)^H\\
+(\mathbf{V}_2^M)^H
+\end{array}
+\right],
+\end{equation}
+where $\Sigma_1^M$ ($N\times N$) and $\Sigma_2^M$ ($(I-N)\times(J-N)$) are diagonal matrices and contain, respectively, larger singular values and smaller singular values. $\mathbf{U}_1^M$ ($I\times N$), $\mathbf{U}_2^M$ ($I\times (I-N)$), $\mathbf{V}_1^M$ ($J\times N$) and $\mathbf{V}_2^M$ ($J\times (J-N)$) denote the associated matrices with singular vectors. The symbol $[\cdot]^H$ denotes the conjugate transpose of a matrix. In general the signal is more energy-concentrated and correlative than the random noise.  Thus, the larger singular values and their associated singular vectors represent the signal, while the smaller values and their associated singular vectors represent the random noise. We let $\Sigma_2^M$ be $\mathbf{0}$ to achieve the goal of attenuating random noise while recovering the missing data during the first iteration in reconstruction process as follows:
+\begin{equation}
+\label{eq:tsvd}
+\tilde{\mathbf{M}} = \mathbf{U}_1^M\Sigma_1^M(\mathbf{V}_1^M)^H.
+\end{equation}
+Equation \ref{eq:tsvd} is referred to as the TSVD, which is used in the conventional MSSA approach.
+
+
+
+\section{3D seismic data reconstruction via DMSSA}
+
+Nevertheless, $\tilde{\mathbf{M}}$ is actually still contaminated  with residual random noise. \cite{weilin2016} suggest using damped MSSA (DMSSA) algorithm to attenuate the residual random noise that the conventional MSSA fails to. Here, we further extend the DMSSA algorithm to simultaneous reconstruction and denoising of 3D seismic data. Since the missing data at each frequency slice can be regarded as the random noise, the derivation are similar with \cite{weilin2016} except for the extra reconstruction process based on the weighted POCS\new{-like} method. Therefore, we conclude the approximation of $\mathbf{S}$ as:
+\begin{align}
+\label{eq:S4}
+\mathbf{S} & = \mathbf{U}_1^M \Sigma_1^M\mathbf{T}(\mathbf{V}_1^M)^H,\\
+\label{eq:T2}
+\mathbf{T} & =\mathbf{I}-(\Sigma_1^M)^{-K}\hat{\delta}^K.
+\end{align} 
+where $\hat{\delta}$ denotes the maximum element of $\Sigma_2^M$ and $K$ denotes the damping factor. It is worth mentioning that the greater the $K$ is, the weaker the damping is, and equation \ref{eq:S4} degrades to equation \ref{eq:tsvd} when $K\rightarrow +\infty$.
+
+The revised TSVD for DMSSA algorithm can be represented in operator notation as follows:
+\begin{equation}
+\label{eq:rankrdopt}
+\mathbf{S}=\mathcal{R}_d\mathbf{M}
+\end{equation}
+where we use $\mathcal{R}_d$ as the rank reduction operator for DMSSA while $\mathcal{R}$ is used for conventional MSSA.
+
+The filtered data is recovered with random noise attenuated and missing traces reconstructed by properly averaging along the anti-diagonals of the low-rank matrix $\mathbf{S}$ obtained via revised TSVD in DMSSA:\\ 
+\begin{equation}
+\label{eq:dmssaopt}
+\hat{\mathbf{D}}=\mathcal{A}\mathbf{S}=\mathcal{A}\mathcal{R}_d\mathbf{M}=\mathcal{A}\mathcal{R}_d\mathcal{H}\mathbf{D}=\mathcal{F}_d\mathbf{D}
+\end{equation}
+$\mathcal{A}$ denotes the averaging operator. And the operator $\mathcal{F}_d$ represents DMSSA filter. If $\mathcal{R}_d$ is changed by the traditional TSVD rank reduction operator $\mathcal{R}$, $\mathcal{F}$ can represent conventional MSSA filter similarly:
+\begin{equation}
+\label{eq:F}
+\mathcal{F}=\mathcal{A}\mathcal{R}\mathcal{H}.
+\end{equation}
+
+In this paper, we pay our attention to the reconstruction of noisy data, \new{more specifically, those noisy data with very low SNR}. \old{Therefore, the modified weighted POCS\new{-like} algorithm  is as follows:}\new{Here, we recall the traditional weighted POCS-like algorithm \cite[]{oropezamssa} as follows:}
+\begin{equation}
+\label{eq:mssapocs}
+\mathbf{D}_n=a_n \mathbf{D}_{obs} + (1-a_n\mathcal{S})\circ \mathcal{F}\mathbf{D}_{n-1},\qquad n=1,2,3,\cdots,n_{max}
+\end{equation}
+
+
+\old{Revised}\new{Substituting the MSSA filter $\mathcal{F}$ with} \old{by} the DMSSA filter $\mathcal{F}_d$, \old{therefore} the \old{extended}\new{improved} DMSSA algorithm for simultaneous seismic data reconstruction and denoising can be formulated as follows:
+\begin{equation}
+\label{eq:dmssapocs}
+\mathbf{D}_n=a_n \mathbf{D}_{obs} + (1-a_n\mathcal{S})\circ \mathcal{F}_d\mathbf{D}_{n-1},\qquad n=1,2,3,\cdots,n_{max}
+\end{equation}
+where $\mathbf{D}_0=\mathbf{D}_{obs}$. $a_n$ is an iteration-dependent scalar that linearly decreases from $a_1=1$ to $a_{n_{max}}=0$. $\mathcal{S}$ denotes the sampling factor. $\mathcal{S}$ equals 1 at the observation point while 0 at the missing traces. $\circ$ denotes the Hadamard product (entry-wise product) of two same size matrices. The algorithm stops when either a maximum number of iterations $n_{max}$ is reached or $\Arrowvert \mathbf{D}_n - \mathbf{D}_{n-1}\Arrowvert_F^2 \leq \epsilon$.
+
+\new{The MSSA based approach is based on the assumption that seismic data is of low rank at each frequency slice in the frequency-space domain. Since seismic data are locally composed of plane-wave components, it intuitively satisfies such assumption. According to our experience, when the SNR is relatively high, in other words with less noise, the performance of MSSA and DMSSA based approaches is similar to each other. However, when the SNR is very low, the proposed DMSSA based approach will outperform the MSSA based approach a lot.}
+
+\section{Code description}
+There are two testing Matlab scripts and four main subroutines and three related subroutines that are required by the Matlab scripts in the Matlab package. 
+
+\begin{enumerate}
+\item \texttt{test\_dmssa\_denoise.m} This script is used to run the denoising demonstration using the synthetic 3D seismic data. It is based on the algorithm described in \cite{weilin2016}.
+\item \texttt{test\_dmssa\_recon.m} This script is used to run the simultaneous denoising and reconstruction of the incomplete and noisy synthetic 3D seismic data. It will generate all the required binary files for Figures 1,3,4. For quick look at the performance, some 2D image comparisons will also be generated automatically.
+\end{enumerate}
+
+The main source subroutines are listed below. All the input and output parameters are clearly annotated in the subroutines.
+
+\begin{enumerate}
+\item \texttt{fxymssa.m} This code is used for MSSA based denoising for 2D/3D seismic data.
+
+\item \texttt{fxydmssa.m} This code is used for DMSSA based denoising for 2D/3D seismic data.
+
+\item \texttt{fxymssa\_recon.m} This code is used for MSSA based simultaneous denoising and reconstruction for 2D/3D seismic data.
+
+\item \texttt{fxydmssa\_recon.m} This code is used for DMSSA based simultaneous denoising and reconstruction for 2D/3D seismic data.
+\end{enumerate}
+
+The other source subroutines are listed below.
+\begin{enumerate}
+\item \texttt{genmask.m} This code is used for generating the random mask sampling operator \cite[]{yangkang2015shape} for the reconstruction test.
+
+\item \texttt{rperm.m} This code is used for permutating the seismic traces randomly.
+
+\item \texttt{snrcyk.m} This code is used to numerically measure the signal-to-noise ratio (SNR) of the reconstructed and denoised data based on the criteria introduced in \cite{yangkang2015ortho}.
+\end{enumerate}
+
+There are five different functions in the main subroutines
+\begin{enumerate}
+\item \texttt{P\_H()} This function corresponds to the Hankelization operator $\mathcal{H}$ in equations \ref{eq:dmssaopt} and \ref{eq:F}. 
+\item \texttt{P\_R()} This function corresponds to the rank reduction operator $\mathcal{R}$ in equation \ref{eq:F}.
+\item \texttt{P\_RD()} This function corresponds to the damped rank reduction operator $\mathcal{R}_d$ in equation \ref{eq:dmssaopt}.
+\item \texttt{P\_A()} This function corresponds to the averaging operator $\mathcal{A}$ in equations \ref{eq:dmssaopt} and \ref{eq:F}.
+\item \texttt{ave\_antid()} This function applies averaging along the anti-diagonals of an input matrix.
+\end{enumerate}
+
+The only difference between the traditional MSSA program and the proposed DMSSA program is the rank reduction operator. For a better comparison, we copy the interior functions \texttt{P\_R()} and \texttt{P\_RD()} as follows:
+\begin{itemize}
+\item \texttt{P\_R()} \\
+\texttt{function} $[dout]$=\texttt{P\_R}$(din,N)$\\
+$[U,D,V]$=\texttt{svd}$(din)$;\\
+$dout=U(:,1:N)*D(1:N,1:N)*(V(:,1:N)')$;\\
+\texttt{return}
+
+\item \texttt{P\_RD()}\\
+\texttt{function} $[dout]$=\texttt{P\_RD}$(din,N,K)$ \\
+    $[U,D,V]$=\texttt{svd}$(din)$;\\
+    \texttt{for} $j=1:N$\\
+        $D(j,j)=D(j,j)*(1-D(N+1,N+1)^K/D(j,j)^K)$;\\
+    \texttt{end}        \\
+    $dout=U(:,1:N)*D(1:N,1:N)*(V(:,1:N)')$;\\
+\texttt{return}
+\end{itemize}
+The second to fourth lines in \texttt{P\_RD()} correspond to applying the damping operator expressed in \ref{eq:T2}. It is worth mentioning that for truncated singular value decomposition, it is faster to use the Matlab function \texttt{svds()} instead 
+of \texttt{svd()} when the size of the input matrix is large. However, \texttt{svd()} is faster than \texttt{svds()} when data size is small. Readers are encouraged to adjust such trivial modification according to specific tasks.
+
+There is also a Python script called SConstruct. It is used for generating the final 2D/3D figures used in the paper. It should be run in the Madagascar software platform \cite[]{mada2013}, which is an open-source geophysical processing software package, which is available for download at $www.ahay.org$. 
+
+\section{Examples}
+We use one synthetic example and one field data example to demonstrate the performances of the traditional and the improved MSSA algorithms from the Matlab package. 
+The first synthetic example is shown in Figures \ref{fig:synth-clean,synth-noisy,synth-obs,synth-mssa,synth-dmssa2}, \ref{fig:synth-dmssa1,synth-dmssa}, \ref{fig:synth-s-clean,synth-s-noisy,synth-s-obs,synth-s-mssa,synth-s-dmssa2}, and \ref{fig:synth-s-clean-i,synth-s-noisy-i,synth-s-obs-i,synth-s-mssa-i,synth-s-dmssa2-i}. Since this example is a synthetic example, we have the clean dataset in Figure \ref{fig:synth-clean}. We add some bandlimited random noise to the clean data to simulate the noisy data, as shown in Figure \ref{fig:synth-noisy}. We then randomly remove 50\% traces from the noisy synthetic data, and obtain the simulated observed noisy data, as shown in Figure \ref{fig:synth-obs}. Figures \ref{fig:synth-mssa} and \ref{fig:synth-dmssa2} show the reconstructed and denoised data using the traditional MSSA and the proposed modified MSSA algorithms. It is obvious that the proposed approach can obtain a very accurate recovery (Figure \ref{fig:synth-dmssa2}) compared with the true clean data shown in Figure \ref{fig:synth-clean}. However, the traditional MSSA approach still causes some noticeable residual noise. Note that in Figure \ref{fig:synth-dmssa2}, we use $N=3,K=2$. We also show the reconstructed and denoised data using $K=1$ and $K=3$ in Figure \ref{fig:synth-dmssa1} and \ref{fig:synth-dmssa}, respectively. It is obvious that when $K=1$, as shown in Figure \ref{fig:synth-dmssa1}, the proposed algorithm causes too much damages to the useful signals. When $K=3$, as shown in Figure \ref{fig:synth-dmssa}, there is a bit more residual noise left in the data compared with that when $K=2$. Figure \ref{fig:synth-s-clean,synth-s-noisy,synth-s-obs,synth-s-mssa,synth-s-dmssa2} shows the comparison of 5th crossline section for all the figures in Figure \ref{fig:synth-clean,synth-noisy,synth-obs,synth-mssa,synth-dmssa2}.  Figure \ref{fig:synth-s-clean-i,synth-s-noisy-i,synth-s-obs-i,synth-s-mssa-i,synth-s-dmssa2-i} shows the comparison of 5th inline section for all the figures in Figure \ref{fig:synth-clean,synth-noisy,synth-obs,synth-mssa,synth-dmssa2}. From both Figures \ref{fig:synth-s-clean,synth-s-noisy,synth-s-obs,synth-s-mssa,synth-s-dmssa2} and \ref{fig:synth-s-clean-i,synth-s-noisy-i,synth-s-obs-i,synth-s-mssa-i,synth-s-dmssa2-i} we can confirm that the proposed improved MSSA algorithm can obtain a much better reconstruction and denoising performance than the traditional MSSA algorithm.
+
+The field data example is shown in Figure \ref{fig:field-obs,field-mssa,field-dmssa,field-s-obs,field-s-mssa,field-s-dmssa}. In this example, we do not know the true answer and thus we can not judge the reconstruction and denoising performance by comparing the final results with the true model as used in the synthetic example. Instead, we can only judge the performance by the spatial coherency of the reconstructed data. Figure \ref{fig:field-obs} shows the observed noisy and incomplete data, which has been binned to regular grids. There are about 50\% missing traces in this example. Figures \ref{fig:field-mssa} and \ref{fig:field-dmssa} show the final results using the traditional and proposed improved MSSA algorithms. Figures \ref{fig:field-s-obs}, \ref{fig:field-s-mssa}, and \ref{fig:field-s-dmssa} show the 4th crossline slices of Figures \ref{fig:field-obs}, \ref{fig:field-mssa}, and \ref{fig:field-dmssa}, respectively. It can be seen that both methods can effectively reconstruct the missing data and attenuate the strong random noise, but the proposed improved MSSA algorithm can obtain even better performance since the events are more spatially coherent. \new{It is worth mentioning that since there is no true answer for the field data example, it is hard to use quantitive measure to compare the performance of different approaches. The visual observation on the spatial coherency, instead, is the most effective and straightforward way.}
+
+Both examples are processed using the introduced Matlab packages. The binary files output from the Matlab packages are then put into the Madagascar platform to generate the final figures shown in Figures 1-5. 
+
+\inputdir{synth}
+\multiplot{5}{synth-clean,synth-noisy,synth-obs,synth-mssa,synth-dmssa2}{width=0.29\textwidth}{(a) Clean data. (b) Noisy data. (c) Observed data with 50\% missing traces. (d) Denoised and reconstructed using the MSSA method. (e) Denoised and reconstructed using the proposed approach ($K=2$).}
+\multiplot{2}{synth-dmssa1,synth-dmssa}{width=0.29\textwidth}{ (a) Denoised and reconstructed data using the proposed approach when $K=3$. (b) Denoised and reconstructed data using the proposed approach when $K=1$.}
+
+\multiplot{5}{synth-s-clean,synth-s-noisy,synth-s-obs,synth-s-mssa,synth-s-dmssa2}{width=0.29\textwidth}{Single slice comparison (5th crossline section). (a) Clean data. (b) Noisy data. (c) Observed data with 50\% missing traces. (d) Denoised and reconstructed using the MSSA method. (e) Denoised and reconstructed data using the proposed approach ($K=2$). }
+
+\multiplot{5}{synth-s-clean-i,synth-s-noisy-i,synth-s-obs-i,synth-s-mssa-i,synth-s-dmssa2-i}{width=0.29\textwidth}{Single slice comparison (5th inline section). (a) Clean data. (b) Noisy data. (c) Observed data with 50\% missing traces. (d) Denoised and reconstructed using the MSSA method. (e) Denoised and reconstructed using the proposed approach ($K=2$). }
+
+\inputdir{field}
+\multiplot{6}{field-obs,field-mssa,field-dmssa,field-s-obs,field-s-mssa,field-s-dmssa}{width=0.29\textwidth}{(a) Observed field data (binned to the regular grid). (b) Reconstructed data using the MSSA method. (c) Reconstructed data using the DMSSA method. (d) 4th crossline slice of the observed data. (e) 4th crossline slice of the MSSA reconstructed data. (f) 4th crossline slice of the reconstructed data using the proposed approach.  }
+
+\section{Conclusions}
+We have proposed an improved rank-reduction method by slightly modifying the truncated singular value decomposition (TSVD) formula used in the traditional method. The resulted new rank reduction method can obtain a significantly cleaner 3D data recovery result compared with the traditional method based on one synthetic and one field data examples. We have described how we write the Matlab code for traditional multichannel singular spectrum analysis (MSSA) method, \new{and }how we make the slight modification to the MSSA code in order to tremendously improve the performance. This Matlab code package can be used in research and industrial applications for effectively and efficiently reconstructing the missing seismic traces due to different reasons. 
+
+\section{Acknowledgements}
+We would like to thank Ming Zhang, Zhaoyu Jin, Shaohuan Zu, Shuwei Gan for constructive suggestions and fruitful discussions that improve the manuscript and Matlab codes greatly. This work is partially supported by Texas Consortium for Computational Seismology (TCCS) and the National Basic Research Program of China (grant NO: 2013 CB228602) \new{and Sinopec Key Laboratory of Geophysics (Grant No. 33550006-15-FW2099-0017)}.
+
+
+\bibliographystyle{seg}
+\bibliography{dmssa}

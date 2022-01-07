@@ -1,0 +1,74 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from math import pi
+
+# Data size: 301*61*61
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=0.3 |
+       grey3 flat=n frame1=100 frame2=5 frame3=5 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time" unit1=s title=
+       screenratio=1.4 color=g %s'''%other)
+
+def Grey32(data,other):
+	Result(data,
+       '''
+       byte clip=0.3 |
+       grey3 flat=n frame1=100 frame2=5 frame3=5 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time" unit1=s title=
+       screenratio=1.4 color=g %s'''%other)
+
+def Grey(data,other):
+	Result(data,
+       '''
+       grey label2=Trace label1="Time" unit1=s clip=0.3 title=
+       screenratio=1.4 color=g color=g %s'''%other)
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Field'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+put='d1=0.004 o1=1 n2=100 d2=1 o2=1 n3=10 d3=1 o3=1'
+############################################################
+## with parameter
+############################################################
+Flow(['field-obs-0','field-mssa-0','field-dmssa-0'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Flow('field-obs','field-obs-0','put %s'%put)
+Flow('field-mssa','field-mssa-0','put %s'%put)
+Flow('field-dmssa','field-dmssa-0','put %s'%put)
+
+Grey3('field-obs','title=Observed')
+Grey3('field-mssa','title=MSSA')
+Grey32('field-dmssa','title="Proposed (K=3)"')
+
+
+# Xline=4
+
+Flow('field-s-obs','field-obs','window n3=1 f3=4')
+Flow('field-s-mssa','field-mssa','window n3=1 f3=4')
+Flow('field-s-dmssa','field-dmssa','window n3=1 f3=4')
+
+Grey('field-s-obs','title=Observed')
+Grey('field-s-mssa','title=MSSA')
+Grey('field-s-dmssa','title="Proposed (K=3)"')
+
+
+
+
+
+
+End()

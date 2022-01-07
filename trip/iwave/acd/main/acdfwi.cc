@@ -64,8 +64,8 @@ using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
 //using TSOpt::GridHelmOp;
 
-int xargc;
-char **xargv;
+int xargc_;
+char **xargv_;
 
 /** this version requires that two model files be present:
     csqext - extended version of csq, with [d=spatial dimn]
@@ -172,9 +172,9 @@ int main(int argc, char ** argv) {
       // must fish the derivative index out by hand and bcast
       // THIS SHOULD ALL BE FIXED! (1) getGrid properly implemented in parallel, (2) proper
       // defn of DSOp to include internal extd axis case (space/time shift)
+#ifdef IWAVE_USE_MPI
       int dsdir = INT_MAX;
       if (retrieveGlobalRank()==0) dsdir=csqsp.getGrid().dim;
-#ifdef IWAVE_USE_MPI
       if (MPI_Bcast(&dsdir,1,MPI_INT,0,retrieveGlobalComm())) {
 	RVLException e;
 	e<<"Error: acdiva, rank="<<retrieveGlobalRank()<<"\n";

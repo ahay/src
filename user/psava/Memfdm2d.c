@@ -118,6 +118,8 @@ int main(int argc, char* argv[])
     /* OMP parameters */
 #ifdef _OPENMP
     ompnth=omp_init();
+    if(!ompnth)
+        abort();
 #endif
     /*------------------------------------------------------------*/
 

@@ -1,0 +1,56 @@
+from rsf.proj import *
+# Script for DTV regularized FWI
+# Reference:
+# Qu, S., E. Verschuur, and Y. Chen, 2019, FWI/JMI with an automatic directional total variation constraint, Geophysics, 84, R175-R183.
+#
+#take about 6 hours in total
+
+exe1=Program('fdmod.c')
+exe2=Program('fwi.c')
+exe3=Program('artm2d.c')
+
+Fetch(['vel.bin','vinit.bin'],'yangkang')
+
+### Modeling
+Flow('vel','vel.bin','bin2rsf bfile=${SOURCES[0]} n1=334 n2=92 d1=12 d2=12 o1=0 o2=0    |transp')
+Flow('vinit','vinit.bin','bin2rsf bfile=${SOURCES[0]} n1=334 n2=92 d1=12 d2=12 o1=0 o2=0|transp')
+
+Flow('shots','vel %s'%exe1[0],'./${SOURCES[1]} 	nt=2000 dt=0.001 ng=334 ns=23 jsx=15 jgx=1 sxbeg=2 szbeg=1 gxbeg=0 gzbeg=1 jsz=0 jgz=0')
+Result('shots','transp|grey screenratio=1.2 title= ')
+
+### RTM requires improvement
+Flow('vwater','vinit','window n1=1|spray  axis=1 n=92 o=0 d=12') 
+Flow('shots-t','shots','transp plane=12')    
+Flow('imag1 imag2 illums refs','vinit shots-t vwater %s'%exe3[0],
+	'''
+	./${SOURCES[3]} shots=${SOURCES[1]} verb=y vwater=${SOURCES[2]}
+	illums=${TARGETS[2]} img2=${TARGETS[1]} refs=${TARGETS[3]}
+	''')
+Result('imag1','laplac|cut n1=8| cut f1=89|grey title= color=g scalebar=y mean=y')
+Result('imag2','laplac|cut n1=8| cut f1=89|grey title= color=g scalebar=y mean=y')
+
+Flow('slope','imag2','laplac|cut n1=8| cut f1=89|dip rect1=5 rect2=10 niter=5 liter=10')
+Flow('theta_yc','slope','math output="atan(input)+3.1415926"|clip clip=3.1415926 value=0.0|cut n1=11')
+
+Result('vel','grey title= color=j scalebar=y mean=y')
+Result('vinit','grey title= color=j scalebar=y mean=y')
+Result('slope','grey title= color=j scalebar=y mean=y')
+Result('theta_yc','grey title= color=j scalebar=y mean=y')
+
+
+### FWI (no TV)
+Flow('vinv obj','vinit shots %s'%exe2[0],'./${SOURCES[2]} niter=100 tv=0 shots=${SOURCES[1]} obj=${TARGETS[1]}')
+Result('vinv','grey title= color=j scalebar=y mean=y')
+
+### FWI (TV)
+Flow('vinv_tv obj_tv','vinit shots %s'%exe2[0],'./${SOURCES[2]} niter=100 tv=1 shots=${SOURCES[1]} obj=${TARGETS[1]}')
+Result('vinv_tv','grey title= color=j scalebar=y mean=y')
+
+### FWI (DTV)
+Flow('vinv_dtv obj_dtv','vinit shots theta_yc %s'%exe2[0],'./${SOURCES[3]} niter=100 tv=2 shots=${SOURCES[1]} theta=${SOURCES[2]} obj=${TARGETS[1]}')
+Result('vinv_dtv','grey title= color=j scalebar=y mean=y')
+
+Flow('objs','obj obj_tv obj_dtv','cat axis=2 ${SOURCES[1:3]}')
+Result('objs','graph title="Misfit functions"')
+
+End()

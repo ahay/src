@@ -59,7 +59,7 @@ def shell_script(target, source=None, env=None):
     shell = env['shell']
     rsfroot = config.RSFROOT
 
-    pypath = get_local_site_pkgs(rsfroot)
+    pypath = env['pypath']
     datapath = os.environ.get('DATAPATH','/var/tmp')
     if datapath[-1] != os.sep:  datapath += os.sep
 
@@ -104,7 +104,7 @@ def shell_script(target, source=None, env=None):
                     else:
                         myrc += 'setenv %s %s:${%s}\n' % (par,value,par)
                     myrc += 'else\n'
-                myrc += 'setenv %s %s:\n' % (par,value)
+                myrc += 'setenv %s %s\n' % (par,value)
                 if redefine:
                     myrc += 'endif\n'
         else:

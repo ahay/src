@@ -123,18 +123,17 @@ int lrosfor2(sf_complex ***wvfld, float **sill, sf_complex **rcd, geopar geop)
     /* acquisition geometry and mesh setup */
     int nx, nz; /* domain of interest */
     int nxb, nzb; /* domain of computation (including boundary) */
-    float dx, dz, ox, oz;
-    int spx, spz, gpz, gpx, gpl;
+    int gpz, gpx, gpl;
     /* snapshot interval */
     int   snpint;
     /*absorbing boundary*/
-    int top, bot, lft, rht;
+    int top, lft;
     /*source parameters*/
     int nt;
     float dt;
     float trunc; /* truncation */
     /*misc*/
-    bool adj, verb, illum;
+    bool verb, illum;
     int m2, pad1;
     /* pointers */
     sf_complex **lt, **rt;
@@ -149,15 +148,13 @@ int lrosfor2(sf_complex ***wvfld, float **sill, sf_complex **rcd, geopar geop)
 
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz; /*not acutally used*/
     gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft;
     nt = geop->nt;
     dt = geop->dt;
     trunc = geop->trunc;
-    adj = geop->adj; verb = geop->verb; illum = geop->illum;
+    verb = geop->verb; illum = geop->illum;
     pad1 = geop->pad1;
     if (geop->mode==0) {
       m2 = geop->m2;
@@ -279,16 +276,13 @@ int lrosback2(sf_complex **img, sf_complex ***wvfld, float **sill, sf_complex **
     /* acquisition geometry and mesh setup */
     int nx, nz; /* domain of interest */
     int nxb, nzb; /* domain of computation (including boundary) */
-    float dx, dz, ox, oz;
-    int spx, spz, gpz, gpx, gpl;
+    int gpz, gpx, gpl;
     /* snapshot interval */
     int snpint;
     /*absorbing boundary*/
-    int top, bot, lft, rht;
+    int top, lft;
     /*source parameters*/
     int nt;
-    float dt;
-    float trunc; /* truncation */
     /*misc*/
     bool adj, verb, illum;
     int m2, pad1;
@@ -304,14 +298,10 @@ int lrosback2(sf_complex **img, sf_complex ***wvfld, float **sill, sf_complex **
 
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz;
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz;
     gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft; 
     nt = geop->nt;
-    dt = geop->dt;
-    trunc = geop->trunc;
     adj = geop->adj; verb = geop->verb; illum = geop->illum;
     pad1 = geop->pad1;
     if (geop->mode==0) {
@@ -537,18 +527,15 @@ int rcvill2(float **sill, sf_complex **rcd, geopar geop)
     /* acquisition geometry and mesh setup */
     int nx, nz; /* domain of interest */
     int nxb, nzb; /* domain of computation (including boundary) */
-    float dx, dz, ox, oz;
-    int spx, spz, gpz, gpx, gpl;
+    int gpz, gpx, gpl;
     /* snapshot interval */
     int snpint;
     /*absorbing boundary*/
-    int top, bot, lft, rht;
+    int top, lft;
     /*source parameters*/
     int nt;
-    float dt;
-    float trunc; /* truncation */
     /*misc*/
-    bool adj, verb, illum;
+    bool verb;
     int m2, pad1;
     /* pointers */
     sf_complex **lt, **rt;
@@ -561,15 +548,11 @@ int rcvill2(float **sill, sf_complex **rcd, geopar geop)
 
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz;
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz;
     gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft; 
     nt = geop->nt;
-    dt = geop->dt;
-    trunc = geop->trunc;
-    adj = geop->adj; verb = geop->verb; illum = geop->illum;
+    verb = geop->verb; 
     pad1 = geop->pad1;
     if (geop->mode==0) {
       m2 = geop->m2;
@@ -686,18 +669,16 @@ int lrosfor2q(sf_complex ***wvfld, geopar geop)
     /* acquisition geometry and mesh setup */
     int nx, nz; /* domain of interest */
     int nxb, nzb; /* domain of computation (including boundary) */
-    float dx, dz, ox, oz;
-    int spx, spz, gpz, gpx, gpl;
     /* snapshot interval */
     int   snpint;
     /*absorbing boundary*/
-    int top, bot, lft, rht;
+    int top, lft;
     /*source parameters*/
     int nt;
     float dt;
     float trunc; /* truncation */
     /*misc*/
-    bool adj, verb, illum;
+    bool verb;
     int m2, pad1;
     /* pointers */
     sf_complex **lt, **rt;
@@ -712,15 +693,12 @@ int lrosfor2q(sf_complex ***wvfld, geopar geop)
 
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz; /*not acutally used*/
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz; /*not acutally used*/
-    gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft; 
     nt = geop->nt;
     dt = geop->dt;
     trunc = geop->trunc;
-    adj = geop->adj; verb = geop->verb; illum = geop->illum;
+    verb = geop->verb; 
     pad1 = geop->pad1;
     if (geop->mode==0) {
       m2 = geop->m2;
@@ -822,18 +800,15 @@ int lrosback2q(sf_complex ***wvfld, sf_complex **rcd, geopar geop)
     /* acquisition geometry and mesh setup */
     int nx, nz; /* domain of interest */
     int nxb, nzb; /* domain of computation (including boundary) */
-    float dx, dz, ox, oz;
-    int spx, spz, gpz, gpx, gpl;
+    int gpz, gpx, gpl;
     /* snapshot interval */
     int snpint;
     /*absorbing boundary*/
-    int top, bot, lft, rht;
+    int top, lft;
     /*source parameters*/
     int nt;
-    float dt;
-    float trunc; /* truncation */
     /*misc*/
-    bool adj, verb, illum;
+    bool verb;
     int m2, pad1;
     /* pointers */
     sf_complex **lt, **rt;
@@ -847,15 +822,11 @@ int lrosback2q(sf_complex ***wvfld, sf_complex **rcd, geopar geop)
 
     nx = geop->nx; nz = geop->nz;
     nxb = geop->nxb; nzb = geop->nzb;
-    dx = geop->dx; dz = geop->dz; ox = geop->ox; oz = geop->oz;
     snpint = geop->snpint;
-    spx = geop->spx; spz = geop->spz;
     gpz = geop->gpz; gpx = geop->gpx; gpl = geop->gpl;
-    top = geop->top; bot = geop->bot; lft = geop->lft; rht = geop->rht;
+    top = geop->top; lft = geop->lft; 
     nt = geop->nt;
-    dt = geop->dt;
-    trunc = geop->trunc;
-    adj = geop->adj; verb = geop->verb; illum = geop->illum;
+    verb = geop->verb; 
     pad1 = geop->pad1;
     if (geop->mode==0) {
       m2 = geop->m2;

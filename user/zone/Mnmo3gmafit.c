@@ -21,8 +21,8 @@
 int main(int argc, char* argv[])
 {
   int nx, ny, nt, npara, nc;
-  float x, y, dx, dy, dt, x0, y0, tini, t0, testval;
-  float **t0sq,**time, *coeff, ***dtime, *offsetx, *offsety; 
+  float x, y=0, dx, dy, dt, x0, y0, tini, t0, testval;
+  float **t0sq,**time, *coeff, ***dtime, *offsetx=NULL, *offsety=NULL; 
   float w1,w2,w3,A1,A2,A3,A4,A5,B1,B2,B3,C1,C2,C3,C4,C5,A,B,C;
   int i,j,k,test;
   int count = 0;

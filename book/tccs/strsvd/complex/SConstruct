@@ -1,0 +1,120 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+def Grey1(data,other):
+	Result(data,
+	  '''
+       grey clip=0.5 wanttitle=n label1=Time unit1=s label2=Trace unit2=
+       labelfat=4 font=2 titlefat=4 color=g %s 
+       '''%other)
+
+def Grey2(data,other):
+	Result(data,
+	  '''
+       put d1=0.004 o1=0 d2=1 o2=0 | grey clip=0.5 wanttitle=n label2=Trace unit2= label1=Time unit1=s
+       labelfat=4 font=2 titlefat=4 color=g %s 
+       '''%other)
+
+Flow('complex','complex.bin',' echo in=$SOURCE n1=501 n2=80 data_format=native_float | put n1=501 n2=80 d1=0.004 d2=1 o1=0 o2=0')
+Flow('complex-noise','complex',
+     '''
+     noise seed=2008 var=0.012 |
+     saltpepper den=80 inten=0.1 seed=122009
+     ''')
+Grey1('complex','')
+Grey1('complex-noise','')
+
+##################
+# Synthetic test
+##################
+# FX deconvolution
+Flow('complex-fx','complex-noise','fxdecon n2w=80')
+Grey1('complex-fx','title=FX')
+
+ns0=7 # smoothing radius
+# structure-oriented SVD
+
+Flow('simi','complex-fx complex','similarity other=${SOURCES[1]} rect1=5 rect2=5')
+Flow('complex-fxsimi','complex-fx simi','simidenoise1 similarity=${SOURCES[1]} s1=0.5 s2=0.5')
+Grey1('complex-fxsimi','')
+
+Flow('complex-ndip','complex-fxsimi','bandpass fhi=30 | dip rect1=%d rect2=%d' % (7,7))
+Result('complex-ndip1','complex-ndip',
+       '''
+       grey color=j scalebar=y wanttitle=n label2=Distance
+       barlabel=Slope barunit=samples bartype=h labelfat=4
+       font=2 titlefat=4 barlabelfat=4
+       ''')
+Flow('complex-spray','complex-noise complex-ndip',
+     '''
+     pwspray dip=${SOURCES[1]} ns=%d | put d2=0 o2=1
+     ''' % (ns0))
+Result('complex-cube','complex-spray',
+       '''
+       transp plane=23 | put d3=1 o3=%d | byte gainpanel=all |
+       grey3 wanttitle= flat=n labelfat=4 font=2 titlefat=4
+       label2=Distance label3="Prediction" unit3=trace
+       frame1=100 frame2=50 frame3=%d point1=0.9 point2=0.8 
+       o3num=%d d3num=3 n3tic=%d  clip=0.00358515
+       '''  % (-ns0,ns0+1,-ns0+1,5))
+
+# standard mean filter
+#Flow('datameanf','spray','stack axis=2')
+#Grey1('datameanf','title=MeanF')
+
+# standard 
+#Flow('datamf','spray','transp plane=12 | mf nfw=%d | transp plane=12 | window n2=1 f2=%d'%(ns0,ns0))
+#Grey1('datamf','title=MF')
+
+
+#Flow('datasvd','spray','svddenoise pclip=4 | window n2=1 f2=%d'%ns0)
+Flow('complex-svd','complex-spray','svddenoise pclip=4 | stack axis=2')
+Grey1('complex-svd','title=STRSVD')
+
+# global svd
+Flow('complex-gsvd','complex-noise','svddenoise pclip=25 ')
+Grey1('complex-gsvd','title=GSVD')
+
+
+
+# local svd
+########################################################################
+# INITIALIZATION
+#######################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'synthlsvd'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+nt=501
+nx=80
+twin=50
+xwin=40
+r=1
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('complex-lsvd',[os.path.join(matROOT,matfun+'.m'), 'complex-noise'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(nt)d,%(nx)d,%(r)d,%(twin)d,%(xwin)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Grey2('complex-lsvd','title=LSVD')
+
+
+# Difference sections
+Flow('complex-n-svd','complex-noise complex-svd','add scale=1,-1 ${SOURCES[1]}')
+Flow('complex-n-fx','complex-noise complex-fx','add scale=1,-1 ${SOURCES[1]}')
+Flow('complex-n-lsvd','complex-noise complex-lsvd','add scale=1,-1 ${SOURCES[1]}')
+Flow('complex-n-gsvd','complex-noise complex-gsvd','add scale=1,-1 ${SOURCES[1]}')
+Grey1('complex-n-svd','')
+Grey1('complex-n-fx','')
+Grey1('complex-n-lsvd','')
+Grey1('complex-n-gsvd','')
+
+
+End()

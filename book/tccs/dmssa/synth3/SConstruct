@@ -1,0 +1,184 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from math import pi
+
+# Data size: 301*61*61
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=0.9 |
+       grey3 flat=n frame1=100 frame2=5 frame3=5 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time sampling number" title=
+       screenratio=1.4 %s'''%other)
+
+def Grey(data,other):
+	Result(data,
+       '''
+       grey label2=Trace label1="Time sampling number" clip=0.9 title=
+       screenratio=1.4 color=g %s'''%other)
+
+def Wig(data,other):
+	Result(data,
+       '''
+       grey poly=y transp=y yreverse=y label2=Trace label1="Time sampling number" clip=0.9 title=
+       screenratio=1.4 %s'''%other)
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Synth2'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+k=3
+n=4
+put='d1=1 o1=1 n2=20 d2=1 o2=1 n3=20 d3=1 o3=1'
+############################################################
+## with parameter
+############################################################
+
+Flow(['synth-clean-0','synth-noisy-0','synth-mssa-0','synth-dmssa-0'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+Flow('synth-clean','synth-clean-0','put %s'%put)
+Flow('synth-noisy','synth-noisy-0','put %s'%put)
+Flow('synth-mssa','synth-mssa-0','put %s'%put)
+Flow('synth-dmssa','synth-dmssa-0','put %s'%put)
+
+Flow('synth-n-mssa','synth-noisy synth-mssa','add scale=1,-1 ${SOURCES[1]}')
+Flow('synth-n-dmssa','synth-noisy synth-dmssa','add scale=1,-1 ${SOURCES[1]}')
+
+Grey3('synth-clean','title=Clean')
+Grey3('synth-noisy','title=Noisy')
+Grey3('synth-mssa','title=MSSA')
+Grey3('synth-dmssa','title=DMSSA')
+Grey3('synth-n-mssa','title=MSSA')
+Grey3('synth-n-dmssa','title=DMSSA')
+
+# Xline=4
+Flow('synth-s-clean','synth-clean','window n3=1 f3=4')
+Flow('synth-s-noisy','synth-noisy','window n3=1 f3=4')
+Flow('synth-s-mssa','synth-mssa','window n3=1 f3=4')
+Flow('synth-s-dmssa','synth-dmssa','window n3=1 f3=4')
+Flow('synth-sn-mssa','synth-n-mssa','window n3=1 f3=4')
+Flow('synth-sn-dmssa','synth-n-dmssa','window n3=1 f3=4')
+
+# Inline=4
+Flow('synth-s-clean-i','synth-clean','window n2=1 f2=4')
+Flow('synth-s-noisy-i','synth-noisy','window n2=1 f2=4')
+Flow('synth-s-mssa-i','synth-mssa','window n2=1 f2=4')
+Flow('synth-s-dmssa-i','synth-dmssa','window n2=1 f2=4')
+Flow('synth-sn-mssa-i','synth-n-mssa','window n2=1 f2=4')
+Flow('synth-sn-dmssa-i','synth-n-dmssa','window n2=1 f2=4')
+
+Flow('synth-err1','synth-s-clean-i synth-s-mssa-i','add scale=-1,1 ${SOURCES[1]}')
+Flow('synth-err2','synth-s-clean-i synth-s-dmssa-i','add scale=-1,1 ${SOURCES[1]}')
+
+#Grey('synth-s-clean','title=Clean')
+#Grey('synth-s-noisy','title=Noisy')
+#Grey('synth-s-mssa','title=MSSA')
+#Grey('synth-s-dmssa','title=DMSSA')
+#Grey('synth-sn-mssa','title=MSSA')
+#Grey('synth-sn-dmssa','title=DMSSA')
+
+Wig('synth-s-clean','title=Clean')
+Wig('synth-s-noisy','title=Noisy')
+Wig('synth-s-mssa','title=MSSA')
+Wig('synth-s-dmssa','title=DMSSA')
+Wig('synth-sn-mssa','title=MSSA')
+Wig('synth-sn-dmssa','title=DMSSA')
+Wig('synth-err1','title="Error (MSSA)"')
+Wig('synth-err2','title="Error (DMSSA)"')
+
+Wig('synth-s-clean-i','title=Clean')
+Wig('synth-s-noisy-i','title=Noisy')
+Wig('synth-s-mssa-i','title=MSSA')
+Wig('synth-s-dmssa-i','title=DMSSA')
+Wig('synth-sn-mssa-i','title=MSSA')
+Wig('synth-sn-dmssa-i','title=DMSSA')
+
+
+
+## N's effect
+n=1
+Flow(['synth-clean-1','synth-noisy-1','synth-mssa-1','synth-dmssa-1'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+n=2
+Flow(['synth-clean-2','synth-noisy-2','synth-mssa-2','synth-dmssa-2'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+n=3
+Flow(['synth-clean-3','synth-noisy-3','synth-mssa-3','synth-dmssa-3'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+n=4
+Flow(['synth-clean-4','synth-noisy-4','synth-mssa-4','synth-dmssa-4'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+n=5
+Flow(['synth-clean-5','synth-noisy-5','synth-mssa-5','synth-dmssa-5'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+n=6
+Flow(['synth-clean-6','synth-noisy-6','synth-mssa-6','synth-dmssa-6'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+n=10
+Flow(['synth-clean-10','synth-noisy-10','synth-mssa-10','synth-dmssa-10'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+     
+n=20
+Flow(['synth-clean-20','synth-noisy-20','synth-mssa-20','synth-dmssa-20'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+n=40
+Flow(['synth-clean-40','synth-noisy-40','synth-mssa-40','synth-dmssa-40'],[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}',%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+          
+Flow('synth-s-dmssa-1','synth-dmssa-1','put %s | window n3=1 f3=4'%put)
+Flow('synth-s-dmssa-2','synth-dmssa-2','put %s | window n3=1 f3=4'%put)
+Flow('synth-s-dmssa-3','synth-dmssa-3','put %s | window n3=1 f3=4'%put)
+Flow('synth-s-dmssa-4','synth-dmssa-4','put %s | window n3=1 f3=4'%put)
+Flow('synth-s-dmssa-5','synth-dmssa-5','put %s | window n3=1 f3=4'%put)
+Flow('synth-s-dmssa-6','synth-dmssa-6','put %s | window n3=1 f3=4'%put)
+Flow('synth-s-dmssa-10','synth-dmssa-10','put %s | window n3=1 f3=4'%put)
+Flow('synth-s-dmssa-20','synth-dmssa-20','put %s | window n3=1 f3=4'%put)
+Flow('synth-s-dmssa-40','synth-dmssa-40','put %s | window n3=1 f3=4'%put)
+
+Wig('synth-s-dmssa-1','title="DMSSA (N=1)"')
+Wig('synth-s-dmssa-2','title="DMSSA (N=2)"')
+Wig('synth-s-dmssa-3','title="DMSSA (N=3)"')
+Wig('synth-s-dmssa-4','title="DMSSA (N=4)"')
+Wig('synth-s-dmssa-5','title="DMSSA (N=5)"')
+Wig('synth-s-dmssa-6','title="DMSSA (N=6)"')
+Wig('synth-s-dmssa-10','title="DMSSA (N=10)"')
+Wig('synth-s-dmssa-20','title="DMSSA (N=20)"')
+Wig('synth-s-dmssa-40','title="DMSSA (N=40)"')
+
+End()

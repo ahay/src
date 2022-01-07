@@ -41,24 +41,24 @@ float fd1_2(float **p, int i2, int i3, char id)
 	case 'u':
 		for (j=-1; j<=1; j++)	
 			a += p[i3-j][i2+1] - p[i3-j][i2-1];
-		        c0=6.0;
+		c0=6.0;
 		break;
         case 'v':
 		for (j=-1; j<=1; j++)	
 			a += p[i3+1][i2-j] - p[i3-1][i2-j];
-		        c0=6.0;
+		c0=6.0;
 		break; 
 	case 'U':
 		for (j3=-1; j3<=1; j3++)
 		for (j2=-1; j2<=1; j2++)
 		         a += (-2*pow(-0.5,j2*j2))*(p[i3-j3][i2+j2]);
-		         c0=6.0;
+		c0=6.0;
 		break;
 	case 'V':
                 for (j3=-1; j3<=1; j3++)
 		for (j2=-1; j2<=1; j2++)
 		         a += (-2*pow(-0.5,j3*j3))*(p[i3+j3][i2-j2]);
-		         c0=6.0;
+		c0=6.0;
 		break;
         case 'W':
 	    a = p[i3+1][i2+1]+p[i3-1][i2-1]-p[i3+1][i2-1]-p[i3-1][i2+1];

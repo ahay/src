@@ -99,10 +99,10 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(n1);
 
     if (reginput) {
-	spine3_init1(nd,x0,dx);
+	spline3_init1(nd,x0,dx);
 	table1 = sf_floatalloc(nd);
     } else {
-	spine3_init(nd,fp);
+	spline3_init(nd,fp);
 	table = sf_floatalloc2(2,nd);
 	if (sort) {
 	  index = sf_intalloc(nd);

@@ -70,7 +70,6 @@ static void thrsample(float *in, float *out, bool complex_data,
 {
     float isample=0.0;
     float osample=0.0;
-    float absample=0.0;
     int i;
     
     for (i=0; i<nt*ntr; i++){

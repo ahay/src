@@ -1,0 +1,8 @@
+from rsf.tex import*
+import os, sys
+
+os.environ['PSTEXPENOPTS']='color=y fat=3 fatmult=1.5'
+
+       
+End(lclass='geophysics',use='listings,amsmath')
+

@@ -1,0 +1,53 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+def Grey1(data,other):
+	Result(data,
+	  '''
+       grey clip=0.08 wanttitle=n label2=Trace unit2=
+       labelfat=4 font=2 titlefat=4 color=g %s 
+       '''%other)
+
+def Grey2(data,other):
+	Result(data,
+	  '''
+       put d1=0.002 o1=0 d2=1 o2=0 | grey label1=Time unit1=s clip=0.08 wanttitle=n label2=Trace unit2=
+       labelfat=4 font=2 titlefat=4 color=g %s 
+       '''%other)
+
+# local svd
+########################################################################
+# INITIALIZATION
+#######################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'steer'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+nt=501
+nx=50
+
+
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('dn dh dhc dc shift',[os.path.join(matROOT,matfun+'.m')],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+Grey2('dn','')
+Grey2('dh','')
+Grey2('dhc','')
+Grey2('dc','')
+
+Result('shift','transp | put d1=1 o1=1 | graph wanttitle=n label1=Trace label2=Samples unit2= unit1= labelfat=4 font=2 titlefat=4')
+
+
+
+End()

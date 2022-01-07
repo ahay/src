@@ -35,13 +35,13 @@ int main(int argc, char* argv[])
 	sf_sou soupar;
 	sf_acqui acpar;
 	sf_vec array;
-	sf_fwi fwipar;
+	sf_fwi fwipar = NULL;
 	sf_optim optpar=NULL;
 	sf_pas paspar=NULL;
 
 	MPI_Comm comm=MPI_COMM_WORLD;
 
-	sf_file Fv, Fq, Fw, Fdat, Fimg, Finv=NULL, Fgrad, Fsrc, Fmwt=NULL;
+	sf_file Fv, Fq, Fw, Fdat, Fimg, Finv=NULL, Fgrad=NULL, Fsrc, Fmwt=NULL;
 
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(comm, &mpipar.cpuid);

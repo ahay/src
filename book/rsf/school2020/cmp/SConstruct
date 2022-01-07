@@ -1,0 +1,29 @@
+from rsf.proj import *
+
+# Donwload data
+Fetch('midpts.hh','midpts')
+
+# Select a CMP gather, mute
+Flow('cmp','midpts.hh',
+     '''
+     window n3=1 | dd form=native | 
+     mutter half=n v0=1.5 |
+     put label1=Time unit1=s label2=Offset unit2=km
+     ''')
+Plot('cmp','grey title="Common Midpoint Gather" ')
+
+# Velocity scan
+Flow('vscan','cmp',
+     'vscan half=n v0=1.4 nv=60 dv=0.02 semblance=n')
+Plot('vscan','grey color=j allpos=y title="Velocity Scan" ')
+
+Flow('pick','vscan','scale axis=2 | pick rect1=10 rect2=10 | window')
+Plot('pick',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=2.6 wanttitle=n
+     label1= unit1= label2= unit2= wantaxis1=n wantaxis2=n pad=n
+     ''') 
+Result('pick','vscan pick','Overlay')
+
+End()
+

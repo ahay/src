@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
    // kiss_fft_cfg cfgx, cfgxi, cfgz, cfgzi;
     sf_file out, velx, velz, source, yita, seta;
     bool opt;    /* optimal padding */     
-    int nk, pad1, nzx, nzx2, n;
+    int nk, pad1, n;
     bool cmplx;
 
     sf_init(argc,argv);
@@ -115,8 +115,6 @@ int main(int argc, char* argv[])
     sf_warning("nkx=%d\n",nkx);
     sf_warning("nkz=%d\n",nkz);
 
-    nzx = nzb*nxb;
-    nzx2 = nkz*nkx;
     dkx = 1./(nkx*dx);
     kx0 = -0.5/dx;
     dkz = 1./(nkz*dz);

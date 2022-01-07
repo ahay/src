@@ -89,6 +89,26 @@ plat = {'OS': 'unknown',
         'cpu': 'unknown'}
 pkg = {}
 
+def distribution():
+    '''
+    Get the distribution id and version id from os-release file.
+
+    Returns:
+        A tuple containing the distribution id and version id.
+    '''
+    etc_dir = '/etc'
+    os_release = os.path.join(etc_dir, 'os-release')
+    with open(os_release) as f:
+        lines = f.readlines()
+        for line in lines:
+            if '=' in line:
+                key, value = line.split('=')
+                if key.lower() == 'id':
+                    dist_id = value.strip().replace('"','')
+                elif key.lower() == 'version_id':
+                    version_id = value.strip().replace('"','')
+    return dist_id, version_id
+
 def need_pkg(pkgtype,fatal=True):
     global pkg, plat
     pkgnm = 'unknown'
@@ -97,6 +117,7 @@ def need_pkg(pkgtype,fatal=True):
             pkgnm = pkg[pkgtype].get(plat['distro'])
             if fatal:
                 stderr_write('Needed package: ' + pkgnm,'yellow_on_red')
+                sys.exit(unix_failure)
             else:
                 stderr_write('Optional package: ' + pkgnm,'bold')
     if fatal:
@@ -110,6 +131,7 @@ def check_all(context):
     cc  (context)
     ar  (context)
     libs(context)
+    rpc(context) # FDNSI
     c99 (context) # FDNSI
     x11 (context) # FDNSI
     opengl(context) # FDNSI
@@ -138,6 +160,8 @@ def check_all(context):
         octave(context)
     if 'java' in api:
         java(context)
+    if 'chapel' in api:
+        chapel(context)
     mpi (context) # FDNSI
     pthreads (context) # FDNSI
     omp (context) # FDNSI
@@ -157,38 +181,50 @@ def identify_platform(context):
         from platform import architecture, uname
         if sys.version_info[:2] < (2, 6): # Python < 2.6
             from platform import dist
+            dist_info = dist()
+        elif sys.version_info[:2] >= (3, 7): # Python >= 3.7
+            try:
+                from distro import linux_distribution as dist
+                dist_info = dist()
+            except:
+                dist_info = distribution()
         else:
             from platform import linux_distribution as dist
+            dist_info = dist(full_distribution_name=0)
 
         plat['arch'] = architecture()[0]
         del architecture
 
         name = uname()[2].split('.')[-2]
         if plat['OS'] in ('linux', 'posix', 'linux2'):
-            if dist()[0].lower() == 'fedora':
+            if dist_info[0].lower() == 'fedora':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
-                plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'redhat' or \
-                    dist()[0].lower()[:7] == 'red hat':
+                plat['version'] = dist_info()[1]
+            elif dist_info[0].lower() == 'redhat' or \
+                    dist_info[0].lower()[:7] == 'red hat':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'rhel' # Red Hat Enterprise Linux
-                plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'ubuntu':
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'ubuntu':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
-                plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'debian':
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'centos':
+                plat['OS'] = 'linux'
+                plat['distro'] = 'centos'
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'debian':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'debian'
-                plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'suse':
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'suse':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'suse'
-            elif dist()[0].lower() == 'linuxmint':
+            elif dist_info[0].lower() == 'linuxmint':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
-                plat['version'] = dist()[1]
+                plat['version'] = dist_info[1]
             elif name[-7:] == 'generic':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
@@ -203,13 +239,13 @@ def identify_platform(context):
         elif plat['OS'] in ('hp-ux', 'hpux'):
             plat['OS'] = 'hpux'
             plat['distro'] = uname()[2].split('.')[-2]
-        del uname, dist
+        del uname
     except: # "platform" not installed. Python < 2.3
         # For each OS with Python < 2.3, should use specific
         # commands hthrough os.system to find distro/version
         # Not known if what follows works everywhere:
         plat_nm = os.uname()[4]
-        if plat_nm == 'x86_64':
+        if plat_nm == 'x86_64' or plat_nm == 'arm64':
             plat['arch'] = '64bit'
         elif plat_nm == 'i686':
             plat['arch'] = '32bit'
@@ -253,7 +289,9 @@ def cc(context):
     if CC.rfind('gcc') >= 0 and \
            CC.rfind('pgcc') < 0:
         oldflag = context.env.get('CFLAGS')
-        for flag in ('-x c -std=gnu99 -Wall -pedantic',
+        for flag in ('-x c -std=gnu17 -Wall -pedantic',
+                     '-x c -std=gnu11 -Wall -pedantic',
+                     '-x c -std=gnu99 -Wall -pedantic',
                      '-std=gnu99 -Wall -pedantic',
                      '-std=gnu9x -Wall -pedantic',
                      '-Wall -pedantic'):
@@ -275,6 +313,34 @@ def cc(context):
             context.Result(res)
             if not res:
                 context.env['CFLAGS'] = oldflag
+    # icc
+    if CC.rfind('icc') >= 0:
+        oldflag = context.env.get('CFLAGS')
+        for flag in ('-x c -std=gnu11 -Wall -pedantic',
+                     '-x c -std=gnu99 -Wall -pedantic',
+                     '-std=gnu99 -Wall -pedantic',
+                     '-std=gnu89 -Wall -pedantic',
+                     '-Wall -pedantic'):
+            context.Message("checking if icc accepts '%s' ... " % flag)
+            context.env['CFLAGS'] = oldflag + ' ' + flag
+            res = context.TryCompile(text,'.c')
+            context.Result(res)
+            if res:
+                break
+        if not res:
+            context.env['CFLAGS'] = oldflag
+        # large file support
+        (status,lfs) = getstatusoutput('getconf LFS_CFLAGS')
+        if not status and lfs:
+            oldflag = context.env.get('CFLAGS')
+            context.Message("checking if icc accepts '%s' ... " % lfs)
+            context.env['CFLAGS'] = oldflag + ' ' + lfs
+            res = context.TryCompile(text,'.c')
+            context.Result(res)
+            if not res:
+                context.env['CFLAGS'] = oldflag
+
+
 
     # Mac OS X include path, library path, and link flags
     if plat['OS'] == 'darwin':
@@ -296,6 +362,13 @@ def cc(context):
             if os.path.isdir('/sw/lib'):
                 context.env['LIBPATH'] = path_get(context,'LIBPATH',
                                                   '/sw/lib')
+        if os.path.isdir('/usr/local/Homebrew'):  # paths for Homebrew
+            if os.path.isdir('/usr/local/include'):
+                context.env['CPPPATH'] = path_get(context, 'CPPPATH',
+                                                  '/usr/local/include')
+            if os.path.isdir('/usr/local/lib'):
+                context.env['LIBPATH'] = path_get(context, 'LIBPATH',
+                                                  '/usr/local/lib')
     # Solaris
     elif plat['OS'] == 'sunos':
         context.env['CFLAGS'] = context.env.get('CFLAGS','').replace(
@@ -314,12 +387,8 @@ def ar(context):
         context.Result(context_failure)
         need_pkg('ar')
 
-pkg['libs'] = {'fedora':'glibc-headers',
-               'cygwin':'libtirpc-devel (Setup...Libs)'}
-
-# Failing this check stops the installation.
+# Checking for the math library.
 def libs(context):
-    context.Message("checking for libraries ... ")
     LIBS = path_get(context,'LIBS','m')
     DYNLIB = context.env.get('DYNLIB')
     if not DYNLIB or DYNLIB[0].lower() == 'n':
@@ -327,15 +396,28 @@ def libs(context):
     else:
         context.env['DYNLIB'] = 'd'
 
+    if plat['OS'] == 'darwin':
+        LIBS.append('mx')
+
+    context.env['LIBS'] = LIBS
+
+# Checking for RPC library. Failing this doesn't stop the installation
+def rpc(context):
+    context.Message("checking for rpc ... ")
+    oldlibs = path_get(context,'LIBS')
+    oldpath = path_get(context, 'CPPPATH')
+    LIBS = oldlibs[:]
+    CPPPATH = oldpath[:]
+
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
         LIBS.append('socket')
-    elif plat['OS'] == 'cygwin':
-        context.env['CPPPATH'] = path_get(context,'CPPPATH',
-                                          '/usr/include/tirpc')
+    elif plat['OS'] == 'cygwin' or \
+         (plat['distro'] == 'centos' and int(plat['version'][0]) >= 8) or \
+	 plat['distro'] == 'fedora' or \
+         (plat['distro'] == 'ubuntu' and int(plat['version'][:2]) >= 20):
+        CPPPATH.append('/usr/include/tirpc')
         LIBS.append('tirpc')
-    elif plat['OS'] == 'darwin':
-        LIBS.append('mx')
     elif plat['OS'] == 'interix':
         LIBS.append('rpclib')
     text = '''
@@ -345,13 +427,19 @@ def libs(context):
     return 0;
     }\n'''
 
+    context.env['LIBS'] = LIBS
     res = context.TryLink(text,'.c')
     if res:
         context.Result(str(LIBS))
-        context.env['LIBS'] = LIBS
+        context.env['HAVE_RPC'] = True
     else:
         context.Result(context_failure)
-        need_pkg('libs')
+        LIBS = oldlibs
+        CPPPATH = oldpath
+        context.env['LIBS'] = oldlibs
+        context.env['CPPPATH'] = oldpath
+        context.env['HAVE_RPC'] = False
+        
 
 pkg['c99'] = {'fedora':'glibc-headers'}
 
@@ -471,7 +559,8 @@ xlib = [
 
 pkg['xaw']={'rhel':'libXaw-devel',
             'fedora':'libXaw-devel',
-            'ubuntu':'libxaw7-dev'}
+            'ubuntu':'libxaw7-dev',
+            'centos':'libXaw-devel'}
 
 # If this check is failed
 # you may not be able to display .vpl images on the screen
@@ -537,6 +626,15 @@ def x11(context):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
+# try this:
+#git clone https://gitlab.freedesktop.org/xorg/lib/libxaw.git
+#cd libXaw
+#./autogen.sh
+#./configure --prefix=build/X
+#make install
+# set XINC to build/X/include and XLIBPATH to build/X/lib and test again
+   
+
 def check_pen(env,pen):
     if pen == 'xtpen' and (env.get('XINC') and env.get('XLIBPATH')):
         return 1
@@ -573,6 +671,7 @@ pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
                  'darwin':'netpbm (fink)',
                  'rhel':'netpbm-devel',
                  'fedora':'netpbm-devel',
+                 'centos':'netpbm-devel',
                  'suse'  :'libnetpbm-devel',
                  'ubuntu':'libnetpbm10-dev'}
 
@@ -621,7 +720,8 @@ def ppm(context):
 pkg['libtiff'] = {'suse':'libtiff-devel',
                   'ubuntu': 'libtiff5-dev',
                   'fedora':'libtiff-devel',
-                  'rhel':'libtiff-devel'}
+                  'rhel':'libtiff-devel',
+                  'centos':'libtiff-devel'}
 
 def tiff(context):
     context.Message("checking for tiff ... ")
@@ -653,7 +753,8 @@ def tiff(context):
 
 pkg['libgd'] = {'suse':'gd-devel',
                 'rhel':'gd-devel',
-                'ubuntu':'libgd-dev'}
+                'ubuntu':'libgd-dev',
+                'centos':'gd-devel'}
 
 def gd(context):
     context.Message("checking for GD (PNG) ... ")
@@ -705,6 +806,7 @@ pkg['plplot'] = {'fedora':'plplot-devel',
                  'rhel': 'plplot-devel',
                  'darwin':'plplot',
                  'suse':'libplplot-devel',
+                 'centos':'libplplot-devel + libtool-ltdl-devel',
                  'ubuntu':'libplplot-dev'}
 
 def plplot(context):
@@ -824,7 +926,8 @@ def ffmpeg(context):
     context.env['CPPPATH'] = oldpath
 
 pkg['cairo'] = {'suse':'cairo-devel',
-                'ubuntu':'libcairo2-dev'}
+                'ubuntu':'libcairo2-dev',
+                'centos':'cairo-devel'}
 
 def cairo(context):
     context.Message("checking for cairo (PNG) ... ")
@@ -888,7 +991,8 @@ def cairo(context):
     LIBS.pop()
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
-               'ubuntu':'libjpeg-dev'}
+               'ubuntu':'libjpeg-dev',
+               'centos':'libjpeg-turbo-devel'}
 
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
@@ -923,6 +1027,7 @@ pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut-devel',
                  'rhel':'freeglut-devel',
                  'suse'  :'freeglut-devel',
                  'ubuntu':'freeglut3-dev',
+                 'centos':'freeglut-devel',
                  'cygwin':'opengl (Setup...Graphics)'}
 
 # If this test is failed, no opengl programs
@@ -982,7 +1087,8 @@ def opengl(context):
 
 pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
                'rhel':'blas-devel + atlas-devel',
-               'ubuntu':'libblas-dev'}
+               'ubuntu':'libblas-dev',
+               'centos':'blas-devel'}
 
 def blas(context):
     context.Message("checking for BLAS ... ")
@@ -1021,41 +1127,62 @@ def blas(context):
             context.env['LIBS'] = LIBS
             context.env['BLAS'] = blas
         else:
-            # some systems require cblas and atlas
-            for atlas_dir in filter(os.path.isdir,
-                                    ['/usr/lib64/atlas/',
-                                     '/usr/lib/atlas/']):
-                context.env['LIBPATH'].append(atlas_dir)
-            LIBS.pop()
-            LIBS.append('f77blas')
+            # Centos 8 requires cblas
+            context.env['CPPPATH'] = path_get(context,'CPPPATH',
+                                          '/usr/include/cblas')
             LIBS.append('cblas')
-            LIBS.append('atlas')
             res = context.TryLink(text,'.c')
             if res:
                 context.Result(res)
                 context.env['LIBS'] = LIBS
                 context.env['BLAS'] = 'cblas'
             else:
-                # try tatlas (threaded atlas + BLAS)
-                LIBS.pop()
-                LIBS.pop()
-                LIBS.pop()
-                LIBS.append('tatlas')
+                # some systems require cblas and atlas
+                for atlas_dir in filter(os.path.isdir,
+                                        ['/usr/lib64/atlas/',
+                                         '/usr/lib/atlas/']):
+                    context.env['LIBPATH'].append(atlas_dir)
+                LIBS.pop() # cblas
+                LIBS.append('f77blas')
+                LIBS.append('atlas')
                 res = context.TryLink(text,'.c')
                 if res:
                     context.Result(res)
                     context.env['LIBS'] = LIBS
-                    context.env['BLAS'] = 'tatlas'
+                    context.env['BLAS'] = 'cblas'
                 else:
-                    context.Result(context_failure)
-                    context.env['CPPDEFINES'] = \
-                       path_get(context,'CPPDEFINES','NO_BLAS')
-                    LIBS.pop()
-                    context.env['BLAS'] = None
-                    need_pkg('blas', fatal=False)
+                    # try tatlas (threaded atlas + BLAS)
+                    LIBS.pop() # atlas
+                    LIBS.pop() # f77blas
+                    LIBS.pop() # blas
+                    LIBS.append('tatlas')
+                    res = context.TryLink(text,'.c')
+                    if res:
+                        context.Result(res)
+                        context.env['LIBS'] = LIBS
+                        context.env['BLAS'] = 'tatlas'
+                    else:
+                        LIBS.pop() # tatlas
+                        LIBS.append('cblas')
+                        LIBS.append('atlas')
+                        res = context.TryLink(text,'.c')
+                        if res:
+                            context.Result(res)
+                            context.env['LIBS'] = LIBS
+                            context.env['BLAS'] = 'cblas'
+                        else:
+                            LIBS.pop() # atlas
+                            LIBS.pop() # cblas
+                            context.Result(context_failure)
+                            context.env['CPPDEFINES'] = \
+                              path_get(context,'CPPDEFINES','NO_BLAS')
+                            context.env['BLAS'] = None
+                            need_pkg('blas', fatal=False)
 
 pkg['lapack'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
-                 'rhel':'blas-devel + atlas-devel'}
+                 'ubuntu': 'liblapack-dev',
+                 'rhel':'blas-devel + atlas-devel',
+                 'centos':'lapack-devel'}
 
 def lapack(context):
     context.Message("checking for LAPACK ... ")
@@ -1086,8 +1213,8 @@ def lapack(context):
             context.env['LAPACK'] = mylibs
         else:
             # some systems require cblas and atlas
-            LIBS.pop()
-            LIBS.pop()
+            LIBS.pop() # blas
+            LIBS.pop() # lapack
             mylibs = ['f77blas','cblas','atlas']
             LIBS.extend(mylibs)
             res = context.TryLink(text,'.c')
@@ -1096,9 +1223,9 @@ def lapack(context):
                 context.env['LAPACK'] = mylibs
             else:
                 # try tatlas (threaded atlas + BLAS)
-                LIBS.pop()
-                LIBS.pop()
-                LIBS.pop()
+                LIBS.pop() # atlas
+                LIBS.pop() # cblas
+                LIBS.pop() # f77blas
                 LIBS.append('tatlas')
                 res = context.TryLink(text,'.c')
                 if res:
@@ -1112,13 +1239,14 @@ def lapack(context):
 
 pkg['mpi'] = {'fedora':'openmpi + openmpi-devel + openmpi-libs',
               'ubuntu':'libopenmpi-dev',
-              'rhel':'openmpi-devel'}
+              'rhel':'openmpi-devel',
+              'centos':'openmpi-devel'}
 
 def mpi(context):
     context.Message("checking for MPICC ... ")
     path = os.environ['PATH']
     if plat['OS'] == 'linux':
-        if plat['distro'] == 'fedora' or plat['distro'] == 'rhel':
+        if plat['distro'] in ['fedora', 'rhel', 'centos']:
             path += ':/usr/lib64/openmpi/bin/'
     mpicc = context.env.get('MPICC',WhereIs('mpicc', path))
     if mpicc:
@@ -1277,6 +1405,7 @@ def cuda(context):
 pkg['fftw'] = {'fedora':'fftw-devel',
                'rhel':'fftw-devel',
                'ubuntu':'libfftw3-dev',
+               'centos':'fftw-devel',
                'darwin':'fftw-3-single'}
 
 def fftw(context):
@@ -1572,6 +1701,7 @@ def psp(context):
 
 pkg['SuiteSparse'] = {'ubuntu':'libsuitesparse-dev',
                       'rhel':'suitesparse-devel',
+                      'centos':'suitesparse-devel',
                       'fedora':'suitesparse-devel'}
 
 def sparse(context):
@@ -1886,7 +2016,8 @@ def api_options(context):
     api = [x.lower() for x in path_get(context,'API')]
 
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
-                         'f90', 'python', 'matlab', 'octave', 'java']
+                         'f90', 'python', 'matlab', 'octave', 'java',
+                         'chapel']
 
     for option in api:
         if not option in valid_api_options:
@@ -1917,7 +2048,8 @@ def api_options(context):
 
 pkg['c++'] = {'fedora':'gcc-c++',
               'suse'  :'gcc-c++',
-              'ubuntu':'g++'}
+              'ubuntu':'g++',
+              'centos':'gcc-c++'}
 
 # For the C++ API
 def cxx(context):
@@ -1955,8 +2087,9 @@ def cxx(context):
 
             if CXX[-3:]=='g++':
                 oldflag = context.env.get('CXXFLAGS')
-                for flag in ['-std=c++11 -U__STRICT_ANSI__ -Wall -pedantic',
-                             '-std=c++0x -U__STRICT_ANSI__ -Wall -pedantic',
+                for flag in ['-std=gnu++17 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=gnu++11 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=gnu++0x -U__STRICT_ANSI__ -Wall -pedantic',
                              '-Wall -pedantic']:
                     context.Message("checking if %s accepts '%s' ... " % (CXX,flag))
                     context.env['CXXFLAGS'] = oldflag + ' ' + flag
@@ -1966,6 +2099,23 @@ def cxx(context):
                         break
                 if not res:
                     context.env['CXXFLAGS'] = oldflag
+            if CXX[-4:]=='icpc':
+                oldflag = context.env.get('CXXFLAGS')
+                for flag in ['-std=c++17 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=gnu++14 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=c++11 -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-std=gnu++0x -U__STRICT_ANSI__ -Wall -pedantic',
+                             '-Wall -pedantic']:
+                    context.Message("checking if %s accepts '%s' ... " % (CXX,flag))
+                    context.env['CXXFLAGS'] = oldflag + ' ' + flag
+                    res = context.TryCompile(text,'.cc')
+                    context.Result(res)
+                    if res:
+                        break
+                if not res:
+                    context.env['CXXFLAGS'] = oldflag
+
+
 
 # Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
@@ -2278,6 +2428,20 @@ def java(context):
         context.Result(context_failure)
         need_pkg('minesjtk', fatal=False)
 
+def chapel(context):
+    context.Message("checking for chapel ... ")
+    CHPL = context.env.get('CHPL_HOST_COMPILER',WhereIs('chpl'))
+    context.env['CHPL_HOST_COMPILER'] = CHPL;
+    #print(CHPL)
+    if not CHPL:
+        context.Result(context_failure)
+        need_pkg('chapel', fatal = False)
+        if 'chapel' in api:
+            api.remove('chapel')
+            context.env['API'] = api
+    else:
+        context.Result(CHPL)
+
 def gcc(context):
     '''Handle dynamic gcc libraries.'''
     libdirs = os.environ.get('LD_LIBRARY_PATH','').split(':')
@@ -2333,6 +2497,7 @@ def options(file):
     opts.Add('ENV','SCons environment')
     opts.Add('RSFROOT','Top Madagascar installation directory')
     opts.Add('AR','Static library archiver')
+    opts.Add('HAVE_RPC','Remote Procedure Call library')
     opts.Add('JPEG','The libjpeg library')
     opts.Add('OPENGL','OpenGL libraries')
     opts.Add('OPENGLFLAGS','Flags for linking OpenGL libraries')
@@ -2418,6 +2583,8 @@ def options(file):
     opts.Add('JAVAC','The Java compiler')
     opts.Add('JAVA_HOME','Location of jdk')
     opts.Add('MINESJTK','Location of edu_mines_jtk.jar')
+    opts.Add('CHPL_HOST_COMPILER', 'Chapel compiler')
+    opts.Add('CHPLFLAGS','Chapel compiler flags','--fast')
     opts.Add('CUDA_TOOLKIT_PATH','Location of CUDA toolkit')
     opts.Add('NVCC','NVIDIA C compiler')
     opts.Add('CUDAFLAGS','NVCC flags')

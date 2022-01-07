@@ -167,7 +167,7 @@ for prog in cuda_mains:
     if CTP and NVCC:
         cfile = env.Command('CUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
         cc = env.get('CC')
-        cflags = env.get('CUDAFLAGS') +' -O'
+        cflags = env.get('CUDAFLAGS') +' -O2'
         ldflags = '-lcublas -lcufft -lcusparse'
         if str.rfind(cc,'icc') >= 0:
             cflags = cflags + ' -ccbin=%s' % cc

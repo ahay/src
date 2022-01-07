@@ -1,0 +1,36 @@
+from rsf.proj import*
+
+def Graph(data,other):
+	Result(data,'graph label2="Amplitude" unit2= labelsz=12 labelfat=4 font=2 wherexlabel=b wheretitle=t title= %s ' %other)
+
+def Grey(data,other):
+	Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" labelsz=12 labelfat=4 font=2 titlesz=12 titlefat=4 wherexlabel=b wheretitle=t clip=0.5 %s'%other)
+
+Flow('trace',None,'spike n1=125 nsp=4 mag=1,-1,2,1.5 k1=25,50,75,100 | ricker1 frequency=25 | scale axis=1')
+Graph('trace','title="(a)"')
+
+Flow('trace1','trace','noise var=0.02 seed=2014')
+Graph('trace1','title="(a)"')
+
+Flow('trace2','trace','noise var=0.1 seed=201415')
+Graph('trace2','title="(b)"')
+
+Flow('trace-simi','trace1 trace2','similarity other=${SOURCES[1]} rect1=5 rect2=1')
+Graph('trace-simi','title="(c)" label2=Similarity')
+
+Result('trace-comp','Fig/trace1.vpl Fig/trace2.vpl Fig/trace-simi.vpl','OverUnderAniso')
+
+
+Flow('flat','trace','spray axis=2 n=10 d=1 o=1')
+Flow('flat1','flat','noise var=0.02 seed=2014')
+Flow('flat2','flat','noise var=0.1 seed=201415')
+Flow('flat-simi','flat1 flat2','similarity other=${SOURCES[1]} rect1=5 rect2=3')
+
+Grey('flat1','title="(a)" ')
+Grey('flat2','title="(b)" ')
+Grey('flat-simi','title="(c)" color=j allpos=y')
+
+Result('flat-comp','Fig/flat1.vpl Fig/flat2.vpl Fig/flat-simi.vpl','SideBySideAniso')
+
+
+End()

@@ -51,14 +51,22 @@ int main (int argc, char* argv[])
 
     if (!sf_getint("large",&large)) large = (int) n1*ranget;
 
-    if (!sf_getfloat("d1",&d1)) d1=0.004; sf_putfloat(mod,"d1",d1);
-    if (!sf_getfloat("d2",&d2)) d2=0.01;  sf_putfloat(mod,"d2",d2);
-    if (!sf_getfloat("d3",&d3)) d3=0.02;  sf_putfloat(mod,"d3",d3);
+    if (!sf_getfloat("d1",&d1)) d1=0.004; 
+    if (!sf_getfloat("d2",&d2)) d2=0.01;  
+    if (!sf_getfloat("d3",&d3)) d3=0.02;  
     
-    if (!sf_getfloat("o1",&o1)) o1=0.;     sf_putfloat(mod,"o1",o1);
-    if (!sf_getfloat("o2",&o2)) o2=-3.*d2; sf_putfloat(mod,"o2",o2);
-    if (!sf_getfloat("o3",&o3)) o3=-3.*d3; sf_putfloat(mod,"o3",o3);
-    
+    if (!sf_getfloat("o1",&o1)) o1=0.;    
+    if (!sf_getfloat("o2",&o2)) o2=-3.*d2;
+    if (!sf_getfloat("o3",&o3)) o3=-3.*d3;
+
+	sf_putfloat(mod,"d1",d1);
+	sf_putfloat(mod,"d2",d2);
+	sf_putfloat(mod,"d3",d3);
+
+	sf_putfloat(mod,"o1",o1);
+	sf_putfloat(mod,"o2",o2);
+	sf_putfloat(mod,"o3",o3);
+		
     if (!sf_getfloat("gaussvel",&gaussvel)) gaussvel=2.5;
     if (!sf_getfloat("throw",&thro)) thro=0.01;
     if (!sf_getint("endtaper",&endtaper)) endtaper=20;

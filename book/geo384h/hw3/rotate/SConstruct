@@ -10,6 +10,11 @@ Result('circle',grey)
 
 # Rotate program
 program = Program('rotate.c')
+
+# COMMENT ABOVE AND UNCOMMENT BELOW IF YOU WANT TO USE PYTHON 
+# program = Command('rotate.exe','rotate.py','cp $SOURCE $TARGET')
+# AddPostAction(program,Chmod(program,0o755))
+
 rotate = str(program[0])
 
 # Rotate by 90 degrees

@@ -1,0 +1,34 @@
+from rsf.proj import *
+import os
+
+## module defining
+def Grey(data,other): 
+	Result(data,'put o2=1 d2=1|grey label1="Time" unit1=s label2=Trace unit2="" labelsz=10 title="" wherexlabel=b wheretitle=t clip=0.5 minval=-1.5 maxval=1.5 %s'%other)
+
+def Graph(data,other):
+	Result(data,'graph label1="" label2="" unit1=""  labelsz=11 labelfat=4 font=2 titlesz=11 titlefat=4  unit2=""  title="" wherexlabel=b wheretitle=t %s' %other)
+
+Flow('synth','synth0','cp')
+Grey('synth','title="Model"')
+
+Flow('synth-n','synth','noise var=0.1 seed=201415')
+Grey('synth-n','title="Noisy data"')
+
+ns0=10
+Flow('dip1','synth-n','bandpass fhi=10 | dip rect1=%d rect2=%d ' % (ns0,ns0))
+Grey('dip1','color=j title="Slope of Noisy data (PWD)" clip=1.5 scalebar=y')
+
+Flow('nriesz','synth-n','bandpass fhi=5 |riesz order=10')
+Flow('nrt','nriesz','window n3=1')
+Flow('nrx','nriesz','window f3=1 | scale dscale=-1')
+
+Grey('nrt','time  componet')
+Grey('nrx','space componet')
+
+Flow('dip2','nrx nrt','divn den=${SOURCES[1]} rect1=20 rect2=10 niter=200 verb=y')
+Grey('dip2','color=j title="Slope of Noisy data (Robust)" clip=1.2 scalebar=y')
+
+Flow('dip','synth','bandpass fhi=10 | dip rect1=%d rect2=%d ' % (ns0,ns0))
+Grey('dip','color=j title="Slope of Clean data (PWD)" clip=1.5 scalebar=y')
+End()
+

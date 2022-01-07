@@ -35,6 +35,12 @@ copyright holder.
 
 #include "localdata.hh"
 
+#if __cplusplus >= 201103L   // We are using C++11 or a later version
+#define NOEXCEPT_FALSE noexcept(false)
+#else
+#define NOEXCEPT_FALSE
+#endif
+
 namespace RVL {
 
   /** Evaluation type, mixin for definition of LFOs */
@@ -43,7 +49,7 @@ namespace RVL {
   public:
     LocalEvaluation() {}
     LocalEvaluation(const LocalEvaluation<DataType> &) {}
-    virtual ~LocalEvaluation() {}
+    virtual ~LocalEvaluation() NOEXCEPT_FALSE {}
     /** Eval method for LDCs */    
     virtual void operator()(LocalDataContainer<DataType> & target,
 			    vector<LocalDataContainer<DataType> const *> & sources) = 0;
@@ -69,7 +75,7 @@ namespace RVL {
   public:
     UnaryLocalEvaluation() {}
     UnaryLocalEvaluation(const UnaryLocalEvaluation<DataType> &) {}
-    virtual ~UnaryLocalEvaluation() {}
+    virtual ~UnaryLocalEvaluation() NOEXCEPT_FALSE {}
 
     /** Evaluation method for LDCs */
     virtual void operator () (LocalDataContainer<DataType> & target) = 0;
@@ -103,7 +109,7 @@ namespace RVL {
   public:
     UnaryLocalFunctionObject() {}
     UnaryLocalFunctionObject(const UnaryLocalFunctionObject<DataType> &) {}
-    virtual ~UnaryLocalFunctionObject() {}
+    virtual ~UnaryLocalFunctionObject() NOEXCEPT_FALSE {}
   };
 
   /** Binary local evaluation mixin. */
@@ -113,7 +119,7 @@ namespace RVL {
   public:
     BinaryLocalEvaluation() {}
     BinaryLocalEvaluation(const BinaryLocalEvaluation<DataType> &) {}
-    virtual ~BinaryLocalEvaluation() {}
+    virtual ~BinaryLocalEvaluation() NOEXCEPT_FALSE {}
     /** Evaluation method for LDCs */
     using LocalEvaluation<DataType>::operator();
     virtual void operator () (LocalDataContainer<DataType> & target,
@@ -147,7 +153,7 @@ namespace RVL {
   public:
     BinaryLocalFunctionObject() {}
     BinaryLocalFunctionObject(const BinaryLocalFunctionObject<DataType> &) {}
-    virtual ~BinaryLocalFunctionObject() {}
+    virtual ~BinaryLocalFunctionObject() NOEXCEPT_FALSE {}
   };
 
   /** Ternary local evaluation mixin. */

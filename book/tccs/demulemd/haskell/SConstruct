@@ -1,0 +1,145 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+def Grey(data,other):
+	Result(data,'grey screenratio=1.3 title= clip=0.62 ')
+
+Fetch('hask_mult.HH','haskell')
+
+Flow('hask','hask_mult.HH',
+     '''
+     dd form=native | 
+     pow pow1=1.5 | noise seed=2015 var=1e-9 | 
+     bandpass flo=10 fhi=40 | mutter half=n v0=1.3 | scale dscale=3081.8 |
+     put label1=Time unit1=s label2=Offset unit2=km
+     ''')
+
+Plot('hask','grey title="Synthetic data" ')
+
+Fetch('picks.hask.txt','haskell')
+
+Flow('picks.txt','picks.hask.txt',"awk '{print $2, $3}'") 
+Flow('picks','picks.txt',
+     '''
+     echo in=$SOURCE n1=2 n2=13 data_format=ascii_float |
+     dd form=native 
+     ''',stdin=0)
+
+vw=1.5    # water velocity
+nw=115
+tw=0.4568 # water depth
+dt=0.004
+
+Flow('mask','hask','window n2=1 | spike k1=%d | causint' % nw)
+
+Flow('vnmo','picks mask',
+     '''
+     transp |
+     linear o1=0.0 d1=0.004 n1=1024 rect=5 niter=100 verb=y |
+     math m=${SOURCES[1]} output="%g*(1-m)+m*input" |
+     put label1=Time unit1=s 
+     ''' % vw)
+Result('vnmo','graph title="NMO Velocity" label2=Velocity unit2=km/s')
+
+Flow('nmo','hask vnmo','nmo velocity=${SOURCES[1]} half=n')
+Plot('nmo','grey title="NMO" ')
+
+#Result('nmo','hask nmo','SideBySideAniso')
+
+Flow('cmp','nmo','window min1=1.5 max1=3.5 n2=30')
+Plot('cmp','grey title="Input CMP" clip=0.62')
+
+# randomization
+Flow('off','cmp','window n1=1 | noise rep=y seed=2015')
+Flow('rand','cmp off','headersort head=${SOURCES[1]}')
+Flow('hrand','rand','cp')
+
+# Add random noise
+Flow('ncmp','cmp','noise seed=2015 var=0')
+Flow('nrand','ncmp off','headersort head=${SOURCES[1]}')
+
+#Flow('pef lag','nrand','lopef a=3,7 w=10,50 lag=${TARGETS[1]}') 
+#Flow('tx','nrand pef','decon filt=${SOURCES[1]} predictive=y')
+
+Flow('tx','nrand','transp | mf nfw=5 | transp')
+
+# Sort back
+Flow('inv','off','math output=x1 | spray axis=1 n=1 | headersort head=$SOURCE')
+Flow('back','tx inv','headersort head=${SOURCES[1]}')
+
+Flow('dif','ncmp back','add scale=1,-1 ${SOURCES[1]}')
+
+Plot('back','grey title="CMP (3-D)" clip=0.62')
+
+Plot('dif','grey title="Difference (3-D)" clip=0.62')
+
+Result('hm-nmo-tx','cmp back dif','SideBySideAniso')
+
+Fetch('hm_supp.HH','haskell')
+
+Flow('hm','hm_supp.HH','dd form=native | window min1=1.5 max1=3.5 n2=30 | put label1=Time unit1=s')
+
+for case in ('cmp','back','hm'):
+    Plot(case+'-trace',case,
+         '''
+         bandpass fhi=50 |
+         window min1=2 max1=2.6 n2=3 | 
+         wiggle poly=y clip=0.6 labelsz=12 labelfat=1 titlesz=12 titlefat=1 title="%s" label2= unit2=
+         ''' % {'cmp':'Input','back':'PEF (3-D)','hm': 'Velocity Stack'}[case])
+
+Result('hm-near-offset-tx','cmp-trace back-trace hm-trace','SideBySideAniso')
+
+
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun/'
+matfun = 'FXEMDM'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+n1=501
+n2=30
+dt=0.004
+lf=5
+hf=120
+N=3
+verb=0
+############################################################
+## with parameter
+############################################################
+Flow('nrand-emd-t',[os.path.join(matROOT,matfun+'.m'),'nrand'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(dt)g,%(lf)g,%(hf)g,%(N)d,%(verb)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('nrand-emd','nrand-emd-t','put  n1=501 n2=30 d2=0.05 d1=0.004 o2=0.25 o1=1.5 label2=Offset unit2=km label1=Time unit1=s')
+Flow('nrand-emd-back','nrand-emd inv','headersort head=${SOURCES[1]}')
+
+Flow('emd-dif','ncmp nrand-emd-back','add scale=1,-1 ${SOURCES[1]}')
+
+
+Flow('h-ncmp','ncmp','cp')
+Flow('h-rand','hrand','cp')
+Flow('h-back','back','cp')
+Flow('h-dif','dif','cp')
+Flow('h-nrand-emd-back','nrand-emd-back','cp')
+Flow('h-emd-dif','emd-dif','cp')
+
+
+
+
+Grey('hask','')
+Grey('nmo','')
+
+Grey('h-rand','')
+Grey('h-ncmp','')
+Grey('h-back','')
+Grey('h-dif','')
+Grey('h-nrand-emd-back','')
+Grey('h-emd-dif','')
+
+End()

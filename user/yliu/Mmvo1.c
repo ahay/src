@@ -86,7 +86,7 @@ void FFT(float x[], float y[], int n, int sign)
 int main (int argc, char* argv[])
 {
     bool opt, mvo, log;
-    int n1, nw1, nt, nw, i, j, N, k, n, nnw, m1;
+    int n1, nt, nw, i, j, N, k, n, nnw, m1;
     float d1, f, dw;
     float *um, *TD, *outp;
     int fftk;
@@ -134,7 +134,6 @@ int main (int argc, char* argv[])
     nt = fftn; 
 
     if (nt%2) nt++;
-    nw1 = nt/2;
     dw = 1./(nt*d1);
     k=(int)(f/dw);
 

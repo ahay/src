@@ -346,28 +346,18 @@ char gs_color(char ***c,
               float cs, float sn /* cosine and sine of the phase angle */)
 /*< Gauss-Seidel "color" >*/
 {
-    char cz, cx, ca;
+    char cz;
 
-    float fz, fx, fa;
+    float fz;
 
     float fzmax, fzmin; 
-    float fxmax, fxmin; 
-    float famax, famin;
 
     /* Downwind scheme coefficients  */
     fz = dzi*cs*ss;
-    fx = dxi*sn*ss;
-    fa = dai*(cs*ssx - sn*ssz);
     
     fzmin = SF_MAX(-fz,0.);
     fzmax = SF_MAX(fz,0.);
     
-    fxmin = SF_MAX(-fx,0.);
-    fxmax = SF_MAX(fx,0.);
-    
-    famin = SF_MAX(-fa,0.);
-    famax = SF_MAX(fa,0.);
-
     /* z-direction */
     if (fzmax > 0. && iz < nz-1) {
         cz = c[ia][ix][iz+1];
@@ -375,30 +365,6 @@ char gs_color(char ***c,
         cz = c[ia][ix][iz-1];
     } else {
         cz = '0';
-    }
-
-    /* x-direction */
-    if (fxmax > 0. && ix < nx-1) {
-        cx = c[ia][ix+1][iz];
-    } else if (fxmin > 0. && ix > 0) {
-        cx = c[ia][ix-1][iz];
-    } else {
-        cx = '0';
-    }
-
-    /* escape angle is periodic on ]-PI,+PI] */
-    if (fxmax > 0.) {
-        if (ia < na-1) 
-            ca = c[ia+1][ix][iz];
-        else
-            ca = c[0][ix][iz];
-    } else if (famin > 0.) {
-        if (ia > 0) 
-            ca = c[ia-1][ix][iz];
-        else
-            ca = c[na-1][ix][iz];
-    } else {
-        ca = '0';
     }
 
     return cz;

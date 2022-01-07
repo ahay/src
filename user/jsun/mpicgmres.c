@@ -85,22 +85,6 @@ my_cdotc (int m,
   return res;
 }
 
-/* computes ab (without conjugating the first vector)
-   m : dimension of vector x [] (m) */
-static sf_complex
-my_cdotu (int m,
-	  const sf_complex *a, const sf_complex *b)
-{
-  int i;
-  sf_complex res;
-  
-  res = sf_cmplx(0.0f, 0.0f);
-  for (i = 0; i < m; i ++) {
-    res += a[i] * b[i];
-  }
-  return res;
-}
-
 /* double-precision L2 norm of a complex number */
 static float
 my_cnorm (int n, const sf_complex* x)
@@ -148,15 +132,6 @@ back_sub (int m, int nn,
     }
 }
 
-static void
-showvec (int m, const sf_complex* v)
-{
-  int i;
-  for (i=0; i < n; i ++) {
-    printf ("(%5.2f, %5.2f)",crealf(v[i]),cimagf(v[i]));
-  }
-  printf("\n");
-}
 
 void cgmres_init(int nx      /* data size */, 
 		int restart /* memory */) 

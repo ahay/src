@@ -165,7 +165,7 @@ void cspsvx_(char *fact, char *uplo, int *n, int *nrhs, cpx8 *ap, cpx8 *afp, int
 void csptrf_(char *uplo, int *n, cpx8 *ap, int *ipiv, int *info);
 void csptri_(char *uplo, int *n, cpx8 *ap, int *ipiv, cpx8 *work, int *info);
 void csptrs_(char *uplo, int *n, int *nrhs, cpx8 *ap, int *ipiv, cpx8 *b, int *ldb, int *info);
-void csrot_(int *n, cpx8 *cx, int *incx, cpx8 *cy, int *incy, float *c, float *s);
+int csrot_(int *n, void *cx, int *incx, void *cy, int *incy, float *c, float *s);
 void cstedc_(char *compz, int *n, float *d, float *e, cpx8 *z, int *ldz, cpx8 *work, int *lwork, float *rwork, int *lrwork, int *iwork, int *liwork, int *info);
 void cstein_(int *n, float *d, float *e, int *m, float *w, int *iblock, int *isplit, cpx8 *z, int *ldz, float *work, int *iwork, int *ifail, int *info);
 void csteqr_(char *compz, int *n, float *d, float *e, cpx8 *z, int *ldz, float *work, int *info);
@@ -627,7 +627,7 @@ void dtrtri_(char *uplo, char *diag, int *n, double *a, int *lda, int *info);
 void dtrtrs_(char *uplo, char *trans, char *diag, int *n, int *nrhs, double *a, int *lda, double *b, int *ldb, int *info);
 void dtzrqf_(int *m, int *n, double *a, int *lda, double *tau, int *info);
 void zbdsqr_(char *uplo, int *n, int *ncvt, int *nru, int *ncc, double *d, double *e, cpx16 *vt, int *ldvt, cpx16 *u, int *ldu, cpx16 *c, int *ldc, double *rwork, int *info);
-void zdrot_(int *n, cpx16 *cx, int *incx, cpx16 *cy, int *incy, double *c, double *s);
+int zdrot_(int *n, void *cx, int *incx, void *cy, int *incy, double *c, double *s);
 void zgbbrd_(char *vect, int *m, int *n, int *ncc, int *kl, int *ku, cpx16 *ab, int *ldab, double *d, double *e, cpx16 *q, int *ldq, cpx16 *pt, int *ldpt, cpx16 *c, int *ldc, cpx16 *work, double *rwork, int *info);
 void zgbcon_(char *norm, int *n, int *kl, int *ku, cpx16 *ab, int *ldab, int *ipiv, double *anorm, double *rcond, cpx16 *work, double *rwork, int *info);
 void zgbequ_(int *m, int *n, int *kl, int *ku, cpx16 *ab, int *ldab, double *r, double *c, double *rowcnd, double *colcnd, double *amax, int *info);

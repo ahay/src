@@ -1,0 +1,283 @@
+
+\published{Geophysical Journal International, 209, 21-31, (2017)}
+
+
+\title{Fast dictionary learning for \old{enhancing multidimensional seismic data}\new{noise attenuation of multidimensional seismic data}}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\author{Yangkang Chen}
+\address{
+\footnotemark[1]Previously: Bureau of Economic Geology \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+ykchen@utexas.edu \\
+Currently: National Center for Computational Sciences \\
+Oak Ridge National Laboratory \\
+One Bethel Valley Road, \\
+Oak Ridge, TN 37831-6008 \\
+chenyk2016@gmail.com
+}
+\maketitle
+
+\lefthead{GJI - Chen 2017}
+\righthead{Fast Dictionary Learning}
+
+
+\begin{abstract}
+The K-SVD algorithm has been successfully utilized for adaptively learning the sparse dictionary in 2D seismic denoising. Because of the high computational cost of many SVDs in the K-SVD algorithm, it is not applicable in practical situations, especially in 3D or 5D problems. In this paper, I extend the dictionary learning based denoising approach from 2D to 3D. To address the computational efficiency problem in K-SVD, I propose a fast dictionary learning approach based on the sequential generalized K-means (SGK) algorithm for denoising multidimensional seismic data. The SGK algorithm updates each dictionary atom by taking an arithmetic average of several training signals instead of calculating a SVD as used in K-SVD algorithm. I summarize the sparse dictionary learning algorithm using K-SVD, and introduce SGK algorithm together with its detailed mathematical implications. 3D synthetic, 2D and 3D field data examples are used to demonstrate the performance of both K-SVD and SGK algorithms. It has been shown that SGK algorithm can significantly increase the computational efficiency while only slightly degrading the denoising performance. 
+\end{abstract}
+
+\section{Introduction}
+Seismic data is inevitably corrupted by random noise in field acquisition, with important consequences for oil and gas exploration. Thus, random noise attenuation plays a fundamental role in seismic data processing and interpretation \cite[]{fxydecon,zhuang2015,qushan2015,shuwei2016vscan,huijian20161,huijian20162}. Over the past few decades, a large number of denoising methods for random noise have been developed.  
+Prediction based methods utilize the predictable property of useful signals to construct prediction filters for enhancing signals and rejecting noise, for example, t-x predictive filtering \cite[]{abma1995}, f-x deconvolution \cite[]{canales1984}, the forward-backward prediction approach \cite[]{yanghua1999}, the polinomial fitting based approach \cite[]{guochang20112}, non-stationary predictive filtering \cite[]{guochang2012,guochang2013}. Mean and median filters utilize the statistical difference between signal and noise to reject the Gaussian white noise or impulsive noise \cite[]{liuyang2009tvmf,yike2013,shuwei2016}.  Decomposition based approaches decompose the noisy seismic data into different components and then select the principal components to represent the useful signals. Empirical mode decomposition and its variations \cite[]{huangemd}, singular value decomposition based approaches \cite[]{bekara2007,yangkang20141,shuwei2015}, regularized non-stationary decomposition based approaches \cite[]{fomel20132} are usually used to extract the useful components in multidimensional seismic data. Rank-reduction based approaches assume the seismic data to be low-rank after some data rearrangement steps, such methods include the Cadzow filtering \cite[]{trickett2008}, principal component analysis \cite[]{weilin2016seg2}, singular spectrum analysis \cite[]{mssa,weilin2017}, damped  singular spectrum analysis \cite[]{weilin2016,zhangdong2016,yangkang2016irr3d,yangkang2016irr5d}. 
+
+The sparse transform based random noise attenuation is one of the most widely used \old{approach}\new{approaches} \cite[]{zhangchao2015,yangkang2016emd}. Not only in seismic data processing, but also in all image processing fields, transform\new{ed} domain thresholding approach has achieved very successful performance \cite[]{protter2009,jianfeng2013}. The denoising step can be implemented by simply applying a thresholding operator in the transformed sparse domain, followed by an inverse sparse transform.  Sparse transform can be divided into two types:  analytical transform, which has an exact basis, and learning-based dictionary, which iteratively updates the basis by learning \cite[]{yangkang2016dsd}. I will use \emph{transform} and \emph{dictionary} to refer to these two types of sparse transform, respectively, in this paper. 
+
+A lot of transforms have been used in denoising seismic data. \cite{jinghuai2006} used the wavelet transform to denoise prestack seismic data. \cite{dian2008} used the second-generation wavelet transform, which is based on the lifting scheme, to denoise seismic data with a percentile thresholding strategy. \cite{hennenfent2006} and \cite{neelamani2008}  applied the curvelet transform to attenuate both random and coherent noise in seismic data. \cite{shaohuan2016} applied the curvelet transform to separate simultaneous sources based on the iterative soft-thresholding algorithm. \cite{fomel2010seislet} designed a sparse transform that is \old{tailed}\new{tailored} specifically for seismic data, which is called seislet transform, for sparse representation based processing of seismic data, including seismic denoising \cite[]{yangkang2016emd,wujiandemul2016}, seismic deblending \cite[]{yangkang20142,shuwei20163},  and data restoration \cite[]{shuwei20153,shuwei20164,liuwei2016dealiase}. \cite{emdseis} used the adaptive separation properties of empirical mode decomposition (EMD) \cite[]{huangemd} for preparing the stable input for the non-stationary 1D seislet transform and proposed a new EMD-seislet transform to denoise seismic data with strong spatial heterogeneity. Recently, \cite{dehui2015} applied the shearlet transform to seismic random noise attenuation. 
+
+The learning-based dictionaries are becoming more and more popular for seismic data processing in recent years since \old{its}\new{their} superior performance\new{s} in adaptively learning the basis that can sparsely represent the complicated seismic data  \cite[]{sgk2013}. \cite{kaplan2009} used a data-driven sparse-coding algorithm to adaptively learn basis functions in order to sparsely represent seismic data and then perform\old{ed} denoising in the transformed domain. Based on a variational sparse-representation model, \cite{jianwei20142} proposed a denoising approach by adaptively learning dictionaries from noisy seismic data. \cite{yangkang2016dsd} combined the learning based dictionaries and the fixed-basis transforms and proposed a double-sparsity dictionary to better handle the special features of seismic data, which can \old{be better in separating signals and noise}\new{can separate signals and noise more precisely}.  
+
+K-SVD is one of the most effective dictionary learning algorithms \cite[]{aharon2006}. However, the computational cost which requires thousands of SVD \old{decomposition} hinders its wide application \old{for}\new{in} seismic data processing, especially in practical 3D or 5D problems. In this paper, I propose to apply a fast dictionary learning algorithm, which is called sequential generalized K-means (SGK) algorithm \cite[]{sgk2013}, to denoise \old{multi-dimensional}\new{multidimensional} seismic data. Since sparse code is relatively new to the seismic community, I introduce the basic formulation of a sparse representation problem and mathematically analyze the principle of K-SVD algorithm and clarify its computational bottleneck. Then, I also introduce the SGK algorithm in detail and apply both K-SVD and SGK algorithms to denoise \old{multi-dimensional}\new{multidimensional} seismic data. Three examples show that the SGK algorithm can significantly accelerate the dictionary learning process and cause no observably worse denoising performance.
+
+
+\section{Method}
+\subsection{Problem formulation}
+Sparse representation via learning based dictionary \old{is consisted}\new{consists} of two main steps.
+\begin{itemize}
+\item Sparse coding. Given the observed data $\mathbf{d}$, sparse coding aims at solving the optimization problem:
+\begin{equation}
+\label{eq:code}
+\mathbf{m}^n = \arg \min_{\mathbf{m}} \parallel \mathbf{d} - \mathbf{F}^n\mathbf{m} \parallel_2^2, s.t. \parallel \mathbf{m} \parallel_0 \le T,
+\end{equation}
+where \new{$\parallel\cdot\parallel_2$ and $\parallel\cdot\parallel_0$ denote the $L_2$ and $L_0$ norms of an input vector, respectively.} $T$ is the number of non-zero coefficients. \new{$\mathbf{F}$ is the learned dictionary and $\mathbf{m}$ is the sparse representation of $\mathbf{d}$.}
+\item Dictionary updating.
+For the obtained $\mathbf{m}^n$, update $\mathbf{F}^n$ such that
+\begin{equation}
+\label{eq:dic}
+\mathbf{F}^{n+1} = \arg \min_{\mathbf{F}} \parallel \mathbf{d} - \mathbf{Fm}^n \parallel _2^2.
+\end{equation}
+\end{itemize}
+Equations \ref{eq:code} and \ref{eq:dic} are iterated $Niter$ times to learn the optimal dictionary and \new{the} sparest representation. 
+
+The multidimensional seismic data is first reformulated into patch form $\mathbf{D}$. Each column vector in $\mathbf{D}$ is extracted from the multidimensional seismic data matrix. An example is given in \cite{siwei2015} and \cite{yangkang2016dsd}.
+Equations \ref{eq:code} and \ref{eq:dic} then become 
+\begin{align}
+\label{eq:Code}
+\forall_i \mathbf{m}_i ^n &= \arg \min_{\mathbf{m}_i} \parallel \mathbf{D} - \mathbf{F}^n\mathbf{M} \parallel_F^2, s.t. \forall_i \parallel \mathbf{m}_i \parallel_0 \le T, \\
+\label{eq:Dic}
+\mathbf{F}^{n+1} &= \arg\min_{\mathbf{F}} \parallel \mathbf{D} - \mathbf{FM}^n \parallel_F^2,
+\end{align}
+\new{where $\parallel\cdot\parallel_F$ denotes the Frobenius norm of an input matrix.}
+
+Problem \ref{eq:Code} is a NP-hard problem, and directly finding the truly optimal $\mathbf{M}$ is impossible and is usually solved by an approximation pursuit method, such as the orthogonal matching pursuit (OMP) algorithm. To solve problem \ref{eq:Dic} for the adaptive dictionary $\mathbf{F}$, there are several different algorithms.
+
+\subsection{Dictionary learning by K-SVD}
+The K-SVD method \cite[]{aharon2006} is one approach that solves equation \ref{eq:Dic} with good performance. The dictionaries in $\mathbf{F}$ are not obtained at a time. Instead, $K$ columns in $\mathbf{F}$ are updated one by one while fixing $\mathbf{M}$. In order to update the $k$th column, one can first write the objective function in \new{equation} \ref{eq:Dic} as
+\begin{equation}
+\label{eq:Dic2}
+\begin{split}
+\parallel \mathbf{D} - \mathbf{FM} \parallel_F^2  & = \parallel \mathbf{D} - \sum_{j=1}^{K}\mathbf{f}_j\mathbf{m}_T^j \parallel_F^2, \\
+&= \parallel \mathbf{D} - \sum_{j\ne k}\mathbf{f}_j\mathbf{m}_T^j - \mathbf{f}_k\mathbf{m}_T^k \parallel_F^2, \\
+& =  \parallel\mathbf{E}_k- \mathbf{f}_k\mathbf{m}_T^k \parallel_F^2 ,
+\end{split}
+\end{equation}
+where \old{$a_j$}\new{$\mathbf{f}_j$} is the $j$th column vector in $\mathbf{F}$, $\mathbf{m}_T^j$ is the $j$th row vector in $\mathbf{M}$. \new{Here, $[\cdot]_T$ simply indicates a row vector.} For simplicity, in equation \ref{eq:Dic2} and the following derivations, I omit the superscript $n$ shown in equation \ref{eq:Dic}. $\mathbf{E}_k$ is the fitting error using all column vectors other than the $k$th dictionary and their corresponding coefficients row vectors.   
+\old{Please note}\new{Note} that in equation \ref{eq:Dic2}, $\mathbf{D}$ and $\mathbf{E}_k$ are of size $M\times N$, $\mathbf{F}$ is of size $M\times K$, and $\mathbf{M}$ is of size $K\times N$. \new{Here, $M$ is the length of each training signal, $N$ is the number of training signals, and $K$ is the number of atoms in the dictionary.}
+
+It is now obvious that the $k$th dictionary in $\mathbf{F}$ is updated by minimizing the misfit between the rank-1 approximation of $\mathbf{f}_k\mathbf{m}_T^k$ and the $\mathbf{E}_k$ term. The rank-1 approximation is then solved using the singular value decomposition (SVD). 
+
+A problem in the direct use of SVD for rank-1 approximation of $\mathbf{E}_k$ is the loss of sparsity in $\mathbf{m}_T^k$. After SVD on $\mathbf{E}_k$, $\mathbf{m}_T^k$ is likely to be filled. In order to solve such problem, K-SVD restricts minimization of equation \ref{eq:Dic2} to a small set of training signals $\mathbf{D}_k=\{\mathbf{d}_i: \mathbf{m}_T^k(i)\ne 0\}$. To achieve this goal, one can define a transformation matrix $\mathbf{R}_k$ to \old{shrinks}\new{shrink} $\mathbf{E}_k$ and $\mathbf{m}_T^k$ by rejecting the zero columns in $\mathbf{E}_k$ and zero entries in $\mathbf{m}_T^k$. First one can define a set $r_k=\{i| 1\le i \le N, \mathbf{m}_T^k(i)\ne 0 \}$, which selects the entries in $\mathbf{m}_T^k$ that are non-zero. One then \old{construct}\new{constructs} $\mathbf{R}_k$ as a matrix of size $N\times N_r^k$ with ones on the $(r_k(i),i)$ entries and zeros otherwise.   
+
+Applying $\mathbf{R}_k$ to both $\mathbf{E}_k$ and $\mathbf{m}_T^k$, then the \old{objection}\new{objective} function in \new{equation} \ref{eq:Dic2} becomes
+\begin{equation}
+\label{eq:Dic3}
+\parallel\mathbf{E}_k\mathbf{R}_k- \mathbf{f}_k\mathbf{m}_T^k\mathbf{R}_k \parallel_F^2  = \parallel\mathbf{E}^R_k- \mathbf{f}_k\mathbf{m}_R^k \parallel_F^2
+\end{equation}
+and can be minimized by directly using SVD:
+\begin{equation}
+\label{eq:svd}
+\mathbf{E}^R_k  = \mathbf{U}\Sigma\mathbf{V}^T. 
+\end{equation}
+$\mathbf{f}_k$ is then set as the first column in $\mathbf{U}$, the coefficient vector $\mathbf{m}_R^k$ as the first column of $\mathbf{V}$ multiplied by first diagonal entry $\sigma_1$. After $K$ columns are all updated, one \old{turn}\new{turns} to solve equation \ref{eq:Code} for $\mathbf{M}$.
+
+\subsection{Fast dictionary learning by sequential generalized K-means}
+Although K-SVD can obtain very successful performance in a number of sparse representation based approaches, since there involves many SVD operations in the K-SVD algorithm, it is very computationally expensive. Especially when utilized in \old{multi-dimensional}\new{multidimensional} seismic data processing (e.g. 3D or 5D processing), the computational cost is not tolerable. The sequential generalized K-means algorithm (SGK) was proposed to increase the computational efficiency \cite[]{sgk2013}. SGK tries to solve slightly different iterative optimization problem in sparse coding as \old{equations}\new{equation} \ref{eq:Code}:
+%\begin{equation}
+%\label{eq:Code2}
+%\forall_i \mathbf{m}_i ^n = \arg \min_{\mathbf{m}_i} \parallel \mathbf{D} - \mathbf{F}^n\mathbf{M} \parallel_F^2, s.t. \forall_i \parallel \mathbf{m}_i \parallel_0 = 1,
+%\end{equation}
+\begin{equation}
+\label{eq:Code2}
+\forall_i \mathbf{m}_i ^n = \arg \min_{\mathbf{m}_i} \parallel \mathbf{D} - \mathbf{F}^n\mathbf{M} \parallel_F^2, s.t. \forall_i \mathbf{m}_i = \mathbf{e}_t.% for some t,
+\end{equation}
+\new{$t$ indicates that $\mathbf{m}_i$ has all 0s except 1 in the $t$th position.} %which means the sparse coding in SGK algorithm needs to be sparser than that in K-SVD.  
+The dictionary updating in SGK algorithm is also different. 
+In SGK, equation \ref{eq:Dic3} also holds. Instead of using SVD to minimize the objective function, which is computationally expensive, SGK turns to use least-squares method to solve the minimization problem. Taking the derivative of $J=\parallel\mathbf{E}^R_k- \mathbf{f}_k\mathbf{m}_R^k \parallel_F^2$ with respect to $\mathbf{f}_k$ and setting the result to 0 gives the following equation:
+\begin{equation}
+\label{eq:deri}
+\frac{\partial J}{\partial \mathbf{f}_k} = -2(\mathbf{E}^{R}_k-\mathbf{f}_k\mathbf{m}_R^k)(\mathbf{m}_R^k)^T = 0
+\end{equation}
+solving equation \ref{eq:deri} leads to
+\begin{equation}
+\label{eq:deriso}
+\mathbf{f}_k = \mathbf{E}^R_k (\mathbf{m}_R^k)^T \left( \mathbf{m}_R^k (\mathbf{m}_R^k)^T \right)^{-1}.
+\end{equation}
+
+It can be derived further that
+\begin{equation}
+\label{eq:em0}
+\begin{split}
+\mathbf{E}^R_k (\mathbf{m}_R^k)^T &= \left(\mathbf{D}_R-\sum_{j\ne k}\mathbf{f}_j\mathbf{m}_R^j\right) (\mathbf{m}_R^k )^T \\
+&= \mathbf{D}_R (\mathbf{m}_R^k )^T  + \sum_{j\ne k}\mathbf{f}_j\mathbf{m}_R^j (\mathbf{m}_R^k ).^T
+\end{split}
+\end{equation}
+\new{Here, $\mathbf{D}_R$ has the same meaning as $\mathbf{D}$ shown in equation \ref{eq:Dic2} except for a smaller size due to the selection set $r_k$ that selects the entries in $\mathbf{m}_T^k$ that are non-zero.}
+
+Since $\forall_i,\parallel \mathbf{m}_i \parallel_0=1$, \new{as constrained in equation \ref{eq:Code2}} then 
+\begin{equation}
+\label{eq:ortho}
+\forall_{j\ne k} \mathbf{m}_R^j (\mathbf{m}_R^k )^T =  0.
+\end{equation}
+\new{
+Since $\mathbf{m}_R^k$ is a smaller version of row vector $\mathbf{m}_T^k$ and all its entries are all equal to 1, $\mathbf{D}_R (\mathbf{m}_R^k )^T$ is simply a summation over all the column vectors in $\mathbf{D}_R$. Considering that $\mathbf{D}_R=\{\mathbf{d}_i: i\in r_k\}$, 
+\begin{equation}
+\label{eq:sum}
+\mathbf{D}_R (\mathbf{m}_R^k )^T=\sum_{i\in r_k}\mathbf{d}_i
+\end{equation}
+}
+\old{Since $\mathbf{D}_R (\mathbf{m}_R^k )^T=\sum_{i\in r_k}\mathbf{d}_i$,}\new{Following equation \ref{eq:sum},} equation \ref{eq:em0} becomes
+\begin{equation}
+\label{eq:em}
+\mathbf{E}^R_k (\mathbf{m}_R^k)^T = \sum_{i\in r_k}\mathbf{d}_i.
+\end{equation}
+It is simple to derive that $\mathbf{m}_R^k(\mathbf{m}_R^k)^T=N_r^k$, %diag(N_r^k,N_r^k,\cdots)
+ where $N_r^k$ denotes the number of elements in the set $r_k$, or the number of training signals associated with the atom $\mathbf{f}_k$. The $k$th atom in \old{$\mathbf{D}_R$}\new{$\mathbf{F}$} is
+\begin{equation}
+\label{eq:fk}
+\mathbf{f}_k =\frac{\sum_{i\in r_k}\mathbf{d}_i}{N_r^k}.
+\end{equation}
+Thus, in SGK, one can avoid the use of SVD. Instead the trained dictionary can be simply expressed as an average of several training signals. In this way, SGK can obtain significantly higher efficiency than K-SVD. In the next section, I will use several examples to show that the overall denoising performance does not degrade when one can obtain a much faster implementation.
+
+\section{Examples}
+I will use three different examples to show the performance of SGK in denoising \old{multi-dimensional}\new{multidimensional} seismic data. Please note that when using equations \ref{eq:Code} (or \ref{eq:Code2}) and \ref{eq:Dic} for dictionary learning, the \old{multi-dimensional}\new{multidimensional} seismic \new{data} is first mapped from the original form to a 2D matrix according to some patching criteria. Some details about the patching method can be found in \cite{siwei2015} or \cite{yangkang2016dsd}.  After iteratively solving equations \ref{eq:Code} (or \ref{eq:Code2}) and \ref{eq:Dic} several times, the denoised data is expressed as 
+\begin{equation}
+\label{eq:final}
+\hat{\mathbf{D}} = \mathbf{F}^{Niter}\mathbf{M}^{Niter}.
+\end{equation}
+An inverse mapping is then applied to $\hat{\mathbf{D}}$ to output the finally denoised data.
+
+\new{
+For measuring the denoising performance of synthetic data examples, where one knows the clean data, I use the signal-to-noise ratio (SNR) \cite[]{guochang2009,weilin2016} measurement and the formula is expressed as follows:
+\begin{equation}
+\label{eq:snr}
+SNR=10\log_{10}\frac{\Arrowvert \mathbf{D}_{true} \Arrowvert_F^2}{\Arrowvert \mathbf{D}_{true} -\hat{\mathbf{D}}\Arrowvert_F^2},
+\end{equation}
+where $\mathbf{D}_{true}$ denotes the clean data and $\hat{\mathbf{D}}$ denotes the denoised data.}
+
+\new{
+In addition to the commonly used SNR measurement, one can also use local similarity \cite[]{fomel2007localattr,yangkang2015ortho} as a convenient tool to evaluate denoising performance. The abnormal area in the local similarity map with high similarity indicates the area that contains significant signal leakage in the removed noise. A local similarity map with values that are close to zero, as well as the observed significant amount of removed noise, provides a valid support of a successful denoising performance. In addition, the local similarity measurement can be used in many cases since the input data of local similarity calculation are just the denoised data and removed noise. It provides an alternative in the case of field data processing, where the clean data is unknown and the SNR based evaluation becomes unavailable. Besides, local similarity is a local measurement of denoising performance, whereas the SNR is a global measurement, which cannot guide us to pick out the areas with poor denoising performances.}
+
+\old{The first example is a 2D field data example, as shown in Figure \ref{fig:field2d}. Figures \ref{fig:field2d-ksvd} and \ref{fig:field2d-sgk} show the denoised result using K-SVD and SGK, respectively. Figures \ref{fig:field2d-n-ksvd} and \ref{fig:field2d-n-sgk} show their corresponding noise sections. The data size of this example is $512\times 512$ . In this example, I chose a patch size of $8\times8$. The overlap between different patches is $7$ points in both vertical and horizontal directions. Thus the atom size $M=8\times8=64$, and the number of sample signals is thus $N=(512-7)\times(512-7)=255025$. The size of $\mathbf{D}$ is $64\times255025$. For K-SVD, the dictionary updating process takes about 1232.23s, while for SGK, the dictionary updating process takes only 51.37s, which shows a great speedup. Figure \ref{fig:dicfield0} shows the initial input dictionary. Figures \ref{fig:dicfieldksvd} and \ref{fig:dicfieldsgk} show the learned dictionaries using K-SVD and SGK, respectively. The two learned dictionaries show some similarities but are not exactly the same. }
+
+
+
+\subsection{Synthetic example}
+
+
+The \old{second}\new{first} example is a 3D synthetic example, as shown in Figure \ref{fig:syn3d,syn3d-ksvd,syn3d-sgk,syn3d-n,syn3d-ksvd-n,syn3d-sgk-n}. Figure \ref{fig:syn3d} is the clean data and Figure \ref{fig:syn3d-n} is the noisy data. Figures \ref{fig:syn3d-ksvd} and \ref{fig:syn3d-sgk} show the denoised results using K-SVD and SGK, respectively. Figures \ref{fig:syn3d-ksvd-n} and \ref{fig:syn3d-sgk-n} show the removed noise cubes of two approaches. It seems that the denoised results using both methods are very successful while the denoised result using SGK algorithm shows a little bit more residual noise, which is however negligible. The size of this example is $64\times 16\times 16$. I use a 3D patch of size $4\times 4\times 4$ and the overlap between neighbor patches is 3 points in all time, inline, xline directions. In this example, the sample signals $\mathbf{D}$ is of size $64\times 10309$. The K-SVD takes \old{195.71s}\new{192.60s} while SGK takes only \old{9.30s}\new{9.27s}. The SNRs of noisy data, K-SVD result and SGK result are 0.68 dB, 9.61dB and 9.32dB respectively. While the SNRs using the K-SVD and SGK are very similar, the SGK method obtains about 5 times acceleration. \new{To further demonstrate the denoising performance and compare the two methods regarding the tiny differences, I plot the local similarity between denoised data and removed noise in Figure \ref{fig:syn3d-simi1,syn3d-simi2,syn3d-simi3,syn3d-simi4}. Figures \ref{fig:syn3d-simi1} and \ref{fig:syn3d-simi2} show the local similarity cubes without amplification that correspond to K-SVD and SGK methods, respectively. It can be seen that both methods cause negligible local similarity, or correlation, between denoised data and removed noise, confirming the extremely successful performance of the two methods. Figures \ref{fig:syn3d-simi3} and \ref{fig:syn3d-simi4} show the amplified local similarity cubes (similarity $\times$ 2) corresponding to K-SVD and SGK methods, respectively. It can be observed that there are some non-zero amplified similarity values around the events, indicating these tiny damages to the signal caused by both methods. It can also be observed that the amplified local similarity of SGK method is slightly higher than K-SVD method. Considering the slightly low SNR using SGK method, I conclude that SGK method might cause slightly worse performance than the K-SVD method while obtaining a huge improvement on computational efficiency.  I also show some learned atoms of this example in Figure \ref{fig:dic0,dicksvd,dicsgk}. Figures \ref{fig:dic0}, \ref{fig:dicksvd}, and \ref{fig:dicsgk} show the atoms from initial dictionary, K-SVD learned dictionary, and SGK learned dictionary, respectively. I set up the initial dictionary using the discrete cosine transform. It can be seen from Figure \ref{fig:dic0} that the shapes of the atoms in the initial dictionary are rigid, which are not optimal to represent the highly-nonstationary seismic data. After dictionary learning, the updated dictionaries as shown in Figures \ref{fig:dicksvd} and \ref{fig:dicsgk} contain atoms with much varied shapes. These various atoms are more likely to capture the non-stationary features in the seismic data and thus can potentially improve the sparse representation of the observed noisy seismic data. Please note that each atom has been reshaped into a 3D cube and only 16 atoms are shown here. }
+
+\new{In order to test the denoising performances of the two methods in different noise levels, I calculate the SNRs of two methods in four different cases with increasing noise levels (or decreasing input SNRs). The denoising performances of different input SNRs are compared in table \ref{tbl:snrcomp}. The SNR of input noisy data drops from 3.18 dB to -5.33 dB. Correspondingly, the SNRs of the best results using two methods drop from above 10 dB to around 1 dB. Besides, the K-SVD method consistently obtains a slightly higher SNR than SGK method. }
+
+
+In this paper, I compare the speed of SGK with the classic version of K-SVD algorithm (exact SVD calculation). Recently, there are a lot of new algorithms proposed to approximate SVD instead of exactly computing it, e.g., \cite{aksvd2008}, \cite{gpuksvd}, and \cite{fksvd}. These methods can hopefully improve the efficiency of K-SVD algorithm, but at the expense of slightly degrading the performance. Both K-SVD and SGK use the fast OMP algorithm for sparse coding in the whole dictionary learning process. In order to compare the computing time fairly, I repeat the same calculation three times for each model size and calculate the average time as the final measured computing time.
+
+
+\tabl{snrcomp}{\new{Comparison of denoising performances  with different input SNRs between K-SVD and SGK methods.}}
+ {
+    \begin{center}
+     \begin{tabular}{|c|c|c|} 
+	  \hline Input SNR (dB) & K-SVD (dB)  & SGK (dB)			       		 \\ 
+	  \hline 3.18 & 10.60 & 10.60 \\
+	  \hline 0.68 & 9.61 & 9.32 \\
+	  \hline -2.84 & 2.17 & 2.08 \\	  
+      \hline -5.33 & 1.27 & 1.11  \\ 
+      \hline
+    \end{tabular} 
+   \end{center}
+}
+
+\inputdir{synth}
+
+\multiplot{6}{syn3d,syn3d-ksvd,syn3d-sgk,syn3d-n,syn3d-ksvd-n,syn3d-sgk-n}{width=0.3\columnwidth}{3D synthetic example. (a) Clean data. (b) Denoised data using K-SVD. (c) Denoised data using SGK. (d) Noisy data. (e) Noise using K-SVD. (f) Noise using SGK. }
+
+\multiplot{4}{syn3d-simi1,syn3d-simi2,syn3d-simi3,syn3d-simi4}{width=0.4\columnwidth}{(a) \& (b) Local similarity between denoised data and removed noise using  K-SVD and SGK. (c) \& (d) Amplified local similarity ($\times$2) between denoised data and removed noise using  K-SVD and SGK.}
+
+\inputdir{./}
+\multiplot{3}{dic0,dicksvd,dicsgk}{width=0.45\columnwidth}{(a) Initial overcomplete DCT dictionary. (b) Learned dictionary using K-SVD. (c) Learned dictionary using SGK. Only the first 16 atoms in the dictionary are displayed and each dictionary has been reshaped into a 3D cube. It can see from (a) that the shapes of the atoms in the initial dictionary (discrete cosine transform) are rigid, which are not optimal to represent the highly-nonstationary seismic data. After dictionary learning, the updated dictionaries as shown in (b) and (c) contain atoms with much varied shapes. These various atoms are more likely to capture the non-stationary features hidden in the seismic data.}
+
+\subsection{\new{Field data example}}
+I first use a 2D field data example to compare the difference between K-SVD and SGK methods, as shown in Figure \ref{fig:field2d}.  The data size of this example is $512\times 512$ . In this example, I choose a patch size of $8\times8$. The overlap between different patches is $7$ points in both vertical and horizontal directions. Thus the atom size $M=8\times8=64$, and the number of sample signals is thus $N=(512-7)\times(512-7)=255025$. The size of $\mathbf{D}$ is $64\times255025$. For K-SVD, the dictionary updating process takes about 1590.2s, while for SGK, the dictionary updating process takes only 87.23s, which shows a great speedup. Figure \ref{fig:dicfield0} shows the initial input dictionary. Figures \ref{fig:dicfieldksvd} and \ref{fig:dicfieldsgk} show the learned dictionaries using K-SVD and SGK, respectively. The two learned dictionaries show some similarities but are not exactly the same. As can be seen in either Figure \ref{fig:dicfieldksvd} or \ref{fig:dicfieldsgk} that there are some atoms in the middle part of the dictionary map containing linear patterns, indicating a better representation of the locally linear events. In this example, I also compare the K-SVD and SGK methods with two other widely known methods, i.e. the DDTF method \cite[]{jianfeng2013} and the seislet transform method \cite[]{fomel2010seislet}. The denoised results using four methods are shown in Figure \ref{fig:field2d-ksvd,field2d-sgk,field2d-ddtf,field2d-seis}. The corresponding noise sections are shown in Figure \ref{fig:field2d-n-ksvd,field2d-n-sgk,field2d-n-ddtf,field2d-n-seis}. Comparing the results in both Figures \ref{fig:field2d-ksvd,field2d-sgk,field2d-ddtf,field2d-seis} and \ref{fig:field2d-n-ksvd,field2d-n-sgk,field2d-n-ddtf,field2d-n-seis}, I can roughly get some conclusions that K-SVD, SGK, and DDTF methods all seem to obtain successful denoised results while the result from seislet transform is a bit over-smoothed, which causes some observable low-frequency coherent energy in the noise section (Figure \ref{fig:field2d-n-seis}). A better evaluation of denoising performance can be obtained using the local similarity measurement and is shown in Figure \ref{fig:field2d-simi1,field2d-simi2,field2d-simi3,field2d-simi4}. The local similarity confirms my observation in that the local similarity corresponding to seislet method is very high, which is followed by the DDTF method. The DDTF method obtains a successful performance in most part of the data but causes some damages to the highly curved signals around the 2s near the left boundary, as indicated from the local similarity map (Figure \ref{fig:field2d-simi3}). The K-SVD and SGK methods obtain very close results but SGK results in a slightly higher local similarity in right part of the data.  
+
+\old{The last example is a 3D field data example}\new{I next use a 3D field data example to demonstrate the performance}, as shown in Figure \ref{fig:field3d,field3d-ksvd,field3d-sgk,field3d-ksvd-n,field3d-sgk-n}. Figures \ref{fig:field3d}, \ref{fig:field3d-ksvd}, and \ref{fig:field3d-sgk} show noisy data, K-SVD denoised data and SGK denoised data, respectively. Figures \ref{fig:field3d-ksvd-n} and \ref{fig:field3d-sgk-n} show the noise sections of two approaches. It is clear that both approach\new{es} obtain \old{close}\new{approximate} performance. It is \old{too} computationally expensive to use K-SVD to learn the dictionary for this example. While it takes about half an hour to learn the dictionary using SGK algorithm\new{, it takes more than half a day to learn the dictionary using the K-SVD algorithm. The local similarity cubes between denoised data cubes and removed noise cubes using two methods are shown in Figure \ref{fig:field3d-simi1,field3d-simi2}, which confirms the successful and comparable performance of both methods in that most part of the data is close to zero}.
+
+
+
+\plot{field2d}{width=0.8\columnwidth}{Noisy 2D field data.}
+\multiplot{3}{dicfield0,dicfieldksvd,dicfieldsgk}{width=0.45\columnwidth}{(a) Initial overcomplete DCT dictionary. (b) Learned dictionaries using K-SVD. (c) Learned dictionaries using SGK. Each atom in the dictionary has been reshaped into a 2D matrix. As can be seen in either (b) or (c) that there are some atoms in the middle part of the dictionary map containing linear patterns, indicating a better representation of the locally linear events. }
+
+\multiplot{4}{field2d-ksvd,field2d-sgk,field2d-ddtf,field2d-seis}{width=0.45\columnwidth}{(a) Denoised data using K-SVD. (b) Denoised data using SGK. (c) Denoised data using DDTF. (d) Denoised data using seislet thresholding.}
+
+\multiplot{4}{field2d-n-ksvd,field2d-n-sgk,field2d-n-ddtf,field2d-n-seis}{width=0.45\columnwidth}{(a) Removed noise using K-SVD. (b) Removed noise using SGK. (c) Removed noise using DDTF. (d) Removed noise using seislet thresholding. }
+
+\multiplot{4}{field2d-simi1,field2d-simi2,field2d-simi3,field2d-simi4}{width=0.45\columnwidth}{Local similarity between denoised data and removed noise using (a)  K-SVD, (b) SGK, (c) DDTF and (d) seislet thresholding.  }
+
+\multiplot{5}{field3d,field3d-ksvd,field3d-sgk,field3d-ksvd-n,field3d-sgk-n}{width=0.3\columnwidth}{(a) Noisy 3D field data. (b) \& (c) Denoised data using K-SVD and SGK. (d) \& (e) Noise cubes using K-SVD and SGK. }
+
+\multiplot{2}{field3d-simi1,field3d-simi2}{width=0.45\columnwidth}{(a) Local similarity between denoised data using K-SVD and the corresponding noise cube. (b) Local similarity between denoised data using SGK and the corresponding noise cube. }
+
+
+\section{Conclusion}
+In this paper, I proposed a fast dictionary-learning based seismic denoising approach using the  sequential generalized K-means (SGK) algorithm. In the SGK algorithm, each atom in the dictionary is updated by an average of several sample signals while K-SVD uses computationally expensive SVD to update each atom. Thus, the SGK algorithm can be much faster than K-SVD algorithm for adaptively learning the dictionary. I applied both K-SVD and SGK to dictionary learning of seismic data for random noise attenuation. The results from three different examples show that SGK is much faster than K-SVD without sacrificing \old{any}\new{much} denoising performance. I suggest substituting the \old{KSVD}\new{K-SVD} with SGK in any applications that require sparse coding. Future research direction may include applying the SGK based dictionary learning for \old{multi-dimensional}\new{multidimensional} seismic data reconstruction.  
+
+
+\section{Acknowledgments}
+\new{I would like to thank editors Jorg Renner, Lapo Boschi, and two anonymous reviewers for providing critical comments that improve the manuscript greatly.} I also thank Shuwei Gan, Shaohuan Zu, Weilin Huang for helpful comments and suggestions on the topic of seismic signal processing, and Jianwei Ma, Sergey Fomel, Siwei Yu for inspiring discussions on sparse transform. 
+
+\section{Appendix A: Local similarity}
+Let $\mathbf{x}_1$ and $\mathbf{x}_2$ denote the two signal vectors that are reshaped from a 2D matrix or 3D tensor. In the case of evaluating denoising performance, $\mathbf{x}_1$ and $\mathbf{x}_2$ simply means signal and noise.
+The simplest way to measure the similarity between two signals is to calculate the correlation coefficient,
+\begin{equation}
+\label{eq:corr}
+c=\frac{\mathbf{x}_1^T\mathbf{x}_2}{\parallel \mathbf{x}_1 \parallel_2 \parallel \mathbf{x}_2 \parallel_2},
+\end{equation}
+where $c$ is the correlation coefficient, $\mathbf{x}_1^T\mathbf{x}_2$ denotes the dot product between $\mathbf{x}_1$ and $\mathbf{x}_2$. $\parallel \cdot \parallel_2$ denotes the $L_2$ norm of the input vector. A locally calculated correlation coefficient can be used to measure the local similarity between two signals,
+\begin{equation}
+\label{eq:localcorr}
+c(i) =  \frac{\sum_{i_w=-N_w/2}^{N_w/2} x_1(i+i_w)x_2(i+i_w)}{\sqrt{\sum_{i_w=-N_w/2}^{N_w/2} x_1(i+i_w)^2}\sqrt{\sum_{i_w=-N_w/2}^{N_w/2} x_2(i+i_w)^2}},
+\end{equation}
+where $x_1(i)$ and $x_2(i)$ denote the $i$the entries of vectors $\mathbf{x}_1$ and $\mathbf{x}_2$, respectively. $i_w$ denotes the index in a local window. $N_w+1$ denotes the length of each local window. The windowing is sometime troublesome, since the measured similarity is largely dependent on the windowing length and the measured local similarity might be discontinuous because of the separate calculations in windows. To avoid the negative performance caused by local windowing calculations, \cite{fomel2007localattr} proposed an elegant way for calculating smooth local similarity via solving two inverse problems. 
+The local similarity I use to evaluate denoising performance in this paper is defined as 
+\begin{equation}
+\label{eq:cc}
+\mathbf{s}=\sqrt{\mathbf{s}_1\circ\mathbf{s}_2},
+\end{equation}
+where $\mathbf{s}$ is the calculated local similarity, $\circ$ denotes Hadamard (or Schur) product, and $\mathbf{s}_1$ and $\mathbf{s}_2$ come from two least-squares inverse problem:
+\begin{align}
+\label{eq:local1}
+\mathbf{s}_1 &=\arg\min_{\tilde{\mathbf{s}}_1}\Arrowvert \mathbf{x}_1-\mathbf{X}_2\tilde{\mathbf{s}}_1 \Arrowvert_2^2, \\
+\label{eq:local2}
+\mathbf{s}_2 &=\arg\min_{\tilde{\mathbf{s}}_2}\Arrowvert \mathbf{x}_2-\mathbf{X}_1\tilde{\mathbf{s}}_2 \Arrowvert_2^2,
+\end{align}
+where $\mathbf{X}_1$ is a diagonal operator composed from the elements of $\mathbf{x}_1$: $\mathbf{X}_1=diag(\mathbf{x}_1)$ and $\mathbf{X}_2$ is a diagonal operator composed from the elements of $\mathbf{x}_2$: $\mathbf{X}_2=diag(\mathbf{x}_2)$.
+Equations \ref{eq:local1} and \ref{eq:local2} are solved via shaping regularization
+\begin{align}
+\label{eq:local3}
+\mathbf{s}_1 &= [\lambda_1^2\mathbf{I} + \mathcal{T}(\mathbf{X}_2^T\mathbf{X}_2-\lambda_1^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{X}_2^T\mathbf{x}_1,\\
+\label{eq:local4}
+\mathbf{s}_2 &= [\lambda_2^2\mathbf{I} + \mathcal{T}(\mathbf{X}_1^T\mathbf{X}_1-\lambda_2^2\mathbf{I})]^{-1}\mathcal{T}\mathbf{X}_1^T\mathbf{x}_2,
+\end{align}
+where $\mathbf{\mathcal{T}}$ is a smoothing operator, and $\lambda_1$ and $\lambda_2$ are two parameters controlling the physical dimensionality and enabling fast convergence when inversion is implemented iteratively. These two parameters can be chosen as $\lambda_1  = \Arrowvert\mathbf{X}_2^T\mathbf{X}_2\Arrowvert_2$ and $\lambda_2  = \Arrowvert\mathbf{X}_1^T\mathbf{X}_1\Arrowvert_2$ \cite[]{fomel2007localattr}.
+
+\bibliographystyle{seg}
+\bibliography{sgk}

@@ -70,13 +70,15 @@ int main(int argc, char* argv[])
     ah = sf_maxa(nh,oh,dh); sf_setlabel(ah,"h"); if(verb) sf_raxa(ah);
  
     /* a = angle in x-z plane */
-    if(!sf_getint  ("na",&na)) na=180; if(nhz==1) na=1;
+    if(!sf_getint  ("na",&na)) na=180; 
+    if(nhz==1) na=1;
     if(!sf_getfloat("oa",&oa)) oa=0.;
     if(!sf_getfloat("da",&da)) da=2.;
     aa = sf_maxa(na,oa,da); sf_setlabel(aa,"a"); if(verb) sf_raxa(aa);
 
     /* b = angle in x-y plane */
-    if(!sf_getint  ("nb",&nb)) nb=180; if(nhy==1) nb=1;
+    if(!sf_getint  ("nb",&nb)) nb=180; 
+    if(nhy==1) nb=1;
     if(!sf_getfloat("ob",&ob)) ob=0.;
     if(!sf_getfloat("db",&db)) db=2.;
     ab = sf_maxa(nb,ob,db); sf_setlabel(ab,"b"); if(verb) sf_raxa(ab);

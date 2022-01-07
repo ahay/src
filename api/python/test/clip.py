@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import numpy
 import m8r
 
@@ -17,8 +18,9 @@ assert clip
 
 trace = numpy.zeros(n1,'f')
 
-for i2 in xrange(n2): # loop over traces
+for i2 in range(n2): # loop over traces
     inp.read(trace)
     trace = numpy.clip(trace,-clip,clip)
     output.write(trace)
 
+sys.exit(0)

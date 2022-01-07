@@ -298,20 +298,20 @@ namespace RVLUmin {
     
     Policy const & pol;
     OperatorEvaluation<Scalar> & opeval;
-    atype & predred;
-    atype & actred;
-    atype & jval;
-    atype & agnrm;
-    atype & rgnrm;
-    bool & nostep;
-    atype gnrmrecip;
     atype eta1;
     atype eta2;
     atype gamma1;
     atype gamma2;
     atype minstep;
+    bool & nostep;
+    atype & predred;
+    atype & actred;
+    atype & jval;
+    atype & agnrm;
+    atype & rgnrm;
     atype rnorm;
     atype nrnorm;
+    atype gnrmrecip;
     Vector<Scalar> p;
     Vector<Scalar> xsave;
     // workspace for solver

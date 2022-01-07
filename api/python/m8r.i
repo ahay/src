@@ -216,10 +216,12 @@ free ((char*) $1);
 /* Apply the Numeric typemaps for 1D input arrays */
 %numpy_typemaps(float, NPY_FLOAT   , size_t)
 %numpy_typemaps(int, NPY_INT   , size_t)
+%numpy_typemaps(unsigned char, NPY_UBYTE, size_t)
 %numpy_typemaps(sf_complex, NPY_CFLOAT   , size_t)
 
 %apply (float*  IN_ARRAY1, size_t DIM1) {(float*  arr, size_t size)};
 %apply (int*  IN_ARRAY1, size_t DIM1) {(int*  arr, size_t size)};
+%apply (unsigned char*  IN_ARRAY1, size_t DIM1) {(unsigned char*  arr, size_t size)};
 %apply (sf_complex*  IN_ARRAY1, size_t DIM1) {(sf_complex*  arr, size_t size)};
 
 #define SF_MAX_DIM 9
@@ -264,6 +266,9 @@ void sf_floatread (float* arr, size_t size, sf_file file);
 
 void sf_intwrite (int* arr, size_t size, sf_file file);
 void sf_intread (int* arr, size_t size, sf_file file);
+
+void sf_ucharwrite (unsigned char* arr, size_t size, sf_file file);
+void sf_ucharread (unsigned char* arr, size_t size, sf_file file);
 
 int sf_try_charread2(char* arr, size_t size, sf_file file);
 
@@ -329,7 +334,7 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 		type = NPY_CFLOAT;
 		break;
 	    case SF_CHAR:
-		type = NPY_CHAR;
+		type = NPY_STRING;
 		break;
 	    case SF_UCHAR:
 		type = NPY_UBYTE;

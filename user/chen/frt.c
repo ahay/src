@@ -193,12 +193,28 @@ void sf_firt(void *h, double freq,
 		&beta, out[0], &p->np);
 
 	lwork = -1;
+#if defined(HAVE_MKL)
+	chesv_("U", &p->np, &nn, (MKL_Complex8 *)(p->LLH[0]), &p->np, p->ipiv, 
+		(MKL_Complex8 *)out[0], &p->np, (MKL_Complex8 *)&workopt, &lwork, &info );
+#elif defined(__APPLE__)
+	chesv_("U", &p->np, &nn, (__CLPK_complex *)(p->LLH[0]), &p->np, p->ipiv, 
+		(__CLPK_complex *)out[0], &p->np, (__CLPK_complex *)&workopt, &lwork, &info );
+#else
 	chesv_("U", &p->np, &nn, p->LLH[0], &p->np, p->ipiv, 
 		out[0], &p->np, &workopt, &lwork, &info );
+#endif
 	lwork = (int)creal(workopt);
 	work = sf_complexalloc(lwork);
+#if defined(HAVE_MKL)
+	chesv_("U", &p->np, &nn, (MKL_Complex8 *)(p->LLH[0]), &p->np, p->ipiv, 
+		(MKL_Complex8 *)out[0], &p->np, (MKL_Complex8 *)work, &lwork, &info );
+#elif defined(__APPLE__)
+	chesv_("U", &p->np, &nn, (__CLPK_complex *)(p->LLH[0]), &p->np, p->ipiv, 
+		(__CLPK_complex *)out[0], &p->np, (__CLPK_complex *)work, &lwork, &info );
+#else
 	chesv_("U", &p->np, &nn, p->LLH[0], &p->np, p->ipiv, 
 		out[0], &p->np, work, &lwork, &info );
+#endif
 	if(info<0) sf_warning("The %d-th argument had an illegal value", -info);
 	if(info>0) sf_warning("Dialogal matrix is singular: %d", info);
 
@@ -257,8 +273,16 @@ void sf_fhrt(void *h, double freq,
 		&beta, out[0], &p->np);
 
 	lwork = -1;
+#if defined(HAVE_MKL)
+	chesv_("U", &p->np, &nrhs, (MKL_Complex8 *)(p->LLH[0]), &p->np, p->ipiv, 
+		(MKL_Complex8 *)out[0], &p->np, (MKL_Complex8 *)&workopt, &lwork, &info );
+#elif defined(__APPLE__)
+	chesv_("U", &p->np, &nrhs, (__CLPK_complex *)(p->LLH[0]), &p->np, p->ipiv, 
+		(__CLPK_complex *)out[0], &p->np, (__CLPK_complex *)&workopt, &lwork, &info );
+#else
 	chesv_("U", &p->np, &nrhs, p->LLH[0], &p->np, p->ipiv, 
 		p->x, &p->np, &workopt, &lwork, &info );
+#endif
 	lwork = (int)(creal(workopt)+0.5);
 	work = sf_complexalloc(lwork);
 
@@ -272,12 +296,20 @@ void sf_fhrt(void *h, double freq,
 			for(i1=0; i1<p->np; i1++) 
 				p->A[i1][i1] += crealf(p->x[i1]);
 			memcpy(p->x, out[i2], p->np*sizeof(sf_complex));
-			chesv_("U", &p->np, &nrhs, p->A[0], &p->np, p->ipiv, 
-				p->x, &p->np, work, &lwork, &info );
-			if(info<0) 
-				sf_warning("The %d-th argument had an illegal value", -info);
-			if(info>0) 
-				sf_warning("Dialogal matrix is singular: %d", info);
+#if defined(HAVE_MKL)
+			chesv_("U", &p->np, &nrhs, (MKL_Complex8 *)(p->A[0]), &p->np, p->ipiv,
+				   (MKL_Complex8 *)(p->x), &p->np, (MKL_Complex8 *)work, &lwork, &info);
+#elif defined(__APPLE__)
+			chesv_("U", &p->np, &nrhs, (__CLPK_complex *)(p->A[0]), &p->np, p->ipiv,
+				   (__CLPK_complex *)(p->x), &p->np, (__CLPK_complex *)work, &lwork, &info);
+#else
+			chesv_("U", &p->np, &nrhs, p->A[0], &p->np, p->ipiv,
+				   p->x, &p->np, work, &lwork, &info);
+#endif
+		if (info < 0)
+			sf_warning("The %d-th argument had an illegal value", -info);
+		if (info > 0)
+			sf_warning("Dialogal matrix is singular: %d", info);
 		}
 		memcpy(out[i2], p->x, p->np*sizeof(sf_complex));
 	}
@@ -309,8 +341,16 @@ void sf_fcrt(void*h, double freq,
 		&beta, out[0], &p->np);
 
 	lwork = -1;
+#if defined(HAVE_MKL)
+	chesv_("U", &p->np, &nrhs, (MKL_Complex8 *)(p->LLH[0]), &p->np, p->ipiv, 
+		(MKL_Complex8 *)(p->x), &p->np, (MKL_Complex8 *)&workopt, &lwork, &info );
+#elif defined(__APPLE__)
+	chesv_("U", &p->np, &nrhs, (__CLPK_complex *)(p->LLH[0]), &p->np, p->ipiv, 
+		(__CLPK_complex *)(p->x), &p->np, (__CLPK_complex *)&workopt, &lwork, &info );
+#else
 	chesv_("U", &p->np, &nrhs, p->LLH[0], &p->np, p->ipiv, 
 		p->x, &p->np, &workopt, &lwork, &info );
+#endif
 	lwork = (int)(creal(workopt)+0.5);
 	work = sf_complexalloc(lwork);
 
@@ -319,8 +359,16 @@ void sf_fcrt(void*h, double freq,
 		memcpy(p->A[0], p->LLH[0], p->np*p->np*sizeof(sf_complex));
 		for(i1=0; i1<p->np; i1++) 
 			p->A[i1][i1] += crealf(ref[i2][i1]);
+#if defined(HAVE_MKL)
+		chesv_("U", &p->np, &nrhs, (MKL_Complex8 *)(p->A[0]), &p->np, p->ipiv,
+			   (MKL_Complex8 *)out[i2], &p->np, (MKL_Complex8 *)work, &lwork, &info);
+#elif defined(__APPLE__)
+		chesv_("U", &p->np, &nrhs, (__CLPK_complex *)(p->A[0]), &p->np, p->ipiv,
+			   (__CLPK_complex *)out[i2], &p->np, (__CLPK_complex *)work, &lwork, &info);
+#else
 		chesv_("U", &p->np, &nrhs, p->A[0], &p->np, p->ipiv, 
 			out[i2], &p->np, work, &lwork, &info );
+#endif
 		if(info<0) 
 			sf_warning("The %d-th argument had an illegal value", -info);
 		if(info>0) 

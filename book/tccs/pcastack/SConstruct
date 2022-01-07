@@ -1,0 +1,14 @@
+from rsf.tex import*
+import os, sys
+
+os.environ['PSTEXPENOPTS']='color=y fat=3 fatmult=1.5'
+
+## add pdflatex into default PATH
+import sys
+env=Environment()
+if sys.platform == 'darwin':
+    env['ENV']['PATH'] = ':'.join(['/opt/local/bin',env['ENV']['PATH']])
+
+       
+End(lclass='geophysics',use='listings,amsmath')
+

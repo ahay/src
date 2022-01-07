@@ -128,7 +128,7 @@ void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		x[i+n*nc] -= tmp[i];
 	    }
 	    for (ic=1; ic < nc-1; ic++) {
-		allpass1t(false, false, ap[ic], tmp, y);
+		allpass1t(false, false, ap[ic], tmp, y+ic*n);
 		for (i=0; i < n; i++) {		    
 		    j = ic*n+i;
 		    k = j+n*nc;
@@ -147,13 +147,13 @@ void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	    allpass1(false, true, ap[ic], xn+ic*n, tmp);
 	    for (i=0; i < n; i++) {
 		j = ic*n+i;
-		x[j] -= y[j]*tmp[i];
+		x[j] += y[j]*tmp[i];
 	    }
 	} 
 	allpass1(false, true, ap[nc-1], x0, tmp);
 	for (i=0; i < n; i++) {
 	    j = (nc-1)*n+i;
-	    x[j] -= y[j]*tmp[i];
+	    x[j] += y[j]*tmp[i];
 	} 
     } else {
 	if (nc > 1) {
@@ -180,13 +180,58 @@ void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	    allpass1(false, true, ap[ic], xn+ic*n, tmp);	    
 	    for (i=0; i < n; i++) {
 		j = ic*n+i;
-		y[j] -= x[j]*tmp[i];
+		y[j] += x[j]*tmp[i];
 	    }
 	} 
 	allpass1(false, true, ap[nc-1], x0, tmp);
 	for (i=0; i < n; i++) {
 	    j = (nc-1)*n+i;
-	    y[j] -= x[j]*tmp[i];
+	    y[j] += x[j]*tmp[i];
+	} 
+    }
+} 
+
+void pwdchainx_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+/*< linear operator for x only >*/
+{
+    int ic, i, j;
+
+    if (nx != (nc-1)*n || ny != nc*n) sf_error("%s: Wrong size",__FILE__);
+
+    sf_adjnull(adj,add,nx,ny,x,y);
+
+    if (adj) {
+	allpass1t(false, false, ap[0], tmp, y);
+	for (i=0; i < n; i++) {
+	    x[i] -= tmp[i];
+	}
+	for (ic=1; ic < nc-1; ic++) {
+	    allpass1t(false, false, ap[ic], tmp, y+ic*n);
+	    for (i=0; i < n; i++) {
+		j = ic*n+i;
+		x[j-n] += y[j];
+		x[j] -= tmp[i];
+	    }
+	} 
+	for (i=0; i < n; i++) {
+	    j = (nc-1)*n+i;
+	    x[j-n] += y[j];
+	} 
+    } else {
+	allpass1(false, false, ap[0], x, tmp);
+	for (i=0; i < n; i++) {
+	    y[i] -= tmp[i];
+	}
+	for (ic=1; ic < nc-1; ic++) {
+	    allpass1(false, false, ap[ic], x+ic*n, tmp);
+	    for (i=0; i < n; i++) {
+		j = ic*n+i;
+		y[j]  += x[j-n] - tmp[i];
+	    }
+	} 
+	for (i=0; i < n; i++) {
+	    j = (nc-1)*n+i;
+	    y[j] += x[j-n];
 	} 
     }
 } 

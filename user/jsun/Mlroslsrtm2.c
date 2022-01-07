@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     sf_file Fvel;
     sf_file left, right, leftb, rightb;
     sf_file Fsrc, Frcd/*source and record*/;
-    sf_file Ftmpwf, Ftmpbwf;
+    sf_file Ftmpwf=NULL, Ftmpbwf=NULL;
     sf_file Fimg;
 
     sf_axis at, ax, az;

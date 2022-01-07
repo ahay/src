@@ -55,18 +55,6 @@ program AFDMf90
   do it=1,nt
      if(verb) write (0,*) it
 
-     ! 4th order laplacian
-!!$     do ix=3,nx-2
-!!$        do iz=3,nz-2
-!!$           ud(iz,ix) = &
-!!$                c0* uo(iz,  ix  ) * (idx + idz)        + &
-!!$                c1*(uo(iz  ,ix-1) + uo(iz  ,ix+1))*idx + &
-!!$                c2*(uo(iz  ,ix-2) + uo(iz  ,ix+2))*idx + &
-!!$                c1*(uo(iz-1,ix  ) + uo(iz+1,ix  ))*idz + &
-!!$                c2*(uo(iz-2,ix  ) + uo(iz+2,ix  ))*idz
-!!$        end do
-!!$     end do
-
      ud(3:nz-2,3:nx-2) = &
           c0* uo(3:nz-2,3:nx-2) * (idx + idz)            + &
           c1*(uo(3:nz-2,2:nx-3) + uo(3:nz-2,4:nx-1))*idx + &

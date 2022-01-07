@@ -1,0 +1,230 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from math import pi
+ 
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=0.3 |
+       grey3 flat=n frame1=40 frame2=2 frame3=5 
+       point1=0.8 point2=0.8 label2=X label3=Y label1="Time" unit1=s title=
+       screenratio=1.6 color=g %s'''%other)
+
+def Grey3e(data,other,clip):
+	Result(data,
+       '''
+       byte clip=%g |
+       grey3 flat=n frame1=40 frame2=2 frame3=5 
+       point1=0.8 point2=0.8 label2=X label3=Y label1="Time" unit1=s title=
+       screenratio=1.6 color=g %s'''%(clip,other))
+
+def Grey3s(data,other,clip):
+	Result(data,
+       '''
+       byte clip=%g  gainpanel=all  bar=bar.rsf|
+       grey3 flat=n frame1=40 frame2=2 frame3=5 
+       point1=0.8 point2=0.8 label2=X label3=Y label1="Time" unit1=s title=
+       screenratio=1.4 color=j scalebar=y maxval=1 minval=0 %s'''%(clip,other))
+       
+def Grey(data,other):
+	Result(data,
+       '''
+       grey label2=Trace label1="Time" unit1=s clip=0.3 title=
+       color=g  wheretitle=t wherexlabel=b %s'''%other)
+             
+def Wig(data,other):
+	Result(data,
+       '''
+       wiggle poly=y transp=y yreverse=y label2=Trace label1="Time" unit1=s clip=0.4 title=
+       screenratio=1.4 color=g %s'''%other)
+
+def Graph(data,other):
+	Result(data,'graph label1="Time" label2="Amplitude" unit2= unit1="s" labelsz=10 labelfat=4 font=2 titlesz=10 titlefat=4 title="" wherexlabel=b wheretitle=t %s' %other)
+	
+## Load data
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Synth2'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+   sys.stderr.write('\nCannot find Matlab.\n')
+   sys.exit(1)
+
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('synth2-clean-0 synth2-noisy-0 synth2-obs-0 synth2-rr-0 synth2-drr-0 synth2-odrr-0',[os.path.join(matROOT,matfun+'.m')],
+    '''MATLABPATH=%(matlabpath)s %(matlab)s 
+    -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${TARGETS[0]}','${TARGETS[1]}','${TARGETS[2]}','${TARGETS[3]}','${TARGETS[4]}','${TARGETS[5]}');quit"
+    '''%vars(),stdin=0,stdout=-1)
+
+Flow('synth2-clean','synth2-clean-0',' put n2=10 n3=10 n4=10 n5=10 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('synth2-noisy','synth2-noisy-0','put n2=10 n3=10 n4=10 n5=10 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('synth2-obs','synth2-obs-0','put n2=10 n3=10 n4=10 n5=10 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('synth2-rr','synth2-rr-0','put n2=10 n3=10 n4=10 n5=10 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('synth2-drr','synth2-drr-0','put n2=10 n3=10 n4=10 n5=10 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('synth2-odrr','synth2-odrr-0','put n2=10 n3=10 n4=10 n5=10 d1=0.004 d2=1 d3=1 d4=1 d5=1 o1=0 o2=1 o3=1 o4=1 o5=1')
+Flow('synth2-clean-xy','synth2-clean','window n2=1 n3=1 f2=5 f3=5')
+Flow('synth2-noisy-xy','synth2-noisy','window n2=1 n3=1 f2=5 f3=5')
+Flow('synth2-obs-xy','synth2-obs','window n2=1 n3=1 f2=5 f3=5')
+Flow('synth2-rr-xy','synth2-rr','window n2=1 n3=1 f2=5 f3=5')
+Flow('synth2-drr-xy','synth2-drr','window n2=1 n3=1 f2=5 f3=5')
+Flow('synth2-odrr-xy','synth2-odrr','window n2=1 n3=1 f2=5 f3=5')
+
+Grey3('synth2-clean-xy','title=Clean')
+Grey3('synth2-noisy-xy','title=Noisy')
+Grey3('synth2-obs-xy','title=Observed')
+Grey3('synth2-rr-xy','title=RR')
+Grey3('synth2-drr-xy','title=DRR')
+Grey3('synth2-odrr-xy','title=ORR')
+
+Flow('synth2-clean-hxhy','synth2-clean','window n4=1 n5=1 f4=1 f5=1')
+Flow('synth2-noisy-hxhy','synth2-noisy','window n4=1 n5=1 f4=1 f5=1')
+Flow('synth2-obs-hxhy','synth2-obs','window n4=1 n5=1 f4=1 f5=1')
+Flow('synth2-rr-hxhy','synth2-rr','window n4=1 n5=1 f4=1 f5=1')
+Flow('synth2-drr-hxhy','synth2-drr','window n4=1 n5=1 f4=1 f5=1')
+Flow('synth2-odrr-hxhy','synth2-odrr','window n4=1 n5=1 f4=1 f5=1')
+
+Grey3('synth2-clean-hxhy','title=Clean frame1=50 label2=HX label3=HY')
+Grey3('synth2-noisy-hxhy','title=Noisy frame1=50 label2=HX label3=HY')
+Grey3('synth2-obs-hxhy','title=Observed frame1=50 label2=HX label3=HY')
+Grey3('synth2-rr-hxhy','title=RR frame1=50 label2=HX label3=HY')
+Grey3('synth2-drr-hxhy','title=DRR frame1=50 label2=HX label3=HY')
+Grey3('synth2-odrr-hxhy','title=ORR frame1=50 label2=HX label3=HY')
+
+Flow('s-c','synth2-clean-hxhy','window n2=1 n3=1 f2=4 f3=4')
+Flow('s-n','synth2-noisy-hxhy','window n2=1 n3=1 f2=4 f3=4')
+Flow('s-obs','synth2-obs-hxhy','window n2=1 n3=1 f2=4 f3=4')
+Flow('s-rr','synth2-rr-hxhy','window n2=1 n3=1 f2=4 f3=4')
+Flow('s-drr','synth2-drr-hxhy','window n2=1 n3=1 f2=4 f3=4')
+Flow('s-odrr','synth2-odrr-hxhy','window n2=1 n3=1 f2=4 f3=4')
+
+
+Flow('synth2-ss','s-c s-drr s-n s-obs s-rr s-odrr','cat axis=2 ${SOURCES[1:6]}')
+Flow('synth2-ss-z','synth2-ss','window min1=0.015 max1=0.165')
+Graph('synth2-ss','plotfat=10 plotcol="7,5,4,2,6,3" min1=0 max1=0.4 min2=-0.7 max2=0.7 title="(a)"')
+Graph('synth2-ss-z','plotfat=10 plotcol="7,5,4,2,6,3" min2=-0.7 max2=0.7 title="(b)"')
+
+## Creating framebox
+x=0.015
+y=-0.7
+w=0.15
+w1=1.4
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=0.4 min2=-0.7 max2=0.7 pad=n plotfat=15 plotcol=7 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+Result('synth2-ss0','Fig/synth2-ss.vpl frame.vpl','Overlay')
+
+Flow('synth2-rr-xy-e','synth2-clean-xy synth2-rr-xy','add scale=1,-1 ${SOURCES[1]}')
+Flow('synth2-drr-xy-e','synth2-clean-xy synth2-drr-xy','add scale=1,-1 ${SOURCES[1]}')
+Flow('synth2-odrr-xy-e','synth2-clean-xy synth2-odrr-xy','add scale=1,-1 ${SOURCES[1]}')
+Grey3e('synth2-rr-xy-e','title=RR',0.9)
+Grey3e('synth2-drr-xy-e','title=DRR',0.9)
+Grey3e('synth2-odrr-xy-e','title=ORR',0.9)
+
+Flow('synth2-rr-hxhy-e','synth2-clean-hxhy synth2-rr-hxhy','add scale=1,-1 ${SOURCES[1]}')
+Flow('synth2-drr-hxhy-e','synth2-clean-hxhy synth2-drr-hxhy','add scale=1,-1 ${SOURCES[1]}')
+Flow('synth2-odrr-hxhy-e','synth2-clean-hxhy synth2-odrr-hxhy','add scale=1,-1 ${SOURCES[1]}')
+Grey3e('synth2-rr-hxhy-e','title=RR',0.9)
+Grey3e('synth2-drr-hxhy-e','title=DRR',0.9)
+Grey3e('synth2-odrr-hxhy-e','title=ORR',0.9)
+
+Flow('synth2-clean-xy-t','synth2-clean-xy','math output="input+1.0"')
+Flow('synth2-noisy-xy-t','synth2-noisy-xy','math output="input+1.0"')
+Flow('synth2-obs-xy-t','synth2-obs-xy','math output="input+1.0"')
+Flow('synth2-rr-xy-t','synth2-rr-xy','math output="input+1.0"')
+Flow('synth2-drr-xy-t','synth2-drr-xy','math output="input+1.0"')
+Flow('synth2-odrr-xy-t','synth2-odrr-xy','math output="input+1.0"')
+
+Flow('synth2-clean-hxhy-t','synth2-clean-hxhy','math output="input+1.0"')
+Flow('synth2-noisy-hxhy-t','synth2-noisy-hxhy','math output="input+1.0"')
+Flow('synth2-obs-hxhy-t','synth2-obs-hxhy','math output="input+1.0"')
+Flow('synth2-rr-hxhy-t','synth2-rr-hxhy','math output="input+1.0"')
+Flow('synth2-drr-hxhy-t','synth2-drr-hxhy','math output="input+1.0"')
+Flow('synth2-odrr-hxhy-t','synth2-odrr-hxhy','math output="input+1.0"')
+
+Flow('synth2-noisy-xy-simi','synth2-clean-xy synth2-noisy-xy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-obs-xy-simi','synth2-clean-xy synth2-obs-xy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-rr-xy-simi','synth2-clean-xy synth2-rr-xy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-drr-xy-simi','synth2-clean-xy synth2-drr-xy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-odrr-xy-simi','synth2-clean-xy synth2-odrr-xy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+
+Grey3s('synth2-noisy-xy-simi','title=Noisy',1.0)
+Grey3s('synth2-obs-xy-simi','title=Observed',1.0)
+Grey3s('synth2-rr-xy-simi','title=RR',1.0)
+Grey3s('synth2-drr-xy-simi','title=DRR',1.0) 
+Grey3s('synth2-odrr-xy-simi','title=ORR',1.0) 
+
+Flow('synth2-noisy-hxhy-simi','synth2-clean-hxhy synth2-noisy-hxhy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-obs-hxhy-simi','synth2-clean-hxhy synth2-obs-hxhy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-rr-hxhy-simi','synth2-clean-hxhy synth2-rr-hxhy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-drr-hxhy-simi','synth2-clean-hxhy synth2-drr-hxhy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-odrr-hxhy-simi','synth2-clean-hxhy synth2-odrr-hxhy','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+
+Grey3s('synth2-noisy-hxhy-simi','title=Noisy',1.0)
+Grey3s('synth2-obs-hxhy-simi','title=Observed',1.0)
+Grey3s('synth2-rr-hxhy-simi','title=RR',1.0)
+Grey3s('synth2-drr-hxhy-simi','title=DRR',1.0)
+Grey3s('synth2-odrr-hxhy-simi','title=ORR',1.0)
+
+#2D plot
+Flow('synth2-clean2d','synth2-clean','window n4=1 n5=1 f4=1 f5=1| put n2=100 n3=1')
+Flow('synth2-noisy2d','synth2-noisy','window n4=1 n5=1 f4=1 f5=1| put n2=100 n3=1')
+Flow('synth2-obs2d','synth2-obs','window n4=1 n5=1 f4=1 f5=1| put n2=100 n3=1')
+Flow('synth2-rr2d','synth2-rr','window n4=1 n5=1 f4=1 f5=1| put n2=100 n3=1')
+Flow('synth2-drr2d','synth2-drr','window n4=1 n5=1 f4=1 f5=1| put n2=100 n3=1')
+Flow('synth2-odrr2d','synth2-odrr','window n4=1 n5=1 f4=1 f5=1| put n2=100 n3=1')
+Grey('synth2-clean2d','title="(a) Clean"')
+Grey('synth2-noisy2d','title="(b) Noisy"')
+Grey('synth2-obs2d','title="(c) Observed"')
+Grey('synth2-rr2d','title="(a) RR"')
+Grey('synth2-drr2d','title="(b) DRR"')
+Grey('synth2-odrr2d','title="(c) ORR"')
+
+Flow('synth2-clean2d2','synth2-clean','window n2=1 n3=1 f2=5 f3=5| put n2=100 n3=1')
+Flow('synth2-noisy2d2','synth2-noisy','window n2=1 n3=1 f2=5 f3=5| put n2=100 n3=1')
+Flow('synth2-obs2d2','synth2-obs','window n2=1 n3=1 f2=5 f3=5| put n2=100 n3=1')
+Flow('synth2-rr2d2','synth2-rr','window n2=1 n3=1 f2=5 f3=5| put n2=100 n3=1')
+Flow('synth2-drr2d2','synth2-drr','window n2=1 n3=1 f2=5 f3=5| put n2=100 n3=1')
+Flow('synth2-odrr2d2','synth2-odrr','window n2=1 n3=1 f2=5 f3=5| put n2=100 n3=1')
+Flow('synth2-rr2d2-simi','synth2-clean2d2 synth2-rr2d2','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-drr2d2-simi','synth2-clean2d2 synth2-drr2d2','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-odrr2d2-simi','synth2-clean2d2 synth2-odrr2d2','similarity other=${SOURCES[1]} rect1=3 rect2=1 rect3=1')
+Flow('synth2-rr2d2-e','synth2-clean2d2 synth2-rr2d2','add scale=1,-1 ${SOURCES[1]}')
+Flow('synth2-drr2d2-e','synth2-clean2d2 synth2-drr2d2','add scale=1,-1 ${SOURCES[1]}')
+Flow('synth2-odrr2d2-e','synth2-clean2d2 synth2-odrr2d2','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('synth2-rrodrr2d2-n','synth2-rr2d2 synth2-odrr2d2','add scale=1,-1 ${SOURCES[1]}')
+Flow('synth2-drrodrr2d2-n','synth2-drr2d2 synth2-odrr2d2','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('synth2-clean2d2','title="(a) Clean"')
+Grey('synth2-noisy2d2','title="(b) Noisy"')
+Grey('synth2-obs2d2','title="(c) Observed"')
+Grey('synth2-rr2d2','title="(a) RR"')
+Grey('synth2-drr2d2','title="(b) DRR"')
+Grey('synth2-odrr2d2','title="(c) ORR"')
+Grey('synth2-rr2d2-simi','title="(a) RR" clip=0.9 scalebar=y maxval=1 minval=0 allpos=y color=j')
+Grey('synth2-drr2d2-simi','title="(b) DRR" clip=0.9 scalebar=y maxval=1 minval=0 allpos=y color=j')
+Grey('synth2-odrr2d2-simi','title="(c) ORR" clip=0.9 scalebar=y maxval=1 minval=0 allpos=y color=j')
+Grey('synth2-rr2d2-e','title="(a) RR"')
+Grey('synth2-drr2d2-e','title="(b) DRR"')
+Grey('synth2-odrr2d2-e','title="(c) ORR"')
+Grey('synth2-rrodrr2d2-n','title="(a) RR-ORR"')
+Grey('synth2-drrodrr2d2-n','title="(b) DRR-ORR"')
+
+Result('figure10','Fig/synth2-rr2d2.vpl Fig/synth2-drr2d2.vpl Fig/synth2-odrr2d2.vpl','OverUnderAniso')
+Result('figure11','Fig/synth2-rr2d2-e.vpl Fig/synth2-drr2d2-e.vpl Fig/synth2-odrr2d2-e.vpl','OverUnderAniso')
+
+
+
+End()

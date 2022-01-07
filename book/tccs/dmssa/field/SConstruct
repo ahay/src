@@ -1,0 +1,132 @@
+from rsf.proj import*
+from rsf.prog import RSFROOT
+from math import pi
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=5000  | window min1=250 |
+       grey3 flat=n frame1=450 frame2=20 frame3=5 
+       point1=0.8 point2=0.8 label2=Inline label3=Xline label1="Time sampling number" unit1= title= color=g
+       screenratio=1.4 %s'''%other)
+
+def Grey(data,other):
+	Result(data,
+       '''
+       window min1=250 | grey label2=Trace label1="Time sampling number" clip=5000 title= unit1=
+       screenratio=1.4 color=g %s'''%other)
+
+def Greyz(data,other):
+	Result(data,
+       '''
+       grey label2=Trace label1="Time sampling number" clip=5000 title= unit1=
+       screenratio=1.4 color=g %s'''%other)
+
+def Wig(data,other):
+	Result(data,
+       '''
+       wiggle poly=y transp=y yreverse=y label2=Trace label1="Time sampling number" clip=5000 title=
+       screenratio=1.4 color=g %s'''%other)
+
+########################################################################
+# INITIALIZATION
+########################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Field'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+k=25
+n=5
+n1=2000
+n2=100
+n3=10
+put='d1=1 o1=1 n2=100 d2=1 o2=1 n3=10 d3=1 o3=1'
+
+
+Flow('field','field-0','put %s'%put)
+Grey3('field','title="Field data"')
+############################################################
+## with parameter
+############################################################
+
+Flow(['field-mssa-0','field-dmssa-0'],[os.path.join(matROOT,matfun+'.m'),'field-0'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}','${TARGETS[1]}',%(n1)d,%(n2)d,%(n3)d,%(k)d,%(n)d);quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+
+Flow('field-mssa','field-mssa-0','put %s'%put)
+Flow('field-dmssa','field-dmssa-0','put %s'%put)
+
+Flow('field-n-mssa','field field-mssa','add scale=1,-1 ${SOURCES[1]}')
+Flow('field-n-dmssa','field field-dmssa','add scale=1,-1 ${SOURCES[1]}')
+
+
+Grey3('field-mssa','title=MSSA')
+Grey3('field-dmssa','title=DMSSA')
+Grey3('field-n-mssa','title=MSSA')
+Grey3('field-n-dmssa','title=DMSSA')
+
+Flow('field-s','field','window n3=1 f3=4')
+Flow('field-s-mssa','field-mssa','window n3=1 f3=4')
+Flow('field-s-dmssa','field-dmssa','window n3=1 f3=4')
+Flow('field-sn-mssa','field-n-mssa','window n3=1 f3=4')
+Flow('field-sn-dmssa','field-n-dmssa','window n3=1 f3=4')
+
+
+
+Grey('field-s','title="Field data"')
+Grey('field-s-mssa','title=MSSA')
+Grey('field-s-dmssa','title=DMSSA')
+Grey('field-sn-mssa','title=MSSA')
+Grey('field-sn-dmssa','title=DMSSA')
+
+#Wig('field-s','title="Field data"')
+#Wig('field-s-mssa','title=MSSA')
+#Wig('field-s-dmssa','title=DMSSA')
+#Wig('field-sn-mssa','title=MSSA')
+#Wig('field-sn-dmssa','title=DMSSA')
+
+Flow('z-field','field-s','window min1=900 max1=1100 min2=50 max2=90')
+Flow('z-mssa','field-s-mssa','window min1=900 max1=1100 min2=50 max2=90')
+Flow('z-dmssa','field-s-dmssa','window min1=900 max1=1100 min2=50 max2=90')
+Greyz('z-field','screenratio=0.8 title="Field data"')
+Greyz('z-mssa','screenratio=0.8 title=MSSA')
+Greyz('z-dmssa','screenratio=0.8 title=DMSSA') 
+#DMSSA may slightly affect the amplitude, a slightly smaller clip value would give a nicer result 
+
+## Creating framebox
+x=50
+y=900
+w=40
+w1=200
+
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=1 max1=100 min2=250 max2=2000 pad=n plotfat=15 plotcol=2 screenratio=1.4
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+Result('field-s-0','Fig/field-s.vpl frame','Overlay')
+Result('field-s-mssa-0','Fig/field-s-mssa.vpl frame','Overlay')
+Result('field-s-dmssa-0','Fig/field-s-dmssa.vpl frame','Overlay')
+
+
+
+
+
+
+
+
+
+
+
+
+End()

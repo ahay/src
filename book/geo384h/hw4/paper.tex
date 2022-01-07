@@ -42,7 +42,7 @@ mathematical derivations that you perform.
 
 \item The following algorithm finds a solution to
   the least-squares optimization problem $\min
-  |\mathbf{F}\,\mathbf{m} - \mathbf{d}|^2$, where $\mathbf{d}$ is
+  \|\mathbf{F}\,\mathbf{m} - \mathbf{d}\|^2$, where $\mathbf{d}$ is
   data, $\mathbf{m}$ is the model we want to estimate, and
   $\mathbf{F}$ is a linear operator that connects them.
 
@@ -125,6 +125,8 @@ $\mathbf{H}_m$, the model shaping equation can be rewritten in a symmetric form
 
 \end{enumerate}
 
+\newpage
+
 \section{Match Filtering for Attenuation of Surface Seismic Waves}
 \inputdir{match}
 
@@ -157,11 +159,14 @@ $\mathbf{N}$ represents convolution of the noise model
 $\mathbf{n}_0$ with the filter. After minimization, $\mathbf{n} =
 \mathbf{N}\,\mathbf{f}$ becomes the new noise model, and
 $\mathbf{d}-\mathbf{n}$ becomes the estimated signal. Match filtering
-is implemented in program \texttt{match.c}. Some parts of this program
+is implemented in \texttt{match.c} and \texttt{match.py}. Some parts of this program
 are left out for you to fill.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=match/match.c]{match/match.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/match.py]{match/match.py}
 
 Your task:
 \begin{enumerate}
@@ -171,7 +176,7 @@ Your task:
 scons view
 \end{verbatim}
 to reproduce the figures on your screen.
-\item Modify the \texttt{match.c} file to fill in missing parts.
+\item Modify the \texttt{match.c} (or, alternatively, \texttt{match.py}) file to fill in missing parts.
 \item Test your modifications by running the dot product test.
 \begin{verbatim}
 scons dot.test
@@ -354,16 +359,20 @@ program but you can use only the 100 original data points as input.
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=invint/SConstruct]{invint/SConstruct}
 
+\newpage
+
 \section{Your own data}
 
 Your final task is to apply one of the data analysis techniques to your own data.
 \begin{enumerate}
 \item Select a dataset suitable for this application.
-\item Apply one of the algorithms of either this homework or the previous homework and choose appropriate parameters.
+\item Apply one of the algorithms of either this homework or the
+  previous homework (data interpolation, data compression, match
+  filtering) and choose appropriate parameters.
 \item Attach the results.
 \end{enumerate}
 
-\newpage
+%\newpage
 
 \section{Completing the assignment}
 

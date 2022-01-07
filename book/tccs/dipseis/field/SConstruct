@@ -1,0 +1,319 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+
+def Grey1(data,other):
+	Result(data,
+	  '''
+       put d1=0.001 o1=0 d2=1 o2=0 | grey clip=0.2 wanttitle=n label2=Trace unit2=
+       labelfat=4 font=2 labelsz=10 titlefat=4 color=g %s 
+       '''%other)
+
+def Grey2(data,other):
+	Result(data,
+	  '''
+       put d1=0.001 o1=0 d2=1 o2=0 | grey clip=0.2 wanttitle=n label2=Trace unit2= label1=Time unit1=s
+       labelfat=4 font=2 labelsz=10 titlefat=4 color=g %s 
+       '''%other)
+
+def Grey2zoom(data,other):
+	Result(data,
+	  '''
+       put d1=0.001 o1=0 d2=1 %s | grey clip=0.2 wanttitle=n label2=Trace unit2= label1=Time unit1=s
+       labelfat=4 font=2 labelsz=10 titlefat=4 color=g  
+       '''%other)
+
+def Greydip(data,other):
+	Result(data,
+	  '''
+       put d1=0.001 o1=0 d2=1 o2=0  | window n2=310 | grey clip=0.5 wanttitle=n label2=Trace unit2= label1=Time unit1=s
+       labelfat=4 font=2 titlefat=4 color=j %s 
+       '''%other)
+
+
+Flow('field','xline','cp | scale axis=2')
+Grey1('field','')
+
+# multi-step
+########################################################################
+# INITIALIZATION
+#######################################################################
+matlab         = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'Field'
+matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
+
+if not matlab:
+    sys.stderr.write('\nCannot find Matlab.\n')
+    sys.exit(1)
+
+thr=15
+############################################################
+## generate and process synthetic data
+############################################################
+Flow('planes',[os.path.join(matROOT,matfun+'.m'),'field'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}');quit"
+     '''%vars(),stdin=0,stdout=-1)
+
+#Flow('planes','dips','cp')
+
+Flow('planes3','planes','put n2=310 n3=6 o3=0 d2=1 d1=0.001')
+
+Flow('sep1','planes3','window n3=3 f3=1 | stack norm=n axis=3')
+Flow('sep2','planes3','window n3=2 f3=4 | stack norm=n axis=3')
+
+Grey2('planes','')
+Grey2('sep1','')
+Grey2('sep2','')
+
+Flow('field-dip','field','threshold1 thr=10|dip rect1=10 rect2=10 | pad n2=512')
+Flow('sep1-dip','sep1','threshold1 thr=10 | dip rect1=10 rect2=10 | pad n2=512')
+Flow('sep2-dip','sep2','threshold1 thr=10 | dip rect1=10 rect2=10 | pad n2=512')
+Greydip('field-dip','')
+Greydip('sep1-dip','')
+Greydip('sep2-dip','')
+
+Flow('field-seis','field field-dip','pad n2=512 | seislet adj=y inv=y dip=${SOURCES[1]} eps=0.01 type=b')
+Flow('sep1-seis','sep1 sep1-dip','pad n2=512 | seislet adj=y inv=y dip=${SOURCES[1]} eps=0.1 type=b')
+Flow('sep2-seis','sep2 sep2-dip','pad n2=512 | seislet adj=y inv=y dip=${SOURCES[1]} eps=0.01 type=b')
+#Result('field-seis','put d1=0.001 o1=0 d2=1 o2=0  |grey label1=Time unit1=s wanttitle=n ')
+# Result('sep1-seis','put d1=0.001 o1=0 d2=1 o2=0  |grey label1=Time unit1=s wanttitle=n ')
+# Result('sep2-seis','put d1=0.001 o1=0 d2=1 o2=0  | grey label1=Time unit1=s wanttitle=n ')
+
+Grey2('field-seis','')
+Grey2('sep1-seis','')
+Grey2('sep2-seis','')
+Flow('field-thr','field-seis','threshold1 thr=%d'%thr)
+Flow('sep1-thr','sep1-seis','threshold1 thr=%d'%thr)
+Flow('sep2-thr','sep2-seis','threshold1 thr=%d'%thr)
+
+Flow('field-recon-t','field-thr field-dip','seislet adj=n inv=y dip=${SOURCES[1]} eps=0.01 type=b | window n2=310')
+Flow('sep1-recon','sep1-thr sep1-dip','seislet adj=n inv=y dip=${SOURCES[1]} eps=0.1 type=b | window n2=310')
+Flow('sep2-recon','sep2-thr sep2-dip','seislet adj=n inv=y dip=${SOURCES[1]} eps=0.01 type=b | window n2=310')
+
+Grey2('sep1-recon','')
+Grey2('sep2-recon','')
+
+
+## EMD & Seis
+Flow('field-emdseis-t','sep1-recon sep2-recon','add scale=1,1 ${SOURCES[1]}')
+Flow('field-emdseis-dif-t','field field-emdseis-t','put d1=1 d2=1 | add scale=1,-1 ${SOURCES[1]} ')
+## Seis
+Flow('field-seis-dif-t','field field-recon-t','put d1=1 d2=1 | add scale=1,-1 ${SOURCES[1]} ')
+
+
+
+## Creating framebox A
+x=230
+y=0.02
+w=110
+w1=0.40
+
+Flow('framea.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('framea','framea.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+## Creating framebox B
+x=180
+y=1.15
+w=170
+w1=0.55
+
+Flow('frameb.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frameb','frameb.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=471 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+
+## Create label A
+Plot('labela',None,
+	'''
+	box x0=9 y0=7.55 label="A" xt=0.5 yt=-0.5 length=0.75 
+	''')
+
+## Create label B
+Plot('labelb',None,
+	'''
+	box x0=7 y0=4.6 label="B" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+Grey2('field-emdseis-t','')
+Grey2('field-emdseis-dif-t','')
+Grey2('field-recon-t','')
+Grey2('field-seis-dif-t','')
+
+Result('field-0','Fig/field.vpl framea frameb labela labelb','Overlay')
+Result('field-emdseis','Fig/field-emdseis-t.vpl framea frameb labela labelb','Overlay')
+Result('field-recon','Fig/field-recon-t.vpl framea frameb labela labelb','Overlay')
+
+
+## Create label 1
+Plot('label1',None,
+	'''
+	box x0=4.5 y0=7.6 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+## Create label 2
+Plot('label2',None,
+	'''
+	box x0=9.4 y0=5.5 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+## Create label 3
+Plot('label3',None,
+	'''
+	box x0=6.7 y0=1.45 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+labels=[]
+for i in range(3):
+	labels.append('label%d'%(i+1))
+Result('field-emdseis-dif',['Fig/field-emdseis-dif-t.vpl']+labels,'Overlay')
+Result('field-seis-dif',['Fig/field-seis-dif-t.vpl']+labels,'Overlay')
+
+## dip component
+Flow('dip1','planes3','window n3=1 f3=1')
+Flow('dip2','planes3','window n3=1 f3=2')
+Flow('dip3','planes3','window n3=1 f3=3')
+Flow('dip4','planes3','window n3=1 f3=4')
+Flow('dip5','planes3','window n3=1 f3=5')
+Grey2('dip1','')
+Grey2('dip2','')
+Grey2('dip3','')
+Grey2('dip4','')
+Grey2('dip5','')
+
+
+## Adding frame
+
+# frame1 Trace: 125: 225 n2=101 f2=125 n1=200 f1=400
+# 	    Time:  0.4:0.6
+
+# frame2 Trace: 150: 225 n2=76 f2=150 n1=130 f1=20
+#	    Time: 0.02:0.15
+Flow('zoom1-field-t','field','window n2=101 f2=125 n1=200 f1=400')
+Flow('zoom1-emdseis-t','field-emdseis-t','window n2=101 f2=125 n1=200 f1=400')
+Flow('zoom1-recon-t','field-recon-t','window n2=101 f2=125 n1=200 f1=400')
+Flow('zoom2-field-t','field','window n2=76 f2=150 n1=130 f1=20')
+Flow('zoom2-emdseis-t','field-emdseis-t','window n2=76 f2=150 n1=130 f1=20')
+Flow('zoom2-recon-t','field-recon-t','window n2=76 f2=150 n1=130 f1=20')
+
+
+Grey2zoom('zoom1-field-t','o1=0.4 o2=125')
+Grey2zoom('zoom1-emdseis-t','o1=0.4 o2=125')
+Grey2zoom('zoom1-recon-t','o1=0.4 o2=125')
+Grey2zoom('zoom2-field-t','o1=0.02 o2=150')
+Grey2zoom('zoom2-emdseis-t','o1=0.02 o2=150')
+Grey2zoom('zoom2-recon-t','o1=0.o2 o2=150')
+
+
+
+
+## Create label 11
+Plot('label11',None,
+	'''
+	box x0=5.2 y0=6.9 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+## Create label 22
+Plot('label22',None,
+	'''
+	box x0=7.5 y0=8 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+## Create label 33
+Plot('label33',None,
+	'''
+	box x0=11 y0=3.45 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+## Create label 44
+Plot('label44',None,
+	'''
+	box x0=10 y0=6.6 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+labelss=[]
+for i in range(4):
+	labelss.append('label%d%d'%(i+1,i+1))
+Result('zoom1-field',['Fig/zoom1-field-t.vpl']+labelss,'Overlay')
+Result('zoom1-emdseis',['Fig/zoom1-emdseis-t.vpl']+labelss,'Overlay')
+Result('zoom1-recon',['Fig/zoom1-recon-t.vpl']+labelss,'Overlay')
+
+
+## Create label 111
+Plot('label111',None,
+	'''
+	box x0=10 y0=6.45 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+## Create label 222
+Plot('label222',None,
+	'''
+	box x0=9 y0=6.45 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+## Create label 222
+Plot('label333',None,
+	'''
+	box x0=8 y0=6.45 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+## Create label 111
+Plot('label444',None,
+	'''
+	box x0=3 y0=4.45 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+## Create label 222
+Plot('label555',None,
+	'''
+	box x0=4 y0=4.45 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+## Create label 222
+Plot('label666',None,
+	'''
+	box x0=5 y0=4.45 label="" xt=-0.5 yt=0.5 length=0.75
+	''')
+
+labelsss=[]
+for i in range(6):
+	labelsss.append('label%d%d%d'%(i+1,i+1,i+1))
+Result('zoom2-field',['Fig/zoom2-field-t.vpl']+labelsss,'Overlay')
+Result('zoom2-emdseis',['Fig/zoom2-emdseis-t.vpl']+labelsss,'Overlay')
+Result('zoom2-recon',['Fig/zoom2-recon-t.vpl']+labelsss,'Overlay')
+
+
+
+
+matcykROOT='../matfun'
+############################################################
+## Curvelet thresholding
+############################################################
+matfun='Curvelet'
+perc=2
+n1=700
+n2=310
+Flow('field-ct',[os.path.join(matcykROOT,matfun+'.m'),'field'],
+     '''MATLABPATH=%(matlabpath)s %(matlab)s 
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}','${TARGETS[0]}',%(n1)d,%(n2)d,%(perc)g);quit"
+     '''%vars(),stdin=0,stdout=-1)
+Flow('field-ct-dif','field field-ct','add scale=1,-1 ${SOURCES[1]}')
+Grey2('field-ct','')
+Grey2('field-ct-dif','')
+
+
+Flow('field-fx','field','fxdecon len=4 n2w=310')
+Flow('field-fx-dif','field field-fx','add scale=1,-1 ${SOURCES[1]}')
+Grey2('field-fx','')
+Grey2('field-fx-dif','')
+
+
+End()

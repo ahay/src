@@ -228,17 +228,17 @@ int main(int argc, char *argv[])
 	struct timeval tim;
 	
 	sf_complex c, **lt, **rt;
-	sf_complex *ww, **dd, ***dd3;
-	float *rr, **temsnap;
+	sf_complex *ww, **dd, ***dd3=NULL;
+	float *rr, **temsnap=NULL;
 	sf_complex *cwave, *cwavem, **wave, *curr;
 
 	sf_axis at, ax, az;
 
 	sf_file Fdat, Fsrc;
-	sf_file Fwfld, Fvel;
+	sf_file Fwfld=NULL, Fvel;
 	sf_file Fleft, Fright;
 
-	int cpuid, numprocs, nth, iturn, nspad;
+	int cpuid, numprocs, iturn, nspad;
 	sf_complex *sendbuf, *recvbuf;
 	MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -249,9 +249,10 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(comm, &numprocs);
 
 #ifdef _OPENMP
+	int nth;
 #pragma omp parallel
 	{
-		nth=omp_get_num_threads();
+		nth = omp_get_num_threads();
 	}
 	sf_warning(">>> Using %d threads <<<", nth);
 #endif

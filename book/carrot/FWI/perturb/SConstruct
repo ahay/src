@@ -1,0 +1,41 @@
+from rsf.proj import *
+
+fpeak=10
+dt=0.001
+delay_n=2.0/fpeak/dt
+print(delay_n)
+Flow('src',None,'spike n1=1500 k1=%d d1=%g | ricker2 frequency=%g'%(delay_n,dt,fpeak))
+Flow('vel1',None,'spike n1=50 d1=10 mag=1800')
+Flow('vel2',None,'spike n1=50 d1=10 mag=2500')
+Flow('vel3',None,'spike n1=50 d1=10 mag=3200')
+Flow('vel4',None,'spike n1=50 d1=10 mag=4000')
+Flow('vel_mid',['vel1','vel2', 'vel3','vel4'],'cat axis=1  ${SOURCES[1:-1]}')
+Flow('vel','vel_mid','put label1=Distance unit1=m')
+
+
+Flow(['rec','rec_all'],'src','acoustic1D  vel=vel.rsf sx=10 rx=10 rec_all=${TARGETS[1]}' )
+
+Flow('vel_ini','vel','smooth rect1=25')
+Flow('vel_recover',['rec','vel_ini','src'],'acoustic1D_FWI_ptb  vel=${SOURCES[1]} src=${SOURCES[2]} sx=10 rx=10 niter=100 damp=1e-9' )
+
+
+
+
+Result('src','src','graph title="source  wavelet"')
+Result('rec','rec','graph title="record at rx"')
+
+Flow('vel_compare1',['vel','vel_ini'],'cat axis=2  ${SOURCES[1:-1]}')
+Flow('vel_compare2',['vel','vel_recover'],'cat axis=2  ${SOURCES[1:-1]}')
+
+Result('vel_compare1','vel_compare1','graph title="Ture and initial velocity" ')
+Result('vel_compare2','vel_compare2','graph title="Ture and recovered velocity with FWI" ')
+
+
+
+
+
+
+
+
+
+End()

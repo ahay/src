@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from __future__ import division, absolute_import, print_function
-import os, stat, sys, types, copy, re, string, ftplib, socket
+import os, stat, sys, types, copy, re, string, ftplib, socket, json
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
@@ -49,7 +49,31 @@ sfsuffix = '.rsf'
 # suffix for vplot files
 vpsuffix = '.vpl'
 
-dataserver = os.environ.get('RSF_DATASERVER','http://www.ahay.org')
+def get_geolocation(address=""):
+    """Get geolocation from http://ip-api.com."""
+    if address == "":
+        url = "http://ip-api.com/json"
+    else:
+        url = "http://ip-api.com/json/" + address
+
+    try:
+        response = urllib_request.urlopen(url,timeout=5)
+        data = json.load(response)
+        return data['countryCode']
+    except:
+#        print("Fail to get country code")
+        return None
+
+def get_dataserver():
+    'Set the default data server'
+    country = get_geolocation()
+    if country == "CN":
+        #    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
+        return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+    else:
+        return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+
+dataserver = None
 libs = os.environ.get('LIBS',"")
 
 resdir = None
@@ -73,8 +97,11 @@ def test(target=None,source=None,env=None):
                     figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
     print("Comparing %s and %s" % (locked,src))
     if os.path.isfile(locked):
-        diff = os.system(' '.join([os.path.join(bindir,sfprefix+'vplotdiff'),
+        if locked.endswith(vpsuffix):
+            diff = os.system(' '.join([os.path.join(bindir,sfprefix+'vplotdiff'),
                                    locked,src]))
+        else:
+            diff = 0
         return diff
     else:
         print('No locked file "%s" ' % locked)
@@ -243,6 +270,15 @@ class Project(Environment):
 #        self.runonnode = os.path.join(self.bindir,'runonnode')
 
         self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','madagascar','figs'))
+
+        try:
+            sys.path.append(os.path.abspath(os.path.join(root,'share','madagascar','etc')))
+            import config
+            self.OMP = config.OMP
+            self.MPI = config.MPICC
+        except:
+            self.OMP=False
+            self.MPI=False
 
         cwd = os.getcwd()
         self.cwd = cwd
@@ -477,17 +513,19 @@ class Project(Environment):
                 reduction = reduce
 
             if split[1] == 'omp' or split[1] == 'mpi':
-                splitpar = 'split=%d ' % split[0]
-                if reduce == 'add':
-                    splitpar += ' join=0'
-                else:
-                    join = re.search('cat\s+axis=(\d)',reduce)
-                    if join:
-                        splitpar += ' join=%s' % join.group(1)
-                flow = '|'.join([' '.join([split[1],splitpar,x]) for x in flow.split('|')])
-                for k in split[2]:
-                    # par=${SOURCES[k]} -> _par=${SOURCES[k]}
-                    flow = re.sub(r'(\S+=\${SOURCES\[%d\]})' % k,'_\\1',flow)
+                if (split[1] == 'omp' and self.OMP) or \
+                   (split[1] == 'mpi' and self.MPI):
+                    splitpar = 'split=%d ' % split[0]
+                    if reduce == 'add':
+                        splitpar += ' join=0'
+                    else:
+                        join = re.search('cat\s+axis=(\d)',reduce)
+                        if join:
+                            splitpar += ' join=%s' % join.group(1)
+                    flow = '|'.join([' '.join([split[1],splitpar,x]) for x in flow.split('|')])
+                    for k in split[2]:
+                        # par=${SOURCES[k]} -> _par=${SOURCES[k]}
+                        flow = re.sub(r'(\S+=\${SOURCES\[%d\]})' % k,'_\\1',flow)
             elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
@@ -577,7 +615,8 @@ class Project(Environment):
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
         if view:
-            flow = flow + ' | %s pixmaps=y' % self.sfpen
+            if suffix==vpsuffix and not 'matplotlib' in flow:
+                flow = flow + ' | %s pixmaps=y' % self.sfpen
             kw.update({'stdout':-1})
         kw.update({'suffix':suffix})
         return self.Flow(*(target,source,flow), **kw)
@@ -586,12 +625,33 @@ class Project(Environment):
             flow = source
             source = target
         target2 = os.path.join(self.resdir,target)
+        if 'matplotlib' in flow:
+            pngflow = flow + ' format=png'
+            pngsuffix = '.png'
+            kw.update({'suffix':pngsuffix})
+            pngplot = self.Plot(*(target,source,pngflow), **kw)
+
+            flow += ' format=pdf'
+            suffix = '.pdf'
+
         kw.update({'suffix':suffix})
         plot = self.Plot(*(target2,source,flow), **kw)
         target2 = target2 + suffix
-        view = self.Command(target + '.view',plot,self.sfpen + " $SOURCES",
-                            src_suffix=vpsuffix)
-        self.view.append(view)
+        if suffix == vpsuffix:
+            viewer = self.sfpen
+        elif suffix == '.pdf':
+            viewer = WhereIs('acroread') or WhereIs('kpdf') \
+              or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') \
+              or WhereIs('open')
+        elif suffix == '.eps':
+            viewer = WhereIs('evince') or WhereIs('gv') or WhereIs('open')
+        else:
+            viewer = None
+
+        if viewer:
+            view = self.Command(target + '.view',plot,viewer + " $SOURCES",
+                                src_suffix=suffix)
+            self.view.append(view)
 
         prnt = self.Command(target + '.print',plot,
                             self.pspen + " printer=%s $SOURCES" % printer,
@@ -603,8 +663,9 @@ class Project(Environment):
         self.Alias(target + '.lock',locked)
         self.lock.append(locked)
 
-        self.Command(target + '.flip',target2,
-                     '%s $SOURCE %s' % (self.sfpen,locked))
+        if suffix == vpsuffix:
+            self.Command(target + '.flip',target2,
+                        '%s $SOURCE %s' % (self.sfpen,locked))
         test = self.Test('.test_'+target,target2,
                          figdir=self.figs,bindir=self.bindir)
         self.test.append(test)
@@ -634,6 +695,7 @@ class Project(Environment):
         os.system('%s files=n su=%d *%s >> %s' % (sizes,su,suffix,infofile))
         return 0
     def Fetch(self,files,dir,private=None,server=dataserver,top='data',usedatapath=True):
+        global dataserver
         if private:
             self.data.append('PRIVATE')
         elif server=='local':
@@ -641,6 +703,9 @@ class Project(Environment):
         else:
             if not type(files) is list:
                 files = files.split()
+            if server == None:
+                dataserver = get_dataserver()
+                server = dataserver
             for fil in files:
                 if server != dataserver:
                     if top:

@@ -1,5 +1,6 @@
 Salah Al-Hadab <salah.alhadab@gmail.com>
 Tariq Alkhalifah <tariq.alkhalifah@kaust.edu.sa>
+Reem Alomar <reemalomar123@gmail.com>
 Sean Bader <sbader@utexas.edu>
 Vladimir Bashkardin <bash@mail.utexas.edu>
 Filippo Broggini <filippo.broggini@gmail.com>
@@ -44,6 +45,7 @@ Douglas McCowan <dwmccowan@windstream.net>
 Dmitrii Merzlikin <dmitrii.merzlikin@utexas.edu>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 Jorge Monsegny <jmonsegny@hotmail.com>
+Rodolfo Neves <rodolfo_profissional@hotmail.com>
 Francesco Perrone <perfrancesco@gmail.com>
 Jack Poulson <jack.poulson@gmail.com>
 Kelly Regimbal <kregimbal@utexas.edu>
@@ -62,6 +64,7 @@ Eduardo Filpo Silva <effsilva@mines.edu>
 Xiaolei Song <songxl1984@gmail.com>
 Yanadet Sripanich <sripanichy@utexas.edu>
 Junzhe Sun <sunjzhe@gmail.com>
+Tharit Tangkijwanichakul <tharit.tangkij@utexas.edu>
 Ioan Vlad <i.vlad@yahoo.com>
 Hui Wang <hui.wang@kaust.edu.sa>
 Robin Weiss <robin.weiss@uwa.edu.au>

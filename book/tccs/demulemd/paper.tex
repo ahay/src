@@ -1,0 +1,159 @@
+\published{IEEE Geoscience and Remote Sensing Letters, 14, 18-22, (2017)}
+  
+\title{Multiple reflections noise attenuation using adaptive randomized-order empirical mode decomposition}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\author{Wei Chen\footnotemark[1]\footnotemark[2], Jianyong Xie\footnotemark[3]\footnotemark[4], Shaohuan Zu\footnotemark[3]\footnotemark[5], and Shuwei Gan\footnotemark[3], and Yangkang Chen\footnotemark[6]}
+\address{
+\footnotemark[1]
+Key Laboratory of Exploration Technology for Oil and Gas Resources of Ministry of Education, Yangtze University, Wuhan, Hubei, 430100, China \\
+\footnotemark[2]
+Hubei Cooperative Innovation Center of Unconventional Oil and Gas, Wuhan, Hubei 430100, China, Email: chenwei2014@yangtzeu.edu.cn \\
+\footnotemark[3]State Key Laboratory of Petroleum Resources and Prospecting \\
+China University of Petroleum \\
+Fuxue Road 18th\\
+Beijing, China, 102200 \\
+\footnotemark[4]
+Department of Physics, 
+University of Alberta, 
+Edmonton Alberta, T6G 2E1, Canada,
+Emails: xjyshl@sina.com\\
+\footnotemark[5] Modeling and Imaging Laboratory\\
+Earth and Planetary Sciences\\
+University of California\\
+Santa Cruz, CA 95064\\
+zushaohuan@qq.com\\
+\footnotemark[6]
+School of Earth Sciences\\
+Zhejiang University\\
+Hangzhou, Zhejiang Province, China, 310027\\
+chenyk2016@gmail.com\\
+}
+
+\maketitle
+
+\begin{abstract}
+We propose a novel approach for removing multiple reflections noise based on an adaptive randomized-order empirical mode decomposition framework. We first flatten the primary reflections in common midpoint (CMP) gather using the automatically picked NMO velocities that correspond to the primary reflections and then randomly permutate all the traces. Next, we removed the spatially distributed random spikes that correspond to the multiple reflections using the EMD based smoothing approach that is implemented in the $f-x$ domain. The trace randomization approach can make the spatially coherent multiple reflections random along the space direction and can decrease the coherency of near-offset multiple reflections. The EMD based smoothing method is superior to median filter and prediction error filter in that it can help preserve the flattened signals better, without the need of exact flattening, and can preserve the amplitude variation much better. In addition, EMD is a fully adaptive algorithm and the parameterization for EMD based smoothing can be very convenient. 
+\end{abstract}
+%
+%\begin{keywords}
+%Multiple reflections noise attenuation, empirical mode decomposition, randomized-order EMD, adaptive algorithm
+%\end{keywords}
+
+\section{Introduction} 
+Multiples are multiplicative events seen in seismic profiles, which undergoes more than one reflections \cite{wujiandemul2016}. Multiple attenuation is one of the most important steps in seismic data processing, especially for marine data processing. Instead of being incoherent along the spatial direction like random noise \cite{hongbo2015,yangkang2016dsd}, the multiple reflections are coherent and behave nearly the same as the primary reflections, which makes it very difficult to remove them using simple signal processing methods. The surface related multiple elimination (SRME) is one of the most appealing approaches to attenuate the multiple reflections, which includes two main steps: multiple prediction and adaptive subtraction \cite{verschuur1992,shoudong2009}.  The surface related multiple reflections are first predicted based on the SRME theory and then adaptively subtracted from the raw data record. The adaptive subtraction step is intended to adjust for the mismatch of amplitude and phase during the SRME prediction step. There have existed several ways for designing the adaptive subtraction filters. \cite{verschuur1992} proposed  the classic least-squares based method for building the adaptive subtraction filter, which is called the stationary matching filter \cite{shebao2015}. \cite{yanghua20031} proposed an expanded multiple multichannel matching filter, which exploits more local time and phase information to match the multiple reflections. The regularized optimization is also adopted for non-stationary matching filtering \cite{fomel20095,yangkang2015ortho}, which better appeals to the real non-stationary seismic data. Another widely used approach to attenuate multiple reflections is by dip filtering after normal moveout (NMO) of primary reflections. While the primary reflections are flattened after NMO, the multiple reflections cannot be flattened in the NMO corrected gather. Usually a Radon transform is used to remove the unflattened multiple reflections \cite{foster1992,yanghua2003,porsani2011,donno2011,zhuang2015,yarudemul2016}. The dip filtering based approach can not only attenuate the surface-related multiple reflections, but also can attenuate high-order multiple reflections or interbed multiple reflections. When processing the marine field seismic data, the SRME method and the dip filtering based method are usually combined to obtain the optimal suppression of all types of multiple reflections.
+
+Empirical mode decomposition (EMD) \cite{huangemd} can adaptively decompose a non-stationary signal into different stationary components, which are called intrinsic mode functions (IMF). The oscillating frequency of each IMF decreases according to the separation sequence of each IMF.  EMD has found successful applications in seismic data processing \cite{yangkang20141,yangkang2016emd}.  EMD is commonly applied in each frequency slice in the frequency-space domain and the highest wavenumber component is removed.  The only parameter we need to define in such method is the number of dip components. Considering that, in practice, we commonly choose to remove the first EMD component in order to remove the highest oscillating components, the EMD based filtering is non-parametric. Because of the adaptivity and the superior performance of the EMD based smoothing in field seismic data processing, more and more researchers are turning to use this technique as a blind-processing tool in order to deal with the rapidly increasing data size in modern seismic data processing \cite{yangkang2015enhemd}. 
+
+In this letter, we propose a novel EMD based approach called randomized-order EMD to attenuate multiple reflections noise \cite{carvalho1992,fomel20095,weglein2003,weglein2013}. The common midpoint (CMP) gather is first flattened by using the automatically picked velocities \cite{fomel20091} corresponding to the primary reflections. Then, the primary reflections are flattened while the multiple reflections are not. Since the multiple reflections and primary reflections are much similar in the near-offset part, we propose to first randomize the data along the spatial direction and make the unflattened multiple reflections behave like random incoherent noise along the spatial direction. Then the EMD based smoothing algorithm is applied to remove such incoherent noise. After EMD based smoothing, an inverse randomization step is applied, which is followed by the inverse normal moveout. The proposed approach is compared with median filtering and prediction error filtering based approaches. The performance shows that the EMD based smoothing algorithm can have stronger capability in removing the incoherent noise while preserving more primary reflections energy. The randomized-order EMD approach can not only be used in attenuating multiple reflections noise, but also be used in attenuating other types of coherent noise. The proposed method solves two long-standing problems in existing demutiple algorithms. The first one is the difficulty in separating coherent signal and coherent noise in near-offset traces, because they have very close local slopes and curvatures. The second one is the difficulty in selecting optimal parameters when applying a denoising operator. In many traditional denoising algorithms, the parameters are highly dependent on the input data set. The proposed algorithm solves the first problem by shuffling the traces along the spatial direction that help best distinguish between signal and noise. The proposed algorithm solves the second problem by using the EMD based method to adaptively process the data, where we do not need to specify any input parameter regardless of the complexity of input data set.
+
+
+\section{Method}
+The dip filtering based multiple reflections noise attenuation approaches depend on the separation between multiple reflections and primary reflections in the NMO corrected CMP gather, especially in the near offset where the local slopes between primary reflections and multiple reflections are very close. In this letter, we propose two novel strategies to better separate the primary reflections and multiple reflections. The first strategy is based on a trace randomization procedure, where we can turn the unflattened multiple reflections into random noise and maximize the difference between primary reflections and multiple reflections in the near offset. The next strategy is a different spatial smoothing approach. The new smoothing approach is based on the empirical mode decomposition (EMD), where we can attenuate the random noise that corresponds to multiple reflections adaptively, and more importantly we can preserve the useful reflection energy even though the events are not exactly flattened. 
+
+\subsection{Brief review of EMD}
+EMD is an adaptive signal analysis algorithm that decomposes a non-stationary 1D signal into multiple stationary sub-signals:
+\begin{equation}
+\label{eq:emd}
+s(t) = \sum_{n=1}^N c_n(t) + r(t).
+\end{equation}
+where $s(t)$ is a non-stationary 1D signal and $c_n(t)$ is $n$th decomposed stationary signal, which is also called intrinsic mode function (IMF). $r(t)$ is the monotonic residual. $N$ is the number of IMFs.
+
+The decomposition is achieved via a recursive process called sifting algorithm. There are four main steps in the sifting algorithm: firstly, finding the local maxima and minima of the signal, and then fitting those extrema by cubic spline interpolation in order to obtain the upper and lower envelopes; secondly, calculating the mean of upper and lower envelopes and subtracting it from the original signal; thirdly, recursively implementing the first two steps until the remaining signal satisfy the two criteria of IMF: (1) the number of extrema and the number of zero crossing points cannot differ by more than one; (2) the mean value of upper envelope and lower envelope must be zero \cite{huangemd}; fourthly, subtracting the obtained IMF from the original signal and implementing the aforementioned three steps recursively on the remaining signal until the residual $r(t)$ becomes either too small or a monotonic function.
+
+\subsection{EMD based smoothing}
+\cite{yangkang2014emdsum} provided an overall introduction of the applications of EMD in random noise attenuation of seismic data. The best way to utilize EMD to remove spatially incoherent noise is to apply EMD along the space direction in each frequency slice and to remove the first decomposed mode that contains the high-wavenumber noise. 
+
+The methodology can be summarized mathematically as:
+\begin{equation}
+\label{eq:fxemd}
+\hat{s}(m,t) = \mathcal{F}^{-1}\left(\sum_{n=2}^{N}C_n(m,w)\right), 
+\end{equation}
+\begin{equation}
+\label{eq:fxemd2}
+\mathcal{F} d(m,t)  = \sum_{n=1}^{N} C_n(m,w),
+\end{equation}
+where $\hat{s}(m,t)$ and $d(m,t)$ denote the estimated signal and observed noisy signal, respectively. $\mathcal{F}$ and $\mathcal{F}^{-1}$ denote the forward and inverse Fourier transforms along the time axis, respectively. $C_n$ denotes the $n$th EMD decomposed component. $w$ denotes frequency. 
+
+The detailed workflow can be summarized as 
+%The EMD based smoothing method was proposed by \cite{bekara} as:
+\begin{enumerate}
+\item 
+Transform the data from $t-x$ domain to $f-x$ domain.
+\item 
+For each frequency slice, 
+\begin{enumerate}
+\item
+separate real and imaginary parts in the spatial sequence,
+\item
+compute the first IMF, for the real signal and subtract it to obtain the filtered real signal,
+\item
+repeat for the imaginary part,
+\item
+combine to create the filtered complex signal.
+\end{enumerate}
+\item
+Transform data back to the $t-x$ domain.
+\end{enumerate}
+
+Smoothing via EMD has two main advantages. The first is its adaptivity. One does not need to decide any parameter before using the EMD based smoothing approach. As can be seen in equation \ref{eq:fxemd}, the first component after EMD is removed in each frequency slice to attenuate any spatially incoherent noise, which is very convenient to implement and has a robust performance. Another advantage is that EMD based smoothing can preserve the spatial amplitude variation details well since it does not require the exactly horizontal data structure. Smoothing via EMD can get very smooth final results. Unlike some other spatial smoothing operators such as mean filter, median filter or KL filter, the EMD based smoothing can also perform well even when the events have small curvatures. The main difference between the EMD and other decomposition algorithms is that it is empirical and thus adaptive to different input data sets, while other algorithms are based on a carefully designed mathematical model that requires a time-consuming parameter setting process \cite{liuwei2016,liuwei2016vmd,huijian2016}.
+
+
+
+
+
+\subsection{Randomized-order EMD}
+EMD was thought to be useful only in attenuating spatially incoherent noise. However, the multiple reflections noise in seismic data is spatially coherent. Here, we propose a novel randomized-order EMD in order to make EMD capable of attenuating spatially coherent noise. The randomized-order EMD can be summarized in five main procedures. Firstly, each common midpoint (CMP) gather is flattened according to the normal moveout (NMO) velocity of primary reflections. This step will require NMO velocity analysis \cite{yangkang2015vel,shuwei2016vscan}. An automatic velocity picking approach is used to pick the NMO velocities that corresponds to the primary reflections \cite{fomel20091}. After the first step, the primary reflections are flattened while the multiple reflections noise of different orders are not. Secondly, the traces are shuffled randomly in order to make the unflattened multiple reflections noise spatially random. Because the primary reflections have small spatial variations, a random trace randomization along the spatial direction will not change the shape of primary reflections too much but will greatly change the spatial coherency of multiple reflections noise. More specifically, the spatially coherent multiple reflections noise can be transformed into spatially incoherent random noise. Thirdly, EMD based smoothing is applied to the randomized CMP gather to attenuate all spatially incoherent noise. Finally, the inverse trace randomization is implemented to the smoothed CMP gather, which is followed by the inverse NMO.  
+
+In this letter, EMD is utilized to attenuate noise other than random noise. The randomized order EMD is used for attenuating multiple reflections noise. Since the randomized-order EMD is a generally framework, it can also be used to attenuate any types of unwanted spatially coherent noise, such as ground roll noise \cite{yangkang2015orthogroll} and point source diffraction.
+
+Fig. \ref{fig:ncmp,back,nrand-emd-back,rand,dif,emd-dif} shows an example of the randomization process. Fig. \ref{fig:ncmp} is a NMO corrected CMP gather with multiple reflections not flattened. Fig.  \ref{fig:rand} shows the section after random permutation of all the traces along the spatial direction. It is obvious that after random shuffling, the multiple reflections turn into random spikes from the spatial view while the primary reflections are still coherent. The spikes can be removed using any type of coherency-based denoising approach. Fig. \ref{fig:back} shows demultipled data using a common PEF filter \cite{Abma1995}. Fig. \ref{fig:nrand-emd-back} shows the demultipled data using EMD based smoothing. Figs. \ref{fig:dif} and \ref{fig:emd-dif} show the removed multiple reflections using PEF and EMD based approaches, respectively. The performance using the PEF method is not acceptable since there is still some noise left. Since we know the true signal in this example, we can quantitively compare the denoising performance between two methods. We use the signal-to-noise ratio (SNR) defined below to measure the denoising performance \cite{yangkang20142,shuwei20153,weilin2016,shaohuan2016}:
+\begin{equation}
+\label{eq:diff}
+SNR=10\log_{10}\frac{\Arrowvert \mathbf{s} \Arrowvert_2^2}{\Arrowvert \mathbf{s} -\hat{\mathbf{s}}\Arrowvert_2^2},
+\end{equation}
+ where $\mathbf{s}$ and $\hat{\mathbf{s}}$ denote the true and estimated signals, respectively. 
+The calculated SNRs of the original noisy data, denoised data using PEF and denoised data using EMD are 0.168 dB, 8.344 dB, and 9.061 dB, respectively. The SNR comparison confirms the better denoising performance using the EMD method.
+\inputdir{syn}
+\multiplot{6}{ncmp,back,nrand-emd-back,rand,dif,emd-dif}{width=0.45\textwidth}{(a) CMP gather. (b) Demultipled using PEF method. (c) Demultipled using the proposed approach. (d) Trace randomization result of (a). (e) Noise corresponding to (b). (f) Noise corresponding to (c).}
+
+\section{Example}
+First we make a synthetic example, as shown in Fig. \ref{fig:hask,nmo}. Fig. \ref{fig:hask} shows the noisy data. Fig. \ref{fig:nmo} shows the NMO corrected data with multiple reflections not flattened. 
+
+We zoom a part from the data and show detailed comparison of demultiple performance using median filter (MF) based and EMD based approaches (Fig. \ref{fig:h-ncmp,h-rand,h-back,h-dif,h-nrand-emd-back,h-emd-dif}). Fig. \ref{fig:h-ncmp} shows the noisy zoomed CMP gather. Fig. \ref{fig:nmo} shows the data after randomization.  Fig. \ref{fig:h-back} is the demultipled data using MF. Fig. \ref{fig:h-dif} shows its corresponding noise. Fig. \ref{fig:h-nrand-emd-back} shows the demultipled data using EMD and Fig. \ref{fig:h-emd-dif} shows the corresponding noise. It is obvious that the EMD based approach can make the flattened primary reflections more coherent while the MF based approach will cause some abnormal features, since the MF based approach is more based on the spike-like property of noise. While the noise is just incoherent but not spiky, MF based approach cannot obtain a successful performance. 
+
+The second example is a field data example, which is shown in Fig. \ref{fig:cmp0}.
+There exists strong internal multiple reflections in this CMP gather. Figs. \ref{fig:demul-mf} and \ref{fig:demul-emd} show the results using MF and EMD based approaches (here we omit the flattening, randomization, processes and just show the final performances). It is clear that the proposed approach can obtain more coherent primary reflections. The bottom row of Fig. \ref{fig:cmp0,vscan,demul-mf,vscan-mf,demul-emd,vscan-emd} shows the velocity spectra that corresponds to the top row of Fig. \ref{fig:cmp0,vscan,demul-mf,vscan-mf,demul-emd,vscan-emd}. The strong multiple reflections energy can be revealed from Fig. \ref{fig:vscan}. Figs. \ref{fig:vscan-mf} and \ref{fig:vscan-emd} confirm that significant multiple reflections energy has been removed while the EMD based approach obtain an obviously better preservation of the primary energy, since the velocity spectrum corresponding EMD has more focused and stronger velocity peaks. The removed multiple reflections using MF and EMD approaches are shown in Figs. \ref{fig:dif-mf} and \ref{fig:dif-emd}, respectively. 
+\inputdir{haskell}
+\multiplot{2}{hask,nmo}{width=0.45\textwidth}{(a) Original synthetic example. (b) Flattened CMP gather by picking the primary reflections related velocity peaks.}
+\multiplot{6}{h-ncmp,h-rand,h-back,h-dif,h-nrand-emd-back,h-emd-dif}{width=0.3\textwidth}{(a) CMP gather. (b) Trace randomization result.  (c) Demultipled using the PEF method. (d) Noise corresponding to (c). (e) Demultipled using the proposed method.  (f) Noise corresponding to (e).}
+
+\inputdir{haskell}
+\multiplot{6}{h-ncmp,h-rand,h-back,h-dif,h-nrand-emd-back,h-emd-dif}{width=0.3\textwidth}{(a) CMP gather. (b) Trace randomization result.  (c) Demultipled using the PEF method. (d) Noise corresponding to (c). (e) Demultipled using the proposed method.  (f) Noise corresponding to (e).}
+
+
+
+\inputdir{mobil}
+\multiplot{6}{cmp0,vscan,demul-mf,vscan-mf,demul-emd,vscan-emd}{width=0.3\textwidth}{(a) CMP gather. (b) Velocity spectrum of (a). (c) Demultipled using MF. (d) Velocity spectrum of (c). (e) Demultipled using EMD.   (f) Velocity spectrum of (e). }
+
+
+\multiplot{2}{dif-mf,dif-emd}{width=0.45\textwidth}{(a) Removed multiple reflections using MF. (b) Removed multiple reflections using EMD. }
+
+
+
+\section{Conclusions}
+We propose a novel approach to attenuate multiple reflections using randomized-order empirical mode decomposition (EMD). EMD is applied in each frequency slice to obtain different oscillating wavenumber components. The several highest wavenumber components are then removed to remove the unflattened high wavenumber components. In order to make EMD based smoothing approach capable of attenuating spatially coherent noise, we propose to first apply a trace randomization procedure to the NMO-corrected CMP gather to make the unflattened multiple reflections spatially incoherent (like random noise) and thus easier for attenuation. Compared with the other denoising approaches that are based on spatial coherency, the proposed EMD based approach is non-parametric and can obtain a better demultiple performance with a better preservation of the flattened primary reflections. The proposed EMD based approach is also more adaptive than those more advanced EMD based approaches, like EEMD \cite{eemd}, CEEMD \cite{epsceemd}, or ICEEMD \cite{iceemd2014}, which require more input parameters.
+
+\section{Acknowledgments}
+We would like to thank Tingting Liu, Zhaoyu Jin, and Wei Liu for helpful comments and suggestions on the topic of EMD. We are grateful to developers of the Madagascar software package for providing corresponding codes for testing the algorithms and preparing the figures. This research is supported by Sinopec Key Laboratory of Geophysics (Grant No. 33550006-15-FW2099-0017) and Texas Consortium for Computational Seismology (TCCS).
+
+
+\bibliographystyle{seg}
+\bibliography{mulemd}
+
+
+
+
+
+
+

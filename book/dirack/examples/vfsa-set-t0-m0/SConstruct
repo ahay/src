@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# SConstruct  (Madagascar Script)
+#
+# Purpose: Obtain zero offset CRS parameters using VFSA.
+# for a set of (t0,m0) pairs.
+#
+# Site: https://dirack.github.io
+# 
+# Version 1.0
+#
+# Programmer: Rodolfo A. C. Neves (Dirack) 13/08/2021
+#
+# Email: rodolfo_profissional@hotmail.com
+#
+# License: GPL-3.0 <https://www.gnu.org/licenses/gpl-3.0.txt>.
+
+
+# Madagascar library
+from rsf.proj import *
+
+# Python math library
+import math
+
+# Modeling: Gaussian reflector in a velocity linear model
+# velocity increases with depth and a 0.5 velocity gradient
+Flow('gaussianReflector',None,
+     '''
+     math d1=0.01 n1=2001 o1=-5 unit1=km label1=Offset
+     output="4-3*exp(-(x1-5)^2/9)"
+     ''')
+
+# Velocity Model
+Flow('velocityModel','gaussianReflector',
+     '''
+     window min1=0 max1=10 |
+     spray axis=1 n=451 d=0.01 o=0 label=Depth unit=km |
+     math output="1.5+0.5*x1+0.0*x2"
+     ''')
+
+Flow('reflectorDip','gaussianReflector','math output="2/3*(x1-5)*input" ')
+
+# Kirchoff Modeling
+Flow('dataCube','gaussianReflector reflectorDip',
+     '''
+     kirmod cmp=y dip=${SOURCES[1]} 
+     nh=161 dh=0.025 h0=0
+     ns=401 ds=0.025 s0=0
+     freq=10 dt=0.004 nt=1001
+     vel=1.5 gradz=0.5 gradx=0.0 verb=y |
+     put d2=0.0125 label3="CMP" unit3="Km" label2="Offset" unit2="Km" label1=Time unit1=s
+     ''')
+
+om0=3
+dm0=1
+nm0=3
+ot0=1.1
+dt0=0.1
+nt0=2
+ot0=1.1
+v0=1.5
+repeat=4
+
+# Very Fast Simulated Annealling Global Optimization (VFSA)
+Flow('crsParameters','dataCube',
+	'''
+	vfsacrsnh om0=%g dm0=%g nm0=%d ot0=%g dt0=%g nt0=%d v0=%g verb=y repeat=%d
+	''' % (om0,dm0,nm0,ot0,dt0,nt0,v0,repeat))
+
+Result('crsParameters','transp | dots label1=')
+
+End()
+

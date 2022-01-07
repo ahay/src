@@ -1,0 +1,293 @@
+from rsf.proj import *
+import math
+
+Flow('plane',None,'spike n1=200 n2=200 d1=0.01 d2=0.01 o1=0.0 o2=0.0 | put label1=x label2=y unit1=km unit2=km')
+
+Flow('zigzag1','plane',
+	'''
+	mutter x0=1.0 v0=2.0 |
+	mutter x0=1.0 v0=-2.0 t0=1.0 inner=n
+	''')
+
+Flow('zigzag2','zigzag1',
+	'''
+	window n1=160 | pad beg1=40 | put o1=0.0
+	''')
+
+Flow('zigzag0','zigzag1 zigzag2',
+	'''
+	math K=${SOURCES[1]} output="input - K" |
+	mask min=0.01 | dd type=float | 
+	spray axis=1 o=0 d=0.004 n=200 label=time
+	''')
+
+Flow('zigzag-refl0','zigzag0',
+	'''
+	window n1=1 | mask max=0.1 |
+	dd type=float | math output="input*0.5"
+	''')
+
+Flow('zigzag-refl','zigzag0 zigzag-refl0',
+	'''
+	sfwindow n1=1 | math output="input*0.7" |
+	add scale=1,1 ${SOURCES[1]}
+	''')
+
+Flow('zigzag-channel','zigzag-refl','mask min=0.6 | dd type=float')
+Flow('zigzag-reflect','zigzag-channel','math output="1.0-input"')
+
+Flow('overburden','zigzag-reflect','math output="0.0" | spray axis=1 n=50 d=0.01 o=0.0')
+Flow('midlburden','zigzag-reflect','math output="input" | spray axis=1 n=20 d=0.01 o=0.5')
+Flow('downburden','zigzag-reflect','math output="1.0" | spray axis=1 n=30 d=0.01 o=0.7')
+
+Flow('burden','overburden midlburden downburden','''
+                                                 cat axis=1 ${SOURCES[1]} ${SOURCES[2]} |
+												 put label1=Depth unit1=km
+                                                 label2=West-East unit2=km
+                                                 label3=North-South unit3=km
+												 ''')
+
+Result('zigzag-channel','grey scalebar=y title="zigzag-channel"')
+Result('zigzag-reflect','grey scalebar=y title="zigzag-reflect"')
+
+# Kirchhoff modeling
+
+nt=100
+
+Flow('zo30',['zigzag-refl'],
+         '''
+         kirmod3 nt=%g dt=0.010265 vel=2.0
+         s0x=0.0 dsx=0.01 nsx=191 verb=n
+         s0y=0.0 dsy=0.01 nsy=191
+         nhx=1 h0x=0 dhx=51.325
+         nhy=1 h0y=0 dhy=51.325 freq=15
+         '''%nt,split=[2,191],reduce='add')
+
+Flow('zo3',['zo30'],
+         '''
+	 window |
+         put label1=Time unit1=s
+         label2=West-East unit2=km
+         label3=North-South unit3=km |
+	 costaper nw1=20 nw2=10 nw3=10        
+         ''')
+
+Flow('vel','zo3','math output="2.0"')
+
+Flow('mig3','zo3 vel','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=80')
+
+Plot('mig3',
+       '''
+       byte gainpanel=all |
+       grey3 title="Migration" 
+       frame1=50 frame2=81 frame3=81 flat=n
+       screenratio=0.6 point1=0.65 point2=0.65
+       ''')
+
+Flow('mask','zo3',
+	'''
+	math output="1.0" |
+	cut min1=0.05 max1=0.95 min2=0.1 max2=1.8 min3=0.1 max3=1.8 | 
+	smooth rect1=3 repeat=3 | smooth rect2=3 repeat=3 | smooth rect3=3 repeat=3 | math output="1-input" 
+	''')
+
+# Mask to remove edge effects
+
+Plot('mask',
+       '''
+       byte gainpanel=all |
+       grey3 title="Mask" 
+       frame1=50 frame2=81 frame3=81 flat=n
+       screenratio=0.6 point1=0.65 point2=0.65
+       ''')
+
+# Generating data for inverse theory crime
+
+Flow('mig3-fwd0','mig3 vel',
+	'''
+	linmig3 vel=${SOURCES[1]} adj=n antialias=t doomp=y apt=80 
+	''')
+
+Flow('mig3-fwd','mig3-fwd0 mask',
+	'''
+	noise seed=1907 var=250000 |
+	bandpass fhi=28 |
+	math K=${SOURCES[1]} output="input*K"
+	''')
+
+"""
+Result('mig3-fwd',
+       '''
+       byte gainpanel=all |
+       grey3 title="Zero Offset" 
+       frame1=50 frame2=81 frame3=81 flat=n
+       screenratio=0.6 point1=0.65 point2=0.65
+       ''')
+"""
+
+Flow('mig3-mig3-fwd','mig3-fwd vel','linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=80')
+
+"""
+Result('mig3','mig3-mig3-fwd',
+       '''
+       byte gainpanel=all |
+       grey3 title="Migration" 
+       frame1=50 frame2=81 frame3=81 flat=n
+       screenratio=0.6 point1=0.65 point2=0.65
+       ''')
+"""
+# Creating zero dip field
+
+Flow('dip00','zo3','math output="0.0"')
+
+Flow('dip0','dip00 dip00','cat axis=4 ${SOURCES[1]}')
+
+# Spray in x and y
+
+Flow('1-sprx','mig3-fwd dip0 mig3-fwd mask',
+	'''
+	pwspray2 ns2=15 ns3=1 dip=${SOURCES[1]} |
+	stack axis=2 |
+	math K=${SOURCES[2]} M=${SOURCES[3]} output="M*(K-input)"
+	''')
+
+Flow('1-spry','mig3-fwd dip0 mig3-fwd mask',
+	'''
+	pwspray2 ns2=1 ns3=15 dip=${SOURCES[1]} |
+	stack axis=2 |
+	math K=${SOURCES[2]} M=${SOURCES[3]} output="M*(K-input)"
+	''')
+
+Plot('1-sprx',
+       '''
+       byte gainpanel=all |
+       grey3 title="Spray X" 
+       frame1=50 frame2=81 frame3=81 flat=n
+       screenratio=0.6 point1=0.65 point2=0.65
+       ''')
+
+Plot('1-spry',
+       '''
+       byte gainpanel=all |
+       grey3 title="Spray Y" 
+       frame1=50 frame2=81 frame3=81 flat=n
+       screenratio=0.6 point1=0.65 point2=0.65
+       ''')
+
+# Estimating channel orientation
+
+Flow('pwd','mig3-fwd dip0','pwd n4=2 dip=${SOURCES[1]}')
+
+Flow('mpwdx','pwd vel','window n4=1 | linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=80')
+
+Flow('mpwdy','pwd vel','window n4=1 f4=1 | linmig3 vel=${SOURCES[1]} antialias=t doomp=y apt=80')
+
+# Generating a structure tensor in a slice by slice fashion 
+
+Flow('delx','mpwdx','window n1=1 min1=0.5')
+
+Flow('dely','mpwdy','window n1=1 min1=0.5')
+
+Flow('delx-delx','delx','math output="input*input" | smooth rect1=5 rect2=5')
+Flow('dely-dely','dely','math output="input*input" | smooth rect1=5 rect2=5')
+Flow('delx-dely','delx dely','math K=${SOURCES[1]} output="K*input" | smooth rect1=5 rect2=5')
+Flow('dely-delx','dely delx','math K=${SOURCES[1]} output="K*input" | smooth rect1=5 rect2=5')
+
+Flow('eig10 ux0 uy0 eig20 vx0 vy0','delx-delx delx-dely dely-dely',
+	'''
+	pwdtensorh in2=${SOURCES[1]} in3=${SOURCES[2]} eps=0.0
+	ux=${TARGETS[1]} uy=${TARGETS[2]} out2=${TARGETS[3]}
+	vx=${TARGETS[4]} vy=${TARGETS[5]} normalize=n
+	''')
+
+Flow('az0','vx0',
+	'''
+	math output="(180/%g)*asin(input)" |
+	math output="input"'''%(math.pi))
+
+# Spraying to the original dimensions
+
+Flow('vx','vx0','spray axis=1 n=100')
+
+Flow('vy','vy0','spray axis=1 n=100')
+
+Flow('az00','az0','spray axis=1 n=100 | math output="input+90"')
+
+Flow('az','az00 vx vy','anisodiffuse vx=${SOURCES[1]} vy=${SOURCES[2]} eps=15 niter=10 repeat=3 | math output="0.0"')
+
+# Oriented smoothing perpendicular to edges
+
+Flow('azspr','1-sprx 1-spry az','azspr spry=${SOURCES[1]} az=${SOURCES[2]}')
+
+Plot('azspr',
+       '''
+       byte gainpanel=all |
+       grey3 title="AzSPR" 
+       frame1=50 frame2=81 frame3=81 flat=n
+       screenratio=0.6 point1=0.65 point2=0.65
+       ''')
+
+# Data to be fit
+
+Flow('linpi-data','azspr mask','linpi v_1=1.7 v_2=1.9 v_3=2.1 v_4=2.4 fftDo=n | math K=${SOURCES[1]} output="K*input"')
+"""
+Result('linpi-data',
+       '''
+       byte gainpanel=all |
+       grey3 title="Data to be fit" 
+       frame1=50 frame2=81 frame3=75 flat=n
+       screenratio=0.6 point1=0.65 point2=0.65
+       ''')
+"""
+# Inversion
+
+window = 'window max3=1 | costaper nw3=15'
+
+Flow('linpi-dataw','linpi-data',window)
+Flow('dip0w','dip0',window)
+Flow('vxw','vx',window)
+Flow('vyw','vy',window)
+Flow('azw','az',window)
+
+# by default antialiasing is t
+Flow('modl snaps','linpi-data vel dip0 az vx vy',
+	'''
+	lspiazpwdmig3 v_1=1.7 v_2=1.9 v_3=2.1 v_4=2.4 fftDo=n apt=80
+	dothr=y thr=100 mode=hard doanisodiff=y anisoeps=10 niter=5 repeat=1
+	vel=${SOURCES[1]} dip=${SOURCES[2]} az=${SOURCES[3]} vx=${SOURCES[4]} vy=${SOURCES[5]}
+	domod=y dopi=y sm=y initer=5 oniter=5 doomp=y snaps=y dsnaps=1 snapsf=${TARGETS[1]}
+	''')
+
+def cube(title="",extra="",bextra=""):
+	return '''
+	put d1=0.01 d2=0.01 d3=0.01 |
+	byte gainpanel=all %s |
+	grey3 title="%s" wanttitle=n
+	frame1=50 frame2=81 frame3=81 flat=n
+	screenratio=0.4 point1=0.65 point2=0.65
+	d2num=0.5 n2tic=3 o2num=0.0
+	d1num=0.5 n1tic=4 o1num=0.0
+	d3num=0.5 n3tic=4 o3num=0.0
+	labelsz=14.0 crowd2=0.65
+	%s
+	'''%(bextra,title,extra)
+
+Result('zo3','mig3-fwd',cube("Zero Offset"))
+
+# mig3
+
+Result('mig3','mig3-mig3-fwd',cube("Migration"))
+
+# linpi-data
+
+Result('linpi-data',cube("Migration"))
+
+# modl
+
+Result('modl',cube("Inverted",'','pclip=100'))
+
+# burden - input model
+
+Result('burden',cube("burden",'','pclip=100'))
+
+End()

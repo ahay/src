@@ -1,0 +1,113 @@
+from rsf.proj import *
+
+def Grey(data,other):
+	Result(data,'grey title= color=j allpos=y bias=2000 scalebar=y label1=Depth unit1=m label2=Position unit2=m %s '%other)
+def Grey2(data,other):
+	Result(data,'grey title= color=j calebar=y label1=Depth unit1=m label2=Position unit2=m screenratio=0.6 %s '%other)
+
+def Greyv(data,other):
+	Result(data,'transp | grey title= color=j allpos=y bias=2000 scalebar=y label1=Depth unit1=m label2=Position unit2=m screenratio=0.6 %s '%other)
+
+def Grey3(data,other):
+	Result(data,
+       '''
+       byte clip=4500 bias=1000 allpos=y bar=bar.rsf|
+       grey3 flat=n  frame1=50 frame2=300 frame3=5 
+       title=Data point1=0.8 point2=0.8  color=j barlabel=Value scalebar=y screenratio=0.6 %s 
+       label1=Z label2=Y label3=X
+       '''%other)
+
+def Grey3i(data,other):
+	Result(data,
+       '''
+       tpow tpow=1 |byte clip=2 bar=bar.rsf|
+       grey3 flat=n  frame1=50 frame2=300 frame3=5 
+       title=Data point1=0.8 point2=0.8  color=j barlabel=Value scalebar=y screenratio=0.6 %s 
+       label1=Z label2=Y label3=X
+       '''%other)
+
+Fetch(['acc_vp.dat','acc_Qp.dat'],'yangkang')
+ 
+Flow('rik',None,'spike n1=2001 d1=0.001 k1=100 nsp=1 |ricker1 frequency=30')
+
+Flow('vp','acc_vp.dat','bin2rsf bfile=${SOURCES[0]} n1=234 n2=663  d1=10 d2=10 o1=0 o2=0 |transp')
+Greyv('vp','title="Velocity"')
+
+Flow('qp','acc_Qp.dat','bin2rsf bfile=${SOURCES[0]} n1=234 n2=663  d1=10 d2=10 o1=0 o2=0 |transp ')
+Greyv('qp','title="Q" bias=40 allpos=y ')
+
+#takes about 10 minutes
+Flow('img-1 img2-1','vp qp','cqrtm type=1 nz=234 nx=663 dz=10 dx=10 L=20 nt=2001 dt=0.001 f0=20 ds=20 s0=15 ns=30 q=${SOURCES[1]} out2=${TARGETS[1]} >$TARGET && /usr/bin/rm -rf ./output/*.*',stdout=-1)
+
+Flow('img-2 img2-2','vp qp','cqrtm type=2 nz=234 nx=663 dz=10 dx=10 L=20 nt=2001 dt=0.001 f0=20 ds=20 s0=15 ns=30 q=${SOURCES[1]} out2=${TARGETS[1]} >$TARGET && /usr/bin/rm -rf ./output/*.*',stdout=-1)
+
+Flow('img-3 img2-3','vp qp','cqrtm type=3 nz=234 nx=663 dz=10 dx=10 L=20 nt=2001 dt=0.001 f0=20 ds=20 s0=15 ns=30 q=${SOURCES[1]} out2=${TARGETS[1]} >$TARGET && /usr/bin/rm -rf ./output/*.*',stdout=-1)
+
+Flow('img-0 img2-0','vp qp','cqrtm type=0 nz=234 nx=663 dz=10 dx=10 L=20 nt=2001 dt=0.001 f0=20 ds=20 s0=15 ns=30 q=${SOURCES[1]} out2=${TARGETS[1]} >$TARGET && /usr/bin/rm -rf ./output/*.*',stdout=-1)
+
+
+Grey2('img-1','title="Q" allpos=n clip=300000 color=d')
+Grey2('img2-1','title="Q" allpos=n clip=10000 color=d')
+
+Grey2('img-2','title="Q" allpos=n clip=300000 color=d')
+Grey2('img2-2','title="Q" allpos=n clip=10000 color=d')
+
+Grey2('img-3','title="Q" allpos=n clip=300000 color=d')
+Grey2('img2-3','title="Q" allpos=n clip=10000 color=d')
+
+Grey2('img-0','title="Q" allpos=n clip=300000 color=d')
+Grey2('img2-0','title="Q" allpos=n clip=10000 color=d')
+
+
+x=2800
+y=380
+w=1000
+w1=400
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+	' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+	'''
+	dd type=complex form=native |
+	graph min1=0 max1=6630 min2=0 max2=2340 pad=n plotfat=15 plotcol=2 screenratio=0.6
+	wantaxis=n wanttitle=n yreverse=y 
+	''')
+
+x=1000
+y=1400
+w=1200
+w1=400
+
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+        ' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+        '''
+        dd type=complex form=native |
+        graph min1=0 max1=6630 min2=0 max2=2340 pad=n plotfat=15 plotcol=6 screenratio=0.6
+        wantaxis=n wanttitle=n yreverse=y
+        ''')
+
+
+x=2800
+y=1900
+w=2000
+w1=400
+
+Flow('frame3.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+        ' '.join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame3','frame3.asc',
+        '''
+        dd type=complex form=native |
+        graph min1=0 max1=6630 min2=0 max2=2340 pad=n plotfat=15 plotcol=3 screenratio=0.6
+        wantaxis=n wanttitle=n yreverse=y
+        ''')
+
+Result('img0','Fig/img-0.vpl frame1 frame2 frame3','Overlay')
+Result('img1','Fig/img-1.vpl frame1 frame2 frame3','Overlay')
+Result('img2','Fig/img-2.vpl frame1 frame2 frame3','Overlay')
+Result('img3','Fig/img-3.vpl frame1 frame2 frame3','Overlay')
+
+
+
+
+End()

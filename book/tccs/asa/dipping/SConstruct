@@ -1,0 +1,176 @@
+from rsf.proj import *
+
+def Grey(data,other): 
+	Result(data,'real | grey clip=0.7 max1=1.5 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Grey1(data,other): 
+	Result(data,'math output="abs(input)" | real | grey max1=1.5 label2=Trace unit2="" label1=Time unit1="s" wherexlabel=t allpos=y color=j title= scalebar=y unit2= %s clip=0.5 maxval=0.5 minval=-0.5'%other)
+
+def Grey2(data,other): 
+	Result(data,'grey max1=1.5 clip=0.7 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Grey3(data,other): 
+	Result(data,'grey clip=0.7 max1=1.5 label2=Trace color=d unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n   %s'%other)
+
+def Greyzoom(data,other): 
+	Result(data,'put d1=0.004 d2=1 o1=1.5 o2=0 | grey minval=-0.3 maxval=0.3 clip=0.3 label2=Trace color=g unit2="" label1=Time unit1="s" title="" wherexlabel=t scalebar=n  %s'%other)
+
+
+###########################################################################
+## Four dipping events
+###########################################################################
+Flow('complex0',None,
+     '''
+     spike n1=512 n2=160 d2=1 o2=0 label2=Trace unit2=
+     nsp=4 k1=64,100,160,200 p2=1.5,-0.3,0,0.5 mag=1,1,1,1 |
+     ricker1 frequency=20 |
+     noise seed=2008 var=0 | scale axis=2
+     ''')
+Flow('complex','complex0','noise var=0.02 seed=201314')
+Grey2('complex','title="Noisy data"')
+Grey2('complex0','title="Clean data"')
+
+Flow('complex-mf','complex','transp | mean nfw=40 | transp')
+Flow('complex-mf-dif','complex complex-mf','add scale=1,-1 ${SOURCES[1]}')
+# find adaptive PEF
+ns = 4
+
+Flow('complex-shift','complex','shift1 ns=%d' % ns)
+
+Flow('complex-itrace','complex','envelope hilb=y')
+Flow('complex-ctrace','complex complex-itrace','cmplx ${SOURCES[1]}')
+
+Flow('complex-ishift','complex-shift','envelope hilb=y')
+Flow('complex-cshift','complex-shift complex-ishift','cmplx ${SOURCES[1]} | transp plane=23')
+
+Flow('complex-cpef complex-cpre','complex-cshift complex-ctrace',
+     'clpf match=${SOURCES[1]} rect1=20 rect2=40 pred=${TARGETS[1]}')
+Flow('complex-cerr','complex-cpre complex-ctrace','add scale=-1,1 ${SOURCES[1]}')
+
+Result('complex-cerr','real | grey clip=0.9 title="Residual after RNAR" ')
+
+Flow('complex-cpoly','complex-cpef','window n3=1 | math output=-1 | cat axis=3 $SOURCE')
+Flow('complex-croots','complex-cpoly',
+     '''
+     transp plane=23 | transp plane=12 |
+     roots verb=n niter=100 sort=p |
+     transp plane=12 | transp plane=23
+     ''')
+
+# Frequency components
+import math
+wf = 2*math.pi
+dt = 0.004
+
+Flow('complex-group','complex-croots',
+     '''
+     math output="-arg(input)/%g" | real 
+     ''' % (wf*dt))
+
+Flow('complex-freqs','complex-group',
+     '''
+     causint | math output="input*%g/(x1+%g)" 
+     ''' % (dt,dt))
+
+for n in range(ns):
+    group = 'complex-group%d' % n
+    Flow(group,'complex-group','window n3=1 f3=%d' % n)
+    Plot(group,
+    '''
+    grey color=j bias=50 clip=25 scalebar=y title="Instantaneous Frequency %d"
+    barlabel=Frequency barunit=Hz unit2=
+    ''' % (n+1))
+    Result(group,'Overlay')
+    
+    freq = 'complex-freq%d' % n
+    Flow(freq,'complex-freqs','window n3=1 f3=%d' % n)
+    Plot(freq,
+    '''
+    grey color=j bias=50 clip=25 scalebar=y title="Local Frequency %d"
+    barlabel=Frequency barunit=Hz 
+    ''' % (n+1))
+    Result(freq,'Overlay')
+    
+Result('complex-freqs','complex-freq0 complex-freq1','OverUnderIso')
+
+Result('complex-vgroup','complex-group0 complex-group1','OverUnderIso')
+
+# Decomposition
+
+Flow('complex-comps','complex-freqs','rtoc | math output="exp(I*input*x1*%g)" ' % wf)
+
+Flow('complex-cwht complex-cfit','complex-comps complex-ctrace',
+     'clpf match=${SOURCES[1]} rect1=5 rect2=5 pred=${TARGETS[1]}')
+
+Flow('complex-cdif','complex-cfit complex-ctrace','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('complex-csign','complex-comps complex-cwht','math other=${SOURCES[1]} output="input*other" ')
+
+
+for n in range(ns):
+    sign = 'complex-sign%d' % n
+    Flow(sign,'complex-csign','window n3=1 f3=%d' % n)
+    cwht = 'complex-cwht%d' % n
+    Flow(cwht,'complex-cwht','window n3=1 f3=%d' % n)
+
+Grey1('complex-cwht0','title="Component 1"')
+Grey1('complex-cwht1','title="Component 2"')
+Grey1('complex-cwht2','title="Component 3"')
+Grey1('complex-cwht3','title="Component 4"')
+Grey('complex-sign0','title="Component 1"')
+Grey('complex-sign1','title="Component 2"')
+Grey('complex-sign2','title="Component 3"')
+Grey('complex-sign3','title="Component 4"')
+
+Grey('complex-cfit','title="Denoised data (SDRNAR)"')
+Grey('complex-cdif','title="Noise (SDRNAR)"')
+Grey3('complex-mf','title="Denoised data (MF)"')
+Grey3('complex-mf-dif','title="Noise (MF)"')
+
+Flow('complex-fx','complex','fxdecon n2w=160 lenf=10')
+Grey3('complex-fx','title="Denoised data (FX)"')
+
+Flow('complex-fx-dif','complex complex-fx','add scale=1,-1 ${SOURCES[1]}')
+Grey3('complex-fx-dif','title="Noise (FX)"')
+
+
+Flow('complex-svd','complex','svddenoise pclip=0.5')
+Grey3('complex-svd','title="Denoised data (SVD)"')
+
+Flow('complex-svd-dif','complex complex-svd','add scale=1,-1 ${SOURCES[1]}')
+Grey3('complex-svd-dif','title="Noise (SVD)"')
+
+
+## For single trace
+Flow('trace1','complex','window n2=1 f2=100')
+Flow('trace10','complex0','window n2=1 f2=100')
+Flow('trace2','complex-sign0','real | window n2=1 f2=100 ')	#first
+Flow('trace3','complex-sign1','real |window n2=1 f2=100')	#second
+Flow('trace4','complex-sign2','real |window n2=1 f2=100')	#third
+Flow('trace5','complex-sign3','real |window n2=1 f2=100')	#fouth
+Flow('trace6','complex-cdif','real |window n2=1 f2=100')	#noise
+Flow('trace7','complex-cfit','real |window n2=1 f2=100')	#denoised
+
+#Result('trace-disp','trace7 trace6 trace5 trace4 trace3 trace2 trace1','cat axis=2 ${SOURCES[1:7]} | dots clip=1 labels=Denoised:Residual:Fourth:Third:Second:First:Noisy') 
+Result('trace-disp','trace7 trace6 trace5 trace4 trace3 trace2 trace1','cat axis=2 ${SOURCES[1:7]} | dots clip=1 labels=\(g\):\(f\):\(e\):\(d\):\(c\):\(b\):\(a\)') 
+
+## compute SNR
+Flow('complex-diff0','complex complex0','add scale=1,-1 ${SOURCES[1]} ')
+Flow('complex-snr0','complex0 complex-diff0','snr2 noise=${SOURCES[1]}')
+
+Flow('complex-diff1','complex-cfit complex0','real | add scale=1,-1 ${SOURCES[1]} ')
+Flow('complex-snr1','complex0 complex-diff1','snr2 noise=${SOURCES[1]}')
+
+Flow('complex-diff2','complex0 complex-mf','add scale=1,-1 ${SOURCES[1]} ')
+Flow('complex-snr2','complex0 complex-diff2','snr2 noise=${SOURCES[1]}')
+
+Flow('complex-diff3','complex0 complex-fx','add scale=1,-1 ${SOURCES[1]} ')
+Flow('complex-snr3','complex0 complex-diff3','snr2 noise=${SOURCES[1]}')
+
+Flow('trace-dif','trace10 trace7','add scale=1,-1 ${SOURCES[1]} ')
+Flow('trace-snr','trace10 trace-dif','snr2 noise=${SOURCES[1]}')
+
+Flow('trace-dif0','trace10 trace1','add scale=1,-1 ${SOURCES[1]} ')
+Flow('trace-snr0','trace10 trace-dif0','snr2 noise=${SOURCES[1]}')
+
+End()

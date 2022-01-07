@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     bool verb;
 	int nd, n1, niter, liter, iter, id, ib, nb;
     float *n, *d,*dd, *r, *b,*btmp, **A, **Atmp, perc;
-    double eb,en;
+    double eb = 0.0,en = 0.0;
   //  double ad, bd, aa, bb, a0, b0, da, db, ab, det;
     sf_file inp, reg, out;
 
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("perc",&perc)) perc=90.0;
     /* percentage for sharpening */
 
-    sf_sharpen_init(nd,perc);
+    sf_sharpen_init(nd,perc,0.5);
 
     /* initialize model (filter) with zero */
     for (ib=0; ib < nb; ib++) {

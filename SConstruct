@@ -1,6 +1,12 @@
 #EnsureSConsVersion(1,0)
 
 import atexit, os, sys
+
+# to deal with non-ASCII characters
+if sys.version_info.major == 2:
+    reload(sys)  
+    sys.setdefaultencoding('utf8')
+
 sys.path.insert(0,'./framework')
 import bldutil, configure, setenv, rsf.doc
 
@@ -65,7 +71,8 @@ etcdir2 = os.path.join(root, 'etc', 'madagascar')
 
 for sh in ('sh','csh'):
     shrc  = env.Command('env.'+sh,  '', setenv.shell_script,
-                        varlist=('shell'),shell=sh)
+                        varlist=('shell,pypath'),
+                        shell=sh,pypath=os.path.dirname(pkgdir))
     env.Alias('config',shrc)
     env.Install(etcdir,shrc)
 

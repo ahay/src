@@ -147,7 +147,7 @@ static void sf_cramdd_free_work (sf_cramdd_work* work) {
 static void* sf_cramdd_process_requests (void *ud) {
     sf_cramdd_work *data = (sf_cramdd_work*)ud;
     int len = 0, rc, elen;
-    float *traces;
+    float *traces = NULL;
     fd_set fset;
     struct timeval timeout;
 
@@ -277,7 +277,7 @@ int main (int argc, char* argv[]) {
     /* Server network variables */
     char *ip = NULL;
     int rc, on = 1, ijob, bsiz;
-    int listen_sd, new_sd, njobs = 0;
+    int listen_sd = 0, new_sd, njobs = 0;
     struct sockaddr_in serv_addr, client_addr;
     struct timeval timeout;
     fd_set sset;
@@ -415,8 +415,10 @@ int main (int argc, char* argv[]) {
         pid = fork ();
         if (pid < 0)
             sf_error ("fork() failed");
-        if (0 == pid)
-            lockf (tmpfile, F_LOCK, 0);
+        if (0 == pid) {
+            if (lockf (tmpfile, F_LOCK, 0) == -1)
+                abort();
+        }
         else
             sleep (1);
     } else
@@ -433,8 +435,9 @@ int main (int argc, char* argv[]) {
             sf_warning ("Daemon is already running [CPU %d]", icpu);
             close (new_sd);
             close (listen_sd);
-            lockf (tmpfile, F_ULOCK, 1);
-            close (tmpfile);
+            if (lockf (tmpfile, F_ULOCK, 1) == -1)
+                abort();
+            close(tmpfile);
             free (str);
             return 0;
         }
@@ -521,8 +524,9 @@ int main (int argc, char* argv[]) {
     sf_warning ("Log file is %s [CPU %d]", sbuffer, icpu);
 
     /* Release the child before starting the server loop */
-    lockf (tmpfile, F_ULOCK, 1);
-    close (tmpfile);
+    if (lockf (tmpfile, F_ULOCK, 1) == -1)
+        abort();
+    close(tmpfile);
     free (str);
     fclose (stderr);
 

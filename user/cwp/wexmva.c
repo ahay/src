@@ -118,7 +118,7 @@ void wexmva(wexmvaop3d      wexmvaop,
 
     int imx, imy, iz, iw;
     int ompith = 0;
-    sf_complex ws, wr;
+    sf_complex wr;
 
     if(!adj){
         sf_complexread(wexmvaop->pss[0][0],cub->amx.n*cub->amy.n*cub->az.n,pslo);
@@ -127,7 +127,7 @@ void wexmva(wexmvaop3d      wexmvaop,
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static) \
-    private(ompith,iw,ws,wr,iz,imy,imx)       \
+    private(ompith,iw,wr,iz,imy,imx)       \
     shared(adj,wfls,wflr,pswf,prwf,wexmvaop,cub,ssr,lsr,tap,slo,pslo)
 #endif
     /* loop over frequencies w */
@@ -151,7 +151,6 @@ void wexmva(wexmvaop3d      wexmvaop,
         }
 
         if (adj) { /* adjoint: perturbed WFs -> slowness */
-            ws = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
             wr = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); /*      causal */
 
             for (iz=0; iz<=cub->az.n-1; iz++) {
@@ -204,7 +203,6 @@ void wexmva(wexmvaop3d      wexmvaop,
             } /* loop over z */
         }
         else {   /* forward: slowness -> perturbed WFs */
-            ws = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); /*      causal */
             wr = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
 //
             for (iz=0; iz<=cub->az.n-1; iz++) {

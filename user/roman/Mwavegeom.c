@@ -64,13 +64,11 @@ int main(int argc, char ** argv) {
     int imf;         /* movie frame counter */
     int isx;         /* source location, in units of dx */
     int nxz;         /* number of spatial grid points */
-    int nz;          /* local number of gridpoints */
     int ntr;         /* number of traces */
     int nsam;        /* number of trace samples */
     int nsrc;        /* number of shots */
     float rz,rx,s;   /* precomputed coefficients */
     float vmax,vmin; /* max, min velocity values */
-    float two;       /* two */
     int k_scale, num_cfl;
 
     /* geomB * arrB = (geomB*)0; */
@@ -119,8 +117,6 @@ int main(int argc, char ** argv) {
     rz=wi.dt*wi.dt/(wi.dz*wi.dz);
     rx=wi.dt*wi.dt/(wi.dx*wi.dx);
     s =2.0*(rz+rx);
-    two=2.0;
-    nz=wi.nz;
     
     /* shot loop */
     isrc=0;

@@ -28,8 +28,8 @@
 #include <math.h>
 #include "match1d.h"
 
-#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
-#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
+#define MY_MIN(X,Y) ((X) < (Y) ? (X) : (Y))
+#define MY_MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
 
 int main (int argc, char *argv[])

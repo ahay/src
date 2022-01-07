@@ -22,7 +22,6 @@ avvvdwe3d
 bvvvdwe2d
 bvvvdwe3d
 '''
-# isoela2d bvvvdweps2d
 
 # python programs
 targets.py = '''

@@ -1,4 +1,4 @@
-/* Nonstationary Prony by chain of PEFs */
+/* Multiple dip estimation by chain of PWDs */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,9 +24,9 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, drift;
-    int i, ic, m1, m2, n, nc, n2, iter, niter, liter, rect1, rect2, it, nt, nw;
-    float *xn, *x1, *y1, *dx, *r, *p, lam;
+    bool verb, drift, proj;
+    int i, ic, m1, m2, n, nc, n2, iter, niter, liter, rect1, rect2, it, nt, nw, nr, k;
+    float *xn, *x1, *y1, *dx, *r, lam, scale, step, rsum, rsum2, *x0;
     sf_file inp, out, dip, dipin;
 
     sf_init(argc,argv);
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
     xn = sf_floatalloc(n2);
     dx = sf_floatalloc(n2);
-    p  = sf_floatalloc(n2);
+    x0 = sf_floatalloc(n2);
     
     x1 = sf_floatalloc(n);
     y1 = sf_floatalloc(n);
@@ -65,8 +65,13 @@ int main(int argc, char* argv[])
     if (!sf_getbool("drift",&drift)) drift=false;
     /* if shift filter */
 
-    pwdchain_init(m1,m2,nw,nc,drift,x1,xn,xn+n*nc);
-    r = sf_floatalloc(n*nc);
+    if (!sf_getbool("vp",&proj)) proj=false;
+    /* if use variable projection */
+
+    nr = n*nc;
+    
+    pwdchain_init(m1,m2,nw,nc,drift,x1,xn,xn+nr);
+    r = sf_floatalloc(nr);
 
     if (!sf_getbool("verb",&verb)) verb=(bool) (1 == nt);
     /* verbosity flag */
@@ -87,14 +92,22 @@ int main(int argc, char* argv[])
     for (it=0; it < nt; it++) {
 	sf_warning("slice %d of %d;",it+1,nt);
 	sf_floatread(x1,n,inp);
+
+	/* rescale */
+	scale = 0.0f;
+	for (i=0; i < n; i++) {
+	    scale += x1[i]*x1[i];
+	}
+	scale = sqrtf(n/scale);
 	
 	/* initialize */
 	for (i=0; i < n; i++) {
 	    y1[i] = 0.0f;
+	    x1[i] *= scale;
 	}
 	
 	if (NULL != dipin) {
-	    sf_floatread(xn,n*nc,dipin);
+	    sf_floatread(xn,nr,dipin);
 	} else {
 	    if (1==nc) {
 		for (i=0; i < n; i++) {
@@ -117,28 +130,63 @@ int main(int argc, char* argv[])
 	    }
 	}
 	
-	sf_conjgrad_init(n2, n2, n*nc, n*nc, lam, 1.e-6, verb, false);
+	sf_conjgrad_init(n2, n2, nr, nr, lam, 1.e-6, verb, false);
 
 	for (iter=0; iter < niter; iter++) {
 	    pwdchain_apply(y1,r);
-	    
-	    for (i=0; i < n*nc; i++) {
+	    rsum = 0.0f;
+	    for (i=0; i < nr; i++) {
 		r[i] = -r[i];
-	    }
-
-	    sf_conjgrad(NULL, pwdchain_lop, smooth1_lop,p,dx,r,liter);
+		rsum += r[i]*r[i];
+	    } 
+	    
+	    sf_conjgrad(NULL, pwdchain_lop, smooth1_lop,x0,dx,r,liter);
 
 	    for (i=0; i < n2; i++) {
-		xn[i] += dx[i];
+		x0[i] = xn[i];
+	    }
+	    
+            /* line search */
+	    step = 1.0f;
+	    for (k=0; k < 8; k++) {
+		for (i=0; i < n2; i++) {
+		    xn[i] = x0[i] + step*dx[i];
+		}
+		
+		pwdchain_apply(y1,r);
+
+		rsum2 = 0.0f;
+		for (i=0; i < nr; i++) {
+		    r[i] = -r[i];
+		    rsum2 += r[i]*r[i];
+		} 
+
+		if (rsum2 < rsum) break;
+
+		step *= 0.5;
+	    }
+
+	    /* variable projection */
+	    if (nc > 1 && proj) {
+		sf_solver(pwdchainx_lop,sf_cgstep,n2-nr,nr,dx+nr,r,liter,"verb",true,"end");
+		sf_cgstep_close();
+		
+		for (i=nr; i < n2; i++) {
+		    xn[i] += dx[i];
+		}
 	    }
 	}
 
 	sf_cconjgrad_close();
 
-	sf_floatwrite(xn,n*nc,dip);
+	sf_floatwrite(xn,nr,dip);
 
 	pwdchain(y1);
 
+	for (i=0; i < n; i++) {
+	    y1[i] /= scale;
+	}
+	
 	sf_floatwrite(y1,n,out);
     }
     sf_warning(".");

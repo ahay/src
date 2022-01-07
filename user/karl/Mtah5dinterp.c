@@ -89,8 +89,6 @@ int main(int argc, char* argv[])
   char** list_of_keys;
   int *indx_of_keys;
   int indx_sx, indx_sy, indx_gx, indx_gy;
-  int indx_iline, indx_xline, indx_offset;
-  int indx_cdpx, indx_cdpy;
   int superbin_maxfold;
   float** superbin_traces;
   float** superbin_headers;
@@ -198,11 +196,6 @@ int main(int argc, char* argv[])
   indx_sy=segykey("sy");
   indx_gx=segykey("gx");
   indx_gy=segykey("gy");
-  indx_iline=segykey("iline");
-  indx_xline=segykey("xline");
-  indx_offset=segykey("offset");
-  indx_cdpx=segykey("cdpx");
-  indx_cdpy=segykey("cdpx");
 
   /* allocate processing arrays */
   superbin_maxfold=1000;

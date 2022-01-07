@@ -1,0 +1,351 @@
+from __future__ import division
+from math import pi
+from rsf.proj import *
+import string
+
+csv = 'qsiwell2.csv'
+
+Fetch(csv,'1504_Seismic_petrophysics_1',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials-2015/master')
+
+Flow('logs',csv,'csv2rsf header=y')
+
+# Examine with < well.rsf sfheaderattr segy=n
+
+# Limit depth
+
+Flow('depthmask','logs','window n1=1 | mask min=2150 max=2200')
+#Flow('logs','well depthmask','headerwindow mask=${SOURCES[1]}')
+
+# Calculate litho-facies log
+
+for case in ('VSH','RHO','VP','VS','SW','PHI','IP','VPVS','DEPTH'):
+    Flow(case,'logs','headermath output=%s segy=n' % case)
+
+Flow('bsmask1','VSH','mask max=0.2')
+Flow('bsmask2','SW', 'mask min=0.9')
+Flow('brine-sand-mask','bsmask1 bsmask2','mul ${SOURCES[1]}')
+
+Flow('oil-sand-mask','bsmask2 bsmask1','add add=-1 scale=-1 | mul ${SOURCES[1]}')
+
+Flow('shale-mask','brine-sand-mask oil-sand-mask','add ${SOURCES[1]} | add add=-1 scale=-1')
+
+hists = []
+for case in ('brine-sand','oil-sand','shale'):
+    Flow(case,['logs',case+'-mask'],'headerwindow mask=${SOURCES[1]}')
+    hist = case+'-hist'
+    Plot(hist,case,
+         '''
+         window n1=1 f1=10 | histogram n1=51 o1=4200 d1=80 | dd type=float | 
+         graph plotcol=1 title="%s" label1=IP unit1="m/s*g/cc" label2=Occurence unit2=
+         ''' % ' '.join(map(str.capitalize,case.split('-'))))
+    hists.append(hist)
+
+Result('histogram',hists,'SideBySideIso')
+
+for case in ('VSH','SW','PHI','IP','VPVS'):
+    graph = ''
+    if case in ('VSH','SW','PHI'):
+        graph += ' min2=-0.1 max2=1.1 label2=Vcl/phi/Sw unit2='
+    if case == 'VSH':
+        graph += ' plotcol=4'
+    if case == 'SW':
+        graph += ' plotcol=1 wantaxis=n wanttitle=n'
+    if case == 'PHI':
+        graph += ' plotcol=5 wantaxis=n wanttitle=n' 
+    if case == 'IP':
+        graph += 'label2=Ip unit2="m/s*g/cc" min2=2500 max2=9500'
+    if case == 'VPVS':
+        graph += 'label2=Vp/Vs unit2= min2=1.0 max2=3.0'
+    Plot(case+'1',['DEPTH',case],
+         '''
+         cmplx ${SOURCES[1]} | window | 
+         graph min1=2150 max1=2200 transp=y yreverse=y label1=Depth unit1= wanttitle=n plotcol=7 labelsz=12 
+         ''' + graph)
+
+for case in ('ipfrmb','vpvsfrmb'):
+    graph = ''
+    if case in ('VSH','SW','PHI'):
+        graph += ' min2=-0.1 max2=1.1 label2=Vcl/phi/Sw unit2='
+    if case == 'VSH':
+        graph += ' plotcol=4'
+    if case == 'SW':
+        graph += ' plotcol=1 wantaxis=n wanttitle=n'
+    if case == 'PHI':
+        graph += ' plotcol=5 wantaxis=n wanttitle=n'
+    if case == 'ipfrmb':
+        graph += 'label2=Ip unit2="m/s*g/cc" min2=2500 wantaxis=y max2=9500'
+    if case == 'vpvsfrmb':
+        graph += 'min2=1.0 max2=3.0 label2=Vp/Vs unit2= wantaxis=y'
+    Plot(case,['DEPTH',case,'lfc-depth-brine','lfc.csv'],
+         '''
+         cmplx ${SOURCES[1]} | window |
+         graph min1=2150 max1=2200 transp=y yreverse=y depth=${SOURCES[2]} color=${SOURCES[3]} label1=Depth unit1= wanttitle=n plotcol=7 labelsz=12 
+         ''' + graph)
+
+for case in ('ipfrmg','vpvsfrmg'):
+    graph = '' 
+    if case in ('VSH','SW','PHI'):
+        graph += ' min2=-0.1 max2=1.1 label2=Vcl/phi/Sw unit2='
+    if case == 'VSH':
+        graph += ' plotcol=4'
+    if case == 'SW':
+        graph += ' plotcol=1 wantaxis=n wanttitle=n'
+    if case == 'PHI':
+        graph += ' plotcol=5 wantaxis=n wanttitle=n'
+    if case == 'ipfrmg':
+        graph += 'label2=Ip unit2="m/s*g/cc" min2=2500 max2=9500 wantaxis=y'
+    if case == 'vpvsfrmg':
+        graph += 'min2=1.0 max2=3.0 label2=Vp/Vs unit2= wantaxis=y'
+    Plot(case,['DEPTH',case,'lfc-depth-gas','lfc.csv'],
+         '''
+         cmplx ${SOURCES[1]} | window |
+         graph min1=2150 max1=2200 transp=y yreverse=y depth=${SOURCES[2]} color=${SOURCES[3]} label1=Depth unit1= wanttitle=n plotcol=7 labelsz=12
+         ''' + graph)
+
+Plot('three','VSH1 SW1 PHI1','Overlay')
+
+# Litho-Facies Log
+
+Flow('LFC','brine-sand-mask oil-sand-mask shale-mask',
+     'add scale=1,2,4 ${SOURCES[1:3]} | dd type=float | window')
+
+Flow('LFCbrine','brine-or-oil-sand-mask shale-mask',
+     'add scale=1,4 ${SOURCES[1]} | dd type=float | window')
+
+Flow('LFCgas','brine-or-oil-sand-mask shale-mask',
+     'add scale=3,4 ${SOURCES[1]} | dd type=float | window')
+
+Flow('LFCoil','brine-or-oil-sand-mask shale-mask',
+     'add scale=2,4 ${SOURCES[1]} | dd type=float | window')
+
+# Make a special colormap
+
+blue =   [0,0,1]
+green =  [0,1,0]
+red =    [1,0,0]
+brown =  [0.6,0.4,0.2]
+
+Flow('lfc.asc',None,
+     '''
+     echo %s n1=3 n2=256 in=$TARGET data_format=ascii_float
+     ''' % ' '.join(map(str,blue*64+green*64+red*64+brown*64)))
+Flow('lfc.csv','lfc.asc','disfil col=3 format="%g," number=n | sed s/,$//')
+
+Flow('LFC-mask','LFC depthmask','transp | headerwindow mask=${SOURCES[1]} | transp')
+
+Plot('LFC','LFC-mask lfc.csv',
+     '''
+     grey color=${SOURCES[1]} pclip=100 allpos=y bias=1 
+     wantaxis=n title=LFC wherexlabel=b titlesz=15 
+     ''')
+
+Result('four','three IP1 VPVS1 LFC','SideBySideAniso')
+
+Flow('lfc-depth','LFC','byte pclip=100 allpos=y bias=1')
+
+Flow('lfc-depth-brine','LFCbrine','byte pclip=100 allpos=y bias=1')
+
+Flow('lfc-depth-gas','LFCgas','byte pclip=100 allpos=y bias=1')
+
+Flow('lfc-depth-oil','LFCoil','byte pclip=100 allpos=y bias=1')
+
+Result('crossplot','IP VPVS lfc-depth lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y 
+       label1=Ip unit1="m/s*g/cc" label2=Vp/Vs unit2= wanttitle=n screenratio=1
+       ''')
+
+# Gassmann
+
+rho_qz=2.65;  k_qz=37;  mu_qz=44    # mineral properties, quartz (i.e., sands)
+rho_sh=2.81;  k_sh=15;  mu_sh=5     # mineral properties, clay (i.e., shales)
+rho_b=1.09;   k_b=2.8               # fluid properties, brine
+rho_o=0.78;   k_o=0.94              # fluid properties, oil
+rho_g=0.25;   k_g=0.06              # fluid properties, gas
+
+Flow('sand','VSH PHI','math x=${SOURCES[0]} y=${SOURCES[1]} output="1-x-y"')
+Flow('shaleN','VSH sand','math x=${SOURCES[0]} y=${SOURCES[1]} output="x/(x+y)"')
+Flow('sandN','VSH sand','math x=${SOURCES[0]} y=${SOURCES[1]} output="y/(x+y)"')
+
+# Voigt-Reuss-Hill averaging
+
+# mineral mixture bulk and shear moduli, k0 and mu0
+Flow('k_u','shaleN sandN','math x=${SOURCES[0]} y=${SOURCES[1]} output="x*%g+y*%g"'%(k_sh,k_qz))
+Flow('k_l','shaleN sandN','math x=${SOURCES[0]} y=${SOURCES[1]} output="1/(x/%g+y/%g)"'%(k_sh,k_qz))
+Flow('mu_u','shaleN sandN','math x=${SOURCES[0]} y=${SOURCES[1]} output="x*%g+y*%g"'%(mu_sh,mu_qz))
+Flow('mu_l','shaleN sandN','math x=${SOURCES[0]} y=${SOURCES[1]} output="1/(x/%g+y/%g)"'%(mu_sh,mu_qz))
+Flow('k0','k_u k_l','math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2"')
+Flow('mu0','mu_u mu_l','math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2"')
+
+# fluid mixture bulk modulus, using the same vrh function but capturing the Reuss average (second output)
+
+Flow('hc','SW','math output="1-input"')
+Flow('k_fl','SW hc','math x=${SOURCES[0]} y=${SOURCES[1]} output="1/(x/%g+y/%g)"'%(k_b,k_o))
+
+# fluid mixture density
+
+Flow('rho_fl','SW hc','math x=${SOURCES[0]} y=${SOURCES[1]} output="x*%g+y*%g"'%(rho_b,rho_o))
+
+# FRM
+
+Flow('mu_1b','RHO VS','math x=${SOURCES[0]} y=${SOURCES[1]} output="x*(y/1000)^2"')
+Flow('k_s1b','RHO VP mu_1b','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="x*(y/1000)^2-(4/3)*z"')
+Flow('kdryb','k_s1b PHI k0 k_fl','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} t=${SOURCES[3]} output="(x * ((y*z)/t+1-y)-z) / ((y*z)/t+(x/z)-1-y)"')
+Flow('k_s2b','kdryb k0 PHI','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="x + (1- (x/y))^2 / ( (z/%g) + ((1-z)/y) - (x/y^2) )"'%(k_b))
+Flow('rho2b','RHO PHI rho_fl','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="x-y * z+y * %g"'%(rho_b))
+Flow('vp2b','k_s2b mu_1b rho2b','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="1000*sqrt(((x+(4/3)*y))/z)"')
+Flow('vs2b','mu_1b rho2b','math x=${SOURCES[0]} y=${SOURCES[1]} output="1000*sqrt((x/y))"')
+
+Flow('k_s2o','kdryb k0 PHI','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="x + (1- (x/y))^2 / ( (z/%g) + ((1-z)/y) - (x/y^2) )"'%(k_o))
+Flow('rho2o','RHO PHI rho_fl','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="x-y * z+y * %g"'%(rho_o))
+Flow('vp2o','k_s2o mu_1b rho2o','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="1000*sqrt(((x+(4/3)*y))/z)"')
+Flow('vs2o','mu_1b rho2o','math x=${SOURCES[0]} y=${SOURCES[1]} output="1000*sqrt((x/y))"')
+
+Flow('k_s2g','kdryb k0 PHI','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="x + (1- (x/y))^2 / ( (z/%g) + ((1-z)/y) - (x/y^2) )"'%(k_g))
+Flow('rho2g','RHO PHI rho_fl','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="x-y * z+y * %g"'%(rho_g))
+Flow('vp2g','k_s2g mu_1b rho2o','math x=${SOURCES[0]} y=${SOURCES[1]} z=${SOURCES[2]} output="1000*sqrt(((x+(4/3)*y))/z)"')
+Flow('vs2g','mu_1b rho2g','math x=${SOURCES[0]} y=${SOURCES[1]} output="1000*sqrt((x/y))"')
+
+Flow('brine-or-oil-sand-mask','brine-sand-mask oil-sand-mask','add ${SOURCES[1]} | mask min=1')
+Flow('brine-or-oil-sand-mask-neg','brine-or-oil-sand-mask','dd type=float | math output="-input+1" | dd type=int')
+
+Flow('lfc-depthfrmb','lfc-depth-brine brine-or-oil-sand-mask','transp | headerwindow mask=${SOURCES[1]} | transp')
+
+Flow('lfc-depthfrmg','lfc-depth-gas brine-or-oil-sand-mask','transp | headerwindow mask=${SOURCES[1]} | transp')
+
+Flow('DEPTHfrmb','DEPTH brine-or-oil-sand-mask','headerwindow mask=${SOURCES[1]}')
+
+# Fluid-replaced log versions
+
+Flow('vpfrmb1','vp2b brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('vpfrmb2','VP brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('vpfrmb','vpfrmb1 vpfrmb2','add ${SOURCES[1]}') 
+
+Flow('rhofrmb1','rho2b brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('rhofrmb2','RHO brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('rhofrmb','rhofrmb1 rhofrmb2','add ${SOURCES[1]}') 
+
+Flow('vsfrmb1','vs2b brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('vsfrmb2','VS brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('vsfrmb','vsfrmb1 vsfrmb2','add ${SOURCES[1]}')
+
+Flow('ipfrmb','vpfrmb rhofrmb','mul ${SOURCES[1]}')
+Flow('isfrmb','vsfrmb rhofrmb','mul ${SOURCES[1]}')
+Flow('vpvsfrmb','vpfrmb vsfrmb','math x=${SOURCES[0]} y=${SOURCES[1]} output="x/y"')
+
+Flow('vpfrmo1','vp2o brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('vpfrmo2','VP brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('vpfrmo','vpfrmo1 vpfrmo2','add ${SOURCES[1]}') 
+
+Flow('rhofrmo1','rho2o brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('rhofrmo2','RHO brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('rhofrmo','rhofrmo1 rhofrmo2','add ${SOURCES[1]}')
+
+Flow('vsfrmo1','vs2o brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('vsfrmo2','VS brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('vsfrmo','vsfrmo1 vsfrmo2','add ${SOURCES[1]}')
+
+Flow('ipfrmo','vpfrmo rhofrmo','mul ${SOURCES[1]}')
+Flow('isfrmo','vsfrmo rhofrmo','mul ${SOURCES[1]}')
+Flow('vpvsfrmo','vpfrmo vsfrmo','math x=${SOURCES[0]} y=${SOURCES[1]} output="x/y"')
+
+Flow('vpfrmg1','vp2g brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('vpfrmg2','VP brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('vpfrmg','vpfrmg1 vpfrmg2','add ${SOURCES[1]}') 
+
+Flow('rhofrmg1','rho2g brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('rhofrmg2','RHO brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('rhofrmg','rhofrmg1 rhofrmg2','add ${SOURCES[1]}')
+
+Flow('vsfrmg1','vs2g brine-or-oil-sand-mask','headercut mask=${SOURCES[1]}')
+Flow('vsfrmg2','VS brine-or-oil-sand-mask-neg','headercut mask=${SOURCES[1]}')
+Flow('vsfrmg','vsfrmg1 vsfrmg2','add ${SOURCES[1]}')
+
+Flow('ipfrmg','vpfrmg rhofrmg','mul ${SOURCES[1]}')
+Flow('isfrmg','vsfrmg rhofrmg','mul ${SOURCES[1]}')
+Flow('vpvsfrmg','vpfrmg vsfrmg','math x=${SOURCES[0]} y=${SOURCES[1]} output="x/y"')
+
+Plot('IPall','IP1 ipfrmg ipfrmb','Overlay')
+Plot('VPVSall','VPVS1 vpvsfrmg vpvsfrmb','Overlay')
+
+Result('fourall','three IPall VPVSall LFC','SideBySideAniso')
+
+# Crossplots
+
+Plot('crossplotori','IP VPVS lfc-depth lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph wheretitle=t wherexaxis=b symbol=* depth=${SOURCES[2]} title="original data" color=${SOURCES[3]} grid=y symbolsz=10
+       label1=Ip unit1="m/s*g/cc" label2=Vp/Vs unit2= min1=3000 max1=9000 min2=1.5 max2=3.0
+       ''')
+
+Plot('crossplotbrine','ipfrmb vpvsfrmb lfc-depth-brine lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} wheretitle=t wherexaxis=b color=${SOURCES[3]} grid=y title="FRM to brine" symbolsz=10
+       label1=Ip unit1="m/s*g/cc" label2=Vp/Vs unit2= min1=3000 max1=9000 min2=1.5 max2=3.0
+       ''')
+
+Plot('crossplotoil','ipfrmo vpvsfrmo lfc-depth-oil lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y wheretitle=t wherexaxis=b title="FRM to oil" symbolsz=10
+       label1=Ip unit1="m/s*g/cc" label2=Vp/Vs unit2= min1=3000 max1=9000 min2=1.5 max2=3.0
+       ''')
+
+Plot('crossplotgas','ipfrmg vpvsfrmg lfc-depth-gas lfc.csv',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* depth=${SOURCES[2]} color=${SOURCES[3]} grid=y title="FRM to gas" wheretitle=t wherexaxis=b symbolsz=10
+       label1=Ip unit1="m/s*g/cc" label2=Vp/Vs unit2= min1=3000 max1=9000 min2=1.5 max2=3.0
+       ''')
+
+Plot('crossplots-1','crossplotori crossplotbrine','SideBySideAniso')
+Plot('crossplots-2','crossplotoil crossplotgas','SideBySideAniso')
+
+Result('crossplots','crossplots-1 crossplots-2','OverUnderAniso')
+
+# Statistical analysis
+
+Flow('LFCtransp','LFC','transp')
+Flow('LFCbrinetransp','LFCbrine','transp')
+Flow('LFCoiltransp','LFCoil','transp')
+Flow('LFCgastransp','LFCgas','transp')
+
+# Megalog
+Flow('megalog1','LFCtransp IP VPVS','cat axis=1 ${SOURCES[0:2]} | transp')
+Flow('megalogbrine','LFCbrinetransp ipfrmb vpvsfrmb','cat axis=1 ${SOURCES[0:2]} | transp')
+Flow('megalogoil','LFCoiltransp ipfrmo vpvsfrmo','cat axis=1 ${SOURCES[0:2]} | transp')
+Flow('megaloggas','LFCgastransp ipfrmg vpvsfrmg','cat axis=1 ${SOURCES[0:2]} | transp')
+
+# Stats (LFC=2)
+
+Flow('LFC2','LFCoil','transp | mask min=2 max=2')
+Flow('LFC2IP','ipfrmo LFC2','headerwindow mask=${SOURCES[1]} | window n2=1013')
+Flow('LFC2VPVS','vpvsfrmo LFC2','headercut mask=${SOURCES[1]} | window n2=1013')
+
+Plot('crossplotoil-2','LFC2IP LFC2VPVS',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* wheretitle=t wanttitle=y wherexaxis=b title="FRM to oil" symbolsz=10
+       label1=Ip unit1="m/s*g/cc" label2=Vp/Vs unit2= min1=3000 max1=8500 min2=1.5 max2=3.0
+       ''')
+Plot('crossplotoil-3','LFC2VPVS LFC2IP',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph symbol=* wanttitle=y wheretitle=t wherexaxis=b title="FRM to oil" symbolsz=10
+       label2=Ip unit2="m/s*g/cc" label1=Vp/Vs unit1= min2=3000 max2=8500 min1=1.5 max1=3.0
+       ''')
+Plot('LFC2VPVShist','LFC2VPVS','histogram n1=61 o1=1.5 d1=0.05 | dd type=float | scale axis=1 | bargraph title="VPVS Normal distribution" min1=1.5 max1=3.0 label1="VP/VS" unit1=')
+Plot('LFC2IPhist','LFC2IP','histogram n1=61 o1=3500 d1=500 | dd type=float | scale axis=1 | bargraph title="Ip Normal distribution" min1=3000 max1=8500 label1="Ip" unit1="m/s*g/cc"')
+
+Plot('stat-1','LFC2IPhist crossplotoil-3','SideBySideAniso')
+Plot('stat-2','crossplotoil-2 LFC2VPVShist','SideBySideAniso')
+Result('stat','stat-1 stat-2','OverUnderAniso')
+
+# Create synthetic dataset
+
+End()

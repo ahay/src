@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
 
 	    /* parent waits */
 	    for (i=0; i < 3; i++) { 
-		if (0 == pid[i]) sf_error("A child alive");
+		if (0 == pid[i]) sf_error("A child alive %d of 3",i);
 		waitpid(pid[i],&status,0);
 	    }
 	}
@@ -494,10 +494,10 @@ int main(int argc, char* argv[])
 	
         /* parent waits */
 	for (i=0; i < 6; i++) { 
-	    if (0 == pid[i]) sf_error("A child alive");
+	    if (0 == pid[i]) sf_error("A child alive 6");
 	    waitpid(pid[i],&status,0);
 	}
-    }
+    } 
 	
     /* write x to out */  
     out = sf_output("out");

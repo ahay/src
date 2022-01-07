@@ -146,7 +146,7 @@ int main(int argc, char* argv[])
 		tips[ig][1][0]=i;
 		tips[ig][1][1]=sxy[ig][i];
 
-		width[ig]=fabs(tips[ig][1][1]-tips[ig][0][1])+30;
+		width[ig]=abs(tips[ig][1][1]-tips[ig][0][1])+30;
 		nn2+=width[ig];
 
 		for(i1=0; i1<tips[ig][0][0]; i1++) sxy[ig][i1]=tips[ig][0][1];
@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 		
 		// inverse interpolation
 		n22=nl[ig];
-		sf_stretch4_define(mo, ff[ig]);
+		sf_stretch4_define(mo, ff[ig], false);
 		sf_stretch4_invert(false, mo, pp[n22], trace);
 		
 		//for (i1=n1-5; i1<n1; i1++) pp[n22][i1]=pp[n22][n1-6]; // stabilization

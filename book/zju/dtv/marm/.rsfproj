@@ -1,0 +1,3 @@
+uses=['sfbin2rsf', 'sftransp', 'sfgrey', 'sfwindow', 'sfspray', 'sflaplac', 'sfcut', 'sfdip', 'sfmath', 'sfclip', 'sfcat', 'sfgraph']
+data=['data/yangkang/vel.bin', 'data/yangkang/vinit.bin']
+size=  188426496

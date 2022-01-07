@@ -77,6 +77,7 @@ void bd3_close(void)
 
 
 float ***extmodel3d(float ***init_model,int nz,int nx,int ny,int np)
+/*< extended model >*/
 {
 	float ***p;
 	int ix,iy,iz;
@@ -138,8 +139,7 @@ void bd3_decay(float ***a /*3-D matrix*/)
 /*< boundary decay>*/
 {
     int iz, ix, ih;
-    int nzb, nxb, nhb;
-    nzb = nz+nbt+nbb;
+    int nxb, nhb;
     nxb = nx+nxl+nxr;
     nhb = nh+nhl+nhr;
     if(nbt){

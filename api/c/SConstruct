@@ -16,11 +16,11 @@ decart deriv divn dottest doubint dtrianglen edge eno eno2 eno3 error
 fftlabel file files freqfilt freqfilt2 ftutil fzero gaussel getpar
 gmres grad2fill halfint helicon helix hilbert igrad1 igrad2 impl2 int1
 int2 int3 interp interp_spline irls komplex llist lsint2 mask math1
-matmult2 multidivn multidivnL1 neighbors omptools parallel point
-polydiv pqueue pweno randn recfilt repeat runge quantile quadratic
-sharpen sharpinv simtab slice spline stack stretch stretch4 system
-tent2 timer tinysolver triangle triangle1 triangle2 trianglen
-tridiagonal upgrad vector wavelet weight weight2
+matmult2 multidivn multidivnL1 neighbors ntriangle ntrianglen omptools
+parallel point polydiv pqueue pweno randn recfilt repeat runge
+quantile quadratic sharpen sharpinv simtab slice spline stack stretch
+stretch4 system tent2 timer tinysolver triangle triangle1 triangle2
+trianglen tridiagonal upgrad vector wavelet weight weight2
 '''
 
 try: # distribution version
@@ -44,6 +44,10 @@ env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+
+rpc = env.get('HAVE_RPC')
+if rpc:
+    env.Prepend(CPPDEFINES=['SF_HAS_RPC'])
     
 sobjs = []
 

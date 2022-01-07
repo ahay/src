@@ -27,11 +27,11 @@ void fwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_mpi *mpipar, sf_sou soupa
 /*< fwi >*/
 {
 	int iter=0, flag;
-	int nz, nx, nzx, nm;
+	int nz, nx, nzx, nm=0;
 	float fcost;
-	float *x, *direction, *grad;
-	sf_gradient gradient;
-	FILE *fp;
+	float *x=NULL, *direction, *grad;
+	sf_gradient gradient=NULL;
+	FILE *fp=NULL;
 
 	nz=acpar->nz;
 	nx=acpar->nx;
@@ -121,7 +121,7 @@ void lstri(sf_file Fdat, sf_file Fmwt, sf_file Fsrc, sf_mpi *mpipar, sf_acqui ac
 {
     float **dd, ***ww, ***mwt;
     int nturn, iturn, is, rdn;
-    char filename[20]="tempbin",srdn[10];
+    char filename[20]="tempbin",srdn[20];
     FILE *temp;
     MPI_Comm comm=MPI_COMM_WORLD;
 
@@ -188,14 +188,16 @@ void lstri(sf_file Fdat, sf_file Fmwt, sf_file Fsrc, sf_mpi *mpipar, sf_acqui ac
         if (paspar->inv) {
             for(is=0; is<acpar->ns; is++){
                 fseeko(temp, is*acpar->nz*acpar->nx*acpar->nt*sizeof(float), SEEK_SET);
-                fread(ww[0][0], sizeof(float), acpar->nz*acpar->nx*acpar->nt, temp);
-                sf_floatwrite(ww[0][0], acpar->nz*acpar->nx*acpar->nt, Fsrc);
+                if (!fread(ww[0][0], sizeof(float), acpar->nz*acpar->nx*acpar->nt, temp))
+                    abort();
+                sf_floatwrite(ww[0][0], acpar->nz * acpar->nx * acpar->nt, Fsrc);
             }
         } else {
             for(is=0; is<acpar->ns; is++){
                 fseeko(temp, is*acpar->nt*acpar->nx*sizeof(float), SEEK_SET);
-                fread(dd[0], sizeof(float), acpar->nt*acpar->nx, temp);
-                sf_floatwrite(dd[0], acpar->nt*acpar->nx, Fdat);
+                if (!fread(dd[0], sizeof(float), acpar->nt*acpar->nx, temp))
+                    abort();
+                sf_floatwrite(dd[0], acpar->nt * acpar->nx, Fdat);
             }
         }
         fclose(temp);
@@ -214,11 +216,11 @@ void pfwi(sf_file Fdat, sf_file Finv, sf_file Fgrad, sf_file Fmwt, sf_file Fsrc,
 /*< passive fwi >*/
 {
 	int iter=0, flag;
-	int nz, nx, nzx, nm;
+	int nz, nx, nzx, nm=0;
 	float fcost;
-	float *x, *direction, *grad;
-	sf_gradient gradient;
-	FILE *fp;
+	float *x=NULL, *direction, *grad;
+	sf_gradient gradient=NULL;
+	FILE *fp=NULL;
 
 	nz=acpar->nz;
 	nx=acpar->nx;

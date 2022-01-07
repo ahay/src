@@ -81,12 +81,12 @@ Flow('ss','ss0.asc','dd form=native')
 
 na=50 # filter length
 
-lags = range(1,na+1) + range(1002-na,1002)
+lags = list(range(1,na+1)) + list(range(1002-na,1002))
 
 Flow('alag0.asc',None,
      '''echo %s n=1000,1000 n1=%d in=$TARGET 
      data_format=ascii_int
-     ''' % (' '.join(map(str,lags)),2*na))
+     ''' % (' '.join([str(x) for x in lags]),2*na))
 Flow('alag','alag0.asc','dd form=native')
 
 Flow('hflt hlag','ss alag',

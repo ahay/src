@@ -30,10 +30,11 @@
 #include "sharpen.h"
 
 static int np=0, n=1;
-static float *ww;
+static float *ww, f;
 
 void sf_sharpen_init(int n1     /* data size */,
-		     float perc /* quantile percentage */) 
+		     float perc /* quantile percentage */,
+		     float fact /* multiplicative factor */) 
 /*< initialize >*/
 {
     int i;
@@ -49,6 +50,8 @@ void sf_sharpen_init(int n1     /* data size */,
     for (i=0; i < n; i++) {
 	ww[i] = 1.0;
     }
+
+    f = fact;
 }
 
 void sf_sharpen_close(void)
@@ -78,7 +81,7 @@ float sf_sharpen(const float *pp)
   
     for (i=0; i < n; i++) {
 	wi = fabsf(pp[i])+wmin;
-	ww[i] = expf(-0.5*wp*wp/(wi*wi));
+	ww[i] = expf(-f*wp*wp/(wi*wi));
     }
 
     return wp;
@@ -105,7 +108,7 @@ void sf_csharpen(const sf_complex *pp)
   
     for (i=0; i < n; i++) {
 	wi = cabsf(pp[i])+wmin;
-	ww[i] = expf(-0.5*wp*wp/(wi*wi));
+	ww[i] = expf(-f*wp*wp/(wi*wi));
     }
 }
 

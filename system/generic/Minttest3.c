@@ -1,4 +1,4 @@
-/* Interpolation from a regular grid in 2-D. */
+/* Interpolation from a regular grid in 3-D. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",m+1)) sf_error("No n2= in input");
     if (!sf_histint(in,"n3",m+2)) sf_error("No n3= in input");
     n = m[0]*m[1]*m[2];
-    n3 = sf_leftsize(in,2);
+    n3 = sf_leftsize(in,3);
 
     if (!sf_histint(crd,"n1",&three) || 3 != three) 
 	sf_error("Need n1=3 in coord");
@@ -51,6 +51,7 @@ int main(int argc, char* argv[])
     nd = nd1*nd2;
     sf_putint(out,"n1",nd1);
     sf_putint(out,"n2",nd2);
+    sf_putint(out,"n3",1);
 
     if (!sf_histfloat(in,"d1",&d1))   sf_error("No d1= in input");
     if (!sf_histfloat(crd,"d2",&dd1)) dd1=d1;

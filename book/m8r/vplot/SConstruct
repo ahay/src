@@ -1,0 +1,4 @@
+from rsf.tex import *
+
+End(lclass='georeport',options='book',use='color,listings,hyperref',
+    include=r'\newcommand{\RSF}{../../..}')

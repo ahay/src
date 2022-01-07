@@ -1,0 +1,5 @@
+from rsf.proj import *
+
+Result('croshyp', None,'croshyp',prefix=plprefix)
+
+End()

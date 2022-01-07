@@ -357,7 +357,7 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	int ix, iy, ic, iv, num, index;
 	float x2, x1, xp=0.;
 	float *xinitial, **oldans;
-	bool skip;
+	bool skip = false;
 	ktable **ta=NULL;
 	
 	if (fwdxini && nc==1) {

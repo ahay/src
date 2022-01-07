@@ -82,7 +82,8 @@ namespace TSOpt {
   }
 
   SEGYDC::~SEGYDC() {
-    if (fp) iwave_fclose(fp); fp=NULL;
+    if (fp) iwave_fclose(fp); 
+    fp=NULL;
     if (fph) iwave_fclose(fph);
     if (buf) delete buf;
     ///////////////

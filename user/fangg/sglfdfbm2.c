@@ -69,7 +69,7 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     int nx, nz, nt, ix, iz, it;
     int nxb, nzb, snpint;
     int spx, spz, gp, gn, ginter;
-    float dt, dx, dz;
+    float dt;
     int pmlout, marg;
     bool freesurface;
     
@@ -80,8 +80,6 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     nz = geop->nz;
     nxb = geop->nxb;
     nzb = geop->nzb;
-    dx = geop->dx;
-    dz = geop->dz;
 
     spx = geop->spx;
     spz = geop->spz;
@@ -236,7 +234,7 @@ int sglfdback2(float **img1, float **img2, float ***wavfld, float **rcd,
     int nx, nz, nt, ix, iz, it, gn, ginter;
     int nxb, nzb, snpint;
     int gp;
-    float dt, dx, dz;
+    float dt;
     int pmlout, marg;
     bool freesurface;
 
@@ -247,8 +245,6 @@ int sglfdback2(float **img1, float **img2, float ***wavfld, float **rcd,
     nz = geop->nz;
     nxb = geop->nxb;
     nzb = geop->nzb;
-    dx = geop->dx;
-    dz = geop->dz;
     
     gp  = geop->gp;
     gn  = geop->gn;

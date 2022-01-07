@@ -1,0 +1,101 @@
+\chapter{Seismic data processing}
+
+Although core Madagascar programs are applicable for analyzing any
+kinds of data, there also programs specialized for seismic reflection
+data processing. In this chapter, we will walk through processing one
+particular dataset. Multiple additional examples are available under
+\texttt{\$RSFSRC/book/data} and \texttt{\$RSFSRC/book/geo384s}. The
+latter contains computational assignments from a seismic data
+processing course at the University of Texas at Austin. An example
+processing of a seismic land 3D dataset (Teapot Dome) is provided by
+\cite{oren2018overview} and included in
+\texttt{\$RSFSRC/book/data/teapotdome/canoren}.
+
+\section{Poland dataset}
+\inputdir{freeusp}
+
+This dataset was made publicly available by Geofizyka Torun S.A. and
+provided initially by Waldek Ogonowski for a tutorial on OpenUSP, a
+seismic processing package from Amoco and
+BP\footnote{\url{https://www.freeusp.org/RaceCarWebsite/TechTransfer/Tutorials/Processing_2D/Processing_2D.html}}.
+
+The 2D reflection seismic survey was acquired on land using vibroseis
+sources. The goal of a seismic processing project is to process the
+dataset all the way to a seismic image.
+
+\section{Analyzing acquisition geometry}
+
+The seismic acquisition geometry involves the distribution of sources
+and recievers on the surface.
+
+\plot{SR0}{width=\textwidth}{Seismic acquisition geometry.}
+
+Figure~\ref{fig:SR0} indicates sources with ... and receivers with
+... Despite small deviations, the overall geometry is fairly regular
+for a 2-D survey, with a uniform distribution along the line. In the
+rest of the processing, we will treat is as such.
+
+\section{Static corrections}
+
+In land surveys, the topography of the observation surface plays a
+role and requires a correction (time shifts), known as elevation
+statics. The elevation static correction in this case is small and
+ranges... (Figure~\ref{fig:elevation}.)
+
+\plot{elevation}{width=\textwidth}{Elevation statics.}
+
+An additional static correction is needed to account for variations of
+seismic velocities in the near surface. This correction was provided
+with the data and is shown in Figure~\ref{fig:static}.
+
+\plot{static}{width=\textwidth}{Additional statics correction.}
+
+Figure~\ref{fig:lines,lines2} shows the seismic data before and after
+applying all statics corrections. The change is subtle, but the
+continuity of reflection events gets improved.
+
+\multiplot{2}{lines,lines2}{width=0.45\textwidth}{Seismic data before (a) and after (b)
+  applying the static corrections.}
+
+\section{Stacking diagram}
+
+In preparation for processing seismic reflection data through
+common-midpoint (CMP) stacking, it helps to analyze the distribution of
+traces among different common-midpoint bins. The stacking diagram is
+shown in Figure~\ref{fig:diagram} and indicates....
+
+\plot{diagram}{width=\textwidth}{Stacking diagram.}
+
+\section{CMP gathers}
+
+The field data comes in shot records, arranged in shot-offset
+coordinates. Before CMP stacking, all traces need to be sorted in
+midpoint-offset coordinates (Figure~\ref{fig:rcmps}.)
+ 
+\multiplot{2}{rcmps,cmps}{width=\textwidth}{Data sorted in CMP gathers
+  before (a) and after (b) noise attenuation.}
+
+The data are contaminated by surface waves (groundroll noise), which
+need to be attenuated to reveal the useful reflection signal from
+deeper targets.
+
+\section{Noise attenuation}
+
+We attenuate the groundroll noise using the technique of the local
+time-frequency decomposition \cite[]{liu2013seismic}, which takes
+advantages of the different behavior of the noise and signal
+components in the frequency domain. The result is shown in
+Figure~\ref{fig:cmps}.
+
+\section{Velocity analysis and CMP stacking}
+
+The next step is normal-moveout (NMO) velocity analysis and
+stacking. Figure~\ref{fig:vel} shows...
+
+\plot{vel}{width=\textwidth}{Stacking velocity.}
+
+\section{Prestack time migration}
+
+\bibliographystyle{seg}
+\bibliography{data}
+

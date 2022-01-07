@@ -4,6 +4,8 @@
 /////////////////////////////////////////////////
 
 #include <vector>
+#include <string>
+using std::string;
 
 #include "rsf.hh"
 
@@ -297,50 +299,38 @@ iRSF::get (const char* name, double& value) const
     }
 }
 
-// void 
-// iRSF::get (const char* name, char* value, const char* defolt) const
-// {
-//     if (file_)  {
-// 	if (0 == auxpar (name,"s", value, file_)) strcpy (value, defolt);
-// 	if (0 != strcmp (file_, "in")) {
-// 	    ostrstream buff (Buffer, MAXLEN);
-// 	    buff << "From aux(" << file_  << "): " << file_ << "_" << name;
-// 	    buff << '\0';
-// 	    putch (Buffer, "s", value);
-// 	}
-//     } else {
-// 	if (0 == getch (name, "s", value)) strcpy (value, defolt);
-// 	ostrstream buff (Buffer, MAXLEN);
-// 	buff << "From par: " << name<< '\0';
-// 	putch (Buffer, "s", value);
-//     }
-// }
+void
+iRSF::get (const char* name, string& value, const string& defolt) const
+{
+    char* retval;
+    if (file_)
+        retval = sf_histstring( file_, name );
+    else
+        retval = sf_getstring( name );
+    if( retval ) {
+        value = retval;
+        free( retval ); // retval was allocated with malloc and we now own it!
+    }
+    else
+        value = defolt;
+}
 
-// void 
-// iRSF::get (const char* name, char* value) const
-// {
-//     if (file_) {
-// 	if (0 == auxpar(name,"s", value, file_)) {
-// 	    cerr << "missing history value: " << name;
-// 	    cerr << "from file: " << file_ << "\n";
-// 	    exit (-1);
-// 	}
-// 	if (0 != strcmp (file_, "in")) {
-// 	    ostrstream buff (Buffer, MAXLEN);
-// 	    buff << "From aux(" << file_  << "): " << file_ << "_" << name;
-// 	    buff << '\0';
-// 	    putch (Buffer, "i", &value);
-// 	}
-//     } else {
-// 	if (0 == getch(name,"s", value)) {
-// 	    cerr << "missing parameter value: " << name << "\n";
-// 	    exit (-1);
-// 	}
-// 	ostrstream buff (Buffer, MAXLEN);
-// 	buff << "From par: " << name << '\0';
-// 	putch (Buffer, "s", value);
-//     }
-// }
+void
+iRSF::get (const char* name, string& value) const
+{
+    char* retval;
+    if (file_) {
+        retval = sf_histstring( file_, name );
+        if( !retval )
+                sf_error("missing history value: %s",name);
+    } else {
+        retval = sf_getstring( name );
+        if( !retval )
+                sf_error("missing parameter value: %s",name);
+    }
+    value = retval;
+    free( retval ); // retval was allocated with malloc and we now own it!
+}
 
 // Reading parameter arrays
 ///////////////////////////

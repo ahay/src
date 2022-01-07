@@ -1,0 +1,143 @@
+from rsf.proj import *
+
+# Donwload data
+Fetch('midpts.hh','midpts')
+
+# Select a CMP gather, mute
+Flow('bei','midpts.hh',
+     '''
+     window n3=1 | dd form=native | 
+     mutter half=n v0=1.5 |
+     put label1=Time unit1=s label2=Offset unit2=km | math output="input/4000000"
+     ''')
+
+#Flow('refa','cmpa','window n2=1')
+Flow('refa','abnmo','snrstack')
+#Flow('refa','modl','window n3=1 | window n2=1')
+
+dat='bei'
+Result(dat,'grey title="CMP" clip=0.99 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2')
+for typ in ('semblance','ab','weighted','similarity-weighted'):
+	scn=typ+'scn'
+
+	if typ == 'similarity-weighted':
+		Flow(scn,[dat,'refa'],'mutter half=n v0=1.5 |simivscan thr=0.3 half=n v0=1.4 nv=111 dv=0.01 semblance=y type=%s ref=${SOURCES[1]}  | clip2 lower=0'%typ)
+	else:
+		Flow(scn,dat,'vscan half=n v0=1.4 nv=111 dv=0.01 semblance=y type=%s  | clip2 lower=0'%typ)
+
+	if typ=='weighted':
+		Plot(scn,scn,
+			'''
+			grey color=j allpos=y title="%s" pclip=80 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			'''%typ)
+	else:
+		Plot(scn,scn,
+			'''
+			grey color=j allpos=y title="%s" scalebar=n pclip=100 clip=0.3 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			'''%typ)
+	pik=typ+'pik'
+	Flow(pik,scn,'scale axis=2 | pick rect1=5')
+	Plot(pik,
+             '''
+             graph yreverse=y transp=y min2=1.4 max2=2.51 pad=n
+             plotcol=7 plotfat=15 wanttitle=n wantaxis=n scalebar=n simbolfat=10
+             ''')
+	Result(scn+'o',[scn,pik],'Overlay')
+
+## Do NMO
+	nmo = typ + 'nmo'
+	Flow(nmo,[dat,pik],'nmo half=n velocity=${SOURCES[1]} str=0.1 ')
+	Result(nmo,
+			'''
+			grey title="(%s)"
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.99 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			''' % typ)
+
+	inmo = typ + 'inmo'
+	Flow(inmo,[nmo,pik],'inmo  half=n velocity=${SOURCES[1]} str=0.4')
+	Result(inmo,
+			'''
+			grey title="(%s)" clip=0.99 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			''' % typ)
+############################################################
+####### Blend 
+############################################################
+## Apply dithering
+Flow('dither','bei',
+     '''
+     window n1=1 |
+     noise rep=y seed=122011 var=10 | math output="1000*input"
+     ''')
+
+Flow('shottime1','bei','window n1=1 | math output=6*1000*x1')
+Flow('shottime2','shottime1 dither','add scale=1,1 ${SOURCES[1]}')
+
+
+## Blend 
+Flow('bei-b','bei bei shottime1 shottime2','blend shot_time_in=${SOURCES[3]} shot_time_out=${SOURCES[2]} |add scale=1,1 ${SOURCES[1]}' )
+dat='bei-b'
+
+for typ in ('semblance','ab','weighted','similarity-weighted'):
+	scn=typ+'scn-b'
+
+	if typ == 'similarity-weighted':
+		Flow(scn,[dat,'refa'],'simivscan thr=0.3 half=n v0=1.4 nv=111 dv=0.01 semblance=y type=%s ref=${SOURCES[1]}  | clip2 lower=0'%typ)
+	else:
+		Flow(scn,dat,'vscan half=n v0=1.4 nv=111 dv=0.01 semblance=y type=%s  | clip2 lower=0'%typ)
+
+	if typ=='weighted':
+		Plot(scn,scn,
+			'''
+			grey color=j allpos=y title="%s" pclip=80 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			'''%typ)
+	else:
+		Plot(scn,scn,
+			'''
+			grey color=j allpos=y title="%s" scalebar=n pclip=100 clip=0.3 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			'''%typ)
+	pik=typ+'pik-b'
+	Flow(pik,scn,'scale axis=2 | pick rect1=5')
+	Plot(pik,
+             '''
+             graph yreverse=y transp=y min2=1.4 max2=2.51 pad=n
+             plotcol=7 plotfat=15 wanttitle=n wantaxis=n scalebar=n simbolfat=10
+             ''')
+#	Result(scn+'o',[scn],'Overlay')
+
+## Do NMO
+	nmo = typ + 'nmo-b'
+	Flow(nmo,[dat,pik],'nmo half=n velocity=${SOURCES[1]} str=0.1 ')
+	Result(nmo,
+			'''
+			grey title="(%s)"
+			grid2=y gridcol=6 gridfat=7 g2num=0.5 clip=0.99 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			''' % typ)
+
+	inmo = typ + 'inmo-b'
+	Flow(inmo,[nmo,pik],'inmo  half=n velocity=${SOURCES[1]} str=0.4')
+	Result(inmo,
+			'''
+			grey title="(%s)" clip=0.99 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			''' % typ)
+
+
+Result('semblancescn-bo','semblancescn-b',
+			'''
+			grey color=j allpos=y title="(b)" scalebar=n pclip=100 clip=0.3 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			''')
+
+Result('similarity-weightedscn-bo','similarity-weightedscn-b',
+			'''
+			grey color=j allpos=y title="(c)" scalebar=n pclip=100 clip=0.3 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2
+			''')
+						
+Result('bei','grey title="CMP" clip=0.99 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2')
+Result('bei-b','grey title="(a)" clip=0.99 labelsz=14 labelfat=2 font=2 titlesz=14 titlefat=2')			
+#Result('comp1','./Fig/bei.vpl ./Fig/semblancescn.vpl ./Fig/abscn.vpl ./Fig/weightedscn.vpl','SideBySideAniso')
+Result('comp1','./Fig/bei.vpl ./Fig/semblancescno.vpl ./Fig/abscno.vpl ./Fig/similarity-weightedscno.vpl','SideBySideAniso')
+
+Result('comp2','./Fig/bei-b.vpl ./Fig/semblancescn-bo.vpl ./Fig/similarity-weightedscn-bo.vpl','SideBySideAniso')
+#Result('comp2','./Fig/bei-b.vpl ./Fig/semblancenmo-b.vpl ./Fig/abnmo-b.vpl ./Fig/weightednmo-b.vpl','SideBySideAniso')
+#Result('comp3','./Fig/bei.vpl ./Fig/semblanceinmo.vpl ./Fig/abinmo.vpl ./Fig/weightedinmo.vpl','SideBySideAniso')
+
+End()

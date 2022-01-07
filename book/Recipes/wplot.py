@@ -4,47 +4,75 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
 import pplot
-import random
+import random,functools,operator
 
 random.seed(1003)
 def add(x,y): return x+y
-def myid(n): return '_'+reduce(add,['%d'%random.randint(0,9) for i in range(n)])
+def myid(n): return '_'+functools.reduce(operator.add,['%d'%random.randint(0,9) for i in range(n)])
 
 # reset default parameters
 def param(par):
 
-    if(not par.has_key('ot')):       par['ot']=0.
-    if(not par.has_key('nt')):       par['nt']=1
-    if(not par.has_key('dt')):       par['dt']=1.
-    if(not par.has_key('lt')):       par['lt']='t'
-    if(not par.has_key('ut')):       par['ut']='s'
+    if 'ot'      not in par: par['ot']=0.0
+    if 'nt'      not in par: par['nt']=1
+    if 'dt'      not in par: par['dt']=1.0
+    if 'lt'      not in par: par['lt']='t'
+    if 'ut'      not in par: par['ut']='s'
+    #if(not par.has_key('ot')):       par['ot']=0.
+    #if(not par.has_key('nt')):       par['nt']=1
+    #if(not par.has_key('dt')):       par['dt']=1.
+    #if(not par.has_key('lt')):       par['lt']='t'
+    #if(not par.has_key('ut')):       par['ut']='s'
 
-    if(not par.has_key('ox')):       par['ox']=0.
-    if(not par.has_key('nx')):       par['nx']=1
-    if(not par.has_key('dx')):       par['dx']=1.
-    if(not par.has_key('lx')):       par['lx']='x'
-    if(not par.has_key('ux')):       par['ux']='km'
+    if 'ox'      not in par: par['ox']=0.0
+    if 'nx'      not in par: par['nx']=1
+    if 'dx'      not in par: par['dx']=1.0
+    if 'lx'      not in par: par['lx']='x'
+    if 'ux'      not in par: par['ux']='km'
+    #if(not par.has_key('ox')):       par['ox']=0.
+    #if(not par.has_key('nx')):       par['nx']=1
+    #if(not par.has_key('dx')):       par['dx']=1.
+    #if(not par.has_key('lx')):       par['lx']='x'
+    #if(not par.has_key('ux')):       par['ux']='km'
 
-    if(not par.has_key('oy')):       par['oy']=0.
-    if(not par.has_key('ny')):       par['ny']=1
-    if(not par.has_key('dy')):       par['dy']=1.
-    if(not par.has_key('ly')):       par['ly']='y'
-    if(not par.has_key('uy')):       par['uy']='km'
+    if 'oy'      not in par: par['oy']=0.0
+    if 'ny'      not in par: par['ny']=1
+    if 'dy'      not in par: par['dy']=1.0
+    if 'ly'      not in par: par['ly']='y'
+    if 'uy'      not in par: par['uy']='km'
+    #if(not par.has_key('oy')):       par['oy']=0.
+    #if(not par.has_key('ny')):       par['ny']=1
+    #if(not par.has_key('dy')):       par['dy']=1.
+    #if(not par.has_key('ly')):       par['ly']='y'
+    #if(not par.has_key('uy')):       par['uy']='km'
 
-    if(not par.has_key('oz')):       par['oz']=0.
-    if(not par.has_key('nz')):       par['nz']=1
-    if(not par.has_key('dz')):       par['dz']=1.
-    if(not par.has_key('lz')):       par['lz']='z'
-    if(not par.has_key('uz')):       par['uz']='km'
+    if 'oz'      not in par: par['oz']=0.0
+    if 'nz'      not in par: par['nz']=1
+    if 'dz'      not in par: par['dz']=1.0
+    if 'lz'      not in par: par['lz']='z'
+    if 'uz'      not in par: par['uz']='km'
+    #if(not par.has_key('oz')):       par['oz']=0.
+    #if(not par.has_key('nz')):       par['nz']=1
+    #if(not par.has_key('dz')):       par['dz']=1.
+    #if(not par.has_key('lz')):       par['lz']='z'
+    #if(not par.has_key('uz')):       par['uz']='km'
 
-    if(not par.has_key('tmin')):     par['tmin']=par['ot']
-    if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
-    if(not par.has_key('xmin')):     par['xmin']=par['ox']
-    if(not par.has_key('xmax')):     par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
-    if(not par.has_key('ymin')):     par['ymin']=par['oy']
-    if(not par.has_key('ymax')):     par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
-    if(not par.has_key('zmin')):     par['zmin']=par['oz']
-    if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+    if 'tmin' not in par: par['tmin']=par['ot']
+    if 'tmax' not in par: par['tmax']=par['ot']+ (par['nt']-1) * par['dt']
+    if 'xmin' not in par: par['xmin']=par['ox']
+    if 'xmax' not in par: par['xmax']=par['ox']+ (par['nx']-1) * par['dx']
+    if 'ymin' not in par: par['ymin']=par['oy']
+    if 'ymax' not in par: par['ymax']=par['oy']+ (par['ny']-1) * par['dy']
+    if 'zmin' not in par: par['zmin']=par['oz']
+    if 'zmax' not in par: par['zmax']=par['oz']+ (par['nz']-1) * par['dz']
+    #if(not par.has_key('tmin')):     par['tmin']=par['ot']
+    #if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+    #if(not par.has_key('xmin')):     par['xmin']=par['ox']
+    #if(not par.has_key('xmax')):     par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+    #if(not par.has_key('ymin')):     par['ymin']=par['oy']
+    #if(not par.has_key('ymax')):     par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
+    #if(not par.has_key('zmin')):     par['zmin']=par['oz']
+    #if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
     if par['nt']>1:
         par['df']=0.5/(par['ot']+(par['nt']-1)*par['dt'])
@@ -52,30 +80,41 @@ def param(par):
         par['df']=1.
     par['of']=0
     par['nf']=par['nt']
-    if(not par.has_key('lf')):       par['lf']='f'
-    if(not par.has_key('uf')):       par['uf']='Hz'
-    if(not par.has_key('fmin')):     par['fmin']=par['of']
-    if(not par.has_key('fmax')):     par['fmax']=par['of'] + (par['nf']-1) * par['df']
+
+    if 'lf' not in par: par['lf']='f'
+    if 'uf' not in par: par['uf']='Hz'
+    if 'fmin' not in par: par['fmin']=par['of']
+    if 'fmax' not in par: par['fmax']=par['of'] + (par['nf']-1) * par['df']
+    #if(not par.has_key('lf')):       par['lf']='f'
+    #if(not par.has_key('uf')):       par['uf']='Hz'
+    #if(not par.has_key('fmin')):     par['fmin']=par['of']
+    #if(not par.has_key('fmax')):     par['fmax']=par['of'] + (par['nf']-1) * par['df']
 
     # make room to plot acquisition
-    if(not par.has_key('zmin')):     par['zmin']=min(par['zmin'],-0.025*(par['zmax']-par['zmin']))
+    if 'zmin' not in par: par['zmin']=min(par['zmin'],-0.025*(par['zmax']-par['zmin']))
+    #if(not par.has_key('zmin')):     par['zmin']=min(par['zmin'],-0.025*(par['zmax']-par['zmin']))
 
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
     dz=par['zmax']-par['zmin'];
     dt=par['tmax']-par['tmin'];
 
-    if(not par.has_key('iratio2d')):
+    if 'iratio2d' not in par:
+    #if(not par.has_key('iratio2d')):
         if(dx==0.0): par['iratio2d']=1.0
         else:        par['iratio2d']=1.0*(dz)/(dx)
-    if(not par.has_key('iheight2d')):
+
+    if 'iheight2d' not in par:
+    #if(not par.has_key('iheight2d')):
         if(par['iratio2d']>=0.8): par['iheight2d']=10
         else:                     par['iheight2d']=12*par['iratio2d']
 
-    if(not par.has_key('dratio2d')):
+    if 'dratio2d' not in par:
+    #if(not par.has_key('dratio2d')):
         par['dratio2d']=par['iratio2d']
 
-    if(not par.has_key('dheight2d')):
+    if 'dheight2d' not in par:
+    #if(not par.has_key('dheight2d')):
        par['dheight2d']=par['iheight2d']
        #       par['dheight2d']=10*par['dratio2d']
 
@@ -108,8 +147,12 @@ def param(par):
         par['mapratio']=1.0
     par['mapheight']=11*par['mapratio']
 
-    if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1. ' + ' '
+    if 'scalebar' not in par: par['scalebar']='n'
+    #if(not par.has_key('scalebar')): par['scalebar']='n'
+
+    if 'labelattr' not in par: par['labelattr'] =' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1.0 ' + ' '
+
+    #if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1.0 ' + ' '
 
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
@@ -153,7 +196,7 @@ def igrey3d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1.5 yll=1.5
+    xll=1.5 yll=1.0
     %s
     '''%(par['lz'],par['uz'],
          par['lx'],par['ux'],
@@ -170,7 +213,7 @@ def icont3d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1.5 yll=1.5
+    xll=1.5 yll=1.0
     %s
     '''%(par['lz'],par['uz'],
          par['lx'],par['ux'],
@@ -187,7 +230,7 @@ def igrey4d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1.5 yll=1.5
+    xll=1.5 yll=1.0
     %s
     '''%(par['lz'],par['uz'],
          par['lx'],par['ux'],
@@ -260,7 +303,7 @@ def dgrey3d(custom,par):
     label3=%s unit3=%s
     frame1=%d frame2=%d frame3=%d
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
-    xll=1.5 yll=1.5
+    xll=1.5 yll=1.0
     %s
     '''%(par['lt'],par['ut'],
          par['lx'],par['ux'],
@@ -702,4 +745,3 @@ def mapXY(custom,par):
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['mapratio'],par['mapheight'],par['scalebar'],
            par['labelattr']+' '+custom)
-

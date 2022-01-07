@@ -27,7 +27,7 @@ int lrexp(sf_complex *mod, sf_complex *dat, bool adj, sf_complex *lt, sf_complex
     int it, iz, ix, im, ik, i, j;
     int nz2, nx2, nk, nzx, nzx2;
     int pad1 = 1;
-    sf_complex **wave, *curr, *currm, *cwave, *cwavem, c;
+    sf_complex **wave, *curr, *currm = NULL, *cwave, *cwavem = NULL, c;
  
     nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
     if (nk!=nkzx) sf_error("nk discrepancy!");

@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
 
     int n[2], w[2], k[2], a[2], l[2], w_out[2], n_out[2];   
-    int  n1, n2, n12, i3, n3, w12;
+    int  n1, n2, n12, i3, n3;
 	int  n12_out, w12_out ;
     float d2; 			   /* data parameters */    
     int ntraces, order, L; /* input parameters */
@@ -93,7 +93,6 @@ int main(int argc, char* argv[])
 	w_out[0] = w[0];
 	w_out[1] = L * (w[1]-1) + 1;
 	
-	w12 = w[0]*w[1];
 	w12_out= w_out[0]*w_out[1];
 
 	

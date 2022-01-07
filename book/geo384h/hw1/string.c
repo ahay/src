@@ -4,7 +4,7 @@ int main(void)
 {
     char *s, string[101];
 
-    printf("Input a string:\n");
+    printf("Input a string: ");
     scanf("%100s",string);
 
     /* loop over characters */

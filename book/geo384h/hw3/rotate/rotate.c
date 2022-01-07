@@ -79,8 +79,7 @@ int main(int argc, char* argv[])
 		    /* !!! ADD CODE !!! */
 		    break;
 		default:
-		    sf_error("Unknown interpolation %s",
-			     interp);
+		    sf_error("Unknown method %s",interp);
 		    break;
 	    }
 	}

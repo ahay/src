@@ -1,0 +1,197 @@
+\published{Geophysics, 84, no. 2, R175-R183, (2019)}
+
+\title{Full waveform inversion and joint migration inversion with an automatic directional total variation constraint}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}} 
+
+
+\author{Shan Qu\footnotemark[1], Eric Verschuur\footnotemark[1], and Yangkang Chen\footnotemark[2]}
+\address{
+\footnotemark[1] Delft University of Technology, Delphi consortium, \\
+Mekelweg 5, 2628 CD Delft, Netherlands \\
+\footnotemark[2] School of Earth Sciences, \\
+Zhejiang University\\
+ Hangzhou, Zhejiang Province, 310027
+}
+
+\lefthead{Qu et al.}
+\righthead{Directional TV}
+
+\maketitle
+
+\begin{abstract}
+\old{As full waveform inversion (FWI) is a non-unique and typically ill-posed inversion problem, it needs proper regularization. To reduce the non-linearity of FWI, Joint Migration Inversion (JMI) is proposed as an alternative, explaining the data with decoupled velocity and reflectivity parameters, however, the velocity update may also suffer from being trapped in local minima. To optimally include geologic information, we propose FWI/JMI with directional total variation as an L1-norm regularization on the velocity. We design the directional total variation (TV) operator based on the local dip field, instead of ignoring the local structural direction and only using horizontal/vertical gradients in the traditional TV. With two complex synthetic examples, based on the Marmousi model, we demonstrate that the proposed method is much more effective compared to both FWI/JMI without regularization and FWI/JMI with the conventional TV regularization. In the JMI-based example, we also show that L1 directional TV works better than L2 directional Laplacian smoothing.}
+\new{As full waveform inversion (FWI) is a non-unique and typically ill-posed inversion problem, it needs proper regularization to avoid cycle-skipping. To reduce the non-linearity of FWI, Joint Migration Inversion (JMI) is proposed as an alternative, explaining the reflection data with decoupled velocity and reflectivity parameters. However, the velocity update may also suffer from being trapped in local minima. To optimally include geologic information, we propose FWI/JMI with directional total variation as an L1-norm regularization on the velocity. We design the directional total variation operator based on the local dip field, instead of ignoring the local structural direction of the subsurface and only using horizontal- and vertical- gradients in the traditional TV. The local dip field is estimated using plane-wave destruction based on a raw reflectivity model, which is usually calculated from the initial velocity model. With two complex synthetic examples, based on the Marmousi model, we demonstrate that the proposed method is much more effective compared to both FWI/JMI without regularization and FWI/JMI with the conventional TV regularization. In the JMI-based example, we also show that L1 directional TV works better than L2 directional Laplacian smoothing. In addition, by comparing these two examples, it can be seen that the impact of regularization is larger for FWI than for JMI, because in JMI the velocity model only explains the propagation effects and, thereby, makes it less sensitive to the details in the velocity model.} \par
+\end{abstract}
+
+\section{Introduction}
+Seismic full waveform inversion (FWI) is a powerful method for providing a quantitative description of
+the \new{subsurface} properties by iteratively minimizing an objective function that measures the misfit between observed and predicted data in the least-squares sense \citep{tarantola1984inversion}. However, FWI is a non-linear and ill-posed inverse problem and its objective function may suffer from local minima that are not informative about the true parameters \citep{Virieux09,yangkang2016fwi,fu2017adaptive,fu2017discrepancy}. Using regularization methods is \new{an}\old{one} effective way to mitigate this ill-posedness and non-uniqueness of FWI. 
+
+Joint Migration Inversion (JMI) was proposed as one of the methods to overcome the \new{above-mentioned}\old{above mentioned} limitations in FWI \citep{Berkhout14b,Staalthesis,verschuur2016joint}. It is an inverse algorithm to automatically derive both velocity and reflectivity based on the full wavefield modeling (FWMod) process \citep{Berkhout14a} that takes into account transmission effects and surface/internal multiples. In the FWMod procedure, the velocity only affects the kinematics without any scattering effect in the modeling operators and the reflectivity only deals with scattering effects. These characteristics lead to a reduced non-linearity in the inversion process. Even though not as severe as FWI, the velocity update may still \old{slightly }suffer from being trapped in local minima. With the help of regularization, JMI can get a \old{better and smoothed}\new{more accurate} inverted velocity, and thus achieve a better inverted reflectivity \citep{qu161,qu2017i4d}.
+
+The popular regularization methods include: quadratic \new{L2-norm-based}\old{L2-norm based} regularization, such as Tikhonov regularization \citep{Hu09}, and laplacian smoothing \citep{guitton2012constrained,qu162,qu2017simultaneous}, which tend to produce models with blurred discontinuities; non-quadratic \new{L1-norm-based}\old{L1-norm based} regularization, such as total variation (TV) \citep{anagaw2011full,qu161}, smooths the model by enhancing the sparsity of the spatial gradient of the velocity, thereby\old{,} preserving its edges. However, regular TV regularization only tends to reduce the horizontal and vertical gradients of each gridpoint in the model regardless of their structural direction. Thus, TV is not suitable where the local geologic structure has a dominant structural direction. Unlike general digital images, the spatial changes of the seismic model always have some specific geological structures, like tilted layers, faults, or edges of a salt body \citep{yangkang2017lsrtm,wujuan2018cg1,baimin2018cg,yangkang2020gji3}. \cite{bayram2012directional} proposed a directional TV method and applied it to digital image denoising. However, they only consider one single dominant direction for all pixels, which is obviously ineffective for \new{complex-textured}\old{complex textured} geologies. \new{Therefore, we propose a directional TV constraint based on a rough estimate of the subsurface image.}
+
+The paper is organized as follows: we first briefly introduce the basics of FWI and JMI. Next, we formulate the conventional TV and the proposed directional TV. Finally, \new{using}\old{with} two complex Marmousi-model-based examples, we show that the proposed method is more effective than the alternative methods, when the model contains tilted layers and steep faults. \new{At}\old{In} the end, \new{using the JMI-based example, }we also show that\new{ the} L1 directional TV works better than\new{ the} L2 directional Laplacian smoothing regarding \new{the preservation of}\old{persevering} edges and \new{the} steering \new{of the} update \new{away} from\new{ the} local minimum\old{with the JMI-based example}. \new{Note}\old{Please note} that this paper is an extended version of work published in \cite{qu2017full}.
+
+\section{Theory of FWI}
+Mathematically, regular FWI can be formulated as a minimization problem with the following objective function:
+\begin{equation}
+\begin{split}
+      J_{FWI} &=|| \mathbf{d} - f\left(\mathbf{m}\right) ||_2^2 + constraint,
+\label{eq1:FWI}
+\end{split}
+\end{equation}
+where $\mathbf{m}$ represents the model, $\mathbf{d}$ is the observed dataset, $f\left(.\right)$ is the corresponding \new{modeling}\old{modelling} operator, and $||.||_2^2$ stands for the L2-norm. In most FWI implementations, $\mathbf{m}$ consists of a gridded velocity distribution that explains both propagation and reflection of the seismic data\new{ and forward modeling is done via a finite-difference implementation of the two-way wave equation} \citep{Virieux09}. Note that in most FWI implementations, density variations are neglected. Minimizing this misfit function is likely to suffer from ill-posedness and non-uniqueness because of limited input data and non-linearity of the forward \new{modeling}\old{modelling} operator. Adding regularization to the objective function can be one effective way to mitigate the ill-posedness and non-uniqueness of this inverse problem.
+
+\section{Theory of JMI}
+Joint Migration Inversion (JMI) was proposed as one of the methods to overcome the \new{above-mentioned}\old{above mentioned} limitations in FWI. In \new{Figure}\old{figure}~\ref{fig:jmi_scheme} the flow diagram of the JMI process is shown. The main engine of the JMI method is a \new{forward-modeling}\old{forward modeling} process, called Full Wavefield Modeling (FWMod) based on \new{the} parameters reflectivity and velocity, which is described in \cite{Berkhout12}, \cite{Davydenko12a}\new{,} and \cite{Berkhout14a}. With this recursive and iterative two-way modeling process, from the current estimate of the reflectivities and the velocity model, the seismic reflection responses are being generated. In this modeling process, multiples and transmission effects are included. Next, the modeled responses are compared to the measured ones and the resulting difference data, being the residual of the inversion, is back-projected into the parameter space via reverse extrapolation of the residual into the medium and a subsequent transformation of this residual energy into updates of reflectivity and velocity. The parameters are updated, from which new seismic responses are modeled, yielding the next version of the residual data. In this way, the residual is slowly driven to zero \cite[]{Berkhout12,Staal12,Staal13,Berkhout14c}. We can treat the whole procedure as minimizing the following objective function:
+\begin{equation}
+J_{JMI} = \sum\limits_{\omega} || \mathbf{D}^-\left(z_0\right) - \mathbf{P}^-_{mod} \left( z_0,\mathbf{r}, \mathbf{v} \right) ||_2 ^2  + constraint,
+\label{eq1:JMI inversion}
+\end{equation}
+where the $|| . ||^2$ describes the sum of the squares of the values (i.e.\new{,} the energy), $\mathbf{D}^-\left(z_0\right)$ is the collection of all recorded surface seismic shot records in the $\left( x,\omega \right)$ domain, and $\mathbf{P}^-_{mod} \left( z_0,\mathbf{r}, \mathbf{v} \right)$ describes the \new{modeled}\old{modelled} surface shot records as a function of reflectivity $\mathbf{r}$ and velocity $\mathbf{v}$\old{ respectively}. Note that by using \new{the} reflectivity and propagation velocity as parameters, density variations are implicitly included in $\mathbf{r}$. Even though JMI has a reduced non-linearity, the velocity update still \old{to some extend }suffers from local minima. With a proper constraint, JMI can lead to a \old{better and smoothed}\new{more accurate} inverted velocity, and therefore a better inverted reflectivity.
+\plot{jmi_scheme}{width=1\textwidth}{JMI flow chart.}
+
+\section{FWI/JMI with TV and Directional TV}
+In this paper, we consider anisotropic TV as the basic regularization method, since TV can smooth the model and at the same time preserve edges by enhancing the sparsity of the spatial gradient of the velocity difference. In addition, the anisotropic version is easier to minimize compared to the isotropic one. \new{Furthermore, we restrict ourselves to the 2D case, although extension to the full 3D situation is relatively straightforward.}
+
+The extended misfit function with a TV constraint can be expressed as
+\begin{equation}
+\begin{split}
+      J_{tot} = \mu J + \lambda C_{TV} \left(\mathbf{p} \right) = \mu J + \lambda ||\nabla_x \mathbf{p}||_1 + \lambda ||\nabla_z \mathbf{p}||_1.
+\label{eq2:J with TV}
+\end{split}
+\end{equation}
+Here, $J$ is $J_{FWI}$ or $J_{JMI}$. $\mathbf{p}$ is the parameter constrained by TV( $\mathbf{p}=\mathbf{m}$ for FWI, and $\mathbf{p} = \mathbf{v}$ for JMI). $\nabla_x$ and $\nabla_z$ represent \new{horizontal- and vertical-}\old{horizontal and vertical }gradient operator, respectively. For one gridpoint $\left(i,j\right)$ in a cartesian coordinate $\left(x,z\right)$, $\nabla_x \mathbf{p}\left(i,j\right) = p_{i+1,j} - p_{i,j}$ and $\nabla_z \mathbf{p}\left(i,j\right) = p_{i,j+1} - p_{i,j}$ (illustrated in figure~\ref{fig:FWI_fig1-01}a with the black dashed arrows). $\mu$ is the weight parameter of the fidelity term. $\lambda$ is the coefficient of the constraint term. \new{The latter two}\old{They} together control the balance between the regularization and the misfit function.
+
+However, this conventional TV regularization only tends to reduce the \new{horizontal- and vertical-}\old{horizontal and vertical }gradients of each gridpoint in the model, regardless of the geological direction of the model. Therefore, TV is not suitable where the local structure has a dominant direction. Unlike general digital images, the spatial changes in the subsurface always follow some specific geological structures, e.g., tilted layers, faults, and edges of a salt body. In this case, we propose FWI/JMI with directional TV and we design the directional TV based on the local dip estimated\new{ from a rough reflection image} using the plane-wave destruction (PWD) algorithm \citep{fomel2002applications}. 
+
+The misfit function with directional TV can be formulated as
+\begin{equation}
+\begin{split}
+      J_{tot} = \mu J + \lambda C_{DTV} \left(\mathbf{p} \right) = \mu J + \lambda ||\nabla_1 \mathbf{p}||_1 + \lambda ||\nabla_2 \mathbf{p}||_1,
+\label{eq3:J with DTV}
+\end{split}
+\end{equation}
+where $\nabla_1$ and $\nabla_2$ \new{are}\old{is} the gradient \new{operators}\old{operator} of the dominant direction and the direction perpendicular to the dominant direction, respectively. From the viewpoint of physical meaning, $\nabla_1$ and $\nabla_2$ are the rotated and scaled version of $\nabla_x$ and $\nabla_z$, according to the estimated local dip and a weighting parameter. Mathematically, for one point $\left(i,j\right)$, $\nabla_1 \mathbf{p}\left(i,j\right)$ and $\nabla_2 \mathbf{p}\left(i,j\right)$ can be represented as
+\begin{equation}
+\begin{split}
+      \begin{pmatrix}
+      \nabla_1 \mathbf{p}\left(i,j\right)\\\nabla_2 \mathbf{p}\left(i,j\right)
+      \end{pmatrix} 
+      &=\Lambda \mathbf{R} \begin{pmatrix}\nabla_x \mathbf{p}\left(i,j\right)\\\nabla_z \mathbf{p}\left(i,j\right)\end{pmatrix}\\
+       \text{Here~} \Lambda &= 
+      \begin{pmatrix}
+      \alpha_1 & 0 \\
+      0 & \alpha_2
+	  \end{pmatrix}, \mathbf{R} = 
+      \begin{pmatrix}
+      \cos \theta & -\sin \theta \\
+      \sin \theta & \cos \theta
+	  \end{pmatrix},
+\label{eq4:DTV}
+\end{split}
+\end{equation}
+where $\Lambda$ and $\mathbf{R}$ represent scaling matrix and rotation matrix, respectively. $\alpha_1$ and $\alpha_2$ represent the weight on the gradient of the dominant direction and its perpendicular direction, respectively, and $\theta$ is the dip of the local structure. An illustration of such \new{a} directional TV is shown in figure~\ref{fig:FWI_fig1-01}a with the red solid arrows.
+
+Please note that if we assume $\alpha_1 = \alpha_2 = 1$ and $\theta = 0^o$, then $\Lambda$ turns into \new{an}\old{a} identity matrix, which means the same weights are put on both directions, and $\mathbf{R}$ also becomes \new{an}\old{a} identity matrix, indicating that the target directions are horizontal and vertical. Therefore, we can see that the conventional TV is actually a special case of \new{the} directional TV, and in turn, \new{the} directional TV is a more general version of \new{the conventional} TV and more suitable to a model with complex geologic structures. In this paper, we solve both FWI/JMI with \new{the} conventional TV and FWI/JMI with \new{the} directional TV effectively using the split-Bregman iterative algorithm \citep{goldstein2009split}. We only show the framework of solving FWI with \new{the} directional TV in Algorithm 1, because, as mentioned before, we treat \new{the} conventional TV as a special case of directional \new{the} TV, and JMI with \new{the conventional} TV/directional TV will follow a similar algorithm.
+
+% Algorithm is not available in Madagascar online version (please refer to the journal version)
+%\begin{algorithm}
+%\caption{FWI with directional total variation}
+%\begin{algorithmic}[1]
+%  \scriptsize
+%  \STATE Initialize: $\mathbf{m}^0=\mathbf{m}_0$, and $\mathbf{a}_1^0=\mathbf{a}_2^0=\mathbf{b}_1^0=\mathbf{b}_2^0=0$\\
+%  \STATE While Iter $<$ MaxIter \\
+%  ~$\mathbf{m}^{k+1}=\min\limits_\mathbf{m} \mu || \mathbf{d} - f\left(\mathbf{m}\right) ||_2^2 + \lambda|| \mathbf{a}_1^k-\nabla_1 \mathbf{m}-\mathbf{b}_1^k||_2^2 + \lambda|| \mathbf{a}_2^k-\nabla_2 \mathbf{m}-\mathbf{b}_2^k||_2^2$  \\
+%  ~~~~~(Hint: we solve this subproblem using gradient method, and the gradient is: \\
+%  ~~~~~~~~$\mu f^{*} \left( f\left(\mathbf{m}^{k}\right) - \mathbf{d} \right) - \lambda \nabla^{T}_1 \left( \mathbf{a}_1^k-\nabla_1 \mathbf{m}^{k}-\mathbf{b}_1^k \right) - \lambda \nabla^{T}_2 \left( \mathbf{a}_2^k-\nabla_2 \mathbf{m}^{k}-\mathbf{b}_2^k \right)$) \\
+%  ~$\mathbf{a}_1^{k+1}=shrink\left(\nabla_1 \mathbf{m}^{k+1}+\mathbf{b}_1^k, \frac{1}{\lambda}\right)$ \\
+%  \new{~~~~~($shrink\left(x, \gamma\right) = \frac{x}{|x|} * max\left(|x| - \gamma, 0\right)$, a soft-thresholding operator \citep{donoho1995noising})} \\
+%  
+%  ~$\mathbf{a}_2^{k+1}=shrink\left(\nabla_2 \mathbf{m}^{k+1}+\mathbf{b}_2^k, \frac{1}{\lambda}\right)$ \\
+%  ~$\mathbf{b}_1^{k+1}=\mathbf{b}_1^{k} + \left(\nabla_1 \mathbf{m}^{k+1}-\mathbf{a}_1^{k+1}\right)$  \\
+%  ~$\mathbf{b}_2^{k+1}=\mathbf{b}_2^{k} + \left(\nabla_2 \mathbf{m}^{k+1}-\mathbf{a}_2^{k+1}\right)$  \\
+%  end
+%\end{algorithmic}
+%\end{algorithm}
+
+\section{FWI Example}
+In order to demonstrate the effectiveness of FWI with directional TV, we consider the velocity model shown in \new{Figure}\old{figure}~\ref{fig:FWI_fig1-01}a, which is scaled from the top half of the Marmousi model. \new{To avoid cycle-skipping, a}\old{A} Ricker wavelet with a dominant frequency of \new{$14$ Hz}\old{$14 Hz$} is used as the source wavelet. Using a \new{constant-density}\old{constant density} acoustic \new{finite-difference modeling}\old{finite difference modelling}, we generated 23 shots with 334 receivers for each shot. The shot spacing is \new{$180$ m}\old{$180 m$} and \new{the} receiver spacing is \new{$12$ m}\old{$12 m$}. \new{The horizontal and vertical grid size are $12$ m}. In addition, some random noise with $SNR = 10$ is added to the \new{modeled}\old{modelled} data. The middle shot gather is shown in \new{Figure}\old{figure}~\ref{fig:shots_orig}. The initial velocity \new{model} is shown in \new{Figure}\old{figure}~\ref{fig:FWI_fig1-01}b, which is a smoothed version of \new{the model in Figure}\old{figure}~\ref{fig:FWI_fig1-01}a.
+
+First, with the initial model, we apply 6 iterations of Full Wavefield Migration  \citep{Berkhout14b,davydenko2016full} at a maximum frequency of \new{$25$ Hz}\old{$25 Hz$} to the dataset and then denoise the inverted image via a simple soft-thresholding in the curvelet domain (\new{Figure}\old{figure}~\ref{fig:FWI_fig2}a, \cite{donoho1995noising}). Note that full wavefield  migration can be considered as a JMI process in which the velocity is assumed known and fixed. It will honour all multiples and transmission effects properly. Now, with this inverted reflectivity, we can estimate the dip field using plane-wave destruction algorithm proposed by \cite{fomel2002applications}, shown in \new{Figure}\old{figure}~\ref{fig:FWI_fig2}b. This estimated dip field is used to build the directional TV operator for each gridpoint.
+
+Next, we compare three methods: regular FWI without any regularization, FWI with conventional TV, and FWI with directional TV. We use the same $\mu$ and $\lambda$ for TV and directional TV. We choose a relaxation strategy to set $\mu$, which is increasing exponentially. $\lambda$ is chosen as $0.005$, which depends on the scale of data. For directional TV, $\alpha_1 : \alpha_2 = 3 : 1$ and $\alpha_1 + \alpha_2 = 2$. For TV, $\Lambda$ is an identity matrix. After 100 iterations, the inverted results are shown in \new{Figure}\old{figure}~\ref{fig:FWI_fig4}. Note that the regular FWI without any regularization is trapped into local minima very quickly, despite the accurate starting model (\new{Figure}\old{figure}~\ref{fig:FWI_fig4}a). With the help of TV regularization, FWI with TV achieves a better result by smoothing the model via enhancing the sparsity of the spatial gradient of the velocity difference, which allows us to steer away from local minima. However, we can observe that the structures still remain vague in \new{Figure}\old{figure}~\ref{fig:FWI_fig4}b, especially in the deeper area, since traditional TV only uses \new{horizontal- and vertical-}\old{horizontal/vertical } and ignores the local structure. Compared to \new{the} regular TV, much weaker artifacts can be observed in the result of FWI with \new{the} directional TV, shown in \new{Figure}\old{figure}~\ref{fig:FWI_fig4}c, because we consider the structural directions of the spatial gradient and their weights according to the local dip. The convergence diagrams of the misfit function with iteration number corresponding to the three methods are shown in \new{Figure}\old{figure}~\ref{fig:FWI_fig4}d, in which it is visible that FWI with TV works well to mitigate the ill-posedness and non-uniqueness of FWI, and FWI with directional TV behaves clearly better than FWI with \new{the conventional} TV. Figure~\ref{fig:vel_profile-01} shows a comparison between \new{the} different velocities at three different locations. The locations are annotated in \new{Figure}\old{figure}~\ref{fig:FWI_fig4}a-c. We can see the obvious improvement using directional TV. 
+
+\new{To further illustrate the contribution of regularization in the inversion, we show the gradients from the residual at the first iteration based on the different methods in Figure~\ref{fig:FWI_gradient}. Compared to Figure~\ref{fig:FWI_gradient}a, Figure~\ref{fig:FWI_gradient}b has sharper structures, especially in the deeper part, by preserving the edges via the TV constraint. The gradient in Figure~\ref{fig:FWI_gradient}c shows even more blocky structures that correspond to the geologic information. Note that, in Figure~\ref{fig:FWI_gradient}c, there are imprints introduced by the imperfect raw reflectivity model and dip field (Figure~\ref{fig:FWI_fig2}). However, these imprints have been compensated and suppressed during inversion, and the proposed method ends up with a decent result shown in Figure~\ref{fig:FWI_fig4}c, which shows the proposed method is insensitive to the locally-incorrect dip field. Figure~\ref{fig:FWI_fig4} and~\ref{fig:FWI_CIGs} demonstrate the corresponding depth migration images and common image gathers calculated using full wavefield migration. We can see that the reflectivity based on the velocity from FWI with directional TV has the best focusing resolution and less imprints, and their corresponding common image gathers are flatter than the alternative methods. Please note some obvious improvements pointed out by the red arrows. In the end, we show in Figure~\ref{fig:FWI_shots-01} the modeled data generated from each of the final inverted velocities and the corresponding differences with the observed data.}
+\old{Figure~\ref{fig:FWI_shots-01} shows the modelled data generated from the final inverted velocities and the corresponding differences between them and the observed data (figure~\ref{fig:shots_orig}).} From this figure, we note that FWI with directional TV approach can restore the observed data much better than \old{other}\new{the} alternatives.
+
+
+\plot{FWI_fig1-01}{width=1\textwidth}{FWI example: (a) Real velocity model, at specific gridpoint $\left(i,j\right)$. The black dash arrows illustrate $\nabla_x \mathbf{p}\left(i,j\right)$ and $\nabla_z \mathbf{p}\left(i,j\right)$, the red solid arrows illustrate $\nabla_1 \mathbf{p}\left(i,j\right)$ and $\nabla_2 \mathbf{p}\left(i,j\right)$, based on the structural dip at $\left(i,j\right)$. (b) Initial velocity model.}
+
+\plot{shots_orig}{width=0.3\textwidth}{FWI example: Recorded middle shot gather at \new{$X = 2000$ m}\old{$X = 2000 m$} }
+
+\plot{FWI_fig2}{width=0.9\textwidth}{FWI example: (a) The inverted reflectivity model after denoising using thresholding in the curvelet domain. (b) The estimated dip field (in degrees).}
+
+\inputdir{marm}
+\multiplot{4}{vinv,vinv_tv,vinv_dtv,objs}{width=0.45\textwidth}{FWI example: The inverted velocity using (a) regular FWI without any regularization, (b) FWI with conventional TV, and (c) FWI with directional TV. (d) The convergence diagrams of the data misfit as a function of iteration. The blue line denotes the inverted velocity using regular FWI without any regularization. The red line denotes the inverted velocity using FWI with conventional TV. The yellow line denotes the inverted velocity using FWI with directional TV.}
+
+\inputdir{./}
+\plot{vel_profile-01}{width=0.9\textwidth}{FWI example: Comparison of different velocities at three locations. Velocity comparison at (a) \new{$X = 1000$ m}\old{$X = 1000 m$}, (b) \new{$X = 2000$ m}\old{$X = 2000 m$}, (c) \new{$X = 3000$ m}\old{$X = 3000 m$}. The purple line denotes the true velocity. The green line denotes the initial velocity. The blue line denotes the inverted velocity using regular FWI without any regularization. The red line denotes the inverted velocity using FWI with conventional TV. The yellow line denotes the inverted velocity using FWI with directional TV. The three locations are highlighted by the black dash lines in \new{Figure}\old{figure}~\ref{fig:FWI_fig3}a-c}.
+
+\plot{FWI_gradient}{width=0.9\textwidth}{FWI example: The velocity gradient from the residual at the first iteration using (a) regular FWI without any regularization, (b) FWI with conventional TV, and (c) FWI with directional TV.}
+
+\plot{FWI_fig4}{width=0.9\textwidth}{FWI example: The corresponding reflectivity based on the inverted velocity using (a) regular FWI without any regularization, (b) FWI with conventional TV, and (c) FWI with directional TV.}
+
+
+\plot{FWI_CIGs}{width=0.9\textwidth}{FWI example: The corresponding angle gathers generated at $X = 1000$ m, $X = 2000$ m, and $X = 3000$, based on the inverted velocity using (a, b, c) regular FWI without any regularization, (d, e, f) regular FWI with conventional TV, and (g, h, i) regular FWI with directional TV.}
+
+\plot{FWI_shots-01}{width=0.9\textwidth}{FWI example: The modeled data \new{ generated at $X = 2000$ m} \old{generated from the inverted velocity} and the corresponding difference with the observed data based on the inverted velocity using (a, b) regular FWI without any regularization\old{figure~\ref{fig:FWI_fig3}a)}, (c, d) regular FWI with conventional TV\old{ (figure~\ref{fig:FWI_fig3}b)}, and (e, f) regular FWI with directional TV\old{ (figure~\ref{fig:FWI_fig3}c).}}
+
+
+\section{JMI Example}
+In this part, we use the same model as in the previous example to demonstrate the effectiveness of JMI with directional TV. \new{Because the forward modeling in JMI is computationally less expensive that in FWI, w}\old{W}e \new{are able to }use a Ricker wavelet with a \new{higher} dominant frequency of \new{$20$ Hz}\old{$20 Hz$}\old{ as the source wavelet} \new{to acquire higher-resolution reflectivities and velocity. The shot spacing is $200$ m and the receiver spacing is $20$ m.} \new{The horizontal and vertical grid size are $20$ m and $10$ m, respectively. }Surface multiples are excluded in the \new{modeling}\old{modelling}, but internal multiples and transmission effects are included. \new{The direct wave is removed, as it cannot be explained by JMI. }Initially, reflectivities are zero and the initial velocity is a very simple vertical gradient (shown in \new{Figure}\old{figure}~\ref{fig:JMI_fig1}). First, with the initial model, we apply 30 iterations of JMI with \new{$5$ Hz $-$ $25$ Hz}\old{$5 Hz - 25 Hz$} \new{frequency bandwidth of}\old{band-width of frequency} to the dataset and then preprocess the inverted image via a simple soft-thresholding in the curvelet domain. Then, with this preprocessed inverted reflectivity, we estimate the dip field to build the directional TV operator. Meanwhile, the inverted velocity can be used as initial velocity model for the next step. 
+
+\new{Next, w}\old{W}e compare\new{results from} the regular JMI without any regularization, JMI with conventional TV, and JMI with directional TV. The \new{frequency bandwidth}\old{band-width of frequency} during \new{the second step of} JMI is \new{$5$ Hz $-$ $40$ Hz}\old{$5 Hz - 40 Hz$}. We use the same $\mu$ and $\lambda$ for both \new{the conventional} TV and directional TV. $\mu$ is also increasing with iteration and $\lambda = 1.2$. For directional TV, $\alpha_1 : \alpha_2 = 3 : 1$ and $\alpha_1 + \alpha_2 = 2$. For \new{the conventional} TV, $\Lambda$ is an identity matrix. After 50 iterations for each method, the inverted results are shown in \new{Figure}\old{figure}~\ref{fig:JMI_fig3} and \new{Figure}\old{figure}~\ref{fig:JMI_fig2}. Because of the inversion process included in JMI, all the images in \new{Figure}\old{figure}~\ref{fig:JMI_fig2} are quite accurate compared to the true reflectivity structures. Furthermore, all the estimated velocity models in \new{Figure}\old{figure}~\ref{fig:JMI_fig3} are also surprisingly stable and show some details. 
+
+In \new{Figure}\old{figure}~\ref{fig:JMI_fig3}a, the regular JMI without any regularization is slightly trapped in a local minimum, \old{i.e.}\new{e.g.,} in the lower right area pointed by the red arrow. With the help of TV regularization, JMI with \new{conventional} TV in \new{Figure}\old{figure}~\ref{fig:JMI_fig3}b achieves a better result by smoothing the model via enhancing the sparsity of the spatial gradient of the velocity difference, which allows us to steer away from the local minimum. Instead of using \new{the conventional} TV, \new{a }much better inverted velocity with clearer edges of structures \new{is obtained}\old{are shown} in \new{Figure}\old{figure}~\ref{fig:JMI_fig3}c using JMI with directional TV. This is because we consider the structural directions of the spatial gradient and their weights according to the local dip from the associated image. Please note some obvious improvements pointed out by the white arrows. In addition, compared to L1 directional \old{total variation}\new{TV}, L2 directional Laplacian smoothing results in a \new{smoother}\old{more smooth} velocity model (\new{Figure}\old{figure}~\ref{fig:JMI_fig3}d)\new{;}\old{,} however, it intensifies the local minima issue and tends to produce models with blurred discontinuities. That is because \new{the} directional Laplacian smoothing may over-smooth the velocity and cannot preserve edges very well\new{;}\old{, and} it is also more sensitive to the accuracy of the estimated dip field, compared to L1 directional \old{total variation}\new{TV}.  As a result of the improvement of the inverted velocity, the inverted reflectivity also becomes more accurate (\new{Figure}\old{figure}~\ref{fig:JMI_fig2}): The inverted reflectivities highlighted with white arrows in \new{Figure}\old{figure}~\ref{fig:JMI_fig2}c have better focussing and less distortions than the other alternatives\old{ do}. 
+
+Note that the velocity field estimated from JMI has less details compared to that from FWI, as it only needs to describe propagation, not reflection. \new{Similar as in the FWI example, we show in Figure~\ref{fig:JMI_shots-01} the modeled data generated from each of the final inverted velocities and the corresponding differences with the observed data. From this figure, we can see that regularizations on velocity do not make much difference in the data residual, because the velocity in JMI only explains propagation effects, and the reflectivities explain the scattering effects, which makes JMI less sensitive to the details in the velocity model compared to FWI.}
+
+%original files
+%\plot{FWI_fig3}{width=0.9\textwidth}{FWI example: The inverted velocity using (a) regular FWI without any regularization, (b) FWI with conventional TV, and (c) FWI with directional TV. (d) The convergence diagrams of the data misfit as a function of iteration. The blue line denotes the inverted velocity using regular FWI without any regularization. The red line denotes the inverted velocity using FWI with conventional TV. The pink line denotes the inverted velocity using FWI with directional TV.}
+
+\plot{JMI_fig1}{width=0.9\textwidth}{JMI example: (a) Initial reflectivity model. (b) Initial velocity model.}
+
+\plot{JMI_fig3}{width=0.9\textwidth}{JMI example: The inverted velocity using (a) regular JMI without any regularization, (b) JMI with conventional TV, (c) JMI with directional TV, and (d) JMI with L2 directional laplacian smoothing.}
+
+\plot{JMI_fig2}{width=0.9\textwidth}{JMI \new{example}: The inverted reflectivity using (a) regular JMI without any regularization, (b) JMI with conventional TV, (c) JMI with directional TV, and (d) JMI with L2 directional laplacian smoothing.}
+
+\plot{JMI_shots-01}{width=0.9\textwidth}{JMI example: the modeled data generated at $X = 2000$ m and the corresponding difference with the observed data based on the inverted velocity and reflectivity using (a, b) regular JMI without any regularization, (c, d) regular JMI with conventional TV , and (e, f) regular JMI with directional TV.}
+
+
+
+\section{Discussion}
+FWI/JMI with directional TV has been demonstrated to be a more effective method than the alternatives. We design the directional TV based on the dip field calculated from an initial image. By considering the local structural directions of the spatial gradient and their weights according to the local dip, the proposed method achieves a better result compared to FWI/JMI without regularization or with conventional TV. In the case of complex subsurface structures, the local dip map \new{cannot}\old{is not able to} be estimated properly. However, directional TV regularization is not sensitive to the accuracy of the estimated dip, because even using an arbitrary dominant direction would not be worse than using \new{horizontal- and vertical-}\old{horizontal/vertical }gradients like \new{using conventional} TV in a complex area.
+
+In terms of the parameter selection, we choose a relaxation strategy for $\mu$, which is increasing exponentially. In this way, we relax the strength of \new{the} L1 constraint gradually to make the inversion converge. $\lambda$ is a constant which depends on the scale of \new{the} data. We can set a proper $\lambda$ to make sure around $60\% - 70\%$ of \new{the} energy is passed through the \old{shrink}\new{shrinkage} step in Algorithm 1, in order to improve the stability of the algorithm. Regarding the weights on the dominant direction and its perpendicular direction of gradients, it depends on the accuracy of \new{the} estimated dip field and the bias of the subsurface structures. Usually, $\alpha_1 : \alpha_2 = 2 : 1$ is a safe choice. \new{In this paper, we use  $\alpha_1 : \alpha_2 = 3 : 1$ for both examples, which puts more weight on the dominant spatial direction of the velocity gradient, because the structures of the Marmousi model are quite tilted and biased.}
+
+\new{Regarding the calculation efficiency of JMI, JMI is more cost-effective than FWI. First, it doesn't require a good initial model to start with due to its linearization; Second, it is implemented in the frequency domain and no finite-difference-based method is used, therefore the horizontal and vertical grid size do not have to satisfy a frequency dispersion condition, but are defined by the spatial Nyquist criterion. For instance, in the JMI example, the frequency range is upto $40$ Hz and the chosen horizontal and vertical grid size is $20$ m and $10$ m, respectively.}
+
+\section{Conclusions}
+\new{
+Full waveform inversion (FWI) and Joint migration inversion (JMI) with the directional total variation (TV) has been demonstrated to be a more effective method than the alternatives (i.e., FWI/JMI without regularization, with the conventional TV, or directional Laplacian smoothing). We design the directional TV based on the dip field calculated from an initial image. By considering the local structural directions of the spatial gradient and their weights according to the local dip, the proposed method achieves a better result compared to FWI/JMI without regularization or with conventional TV. Finally, it can be concluded that the impact of directional TV is larger for FWI than for JMI, because in JMI the velocity model only explains the propagation effects and, thereby, makes it less sensitive to the details in the velocity model. }
+\old{FWI/JMI with directional TV has been demonstrated to be a more effective method than the alternatives. We design the directional TV based on the dip field calculated from an initial image. By considering the local structural directions of the spatial gradient and their weights according to the local dip, the proposed method achieves a better result compared to FWI/JMI without regularization or with conventional TV. Finally, it can be concluded that the impact of directional TV is larger for FWI than for JMI, confirming the robustness of the JMI methodology. }
+
+\section{ACKNOWLEDGEMENTS}
+S. Qu and E. Verschuur thank the sponsors of the Delphi consortium for their support. Y. Chen is supported by the “Thousand Youth Talents Plan” of China, and the Starting Funds from Zhejiang University.
+
+%\new{Furthermore, they thank the anonymous reviewers, the associate and assistant editors for their constructive comments.}
+%\new{The authors thank the anonymous reviewers, the associate and assistant editors for their constructive comments.}
+
+%\append{The source of the bibliography}
+%\verbatiminput{2016_seg.bib}
+
+\bibliographystyle{seg}  % style file is seg.bst
+\bibliography{dtv}

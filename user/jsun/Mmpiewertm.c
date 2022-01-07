@@ -107,7 +107,6 @@ int main(int argc, char* argv[])
   float wfdt;
   int ix,it,is;
   int nzx,nzx1,nzx2,nz2,nx2,nk,n2; /*fft related*/
-  int nth;
 
   float **rcdz, **rcdx;
   float *imgpp, *imgps, *imgsp, *imgss;
@@ -251,6 +250,7 @@ int main(int argc, char* argv[])
   sf_warning("==   Lowrank two-step elastic wave propagator   ==");
   sf_warning("==================================================");
 #ifdef _OPENMP
+  int nth;
 #pragma omp parallel
   {
     nth = omp_get_num_threads(); /* omp_set_num_threads(nth); */
@@ -681,7 +681,7 @@ int main(int argc, char* argv[])
 int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz, float **usx, geopar geop)
 /*< lowrank 2d elastic forward modeling >*/
 {
-  int nx,nz,nz1,nx1;     /* model dimension parameters */
+  int nx,nz,nx1;     /* model dimension parameters */
   float dx,dz;           /* spatial sampling */
   int gpz;
 
@@ -706,7 +706,7 @@ int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz,
   float c, old;
   int wfit;
   int iz, ix, ik, im, it, i, j;
-  int nzx,nzx2,nz2,nx2,nk,nkz,nkx;
+  int nzx2,nz2,nx2,nk,nkz,nkx;
   float kz0, kx0, dkz, dkx;
   float *kx,*kz,kmod;
   float **wavep, **waves, *uz2, *uz1, *ux2, *ux1;
@@ -715,7 +715,6 @@ int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz,
   nx  = geop->nx;
   nz  = geop->nz;
   nx1 = geop->nx1;
-  nz1 = geop->nz1;
   dx  = geop->dx;
   dz  = geop->dz;
   gpz = geop->gpz;
@@ -752,7 +751,6 @@ int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz,
 
   nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
   if (nk!=geop->nk) sf_error("Incompatible nk!");
-  nzx = nz*nx;
   nzx2 = nz2*nx2;
   kz0 = cmplx ? -SF_PI/dz : 0;
   kx0 = -SF_PI/dx;
@@ -824,7 +822,7 @@ int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz,
 #endif
       for(ix=-1;ix<=1;ix++) {
 	for(iz=-1;iz<=1;iz++) {
-	  if(fabs(ix)+fabs(iz)==2) {
+	  if(abs(ix)+abs(iz)==2) {
 	    j = isz+iz+nz2*(isx+ix);
 	    uz2[j]+=iz*Ricker(t, f0, t0, A);
 	    ux2[j]+=ix*Ricker(t, f0, t0, A);
@@ -838,7 +836,7 @@ int lrewefor2(float **rcdz, float** rcdx, float **upz, float **upx, float **usz,
 #endif
       for(ix=-1;ix<=1;ix++) {
         for(iz=-1;iz<=1;iz++) {
-	  if(fabs(ix)+fabs(iz)==2) {
+	  if(abs(ix)+abs(iz)==2) {
 	    j = isz+iz+nz2*(isx+ix);
 	    if(ix==-1&&iz==1)  
 	      uz2[j]+=sqrt(2.0)*Ricker(t, f0, t0, A);
@@ -1045,8 +1043,7 @@ int lrewebac2(float *imgpp, float *imgps, float *imgsp, float *imgss, float **rc
   float dx,dz;           /* spatial sampling */
   int gpz;
 
-  int nt, src, isx, isz; /* model/data dimension and source location */
-  float dt, f0, t0, A;   /* time and source related */
+  int nt; /* model/data dimension and source location */
 
   bool abc;              /* abc flag */
   int nbt,nbb,nbl,nbr;   /* abc width */
@@ -1062,11 +1059,10 @@ int lrewebac2(float *imgpp, float *imgps, float *imgsp, float *imgss, float **rc
   int pad1;   /* fft padding on the first axis */
 
   /* computation related variables/arrays*/
-  float t;
   float c, old;
   int wfit;
   int iz, ix, ik, im, it, i, j;
-  int nzx,nzx2,nz2,nx2,nk,nkz,nkx;
+  int nzx2,nz2,nx2,nk,nkz,nkx;
   float kz0, kx0, dkz, dkx;
   float *kx,*kz,kmod;
   float **wavep, **waves, *uz2, *uz1, *ux2, *ux1;
@@ -1083,13 +1079,6 @@ int lrewebac2(float *imgpp, float *imgps, float *imgsp, float *imgss, float **rc
   //gpx = geop->gpx;
   //gpl = geop->gpl;
   nt  = geop->nt;
-  src = geop->src;
-  isx = geop->isx;
-  isz = geop->isz;
-  dt  = geop->dt;
-  f0  = geop->f0;
-  t0  = geop->t0;
-  A   = geop->A;
   abc = geop->abc;
   nbt = geop->nbt;
   nbb = geop->nbb;
@@ -1113,7 +1102,6 @@ int lrewebac2(float *imgpp, float *imgps, float *imgsp, float *imgss, float **rc
 
   nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
   if (nk!=geop->nk) sf_error("Incompatible nk!");
-  nzx = nz*nx;
   nzx2 = nz2*nx2;
   kz0 = cmplx ? -SF_PI/dz : 0;
   kx0 = -SF_PI/dx;
@@ -1177,7 +1165,6 @@ int lrewebac2(float *imgpp, float *imgps, float *imgsp, float *imgss, float **rc
 
   wfit = wfnt-1;
   for(it=nt-1;it>=0;it--) {
-    t=it*dt;
 
     /* backward-propagating using two-step k-space solution in VTI media */
 

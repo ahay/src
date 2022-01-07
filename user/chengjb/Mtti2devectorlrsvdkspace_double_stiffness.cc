@@ -667,9 +667,9 @@ int main(int argc, char* argv[])
         if(it%1==0&&it>=12000)
         {
             FILE *fp1,*fp2,*fp3,*fp4,*fp5,*fp6;
-            char dataxnumber[10],dataznumber[10];
-            char datasxnumber[10],datapznumber[10];
-            char datapxnumber[10],datasznumber[10];
+            char dataxnumber[20],dataznumber[20];
+            char datasxnumber[20],datapznumber[20];
+            char datapxnumber[20],datasznumber[20];
             memset(dataxnumber,0,10);
             memset(dataznumber,0,10);
             memset(datapxnumber,0,10);

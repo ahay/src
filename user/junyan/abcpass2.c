@@ -143,6 +143,7 @@ void bdz_init(int n1, int n2, int n3 /*model size:x*/,
    
 
 float **extmodel(float **init_model,int nz,int nx,int np)
+/*< extended model >*/
 {
 	float **p;
 	int ix,iz;

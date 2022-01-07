@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave = sf_floatalloc2(nzx2,m2);
 
-    ifft2_allocate(cwavem);
+    fft2_allocate(cwavem);
 
     for (iz=0; iz < nzx; iz++) {
 	prev[iz]=0.;

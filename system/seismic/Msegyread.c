@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
     char *filename, *trace, *prog, key[7], *name;
     sf_file out, hdr, msk=NULL;
-    int format, ns, itr, ntr, n2, itrace[SF_MAXKEYS], *mask, nkeys=SF_NKEYS, ik;
+    int format, ns, itr, ntr, n2, itrace[SF_MAXKEYS], *mask, nkeys=SF_NKEYS, ik, nsbyte;
     off_t pos, start, nsegy=0;
     FILE *head, *file;
     float *ftrace, dt=0.0, t0;
@@ -479,7 +479,10 @@ int main(int argc, char *argv[])
     if(!su){ 
       if (ns==0){
 	/* Number of samples. The default ns from binary header */
-	ns = segyns (bhead);
+	  if (!sf_getint("nsbyte",&nsbyte)) nsbyte=0;
+	  /* byte number for ns in binary header */
+	  if (0 != nsbyte) set_segyns_byte(nsbyte);
+	  ns = segyns (bhead);
       }
       if (0>=ns) sf_error("Number of samples is not set in binary header");
 

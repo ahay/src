@@ -75,12 +75,14 @@ static sf_complex fkocpredict(bool forw, sf_complex tt, int i, int j)
 #else
 		tt = sf_cmul(tt,oper);
 #endif
-	    } else {
-		tt = tt;
-	    }
-	} else {
-	    tt = tt;
-	}
+	    } 
+		//else {
+		//tt = tt;
+	    //}
+	} 
+	//else {
+	//    tt = tt;
+	//}
 	return(tt);
     }
 }

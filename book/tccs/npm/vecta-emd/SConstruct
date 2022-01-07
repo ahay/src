@@ -1,0 +1,132 @@
+from rsf.proj import *
+#from rsf.recipes.beg import server as private
+from math import *
+from rsf.prog import RSFROOT
+
+# load data
+
+data = '../vecta-nar/bend_l1_pmig_enhanc.sgy'
+#Fetch(data, 'vecta', private)
+Flow('data', data, 'segyread stdin=0 | window n2=471 max1=1.5 | scale axis=2')
+
+Plot('data', 'grey  clip=0.5 title="Input Data" screenratio=0.7 lavelsz=11')
+Result('data', 'Overlay')
+
+# parameters setting
+
+nt = 751       # time sampling points
+nx = 471       # trace
+dt = 0.002
+dx = 1
+nf = 1/dt      # sample  frequency
+df = (1/dt/2)/(nf-1)
+
+
+# define cubic plot
+def Grey2(data, other):
+    Result(data,
+           '''
+           transp | window min1=0 max1=150 | scale axis=2 |
+           grey wanttitle=n color=j scalebar=y minval=0 maxval=1 allpos=y label2=Time
+           unit2=s label1=Frequency unit1=hz grid=y screenratio=0.5 labelsz=11 wherexlabel=b
+           %s
+           ''' % (other))
+def Grey21(data):
+    Result(data,
+           '''
+           window min1=0 max1=150 | scale axis=2 |
+           grey wanttitle=n color=j scalebar=y minval=0 maxval=1 allpos=y label2=Time
+           unit2=s label1=Frequency unit1=hz grid=y screenratio=0.5 labelsz=11 wherexlabel=b
+           ''')
+
+# Slice image
+
+def Grey22(data,other):
+    Plot(data,
+           '''
+           scale axis=2 |
+           grey wanttitle=y color=j scalebar=y minval=0 maxval=1 allpos=y label2=Trace
+           unit2= label1=Time unit1=s grid=y screenratio=0.5 labelsz=11 wherexlabel=t
+           %s ''' % (other))
+
+def Grey3(data, other):
+    Result(data,
+           '''
+           byte | transp plane=23 memsize=1000 | grey3 flat=n transp=y color=j
+           unit1=s unit2= allpos=y frame1=300 frame2=150 frame3=100 label2=Trace
+           label1=Time label3=Frequency labelsz=6 screenratio=1 point1=0.8
+           point2=0.8
+           %s
+           ''' % (other))
+
+# define eemd transform for later use
+
+def eemd_tran(data):
+    nimf = 6
+    emdt = []
+    for seed in range(25):
+        emd = data+'emd%d' % seed
+        Flow(emd, data,
+             '''
+             noise var=0.01 seed=%d | emd | window n2=%d
+             ''' % (seed, nimf))
+        emdt.append(emd)
+    emds = data+'emds'
+    Flow(emds, emdt, 'cat axis=3 ${SOURCES[1:%d]} | stack axis=3' % len(emdt))
+
+# eemd transform to seismic data --> tfemds
+
+tfemdt = []
+for num in range(nx):
+    trace = 'trace%d' % (num+1)
+    Flow(trace, 'data', 'window n2=1 f2=%d' % num)
+    eemd_tran(trace)
+    emdtmp = trace+'emds'
+    tfemdt.append(emdtmp)
+Flow('dataemds', tfemdt, 'cat axis=2 ${SOURCES[1:%d]}' % len(tfemdt))
+
+# MatLab initiation
+
+matlab = WhereIs('matlab')
+matROOT = '../matfun'
+matfun = 'VectaTrace'
+matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
+if not matlab:
+    sys.stderr.write('\n Cannot find MatLab.\n')
+
+# MatLab process
+
+Flow('tfemds1 tfslice1 tfslice2 tfslice3 tfslice4 tfslice5 tfslice6', [os.path.join(matROOT, matfun+'.m'), 'dataemds'],
+     '''
+     MATLABPATH=%(matlabpath)s %(matlab)s
+     -nosplash -nojvm -r "addpath %(matROOT)s;%(matfun)s('${SOURCES[1]}', '${TARGET}', '${TARGETS[1]}', '${TARGETS[2]}', '${TARGETS[3]}', '${TARGETS[4]}', '${TARGETS[5]}', '${TARGETS[6]}'); quit"
+     ''' % vars(), stdin=0, stdout=-1)
+
+Flow('TimeFreqCubeEmd', 'tfemds1',
+     '''
+     put o1=%g d1=%g n1=%d  o2=%g d2=%g n2=%d  o3=%g d3=%g n3=%d
+     ''' % (0,dt,nt,0,df,nf,0,dx,nx))
+
+Plot('label',None,'box x0=8.5 y0=7.2 label="Gas?" size=0.3 xt=0.75 yt=0.75')
+for num in range(6):
+    DataOut = 'SliceEmd%d' % (num+1)
+    DataIn  = 'tfslice%d' % (num+1)
+    Flow(DataOut, DataIn, 'put o1=%g d1=%g n1=%d o2=%g d2=%g n2=%d' % (0, dt, nt, 0, dx, nx))
+    Grey22('SliceEmd%d' % (num+1), 'title="%d Hz"' % ((num+1)*10))
+    Plot('GasSliceNar%d' % (num+1), [DataOut, 'label'], 'Overlay')
+    Result('GasSliceNar%d' % (num+1), 'Overlay')
+
+Grey3('TimeFreqCubeEmd','title="EEMD"')
+
+# Smooth process
+
+for num in range(6):
+    DataOut = 'SmoothSliceEmd%d' % (num+1)
+    DataIn =  'SliceEmd%d' % (num+1)
+    Flow(DataOut, DataIn, 'smooth rect1=3 rect2=3 repeat=2')
+    Grey22('SmoothSliceEmd%d' % (num+1), 'title="%d Hz"' % ((num+1)*10))
+    Plot('GasSmoothSliceEmd%d' % (num+1), [DataOut, 'label'], 'Overlay')
+    Result('GasSmoothSliceEmd%d' % (num+1), 'Overlay')
+
+
+End()

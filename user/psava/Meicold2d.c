@@ -89,9 +89,12 @@ int main(int argc, char* argv[])
     ac = sf_iaxa(Fc,2); sf_setlabel(ac,"cc"); sf_setunit(ac,"");
     nc = sf_n(ac); 
 
-    if(! sf_getint("nhz",&nhz)) nhz=0; nhz2=2*nhz+1; /* z lags */
-    if(! sf_getint("nhx",&nhx)) nhx=0; nhx2=2*nhx+1; /* x lags */
-    if(! sf_getint("nht",&nht)) nht=0; nht2=2*nht+1; /* t lags */
+    if(! sf_getint("nhz",&nhz)) nhz=0; 
+    if(! sf_getint("nhx",&nhx)) nhx=0; 
+    if(! sf_getint("nht",&nht)) nht=0; 
+    nhz2=2*nhz+1; /* z lags */
+    nhx2=2*nhx+1; /* x lags */
+    nht2=2*nht+1; /* t lags */
 
     lht=2*nht;
 
@@ -124,9 +127,12 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool("gaus",&gaus)) gaus=false; /* Gaussian taper flag */
     if(gaus) {
-	if(! sf_getfloat("gsx",&gsx)) gsx=nhx*sf_d(ax); gsx=1./(2*gsx*gsx);
-	if(! sf_getfloat("gsz",&gsz)) gsz=nhz*sf_d(az); gsz=1./(2*gsz*gsz);
-	if(! sf_getfloat("gst",&gst)) gst=nht*sf_d(at); gst=1./(2*gst*gst);
+	if(! sf_getfloat("gsx",&gsx)) gsx=nhx*sf_d(ax); 
+	if(! sf_getfloat("gsz",&gsz)) gsz=nhz*sf_d(az); 
+	if(! sf_getfloat("gst",&gst)) gst=nht*sf_d(at); 
+    gsx=1./(2*gsx*gsx);
+    gsz=1./(2*gsz*gsz);
+    gst=1./(2*gst*gst);
     }
 
     /*------------------------------------------------------------*/

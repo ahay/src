@@ -25,17 +25,18 @@ Flow('hist','byte',
      dd type=float
      ''')
 Plot('hist',
-     'graph label1=Value label2=Occurence title=Histogram')
+     'bargraph label1=Value label2=Occurence title=Histogram')
 
 # Cumulative histogram
 Flow('cumu','hist','causint')
 
-Result('hist','hist cumu',
+Plot('cumu',
        '''
-       cat axis=2 ${SOURCES[1]} | scale axis=1 |
-       graph label1=Value label2="Normalized Occurence"
-       title=Histogram dash=0,1
+       bargraph label1=Value label2=Occurence
+       title="Cumulative Histogram"
        ''')
+
+Result('hist','hist cumu','SideBySideIso')
 
 # ADD HISTOGRAM EQUALIZATION
 

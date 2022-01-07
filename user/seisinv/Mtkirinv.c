@@ -38,8 +38,8 @@ reg=4: precondition => local slope constraints along t-x plane and smoothing alo
 
 int main(int argc, char* argv[])
 {
-    int nt, ncmp, ncdp, nh, nh2, nm, nd, memsize, niter, reg, ix, ih, i3, i2, i1, iter, filt, nw, np;
-    float t0, cmp0, cdp0, h0, dt, dcmp, dcdp, dh, apt, rho, aal, norm;
+    int nt, ncmp, ncdp, nh, nh2, nm, nd, memsize, niter, reg, ix, ih, i3, i2, i1, iter=0, filt, nw, np;
+    float t0, cmp0, cdp0, h0, dt, dcmp, dcdp, dh, apt, rho, aal, norm=0.;
     bool verb, half, amp;
     float ***data, ***modl, **vrms, **mask, *off, *error=NULL;
     float **pp, **qq, *aa;

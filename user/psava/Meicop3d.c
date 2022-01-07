@@ -205,10 +205,14 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     if(! sf_getbool("gaus",&gaus)) gaus=false; /* Gaussian taper */
     if(gaus) {
-	if(! sf_getfloat("gsx",&gsx)) gsx=0.25*sf_n(ahx)*sf_d(ahx); gsx=(nhx==0)?1:1./(2*gsx*gsx);
-	if(! sf_getfloat("gsy",&gsy)) gsy=0.25*sf_n(ahy)*sf_d(ahy); gsy=(nhy==0)?1:1./(2*gsy*gsy);
-        if(! sf_getfloat("gsz",&gsz)) gsz=0.25*sf_n(ahz)*sf_d(ahz); gsz=(nhz==0)?1:1./(2*gsz*gsz);
-        if(! sf_getfloat("gst",&gst)) gst=0.25*sf_n(aht)*sf_d(aht); gst=(nht==0)?1:1./(2*gst*gst);
+		if(! sf_getfloat("gsx",&gsx)) gsx=0.25*sf_n(ahx)*sf_d(ahx); 
+		if(! sf_getfloat("gsy",&gsy)) gsy=0.25*sf_n(ahy)*sf_d(ahy); 
+        if(! sf_getfloat("gsz",&gsz)) gsz=0.25*sf_n(ahz)*sf_d(ahz); 
+        if(! sf_getfloat("gst",&gst)) gst=0.25*sf_n(aht)*sf_d(aht); 
+		gsx=(nhx==0)?1:1./(2*gsx*gsx);
+		gsy=(nhy==0)?1:1./(2*gsy*gsy);
+		gsz=(nhz==0)?1:1./(2*gsz*gsz);
+		gst=(nht==0)?1:1./(2*gst*gst);
     }
     
     /*------------------------------------------------------------*/

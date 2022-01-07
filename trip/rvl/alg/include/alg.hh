@@ -68,7 +68,11 @@ namespace RVLAlg {
   public:
 
     Algorithm() {}
+#if __cplusplus >= 201103L  // We are using C++11 or a later version
+    virtual ~Algorithm() noexcept(false) {}
+#else
     virtual ~Algorithm() {}
+#endif
 
     /** 
 	This is the only required member function.  When called
@@ -153,8 +157,12 @@ namespace RVLAlg {
 
   */
   class Terminator {
-  public: 
+  public:
+#if __cplusplus >= 201103L // We are using C++11 or a later version   
+    virtual ~Terminator() noexcept(false) {}
+#else
     virtual ~Terminator() {}
+#endif
     virtual bool query() = 0;
   };
 

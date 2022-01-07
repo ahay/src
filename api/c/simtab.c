@@ -561,9 +561,9 @@ void sf_simtab_input (sf_simtab table, FILE* fp, FILE* out)
 
     while (NULL != fgets(line,4,fp)) {
 	/* code for the header end */
-	if (SF_EOL==line[0] && SF_EOL==line[1] && SF_EOT==line[2]) return;
+	if (SF_EOL==line[0] && SF_EOL==line[1] && SF_EOT==line[2]) break;
 	if ('\n'  !=line[0] && '\n'  !=line[1] && '\n'  !=line[2] &&
-	    NULL == fgets(line+3,LINELEN-3,fp)) return;
+	    NULL == fgets(line+3,LINELEN-3,fp)) break;
 
 	if (NULL != out) fputs(line,out);
 	sf_simtab_string(table,line);

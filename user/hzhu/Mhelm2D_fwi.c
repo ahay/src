@@ -43,9 +43,9 @@ int main(int argc, char* argv[])
     char *order;
     int uts, mts, i, j, k, iw, niter, iter;
     float **cur_grad, **pre_grad, **cur_dir, **pre_dir;
-    float *cur_grad_input, *cur_grad_smooth, *cur_grad_smooth2;
+    float *cur_grad_input=NULL, *cur_grad_smooth=NULL, *cur_grad_smooth2=NULL;
     float misfit0, misfit1, misfit2, misfitold, beta, alpha;
-    float **v, **vnew, **slope, **recloc;
+    float **v, **vnew, **slope=NULL, **recloc;
 
     sf_init(argc, argv);
 

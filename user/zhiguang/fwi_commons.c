@@ -1079,10 +1079,9 @@ void gradient_smooth2(int rectx, int rectz, int nx, int nz, int waterz, float sc
 void smooth_misfit(float **pp, float *fcost, int nr, int nt, int drectx, int drectz, int nrepeat, int ider)
 /*< adjoint source of smoothing kernel misfit >*/
 {
-	int it, ir, nd;
+	int it, ir;
 	int m[2], rect[2];
 
-	nd=nt*nr;
 	m[0]=nt; m[1]=nr;
 	rect[0]=drectz; rect[1]=drectx;
 
@@ -1399,7 +1398,7 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 //
 //void wiener_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 ///*< linear operator >*/
-//{
+/*{
 //	int i, j;
 //
 //	sf_adjnull(adj, add, nx, ny, xx, yy);
@@ -1428,10 +1427,11 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 //		}
 //	}
 //}
-//
+*/
+
 //void wiener_lop2(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 ///*< linear operator >*/
-//{
+/*{
 //	int i, j;
 //
 //	sf_adjnull(adj, add, nx, ny, xx, yy);
@@ -1460,7 +1460,7 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 //		}
 //	}
 //}
-//
+*/
 //void adjsou_wiener(float **dd, float **pp, float *fcost, int nr, int r0, int nt, float dt, int fniter)
 ///*< calculate adjoint source of Wiener filter misfit >*/
 //{
@@ -1549,7 +1549,7 @@ void line_search(int n, float *x, float *grad, float *direction, sf_gradient gra
 //			}
 //			
 //			for(ir=0; ir<nr; ir++){
-//				sf_stretch4_define(mo,str);
+//				sf_stretch4_define(mo,str,false);
 //				sf_stretch4_apply(false,mo,dd[ir],ref[iw][ir]);
 //			}
 //		}

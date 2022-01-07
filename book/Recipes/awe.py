@@ -1,39 +1,65 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import random
+import random,functools,operator
 
 random.seed(1002)
 def add(x,y): return x+y
-def myid(n): return '_'+reduce(add,['%d'%random.randint(0,9) for i in range(n)])
+def myid(n): return '_'+functools.reduce(operator.add,['%d'%random.randint(0,9) for i in range(n)])
 
 # ------------------------------------------------------------
 def param(par):
-    if(not par.has_key('nb')):       par['nb']=0
-    if(not par.has_key('nbell')):    par['nbell']=5
+    if 'nb'     not in par: par['nb']=0
+    if 'nbell'  not in par: par['nbell']='y'
+    if 'snap'   not in par: par['snap']='y'
+    if 'jsnap'  not in par: par['jsnap']=100
+    if 'jdata'  not in par: par['jdata']=1
+    #if(not par.has_key('nb')):       par['nb']=0
+    #if(not par.has_key('nbell')):    par['nbell']=5
+    #if(not par.has_key('snap')):     par['snap']='y'
+    #if(not par.has_key('jsnap')):    par['jsnap']=100
+    #if(not par.has_key('jdata')):    par['jdata']=1
 
-    if(not par.has_key('snap')):     par['snap']='y'
-    if(not par.has_key('jsnap')):    par['jsnap']=100
-    if(not par.has_key('jdata')):    par['jdata']=1
-    if(not par.has_key('dabc')):     par['dabc']='y'
-    if(not par.has_key('ompchunk')): par['ompchunk']=1
-    if(not par.has_key('ompnth')):   par['ompnth']=0
-    if(not par.has_key('fsrf')):     par['fsrf']='n'
-    if(not par.has_key('verb')):     par['verb']='n'
-    if(not par.has_key('fdorder')):  par['fdorder']=4
-    if(not par.has_key('optfd')):    par['optfd']='n'
-    if(not par.has_key('hybridbc')): par['hybridbc']='n'
-    if(not par.has_key('sinc')):     par['sinc']='n'
-    if(not par.has_key('expl')):     par['expl']='n'
+    if 'ompchunk'  not in par: par['ompchunk']=1
+    if 'ompnth'    not in par: par['ompnth']=0
+    #if(not par.has_key('ompchunk')): par['ompchunk']=1
+    #if(not par.has_key('ompnth')):   par['ompnth']=0
 
-    if(not par.has_key('gaus')):     par['gaus']='y'
+    if 'dabc'      not in par: par['dabc']='y'
+    if 'fsrf'      not in par: par['fsrf']='n'
+    if 'verb'      not in par: par['verb']='n'
+    if 'expl'      not in par: par['expl']='n'
+    if 'gaus'      not in par: par['gaus']='y'
+    if 'sinc'      not in par: par['sinc']='n'
+    #if(not par.has_key('dabc')):     par['dabc']='y'
+    #if(not par.has_key('fsrf')):     par['fsrf']='n'
+    #if(not par.has_key('verb')):     par['verb']='n'
+    #if(not par.has_key('expl')):     par['expl']='n'
+    #if(not par.has_key('gaus')):     par['gaus']='y'
+    #if(not par.has_key('sinc')):     par['sinc']='n'
 
-    if(not par.has_key('nqz')): par['nqz']=par['nz']
-    if(not par.has_key('oqz')): par['oqz']=par['oz']
-    if(not par.has_key('dqz')): par['dqz']=par['dz']
+    if 'fdorder'      not in par: par['fdorder']=4
+    if 'optfd'        not in par: par['optfd']='n'
+    if 'hybridbc'     not in par: par['hybridbc']='n'
+    #if(not par.has_key('fdorder')):  par['fdorder']=4
+    #if(not par.has_key('optfd')):    par['optfd']='n'
+    #if(not par.has_key('hybridbc')): par['hybridbc']='n'
 
-    if(not par.has_key('nqx')): par['nqx']=par['nx']
-    if(not par.has_key('oqx')): par['oqx']=par['ox']
-    if(not par.has_key('dqx')): par['dqx']=par['dx']
+    if 'nqx'      not in par: par['nqx']=par['nx']
+    if 'oqx'      not in par: par['oqx']=par['ox']
+    if 'dqx'      not in par: par['dqx']=par['dx']
+    if 'nqy'      not in par: par['nqy']=par['ny']
+    if 'oqy'      not in par: par['oqy']=par['oy']
+    if 'dqy'      not in par: par['dqy']=par['dy']
+    if 'nqz'      not in par: par['nqz']=par['nz']
+    if 'oqz'      not in par: par['oqz']=par['oz']
+    if 'dqz'      not in par: par['dqz']=par['dz']
+    #if(not par.has_key('nqx')): par['nqx']=par['nx']
+    #if(not par.has_key('oqx')): par['oqx']=par['ox']
+    #if(not par.has_key('dqx')): par['dqx']=par['dx']
+    #if(not par.has_key('nqz')): par['nqz']=par['nz']
+    #if(not par.has_key('oqz')): par['oqz']=par['oz']
+    #if(not par.has_key('dqz')): par['dqz']=par['dz']
+
 
 # ------------------------------------------------------------
 def awepar(par):
@@ -57,7 +83,7 @@ def eicpar(par):
 def iwindow(par):
     win = ' ' + \
           '''
-          nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+          nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g
           nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
           ''' % par + ' '
     return win
@@ -68,28 +94,28 @@ def aweoptpar(par):
           verb=%(verb)s
           sinc=%(sinc)s expl=%(expl)s
           fdorder=%(fdorder)d optfd=%(optfd)s
-          dabc=%(dabc)s nb=%(nb)d hybridbc=%(hybridbc)s 
+          dabc=%(dabc)s nb=%(nb)d hybridbc=%(hybridbc)s
           snap=%(snap)s jsnap=%(jsnap)d
           '''%par + ' '
     return aweopt
 
 # ------------------------------------------------------------
 # wavelet
-def wavelet(wav,frq,custom,par):    
+def wavelet(wav,frq,custom,par):
     Flow(wav,None,
          '''
          spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
          pad end1=%(nt)d |
-         '''%par + 
+         '''%par +
          '''
          ricker1 frequency=%g |
-         '''%frq + 
-         '''      
+         '''%frq +
+         '''
          window n1=%(nt)d |
          scale axis=123 |
          put label1=%(lt)s unit1=%(ut)s |
          transp
-         '''%par)   
+         '''%par)
 
 # ------------------------------------------------------------
 # variable-density acoustic FD modeling
@@ -110,10 +136,10 @@ def awefd3d(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          sou=${SOURCES[3]} rec=${SOURCES[4]}
          wfl=${TARGETS[1]}
          ''' + ' ' + awepar(par) + ' ' + custom)
-         
+
 # ------------------------------------------------------------
 # constant-density acoustic FD modeling
-def cdafd2d(odat,owfl,idat,velo,sou,rec,custom,par):    
+def cdafd2d(odat,owfl,idat,velo,sou,rec,custom,par):
     Flow([odat,owfl],[idat,velo,sou,rec],
          '''
          awefd2d cden=y
@@ -122,7 +148,7 @@ def cdafd2d(odat,owfl,idat,velo,sou,rec,custom,par):
          wfl=${TARGETS[1]}
          ''' + ' ' + aweoptpar(par) + ' ' + custom)
 
-def cdafd3d(odat,owfl,idat,velo,sou,rec,custom,par):    
+def cdafd3d(odat,owfl,idat,velo,sou,rec,custom,par):
     Flow([odat,owfl],[idat,velo,sou,rec],
          '''
          awefd3d cden=y
@@ -150,10 +176,10 @@ def awefd3dopt(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          sou=${SOURCES[3]} rec=${SOURCES[4]}
          wfl=${TARGETS[1]}
          ''' + ' ' + awepar(par) + ' ' + custom)
- 
+
 # ------------------------------------------------------------
 # constant-density acoustic FD modeling with optimized fd and hybrid bc
-def cdafd2dopt(odat,owfl,idat,velo,sou,rec,custom,par):    
+def cdafd2dopt(odat,owfl,idat,velo,sou,rec,custom,par):
     Flow([odat,owfl],[idat,velo,sou,rec],
          '''
          awefd2dopt cden=y
@@ -161,8 +187,8 @@ def cdafd2dopt(odat,owfl,idat,velo,sou,rec,custom,par):
          sou=${SOURCES[2]} rec=${SOURCES[3]}
          wfl=${TARGETS[1]}
          ''' + ' ' + aweoptpar(par) + ' ' + custom)
-         
-def cdafd3dopt(odat,owfl,idat,velo,sou,rec,custom,par):    
+
+def cdafd3dopt(odat,owfl,idat,velo,sou,rec,custom,par):
     Flow([odat,owfl],[idat,velo,sou,rec],
          '''
          awefd3dopt cden=y
@@ -186,65 +212,65 @@ def aweop3d(wfl,sou,vel,custom,par):
          aweop3d
          vel=${SOURCES[1]}
          '''+ ' ' + awepar(par) + ' ' + custom)
-         
+
 # ------------------------------------------------------------
 # CIC forward: opr * wfl = img
 def cic2dF(img,wfl,opr,custom,par):
     Flow(img,[wfl,opr],
          '''
-         cicop2d adj=n wflcausal=y oprcausal=n 
-         opr=${SOURCES[1]} 
+         cicop2d adj=n wflcausal=y oprcausal=n
+         opr=${SOURCES[1]}
          ''' + ' ' + custom)
 def cic3dF(img,wfl,opr,custom,par):
     Flow(img,[wfl,opr],
          '''
-         cicop3d adj=n wflcausal=y oprcausal=n 
-         opr=${SOURCES[1]} 
+         cicop3d adj=n wflcausal=y oprcausal=n
+         opr=${SOURCES[1]}
          ''' + ' ' + custom)
 
 # CIC adjoint: opr * img = wfl
 def cic2dA(wfl,img,opr,custom,par):
     Flow(wfl,[img,opr],
          '''
-         cicop2d adj=y wflcausal=n oprcausal=n 
-         opr=${SOURCES[1]} 
+         cicop2d adj=y wflcausal=n oprcausal=n
+         opr=${SOURCES[1]}
          ''' + ' ' + custom)
 def cic3dA(wfl,img,opr,custom,par):
     Flow(wfl,[img,opr],
          '''
-         cicop3d adj=y wflcausal=n oprcausal=n 
-         opr=${SOURCES[1]} 
+         cicop3d adj=y wflcausal=n oprcausal=n
+         opr=${SOURCES[1]}
          ''' + ' ' + custom)
-         
-# ------------------------------------------------------------         
+
+# ------------------------------------------------------------
 # EIC forward: opr * wfl = img
-def eic2dF(img,wfl,opr,cip,custom,par):    
+def eic2dF(img,wfl,opr,cip,custom,par):
     Flow(img,[wfl,opr,cip],
          '''
-         eicop2d adj=n wflcausal=y oprcausal=n 
+         eicop2d adj=n wflcausal=y oprcausal=n
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + eicpar(par) + ' ' + custom )
-def eic3dF(img,wfl,opr,cip,custom,par):    
+def eic3dF(img,wfl,opr,cip,custom,par):
     Flow(img,[wfl,opr,cip],
          '''
-         eicop3d adj=n wflcausal=y oprcausal=n 
+         eicop3d adj=n wflcausal=y oprcausal=n
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + eicpar(par) + ' ' + custom )
-         
+
 # EIC adjoint: opr * img = wfl
-def eic2dA(wfl,img,opr,cip,custom,par):    
+def eic2dA(wfl,img,opr,cip,custom,par):
     Flow(wfl,[img,opr,cip],
          '''
-         eicop2d adj=y wflcausal=n oprcausal=n 
+         eicop2d adj=y wflcausal=n oprcausal=n
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + ' ' + custom )
-def eic3dA(wfl,img,opr,cip,custom,par):    
+def eic3dA(wfl,img,opr,cip,custom,par):
     Flow(wfl,[img,opr,cip],
          '''
-         eicop3d adj=y wflcausal=n oprcausal=n 
+         eicop3d adj=y wflcausal=n oprcausal=n
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + ' ' + custom )
-         
+
 # ------------------------------------------------------------
 # EIC 'source' kernel
 def kerS2d(ker,uS,uR,res,cip,vel,custom,par):
@@ -256,7 +282,7 @@ def kerS3d(ker,uS,uR,res,cip,vel,custom,par):
     eic3dA(ker+'_gS',res,uR,cip,'gaus=y wflcausal=y oprcausal=n'+' '+custom,par)
     aweop3d(ker+'_aS',ker+'_gS',vel,'adj=y'+' '+custom,par)
     cic3dF(ker,uS,ker+'_aS','wflcausal=y oprcausal=y'+' '+custom,par)
-    
+
 # ------------------------------------------------------------
 # EIC 'receiver' kernel
 def kerR2d(ker,uS,uR,res,cip,vel,custom,par):
@@ -270,7 +296,7 @@ def kerR3d(ker,uS,uR,res,cip,vel,custom,par):
     eic3dA(ker+'_gR',res+'_',uS,cip,'gaus=y wflcausal=y oprcausal=y'+' '+custom,par)
     aweop3d(ker+'_aR',ker+'_gR',vel,'adj=n'+' '+custom,par)
     cic3dF(ker,uR,ker+'_aR','wflcausal=y oprcausal=n'+' '+custom,par)
-    
+
 # ------------------------------------------------------------
 # EIC total kernel
 def kerT2d(ker,uS,uR,res,cip,vel,custom,par):
@@ -290,7 +316,7 @@ def cicmig(icic,
            rdat,rcoo,
            velo,dens,
            custom,par):
-    
+
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
@@ -338,7 +364,7 @@ def cicmigCD(icic,
              rdat,rcoo,
              velo,
              custom,par):
-    
+
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
@@ -376,7 +402,7 @@ def cicmigCD(icic,
          '''%(M8R,swfl,rdrv,rwfl),
               stdin=0,
               stdout=0)
-    
+
 # ------------------------------------------------------------
 # veriable-density RTM w/ CIC and EIC
 def eicmig(icic,
@@ -385,7 +411,7 @@ def eicmig(icic,
            rdat,rcoo,
            velo,dens,
            custom,par):
-    
+
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
@@ -422,7 +448,7 @@ def eicmig(icic,
          '''%(M8R,swfl,custom,rwfl) +
          '''
          %seicop2d <%s adj=n wflcausal=y oprcausal=n %s
-         opr=%s cip=${SOURCES[4]} 
+         opr=%s cip=${SOURCES[4]}
          >${TARGETS[1]};
          '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
          '''
@@ -439,7 +465,7 @@ def eicmigCD(icic,
              rdat,rcoo,
              velo,
              custom,par):
-    
+
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
@@ -469,12 +495,12 @@ def eicmigCD(icic,
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
          %scicop2d <%s adj=n wflcausal=y oprcausal=n %s
-         opr=%s 
+         opr=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
          %seicop2d <%s adj=n wflcausal=y oprcausal=n %s
-         opr=%s cip=${SOURCES[4]} 
+         opr=%s cip=${SOURCES[4]}
          >${TARGETS[1]};
          '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
          '''
@@ -482,7 +508,7 @@ def eicmigCD(icic,
          '''%(M8R,swfl,rdrv,rwfl),
               stdin=0,
               stdout=0)
-    
+
 # ------------------------------------------------------------
 # zero-offset RTM - variable density
 def awertm2d(imag,data,rcoo,velo,dens,custom,par):
@@ -534,7 +560,7 @@ def awertm3d(imag,data,rcoo,velo,dens,custom,par):
          '''%(M8R,rwfl),
               stdin=0,
               stdout=0)
-    
+
 # zero-offset RTM - constant density
 def cdartm2d(imag,data,rcoo,velo,custom,par):
     M8R='$RSFROOT/bin/sf'
@@ -688,4 +714,3 @@ def wom(wom,wfld,velo,vmean,par):
         '''%(M8R,wtmp,vtmp),
         stdin=0,
         stdout=0)
-         

@@ -1,9 +1,23 @@
 from rsf.proj import *
 from rsf.recipes.beg import server
 
+tgz = 'Salt_Model_3D.tar.gz'
+
+Fetch(tgz,'seg_eage_models_cd',
+      server='https://s3.amazonaws.com',
+      top='open.source.geoscience/open_data')
+
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+
+saltaa = ['./Salt_Model_3D/3-D_Salt_Model/VEL_GRIDS/saltaa.h',
+          './Salt_Model_3D/3-D_Salt_Model/VEL_GRIDS/saltaa@']
+
+Flow(saltaa,tgz,
+     zcat + ' $SOURCE | tar -xvf - $TARGETS',stdin=0,stdout=-1,suffix='')
+
 # Get 2-D velocity model
-Fetch(['saltaa.h','saltaa@'],'segsalt',server)
-Flow('saltaa',['saltaa.h','./saltaa@'],
+# Fetch(['saltaa.h','saltaa@'],'segsalt',server)
+Flow('saltaa',saltaa,
      '''
      (cat ${SOURCES[0]} ; echo in=${SOURCES[1]} data_format=xdr_float) |
      put n1=780 |
@@ -19,10 +33,17 @@ def getvel2D(vel):
          put o1=-4014.281 |
          remap1 o1=0 d1=20 n1=201 
          ''')
-
+    
 # Get 3-D velocity model
-Fetch(['salt.h','Saltf@@'],'segsalt',server)
-Flow('salt','salt.h ./Saltf@@',
+salt = ['./Salt_Model_3D/3-D_Salt_Model/VEL_GRIDS/salt.h',
+        './Salt_Model_3D/3-D_Salt_Model/VEL_GRIDS/SALTF.ZIP',
+        './Saltf@@']
+Flow(salt[:2],tgz,
+     zcat + ' $SOURCE | tar -xvf - $TARGETS',stdin=0,stdout=-1,suffix='')
+Flow(salt[2],salt[1],'unzip $SOURCE',stdin=0,stdout=-1,suffix='')
+
+#Fetch(['salt.h','Saltf@@'],'segsalt',server)  
+Flow('salt',[salt[0],salt[2]],
      '''
      (cat ${SOURCES[0]} ; echo in=${SOURCES[1]} data_format=xdr_float) | 
      dd form=native | 

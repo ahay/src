@@ -59,7 +59,7 @@ Plot('vofz',
      title=Model screenratio=1
      ''')
 
-Result('model','vofz lays0 lays1','Overlay')
+Result('lmodel','vofz lays0 lays1','Overlay')
 
 # Exploding reflector
 
@@ -92,7 +92,7 @@ Flow('kmodl','kexpl %s vofz' % prog[0],
      '''
      ./${SOURCES[1]} vel=${SOURCES[2]} 
      nw=247 dw=0.16276
-     ''',split=[2,'omp',[0]])
+     ''')
 
 Flow('modl','kmodl',
      'pad n1=769 | fft1 inv=y | cosft sign2=-1')
@@ -110,8 +110,7 @@ Flow('kdata','modl',
      'cosft sign2=1 | fft1 | window n1=247')
 
 Flow('kmigr','kdata %s vofz' % prog[0],
-     './${SOURCES[1]} vel=${SOURCES[2]} adj=1',
-     split=[2,'omp',[0]])
+     './${SOURCES[1]} vel=${SOURCES[2]} adj=1')
 
 Flow('migr','kmigr','real | cosft sign2=-1')
 
@@ -129,7 +128,7 @@ Flow('migr','kmigr','real | cosft sign2=-1')
 
 Flow('kinvs','kdata %s vofz kmigr' % prog[0],
      '''
-     cconjgrad omp ./${SOURCES[1]} split=2 
+     cconjgrad ./${SOURCES[1]} split=2 
      nw=247 dw=0.16276
      vel=${SOURCES[2]} mod=${SOURCES[3]} niter=10
      ''')
