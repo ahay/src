@@ -2,7 +2,7 @@ from rsf.tex import *
 
 
 End(lclass='geophysics',use='''amssymb,hyperref,
-          amsthm,amsmath,amsbsy,subfigure,latexsym,graphicx,
+          amsthm,amsmath,amsbsy,latexsym,graphicx,
           natbib,multirow,rotating''')
 
 
