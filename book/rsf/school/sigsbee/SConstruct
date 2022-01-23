@@ -38,7 +38,7 @@ Flow('modl','vraw',
             par['nx'],par['ox']
             ))
 Plot  ('modl',wplot.igrey2d('mean=y',par))
-Result('modl',wplot.igrey2d('mean=y',par))
+Result('modl','modl','Overlay')
 
 # ------------------------------------------------------------
 # source coordinates (exploding reflectors)
@@ -133,13 +133,13 @@ nfrm=int((par['nt']-1)/par['jsnap'])
 Flow('wbyt','wfld','byte gainpanel=a pclip=99.9')
 for i in range(nfrm):
     tag = '-%02d'%i
-    # plot wavefield frames
-    Plot('wfld'+tag,
-         'wbyt',wplot.ifrm2d(i,'',par))
-    Plot(  'wovl'+tag,['wfld'+tag,'ss','rH','rV'],
-           'Overlay')
-    Result('wfld'+tag,['wfld'+tag,'ss','rH','rV'],
-           'Overlay')
+
+    Plot('wfld'+tag, 'wbyt',wplot.ifrm2d(i,'',par))
+
+    Plot(  'wovl'+tag,['wfld'+tag,'ss','rH','rV'],'Overlay')
+
+    Result('wfld'+tag,'wfld'+tag,'Overlay')
+
 Result('wfld',
         ['wovl-%02d'%i for i in range(nfrm)],
        'Movie')
