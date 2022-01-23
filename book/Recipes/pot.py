@@ -18,16 +18,16 @@ def cliptogetherK(plot,file1,file2,title1,title2,axis,custom,par):
 
     
     if(axis==1):
-        if(not par.has_key('ys')): par['ys']=0.75
-        if(not par.has_key('xs')): par['xs']=0.75
-        if(not par.has_key('xc')): par['xc']=-8.25
+        if(('ys') not in par): par['ys']=0.75
+        if(('xs') not in par): par['xs']=0.75
+        if(('xc') not in par): par['xc']=-8.25
         Plot(file1,plot+'-all','window n3=1 f3=0 |' + fdmod.cgrey(custom+' title=%s'%title1,par))
         Plot(file2,plot+'-all','window n3=1 f3=1 |' + fdmod.cgrey(custom+' title=%s label1=  unit1= '%title2,par))
         pplot.p1x2(plot,file1,file2,par['ys'],par['xs'],par['xc'])
     else:
-        if(not par.has_key('ys')): par['ys']=.75
-        if(not par.has_key('xs')): par['xs']=.75
-        if(not par.has_key('xc')): par['xc']=-10
+        if(('ys') not in par): par['ys']=.75
+        if(('xs') not in par): par['xs']=.75
+        if(('xc') not in par): par['xc']=-10
         Plot(file1,plot+'-all','window n3=1 f3=1 |' + fdmod.cgrey(custom+' title=%s wantaxis2=n label2= unit2='%title1,par))
         Plot(file2,plot+'-all','window n3=1 f3=0 |' + fdmod.cgrey(custom+' title=%s '%title2,par))
         p2x1(plot,file1,file2,par['ys'],par['xs'],par['xc'])
@@ -46,16 +46,16 @@ def cliptogetherX(plot,file1,file2,title1,title2,axis,custom,par):
 
     
     if(axis==1):
-        if(not par.has_key('ys')): par['ys']=0.75
-        if(not par.has_key('xs')): par['xs']=0.75
-        if(not par.has_key('xc')): par['xc']=-8.25
+        if(('ys') not in par): par['ys']=0.75
+        if(('xs') not in par): par['xs']=0.75
+        if(('xc') not in par): par['xc']=-8.25
         Plot(file1,plot+'-all','window n3=1 f3=0 |' + fdmod.cgrey(custom+' title=%s'%title1,par))
         Plot(file2,plot+'-all','window n3=1 f3=1 |' + fdmod.cgrey(custom+' title=%s label1= unit1= '%title2,par))
         pplot.p1x2(plot,file1,file2,par['ys'],par['xs'],par['xc'])
     else:
-        if(not par.has_key('ys')): par['ys']=.75
-        if(not par.has_key('xs')): par['xs']=.75
-        if(not par.has_key('xc')): par['xc']=-10
+        if(('ys') not in par): par['ys']=.75
+        if(('xs') not in par): par['xs']=.75
+        if(('xc') not in par): par['xc']=-10
         Plot(file1,plot+'-all','window n3=1 f3=1 |' + fdmod.cgrey(custom+' title=%s wantaxis2=n label2= unit2='%title1,par))
         Plot(file2,plot+'-all','window n3=1 f3=0 |' + fdmod.cgrey(custom+' title=%s '%title2,par))
         p2x1(plot,file1,file2,par['ys'],par['xs'],par['xc'])
@@ -72,16 +72,16 @@ def cliptogether(plot,file1,file2,title1,title2,axis,custom,par):
 
     
     if(axis==1):
-        if(not par.has_key('ys')): par['ys']=0.75
-        if(not par.has_key('xs')): par['xs']=0.75
-        if(not par.has_key('xc')): par['xc']=-8.25
+        if(('ys') not in par): par['ys']=0.75
+        if(('xs') not in par): par['xs']=0.75
+        if(('xc') not in par): par['xc']=-8.25
         Plot(file1,plot+'-all','window n3=1 f3=0 |' + fdmod.cgrey(custom+' title=%s'%title1,par))
         Plot(file2,plot+'-all','window n3=1 f3=1 |' + fdmod.cgrey(custom+' title=%s wantaxis1=n label1= unit1= '%title2,par))
         pplot.p1x2(plot,file1,file2,par['ys'],par['xs'],par['xc'])
     else:
-        if(not par.has_key('ys')): par['ys']=.75
-        if(not par.has_key('xs')): par['xs']=.75
-        if(not par.has_key('yc')): par['yc']=-5
+        if(('ys') not in par): par['ys']=.75
+        if(('xs') not in par): par['xs']=.75
+        if(('yc') not in par): par['yc']=-5
         Plot(file1,plot+'-all','window n3=1 f3=1 |' + fdmod.cgrey(custom+' title=%s wantaxis2=n label2= unit2='%title1,par))
         Plot(file2,plot+'-all','window n3=1 f3=0 |' + fdmod.cgrey(custom+' title=%s '%title2,par))
         p2x1(plot,file1,file2,par['ys'],par['xs'],par['yc']) 
@@ -129,9 +129,9 @@ def cliptogether3(plot,file1,file2,file3,title1,title2,title3,axis,center,custom
     
    
     if(axis==1):
-        if(not par.has_key('ys')): par['ys']=0.48
-        if(not par.has_key('xs')): par['xs']=0.48
-        if(not par.has_key('xc')): par['xc']=-8.5
+        if(('ys') not in par ): par['ys']=0.48
+        if(('xs') not in par): par['xs']=0.48
+        if(('xc') not in par): par['xc']=-8.5
         Plot(file1,plot+'-all','window n4=1 f4=0 | '+ cgrey3('  flat=y title=%s '%title1 +custom+center,par))
         Plot(file2,plot+'-all','window n4=1 f4=1 |' + cgrey3('  flat=y title=%s wantaxis1=n'%title2 +custom+center,par))
         Plot(file3,plot+'-all','window n4=1 f4=2 |' + cgrey3('  flat=y title=%s  wantaxis1=n'%title3 +custom+center,par))
@@ -141,9 +141,9 @@ def cliptogether3(plot,file1,file2,file3,title1,title2,title3,axis,center,custom
         Result(file3,plot+'-all','window n4=1 f4=2 |' + cgrey3('  flat=y title=%s '%title3 +custom+center,par))
         
     else:
-        if(not par.has_key('ys')): par['ys']=.75
-        if(not par.has_key('xs')): par['xs']=.75
-        if(not par.has_key('xc')): par['xc']=-10
+        if(('ys') not in par): par['ys']=.75
+        if(('xs') not in par): par['xs']=.75
+        if(('xc') not in par): par['xc']=-10
         Plot(file1,plot+'-all','window n4=1 f4=0 | '+ cgrey3('  flat=y title=%s '%title1 +custom+center,par))
         Plot(file2,plot+'-all','window n4=1 f4=1 |' + cgrey3('  flat=y title=%s '%title2 +custom+center,par))
         Plot(file3,plot+'-all','window n4=1 f4=2 |' + cgrey3('  flat=y title=%s '%title3 +custom+center,par))

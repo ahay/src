@@ -18,7 +18,10 @@ To the reproducible documents collection:
 * tccs/anisodiff: Least-squares diffraction imaging using shaping
   regularization by anisotropic smoothing (Merzlikin, Fomel, and Wu)
 * tccs/dtwaniso: Quantifying and correcting residual azimuthal anisotropic
-  moveout in image gathers using dynamic time warping (Decker and Zhang)
+  moveout in image gathers using dynamic time warping (Decker and
+  Zhang)
+* tccs/dlchain: Automatic channel detection using deep learning (Pham,
+  Fomel, and Dunlap)
 
 To SCons:
 

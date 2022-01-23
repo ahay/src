@@ -3,44 +3,44 @@ import pplot
 
 # default parameters
 def param(par):
-    if(not par.has_key('lt')):       par['lt']='t'
-    if(not par.has_key('lz')):       par['lz']='z'
-    if(not par.has_key('lx')):       par['lx']='x'
+    if('lt' not in par):       par['lt']='t'
+    if('lz' not in par):       par['lz']='z'
+    if('lx' not in par):       par['lx']='x'
 
-    if(not par.has_key('ut')):       par['ut']='s'
-    if(not par.has_key('uz')):       par['uz']='m'
-    if(not par.has_key('ux')):       par['ux']='m'
+    if('ut' not in par):       par['ut']='s'
+    if('uz' not in par):       par['uz']='m'
+    if('ux' not in par):       par['ux']='m'
 
-    if(not par.has_key('nb')):       par['nb']=0
-    if(not par.has_key('nbz')):      par['nbz']=100
-    if(not par.has_key('nbx')):      par['nbx']=100
-    if(not par.has_key('tz')):       par['tz']=0.0035
-    if(not par.has_key('tx')):       par['tx']=0.0035
+    if('nb' not in par):       par['nb']=0
+    if('nbz' not in par):      par['nbz']=100
+    if('nbx' not in par):      par['nbx']=100
+    if('tz' not in par):       par['tz']=0.0035
+    if('tx' not in par):       par['tx']=0.0035
 
-    if(not par.has_key('nbell')):    par['nbell']=1
+    if('nbell' not in par):    par['nbell']=1
 
-    if(not par.has_key('snap')):     par['snap']='y'
-    if(not par.has_key('jsnap')):    par['jsnap']=100
-    if(not par.has_key('jdata')):    par['jdata']=1
+    if('snap' not in par):     par['snap']='y'
+    if('jsnap' not in par):    par['jsnap']=100
+    if('jdata' not in par):    par['jdata']=1
 
-    if(not par.has_key('ompchunk')): par['ompchunk']=1
-    if(not par.has_key('ompnth')):   par['ompnth']=0
-    if(not par.has_key('free')):     par['free']='n'
+    if('ompchunk' not in par): par['ompchunk']=1
+    if('ompnth' not in par):   par['ompnth']=0
+    if('free' not in par):     par['free']='n'
    
-    if(not par.has_key('ot')):       par['ot']=0.
-    if(not par.has_key('nt')):       par['nt']=1
-    if(not par.has_key('dt')):       par['dt']=1.
+    if('ot' not in par):       par['ot']=0.
+    if('nt' not in par):       par['nt']=1
+    if('dt' not in par):       par['dt']=1.
 
-    if(not par.has_key('tmin')):     par['tmin']=par['ot']
-    if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
-    if(not par.has_key('xmin')):     par['xmin']=par['ox']
-    if(not par.has_key('xmax')):     par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
-    if(not par.has_key('ymin')):     par['ymin']=par['oy']
-    if(not par.has_key('ymax')):     par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
-    if(not par.has_key('zmin')):     par['zmin']=par['oz']
-    if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+    if('tmin' not in par):     par['tmin']=par['ot']
+    if('tmax' not in par):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+    if('xmin' not in par):     par['xmin']=par['ox']
+    if('xmax' not in par):     par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+    if('ymin' not in par):     par['ymin']=par['oy']
+    if('ymax' not in par):     par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
+    if('zmin' not in par):     par['zmin']=par['oz']
+    if('zmax' not in par):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
-    if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
+    if('ratio' not in par):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
 
     if(par['ratio']>=1):
         par['height']=10
@@ -61,16 +61,16 @@ def param(par):
     else:
         par['height3d']=13*par['ratio3d']
             
-    if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
+    if(('scalebar') not in par): par['scalebar']='n'
+    if(('labelattr') not in par): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
     # parallel2=n
-    if(not par.has_key('nqz')): par['nqz']=par['nz']
-    if(not par.has_key('oqz')): par['oqz']=par['oz']
-    if(not par.has_key('dqz')): par['dqz']=par['dz']
+    if(('nqz') not in par): par['nqz']=par['nz']
+    if(('oqz') not in par): par['oqz']=par['oz']
+    if(('dqz') not in par): par['dqz']=par['dz']
 
-    if(not par.has_key('nqx')): par['nqx']=par['nx']
-    if(not par.has_key('oqx')): par['oqx']=par['ox']
-    if(not par.has_key('dqx')): par['dqx']=par['dx']
+    if(('nqx') not in par): par['nqx']=par['nx']
+    if(('oqx') not in par): par['oqx']=par['ox']
+    if(('dqx') not in par): par['dqx']=par['dx']
     
     par['labelattr']=' '+par['labelattr']+' '
 
@@ -699,8 +699,8 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
 # wavefield-over-model plot
 def wom(wom,wfld,velo,vmean,par):
 
-    if(not par.has_key('wweight')): par['wweight']=10
-    if(not par.has_key('wclip')):   par['wclip']=1.0
+    if(('wweight') not in par): par['wweight']=10
+    if(('wclip') not in par):   par['wclip']=1.0
 
     chop = wfld+'_chop'
     Flow(chop,wfld,
@@ -728,8 +728,8 @@ def wom(wom,wfld,velo,vmean,par):
 # (elastic) wavefield-over-model
 def wem(wom,wfld,velo,vmean,par):
 
-    if(not par.has_key('wweight')): par['wweight']=10
-    if(not par.has_key('wclip')):   par['wclip']=1.0
+    if(('wweight') not in par): par['wweight']=10
+    if(('wclip') not in par):   par['wclip']=1.0
 
     Flow(velo+'-spray',
          velo,
@@ -765,8 +765,8 @@ def wem(wom,wfld,velo,vmean,par):
 # image-over-model plot
 def iom(iom,imag,velo,vmean,par):
 
-    if(not par.has_key('iweight')): par['iweight']=10
-    if(not par.has_key('iclip')):   par['iclip']=1.0
+    if(('iweight') not in par): par['iweight']=10
+    if(('iclip') not in par):   par['iclip']=1.0
 
     chop = imag+'_chop'
     Flow(chop,imag,

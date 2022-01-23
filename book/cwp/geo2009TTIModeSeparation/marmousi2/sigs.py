@@ -125,7 +125,7 @@ def win1(vou,vin,par):
     par['nz']=1000
     
     par['ox']=25*par['ft2km']
-    par['oz']=05*par['ft2km']
+    par['oz']=5*par['ft2km']
 
     Flow(vou,vin,'window n1=%d min1=%g n2=%d min2=%g'
          % (par['nz'],par['oz'],par['nx'],par['ox']) )
@@ -137,7 +137,7 @@ def win2(vou,vin,par):
     par['nz']=1000
     
     par['ox']=11*par['ft2km']
-    par['oz']=05*par['ft2km']
+    par['oz']=5*par['ft2km']
 
     Flow(vou,vin,'window n1=%d min1=%g n2=%d min2=%g'
          % (par['nz'],par['oz'],par['nx'],par['ox']) )

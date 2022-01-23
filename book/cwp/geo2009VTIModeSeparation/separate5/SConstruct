@@ -100,7 +100,7 @@ delta=[-0.29, -0.1, -0.3, 0]
 
 for ani in range(0,4,1):
     tag=str(ani)
-    print epsilon[ani]
+    print(epsilon[ani])
     
     Flow('epsilon'+tag,'zero','add add=%f'%epsilon[ani])
     Flow('delta'+tag,  'zero','add add=%f'%delta[ani])

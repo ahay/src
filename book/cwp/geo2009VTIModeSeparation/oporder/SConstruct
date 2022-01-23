@@ -79,4 +79,21 @@ fdd.oneirST('diff','diffaz','diffax',5,5,'clip=5 color=Ic',par)
 
 Result('diff','grey title=Difference')
 
+
+
+
+Result('iop2','Overlay')
+Result('iop4','Overlay')
+Result('iop6','Overlay')
+Result('iop8','Overlay')
+Result('mop2','Overlay')
+Result('mop4','Overlay')
+Result('mop6','Overlay')
+Result('mop8','Overlay')
+
+
+
+
+
+
 End()

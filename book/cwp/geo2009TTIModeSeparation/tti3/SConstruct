@@ -81,7 +81,7 @@ fdm.ewavelet3d('wave3d','',par)
 xsou=par['ox']+(par['nx']/2*par['dx']);
 ysou=par['oy']+(par['ny']/2*par['dy']);
 zsou=par['oz']+(par['nz']/2*par['dz']);
-print xsou,ysou,zsou
+print(xsou,ysou,zsou)
 center=fdm.center3d(xsou,ysou,1*zsou,par)
 
 fdm.point('ss2d',xsou,zsou,par)
