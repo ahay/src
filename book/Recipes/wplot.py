@@ -4,7 +4,8 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
 import pplot
-import random,functools,operator
+import random
+import functools,operator
 
 random.seed(1003)
 def add(x,y): return x+y

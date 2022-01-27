@@ -2,11 +2,11 @@ try:    from rsf.cluster import *
 except: from rsf.proj    import *
 import pplot,math
 import random
-from functools import reduce
+import functools, operator
 
 random.seed(1006)
 def add(x,y): return x+y
-def myid(n): return '_'+reduce(add,['%d'%random.randint(0,9) for i in range(n)])
+def myid(n): return '_'+functools.reduce(operator.add,['%d'%random.randint(0,9) for i in range(n)])
 
 # ------------------------------------------------------------
 def obsolete(old,new):
