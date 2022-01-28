@@ -8,7 +8,7 @@ from math import *
 
 
 def arr2str(array,sep=' '):
-    return string.join(map(str,array),sep)
+    return " ".join(map(str,array))
 
 par = {
     'nx':600, 'ox':0, 'dx':0.001,  'lx':'x', 'ux':'km',
@@ -80,7 +80,7 @@ Flow('layers',None,
      echo %s
      n1=%d n2=%d o1=0 d1=%g
      data_format=ascii_float in=$TARGET     
-     ''' % (string.join(map(arr2str,layers),' '),
+     ''' % (" ".join(map(arr2str,layers)),
             n1,n2,xmax/(n1-1)))
 
 
@@ -199,7 +199,7 @@ Flow('uAc','uA','window n1=%(nz)d n2=%(nx)d f1=%(nbell)d f2=%(nbell)d |scale axi
 Flow('uAwom',['vp','uAc'],'add add=-2.4 | spray axis=3 n=2|spray axis=4 n=%d | scale axis=123|add ${SOURCES[1]}'%nframe)
 fdmod.emovie('uAmovie','uAwom',nframe,'pclip=98',2,par)
 
-
+Result('uA','uAmovie-04','Overlay')
 fdd.derivatives(par)
 order=8
 

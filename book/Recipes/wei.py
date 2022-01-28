@@ -6,43 +6,43 @@ import fdmod
 def param(par):
     p  = ' '
     p = p + ' --readwrite=y'
-    if(par.has_key('verb')):  p = p + ' verb='  +     par['verb']
-    if(par.has_key('nrmax')): p = p + ' nrmax=' + str(par['nrmax'])
-    if(par.has_key('dtmax')): p = p + ' dtmax=' + str(par['dtmax'])
-    if(par.has_key('eps')):   p = p + ' eps='   + str(par['eps'])
-    if(par.has_key('tmx')):   p = p + ' tmx='   + str(par['tmx'])
-    if(par.has_key('tmy')):   p = p + ' tmy='   + str(par['tmy'])
-    if(par.has_key('pmx')):   p = p + ' pmx='   + str(par['pmx'])
-    if(par.has_key('pmy')):   p = p + ' pmy='   + str(par['pmy'])
-    if(par.has_key('misc')):  p = p + ' '       +     par['misc']
+    if 'verb' in par:  p = p + ' verb='  +     par['verb']
+    if 'nrmax' in par: p = p + ' nrmax=' + str(par['nrmax'])
+    if 'dtmax' in par: p = p + ' dtmax=' + str(par['dtmax'])
+    if 'eps' in par:   p = p + ' eps='   + str(par['eps'])
+    if 'tmx' in par:   p = p + ' tmx='   + str(par['tmx'])
+    if 'tmy' in par:   p = p + ' tmy='   + str(par['tmy'])
+    if 'pmx' in par:   p = p + ' pmx='   + str(par['pmx'])
+    if 'pmy' in par:   p = p + ' pmy='   + str(par['pmy'])
+    if 'misc' in par:  p = p + ' '       +     par['misc']
     p = p + ' '
     return p
 
 # ------------------------------------------------------------
 def wempar(par):
-    if(not par.has_key('verb')):    par['verb']='y'
-    if(not par.has_key('eps')):     par['eps']=0.1
+    if 'verb' not in par:    par['verb']='y'
+    if 'eps' not in par:     par['eps']=0.1
 
-    if(not par.has_key('nrmax')):   par['nrmax']=1
-    if(not par.has_key('dtmax')):   par['dtmax']=0.00005
+    if 'nrmax' not in par:   par['nrmax']=1
+    if 'dtmax' not in par:   par['dtmax']=0.00005
 
-    if(not par.has_key('tmx')):     par['tmx']=16
-    if(not par.has_key('tmy')):     par['tmy']=16
+    if 'tmx' not in par:     par['tmx']=16
+    if 'tmy' not in par:     par['tmy']=16
 
 # ------------------------------------------------------------
 def eicpar(par):
     p = ' '
-    if(par.has_key('nhx')):
+    if 'nhx' in par:
         p = p + ' nhx='   + str(par['nhx'])
-    if(par.has_key('nhy')):
+    if 'nhy' in par:
         p = p + ' nhy='   + str(par['nhy'])
-    if(par.has_key('nhz')):
+    if 'nhz' in par:
         p = p + ' nhz='   + str(par['nhz'])
-    if(par.has_key('nht')):
+    if 'nht' in par:
         p = p + ' nht='   + str(par['nht'])
-    if(par.has_key('oht')):
+    if 'oht' in par:
         p = p + ' oht='   + str(par['oht'])
-    if(par.has_key('dht')):
+    if 'dht' in par:
         p = p + ' dht='   + str(par['dht'])
     p = p + ' '
     return(p)
