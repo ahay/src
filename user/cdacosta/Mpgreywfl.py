@@ -203,10 +203,16 @@ if __name__ == "__main__":
     nt = inp_d.shape[0]
 
     if aclip:
-        inp_d /= np.max(np.abs(inp_d)) + 1e-10
+        normalization = np.max(np.abs(inp_d))
     else:
-        for i in range(nt):
-            inp_d[i,:,:] /= np.max(np.abs(inp_d[i,:,:])) + 1e-10
+        nt_smooth = 2 * int((0.1 * nt) // 2) + 1
+        amps_true = np.max(inp_d + 1e-20, axis=(-2, -1))
+        idx = np.argmax(amps_true)
+        amps_true[:idx] = amps_true[idx]
+        normalization = np.convolve(amps_true, np.ones(nt_smooth) / nt_smooth, mode="same")
+        normalization = normalization[:, np.newaxis, np.newaxis]
+
+    inp_d /= np.maximum(normalization, 1e-20)
 
     if bgf:
         (uz2, lz2) = read_axis(bg, 1)[3:]
