@@ -78,8 +78,8 @@ def create_tranparent_cmap(cmap, treshold=0.01):
     N = cmap.N+3
     alphas = [a if a > treshold else 0 for a in abs(np.linspace(-1.0, 1.0, N))]
     N2 = len([a for a in alphas if a < treshold]) # No. of elements with 0 alpha
-    N3 = (N-N2)/2 # No. of elements with nonzero alpha
-    N4 = (N+N2)/2
+    N3 = round((N-N2)/2) # No. of elements with nonzero alpha
+    N4 = round((N+N2)/2)
 
     # These next commands will taper alphas, so that no abrupt transition
     # between zero and nonzero elements occur
@@ -148,10 +148,10 @@ if __name__ == "__main__":
     if figy < 0:
         sf_warning("setting figy=8")
         figy = 6
-    if xints < 0 and xints is not None:
+    if xints is not None and xints < 0:
         sf_warning("setting xints=None")
         xints = None
-    if yints < 0 and yints is not None:
+    if yints is not None and yints < 0:
         sf_warning("setting yints=None")
         yints = None
 
@@ -203,10 +203,10 @@ if __name__ == "__main__":
     nt = inp_d.shape[0]
 
     if aclip:
-        inp_d /= np.max(np.abs(inp_d))
+        inp_d /= np.max(np.abs(inp_d)) + 1e-10
     else:
         for i in range(nt):
-            inp_d[i,:,:] /= np.max(np.abs(inp_d[i,:,:]))
+            inp_d[i,:,:] /= np.max(np.abs(inp_d[i,:,:])) + 1e-10
 
     if bgf:
         (uz2, lz2) = read_axis(bg, 1)[3:]
