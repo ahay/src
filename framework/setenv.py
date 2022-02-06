@@ -104,7 +104,10 @@ def shell_script(target, source=None, env=None):
                     else:
                         myrc += 'setenv %s %s:${%s}\n' % (par,value,par)
                     myrc += 'else\n'
-                myrc += 'setenv %s %s\n' % (par,value)
+                if par.startswith('JULIA'):
+                    myrc += 'setenv %s %s:\n' % (par,value)
+                else:
+                    myrc += 'setenv %s %s\n' % (par,value)
                 if redefine:
                     myrc += 'endif\n'
         else:
@@ -117,7 +120,10 @@ def shell_script(target, source=None, env=None):
                 myrc += 'else\n'
             if par == 'MANPATH':
                 myrc += 'unset MANPATH\n' # necessary for recent bash shells
-            myrc += 'export %s=%s\n' % (par,value)
+            if par.startswith('JULIA'):
+                myrc += 'export %s=%s:\n' % (par,value)
+            else:
+                myrc += 'export %s=%s\n' % (par,value)
             if redefine:
                 myrc += 'fi\n'
 
