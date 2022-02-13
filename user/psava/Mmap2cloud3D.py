@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 '''
-compute normals of a 3D surface
+output point cloud from gridded surface
+-> cloud components: x,y,z, nx,ny,nz
 '''
 import rsf.api as rsf
 import numpy as np
@@ -9,61 +10,101 @@ import sys
 par = rsf.Par()
 
 verb = par.bool('verb',False) # verbosity flag
+sphc = par.bool('sphc',False) # spherical coordinates flag
+# print(sphc, file=sys.stderr)
+deg2rad = np.pi / 180         # degrees to radians
 
 # ------------------------------------------------------------
 Fin = rsf.Input()             # input file
-ny  = Fin.int  ("n1")
-oy  = Fin.float("o1")
-dy  = Fin.float("d1")
-#print  >> sys.stderr,ny,oy,dy
+n1  = Fin.int  ("n1")
+o1  = Fin.float("o1")
+d1  = Fin.float("d1")
 
-nx  = Fin.int  ("n2")
-ox  = Fin.float("o2")
-dx  = Fin.float("d2")
-#print  >> sys.stderr,nx,ox,dx
+n2  = Fin.int  ("n2")
+o2  = Fin.float("o2")
+d2  = Fin.float("d2")
 
-z   = np.zeros( (nx,ny),'f')
-Fin.read(z)
+r   = np.zeros( (n2,n1),'f')  # read elevation
+Fin.read(r)
 
 # ------------------------------------------------------------
 Fou = rsf.Output()            # output file
-Fou.put("n1",6)
+Fou.put("n1",9)
 Fou.put("o1",0)
 Fou.put('d1',1)
 
-Fou.put("n2",nx*ny)
+Fou.put("n2",n2*n1)
 Fou.put("o2",0)
 Fou.put('d2',1)
 
-dou = np.zeros(6,'f')
+dou = np.zeros(9,'f')
 
 # ------------------------------------------------------------
-for ix in range(nx):
-    x = ox + ix * dx
+# compute Cartesian coordinates
+x = np.zeros( (n2,n1),'f')
+y = np.zeros( (n2,n1),'f')
+z = np.zeros( (n2,n1),'f')
 
-    for iy in range(ny):
-        y = oy + iy * dy
+if sphc: # spherical to Cartesian coordinates
+    for i2 in range(n2):
+        lon = o2 + i2 * d2 # [deg] longitude
+        lon *= deg2rad     # [rad] longitude
 
-        ax = dx
-        ay = 0.0
-        if(ix < nx-1):
-            az = z[ix+1][iy] - z[ix][iy]
+        for i1 in range(n1):
+            lat = o1 + i1 * d1 # [deg] latitude
+            lat *= deg2rad     # [rad] latitude
+
+            x[i2,i1] = np.cos(lat) * np.cos(lon)
+            y[i2,i1] = np.cos(lat) * np.sin(lon)
+            z[i2,i1] = np.sin(lat)
+
+    # scale by elevation
+    x *= r
+    y *= r
+    z *= r
+
+else: # local Cartesian coordinates
+    for i2 in range(n2):
+        for i1 in range(n1):
+            x[i2,i1] = o2 + i2 * d2
+            y[i2,i1] = o1 + i1 * d1
+            z[i2,i1] = r[i2,i1]
+
+# ------------------------------------------------------------
+# compute normals
+for i2 in range(n2):
+    for i1 in range(n1):
+
+        # vector a
+        if(i2 < n2-1):
+            ax = x[i2+1][i1] - x[i2  ][i1]
+            ay = y[i2+1][i1] - y[i2  ][i1]
+            az = z[i2+1][i1] - z[i2  ][i1]
         else:
-            az = z[ix][iy] - z[ix-1][iy]
+            ax = x[i2  ][i1] - x[i2-1][i1]
+            ay = y[i2  ][i1] - y[i2-1][i1]
+            az = z[i2  ][i1] - z[i2-1][i1]
 
-        bx = 0.0
-        by = dy
-        if(iy < ny-1):
-            bz = z[ix][iy+1] - z[ix][iy]
+        # vector b
+        if(i1 < n1-1):
+            bx = x[i2][i1+1] - x[i2][i1  ]
+            by = y[i2][i1+1] - y[i2][i1  ]
+            bz = z[i2][i1+1] - z[i2][i1  ]
         else:
-            bz = z[ix][iy] - z[ix][iy-1]
+            bx = x[i2][i1  ] - x[i2][i1-1]
+            by = y[i2][i1  ] - y[i2][i1-1]
+            bz = z[i2][i1  ] - z[i2][i1-1]
 
-        cx = ay*bz - by*az
-        cy = az*bx - bz*ax
-        cz = ax*by - bx*ay
-        cc = np.sqrt(np.power(cx,2)+np.power(cy,2)+np.power(cz,2))
+        # normal vector n = a x b
+        nx = ay*bz - by*az
+        ny = az*bx - bz*ax
+        nz = ax*by - bx*ay
+        nn = np.sqrt(np.power(nx,2)+np.power(ny,2)+np.power(nz,2))
 
-        dou = np.array([ x, y, z[ix][iy], cx/cc,cy/cc,cz/cc])
+        # output x,y,z, nx,ny,nz
+        dou = np.array([ x[i2][i1],  y[i2][i1], z[i2][i1],
+                        nx/nn,      ny/nn,     nz/nn,
+                            0,          0,         0 ])
         Fou.write(dou)
 
 # ------------------------------------------------------------

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 '''
-compute normals of a 3D surface
+output point cloud from gridded surface
+-> cloud components: x,z, nx,nz
 '''
 import rsf.api as rsf
 import numpy as np
@@ -9,44 +10,74 @@ import sys
 par = rsf.Par()
 
 verb = par.bool('verb',False) # verbosity flag
+sphc = par.bool('sphc',False) # spherical coordinates flag
+# print(sphc, file=sys.stderr)
+deg2rad = np.pi / 180         # degrees to radians
 
 # ------------------------------------------------------------
 Fin = rsf.Input()             # input file
-nx  = Fin.int  ("n1")
-ox  = Fin.float("o1")
-dx  = Fin.float("d1")
-#print  >> sys.stderr,nx,ox,dx
+n1  = Fin.int  ("n1")
+o1  = Fin.float("o1")
+d1  = Fin.float("d1")
 
-z   = np.zeros( nx,'f')
-Fin.read(z)
+r   = np.zeros( n1,'f')       # read elevation
+Fin.read(r)
 
 # ------------------------------------------------------------
 Fou = rsf.Output()            # output file
-Fou.put("n1",4)
+Fou.put("n1",6)
 Fou.put("o1",0)
 Fou.put('d1',1)
 
-Fou.put("n2",nx)
+Fou.put("n2",n1)
 Fou.put("o2",0)
 Fou.put("d2",1)
 
-dou = np.zeros(4,'f')
+dou = np.zeros(6,'f')
 
 # ------------------------------------------------------------
-for ix in range(nx):
-    x = ox + ix * dx
+# compute Cartesian coordinates
+x = np.zeros( n1,'f')
+z = np.zeros( n1,'f')
 
-    ax = dx
-    if(ix < nx-1):
-        az = z[ix+1] - z[ix]
+if sphc: # spherical to Cartesian coordinates
+    for i1 in range(n1):
+        lat = o1 + i1 * d1 # [deg] latitude
+        lat *= deg2rad     # [rad] latitude
+
+        x[i1] = np.cos(lat)
+        z[i1] = np.sin(lat)
+
+    # scale by elevation
+    x *= r
+    z *= r
+
+else: # local Cartesian coordinates
+    for i1 in range(n1):
+        x[i1] = o1 + i1 * d1
+        z[i1] = r[i1]
+
+# ------------------------------------------------------------
+# compute normals
+for i1 in range(n1):
+
+    # vector a
+    if(i1 < n1-1):
+        ax = x[i1+1] - x[i1  ]
+        az = z[i1+1] - z[i1  ]
     else:
-        az = z[ix] - z[ix-1]
+        ax = x[i1  ] - x[i1-1]
+        az = z[i1  ] - z[i1-1]
 
-    cx = -az
-    cz = +ax
-    cc = np.sqrt(np.power(cx,2)+np.power(cz,2))
+    # normal vector n orthogonal to a
+    nx = -az
+    nz = +ax
+    nn = np.sqrt(np.power(nx,2)+np.power(nz,2))
 
-    dou = np.array([ x, z[ix], cx/cc,cz/cc])
+    # output x,z, cx,cz
+    dou = np.array([ x[i1], z[i1],
+                    nx/nn, nz/nn,
+                        0,      0 ])
     Fou.write(dou)
 
 # ------------------------------------------------------------
