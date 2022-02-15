@@ -120,10 +120,11 @@ coords = StringVar()
 
 frame = Frame(root)
 
-button = Button(frame,text='Quit',bg='red',command=sys.exit)
+button = Button(frame,text='Quit',command=sys.exit,fg='black',
+                highlightbackground='red')
 button.pack(side=RIGHT)
 
-button = Button(frame,text='Set Color',command=pickcolor)
+button = Button(frame,text='Set Color',fg='black',command=pickcolor)
 button.pack(side=RIGHT)
 
 if n3 > 1:
@@ -160,14 +161,15 @@ if n3 > 1:
     i3frame = StringVar()
     i3frame.set('%d of %d' % (i3+1,n3))
 
-    next = Button(frame,text='Next >',command=nextframe)
+    next = Button(frame,text='Next >',command=nextframe,fg='black')
     next.pack(side=LEFT)
 
-    prev = Button(frame,text='< Prev',command=prevframe)
+    prev = Button(frame,text='< Prev',command=prevframe,fg='black')
     prev.config(state='disabled')
     prev.pack(side=LEFT)
 
-    label = Label(frame,textvariable=i3frame,relief=RIDGE,borderwidth=3)
+    label = Label(frame,textvariable=i3frame,fg='black',
+                  relief=RIDGE,borderwidth=3)
     label.pack(side=LEFT)
 
     root.bind('n',nextframe)
