@@ -75,9 +75,9 @@ for i1 in range(n1):
     nn = np.sqrt(np.power(nx,2)+np.power(nz,2))
 
     # output x,z, cx,cz
-    dou = np.array([ x[i1], z[i1],
-                    nx/nn, nz/nn,
-                        0,      0 ])
+    dou = np.array([  x[i1],  z[i1],
+                    -nx/nn, -nz/nn,
+                      0,      0 ])
     Fou.write(dou)
 
 # ------------------------------------------------------------
