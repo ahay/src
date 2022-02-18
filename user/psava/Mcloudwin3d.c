@@ -55,50 +55,47 @@ int main(int argc, char* argv[])
   /* orbit coordinates */
   oco = (pt3d*) sf_alloc(sf_n(ao),sizeof(*oco));
   ono = (vc3d*) sf_alloc(sf_n(ao),sizeof(*ono));
-
   jnk = sf_floatalloc( nco );
+
   for( io = 0; io < sf_n(ao); io++) {
-      sf_floatread( jnk,nco,Fo);
-      oco[io].x  = jnk[0];
-      oco[io].y  = jnk[1];
-      oco[io].z  = jnk[2];
-      ono[io].dx = jnk[3];
-      ono[io].dy = jnk[4];
-      ono[io].dz = jnk[5];
+    sf_floatread( jnk,nco,Fo);
+    oco[io].x  = jnk[0];
+    oco[io].y  = jnk[1];
+    oco[io].z  = jnk[2];
+    ono[io].dx = jnk[3];
+    ono[io].dy = jnk[4];
+    ono[io].dz = jnk[5];
   }
-  free(jnk);
 
   /*------------------------------------------------------------*/
   /* ground coordinates */
-  jnk = sf_floatalloc( nco );
-
   for( ipass = 0; ipass < 2; ipass++) {
     sf_seek(Fin,0,SEEK_SET); // seek to the start of the input file
 
     for( ig = 0; ig < sf_n(ag); ig++) {
-        sf_floatread( jnk,nco,Fin);
-        gco.x  = jnk[0];
-        gco.y  = jnk[1];
-        gco.z  = jnk[2];
+      sf_floatread( jnk,nco,Fin);
+      gco.x  = jnk[0];
+      gco.y  = jnk[1];
+      gco.z  = jnk[2];
 
-        for( io = 0; io < sf_n(ao); io++ ) {
+      for( io = 0; io < sf_n(ao); io++ ) {
 
-          // compute distance
-          Rx = gco.x - oco[io].x;
-          Ry = gco.y - oco[io].y;
-          Rz = gco.z - oco[io].z;
-          R = sqrtf( Rx * Rx + Ry * Ry + Rz * Rz );
-          Rx /= R;
-          Ry /= R;
-          Rz /= R;
+        // compute distance
+        Rx = gco.x - oco[io].x;
+        Ry = gco.y - oco[io].y;
+        Rz = gco.z - oco[io].z;
+        R = sqrtf( Rx * Rx + Ry * Ry + Rz * Rz );
+        Rx /= R;
+        Ry /= R;
+        Rz /= R;
 
-          cosobl = SF_ABS( Rx*ono[io].dx + Ry*ono[io].dy + Rz*ono[io].dz );
-          if( cosobl > cosapt) {
-            if( ipass == 0) ncount++;                    // count points
-            else            sf_floatwrite( jnk,nco,Fou); // write points
-            break;
-          }
+        cosobl = SF_ABS( Rx*ono[io].dx + Ry*ono[io].dy + Rz*ono[io].dz );
+        if( cosobl > cosapt) {
+          if( ipass == 0) ncount++;                    // count points
+          else            sf_floatwrite( jnk,nco,Fou); // write points
+          break;
         }
+      }
     }
 
     if(ipass == 0) { // make output axis after first pass
@@ -108,11 +105,12 @@ int main(int argc, char* argv[])
     }
 
   }
-  free(jnk);
-
+  
   /*------------------------------------------------------------*/
   /* deallocate arrays */
-  free(oco); free(ono);
+  free(jnk);
+  free(oco);
+  free(ono);
 
   exit (0);
 }
