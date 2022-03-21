@@ -64,13 +64,14 @@ if window:
 	real_chirp_f_windowed = real_chirp_f*window_f
 
 # Range compression
-h_real = np.conj(real_chirp_f)
 if window:
+    h_real = np.conj(real_chirp_f_windowed)
 	rc_chirp_f = real_chirp_f_windowed*h_real
 else:
+    h_real = np.conj(real_chirp_f)
 	rc_chirp_f = real_chirp_f*h_real
 
-# Shift to latency delay 
+# Shift to latency delay
 rc_chirp_f *= np.exp(-1j*2*np.pi*freq*(delay*1e-6))
 rc_chirp_t = np.fft.ifft(rc_chirp_f).real
 rc_chirp_t /= np.max(rc_chirp_t)
