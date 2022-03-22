@@ -197,7 +197,11 @@ def identify_platform(context):
 
         name = uname()[2].split('.')[-2]
         if plat['OS'] in ('linux', 'posix', 'linux2'):
-            if dist_info[0].lower() == 'fedora':
+            if dist_info[0].lower() == 'rocky':
+                plat['OS'] = 'linux'
+                plat['distro'] = 'rocky'
+                plat['version'] = dist_info()[1]
+            elif dist_info[0].lower() == 'fedora':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
                 plat['version'] = dist_info()[1]
