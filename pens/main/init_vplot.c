@@ -183,7 +183,7 @@ int             num_col_8;
  * invras=y is the proper default to make dithered images not come out as negatives
  */
 bool             invras = true;
-bool             window = true;
+bool             vplot_window = true;
 bool             shade = true;
 bool             framewindows = false;
 bool             endpause = false;
@@ -359,7 +359,7 @@ void init_vplot (int argc, char* argv[])
     sf_getbool ("cachepipe",&dev.cachepipe);
     sf_getbool ("shade", &shade);
     sf_getbool ("wantras", &wantras);
-    sf_getbool ("window", &window);
+    sf_getbool ("window", &vplot_window);
     sf_getbool ("frame", &framewindows);
     sf_getbool ("overlay", &overlay);
     default_overlay = overlay;
