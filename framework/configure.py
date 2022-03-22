@@ -760,6 +760,7 @@ def tiff(context):
 
 pkg['libgd'] = {'suse':'gd-devel',
                 'rhel':'gd-devel',
+                'rocky':'gd-devel',
                 'ubuntu':'libgd-dev',
                 'centos':'gd-devel'}
 
