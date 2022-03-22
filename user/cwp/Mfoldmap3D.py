@@ -16,27 +16,13 @@ topoWstr = par.string('topoWl')
 topoWlist = topoWstr.split(',')
 
 # Local functions
-def read_rsf2D(rsffile):
-	Fin = rsf.Input(rsffile)
+def read_rsf(fname):
+	fIn = rsf.Input(fname+'.rsf')
+	data = fIn.read()
+	fIn.close()
+	return data.T
 
-	n1 = Fin.int('n1') # number of coordinates
-	n2 = Fin.int('n2') # number of points
-
-	data = np.zeros((n1,n2),dtype=float)
-
-	# Read data to numpy
-	j2 = 1
-	dn1 = np.zeros(n1,'f')
-	i=0
-	while i < n2:
-		Fin.read(dn1)
-		data[:,i] = dn1[:]
-		i+=j2
-
-	Fin.close()
-	return data
-
-topo = read_rsf2D(topof)
+topo = read_rsf(topof)
 
 foldmap = np.zeros((4,topo.shape[1]))
 foldmap[0:3,:] = topo[0:3,:]
@@ -50,7 +36,7 @@ Fou.put('d2',1)
 Fou.put('o2',0)
 
 for file in topoWlist:
-	topoW = read_rsf2D(file)
+	topoW = read_rsf(file)
 
 	for i in range(topo.shape[1]):
 		if foldmap[0,i] in topoW[0,:] and foldmap[1,i] in topoW[1,:] and foldmap[2,i] in topoW[2,:]:
@@ -62,6 +48,9 @@ for file in topoWlist:
 
 			if len(intersection) > 0:
 				foldmap[3,i] += 1
+
+# Change all instances where fold number = 0 to 1 to avoid division by 0
+foldmap[foldmap==0]=1
 
 # Write fold map
 for i in range(topo.shape[1]):
