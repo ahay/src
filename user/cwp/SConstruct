@@ -37,6 +37,10 @@ mpistack  bigmpistack
 
 targets.py = '''
 dbmerge
+foldmap3D
+padpt3D
+sharadwav
+staticcorr
 '''
 
 if glob_build:
