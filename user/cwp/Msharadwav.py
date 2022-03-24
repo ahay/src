@@ -38,8 +38,8 @@ fc = 20e6                   # chirp centre frequency (Hz)
 f0 = fc + (BW / 2)          # beginning frequency of chirp (Hz), use (+) for downswept, (-) for upswept
 f1 = fc - (BW / 2)          # ending frequency of chirp (Hz), use (-) for downswept, (+) for upswept
 
-dt = 0.0375e-6				# time sampling (non-baseband)
-N = 2268						# number of samples in transmitted chirp
+dt = 0.0375e-6                # time sampling (non-baseband)
+N = 2268                        # number of samples in transmitted chirp
 n = np.arange(0,N,1)
 
 # Create real SHARAD chirp
@@ -58,18 +58,18 @@ real_chirp_f = np.fft.fft(real_chirp_t)
 
 # Window
 if window:
-	pos_window = hann(freq, BW, df, 1.67e6, 11.67e6)
-	neg_window = hann(freq, BW, df, -11.67e6, -1.67e6)
-	window_f = pos_window + neg_window
-	real_chirp_f_windowed = real_chirp_f*window_f
+    pos_window = hann(freq, BW, df, 1.67e6, 11.67e6)
+    neg_window = hann(freq, BW, df, -11.67e6, -1.67e6)
+    window_f = pos_window + neg_window
+    real_chirp_f_windowed = real_chirp_f*window_f
 
 # Range compression
 if window:
     h_real = np.conj(real_chirp_f_windowed)
-	rc_chirp_f = real_chirp_f_windowed*h_real
+    rc_chirp_f = real_chirp_f_windowed*h_real
 else:
     h_real = np.conj(real_chirp_f)
-	rc_chirp_f = real_chirp_f*h_real
+    rc_chirp_f = real_chirp_f*h_real
 
 # Shift to latency delay
 rc_chirp_f *= np.exp(-1j*2*np.pi*freq*(delay*1e-6))
