@@ -198,7 +198,7 @@ extern char    *txbuffer;
 extern int      txbuflen;
 extern struct vertex *vxbuffer;
 extern int      vxbuflen;
-extern int      window;
+extern bool     window;
 extern int      xwmax, xwmin, ywmax, ywmin;
 extern int      xWmax, xWmin, yWmax, yWmin;
 int             xwmin_last, xwmax_last, ywmin_last, ywmax_last;
