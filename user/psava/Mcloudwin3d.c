@@ -20,11 +20,11 @@ int main(int argc, char* argv[])
   int          nco=9;      /* coordinates (position, normal, velocity) */
 
   sf_axis ao,ag,aw;        /* cube axes */
-  int     io,ig,iw;
+  int     io,ig;
 
   float R,Rx,Ry,Rz;
   float cosobl;
-  int icount,ncount=0;
+  int ncount=0;
 
   int ipass;
 
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     }
 
   }
-  
+
   /*------------------------------------------------------------*/
   /* deallocate arrays */
   free(jnk);
