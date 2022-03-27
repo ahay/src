@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
   if (!sf_getfloat("apt", &apt))   apt=15.0;  /* aperture (deg) */
   cosapt = cos(apt*SF_PI/180);                /* cos(aperture) */
   if(verb) {
-    sf_warning("apt=%f",apt);
+    sf_warning("apt=%6.2f",apt);
   }
 
   /* setup i/o and auxiliary file */
