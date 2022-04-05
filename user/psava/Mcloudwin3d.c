@@ -45,8 +45,6 @@ int main(int argc, char* argv[])
   pt3d       * oco=NULL;   /* orbit coordinates  */
   vc3d       * ono=NULL;   /* orbit normals      */
   pt3d         gco;        /* ground coordinate  */
-  vc3d         gno;        /* ground normal      */
-  vc3d         gve;        /* ground velocity    */
   float      * jnk=NULL;
   float      * din=NULL;
   float      * dou=NULL;
