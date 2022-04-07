@@ -52,6 +52,9 @@ esou epot
 regrid1d regrid2d regrid3d
 getattr
 checkerboard
+cloudwin3d
+cloudspray
+stransp
 '''
 
 # vse

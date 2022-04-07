@@ -4,7 +4,8 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
 import pplot
-import random,functools,operator
+import random
+import functools,operator
 
 random.seed(1003)
 def add(x,y): return x+y
@@ -288,7 +289,7 @@ def dgrey3d_init(vel,par):
 
     if((dx+dy) == 0.0): par['pointx']=1.0
     else              : par['pointx']=dx/(dx+dy)
-    if((dt+dy) == 0.0): par['pointt']=1.0
+    if((dz+dy) == 0.0): par['pointt']=1.0
     else              : par['pointt']=dz/(dz+dy);
     if((dx+dy) == 0.0): par['dratio3d']=1
     else:               par['dratio3d']=(dz+dy)/(dx+dy)

@@ -595,7 +595,7 @@ class _File(File):
         File.__del__(self) # this removes file if it is temporary
     def settype(self,type):
         if _swig_:
-            for i,filetype in enumerate(_File.type):
+            for i,filetype in enumerate(_File.types):
                 if type == filetype:
                     self.type = type
                     c_rsf.sf_settype(self.file,i)

@@ -197,7 +197,11 @@ def identify_platform(context):
 
         name = uname()[2].split('.')[-2]
         if plat['OS'] in ('linux', 'posix', 'linux2'):
-            if dist_info[0].lower() == 'fedora':
+            if dist_info[0].lower() == 'rocky':
+                plat['OS'] = 'linux'
+                plat['distro'] = 'rocky'
+                plat['version'] = dist_info()[1]
+            elif dist_info[0].lower() == 'fedora':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
                 plat['version'] = dist_info()[1]
@@ -255,7 +259,8 @@ def identify_platform(context):
         if 'TACC_' == env[:5]:
             context.env.Append(ENV={env:os.environ[env]})
 
-pkg['gcc'] = {'fedora':'gcc'}
+pkg['gcc'] = {'rocky': 'gcc',
+              'fedora':'gcc'}
 pkg['libc'] = {'fedora':'glibc',
                'ubuntu':'libc6-dev'}
 
@@ -558,6 +563,7 @@ xlib = [
     ]
 
 pkg['xaw']={'rhel':'libXaw-devel',
+            'rocky': 'libXaw-devel',
             'fedora':'libXaw-devel',
             'ubuntu':'libxaw7-dev',
             'centos':'libXaw-devel'}
@@ -719,6 +725,7 @@ def ppm(context):
 
 pkg['libtiff'] = {'suse':'libtiff-devel',
                   'ubuntu': 'libtiff5-dev',
+                  'rocky':'libtiff-devel',
                   'fedora':'libtiff-devel',
                   'rhel':'libtiff-devel',
                   'centos':'libtiff-devel'}
@@ -753,6 +760,7 @@ def tiff(context):
 
 pkg['libgd'] = {'suse':'gd-devel',
                 'rhel':'gd-devel',
+                'rocky':'gd-devel',
                 'ubuntu':'libgd-dev',
                 'centos':'gd-devel'}
 
@@ -991,6 +999,7 @@ def cairo(context):
     LIBS.pop()
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
+               'rocky':'libjpeg-devel',
                'ubuntu':'libjpeg-dev',
                'centos':'libjpeg-turbo-devel'}
 
@@ -1024,6 +1033,7 @@ def jpeg(context):
     LIBS.pop()
 
 pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut-devel',
+                 'rocky': 'freeglut-devel',
                  'rhel':'freeglut-devel',
                  'suse'  :'freeglut-devel',
                  'ubuntu':'freeglut3-dev',

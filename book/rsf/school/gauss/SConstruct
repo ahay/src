@@ -79,7 +79,7 @@ Plot('vel',
      grey title="" pclip=100 color=g
      screenratio=%(ratio)g mean=y %(labelattr)s
      '''%par)
-Result('vel','grey title="" color=g pclip=100 screenratio=%(ratio)g mean=y %(labelattr)s'%par)
+Result('vel','vel','Overlay')
 # ------------------------------------------------------------
 
 # make eikonal traveltimes

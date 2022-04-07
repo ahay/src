@@ -49,7 +49,7 @@ order=8
 odlst=[8,2]
 for order in odlst:
     for ani in range(0,3,1):
-        tag=str(ani)+'-order'+`order`
+        tag=str(ani)+'-order'+str(order)
         
         Flow('epsilon'+tag,'zero','add add=%f'%epsilon[ani])
         Flow('delta'+tag,  'zero','add add=%f'%delta[ani])
@@ -65,7 +65,7 @@ for order in odlst:
         Flow('ax'+tag,'mop'+tag+'-dxM'+tag,'scale axis=123')
         Flow('az'+tag,'mop'+tag+'-dzM'+tag,'scale axis=123')
 for ani in range(0,3,1):
-    tag=`ani`
+    tag=str(ani)
     Flow('diffax'+tag,
          ['ax'+tag+'-order8','ax'+tag+'-order2'],
           'add scale=1,-1 ${SOURCES[1]}')
@@ -75,6 +75,11 @@ for ani in range(0,3,1):
     fdd.oneirST('diff'+tag,'diffaz'+tag,'diffax'+tag,5,5,'clip=1 color=Ic',par)
 
     Result('diff'+tag,'grey title="Difference %s" ' % tag)
- 
+
+
+Result('mop0-order8','Overlay')
+Result('mop1-order8','Overlay')
+Result('mop2-order8','Overlay')
+
 End()
 
