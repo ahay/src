@@ -46,6 +46,7 @@ void sf_pqueue_start (void)
 void sf_pqueue_close (void)
 /*< Free the allocated storage >*/
 {
+	free (*x);
     free (x);
 }
 
