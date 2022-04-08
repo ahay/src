@@ -1,4 +1,4 @@
-/* Fast explicit diffusion as a chain */
+/* Fast explicit diffusion as a chain (2-D) */
 /*
   Copyright (C) 2022 University of Texas at Austin
   
@@ -19,14 +19,14 @@
 
 #include <rsf.h>
 
-#include "fedchain.h"
+#include "fedchain2.h"
 
 int main(int argc, char* argv[])
 {
     bool verb;
-    int i, ic, n, nc, n2, iter, niter, liter, rect, k;
+    int i, ic, m1, m2, n, nc, n2, iter, niter, liter, k, rect;
     float step, rsum, rsum2;
-    float *xn, *x1, *y1, *dx, *r, *x0;
+    float *xn, *x1, *y1, *dx, *r, *x0, *p;
     sf_file inp, out, wht, smo;
 
     sf_init(argc,argv);
@@ -36,15 +36,23 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
-    if (!sf_histint(inp,"n1",&n)) sf_error("No n1= in input");
+    if (!sf_histint(inp,"n1",&m1)) sf_error("No n1= in input");
+    if (!sf_histint(inp,"n2",&m2)) sf_error("No n2= in input");
 
     if (!sf_getint("nc",&nc)) nc=1; /* number of components */
- 
+
+    if (!sf_getint("rect",&rect)) rect=1;
+    /* smoothing radius */
+
+    sf_smooth1_init(m1,m2,1,rect,rect);
+
+    n = m1*m2;
     n2 = nc*n;
     xn = sf_floatalloc(n2);
     dx = sf_floatalloc(n2);
     x0 = sf_floatalloc(n2);
     r = sf_floatalloc(n2);
+    p = sf_floatalloc(n2);
     
     x1 = sf_floatalloc(n);
     sf_floatread(x1,n,inp);
@@ -52,7 +60,7 @@ int main(int argc, char* argv[])
     y1 = sf_floatalloc(n);
     sf_floatread(y1,n,smo);
 
-    fedchain_init(n,nc,x1,xn,xn+n);
+    fedchain2_init(m1,m2,nc,x1,xn,xn+n);
 
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
@@ -60,11 +68,6 @@ int main(int argc, char* argv[])
     /* number of iterations */
     if (!sf_getint("liter",&liter)) liter=50;
     /* number of linear iterations */
-
-    if (!sf_getint("rect",&rect)) rect=1;
-    /* smoothing in time */
-
-    sf_smooth1_init(n,1,1,rect,1);
 
     for (i=0; i < n; i++) {
 	xn[i]=1.0f;
@@ -74,21 +77,23 @@ int main(int argc, char* argv[])
 	    xn[ic*n+i] = 0.0f;
 	}
     }
-	
-    /* sf_conjgrad_init(n2, n2, n2, n2, 1., 1.e-6, verb, false); */
+
+    sf_conjgrad_init(n2, n2, n2, n2, 1., 1.e-6, verb, false);
 
     for (iter=0; iter < niter; iter++) {
-	fedchain_apply(y1,r);
+	fedchain2_apply(y1,r);
+
 	rsum = 0.0f;
 	for (i=0; i < n2; i++) {
 	    r[i] = -r[i];
 	    rsum += r[i]*r[i];
 	}
 
-	/* sf_conjgrad(NULL, fedchain_lop, sf_smooth1_lop, p, dx, r, liter); */
+	/*
+	sf_solver(fedchain2_lop,sf_cgstep,n2,n2,dx,r,liter,"verb",verb,"end");
+	sf_cgstep_close(); */
 
-	sf_solver(fedchain_lop,sf_cgstep,n2,n2,dx,r,liter,"verb",verb,"end");
-	sf_cgstep_close();
+	sf_conjgrad(NULL, fedchain2_lop, sf_smooth1_lop, p, dx, r, liter);
 	
 	for (i=0; i < n2; i++) {
 	    x0[i] = xn[i];
@@ -101,7 +106,7 @@ int main(int argc, char* argv[])
 		xn[i] = x0[i] + step*dx[i];
 	    }
 		
-	    fedchain_apply(y1,r);		
+	    fedchain2_apply(y1,r);		
 	    rsum2 = 0.0f;
 	    for (i=0; i < n2; i++) {
 		r[i] = -r[i];
@@ -112,18 +117,10 @@ int main(int argc, char* argv[])
 	    
 	    step *= 0.5;
 	}
-
-	/* variable projection 
-	sf_solver(fedchainx_lop,sf_cgstep,n2-n,n2,dx+n,r,liter,"verb",verb,"end");
-	sf_cgstep_close();
-		
-	for (i=n; i < n2; i++) {
-	    xn[i] += dx[i];
-	    } */
     }
     
     sf_floatwrite(xn,n,wht);
-    fedchain(y1);
+    fedchain2(y1);
     sf_floatwrite(y1,n,out);
 
     exit(0);

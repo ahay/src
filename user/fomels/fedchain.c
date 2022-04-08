@@ -150,8 +150,7 @@ void fedchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		j = (ir+1)*n+n-1;
 		x[j] += t[n-1] - r*w[n-1]*t[n-1];
 		x[j-1] += r*w[n-1]*t[n-1];
-		x[j] -= r*w[0]*t[0];
-	    }
+		} 
 	    	    
 	    /* delta A */
 	    if (ir < nc-1) {	    
@@ -217,6 +216,68 @@ void fedchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		j = ir*n+n-1;
 		y[j] += r*(x0[n-2]-x0[n-1])*x[n-1];
 	    }
+	}
+    }
+}
+
+void fedchainx_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+/*< linear operator for intermediate results >*/
+{
+    int ir, i, j;
+    float r;
+
+    if (nx != (nc-1)*n || ny != nc*n) sf_error("%s: Wrong size",__FILE__);
+
+    sf_adjnull(adj,add,nx,ny,x,y);
+
+    for (ir=0; ir < nc; ir++) {
+	r = rc[ir];
+
+	if (adj) {
+	    for (i=0; i < n; i++) {
+		j = ir*n+i;
+		t[i] = y[j];
+		if (0 < ir) {
+		    x[j-n] -= y[j];
+		}
+	    }
+	    if (ir < nc-1) {	    
+		j = ir*n;
+		x[j] += t[0] - r*w[0]*t[0];
+		x[j+1] += r*w[0]*t[0];
+		for (i=1; i < n-1; i++) {
+		    j = ir*n+i;
+		    x[j] += t[i] - 2*r*w[i]*t[i];
+		    x[j-1] += r*w[i]*t[i];
+		    x[j+1] += r*w[i]*t[i];
+		}
+		j = ir*n+n-1;
+		x[j] += t[n-1] - r*w[n-1]*t[n-1];
+		x[j-1] += r*w[n-1]*t[n-1];
+		} 
+	} else {
+	    if (ir < nc-1) {	    
+		j = ir*n;
+		t[0] = x[j]+ r*(x[j+1]-x[j])*w[0];
+		for (i=1; i < n-1; i++) {
+		    j = ir*n+i;
+		    t[i] = x[j]+ r*(x[j-1] + x[j+1] - 2*x[j])*w[i];
+		}
+		j = ir*n+n-1;
+		t[n-1] = x[j]+ r*(x[j-1]-x[j])*w[n-1];
+	    } else {
+		 for (i=0; i < n; i++) {
+		     t[i] = 0.0f;
+		 }
+	    }		    
+	    for (i=0; i < n; i++) {
+		j = ir*n+i;
+		if (0==ir) {
+		    y[j] += t[i];
+		} else {
+		    y[j] += t[i] - x[j-n];
+		}
+	    }    
 	}
     }
 }
