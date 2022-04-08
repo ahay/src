@@ -18,9 +18,9 @@ gmres grad2fill halfint helicon helix hilbert igrad1 igrad2 impl2 int1
 int2 int3 interp interp_spline irls komplex llist lsint2 mask math1
 matmult2 multidivn multidivnL1 neighbors ntriangle ntrianglen omptools
 parallel point polydiv pqueue pweno randn recfilt repeat runge
-quantile quadratic sharpen sharpinv simtab slice spline stack stretch
-stretch4 system tent2 timer tinysolver triangle triangle1 triangle2
-trianglen tridiagonal upgrad vector wavelet weight weight2
+quantile quadratic sharpen sharpinv simtab slice smooth1 spline stack
+stretch stretch4 system tent2 timer tinysolver triangle triangle1
+triangle2 trianglen tridiagonal upgrad vector wavelet weight weight2
 '''
 
 try: # distribution version

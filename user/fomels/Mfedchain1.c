@@ -1,4 +1,4 @@
-/* Chain of PWDs */
+/* Fast explicit diffusion using chains - linear operator */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,57 +19,54 @@
 
 #include <rsf.h>
 
-#include "pwdchain.h"
+#include "fedchain.h"
 
 int main(int argc, char* argv[])
 {
-    bool drift;
-    int m1, m2, i, n, nc, n2, n1;
-    float *xn, *x1, *x2, *r;
-    sf_file inp, out, sig;
+    bool adj;
+    int n, n1, n2;
+    float *xn, *x1, *dx, *r;
+    sf_file inp, out, wht, sig;
 
     sf_init(argc,argv);
     inp = sf_input("in");
+    wht = sf_input("weight");
     sig = sf_input("sig");
     out = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
-    if (!sf_histint(inp,"n1",&m1)) sf_error("No n1= in dip");
-    if (!sf_histint(inp,"n2",&m2)) sf_error("No n2= in dip");
-    if (!sf_histint(inp,"n3",&n2)) sf_error("No n3= in dip");
+    if (!sf_histint(inp,"n1",&n1)) sf_error("No n1=");
+    if (!sf_histint(inp,"n2",&n2)) sf_error("No n2=");
 
-    if (!sf_getbool("drift",&drift)) drift=false;
-    /* if shift filter */
+    n = n1*n2;
 
-    n = m1*m2;
+    x1 = sf_floatalloc(n1);
+    sf_floatread(x1,n1,sig);
 
-    nc = (n2+1)/2;
+    xn = sf_floatalloc(n);
+    sf_floatread(xn,n,wht);
 
-    sf_putint(out,"n3",nc);
- 
-    n2 *= n; 
-    n1 = (n2+n)/2;
-
-    sf_warning("nc=%d n=%d",nc,n);
+    fedchain_init(n1,n2,x1,xn,xn+n1);
     
-    x1 = sf_floatalloc(n);
-    sf_floatread(x1,n,sig);
+    dx = sf_floatalloc(n);
+    r =  sf_floatalloc(n);
 
-    x2 = sf_floatalloc(n);
-    for (i=0; i < n; i++) {
-	x2[i] = 0.0f;
-    }
-	
-    xn = sf_floatalloc(n2);
-    sf_floatread(xn,n2,inp);
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
 
-    pwdchain_init(m1,m2,1,nc,drift,x1,xn,xn+n*nc);
- 
-    r =  sf_floatalloc(n1);
- 
-    pwdchain_apply(x2,r);
+    if (adj) {
+	sf_floatread(r,n,inp);
+    } else {
+	sf_floatread(dx,n,inp);
+    } 
 
-    sf_floatwrite(r,n1,out);
- 
+    fedchain_lop(adj,false,n,n,dx,r);
+
+    if (adj) {
+	sf_floatwrite(dx,n,out);
+    } else {
+	sf_floatwrite(r,n,out);
+    } 
+
     exit(0);
 }

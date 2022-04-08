@@ -17,12 +17,14 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "alloc.h"
+#include "triangle2.h"
+#include "adjnull.h"
 
 static int n, nc;
 static float *tmp;
 
-void smooth1_init(int n1, int n2     /* data size */,
+void sf_smooth1_init(int n1, int n2     /* data size */,
 		  int nc1            /* number of components */,
 		  int nb1, int nb2   /* smoothing radius */)
 /*< initialize >*/
@@ -33,14 +35,14 @@ void smooth1_init(int n1, int n2     /* data size */,
     tmp = sf_floatalloc(n);
 }
 
-void smooth1_close (void)
+void sf_smooth1_close (void)
 /*< free allocated storage >*/
 {
     sf_triangle2_close();
     free (tmp);
 }
 
-void smooth1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+void sf_smooth1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 /*< smooth each component >*/
 {
     int i, ic;

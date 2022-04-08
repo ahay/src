@@ -260,8 +260,40 @@ to be picked up by the scheduling system. \texttt{sfbatch} is a script
 that simplifies working with such services in the Madagascar
 environment.
 
-There are two ways of using \texttt{sfbatch}...
+There are two ways of using \texttt{sfbatch}. The first one is using
+it in front of the command to be executed, for example
+\begin{verbatim}
+sfbatch scons target.rsf
+\end{verbatim}
+In this case, the \texttt{sfbatch} script is going to generate a
+script for running the parallel job, submit it to the queue, and wait
+for the job to finish before returning. The options to control the job
+script can be supplied either on the command line or in a text file
+containing key=value pairs. The file is in \verbatim+~/.batch+ or 
+specified on the command line with \texttt{batchfile=}.
+The required options are
+\begin{verbatim}
+batch=   # pbs, sge, or slurm
+queue=   # type of the queue
+mail=    # email for the user
+acct=    # account name
+wall=    # wall time
+nodes=   # number of nodes
+ppn=     # processes per node
+np=      # number of tasks
+exe=     # command to run
+\end{verbatim}
 
+Let us look at an example...
+
+The second way to use \texttt{sfbatch} is through \texttt{BATCH=} option to SCons. When running
+\begin{verbatim}
+sfbatch BATCH=y
+\end{verbatim}
+a parallel job with a separate job script is submitted individually
+for each command required to generate SCons targets.
+
+Consider the example from above again...
 
 \section{Conclusions}
 

@@ -1,6 +1,6 @@
-/* Chain of PWDs */
+/* Fast explicit diffusion using chains - linear operator (2-D) */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2022 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,57 +19,56 @@
 
 #include <rsf.h>
 
-#include "pwdchain.h"
+#include "fedchain2.h"
 
 int main(int argc, char* argv[])
 {
-    bool drift;
-    int m1, m2, i, n, nc, n2, n1;
-    float *xn, *x1, *x2, *r;
-    sf_file inp, out, sig;
+    bool adj;
+    int n, n1, n2, nc, n3;
+    float *xn, *x1, *dx, *r;
+    sf_file inp, out, wht, sig;
 
     sf_init(argc,argv);
     inp = sf_input("in");
+    wht = sf_input("weight");
     sig = sf_input("sig");
     out = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
-    if (!sf_histint(inp,"n1",&m1)) sf_error("No n1= in dip");
-    if (!sf_histint(inp,"n2",&m2)) sf_error("No n2= in dip");
-    if (!sf_histint(inp,"n3",&n2)) sf_error("No n3= in dip");
+    if (!sf_histint(inp,"n1",&n1)) sf_error("No n1=");
+    if (!sf_histint(inp,"n2",&n2)) sf_error("No n2=");
+    if (!sf_histint(inp,"n3",&nc)) sf_error("No n3=");
 
-    if (!sf_getbool("drift",&drift)) drift=false;
-    /* if shift filter */
+    n = n1*n2;
+    n3 = n*nc;
 
-    n = m1*m2;
-
-    nc = (n2+1)/2;
-
-    sf_putint(out,"n3",nc);
- 
-    n2 *= n; 
-    n1 = (n2+n)/2;
-
-    sf_warning("nc=%d n=%d",nc,n);
-    
     x1 = sf_floatalloc(n);
     sf_floatread(x1,n,sig);
 
-    x2 = sf_floatalloc(n);
-    for (i=0; i < n; i++) {
-	x2[i] = 0.0f;
-    }
-	
-    xn = sf_floatalloc(n2);
-    sf_floatread(xn,n2,inp);
+    xn = sf_floatalloc(n3);
+    sf_floatread(xn,n3,wht);
 
-    pwdchain_init(m1,m2,1,nc,drift,x1,xn,xn+n*nc);
- 
-    r =  sf_floatalloc(n1);
- 
-    pwdchain_apply(x2,r);
+    fedchain2_init(n1,n2,nc,x1,xn,xn+n);
+    
+    dx = sf_floatalloc(n3);
+    r =  sf_floatalloc(n3);
 
-    sf_floatwrite(r,n1,out);
- 
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
+    if (adj) {
+	sf_floatread(r,n3,inp);
+    } else {
+	sf_floatread(dx,n3,inp);
+    } 
+
+    fedchain2_lop(adj,false,n3,n3,dx,r);
+
+    if (adj) {
+	sf_floatwrite(dx,n3,out);
+    } else {
+	sf_floatwrite(r,n3,out);
+    } 
+
     exit(0);
 }

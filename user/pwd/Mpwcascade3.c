@@ -33,9 +33,9 @@ int main (int argc, char *argv[])
     dip = sf_input("dip");
     out = sf_output("out");
 
-    if (!sf_histint(dip,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(dip,"n2",&n2)) sf_error("No n2= in input");
-    if (!sf_histint(dip,"n3",&n3)) sf_error("No n3= in input");
+    if (!sf_histint(inp,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
+    if (!sf_histint(inp,"n3",&n3)) sf_error("No n3= in input");
     n12 = n1*n2*n3;
 
     if (!sf_getbool("verb",&verb)) verb=false;
@@ -97,6 +97,8 @@ int main (int argc, char *argv[])
 
     for (ic=0; ic < nc; ic++) {
 	for (i=1; i < n; i++) {
+	    sf_warning("cascade %d of %d (cycle %d)",i+1,n,ic+1);
+	    
 	    r = 2*sinf(2*SF_PI*i/n);
 	    r = 0.5/(r*r);
 
