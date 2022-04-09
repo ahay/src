@@ -141,12 +141,14 @@ int main(int argc, char* argv[])
 #endif
     for( ig = 0; ig < ng; ig++) nw += fin[ig];
 
+    // avoid empty window
+    nw = SF_MAX(nw,1);
+
     // write window header
     if(verb) sf_warning("write window header");
     aw = sf_maxa(nw,0,1);
     sf_oaxa(Fou,aw,2);
     if(verb) sf_raxa(aw);
-
 
     // index window points
     if(verb) sf_warning("index window points");
@@ -207,7 +209,7 @@ int main(int argc, char* argv[])
       }
 
       if(ipass == 0) { // make output axis after first pass
-        aw = sf_maxa(ncount,0,1);
+        aw = sf_maxa( SF_MAX(ncount,1),0,1);
         sf_oaxa(Fou,aw,2);
         if(verb) sf_raxa(aw);
       }
