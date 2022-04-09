@@ -69,12 +69,15 @@ Flow('AI','TIME-log AI-log','cat axis=2 ${SOURCES[1]} | transp | spline n1=9700 
 Flow('logspec','AI','spectra | math output="log(input)" ')
 Flow('logfreq','logspec','math output=x1 | math output="log(input)" ')
 
-Result('spec','logfreq logspec',
-       '''
-       cmplx ${SOURCES[1]} | 
-       graph symbol=o label1="log(Frequency)" label2="log(Spectrum)"
-       title="Log Spectrum"
-       ''')
+Plot('spec','logfreq logspec',
+     '''
+     cmplx ${SOURCES[1]} | 
+     graph symbol=o min1=-7.5 max1=1.5 min2=6 max2=20
+     label1="log(Frequency)" label2="log(Spectrum)"
+     title="Log Spectrum"
+     ''')
+
+Result('spec','Overlay')
 
 # Seismic data
 
@@ -94,5 +97,19 @@ Flow('seismic',asc,
 Result('seismic','grey wanttitle=n')
 
 # Step 1: Fit a function
+
+Flow('linefit','logfreq logspec',
+     '''
+     cat axis=2 ${SOURCES[1]} | window f1=1 | transp | 
+     linefit o1=-7.5 n1=10 d1=1
+     ''')
+Plot('linefit',
+     '''
+     graph wanttitle=n wantaxis=n plotfat=5 plotcol=3 
+     min1=-7.5 max1=1.5 min2=6 max2=20
+     ''')
+Result('linefit','spec linefit','Overlay')
+
+# Seismic power spectrum around the well location
 
 End()

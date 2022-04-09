@@ -684,7 +684,8 @@ def wom(wom,wfld,velo,vmean,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
-    if(not par.has_key('wweight')): par['wweight']=1
+    #if(not par.has_key('wweight')): par['wweight']=1
+    if 'wweight' not in par: par['wweight']=1
 
     wtmp = wfld + 'tmp'+myid(16)
     vtmp = wfld + 'vel'+myid(16)
