@@ -32,31 +32,33 @@ int main (int argc, char *argv[])
 {
     bool  verb,inv, sym, opt;
     int   n1, nw, nt,i1;
-    float o1;
-    float d1, dw;
-    float shift;
-    float wght;
+    float o1, d1, dw;
+    float shift, wght;
     char *label;
-    sf_file Fin=NULL, Fou=NULL;
+    sf_file Fin = NULL, Fou = NULL;
 
 #ifdef SF_HAS_FFTW
   #ifdef SF_HAS_FFTW_OMP
     fftwf_plan    ompcfg;
   #else
-    fftwf_plan    *ompcfg;
+    fftwf_plan   *ompcfg;
   #endif
 #else
-  kiss_fftr_cfg *ompcfg;
+  kiss_fftr_cfg  *ompcfg;
 #endif
 
   long int nbuf, ibuf, left, n2buf;
-  int            ompnth; /* number of threads */
-  int            ompith; /* thread index */
+  int          ompnth; /* number of threads */
+  int          ompith; /* thread index */
   float        **ompP;
   kiss_fft_cpx **ompQ;
   kiss_fft_cpx  *ompE;
 
   float  memsize; /* in Mb */
+
+  sf_file Fot = NULL;
+  bool     otIsFile = false;
+  float   * ot;
 
   /*------------------------------------------------------------*/
   sf_init(argc, argv);
@@ -78,15 +80,22 @@ int main (int argc, char *argv[])
     sf_settype (Fou,SF_COMPLEX);
   }
 
+  /* check if a time origin file exists */
+  otIsFile = fopen( sf_getstring("ot") , "r" );
+  if(otIsFile)
+    Fot = sf_input("ot");
+  if(verb) sf_warning("otIsFile = %d",otIsFile);
+
   if (!inv) {
     if (!sf_histint  (Fin,"n1",&n1)) n1=1;
     if (!sf_histfloat(Fin,"d1",&d1)) d1=1.;
-    if (!sf_histfloat(Fin,"o1",&o1)) o1=0.;
+    if( !sf_getfloat("ot",&o1) )                  /* try command line, else */
+      if (!sf_histfloat(Fin,"o1",&o1)) o1=0.;     /* read from history */
 
     /* determine wavenumber sampling (for real to complex FFT) */
-    nt = opt? 2*kiss_fft_next_fast_size((n1+1)/2): n1;
+    nt = opt ? 2*kiss_fft_next_fast_size((n1+1)/2) : n1;
     if (nt%2) nt++;
-    nw = nt/2+1;
+    nw = nt/2 + 1;
     dw = 1./(nt*d1);
 
     sf_putint  (Fou,"n1",nw);
@@ -104,8 +113,7 @@ int main (int argc, char *argv[])
   } else {
     if (!sf_histint  (Fin,"n1",&nw)) sf_error("No n1= in input");
     if (!sf_histfloat(Fin,"d1",&dw)) sf_error("No d1= in input");
-
-    if( !sf_getfloat("o1",&o1) )                  /* try command line, else */
+    if( !sf_getfloat("ot",&o1) )                  /* try command line, else */
       if (!sf_histfloat(Fin,"fft_o1",&o1)) o1=0.; /* read from history */
 
     nt = 2*(nw-1);
@@ -135,7 +143,7 @@ int main (int argc, char *argv[])
   if(!sf_getfloat("memsize",&memsize)) memsize=1000.0;
   if(verb) sf_warning("memsize=%g",memsize);
 
-  n2buf=1;
+  n2buf = 1;
   while(n2buf/1024.*n1/1024.*SF_FLOAT < memsize) n2buf++;
   n2buf = SF_MIN(n2buf,sf_leftsize(Fin,1));
 
@@ -145,6 +153,7 @@ int main (int argc, char *argv[])
   ompP =                  sf_floatalloc2  (nt,n2buf);
   ompQ = (kiss_fft_cpx**) sf_complexalloc2(nw,n2buf);
   ompE = (kiss_fft_cpx* ) sf_complexalloc (ompnth);
+  if(otIsFile) ot = sf_floatalloc(n2buf);
 
   /*------------------------------------------------------------*/
   if(verb) sf_warning("init FFT");
@@ -203,15 +212,17 @@ int main (int argc, char *argv[])
 
   /*------------------------------------------------------------*/
   nbuf = n2buf;
-  for (left=sf_leftsize(Fin,1); left>0; left -= nbuf) {
+  for (left = sf_leftsize(Fin,1); left > 0; left -= nbuf) {
     if(verb) sf_warning("%ld %ld;",left,nbuf);
 
     /* buffer size */
-    nbuf=SF_MIN(left,nbuf);
+    nbuf = SF_MIN(left,nbuf);
 
     if (!inv) { /* FORWARD TRANSFORM */
-      for(ibuf = 0; ibuf < nbuf; ibuf++)
+      for(ibuf = 0; ibuf < nbuf; ibuf++) {
         sf_floatread (ompP[ibuf],n1,Fin);
+        if(otIsFile) sf_floatread (&ot[ibuf],1,Fot);
+      }
 
       #ifdef SF_HAS_FFTW_OMP
         for(ibuf = 0; ibuf < nbuf; ibuf++) {
@@ -224,7 +235,7 @@ int main (int argc, char *argv[])
       #ifdef _OPENMP
         #pragma omp parallel for schedule(static)			\
         private(ibuf,i1,ompith,shift)				\
-        shared( nbuf,n1,nt,nw,dw,o1,wght,ompP,ompQ,ompE,ompcfg)
+        shared( nbuf,n1,nt,nw,dw,o1,wght,ompP,ompQ,ompE,ompcfg,ot)
       #endif
       for(ibuf = 0; ibuf < nbuf; ibuf++) {
         #ifdef _OPENMP
@@ -241,6 +252,7 @@ int main (int argc, char *argv[])
           #endif /* SF_HAS_FFTW */
         #endif /* SF_HAS_FFTW_OMP */
 
+        if(otIsFile) o1 = ot[ibuf];
         if (0. != o1) { shift = -2.0*SF_PI*dw*o1;
           for (i1 = 0; i1 < nw; i1++) {
             ompE[ompith].r = cosf(shift*i1);
@@ -256,13 +268,17 @@ int main (int argc, char *argv[])
 
     } else { /* INVERSE TRANSFORM */
 
-      for(ibuf=0; ibuf<nbuf; ibuf++)
+      for(ibuf=0; ibuf<nbuf; ibuf++) {
         sf_complexread( (sf_complex*) ompQ[ibuf],nw,Fin);
+        if(otIsFile) sf_floatread (&ot[ibuf],1,Fot);
+      }
 
       #ifdef SF_HAS_FFTW_OMP
         ompith=0;
 
         for(ibuf=0; ibuf<nbuf; ibuf++) {
+
+          if(otIsFile) o1 = ot[ibuf];
           if (0. != o1) { shift = +2.0*SF_PI*dw*o1;
             for(i1 = 0; i1 < nw; i1++) {
               ompE[ompith].r = cosf(shift*i1);
@@ -270,6 +286,7 @@ int main (int argc, char *argv[])
               ompQ[ibuf][i1] = sf_cmul(ompQ[ibuf][i1],ompE[ompith]);
             }
           }
+
         }
         fftwf_execute(ompcfg);
       #endif /* SF_HAS_FFTW_OMP */
@@ -277,7 +294,7 @@ int main (int argc, char *argv[])
       #ifdef _OPENMP
         #pragma omp parallel for schedule(static)			\
         private(ibuf,i1,ompith,shift)				\
-        shared( nbuf,n1,nw,dw,o1,wght,ompP,ompQ,ompE,ompcfg)
+        shared( nbuf,n1,nw,dw,o1,wght,ompP,ompQ,ompE,ompcfg,ot)
       #endif
       for(ibuf=0; ibuf<nbuf; ibuf++) {
         #ifdef _OPENMP
