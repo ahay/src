@@ -5,15 +5,13 @@
 int main(int argc, char* argv[])
 {
   bool verb, isreal;
-  int  nsum, left, nout;
+  int  nsum, left;
 
   /* I/O files */
   sf_file Fin = NULL;      /* input   cloud */
   sf_file Fou = NULL;      /* output  cloud */
 
   sf_axis a1,a2,b2;        /* cube axes */
-  int     n1,n2;
-  size_t  i1,i2;
 
   float      ** dinR = NULL;
   float       * douR = NULL;
@@ -36,8 +34,8 @@ int main(int argc, char* argv[])
   else                             isreal = false;
 
   /* coordinate axes */
-  a1 = sf_iaxa(Fin,1); n1 = sf_n(a1);
-  a2 = sf_iaxa(Fin,2); n2 = sf_n(a2);
+  a1 = sf_iaxa(Fin,1);
+  a2 = sf_iaxa(Fin,2);
   if(verb) sf_raxa(a1);
   if(verb) sf_raxa(a2);
 
