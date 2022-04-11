@@ -106,12 +106,12 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
 
     // read input
-    if(verb) sf_warning("read points");
+    //if(verb) sf_warning("read points");
     din = sf_floatalloc( ng * NCO );
     sf_floatread(din, ng * NCO, Fin);
 
     // flag window points
-    if(verb) sf_warning("flag window points");
+    //if(verb) sf_warning("flag window points");
     fin = sf_boolalloc ( ng );
 #ifdef _OPENMP
   #pragma omp parallel for schedule(dynamic) \
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     }
 
     // count window points
-    if(verb) sf_warning("count window points");
+    //if(verb) sf_warning("count window points");
     nw = 0;
 #ifdef _OPENMP
   #pragma omp parallel for reduction(+ : nw)
@@ -145,13 +145,13 @@ int main(int argc, char* argv[])
     nw = SF_MAX(nw,1);
 
     // write window header
-    if(verb) sf_warning("write window header");
+    //if(verb) sf_warning("write window header");
     aw = sf_maxa(nw,0,1);
     sf_oaxa(Fou,aw,2);
     if(verb) sf_raxa(aw);
 
     // index window points
-    if(verb) sf_warning("index window points");
+    //if(verb) sf_warning("index window points");
     dou = sf_floatalloc( nw * NCO );
     iw = 0;
     for( ig = 0; ig < ng; ig++) {
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
     }
 
     // move window points
-    if(verb) sf_warning("move window points");
+    //if(verb) sf_warning("move window points");
 #ifdef _OPENMP
   #pragma omp parallel for schedule(dynamic) \
   private( iw, ig, ico) \
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
     }
 
     // write window points
-    if(verb) sf_warning("write window points");
+    //if(verb) sf_warning("write window points");
     sf_floatwrite(dou, nw * NCO, Fou);
 
     // deallocate arrays
