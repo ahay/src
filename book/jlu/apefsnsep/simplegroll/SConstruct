@@ -1,0 +1,287 @@
+from math import *
+from rsf.proj import *
+
+wf = 2 * pi
+nt = 501
+dt = 0.004
+ot = 0
+nx = 501
+dx = 0.01
+ox = 0
+nw = 200
+dw = 0.0005
+ow = 0
+
+### make model
+# reflection event
+for eve in (1, 2, 3, 4):
+    spike = "spike%d" % eve
+    tpara = "tpara%d" % eve
+    para = "para%d" % eve
+    Flow(
+        spike, None, """
+        spike n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g nsp=1 k1=%d mag=1  p2=0|
+        ricker1 frequency=30 | put unit2=km label2=Distance
+        """ % (nt, dt, ot, nx, dx, ox, eve * 80 - 30))
+    Flow(
+        tpara, spike, """
+        window n1=1 | math output="-sqrt(%g*%g+(x1-2.5)*(x1-2.5)/%g/%g)+%g"
+        """ % (0.004 * (eve * 80 - 30), 0.004 * (eve * 80 - 30), 2, 2, 0.004 *
+               (eve * 80 - 30)))
+    Flow(para, [spike, tpara], "datstretch datum=${SOURCES[1]} ")
+Flow("para", "para1 para2 para3 para4",
+     "add ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}")
+Result(
+    "para", "para", """
+    window j2=4 | wiggle label2=Distance unit2=km 
+    transp=y yreverse=y poly=y title="Signal" 
+    """)
+# ground roll
+Flow(
+    "line1", None, """
+     spike n1=501 n2=501 nsp=1 k1=250 mag=5 p2=0.15 |
+     ricker1 frequency=27 | transp
+     """)
+Flow(
+    "line2", None, """
+     spike n1=501 n2=501 nsp=1 k1=250 mag=6 p2=0.13 |
+     ricker1 frequency=18 | transp
+     """)
+Flow(
+    "line3", None, """
+     spike n1=501 n2=501 nsp=1 k1=250 mag=7 p2=0.1 |
+     ricker1 frequency=12 | transp
+     """)
+Flow("part1", "line1 line2 line3", "add scale=1,1,1 ${SOURCES[1:2]}")
+Flow("part2", "part1", "reverse which=2")
+Flow("groll", "part1 part2", "add scale=1,1 ${SOURCES[1]}")
+Result("groll", "grey title=ground roll")
+# data
+Flow("data", "para groll",
+     "add scale=1,1 ${SOURCES[1]} | put o2=-12.5 d2=0.05")
+Result(
+    "sp-synth", "data", """
+    window n1=480 j2=2 |
+    grey label1="Time" label2="Offset" title=
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 clip=0.9
+    labelfat=3 gridfat=3
+    """)
+Flow("fkpara", "para", """
+    fft1 | fft3 axis=2 | math output="abs(input)" | real
+    """)
+Result(
+    "sp-fkpara", "fkpara", """
+     grey scalebar=n title= unit2= color=i max1=100 
+     labelfat=2 font=2 label1=Frequency label2=Wavenumber unit1=Hz
+     """)
+Flow("fksynth", "data", """
+    fft1 | fft3 axis=2 | math output="abs(input)" | real
+    """)
+Result(
+    "sp-fksynth", "fksynth", """
+     grey scalebar=n title= unit2= color=i max1=100
+     labelfat=2 font=2 label1=Frequency label2=Wavenumber unit1=Hz
+     """)
+# snr
+Flow("diff", "para groll", "add scale=1,-1 ${SOURCES[1]}")
+Flow("snr", "para diff", "snr2 noise=${SOURCES[1]}")
+# spt
+Flow("paraspt", "para", " spectra all=y")
+Plot(
+    "paraspt", """
+    graph title= max1=80 min2=0 max2=0.55 label2=Amplitude unit2=
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 dash=1 plotcol=7
+    plotfat=4
+    """)
+Flow(
+    "grollspt", "groll", """
+    put d1=0.004 d2=0.01 label1='Time' unit1='s' 
+    label2='Distance' unit2='km' | spectra all=y
+    """)
+Plot(
+    "grollspt", """
+    graph title= max1=80 min2=0 max2=0.55 label2=Amplitude unit2= 
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 dash=1 plotcol=7
+    plotfat=4
+    """)
+Flow("dataspt", "data", "spectra all=y")
+Plot(
+    "dataspt", """
+    graph title= max1=80 min2=0 max2=0.55 label2=Amplitude unit2= 
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 plotcol=7
+    plotfat=4
+    """)
+Result("sp-compspt", "dataspt paraspt grollspt", "Overlay")
+
+### APEF
+Flow("noiz", "data", "bandpass fhi=12.")
+Flow("noiz1", "data", """
+    bandpass fhi=10. |
+    mutter t0=-0.5 hyper=y v0=3.5
+    """)
+Result("noiz1", "grey title=")
+Flow(
+    "mask", "noiz", """
+    math output="input*input" | smooth rect1=3 rect2=10 |
+    mask min=0.01
+    """)
+Flow("mask2", "mask", "dd type=float")
+Result("mask2", " grey title= ")
+Flow("dat2", "mask2 data", "add mode=p ${SOURCES[1]}")
+Result("dat2", "grey title=")
+Flow(
+    "anpef anpred", "noiz1", """
+    apef a=12,3 rect1=20 rect2=10 niter=500
+    jump=1 pred=${TARGETS[1]} verb=y
+    """)
+Flow(
+    "aspef aspred", "data", """
+    apef a=7,4 rect1=40 rect2=30 niter=500
+    jump=1 pred=${TARGETS[1]} verb=y
+    """)
+Flow(
+    "asign", "data aspef anpef", """
+    apefsignoi sfilt=${SOURCES[1]} nfilt=${SOURCES[2]}
+    niter=14 eps=2 verb=y 
+    """)
+Flow("asignc", "asign", "cut n1=40 | cut f1=480")
+Flow(
+    "synth-ann", "data asignc mask2", """
+     add scale=1,-1 ${SOURCES[1]} |
+     add mode=p ${SOURCES[2]}
+     """)
+Flow("synth-ass", "data synth-ann", "add scale=1,-1 ${SOURCES[1]} ")
+Result(
+    "sp-apef", "synth-ass", """
+     window n1=480 j2=2  |
+    grey label1="Time" label2="Offset" title=
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 clip=0.4
+    labelfat=3 gridfat=3
+    """)
+Result(
+    "sp-apefnoiz", "synth-ann", """
+     window n1=480 j2=2  |
+    grey label1="Time" label2="Offset" title=
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 clip=0.89
+    labelfat=3 gridfat=3
+    """)
+Flow("fksynth-ass", "synth-ass", """
+    fft1 | fft3 axis=2 | math output="abs(input)" | real
+    """)
+Result(
+    "sp-fkapef", "fksynth-ass", """
+     grey scalebar=n title= unit2= color=i max1=100 labelfat=2
+     font=2 label1=Frequency label2=Wavenumber unit1=Hz
+     """)
+# snr
+Flow("adiff", "para synth-ass", "add scale=1,-1 ${SOURCES[1]}")
+Flow("asnr", "para adiff", "snr2 noise=${SOURCES[1]}")
+
+### Bandpass filter
+Flow("bshot", "data", "bandpass flo=25")
+Flow("bnoiz", "data bshot", "add scale=1,-1 ${SOURCES[1]}")
+Result(
+    "sp-bp", "bshot", """
+    window n1=480 j2=2  |
+    grey label1="Time" label2="Offset" title=
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 clip=0.4
+    labelfat=3 gridfat=3
+    """)
+Result(
+    "sp-bpnoiz", "bnoiz", """
+    window n1=480 j2=2 |
+    grey label1="Time" label2="Offset" title=
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 clip=0.89
+    labelfat=3 gridfat=3
+    """)
+Flow("fksynth-bp", "bshot", """
+    fft1 | fft3 axis=2 | math output="abs(input)" | real
+    """)
+Result(
+    "sp-fkbp", "fksynth-bp", """
+       grey scalebar=n title= unit2= color=i max1=100 labelfat=2
+        font=2 label1=Frequency label2=Wavenumber unit1=Hz
+     """)
+# snr
+Flow("bdiff", "para bshot", "add scale=1,-1 ${SOURCES[1]}")
+Flow("bsnr", "para bdiff", "snr2 noise=${SOURCES[1]}")
+
+### time-frequency
+Flow("ltft",
+     "data",
+     """
+     ltft rect=20 verb=n nw=200 dw=0.5 niter=25
+     """,
+     split=[2, 501],
+     reduce="cat axis=3")
+Result(
+    "ltft", """
+     math output="abs(input)" | real |
+     byte allpos=y gainpanel=40 pclip=100 |
+     transp plane=23 memsize=1000 | 
+     grey3 color=j frame1=250 frame3=10 frame2=250 label1=Time flat=n 
+     unit1=s label2=Offset label3="\F5 F \F-1" unit2=km
+     screenht=10 screenratio=0.7
+     point1=0.85 point2=0.8 wanttitle=n labelfat=4 font=2 titlefat=4
+     parallel2=n format2=%3.1f
+     """)
+Flow(
+    "lmask", "ltft", """
+     real | transp plane=23 memsize=1000 |
+     math output=1. |
+     mutter t0=-0.8 v0=4.0 | cut min3=14 |
+     math output="1-input"
+     """)
+Result(
+    "sp-lmask", "lmask", """
+     byte allpos=y gainpanel=40 pclip=100 | 
+     grey3 color=j frame1=250 frame3=10 frame2=250 label1=Time flat=n 
+     unit1=s label2=Offset label3="\F5 F \F-1" unit2=km
+     screenht=10 screenratio=0.7
+     point1=0.85 point2=0.8 wanttitle=n labelfat=4 font=2 titlefat=4
+     parallel2=n format2=%3.1f
+     """)
+Flow(
+    "thr1", "ltft", """
+     real | transp plane=23 memsize=1000 | 
+     mutter t0=-0.8 v0=4.6 | cut min3=28
+     """)
+Flow(
+    "thr2", "ltft", """
+     imag | transp plane=23 memsize=1000 |
+     mutter t0=-0.8 v0=4.6 | cut min3=28
+     """)
+Flow(
+    "complx", "thr1 thr2", """
+     cmplx ${SOURCES[1:2]} | 
+     transp plane=23 memsize=1000
+     """)
+Flow("ltftnoiz", "complx", "ltft inv=y verb=n")
+Result(
+    "sp-ltftnoiz", "ltftnoiz", """
+    window n1=480 j2=2 |
+    grey label1="Time" label2="Offset" title=
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 clip=0.89
+    labelfat=3 gridfat=3
+    """)
+Flow("ltftsign", "data ltftnoiz", "add ${SOURCES[1]} scale=1,-1")
+Result(
+    "sp-ltft", "ltftsign", """
+    window n1=480 j2=2 |
+    grey label1="Time" label2="Offset" title=
+    screenratio=0.7 screenht=8.5 font=2 titlefat=2 clip=0.4
+    labelfat=3 gridfat=3
+    """)
+Flow("fkltft", "ltftsign", """
+    fft1 | fft3 axis=2 | math output="abs(input)" | real
+    """)
+Result(
+    "sp-fkltft", "fkltft", """
+     grey scalebar=n title= unit2= color=i max1=100 labelfat=2
+     font=2 label1=Frequency label2=Wavenumber unit1=Hz
+     """)
+# snr
+Flow("ldiff", "para ltftsign", "add scale=1,-1 ${SOURCES[1]}")
+Flow("lsnr", "para ldiff", "snr2 noise=${SOURCES[1]}")
+
+End()
