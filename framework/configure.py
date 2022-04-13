@@ -444,7 +444,7 @@ def rpc(context):
         context.env['LIBS'] = oldlibs
         context.env['CPPPATH'] = oldpath
         context.env['HAVE_RPC'] = False
-        
+
 
 pkg['c99'] = {'fedora':'glibc-headers'}
 
@@ -639,7 +639,7 @@ def x11(context):
 #./configure --prefix=build/X
 #make install
 # set XINC to build/X/include and XLIBPATH to build/X/lib and test again
-   
+
 
 def check_pen(env,pen):
     if pen == 'xtpen' and (env.get('XINC') and env.get('XLIBPATH')):
@@ -2456,13 +2456,13 @@ def gcc(context):
     '''Handle dynamic gcc libraries.'''
     libdirs = os.environ.get('LD_LIBRARY_PATH','').split(':')
     libs = [x for x in libdirs if re.search('gcc',x) and os.path.isdir(x)]
-    context.env.Append(ENV={'LD_LIBRARY_PATH':':'.join(':')})
+    context.env.Append(ENV={'LD_LIBRARY_PATH':':'.join(libs)})
 
 def intel(context):
     '''Trying to fix weird intel setup.'''
     libdirs = os.environ.get('LD_LIBRARY_PATH','').split(':')
     libs = [x for x in libdirs if re.search('intel',x) and os.path.isdir(x)]
-    context.env.Append(ENV={'LD_LIBRARY_PATH':':'.join(':')})
+    context.env.Append(ENV={'LD_LIBRARY_PATH':':'.join(libs)})
     for key in ('INTEL_FLEXLM_LICENSE','INTEL_LICENSE_FILE','IA32ROOT'):
         license = os.environ.get(key)
         if license:
