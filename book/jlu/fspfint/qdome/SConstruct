@@ -1,0 +1,249 @@
+from rsf.proj import *
+
+def cubeplot(title, clip="", extra=""):
+    return """
+    byte gainpanel=all %s |
+    grey3 frame1=82 frame2=75 frame3=50 flat=n point1=0.7 point2=0.7
+    title="%s" %s labelfat=2 wanttitle=n
+    """ % (clip, title, extra)
+
+ns2 = 2
+ns3 = 2
+"""3D model test"""
+# Qdome model
+Flow("qdome", None, 
+     """
+     qdome
+     n1=200 n2=151 n3=100
+     d1=0.01 d2=0.01 d3=0.01
+     o1=0 o2=0.5 o3=-0.05 |
+     smooth rect1=3 diff1=1 | smooth rect1=4 |
+     reverse which=2 |
+     put o2=0 o3=0 d2=1 d3=1
+     label1=Time label2="TraceX" label3="TraceY"
+     unit1=s unit2= unit3=
+     """)
+Result("qdome", cubeplot("", "clip=0.000760897"))
+# fk
+Flow("fkqd", "qdome",
+     'fft1 | fft3 axis=2 | fft3 axis=3 |math output="abs(input)" | real')
+Result("fkqd",
+       """
+       window n1=61 |
+       byte gainpanel=all |
+       grey3 frame1=20 frame2=160 frame3=100 flat=n point1=0.7 point2=0.7
+       title= label1=Fequency label2=Kx label3=Ky unit2= unit3= color=i
+       """)
+
+# random mask
+Flow("mask", "qdome",
+     """
+     window n1=1 | noise type=n rep=y seed=150 |
+     mask min=0.2 | dd type=float |
+     cut n1=2 f1=74 n2=4 f2=47 | dd type=int
+     """)
+Flow("masky", "mask", "transp plane=12")
+# irregular missing data
+Flow("gapqd", "qdome mask", "headercut mask=${SOURCES[1]}")
+Plot("gapqd", cubeplot("gap data", "clip=0.000760897"))
+Result("gapqd", cubeplot("", "clip=0.000760897"))
+# SNR
+Flow("diffgapqd", "qdome gapqd", "add scale=1,-1 ${SOURCES[1]}")
+Flow("snrgapqd", "qdome diffgapqd", "snr3 noise=${SOURCES[1]}")
+# fk
+Flow("fkgapqd", "gapqd",
+     'fft1 | fft3 axis=2 | fft3 axis=3 |math output="abs(input)" | real')
+Result("fkgapqd",
+       """
+       window n1=61 |
+       byte gainpanel=all |
+       grey3 frame1=20 frame2=160 frame3=100 flat=n point1=0.7 point2=0.7
+       title= label1=Fequency label2=Kx label3=Ky unit2= unit3= color=i
+       """)
+
+# POCS
+Flow("pmask", "mask", "spray axis=1 n=200 d=0.004 | dd type=float")
+Flow("pmask3", "pmask", "math output=1-input")
+
+pniter = 50
+fniter = 50
+fforward = """
+fft1 | fft3 | fft3 axis=3
+"""
+fbackward = """
+fft3 axis=3 inv=y | fft3 inv=y | fft1 inv=y
+"""
+fdata = "gapqd"
+
+for iter in range(fniter):
+    fold = fdata
+    fdata = "fdata%d" % iter
+
+    # 1. Forward 3D Fourier
+    # 2. Thresholding
+    # 3. Inverse 3D Fourier
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(fdata, [fold, "pmask3", "gapqd"], fforward + """
+         | threshold pclip=%g |
+         """ % (5.0 + ((99.0 - 5.0) * (iter**2) / ((pniter - 1)**2))) +
+         fbackward + """
+         | add mode=p ${SOURCES[1]} | 
+         add ${SOURCES[2]}
+         """)
+
+Flow("pocsqd", "fdata49", "cp")
+Result("pocsqd", cubeplot("", "clip=0.000760897"))
+# error
+Flow("errpocsqd", "qdome pocsqd", "add ${SOURCES[1]} scale=1,-1 ")
+Result("errpocsqd", cubeplot("", "clip=0.000760897"))
+# SNR
+Flow("snrpocsqd", "qdome errpocsqd", "snr3 noise=${SOURCES[1]}")
+# fk
+Flow("fkpocsqd", "pocsqd",
+     'fft1 | fft3 axis=2 | fft3 axis=3 |math output="abs(input)" | real')
+Result("fkpocsqd",
+       """
+       window n1=61 |
+       byte gainpanel=all |
+       grey3 frame1=20 frame2=160 frame3=100 flat=n point1=0.7 point2=0.7
+       title= label1=Fequency label2=Kx label3=Ky unit2= unit3= color=i
+       """)
+
+# SPF3
+# padding x and y axis
+Flow("maskpad1", "mask", "window n2=20 | reverse which=2 ")
+Flow("maskspf1", "maskpad1 mask", "cat ${SOURCES[1]} axis=2")
+Flow("maskpad2", "maskspf1", "window n1=20 | reverse which=1")
+Flow("maskspf", "maskpad2 maskspf1", "cat ${SOURCES[1]} axis=1")
+Flow("datapad1", "gapqd", "window n3=20 | reverse which=4")
+Flow("gapdata1", "datapad1 gapqd", "cat ${SOURCES[1]} axis=3")
+Flow("datapad2", "gapdata1", "window n2=20 | reverse which=2")
+Flow("gapdata", "datapad2 gapdata1", "cat ${SOURCES[1]} axis=2")
+Flow("spfx", "gapdata maskspf",
+     """
+     fxyspfint3 mask=${SOURCES[1]}
+     lambdax=0.001 lambday=0.0008 lambdaf=0.0005
+     na1=5 na2=6 ftype=1 verb=y
+     """)
+Flow("maskspft", "maskspf", "transp")
+Flow("spfy", "gapdata maskspft", 
+     """
+     transp plane=23|
+     fxyspfint3 mask=${SOURCES[1]}
+     lambdax=0.001 lambday=0.0008 lambdaf=0.0005
+     na1=5 na2=6 ftype=1 verb=y |
+     transp plane=23
+     """)
+Flow("spfqd", "spfx spfy",
+     """
+     add ${SOURCES[1]} scale=1,1 | math output="input/2" |
+     window f2=20 f3=20 | put d2=1 d3=1 o2=0 o3=0
+     """)
+Result("spfqd", cubeplot("", "clip=0.000760897"))
+# error
+Flow("errspfqd", "qdome spfqd", "add ${SOURCES[1]} scale=1,-1 ")
+Result("errspfqd", cubeplot("", "clip=0.000760897"))
+# SNR
+Flow("snrspfqd", "qdome errspfqd", "snr3 noise=${SOURCES[1]}")
+# fk
+Flow("fkspfqd", "spfqd",
+     "fft1 | fft3 axis=2 | fft3 axis=3 |math output='abs(input)' | real")
+Result("fkspfqd", 
+       """
+       window n1=61 |
+       byte gainpanel=all |
+       grey3 frame1=20 frame2=160 frame3=100 flat=n point1=0.7 point2=0.7
+       title= label1=Fequency label2=Kx label3=Ky unit2= unit3= color=i
+       """)
+
+# seislet pocs
+
+# # define forward and backward transform strings
+sforward = """
+pad n2=256 | seislet adj=y inv=y dip=${SOURCES[3]} eps=0.1 type=b
+"""
+sbackward = """
+seislet adj=n inv=n dip=${SOURCES[3]} eps=0.1 type=b | window n2=151
+"""
+pniter = 50
+sniter = 50
+
+datas = []
+for islice in range(0, 100):
+    dmask = "dipmask%d" % islice
+    smask = "smask%d" % islice
+    wgap = "wgap%d" % islice
+    wdip = "wdip%d" % islice
+    Flow(dmask, "mask",
+         "window n2=1 f2=%g | spray n=200 axis=1| pad n2=256" % islice)
+    Flow(smask, "pmask3", "window n3=1 f3=%g" % islice)
+    Flow(wgap, "gapqd", "window n3=1 f3=%g" % islice)
+    Flow(wdip, [wgap, dmask],
+         "pad n2=256 | dip rect1=20 rect2=20 mask=${SOURCES[1]}")
+    # Result(wdip, "grey title= color=j")
+
+    sdata = wgap
+    for itera in range(sniter):
+        sfold = sdata
+        sdata = "wgap%s-%s" % (islice, itera)
+        # 1. Forward seislet transform
+        # 2. Thresholding
+        # 3. Inverse seislet transform
+        # 4. Multiply by space mask
+        # 5. Add data outside of hole
+        Flow(sdata, [sfold, smask, wgap, wdip], sforward + """
+             | threshold pclip=%g |
+            """ % (5.0 + ((99.0 - 5.0) * (itera**2) / ((pniter - 1)**2))) +
+            sbackward + """
+            | add mode=p ${SOURCES[1]} |
+            add ${SOURCES[2]}
+            """)
+        if itera == (sniter - 1):
+            datas.append(sdata)
+
+Flow("stpocsqd", datas, "cat ${SOURCES[1:%d]} axis=3" % len(datas))
+Result("stpocsqd", cubeplot("", "clip=0.000760897"))
+# error
+Flow("errstpocsqd", "qdome stpocsqd", "add ${SOURCES[1]} scale=1,-1 ")
+Result("errstpocsqd", cubeplot("", "clip=0.000760897"))
+Flow("fkstpocsqd", "stpocsqd",
+     'fft1 | fft3 axis=2 | fft3 axis=3 |math output="abs(input)" | real')
+Result("fkstpocsqd",
+       """
+       window n1=61 |
+       byte gainpanel=all |
+       grey3 frame1=20 frame2=160 frame3=100 flat=n point1=0.7 point2=0.7
+       title= label1=Fequency label2=Kx label3=Ky unit2= unit3= color=i
+       """)
+
+# aliasing
+Flow("alias", "qdome", "cut f2=0 f3=0 j2=2 j3=2")
+Result("aliasqd", "alias", cubeplot("", "clip=0.000760897"))
+# mask
+Flow("amaskx", "qdome",
+     "window n1=1 | math output=1 | cut f1=0 f2=0 j1=2 j2=2 | dd type=int")
+# Result("amaskx", " dd type=float | grey title=")
+Flow("intpx", "alias amaskx", 
+     """
+     fxyspfint3 mask=${SOURCES[1]}
+     lambdax=0.001 lambday=0.0008 lambdaf=0.0005
+     na1=5 na2=6 ftype=1 verb=y
+     """)
+Flow("amasky", "amaskx", "transp")
+Flow("intpy", "alias amasky", 
+     """
+     transp plane=23|
+     fxyspfint3 mask=${SOURCES[1]}
+     lambdax=0.001 lambday=0.0008 lambdaf=0.0005
+     na1=5 na2=6 ftype=1 verb=y |
+     transp plane=23
+     """)
+Flow("intp", "intpx intpy", 
+     """
+     add ${SOURCES[1]} scale=1,1 | math output="input/2" |
+     window f2=20 f3=20 | put d2=1 d3=1 o2=0 o3=0
+     """)
+Result("intpqd", "intp", cubeplot("", "clip=0.000760897"))
+
+End()
