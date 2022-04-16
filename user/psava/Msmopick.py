@@ -8,8 +8,39 @@ from scipy.sparse        import spdiags
 from scipy.sparse.linalg import spsolve
 import sys
 
-import idnUtil as IDN
-import lapUtil as LAP
+# ------------------------------------------------------------
+def idnop1D(n):
+    e = np.ones( n, dtype='float')
+    Lopr = spdiags([e], [0], n,n)
+    return Lopr
+
+def idnop2D(nx,nz):
+    n = nx*nz
+    e = np.ones( n, dtype='float')
+
+    Lopr = spdiags([e], [0], n,n)
+    return Lopr
+# ------------------------------------------------------------
+def lapop1D(n):
+    e = np.ones( n, dtype='float')
+    Lopr = spdiags([e, -2*e, e], [-1, 0, +1], n,n)
+    return Lopr
+
+def lapop2D(nx,nz):
+    n = nx*nz
+    e = np.ones( n, dtype='float')
+
+    u = e.copy()
+    u[::nz]=0
+
+    l = e.copy()
+    l[nz-1::nz]=0
+
+    Lopr = spdiags([e, l, -4*e, u,e], [-nz, -1, 0, +1, +nz], n,n)
+    return Lopr
+# ------------------------------------------------------------
+
+
 
 par = rsf.Par()
 
@@ -69,8 +100,8 @@ dbar = pck                            # rough picks
 wpo = par.float('wpo',1.0)
 wgh = np.power(wgh-np.min(wgh),wpo)
 WDop = spdiags(wgh,[0],nd,nd)         # data weight operator
-Gop  = IDN.idnop1D(nd)                # mapping operator
-Rop  = LAP.lapop1D(nm)                # Laplacian operator
+Gop  = idnop1D(nd)                # mapping operator
+Rop  = lapop1D(nm)                # Laplacian operator
 
 # ------------------------------------------------------------
 # L-curve
