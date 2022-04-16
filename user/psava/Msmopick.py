@@ -8,6 +8,9 @@ from scipy.sparse        import spdiags
 from scipy.sparse.linalg import spsolve
 import sys
 
+#import idnUtil as IDN
+#import lapUtil as LAP
+
 # ------------------------------------------------------------
 def idnop1D(n):
     e = np.ones( n, dtype='float')
@@ -39,8 +42,6 @@ def lapop2D(nx,nz):
     Lopr = spdiags([e, l, -4*e, u,e], [-nz, -1, 0, +1, +nz], n,n)
     return Lopr
 # ------------------------------------------------------------
-
-
 
 par = rsf.Par()
 
@@ -90,10 +91,10 @@ xS = xx[0]
 xE = xx[nd-1]
 
 nb = np.max([1,nd//10])
-tS = np.median(pck[      0:  nb])     # first 1% of picks
-tE = np.median(pck[nd-1-nb:nd-1])     #  last 1% of picks
-#tS = tE = np.median(pck)
-mbar = tS + (xx-xS)/(xE-xS) * (tE-tS) #   reference model
+#tS = np.median(pck[      0:  nb])     # first 1% of picks
+#tE = np.median(pck[nd-1-nb:nd-1])     #  last 1% of picks
+#mbar = tS + (xx-xS)/(xE-xS) * (tE-tS) #   reference model
+mbar = pck*0 + np.median(pck)
 
 dbar = pck                            # rough picks
 
