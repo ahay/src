@@ -39,7 +39,10 @@ int main(int argc, char* argv[])
   if(verb) sf_raxa(a1);
   if(verb) sf_raxa(a2);
 
-  b2 = sf_maxa( sf_n(a2)/nsum , sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
+  if( sf_n(a2) % nsum == 0)
+    b2 = sf_maxa( sf_n(a2)/nsum  , sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
+  else
+    b2 = sf_maxa( sf_n(a2)/nsum+1, sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
   sf_oaxa(Fou, a1, 1);
   sf_oaxa(Fou, b2, 2);
 
@@ -53,8 +56,8 @@ int main(int argc, char* argv[])
 
   if(isreal) {
     for (left = sf_leftsize(Fin,1); left > 0; left -= nsum) {
-      //nsum = SF_MIN(left,nsum);
-      if(left < nsum) break;
+      nsum = SF_MIN(left,nsum);
+      //if(left < nsum) break;
 
       sf_floatread(dinR[0], sf_n(a1) * nsum , Fin);
 
