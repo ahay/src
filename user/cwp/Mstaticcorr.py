@@ -3,7 +3,6 @@
 Static Corrections for Redatuming SHARAD data to MOLA surface
 Input: 2D correlation between SHARAD data and clutter simulation
 Output: Smoothed maximum correlation picks representing residual ionosphere time delay
-Created by: Dylan Hickson, Colorado School of Mines
 Created on: Mar 9, 2021
 '''
 import rsf.api as rsf
