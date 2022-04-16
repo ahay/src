@@ -56,6 +56,7 @@ cloudwin3d
 cloudspray
 stransp
 presum
+fftxcor
 '''
 
 # vse
@@ -69,6 +70,7 @@ ocor3d
 findmax
 map2cloud2D
 map2cloud3D
+smopick
 '''
 
 dynlib = env.get('DYNLIB','')
