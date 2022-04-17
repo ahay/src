@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[])
 {
-  bool verb, isreal;
+  bool verb, isreal, norm;
 
   const char **fname; // array of file names
   int nFILES;         //     number of input files
@@ -38,7 +38,8 @@ int main(int argc, char *argv[])
   /*------------------------------------------------------------*/
   /* init RSF */
   sf_init(argc,argv);
-  if (!sf_getbool("verb", &verb)) verb = false; /* verbosity  */
+  if (!sf_getbool("verb", &verb)) verb = false; /* verbosity */
+  if (!sf_getbool("norm", &norm)) norm = true;  /* fold normalization */
 
   /*------------------------------------------------------------*/
   nopen = sysconf(_SC_OPEN_MAX);
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
   if(isreal) allR = sf_floatalloc  ( sf_n(aa) );
   else       allC = sf_complexalloc( sf_n(aa) );
 
-  fold = sf_floatalloc  ( sf_n(aa) );
+  if(norm) fold = sf_floatalloc( sf_n(aa) );
 
   /*------------------------------------------------------------*/
   /* define the hash table */
@@ -131,14 +132,20 @@ int main(int argc, char *argv[])
       #pragma omp parallel for schedule(dynamic) \
         private(ja) shared(aa, allR, fold)
       #endif
-      for(ja = 0; ja < sf_n(aa); ja++) { allR[ ja ] = 0.0; fold[ ja ] = 0;}
+      for(ja = 0; ja < sf_n(aa); ja++) {
+        allR[ ja ] = 0.0;
+        if(norm) fold[ ja ] = 0;
+      }
 
     } else {
       #ifdef _OPENMP
       #pragma omp parallel for schedule(dynamic) \
         private(ja) shared(aa, allC, fold)
       #endif
-      for(ja = 0; ja < sf_n(aa); ja++) { allC[ ja ] = 0.0; fold[ ja ] = 0;}
+      for(ja = 0; ja < sf_n(aa); ja++) {
+        allC[ ja ] = 0.0;
+        if(norm) fold[ ja ] = 0;
+      }
     }
 
     // loop over clouds
@@ -176,7 +183,7 @@ int main(int argc, char *argv[])
         for(jw = 0; jw < sf_n(aw); jw++) {
             ihash = htLookup( nhash, &wco[jw], &o);
             allR[ ihash ] += winR[ jw ];
-            fold[ ihash ]++;
+            if(norm) fold[ ihash ]++;
         }
       } else {
         #ifdef _OPENMP
@@ -186,7 +193,7 @@ int main(int argc, char *argv[])
         for(jw = 0; jw < sf_n(aw); jw++) {
             ihash = htLookup( nhash, &wco[jw], &o);
             allC[ ihash ] += winC[ jw ];
-            fold[ ihash ]++;
+            if(norm) fold[ ihash ]++;
         }
       }
 
@@ -204,9 +211,13 @@ int main(int argc, char *argv[])
     } // end loop over clouds
 
     // normalize by fold
-    for(ja = 0; ja < sf_n(aa); ja++) { fold[ja] = SF_MAX(fold[ja],1); }
-    if(isreal) for(ja = 0; ja < sf_n(aa); ja++) { allR[ja] /= fold[ja]; }
-    else       for(ja = 0; ja < sf_n(aa); ja++) { allC[ja] /= fold[ja]; }
+    if(norm) {
+      for(ja = 0; ja < sf_n(aa); ja++) {
+        fold[ja] = SF_MAX(fold[ja],1);
+      }
+      if(isreal) for(ja = 0; ja < sf_n(aa); ja++) { allR[ja] /= fold[ja]; }
+      else       for(ja = 0; ja < sf_n(aa); ja++) { allC[ja] /= fold[ja]; }
+    }
 
     // output all data
     if(isreal) sf_floatwrite  (allR, sf_n(aa), Fdall); // write all data
@@ -225,6 +236,6 @@ int main(int argc, char *argv[])
   sf_fileclose(Fcall);
   sf_fileclose(Fdall);
 
-  free(fold);
+  if(norm) free(fold);
   free(jnk);
 }
