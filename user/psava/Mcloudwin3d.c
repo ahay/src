@@ -51,6 +51,8 @@ int main(int argc, char* argv[])
 
   bool * fin;
 
+  jnk = sf_floatalloc( NCO );
+
   /*------------------------------------------------------------*/
   /* init RSF */
   sf_init(argc,argv);
@@ -87,7 +89,6 @@ int main(int argc, char* argv[])
   /* orbit coordinates */
   oco = (pt3d*) sf_alloc(no,sizeof(*oco));
   ono = (vc3d*) sf_alloc(no,sizeof(*ono));
-  jnk = sf_floatalloc( NCO );
 
   for( io = 0; io < no; io++) {
     sf_floatread( jnk,NCO,Fo);
@@ -121,7 +122,7 @@ int main(int argc, char* argv[])
     for( ig = 0; ig < ng; ig++) {
       fin[ig] = 0;
 
-      gco.x  = din[ig * NCO];
+      gco.x  = din[ig * NCO + 0];
       gco.y  = din[ig * NCO + 1];
       gco.z  = din[ig * NCO + 2];
 
@@ -153,6 +154,8 @@ int main(int argc, char* argv[])
     // index window points
     //if(verb) sf_warning("index window points");
     dou = sf_floatalloc( nw * NCO );
+    for(int i = 0; i < nw * NCO; i++) dou[i] = 0.0;
+
     iw = 0;
     for( ig = 0; ig < ng; ig++) {
       if( fin[ig] ) {
@@ -166,10 +169,10 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
   #pragma omp parallel for schedule(dynamic) \
   private( iw, ig, ico) \
-  shared(  nw, dou )
+  shared(  nw, dou, din )
 #endif
     for( iw = 0; iw < nw; iw++ ) {
-      ig = dou[iw * NCO];
+      ig = dou[ iw * NCO ];
       for(ico = 0; ico < NCO; ico++) {
         dou[iw * NCO + ico] = din[ig * NCO + ico];
       }
