@@ -1,0 +1,817 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+import copy
+import random
+# seed random number generator
+random.seed(0)
+# Donwload data
+Fetch('midpts.hh','midpts')
+name = 'gom-'
+# Field Data Sampling Information
+# time
+to = 0
+nt = 876 # this is in agreement with the windowing that occurs
+dt = 0.004
+tf = to+(nt-1)*dt
+
+# midpoint
+xo = 7.705
+nx = 250
+dx = 0.0335
+xf = xo+(nx-1)*dx
+
+
+# offset
+ho = 0.264
+nh = 24
+dh = 0.134
+
+def getstring(par):
+    return "\`< ${SOURCES[1]} $RSFROOT/bin/sfget %s parform=n \`"%par
+def getstring2(par):
+    return "`< ${SOURCES[1]} $RSFROOT/bin/sfget %s parform=n `"%par
+
+
+def make_linear_vel(outfile,infile):
+   Flow(outfile,[infile,infile],
+       '''
+       window n2=1 | 
+       math output="(%s-1)*%s/(%s-1)/%s*(x1-%s)+%s" 
+       '''%(getstring2('n2'),getstring2('d2'),
+            getstring2('n1'),getstring2('d1'),
+            getstring2('o1'),getstring2('o2')))
+
+
+# mute cmps
+cmps = name+'cmps'
+Flow(cmps,'midpts.hh',
+     '''
+     dd form=native | 
+     mutter half=n v0=1.5 |
+     put label1=Time unit1=s label2=Offset unit2=km |
+     mutter half=n |
+     put label2=Offset unit2=km label3=Midpoint unit3=km |
+     window max1=3.5 
+     ''')
+
+# velocity scan parameters
+vo =1.4
+nv=121
+dv=0.01
+# calculate last velocity
+vf = vo+(nv-1)*dv
+
+# Velocity scan
+vscan = name+'vscan'
+#Flow(vscan+'-pre',cmps,
+Flow(vscan,cmps,
+     '''
+     vscan half=n v0=%g nv=%i dv=%g semblance=y |
+     costaper nw1=50 | costaper nw2=3
+     '''%(vo,nv,dv))
+
+# mute for unplysical values
+mutestr = 0.35
+muterect1 = 50
+muterect2 = 15
+velomute = name+'velomute'
+
+#Flow(velomute,vscan,
+#   '''
+#   window n3=1| math output=1|
+#   mutter inner=n t0=-3.25 v0=1 |
+#   mutter inner=y t0=1 x0=1.4 v0=0.5 |
+#   math output="(input-1)*%g+1" |
+#   smooth rect1=%i rect2=%i |
+#   spray axis=3 n=%i d=%g o=%g |
+#   add mode=p ${SOURCE}
+#   '''%(mutestr,muterect1,muterect2,nx,dx,xo))
+
+
+# make low velocity veloguide
+veloguide = name+'veloguide'
+watervel = 1.5
+waterbot = 1.2
+velsmth = 100
+velsgma = 0.63 #0.7 works well, 0.6 works better, this works best
+
+Flow(veloguide,vscan,
+    ''' 
+    window n3=1| 
+    math output="exp(-(x2-%g)*(x2-%g)/%g)-1"|
+    cut min1=%g | 
+    smooth rect1=%i |
+    math output="input+1" | 
+    spray axis=3 n=%i d=%g o=%g 
+    '''%(watervel,watervel,velsgma*velsgma,waterbot,velsmth,nx,dx,xo))
+
+# make scalebars
+bar3 = vscan+'-bar3'
+Flow(bar3,vscan,'window j3=3|bar allpos=y gainpanel=e minval=0 maxval=0.5 ')
+bar = vscan+'-bar'
+Flow(bar,vscan,'bar allpos=y gainpanel=e minval=0 maxval=0.5 ')
+#Result(vscan,[vscan,bar3],
+#   '''window j3=3 |byte allpos=y gainpanel=e minval=0 maxval=0.5 | 
+#      grey3 color=j frame1=0 frame2=%i movie=3 title="Semblance Scan" 
+#      bar=${SOURCES[1]} barlabel=Semblance flat=n point1=.9 point2=0.5 scalebar=y
+#   '''%(nv/3))
+
+
+
+
+
+# first good top data 
+#toptime = 0.35
+#topdex = (toptime-to)/dt
+# make vscan topper
+#topper = vscan+'-topper'
+#Flow(topper,vscan,
+#    'window f1=%i n1=10| stack axis=1 mean=y | smooth rect2=3 | math output="input/(x1-0.5)/(x1-0.5)"'%topdex)
+# insert topper on vscan
+#topped_pre = vscan+'-topped-pre'
+#Flow(topped_pre,vscan,'window f1=%i'%topdex)
+# put on topper
+#topped = vscan+'-topped'
+#Flow(topped,[topper,topped_pre],'spray axis=1 n=%i d=%g o=%g | cat axis=1 ${SOURCES[1]}'%(topdex,dt,to))
+
+semb_in = vscan
+# do continuation
+minlevel=1
+nsmoothings = 10
+smoothstrong = 5
+saniso1 = 6
+saniso2 = 1
+saniso3 = 3
+
+semblst = []
+derivlst = [] 
+#          window f1=%i | pad2 top=%i| topdex,topdex,
+for i in range(nsmoothings):
+   j = i+minlevel
+   this_one = semb_in+'-smth-%i'%i
+   Flow(this_one,[semb_in,veloguide],
+          '''
+          scale dscale=%g|
+          smooth rect1=%i rect2=%i rect3=%i  | costaper nw2=10|
+          add mode=p ${SOURCES[1]} 
+          '''%((j),j*smoothstrong*saniso1, j*smoothstrong*saniso2, j*smoothstrong*saniso3)) # costaper nw2=10 | used to be before multiplication by veloguide
+   deriv = semb_in+'-deriv-%i'%i
+   Flow(deriv,this_one,'transp plane=12 | sfderiv scale=y| transp plane=12')
+   semblst.append(this_one)
+   derivlst.append(deriv)
+
+
+semblst.reverse()
+derivlst.reverse()
+
+
+lmbda = 5
+rho = 0.01
+niter = 20
+epsilon = 0.001
+
+
+
+# create a number of models
+# range of x
+rx = xf-xo
+# range of t
+rt = tf-to
+
+# constant value sweep
+nc = 5 # number of constants
+dc = (vf-vo)/(nc-1) # constant increment
+
+ndx = 5 # number of slope in x increments
+ndt = 5 # number of slope in t increments
+cutoffx = 1
+cutofft = 1
+modlst = []
+wantvelplots = False
+
+# random list of models
+nmods = 9
+randmodlst = random.sample(range(nc*ndx*ndt),9)
+randmodlst.sort()
+tracker = 0
+# create modelbar
+modbar = name+'modbar'
+Flow(modbar,vscan,'window n2=1 |math output="(x1-%g)*%g+%g" | byte allpos=y bias=%g'%(to,(vf-vo)/(tf-to),vo,vo))
+nbar=6
+rowlst = []
+collst = []
+for ic in range(nc):
+   const = dc*ic+vo
+   # max and min slope in x
+   min_slopex = cutoffx*(vo-const)/(rx)
+   max_slopex = cutoffx*(vf-const)/(rx)
+   range_slopex = max_slopex - min_slopex
+   dslopex = range_slopex/(ndx-1)
+   # max and min slope in t
+   min_slopet = cutofft*(vo-const)/(rt)
+   max_slopet = cutofft*(vf-const)/(rt)
+   range_slopet = max_slopet - min_slopet
+   dslopet = range_slopet/(ndt-1)
+   # loop through
+   for idx in range(ndx):
+      slopex = min_slopex + idx*dslopex
+      for idt in range(ndt):
+         slopet = min_slopet + idt*dslopet
+         mod = name+'linear-model-%i-%i-%i'%(ic,idx,idt)
+         Flow(mod,semblst[0],
+             '''
+             window n2=1|
+             math output="%g+%g*(x2-%g)+%g*(x1-%g) "
+             '''%(const,slopex,xo+rx/2,slopet,to))
+         # identification number for model
+         modid = idt+idx*ndt+ic*(ndt*nc)
+         if modid in randmodlst:
+            plotmod = name+'plotmod-%i'%tracker
+            Plot(plotmod,[mod,modbar],'clip2 lower=%g upper=%g |grey color=j bias=1.4 allpos=y scalebar=y barlabel=Velocity barunit="km/s" title="Starting Model %i"  bar=${SOURCES[1]} '%(vo,vf,modid+1))
+            Result(plotmod,[mod,modbar],'clip2 lower=%g upper=%g |grey color=j bias=1.4 allpos=y scalebar=y barlabel=Velocity barunit="km/s" title="Starting Model %i"  bar=${SOURCES[1]} '%(vo,vf,modid+1))
+            collst.append(plotmod)
+            tracker = tracker+1
+         modlst.append(mod)
+         if len(collst) == 3:
+            Plot(name+'row-%i'%(len(rowlst)),collst,'SideBySideAniso')
+            rowlst.append(name+'row-%i'%(len(rowlst)))
+            collst = []
+Result(name+'starting-models',rowlst,'OverUnderAniso')
+searchtype = 'lbfgs'
+
+modoutlst = []
+updateoutlst = []
+costoutlst = []
+for j in range(len(modlst)):
+    initial_model = modlst[j]
+    updatelst = [initial_model]
+    for i in range(len(semblst)):
+        if i == 0:
+           model_in = initial_model
+        else:
+           model_in = initial_model+'-velo-out-%i'%(i-1)
+        updates = initial_model+'-updates-%i'%(i)
+        vpicked = initial_model+'-velo-out-%i'%(i)
+        Flow([vpicked,updates],[semblst[i],derivlst[i],model_in],
+          '''
+          varipick dsemb=${SOURCES[1]} vo=${SOURCES[2]} updates=${TARGETS[1]}
+          lambda=%g rho=%g niter=%i epsilon=%g type=%s
+          '''%(lmbda+len(semblst)-1-i,rho,niter,epsilon,searchtype))
+        updatelst.append(updates)
+    upd = initial_model+'-updates'
+    Flow(upd,updatelst,'cat axis=3 o=0 d=1 ${SOURCES[1:%i]}'%(len(updatelst)))
+    costs = upd+'-costs'
+    Flow(costs,[upd,semblst[len(semblst)-1]],
+          '''
+          varicost semb=${SOURCES[1]}
+          lambda=%g  epsilon=%g
+          '''%(lmbda,epsilon))
+    # update lists
+    modoutlst.append(vpicked)
+    updateoutlst.append(upd)
+    costoutlst.append(costs)
+
+
+    
+
+# find best model
+bestmod = name+'best-model'
+# and the worst
+worstmod = name+'worst-model'
+# file for final costs
+finalcosts = name+'final-model-costs'
+# make list for input
+models  = name+'models'
+
+Flow(models,modoutlst,'cat axis=3 o=0 d=1 ${SOURCES[1:%i]}'%len(modoutlst))
+Flow([bestmod,finalcosts,worstmod],[models,semblst[-1]],
+    '''
+    variminim semb=${SOURCES[1]} costs=${TARGETS[1]}
+    lambda=%g epsilon=%g worst=${TARGETS[2]}
+    '''%(lmbda,epsilon))
+
+
+# create plots of costs
+maxiter = niter*(len(semblst) )
+maxcost = 148
+mincost = 128
+
+# create minimum flat line
+costmin = name+'minimum-cost'
+Flow(costmin,finalcosts,'stack axis=0 min=y| spray axis=1 n=%i d=1 o=0'%maxiter)
+costoutlst.append(costmin)
+costoutlst.reverse()
+costplots = []
+scr = .66
+for c in range(len(costoutlst)):
+   color = c%6+1
+   dash = 0
+   cost = costoutlst[c]
+   if c == 0:
+     color = 7
+     dash = 3
+   Plot(cost,
+      '''
+      pad2 bottom=%i| window n1=%i|
+      graph title="Continuation Cost Convergence" 
+      label2=Cost label1=Iteration unit1= unit2=
+      plotcol=%i dash=%i 
+      min2=%g max2=%g min1=%g max1=%g screenratio=%g
+      '''%(maxiter,maxiter,color,dash,mincost,maxcost,0,maxiter-1,scr))
+   costplots.append(cost)
+costplots.reverse()
+Result(name+'costs',costplots,'Overlay')
+
+
+
+# want to do H1 convergence?
+want_h1 = True
+if want_h1 :
+# H1 convergence to minimizing model
+   bestdx = bestmod+'-dx'
+   derivx = 'transp | deriv scale=y | transp '
+   Flow(bestdx,bestmod,derivx)
+   bestdt = bestmod+'-dt'
+   derivt = 'deriv scale=y | add mode=d ${SOURCES[0]}'
+   Flow(bestdt,bestmod,derivt)
+
+# misfit with final model at final step
+   mis = models+'-mis'
+   Flow(mis,[bestmod,models],
+      '''
+      spray axis=3 n=%i d=%g o=%g|
+      math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+      stack axis=3 mean=n
+      '''%(len(modoutlst),1,0))
+   modsdt = models+'-dt'
+   modsdx = models+'-dx'
+   misdt = mis+'-dt'
+   misdx = mis+'-dx'
+   # compute dx
+   Flow(modsdx,models,derivx)
+   # and summed misfit
+   Flow(misdx,[bestdx,modsdx],
+      '''
+      spray axis=3 n=%i d=%g o=%g|
+      math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+      stack axis=3 mean=n
+      '''%(len(modoutlst),1,0))
+   # compute dt
+   Flow(modsdt,models,derivt)
+   Flow(misdt,[bestdt,modsdt],
+      '''
+      spray axis=3 n=%i d=%g o=%g|
+      math A=${SOURCES[1]} output="(input-A)*(input-A)"|
+      stack axis=3 mean=n
+      '''%(len(modoutlst),1,0))
+   h1mis = models+'-h1mis'
+   Flow(h1mis,[mis,misdx,misdt],'math A=${SOURCES[1]} B=${SOURCES[2]} output="sqrt(input+A+B)/%g"'%(len(modoutlst)))
+
+   convlst = []
+# compute convergence on each model
+   for update in updateoutlst:
+      # compute dx
+      updatedx = update+'-dx'
+      Flow(updatedx,update,derivx)
+      # and difference
+      updatedifdx = updatedx+'-diff'
+      Flow(updatedifdx,[bestdx,updatedx],
+          '''
+          spray axis=3 n=%s d=1 o=0|
+          math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+          stack axis=1 mean=n |
+          stack axis=1 mean=n
+          '''%(getstring2('n3')))
+      # compute dt
+      updatedt = update+'-dt'
+      Flow(updatedt,update,derivt)
+      # and the difference
+      updatedifdt = updatedt+'-diff'
+      Flow(updatedifdt,[bestdt,updatedt],
+          '''
+          spray axis=3 n=%s d=1 o=0|
+          math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+          stack axis=1 mean=n |
+             stack axis=1 mean=n
+          '''%(getstring2('n3')))
+      # compute regular difference
+      updatedif = update+'-diff'
+      Flow(updatedif,[bestmod,update],
+          '''
+          spray axis=3 n=%s d=1 o=0|
+          math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+          stack axis=1 mean=n |
+          stack axis=1 mean=n
+          '''%(getstring2('n3')))
+      # and the H1 convergence
+      h1conv = update+'-h1conv'
+      Flow(h1conv,[updatedif, updatedifdx , updatedifdt],
+         '''
+         math A=${SOURCES[1]} B=${SOURCES[2]} output="input+A+B"
+         ''')
+      convlst.append(h1conv)
+
+   # plot convergences
+   maxmisfit = 2
+   minmisfit = -12
+   convplots = []
+   convlst.reverse()
+   for c in range(len(convlst)):
+      color = (c+1)%6+1
+      dash = 0
+      conv = convlst[c]
+      Plot(conv,
+         '''
+         math output="log(sqrt(input))"|
+         pad2 bottom=%i | window n1=%i |
+         graph title="Continuation Misfit With Best Model" 
+         label2="log(H\^1\_ Misfit)" label1=Iteration unit1= unit2=
+         plotcol=%i dash=%i 
+         min2=%g max2=%g min1=%g max1=%g screenratio=%g
+         '''%(maxiter,maxiter,color,dash,minmisfit,maxmisfit,0,maxiter-1,scr))
+      convplots.append(conv)
+   Result(name+'convergence',convplots,'Overlay')
+
+
+
+# repeat experiment without continuation 
+nocont_modoutlst = []
+nocont_updateoutlst = []
+nocont_costoutlst = []
+for j in range(len(modlst)):
+        model = modlst[j]
+        updates = model+'-nocont-updates-pre'
+        vpicked = model+'-nocont-velo-out'
+        Flow([vpicked,updates],[semblst[-1],derivlst[-1],model],
+          '''
+          varipick dsemb=${SOURCES[1]} vo=${SOURCES[2]} updates=${TARGETS[1]}
+          lambda=%g rho=%g niter=%i epsilon=%g type=%s
+          '''%(lmbda,rho,niter,epsilon,searchtype))
+        upd = model+'-nocont-updates'
+        Flow(upd,[model,updates],'cat axis=3 d=1 o=0 ${SOURCES[1]}')
+        costs = upd+'-costs'
+        Flow(costs,[upd,semblst[-1]],
+          '''
+          varicost semb=${SOURCES[1]}
+          lambda=%g  epsilon=%g
+          '''%(lmbda,epsilon))
+        # update lists
+        nocont_modoutlst.append(vpicked)
+        nocont_updateoutlst.append(upd)
+        nocont_costoutlst.append(costs)
+
+
+    
+
+# find best model
+nocont_bestmod = name+'nocont-best-model'
+# and the worst
+nocont_worstmod = name+'nocont-worst-model'
+# file for final costs
+nocont_finalcosts = name+'nocont-final-model-costs'
+# make list for input
+nocont_models  = name+'nocont-models'
+
+Flow(nocont_models,nocont_modoutlst,'cat axis=3 d=1 o=0 ${SOURCES[1:%i]}'%len(nocont_modoutlst))
+Flow([nocont_bestmod,nocont_finalcosts,nocont_worstmod],[nocont_models,semblst[-1]],
+    '''
+    variminim semb=${SOURCES[1]} costs=${TARGETS[1]}
+    lambda=%g epsilon=%g worst=${TARGETS[2]}
+    '''%(lmbda,epsilon))
+
+costmin_nocont = name+'minimum-cost-for-nocont'
+Flow(costmin_nocont,finalcosts,'stack axis=0 min=y| spray axis=1 n=%i d=1 o=0'%niter)
+nocont_costoutlst.append(costmin_nocont)
+nocont_costoutlst.reverse()
+nocont_costplots = []
+
+for c in range(len(nocont_costoutlst)):
+   color = (c)%6+1
+   dash = 0
+   cost = nocont_costoutlst[c]
+   if c == 0:
+     color = 7
+     dash = 3
+   Plot(cost,
+      '''
+      pad2 bottom=%i| window n1=%i|
+      graph title="Non-Continuation Cost Convergence" 
+      label2=Cost label1=Iteration unit1= unit2=
+      plotcol=%i dash=%i 
+      min2=%g max2=%g min1=%g max1=%g screenratio=%g
+      '''%(niter,niter,color,dash,mincost,maxcost,0,niter-1,scr))
+   nocont_costplots.append(cost)
+nocont_costplots.reverse()
+Result(name+'noncont-costs',nocont_costplots,'Overlay')
+
+
+
+if want_h1 :
+
+# misfit with final model at final step
+   nocont_mis = nocont_models+'-mis'
+   Flow(nocont_mis,[bestmod,nocont_models],
+      '''
+      spray axis=3 n=%i d=%g o=%g|
+      math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+      stack axis=3 mean=n
+      '''%(len(modoutlst),1,0))
+   nocont_modsdt = nocont_models+'-dt'
+   nocont_modsdx = nocont_models+'-dx'
+   nocont_misdt = nocont_mis+'-dt'
+   nocont_misdx = nocont_mis+'-dx'
+   # compute dx
+   Flow(nocont_modsdx,nocont_models,derivx)
+   # and summed misfit
+   Flow(nocont_misdx,[bestdx,nocont_modsdx],
+      '''
+      spray axis=3 n=%i d=%g o=%g|
+      math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+      stack axis=3 mean=n
+      '''%(len(modoutlst),1,0))
+   # compute dt
+   Flow(nocont_modsdt,nocont_models,derivt)
+   Flow(nocont_misdt,[bestdt,nocont_modsdt],
+      '''
+      spray axis=3 n=%i d=%g o=%g|
+      math A=${SOURCES[1]} output="(input-A)*(input-A)"|
+      stack axis=3 mean=n
+      '''%(len(modoutlst),1,0))
+   nocont_h1mis = nocont_models+'-h1mis'
+   Flow(nocont_h1mis,[nocont_mis,nocont_misdx,nocont_misdt],'math A=${SOURCES[1]} B=${SOURCES[2]} output="sqrt(input+A+B)/%g"'%(len(modoutlst)))
+# H1 convergence to minimizing model
+   nocont_convlst = []
+# compute convergence on each model
+   for update in nocont_updateoutlst:
+      # compute dx
+      updatedx = update+'-dx'
+      Flow(updatedx,update,derivx)
+      # and difference
+      updatedifdx = updatedx+'-diff'
+      Flow(updatedifdx,[bestdx,updatedx],
+          '''
+          spray axis=3 n=%s d=1 o=0|
+          math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+          stack axis=1 mean=n |
+          stack axis=1 mean=n
+          '''%(getstring2('n3')))
+      # compute dt
+      updatedt = update+'-dt'
+      Flow(updatedt,update,derivt)
+      # and the difference
+      updatedifdt = updatedt+'-diff'
+      Flow(updatedifdt,[bestdt,updatedt],
+          '''
+          spray axis=3 n=%s d=1 o=0|
+          math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+          stack axis=1 mean=n |
+             stack axis=1 mean=n
+          '''%(getstring2('n3')))
+      # compute regular difference
+      updatedif = update+'-diff'
+      Flow(updatedif,[bestmod,update],
+          '''
+          spray axis=3 n=%s d=1 o=0|
+          math A=${SOURCES[1]} output="(input-A)*(input-A)" |
+          stack axis=1 mean=n |
+          stack axis=1 mean=n
+          '''%(getstring2('n3')))
+      # and the H1 convergence
+      h1conv = update+'-h1conv'
+      Flow(h1conv,[updatedif, updatedifdx , updatedifdt],
+         '''
+         math A=${SOURCES[1]} B=${SOURCES[2]} output="input+A+B"
+         ''')
+      nocont_convlst.append(h1conv)
+
+   # plot convergences
+
+   nocont_convplots = []
+   for c in range(len(nocont_convlst)):
+      color = (c+1)%6+1
+      dash = 0
+      conv = nocont_convlst[c]
+      Plot(conv,
+         '''
+         math output="log(sqrt(input))"|
+         pad2 bottom=%i | window n1=%i |
+         graph title="Non-Continuation Misfit With Best Model" 
+         label2="log(H\^1\_ Misfit)" label1=Iteration unit1= unit2=
+         plotcol=%i dash=%i 
+         min2=%g max2=%g min1=%g max1=%g screenratio=%g
+         '''%(niter,niter,color,dash,minmisfit,maxmisfit,0,niter-1,scr))
+      nocont_convplots.append(conv)
+   Result(name+'nocont-convergence',nocont_convplots,'Overlay')
+
+# perform processing
+
+
+# Plotting Information
+
+point1 = 0.9
+point2 = 0.5
+
+min1 = 0.1
+max1 = 3.1
+
+min2 = xo
+max2 = xf
+
+xwindow = nx/2+10
+
+# x locations
+xlst = [8.5,11.5,14.1,15.7]
+
+# bias for semblance
+sembias = 0.05
+larn=28
+titlesz = 20
+v0plt = 1.45
+vfplt = vf#2.3
+
+# tighter screen ratio for plots without sidebysideaniso
+scr0 = 1.8
+titlesz0 = 8
+labelsz0 = 6
+
+# string for plotting velocity models
+velplot = '''grey color=j  
+             scalebar=y barlabel="Velocity" barunit="km/s" 
+             min1=%g max1=%g min2=%g max2=%g'''%(min1,max1,min2,max2)
+
+letterboxsemb = '''grey color=j allpos=y bias=%g pclip=100 
+              scalebar=y barlabel=Semblance
+              min1=%g max1=%g min2=%g max2=%g screenratio=%g
+              labelsz=%g titlesz=%g'''%(sembias,min1,max1,v0plt,vfplt,scr0,labelsz0,titlesz0)
+              
+letterboxgraph = '''graph 
+              transp=y min1=%g max1=%g min2=%g max2=%g 
+              scalebar=y title= labelsz=%g titlesz=%g plotfat=12 screenratio=%g
+              label1= label2= unit1= unit2= n1tic=0 n2tic=0'''%(max1,min1,v0plt,vfplt,labelsz0,titlesz0,scr0)
+              
+letterboxgatherplot = '''grey min1=%g max1=%g labelsz=%g titlesz=%g pclip=95 screenratio=%g
+             '''%(min1,max1,labelsz0,titlesz0,scr0)
+
+# string for plotting stack
+stkmin1 = .5
+stkmax1 = 2.4
+stkmin2 = 12.1
+stkmax2 = 14.8
+
+stkplot = ''' grey min1=%g max1=%g min2=%g max2=%g clip=1.5e7 screenratio=.85'''%(min1,max1,min2,max2)
+
+stkplotb = ''' grey min1=%g max1=%g min2=%g max2=%g clip=1.5e7 scalebar=y barlabel=Amplitude'''%(min1,max1,min2,max2)
+
+imgplot = ''' grey min1=%g max1=%g min2=%g max2=%g barlabel=Amplitude'''%(min1,max1,min2,max2)
+
+stkplotz = ''' grey min1=%g max1=%g min2=%g max2=%g clip=1.5e7 screenratio=.85'''%(stkmin1,stkmax1,stkmin2,stkmax2)
+
+wglplot = ''' window j2=4 f2=2| 
+              wiggle min1=%g max1=%g min2=%g max2=%g 
+              transp=y wherexlabel=top 
+              wheretitle=bottom grid2=n'''%(max1,min1,min2,max2)
+
+sembplot = '''grey color=j allpos=y bias=%g pclip=100 
+              scalebar=y barlabel=Semblance
+              min1=%g max1=%g min2=%g max2=%g
+              larnersz=%g titlesz=%g'''%(sembias,min1,max1,v0plt,vfplt,larn,titlesz)
+              
+velgraph = '''graph 
+              transp=y min1=%g max1=%g min2=%g max2=%g 
+              scalebar=y title= larnersz=%g titlesz=%g plotfat=12 
+              label1= label2= unit1= unit2= n1tic=0 n2tic=0'''%(max1,min1,v0plt,vfplt,larn,titlesz)
+              
+gatherplot = '''grey min1=%g max1=%g larnersz=%g titlesz=%g pclip=95
+             '''%(min1,max1,larn,titlesz)
+             
+cmplot = '''window f2=1 min1=%g|
+            byte gainpanel=e pclip=95|
+            grey3 frame1=0 frame2=0
+            flat=n point1=.7 point2=.7
+            framelabel1=n framelabel2=n
+         '''%(min1)
+pksmbplot = '''grey color=j  scalebar=y barlabel=Semblance 
+               min1=%g max1=%g min2=%g max2=%g minval=0 maxval=0.5 bias=0.25
+               '''%(min1,max1,min2,max2)
+if want_h1 :
+# misfit
+   Result(h1mis,
+      '''
+      grey color=j allpos=y scalebar=y barlabel="Mean H\^1\_ Misfit" 
+      title="Mean Continuation H\^1\_ Misfit"
+      min1=%g max1=%g min2=%g max2=%g label2="Midpoint" unit2=km
+      '''%(min1,max1,min2,max2))
+   Result(nocont_h1mis,
+      '''
+      grey color=j allpos=y scalebar=y barlabel="Mean H\^1\_ Misfit" 
+      title="Mean Non-Continuation H\^1\_ Misfit"
+      min1=%g max1=%g min2=%g max2=%g label2="Midpoint" unit2=km
+      '''%(min1,max1,min2,max2))
+   
+final = bestmod
+# semblance panel
+for i in range(len(xlst)):
+    # where are we?
+    x = xlst[i]
+    # window out semblance
+    semb = vscan+'-%i'%i
+    Flow(semb,vscan,'window n3=1 min3=%g'%x)
+    # window out velocity
+    vend   = final+'-%i'%i
+    Flow(vend,final,'window n2=1 min2=%g'%x)
+    # plot semblance
+    Plot(semb,sembplot+' title="Velocity Pick"')
+    # letterbox
+    Plot(semb+'-0',semb,letterboxsemb+' title="NMO Scan at %g km"'%x)
+    # plot final velocity
+    Plot(vend,velgraph+' dash=0 plotcol=4')
+    # letterbox
+    Plot(vend+'-0',vend,letterboxgraph+' dash=0 plotcol=4')
+    # overlay
+    scn = name+'scan-%i'%i
+    Plot(scn,[semb,vend],'Overlay')
+    # letterbox
+    Plot(scn+'-0',[semb+'-0',vend+'-0'],'Overlay')
+    Result(scn+'-0',[semb+'-0',vend+'-0'],'Overlay')
+    Result(cmps+'-%i'%i,cmps,cmplot+' frame3=%i  title="CMP Gathers"'%((x-xo)/dx+1))
+    Result(vscan+'-%i'%i,[vscan,bar],
+       '''byte allpos=y gainpanel=e minval=0 maxval=0.5 | 
+          grey3 color=j frame1=0 frame2=%i frame3=%i title="Semblance Scan" 
+          bar=${SOURCES[1]} barlabel=Semblance flat=n point1=.9 point2=0.5 scalebar=y
+       '''%(nv/3,(x-xo)/dx+1))
+# perform NMO correction using starting and final model
+vellist = [final]
+titles = ['Best Model']
+letters = ['NMO Gather']
+nmolst = []
+for i in range(len(vellist)):
+    vel = vellist[i]
+    title = titles[i]
+    # perform nmo correction
+    nmo = vel+'-nmo'
+    Flow(nmo,[cmps,vel],'nmo half=n velocity=${SOURCES[1]} ')
+    # smooth and reverse
+    smthcmp = vel+'-smthcmp'
+    Flow(smthcmp,[nmo,vel],'smooth rect2=10 rect3=4 | nmo half=n velocity=${SOURCES[1]} inv=y')
+    smb = vel+'-semb'
+    Flow(smb,[vscan,vel],'slice pick=${SOURCES[1]}')
+    Plot(smb,pksmbplot+' title="%s Semblance" '%(title))
+    Result(smb,pksmbplot+' title="%s Semblance" '%(title))
+    # stack
+    stk = nmo+'-stk'
+    Flow(stk,nmo,'stack axis=2 norm=n ')
+    slope = stk+'-slope'
+    Flow(slope,stk,'dip rect1=50 rect2=20')
+    refl = stk+'-refl'
+    Flow(refl,[stk,slope],'pwspray dip=${SOURCES[1]} ns=2 | stack axis=2')
+    Result(refl,stkplot+' title="%s Enhanced Reflections"'%title)
+    difr = stk+'-difr'
+    Flow(difr,[stk,refl],'math A=${SOURCES[1]} output="input-A"')
+    Result(difr,stkplot+' title="%s Separated Diffractions"'%title)
+    Result(difr+'-z',difr,stkplotz+' title="Zoomed %s Diffractions"'%title)
+    # plot velocity
+    Result(vel,velplot+' title="%s" bias=%g allpos=y label2=Midpoint unit2=km'%(title,vo))
+    Plot(vel,velplot+' title=  bias=%g allpos=y'%(vo))
+    Result(stk,stkplot+' title="%s NMO Stack"'%title)
+    Result(stk+'-b',stk,stkplotb+' title="%s NMO Stack" '%title)
+    Result(stk+'-z',stk,stkplotz+' title="Zoomed %s NMO Stack"'%title)
+#    Plot(stk+'-spec',stk,
+#       '''
+#       fft1 | 
+#       math output="abs(input)"| 
+#       real| 
+#       stack axis=2| smooth rect1=3|
+#       graph title="%s NMO Stack Spectra" plotcol=%i max2=8e8
+#       '''%(title,i+1))
+    Plot(stk+'-w',stk,wglplot+' title="%s NMO Stack" scalebar=y '%title)
+    Result(vel+'-overlay',[vel,stk+'-w'],'Overlay')
+    # loop through x positions
+    for j in range(len(xlst)):
+        x = xlst[j]
+        gather = nmo+'-%i'%j
+        Flow(gather,nmo,'window n3=1 min3=%g'%x)
+        Plot(gather,gatherplot+' title="%s"'%letters[i])
+        # letterbox
+        Result(gather+'-0',gather,letterboxgatherplot+' title="%s"'%titles[i])
+    # create image
+    img = vel+'-image'
+#    Flow(img,[smthcmp,vel],'transp plane=23 | mig2 vel=${SOURCES[1]}')
+    Flow(img,[stk,vel],'kirchnew velocity=${SOURCES[1]}')
+    Result(img,imgplot+' title="%s Image"'%(title))
+    difimg = vel+'-difr-img'
+    Flow(difimg,[difr,vel],'kirchnew velocity=${SOURCES[1]}')
+    Result(difimg,imgplot+' title="%s Diffraction Image"'%(title))
+
+# combine gather and scan plots
+for i in range(len(xlst)):
+    gather = name+'gather-%i'%i
+    Result(gather,[name+'scan-%i'%i,final+'-nmo-%i'%i],'SideBySideAniso')
+
+# plot other velocities
+allvels = [bestmod,worstmod,nocont_bestmod,nocont_worstmod]
+alltitles = ['Best Continuation Final Model','Worst Continuation Final Model','Best Non-Continuation Final Model','Worst Non-Continuation Final Model']
+for iv in range(len(allvels)):
+    vel=allvels[iv]
+    title = alltitles[iv]
+    Result(vel+'-final-plot',vel,velplot+' title="%s" bias=%g allpos=y label2=Midpoint unit2=km'%(title,vo))
+End()
