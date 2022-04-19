@@ -94,7 +94,8 @@ nb = np.max([1,nd//10])
 #tS = np.median(pck[      0:  nb])     # first 1% of picks
 #tE = np.median(pck[nd-1-nb:nd-1])     #  last 1% of picks
 #mbar = tS + (xx-xS)/(xE-xS) * (tE-tS) #   reference model
-mbar = pck*0 + np.median(pck)
+#mbar = pck*0 + np.median(pck)
+mbar = pck*0
 
 dbar = pck                            # rough picks
 
