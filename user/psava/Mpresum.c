@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
   else
     n2 = sf_n(a2)/nsum + 1;
 
-
   b2 = sf_maxa( n2, sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
   if(verb) sf_raxa(b2);
 
@@ -71,11 +70,12 @@ int main(int argc, char* argv[])
   else       douC = sf_complexalloc ( sf_n(a1) );
 
   if(isreal) {
-    for(left = sf_leftsize(Fin,1); left > 0; left -= nsum) {
-      if( left/nsum == 0) break;
-      nsum = SF_MIN(left,nsum);
+    left = sf_leftsize(Fin,1);
+    for(int i2 = 0; i2 < n2; i2++) {
 
+      nsum = SF_MIN(left,nsum);
       sf_floatread(dinR[0], sf_n(a1) * nsum , Fin);
+      left -= nsum;
 
       for(int i1 = 0; i1 < sf_n(a1); i1++) {
         douR[i1] = 0.0;
@@ -88,11 +88,12 @@ int main(int argc, char* argv[])
       sf_floatwrite(douR  , sf_n(a1)        , Fou);
     }
   } else {
-    for(left = sf_leftsize(Fin,1); left > 0; left -= nsum) {
-      if( left/nsum == 0) break;
-      nsum = SF_MIN(left,nsum);
+    left = sf_leftsize(Fin,1);
+    for(int i2 = 0; i2 < n2; i2++) {
 
+      nsum = SF_MIN(left,nsum);
       sf_complexread(dinC[0], sf_n(a1) * nsum , Fin);
+      left -= nsum;
 
       for(int i1 = 0; i1 < sf_n(a1); i1++) {
         douC[i1] = 0.0;
