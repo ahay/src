@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /* OMP init */
   #ifdef _OPENMP
-      omp_init();
+    omp_init();
   #endif
 
   /* default behavior */
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 
   /* setup i/o and auxiliary file */
   Fa = sf_input ( "in");
-  Fb = sf_input ( "bb");
+  Fb = sf_input ("ref");
   Fc = sf_output("out");
 
   ax = sf_iaxa(Fa,1);
@@ -74,8 +74,8 @@ int main(int argc, char* argv[])
 
   #ifdef _OPENMP
   #pragma omp parallel for schedule(dynamic) \
-      private(jt,jx,jf, t,f) \
-      shared( at,ax,af, aa,bb,cc)
+    private(jt,jx,jf, t,f) \
+    shared( at,ax,af, aa,bb,cc)
   #endif
   for(jt = 0; jt < sf_n(at); jt++) {
     t = sf_o(at) + jt * sf_d(at);
