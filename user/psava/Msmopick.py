@@ -53,6 +53,7 @@ Fin = rsf.Input()             # input file
 n1 = Fin.int  ("n1")
 o1 = Fin.float("o1")
 d1 = Fin.float("d1")
+l1 = 0.5 * n1*d1              # xcorr time window
 
 nd = Fin.size(1);             # number of traces
 nm = nd
@@ -80,7 +81,9 @@ for i in range(nd):
     Fin.read(din)
     pck[i] = o1 + np.argmax(din) * d1
     wgh[i] = np.max(din)
-    wgh[i]*= np.exp(- abs(pck[i]) )
+    #wgh[i]*= np.exp(- abs(pck[i]) )
+    wgh[i] *= np.cos( 0.5*np.pi * abs(pck[i]/l1) )
+
 wgh /= np.max(wgh)
 
 # ------------------------------------------------------------
