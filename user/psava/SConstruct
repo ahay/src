@@ -70,6 +70,7 @@ findmax
 map2cloud2D
 map2cloud3D
 smopick
+fshift
 '''
 
 dynlib = env.get('DYNLIB','')
