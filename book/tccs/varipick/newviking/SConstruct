@@ -70,7 +70,7 @@ panelcoord = 10#18.25
 frame3 = (panelcoord-min3)/dx
 # Download pre-processed CMP gathers
 # from the Viking Graben dataset
-#Fetch('paracdp.segy','viking')
+Fetch('paracdp.segy','viking')
 
 # Convert to RSF
 Flow('paracdp tparacdp','paracdp.segy',
