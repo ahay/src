@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
   for(jf = 0; jf < sf_n(af); jf++) {
     if(verb) fprintf(stderr,"%8d\b\b\b\b\b\b\b\b",sf_n(af)-jf-1);
 
-    // reset all data
+    // reset all data & fold
     if(isreal) {
       #ifdef _OPENMP
       #pragma omp parallel for schedule(dynamic) \
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
       #endif
       for(ja = 0; ja < sf_n(aa); ja++) {
         allR[ ja ] = 0.0;
-        if(norm) fold[ ja ] = 0;
+        if(norm && jf==0) fold[ ja ] = 0;
       }
 
     } else {
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
       #endif
       for(ja = 0; ja < sf_n(aa); ja++) {
         allC[ ja ] = 0.0;
-        if(norm) fold[ ja ] = 0;
+        if(norm && jf==0) fold[ ja ] = 0;
       }
     }
 
@@ -159,9 +159,11 @@ int main(int argc, char *argv[])
       //  read win data
       if(isreal) {
         winR =   sf_floatalloc( sf_n(aw) );
+        sf_seek(Fdwin,jf*sf_n(aw)*sizeof(float),SEEK_SET);
         sf_floatread  (winR, sf_n(aw), Fdwin);
       } else {
         winC = sf_complexalloc( sf_n(aw) );
+        sf_seek(Fdwin,jf*sf_n(aw)*sizeof(sf_complex),SEEK_SET);
         sf_complexread(winC, sf_n(aw), Fdwin);
       }
 
@@ -183,7 +185,7 @@ int main(int argc, char *argv[])
         for(jw = 0; jw < sf_n(aw); jw++) {
             ihash = htLookup( nhash, &wco[jw], &o);
             allR[ ihash ] += winR[ jw ];
-            if(norm) fold[ ihash ]++;
+            if(norm && jf==0) fold[ ihash ]++;
         }
       } else {
         #ifdef _OPENMP
@@ -193,7 +195,7 @@ int main(int argc, char *argv[])
         for(jw = 0; jw < sf_n(aw); jw++) {
             ihash = htLookup( nhash, &wco[jw], &o);
             allC[ ihash ] += winC[ jw ];
-            if(norm) fold[ ihash ]++;
+            if(norm && jf==0) fold[ ihash ]++;
         }
       }
 
