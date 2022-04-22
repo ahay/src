@@ -1,0 +1,137 @@
+"""denoise test in 3d model"""
+from rsf.proj import *
+
+ns2 = 2
+ns3 = 2
+"""3D model test"""
+# Qdome model
+Flow("mod", None,
+     """
+     qdome
+     n1=200 n2=150 n3=100
+     d1=0.01 d2=0.01 d3=0.01
+     o1=0 o2=0.5 o3=-0.05 |
+     smooth rect1=3 diff1=1 | smooth rect1=4
+     """)
+Result("qdmod", "mod",
+       """
+       byte gainpanel=all clip=0.000760897 |
+       grey3 flat=n frame1=82 frame2=75 frame3=50
+       point1=0.6 point2=0.6  title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+
+# add noise
+Flow("noise", "mod", "noise seed=1 range=0.00127546")
+Result("qdnoise", "noise",
+       """
+       byte gainpanel=all clip=0.000760897 |
+       grey3 flat=n frame1=82 frame2=75 frame3=50
+       point1=0.6 point2=0.6 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("sig0", "mod", 'math output="input*input" | stack axis=0')
+Flow("noi0", "mod noise",
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr0", "sig0 noi0",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)'")
+
+### f-x SPF
+Flow("spf2", "noise", 
+     """
+     fxspfdenoise2 lambda1=0.06 lambda3=0.008 na1=4 na2=0 verb=y
+     """)
+Result("qdspf2", "spf2",
+       """
+       byte gainpanel=all clip=0.000760897 |
+       grey3 flat=n frame1=82 frame2=75 frame3=50
+       point1=0.6 point2=0.6 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("errspf2", "noise spf2", "add ${SOURCES[1]} scale=1,-1 ")
+Result("qderrspf2", "errspf2", 
+       """
+       byte gainpanel=all clip=0.000760897 |
+       grey3 flat=n frame1=82 frame2=75 frame3=50
+       point1=0.6 point2=0.6 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("noi1", "mod spf2", 
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr1", "sig0 noi1",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)'")
+
+### f-x-y SPF
+# padding data
+length_pad = 50
+Flow("noise_pad", "noise", 
+     """
+     window n3=%d | reverse which=4 | put o3=0 d3=0.01
+     """ % length_pad)
+Flow("noises", "noise_pad noise", "cat ${SOURCES[1:2]} axis=3")
+Flow("spf3", "noises",
+     """
+     fxyspfdenoise3 lambda1=0.06 lambda2=0.06 lambda3=0.008 na1=2 na2=2 verb=y |
+     window f3=%d | put o3=-0.05
+     """ % length_pad)
+Result("qdspf3", "spf3",
+       """
+       byte gainpanel=all clip=0.000760897 |
+       grey3 flat=n frame1=82 frame2=75 frame3=50
+       point1=0.6 point2=0.6 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("errspf3", "noise spf3", "add ${SOURCES[1]} scale=1,-1 ")
+Result("qderrspf3", "errspf3",
+       """
+       byte gainpanel=all clip=0.000760897 |
+       grey3 flat=n frame1=82 frame2=75 frame3=50
+       point1=0.6 point2=0.6 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("noi2", "mod spf3",
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr2", "sig0 noi2",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)'")
+
+### fxy-RNA
+Flow("fnoise", "noise", "fft1 | transp plane=13 | transp plane=12")
+Flow("shifts", "fnoise", "cshifts2 ns1=4 ns2=4 | transp plane=34")
+Flow("flt pre", "shifts fnoise",
+     """
+     clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=10 niter=30
+     """)
+Flow("rna", "pre", "transp plane=13 | transp plane=23 | fft1 inv=y")
+Result("qdrna", "rna", 
+       """
+       byte gainpanel=all clip=0.000760897 |
+       grey3 flat=n frame1=82 frame2=75 frame3=50
+       point1=0.6 point2=0.6 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("errrna", "noise rna", "add ${SOURCES[1]} scale=1,-1 ")
+Result("qderrrna", "errrna",
+       """
+       byte gainpanel=all clip=0.000760897 |
+       grey3 flat=n frame1=82 frame2=75 frame3=50
+       point1=0.6 point2=0.6 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("noi3", "mod rna",
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr3", "sig0 noi3",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)' ")
+
+End()
