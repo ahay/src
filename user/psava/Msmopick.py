@@ -139,8 +139,8 @@ spk = ME[:,je]        # smooth picks
 # ------------------------------------------------------------
 # write picks
 # ------------------------------------------------------------
-Fou.write(pck) # rough picks
 Fou.write(spk) # smooth picks
+Fou.write(pck) # rough picks
 Fou.write(wgh)
 
 Fin.close()
