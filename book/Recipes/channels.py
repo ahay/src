@@ -231,7 +231,7 @@ def format_props (target=None, source=None, env=None):
     lines = inp.readlines()             # read input file
     lines.pop(0)                        # remove the first line
     for line in lines:                  # get all fields except the first one
-        out.write(string.join(line.split()[1:],' ')+'\n')
+        out.write(' '.join(line.split()[1:])+'\n')
         
     out.write('''
               n1=4 d1=1 o1=1
