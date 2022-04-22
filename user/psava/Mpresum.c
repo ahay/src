@@ -12,6 +12,7 @@ int main(int argc, char* argv[])
   sf_file Fou = NULL;      /* output  cloud */
 
   sf_axis a1,a2,b2;        /* cube axes */
+  int n2;
 
   float      ** dinR = NULL;
   float       * douR = NULL;
@@ -24,7 +25,7 @@ int main(int argc, char* argv[])
 
   /* default behavior */
   if (!sf_getbool("verb",&verb)) verb=false; /* verbosity  */
-  if (!sf_getint ("nsum",&nsum)) nsum=1;   /* number of traces to sum */
+  if (!sf_getint ("nsum",&nsum)) nsum=1;     /* number of traces to sum */
 
   /* setup i/o and auxiliary file */
   Fin = sf_input ( "in");
@@ -39,10 +40,24 @@ int main(int argc, char* argv[])
   if(verb) sf_raxa(a1);
   if(verb) sf_raxa(a2);
 
-  if( sf_n(a2) % nsum == 0)
-    b2 = sf_maxa( sf_n(a2)/nsum  , sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
+  //if( sf_n(a2) % nsum == 0)
+  //  b2 = sf_maxa( sf_n(a2)/nsum  , sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
+  //else
+  //  b2 = sf_maxa( sf_n(a2)/nsum+1, sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
+
+  //n2 = round(1.0*sf_n(a2)/nsum);
+  //n2 = sf_n(a2)/nsum;
+
+  n2 = floor( 0.5 + (sf_n(a2)-1)/nsum );
+
+  if( 1.0*sf_n(a2)/nsum - sf_n(a2)/nsum <= 0.5)
+    n2 = sf_n(a2)/nsum;
   else
-    b2 = sf_maxa( sf_n(a2)/nsum+1, sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
+    n2 = sf_n(a2)/nsum + 1;
+
+  b2 = sf_maxa( n2, sf_o(a2) + nsum*sf_d(a2)/2, sf_d(a2)*nsum );
+  if(verb) sf_raxa(b2);
+
   sf_oaxa(Fou, a1, 1);
   sf_oaxa(Fou, b2, 2);
 
@@ -55,11 +70,12 @@ int main(int argc, char* argv[])
   else       douC = sf_complexalloc ( sf_n(a1) );
 
   if(isreal) {
-    for (left = sf_leftsize(Fin,1); left > 0; left -= nsum) {
-      nsum = SF_MIN(left,nsum);
-      //if(left < nsum) break;
+    left = sf_leftsize(Fin,1);
+    for(int i2 = 0; i2 < n2; i2++) {
 
+      nsum = SF_MIN(left,nsum);
       sf_floatread(dinR[0], sf_n(a1) * nsum , Fin);
+      left -= nsum;
 
       for(int i1 = 0; i1 < sf_n(a1); i1++) {
         douR[i1] = 0.0;
@@ -72,11 +88,12 @@ int main(int argc, char* argv[])
       sf_floatwrite(douR  , sf_n(a1)        , Fou);
     }
   } else {
-    for (left = sf_leftsize(Fin,1); left > 0; left -= nsum) {
-      //nsum = SF_MIN(left,nsum);
-      if(left < nsum) break;
+    left = sf_leftsize(Fin,1);
+    for(int i2 = 0; i2 < n2; i2++) {
 
+      nsum = SF_MIN(left,nsum);
       sf_complexread(dinC[0], sf_n(a1) * nsum , Fin);
+      left -= nsum;
 
       for(int i1 = 0; i1 < sf_n(a1); i1++) {
         douC[i1] = 0.0;
