@@ -305,19 +305,19 @@ Flow('ro1','ovr_rho_noise_taper',flip() )
 
 # density
 Flow  ('den','ro0','window n1=%(nz)d | put o1=0' % par)
-Result('den','den',
+Result('tden','den',
        'transp plane=13 |'
        + zplot3d(par,'pclip=100 bias=2.1 allpos=y','title="density" color=j'))
 
 # reservoir velocity
 Flow(  'vel','vp0', 'window n1=%(nz)d | put o1=0 o3=0' % par)
-Result('vel','vel',
+Result('tvel','vel',
        'transp plane=13 |'
        + zplot3d(par,'pclip=100 bias=2297 allpos=y','title="velocity" color=j'))
 
 # overburden velocity (can reduce n1=??? for speed)
 Flow(  'ovb','vp1', 'window n1=%(nz)d | put o1=0 o3=0' % ovr_grid_par)
-Result('ovb','ovb',
+Result('tovb','ovb',
        'transp plane=13 |'
        + zplot3d(par,'pclip=100 bias=1950 allpos=y',
                      'title="overburden velocity" frame3=%(nz)d color=j'
@@ -338,7 +338,7 @@ Flow('slo','vel',
      put label1=x label2=y label3=z
      unit1=m unit2=m unit3=m
         ''')
-Result('slo','slo',
+Result('tslo','slo',
        'transp memsize=250 plane=12 |'
        + zplot3d(par,'pclip=100 bias=0.00034 allpos=y',
                      'title="slowness" color=j'))
@@ -346,7 +346,7 @@ Result('slo','slo',
 # reservoir slowness (smooth)
 Flow('slo-s','slo',
      'smooth rect1=50 rect2=50 rect3=%d' % (z_rect/res_grid_par['dz']))
-Result('slo-s','slo-s',
+Result('tslo-s','slo-s',
        'transp memsize=250 plane=12 |'
        + zplot3d(par,'pclip=100 bias=0.00034 allpos=y',
                      'title="smoothed slowness" color=j'))
@@ -359,7 +359,7 @@ Flow('ovs','ovb',
      transp memsize=250 plane=23 |
      put label1=x label2=y label3=z
      ''')
-Result('ovs','ovs',
+Result('tovs','ovs',
        'transp memsize=250 plane=12 |'
        + zplot3d(par,'pclip=100 bias=0.00039 allpos=y',
                      'title="overburden slowness" frame3=%(nz)d color=j'
@@ -368,7 +368,7 @@ Result('ovs','ovs',
 # overburden slowness (smooth)
 Flow('ovs-s','ovs',
      'smooth rect1=50 rect2=50 rect3=%d' % (z_rect/ovr_grid_par['dz']))
-Result('ovs-s','ovs-s',
+Result('tovs-s','ovs-s',
        'transp memsize=250 plane=12 |'
        + zplot3d(par,'pclip=100 bias=0.00039 allpos=y',
                      'title="smoothed overburden slowness" frame3=%(nz)d color=j'
@@ -386,7 +386,7 @@ t_frame = 0.12/dt_conv
 
 # acoustic impedance (depth)
 Flow('aim','vel den','math v=${SOURCES[0]} d=${SOURCES[1]} output=v*d', stdin=0)
-Result('aim','aim',
+Result('taim','aim',
        'transp plane=13 |'
        + zplot3d(par,'pclip=100 bias=4.44 allpos=y',
                      'title="acoustic impedance" color=j'))
@@ -395,20 +395,20 @@ Result('aim','aim',
 Flow('ait',['aim','vel'],
      'depth2time velocity=${SOURCES[1]} dt=%g nt=%d | put label1=t unit1=s'
      % (dt_conv,par['nt']) )
-Result('ait','ait',
+Result('tait','ait',
        'window max1=%g |' % (t_window)
        + tplot3d(par,'pclip=100 bias=4.44 allpos=y',
                      'title="acoustic impedance" color=j frame3=%d' % (t_frame)))
 
 # reflectivity (depth)
 Flow('ref','aim','ai2refl')
-Result('ref','ref',
+Result('tref','ref',
        'transp plane=13 |'
        + zplot3d(par,'','title="reflectivity"'))
 
 # reflectivity (time)
 Flow('ret','ait','ai2refl')
-Result('ret','ret',
+Result('tret','ret',
        'window max1=%g |' % (t_window)
        + tplot3d(par,'','title="reflectivity" frame3=%d' % (t_frame)))
 
@@ -452,7 +452,7 @@ for frq in frq_list:
          put label1=t label2=x label3=y
          ''' % (par['kt'],par['nt'],par['dt'],
                 par['dx'],par['xsou'],par['dy'],par['ysou'],frq) )
-    Result('wav_%d' % (frq),'wav_%d' % (frq),
+    Result('twav_%d' % (frq),'wav_%d' % (frq),
            'window n1=50 | graph title="wavelet %dHz" wantaxis2=n' % (frq))
 
     Flow('tfreq_%d' % (frq),None,'math n1=%g d1=%g o1=%g output="0" | math output="%g - (%g/10.0)*x1" | put n2=1 n3=1 | spray axis=4 n=54'%(300,par['dt'],par['ot'],frq,frq))
