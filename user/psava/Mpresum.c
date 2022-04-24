@@ -1,4 +1,8 @@
-/* presum traces */
+/*
+presum traces
+Paul Sava
+Copyright (C) 2022 Colorado School of Mines
+*/
 #include <rsf.h>
 
 /*------------------------------------------------------------*/
