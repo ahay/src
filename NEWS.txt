@@ -4,24 +4,39 @@
 
 To the reproducible documents collection:
 
-* zju/diffrlrra: Separation and imaging of seismic diffractions using a 
-  localized rank-reduction method with adaptively selected ranks (Wang, Liu, and 
-  Chen)
-* tccs/drr5d: Simultaneous denoising and reconstruction of 5D seismic data via 
-  damped rank-reduction method (Chen, Zhang, Jin, Chen, Zu, Huang, and Gan)
-* zju/odrr3d: Seismic signal enhancement based on the lowrank methods (Bai, 
-  Huang, Wang, and Chen)
-* zju/odrr5d: Five-dimensional seismic data reconstruction using the optimally 
-  damped rank-reduction method (Chen, Bai, Guan, Zhang, Zhang, and Wang)
-* zju/dtv: Full waveform inversion and joint migration inversion with 
-  an automatic directional total variation constraint (Qu, Verschuur, and Chen)
+* zju/diffrlrra: Separation and imaging of seismic diffractions using
+  a localized rank-reduction method with adaptively selected ranks
+  (Wang, Liu, and Chen)  
+
+* tccs/drr5d: Simultaneous denoising and reconstruction of 5D seismic
+  data via damped rank-reduction method (Chen, Zhang, Jin, Chen, Zu,
+  Huang, and Gan)
+* zju/odrr3d: Seismic signal enhancement based on the lowrank methods
+  (Bai, Huang, Wang, and Chen)
+* zju/odrr5d: Five-dimensional seismic data reconstruction using the
+  optimally damped rank-reduction method (Chen, Bai, Guan, Zhang,
+  Zhang, and Wang)
+* zju/dtv: Full waveform inversion and joint migration inversion with
+  an automatic directional total variation constraint (Qu, Verschuur,
+  and Chen)
 * tccs/anisodiff: Least-squares diffraction imaging using shaping
   regularization by anisotropic smoothing (Merzlikin, Fomel, and Wu)
-* tccs/dtwaniso: Quantifying and correcting residual azimuthal anisotropic
-  moveout in image gathers using dynamic time warping (Decker and
-  Zhang)
+* tccs/dtwaniso: Quantifying and correcting residual azimuthal
+  anisotropic moveout in image gathers using dynamic time warping
+  (Decker and Zhang)  
 * tccs/dlchain: Automatic channel detection using deep learning (Pham,
   Fomel, and Dunlap)
+* tccs/probdif: A Probabilistic Approach to Seismic Diffraction
+  Imaging (Decker and Fomel)
+* jlu/apefsnsep: Nonstationary pattern-based signal-noise separation
+  using adaptive prediction-error filter (Zheng, Liu, and Liu)  
+* jlu/fspfint: Seismic data interpolation using streaming prediction
+  filter in the frequency domain (Zheng, Liu, and Liu)
+* jlu/fxyspfdenoi: Noniterative f-x-y streaming prediction filtering
+  for random noise attenuation on seismic data (Liu and Zheng)
+* jlu/txyspfint: Seismic data interpolation without iteration using
+  t-x-y streaming prediction filter with varying smoothness (Liu, Wu,
+  and Zheng)
 
 To SCons:
 
