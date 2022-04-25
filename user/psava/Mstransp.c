@@ -1,4 +1,4 @@
-/* 
+/*
 in-memory transpose 12
 Paul Sava
 Copyright (C) 2022 Colorado School of Mines
@@ -16,8 +16,7 @@ int main(int argc, char *argv[])
 
   sf_axis a1, a2; /* cube axes */
   size_t n1,n2,n12;
-  size_t i1,i2;
-
+  
   float      *dR, *wR; /* data real */
   sf_complex *dC, *wC; /* data complex */
 
