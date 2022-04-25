@@ -1,11 +1,14 @@
-/* in-memory transpose 12 */
+/* 
+in-memory transpose 12
+Paul Sava
+Copyright (C) 2022 Colorado School of Mines
+*/
 #include <rsf.h>
 
 /*------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
-  bool verb;
-  bool isreal;
+  bool verb, isreal;
 
   /* I/O files */
   sf_file Fin = NULL; /* input */

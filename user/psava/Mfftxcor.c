@@ -1,4 +1,8 @@
-/* compute XCOR in Fourier domain */
+/* 
+Fourier domain cross-correlation
+Paul Sava
+Copyright (C) 2022 Colorado School of Mines
+*/
 #include <rsf.h>
 
 #ifdef _OPENMP
