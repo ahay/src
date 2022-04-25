@@ -1,4 +1,8 @@
-/* define hash table for point cloud operations */
+/* 
+hash table for point cloud operations
+Paul Sava
+Copyright (C) 2022 Colorado School of Mines
+*/
 #include <rsf.h>
 #include "hash.h"
 
