@@ -1,4 +1,8 @@
-/* 3D CLoud DATA merge */
+/* 
+3D CLoud DATA merge 
+Paul Sava
+Copyright (C) 2022 Colorado School of Mines
+*/
 #include <rsf.h>
 #include "hash.h"
 
@@ -48,7 +52,7 @@ int main(int argc, char *argv[])
   if(verb) sf_warning("   total files: %d",argc);
   if(argc < nopen) {
     allopen = true;
-    sf_warning("opening all files");
+    if(verb) sf_warning("opening all files");
   }
 
   // array of file names
@@ -91,7 +95,7 @@ int main(int argc, char *argv[])
 
   /*------------------------------------------------------------*/
   // check file type
-  if( !allopen ) Fdwin[0] = sf_input(fname[0+nCLOUD]); // open win  data
+  if(!allopen) Fdwin[0] = sf_input(fname[0+nCLOUD]); // open win  data
 
   af = sf_iaxa(Fdwin[0], 2);            // get time/freq axis
   if(verb) sf_raxa(af);
@@ -100,7 +104,7 @@ int main(int argc, char *argv[])
   if (SF_FLOAT == sf_gettype(Fdwin[0])) isreal = true;
   else                                  isreal = false;
 
-  if( !allopen ) sf_fileclose(Fdwin[0]);               // close win  data
+  if(!allopen) sf_fileclose(Fdwin[0]);               // close win  data
 
   /*------------------------------------------------------------*/
   Fcall = sf_input ("all"); // open all cloud
@@ -167,7 +171,7 @@ int main(int argc, char *argv[])
     for(int jCLOUD = 0; jCLOUD < nCLOUD; jCLOUD++) {
 
       // open cloud/data files
-      if( !allopen ) {
+      if(!allopen) {
         Fcwin[0] = sf_input( fname[jCLOUD]        );
         Fdwin[0] = sf_input( fname[jCLOUD+nCLOUD] );
       }
@@ -223,7 +227,7 @@ int main(int argc, char *argv[])
       if(isreal) free(winR); // clear win data
       else       free(winC);
 
-      if( !allopen ) {
+      if(!allopen) {
         sf_fileclose(Fcwin[0]); // close cloud/data files
         sf_fileclose(Fdwin[0]);
       }

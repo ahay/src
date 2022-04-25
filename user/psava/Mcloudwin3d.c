@@ -1,4 +1,8 @@
-/* 3D CLoud WINdowing */
+/* 
+3D CLoud WINdowing
+Paul Sava
+Copyright (C) 2022 Colorado School of Mines
+*/
 #include <rsf.h>
 #ifdef _OPENMP
   #include <omp.h>
