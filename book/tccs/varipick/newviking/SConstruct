@@ -100,14 +100,14 @@ Result(name+'-cmps','cmps',
    point1=.9 point2=0.5 flat=n framelabel1=n
    '''%(min3,max3,max1tp,nh/4,frame3))
 
-Result('cmps-m','cmps',
-   '''
-   window j3=10 |
-   byte gainpanel=e | 
-   grey3 title="Viking Graben CMP Gathers" 
-   frame1=0 unit2=  label2=Trace frame2=%i frame3=%i movie=3
-   point1=.9 point2=0.5 flat=n
-   '''%(nh/3,15))
+#Result('cmps-m','cmps',
+#   '''
+#   window j3=10 |
+#   byte gainpanel=e | 
+#   grey3 title="Viking Graben CMP Gathers" 
+#   frame1=0 unit2=  label2=Trace frame2=%i frame3=%i movie=3
+#   point1=.9 point2=0.5 flat=n
+#   '''%(nh/3,15))
 # Extract offsets
 Flow('offsets mask','tparacdp',
      '''
@@ -184,28 +184,26 @@ Result('dmo',
        label3=Velocity unit3=km/s
        ''')
 
-Result('dmo-mov','dmo',
-       '''
-       window min3=3.994 n3=1601|
-       byte gainpanel=all | transp plane=23 memsize=5000 |
-       grey 
-       title="Constant-Velocity DMO Stacks" 
-       label3=Velocity unit3=km/s
-       ''')
+#Result('dmo-mov','dmo',
+#       '''
+#       window min3=3.994 n3=1601|
+#       byte gainpanel=all | transp plane=23 memsize=5000 |
+#       grey 
+#       title="Constant-Velocity DMO Stacks" 
+#       label3=Velocity unit3=km/s
+#       ''')
 Flow('dmo-bar','dmo','bar gainpanel=all')
-Result('dmo-mov-bar','dmo dmo-bar',
-       '''
-       window min3=3.994 n3=1601|
-       byte gainpanel=all | transp plane=23 memsize=5000 |
-       grey 
-       title="Constant-Velocity DMO Stacks"  maxval=4e7 minval=-4e7
-       label3=Velocity unit3=km/s scalebar=y barlabel="Amplitude" bar=${SOURCES[1]}
-       ''')
+#Result('dmo-mov-bar','dmo dmo-bar',
+#       '''
+#       window min3=3.994 n3=1601|
+#       byte gainpanel=all | transp plane=23 memsize=5000 |
+#       grey 
+#       title="Constant-Velocity DMO Stacks"  maxval=4e7 minval=-4e7
+#       label3=Velocity unit3=km/s scalebar=y barlabel="Amplitude" bar=${SOURCES[1]}
+#       ''')
 
 # Compute envelope for picking
 Flow('envelope','dmo','envelope | scale axis=2',split=[3,'omp'])
-
-
 
 
 #smoothed envelope
@@ -224,14 +222,14 @@ Result('envelope-s',['envelope-s1','envelope-s-bar'],
    frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel=Envelope
    point1=.9 point2=0.5 color=j flat=n
    '''%(141/3,30))
-Result('envelope-s-mov',['envelope-s1','envelope-s-bar'],
-   '''
-   window j3=10 | 
-   byte gainpanel=e allpos=y| 
-   grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} color=j
-   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel=Envelope movie=3
-   point1=.9 point2=0.5 flat=n
-   '''%(141/3,15))
+#Result('envelope-s-mov',['envelope-s1','envelope-s-bar'],
+#   '''
+#   window j3=10 | 
+#   byte gainpanel=e allpos=y| 
+#   grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} color=j
+#   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel=Envelope movie=3
+#   point1=.9 point2=0.5 flat=n
+#   '''%(141/3,15))
 # make mute
 #    mutter inner=y t0=2.1 x0=1.95 v0=0.11|
 #    cut f1=486 n2=55| smooth rect2=3 rect1=5|
@@ -416,14 +414,14 @@ Result(name+'-envelope-f',[semblst[-1],'envelope-f-bar'],
    frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power"
    point1=.9 point2=0.5 color=j flat=n framelabel1=n
    '''%(max1tp,2*nv/3-9,frame3))
-Result('envelope-f-mov',[semblst[-1],'envelope-f-bar'],
-   '''
-   window j3=10 max1=%g| 
-   byte gainpanel=e allpos=y| 
-   grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} color=j
-   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power" movie=3
-   point1=.9 point2=0.5 flat=n
-   '''%(max1tp,2*nv/3-9,0))
+#Result('envelope-f-mov',[semblst[-1],'envelope-f-bar'],
+#   '''
+#   window j3=10 max1=%g| 
+#   byte gainpanel=e allpos=y| 
+#   grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} color=j
+#   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power" movie=3
+#   point1=.9 point2=0.5 flat=n
+#   '''%(max1tp,2*nv/3-9,0))
 
 
 lmbda = 1

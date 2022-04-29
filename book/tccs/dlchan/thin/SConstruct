@@ -305,7 +305,7 @@ Flow('ro1','ovr_rho_noise_taper',flip() )
 
 # density
 Flow  ('den','ro0','window n1=%(nz)d | put o1=0' % par)
-Result('den','den',
+Result('tden','den',
        'transp plane=13 |'
        + zplot3d(par,'pclip=100 bias=2.1 allpos=y','title="density" color=j'))
 
