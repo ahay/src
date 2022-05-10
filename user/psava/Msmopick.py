@@ -139,9 +139,6 @@ for ie in range(ne):
     rd[ie] = np.linalg.norm( WDop * (Gop * modE - dbar))
     rm[ie] = np.linalg.norm(  Rop * (      modE - mbar))
 
-print >> sys.stderr, rd
-print >> sys.stderr, rm
-
 if rd > 0:
     rdn = rd / np.max(rd) # normalized residual norm
 else:
