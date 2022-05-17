@@ -3,6 +3,8 @@
 Create the time domain range compressed waveform for MARSIS
 Created by: Dylan Hickson, Colorado School of Mines
 Created on: Feb 16, 2022
+Edited May 4, 2022:
+    - add option to zero-pad
 '''
 import rsf.api as rsf
 import numpy as np
@@ -11,9 +13,10 @@ import sys
 par = rsf.Par()
 
 verb    = par.bool('verb',False) # verbosity flag
-window  = par.bool('window')  # spectral Hann window flag
-delay   = par.float('delay')  # latency delay in transmitted signal in microseconds
-cmplxBB = par.bool('cmplxBB')
+window  = par.bool('window')     # spectral Hann window flag
+delay   = par.float('delay')     # latency delay in transmitted signal in microseconds
+cmplxBB = par.bool('cmplxBB')    # complex baseband chirp
+zpad    = par.bool('zpad')       # zero pad to closest 2^n
 
 def hann(freq, BW, df, BW_l, BW_h):
     freq = np.fft.fftshift(freq)
@@ -32,9 +35,9 @@ def hann(freq, BW, df, BW_l, BW_h):
             cnt+=1
     return np.fft.ifftshift(out)
 
-def marsis_rc_wav_cmplx(delay, window=False):
+def marsis_rc_wav_cmplx(delay, window=False, zpad=True):
     pulse_w = 250e-6             # pulse_width (s)
-    BW = 1e6                   # chirp bandwidth (Hz)
+    BW = 1e6                     # chirp bandwidth (Hz)
 
     # 490 complex samples recorded in receive window
     Ns = 490
@@ -46,12 +49,14 @@ def marsis_rc_wav_cmplx(delay, window=False):
     cmplx_chirp_t = np.exp(np.pi * 1j * BW / pulse_w * (t - pulse_w/2)**2)
     cmplx_chirp_t[t > pulse_w] = 0 + 1j*0
 
-    # Pad to 512
-    Np = 512
-    cmplx_chirp_t = np.append(cmplx_chirp_t, np.zeros(Np-Ns, dtype=complex))
+    if zpad:
+        # Pad to 512
+        Np = 512
+        cmplx_chirp_t = np.append(cmplx_chirp_t, np.zeros(Np-Ns, dtype=complex))
+        Ns = Np
 
     # FFT to frequency
-    freq = np.fft.fftfreq(Np,d=dt)
+    freq = np.fft.fftfreq(Ns,d=dt)
     df = freq[1]-freq[0]
     cmplx_chirp_f = np.fft.fft(cmplx_chirp_t)
 
@@ -75,7 +80,7 @@ def marsis_rc_wav_cmplx(delay, window=False):
 
     return rc_chirp_t, rc_chirp_f
 
-def marsis_rc_wav_real(delay, window=False):
+def marsis_rc_wav_real(delay, window=False, zpad=True):
     pulse_w = 250e-6             # pulse_width (s)
     BW = 1e6                   # chirp bandwidth (Hz)
 
@@ -93,12 +98,14 @@ def marsis_rc_wav_real(delay, window=False):
     real_chirp_t = np.cos(2*np.pi*f_carrier*t + np.pi * BW / pulse_w * (t - pulse_w/2)**2)
     real_chirp_t[t > pulse_w] = 0
 
-    # Pad to 1024
-    Np = 1024
-    real_chirp_t = np.append(real_chirp_t, np.zeros(Np-Ns))
+    if zpad:
+        # Pad to 1024
+        Np = 1024
+        real_chirp_t = np.append(real_chirp_t, np.zeros(Np-Ns))
+        Ns = Np
 
     # FFT to frequency
-    freq = np.fft.fftfreq(Np,d=dt)
+    freq = np.fft.fftfreq(Ns,d=dt)
     df = freq[1]-freq[0]
     real_chirp_f = np.fft.fft(real_chirp_t)
 
@@ -125,13 +132,19 @@ def marsis_rc_wav_real(delay, window=False):
     return rc_chirp_t, rc_chirp_f
 
 if cmplxBB:
-    marsisOut_t, marsisOut_f = marsis_rc_wav_cmplx(delay, window=window)
+    marsisOut_t, marsisOut_f = marsis_rc_wav_cmplx(delay, window=window, zpad=zpad)
     dt = 1/1.4e6
-    Ns = 512
+    if zpad:
+        Ns = 512
+    else:
+        Ns = 490
 else:
-    marsisOut_t, marsisOut_f = marsis_rc_wav_real(delay, window=window)
+    marsisOut_t, marsisOut_f = marsis_rc_wav_real(delay, window=window, zpad=zpad)
     dt = 1/2.8e6
-    Ns = 1024
+    if zpad:
+        Ns = 1024
+    else:
+        Ns = 980
 
 # Write to RDF
 wavTout = rsf.Output()
