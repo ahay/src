@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 output point cloud from gridded surface
--> cloud components: x,z, nx,nz
+-> cloud components: x,z, nx,nz, vz,vy
 '''
 import rsf.api as rsf
 import numpy as np
@@ -72,7 +72,8 @@ for i1 in range(n1):
     # normal vector n orthogonal to a
     nx = -az
     nz = +ax
-    nn = np.sqrt(np.power(nx,2)+np.power(nz,2))
+    nn = np.sqrt(np.power(nx,2) +
+                 np.power(nz,2) )
 
     # output x,z, cx,cz
     dou = np.array([  x[i1],  z[i1],

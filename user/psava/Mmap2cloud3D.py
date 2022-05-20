@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 output point cloud from gridded surface
--> cloud components: x,y,z, nx,ny,nz
+-> cloud components: x,y,z, nx,ny,nz, vx,vy,vz
 '''
 import rsf.api as rsf
 import numpy as np
@@ -99,7 +99,9 @@ for i2 in range(n2):
         nx = ay*bz - by*az
         ny = az*bx - bz*ax
         nz = ax*by - bx*ay
-        nn = np.sqrt(np.power(nx,2)+np.power(ny,2)+np.power(nz,2))
+        nn = np.sqrt(np.power(nx,2) +
+                     np.power(ny,2) +
+                     np.power(nz,2) )
 
         # output x,y,z, nx,ny,nz
         dou = np.array([ x[i2][i1],  y[i2][i1],  z[i2][i1],
