@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
   // check file type
   if (SF_FLOAT == sf_gettype(Fdwin[0])) isreal = true;
   else                                  isreal = false;
+  if(verb) sf_warning("file is real:%d",isreal);
 
   if(!allopen) sf_fileclose(Fdwin[0]);               // close win  data
 
