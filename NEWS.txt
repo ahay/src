@@ -40,6 +40,9 @@ To the reproducible documents collection:
 
 To SCons:
 
+* upgrade to scons-4.2.0
+* added support for Rocky Linux
+
 To documentation:
 
 To APIs:

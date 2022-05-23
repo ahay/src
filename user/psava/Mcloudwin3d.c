@@ -1,4 +1,4 @@
-/* 
+/*
 3D CLoud WINdowing
 Paul Sava
 Copyright (C) 2022 Colorado School of Mines
@@ -10,6 +10,7 @@ Copyright (C) 2022 Colorado School of Mines
 
 #define NCO 9
 
+/*------------------------------------------------------------*/
 bool isInCone(pt3d *oco, vc3d *ono, pt3d *gco, float cosapt)
 {
   float Rx,Ry,Rz,R, cosobl;
@@ -27,7 +28,6 @@ bool isInCone(pt3d *oco, vc3d *ono, pt3d *gco, float cosapt)
   if( cosobl > cosapt) return true;
   else                 return false;
 }
-
 
 /*------------------------------------------------------------*/
 int main(int argc, char* argv[])
@@ -146,14 +146,14 @@ int main(int argc, char* argv[])
 #endif
     for( ig = 0; ig < ng; ig++) nw += fin[ig];
 
-    // avoid empty window
-    nw = SF_MAX(nw,1);
-
     // write window header
     //if(verb) sf_warning("write window header");
     aw = sf_maxa(nw,0,1);
     sf_oaxa(Fou,aw,2);
     if(verb) sf_raxa(aw);
+
+    // avoid empty window
+    nw = SF_MAX(nw,1);
 
     // index window points
     //if(verb) sf_warning("index window points");
@@ -219,6 +219,8 @@ int main(int argc, char* argv[])
         aw = sf_maxa( SF_MAX(ncount,1),0,1);
         sf_oaxa(Fou,aw,2);
         if(verb) sf_raxa(aw);
+
+        //if(nw == 0) exit(0);
       }
 
     } // ipass
