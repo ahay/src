@@ -157,9 +157,8 @@ Flow('recvadiff','arms recvscarms','add scale=1,-1 ${SOURCES[1]}')
 
 Result('recvadiff','recvadiff tshots0',plot('s,h,cdp,r difference'))
 
-size=dict(sht=326,off=2266,rcv=7784,cmp=401)
 for case in ('sht','ofs','rcv','cmp'):
-    Result(case,'recvsc',
+    Result(case,
            '''
            graph title="%s Term" 
            label1="%s Number" unit1= label2=Amplitude unit2=
