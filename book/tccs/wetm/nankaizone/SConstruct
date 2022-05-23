@@ -140,25 +140,13 @@ Flow('varms','arms tshots0',
      intbin head=${SOURCES[1]} yk=fldr xk=tracf | window
      ''')
 
-prog = Program('surface-consistent.c')
-sc = str(prog[0])
-
 # recv index
 
-# get model dimensions
-Flow('recvmodel',['arms','extindrecv',sc],
-     './${SOURCES[2]} index=${SOURCES[1]} verb=y')
-
 # find a term
-Flow('recvsc',['arms','extindrecv',sc,'recvmodel'],
+Flow('recvscarms','arms extindrecv',
      '''
-     conjgrad ./${SOURCES[2]} index=${SOURCES[1]} 
-     mod=${SOURCES[3]} niter=150
+     sc index=${SOURCES[1]} niter=150
      ''')
-
-# project to a data space
-Flow('recvscarms',['recvsc','extindrecv',sc],
-     './${SOURCES[2]} index=${SOURCES[1]} adj=n')
 
 Result('recvvscarms','recvscarms tshots0',
        plotb('Source, Offset, CDP, Recv S-C Log(A)'))
