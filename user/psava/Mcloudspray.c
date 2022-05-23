@@ -1,4 +1,4 @@
-/* 
+/*
 point cloud spray
 Paul Sava
 Copyright (C) 2022 Colorado School of Mines
@@ -35,15 +35,13 @@ int main(int argc, char *argv[])
   Fou = sf_output("out");
   Fcc = sf_input("cc");
 
-  if (SF_FLOAT == sf_gettype(Fin))
-      isreal = true;
-  else
-      isreal = false;
+  if (SF_FLOAT == sf_gettype(Fin)) isreal = true;
+  else                             isreal = false;
 
   /* coordinate axes */
   aa = sf_iaxa(Fin,1);
   ac = sf_iaxa(Fcc,2);
-  if (verb) {
+  if(verb) {
     sf_raxa(aa);
     sf_raxa(ac);
   }
@@ -54,6 +52,45 @@ int main(int argc, char *argv[])
   } else {
     sf_oaxa(Fou, aa, 1);
     sf_oaxa(Fou, ac, 2);
+  }
+
+  /*------------------------------------------------------------*/
+  /* stop if the cloud is empty */
+  if(sf_n(ac) == 0) {
+
+    if(isreal) {
+
+      if(axis == 1) {
+        dR =   sf_floatalloc( 1 );
+        for(int ic = 0; ic < 1; ic++) dR[ ic ] = 0.0;
+        for(int ia = 0; ia < sf_n(aa); ia++)
+          sf_floatwrite(dR, 1, Fou);
+      } else {
+        dR =   sf_floatalloc( sf_n(aa) );
+        for(int ia = 0; ia < sf_n(aa); ia++) dR[ ia ] = 0.0;
+        for(int ic = 0; ic < 1; ic++)
+          sf_floatwrite(dR, sf_n(aa), Fou);
+      }
+      free(dR);
+
+    } else {
+
+      if(axis == 1) {
+        dC = sf_complexalloc( 1 );
+        for(int ic = 0; ic < 1; ic++) dC[ ic ] = 0.0;
+        for(int ia = 0; ia < sf_n(aa); ia++) {
+          sf_complexwrite(dC, 1, Fou);
+        }
+      } else {
+        dC = sf_complexalloc( sf_n(aa) );
+        for(int ia = 0; ia < sf_n(aa); ia++) dC[ ia ] = 0.0;
+        for(int ic = 0; ic < 1; ic++)
+          sf_complexwrite(dC, sf_n(aa), Fou);
+      }
+      free(dC);
+
+    }
+    exit(0);
   }
 
   /*------------------------------------------------------------*/

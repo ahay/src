@@ -8,9 +8,6 @@ from scipy.sparse        import spdiags
 from scipy.sparse.linalg import spsolve
 import sys
 
-#import idnUtil as IDN
-#import lapUtil as LAP
-
 # ------------------------------------------------------------
 def idnop1D(n):
     e = np.ones( n, dtype='float')
@@ -54,6 +51,7 @@ n1 = Fin.int  ("n1")
 o1 = Fin.float("o1")
 d1 = Fin.float("d1")
 l1 = 0.5 * n1*d1              # xcorr time window
+z1 = int( abs(o1)/d1)
 
 nd = Fin.size(1);             # number of traces
 nm = nd
@@ -79,8 +77,20 @@ wgh = np.zeros(nd,'f') # weights
 
 for i in range(nd):
     Fin.read(din)
-    pck[i] = o1 + np.argmax(din) * d1
-    wgh[i] = np.max(din)
+
+    # raw picks
+    #pck[i] = o1 + np.argmax(din) * d1
+    #wgh[i] = np.max(din)
+
+    din += 1.0 # avoid zero weights
+    pck[i] = o1 + z1 * d1
+    wgh[i] = din[z1]
+    for j in range(n1):
+        if  wgh[i] < din[j]:
+            pck[i] = o1 + j * d1
+            wgh[i] = din[j]
+
+    # weights to bias towards 0
     #wgh[i]*= np.exp(- abs(pck[i]) )
     wgh[i] *= np.cos( 0.5*np.pi * abs(pck[i]/l1) )
 
@@ -97,7 +107,6 @@ xE = xx[nd-1]
 nb = np.max([1,nd//10])
 mbar = pck*0                          # reference model
 dbar = pck                            # rough picks
-
 
 wgh = np.power(wgh-np.min(wgh),wpo)
 
@@ -130,8 +139,14 @@ for ie in range(ne):
     rd[ie] = np.linalg.norm( WDop * (Gop * modE - dbar))
     rm[ie] = np.linalg.norm(  Rop * (      modE - mbar))
 
-rdn = rd / np.max(rd) # normalized residual norm
-rmn = rm / np.max(rm)
+if rd > 0:
+    rdn = rd / np.max(rd) # normalized residual norm
+else:
+    rdn = 1.0
+if rm > 0:
+    rmn = rm / np.max(rm)
+else:
+    rmn = 1.0
 rrn = rdn**2 + rmn**2 # distance from origin
 je = np.argmin(rrn)   # index of the optimal model
 spk = ME[:,je]        # smooth picks

@@ -387,12 +387,13 @@ def getrefl(refl,par):
                 10.000*par['ft2km'],0.0250*par['ft2km'],par['lx'],par['ux']
                 ))
 
-
 # ------------------------------------------------------------
 def makeshots(shot,data,par):
 
-    Flow(shot+'-ss',data+'-t','dd type=float | headermath output="10925+fldr*150" | window')
-    Flow(shot+'-oo',data+'-t','dd type=float | headermath output="offset"         | window')
+    Flow(shot+'-ss',data+'-t',
+        'dd type=float | headermath output="10925+fldr*150" | window')
+    Flow(shot+'-oo',data+'-t',
+        'dd type=float | headermath output="offset"         | window')
 
     # create sraw(t,o,s): o=full offset
     Flow(shot+'-si',shot+'-ss','math output=input/150')
@@ -417,8 +418,10 @@ def makeshots(shot,data,par):
 # ------------------------------------------------------------
 def makecmps(cmps,data,par):
 
-    Flow(cmps+'-ss',data+'-t','dd type=float | headermath output="10925+fldr*150" | window')
-    Flow(cmps+'-oo',data+'-t','dd type=float | headermath output="offset"         | window')
+    Flow(cmps+'-ss',data+'-t',
+        'dd type=float | headermath output="10925+fldr*150" | window')
+    Flow(cmps+'-oo',data+'-t',
+        'dd type=float | headermath output="offset"         | window')
 
     Flow(cmps+'-mm',[cmps+'-oo',cmps+'-ss'],
          'math o=${SOURCES[0]} s=${SOURCES[1]} output=s+o/2-10925')
