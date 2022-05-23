@@ -202,6 +202,10 @@ def identify_platform(context):
                 plat['OS'] = 'linux'
                 plat['distro'] = 'arch'
                 plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'alpine':
+                plat['OS'] = 'linux'
+                plat['distro'] = 'alpine'
+                plat['version'] = dist_info[1]
             elif dist_info[0].lower() == 'rocky':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'rocky'
@@ -570,6 +574,7 @@ xlib = [
 pkg['xaw']={'rhel':'libXaw-devel',
             'rocky': 'libXaw-devel',
             'arch': 'libxaw',
+            'alpine': 'libxaw-dev',
             'fedora':'libXaw-devel',
             'ubuntu':'libxaw7-dev',
             'centos':'libXaw-devel'}
@@ -733,6 +738,7 @@ pkg['libtiff'] = {'suse':'libtiff-devel',
                   'ubuntu': 'libtiff5-dev',
                   'rocky':'libtiff-devel',
                   'arch': 'libtiff',
+                  'alpine': 'tiff-dev',
                   'fedora':'libtiff-devel',
                   'rhel':'libtiff-devel',
                   'centos':'libtiff-devel'}
@@ -769,6 +775,7 @@ pkg['libgd'] = {'suse':'gd-devel',
                 'rhel':'gd-devel',
                 'rocky':'gd-devel',
                 'arch': 'gd',
+                'alpine': 'gd-dev',
                 'ubuntu':'libgd-dev',
                 'centos':'gd-devel'}
 
@@ -1009,6 +1016,7 @@ def cairo(context):
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
                'rocky':'libjpeg-devel',
                'arch': 'libjpeg-turbo',
+               'alpine': 'libjpeg-turbo',
                'ubuntu':'libjpeg-dev',
                'centos':'libjpeg-turbo-devel'}
 
@@ -1044,6 +1052,7 @@ def jpeg(context):
 pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut-devel',
                  'rocky': 'freeglut-devel',
                  'arch': 'freeglut, glu',
+                 'alpine': 'freeglut-dev',
                  'rhel':'freeglut-devel',
                  'suse'  :'freeglut-devel',
                  'ubuntu':'freeglut3-dev',
