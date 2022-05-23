@@ -1,0 +1,20 @@
+1. Write unit test cases
+
+    reference: https://docs.python.org/3/library/unittest.html
+
+    examples: RSFSRC/framework/rsf/test/test_flow.py
+
+2. Install Coverage.py (coverage.readthedocs.io)
+
+    pip install coverage
+
+3. Run unittest locally using Coverage.py
+
+    coverage run -m unittest discover framework/rsf/test
+
+4. Get annotated HTML listing
+
+    coverage html
+
+5. Push changes to Github. codecov will be automatically triggered to generate 
+   the new code coverage report.
