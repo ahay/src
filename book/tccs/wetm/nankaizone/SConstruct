@@ -147,7 +147,7 @@ Flow('sht ofs rcv cmp recvscarms','arms extindrecv',
      '''
      sc index=${SOURCES[1]} niter=150 pred=${TARGETS[4]}
      out2=${TARGETS[1]} out3=${TARGETS[2]} out4=${TARGETS[3]}
-     ''',stdout=0)
+     ''')
 
 Result('recvvscarms','recvscarms tshots0',
        plotb('Source, Offset, CDP, Recv S-C Log(A)'))
