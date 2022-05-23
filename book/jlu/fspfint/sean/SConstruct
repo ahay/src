@@ -1,0 +1,136 @@
+"""real data test"""
+from rsf.proj import *
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+# plot clip
+clip = 0.139495
+
+# make model
+Fetch("sean.HH", "bp")
+Flow("sean", "sean.HH", 
+     """
+     dd form=native | window n3=1 f3=3 n1=500 | bandpass fhi=50|
+     math output="input/1989.66" |
+     put label1="Time" label2="Trace"
+     unit1=s unit2=
+     """)
+Result("sean", "grey title= clip=%g" % clip)
+# fk
+Flow("fksn", "sean", 'fft1 | fft3 axis=2 | math output="abs(input)" | real')
+Result("fksn", "grey scalebar=n title= unit2= color=i max1=80")
+
+# random mask
+Flow("mask", "sean", 
+     """
+     window n1=1 | noise type=n rep=y seed=150 |
+     mask min=-0.1 | dd type=float |
+     cut f1=50 n1=3 | dd type=int
+     """)
+Flow("mask2", "mask", "reverse which=1")
+
+# irregular missing data
+Flow("gapsn", "sean mask", "headercut mask=${SOURCES[1]}")
+Result("gapsn", "grey title= clip=%g scalebar=n " % clip)
+# SNR
+Flow("diffgapsn", "sean gapsn", "add scale=1,-1 ${SOURCES[1]}")
+Flow("snrgapsn", "sean diffgapsn", "snr2 noise=${SOURCES[1]}")
+# fk
+Flow("fkgapsn", "gapsn", 'fft1 |fft3 axis=2 | math output="abs(input)" | real')
+Result("fkgapsn", "grey scalebar=n title= unit2= color=i max1=80")
+
+# interpolation comparison
+# fxspf
+Flow("fxspfleft", "gapsn mask",
+     """
+     fxspfint2 lambda1=0.1 lambda2=0.05 na=20
+     ftype=1 mask=${SOURCES[1]} verb=n
+     """)
+Flow("fxspfright", "gapsn mask2",
+     """
+     reverse which=2 |
+     fxspfint2 lambda1=0.1 lambda2=0.05 na=20
+     ftype=1 mask=${SOURCES[1]} verb=n |
+     reverse which=2
+     """)
+Flow("fxspfsn", "fxspfleft fxspfright", 
+     """
+     add ${SOURCES[1]} scale=1,1 |
+     math output="input/2"
+     """)
+Result("fxspfsn", "grey title= clip=%g scalebar=n" % clip)
+# error
+Flow("errfxspfsn", "fxspfsn sean", "add ${SOURCES[1]} scale=-1,1")
+Result("errfxspfsn", "grey title= scalebar=n clip=%g" % clip)
+# SNR
+Flow("snrfxspfsn", "sean errfxspfsn", "snr2 noise=${SOURCES[1]}")
+# fk
+Flow("fkfxspfsn", "fxspfsn",
+     'fft1 |fft3 axis=2 | math output="abs(input)" | real')
+Result("fkfxspfsn", "grey scalebar=n title= unit2= color=i max1=80")
+
+# POCS
+Flow("pmask", "mask", "spray axis=1 n=500 d=0.004 | dd type=float")
+Flow("pocssn errsn", "gapsn pmask sean", 
+     """
+     fourmis2 mask=${SOURCES[1]} niter=200 oper=p ordert=1.
+     perc=99 verb=n error=y ref=${SOURCES[2]} res=${TARGETS[1]}
+     """)
+Result("pocssn", "grey title= scalebar=n clip=%g " % clip)
+# error
+Flow("errpocssn", "pocssn sean", "add ${SOURCES[1]} scale=-1,1")
+Result("errpocssn", "grey title=  scalebar=n clip=%g " % clip)
+# SNR
+Flow("snrpocssn", "sean errpocssn", "snr2 noise=${SOURCES[1]}")
+# fk
+Flow("fkpocssn", "pocssn",
+     'fft1 |fft3 axis=2 | math output="abs(input)" | real')
+Result("fkpocssn", "grey scalebar=n title= unit2= color=i max1=80")
+
+# # 3## Seislet POCS iterations (soft thresholding)
+Flow("dipmask", "pmask", "pad n2=256")
+Flow("smask", "pmask", "math output='1-input'")
+
+Flow("dip", "gapsn dipmask",
+    "bandpass fhi=60 | pad n2=256 | dip rect1=15 rect2=15 mask=${SOURCES[1]}")
+
+pniter = 50
+sniter = 50
+# forward and backward
+sforward = """
+pad n2=256 | seislet adj=y inv=y dip=${SOURCES[3]} eps=0.1 type=b 
+"""
+sbackward = """
+seislet adj=n inv=n dip=${SOURCES[3]} eps=0.1 type=b | window n2=180 
+"""
+sdata = "gapsn"
+for iter in range(sniter):
+    sfold = sdata
+    sdata = "sdata%d" % iter
+    # 1. Forward seislet transform
+    # 2. Thresholding
+    # 3. Inverse seislet transform
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(sdata, [sfold, "smask", "gapsn", "dip"], sforward + """
+         | threshold pclip=%g |
+         """ % (5.0 + ((99.0 - 5.0) * (iter**2) / ((pniter - 1)**2))) +
+        sbackward + """
+         | add mode=p ${SOURCES[1]} |
+         add ${SOURCES[2]}
+         """)
+
+Flow("stpocssn", "sdata49", "cp")
+Result("stpocssn", "grey title= clip=%g" % clip)
+# error
+Flow("errstpocssn", "stpocssn sean", "add ${SOURCES[1]} scale=-1,1")
+Result("errstpocssn", "grey title= clip=%g " % clip)
+# SNR
+Flow("snrstpocssn", "sean errstpocssn", "snr2 noise=${SOURCES[1]}")
+# fk
+Flow("fkstpocssn", "stpocssn",
+     'fft1 | fft3 axis=2 | math output="abs(input)" | real')
+Result("fkstpocssn", "grey scalebar=n title= unit2= color=i max1=80")
+
+End()

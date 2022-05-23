@@ -1,0 +1,96 @@
+from rsf.proj import *
+
+Flow('aliasp',None,
+     'aliasp cycles=24 n2=30 | put label1=Sample label2=Position')
+Plot('aliasp','window n1=575 n2=24 | grey title=Input crowd=0.85')
+Result('jaliasp','aliasp',
+       '''
+       window n1=425 n2=24 f1=150 |
+       grey yreverse=y transp=y poly=y title=''
+       screenratio=1.0 labelsz=5. titlesz=7 
+       parallel2=n font=2 labelfat=2 titlefat=2 d2num=50 o2num=150 n2tic=9
+       ''')
+
+Flow('dip2','aliasp',
+     'twodip2 order=3 nj1=4 nj2=4 p0=2 q0=-1 eps=4 gauss=n')
+Flow('dip1','aliasp dip2',
+     'dip idip=${SOURCES[1]} order=3 nj1=4 rect1=7 rect2=3')
+Flow('dip','dip1',
+     'transp | spline n1=120 o1=0 d1=0.25 | transp')
+
+Flow('aliasp4 ones4','aliasp','lpad jump=4 mask=${TARGETS[1]}')
+Flow('mask-int','ones4','dd type=int')
+
+
+### RNA interpolation for initialization
+Flow('winr','aliasp4','window n2=9 f2=0')
+Flow('ones1','ones4','window n2=9 f2=0')
+
+Flow('winr1','winr','math output=1.')
+Flow('apef1 maskout1','winr winr1',
+     '''
+     apef a=5,2 jump=4 rect1=50 rect2=2 niter=50 verb=y
+     maskin=${SOURCES[1]} maskout=${TARGETS[1]}
+     ''')
+Flow('amiss1','winr apef1 ones1',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+
+Flow('maskw','mask-int','window n2=111 f2=9')
+Flow('win','aliasp4','window n2=111 f2=9')
+
+Flow('spike1','','spike n1=600 d1=1 o1=0 n2=9 d2=0.25 o2=0 | dd type=int')
+Flow('mask1','spike1 maskw','cat axis=2 ${SOURCES[1]} space=n')
+Flow('win1','amiss1 win','cat axis=2 ${SOURCES[1]} space=n')
+
+# parameters for txspfvsint2 
+lambda1 = 0.3
+lambda2 = 0.2
+a1 = 19
+a2 = 11
+verb = 0
+smooth = 1
+epst = 0.12
+epsx = 0.12
+
+# forward interpolation 1 ->
+Flow('inter0',' win1 mask1',
+     '''
+     txspfvsint2 lambda1=%f lambda2=%f a=%d,%d 
+     known=${SOURCES[1]} verb=%d smooth=%d epst=%f epsx=%f
+     ''' %(lambda1, lambda2, a1, a2, verb, smooth, epst, epsx))
+
+Flow('mask-rev','mask1','reverse which=3 ')
+for n in range(1,2):
+    inter = 'inter%d' %n
+    interb = 'interb%d' %n
+    add = 'add%d' %n
+    rev = 'rev%d' %(n-1)
+    
+    # backward interpolation 1 <-
+    Flow(rev,'inter%d' %(n-1),'reverse which=3')
+    Flow(interb,' %s  mask-rev' %rev,
+         '''
+         txspfvsint2 lambda1=%f lambda2=%f a=%d,%d 
+         known=${SOURCES[1]} verb=%d smooth=%d epst=%f epsx=%f |
+         reverse which=3
+         ''' %(lambda1, lambda2, a1, a2, verb, smooth, epst, epsx))
+    
+    # forward interpolation 2 ->
+    Flow(inter, '%s mask1' %interb,
+         '''
+         txspfvsint2 lambda1=%f lambda2=%f a=%d,%d 
+         known=${SOURCES[1]} verb=%d smooth=%d epst=%f epsx=%f
+         ''' %(lambda1, lambda2, a1, a2, verb, smooth, epst, epsx))
+    
+    # add backward 1 and forward 2
+    Flow(add,[interb,inter],'add scale=0.5,0.5 ${SOURCES[1]}')
+    Result(add,
+           '''
+           window n1=425 n2=96 f1=150 |
+           grey yreverse=y transp=y poly=y title=""
+           screenratio=1.0 labelsz=5. titlesz=7 
+           parallel2=n font=2 labelfat=2 titlefat=2 d2num=50 o2num=150 n2tic=9
+           ''' )
+
+
+End()

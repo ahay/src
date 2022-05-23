@@ -159,7 +159,7 @@ static float qsolve(int i)
 
 	xj = x+j;
 	xj->delta = rdx[j];
-
+	
 	if (a < b) {
 	    xj->stencil = xj->value = a;
 	} else {
@@ -510,6 +510,75 @@ int sf_neighbors_nearsource(float* xs   /* source location [3] */,
 	}
     }
     
+    return npoints;
+}
+
+int sf_neighbors_nearsource_rtp(float* xs   /* source location [3] */, 
+			    int* b      /* constant-velocity box around it [3] */, 
+			    float* d    /* grid sampling [3] */, 
+			    float* vv1  /* slowness [n[0]*n[1]*n[2]] */, 
+			    bool *plane /* if plane-wave source */)
+/*< initialize the source in the spherical case (rtp), added by YC, Apr, 2022 >*/
+{
+    int npoints, ic, i, j, is, start[3], endx[3], ix, iy, iz;
+    double delta[3], delta2;
+    
+
+    /* initialize everywhere */
+    for (i=0; i < n[0]*n[1]*n[2]; i++) {
+	in[i] = SF_OUT;
+	ttime[i] = SF_HUGE;
+    }
+
+    vv = vv1;
+
+    /* Find index of the source location and project it to the grid */
+    for (j=0; j < 3; j++) {
+	is = xs[j]/d[j]+0.5;
+	start[j] = is-b[j]; 
+	endx[j]  = is+b[j];
+    } 
+    
+    grid(start, n);
+    grid(endx, n);
+    
+    ic = (start[0]+endx[0])/2 + 
+	n[0]*((start[1]+endx[1])/2 +
+	      n[1]*(start[2]+endx[2])/2);
+    
+    v1 = vv[ic];
+    /* loop in a small box around the source */
+    npoints = n[0]*n[1]*n[2];
+    sf_warning("npoints before is %d",npoints);
+    for (ix=start[2]; ix <= endx[2]; ix++) {
+	for (iy=start[1]; iy <= endx[1]; iy++) {
+	    for (iz=start[0]; iz <= endx[0]; iz++) {
+		npoints--;
+		i = iz + n[0]*(iy + n[1]*ix);
+
+		delta[0] = xs[0]-iz*d[0];
+/*		delta[1] = xs[1]-iy*d[1];
+		delta[2] = xs[2]-ix*d[2];
+
+		delta2 = 0.;
+		for (j=0; j < 3; j++) {
+		    if (!plane[2-j]) delta2 += delta[j]*delta[j];
+		}*/
+		delta2 = delta[0]*delta[0];
+
+		/* analytical formula (Euclid) */ 
+		ttime[i] = sqrtf(v1*delta2);
+		in[i] = SF_IN;
+
+		if ((n[0] > 1 && (iz == start[0] || iz == endx[0])) ||
+		    (n[1] > 1 && (iy == start[1] || iy == endx[1])) ||
+		    (n[2] > 1 && (ix == start[2] || ix == endx[2]))) {
+		    sf_pqueue_insert (ttime+i);
+		}
+	    }
+	}
+    }
+    sf_warning("npoints after is %d",npoints);
     return npoints;
 }
 

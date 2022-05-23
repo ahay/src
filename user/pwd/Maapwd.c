@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "aapwd.h"
-#include "smooth1.h"
 
 int main(int argc, char* argv[])
 {
@@ -105,7 +104,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("lambda",&lam)) lam=1.0f;
     /* scaling */
 
-    smooth1_init(m1,m2,2,rect1,rect2);
+    sf_smooth1_init(m1,m2,2,rect1,rect2);
 
     for (it=0; it < nt; it++) {
 	sf_warning("slice %d of %d;",it+1,nt);
@@ -154,7 +153,7 @@ int main(int argc, char* argv[])
 		rsum += r[i]*r[i];
 	    } 
 	    
-	    sf_conjgrad(NULL, aapwd_lop, smooth1_lop,x0,dx,r,liter);
+	    sf_conjgrad(NULL, aapwd_lop, sf_smooth1_lop,x0,dx,r,liter);
 
 	    for (i=0; i < n2; i++) {
 		x0[i] = xn[i];

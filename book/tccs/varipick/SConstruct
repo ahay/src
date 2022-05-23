@@ -1,0 +1,8 @@
+from rsf.tex import *
+
+Paper('paper',
+        lclass='geophysics',
+        color='ALL',
+        use='amsfonts,amsmath,amssymb,url,hyperref,algorithm,algpseudocode,float')
+
+

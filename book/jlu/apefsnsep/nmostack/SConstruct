@@ -1,0 +1,135 @@
+from rsf.proj import *
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+###
+# To finishing curvelet denoising part, it needs to install pylops and curvelops.
+# pylops : pip install pylops
+# curvelops : follow the instructions in the link: https://github.com/PyLops/curvelops
+###
+
+### read data
+sgy = "nmo_stack_agc.sgy"
+Fetch(sgy,'yang')
+Flow(
+    "oldstack toldstack oldstack.asc oldstack.bin", sgy, """
+    segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} 
+    """)
+Result(
+    "stack1", "oldstack", """
+    window n2=100 min1=2 max1=4 | put d2=0.04238 |
+    wiggle transp=y yreverse=y color=n wanttitle=n 
+    wherexlabel=top poly=y parallel2=n n2tic=20 labelfat=3 gridfat=3
+    label1=Time label2=Distance unit1=s unit2=km
+    """)
+Flow("data", "oldstack", "window n2=100 min1=2.5 max1=5 | put d2=0.04238")
+Result("nmo-data", "data",
+       "grey title= font=2 titlefat=2 labelfat=3 gridfat=3")
+# FK
+Flow("fkdata", "data", 'fft1 | fft3 axis=2 | math output="abs(input)" | real')
+Result(
+    "nmo-fkdata", "fkdata", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2 
+    label1=Frequency label2=Wavenumber unit1=Hz
+    """)
+
+# bandpass or not
+Flow("noise", "data", "bandpass flo=30")
+Result("noise",
+       "grey title=noise clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3")
+
+# hpef
+Flow("hnpef hnlag", "data", "hpef a=9,1 lag=${TARGETS[1]} ")
+Flow("hspef hslag", "data", "hpef a=11,4 lag=${TARGETS[1]} ")
+Flow(
+    "hsign", "data hspef hnpef", """
+    signoi epsilon=1.0 sfilt=${SOURCES[1]} nfilt=${SOURCES[2]}
+    spitz=n niter=100
+    """)
+Flow("hss", "hsign", "window n3=1 f3=0")
+Flow("hnn", "hsign", "window n3=1 f3=1")
+Result("nmo-hpef", "hss",
+       "grey title= clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3")
+Result("nmo-hpefnoiz", "hnn",
+       "grey title= clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3")
+# FK
+Flow("fkhpef", "hss", "fft1 | fft3 axis=2 | math output='abs(input)' | real")
+Result(
+    "nmo-fkhpef", "fkhpef", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2 label1=Frequency 
+    label2=Wavenumber unit1=Hz
+    """)
+
+### apef
+Flow(
+    "napef npred", "noise", """
+    apef a=9,1 rect1=60 rect2=1 niter=500
+    jump=1 pred=${TARGETS[1]} verb=y
+    """)
+Flow(
+    "sapef spred", "data", """
+    apef a=9,4 rect1=60 rect2=20 niter=500
+    jump=1 pred=${TARGETS[1]} verb=y
+    """)
+Flow(
+    "ass", "data sapef napef", """
+    apefsignoi sfilt=${SOURCES[1]} nfilt=${SOURCES[2]}
+    niter=800 eps=15 verb=y
+    """)
+Flow("ann", "data ass", "add scale=1,-1 ${SOURCES[1]}")
+Result("nmo-apef", "ass",
+       "grey title= clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3")
+Result("nmo-apefnoiz", "ann",
+       "grey title= clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3")
+# FK
+Flow("fkapef", "ass", "fft1 | fft3 axis=2 | math output='abs(input)' | real")
+Result(
+    "nmo-fkapef", "fkapef", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2
+     label1=Frequency label2=Wavenumber unit1=Hz
+     """)
+
+### fxdecon
+Flow("fxsign", "data", "fxdecon lenf=8 n2w=30")
+Flow("fxnoiz", "data fxsign", "add scale=1,-1 ${SOURCES[1]}")
+Result("nmo-fx", "fxsign",
+       "grey title= clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3")
+Result("nmo-fxnoiz", "fxnoiz",
+       "grey title= clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3")
+# FK
+Flow("fkfxdecon", "fxsign",
+     "fft1 | fft3 axis=2 | math output='abs(input)' | real")
+Result(
+    "nmo-fkfx", "fkfxdecon", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2 
+    label1=Frequency label2=Wavenumber unit1=Hz
+    """)
+
+#! Need to install python package: pylops, curvelops
+#! Follow "python curvelet_denoise.py" to generate "ct_denoise.rsf"
+### curvelet
+#Flow("ct_denoise", "ct_denoise.H", "dd form=native")
+Result(
+    "nmo-ct", "ct_denoise", """
+    put d1=0.004 d2=0.04238 o1=2.5 o2=0 label1=Time unit1=s label2=Trace |
+    grey title= clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3
+    """)
+Flow("ct_denoise_err", "data ct_denoise", "add scale=1,-1 ${SOURCES[1]}")
+Result(
+    "nmo-ctnoiz", "ct_denoise_err", """
+    put d1=0.004 d2=0.04238 o1=2.5 o2=0 label1=Time unit1=s label2=Trace  |
+    grey title= clip=3.10373 font=2 titlefat=2 labelfat=3 gridfat=3
+    """)
+# FK
+Flow(
+    "fkct", "ct_denoise", """
+    put d1=0.004 d2=0.04238 o1=2.5 o2=0|
+    fft1 | fft3 axis=2 | math output="abs(input)" | real
+    """)
+Result(
+    "nmo-fkct", "fkct", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2 
+    label1=Frequency label2=Wavenumber unit1=Hz
+    """)
+
+End()

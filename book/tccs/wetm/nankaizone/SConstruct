@@ -1,0 +1,830 @@
+from rsf.proj import *
+
+
+def section(title,label1='Time',unit1='s',min1=5.8,max1=8.0,extra=" "):
+    return '''
+    window min1=%g max1=%g |
+    grey title="%s"
+    label1="%s" unit1="%s" label2=Distance unit2=m %s
+    ''' % (min1,max1,title,label1,unit1,extra)
+
+# Download data
+
+Fetch('Nshots.su','nankai')
+
+# Convert from SU to RSF
+
+Flow('shots tshots','Nshots.su',
+     	'''
+	suread suxdr=y tfile=${TARGETS[1]} 
+	''')
+
+
+
+Fetch('Nstack.su','nankai')
+
+Flow('stackd tstackd','Nstack.su',
+     '''
+     suread suxdr=y tfile=${TARGETS[1]}
+     ''')
+Flow('stack-win','stackd','window min1=5')
+Flow('stack-shot','stack-win',
+     '''
+     window min2=900 max2=1300 | put label2=CMP
+     ''')
+Plot('stackd','window j1=2 j2=2 | grey title=Stack label2=CMP')
+Plot('stack-win',
+     '''
+     window  j2=2 | grey title="Stack (Window)" label2=CMP
+     ''')
+Plot('stack-shot','stack-win',
+     '''
+     window min2=900 max2=1300 | 
+     grey title="Part of stack corresponding to the shot file" 
+     label2=CMP
+     ''') 
+
+####### DC Removal
+
+Flow('mean','shots',
+     '''
+     stack axis=1 | spray axis=1 n=5500 o=0.0 d=0.002
+     ''')
+
+Flow('shotsdc','shots mean','add scale=1,-1 ${SOURCES[1]}')
+
+####### Bandpass Filtering
+
+Flow('shotsf','shotsdc','bandpass flo=10 fhi=125')
+
+
+####### Mask zero traces
+
+Flow('mask0','shotsf','mul $SOURCE | stack axis=1 | mask min=1e-20')
+Flow('shots0','shotsf mask0','headerwindow mask=${SOURCES[1]}')
+
+# update a database
+Flow('tshots0','tshots mask0','headerwindow mask=${SOURCES[1]}')
+
+####### Surface consistent
+
+# Average trace amplitude
+Flow('arms','shots0',
+     'mul $SOURCE | stack axis=1 | math output="log(input)"')
+
+# shot/offset indeces: fldr and tracf
+
+Flow('indexshot','tshots0','window n1=1 f1=2')
+
+Flow('offsets4index','tshots0',
+     ''' 
+     headermath output=offset | dd type=float | window
+     ''')
+
+Flow('offsetindex','offsets4index',
+     '''
+     math output="abs(input) - 170" | dd type=int
+     ''')
+
+# receiver/midpoint
+
+Flow('midpoint','tshots0','window n1=1 f1=5')
+
+Flow('cmps4index','tshots0',
+     ''' 
+     headermath output=cdp | dd type=float | 
+     math output="input*16.667" | window
+     ''')
+
+Flow('recv','cmps4index offsets4index',
+     '''
+     add scale=1,0.5 ${SOURCES[1]} | 
+     math output="input - 13799" | dd type=int
+     ''')
+
+Flow('index','indexshot offsetindex',
+     '''
+     cat axis=2 ${SOURCES[1]}
+     ''')
+
+Flow('extindex','index midpoint',
+     '''
+     cat axis=2 ${SOURCES[1]}
+     ''')
+
+Flow('extindrecv','extindex recv',
+     '''
+     cat axis=2 ${SOURCES[1]}
+     ''')
+
+def plot(title):
+    return '''
+    spray axis=1 n=1 | 
+    intbin head=${SOURCES[1]} yk=fldr xk=tracf | window | 
+    grey title="%s" label2="Shot Number" unit2= 
+    label1="Offset Number" unit1= scalebar=y
+    ''' % (title)
+
+def plotb(title,bias=-5):
+    return '''
+    spray axis=1 n=1 | 
+    intbin head=${SOURCES[1]} yk=fldr xk=tracf | window | 
+    grey title="%s" label2="Shot Number" unit2= 
+    label1="Offset Number" unit1= scalebar=y clip=3 bias=%g
+    ''' % (title,bias)
+
+# Display in shot/offset coordinates
+Flow('varms','arms tshots0',
+     '''
+     spray axis=1 n=1 | 
+     intbin head=${SOURCES[1]} yk=fldr xk=tracf | window
+     ''')
+
+# recv index
+
+# find a term
+Flow('sht ofs rcv cmp recvscarms','arms extindrecv',
+     '''
+     sc index=${SOURCES[1]} niter=150 pred=${TARGETS[4]}
+     out2=${TARGETS[1]} out3=${TARGETS[2]} out4=${TARGETS[3]}
+     ''')
+
+Result('recvvscarms','recvscarms tshots0',
+       plotb('Source, Offset, CDP, Recv S-C Log(A)'))
+
+# compute difference
+Flow('recvadiff','arms recvscarms','add scale=1,-1 ${SOURCES[1]}')
+
+Result('recvadiff','recvadiff tshots0',plot('s,h,cdp,r difference'))
+
+for case in ('sht','ofs','rcv','cmp'):
+    Result(case,
+           '''
+           graph title="%s Term" 
+           label1="%s Number" unit1= label2=Amplitude unit2=
+           ''' % (case.capitalize(),case.capitalize()))
+
+### apply to traces to all times 
+
+Flow('ampl','recvscarms',
+     'math output="exp(-input/2)" | spray axis=1 n=5500 d=0.002 o=0')
+
+Flow('shots-preproc','shots0 ampl','mul ${SOURCES[1]}')
+
+Plot('shots-preproc','shots-preproc',
+     '''
+     window n2=100 | 
+     grey min1=6.0 max1=8.0 title="Shots Preproc"
+     ''')
+
+Plot('shots-raw','shots0',
+     '''
+     window n2=100 | 
+     grey min1=6.0 max1=8.0 title="Shots Raw"
+     ''')
+
+
+# Resample to 4 ms
+
+Flow('subsamples','shots-preproc',
+     '''
+     bandpass fhi=125 | window j1=2
+     ''')
+
+# Extract shots
+Flow('shots2','subsamples tshots0',
+        '''
+        intbin xk=tracf yk=fldr head=${SOURCES[1]} 
+        ''')
+
+
+
+# Create a mask to remove misfired shots
+
+Flow('smask','shots2','mul $SOURCE | stack axis=1 | mask min=1e-20')
+
+
+Flow('offsets','tshots0',
+     '''
+     window n1=1 f1=11 squeeze=n | dd type=float |
+     intbin head=$SOURCE xk=tracf yk=fldr
+     ''')
+
+
+# Select one shot (fldr)
+
+shot=1707
+
+Flow('mask','smask','window n2=1 min2=%g' % shot)
+
+Flow('shot','shots2 mask',
+     '''
+     window n3=1 min3=%g squeeze=n |
+     headerwindow mask=${SOURCES[1]}
+     ''' % shot)
+
+Flow('offset','offsets mask',
+     '''
+     window n3=1 min3=%g squeeze=n |
+     headerwindow mask=${SOURCES[1]}
+     ''' % shot)
+
+
+
+Plot('shot',
+     ''' 
+     window min1=5.8 max1=8.5 | 
+     grey title="Selected Shot" clip=2
+     ''')
+
+
+# Extract CMPs and apply t^2 gain
+
+Flow('cmps maskcmp','subsamples tshots0',
+     '''
+      intbin head=${SOURCES[1]} mask=${TARGETS[1]} 
+      xk=tracf yk=cdp 	      |
+      pow pow1=2 	
+      ''')
+
+Flow('cmask','cmps','mul $SOURCE | stack axis=1 | mask min=1e-20')
+
+Flow('offs','tshots0',
+     '''
+     window n1=1 f1=11 squeeze=n | dd type=float |
+     intbin xk=tracf yk=cdp head=$SOURCE
+     ''')
+
+# Examine one CMP gather
+
+Flow('mask1','cmask','window n2=1 min2=1280')
+
+Flow('cmp1','cmps mask1',
+     '''
+     window n3=1 min3=1280 | headerwindow mask=${SOURCES[1]}
+     ''')
+
+Flow('off','offs mask1',
+     '''
+     window n3=1 min3=1280 squeeze=n | headerwindow mask=${SOURCES[1]}
+     ''')
+Plot('cmp1','cmp1 off',
+     '''
+     window min1=5.8 max1=8.5 |
+     wiggle xpos=${SOURCES[1]} title="CMP 1280"
+     yreverse=y transp=y poly=y label2=Offset unit2=m
+     wherexlabel=t wheretitle=b
+     ''')
+
+# Velocity analysis and NMO
+
+Flow('vscan','cmp1 off mask1',
+     '''
+     vscan half=n offset=${SOURCES[1]} 
+     v0=1400 nv=101 dv=10 semblance=y 
+     ''')
+
+Plot('vscan',
+     '''
+     window min1=5.8 max1=8.5 | 
+     grey color=j allpos=y title="Velocity Scan" unit2=m/s
+     ''')
+
+Flow('pick','vscan',
+     '''
+     mutter inner=y half=n t0=5 x0=1400 v0=75 | 
+     pick v0=1500 rect1=25
+     ''')
+
+Plot('pick',
+     '''
+     window min1=5.8 max1=8.5 |
+     graph transp=y yreverse=y plotcol=7 plotfat=3
+     pad=n min2=1400 max2=2400 wanttitle=n wantaxis=n
+     ''')
+
+Plot('vscanp','vscan pick','Overlay')
+
+Flow('nmo','cmp1 off mask1 pick',
+     '''
+     nmo half=n offset=${SOURCES[1]} 
+     velocity=${SOURCES[3]}
+     ''')
+
+Plot('cmpg','cmp1',
+     '''
+     window min1=5.8 max1=8.5 | 
+     grey title="CMP 1280" labelsz=12 titlesz=18
+     ''')
+
+Plot('nmog','nmo',
+     '''
+     window min1=5.8 max1=8.5 | 
+     grey title="Normal Moveout" labelsz=12 titlesz=18
+     ''')
+
+
+# Apply to all CMPs
+
+Flow('cmask2','cmask','transp plane=23 | transp plane=21')
+
+Flow('vscans','cmps offs cmask2',
+     '''
+     vscan half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
+     v0=1400 nv=101 dv=10 semblance=y nb=5
+     ''',split=[3,'omp'])
+
+Flow('picks','vscans',
+     '''
+     mutter inner=y half=n t0=5 x0=1400 v0=75 |
+     pick v0=1500 rect1=25 rect2=10
+     ''')
+
+
+Flow('nmos','cmps offs cmask picks',
+     '''
+     nmo half=n offset=${SOURCES[1]} mask=${SOURCES[2]}
+     velocity=${SOURCES[3]}
+     ''')
+
+
+
+Flow('stack','nmos','stack')
+
+
+
+# Try DMO
+
+nv=60
+
+Flow('stacks','cmps offs maskcmp',
+     '''
+     stacks half=n v0=1400 nv=%g dv=20 
+     offset=${SOURCES[1]} mask=${SOURCES[2]}
+     '''%nv, split=[3,'omp'])
+     
+Flow('stackst','stacks','costaper nw3=20')
+
+
+
+# Apply double Fourier transform (cosine transform)
+
+Flow('cosft3','stackst',
+     '''
+     put d3=16.667 o3=0 label2=Distance unit2=m | 
+     cosft sign1=1 sign3=1
+     ''')
+
+# Transpose f-v-k to v-f-k
+
+Flow('transp','cosft3','transp')
+
+# Fowler DMO: mapping velocities
+
+Flow('map','transp',
+     '''
+     math output="x1/sqrt(1+0.25*x3*x3*x1*x1/(x2*x2))" | 
+     cut n2=1
+     ''')
+
+        
+Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp')
+
+Flow('map2','fowler','math output="sqrt(x1*x1+0.25*x3*x3*x2*x2)" ')
+Flow('stolt','fowler map2','iwarp warp=${SOURCES[1]} inv=n',split=[3,'omp'])
+
+Flow('mig','stolt','cosft sign1=-1 sign3=-1 ')
+
+# Inverse Fourier transform
+
+Flow('dmo','fowler','cosft sign1=-1 sign3=-1')
+ 
+
+# Compute envelope for picking
+
+Flow('envelope','dmo','envelope | scale axis=2')
+Flow('envelope2','mig','envelope | scale axis=2',split=[3,'omp'])
+
+
+# Mute and Pick velocity
+
+Flow('vpick','envelope',
+    '''
+	mutter v0=130 x0=1300 t0=4.0 half=n inner=n |
+	mutter x0=1400 v0=20 t0=5.0 half=n inner=y | 
+	mutter v0=2500 x0=1400 t0=5.8 half=n inner=n |
+	mutter v0=500 x0=1400 t0=7.0 half=n inner=y  |
+	pick rect1=80 rect2=20 vel0=1400
+	''')
+Flow('envelopem','envelope',
+    '''
+	mutter v0=130 x0=1300 t0=4.0 half=n inner=n |
+	mutter x0=1400 v0=20 t0=5.0 half=n inner=y | 
+	mutter v0=2500 x0=1400 t0=5.8 half=n inner=n |
+	mutter v0=500 x0=1400 t0=7.0 half=n inner=y  
+	''')
+Flow('vpick2','envelope2',
+    '''
+        mutter v0=130 x0=1300 t0=4.0 half=n inner=n |
+        mutter x0=1400 v0=20 t0=5.0 half=n inner=y |
+        mutter v0=2500 x0=1400 t0=5.8 half=n inner=n |
+        mutter v0=500 x0=1400 t0=7.0 half=n inner=y  |
+        pick rect1=80 rect2=20 vel0=1400
+        ''')
+Flow('envelopem2','envelope2',
+    '''
+	mutter v0=130 x0=1300 t0=4.0 half=n inner=n |
+	mutter x0=1400 v0=20 t0=5.0 half=n inner=y | 
+	mutter v0=2500 x0=1400 t0=5.8 half=n inner=n |
+	mutter v0=500 x0=1400 t0=7.0 half=n inner=y  
+	''')
+# Take a slice
+
+Flow('slice','dmo vpick',
+     '''
+     slice pick=${SOURCES[1]} | 
+     put d2=1 o2=900 unit2= label2="CMP Number"
+     ''')
+#Plot('ew','window min1=5 max1=8|grey title="DMO"')
+Flow('slicew','slice','put d2=16.667 o2=0')
+Plot('slicew',
+     '''
+     window min1=5 max1=9|grey title="Stacked section"
+     label1=Time unit1=s label2=Distance unit2=m label2=Distance
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 screenratio=0.75 screenht=9 
+     ''')
+#Dix velocity
+Flow('weight','envelope vpick2','slice pick=${SOURCES[1]}')
+Flow('vdix','vpick2 weight',
+     'dix rect1=25 rect2=50 weight=${SOURCES[1]}')
+Flow('dix','vdix',
+     'put d1=0.002 | put label1=Time unit1=s')
+Flow('vofz','vdix',
+     '''
+     time2depth velocity=$SOURCE intime=y nz=2750 z0=0 dz=5 twoway=y | 
+     put label1=Depth unit1=km
+     ''')
+Flow('slice2','mig vpick2',
+     '''
+     slice pick=${SOURCES[1]} |
+     bandpass flo=5 
+     ''')
+Result('slice2','window min1=5 max1=8|grey title="Prestack Time Migration"')
+Plot('slice2','window min1=5 max1=8|grey title="Prestack Time Migration"')
+Flow('topw',None,'spike n1=900 n2=401 d1=0.004 d2=16.667 mag=1500')
+Flow('botw','vdix','window n1=1850 f1=900 n2=401 d1=0.004 d2=16.667')
+Flow('veltestw','topw botw','cat axis=1 ${SOURCES[1]} | smooth rect1=3')
+Flow('top',None,'spike n1=900 n2=401 d1=5 d2=16.667 mag=1500')
+Flow('bot','vofz','window n1=1850 f1=900 n2=401 d1=5 d2=16.667')
+Flow('veltest','top bot','cat axis=1 ${SOURCES[1]} | smooth rect1=3')
+#Kirchhoff Post stack migration
+Flow('kpstm','slice vpick2','put d2=16.667 o2=0|kirchnew velocity=${SOURCES[1]}')
+Plot('kpstm','window min1=5 max1=8 max2=6000|grey title="Kirchhoff Post stack time migration"')
+# Reference 1D model in (z,x) from the central trace of Dix velocity 
+# velocity model
+Flow('vz','veltest','window n2=1 f2=200 | spray axis=2 n=401 o=0 d=16.667')
+# Derivatives of Dix velocity squared
+Flow('dv2dt0','veltestw','math output="input^2" | smoothder')
+Flow('dv2dx0','veltestw','math output="input^2" | transp | smoothder | transp')
+Flow('beta','dv2dt0 veltestw',
+     '''
+     time2depth velocity=${SOURCES[1]} intime=y twoway=y nz=2750 dz=5 |
+     put label1=Depth unit1=m
+     ''')
+Flow('alpha','dv2dx0 veltestw',
+     '''
+     time2depth velocity=${SOURCES[1]} intime=y twoway=y nz=2750 dz=5 |
+     put label1=Depth unit1=m
+     ''')
+Plot('alpha',
+     '''
+      grey color=j scalebar=y title="dw\_d\^/dx\_0" pclip=100
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6
+     screenratio=0.75 screenht=9  barlabel="dw\_d\^/dx\_0\^" barunit="kft/s\^2"
+     ''')
+Plot('beta',
+     '''
+      grey color=j scalebar=y title="dw\_d\^/dt\_0" pclip=100
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6 allpos=y
+     screenratio=0.75 screenht=9  barlabel="dw\_d\^/dt\_0\^" barunit="kft\^2\_/s\^3"
+     ''')
+
+# Reference velocity squared
+Flow('refdix','veltest','math output="input^2" | put label1=Depth unit1=kft')
+Flow('refvz','vz','math output="input^2" ')
+Plot('refdix',
+     '''
+     grey color=j scalebar=y title="Ref w\_dr\^(x,z)"
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6 allpos=y 
+     screenratio=0.75 screenht=9 barlabel="v\^2" barunit="kft\^2\_/s\^2"
+     ''')
+Plot('refvz',
+     '''
+     grey color=j scalebar=y title="Ref w\_r\^(z)"
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6 allpos=y 
+     screenratio=0.75 screenht=9 barlabel="v\^2" barunit="kft\^2\_/s\^2"
+     ''')
+
+Result('input-nankai','refdix alpha beta','OverUnderAniso')
+ # Remap models for FD stability
+for i in ['refdix','refvz','alpha','beta']:
+        Flow(i+'_remap',i,'window')
+
+# Find differential ########################################################################################
+Flow('depth dx0 dt0 dv','refdix_remap refvz_remap alpha_remap beta_remap',
+        '''
+        time2depthweak zsubsample=30 nsmooth=200 smoothlen=50
+        velocity=$SOURCE refvelocity=${SOURCES[1]} dvdx0=${SOURCES[2]} dvdt0=${SOURCES[3]}
+        outdx0=${TARGETS[1]} outdt0=${TARGETS[2]} outdv=${TARGETS[3]}
+        ''')
+Flow('finalv','refvz dv','math est=${SOURCES[1]} output="sqrt(input+est)" | put d3=1 o3=0 ')
+
+Plot('vofz',
+     '''
+     grey color=j scalebar=y title=" v\_dr\^(x,z)"
+     labelsz=15 titlesz=16 titlefat=10 labelfat=6
+     label1=Depth unit1=kft label2=Distance unit2=kft barunit=kft/s 
+     allpos=y screenratio=0.75 screenht=9  barlabel="v" barunit="kft/s"
+     ''')
+Plot('finalv',
+     '''
+     grey color=j scalebar=y title=" Estimated interval v(x,z)" allpos=y
+     label1=Depth unit1=kft label2=Distance unit2=kft barunit=kft/s 
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6 barlabel="v" barunit="kft/s"
+     ''')
+Flow('diff','finalv vofz','math est=${SOURCES[1]} output="input-est" | put d3=1 o3=0 ')
+Plot('diff',
+     '''
+     grey color=j scalebar=y title=" Estimated interval velocity v(x,z) - v\_dr\^(x,z) " allpos=y
+     label1=Depth unit1=kft label2=Distance unit2=kft barunit=kft/s 
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6  barlabel="v" barunit="kft/s"
+     ''')
+
+Flow('reft0','refvz','math output="2*1/sqrt(input)*5" | causint') # two-way
+Flow('finalt0','reft0 dt0','math dt=${SOURCES[1]} output="input+dt"')
+
+Flow('refx0','refvz','math output="x2"')
+Flow('finalx0','refx0 dx0','math dx=${SOURCES[1]} output="input+dx" ')
+Plot('finalt0',
+     ''' 
+     window min1=3000 max1=7000 max2=6000|contour labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 wanttitle=y plotcol=5 wantaxis=y title="Image Rays "
+     label1=Depth unit1=km label2=Distance unit2=m unit1=m n2tic=20 allpos=y
+     ''')
+Plot('finalx0',
+     ''' 
+     window min1=3000 max1=7000 max2=6000|contour labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 wantaxis=n wanttitle=n n2tic=20 plotcol=6 unit1=m unit2=m
+     ''')
+Result('imageraysnan','finalt0 finalx0','Overlay')
+Flow('finalcoord','finalt0 finalx0',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     transp plane=23 | transp plane=12
+     ''')
+Flow('dixcoord','reft0 refx0',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     transp plane=23 | transp plane=12
+     ''')
+Flow('dixmapd','kpstm dixcoord','inttest2 interp=spline nw=8 coord=${SOURCES[1]} | window min2=45 max2=70')
+Flow('finalmapd','wetm1 finalcoord','inttest2 interp=spline nw=8 coord=${SOURCES[1]}')
+Plot('finalmapd',
+     '''
+     grey title="Time -> Depth (Proposed)"
+     label1=Depth unit1=m label2=Distance unit2=m
+     labelsz=10 titlesz=12 titlefat=4 labelfat=4
+     ''') 
+###########################################################
+# Wave-equation time migration
+###########################################################
+Flow('topw',None,'spike n1=900 n2=401 d1=0.004 d2=16.667 mag=1500')
+Flow('botw','vdix','window n1=1850 f1=900 n2=401 d1=0.004 d2=16.667')
+Flow('veltestw','topw botw','cat axis=1 ${SOURCES[1]} | smooth rect1=3')
+#Flow('one','veltestw','math output=1 | transp')
+#Flow('zero','veltestw','math output=0 | transp')
+Flow('one','veltestw','math output=1 | transp')
+Flow('zero','veltestw','math output=0 | transp')
+
+#Flow('dfft','vpick2','transp | rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Flow('dfft','veltestw','transp |fft1| fft3 axis=2 pad=1')
+Flow('dright dleft','veltestw dfft one zero',
+     '''
+     transp | scale dscale=0.5 |
+     anisolr2 seed=2016 dt=0.002
+     velx=${SOURCES[2]}
+     eta=${SOURCES[3]} theta=${SOURCES[3]}
+     fft=${SOURCES[1]} left=${TARGETS[1]}
+     ''')
+Flow('wetm wsnaps','slice dleft dright',
+     '''
+     put d2=16.667 o2=0|spline n1=5500 o1=0 d1=0.002 |
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=2750 dz=5
+     ''')
+Flow('wetm1','wetm','put d1=0.004')
+Result('wetm','window min1=6000 max1=10000|grey title="Wave Equation Time Migration"')
+Plot('wetm','window min1=6000 max1=10000|grey title="Wave Equation Time Migration" label2=Midpoint label1=Time unit1=sec')
+
+Plot('wetm1',
+     '''
+     window min1=5 max1=9 max2=6000|grey title="Wave Equation Time Migration"
+     label1=Time unit1=s label2=Distance unit2=m
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 screenratio=0.75 screenht=9 
+     ''')
+#Velocity
+Flow('vpick21','vpick2','pad beg1=900 | math output="1500" | window n1=900 | put o1=0')
+Flow('vpick22','vpick2','window n1=1850 f1=900 n2=401 d1=0.004 d2=16.667')
+Flow('vpickk','vpick21 vpick22','cat ${SOURCES[1:2]} axis=1')
+#Kirchhoff Post stack migration
+Flow('kpstm2','slice vpickk','put d2=16.667 o2=0|kirchnew velocity=${SOURCES[1]}')
+Plot('kpstm2','window min1=5 max1=8 max2=6000|grey title="Kirchhoff Post stack time migration"')
+#Flow('vdixk','vpickk weight',
+#     'dix rect1=25 rect2=50 weight=${SOURCES[1]}')
+#WETM
+#Flow('onek','vdixk','math output=1 | transp')
+#Flow('zerok','vdixk','math output=0 | transp')
+
+#Flow('dfft','vpick2','transp | rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+#Flow('dfftk','vdixk','transp |fft1| fft3 axis=2 pad=1')
+#Flow('drightk dleftk','vdixk dfftk onek zerok',
+#     '''
+#     transp | scale dscale=0.5 |
+#    anisolr2 seed=2016 dt=0.002
+#    velx=${SOURCES[2]}
+#     eta=${SOURCES[3]} theta=${SOURCES[3]}
+#     fft=${SOURCES[1]} left=${TARGETS[1]}
+#     ''')
+#Flow('wetmk wsnapsk','slice dleftk drightk',
+#     '''
+#     put d2=16.667 o2=0|spline n1=5500 o1=0 d1=0.002 |
+#    reverse which=1 |
+#    transp |
+#    fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+#    left=${SOURCES[1]} right=${SOURCES[2]}
+#     nz=2750 dz=5
+#     ''')
+#Flow('wetm1k','wetmk','put d1=0.004')
+
+###########################################################
+# Zero-offset reverse-time migration with proposed velocity ((Sripanich and Fomel, 2017)
+###########################################################
+
+Flow('topsf',None,'spike n1=900 n2=401 d1=5 d2=16.667 mag=1500')
+Flow('botsf','finalv','window n1=1850 f1=900 n2=401 d1=5 d2=16.667')
+#Flow('bot',None,'spike n1=147 n2=401 d1=15 d2=15 mag=4500')
+
+Flow('veltestsf','topsf botsf','cat axis=1 ${SOURCES[1]} | smooth rect1=3')
+
+Flow('fftsf','veltestsf','transp | fft1 | fft3 axis=2 pad=1')
+Flow('rightsf leftsf','veltestsf fftsf',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2016 dt=0.002 npk=50
+     fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''')
+
+Flow('rtmsf snapssf','slice leftsf rightsf',
+     '''
+     put d2=16.667 o2=0|spline n1=5500 o1=0 d1=0.002 |
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=2750 dz=5
+     ''')
+
+
+
+# Zoom an interesting area (!!! MODIFY ME !!!)
+##############################################
+min1,max1=6.0,7.0
+min2,max2=50,3000
+
+
+Flow('box1.asc',None,
+     '''
+     echo %s n1=2 n2=5 data_format=ascii_float in=$TARGET
+     ''' % ' '.join(map(str,(min1,min2,max1,min2,
+                             max1,max2,min1,max2,min1,min2))))
+Plot('box1','box1.asc',
+     '''
+     dd form=native type=complex | window |
+     graph transp=y yreverse=y min1=5 max1=8 min2=0 max2=6683.476
+     wanttitle=n plotfat=5 plotcol=6 wantaxis=n
+     ''')
+Result('box1','slicew box1','Overlay')
+
+for i in range (3):
+    case=('slicew','kpstm2','wetm1')[i]
+    zoom = case + '-zoom'
+    Flow(zoom,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom,'grey title=%s grid=n gridcol=5 label2=Distance unit2=m label1=Time unit1=s labelsz=15 titlesz=15 titlefat=6 labelfat=6' % ('abc'[i]))
+Result('zoom','slicew-zoom kpstm2-zoom wetm1-zoom','SideBySideIso')
+
+##Zoom second interesting area
+min12,max12=6.0,7.2
+min22,max22=2000,3800
+
+
+Flow('box12.asc',None,
+     '''
+     echo %s n1=2 n2=5 data_format=ascii_float in=$TARGET
+     ''' % ' '.join(map(str,(min12,min22,max12,min22,
+                             max12,max22,min12,max22,min12,min22))))
+Plot('box12','box12.asc',
+     '''
+     dd form=native type=complex | window |
+     graph transp=y yreverse=y min1=5 max1=8 min2=0 max2=6683.476
+     wanttitle=n plotfat=5 plotcol=6 wantaxis=n
+     ''')
+Result('box12','slicew box12','Overlay')
+for i in range (3):
+    case=('slicew','kpstm2','wetm1')[i]
+    zoom2 = case + '-zoom2'
+    Flow(zoom2,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min12,max12,min22,max22))
+    Plot(zoom2,'grey title=%s grid=n gridcol=5 label2=Distance unit2=m label1=Time unit1=s labelsz=15 titlesz=15 titlefat=6 labelfat=6' % ('abc'[i]))
+Result('zoom2','slicew-zoom2 kpstm2-zoom2 wetm1-zoom2','SideBySideIso')
+#Figs
+Result('slice',
+     '''
+     put d2=16.667 o2=0|window min1=5 max1=9 max2=6000|grey title="Stacked section"
+     label1=Time unit1=s label2=Distance unit2=m
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20
+     ''')
+Result('vpickk',
+     '''
+     put d2=16.667 o2=0|window min1=5 max1=9 max2=6000|grey title="Picked Migration Velocity"
+     color=j scalebar=y barreverse=y mean=y barlabel=Velocity
+     label1=Time unit1=s label2=Distance unit2=m barunit=m/s n1tic=25 n2tic=25 
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20
+     ''')
+Result('veltestw',
+     '''
+     put d2=16.667 o2=0|window min1=5 max1=9 max2=6000| grey title="Dix Velocity"
+     color=j scalebar=y barreverse=y barlabel=Velocity
+     label1=Time unit1=s label2=Distance unit2=m barunit=m/s  mean=y n1tic=25 n2tic=25  
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20
+     ''')
+Result('kpstm2',
+     '''
+     window min1=5 max1=9 max2=6000|grey title="Time Migration"
+     label1=Time unit1=s label2=Distance unit2=m
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20  
+     ''')
+Result('wetmnan','wetm1',
+     '''
+     window min1=5 max1=9 max2=6000|grey title="Wave Equation Time Migration"
+     label1=Time unit1=s label2=Distance unit2=m
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20 
+     ''')
+Result('refdix',
+     '''
+     window min1=3000 max1=7000 max2=6000|grey color=j scalebar=y title="Ref w\_dr\^(x,z)"
+     allpos=y n1tic=30 n2tic=20 bias=4500000 label2=Distance unit2=m unit1=m 
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 barlabel="v\^2" barunit="m\^2\_/s\^2"
+     ''')
+Result('alpha',
+     '''
+     sfsmooth rect1=10 rect2=10|window min1=3000 max1=7000 max2=6000|grey color=j scalebar=y title="dw\_d\^/dx\_0" pclip=100
+     n1tic=30 n2tic=20 unit1=m unit2=m
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20  barlabel="dw\_d\^/dx\_0\^" barunit="m/s\^2"
+     ''')
+Result('beta',
+     '''
+     sfsmooth rect1=10 rect2=10|window min1=3000 max1=7000 max2=6000|grey color=j scalebar=y title="dw\_d\^/dt\_0" pclip=100
+     allpos=y n1tic=30 n2tic=20 minval=-25000000 maxval=2900000 unit1=m unit2=m
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 barlabel="dw\_d\^/dt\_0\^" barunit="m\^2\_/s\^3"
+     ''')
+Result('finalv',
+     '''
+     window min1=3000 max1=7000 max2=6000|grey color=j scalebar=y title=" Estimated interval v(x,z)" allpos=y
+     label1=Depth unit1=m label2=Distance unit2=m barunit=m/s bias=2000
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 barlabel="v" barunit="m/s"
+     ''')
+Result('diff',
+     '''
+     window min1=3000 max1=7000 max2=6000|grey color=j scalebar=y title=" Estimated interval velocity v(x,z) - v\_dr\^(x,z) " mean=y
+     label1=Depth unit1=m label2=Distance unit2=m barunit=m/s 
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20  barlabel="v" barunit="m/s"
+     ''')
+Result('finalmapd',
+     '''
+     window min1=3000 max1=7000 max2=6000|grey title="Wave Equation Time Migration -> Depth"
+     label1=Depth unit1=m label2=Distance unit2=m 
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20 
+     ''')
+Result('rtmsf',
+     '''
+     window min1=3000 max1=7000 max2=6000| grey title="Depth Migration"
+    label1=Depth unit1=m label2=Distance unit2=m
+    labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20 
+     ''')
+End()

@@ -1,0 +1,134 @@
+"""curve model test"""
+from rsf.proj import *
+
+# plot clip
+clip = 0.110018
+
+# make model
+# curve1
+Flow("line1", None, 
+     """
+     spike d1=0.004 d2=0.005 n1=501 n2=201 k1=150 p2=-0.5  mag=1.5 |
+     ricker1 frequency=11
+     """)
+Flow("mo1", None, 'math n1=201 output="x1*x1*0.00004" ')
+Flow("curve1", "line1 mo1", "stretch datum=${SOURCES[1]} rule=d inv=y")
+# curve2
+Flow("line2", None, 
+     """
+     spike d1=0.004 d2=0.005 n1=501 n2=201 k1=350 p2=0.5  mag=1. |
+     ricker1 frequency=15
+     """)
+Flow("mo2", None, 'math n1=201 output="x1*x1*0.00005" ')
+Flow("curve2", "line2 mo2", "stretch datum=${SOURCES[1]} rule=d ")
+# line3
+Flow("line3", None, 
+     """
+     spike d1=0.004 d2=0.005 n1=501 n2=201 k1=40 p2=3  mag=1 |
+     ricker1 frequency=13
+     """)
+Flow("mod", "curve1 curve2 line3",
+    """
+    add ${SOURCES[1:3]} | noise seed=202107 var=0.005 | 
+    put d2=1 label2=Trace unit2=
+    """)
+Result("noisemod", "mod", "grey title= ")
+
+Flow("mask", "mod",
+     """
+     window n1=1 | noise type=n rep=y seed=2020 |
+     mask min=-0.1
+     """)
+Flow("mask2", "mask", "reverse which=1")
+# irregular missing data
+Flow("gap", "mod mask", "headercut mask=${SOURCES[1]}")
+Result("noisegap", "gap", "grey title= clip=%g scalebar=n" % clip)
+# SNR
+Flow("diffgap", "mod gap", "add scale=1,-1 ${SOURCES[1]}")
+Flow("snrgap", "mod diffgap", "snr2 noise=${SOURCES[1]}")
+
+# interpolation comparison
+# fxspf
+Flow("fxspfleft", "gap mask", 
+     """
+     fxspfint2 lambda1=0.5 lambda2=0.2 na=30
+     ftype=1 mask=${SOURCES[1]} verb=y
+     """)
+Flow("fxspfright", "gap mask2", 
+     """
+     reverse which=2 |
+     fxspfint2 lambda1=0.5 lambda2=0.2 na=30
+     ftype=1 mask=${SOURCES[1]} verb=y |
+     reverse which=2
+     """)
+Flow("fxspf", "fxspfleft fxspfright", 
+     """
+     add ${SOURCES[1]} scale=1,1 |
+     math output="input/2"
+     """)
+Result("noisefxspf", "fxspf", "grey title= clip=%g scalebar=n" % clip)
+# error
+Flow("errfxspf", "fxspf mod", "add ${SOURCES[1]} scale=-1,1")
+Result("noiseerrfxspf", "errfxspf", "grey title= scalebar=n clip=%g" % clip)
+# SNR
+Flow("snrfxspf", "mod errfxspf", "snr2 noise=${SOURCES[1]}")
+
+# 2d fourier POCS
+Flow("pmask", "mask", "spray axis=1 n=501 d=0.004 | dd type=float")
+Flow("pocs err", "gap pmask gap", 
+     """
+     fourmis2 mask=${SOURCES[1]} niter=200 oper=p ordert=1.
+     perc=99 verb=n error=y ref=${SOURCES[2]} res=${TARGETS[1]}
+     """)
+Result("noisepocs", "pocs", "grey title= scalebar=n clip=%g" % clip)
+# error
+Flow("errpocs", "pocs mod", "add ${SOURCES[1]} scale=-1,1")
+Result("noiseerrpocs", "errpocs", "grey title=  scalebar=n clip=%g" % clip)
+# SNR
+Flow("snrpocs", "mod errpocs", "snr2 noise=${SOURCES[1]}")
+
+# Seislet POCS iterations (soft thresholding)
+Flow("dipmask", "pmask", "pad n2=256")
+Flow("smask", "pmask", "math output='1-input'")
+Flow("dip", "gap dipmask",
+    "bandpass fhi=60 | pad n2=256 | dip rect1=15 rect2=15 mask=${SOURCES[1]}")
+
+pniter = 50
+sniter = 50
+# forward and backward
+sforward = """
+pad n2=256 | seislet adj=y inv=y dip=${SOURCES[3]} eps=0.1 type=b
+"""
+sbackward = """
+seislet adj=n inv=n dip=${SOURCES[3]} eps=0.1 type=b | window n2=201
+"""
+
+sdata = "gap"
+for iter in range(sniter):
+    sfold = sdata
+    sdata = "sdata%d" % iter
+    # 1. Forward seislet transform
+    # 2. Thresholding
+    # 3. Inverse seislet transform
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(sdata, [sfold, "smask", "gap", "dip"],
+        sforward + """
+         | threshold pclip=%g |
+         """ % (5.0 + ((99.0 - 5.0) * (iter**2) / ((pniter - 1)**2)))
+        #  % (1.0)
+        + sbackward + """
+         | add mode=p ${SOURCES[1]} |
+         add ${SOURCES[2]}
+         """)
+
+Flow("stpocs", "sdata49", "cp")
+Result("noisestpocs", "stpocs", "grey title= clip=%g" % clip)
+# error
+Flow("errstpocs", "stpocs mod", "add ${SOURCES[1]} scale=-1,1")
+Result("noiseerrstpocs", "errstpocs",
+       "grey title=  scalebar=n clip=%g " % clip)
+# SNR
+Flow("snrstpocs", "mod errstpocs", "snr2 noise=${SOURCES[1]}")
+
+End()

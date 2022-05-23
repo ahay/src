@@ -75,17 +75,17 @@ def param(par):
     #if(not par.has_key('zmin')):     par['zmin']=par['oz']
     #if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
-    if par['nt']>1:
-        par['df']=0.5/(par['ot']+(par['nt']-1)*par['dt'])
-    else:
-        par['df']=1.
-    par['of']=0
-    par['nf']=par['nt']
+    #if par['nt']>1:
+    #    par['df']=0.5/(par['ot']+(par['nt']-1)*par['dt'])
+    #else:
+    #    par['df']=1.
+    #par['of']=0
+    #par['nf']=par['nt']
 
-    if 'lf' not in par: par['lf']='f'
-    if 'uf' not in par: par['uf']='Hz'
-    if 'fmin' not in par: par['fmin']=par['of']
-    if 'fmax' not in par: par['fmax']=par['of'] + (par['nf']-1) * par['df']
+    #if 'lf' not in par: par['lf']='f'
+    #if 'uf' not in par: par['uf']='Hz'
+    #if 'fmin' not in par: par['fmin']=par['of']
+    #if 'fmax' not in par: par['fmax']=par['of'] + (par['nf']-1) * par['df']
     #if(not par.has_key('lf')):       par['lf']='f'
     #if(not par.has_key('uf')):       par['uf']='Hz'
     #if(not par.has_key('fmin')):     par['fmin']=par['of']
@@ -289,7 +289,7 @@ def dgrey3d_init(vel,par):
 
     if((dx+dy) == 0.0): par['pointx']=1.0
     else              : par['pointx']=dx/(dx+dy)
-    if((dt+dy) == 0.0): par['pointt']=1.0
+    if((dz+dy) == 0.0): par['pointt']=1.0
     else              : par['pointt']=dz/(dz+dy);
     if((dx+dy) == 0.0): par['dratio3d']=1
     else:               par['dratio3d']=(dz+dy)/(dx+dy)
