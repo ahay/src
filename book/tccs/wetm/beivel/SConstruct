@@ -520,7 +520,7 @@ Plot('wetm1',
      label1=Time unit1=s label2=Distance unit2=km
      labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20
      ''')
-Result('wetm1f','wetm1 F1 F2 F3 F4 F5','Overlay')
+Plot('wetm1f','wetm1 F1 F2 F3 F4 F5','Overlay')
 #Result('data','dstack-gulf vnmo-gulf vinv-gulf','OverUnderAniso')
 Result('wetm1','vinv-gulf wetm1f','OverUnderAniso')
 Result('timewetm','kpstm wetm1f','OverUnderAniso')
