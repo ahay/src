@@ -78,18 +78,19 @@ the number of available cores. To use a different number, you can set
 By default, \texttt{sfomp} splits the input over the last dimension,
 processes different parts of the data, and concatenates the outputs
 along the same dimension. To change this behavior, you can use
-\texttt{split=} and \texttt{join=} parameters. For example, to
+\texttt{split=} and \texttt{reduce=} parameters. For example, to
 transpose a 2-D dataset in parallel, we can split it over one
 dimension and join over the other dimension:
+%The previous commit had inaccurate message for git log. Last commit changed join with reduce since join is syntactically incorrect kwarg.
 \begin{verbatim}
-< original.rsf sfomp sftransp split=1 join=2 > transp.rsf
+< original.rsf sfomp sftransp split=1 reduce=2 > transp.rsf
 \end{verbatim}
 The result should be equivalent to that of running
 \begin{verbatim}
-< original.rsf sfomp sftransp split=2 join=1 > transp.rsf
+< original.rsf sfomp sftransp split=2 reduce=1 > transp.rsf
 \end{verbatim}
 If, instead of concatenating, the results need to be added together,
-use \texttt{join=0}.
+use \texttt{reduce=0}.
 
 Certain programs have multiple input or output files. If some of the
 input files need to be split similarly to the file coming from the
@@ -115,7 +116,7 @@ appear as follows in an \texttt{SConstruct} file:
 Flow('output','input','bandpass fhi=50',
      split=[2,'omp'])
 Flow('transp','original','transp',
-     split=[2,'omp'],join='cat axis=1')
+     split=[2,'omp'],reduce='cat axis=1')
 Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
      split=[3,'omp',[0,1]])
 \end{lstlisting}
@@ -154,13 +155,13 @@ specified by \texttt{MPIRUN=} configuration variable.
 Similarly to \texttt{sfomp}, \texttt{sfmpi} splits the input over the last dimension,
 processes different parts of the data, and concatenates the outputs
 along the same dimension. To change this behavior, you can use
-\texttt{split=} and \texttt{join=} parameters. For example, to
+\texttt{split=} and \texttt{reduce=} parameters. For example, to
 transpose a 2-D dataset in parallel, we can split it over one
 dimension and join over the other dimension:
 \begin{verbatim}
-mpirun -np 10 sfmpi sftransp --input=orig.rsf split=1 join=2 --output=transp.rsf
+mpirun -np 10 sfmpi sftransp --input=orig.rsf split=1 reduce=2 --output=transp.rsf
 \end{verbatim}
-If, instead of concatenating, the results should be added together, use \texttt{join=0}.
+If, instead of concatenating, the results should be added together, use \texttt{reduce=0}.
 
 While \texttt{sfomp} is restricted to shared memory, \texttt{sfmpi}
 can be used more flexibly on both shared-memory and distributed-memory
@@ -177,7 +178,7 @@ SCons processing looks similar to the OMP case but replacing \texttt{omp} with \
 Flow('output','input','bandpass fhi=50',
      split=[2,'mpi'])
 Flow('transp','original','transp',
-     split=[2,'mpi'],join='cat axis=1')
+     split=[2,'mpi'],reduce='cat axis=1')
 Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
      split=[3,'mpi',[0,1]])
 \end{lstlisting}
@@ -224,7 +225,7 @@ processing can be indicated with \texttt{split=} parameter.
 Flow('output','input','bandpass fhi=50',
      split=[2,1001])
 Flow('transp','original','transp',
-     split=[2,1001],join='cat axis=1')
+     split=[2,1001],reduce='cat axis=1')
 Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
      split=[3,1001,[0,1]])
 \end{lstlisting}
