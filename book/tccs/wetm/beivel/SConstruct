@@ -112,7 +112,7 @@ Flow('pstm','tcmps vnmo-gulf',
      ''',split=[3,48,[0]],reduce='add')
 #Kirchhoff Post stack migration
 Flow('kpstm','dstack-gulf vnmo-gulf','kirchnew velocity=${SOURCES[1]}')
-Result('kpstm',
+Plot('kpstm',
      '''
      grey title="Time Migration"
      label1=Time unit1=s label2=Distance unit2=km
