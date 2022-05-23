@@ -76,7 +76,7 @@ Flow('vmigtest',None,
      label1=Time unit1=s label2=Position unit2=km label=Velocity unit=km/s
      ''' % (v0,gx,v0,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz))
 Flow('vmigwintest','vmigtest','window n1=8000|put o1=0')
-Flow('vmigtest',None,
+Flow('vmig',None,
      '''
      math n1=8001 o1=1 n2=501 d1=0.001 d2=0.02 output="((%g+%g*x2)*(%g+%g*x2))/
      (x1*(sqrt(%g*%g+%g*%g)*(1/tanh(sqrt(%g*%g+%g*%g)*x1))-%g))"
