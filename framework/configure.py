@@ -100,6 +100,7 @@ def distribution():
     os_release = os.path.join(etc_dir, 'os-release')
     with open(os_release) as f:
         lines = f.readlines()
+        version_id = ''
         for line in lines:
             if '=' in line:
                 key, value = line.split('=')
@@ -197,14 +198,18 @@ def identify_platform(context):
 
         name = uname()[2].split('.')[-2]
         if plat['OS'] in ('linux', 'posix', 'linux2'):
-            if dist_info[0].lower() == 'rocky':
+            if dist_info[0].split()[0].lower() == 'arch':
+                plat['OS'] = 'linux'
+                plat['distro'] = 'arch'
+                plat['version'] = dist_info[1]
+            elif dist_info[0].lower() == 'rocky':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'rocky'
-                plat['version'] = dist_info()[1]
+                plat['version'] = dist_info[1]
             elif dist_info[0].lower() == 'fedora':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
-                plat['version'] = dist_info()[1]
+                plat['version'] = dist_info[1]
             elif dist_info[0].lower() == 'redhat' or \
                     dist_info[0].lower()[:7] == 'red hat':
                 plat['OS'] = 'linux'
@@ -564,6 +569,7 @@ xlib = [
 
 pkg['xaw']={'rhel':'libXaw-devel',
             'rocky': 'libXaw-devel',
+            'arch': 'libxaw',
             'fedora':'libXaw-devel',
             'ubuntu':'libxaw7-dev',
             'centos':'libXaw-devel'}
@@ -726,6 +732,7 @@ def ppm(context):
 pkg['libtiff'] = {'suse':'libtiff-devel',
                   'ubuntu': 'libtiff5-dev',
                   'rocky':'libtiff-devel',
+                  'arch': 'libtiff',
                   'fedora':'libtiff-devel',
                   'rhel':'libtiff-devel',
                   'centos':'libtiff-devel'}
@@ -761,6 +768,7 @@ def tiff(context):
 pkg['libgd'] = {'suse':'gd-devel',
                 'rhel':'gd-devel',
                 'rocky':'gd-devel',
+                'arch': 'gd',
                 'ubuntu':'libgd-dev',
                 'centos':'gd-devel'}
 
@@ -1000,6 +1008,7 @@ def cairo(context):
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
                'rocky':'libjpeg-devel',
+               'arch': 'libjpeg-turbo',
                'ubuntu':'libjpeg-dev',
                'centos':'libjpeg-turbo-devel'}
 
@@ -1034,6 +1043,7 @@ def jpeg(context):
 
 pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut-devel',
                  'rocky': 'freeglut-devel',
+                 'arch': 'freeglut, glu',
                  'rhel':'freeglut-devel',
                  'suse'  :'freeglut-devel',
                  'ubuntu':'freeglut3-dev',
