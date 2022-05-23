@@ -1,7 +1,15 @@
 import unittest
-from rsf.flow import Flow
+from rsf.flow import Flow, add_prefix
 
 class TestFlow(unittest.TestCase):
+    def test_add_prefix_with_prefix(self):
+        output = add_prefix('spike', 'sf')
+        self.assertEqual(output, 'sfspike')
+
+    def test_add_prefix_without_prefix(self):
+        output = add_prefix('sfspike', 'sf')
+        self.assertEqual(output, 'sfspike')
+
     def test_without_source(self):
         output = Flow([], 'spike', '', stdin=0)
         self.assertEqual(output, 'sfspike > $TARGET')
