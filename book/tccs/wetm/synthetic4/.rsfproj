@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfspline', 'sfmath', 'sfcat', 'sfgraph', 'sfgrey', 'sfderiv', 'sfkirmod', 'sfwindow', 'sfcostaper', 'sfput', 'sftransp', 'sfscale', 'sfkirchnew', 'sfeikonal', 'sfcontour', 'sflineiko', 'sfiwarp2', 'sfpad', 'sflapfill', 'sfsmooth', 'sffft1', 'sffft3', 'sfanisolr2', 'sfreverse', 'sffftexp0', 'sfbandpass', 'sfcut', 'sfinttest2', 'sfisolr2']
+data=[]
+size= 52414210052
