@@ -154,7 +154,7 @@ Result('vnmo-gulf',
      label1=Time unit1=s label2=Distance unit2=km barunit=km/s
      labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20
      ''')
-Result('vinv-gulf',
+Plot('vinv-gulf',
      '''
      put d1=0.004 | grey title="Dix Velocity"
      color=j scalebar=y barreverse=y
