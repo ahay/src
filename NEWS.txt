@@ -7,7 +7,6 @@ To the reproducible documents collection:
 * zju/diffrlrra: Separation and imaging of seismic diffractions using
   a localized rank-reduction method with adaptively selected ranks
   (Wang, Liu, and Chen)  
-
 * tccs/drr5d: Simultaneous denoising and reconstruction of 5D seismic
   data via damped rank-reduction method (Chen, Zhang, Jin, Chen, Zu,
   Huang, and Gan)
@@ -37,6 +36,7 @@ To the reproducible documents collection:
 * jlu/txyspfint: Seismic data interpolation without iteration using
   t-x-y streaming prediction filter with varying smoothness (Liu, Wu,
   and Zheng)
+* tccs/wetm: Wave-equation time migration (Fomel and Kaur)
 
 To SCons:
 
