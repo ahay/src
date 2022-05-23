@@ -508,7 +508,7 @@ Plot('F4',None,
      'box x0=9.686667 y0=6.108333 label="F4"  xt=-1 yt=1 screenht=9 screenwd=20')
 Plot('F5',None,
      'box x0=5.086667 y0=6.108333 label="F5"  xt=1 yt=1 screenht=9 screenwd=20')
-Result('dstack-gulf',
+Plot('dstack-gulf',
      '''
      grey title="Stacked section"
      label1=Time unit1=s label2=Distance unit2=km
