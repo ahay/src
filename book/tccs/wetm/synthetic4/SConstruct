@@ -40,7 +40,9 @@ Plot('anamapd','grey min1=0 max1=5 min2=2.5 max2=7.5')
 Result('wetmlayers','anamapd lays2','Overlay')
 Plot('zomig','grey min1=0 max1=5 min2=2.5 max2=7.5')
 Result('zomiglayers','zomig lays2','Overlay')
+
 # Generate data using Kirchhoff modeling
+Flow('dips','lays','deriv scale=y')
 
 Flow('zodata','lays dips',
      '''
