@@ -143,7 +143,7 @@ Flow('varms','arms tshots0',
 # recv index
 
 # find a term
-Flow('sht off rcv cmp recvscarms','arms extindrecv',
+Flow('sht ofs rcv cmp recvscarms','arms extindrecv',
      '''
      sc index=${SOURCES[1]} niter=150 pred=${TARGETS[4]}
      out2=${TARGETS[1]} out3=${TARGETS[2]} out4=${TARGETS[3]}
@@ -158,7 +158,7 @@ Flow('recvadiff','arms recvscarms','add scale=1,-1 ${SOURCES[1]}')
 Result('recvadiff','recvadiff tshots0',plot('s,h,cdp,r difference'))
 
 size=dict(sht=326,off=2266,rcv=7784,cmp=401)
-for case in ('sht','off','rcv','cmp'):
+for case in ('sht','ofs','rcv','cmp'):
     Result(case,'recvsc',
            '''
            graph title="%s Term" 
