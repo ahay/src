@@ -112,4 +112,24 @@ Result('linefit','spec linefit','Overlay')
 
 # Seismic power spectrum around the well location
 
+min_time = 50
+max_time = 250
+xmin = 26
+xmax = 46
+
+Flow('trace','seismic','window f1=50 n1=200 f2=26 n2=20 | stack axis=2')
+Result('trace','graph title="Mean Trace" label2=Amplitude unit2=')
+
+Flow('spectrum','trace',
+     'put d1=0.004 unit1=s | spectra | math output="log(input)/log(10)" ')
+Result('spectrum',
+       '''
+       graph title="Seismic Spectrum" min2=0
+       label2="log\_\s75 10\^\s100 (Amplitude)" unit2=
+       ''')
+
+# Compare seismic spectrum with the one from the AI log
+
+
+
 End()
