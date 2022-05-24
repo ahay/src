@@ -1,6 +1,6 @@
 from rsf.proj import *
 from rsf.recipes.beg import server
-#Fetch('HeidrunFull.sgy','heidrun',server)
+Fetch('HeidrunFull.sgy','heidrun',server)
 
 Flow('heidrun theidrun heidrun.asc heidrun.bin',
      'HeidrunFull.sgy',
