@@ -11,20 +11,20 @@ Copyright (C) 2022 Colorado School of Mines
 #define NCO 9
 
 /*------------------------------------------------------------*/
-bool isInCone(pt3d *oco, vc3d *ono, pt3d *gco, float cosapt)
+bool isInCone(pt3d *oco, pt3d *gco, vc3d *gno, float cosapt)
 {
   float Rx,Ry,Rz,R, cosobl;
 
   // cone axis vector
-  Rx = gco->x - oco->x;
-  Ry = gco->y - oco->y;
-  Rz = gco->z - oco->z;
+  Rx = oco->x - gco->x;
+  Ry = oco->y - gco->y;
+  Rz = oco->z - gco->z;
   R = sqrtf( Rx * Rx + Ry * Ry + Rz * Rz );
   Rx /= R;
   Ry /= R;
   Rz /= R;
 
-  cosobl = SF_ABS( Rx*ono->dx + Ry*ono->dy + Rz*ono->dz );
+  cosobl = SF_ABS( Rx * gno->dx + Ry * gno->dy + Rz * gno->dz );
   if( cosobl > cosapt) return true;
   else                 return false;
 }
@@ -47,8 +47,8 @@ int main(int argc, char* argv[])
   int ico;
 
   pt3d       * oco=NULL;   /* orbit coordinates  */
-  vc3d       * ono=NULL;   /* orbit normals      */
   pt3d         gco;        /* ground coordinate  */
+  vc3d         gno;        /* ground normal */
   float      * jnk=NULL;
   float      * din=NULL;
   float      * dou=NULL;
@@ -92,16 +92,13 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /* orbit coordinates */
   oco = (pt3d*) sf_alloc(no,sizeof(*oco));
-  ono = (vc3d*) sf_alloc(no,sizeof(*ono));
+  //ono = (vc3d*) sf_alloc(no,sizeof(*ono));
 
   for( io = 0; io < no; io++) {
     sf_floatread( jnk,NCO,Fo);
     oco[io].x  = jnk[0];
     oco[io].y  = jnk[1];
     oco[io].z  = jnk[2];
-    ono[io].dx = jnk[3];
-    ono[io].dy = jnk[4];
-    ono[io].dz = jnk[5];
   }
 
   /* ground coordinates */
@@ -120,8 +117,8 @@ int main(int argc, char* argv[])
     fin = sf_boolalloc ( ng );
 #ifdef _OPENMP
   #pragma omp parallel for schedule(dynamic) \
-  private( ig, io, gco ) \
-  shared(  ng, no, din, fin, oco,ono,cosapt )
+  private( ig, io, gco, gno ) \
+  shared(  ng, no, din, fin, oco, cosapt )
 #endif
     for( ig = 0; ig < ng; ig++) {
       fin[ig] = 0;
@@ -130,8 +127,12 @@ int main(int argc, char* argv[])
       gco.y  = din[ig * NCO + 1];
       gco.z  = din[ig * NCO + 2];
 
+      gno.dx = din[ig * NCO + 3];
+      gno.dy = din[ig * NCO + 4];
+      gno.dz = din[ig * NCO + 5];
+
       for( io = 0; io < no; io++ ) {
-        if( isInCone( &oco[io], &ono[io], &gco, cosapt) ) {
+        if( isInCone( &oco[io], &gco, &gno, cosapt) ) {
           fin[ig] = 1;
           break;
         }
@@ -205,8 +206,12 @@ int main(int argc, char* argv[])
         gco.y  = jnk[1];
         gco.z  = jnk[2];
 
+        gno.dx = jnk[3];
+        gno.dy = jnk[4];
+        gno.dz = jnk[5];
+
         for( io = 0; io < sf_n(ao); io++ ) {
-          if( isInCone( &oco[io], &ono[io], &gco, cosapt) ) {
+          if( isInCone( &oco[io], &gco, &gno, cosapt) ) {
             if( ipass == 0) ncount++;         // count points
             else sf_floatwrite( jnk,NCO,Fou); // write points
             break;
@@ -231,7 +236,7 @@ int main(int argc, char* argv[])
   /* deallocate arrays */
   free(jnk);
   free(oco);
-  free(ono);
+  //free(ono);
 
   exit (0);
 }
