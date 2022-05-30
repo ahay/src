@@ -93,7 +93,7 @@ for i in range(nd):
 pckmed = np.median(pck)
 for i in range(nd):
     #wgh[i]*= np.exp(- abs(pck[i]) )
-    wgh[i] *= np.cos( 0.5*np.pi * abs( (pck[i]-pckmed)/l1) )
+    wgh[i] *= np.cos( 0.5*np.pi * abs((pck[i]-pckmed)/l1) )
 
 wgh /= np.max(wgh)
 
