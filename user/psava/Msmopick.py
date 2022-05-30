@@ -70,7 +70,6 @@ Fou.put("n4",1)
 # ------------------------------------------------------------
 # pick max value and weight
 # ------------------------------------------------------------
-
 din = np.zeros(n1,'f')
 pck = np.zeros(nd,'f') # picks
 wgh = np.zeros(nd,'f') # weights
@@ -90,9 +89,11 @@ for i in range(nd):
             pck[i] = o1 + j * d1
             wgh[i] = din[j]
 
-    # weights to bias towards 0
+# bias weights
+pckmed = np.median(pck)
+for i in range(nd):
     #wgh[i]*= np.exp(- abs(pck[i]) )
-    wgh[i] *= np.cos( 0.5*np.pi * abs(pck[i]/l1) )
+    wgh[i] *= np.cos( 0.5*np.pi * abs( (pck[i]-pckmed)/l1) )
 
 wgh /= np.max(wgh)
 
@@ -106,7 +107,7 @@ xE = xx[nd-1]
 
 nb = np.max([1,nd//10])
 #mbar = pck*0                          # reference model
-mbar = np.median(pck)
+mbar = pck*0 + pckmed
 dbar = pck                            # rough picks
 
 wgh = np.power(wgh-np.min(wgh),wpo)
