@@ -105,7 +105,8 @@ xS = xx[0]
 xE = xx[nd-1]
 
 nb = np.max([1,nd//10])
-mbar = pck*0                          # reference model
+#mbar = pck*0                          # reference model
+mbar = np.median(pck)
 dbar = pck                            # rough picks
 
 wgh = np.power(wgh-np.min(wgh),wpo)
