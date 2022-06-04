@@ -22,7 +22,7 @@ module m8r {
     require "rsf.h";
 
     use SysBasic;
-    use SysCTypes;
+    use CTypes;
 
     //Extern declaration of C Madagascar procedures
     //and datatypes w=wrapper nw=no wrapper
