@@ -86,12 +86,12 @@ if dt==None:
     print("dt is a required parameter in interpvel")
     sys.exit(2)
 
-print >>sys.stderr,"nxline=",nxline," fxline=",fxline
-print >>sys.stderr,"ninline=",ninline," finline=",finline
-print >>sys.stderr,"maxt=",maxt," dt=",dt
+print("nxline=",nxline," fxline=",fxline,file=sys.stderr)
+print("ninline=",ninline," finline=",finline,file=sys.stderr)
+print("maxt=",maxt," dt=",dt,file=sys.stderr)
 
 maskfile =command_line_par.string("mask")
-print >>sys.stderr,"maskfile=",maskfile
+print("maskfile=",maskfile,file=sys.stderr)
 # Densely sampled time axis
 tint = arange (0, maxt, dt, dtype = float32)
 nt = size (tint)
@@ -171,11 +171,11 @@ vrms3d = zeros ((nt, ninline, nxline), dtype = float32)
 # Go along time slices and do triangulation
 for it in range (nt):
     if it<3 or it%50==0:
-        print >> sys.stderr, "Processing slice", it + 1, "of", nt
+        print("Processing slice", it + 1, "of", nt,file=sys.stderr)
     if it==2:
-        print >> sys.stderr,"now print status for every 50 slices"
+        print("now print status for every 50 slices",file=sys.stderr)
     vrms3d[it] = mask*interp_for_const_t (pnt, vint[it,:], gx, gy)
-print >> sys.stderr, "Completed all time slices"
+print("Completed all time slices",file=sys.stderr)
 
 # Finally, dump trace by trace to binary file
 binfile = 'vrms3d.dat' # Binary part
@@ -183,9 +183,9 @@ bfid = open (binfile, 'w+')
 print(vrms3d.shape)
 for il in range (ninline):
     if il<3 or il%50==0:
-        print >> sys.stderr, "Saving inline", il + 1, "of", ninline
+        print("Saving inline", il + 1, "of", ninline,file=sys.stderr)
     if il==2:
-        print >> sys.stderr,"now print status for every 50 lines"
+        print("now print status for every 50 lines",file=sys.stderr)
     for xl in range (nxline):
         vrms3d[:,il,xl].tofile (bfid)
 bfid.flush ()
