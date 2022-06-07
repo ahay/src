@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys, re, os
 from numpy import *
 from scipy.interpolate import interp1d
@@ -56,33 +57,33 @@ command_line_par=rsf.Par()
 # Survey parameters
 nxline=command_line_par.int("nxline")
 if nxline==None:
-    print "nxline is a required parameter in interpvel"
+    print("nxline is a required parameter in interpvel")
     sys.exit(2)
 
 ninline=command_line_par.int("ninline")
 if ninline==None:
-    print "ninline is a required parameter in interpvel"
+    print("ninline is a required parameter in interpvel")
     sys.exit(2)
 
 fxline=command_line_par.int("fxline")
 if fxline==None:
-    print "fxline is a required parameter in interpvel"
+    print("fxline is a required parameter in interpvel")
     sys.exit(2)
 
 finline=command_line_par.int("finline")
 if finline==None:
-    print "finline is a required parameter in interpvel"
+    print("finline is a required parameter in interpvel")
     sys.exit(2)
 
 # Time axis
 maxt=command_line_par.float("maxt")
 if maxt==None:
-    print "maxt is a required parameter in interpvel"
+    print("maxt is a required parameter in interpvel")
     sys.exit(2)
 
 dt=command_line_par.float("dt")
 if dt==None:
-    print "dt is a required parameter in interpvel"
+    print("dt is a required parameter in interpvel")
     sys.exit(2)
 
 print >>sys.stderr,"nxline=",nxline," fxline=",fxline
@@ -179,7 +180,7 @@ print >> sys.stderr, "Completed all time slices"
 # Finally, dump trace by trace to binary file
 binfile = 'vrms3d.dat' # Binary part
 bfid = open (binfile, 'w+')
-print vrms3d.shape
+print(vrms3d.shape)
 for il in range (ninline):
     if il<3 or il%50==0:
         print >> sys.stderr, "Saving inline", il + 1, "of", ninline
