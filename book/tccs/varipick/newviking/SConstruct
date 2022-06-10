@@ -352,11 +352,11 @@ Flow('illustration','envelope',
           window min3=3.994 n3=1601 |transp plane=23 memsize=5000
           '''%(2*j+sclbase,j*smoothstrong*saniso1, j*smoothstrong*saniso2, j*smoothstrong*saniso3,max1t))
 
-Result('stack-power-illustration','illustration',
-   '''
-   grey gainpanel=a title="DMO Stack Power" color=j allpos=y
-   scalebar=y barlabel="Stack Power" maxval=0.6
-   ''')
+#Result('stack-power-illustration','illustration',
+#   '''
+#   grey gainpanel=a title="DMO Stack Power" color=j allpos=y
+#   scalebar=y barlabel="Stack Power" maxval=0.6
+#   ''')
 Flow('stack-power-illustration-window','illustration','window n2=1 min2=%g'%panelcoord)
 
 
@@ -611,8 +611,8 @@ def plotvels(velo,title,clip):
 # plotting function for velocity fields
 plotvel = ''' grey mean=y color=j scalebar=y barunit=km/s barlabel=Velocity label2=Midpoint unit2=km '''
 plotstk = ''' grey label2=Midpoint unit2=km'''
-plotvels(upd,'Continuation Convergence',3)
-plotvels(nocontup,'Non-Continuation Convergence',3)
+#plotvels(upd,'Continuation Convergence',3)
+#plotvels(nocontup,'Non-Continuation Convergence',3)
 drect1 = 200
 drect2 = 400
 nz = nt+80#-100
