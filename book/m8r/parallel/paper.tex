@@ -83,14 +83,14 @@ transpose a 2-D dataset in parallel, we can split it over one
 dimension and join over the other dimension:
 %The previous commit had inaccurate message for git log. Last commit changed join with reduce since join is syntactically incorrect kwarg.
 \begin{verbatim}
-< original.rsf sfomp sftransp split=1 reduce=2 > transp.rsf
+< original.rsf sfomp sftransp split=1 join=2 > transp.rsf
 \end{verbatim}
 The result should be equivalent to that of running
 \begin{verbatim}
-< original.rsf sfomp sftransp split=2 reduce=1 > transp.rsf
+< original.rsf sfomp sftransp split=2 join=1 > transp.rsf
 \end{verbatim}
 If, instead of concatenating, the results need to be added together,
-use \texttt{reduce=0}.
+use \texttt{join=0}.
 
 Certain programs have multiple input or output files. If some of the
 input files need to be split similarly to the file coming from the
