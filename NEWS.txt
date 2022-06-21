@@ -37,6 +37,8 @@ To the reproducible documents collection:
   t-x-y streaming prediction filter with varying smoothness (Liu, Wu,
   and Zheng)
 * tccs/wetm: Wave-equation time migration (Fomel and Kaur)
+* tccs/varipick: A variational approach for picking optimal surfaces
+  from semblance-like panels (Decker and Fomel)
 
 To SCons:
 

@@ -11,6 +11,7 @@ decker.luke@utexas.edu
 }
 \maketitle
 
+\lefthead{Decker \& Fomel}
 \righthead{Variational surface picking}
 \begin{abstract}
 
@@ -214,7 +215,8 @@ Beyond the demonstrated applications shown here for processing 2D seismic lines 
 \section{Acknowledgements}
 We are grateful to TCCS sponsors for financial support of this work; to Todd Arbogast, Doug Foster, Omar Ghattas, Tom Hess, Tristan Leeuwen, Nick Luiken, and Mary Wheeler for inspiring conversations; the reviewers of this manuscript for valuable suggestions; and and to contributors to the \texttt{Madagascar} open-source software library \cite[]{madagascar}.
 
-\append[pickalgo]{Pseudocode for a Picking Algorithm Utilizing Continuation}
+\appendix
+\section{Appendix A: Pseudocode for a Picking Algorithm Utilizing Continuation}
 Algorithm~\ref{alg:picking} contains pseudocode which could be used to create a variational picking algorithm.  Algorithm~\ref{alg:continu} shows how a variational picking algorithm may be used in a continuation framework.  Here, $\rho_o$ and $\rho_f$ are strictly positive numbers denoting the minimum and maximum possible step sizes at each iteration, $\gamma$ and $\xi$ are positive early termination parameters, $N$ is the maximum number of iterations at each continuation level, $v(\mathbf{x})$ is a velocity model, $v_0(\mathbf{x})$ is a starting velocity model, $g(\mathbf{x})$ is the functional gradient, and $h(\mathbf{x})$ is the search direction. $M$ is the number of continuation levels,  $\mathbf{r}_j$ is a vector holding the triangle smoothing radius for each spatial dimension at continuation level $j$, and $\sigma_j$ is the semblance scaling factor at continuation level $j$. We assume that scaling and smoothing increase with increasing $j$. $\alpha_0 \left[v,\mathbf{x}\right]$ is the least-smoothed semblance-like volume, and $\alpha \left[v,\mathbf{x}\right]$ denotes a semblance-like volume.  These algorithms assume one has the following methods defined:
 \begin{itemize}
 	\item \textsc{Cost}$\left(v(\mathbf{x}),\alpha \left[v,\mathbf{x}\right],\lambda,\epsilon \right)$ \\
@@ -271,7 +273,8 @@ Algorithm~\ref{alg:picking} contains pseudocode which could be used to create a 
 	\end{algorithmic}
 \end{algorithm}
 
-\append[horizonpick]{A Primitive, Semblance-Like Volume for Horizon Picking}
+\appendix
+\section{Appendix B: A Primitive, Semblance-Like Volume for Horizon Picking}
 Suppose we have a trace representative of a seismic horizon, apply cosine tapering to its edges, and pad it  with zeros.  This ideal horizon reference trace is called $h(t)$.  To create a measure of how well this ideal waveform matches with other traces throughout a seismic volume, the crosscorrelation is calculated throughout the volume over shift $\tau$,
 \begin{equation}
 \label{eq:horiz-xcor}

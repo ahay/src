@@ -80,7 +80,7 @@ def grey3am(title,clip='',extra=''):
     point2=%g %s grid2=n gridcol=6  movie=3
     ''' % (maxshift-minshift+nspls,refn+minshift,clip,title,point2,extra)
 Result('hcube-w','hcube',grey3a('Zoomed Heidrun Image'))
-Result('hcube-wm','hcube',grey3am('Zoomed Heidrun Image'))
+#Result('hcube-wm','hcube',grey3am('Zoomed Heidrun Image'))
 for i in range(maxshift-minshift+1):
    j = (i+minshift)*dshift
    # window out shifted data
@@ -126,14 +126,14 @@ Result(alpha+'-scalebar',[alpha,alphabar],
    label1=Time unit1=s scalebar=y bar=${SOURCES[1]} barlabel=Correlation 
    n2tic=3 d2num=0.05 o2num=1.925 o3num=250 n3tic=2 d3num=200 
    '''%point2)
-Result(alpha+'-mov',alpha,
-   '''
-   transp plane=12|
-   byte gainpanel=a allpos=y|
-   grey3 color=j frame1=18 frame2=400 frame3=1 point2=%g
-   title="Correlation with Reference Trace" movie=3 label3=Inline
-   n2tic=3 d2num=0.05 o2num=1.925 o3num=250 n3tic=2 d3num=200 
-   '''%point2)
+#Result(alpha+'-mov',alpha,
+#   '''
+#   transp plane=12|
+#   byte gainpanel=a allpos=y|
+#   grey3 color=j frame1=18 frame2=400 frame3=1 point2=%g
+#   title="Correlation with Reference Trace" movie=3 label3=Inline
+#   n2tic=3 d2num=0.05 o2num=1.925 o3num=250 n3tic=2 d3num=200 
+#   '''%point2)
 # make mutes
 mute1 = name+'-mute1'
 Flow(mute1,alpha,
