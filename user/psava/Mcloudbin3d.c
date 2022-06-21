@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
   obin = sf_floatalloc2(sf_n(alat),sf_n(alon));
   for( ilon = 0; ilon < sf_n(alon); ilon++) {
     for( ilat = 0; ilat < sf_n(alat); ilat++) {
-        obin[ilon][ilat] = 0.0;
+        obin[ilon][ilat] = 1.0; // avoid division by 0 in bin normalization
     }
   }
 
