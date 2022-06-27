@@ -74,12 +74,7 @@ inp.read(data)
 inp.close()
 
 x1 = numpy.transpose(numpy.tile(numpy.arange(o1, o1+n1*d1, d1,dtype='f'),(n2,1)))
-
-print('got x1',n2,x1.shape,file=sys.stderr)
-
 x2 = numpy.tile(numpy.arange(o2, o2+n2*d2, d2,dtype='f'),(n1,1))
-
-print('got x2',n2,x2.shape,file=sys.stderr)
 
 # recognize the plotting type
 if plot == 'imshow':
