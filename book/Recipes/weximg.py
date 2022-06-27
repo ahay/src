@@ -4,53 +4,53 @@ except: from rsf.proj    import *
 def param(par):
     p  = ' '
     p = p + ' --readwrite=y'
-    if(par.has_key('verb')):
+    if('verb' in par):
         p = p + ' verb='  +     par['verb']
-    if(par.has_key('nrmax')):
+    if('nrmax' in par):
         p = p + ' nrmax=' + str(par['nrmax'])
-    if(par.has_key('dtmax')):
+    if('dtmax' in par):
         p = p + ' dtmax=' + str(par['dtmax'])
-    if(par.has_key('eps')):
+    if('eps' in par):
         p = p + ' eps='   + str(par['eps'])
-    if(par.has_key('tmx')):
+    if('tmx' in par):
         p = p + ' tmx='   + str(par['tmx'])
-    if(par.has_key('tmy')):
+    if('tmy' in par):
         p = p + ' tmy='   + str(par['tmy'])
-    if(par.has_key('pmx')):
+    if('pmx' in par):
         p = p + ' pmx='   + str(par['pmx'])
-    if(par.has_key('pmy')):
+    if('pmy' in par):
         p = p + ' pmy='   + str(par['pmy'])
-    if(par.has_key('misc')):
+    if('misc' in par):
         p = p + ' '       +     par['misc']
     p = p + ' '
     return p
 
 # ------------------------------------------------------------
 def wempar(par):
-    if(not par.has_key('verb')):    par['verb']='y'
-    if(not par.has_key('eps')):     par['eps']=0.1
+    if('verb' not in par):    par['verb']='y'
+    if('eps' not in par):     par['eps']=0.1
 
-    if(not par.has_key('nrmax')):   par['nrmax']=1
-    if(not par.has_key('dtmax')):   par['dtmax']=0.00005
+    if('nrmax' not in par):   par['nrmax']=1
+    if('dtmax' not in par):   par['dtmax']=0.00005
 
-    if(not par.has_key('tmx')):     par['tmx']=16
-    if(not par.has_key('tmy')):     par['tmy']=16
+    if('tmx' not in par):     par['tmx']=16
+    if('tmy' not in par):     par['tmy']=16
 
-    if(not par.has_key('incore')):  par['incore']='y'
+    if('incore' not in par):  par['incore']='y'
 
 def eicpar(par):
     p = ' '
-    if(par.has_key('nhx')):
+    if('nhx' in par):
         p = p + ' nhx='   + str(par['nhx'])
-    if(par.has_key('nhy')):
+    if('nhy' in par):
         p = p + ' nhy='   + str(par['nhy'])
-    if(par.has_key('nhz')):
+    if('nhz' in par):
         p = p + ' nhz='   + str(par['nhz'])
-    if(par.has_key('nht')):
+    if('nht' in par):
         p = p + ' nht='   + str(par['nht'])
-    if(par.has_key('oht')):
+    if('oht' in par):
         p = p + ' oht='   + str(par['oht'])
-    if(par.has_key('dht')):
+    if('dht' in par):
         p = p + ' dht='   + str(par['dht'])
     p = p + ' '
     return(p)

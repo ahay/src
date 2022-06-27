@@ -6,23 +6,23 @@ import zomig, os
 def param(par):
     p  = ' '
     p = p + ' --readwrite=y'
-    if(par.has_key('verb')):
+    if('verb' in par):
         p = p + ' verb=' +     par['verb']
-    if(par.has_key('nrmax')):
+    if('nrmax' in par):
         p = p + ' nrmax='+ str(par['nrmax'])
-    if(par.has_key('dtmax')):
+    if('dtmax' in par):
         p = p + ' dtmax='+ str(par['dtmax'])
-    if(par.has_key('tmx')):
+    if('tmx' in par):
         p = p + ' tmx='  + str(par['tmx'])
-    if(par.has_key('tmy')):
+    if('tmy' in par):
         p = p + ' tmy='  + str(par['tmy'])
-    if(par.has_key('pmx')):
+    if('pmx' in par):
         p = p + ' pmx='  + str(par['pmx'])
-    if(par.has_key('pmy')):
+    if('pmy' in par):
         p = p + ' pmy='  + str(par['pmy'])
-    if(par.has_key('ompnth')):
+    if('ompnth' in par):
         p = p + ' ompnth='  + str(par['ompnth'])
-    if(par.has_key('misc')):
+    if('misc' in par):
         p = p + ' '      +     par['misc']
     p = p + ' '
     return p
@@ -30,23 +30,23 @@ def param(par):
 # ------------------------------------------------------------
 def freqs(par):
     f  = ' '
-    if(par.has_key('nw')): f = f + ' nw=' + str(par['nw'])
-    if(par.has_key('ow')): f = f + ' ow=' + str(par['ow'])
-    if(par.has_key('dw')): f = f + ' dw=' + str(par['dw'])
+    if('nw' in par): f = f + ' nw=' + str(par['nw'])
+    if('ow' in par): f = f + ' ow=' + str(par['ow'])
+    if('dw' in par): f = f + ' dw=' + str(par['dw'])
     f = f + ' '
     return f
 
 def migpar(par):
-    if(not par.has_key('verb')):    par['verb']='y'
-    if(not par.has_key('eps')):     par['eps']=0.1
+    if('verb' not in par):    par['verb']='y'
+    if('eps' not in par):     par['eps']=0.1
 
-    if(not par.has_key('nrmax')):   par['nrmax']=1
-    if(not par.has_key('dtmax')):   par['dtmax']=0.00005
+    if('nrmax' not in par):   par['nrmax']=1
+    if('dtmax' not in par):   par['dtmax']=0.00005
 
-    if(not par.has_key('tmx')):     par['tmx']=16
-    if(not par.has_key('tmy')):     par['tmy']=16
+    if('tmx' not in par):     par['tmx']=16
+    if('tmy' not in par):     par['tmy']=16
     
-    if(not par.has_key('incore')):  par['incore']='y'
+    if('incore' not in par):  par['incore']='y'
 
 # ------------------------------------------------------------
 # create surface wavefield files
@@ -237,7 +237,7 @@ def script(EDIR,job,imag,cigs,slow,swfl,rwfl,par,ngroup,nshots):
     mycom = 'cp ' + bindir + '/sfsrmig2' + ' '+ EDIR
     os.system(mycom)
     
-    allk = map(lambda x: '%03d' % x,range(ngroup))
+    allk = ['%03d' % x for x in range(ngroup)]
     for k in allk:
         _j = '_' + imag + '.' + k + '.rsf'
         _c = '_' + cigs + '.' + k + '.rsf'
@@ -260,7 +260,7 @@ def execute(EDIR,JOB,ngroup,nshots,imag,cigs,slow,swfl,rwfl,par):
 
     f = open(script,'w')
 
-    allk = map(lambda x: '%03d' % x,range(ngroup))
+    allk = ['%03d' % x for x in range(ngroup)]
     for k in allk:
         _j = '_' + imag + '.' + k + '.rsf'
         _c = '_' + cigs + '.' + k + '.rsf'
