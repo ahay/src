@@ -1,0 +1,38 @@
+from rsf.proj import *
+
+sys.path.append('..')
+import overthrust
+
+# 2-D velocity
+overthrust.getvel2D('vel')
+
+# 2-D exploding-reflector data
+Fetch('otexp2.rsf','overthrust')
+Flow('exp','otexp2.rsf','dd form=native')
+
+# From velocity to slowness
+Flow('slowness','vel','transp | transp plane=23 | math output=1/input')
+
+# Fourier transform and transpose
+
+fmax = 50 # maximum frequency
+nf = 206  # number of frequencies
+
+Flow('fft','exp',
+     'fft1 | window max1=%g | transp plane=12 | transp plane=23' % fmax)
+
+# Extended split-step migration
+Flow('mig','fft slowness',
+     '''
+     zomig3 ompnth=1 mode=m verb=y
+     nrmax=40 dtmax=0.001 slo=${SOURCES[1]} |
+     window | transp
+     ''',split=[3,nf,[0]],reduce='add') # --readwrite=y
+
+Result('mig',
+       '''
+       grey title="Zero-Offset Wave Equation Migration"
+       label2=Distance    unit2=km 
+       label1=Depth unit1=km
+       ''')
+End()

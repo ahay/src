@@ -82,7 +82,7 @@ if test "$scons" = "no"; then
     dir=`ls -d [Ss][Cc]ons-* | grep '[^mz]$'`
     cd $dir
     $python setup.py install --prefix=$root > /dev/null
-    cd $here
+    cd "$here"
     scons="$root/bin/scons"
     if test ! -x "$scons"; then
 	scons="failed"
@@ -121,7 +121,7 @@ eval $command2
 echo "------------------------"
 echo "Done with configuration."
 
-M8R_PY_PATH=`RSFROOT=$root framework/setenv.py`
+M8R_PY_PATH=`RSFROOT="$root" framework/setenv.py`
 if [ -n "$PYTHONPATH" ]; then
 PYTHONPATH=$M8R_PY_PATH:${PYTHONPATH}
 else
