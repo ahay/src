@@ -52,7 +52,7 @@ esou epot
 regrid1d regrid2d regrid3d
 getattr
 checkerboard
-cloudwin3d cloudmerge3d cloudspray
+cloudwin3d cloudbin3d cloudmerge3d cloudspray
 stransp
 presum
 fftxcor

@@ -77,7 +77,7 @@ def shell_script(target, source=None, env=None):
         'DATAPATH':(datapath,'binary data files part of RSF datasets'),
         'LD_LIBRARY_PATH':(ldlibpath,'shared object files'),
         'MANPATH':(manpath,'manual pages'),
-        'RSFSRC':(os.getcwd(),'Madagascar source directory'),
+        'RSFSRC':('"%s"' % os.getcwd(),'Madagascar source directory'),
         'PATH':('$RSFROOT/bin:$PATH','executables')
         }
 

@@ -68,9 +68,10 @@ int main(int argc, char* argv[])
     f = sf_floatalloc(n12);
     g = sf_floatalloc(nd);
 
-    sf_multidivn_init(ns, mdim, nd, m, rect, d, NULL, verb); 
-
     for (i4=0; i4 < n4; i4++) {
+	sf_warning("i4=%d of %d;",i4+1,n4);
+	sf_multidivn_init(ns, mdim, nd, m, rect, d, NULL, verb); 
+
 	sf_floatread(g,nd,mat);
 	ii=0;
 	for(iy=-a[2]/2; iy < a[2]/2+1; iy++) {
@@ -129,7 +130,7 @@ int main(int argc, char* argv[])
 	}
 	sf_weight2_lop(false,false,n12,nd,f,g);
 	sf_floatwrite(g,nd,pre);
-	
+	sf_multidivn_close();
     }
   
     exit(0);
