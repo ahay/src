@@ -195,7 +195,7 @@ class Job:
 
     def make(self):
         createPBSfile(self.name,EMAIL,self.nodes,self.ppn,
-            self.time,self.last,self.next,'\n'.join(self.tasks),self.relaunch,self.run,self.content,nodetype=NODETYPE)
+            self.time,self.last,self.__next__,'\n'.join(self.tasks),self.relaunch,self.run,self.content,nodetype=NODETYPE)
 
     def keep(self):
         if len(self.tasks) > 0:
@@ -251,7 +251,7 @@ class Parallel(Job):
             next = None
             nodes = self.nodes
             if i == len(self.all)-1:
-                next = self.next
+                next = self.__next__
                 nodes = self.nnl
             createPBSfile(self.all[i],EMAIL,nodes,self.ppn,
                 self.time,self.last,next,'',False,False,'',nodetype=NODETYPE,parallel=True)
@@ -342,7 +342,7 @@ def Cluster(name, email=None, cluster='mio', time=1,ppn=8,nodetype=None,submit=F
 def Serial(time=None,ppn=None,tasks=None):
     global CURRENT_JOB, JOB_QUEUE, CLUSTER_CONFIGURED
     if not CLUSTER_CONFIGURED:
-        print "FATAL ERROR: You must initialize default parameters first, by calling the Cluster function"
+        print("FATAL ERROR: You must initialize default parameters first, by calling the Cluster function")
         sys.exit(155)
 
     if not time: time = DEFAULT_TIME
@@ -358,7 +358,7 @@ def Serial(time=None,ppn=None,tasks=None):
 def Fork(time=0,nodes=0,ipn=0,ppn=0):
     global CURRENT_JOB, JOB_QUEUE, CLUSTER_CONFIGURED
     if not CLUSTER_CONFIGURED:
-        print "FATAL ERROR: You must initialize default parameters first, by calling the Cluster function"
+        print("FATAL ERROR: You must initialize default parameters first, by calling the Cluster function")
         sys.exit(155)
     if not time or not nodes or not ipn:
         raise Exception('Must enter a value for nodes, time, and ipn')
@@ -371,7 +371,7 @@ def Iterate():
     try:
         CURRENT_JOB.flush()
     except:
-        print 'Could not find a valid Job type.  Did you forget to Fork?'
+        print('Could not find a valid Job type.  Did you forget to Fork?')
 
 def Join():
     global CURRENT_JOB
@@ -396,7 +396,7 @@ def __createstring(rsfcommand,target,source,command,kw):
     else:
         command = """%s(%s,%s,\n\t'''%s'''""" % (rsfcommand,outtar,outsou,command)
 
-    for key in kw.keys():
+    for key in list(kw.keys()):
         if type(kw[key]) == str:
             command+=',%s="%s"' % (str(key),str(kw[key]))
         else:
@@ -418,27 +418,27 @@ def Flow(target,source,flow,**kw):
 
         mpi = None
         nodes = -1
-        if kw.has_key('mpi'):
+        if 'mpi' in kw:
             mpi = kw['mpi']
             kw.pop('mpi')
-            if not kw.has_key('nodes'):
+            if 'nodes' not in kw:
                 raise Exception('Must specify # of nodes for mpi jobs')
             else:
                 nodes = kw.pop('nodes')
 
-            if kw.has_key('ppn'):
+            if 'ppn' in kw:
                 ppn = kw.pop('ppn')
                 if not ppn: ppn= DEFAULT_PPN
             else:
                 ppn = DEFAULT_PPN
 
-            if not kw.has_key('time'):
+            if 'time' not in kw:
                 raise Exception('you must specify time for mpi jobs')
             else:
                 time = kw.pop('time')
                 if not time: raise Exception("must specify time for mpi jobs")
 
-            if not kw.has_key('np'):
+            if 'np' not in kw:
                 if nodes <= 0:
                 #try:
                 #    kw['np'] = nodes
@@ -460,18 +460,18 @@ def Flow(target,source,flow,**kw):
         CURRENT_JOB.add(command)
 
     else:
-        if kw.has_key('time'): 
+        if 'time' in kw: 
             kw.pop('time')
-        if kw.has_key('np'):
+        if 'np' in kw:
             kw['np'] = -1 # We are running locally
             kw.pop('np')
-        if kw.has_key('mpi'):
+        if 'mpi' in kw:
             kw.pop('mpi')
-        if kw.has_key('nodes'):
+        if 'nodes' in kw:
             kw.pop('nodes')
-        if kw.has_key('ppn'):
+        if 'ppn' in kw:
             kw.pop('ppn')
-        return apply(project.Flow,(target,source,flow),kw)
+        return project.Flow(*(target,source,flow), **kw)
 
 def Plot (target,source,flow=None,**kw):
     if CSCONS:
@@ -486,7 +486,7 @@ def Plot (target,source,flow=None,**kw):
         command = __createstring('Plot',target,source,flow,kw)
         CURRENT_JOB.add(command)
     else:
-        return apply(project.Plot,(target,source,flow),kw)
+        return project.Plot(*(target,source,flow), **kw)
 
 def Result(target,source,flow=None,**kw):
     if CSCONS:
@@ -498,7 +498,7 @@ def Result(target,source,flow=None,**kw):
         command = __createstring('Result',target,source,flow,kw)
         CURRENT_JOB.add(command)
     else:
-        return apply(project.Result,(target,source,flow),kw)
+        return project.Result(*(target,source,flow), **kw)
 
 def Force(content):
     global CURRENT_JOB
@@ -526,7 +526,7 @@ def Run(content):
 ####
 # No changes here
 def Fetch(file,dir,private=0,**kw):
-    return apply(project.Fetch,(file,dir,private),kw)
+    return project.Fetch(*(file,dir,private), **kw)
 #####
 
 def Save(file):
@@ -537,7 +537,7 @@ def End(**kw):
 
     if CSCONS and CLUSTER_CONFIGURED:
         if len(JOB_QUEUE) > 0:
-            print "Removing extra jobs..."
+            print("Removing extra jobs...")
             final_queue = []
             # We could possibly have jobs with no tasks
             # Remove these from the queue
@@ -545,13 +545,13 @@ def End(**kw):
                 if job.keep():
                     final_queue.append(job)
 
-            print "Found: %d jobs" % len(final_queue)
-            print 'Creating job directory...'
+            print("Found: %d jobs" % len(final_queue))
+            print('Creating job directory...')
             if not os.path.exists(pbs_dirt):
                 os.mkdir(pbs_dirt)
             else:
                 if os.path.isdir(pbs_dirt):
-                    print '......pbs directory already exists'
+                    print('......pbs directory already exists')
                 else:
                     raise Exception('pbs directory exists, but is not suitable for script files?')
 
@@ -559,11 +559,11 @@ def End(**kw):
                 os.mkdir('Fig')
             else:
                 if os.path.isdir('Fig'):
-                    print '......Fig directory already exists'
+                    print('......Fig directory already exists')
                 else:
                     raise Exception('Fig directory exists but is not suitable for vpl files?')
 
-            print 'Preparing jobs...'
+            print('Preparing jobs...')
             
             global SCONSIGNS
 
@@ -573,7 +573,7 @@ def End(**kw):
                     job.name = JOB_NAME+'-l-%02d' % i
                 else:
                     job.name = JOB_NAME+'-s-%02d' % i
-                print 'Job %d/%d - %s - %s' % (i,n,str(job),job.name)
+                print('Job %d/%d - %s - %s' % (i,n,str(job),job.name))
                 if not job.relaunch:
                   job.prepare()
                   SCONSIGNS.extend(job.sconsign)
@@ -582,9 +582,9 @@ def End(**kw):
 
                 i += 1
 
-            SCONSIGNS = map(lambda x: pbs_dirt + '/' + x, SCONSIGNS)
+            SCONSIGNS = [pbs_dirt + '/' + x for x in SCONSIGNS]
 
-            print 'Making job files...'
+            print('Making job files...')
             i = 0
             for job in final_queue:
                 if i > 0:
@@ -597,7 +597,7 @@ def End(**kw):
                 job.make()
                 i += 1
 
-            print 'Submitting jobs...\n'
+            print('Submitting jobs...\n')
 
             pbs_names = []
 
@@ -611,12 +611,12 @@ def End(**kw):
                     command += pbs
                     if job.last != None:
                         command +=' -W depend=afterok:%s' % (':'.join(pbs_names[j-1]))
-                    print 'Executing...',command
+                    print('Executing...',command)
                     process = subprocess.Popen(command,shell=True,stdout=subprocess.PIPE)
                     stdout,stderr  = process.communicate()
                     if len(stdout) < 3:
-                        print 'WARNING: submission was not successful?',stdout
-                    print 'Job submitted to: %s' % stdout
+                        print('WARNING: submission was not successful?',stdout)
+                    print('Job submitted to: %s' % stdout)
                     subjobs.append(stdout.strip('\n'))
 
                 pbs_names.append(subjobs)
@@ -625,4 +625,4 @@ def End(**kw):
         else:
             raise Exception("Did not find any jobs?")
             
-    return apply(project.End,[],kw)
+    return project.End(*[], **kw)
