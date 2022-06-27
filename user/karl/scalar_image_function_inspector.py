@@ -35,7 +35,7 @@ from traitsui.api import Group, HGroup, Item, View, UItem, spring
 from pyface.timer.api import Timer
 
 # Remove the most boring colormaps from consideration:
-colormaps = default_colormaps.color_map_name_dict.keys()
+colormaps = list(default_colormaps.color_map_name_dict.keys())
 for boring in 'bone gray yarg gist_gray gist_yarg Greys'.split():
     colormaps.remove(boring)
 
@@ -91,8 +91,8 @@ class Model(HasTraits):
         x, y = meshgrid(gridx, gridy)
         try:
             d = dict(x=x, y=y)
-            exec "from scipy import *" in d
-            exec "from scipy.special import *" in d
+            exec("from scipy import *", d)
+            exec("from scipy.special import *", d)
             self.zs = eval(self.function, d)
             self.minz = nanmin(self.zs)
             self.maxz = nanmax(self.zs)
@@ -320,7 +320,7 @@ class PlotUI(HasTraits):
         self.cross_plot.value_range.high = self.maxz
         self.cross_plot2.value_range.low = self.minz
         self.cross_plot2.value_range.high = self.maxz
-        if self._image_index.metadata.has_key("selections"):
+        if "selections" in self._image_index.metadata:
             x_ndx, y_ndx = self._image_index.metadata["selections"]
             if y_ndx and x_ndx:
                 self.pd.set_data("line_value",
