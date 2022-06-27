@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfscale', 'sfput', 'sfwindow', 'sftransp', 'sfmath', 'sffft1', 'sfzomig3', 'sfgrey']
+data=['https://s3.amazonaws.com/open.source.geoscience/open_data/seg_eage_models_cd/Overthrust_3D_CD1.tar.gz', 'data/overthrust/otexp2.rsf']
+size=  490558032
