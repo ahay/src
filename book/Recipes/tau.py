@@ -8,18 +8,18 @@ def init(par):
 		   nT,T0,dT,T, \
 		   nt,t0,dt,t
 
-	if par.has_key('nx'):
+	if 'nx' in par:
 		nx = par['nx']; x0 = par['x0']; dx = par['dx']
-		x = map(lambda t : x0 + t * dx,range(nx)); xlen = x[-1] - x[0]
-	if par.has_key('nz'):
+		x = [x0 + t * dx for t in range(nx)]; xlen = x[-1] - x[0]
+	if 'nz' in par:
 		nz = par['nz']; z0 = par['z0']; dz = par['dz']
-		z = map(lambda t : z0 + t * dz,range(nz)); zlen = z[-1] - z[0]
-	if par.has_key('nT'):
+		z = [z0 + t * dz for t in range(nz)]; zlen = z[-1] - z[0]
+	if 'nT' in par:
 		nT = par['nT']; T0 = par['T0']; dT = par['dT']
-		T = map(lambda t : T0 + t * dT,range(nT)); Tlen = T[-1] - T[0]
-	if par.has_key('nt'):
+		T = [T0 + t * dT for t in range(nT)]; Tlen = T[-1] - T[0]
+	if 'nt' in par:
 		nt = par['nt']; t0 = par['t0']; dt = par['dt']
-		t = map(lambda t : t0 + t * dt,range(nt)); tlen = t[-1] - t[0]
+		t = [t0 + t * dt for t in range(nt)]; tlen = t[-1] - t[0]
 
 def compute_tau(tau1,vmap):
 	Flow(tau1,vmap,'math output="1./input" | integral1 rule=s')
