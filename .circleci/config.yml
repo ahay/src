@@ -56,7 +56,7 @@ jobs:
         command: |
           source env.sh 
           cd book 
-          scons test
+          pscons test
     # Save test results
     - store_test_results:
         path: /tmp/circleci-test-results

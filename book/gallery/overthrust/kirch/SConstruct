@@ -1,0 +1,36 @@
+from rsf.proj import *
+
+sys.path.append('..')
+import overthrust
+
+# 2-D velocity
+overthrust.getvel2D('vel')
+
+# 2-D exploding-reflector data
+Fetch('otexp2.rsf','overthrust')
+Flow('exp','otexp2.rsf','dd form=native')
+
+# Traveltimes
+Flow('shots','exp',
+     '''
+     window n1=1 | math output=x1 |
+     transp | pad beg1=1 end1=1 | put o1=0
+     ''')
+Flow('tt tds tdl','vel shots',
+     '''
+     put d3=0.025 o3=0 label3= unit3= |
+     eikods shotfile=${SOURCES[1]} tds1=${TARGETS[1]} tdl1=${TARGETS[2]} |
+     window | put o3=0 d3=0.025 label3=Shot unit3= 
+     ''')
+Flow('mig','exp tt tds',
+     '''
+     transp plane=23 |
+     kirmig table=${SOURCES[1]} deriv=${SOURCES[2]}
+     aperture=35.
+     ''')
+Result('mig',
+       '''
+       grey title="Zero-Offset Kirchhoff Migration"
+       label2=Distance unit2=km
+       ''')
+End()
