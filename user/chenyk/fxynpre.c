@@ -1,6 +1,6 @@
 /* FX Regularized Nonstationary Autoregression subroutine 
 
-Reference: Wang et al. (2021), Non-stationary predictive filtering for seismic random noise suppression - A tutorial, Geophysics, doi: 10.1190/geo2020-0368.1. 
+Reference: Wang et al. (2021), Non-stationary predictive filtering for seismic random noise suppression - A tutorial, Geophysics, 86(3), W21–W30. 
 */
 /*
   Copyright (C) 2016 Yangkang Chen
@@ -30,7 +30,7 @@ void fxynpre0(float **dtime /*input and output data*/,
 /*<Non-stationary predictive filtering in 3D (without frequency-dependent smoothing)>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -89,11 +89,15 @@ void fxynpre0(float **dtime /*input and output data*/,
     n12=nd*ns;
     
     m[0]=nw;m[1]=nx;m[2]=ny;
-
+	if(ny==1)	/*2D denoising*/
+		dim=2;
+	else		/*3D denoising*/
+		dim=3;
+	
 	sf_warning("nsx=%d,nsy=%d,ns=%d",nsx,nsy,ns);
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
-    cmultidivn_init(ns, 3, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivn_init(ns, dim, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
     mean = 0.;
@@ -135,17 +139,11 @@ void fxynpre0(float **dtime /*input and output data*/,
     /*inverse transform*/
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
-	cmultidivn_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+	cmultidivn_close();  
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
     
 }
 
@@ -160,7 +158,7 @@ void fxynpre(float **dtime /*input and output data*/,
 		int nsx,
 		int nsy,
 		int *rect,
-		float Nfrac, /*starting varying from nw/Nfrac*F_nyquist*/
+		float Nfrac, /*starting varying from 1/Nfrac*F_nyquist*/
 		float Ntimes, /*largest radius is Ntimes of the ref radius*/
 		float pow,   /*sharp rate of the varying curve, the lower the sharper*/
 		bool sym, 
@@ -169,7 +167,7 @@ void fxynpre(float **dtime /*input and output data*/,
 /*<Non-stationary predictive filtering in 3D with frequency-dependent smoothing>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -228,7 +226,10 @@ void fxynpre(float **dtime /*input and output data*/,
     n12=nd*ns;
     
     m[0]=nw;m[1]=nx;m[2]=ny;
-
+	if(ny==1)	/*2D denoising*/
+		dim=2;
+	else		/*3D denoising*/
+		dim=3;
 
 	int **rct;float quad;
 	rct=sf_intalloc2(2,nw);
@@ -252,7 +253,7 @@ void fxynpre(float **dtime /*input and output data*/,
 
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
-    cmultidivn_fs_init(ns, 3, nd, m, rect[0], rct, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivn_fs_init(ns, dim, nd, m, rect[0], rct, (sf_complex *) dfftshift[0][0], verb); 
     /*frequency-dependent smoothing*/
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
@@ -279,32 +280,24 @@ void fxynpre(float **dtime /*input and output data*/,
     {
 	dfft[i2][i1] = sf_crmul(dfft[i2][i1],mean);
     }
-    
     cmultidivn_fs ((sf_complex *) dfft[0], (sf_complex *) dfftfilt[0][0],niter);
-	
     for(is=0;is<ns;is++)
     for(i2=0;i2<n2;i2++)
     for(i1=0;i1<nw;i1++)
 	{
 	    dfftshift[is][i2][i1] = sf_crmul(dfftshift[is][i2][i1],1./mean);
 	}
-
 	cweight2_lop(false,false,n12,nd,(sf_complex *) dfftfilt[0][0], (sf_complex *) dfftpre[0]);
-
+	
     /*inverse transform*/
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivn_fs_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
+    
     
 }
 
@@ -325,7 +318,7 @@ void fxynpre1(float **dtime /*input and output data*/,
 /*<Non-stationary predictive filtering in 3D>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -384,9 +377,12 @@ void fxynpre1(float **dtime /*input and output data*/,
     n12=nd*ns;
     
     m[0]=nw;m[1]=nx;m[2]=ny;
-
+	if(ny==1)	/*2D denoising*/
+		dim=2;
+	else		/*3D denoising*/
+		dim=3;
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
-    cmultidivn_rnar_init(ns, 3, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivn_rnar_init(ns, dim, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
     if(verb) sf_warning("rect[0]=%d,rect[1]=%d,rect[2]=%d",rect[0],rect[1],rect[2]);
     
 
@@ -429,17 +425,11 @@ void fxynpre1(float **dtime /*input and output data*/,
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivn_rnar_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
-    
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
+
 }
 
 void fxynpre3(float **dtime /*input and output data*/, 
@@ -461,7 +451,7 @@ void fxynpre3(float **dtime /*input and output data*/,
 /*<Non-stationary predictive filtering in 3D with arbitrary smoothing strategies>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -520,7 +510,10 @@ void fxynpre3(float **dtime /*input and output data*/,
     n12=nd*ns;
     
     m[0]=nw;m[1]=nx;m[2]=ny;
-
+	if(ny==1)	/*2D denoising*/
+		dim=2;
+	else		/*3D denoising*/
+		dim=3;
 
 // 	int **rct;
 // 	rct=sf_intalloc2(2,nw);
@@ -538,7 +531,7 @@ void fxynpre3(float **dtime /*input and output data*/,
 	
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
-    cmultidivnn_init(ns, 3, nd, m, rect, rct, sft, (sf_complex *) dfftshift[0][0], verb); 
+    cmultidivnn_init(ns, dim, nd, m, rect, rct, sft, (sf_complex *) dfftshift[0][0], verb); 
     /*frequency-dependent smoothing*/
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
@@ -583,16 +576,10 @@ void fxynpre3(float **dtime /*input and output data*/,
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
 	cmultidivnn_close();    
-    free(dfftfilt[0][0]);
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+    free(**dfftfilt);free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
     
 }
 
@@ -613,7 +600,7 @@ void fxypre(float **dtime /*input and output data*/,
 /*<Stationary predictive filtering in 3D>*/ 
 {   
     int nw, nt, i2, i22;
-    int m[SF_MAX_DIM];    
+    int m[SF_MAX_DIM], dim;    
     int nd, n12;    
     int ns,is,i1,isx,isy,ix,iy;
     float dw, mean;
@@ -673,10 +660,16 @@ void fxypre(float **dtime /*input and output data*/,
     
     m[0]=nw;m[1]=1;m[2]=1;
 
+	if(ny==1)	/*2D denoising*/
+		dim=1;
+	else		/*3D denoising*/
+		dim=2;
+		
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
     
     rect[1]=1;rect[2]=1;
-    cmultidivns_init(ns, 2, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
+    if(verb) sf_warning("rect[0]=%d,rect[1]=%d,rect[2]=%d",rect[0],rect[1],rect[2]);
+    cmultidivns_init(ns, 1, nd, m, rect, (sf_complex *) dfftshift[0][0], verb); 
     if(verb) sf_warning("n12=%d,nd=%d,ns=%d",n12,nd,ns);
 
     mean = 0.;
@@ -714,16 +707,11 @@ void fxypre(float **dtime /*input and output data*/,
     /*inverse transform*/
     fft1(dtime, dfftpre, n2,n1,d1,o1,nt,nw,dw, sym, opt, verb, true);   
     
-	cmultidivn_close();    
-    free(dfftfilt[0]);
-    free(dfftfilt);
-    free(dfftshift[0][0]);
-    free(dfftshift[0]);
-    free(dfftshift);
-    free(dfftpre[0]);
-    free(dfftpre);
-    free(dfft[0]);
-    free(dfft);
+	cmultidivns_close();    
+    free(*dfftfilt);free(dfftfilt);
+    free(**dfftshift);free(*dfftshift);free(dfftshift);
+    free(*dfftpre);free(dfftpre);
+    free(*dfft);free(dfft);
     
 }
 

@@ -23,8 +23,6 @@ Example: chenyk/ortho_non/nsmooth
 
 #include <rsf.h>
 
-#include "ntrianglen.h"
-
 int main (int argc, char* argv[]) 
 {
     int *sft[SF_MAX_DIM];
@@ -109,12 +107,12 @@ int main (int argc, char* argv[])
 	}
     }
 
-    ntrianglen_init(dim1+1,box,n,rct,sft,nrep);
+    sf_ntrianglen_init(dim1+1,box,n,rct,sft,nrep);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
 
-	ntrianglen_lop(false,false,n1,n1,data,smoo);
+	sf_ntrianglen_lop(false,false,n1,n1,data,smoo);
 	
 	sf_floatwrite(smoo,n1,out);
     }    

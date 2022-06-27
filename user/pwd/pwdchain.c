@@ -128,7 +128,7 @@ void pwdchain_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 		x[i+n*nc] -= tmp[i];
 	    }
 	    for (ic=1; ic < nc-1; ic++) {
-		allpass1t(false, false, ap[ic], tmp, y);
+		allpass1t(false, false, ap[ic], tmp, y+ic*n);
 		for (i=0; i < n; i++) {		    
 		    j = ic*n+i;
 		    k = j+n*nc;
@@ -206,8 +206,8 @@ void pwdchainx_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	    x[i] -= tmp[i];
 	}
 	for (ic=1; ic < nc-1; ic++) {
-	    allpass1t(false, false, ap[ic], tmp, y);
-	    for (i=0; i < n; i++) {		    
+	    allpass1t(false, false, ap[ic], tmp, y+ic*n);
+	    for (i=0; i < n; i++) {
 		j = ic*n+i;
 		x[j-n] += y[j];
 		x[j] -= tmp[i];

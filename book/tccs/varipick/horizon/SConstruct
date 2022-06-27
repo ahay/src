@@ -1,0 +1,337 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+Fetch('HeidrunFull.sgy','heidrun',server)
+
+Flow('heidrun theidrun heidrun.asc heidrun.bin',
+     'HeidrunFull.sgy',
+     'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+var = 0.135313
+Flow('hcube','heidrun',
+     '''
+     intbin xk=xline yk=iline | 
+     put label2=Crossline label3=Inline |
+     scale dscale=%g
+     '''%(1/var))
+n1 = 1001
+d1 = 0.004
+o1 = 0
+n2 = 813
+d2 = 1
+o2 = 840
+n3 = 423
+d3 = 1
+o3 = 153
+#window n1=631 f1=120
+point2 = 813.00/(813+423)
+pad=500
+def grey3(title,clip='',extra=''):
+    return '''
+    window n1=631 f1=120 |
+    byte gainpanel=all %s | 
+    grey3 frame1=350 frame2=400 frame3=200 title="%s" 
+    point2=%g %s grid2=n gridcol=6 
+    o3num=250 n3tic=2 d3num=200 
+    ''' % (clip,title,point2,extra)
+
+Plot('hcube',grey3('Heidrun Image'))
+Result('hcube',grey3('Heidrun Image'))
+
+#Result('hcube','Overlay')
+#Flow('spec_car','stack','spectra all=y | smooth rect1=5')
+#Flow('spec_strat','hcube','spectra all=y | smooth rect1=5 ')
+#Result('spec','spec_car spec_strat','cat axis=2 ${SOURCES[1:2]} | scale axis=1 | graph dash=0,1 plotfat=2 title=Spectrum label2=Amplitude unit2=  labelfat=4 font=2 titlefat=4')
+#Flow('mask','hcube','mul $SOURCE | stack axis=1 | mask min=0.001')
+hcube = 'hcube'
+# get reference signal
+xlineref = 1120
+ilineref= 425
+refto = 1.87
+reftf = 2.015
+nspls = (reftf-refto)/d1+1
+refn = refto/d1
+shift = nspls*d1/2
+costaper=5
+name = 'heidrun'
+ref = name+'-reference'
+Flow(ref,hcube,'window n2=1 n3=1 min2=%g min3=%g f1=%i n1=%i |costaper nw1=%i '%(xlineref,ilineref,refn,nspls,costaper))
+Result(ref,'costaper nw1=5|graph title="Reference for Horizon" plotfat=12 label2=Amplitude unit2= transp=y min1=%g max1=%g'%(reftf-d1,refto))
+
+maxshift = 25
+minshift = -12
+dshift = 1
+minval=1.25
+drect1 = 3
+drect2 = 3
+simlst = []
+
+def grey3a(title,clip='',extra=''):
+    return '''
+    window n1=%i f1=%i |
+    byte gainpanel=all %s | 
+    grey3 frame1=30 frame2=400 frame3=200 title="%s" 
+    point2=%g %s grid2=n gridcol=6  
+    o3num=250 n3tic=2 d3num=200 
+    ''' % (maxshift-minshift+nspls,refn+minshift,clip,title,point2,extra)
+def grey3am(title,clip='',extra=''):
+    return '''
+    window n1=%i f1=%i |
+    byte gainpanel=all %s | 
+    grey3 frame1=30 frame2=400 frame3=1 title="%s" 
+    point2=%g %s grid2=n gridcol=6  movie=3
+    ''' % (maxshift-minshift+nspls,refn+minshift,clip,title,point2,extra)
+Result('hcube-w','hcube',grey3a('Zoomed Heidrun Image'))
+#Result('hcube-wm','hcube',grey3am('Zoomed Heidrun Image'))
+for i in range(maxshift-minshift+1):
+   j = (i+minshift)*dshift
+   # window out shifted data
+   shifted = name+'-shifted-%i'%i
+   Flow(shifted, hcube, 'window f1=%i n1=%i |costaper nw1=%i'%(refn+j,nspls,costaper))
+   # compute amplitude
+   shiftedamp = name+'-ampl-%i'%i
+   Flow(shiftedamp,shifted,'add mode=p ${SOURCE} | stack axis=1')
+   # compute similarity
+   similarity = name+'-siml-%i'%i
+   Flow(similarity,[ref,shifted,shiftedamp],
+      '''
+      spray axis=2 n=%i d=%g o=%g|
+      spray axis=3 n=%i d=%g o=%g|
+      add mode=p ${SOURCES[1]}   |
+      stack axis=1               
+      '''%(n2,d2,o2,n3,d3,o3))
+   simlst.append(similarity)
+#      divn den=${SOURCES[2]} rect1=%i rect2=%i
+alpha = name+'-alpha'
+Flow(alpha,simlst,
+    '''
+    cat axis=3 d=%g o=%g ${SOURCES[1:%i]}| 
+    math output="input+%g" |  costaper nw1=10 nw2=10 nw3=5|
+    transp plane=23
+    '''%(d1*dshift,(minshift*dshift+refn)*d1+shift,len(simlst),minval))
+Result(alpha,
+   '''
+   transp plane=12|
+   byte gainpanel=a allpos=y|
+   grey3 color=j frame1=18 frame2=400 frame3=200 point2=%g
+   title="Correlation with Reference Trace" label3=Inline unit2= unit3=
+   label1=Time unit1=s n2tic=3 d2num=0.05 o2num=1.925 o3num=250 n3tic=2 d3num=200 
+   '''%point2)
+alphabar = alpha+'-bar'
+Flow(alphabar,alpha,'transp plane=12 | bar gainpanel=a allpos=y')
+Result(alpha+'-scalebar',[alpha,alphabar],
+   '''
+   transp plane=12|
+   byte gainpanel=a allpos=y|
+   grey3 color=j frame1=18 frame2=400 frame3=200 point2=%g
+   title="Correlation with Reference Trace" label3=Inline unit2= unit3=
+   label1=Time unit1=s scalebar=y bar=${SOURCES[1]} barlabel=Correlation 
+   n2tic=3 d2num=0.05 o2num=1.925 o3num=250 n3tic=2 d3num=200 
+   '''%point2)
+#Result(alpha+'-mov',alpha,
+#   '''
+#   transp plane=12|
+#   byte gainpanel=a allpos=y|
+#   grey3 color=j frame1=18 frame2=400 frame3=1 point2=%g
+#   title="Correlation with Reference Trace" movie=3 label3=Inline
+#   n2tic=3 d2num=0.05 o2num=1.925 o3num=250 n3tic=2 d3num=200 
+#   '''%point2)
+# make mutes
+mute1 = name+'-mute1'
+Flow(mute1,alpha,
+   '''
+   window n3=1 | math output=1 |
+   put d2=1 o1=0 d1=0.1| 
+   mutter inner=y t0=45 v0=1 |
+   mutter inner=n t0=17 v0=-2|
+   smooth rect1=5 rect2=5|
+   put d2=%g o1=%g d1=%g
+   '''%(d1*dshift,o2,d2))
+mute2 = name+'-mute2'
+Flow(mute2,alpha,
+   '''
+   window n1=1 | math output=1|
+   put d1=1 d2=0.1 o2=0|
+   mutter t0=47 v0=-3 inner=n |
+   spray axis=1 n=220|
+   pad beg1=180|
+   pad n1=%i | 
+   math output="-1*(input-1)"|
+   smooth rect1=5 rect2=5
+   '''%n2)
+muted = alpha+'-muted'
+Flow(muted,[mute1,alpha,mute2],
+   '''
+   spray axis=3 n=%i| add mode=p ${SOURCES[1]}|
+   add mode=p ${SOURCES[2]}
+   '''%(n3))
+minlevel=1
+nsmoothings = 12
+smoothstrong = 2.5
+saniso1 = 3
+saniso2 = 1
+saniso3 = 3
+semb_in   = muted
+semblst = []
+derivlst = [] 
+for i in range(nsmoothings):
+   j = i+minlevel
+   this_one = semb_in+'-%i'%i
+#   last_one = semb_in+'-%i'%(i-1)
+# was scale dscale=10 at the end
+   Flow(this_one,semb_in,
+          '''
+          scale dscale=%g|
+          smooth rect1=%i rect2=%i rect3=%i   
+          '''%(2*j,j*smoothstrong*saniso1, j*smoothstrong*saniso2, j*smoothstrong*saniso3))
+   deriv = semb_in+'-deriv-%i'%i
+   Flow(deriv,this_one,'transp plane=12 | sfderiv scale=y| transp plane=12')
+   semblst.append(this_one)
+   derivlst.append(deriv)
+#semblance = 'envelope-s'
+#dsemblance = semblance+'-dv'
+
+semblst.reverse()
+derivlst.reverse()
+
+
+lmbda = 1
+rho = 0.01
+niter = 20
+epsilon = 0.001
+
+vmod = name+'-starting'
+Flow(vmod,semb_in,'window n2=1 | math output=1.9+%g'%shift)
+initial_model =  vmod
+searchtype = 'lbfgs'
+updatelst = [initial_model]
+modslst = [initial_model]
+for i in range(len(semblst)):
+    if i == 0:
+       model_in = initial_model
+    else:
+       model_in = name+'-horiz-out-%i'%(i-1)
+    updates = name+'-updates-%i'%(i)
+    vpicked = name+'-horiz-out-%i'%(i)
+#    vmod = name+'-input' 
+    thislmbda = lmbda#*(nsmoothings-i)
+    Flow([vpicked,updates],[semblst[i],derivlst[i],model_in],
+      '''
+      varipick dsemb=${SOURCES[1]} vo=${SOURCES[2]} updates=${TARGETS[1]}
+      lambda=%g rho=%g niter=%i epsilon=%g type=%s
+      '''%(thislmbda,rho,niter,epsilon,searchtype))
+    updatelst.append(updates)
+    modslst.append(vpicked)
+upd = initial_model+'-updates'
+Flow(upd,updatelst,'cat axis=3 ${SOURCES[1:%i]}'%(len(updatelst)))
+costs = upd+'-costs'
+Flow(costs,[upd,semblst[len(semblst)-1]],
+      '''
+      varicost semb=${SOURCES[1]}
+      lambda=%g  epsilon=%g
+      '''%(thislmbda,epsilon))
+# make a convergence movie #119
+Result(upd,
+   '''
+   window j3=2|
+   grey color=j barlabel="Horizon Time" barunit=s allpos=y bias=%g scalebar=y 
+   minval=%g maxval=%g gainpanel=85 label2=Inline unit1= unit2= title="Horizon Convergence"
+   '''%(1.83+shift,1.83+shift,1.95+shift))
+Result(vpicked,
+   '''
+   grey color=j barlabel="Horizon Time" barunit=s allpos=y bias=%g scalebar=y 
+   minval=%g maxval=%g gainpanel=a label2=Inline unit1= unit2= title="Picked Horizon"
+   '''%(1.83+shift,1.83+shift,1.95+shift))
+pickbar = vpicked+'-bar'
+Flow(pickbar,vpicked,'bar allpos=y bias=%g minval=%g maxval=%g gainpanel=a pclip=100')
+Plot(vpicked,[vpicked,pickbar],
+   '''
+   grey color=j barlabel="Horizon Time" barunit=s allpos=y bias=%g scalebar=y 
+   minval=%g maxval=%g gainpanel=a label2=Inline unit1= unit2= title="Picked Horizon" pclip=100
+   bar=${SOURCES[1]}
+   '''%(1.83+shift,1.83+shift,1.95+shift))
+mx = 1.95+shift
+mn = 1.83+shift
+nc = 9
+dc = (mx-mn)/(nc-1)
+
+Plot(vpicked+'-contour',vpicked,
+   '''
+   contour nc=%i dc=%g co=%g plotcol=7
+   minval=%g maxval=%g scalebar=y title= label2=Inline unit1= unit2= 
+   '''%(nc,dc,mn+dc,mn,mx))
+Result(vpicked+'-contour',[vpicked,vpicked+'-contour'],'Overlay')
+
+#for i in range(len(modslst)-1):
+#   modl = modslst[i]
+#   if i == 0:
+#      ttl = "Starting Model"
+#   else:
+#      ttl = "Continuation Level %i Final Model"%i
+#   Plot(modl,[modl,pickbar],
+#   '''
+#   grey color=j barlabel="Horizon Time" barunit=s allpos=y bias=%g scalebar=y 
+#   minval=%g maxval=%g gainpanel=a label2=Inline unit1= unit2= title="%s" pclip=100
+#   bar=${SOURCES[1]}
+#   '''%(1.83+shift,1.83+shift,1.95+shift,ttl))
+#   Plot(modl+'-contour',[modl,pickbar],
+#   '''
+#   contour nc=%i dc=%g co=%g plotcol=7 bar=${SOURCES[1]}
+#   minval=%g maxval=%g scalebar=y title= label2=Inline unit1= unit2= 
+#   '''%(nc,dc,mn+dc,mn,mx))
+#   Result(modl+'-contour',[modl,modl+'-contour'],'Overlay')
+
+nf = 9
+allniters = 217
+df = allniters//(9-1)
+for i in range(nf):
+   it = df * i
+   ttl = 'Horizon at Iteration %i'%it
+   modl = upd+'-itr-%i'%i
+   Flow(modl,upd,'window n3=1 f3=%i'%it)
+   Plot(modl,[modl,pickbar],
+   '''
+   grey color=j barlabel="Horizon Time" barunit=s allpos=y bias=%g scalebar=y 
+   minval=%g maxval=%g gainpanel=a label2=Inline unit1= unit2= title="%s" pclip=100
+   bar=${SOURCES[1]}
+   '''%(1.83+shift,1.83+shift,1.95+shift,ttl))
+   Plot(modl+'-contour',[modl,pickbar],
+   '''
+   contour nc=%i dc=%g co=%g plotcol=7 bar=${SOURCES[1]}
+   minval=%g maxval=%g scalebar=y title= label2=Inline unit1= unit2= 
+   '''%(nc,dc,mn+dc,mn,mx))
+   Result(modl+'-contour',[modl,modl+'-contour'],'Overlay')
+Result(costs,'graph title="Horizon Cost Convergence" plotfat=12 label2="Cost" unit1= unit2= label1="Iteration" screenratio=0.5')
+
+windowed = 'hcube-wind'
+Flow(windowed,'hcube','window n1=%i f1=%i'%(maxshift-minshift+nspls,refn+minshift))
+
+tone = (refn+minshift)*d1
+ttwo = tone + (maxshift-minshift+nspls-1)*d1
+
+
+inlines = [100,200,300]
+for i in range(len(inlines)):
+   inline = inlines[i]
+   velo = vpicked+'-il-%i'%i
+   Flow(velo,vpicked,'window n2=1 min2=%g'%(inline))
+   Plot(velo,
+     'graph min2=%g max2=%g min1=%g max1=%g title= n1tic=0 n2tic=0 label1= label2= unit1= unit2= plotfat=10'%(ttwo,tone,o2,o2+(n2+1)*d2))
+   img = windowed+'-il-%i'%i
+   Flow(img,windowed,'window n3=1 min3=%g'%inline)
+   Plot(img,'grey title="Inline %g" min1=%g max1=%g min2=%g max2=%g'%(inline,tone,ttwo,o2,o2+(n2+1)*d2))
+   overlay = windowed+'-il-overlay-%i'%i
+   Result(overlay,[img,velo],'Overlay')
+
+
+crosslines = [1100, 1200, 1300, 1400]
+for i in range(len(crosslines)):
+   crossline = crosslines[i]
+   velo = vpicked+'-xl-%i'%i
+   Flow(velo,vpicked,'window n1=1 min1=%g'%(crossline))
+   Plot(velo,
+     'graph min2=%g max2=%g min1=%g max1=%g title= n1tic=0 n2tic=0 label1= label2= unit1= unit2= plotfat=10'%(ttwo,tone,o3,o3+(n3+1)*d3))
+   img = windowed+'-xl-%i'%i
+   Flow(img,windowed,'window n2=1 min2=%g'%crossline)
+   Plot(img,'grey title="Crossline %g" min1=%g max1=%g min2=%g max2=%g'%(crossline,tone,ttwo,o3,o3+(n3+1)*d3))
+   overlay = windowed+'-xl-overlay-%i'%i
+   Result(overlay,[img,velo],'Overlay')
+End()

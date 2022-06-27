@@ -17,8 +17,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include "ntriangle.h"
-#include "ntrianglen.h"
 
 static int n0, n1, n2;
 static sf_triangle *tr;
@@ -208,7 +206,7 @@ void divnn_sc_init2(int nw       /* number of components */, \
 //     ntrianglen2_init(nw,n,ndat[0],nbox);
 
 	/*initialization for the non-stationary triangle smoothing operator*/
-    ntrianglen_init(ndim,nbox,ndat,rct,sft,1);
+    sf_ntrianglen_init(ndim,nbox,ndat,rct,sft,1);
     
     sf_conjgrad_init(n2, n2, n, n, 1., 1.e-6, verb, false);
     p = sf_floatalloc (n2);
@@ -238,7 +236,7 @@ void divnn_sc2 (float* num  /* numerator */,
 		   int niter   /* number of iterations */)
 /*< smoothly divide num/rat >*/
 {
-    sf_conjgrad(NULL,sf_weight2_lop,ntrianglen_lop,p,rat,num,niter);
+    sf_conjgrad(NULL,sf_weight2_lop,sf_ntrianglen_lop,p,rat,num,niter);
 }
 
 

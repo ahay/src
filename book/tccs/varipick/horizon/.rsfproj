@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfintbin', 'sfput', 'sfscale', 'sfwindow', 'sfbyte', 'sfgrey3', 'sfcostaper', 'sfgraph', 'sfadd', 'sfstack', 'sfspray', 'sfcat', 'sfmath', 'sftransp', 'sfbar', 'sfmutter', 'sfsmooth', 'sfpad', 'sfderiv', 'sfvaripick', 'sfvaricost', 'sfgrey', 'sfcontour']
+data=['PRIVATE']
+size= 7058283308

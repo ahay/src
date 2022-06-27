@@ -115,7 +115,7 @@ void sf_oaxa(sf_file FF, const sf_axis AA, int i)
 void sf_raxa(const sf_axis AA) 
 /*< report information on axis AA >*/
 {    
-    sf_warning("n=%4d   o=% 8.3f   d=% 8.3f   l=%s \t u=%s",
+    sf_warning("n=%8d   o=% 8.3f   d=% 8.3f   l=%s \t u=%s",
 	       AA->n,AA->o,AA->d,AA->l,AA->u);
 }
 

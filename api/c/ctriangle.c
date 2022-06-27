@@ -34,16 +34,19 @@ typedef struct sf_Ctriangle *sf_ctriangle;
 
 struct sf_Ctriangle {
     sf_complex *tmp;
+    float wt;
     int np, nb, nx;
+    bool box;
 };
 
 static void fold (int o, int d, int nx, int nb, int np, 
 		 sf_complex *x, const sf_complex* tmp);
 static void doubint (int nx, sf_complex *x, bool der);
-static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_complex* tmp, bool box);
+static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_complex* tmp, bool box, float wt);
 
 sf_ctriangle sf_ctriangle_init (int nbox /* triangle length */, 
-			  int ndat /* data length */)
+				int ndat /* data length */,
+				bool box /* if box instead of triangle */)
 /*< initialize >*/
 {
     sf_ctriangle tr;
@@ -52,7 +55,14 @@ sf_ctriangle sf_ctriangle_init (int nbox /* triangle length */,
 
     tr->nx = ndat;
     tr->nb = nbox;
+    tr->box = box;
     tr->np = ndat + 2*nbox;
+
+    if (box) {
+	tr->wt = 1.0/(2*nbox-1);
+    } else {
+	tr->wt = 1.0/(nbox*nbox);
+    }
     
     tr->tmp = sf_complexalloc(tr->np);
 
@@ -138,10 +148,9 @@ static void doubint (int nx, sf_complex *xx, bool der)
     }
 }
 
-static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_complex* tmp, bool box)
+static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_complex* tmp, bool box, float wt)
 {
     int i;
-    float wt;
     sf_complex xi;
 
     for (i=0; i < nx + 2*nb; i++) {
@@ -149,8 +158,6 @@ static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_comple
     }
 
     if (box) {
-	wt = 1.0/(2*nb-1);
-   
 	for (i=0; i < nx; i++) {
 #ifdef SF_HAS_COMPLEX_H
 	    xi = wt*x[o+i*d];
@@ -165,8 +172,6 @@ static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_comple
 #endif
 	}
     } else {
-	wt = 1.0/(nb*nb);
-    
 	for (i=0; i < nx; i++) {
 #ifdef SF_HAS_COMPLEX_H
 	    xi = wt*x[o+i*d];
@@ -186,14 +191,13 @@ static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_comple
 }
 
 void sf_csmooth (sf_ctriangle tr    /* smoothing object */, 
-	      int o, int d    /* trace sampling */, 
-	      bool der        /* if derivative */,
-	      bool box        /* if box filter */,
-	      sf_complex *x   /* data (smoothed in place) */)
+		 int o, int d    /* trace sampling */, 
+		 bool der        /* if derivative */,
+		 sf_complex *x   /* data (smoothed in place) */)
 /*< apply adjoint triangle smoothing >*/
 {
-    triple (o,d,tr->nx,tr->nb,x,tr->tmp,box);
-    doubint (tr->np,tr->tmp,(bool) (box || der));
+    triple (o,d,tr->nx,tr->nb,x,tr->tmp,tr->box,tr->wt);
+    doubint (tr->np,tr->tmp,(bool) (tr->box || der));
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }
 
@@ -204,4 +208,3 @@ void  sf_ctriangle_close(sf_ctriangle tr)
     free (tr);
 }
 
-/* 	$Id: triangle.c 5070 2009-12-04 00:45:45Z sfomel $	 */

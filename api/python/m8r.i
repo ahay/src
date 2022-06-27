@@ -334,7 +334,7 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 		type = NPY_CFLOAT;
 		break;
 	    case SF_CHAR:
-		type = NPY_CHAR;
+		type = NPY_STRING;
 		break;
 	    case SF_UCHAR:
 		type = NPY_UBYTE;

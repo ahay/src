@@ -507,6 +507,20 @@ The following interfaces are configured by default: C, C++, Julia, and
 Python. The configuration parameters are stored in
 \texttt{\$RSFROOT/share/madagascar/etc/config.py}.
 
+\section{Advanced example}
+
+A more advanced example of the Madagascar interface can be found at
+\url{https://www.reproducibility.org/wiki/Guide_to_programming_with_madagascar}. It
+shows an example program for wave propagation using finite
+differences, originally developed by Paul Sava (Figure~\ref{fig:wavec,wavepython}.) The example programs
+are in C, C++, Fortran-90, and Python. The code for running the
+examples can be found in
+\href{https://github.com/ahay/src/blob/master/book/rsf/rsf/afdm/SConstruct}{\$RSFSRC/book/rsf/rsf/afdm/SConstruct}
+in the Madagascar distribution.
+
+\inputdir{afdm}
+\multiplot{2}{wavec,wavepython}{width=0.45\textwidth}{Wave propagation snapshots computed using two equivalent programs using C (a) and Python (b).}
+
 \bibliographystyle{seg} 
 \bibliography{api}
 

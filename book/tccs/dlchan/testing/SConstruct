@@ -1,0 +1,1162 @@
+from rsf.proj import *
+
+import numpy as np
+from tensorflow import keras
+import m8r
+import glob
+
+# for reproducibility
+from tensorflow import random
+np.random.seed(2021)
+random.set_seed(2021)
+import random as rdn
+rdn.seed(2021)
+
+from tensorflow.keras.layers import Activation, BatchNormalization, concatenate, Conv3D, Dropout, Input, MaxPooling3D, UpSampling3D, SpatialDropout3D, Conv3DTranspose
+from tensorflow.keras.models import Model
+from tensorflow.keras.initializers import Orthogonal, TruncatedNormal
+import tensorflow as tf
+import numpy as np
+
+import math
+from tensorflow.keras import backend as K
+import pickle
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+
+def cross_entropy_balanced(smooth=1e-6):
+    """Return a callable that computes weighted softmax cross entropy loss."""
+
+    def _cross_entropy_balanced(targets, inputs):
+        """Compute weighted softmax cross entropy loss
+        Args:
+          targets: true labels.
+          inputs: predicted logits.
+          
+        Returns:
+          A tensor with weighted softmax cross entropy loss computed from targets and inputs.
+        """
+
+        inputs = tf.reshape(inputs, [-1, 2])
+        targets = tf.reshape(targets, [-1])
+
+        counts = tf.cast(tf.reduce_sum(targets), tf.float32)
+        counts2 = tf.cast(tf.shape(targets)[0], tf.float32) - counts
+
+        weights = 1./(
+            tf.math.log(1.02 +
+                        (counts / tf.cast(tf.shape(targets)[0], tf.float32))))
+        weights2 = 1./(
+            tf.math.log(1.02 +
+                        (counts2 / tf.cast(tf.shape(targets)[0], tf.float32))))
+
+        #weights2 = 1.4914438787763962
+        #weights = 12.28532041146244
+        weightstot = targets
+        weightstot = tf.where(weightstot == 1, weights, weights2)
+
+        cross_entropy_mean = tf.reduce_mean(tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)(tf.cast(targets,tf.int32), inputs, sample_weight=weightstot))
+        #cross_entropy_mean = tf.compat.v1.losses.sparse_softmax_cross_entropy(
+    #labels=tf.cast(targets,tf.int32), logits=inputs, weights=weightstot)
+        return cross_entropy_mean
+    return _cross_entropy_balanced
+
+def iou_coef(y_true, y_pred, smooth=1e-6):
+    y_pred = tf.expand_dims(y_pred[...,1], -1)
+    #y_true = tf.expand_dims(y_true[...,0], -1)
+    intersection = K.sum(K.abs(y_true * y_pred), axis=[1,2,3,4])
+    union = K.sum(y_true, [1,2,3,4]) + K.sum(y_pred, [1,2,3,4]) - intersection
+    iou = K.mean((intersection + smooth) / (union + smooth), axis=0)
+    return iou
+
+_EPSILON = tf.keras.backend.epsilon()
+
+Fetch('trainmt2.zip','channels')
+Fetch('trainmt3.zip','channels')
+Fetch('validationmt2.zip','channels')
+Fetch('validationmt3.zip','channels')
+Fetch('dn.sgy','channels')
+
+def get_data(target=None, source=None, env=None):
+    
+    import zipfile
+    with zipfile.ZipFile(str(source[0]),'r') as zipf:
+        zipf.extractall('./')
+
+    with zipfile.ZipFile(str(source[1]),'r') as zipf:
+        zipf.extractall('./')
+
+    with zipfile.ZipFile(str(source[2]),'r') as zipf:
+        zipf.extractall('./')
+
+    with zipfile.ZipFile(str(source[3]),'r') as zipf:
+        zipf.extractall('./')
+
+    path = 'trainmt2/*.npz'    
+
+    data = []
+    label = []
+    for name in glob.glob(path):
+        patches = np.load(name)['patch']
+        labels = np.load(name)['label']
+        patches = np.transpose(patches, (0,3,1,2))
+        data.append(patches)
+        label.append(labels)
+
+    path = 'trainmt3/*.npz'
+
+    for name in glob.glob(path):
+        patches = np.load(name)['patch']
+        labels = np.load(name)['label']
+        patches = np.transpose(patches, (0,3,1,2))
+        data.append(patches)
+        label.append(labels)
+
+    data = np.reshape(np.array(data),(-1,128,128,128,1))
+    label = np.reshape(np.array(label),(-1,128,128,128,1))
+
+    m8r.File(data,name=str(target[0]))
+    m8r.File(label,name=str(target[1]))
+
+    pathval = 'validationmt2/*.npz'
+    data = []
+    label = []
+    for name in glob.glob(pathval):
+        patches = np.load(name)['patch']
+        labels = np.load(name)['label']
+        patches = np.transpose(patches, (0,3,1,2))
+        data.append(patches)
+        label.append(labels)
+
+    pathval = 'validationmt3/*.npz'
+    for name in glob.glob(pathval):
+        patches = np.load(name)['patch']
+        labels = np.load(name)['label']
+        patches = np.transpose(patches, (0,3,1,2))
+        data.append(patches)
+        label.append(labels)
+
+    data = np.reshape(np.array(data),(-1,128,128,128,1))
+    label = np.reshape(np.array(label),(-1,128,128,128,1))
+
+    m8r.File(data,name=str(target[2]))
+    m8r.File(label,name=str(target[3])) 
+
+Command(['xtrainchan.rsf','ytrainchan.rsf','xtestchan.rsf','ytestchan.rsf'],['trainmt2.zip','validationmt2.zip','trainmt3.zip','validationmt3.zip'],
+       action=Action(get_data))
+
+def get_deconv_filter(shape, dtype=None):
+
+    width, height, depth, in_channel, out_channel = tuple(shape)
+    f = math.ceil(width/2.0)
+    c = (2*f-1-f%2) / (2.0*f)
+    bilinear = np.zeros([width, height, depth])
+    for x in range(width):
+        for y in range(height):
+            for z in range(depth):
+                bilinear[x, y, z] = (1 - abs(x/f-c)) * (1 - abs(y/f-c)) * (1 - abs(z/f-c))
+    weights = np.zeros(shape)
+    for i in range(in_channel):
+        for j in range(out_channel):
+            weights[:,:,:, i, j] = bilinear
+
+    init = tf.constant_initializer(value=weights)
+    return init
+
+def train_model(target=None, source=None, env=None):
+    
+    input_size = env.get('input_size')
+    training = env.get('training')
+    learning_rate = env.get('learning_rate')
+    batch_size = env.get('batch_size')
+    num_epochs = env.get('num_epochs')
+
+    x_train = m8r.File(str(source[0]))[:]
+    y_train = m8r.File(str(source[1]))[:]
+    x_val = m8r.File(str(source[2]))[:]
+    y_val = m8r.File(str(source[3]))[:]
+
+    meantrain = np.reshape(np.mean(x_train,axis=(1,2,3,4)),(-1,1,1,1,1))
+    stdtrain = np.reshape(np.std(x_train,axis=(1,2,3,4)),(-1,1,1,1,1))
+    x_train = (x_train-meantrain)/(stdtrain + _EPSILON)
+
+    meanval = np.reshape(np.mean(x_val,axis=(1,2,3,4)),(-1,1,1,1,1))
+    stdval = np.reshape(np.std(x_val,axis=(1,2,3,4)),(-1,1,1,1,1))
+    x_val = (x_val-meanval)/(stdval + _EPSILON)
+
+
+    best_model_path = str(target[0])
+
+    strategy = tf.distribute.MirroredStrategy()
+    with strategy.scope():
+        inputs = Input(input_size)
+        conv1 = Conv3D(16, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(inputs)
+        conv1 = BatchNormalization()(conv1)
+        conv1 = Activation('relu')(conv1)
+        #conv1 = Conv3D(16, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(conv1)
+        #conv1 = BatchNormalization(momentum=0.9)(conv1)
+        #conv1 = Activation('relu')(conv1)
+        pool1 = MaxPooling3D(pool_size=(2,2,2))(conv1)
+
+        conv2 = Conv3D(32, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(pool1)
+        conv2 = BatchNormalization()(conv2)
+        conv2 = Activation('relu')(conv2)
+        #conv2 = Conv3D(32, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(conv2)
+        #conv2 = BatchNormalization(momentum=0.9)(conv2)
+        #conv2 = Activation('relu')(conv2)
+        pool2 = MaxPooling3D(pool_size=(2,2,2))(conv2)
+
+        conv3 = Conv3D(64, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(pool2)
+        conv3 = BatchNormalization()(conv3)
+        conv3 = Activation('relu')(conv3)
+        #conv3 = Conv3D(64, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(conv3)
+        #conv3 = BatchNormalization(momentum=0.9)(conv3)
+        #conv3 = Activation('relu')(conv3)
+        pool3 = MaxPooling3D(pool_size=(2,2,2))(conv3)
+
+        conv4 = Conv3D(128, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(pool3)
+        conv4 = BatchNormalization()(conv4)
+        conv4 = Activation('relu')(conv4)
+        #conv4 = Conv3D(128, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(conv4)
+        #conv4 = BatchNormalization(momentum=0.9)(conv4)
+        #conv4 = Activation('relu')(conv4)
+
+        conv4 = Dropout(0.3)(conv4, training=training)
+
+        shape1 = [4,32,32,32,8]
+
+        #up5 = concatenate([Conv3DTranspose(filters=128, kernel_size=(2,2,2), strides=(2,2,2))(conv4), conv3], axis=-1)
+        #up5 = Conv3DTranspose(filters=8, kernel_size=(2,2,2), strides=(2,2,2), kernel_initializer=get_deconv_filter([2,2,2,8,8]))(conv4)
+        #up5 = tf.nn.conv3d_transpose(conv4, get_deconv_filter([2,2,2,8,8]), output_shape=shape1, strides=[1,2,2,2,1], padding='SAME')
+        #up5 = UpSampling3D()(conv4)
+        up5 = Conv3DTranspose(filters=128, kernel_size=(2,2,2), strides=(2,2,2), kernel_initializer=get_deconv_filter([2,2,2,128,128]))(conv4)
+        conv5 = Conv3D(64, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(up5)
+        conv5 = BatchNormalization()(conv5)
+        #conv5 = Activation('relu')(conv5)
+        #conv5 = Conv3D(64, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(conv5)
+        #conv5 = BatchNormalization(momentum=0.9)(conv5)
+        #conv5 = Activation('relu')(conv5)
+
+        shape2 = [4,64,64,64,8]
+        #up6 = concatenate([Conv3DTranspose(filters=64, kernel_size=(2,2,2), strides=(2,2,2))(conv5), conv2], axis=-1)
+        #up6 = Conv3DTranspose(filters=8, kernel_size=(2,2,2), strides=(2,2,2), kernel_initializer=get_deconv_filter([2,2,2,8,8]))(conv5)
+        #up6 = tf.nn.conv3d_transpose(conv5, get_deconv_filter([2,2,2,8,8]), output_shape=shape2, strides=[1,2,2,2,1], padding='SAME')
+        #up6 = UpSampling3D()(conv5)
+        up6 = Conv3DTranspose(filters=64, kernel_size=(2,2,2), strides=(2,2,2), kernel_initializer=get_deconv_filter([2,2,2,64,64]))(conv5)
+        conv6 = Conv3D(32, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(up6)
+        conv6 = BatchNormalization()(conv6)
+        #conv6 = Activation('relu')(conv6)
+        #conv6 = Conv3D(32, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(conv6)
+        #conv6 = BatchNormalization(momentum=0.9)(conv6)
+        #conv6 = Activation('relu')(conv6)
+
+        #conv6 = Dropout(0.5)(conv6, training=training)
+
+        shape3 = [4,128,128,128,8]
+        #up7 = concatenate([Conv3DTranspose(filters=32, kernel_size=(2,2,2), strides=(2,2,2))(conv6), conv1], axis=-1)
+        #up7 = Conv3DTranspose(filters=8, kernel_size=(2,2,2), strides=(2,2,2), kernel_initializer=get_deconv_filter([2,2,2,8,8]))(conv6)
+        #up7 = tf.nn.conv3d_transpose(conv6, get_deconv_filter([2,2,2,8,8]), output_shape=shape3, strides=[1,2,2,2,1], padding='SAME')
+        #up7 = UpSampling3D()(conv6)
+        up7 = Conv3DTranspose(filters=32, kernel_size=(2,2,2), strides=(2,2,2), kernel_initializer=get_deconv_filter([2,2,2,32,32]))(conv6)
+        conv7 = Conv3D(16, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(up7)
+        conv7 = BatchNormalization()(conv7)
+        #conv7 = Activation('relu')(conv7)
+        #conv7 = Conv3D(16, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(conv7)
+        #conv7 = BatchNormalization(momentum=0.9)(conv7)
+        #conv7 = Activation('relu')(conv7)
+
+        conv8 = Conv3D(
+            2, (1,1,1), activation='softmax', padding='same', kernel_initializer=TruncatedNormal(stddev=math.sqrt(2.0 / (1**2 * 16))))(conv7)
+
+        model = Model(inputs=[inputs], outputs=[conv8])
+        model.summary()
+
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(lr=learning_rate),
+            loss=cross_entropy_balanced(),
+            metrics=iou_coef)
+    
+        checkpoint = ModelCheckpoint(
+            best_model_path,
+            monitor='val_iou_coef',
+            verbose=1,
+            save_best_only=True,
+            save_weights_only=False,
+            mode='max')
+        early = EarlyStopping(
+                monitor='val_iou_coef',
+                patience=20,
+                mode='max',
+                verbose=1)
+
+        callbacks_list = [checkpoint, early]
+
+        history = model.fit(
+            x_train, y_train,
+            validation_data = (x_val, y_val),
+            epochs = num_epochs,
+            batch_size = batch_size,
+            callbacks = callbacks_list,
+            verbose = 1, shuffle = True)
+        
+    keras.models.save_model(model,str(target[0]),save_format='h5')
+    with open(str(target[1]), 'wb') as file_pi:
+        pickle.dump(history.history, file_pi)
+
+Command(['modelchan.h5','train_history.pkl'],['xtrainchan.rsf','ytrainchan.rsf','xtestchan.rsf','ytestchan.rsf'],action=Action(train_model),
+        varlist=['batch_size','num_epochs','input_size','training','learning_rate'],batch_size=10,num_epochs=200,training=True,learning_rate=0.001, input_size=(None,None,None,1))
+
+def get_layer(target=None,source=None,env=None):
+    model = keras.models.load_model(str(source[0]),compile=False)
+    layer_name = env.get('layer_name')
+    layer = tf.keras.models.Model(inputs=model.input, outputs=model.get_layer(str(layer_name)).output)
+    x_test = m8r.File(str(source[1]))[:]
+    x_test = np.reshape(x_test,(-1,128,128,128,1))
+    meantest = np.reshape(np.mean(x_test,axis=(1,2,3,4)),(-1,1,1,1,1))
+    stdtest = np.reshape(np.std(x_test,axis=(1,2,3,4)),(-1,1,1,1,1))
+    x_test = (x_test - meantest)/(stdtest + _EPSILON)
+
+    layer_out = layer.predict(x_test)
+    m8r.File(layer_out,name=str(target[0]))
+
+Flow('xtestchanex','xtestchan','window n5=1')   
+Command('conv1-1.rsf',['modelchan.h5','xtestchanex.rsf'],action=Action(get_layer),varlist=['layer_name'],layer_name='activation')
+
+examples = []
+for example in (0,1,2,3,4):
+    layer = 'conv1-1-%d' % example
+    Plot(layer,'conv1-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= | 
+         grey wantaxis=y wanttitle=y title='Filter %d' titlesz=30 labelsz=15 color='i' allpos=y
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('conv-1',examples,'SideBySideAniso')
+
+examples = []
+for example in (5,6,7,8,9):
+    layer = 'conv1-1-%d' % example
+    Plot(layer,'conv1-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= |
+         grey allpos=y wantaxis=y wanttitle=y title='Filter %d' titlesz=30 labelsz=15 color='i'
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('conv-2',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,11,12,13,14):
+    layer = 'conv1-1-%d' % example
+    Plot(layer,'conv1-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= |
+         grey wantaxis=y wanttitle=y title='Filter %d' titlesz=30 labelsz=15 color='i' allpos=y
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('conv-3',examples,'SideBySideAniso')
+
+Result('conv','conv-1 conv-2 conv-3','OverUnderAniso')
+
+Command('transpconv1-1.rsf',['modelchan.h5','xtestchanex.rsf'],action=Action(get_layer),varlist=['layer_name'],layer_name='conv3d_transpose_2')
+
+examples = []
+for example in (0,1,2,3,4):
+    layer = 'transpconv1-1-%d' % example
+    Plot(layer,'transpconv1-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= |
+         grey mean=y wantaxis=y wanttitle=y color='i' title='Filter %d' titlesz=30 labelsz=15
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('transpconv-1',examples,'SideBySideAniso')
+
+examples = []
+for example in (5,6,7,8,9):
+    layer = 'transpconv1-1-%d' % example
+    Plot(layer,'transpconv1-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= |
+         grey wantaxis=y mean=y wanttitle=y color='i' title='Filter %d' titlesz=30 labelsz=15
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('transpconv-2',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,11,12,13,14):
+    layer = 'transpconv1-1-%d' % example
+    Plot(layer,'transpconv1-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= |
+         grey wantaxis=y mean=y wanttitle=y color='i' title='Filter %d' titlesz=30 labelsz=15
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('transpconv-3',examples,'SideBySideAniso')
+
+Result('transpconv','transpconv-1 transpconv-2 transpconv-3','OverUnderAniso')
+
+Command('conv2-1.rsf',['modelchan.h5','xtestchanex.rsf'],action=Action(get_layer),varlist=['layer_name'],layer_name='conv3d_6')
+
+examples = []
+for example in (0,1,2,3,4):
+    layer = 'conv2-1-%d' % example
+    Plot(layer,'conv2-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= |
+         grey mean=y wantaxis=y wanttitle=y title='Filter %d' titlesz=30 labelsz=15
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('conv2-1',examples,'SideBySideAniso')
+
+examples = []
+for example in (5,6,7,8,9):
+    layer = 'conv2-1-%d' % example
+    Plot(layer,'conv2-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= |
+         grey mean=y wantaxis=y wanttitle=y title='Filter %d' titlesz=30 labelsz=15
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('conv2-2',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,11,12,13,14):
+    layer = 'conv2-1-%d' % example
+    Plot(layer,'conv2-1',
+         '''
+         transp plane=23 | window n4=1 f4=64 f1=%d n1=1 | put d2=1 d3=1 label2= unit2= label1= unit1= |
+         grey mean=y wantaxis=y wanttitle=y title='Filter %d' titlesz=30 labelsz=15
+         ''' % (example,example))
+    examples.append(layer)
+
+Plot('conv2-3',examples,'SideBySideAniso')
+
+Result('conv2','conv2-1 conv2-2 conv2-3','OverUnderAniso')
+
+#
+# Forward seismic modeling for a deep-water channel model
+#
+# Paul Sava & James W. Jennings
+# 
+# Bureau of Economic Geology
+# John A. and Katherine G. Jackson School of Geosciences
+# University of Texas at Austin
+# University Station, Box X
+# Austin, TX 78713-8924
+# 
+# 512-471-1534 (voice)
+# 512-471-0140 (fax)
+# mailto:jim.jennings@beg.utexas.edu
+# http://www.beg.utexas.edu/staffinfo/jennings01.htm
+# 
+# June 2006
+#
+# $Id: SConstruct 1934 2006-06-21 15:45:20Z jennings_jim $
+#
+
+import rsf.recipes.channels as channels
+
+# Index of result names
+
+titles =  {'t'  : 'convolution (depth refl)',       # data results in time
+           'tt' : 'convolution (time refl)',
+           'f'  : 'exploding reflector (depth refl)',
+           'ft' : 'exploding reflector (time refl)',
+           'c'  : 'shot record',
+           
+           'm'  : 'convolution (depth refl)',       # image results in depth
+           'mt' : 'convolution (time refl)',
+           'i'  : 'exploding reflector (depth refl)',
+           'it' : 'exploding reflector (time refl)',
+           'j'  : 'shot record'}
+
+# Lists of results to generate
+
+#
+# Fast collection:
+#   one frequencies
+#   2D & 3D convolution
+#   2D exploding reflector
+#   2D shot record
+#
+
+frq_list = [40]                             # frequency list
+
+time_list_2D  = ['t','tt','f','ft','c']     # 2D data in time
+depth_list_2D = ['m','mt','i','it','j']     # 2D images in depth
+
+time_list_3D  = ['t','tt']                  # 3D data in time
+depth_list_3D = ['m','mt']                  # 3D images in depth
+
+time_list_3D_slice  = []                    # 2D slices from 3D time data
+depth_list_3D_slice = []                    # 2D slices from 3D depth images
+
+#
+# Overnight collection:
+#   three frequencies
+#   2D & 3D convolution
+#   2D & 3D exploding reflector
+#   2D shot record
+#
+
+# frq_list = [20,30,40]                       # frequency list
+#  
+# time_list_2D  = ['t','tt','f','ft','c']     # 2D data in time
+# depth_list_2D = ['m','mt','i','it','j']     # 2D images in depth
+#  
+# time_list_3D  = ['t','tt','ft']             # 3D data in time
+# depth_list_3D = ['m','mt','it']             # 3D images in depth
+# 
+# time_list_3D_slice  = ['ft']                # 2D slices from 3D time data
+# depth_list_3D_slice = ['it']                # 2D slices from 3D depth images
+
+# Authentication for the private data server
+from rsf.recipes.beg import server as private
+ 
+# Grid parameters
+
+grid_par = {'nx':360, 'dx':15, 'ox':0,      # common x & y grid parameters
+            'ny':200, 'dy':15, 'oy':0,
+            'xy_pad':40}
+
+res_grid_par = grid_par.copy()              # reservoir z grid parameters
+res_grid_par['nz'] = 128
+res_grid_par['dz'] =   2
+res_grid_par['oz'] = -59
+
+ovr_grid_par = grid_par.copy()              # overburden z grid parameters
+ovr_grid_par['nz'] =  64
+ovr_grid_par['dz'] =  40
+ovr_grid_par['oz'] = 158
+
+# Channel geometrical parameters
+
+geo_par =   {
+
+# Amalgamated sand width & shift parameters (fraction of channel top width)
+'as_width'   :  0.8,    # width at channel bottom
+'as_shift'   :  0.8,    # lateral shift at abs(skew)=1 (channel max bend)
+
+# Amalgamated sand height parameters (fraction of channel depth)
+'as_height0' :  0.5,    # height at skew=0 (channel inflection)
+'as_height1' :  0.8,    # height at abs(skew)=1 (channel max bend)
+
+# Amalgamated sand cross-section shape parameter
+'as_shape'   :  1.2,    # =1 parabolic, >1 more blunt, <1 more pointy
+
+# Bar & margin drape thickness parameters (fraction of channel depth)
+
+# No drapes
+# 'bd_depth'   :  1.0,    # profile depth
+# 'bd_zshift'  :  0.00,   # bar drape profile z shift, positive is down
+# 'md_depth'   :  1.0,    # margin drape profile depth
+# 'md_zshift'  :  0.00}   # margin drape profile z shift, positive is down
+
+# 1x drape thicknesses (base case)
+'bd_depth'   :  0.8,    # bar drape profile depth
+'bd_zshift'  : -0.15,   # bar drape profile z shift, positive is down
+'md_depth'   :  1.2,    # margin drape profile depth
+'md_zshift'  :  0.10}   # margin drape profile z shift, positive is down
+
+# Sand fraction parameters 
+
+sand_par =  {
+
+'bd_sand'  : 0.3,   # sand fraction in the bypass drape
+'md_sand'  : 0.2,   # sand fraction in the margin drape
+'as_sand'  : 1.0,   # sand fraction in the amalgamated sand
+'na_sand0' : 0.4,   # sand fraction in non-amalgamated sand at channel top
+'na_sand1' : 0.9}   # sand fraction in non-amalgamated sand at amalgamated sand surface
+
+# Porosity noise parameters
+
+# Background noise parameters
+bk_noise_par = {'taper_switch':1,       # covariance taper switch
+                'std_dev': 0.03,        # porosity noise standard devietion
+                'alpha':1,              # covariance shape parameter
+                'oriu':[1,0,0],         # covariance range orientation vectors
+                'oriv':[0,1,0], 
+                'oriw':[0,0,1],
+                'ru':1000,              # covariance range parameters
+                'rv':1000,   
+                'rw':   1}
+
+# Amalgamated and non-amalgamated sand noise parameters
+sd_noise_par = {'taper_switch':1,       # covariance taper switch
+                'std_dev':0.01,         # porosity noise standard devietion
+                'alpha':1,              # covariance shape parameter
+                'oriu':[1,0,0],         # covariance range orientation vectors
+                'oriv':[0,1,0], 
+                'oriw':[0,0,1],
+                'ru':200,               # covariance range parameters
+                'rv':200,   
+                'rw':  1}
+
+# Top & bottom taper parameters
+
+# Reservoir taper parameters
+res_taper_par = { 'top_h'    :    0,        # thickness (m)
+                  'top_phi'  :    0.3500,   # porosity (fraction)
+                  'top_rho'  :    1.6865,   # density (gm/cc)
+                  'top_vp'   : 1964.5730,   # Vp (m/s)
+                  'top_vs'   :  509.7961,   # Vs (m/s)
+                  'bot_h'    :   20,        # thickness (m)
+                  'bot_phi'  :    0.1554,   # porosity (fraction)
+                  'bot_rho'  :    2.3431,   # density (gm/cc)
+                  'bot_vp'   : 2429.1460,   # Vp (m/s)
+                  'bot_vs'   : 1019.5922}   # Vs (m/s)
+
+# Overburden taper parameters
+ovr_taper_par = { 'top_h'    : 2000,        # thickness (m)
+                  'top_phi'  :    0.3500,   # porosity (fraction)
+                  'top_rho'  :    1.6865,   # density (gm/cc)
+                  'top_vp'   : 1964.5730,   # Vp (m/s)
+                  'top_vs'   :  509.7961,   # Vs (m/s)
+                  'bot_h'    :    0,        # thickness (m)
+                  'bot_phi'  :    0.1554,   # porosity (fraction)
+                  'bot_rho'  :    2.3431,   # density (gm/cc)
+                  'bot_vp'   : 2429.1460,   # Vp (m/s)
+                  'bot_vs'   : 1019.5922}   # Vs (m/s)
+
+# Available memory size setting for transpose operations (Mb)
+
+memsize = 512
+
+# End of user adjustable settings
+
+# ------------------------------------------------------------
+# Make channel model
+
+channels.make_reservoir (   memsize, private,
+                            res_grid_par, geo_par,
+                            sand_par, bk_noise_par, sd_noise_par,
+                            res_taper_par)
+
+channels.make_overburden (memsize, ovr_grid_par, bk_noise_par, ovr_taper_par)
+
+# ------------------------------------------------------------
+# Plotting functions
+
+def tplot2d(par,custom=""):
+    return '''
+    window |
+    grey scalebar=y labelrot=n pclip=100
+    label1=t label2=x %s
+    ''' % (custom)    
+
+def zplot2d(par,custom=""):
+    return '''
+    window |
+    transp |
+    grey scalebar=y labelrot=n pclip=100
+    label1=z label2=x %s
+    ''' % (custom)
+
+def tplot3d(par,custom1="",custom2=""):
+    return '''
+    transp memsize=%d plane=13 |
+    byte bar=bar.rsf gainpanel=all pclip=99 %s |
+    grey3 scalebar=n bar=bar.rsf labelrot=n flat=y
+    frame1=%d frame2=%d frame3=80
+    point1=0.85 point2=0.90 screenratio=0.7 screenht=9
+    label1=y label2=x label3=t %s
+    ''' % (memsize,custom1,par['ypad'],par['xpad'],custom2)
+
+# set a z slice 10 meters up from the bottom of the channels
+z_slice = res_grid_par['dz']*res_grid_par['nz']+res_grid_par['oz']-10
+
+def zplot3d(par,custom1="",custom2=""):
+    return '''
+    byte bar=bar.rsf gainpanel=all pclip=90 %s |
+    grey3 scalebar=n bar=bar.rsf labelrot=n flat=y
+    frame1=%d  frame2=%d frame3=%d
+    point1=0.85 point2=0.90 screenratio=0.7 screenht=9
+    label1=y label2=x label3=z %s
+    ''' % (custom1,par['ypad'],par['xpad'],
+           z_slice/res_grid_par['dz'],custom2)
+
+# ------------------------------------------------------------
+# Seismic modeling parameters
+
+par = {
+        'nt':1000, 'ot':0, 'dt':0.005, 'kt':20,             # time
+        'nw':501,  'ow':0,                                  # frequency
+        
+        'nx':res_grid_par['nx']+2*res_grid_par['xy_pad'],   # array sizes
+        'ny':res_grid_par['ny']+2*res_grid_par['xy_pad'], 
+        'nz':res_grid_par['nz'],      
+
+        'dx':res_grid_par['dx'],                            # cell sizes
+        'dy':res_grid_par['dy'],
+        'dz':res_grid_par['dz'],
+
+        'ox':0, 'oy':0, 'oz':0,                             # grid origin
+        
+        'verb':'y','eps':0.01,'nrmax':1,'dtmax':0.00005,    # migration
+        'tmx':16,'tmy':16,'pmx':0,'pmy':0,'misc':'incore=y'                
+      }
+
+par['dw']=1./(par['nt']*par['dt'])
+
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['ymin']=par['oy']
+par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+
+# source coordinates
+par['xpad']=par['nx']/2.
+par['ypad']=par['ny']/2.
+
+par['xsou']=par['ox'] + par['xpad'] * par['dx']
+par['ysou']=par['oy'] + par['ypad'] * par['dy']
+
+par['ft']=par['kt']*par['dt']
+
+# ------------------------------------------------------------
+
+def flip():
+    return '''
+    transp memsize=250 plane=23 |
+    transp memsize=250 plane=12 |
+    reverse which=1 opt=i |
+    put label1=z label2=x label3=y
+    unit1=m unit2=m unit3=m
+    '''
+
+# ------------------------------------------------------------
+# Density and velocity
+
+# '0' = reservoir
+# '1' = overburden
+
+Flow('vp0','res_vp_noise_taper',flip() )
+Flow('vp1','ovr_vp_noise_taper',flip() )
+
+Flow('ro0','res_rho_noise_taper',flip() )
+Flow('ro1','ovr_rho_noise_taper',flip() )
+
+# density
+Flow  ('den','ro0','window n1=%(nz)d | put o1=0' % par)
+Result('den','den',
+       'transp plane=13 |'
+       + zplot3d(par,'pclip=100 bias=2.1 allpos=y','title="density" color=j'))
+
+# reservoir velocity
+Flow(  'vel','vp0', 'window n1=%(nz)d | put o1=0 o3=0' % par)
+Result('vel','vel',
+       'transp plane=13 |'
+       + zplot3d(par,'pclip=100 bias=2297 allpos=y','title="velocity" color=j'))
+
+# overburden velocity (can reduce n1=??? for speed)
+Flow(  'ovb','vp1', 'window n1=%(nz)d | put o1=0 o3=0' % ovr_grid_par)
+Result('ovb','ovb',
+       'transp plane=13 |'
+       + zplot3d(par,'pclip=100 bias=1950 allpos=y',
+                     'title="overburden velocity" frame3=%(nz)d color=j' 
+                     % ovr_grid_par))
+
+# ------------------------------------------------------------
+# Slowness
+
+# vertical smoothing window (m)
+z_rect = 120
+
+# reservoir slowness (true)
+Flow('slo','vel',
+     '''
+     math "output=1/input" |
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     unit1=m unit2=m unit3=m
+        ''')
+Result('slo','slo',
+       'transp memsize=250 plane=12 |'
+       + zplot3d(par,'pclip=100 bias=0.00034 allpos=y',
+                     'title="slowness" color=j'))
+
+# reservoir slowness (smooth)
+Flow('slo-s','slo',
+     'smooth rect1=50 rect2=50 rect3=%d' % (z_rect/res_grid_par['dz']))
+Result('slo-s','slo-s',
+       'transp memsize=250 plane=12 |'
+       + zplot3d(par,'pclip=100 bias=0.00034 allpos=y',
+                     'title="smoothed slowness" color=j'))
+
+# overburden slowness (true)
+Flow('ovs','ovb',
+     '''
+     math "output=1/input" |
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     ''')
+Result('ovs','ovs',
+       'transp memsize=250 plane=12 |'
+       + zplot3d(par,'pclip=100 bias=0.00039 allpos=y',
+                     'title="overburden slowness" frame3=%(nz)d color=j' 
+                     % ovr_grid_par))
+
+# overburden slowness (smooth)
+Flow('ovs-s','ovs',
+     'smooth rect1=50 rect2=50 rect3=%d' % (z_rect/ovr_grid_par['dz']))
+Result('ovs-s','ovs-s',
+       'transp memsize=250 plane=12 |'
+       + zplot3d(par,'pclip=100 bias=0.00039 allpos=y',
+                     'title="smoothed overburden slowness" frame3=%(nz)d color=j' 
+                     % ovr_grid_par))
+                     
+# ------------------------------------------------------------
+# Acoustic impedance
+
+# convolution time sampling
+dt_conv = 0.0025
+
+# impedance and reflectivity time image parameters
+t_window = 0.16
+t_frame = 0.12/dt_conv
+
+# acoustic impedance (depth)
+Flow('aim','vel den','math v=${SOURCES[0]} d=${SOURCES[1]} output=v*d', stdin=0)
+Result('aim','aim',
+       'transp plane=13 |'
+       + zplot3d(par,'pclip=100 bias=4.44 allpos=y',
+                     'title="acoustic impedance" color=j'))
+
+# acoustic impedance (time)
+Flow('ait',['aim','vel'],
+     'depth2time velocity=${SOURCES[1]} dt=%g nt=%d | put label1=t unit1=s'
+     % (dt_conv,par['nt']) )
+Result('ait','ait',
+       'window max1=%g |' % (t_window)
+       + tplot3d(par,'pclip=100 bias=4.44 allpos=y',
+                     'title="acoustic impedance" color=j frame3=%d' % (t_frame)))
+
+# reflectivity (depth)
+Flow('ref','aim','ai2refl')
+Result('ref','ref',
+       'transp plane=13 |'
+       + zplot3d(par,'','title="reflectivity"'))
+
+# reflectivity (time)
+Flow('ret','ait','ai2refl')
+Result('ret','ret',
+       'window max1=%g |' % (t_window)
+       + tplot3d(par,'','title="reflectivity" frame3=%d' % (t_frame)))
+
+# ------------------------------------------------------------
+
+# reflectivity (depth)
+Flow('r2d','ref','window squeeze=n n3=1 f3=140 | transp memsize=250 plane=12 | transp memsize=250 plane=23')
+Flow('r3d','ref','window                       | transp memsize=250 plane=12 | transp memsize=250 plane=23')
+
+# reflectivity (time)
+Flow('rt2d','ret','window squeeze=n n3=1 f3=140')
+Flow('rt3d','ret','window')
+
+# velocity
+Flow('v2d','vel','window squeeze=n n3=1 f3=140')
+Flow('v3d','vel','window')
+
+# overburden slowness
+Flow('o2d'  ,'ovs'  ,'window squeeze=n n2=1 f2=140')    # true
+Flow('o3d'  ,'ovs'  ,'window')                          # true
+Flow('o2d-s','ovs-s','window squeeze=n n2=1 f2=140')    # smooth
+Flow('o3d-s','ovs-s','window')                          # smooth
+
+# reservoir slowness
+Flow('s2d'  ,'slo'  ,'window squeeze=n n2=1 f2=140')    # true
+Flow('s3d'  ,'slo'  ,'window')                          # true
+Flow('s2d-s','slo-s','window squeeze=n n2=1 f2=140')    # smooth
+Flow('s3d-s','slo-s','window')                          # smooth
+
+# ------------------------------------------------------------
+# Wavelet
+
+for frq in frq_list:
+    Flow('wav_%d' % (frq),None,
+         '''
+         spike nsp=1 mag=1 k1=%d
+         unit2=m unit3=m
+         n1=%d d1=%g o1=0
+         n2=1  d2=%g o2=%g
+         n3=1  d3=%g o3=%g |
+         ricker1 frequency=%s |
+         put label1=t label2=x label3=y
+         ''' % (par['kt'],par['nt'],par['dt'],
+                par['dx'],par['xsou'],par['dy'],par['ysou'],frq) )
+    Result('wav_%d' % (frq),'wav_%d' % (frq),
+           'window n1=50 | graph title="wavelet %dHz" wantaxis2=n' % (frq))
+
+    Flow('tfreq_%d' % (frq),None,'math n1=%g d1=%g o1=%g output="0" | math output="%g - (%g/10.0)*x1" | put n2=1 n3=1 | spray axis=4 n=54'%(300,par['dt'],par['ot'],frq,frq))
+Flow('tphase',None,'math n1=%g d1=%g o1=%g output="0" | put n2=1 n3=1 | spray axis=4 n=54'%(300,par['dt'],par['ot']))
+
+# ------------------------------------------------------------
+# 1-D convolution
+# ------------------------------------------------------------
+
+# Convolution time sampling
+dt_conv = 0.0025
+
+Flow('t3dpatch',['r3d','v3d'],
+         '''
+         transp memsize=250 plane=23 |
+         transp memsize=250 plane=12 |
+         depth2time velocity=${SOURCES[1]} dt=%g nt=%d | patch w=300,300,200 | put n4=54 n5=1 n6=1
+         '''  % (dt_conv,par['nt']))
+for frq in frq_list:
+
+    # data from reflectivity in depth
+    Flow('t2d_%d' % (frq),['r2d','v2d'],
+         '''
+         transp memsize=250 plane=23 |
+         transp memsize=250 plane=12 |
+         depth2time velocity=${SOURCES[1]} dt=%g nt=%d |
+         ricker1 frequency=%g | put label1=t unit1=s
+         ''' % (dt_conv,par['nt'],frq) )
+
+    Flow('t3d_%dpatch' % (frq), 't3dpatch tfreq_%d tphase' % frq,
+         '''
+         ricker2 tfreq=${SOURCES[1]} tphase=${SOURCES[2]} | put label1=t unit1=s
+         ''', split=[4,"omp"])
+    Flow('t3d_%d' % (frq), 't3d_%dpatch' % (frq), 'put n4=6 n5=3 n6=3 | patch inv=y weight=y n0=1000,440,280')
+
+    # data from reflectivity in time
+    Flow('tt2d_%d' % (frq),'rt2d','ricker1 frequency=%d | put label1=t' % frq )
+
+    Flow('rt3dpatch','rt3d','patch w=300,300,200 | put n4=54 n5=1 n6=1')
+    Flow('tt3d_%dpatch' % (frq),'rt3dpatch tfreq_%d tphase'%frq,'ricker2 tfreq=${SOURCES[1]} tphase=${SOURCES[2]} | put label1=t', split=[4,"omp"])
+    Flow('tt3d_%d' % (frq), 'tt3d_%dpatch' % (frq), 'put n4=6 n5=3 n6=3 | patch inv=y weight=y n0=1000,440,280')
+
+    # image from reflectivity in depth
+    Flow('m2d_%d' % (frq),['t2d_%d' % (frq),'v2d'],
+         '''
+         time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
+         transp memsize=250 plane=12 |
+         transp memsize=250 plane=23 |
+         put label3=z unit3=m
+         ''' % par )
+
+    Flow('m3d_%d' % (frq),['t3d_%d' % (frq),'v3d'],
+         '''
+         time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
+         transp memsize=250 plane=12 |
+         transp memsize=250 plane=23 |
+         put label3=z unit3=m
+         ''' % par )
+
+    # image from reflectivity in time
+    Flow('mt2d_%d' % (frq),['tt2d_%d' % (frq),'v2d'],
+         '''
+         time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
+         transp memsize=250 plane=12 |
+         transp memsize=250 plane=23 |
+         put label3=z unit3=m
+         ''' % par )
+
+    Flow('mt3d_%d' % (frq),['tt3d_%d' % (frq),'v3d'],
+         '''
+         time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
+         transp memsize=250 plane=12 |
+         transp memsize=250 plane=23 |
+         put label3=z unit3=m
+         ''' % par )
+
+# 3D results in depth
+for i in depth_list_3D:
+    for frq in frq_list:
+        Result ('%s3d-%d' % (i,frq),'%s3d_%d' % (i,frq),
+                'transp plane=12 |'
+                + zplot3d(par,'','title="Training data"'))
+
+SConscript('../thin/SConstruct')
+Flow('mt3d_40-2','../thin/mt3d_40.rsf','cp')
+Result('mt3d-40-2','mt3d_40-2','transp plane=12 |'
+                + zplot3d(par,'','title="Training data"'))
+
+SConscript('../label/SConstruct')
+Flow('label','ref ../label/reflbl.rsf','math x=${SOURCES[0]} y=${SOURCES[1]} output="x-y" | mask min=0 max=0 | dd type=float | math output="1-input"')
+Result('diff-mask2','label',
+       'transp plane=13 |'
+       + zplot3d(par,'','title="Training label"'))
+
+par1 = par
+par1['xpad']=128/2.
+par1['ypad']=128/2.
+Flow('prdw9','xtestchan','window n1=1 n5=1 f5=150')
+Flow('prdw9y','ytestchan','window n1=1 n5=1 f5=150')
+Result('prdw9','put unit1=m unit2=m unit3=m |' + zplot3d(par1,'','title="Training cuboid"'))
+
+Flow(['dn.rsf','dn_hdr.rsf',
+      'dn.thdr','dn.bhdr'],
+     'dn.sgy',
+     '''
+     sfsegyread tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}  bfile=${TARGETS[3]}
+     ''')
+
+Flow('mapped_dn','dn','intbin xk=iline yk=xline | put o1=2.78 label2=Inline label3=Crossline unit1=km label1=Depth')
+
+Flow('mapped_dn_patch','mapped_dn','transp plane=13 | patch w=128,128,100')
+
+def predict(target=None,source=None,env=None):
+    model = keras.models.load_model(str(source[0]),compile=False)
+    x_test = m8r.File(str(source[1]))[:]
+    x_test = np.expand_dims(np.reshape(x_test,(-1,100,128,128)),-1)
+    meantest = np.reshape(np.mean(x_test,axis=(1,2,3,4)),(-1,1,1,1,1))
+    stdtest = np.reshape(np.std(x_test,axis=(1,2,3,4)),(-1,1,1,1,1))
+    x_test = (x_test - meantest)/(stdtest + _EPSILON)
+    x_test = np.pad(x_test,((0,0),(14,14),(0,0),(0,0),(0,0)))
+    
+    strategy = tf.distribute.MirroredStrategy()
+    
+    ypredtot = np.zeros_like(x_test)
+    ypredvar = np.zeros_like(x_test)
+    ypredtot = ypredtot[:,14:114,:,:,0]
+    ypredvar = ypredvar[:,14:114,:,:,0]
+    for i in range (x_test.shape[0]):
+        ypreds = []
+        for _ in range(100):
+            y_pred = model.predict(np.expand_dims(x_test[i],0))
+            ypreds.append(y_pred)
+        y_pred = np.mean(np.array(ypreds),axis=0)
+        y_predvar = np.var(np.array(ypreds),axis=0)
+        ypredtot[i] = y_pred[0,14:114,:,:,1]
+        ypredvar[i] = y_predvar[0,14:114,:,:,1]
+    m8r.File(ypredtot,name=str(target[0]))
+    m8r.File(ypredvar,name=str(target[1]))
+    
+Command(['ypredchan.rsf','ypredchanvar.rsf'],['modelchan.h5','mapped_dn_patch.rsf'],action=Action(predict))
+
+def predict2(target=None,source=None,env=None):
+    model = keras.models.load_model(str(source[0]),compile=False)
+    x_test = m8r.File(str(source[1]))[:]
+    x_test = np.expand_dims(np.reshape(x_test,(-1,128,128,128)),-1)
+    meantest = np.reshape(np.mean(x_test,axis=(1,2,3,4)),(-1,1,1,1,1))
+    stdtest = np.reshape(np.std(x_test,axis=(1,2,3,4)),(-1,1,1,1,1))
+    x_test = (x_test - meantest)/(stdtest + _EPSILON)
+
+    strategy = tf.distribute.MirroredStrategy()
+
+    ypredtot = np.zeros_like(x_test)
+    ypredvar = np.zeros_like(x_test)
+    ypredtot = ypredtot[:,:,:,:,0]
+    ypredvar = ypredvar[:,:,:,:,0]
+    for i in range (x_test.shape[0]):
+        ypreds = []
+        for _ in range(100):
+            y_pred = model.predict(np.expand_dims(x_test[i],0))
+            ypreds.append(y_pred)
+        y_pred = np.mean(np.array(ypreds),axis=0)
+        y_predvar = np.var(np.array(ypreds),axis=0)
+        ypredtot[i] = y_pred[0,:,:,:,1]
+        ypredvar[i] = y_predvar[0,:,:,:,1]
+    m8r.File(ypredtot,name=str(target[0]))
+    m8r.File(ypredvar,name=str(target[1]))
+
+Command(['prdw9predchan.rsf','prdw9predchanvar.rsf'],['modelchan.h5','prdw9.rsf'],action=Action(predict2))
+
+Result('prdw9ver','prdw9','window n2=1 f2=64 | grey title="Training vertical slice" pclip=90 transp=n scalebar=y barlabel=Amplitude label2=z unit2=samples label1=x unit1=samples') 
+Result('prdw7ver','prdw9predchan','window n2=1 f2=64 | grey transp=n scalebar=y title="Channel probability" barlabel=Probability color=j label2=z unit2=samples label1=x unit1=samples')
+Result('vadw7ver','prdw9predchanvar','window n2=1 f2=64 | grey transp=n scalebar=y barlabel=Uncertainty title="Model uncertainty" label2=z unit2=samples label1=x unit1=samples')
+Result('prdw10ver','prdw9y','window n2=1 f2=64 | grey transp=n scalebar=y label2=z unit2=samples label1=x unit1=samples title="Ground truth" barlabel="Label"')
+
+Result('prdw9hor','prdw9','window n3=1 f3=90 | grey pclip=90 scalebar=y barlabel=Amplitude label1=x unit1=samples label2=y unit2=samples title="Training horizontal slice"')
+Result('prdw7hor','prdw9predchan','window n3=1 f3=90 | grey scalebar=y barlabel=Probability color=j label2=y unit2=samples label1=x unit1=samples title="Channel probability"')
+Result('vadw7hor','prdw9predchanvar','window n3=1 f3=90 | grey scalebar=y barlabel=Uncertainty label2=y unit2=samples label1=x unit1=samples title="Model uncertainty"')
+Result('prdw10hor','prdw9y','window n3=1 f3=90 | grey scalebar=y label2=y unit2=samples label1=x unit1=samples title="Ground truth" barlabel="Label"')
+
+def lossplot(target=None,source=None,env=None):
+    history = pickle.load(open(str(source[0]),"rb"))
+    trainloss = history['loss']
+    valloss = history['val_loss']
+    m8r.File(trainloss,name=str(target[0]))
+    m8r.File(valloss,name=str(target[1]))   
+
+Command(['trainlosschan.rsf','vallosschan.rsf'],'train_history.pkl',action=Action(lossplot))
+
+Plot('trainlosschan','put d1=1 o1=1 label1=Epochs label2=Loss | graph title="Loss curves" min2=0 max2=1.5')
+Plot('vallosschan','put d1=1 o1=1 label1=Epochs label2=Loss | graph title="Loss curves" wanttitle=n wanntaxis=n min2=0 max2=1.5 plotcol=5')
+Result('cost2','trainlosschan vallosschan','Overlay')
+
+Flow('ypredafpatchchan','ypredchan','put n6=1 n5=4 n4=4 | transp plane=13 | transp plane=46 | patch inv=y weight=y n0=100,312,312 | put d1=0.002 o1=2.78 o2=2677 o3=3960 d2=1 d3=1 | put label1=Depth unit1=km label2=Inline label3=Crossline')
+
+Flow('ypredafpatchchanvar','ypredchanvar','put n6=1 n5=4 n4=4 | transp plane=13 | transp plane=46 | patch inv=y weight=y n0=100,312,312 | put d1=0.002 o1=2.78 o2=2677 o3=3960 d2=1 d3=1 | put label1=Depth unit1=km label2=Inline label3=Crossline')
+
+Result('imageausnew3','mapped_dn','sfput o1=2.78 | sfbyte gainpanel=all bar=bar.rsf | sfgrey3 frame1=50 frame2=50 frame3=140 flat=y point1=0.2 title="Field data" barlabel=Amplitude label1=Depth unit1=km label2=Inline unit2= label3=Crossline unit3= scalebar=y')
+
+Flow('dip','mapped_dn','fdip n4=2 rect1=5 rect2=5 rect3=5')
+Flow('idip','dip','window n4=1')
+Flow('xdip','dip','window f4=1')
+Flow('xdip23','xdip','transp plane=23')
+Result('idip','byte bar=bar.rsf gainpanel=all | grey3 color=j scalebar=y frame2=100 frame3=50 frame1=130 label1=Time unit1=s label2=Inline label3=Crossline title="Inline dip" barlabel="Slope" unit2= unit3=')
+Result('xdip','byte bar=bar.rsf gainpanel=all | grey3 color=j scalebar=y frame2=100 frame3=50 frame1=130 label1=Time unit1=s label2=Inline label3=Crossline title="Crossline dip" barlabel="Slope" unit2= unit3=')
+Flow('browse','mapped_dn dip','pwspray2 dip=${SOURCES[1]} ns2=3 ns3=1 | transp | median')
+Result('browse','byte gainpanel=all | grey3 frame2=100 frame3=50 frame1=130 label1=Time unit1=s label2=Inline label3=Crossline title="Seismic data" unit2= unit3=')
+Flow('ipwd','mapped_dn idip','pwd n4=0 dip=${SOURCES[1]}')
+Flow('xpwd','mapped_dn xdip','pwd n4=1 dip=${SOURCES[1]}')
+Flow('isobel','ipwd xdip23','transp plane=23 | pwsmooth dip=${SOURCES[1]} ns=3 | transp plane=23')
+Flow('xsobel','xpwd idip','pwsmooth dip=${SOURCES[1]} ns=3')
+Result('isobel','byte gainpanel=all allpos=y polarity=y | grey3 frame2=100 frame3=50 frame1=130 label1=Time unit1=s label2=Inline label3=Crossline title="Inline Sobel" unit2= unit3=')
+Result('xsobel','byte gainpanel=all allpos=y polarity=y | grey3 frame1=50 frame2=100 frame3=50 frame1=130 label1=Time unit1=s label2=Inline label3=Crossline title="Crossline Sobel" unit2= unit3=')
+Flow('sobelbrowseaf','isobel xsobel','math x=${SOURCES[1]} output="(input*input+x*x)" | smooth rect1=3')
+Result('aussobel3','sobelbrowseaf','byte bar=bar.rsf gainpanel=all allpos=y polarity=y | sfgrey3 scalebar=y frame1=50 frame2=50 frame3=140 flat=y point1=0.2 label1=Depth barlabel=Output unit1=km label2=Inline label3=Crossline title="Plane-wave Sobel" unit2= unit3= ')
+
+Result('ausnew3','ypredafpatchchan','sfput o1=2.78 | sfbyte gainpanel=all bar=bar.rsf | sfgrey3 frame1=50 frame2=50 frame3=140 title="Channel probability" barlabel=Probability color=j label1=Depth unit1=km label2=Inline unit2= label3=Crossline flat=y point1=0.2 unit3= scalebar=y')
+
+Result('ausunnew3','ypredafpatchchanvar','sfput o1=2.78 | sfbyte gainpanel=all bar=bar.rsf | sfgrey3 frame1=50 frame2=50 frame3=140 title="Model uncertainty" barlabel=Uncertainty label1=Depth unit1=km label2=Inline unit2= label3=Crossline flat=y point1=0.2 unit3= scalebar=y')
+
+for file in ['full_angle']:
+   Fetch('Parihaka_PSTM_%s.sgy'%file,dir='PARIHAKA-3D',
+          server='https://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data/newzealand/Taranaiki_Basin',
+	  usedatapath=1)
+   Flow(['%s.rsf'%file,'%s_hdr.rsf'%file,
+         '%s.thdr'%file,'%s.bhdr'%file],
+        'Parihaka_PSTM_%s.sgy'%file,
+        '''
+        sfsegyread
+           tfile=${TARGETS[1]} 
+           hfile=${TARGETS[2]}  
+	   bfile=${TARGETS[3]} 
+        ''')
+   Flow('%sheaderattr.txt'%file,'%s_hdr.rsf'%file,
+        'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+Flow('mapped_full_angle','full_angle full_angle_hdr','intbin head=${SOURCES[1]} xk=iline yk=xline | put label2=Inline label3=Crossline')
+#Flow('mapped_full_angle_cut','mapped_full_angle','window min1=0.7 max1=1.704')
+Flow('mapped_full_angle_cut','mapped_full_angle','window min1=1 max1=1.4 min2=2200 max2=2400 min3=4900 max3=5200')
+Result('imageParinew3','mapped_full_angle_cut','sfbyte gainpanel=all bar=bar.rsf | sfgrey3 point1=0.2 frame1=100 frame2=100 frame3=100 flat=y title="Field data" barlabel=Amplitude label1=Time unit1=s label2=Inline unit2= label3=Crossline unit3= scalebar=y')
+
+Flow('mapped_full_angle_cut_patch','mapped_full_angle_cut','transp plane=13 | patch w=128,128,128')
+Command(['prppredchan.rsf','prppredchanvar.rsf'],['modelchan.h5','mapped_full_angle_cut_patch.rsf'],action=Action(predict2))
+
+Flow('prppredafpatchchan','prppredchan','put n6=2 n5=3 n4=4 | transp plane=13 | transp plane=46 | patch inv=y weight=y n0=135,201,301 | put label1=Time unit1=s label3=Crossline label2=Inline d1=0.003 o1=0.999 d2=1 d3=1 o3=4900 o2=2200')
+Result('Parinew3','prppredafpatchchan','sfbyte gainpanel=all bar=bar.rsf | sfgrey3 frame1=100 frame2=100 frame3=100 flat=y title="Channel probability" barlabel=Probability color=j label1=Time unit1=s label2=Inline unit2= label3=Crossline unit3= scalebar=y point1=0.2')
+
+Flow('prppredafpatchchanvar','prppredchanvar','put n6=2 n5=3 n4=4 | transp plane=13 | transp plane=46 | patch inv=y weight=y n0=135,201,301 | put label1=Time unit1=s label3=Crossline label2=Inline d1=0.003 o1=0.999 d2=1 d3=1 o3=4900 o2=2200')
+Result('Pariunnew3','prppredafpatchchanvar','sfbyte gainpanel=all bar=bar.rsf | sfgrey3 frame1=100 frame2=100 frame3=100 flat=y title="Model uncertainty" barlabel="Uncertainty" label1=Time unit1=s label2=Inline unit2= label3=Crossline unit3= scalebar=y point1=0.2')
+
+Flow('dipprp','mapped_full_angle_cut','fdip n4=2 rect1=5 rect2=5 rect3=5')
+Flow('idipprp','dipprp','window n4=1')
+Flow('xdipprp','dipprp','window f4=1')
+Flow('xdip23prp','xdipprp','transp plane=23')
+Flow('prp','mapped_full_angle_cut dipprp','pwspray2 dip=${SOURCES[1]} ns2=3 ns3=1 | transp | median')
+Flow('ipwdprp','mapped_full_angle_cut idipprp','pwd n4=0 dip=${SOURCES[1]}')
+Flow('xpwdprp','mapped_full_angle_cut xdipprp','pwd n4=1 dip=${SOURCES[1]}')
+Flow('isobelprp','ipwdprp xdip23prp','transp plane=23 | pwsmooth dip=${SOURCES[1]} ns=3 | transp plane=23')
+Flow('xsobelprp','xpwdprp idipprp','pwsmooth dip=${SOURCES[1]} ns=3')
+Flow('sobelprpaf','isobelprp xsobelprp','math x=${SOURCES[1]} output="(input*input+x*x)" | smooth rect1=3')
+Result('sobelnew3','sobelprpaf','byte bar=bar.rsf gainpanel=all allpos=y polarity=y | sfgrey3 scalebar=y frame1=100 frame2=100 frame3=100 flat=y point1=0.2 label1=Time barlabel=Output unit1=s label2=Inline label3=Crossline title="Plane-wave Sobel" unit2= unit3= ')
+
+End()
+

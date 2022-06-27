@@ -1,0 +1,220 @@
+from rsf.proj import *
+
+par = dict(xmin=2.5,xmax=7.5,zmin=0,zmax=5,
+           v0=1.0,gradx=0.15,gradz=0.15,
+           dim1 = 'd1=0.001 o1=0 n1=10001',
+           dim2 = 'd2=0.01 o2=0 n2=2000')
+v0=1.0
+gx=0.15
+gz=0.15
+
+layers = (
+    ((0,2),(3.5,2),(4.5,2.5),(5.,2.25),(5.5,2),(6.5,2.5),(10,2.5)),
+    ((0,2.5),(10,3.5)),
+    ((0,3.2),(3.5,3.2),(5,3.7),(6.5,4.2),(10,4.2)),
+    ((0,4.5),(10,4.5))
+    )
+
+nlays = len(layers)
+for i in range(nlays):
+    inp = 'inp%d' % (i+1)
+    Flow(inp+'.asc',None,
+         'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
+         (' '.join([' '.join([str(y) for y in x]) for x in layers[i]]),
+          len(layers[i])))
+
+Flow('lay1','inp1.asc','dd form=native | spline %(dim1)s fp=0,0' % par)
+Flow('lay2',None,'math %(dim1)s output="2.5+x1*0.1" ' % par)
+Flow('lay3','inp3.asc','dd form=native | spline %(dim1)s fp=0,0' % par)
+Flow('lay4',None,'math %(dim1)s output=4.5' % par)
+
+Flow('lays','lay1 lay2 lay3 lay4','cat axis=2 ${SOURCES[1:4]}')
+graph = '''
+graph yreverse=y wantaxis=y wanttitle=n wantscalebar=n 
+''' % par
+
+Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
+Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
+Plot('lays2','lays','graph min1=2.5 max1=7.5 min2=0 max2=5 yreverse=y wantaxis=n wanttitle=n plotfat=2')
+Plot('anamapd','grey min1=0 max1=5 min2=2.5 max2=7.5')
+Result('wetmlayers','anamapd lays2','Overlay')
+Plot('zomig','grey min1=0 max1=5 min2=2.5 max2=7.5')
+Result('zomiglayers','zomig lays2','Overlay')
+
+# Generate data using Kirchhoff modeling
+Flow('dips','lays','deriv scale=y')
+
+Flow('zodata','lays dips',
+     '''
+     kirmod twod=y freq=15 dip=${SOURCES[1]}
+     dt=0.001 nt=8000
+     s0=0 ds=0.02 ns=501
+     h0=0 dh=0.02 nh=1
+     type=v vel=%(v0)g gradx=%(gradx)g gradz=%(gradz)g |
+     window | costaper nw2=10 | put label2=Distance unit2=km
+     ''' % par)
+
+Result('zodata','grey title="Zero-Offset Data" labelsz=10 titlesz=11 titlefat=5 labelfat=4 label1=Time unit1=s label2=Distance unit2=km screenwd=20 screenht=6 ')
+Flow('vel',None,'math %(dim1)s %(dim2)s output="%(v0)g+%(gradx)g*x1+%(gradz)g*x2" | transp' % par)
+
+Flow('veloc','vel','window j2=20')
+Plot('vel','grey mean=y color=j')
+graph = '''
+graph yreverse=y wantaxis=n wanttitle=n wantscalebar=n 
+''' % par
+Result('vel','window max1=5 min2=1.3 max2=8|grey title="Velocity"  labelsz=10 titlesz=11 titlefat=5 labelfat=4 color=j scalebar=y allpos=y bias=1.5 label1=Depth unit1=km label2=Distance unit2=km screenwd=20 screenht=6 scalebar=y barlabel=Velocity barunit=km/s')
+Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
+Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
+Plot('vel-model','vel lays0 lays1','Overlay')
+Flow('vel2','veloc','transp | scale dscale=0.5')
+#Flow('veloc2','veloc','scale dscale=0.5')
+#Analytical migration velocity
+Flow('vmigtest',None,
+     '''
+     math n1=8001 o1=1 n2=501 d1=0.001 d2=0.02 output="((%g+%g*x2)*(%g+%g*x2))/
+     (x1*(sqrt(%g*%g+%g*%g)*(1/tanh(sqrt(%g*%g+%g*%g)*x1))-%g))"
+     label1=Time unit1=s label2=Position unit2=km label=Velocity unit=km/s
+     ''' % (v0,gx,v0,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz))
+Flow('vmigwintest','vmigtest','window n1=8000|put o1=0')
+Flow('vmig',None,
+     '''
+     math n1=8001 o1=1 n2=501 d1=0.001 d2=0.02 output="((%g+%g*x2)*(%g+%g*x2))/
+     (x1*(sqrt(%g*%g+%g*%g)*(1/tanh(sqrt(%g*%g+%g*%g)*x1))-%g))"
+     label1=Time unit1=s label2=Position unit2=km label=Velocity unit=km/s
+     ''' % (v0,gx,v0,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz))
+Flow('vmigwin','vmig','window n1=8000|put o1=0')
+Flow('kpstmtime','zodata vmigwin','kirchnew velocity=${SOURCES[1]}')
+#Method 2:
+# Find T0
+
+Flow('t02','vel','eikonal plane2=y zshot=0 order=1 | scale dscale=2')
+Plot('t02','contour wanttitle=n plotcol=5')
+
+# Find X0
+
+Flow('dist','t02','math output=x2')
+Flow('zero22','t02','math output=0')
+
+Flow('x02','t02 dist zero22',
+     'lineiko what=i time=${SOURCES[1]} slow=${SOURCES[2]}')
+Plot('x02','contour wanttitle=n wantaxis=y plotcol=4 nc=100 allpos=n')
+
+Result('imrays','t02 x02','Overlay')
+Flow('warp3','t02 x02',
+     '''
+     cat axis=3 ${SOURCES[1]} 
+     ''')
+Flow('kpstmwarp2','kpstmtime warp3',
+     'iwarp2 warp=${SOURCES[1]} inv=n')
+# analytical Dix
+
+Flow('vdix',None,
+     '''
+     math n1=8000 n2=501 d1=0.001 d2=0.02 output="(%g+%g*x2)*sqrt(%g*%g+%g*%g)/
+     (sqrt(%g*%g+%g*%g)*(cosh(sqrt(%g*%g+%g*%g)*x1))-%g*sinh(sqrt(%g*%g+%g*%g)*x1))"
+     label1=Time unit1=s label2=Position unit2=km label=Velocity unit=km/s|pad n1=16001 |lapfill niter=250 verb=y grad=y | window n1=16000|smooth rect1=5 rect2=5 repeat=3
+     ''' % (v0,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz,gz,gx,gx,gz,gz,gz,gx,gx))
+Result('vmigwin','window max1=6 min2=1.3 max2=8|grey title="Time Migration Velocity"  labelsz=10 titlesz=11 titlefat=5 labelfat=4 color=j scalebar=y allpos=y bias=1.5 label1=Time unit1=s label2=Distance unit2=km screenwd=20 screenht=6 scalebar=y barlabel=Velocity barunit=km/s')
+Result('vdix','window max1=6 min2=1.3 max2=8|grey title="Dix Velocity"  labelsz=10 titlesz=11 titlefat=5 labelfat=4 color=j scalebar=y allpos=y bias=1.5 label1=Time unit1=s label2=Distance unit2=km screenwd=20 screenht=6 scalebar=y barlabel=Velocity barunit=km/s')
+#Result('datagrad','zodata vmig vdix','OverUnderAniso')
+###########################################################
+# Wave-equation time migration
+###########################################################
+
+Flow('one','vdix','math output=1 | transp')
+Flow('zero','vdix','math output=0 | transp')
+
+#Flow('dfft','vpick2','transp | rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Flow('dfft','vdix','transp |fft1| fft3 axis=2 pad=1')
+Flow('dright dleft','vdix dfft one zero',
+     '''
+     transp | scale dscale=0.5 |
+    anisolr2 seed=2016 dt=0.001
+     velx=${SOURCES[2]}
+     eta=${SOURCES[3]} theta=${SOURCES[3]}
+     fft=${SOURCES[1]} left=${TARGETS[1]}
+    ''')
+
+Flow('wetm wsnaps','zodata dleft dright',
+     '''
+     pad n1=16000|spline n1=16000 o1=0 d1=0.001 |reverse which=1 |
+     transp |
+     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=16000 dz=0.001
+     ''')
+Flow('wetm1','wetm','window n1=8000|bandpass fhi=50 flo=3')
+#Analytical solution:
+# analytical x0
+Flow('ax0','veloc',
+     '''
+     math output="x2+(sqrt((%g+%g*x2)*(%g+%g*x2)+%g*x1*%g*x1)-(%g+%g*x2))/%g" |
+     put label=Position unit=km
+     ''' % (v0,gx,v0,gx,gx,gx,v0,gx,gx))
+
+Plot('ax0',
+     '''
+     grey color=j scalebar=y allpos=y 
+     title="Analytical x\_0\^" screenratio=0.75 screenwd=20 screenht=6 
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+     ''')
+Plot('cax0','ax0',
+     '''
+     contour screenwd=20 screenht=6 wanttitle=n plotcol=6 wantaxis=n
+     ''')
+Result('x0','ax0 cax0','Overlay')
+
+# analytical t0
+Flow('at0','veloc',
+     '''
+     math output="acosh(((%g*%g+%g*%g)*(sqrt((%g+%g*x2)*(%g+%g*x2)+%g*x1*%g*x1)+%g*x1)
+     -input*%g*%g)/(input*%g*%g))/sqrt(%g*%g+%g*%g)" | cut n1=1 |scale dscale=2|
+     put label=Time unit=s
+     ''' % (gx,gx,gz,gz,v0,gx,v0,gx,gx,gx,gz,gz,gz,gx,gx,gz,gz,gx,gx))
+
+Plot('at0',
+     '''
+     grey color=j scalebar=y allpos=y 
+     title="Analytical t\_0\^" screenratio=0.75 screenwd=20 screenht=6
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+     ''')
+Plot('cat0','at0',
+     '''
+     contour screenwd=20 screenht=6 wanttitle=y plotcol=5 wantaxis=y title="Image Rays "
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 
+     label1=Depth unit1=km label2=Distance unit2=km 
+     allpos=y
+     ''')
+Result('t0','at0 cat0','Overlay')
+Flow('analycoord','at0 ax0',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     transp plane=23 | transp plane=12
+     ''')
+Result('acoord','cat0 cax0','Overlay')
+Flow('anamapd','wetm1 analycoord','inttest2 interp=spline nw=8 coord=${SOURCES[1]}')
+Flow('anamapdtime','kpstmtime analycoord','inttest2 interp=spline nw=8 coord=${SOURCES[1]}')
+Result('kpstmtime','window max1=6 min2=1.3 max2=8|grey title="Time Migration"  labelsz=10 titlesz=11 titlefat=5 labelfat=4 label2=Distance unit2=km screenwd=20 screenht=6') 
+Result('anamapdtime','window max1=5 min2=1.3 max2=8|grey title="From time to depth"  labelsz=10 titlesz=11 titlefat=5 labelfat=4 label1=Depth unit1=km label2=Distance unit2=km screenwd=20 screenht=6') 
+Result('wetm1','window max1=6 min2=1.3 max2=8|grey title="Wave Equation Time Migration"  labelsz=10 titlesz=11 titlefat=5 labelfat=4 label2=Distance unit2=km screenwd=20 screenht=6 label1=Time unit1=s') 
+Result('anamapd','window max1=5 min2=1.3 max2=8|grey title="Wave Equation Time Migration -> Depth" labelsz=10 titlesz=11 titlefat=5 labelfat=4 label1=Depth unit1=km label2=Distance unit2=km screenwd=20 screenht=6') 
+# Lowrank decomposition (isotropic)
+Flow('fft','vel2','fft1 | fft3 axis=2 pad=1')
+Flow('right left','vel2 fft',
+     'isolr2 seed=2012 dt=0.001 fft=${SOURCES[1]} left=${TARGETS[1]}')
+##RTM
+# Zero-offset migration (two-step)
+zomig = '''
+reverse which=1 |
+transp |
+fftexp0 mig=y snap=100
+left=${SOURCES[1]} right=${SOURCES[2]}
+nz=2000 dz=0.01 snaps=${TARGETS[1]}
+'''
+
+Flow('zomig zosnaps','zodata left right',zomig)
+Result('zomig','window max1=5 min2=1.3 max2=8|grey title="Depth Migration"  labelsz=10 titlesz=11 titlefat=5 labelfat=4 label1=Depth unit1=km label2=Distance unit2=km screenwd=20 screenht=6')
+#Result('timewetmgrad','kpstmtime wetm1','OverUnderAniso')
+#Result('rtmwetmgrad','anamapd zomig','OverUnderAniso')
+
+End()

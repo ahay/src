@@ -1,0 +1,261 @@
+from rsf.proj import *
+from math import pi
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+def grey3(title):
+    return '''
+    put o3=0 |
+    byte allpos=n clip=0.272284 |
+    grey3 title="%s" label2=Trace label1="Time" unit1=s label3=Shot
+    point1=0.8 point2=0.7 frame1=250 frame2=50 frame3=7
+    parallel2=n o2num=2 d2num=1 n2tic=2 screenratio=1.3
+    font=2 labelfat=2 titlefat=2  flat=y
+    ''' % title
+
+#### fetch data
+Fetch('sean.HH','bp')
+Flow('sean3','sean.HH',
+     'dd form=native | bandpass fhi=50 | math output="input/2284.76"')
+
+Result('s3','sean3',
+    '''
+    put o3=0 |
+    byte allpos=n clip=0.272284 |
+    grey3 title="" label2=Trace label1="Time" unit1=s label3=Shot
+    point1=0.8 point2=0.7 frame1=250 frame2=50 frame3=7
+    parallel2=n o2num=2 d2num=1 n2tic=2 screenratio=1.3
+    font=2 labelfat=2 titlefat=2  flat=y
+    ''')
+
+# f-k spectra
+Flow('seanfk','sean3',
+     'fft1 | fft3 axis=2 | fft3 axis=3 | math output="abs(input)" | sfreal')
+Result('seanfk',
+       ''' 
+       window n1=160 | put d2=0.003 |
+       byte allpos=n | 
+       grey3 title="" label2=Wavenumber
+       label1="Frequency" unit1=Hz label3=Wavenumber point1=0.8 point2=0.7
+       frame1=80 frame2=180 frame3=20 parallel2=n 
+       screenratio=1.3 font=2 labelfat=2 titlefat=2 flat=y
+       color=g
+       ''')
+
+# mask for random traces
+Flow('mcut3','sean3',
+     '''
+     window n1=1 |
+     noise rep=y type=n seed=195|
+     math output="input^1" |
+     mask min=-0.3 | dd type=int | cut j2=2
+     ''')
+
+# zero out random traces
+Flow('zero3','sean3 mcut3','headercut mask=${SOURCES[1]}')
+Result('m3','zero3',grey3(''))
+
+# f-k spectra
+Flow('zerofk','zero3',
+     'fft1 | fft3 axis=2 | fft3 axis=3 | math output="abs(input)" | sfreal')
+Result('zerofk',
+       ''' 
+       window n1=160 | put d2=0.003 |
+       byte allpos=n | 
+       grey3 title="" label2=Wavenumber
+       label1="Frequency" unit1=Hz label3=Wavenumber point1=0.8 point2=0.7
+       frame1=80 frame2=180 frame3=20 parallel2=n 
+       screenratio=1.3 font=2 labelfat=2 titlefat=2 flat=y
+       color=g
+       ''')
+
+#### initialize boundary
+Flow('maskin3','mcut3',
+     'dd type=float | spray axis=1 n=500 d=0.004 o=1.9 | dd type=int')
+Flow('maskin3-f','maskin3','dd type=float')
+Flow('spike',None,'spike n1=500 n2=180 n3=20 | dd type=int')
+
+Flow("maskpad1", "spike", "window n3=10 | reverse which=4 ")
+Flow("maskpad2", "spike", "window n3=10 f3=10 | reverse which=4 ")
+Flow("maskspf1", "maskpad1 maskin3 maskpad2", "cat ${SOURCES[1:3]} axis=3")
+
+Flow("maskpad3", "maskspf1", "window n2=20 | reverse which=2")
+Flow("maskpad4", "maskspf1", "window n2=20 f2=160 | reverse which=2")
+Flow("maskspf", "maskpad3 maskspf1 maskpad4", "cat ${SOURCES[1:3]} axis=2 ")
+
+Flow("datapad1", "sean3", "window n3=10 | reverse which=4")
+Flow("datapad2", "sean3", "window n3=10 f3=10 | reverse which=4")
+Flow("gapdata1", "datapad1 zero3 datapad2", "cat ${SOURCES[1:3]} axis=3")
+
+Flow("datapad3", "gapdata1", "window n2=20 | reverse which=2")
+Flow("datapad4", "gapdata1", "window n2=20 f2=160 | reverse which=2")
+Flow("gapdata", "datapad3 gapdata1 datapad4", "cat ${SOURCES[1:3]} axis=2  ")
+
+#### data interpolation using t-x-y SPF with vary smoothness
+# forward interpolation 1 ->
+lambda1 = 0.5
+lambda2 = 0.5
+lambda3 = 0.03
+a1 = 11
+a2 = 11
+a3 = 5
+smooth = 1
+epst = 0.003
+epsx = 0.003
+epsy = 0.003
+
+Flow('inter1','gapdata maskspf',
+     '''
+     txyspfvsint3 lambda1=%f lambda2=%f lambda3=%f a=%d,%d,%d 
+     smooth=%d epst=%f epsx=%f epsy=%f known=${SOURCES[1]} 
+     '''%(lambda1, lambda2, lambda3, a1, a2, a3, smooth, epst, epsx, epsy))
+
+# reverse data
+Flow('rev1','inter1','reverse which=1 | reverse which=2')
+Flow('mask-rev','maskspf','reverse which=1 | reverse which=2')
+
+# backward interpolation 1 <-
+Flow('inter2','rev1 mask-rev',
+     '''
+     txyspfvsint3 lambda1=%f lambda2=%f lambda3=%f a=%d,%d,%d 
+     smooth=%d epst=%f epsx=%f epsy=%f known=${SOURCES[1]} | 
+     reverse which=1 | reverse which=2
+     ''' %(lambda1, lambda2, lambda3, a1, a2, a3, smooth, epst, epsx, epsy))
+
+# forward interpolation 2 ->
+Flow('inter3','inter2 maskspf',
+     '''
+     txyspfvsint3 lambda1=%f lambda2=%f lambda3=%f a=%d,%d,%d  
+     smooth=%d epst=%f epsx=%f epsy=%f known=${SOURCES[1]}
+     ''' %(lambda1, lambda2, lambda3, a1, a2, a3, smooth, epst, epsx, epsy))
+
+# sum backward 1 and forward 2
+Flow('add','inter2 inter3',
+     '''
+     add scale=0.5,0.5 ${SOURCES[1]} |
+     window f2=20 n2=180 f3=10 n3=20 | 
+     put d2=1 o2=0 d3=2 o3=130 
+     ''')
+Result('a3','add',grey3(''))
+
+# f-k spectra
+Flow('addfk','add',
+     'fft1 | fft3 axis=2 | fft3 axis=3 | math output="abs(input)" | sfreal')
+Result('addfk',
+       ''' 
+       window n1=160 | put d2=0.003 |
+       byte allpos=n | 
+       grey3 title="" label2=Wavenumber
+       label1="Frequency" unit1=Hz label3=Wavenumber point1=0.8 point2=0.7
+       frame1=80 frame2=180 frame3=20 parallel2=n 
+       screenratio=1.3 font=2 labelfat=2 titlefat=2 flat=y
+       color=g
+       ''')
+
+# difference
+Flow('dif','add sean3','add scale=1,-1 ${SOURCES[1]}  ')
+Result('ds3','dif',grey3(''))
+
+#### data interpolation using 3D Fourier POCS
+Flow("pmask3", "maskin3-f", "math output=1-input")
+
+pniter = 50
+fniter = 500
+fforward = """
+fft1 | fft3 | fft3 axis=3
+"""
+fbackward = """
+fft3 axis=3 inv=y | fft3 inv=y | fft1 inv=y
+"""
+fdata = "zero3"
+
+for iter in range(fniter):
+    fold = fdata
+    fdata = "fdata%d" % iter
+
+    # 1. Forward 3D Fourier
+    # 2. Thresholding
+    # 3. Inverse 3D Fourier
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(fdata,
+         [fold, "pmask3", "zero3"],
+         fforward
+         + """
+         | threshold pclip=%g |
+         """
+         % (5.0 + ((99.0 - 5.0) * iter * iter / ((pniter - 1) * (pniter - 1))))
+         # % (1.0)
+         + fbackward
+         + """
+         | add mode=p ${SOURCES[1]} | 
+         add ${SOURCES[2]}
+         """)
+
+Flow("pocsqd", "fdata499", "cp")
+
+Result('pocsqd',grey3(''))
+Flow('errpocsqd','pocsqd sean3','add ${SOURCES[1]} scale=1,-1')
+Result('errpocsqd',grey3(''))
+
+# f-k spectra
+Flow('pocsfk','pocsqd',
+     'fft1 | fft3 axis=2 | fft3 axis=3 | math output="abs(input)" | sfreal')
+Result('pocsfk',
+       ''' 
+       window n1=160 | put d2=0.003 o2=-0.5 |
+       byte allpos=n | 
+       grey3 title="" label2=Wavenumber
+       label1="Frequency" unit1=Hz label3=Wavenumber point1=0.8 point2=0.7
+       frame1=80 frame2=180 frame3=20 parallel2=n 
+       screenratio=1.3 font=2 labelfat=2 titlefat=2 flat=y
+       color=g
+       ''')
+
+#### data interpolation using conentional t-x-y SPF
+# forward interpolation ->
+Flow('inters1','gapdata maskspf',
+     '''
+     txyspfint3 lambda1=0.5 lambda2=0.5 lambda3=0.03 a=11,11,5
+     known=${SOURCES[1]}
+     ''')
+# reverse data
+Flow('revs','gapdata','reverse which=1 | reverse which=2')
+
+# backward interpolation <-
+Flow('inters2','revs mask-rev',
+     '''
+     txyspfint3 lambda1=0.5 lambda2=0.5 lambda3=0.03 a=11,11,5
+     known=${SOURCES[1]} | reverse which=1 | reverse which=2
+     ''')
+# add forward and backward
+Flow('adds','inters1 inters2',
+     '''
+     add scale=0.5,0.5 ${SOURCES[1]} | 
+     window f2=20 n2=180 f3=10 n3=20 | 
+     put d2=1 o2=0 d3=2 o3=130
+     ''')
+Result('adds',grey3(''))
+
+# difference
+Flow('difs','adds sean3','add scale=1,-1 ${SOURCES[1]}  ')
+Result('difs',grey3(''))
+
+# f-k spectra
+Flow('addsfk','adds',
+     'fft1 | fft3 axis=2 | fft3 axis=3 | math output="abs(input)" | sfreal')
+Result('addsfk',
+       ''' 
+       window n1=160 | put d2=0.003 |
+       byte allpos=n | 
+       grey3 title="" label2=Wavenumber
+       label1="Frequency" unit1=Hz label3=Wavenumber point1=0.8 point2=0.7
+       frame1=80 frame2=180 frame3=20 parallel2=n 
+       screenratio=1.3 font=2 labelfat=2 titlefat=2 flat=y
+       color=g
+       ''')
+
+End()
+
+
+

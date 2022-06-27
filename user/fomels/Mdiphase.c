@@ -24,13 +24,14 @@ int main (int argc, char* argv[])
 {
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a,b,c, mean, d1;
+    float *traced, *hilbd, *dtraced, *dhilbd, *dnum, *dden, da, db;
     char key[6];
     bool hertz, verb;
     sf_file in, out, df;
 	
     sf_init (argc,argv);
-    in = sf_input("in");
-    df = sf_input("delta");
+    df = sf_input("in");
+    in = sf_input("sig");
     out = sf_output("out");
 	
     if (SF_FLOAT   != sf_gettype(in)) sf_error("Need float input");
@@ -56,10 +57,19 @@ int main (int argc, char* argv[])
 
     dtrace = sf_floatalloc(n1);
     dhilb = sf_floatalloc(n1);
+
+    traced = sf_floatalloc(n1);
+    hilbd = sf_floatalloc(n1);
+
+    dtraced = sf_floatalloc(n1);
+    dhilbd = sf_floatalloc(n1);
 	
     num = sf_floatalloc(n12);
     den = sf_floatalloc(n12);
     phase = sf_floatalloc(n12);
+
+    dnum = sf_floatalloc(n12);
+    dden = sf_floatalloc(n12);
 	
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
@@ -84,25 +94,41 @@ int main (int argc, char* argv[])
 
 	sf_deriv(trace,dtrace);
 	sf_deriv(hilb,dhilb);
-	
+
+	sf_floatread(traced,n1,df);
+	sf_hilbert(traced,hilbd);
+
+	sf_deriv(traced,dtraced);
+	sf_deriv(hilbd,dhilbd);
+
 	for (i1=0; i1 < nh; i1++, i++) {
 	    num[i] = 0.;
 	    den[i] = 0.;
+	    dnum[i] = 0.;
+	    dden[i] = 0.;
 	}	
 	    
 	for (i1=nh; i1 < n1-nh; i1++, i++) {
 	    a = trace[i1];
 	    b = hilb[i1];
 
+	    da = traced[i1];
+	    db = hilbd[i1];
+
 	    num[i] = a*dhilb[i1]-b*dtrace[i1];
 	    den[i] = a*a+b*b;
 
+	    dnum[i] = da*dhilb[i1] + a*dhilbd[i1] - b*dtraced[i1] - db*dtrace[i1];
+	    dden[i] = 2*a*da + 2*b*db;
+	    
 	    mean += den[i]*den[i];
 	}
 	    
 	for (i1=n1-nh; i1 < n1; i1++, i++) {
 	    num[i] = 0.;
 	    den[i] = 0.;
+	    dnum[i] = 0.;
+	    dden[i] = 0.;
 	}
     } /* i2 */
     
@@ -114,9 +140,32 @@ int main (int argc, char* argv[])
 	num[i] *= mean;
 	den[i] *= mean;
     }
-	
+
     sf_divn_init(dim, n12, n, rect, niter, true);
     sf_divn (num, den, phase);
+    sf_divn_close();
+
+    for (i=i2=0; i2 < n2; i2++) {
+	if (verb) sf_warning("slice %d of %d;",i2+1,n2);
+
+	for (i1=nh; i1 < n1-nh; i1++, i++) {
+	    num[i] = 0.;
+	}
+	    
+	for (i1=nh; i1 < n1-nh; i1++, i++) {
+	    num[i] = (dnum[i] + dden[i]*phase[i])*mean;
+	}
+
+	for (i1=n1-nh; i1 < n1; i1++, i++) {
+	    num[i] = 0.;
+	}	
+    } /* i2 */
+    
+    if (verb) sf_warning(".");
+
+    sf_divn_init(dim, n12, n, rect, niter, true);
+    sf_divn (num, den, phase);
+    sf_divn_close();    
 	
     if (hertz) {
 	/* convert to Hertz */    

@@ -55,6 +55,10 @@ int main(int argc, char* argv[])
   bool wantwf;
   int nxtap,nytap;
   bool verbose;
+#if (CUDART_VERSION >= 10000)
+  size_t pbuffersize;
+#endif
+
   /* I/O files */
   sf_file Fvel  = NULL; /* velocity file */
   sf_file Fswf  = NULL; /* input SWF at iz=0 */
@@ -444,28 +448,48 @@ int main(int argc, char* argv[])
 				setup_FD3d<<<dimGrid,dimBlock>>>
 					(SWFslice_d,v_d,ra_d,rb_d,rc_d,vel_d,ww, -caus*ab_h[4*is+0],ab_h[4*is+1],nx,ny);
 				//cusparseStatusX = cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
+#if (CUDART_VERSION >= 10000)
+				cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandleX, nx, rc_d, ra_d, rb_d, v_d, ny, nx, &pbuffersize);
+                                cusparseCgtsv2StridedBatch(cusparseHandleX, nx, rc_d, ra_d, rb_d, v_d, ny, nx, &pbuffersize);
+#else
 				cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
+#endif
 				copy_transp_wfld3d_for<<<dimGrid,dimBlock>>>(v_d,SWFslice_d,nx,ny);
 				//transposeDiagonal<<<dimGrid2,dimBlock2>>>(v_d,SWFslice_d,ny,nx);
 				
 				setup_FD3d<<<dimGrid,dimBlock>>>
 					(SWFslice_d,v_d,ra_d,rb_d,rc_d,vel_d,ww, -caus*ab_h[4*is+2],ab_h[4*is+3],ny,nx);
 				//cusparseStatusY = cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
+#if (CUDART_VERSION >= 10000)
+				cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandleY, ny, rc_d, ra_d, rb_d, v_d, nx, ny, &pbuffersize);
+                                cusparseCgtsv2StridedBatch(cusparseHandleY, ny, rc_d, ra_d, rb_d, v_d, nx, ny, &pbuffersize);
+#else
 				cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
+#endif
 				copy_transp_wfld3d_adj<<<dimGrid,dimBlock>>>(v_d,SWFslice_d,nx,ny);
 				//transposeDiagonal<<<dimGrid2,dimBlock2>>>(v_d,SWFslice_d,nx,ny);
 
 				setup_FD3d<<<dimGrid,dimBlock>>>
 					(RWFslice_d,v_d,ra_d,rb_d,rc_d,vel_d,ww,-acaus*ab_h[4*is+0],ab_h[4*is+1],nx,ny);
 				//cusparseStatusX = cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
+#if (CUDART_VERSION >= 10000)
+				cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandleX, nx, rc_d, ra_d, rb_d, v_d, ny, nx, &pbuffersize);
+                                cusparseCgtsv2StridedBatch(cusparseHandleX, nx, rc_d, ra_d, rb_d, v_d, ny, nx, &pbuffersize);
+#else
 				cusparseCgtsvStridedBatch(cusparseHandleX,nx,rc_d,ra_d,rb_d,v_d,ny,nx);
+#endif
 				copy_transp_wfld3d_for<<<dimGrid,dimBlock>>>(v_d,RWFslice_d,nx,ny);
 				//transposeDiagonal<<<dimGrid2,dimBlock2>>>(v_d,RWFslice_d,ny,nx);
 				
 				setup_FD3d<<<dimGrid,dimBlock>>>
 					(RWFslice_d,v_d,ra_d,rb_d,rc_d,vel_d,ww,-acaus*ab_h[4*is+2],ab_h[4*is+3],ny,nx);
 				//cusparseStatusY = cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
+#if (CUDART_VERSION >= 10000)
+				cusparseCgtsv2StridedBatch_bufferSizeExt(cusparseHandleY, ny, rc_d, ra_d, rb_d, v_d, nx, ny, &pbuffersize);
+                                cusparseCgtsv2StridedBatch(cusparseHandleY, ny, rc_d, ra_d, rb_d, v_d, nx, ny, &pbuffersize);
+#else
 				cusparseCgtsvStridedBatch(cusparseHandleY,ny,rc_d,ra_d,rb_d,v_d,nx,ny);
+#endif
 				copy_transp_wfld3d_adj<<<dimGrid,dimBlock>>>(v_d,RWFslice_d,nx,ny);
 				//transposeDiagonal<<<dimGrid2,dimBlock2>>>(v_d,RWFslice_d,nx,ny);
 				

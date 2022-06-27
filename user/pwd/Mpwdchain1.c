@@ -20,12 +20,11 @@
 #include <rsf.h>
 
 #include "pwdchain.h"
-#include "smooth1.h"
 
 int main(int argc, char* argv[])
 {
-    bool adj, drift;
-    int m1, m2, n, nc, n2, n1;
+    bool adj, drift, forx;
+    int m1, m2, n, nc, n2, n1, nw;
     float *xn, *x1, *dx, *r;
     sf_file inp, out, dip, sig;
 
@@ -38,11 +37,11 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(dip,"n1",&m1)) sf_error("No n1= in dip");
     if (!sf_histint(dip,"n2",&m2)) sf_error("No n2= in dip");
-    if (!sf_histint(dip,"n3",&n2)) sf_error("No n3= in dip");
+    if (!sf_histint(dip,"n3",&nc)) sf_error("No n3= in dip");
 
     n = m1*m2;
 
-    nc = (n2+1)/2;
+    n2 = 2*nc-1;
 
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
@@ -50,26 +49,30 @@ int main(int argc, char* argv[])
     if (!sf_getbool("drift",&drift)) drift=false;
     /* if shift filter */
 
+    if (!sf_getbool("forx",&forx)) forx=false;
+    /* for x only */
+
+    if (!sf_getint("order",&nw)) nw=1; /* PWD order */
+    
     if (adj) {
-	sf_putint(out,"n3",n2);
+	sf_putint(out,"n3",forx? nc-1: n2);
     } else {
 	sf_putint(out,"n3",nc);
     }
 
     n2 *= n; 
-    n1 = (n2+n)/2;
-
- 
-    sf_warning("nc=%d n=%d",nc,n);
-    
+    n1 = nc*n;
+     
     x1 = sf_floatalloc(n);
     sf_floatread(x1,n,sig);
 
     xn = sf_floatalloc(n2);
-    sf_floatread(xn,n2,dip);
+    sf_floatread(xn,n1,dip);
 
-    pwdchain_init(m1,m2,1,nc,drift,x1,xn,xn+n*nc);
+    pwdchain_init(m1,m2,nw,nc,drift,x1,xn,xn+n*nc);
     
+    if (forx) n2=n1-n;
+
     dx = sf_floatalloc(n2);
     r =  sf_floatalloc(n1);
 
@@ -79,7 +82,11 @@ int main(int argc, char* argv[])
 	sf_floatread(dx,n2,inp);
     } 
 
-    pwdchain_lop(adj,false,n2,n1,dx,r);
+    if (forx) {
+	pwdchainx_lop(adj,false,n2,n1,dx,r);
+    } else {
+	pwdchain_lop(adj,false,n2,n1,dx,r);
+    }
 
     if (adj) {
 	sf_floatwrite(dx,n2,out);

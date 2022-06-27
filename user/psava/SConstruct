@@ -52,6 +52,12 @@ esou epot
 regrid1d regrid2d regrid3d
 getattr
 checkerboard
+cloudwin3d cloudbin3d cloudmerge3d cloudspray
+stransp
+presum
+fftxcor
+map2cloud2D
+map2cloud3D
 '''
 
 # vse
@@ -63,8 +69,8 @@ corop
 pwave3d
 ocor3d
 findmax
-map2cloud2D
-map2cloud3D
+smopick
+fshift
 '''
 
 dynlib = env.get('DYNLIB','')

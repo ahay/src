@@ -1,0 +1,220 @@
+from rsf.proj import *
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+Fetch("dune3D.H", "mideast")
+Flow(
+    "dat", "dune3D.H", """
+     dd form=native | window n3=1 f3=2 n1=500 f1=100 |
+     scale dscale=100. | pad end1=50
+     """)
+Result(
+    "dune-data", "dat", """
+       window n1=500 |
+       grey label1="Time (s)" label2="Offset (m)" title=
+       screenratio=0.5 screenht=7. font=2 titlefat=2 clip=1.0
+       labelfat=3 gridfat=3
+       """)
+Result(
+    "dune-dspec", "dat", """
+       spectra2 |
+       grey screenratio=0.5 screenht=7. font=2 titlefat=2 clip=2
+       labelfat=3 gridfat=3 label1=Frequency unit1=Hz
+       label2=Wavenumber unit2=1/m wanttitle=n
+       """)
+Result(
+    "dune-spt", "dat", """
+       window n1=500 | spectra all=y |
+       graph label2="Amplitude" unit2= title= unit1=Hz
+       screenratio=0.6 screenht=8. font=2 titlefat=2 clip=2.
+       labelfat=3 gridfat=3 plotcol=7 plotfat=4
+       min2=0 max2=3.0 max1=80
+       """)
+Flow(
+    "noiz", "dat", """
+     bandpass fhi=20. |
+     mutter half=n v0=1500 t0=0.8 hyper=y tp=0.05 |
+     window f1=90 | pad beg1=90
+     """)
+Flow("mask", "noiz",
+     "math output='input*input' | smooth rect1=5 rect2=5 | mask min=0.01")
+Flow("mask2", "mask", "dd type=float")
+
+### APEF
+Flow("maskin", "dat", "math output=1")
+Flow("sign", "noiz mask2 dat",
+     "add mode=p ${SOURCES[1]} | add scale=-1,1 ${SOURCES[2]}")
+Result(
+    "dune-sign", "sign", """
+       window n1=500 |
+       grey label1="Time (s)" label2="Offset (m)"
+       title="Estimated frequency signal" clip=2
+       screenratio=0.5 screenht=7. font=2 titlefat=2
+       labelfat=3 gridfat=3
+       """)
+Result(
+    "dune-noiz", "dat sign", """
+       add scale=1,-1 ${SOURCES[1]} |
+       window n1=500 |
+       grey label1="Time (s)" label2="Offset (m)"
+       title="Estimated initial noise" clip=2
+       screenratio=0.5 screenht=7. font=2 titlefat=2
+       labelfat=3 gridfat=3
+       """)
+Flow(
+    "aspef aspred", "dat", """
+     apef a=7,5 rect1=30 rect2=10 niter=500
+     jump=1 pred=${TARGETS[1]} verb=y
+     """)
+Flow(
+    "anpef anpred", "noiz", """
+     apef a=9,3 rect1=15 rect2=10 niter=500
+     jump=1 pred=${TARGETS[1]} verb=y
+     """)
+Flow(
+    "ass", "dat aspef anpef", """
+     apefsignoi sfilt=${SOURCES[1]} nfilt=${SOURCES[2]}
+     niter=200 eps=0.1 verb=y
+     """)
+Flow(
+    "ann", "dat ass mask2", """
+     add scale=1,-1 ${SOURCES[1]} |
+     add mode=p ${SOURCES[2]}
+     """)
+Result(
+    "dune-apefnoiz", "ann", """
+       window n1=500 |
+       grey label1="Time (s)" label2="Offset (m)"
+       title= clip=1.0
+       screenratio=0.5 screenht=7. font=2 titlefat=2
+       labelfat=3 gridfat=3
+       """)
+Flow("dune-ass", "dat ann", """
+     add scale=1,-1 ${SOURCES[1]} | window n1=500
+     """)
+Result(
+    "dune-apef", "dune-ass", """
+       grey label1="Time (s)" label2="Offset (m)"
+       title= clip=1.0
+       screenratio=0.5 screenht=7. font=2 titlefat=2
+       labelfat=3 gridfat=3
+       """)
+Result(
+    "dune-aspec", "dune-ass", """
+       spectra2 |
+       grey screenratio=0.5 screenht=7. font=2 titlefat=2 clip=2
+       labelfat=3 gridfat=3 label1=Frequency unit1=Hz
+       label2=Wavenumber unit2=1/m wanttitle=n
+       """)
+
+### Bandpass filter
+Flow("bshot", "dat", "bandpass flo=20")
+Flow(
+    "bp-ann", "dat bshot mask2", """
+     add scale=1,-1 ${SOURCES[1]} |
+     add mode=p ${SOURCES[2]}
+     """)
+Flow("bp-ass", "dat bp-ann", "add scale=1,-1 ${SOURCES[1]}")
+Result(
+    "dune-bp", "bp-ass", """
+       window n1=500 |
+       grey label1="Time (s)" label2="Offset (m)"
+       title= clip=1.0
+       screenratio=0.5 screenht=7. font=2 titlefat=2
+       labelfat=3 gridfat=3
+       """)
+Result(
+    "dune-bpnoiz", "bp-ann", """
+       window n1=500 |
+       grey label1="Time (s)" label2="Offset (m)"
+       title= clip=1.0
+       screenratio=0.5 screenht=7. font=2 titlefat=2
+       labelfat=3 gridfat=3
+       """)
+Result(
+    "dune-bspec", "bp-ass", """
+       spectra2 |
+       grey screenratio=0.5 screenht=7. font=2 titlefat=2 clip=2
+       labelfat=3 gridfat=3 label1=Frequency unit1=Hz
+       label2=Wavenumber unit2=1/m wanttitle=n
+       """)
+
+### time-frequency
+Flow("ltft",
+     "dat",
+     """
+     ltft rect=20 verb=n nw=200 dw=0.5 niter=25
+     """,
+     split=[2, 96],
+     reduce="cat axis=3")
+Result(
+    "ltft", """
+       math output="abs(input)" | real |
+       byte allpos=y gainpanel=40 pclip=100 |
+       transp plane=23 memsize=1000 | 
+       grey3 color=j frame1=250 frame3=23 frame2=48 label1=Time flat=n 
+       unit1=s label2=Offset label3="\F5 F \F-1" unit2=km
+       screenht=10 screenratio=0.7
+       point1=0.85 point2=0.8 wanttitle=n labelfat=4 font=2 titlefat=4
+       parallel2=n format2=%3.1f
+       """)
+Flow(
+    "lmask", "ltft", """
+     real | transp plane=23 memsize=1000 |
+     math output=1. |
+     mutter t0=0.2 v0=2000.0 | cut min3=24 |
+     math output="1-input"
+     """)
+Result(
+    "lmask", """
+       byte allpos=y gainpanel=40 pclip=100 | 
+       grey3 color=j frame1=250 frame3=23 frame2=48 label1=Time flat=n 
+       unit1=s label2=Offset label3="\F5 F \F-1" unit2=km
+       screenht=10 screenratio=0.7
+       point1=0.85 point2=0.8 wanttitle=n labelfat=4 font=2 titlefat=4
+       parallel2=n format2=%3.1f
+       """)
+Flow(
+    "thr1", "ltft", """
+     real | transp plane=23 memsize=1000 | 
+     mutter t0=0.2 v0=2000.0 | cut min3=24
+     """)
+Flow(
+    "thr2", "ltft", """
+     imag | transp plane=23 memsize=1000 |
+     mutter t0=0.2 v0=2000.0 | cut min3=24
+     """)
+Flow(
+    "complx", "thr1 thr2", """
+     cmplx ${SOURCES[1:2]} | 
+     transp plane=23 memsize=1000
+     """)
+Flow("ltftnoiz", "complx mask2",
+     "ltft inv=y verb=n | add mode=p ${SOURCES[1]}")
+Result(
+    "dune-ltftnoiz", "ltftnoiz", """
+       window n1=500 |
+       grey label1="Time (s)" label2="Offset (m)"
+       title= unit2= clip=1.0
+       screenratio=0.5 screenht=7. font=2 titlefat=2
+       labelfat=3 gridfat=3
+       """)
+Flow("ltftsign", "dat ltftnoiz", "add ${SOURCES[1]} scale=1,-1")
+Result(
+    "dune-ltft", "ltftsign", """
+       window n1=500 |
+       grey label1="Time (s)" label2="Offset (m)"
+       title= clip=1.0
+       screenratio=0.5 screenht=7. font=2 titlefat=2
+       labelfat=3 gridfat=3
+       """)
+Result(
+    "dune-lspec", "ltftsign", """
+       spectra2 |
+       grey screenratio=0.5 screenht=7. font=2 titlefat=2 clip=2
+       labelfat=3 gridfat=3 label1=Frequency unit1=Hz
+       label2=Wavenumber unit2=1/m wanttitle=n
+       """)
+
+End()

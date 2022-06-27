@@ -6,6 +6,7 @@ import wplot,geom,awe
 f2m=0.3048     # convert ft to m
 par = dict(
     nx=1601,ox=25.*f2m,dx=0.025*f2m,lx='x',ux='km',
+    ny=1,   oy=0.0*f2m,dy=0.025*f2m,ly='y',uy='km',
     nz=801, oz=4.5*f2m,dz=0.025*f2m,lz='z',uz='km',
     nt=5001,ot=0.0,    dt=0.0009,   lt='t',ut='s',
     jsnap=200, # snapshot jump
@@ -37,7 +38,7 @@ Flow('modl','vraw',
             par['nx'],par['ox']
             ))
 Plot  ('modl',wplot.igrey2d('mean=y',par))
-Result('modl',wplot.igrey2d('mean=y',par))
+Result('modl','modl','Overlay')
 
 # ------------------------------------------------------------
 # source coordinates (exploding reflectors)
@@ -132,13 +133,13 @@ nfrm=int((par['nt']-1)/par['jsnap'])
 Flow('wbyt','wfld','byte gainpanel=a pclip=99.9')
 for i in range(nfrm):
     tag = '-%02d'%i
-    # plot wavefield frames
-    Plot('wfld'+tag,
-         'wbyt',wplot.ifrm2d(i,'',par))
-    Plot(  'wovl'+tag,['wfld'+tag,'ss','rH','rV'],
-           'Overlay')
-    Result('wfld'+tag,['wfld'+tag,'ss','rH','rV'],
-           'Overlay')
+
+    Plot('wfld'+tag, 'wbyt',wplot.ifrm2d(i,'',par))
+
+    Plot(  'wovl'+tag,['wfld'+tag,'ss','rH','rV'],'Overlay')
+
+    Result('wfld'+tag,'wfld'+tag,'Overlay')
+
 Result('wfld',
         ['wovl-%02d'%i for i in range(nfrm)],
        'Movie')

@@ -1,0 +1,8 @@
+from rsf.tex import *
+
+#Paper('paper',lclass='geophysics',options='manuscript',use='amsmath',hires='ALL',color='ALL')
+
+End(options='reproduce',color='ALL',include=r'''
+''')
+#End(lclass='geophysics',color='ALL')
+#End(lclass='segabs',color='ALL')

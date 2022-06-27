@@ -1,0 +1,264 @@
+from rsf.proj import *
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+def cubeplot(title,clip='',extra=''):
+    return '''
+    byte gainpanel=all %s |
+    grey3 frame1=32 frame2=256 frame3=10 flat=y point1=0.7 point2=0.4
+    label1="Offset" unit1=km label2="Midpoint wavenumber" unit2=1/km
+    label3="Frequency" unit3=Hz
+    title="%s" %s wanttitle=n labelfat=4 font=2 titlefat=4
+    ''' % (clip,title,extra)
+
+#### Fetch model
+Fetch('french.asc','french')
+
+Flow('french','french.asc',
+     '''
+     dd form=native | transp | scale dscale=0.0005 |
+     put d1=0.10265 d2=0.10265
+     label1=North-South label2=West-East unit1=km unit2=km
+     ''')
+
+Flow('french1','french.asc','dd form=native | transp | scale dscale=2')
+Flow('refl','french1',
+     '''
+     remap1 n1=161 o1=0 d1=51.325 | transp |
+     remap1 n1=161 o1=0 d1=51.325 | transp
+     ''')
+
+Flow('slice','french',
+     '''
+     window n1=1 f1=30 | put d1=0.025 |
+     remap1 n1=256 o1=0 d1=0.008 |
+     unif2 n1=256 d1=0.004 v00=1,2
+     ''')
+
+Flow('cup','slice',
+     '''
+     deriv | bandpass flo=10 fhi=50 |
+     transp memsize=1000| bandpass fhi=50 | transp | put o1=0.004
+     ''')
+
+#### forward modeling
+Flow('fdata','cup',
+     '''
+     halfint inv=y |
+     preconstkirch zero=y inv=y h0=0 dh=0.008 nh=61 vel=1.5 |
+     window | put label1=Time label2=Midpoint label3=Offset
+     ''')
+
+#### cmps to shots
+Flow('shots','fdata',
+     '''
+     transp plane=23 | cmp2shot positive=y | 
+     put label1=Time unit1=s label2=Offset 
+     unit2=km label3=Shots unit3=km d2=0.016
+     ''')
+Flow('shot','shots','window f3=100 n3=1 ')
+Flow('shotsw2','shots','window f3=20 n3=200')
+Flow('shotsw','shots','window f3=30 n3=180 ')
+
+Flow('2shotsw','shotsw','lpad jump=2 | window j3=2')
+Flow('2spike',None,'spike n1=256 n2=61 n3=180 | lpad jump=2 | window j3=2')
+
+Flow('apef ','2shotsw 2spike',
+     '''
+     apef maskin=${SOURCES[1]}  jump=2
+     a=4,2,2 niter=200 rect1=50 rect2=10  rect3=10 verb=y
+     ''')
+
+Flow('amiss','2shotsw apef 2spike',
+     'miss43 filt=${SOURCES[1]} mask=${SOURCES[2]} niter=200 verb=y')
+Result('amiss',
+       cubeplot('Data','clip=2.1713','label1=Time unit1=s \
+       label3="Shots" unit3=km label2="Offset" unit2=km \
+       frame1=125 frame2=60 frame3=125 flat=y' ) )
+
+Flow('mcut','shotsw',
+     '''
+     window n1=1 |
+     noise rep=y type=n seed=10 |
+     math output="input^1" |
+     mask min=-0.35 | dd type=int | cut j2=2 
+     ''')
+
+Flow('zero','shotsw mcut','headercut mask=${SOURCES[1]}')
+
+Flow('mcut3','mcut',' transp | lpad jump=2 | transp')
+
+Flow('zero3','zero','lpad jump=2 | window j3=2')
+Result('zero3',
+       cubeplot('Data','clip=2.1713','label1=Time unit1=s \
+       label3="Shots" unit3=km label2="Offset" unit2=km \
+       frame1=125 frame2=60 frame3=125 flat=y title="Missing data" ' ) )
+
+#### Boundary for t-x-y SPF interpolation
+Flow('maskin3','mcut3',
+     'dd type=float | spray axis=1 n=256 d=0.004 o=0.004 | dd type=int')
+Flow('spike',None,'spike n1=256 n2=122 n3=180 | dd type=int')
+
+Flow("maskpad", "spike", "window  f3=40 n3=10 | reverse which=4 ")
+Flow("maskpad1", "spike", "window f3=112 n3=10 | reverse which=4 ")
+Flow("maskspf1", "maskpad maskin3 maskpad1", "cat ${SOURCES[1:3]} axis=3")
+Flow("maskpad2", "maskspf1", "window n2=10 | reverse which=2")
+Flow("maskpad3", "maskspf1", "window n2=10 f2=112 | reverse which=2")
+Flow("maskspf", "maskpad2 maskspf1 maskpad3", "cat ${SOURCES[1:3]} axis=2 ")
+
+Flow('shott','zero3','window n3=10 f3=0')
+Flow('shotw','zero3','window n3=10 f3=170')
+Flow('maskt','maskin3','window n3=10 f3=0')
+Flow('maskw','maskin3','window n3=10 f3=170')
+
+Flow('apeft','shott maskt',
+     '''
+     apef maskin=${SOURCES[1]}  jump=2
+     a=4,3,3 niter=200 rect1=50 rect2=50  rect3=50 verb=y
+     ''')
+
+Flow('amisst','shott apeft maskt',
+     'miss43 filt=${SOURCES[1]} mask=${SOURCES[2]} niter=200 verb=y')
+
+Flow('apefw','shotw maskw',
+     '''
+     apef maskin=${SOURCES[1]}  jump=2
+     a=4,3,3 niter=200 rect1=50 rect2=50  rect3=50 verb=y
+     ''')
+
+Flow('amissw','shotw apefw maskw',
+     'miss43 filt=${SOURCES[1]} mask=${SOURCES[2]} niter=200 verb=y')
+
+Flow("datapad", "amisst", " reverse which=4")
+Flow("datapad1", "amissw", " reverse which=4")
+Flow("gapdata1", " datapad zero3 datapad1", "cat ${SOURCES[1:3]} axis=3")
+Flow("datapad2", "gapdata1", "window n2=10 | reverse which=2")
+Flow('datapad3','gapdata1','window n2=10 f2=112 | reverse which=2')
+Flow("gapdata", "datapad2 gapdata1 datapad3", "cat ${SOURCES[1:3]} axis=2 ")
+
+#### interpolation with t-x-y SPF with varying smoothness
+# forward interpolation 1 ->
+
+lambda1 = 0.4
+lambda2 = 0.5
+lambda3 = 0.4
+a1 = 7
+a2 = 9
+a3 = 3
+smooth = 1
+epst = 0.01
+epsx = 0.01
+epsy = 0.01
+
+Flow('inter1','gapdata maskspf',
+     '''
+     txyspfvsint3 lambda1=%f lambda2=%f lambda3=%f a=%d,%d,%d 
+     smooth=%d epst=%f epsx=%f epsy=%f known=${SOURCES[1]}
+     ''' %(lambda1, lambda2, lambda3, a1, a2, a3, smooth, epst, epsx, epsy))
+
+# reverse data
+Flow('rev1','inter1','reverse which=1 | reverse which=2')
+Flow('mask-rev','maskspf','reverse which=1 | reverse which=2')
+
+# backward interpolation 1 <-
+Flow('inter2','rev1 mask-rev',
+     '''
+     txyspfvsint3 lambda1=%f lambda2=%f lambda3=%f a=%d,%d,%d 
+     smooth=%d epst=%f epsx=%f epsy=%f  known=${SOURCES[1]} | 
+     reverse which=1 | reverse which=2
+     ''' %(lambda1, lambda2, lambda3, a1, a2, a3, smooth, epst, epsx, epsy))
+
+# forward interpolation 2 ->
+Flow('inter3','inter2 maskspf',
+     '''
+     txyspfvsint3 lambda1=%f lambda2=%f lambda3=%f a=%d,%d,%d 
+     smooth=%d epst=%f epsx=%f epsy=%f known=${SOURCES[1]} 
+     ''' %(lambda1, lambda2, lambda3, a1, a2, a3, smooth, epst, epsx, epsy))
+
+# sum backward 2 and forward 3
+Flow('add','inter2 inter3',
+     '''
+     add scale=0.5,0.5 ${SOURCES[1]} | 
+     window f2=10 n2=122  f3=10 n3=180 | 
+     put d2=0.008 o2=0 d3=0.008 o3=-0.24
+     ''')
+Result('add',
+       cubeplot('Data','clip=2.16812','label1=Time unit1=s \
+       label3="Shots" unit3=km label2="Offset" unit2=km \
+       frame1=125 frame2=60 frame3=125 flat=y title="CSPF"'))
+
+#### interpolation with 3D Fourier POCS
+Flow('maskin3-f','maskin3','dd type=float')
+Flow("pmask3", "maskin3-f", "math output=1-input")
+
+pniter = 50
+fniter = 500
+fforward = """
+fft1 | fft3 | fft3 axis=3
+"""
+fbackward = """
+fft3 axis=3 inv=y | fft3 inv=y | fft1 inv=y
+"""
+fdata = "zero3"
+
+for iter in range(fniter):
+    fold = fdata
+    fdata = "fdata%d" % iter
+
+    # 1. Forward 3D Fourier
+    # 2. Thresholding
+    # 3. Inverse 3D Fourier
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(fdata,
+         [fold, "pmask3", "zero3"],
+         fforward
+         + """
+         | threshold pclip=%g |
+         """
+         % (5.0 + ((99.0 - 5.0) * iter * iter / ((pniter - 1) * (pniter - 1))))
+         # % (1.0)
+         + fbackward
+         + """
+         | add mode=p ${SOURCES[1]} | 
+         add ${SOURCES[2]}
+         """)
+
+Flow("pocsqd", "fdata499", "cp | put o1=0.00399995 d2=0.008 d3=0.008 o3=-0.24")
+Result('pocsqd',
+       cubeplot('Data','clip=2.16812','label1=Time unit1=s \
+       label3="Shots" unit3=km label2="Offset" unit2=km \
+       frame1=125 frame2=60 frame3=125 flat=y title="POCS" ' ) )
+
+#### interpolation with the conventional streaming PF
+# forward interpolation ->
+Flow('inters1','gapdata maskspf',
+     '''
+     txyspfint3 lambda1=0.5 lambda2=0.4 lambda3=0.4 a=9,9,3 
+     known=${SOURCES[1]} 
+     ''')
+
+# reverse data
+Flow('revs','gapdata','reverse which=1 | reverse which=2')
+
+# backward interpolation <-
+Flow('inters2','revs mask-rev',
+     '''
+     txyspfint3 lambda1=0.5 lambda2=0.4 lambda3=0.4 a=9,9,3
+     known=${SOURCES[1]} | reverse which=1 | reverse which=2
+     ''' )
+
+# add forward and backward
+Flow('adds','inters1 inters2',
+     '''
+     add scale=0.5,0.5 ${SOURCES[1]} | 
+     window f2=10 n2=122 f3=10 n3=180 | 
+     put d2=0.008 o2=0 d3=0.008 o3=-0.24
+     ''')
+
+Result('adds',
+       cubeplot('Data','clip=2.16812','label1=Time unit1=s \
+       label3="Shots" unit3=km label2="Offset" unit2=km \
+       frame1=125 frame2=60 frame3=125 flat=y title="SPEF"'))
+
+End()

@@ -1,0 +1,408 @@
+#
+# Forward seismic modeling for a deep-water channel model
+#
+# Paul Sava & James W. Jennings
+#
+# Bureau of Economic Geology
+# John A. and Katherine G. Jackson School of Geosciences
+# University of Texas at Austin
+# University Station, Box X
+# Austin, TX 78713-8924
+#
+# 512-471-1534 (voice)
+# 512-471-0140 (fax)
+# mailto:jim.jennings@beg.utexas.edu
+# http://www.beg.utexas.edu/staffinfo/jennings01.htm
+#
+# June 2006
+#
+# $Id: SConstruct 1934 2006-06-21 15:45:20Z jennings_jim $
+#
+
+from rsf.proj import *
+import rsf.recipes.channelslabel as channels
+
+# Index of result names
+
+titles =  {'t'  : 'convolution (depth refl)',       # data results in time
+           'tt' : 'convolution (time refl)',
+           'f'  : 'exploding reflector (depth refl)',
+           'ft' : 'exploding reflector (time refl)',
+           'c'  : 'shot record',
+
+           'm'  : 'convolution (depth refl)',       # image results in depth
+           'mt' : 'convolution (time refl)',
+           'i'  : 'exploding reflector (depth refl)',
+           'it' : 'exploding reflector (time refl)',
+           'j'  : 'shot record'}
+
+# Lists of results to generate
+
+#
+# Fast collection:
+#   one frequencies
+#   2D & 3D convolution
+#   2D exploding reflector
+#   2D shot record
+#
+
+frq_list = [40]                             # frequency list
+
+time_list_2D  = ['t','tt','f','ft','c']     # 2D data in time
+depth_list_2D = ['m','mt','i','it','j']     # 2D images in depth
+
+time_list_3D  = ['t','tt']                  # 3D data in time
+depth_list_3D = ['m','mt']                  # 3D images in depth
+
+time_list_3D_slice  = []                    # 2D slices from 3D time data
+depth_list_3D_slice = []                    # 2D slices from 3D depth images
+
+#
+# Overnight collection:
+#   three frequencies
+#   2D & 3D convolution
+#   2D & 3D exploding reflector
+#   2D shot record
+#
+
+# frq_list = [20,30,40]                       # frequency list
+#
+# time_list_2D  = ['t','tt','f','ft','c']     # 2D data in time
+# depth_list_2D = ['m','mt','i','it','j']     # 2D images in depth
+#
+# time_list_3D  = ['t','tt','ft']             # 3D data in time
+# depth_list_3D = ['m','mt','it']             # 3D images in depth
+#
+# time_list_3D_slice  = ['ft']                # 2D slices from 3D time data
+# depth_list_3D_slice = ['it']                # 2D slices from 3D depth images
+
+# Authentication for the private data server
+from rsf.recipes.beg import server as private
+
+# Grid parameters
+
+grid_par = {'nx':360, 'dx':15, 'ox':0,      # common x & y grid parameters
+            'ny':200, 'dy':15, 'oy':0,
+            'xy_pad':40}
+
+res_grid_par = grid_par.copy()              # reservoir z grid parameters
+res_grid_par['nz'] = 128
+res_grid_par['dz'] =   2
+res_grid_par['oz'] = -59
+
+ovr_grid_par = grid_par.copy()              # overburden z grid parameters
+ovr_grid_par['nz'] =  64
+ovr_grid_par['dz'] =  40
+ovr_grid_par['oz'] = 158
+
+# Channel geometrical parameters
+
+geo_par =   {
+
+# Amalgamated sand width & shift parameters (fraction of channel top width)
+'as_width'   :  0.8,    # width at channel bottom
+'as_shift'   :  0.8,    # lateral shift at abs(skew)=1 (channel max bend)
+
+# Amalgamated sand height parameters (fraction of channel depth)
+'as_height0' :  0.5,    # height at skew=0 (channel inflection)
+'as_height1' :  0.8,    # height at abs(skew)=1 (channel max bend)
+
+# Amalgamated sand cross-section shape parameter
+'as_shape'   :  1.2,    # =1 parabolic, >1 more blunt, <1 more pointy
+
+# Bar & margin drape thickness parameters (fraction of channel depth)
+
+# No drapes
+# 'bd_depth'   :  1.0,    # profile depth
+# 'bd_zshift'  :  0.00,   # bar drape profile z shift, positive is down
+# 'md_depth'   :  1.0,    # margin drape profile depth
+# 'md_zshift'  :  0.00}   # margin drape profile z shift, positive is down
+
+# 1x drape thicknesses (base case)
+'bd_depth'   :  0.8,    # bar drape profile depth
+'bd_zshift'  : -0.15,   # bar drape profile z shift, positive is down
+'md_depth'   :  1.2,    # margin drape profile depth
+'md_zshift'  :  0.10}   # margin drape profile z shift, positive is down
+
+# Sand fraction parameters
+
+sand_par =  {
+
+'bd_sand'  : 0.3,   # sand fraction in the bypass drape
+'md_sand'  : 0.2,   # sand fraction in the margin drape
+'as_sand'  : 1.0,   # sand fraction in the amalgamated sand
+'na_sand0' : 0.4,   # sand fraction in non-amalgamated sand at channel top
+'na_sand1' : 0.9}   # sand fraction in non-amalgamated sand at amalgamated sand surface
+
+# Porosity noise parameters
+
+# Background noise parameters
+bk_noise_par = {'taper_switch':1,       # covariance taper switch
+                'std_dev': 0.03,        # porosity noise standard devietion
+                'alpha':1,              # covariance shape parameter
+                'oriu':[1,0,0],         # covariance range orientation vectors
+                'oriv':[0,1,0],
+                'oriw':[0,0,1],
+                'ru':1000,              # covariance range parameters
+                'rv':1000,
+                'rw':   1}
+
+# Amalgamated and non-amalgamated sand noise parameters
+sd_noise_par = {'taper_switch':1,       # covariance taper switch
+                'std_dev':0.01,         # porosity noise standard devietion
+                'alpha':1,              # covariance shape parameter
+                'oriu':[1,0,0],         # covariance range orientation vectors
+                'oriv':[0,1,0],
+                'oriw':[0,0,1],
+                'ru':200,               # covariance range parameters
+                'rv':200,
+                'rw':  1}
+
+# Top & bottom taper parameters
+
+# Reservoir taper parameters
+res_taper_par = { 'top_h'    :    0,        # thickness (m)
+                  'top_phi'  :    0.3500,   # porosity (fraction)
+                  'top_rho'  :    1.6865,   # density (gm/cc)
+                  'top_vp'   : 1964.5730,   # Vp (m/s)
+                  'top_vs'   :  509.7961,   # Vs (m/s)
+                  'bot_h'    :   20,        # thickness (m)
+                  'bot_phi'  :    0.1554,   # porosity (fraction)
+                  'bot_rho'  :    2.3431,   # density (gm/cc)
+                  'bot_vp'   : 2429.1460,   # Vp (m/s)
+                  'bot_vs'   : 1019.5922}   # Vs (m/s)
+
+# Overburden taper parameters
+ovr_taper_par = { 'top_h'    : 2000,        # thickness (m)
+                  'top_phi'  :    0.3500,   # porosity (fraction)
+                  'top_rho'  :    1.6865,   # density (gm/cc)
+                  'top_vp'   : 1964.5730,   # Vp (m/s)
+                  'top_vs'   :  509.7961,   # Vs (m/s)
+                  'bot_h'    :    0,        # thickness (m)
+                  'bot_phi'  :    0.1554,   # porosity (fraction)
+                  'bot_rho'  :    2.3431,   # density (gm/cc)
+                  'bot_vp'   : 2429.1460,   # Vp (m/s)
+                  'bot_vs'   : 1019.5922}   # Vs (m/s)
+
+# Available memory size setting for transpose operations (Mb)
+
+memsize = 512
+
+# End of user adjustable settings
+
+# ------------------------------------------------------------
+# Make channel model
+
+channels.make_reservoir (   memsize, private,
+                            res_grid_par, geo_par,
+                            sand_par, bk_noise_par, sd_noise_par,
+                            res_taper_par)
+
+channels.make_overburden (memsize, ovr_grid_par, bk_noise_par, ovr_taper_par)
+
+# ------------------------------------------------------------
+# Plotting functions
+
+def tplot2d(par,custom=""):
+    return '''
+    window |
+    grey scalebar=y labelrot=n pclip=100
+    label1=t label2=x %s
+    ''' % (custom)
+
+def zplot2d(par,custom=""):
+    return '''
+    window |
+    transp |
+    grey scalebar=y labelrot=n pclip=100
+    label1=z label2=x %s
+    ''' % (custom)
+
+def tplot3d(par,custom1="",custom2=""):
+    return '''
+    transp memsize=%d plane=13 |
+    byte bar=bar.rsf gainpanel=all pclip=99 %s |
+    grey3 scalebar=n bar=bar.rsf labelrot=n flat=y
+    frame1=%d frame2=%d frame3=80
+    point1=0.85 point2=0.90 screenratio=0.7 screenht=9
+    label1=y label2=x label3=t %s
+    ''' % (memsize,custom1,par['ypad'],par['xpad'],custom2)
+
+# set a z slice 10 meters up from the bottom of the channels
+z_slice = res_grid_par['dz']*res_grid_par['nz']+res_grid_par['oz']-10
+
+def zplot3d(par,custom1="",custom2=""):
+    return '''
+    byte bar=bar.rsf gainpanel=all pclip=99 %s |
+    grey3 scalebar=n bar=bar.rsf labelrot=n flat=y
+    frame1=%d  frame2=%d frame3=%d
+    point1=0.85 point2=0.90 screenratio=0.7 screenht=9
+    label1=y label2=x label3=z %s
+    ''' % (custom1,par['ypad'],par['xpad'],
+           z_slice/res_grid_par['dz'],custom2)
+
+# ------------------------------------------------------------
+# Seismic modeling parameters
+
+par = {
+        'nt':1000, 'ot':0, 'dt':0.005, 'kt':20,             # time
+        'nw':501,  'ow':0,                                  # frequency
+
+        'nx':res_grid_par['nx']+2*res_grid_par['xy_pad'],   # array sizes
+        'ny':res_grid_par['ny']+2*res_grid_par['xy_pad'],
+        'nz':res_grid_par['nz'],
+
+        'dx':res_grid_par['dx'],                            # cell sizes
+        'dy':res_grid_par['dy'],
+        'dz':res_grid_par['dz'],
+
+        'ox':0, 'oy':0, 'oz':0,                             # grid origin
+
+        'verb':'y','eps':0.01,'nrmax':1,'dtmax':0.00005,    # migration
+        'tmx':16,'tmy':16,'pmx':0,'pmy':0,'misc':'incore=y'
+      }
+
+par['dw']=1./(par['nt']*par['dt'])
+
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['ymin']=par['oy']
+par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+
+# source coordinates
+par['xpad']=par['nx']/2.
+par['ypad']=par['ny']/2.
+
+par['xsou']=par['ox'] + par['xpad'] * par['dx']
+par['ysou']=par['oy'] + par['ypad'] * par['dy']
+
+par['ft']=par['kt']*par['dt']
+
+# ------------------------------------------------------------
+
+def flip():
+    return '''
+    transp memsize=250 plane=23 |
+    transp memsize=250 plane=12 |
+    reverse which=1 opt=i |
+    put label1=z label2=x label3=y
+    unit1=m unit2=m unit3=m
+    '''
+
+# ------------------------------------------------------------
+# Density and velocity
+
+# '0' = reservoir
+# '1' = overburden
+
+Flow('vp0','res_vp_noise_taper',flip() )
+Flow('vp1','ovr_vp_noise_taper',flip() )
+
+Flow('ro0','res_rho_noise_taper',flip() )
+Flow('ro1','ovr_rho_noise_taper',flip() )
+
+# density
+Flow  ('den','ro0','window n1=%(nz)d | put o1=0' % par)
+Result('lden','den',
+       'transp plane=13 |'
+       + zplot3d(par,'pclip=100 bias=2.1 allpos=y','title="density" color=j'))
+
+# reservoir velocity
+Flow(  'vel','vp0', 'window n1=%(nz)d | put o1=0 o3=0' % par)
+Result('lvel','vel',
+       'transp plane=13 |'
+       + zplot3d(par,'pclip=100 bias=2297 allpos=y','title="velocity" color=j'))
+
+# overburden velocity (can reduce n1=??? for speed)
+Flow(  'ovb','vp1', 'window n1=%(nz)d | put o1=0 o3=0' % ovr_grid_par)
+Result('lovb','ovb',
+       'transp plane=13 |'
+       + zplot3d(par,'pclip=100 bias=1950 allpos=y',
+                     'title="overburden velocity" frame3=%(nz)d color=j'
+                     % ovr_grid_par))
+
+# ------------------------------------------------------------
+# Slowness
+
+# vertical smoothing window (m)
+z_rect = 120
+
+# reservoir slowness (true)
+Flow('slo','vel',
+     '''
+     math "output=1/input" |
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     unit1=m unit2=m unit3=m
+        ''')
+Result('lslo','slo',
+       'transp memsize=250 plane=12 |'
+       + zplot3d(par,'pclip=100 bias=0.00034 allpos=y',
+                     'title="slowness" color=j'))
+
+# reservoir slowness (smooth)
+Flow('slo-s','slo',
+     'smooth rect1=50 rect2=50 rect3=%d' % (z_rect/res_grid_par['dz']))
+Result('lslo-s','slo-s',
+       'transp memsize=250 plane=12 |'
+       + zplot3d(par,'pclip=100 bias=0.00034 allpos=y',
+                     'title="smoothed slowness" color=j'))
+
+# overburden slowness (true)
+Flow('ovs','ovb',
+     '''
+     math "output=1/input" |
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     ''')
+Result('lovs','ovs',
+       'transp memsize=250 plane=12 |'
+       + zplot3d(par,'pclip=100 bias=0.00039 allpos=y',
+                     'title="overburden slowness" frame3=%(nz)d color=j'
+                     % ovr_grid_par))
+
+# overburden slowness (smooth)
+Flow('ovs-s','ovs',
+     'smooth rect1=50 rect2=50 rect3=%d' % (z_rect/ovr_grid_par['dz']))
+Result('lovs-s','ovs-s',
+       'transp memsize=250 plane=12 |'
+       + zplot3d(par,'pclip=100 bias=0.00039 allpos=y',
+                     'title="smoothed overburden slowness" frame3=%(nz)d color=j'
+                     % ovr_grid_par))
+
+# ------------------------------------------------------------
+# Acoustic impedance
+
+# convolution time sampling
+dt_conv = 0.0025
+
+# impedance and reflectivity time image parameters
+t_window = 0.16
+t_frame = 0.12/dt_conv
+
+# acoustic impedance (depth)
+Flow('aim','vel den','math v=${SOURCES[0]} d=${SOURCES[1]} output=v*d', stdin=0)
+Result('laim','aim',
+       'transp plane=13 |'
+       + zplot3d(par,'pclip=100 bias=4.44 allpos=y',
+                     'title="acoustic impedance" color=j'))
+
+# acoustic impedance (time)
+Flow('ait',['aim','vel'],
+     'depth2time velocity=${SOURCES[1]} dt=%g nt=%d | put label1=t unit1=s'
+     % (dt_conv,par['nt']) )
+Result('lait','ait',
+       'window max1=%g |' % (t_window)
+       + tplot3d(par,'pclip=100 bias=4.44 allpos=y',
+                     'title="acoustic impedance" color=j frame3=%d' % (t_frame)))
+
+# reflectivity (depth)
+Flow('reflbl','aim','ai2refl')
+Result('reflbl','reflbl',
+       'transp plane=13 |'
+       + zplot3d(par,'','title="reflectivity"'))
+End()

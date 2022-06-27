@@ -21,8 +21,6 @@
 */
 #include <rsf.h>
 #include "divnn.h"
-#include "ntriangle.h"
-#include "ntrianglen.h"
 
 static float *coord, ***out, *rat2, *num, *den, g0, dg, o1, d1, o2, d2;
 static int n2g, ntr, n1, n2, ng, order;

@@ -846,6 +846,9 @@ Result('nmostack/gathervscanpicknmo','nmostack/gather nmostack/vscanpick nmostac
 # Perform interpolation to create 3D volume from manually selected 1D velocity functions.
 # If you encounter a problem with the interpolation method (thin_plate) used in interpvel.py, you can try the other methods described in the Python's scipy library.  
 # Note that rms_vel.txt and interpvel.py files provided with SConstruct script should be placed in 'vel' directory.
+
+Fetch('rms_vel.txt','teapot')
+
 Flow(['vel/vrms3d','vel/vrms3d.dat'],['rms_vel.txt','interpvel.py'],
      '''
       %s ${SOURCES[1]} 

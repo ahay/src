@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfmath', 'sfcat', 'sfkirmod', 'sfwindow', 'sfput', 'sfnoise', 'sfgrey', 'sfscale', 'sfcosft', 'sfomp', 'sfstolt', 'sfclip', 'sfspray', 'sfunif2', 'sfai2refl', 'sfadd', 'sfdepth2time', 'sfresample', 'sfricker2', 'sft2warp', 'sfdip', 'sffft1', 'sffft3', 'sfvczo2', 'sftransp', 'sfcltft', 'sfmul', 'sfpad', 'sfovczop', 'sfstack', 'sfdivnp', 'sfclip2', 'sfcostaper', 'sfbyte', 'sfgrey3', 'sfdivn', 'sfslice', 'sfbandpass', 'sfderiv', 'sfrtoc', 'sfgraph']
+data=[]
+size= 136042920424

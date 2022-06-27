@@ -223,7 +223,7 @@
   \item ``sf'' prefix
   \item documented by examples (``books'')
   \item implement SMP parallelism
-  \item program count: $1757$ on 8/21/2018
+  \item program count: $1724$ in January 2022
   \end{itemize}
 
 \end{frame}
@@ -479,12 +479,10 @@ total number of samples = 5000
     \mex{ {\bf In} f1.rsf}
   \item SU: use converters
     \\
-    \mex{ {\bf sfsegyread}  tape=f1.su su=y tfile=tfile.rsf endian=0
-      \\ $>$ f1.rsf }
+    \mex{ {\bf sfsegyread}  tape=f1.su su=y tfile=tfile.rsf endian=0 $>$ f1.rsf }
     \vspace{0.25in}
     \\
-    \mex{ {\bf sfsegywrite} tape=f1.su su=y tfile=tfile.rsf endian=0
-      \\ $<$ f1.rsf }
+    \mex{ {\bf sfsegywrite} tape=f1.su su=y tfile=tfile.rsf endian=0 $<$ f1.rsf }
   \end{itemize}
 
 \end{frame}

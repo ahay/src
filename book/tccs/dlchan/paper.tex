@@ -1,0 +1,108 @@
+\published{Interpretation, 7, SE43-SE50, (2019)}
+
+\title{Automatic channel detection using deep learning}
+\author{Nam Pham, Sergey Fomel, and Dallas Dunlap}
+\address{The University of Texas at Austin,\\
+John A. and Katherine G. Jackson School of Geosciences,\\ Bureau of Economic Geology,\\
+Austin, Texas, USA}
+
+\lefthead{Pham et al.}
+\righthead{DL for channel detection}
+
+
+
+\maketitle
+\begin{abstract}
+We propose a method based on an encoder-decoder convolutional neural network for automatic channel detection in 3D seismic volumes. We use two architectures borrowed from computer vision which are SegNet for image segmentation together with Bayesian SegNet for uncertainty measurement. We train the network on 3D synthetic volumes and then apply it to field data. We test the proposed approach on a 3D field dataset from the Browse Basin, offshore Australia and a 3D Parihaka seismic data in New Zealand. Applying the weights estimated from training on 3D synthetic volumes to a 3D field dataset accurately identifies channel geobodies without the need for any human interpretation on seismic attributes. Our proposed method also produces uncertainty volumes to quantify the trustiness of detection model.  
+\end{abstract}
+
+\section{Introduction}
+Channels are important geologic features for hydrocarbon exploration. However, manual interpretation of channels in seismic images is a time-consuming and subjective process. Numerous methods, such as using coherence attributes, sweetness attributes, and steerable pyramid, have been proposed for helping channel detection in seismic \cite[]{coherence, sweetness, pyramid}. 
+
+Seismic coherence and other edge-detection algorithms, such as Sobel filter, can be used to highlight channel boundaries \cite[]{coherence, attributes, Mason}. The directional structure-tensor-based coherence method computes the seismic coherence attribute using eigenvalues of the directional structure-tensors constructed from directional derivatives perpendicular and parallel to the seismic structures \cite[]{coherence}. These edge-sensitive methods can detect channel edges easily but do not indicate channel thickness \cite[]{instantaneous}. Sweetness is another seismic attribute for channel detection, and is defined as the ratio between reflection strength and the square root of instantaneous frequency \cite[]{sweetness}. Sand channel bodies generally create stronger, broader reflections than the surrounding shale. \cite{pyramid} propose steerable pyramid filters to enhance the channel features by partitioning the seismic image with respect to scale and orientation.
+
+All of these seismic attributes focus on detecting the channel boundaries but not the geobodies. We propose to adopt an encoder-decoder convolutional neural network to directly detect 3D channel geobodies without human interpretation on precomputed seismic attributes. The encoder-decoder neural network automatically learns useful features for channel detection. We propose to train the network using a 3D labeled synthetic dataset and then use trained parameters to predict channel bodies in 3D seismic field datasets.
+
+While conventional methods for automatic channel picking lack uncertainty analysis, our proposed method can also provide a quantitative uncertainty analysis. Bayesian SegNet samples the posterior distribution of class probabilities at test time using dropout layers \cite[]{bayesianSegNet}. The network estimates the mean and variance of the distribution, which can be used to model the uncertainty and provide information to evaluate the risk of decision-making based on interpretation. 
+
+\section{Encoder-Decoder Architecture}
+\inputdir{./}
+Convolutional Neural Networks (CNNs) are a specialization of the neural networks for data in the form of multiple arrays \cite[]{nature}. CNNs replace matrix multiplication in traditional neural networks with a convolution operator to focus on locality and spatial relationship. CNNs can learn highly complex non-linear relationships in the input data with the usage of non-linear activation functions.
+
+Image segmentation in computer vision understands an image at pixel level, and assigns each pixel to an object class. Various methods utilizing CNNs have been used for semantic pixel-wise labeling, but the output images are coarse because max-pooling and subsampling reduce the feature map size \cite[]{SegNet}. SegNet architecture has encoder layers to learn low resolution features and uses decoder layers to map them to input resolution for pixel-wise classification \cite[]{SegNet} (Figure~\ref{fig:architecture}). We define the channel detection problem as an image segmentation task in which we assign a label of channel or non-channel to each pixel of the seismic image. The proposed architecture for automatic channel detection consists of four layers in the encoder and corresponding four layers in the decoder.
+\plot{architecture}{width=0.9\columnwidth}{SegNet architecture (Image modified after \cite{SegNet}).}
+
+Each encoder layer has a convolutional layer which learns useful features (Figure~\ref{fig:conv}) and a pooling layer. Our architecture for automatic channel detection has trainable filters in each convolutional layer with the size of 3x3x3. Each filter is only connected to local patches in the feature maps of the previous layer \cite[]{nature}. Each convolutional layer comes with a batch normalization layer to normalize the data and control overfitting \cite[]{BN}. Non-linear activation function ReLU is inserted after the batch normalization layer to learn non-linear relationships. Max-pooling layers with 2x2x2 kernels are added in between each convolutional layer to reduce the spatial size of feature maps and control overfitting.         
+\inputdir{testing}
+\plot{conv}{width=1.0\columnwidth}{15 example feature maps generated by a convolutional layer.}
+
+Each decoder layer upsamples the input feature maps and convolves the outputs with trainable decoder filters to produce dense maps. Upsampling layers use transposed convolution algorithm \cite[]{Dumoulin2016AGT} with learnable 2x2x2 filters (Figure~\ref{fig:transpconv}). The coarse outputs are convolved with learnable 3x3x3 filters to produce denser feature maps (Figure~\ref{fig:conv2}). The output from last decoder layer is fed into a 1x1x1 convolutional layer to produce feature maps corresponding to two labels of channel or non-channel. The last layer is softmax layer that produces the probabilities of each label for each pixel in the seismic image.
+\inputdir{testing}
+\plot{transpconv}{width=1.0\columnwidth}{15 example feature maps generated by transposed convolution upsample filters.}
+\plot{conv2}{width=1.0\columnwidth}{15 example feature maps generated by denser upsample filters.} 
+   
+Neural networks can be expressed in a Bayesian way to understand the uncertainty \cite[]{bayes}. The training phase is the transformation of the prior probability distributions $P(\theta|m)$, defined before observing data, into the posterior distributions $P(\theta|D,m)$, defined after observing data. 
+\begin{equation}
+P(\theta|D,m) = \frac{P(D|\theta,m)\,P(\theta|m)}{P(D|m)}
+\end{equation}
+where $D$ is the observed data, $m$ is the model, and $\theta$ is the network parameters. The prediction can also be expressed by Bayes rule.
+\begin{equation}
+P(x|D,m) = \int\,P(x|\theta,D,m)\,P(\theta|D,m)\,d\theta
+\end{equation}
+where $x$ is new data. Different models can be compared by using Bayes rule.
+\begin{equation}
+P(m|D) = \frac{P(D|m)\,P(m)}{P(D)}
+\end{equation}
+
+The uncertainty of the neural networks can come from all sources such as parameters uncertainty and model structure uncertainty. Bayesian SegNet is a development of SegNet architecture and a probabilistic image segmentation framework understanding the network parameters uncertainty by using dropout layers \cite[]{bayesianSegNet}. The dropout method randomly removes units in a network, which is a way of getting samples from posterior distribution of softmax class probabilities. Therefore, dropout is an approximation of Bayesian inference over the network's weights \cite[]{gal2015dropout}. It can be used at test time to create a Bernoulli distribution over the filter's weights \cite[]{Gal2015BayesianCN}. Our model has a dropout layer between the last encoder layer and the first decoder layer, which removes 30\% of the units. Adam optimizer \cite[]{adam} with 0.001 as learning rate is used for backpropagation. We take 100 samples at test time and calculate the variance of the distribution over the probabilities of channel to quantify the prediction uncertainty.
+
+\section{Training}
+\subsection{Training Data} 
+\inputdir{testing}
+For the training data, we choose a 3D convolutional synthetic depth model created by James Jennings at Bureau of Economic Geology, Austin, Texas, in collaboration with Chevron (Figure~\ref{fig:mt3d-40}). The data simulates a complex deep-water stacked channel system in Africa with correlated noise in porosity. On top of the channel is an overburden with stochastically generated velocity fluctuations and correlated noise in porosity \cite[]{diffraction}. The dominant frequency of the seismic wavelet is 40 Hz. The data is created by three pieces of information: a 3D shallow high-resolution seismic data is used together with an analytical curve to simulate the shape of channels, a group of geologists study the channel properties distribution at an analog outcrop in California, and the background information is created by geostatistics.
+
+We eliminate the noise in the channel bodies and subtract the result from original data to obtain the location of channels. We create the labels by simply masking the channel location with 1 and everywhere else with 0 (Figure~\ref{fig:diff-mask2}). We modify different channel properties, such as amalgamated sand cross-section shape parameter, porosity, dominant frequency, and channels thickness to create a diverse training dataset (Figure~\ref{fig:mt3d-40-2}). Because of limited computational resources, a training batch has 10 seismic volumes with a size of 128x128x128 samples (Figure~\ref{fig:prdw9}). Examples in the training data overlap with one another, but it is a way of augmenting the data. We generate a total of 1140 training examples with 300 examples for validating the network.
+\multiplot{2}{mt3d-40,mt3d-40-2}{width=0.45\columnwidth}{(a) Synthetic training data. (b) An example of synthetic training data with thin channels.} 
+\plot{diff-mask2}{width=0.9\columnwidth}{Training label.}
+\plot{prdw9}{width=0.9\columnwidth}{Training cuboid.}
+
+\subsection{Training Result}
+We trained our network on the synthetic data for 102 epochs in 2 hours using two GPUs. Mean value of Intersection over Union (Mean IU) is the accuracy metric defined as\begin{equation}(\frac{1}{n_{cl}})\sum\nolimits_{i}\frac{n_{ii}}{\sum\nolimits_{j}n_{ij}+\sum\nolimits_{j}n_{ji}-n_{ii}}\end{equation}
+where $n_{cl}$ is number of classes, $n_{ij}$ is the number of pixels of class i predicted to belong to class j \cite[]{IU}. The cross-entropy cost decreases during training (Figure~\ref{fig:cost2}) and the mean IU is 87.4\% after training. The global accuray defined as the percentage of pixels correctly classified in the image increases during training and reaches 99\%. Applying the trained model to 285 unseen validation examples, we obtain the mean IU of 88.1\%, which is close to the training mean IU. Comparing with true label of a vertical slice in Figure~\ref{fig:prdw10ver}, channel bodies are picked clearly in the synthetic dataset (Figure~\ref{fig:prdw7ver}).
+\plot{cost2}{width=0.9\columnwidth}{Training losses.}
+
+The model uncertainty from Bayesian SegNet can be used to understand how confidently we can trust the channel segmentation. At boundaries of the channels, the prediction has high uncertainty (Figure~\ref{fig:vadw7ver}), which reflects the ambiguity of the network surrounding the definition of defining the transition between the channel and non-channel areas \cite[]{bayesianSegNet}. Comparing with true label of a horizontal slice in Figure~\ref{fig:prdw10hor}, the model can successfully pick the channel geobodies (Figure~\ref{fig:prdw7hor}). However, it is difficult to distinguish individual channels in the dataset, so there is high uncertainty where there are multiple channels (Figure~\ref{fig:vadw7hor}). 
+\multiplot{4}{prdw9ver,prdw10ver,prdw7ver,vadw7ver}{width=0.475\columnwidth}{(a) Training vertial slice. (b) Ground truth of the training vertical slice. (c) Channel probability in the vertical slice. (d) Model uncertainty in the vertical slice.}
+\multiplot{4}{prdw9hor,prdw10hor,prdw7hor,vadw7hor}{width=0.475\columnwidth}{(a) Training horizontal slice. (b) Ground truth of the training horizontal slice. (c) Channel probability in the horizontal slice. (d) Model uncertainty in the horizontal slice.}
+
+\section{Testing}
+\inputdir{testing}
+\subsection{Browse Basin dataset}
+We apply the weights from training the synthetic data to a 312x312x100 subvolume of a field dataset from offshore Australia (Figure~\ref{fig:imageausnew3}). The dataset is a 3D marine seismic survey located in 2500 m water depth with a sample rate of 2 ms and a dominant frequency of 120 Hz. The dataset is in depth with a sampling interval of 2 m. The seismic data hosts numerous stacked deep-water channel-levee complexes. We divide the subvolume into 16 small overlapping volumes of size 128x128x128 samples using nonstationary patching method \cite[]{geoest} and padding along the depth dimension, to eliminate the edge artifacts and test each volume independently. The testing output volumes are stitched together using the inverse of non-stationary patching method with weighted boundaries. Figure~\ref{fig:ausnew3} shows that channel bodies are clearly picked in the seismic volume. We analyze the prediction uncertainty by using the variance of 100 samples from the posterior distribution of channel probability (Figure~\ref{fig:ausunnew3}).
+
+When there are multiple channels in the dataset (around crossline 4000 and inline 2780 in Figure~\ref{fig:imageausnew3}), the trained model cannot distinguish individual channels very well and the prediction uncertainty is high. The trained model can detect thin channels in the dataset with not too high probabilities, but the uncertainty map displays high values in these regions. Therefore, the prediction uncertainty has useful information for the channels detection task and interpreters can repick the regions with high uncertainty to enhance the detection result from neural network. Our result follows the channel edges enhanced by plane wave destruction Sobel filter \cite[]{Mason} (Figure~\ref{fig:aussobel3}), with the addition of model uncertainty. 
+\plot{imageausnew3}{width=0.9\columnwidth}{Australia field dataset.}
+\multiplot{2}{ausnew3,aussobel3}{width=0.45\columnwidth}{(a) Channel probability in the Australia field dataset. (b) Channel boundaries enhancement in the Australia dataset by PWD Sobel filter.}
+\plot{ausunnew3}{width=0.9\columnwidth}{Model uncertainty in the Australia field dataset.}
+
+\subsection{Parihaka dataset}
+\inputdir{testing}
+We apply the weights from training the synthetic data to a 135x201x301 subvolume of the Parihaka dataset in New Zealand (Figure~\ref{fig:imageParinew3}). The relative coarse-grained channel deposits are at the base of the incisional channel systems, which is different from the Australian dataset where the coarse-grained channel deposits are vertically stacked. The dataset is in time with a sample rate of 4 ms. We also use nonstationary patching method \cite[]{geoest} to divide the subvolume into small overlapping volumes of size 128x128x128 samples in order to eliminate edge artifacts. The trained neural network model successfully picks the channel bodies in the seismic volume with high probabilities (Figure~\ref{fig:Parinew3}). The model uncertainty is calculated by using the variance of 100 samples from the posterior distribution of channel probability (Figure~\ref{fig:Pariunnew3}). Parihaka dataset is different from our synthetic training dataset so applying our trained model is hard to produce a clean probability volume. However, high channel probabilities follow the channel edges enhanced by plane wave destruction Sobel filter \cite[]{Mason} (Figure~\ref{fig:sobelnew3}) with the addition of model uncertainty.  
+\plot{imageParinew3}{width=0.9\columnwidth}{Parihaka field dataset.}
+\multiplot{2}{Parinew3,sobelnew3}{width=0.45\columnwidth}{(a) Channel probability in the Parihaka field dataset. (b) Channel boundaries enhancement in the Parihaka dataset by PWD Sobel filter.}
+\plot{Pariunnew3}{width=0.9\columnwidth}{Model uncertainty in the Parihaka field dataset.}
+
+\section{Conclusions}
+We propose a method for automatic detection of channel bodies in seismic images using an encoder-decoder convolutional neural network. The network is trained on synthetic training data and is then applied to field data.
+
+We test the model on field datasets from offshore Australia and New Zealand. With only training on the synthetic dataset, the model succesfully identifies the channel bodies in the field datasets. The prediction uncertainty is computed simultaneously and can help an interpreter judge and enhance the channel detection results. 
+
+We believe the proposed method has a high potential in the future for automatic interpretation and quantitative analysis. Neural network models are trained with synthetic datasets created by the knowledge of experts from geologists, geophysicists, and petroleum engineers, and then the trained models are applied to field datasets to perform interpretation tasks such as faults, salt, and channel geobodies detection. Our results can be improved using more diverse labeled training datasets. Future research will also combine object detection and semantic segmentation to clearly image individual channels.                
+
+\section{Acknowledgments}
+We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for their financial support. We also thank NVIDIA GPU Grant Program for providing the GPU. The field datasets are provided by Jacob Covault from the Quantitative Clastics Laboratory (QCL). The synthetic dataset is simulated by James Jennings in collaboration with Chevron. We also acknowledge the donation of Landmark graphics interpretation software through the Landmark Graphics University Grant Program and GeoScience Australia for data access. We thank Yunzhi Shi and Xinming Wu for helpful discussions. 
+
+%\newpage
+%\onecolumn
+\bibliographystyle{seg}
+\bibliography{channel}

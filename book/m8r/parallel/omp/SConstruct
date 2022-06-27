@@ -1,0 +1,44 @@
+from rsf.proj import *
+
+n1_input = 100
+d1_input = 1.0 / float(n1_input)
+o1_input = 0.0
+
+n2_input = 100
+d2_input = 1.0 / float(n2_input)
+o2_input = 0.0
+
+f_string = 'sin(20*x1)*sin(20*x2)'
+
+fhi=4
+
+Flow('input', None, 
+    '''
+    math output="%s" 
+        n1=%d d1=%.4f o1=%.4f 
+        n2=%d d2=%.4f o2=%.4f
+    '''%(f_string, 
+            n1_input, d1_input, o1_input, 
+            n2_input, d2_input, o2_input))
+#Flow( 'output' , 'input' , 'bandpass fhi=%.4f'%fhi, split =[2, 'omp' ])
+Flow( 'output' , 'input' , 'bandpass fhi=%.4f'%fhi)
+Plot('input', 'input', 'grey title="Input Signal" scalebar=y')
+Plot('output', 'output', 'grey title="Bandpassed Signal" scalebar=y')
+Plot('diff', 'input output', 
+    '''
+    add ${SOURCES[1]} scale=1,-1 | 
+    grey title="Difference" scalebar=y
+    ''')
+Result('comparison', 'input output diff', 'SideBySideIso')
+
+#Transpose example
+n1_original = 500
+n2_original = 500
+Flow('original', None, 
+    '''
+    math output="x1 + %d * x2" n1=%d d1=1 o1=0 n2=%d d2=1 o1=0 o2=0
+    '''%(n2_original, n1_original, n2_original))
+Flow('transp','original','transp', split=[2,'omp'],reduce='cat axis=1')
+
+
+End()

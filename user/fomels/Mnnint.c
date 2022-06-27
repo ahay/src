@@ -22,7 +22,6 @@
 #include<rsf.h>
 
 #include "distance.h"
-#include "ntrianglen.h"
 
 int main (int argc,char* argv[]) 
 {
@@ -188,8 +187,8 @@ int main (int argc,char* argv[])
 	}
     }
 
-    ntrianglen_init(2,box,n,rect,sift,repeat);
-    ntrianglen_lop(false,false,n123,n123,vor,bin);
+    sf_ntrianglen_init(2,box,n,rect,sift,repeat);
+    sf_ntrianglen_lop(false,false,n123,n123,vor,bin);
 	    
     sf_floatwrite(bin,n123,grid); 
 

@@ -20,11 +20,10 @@
 #include <rsf.h>
 
 #include "pwdchain.h"
-#include "smooth1.h"
 
 int main(int argc, char* argv[])
 {
-    bool verb, drift;
+    bool verb, drift, proj;
     int i, ic, m1, m2, n, nc, n2, iter, niter, liter, rect1, rect2, it, nt, nw, nr, k;
     float *xn, *x1, *y1, *dx, *r, lam, scale, step, rsum, rsum2, *x0;
     sf_file inp, out, dip, dipin;
@@ -65,6 +64,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("drift",&drift)) drift=false;
     /* if shift filter */
 
+    if (!sf_getbool("vp",&proj)) proj=false;
+    /* if use variable projection */
+
     nr = n*nc;
     
     pwdchain_init(m1,m2,nw,nc,drift,x1,xn,xn+nr);
@@ -84,7 +86,7 @@ int main(int argc, char* argv[])
      if (!sf_getfloat("lambda",&lam)) lam=1.0f;
     /* scaling */
 
-    smooth1_init(m1,m2,nc,rect1,rect2);
+    sf_smooth1_init(m1,m2,nc,rect1,rect2);
 
     for (it=0; it < nt; it++) {
 	sf_warning("slice %d of %d;",it+1,nt);
@@ -95,7 +97,7 @@ int main(int argc, char* argv[])
 	for (i=0; i < n; i++) {
 	    scale += x1[i]*x1[i];
 	}
-	scale = nc*sqrtf(n/scale);
+	scale = sqrtf(n/scale);
 	
 	/* initialize */
 	for (i=0; i < n; i++) {
@@ -137,7 +139,7 @@ int main(int argc, char* argv[])
 		rsum += r[i]*r[i];
 	    } 
 	    
-	    sf_conjgrad(NULL, pwdchain_lop, smooth1_lop,x0,dx,r,liter);
+	    sf_conjgrad(NULL, pwdchain_lop, sf_smooth1_lop,x0,dx,r,liter);
 
 	    for (i=0; i < n2; i++) {
 		x0[i] = xn[i];
@@ -164,7 +166,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* variable projection */
-	    if (nc > 1) {
+	    if (nc > 1 && proj) {
 		sf_solver(pwdchainx_lop,sf_cgstep,n2-nr,nr,dx+nr,r,liter,"verb",true,"end");
 		sf_cgstep_close();
 		

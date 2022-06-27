@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "pwdchain.h"
-#include "smooth1.h"
 
 int main(int argc, char* argv[])
 {

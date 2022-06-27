@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfremap1', 'sftransp', 'sfwindow', 'sfadd', 'sfspray', 'sfmath', 'sfclip2', 'sfminmax', 'sfreverse', 'sflistminmax', 'sfcat', 'sfrm', 'sfpad', 'sfunif3', 'sfmask', 'sfput', 'sfrotate', 'sfnoise', 'sfrtoc', 'sffft3', 'sfreal', 'sfstack', 'sfbyte', 'sfgrey3', 'sfsmooth', 'sfdepth2time', 'sfai2refl']
+data=['PRIVATE', 'PRIVATE', 'PRIVATE']
+size= 14020794392

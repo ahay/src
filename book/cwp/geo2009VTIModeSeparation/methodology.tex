@@ -274,14 +274,14 @@ result is consistent with the previous observation that the central
 part of an operator is determined by the order of accuracy, and the
 outer part is controlled by anisotropy parameters. 
 
-{\rFg{aniopsize-diff0} shows the influence of
-approximation to finite difference ($2^{nd}$ and $8^{th}$
-order, \rFgs{oporder-mop8} and \subrfn{oporder-mop2}). The ``anisotropic''
-part (``diagonal tails'') are almost the same, and the difference comes from
-the central part.  \rFg{aniopsize-diff1} shows the difference
-between operators with different anisotropy (\rFgs{aniopsize-mop0-order8}
-and \subrfn{aniopsize-mop1-order8}). The difference mainly lies in the ``tails''
-of the operators.  }
+%{\rFg{aniopsize-diff0} shows the influence of
+%approximation to finite difference ($2^{nd}$ and $8^{th}$
+%order, \rFgs{oporder-mop8} and \subrfn{oporder-mop2}). The ``anisotropic''
+%part (``diagonal tails'') are almost the same, and the difference comes from
+%the central part.  \rFg{aniopsize-diff1} shows the difference
+%between operators with different anisotropy (\rFgs{aniopsize-mop0-order8}
+%and \subrfn{aniopsize-mop1-order8}). The difference mainly lies in the ``tails''
+%of the operators.  }
 
 A comparison between \rFgs{aniopsize-mop0-order8}
 and \subrfn{aniopsize-mop1-order8} shows that when one has large
@@ -312,20 +312,11 @@ the size of the anisotropic derivative operators.
 \inputdir{aniopsize} \multiplot{3}{mop0-order8,mop1-order8,mop2-order8}
 {width=.6\textwidth}
 {$8^{th}$ order anisotropic pseudo derivative operators for three VTI
-  media: a) $\epsilon$=0.25, $\delta$=-0.29, b) $\epsilon$=0.54,
-  $\delta$=0, and c) $\epsilon$=0.2, $\delta$=0.}
+  media}
 
 %figure5
 %\multiplot{2}{diff,comp}{width=.5\textwidth}
-\multiplot{2}{diff0,diff1}{width=.8\textwidth}
-{(a) The difference between the $8^{th}$ and $2^{nd}$ order operators
-(\rFgs{oporder-mop8} and \subrfn{oporder-mop2}) for a VTI
-medium with anisotropy $\epsilon$=0.25, $\delta$=-0.29 in the $z$ and
-$x$ directions.  (b) The difference between the $8^{th}$ order
-anisotropic operators for a VTI medium with anisotropy
-$\epsilon$=0.25, $\delta$=-0.29 (\rFg{aniopsize-mop0-order8}) and a
-VTI medium with anisotropy $\epsilon$=0.54, $\delta$=0
-(\rfg{aniopsize-mop1-order8}).  }
+\multiplot{2}{diff0,diff1}{width=.8\textwidth}{}
 
 %\inputdir{oporder}
 %\plot{diff}{width=8cm}{}
@@ -401,19 +392,19 @@ even this difference makes the separation incomplete.
 %$\CURL{}$ and (c) anisotropic potentials by pseudo derivative
 %operators.}
 % ------------------------------------------------------------
-\multiplot{2}{uA,mop5}{width=0.75\textwidth} {(a) A snapshot of an
-  elastic wavefield showing the vertical (left) and horizontal (right)
-  components for a VTI medium ($\epsilon=0.25$ and
-  $\delta=-0.29$). (b) $8^{th}$ order anisotropic pseudo derivative
-  operators in $z$ (left) and $x$ (right) direction for this VTI
-  medium. The boxes show the truncation of the operator to sizes of
-  $11\times11$, $31\times31$, and $51\times51$.}
+%\multiplot{2}{uA,mop5}{width=0.75\textwidth} {(a) A snapshot of an
+%  elastic wavefield showing the vertical (left) and horizontal (right)
+%  components for a VTI medium ($\epsilon=0.25$ and
+%  $\delta=-0.29$). (b) $8^{th}$ order anisotropic pseudo derivative
+%  operators in $z$ (left) and $x$ (right) direction for this VTI
+%  medium. The boxes show the truncation of the operator to sizes of
+%  $11\times11$, $31\times31$, and $51\times51$.}
 
-\multiplot{3}{pA1,pA3,pA5}{width=0.6\textwidth}
-{separation by $8^{th}$ order anisotropic pseudo derivative operators
-of different sizes: (a) $11\times11$, (b) $31\times31$, (c)
-$51\times51$, shown in {\rFg{separate2-mop5}}. {The plot shows the
-larger the size of the operators, the better the separation is.}}
+%\multiplot{3}{pA1,pA3,pA5}{width=0.6\textwidth}
+%{separation by $8^{th}$ order anisotropic pseudo derivative operators
+%of different sizes: (a) $11\times11$, (b) $31\times31$, (c)
+%$51\times51$, shown in {\rFg{separate2-mop5}}. {The plot shows the
+%larger the size of the operators, the better the separation is.}}
 
 
 

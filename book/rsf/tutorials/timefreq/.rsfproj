@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfgraph', 'sfwindow', 'sfadd', 'sfspectra', 'sfcut', 'sffft1', 'sfreal', 'sfcat', 'sfst', 'sfbyte', 'sfgrey', 'sfstft', 'sftimefreq', 'sfcltftfft', 'sfdd', 'sfspike']
+data=['https://raw.githubusercontent.com/seg/tutorials-2018/master/1806_Time-frequency/signals/piano_22050Hz.txt', 'https://raw.githubusercontent.com/seg/tutorials-2018/master/1806_Time-frequency/signals/seg_44100Hz.txt', 'https://raw.githubusercontent.com/seg/tutorials-2018/master/1806_Time-frequency/signals/bat_96000Hz.txt', 'https://raw.githubusercontent.com/seg/tutorials-2018/master/1806_Time-frequency/signals/tremor_100Hz.txt']
+size= 2659023364

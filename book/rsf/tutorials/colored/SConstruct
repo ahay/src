@@ -1,0 +1,168 @@
+from rsf.proj import *
+
+# Extract acoustic impedance 
+
+dat = 'Ai_inline362_horizons.dat'
+
+Fetch(dat,'data',
+      server='https://raw.githubusercontent.com/',
+      top='seg/tutorials-2017/master/1710_Colored_inversion')
+Flow('ai',dat,
+     '''
+     echo n1=185 n2=951 in=$SOURCE data_format=ascii_float 
+     o1=408 d1=4 o2=300 d2=1 label1=Time unit1=ms label2=X-BIN | 
+     dd form=native | window f1=2
+     ''')
+
+Result('ai',
+       '''
+       grey bias=5000000 clip=800000 
+       color=inferno wanttitle=n parallel2=n
+       scalebar=y minval=4200000 maxval=5800000 bartype=h
+       ''')
+
+# Extract impedance from log
+
+las = 'F02-1_logs.las'
+
+Fetch(las,'Lasfiles',
+      server='https://raw.githubusercontent.com/',
+      top='seg/tutorials-2017/master/1710_Colored_inversion/data/All_wells_RawData')
+
+
+Flow('log',las,'las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+Flow('AI-log','log','headermath output=AI segy=n | window')
+Flow('DEPTH-log','log','headermath output=DEPTH segy=n | window')
+
+Result('AI-log','DEPTH-log AI-log',
+       '''
+       cmplx ${SOURCES[1]} | 
+       graph transp=y title=Impedance parallel2=n
+       yreverse=y label1=Depth unit1=m label2=AI
+       ''')
+
+# Convert depth to time
+
+td = 'F02-1_TD.txt'
+
+Fetch(td,'DT_model',
+      server='https://raw.githubusercontent.com/',
+      top='seg/tutorials-2017/master/1710_Colored_inversion/data/All_wells_RawData')
+
+Flow('td',td,'echo n1=2 n2=7440 data_format=ascii_float in=$SOURCE | dd form=native',stdin=0)
+
+# linear interpolation
+Flow('time','td','transp | linear n1=6001 d1=0.5 o1=0')
+Flow('TIME-log','time DEPTH-log','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+
+Result('AI-log-time','TIME-log AI-log',
+       '''
+       cmplx ${SOURCES[1]} | window |
+       graph transp=y title=Impedance parallel2=n
+       yreverse=y label1=Time unit1=ms label2=AI
+       ''')
+
+# Log spectrum
+
+Flow('AI','TIME-log AI-log','cat axis=2 ${SOURCES[1]} | transp | spline n1=9700 d1=0.15 o1=45')
+
+Flow('logspec','AI','put o1=0.045 d1=0.00015 | spectra | math output="log(input)" ')
+Plot('logspec',
+     '''
+     graph min1=0 max1=2000 min2=6 max2=20
+     label1="Frequency" unit1=Hz label2="log(Spectrum)"
+     title="Spectrum"
+     ''')
+
+Flow('logfreq','logspec','math output="log(x1)" ')
+
+Plot('spec','logfreq logspec',
+     '''
+     cmplx ${SOURCES[1]} | 
+     graph symbol=o min1=-1 max1=8.5 min2=6 max2=20
+     label1="log(Frequency)" label2="log(Spectrum)"
+     title="Log Spectrum"
+     ''')
+
+Result('spec','Overlay')
+
+# Seismic data
+
+asc = 'export_inline362.ascii'
+Fetch(asc,'data',
+      server='https://raw.githubusercontent.com/',
+      top='seg/tutorials-2017/master/1710_Colored_inversion')
+
+Flow('seismic',asc,
+     '''
+     echo in=$SOURCE data_format=ascii_float 
+     n1=465 n2=951 d1=4 
+     label1=Time unit1=ms label2=Crossline unit2=trace |
+     dd form=native
+     ''',stdin=0)
+
+Result('seismic','grey wanttitle=n')
+
+# Step 1: Fit a function
+
+Flow('linefit','logfreq logspec',
+     '''
+     cat axis=2 ${SOURCES[1]} | window f1=1 | transp | 
+     linefit o1=-1 n1=10 d1=1
+     ''')
+Plot('linefit',
+     '''
+     graph wanttitle=n wantaxis=n plotfat=5 plotcol=3 
+     min1=-1 max1=8.5 min2=6 max2=20
+     ''')
+Result('linefit','spec linefit','Overlay')
+
+Plot('linefit2','linefit',
+     '''
+     math output="exp(x1)" | cmplx $SOURCE |
+     graph wanttitle=n wantaxis=n plotfat=5 plotcol=3 
+     min1=0 max1=2000 min2=6 max2=20
+     ''')
+Result('linefit2','logspec linefit2','Overlay')
+
+Flow('x','logfreq','math output=1 | cat axis=2 $SOURCE | window f1=1')
+Flow('y','logspec','window f1=1')
+
+Flow('lsfit ab','y x',
+     '''
+     lsfit coef=${TARGETS[1]} fit=${SOURCES[1]}
+     ''')
+Flow('x1','linefit','math output=x1')
+Flow('matrix','x1','math output=1 | cat axis=2 $SOURCE')
+Flow('line','ab matrix',
+     'matmult mat=${SOURCES[1]} adj=y | put o1=-1 n1=10 d1=1')
+Plot('line',
+     '''
+     graph wanttitle=n wantaxis=n plotfat=5 plotcol=3 
+     min1=-1 max1=8.5 min2=6 max2=20
+     ''')
+Result('line','spec line','Overlay')
+
+# Seismic power spectrum around the well location
+
+min_time = 50
+max_time = 250
+xmin = 26
+xmax = 46
+
+Flow('trace','seismic','window f1=50 n1=200 f2=26 n2=20 | stack axis=2')
+Result('trace','graph title="Mean Trace" label2=Amplitude unit2=')
+
+Flow('spectrum','trace',
+     'put d1=0.004 unit1=s | spectra | math output="log(input)/log(10)" ')
+Result('spectrum',
+       '''
+       graph title="Seismic Spectrum" min2=0
+       label2="log\_\s75 10\^\s100 (Amplitude)" unit2=
+       ''')
+
+# Compare seismic spectrum with the one from the AI log
+
+# spectrum & linefit2 - to 200 Hz and scale
+
+End()

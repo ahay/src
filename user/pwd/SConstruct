@@ -3,13 +3,14 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-beamform dealias dealias2 dijkstra dip dip2 diplet dips dixshape
-explanesignoi expsignoi fdip mdip odip2 ofpwd ofpwd2 opwd2 planemis2
-planemis3 planereg2 planereg3 planesig planesignoi pmshape2 predict
-pwcascade pwcoh pwd pwd1 pwdchain pwdchain1 pwdchain2 pwdix pwdsigk
-pwsmooth pwsmooth2 pwpaint pwpaint2 pwspray2 pwspray3 pwdsmooth2
-pwpaint3 pwspray pwstack seisigk seislet shapesigk shplanemis2
-shplanemis3 timeshift trismooth2 twodip2 distpaint distpaint3D
+aapwd aapwd1 beamform dealias dealias2 dijkstra dip dip2 diplet dips
+dixshape explanesignoi expsignoi fdip mdip odip2 ofpwd ofpwd2 opwd2
+planemis2 planemis3 planereg2 planereg3 planesig planesignoi pmshape2
+predict pwcascade pwcascade3 pwcoh pwd pwd1 pwdchain pwdchain1
+pwdchain2 pwdix pwdsigk pwsmooth pwsmooth2 pwpaint pwpaint2 pwspray2
+pwspray3 pwdsmooth2 pwpaint3 pwspray pwstack seisigk seislet shapesigk
+shplanemis2 shplanemis3 timeshift trismooth2 twodip2 distpaint
+distpaint3D
 '''
 
 try:  # distributed version

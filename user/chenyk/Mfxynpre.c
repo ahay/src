@@ -2,7 +2,7 @@
 with frequency-axis smoothness constraint
 with frequency-dependent smoothing
 
-Reference: Wang et al. (2021), Non-stationary predictive filtering for seismic random noise suppression - A tutorial, Geophysics, doi: 10.1190/geo2020-0368.1. 
+Reference: Wang et al. (2021), Non-stationary predictive filtering for seismic random noise suppression - A tutorial, Geophysics, 86(3), W21–W30. 
 */
 
 /*
@@ -48,17 +48,24 @@ int main (int argc, char *argv[])
     
 	if(fs)
 	{
-    if (!sf_getfloat("Nfrac",&Nfrac))    Nfrac=6.0;  
-    if (!sf_getfloat("Ntimes",&Ntimes))    Ntimes=5.0;  
-    if (!sf_getfloat("pow",&pow))    pow=0.5;  
+    if (!sf_getfloat("Nfrac",&Nfrac))    Nfrac=6.0;     /*frequency-dependent smoothing starts from 1/Nfrac * (Nyquist frequency) */
+    if (!sf_getfloat("Ntimes",&Ntimes))    Ntimes=5.0;  /*Maximum smoothing radius is Ntimes*(reference smoothing radius) */
+    if (!sf_getfloat("pow",&pow))    pow=0.5;  /*fraction parameter*/
 	}
 
+    for (j=0; j < 3; j++) {
+	snprintf(key,6,"rect%d",j+1);
+	if (!sf_getint(key,rect+j)) rect[j]=1; 
+	/*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
+    }
+    
  	if (!sf_histint  (Fin,"n1",&n1)) n1=1;
 	if (!sf_histfloat(Fin,"d1",&d1)) d1=1.;
 	if (!sf_histfloat(Fin,"o1",&o1)) o1=0.;
  	if (!sf_histint  (Fin,"n2",&nx)) nx=1;
  	if (!sf_histint  (Fin,"n3",&ny)) ny=1;
-	
+
+
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
@@ -73,11 +80,6 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("mode",&mode)) mode=0; /*predictive filtering mode; default: non-stationary*/	
     
-    for (j=0; j < 3; j++) {
-	snprintf(key,6,"rect%d",j+1);
-	if (!sf_getint(key,rect+j)) rect[j]=1; /*get radii for different dimensions*/
-    }
-
 	if(! sf_getint("nsx",&nsx)) nsx=2; /* number of shifts in non-causal prediction filtering */
 	if(! sf_getint("nsy",&nsy)) nsy=2; /* number of shifts in non-causal prediction filtering */
 
@@ -86,7 +88,6 @@ int main (int argc, char *argv[])
 	
 	sf_warning("nsx=%d,nsy=%d",nsx,nsy);
 
-	
 	/*padding */	
 	n1pad=n1win;nw1=1;while(n1pad<n1){n1pad=n1pad+nov1;nw1++;	 }   
 	n2pad=n2win;nw2=1;while(n2pad<nx){n2pad=n2pad+nov2;nw2++;	 }   	

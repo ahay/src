@@ -19,8 +19,6 @@
 */
 #include <rsf.h>
 #include "divnn.h"
-#include "ntriangle.h"
-#include "ntrianglen.h"
 
 static int niter, n;
 static float *p;
@@ -40,7 +38,7 @@ void divnn_init(int ndim   /* number of dimensions */,
     n = nd;
 	
 	/*initialization for the non-stationary triangle smoothing operator*/
-    ntrianglen_init(ndim,nbox,ndat,rct,sft,1);
+    sf_ntrianglen_init(ndim,nbox,ndat,rct,sft,1);
 	
     sf_conjgrad_init(nd, nd, nd, nd, 1., 1.e-6, verb, false);
     p = sf_floatalloc (nd);
@@ -58,7 +56,7 @@ void divnn (float* num, float* den,  float* rat)
 /*< smoothly divide rat=num/den >*/
 {
     sf_weight_init(den);
-    sf_conjgrad(NULL, sf_weight_lop,ntrianglen_lop,p,rat,num,niter); 
+    sf_conjgrad(NULL, sf_weight_lop,sf_ntrianglen_lop,p,rat,num,niter); 
 }
 
 void divnne (float* num, float* den,  float* rat, float eps)
@@ -91,7 +89,7 @@ void divnne (float* num, float* den,  float* rat, float eps)
     }   
 
     sf_weight_init(den);
-    sf_conjgrad(NULL, sf_weight_lop,ntrianglen_lop,p,rat,num,niter); 
+    sf_conjgrad(NULL, sf_weight_lop,sf_ntrianglen_lop,p,rat,num,niter); 
 }
 
 
