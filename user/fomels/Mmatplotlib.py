@@ -62,13 +62,24 @@ n1 = inp.int("n1")
 d1 = inp.float("d1")
 o1 = inp.float("o1")
 n2 = inp.size(1)
-
+if n2 > 1:
+    d2 = inp.float("d2")
+    o2 = inp.float("o2")
+else:
+    d2 = 1.0
+    o2 = 0.0
 
 data = numpy.zeros([n1,n2],'f')
 inp.read(data)
 inp.close()
 
 x1 = numpy.transpose(numpy.tile(numpy.arange(o1, o1+n1*d1, d1,dtype='f'),(n2,1)))
+
+print('got x1',n2,x1.shape,file=sys.stderr)
+
+x2 = numpy.tile(numpy.arange(o2, o2+n2*d2, d2,dtype='f'),(n1,1))
+
+print('got x2',n2,x2.shape,file=sys.stderr)
 
 # recognize the plotting type
 if plot == 'imshow':
@@ -81,11 +92,13 @@ elif plot == 'semilogy':
     plt.semilogy.__call__(x1,data,**args)
 elif plot == 'loglog':
     plt.loglog.__call__(x1,data,**args)
+elif plot == 'plot_surface':
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface.__call__(x1,x2,data,**args)
 else:
     sys.stderr.write('Unrecognized plotting function "%s" \n\n' % plot)
     sys.exit(2)
-
-
 
 if grid:
     plt.grid()
