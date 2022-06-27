@@ -9,80 +9,80 @@ def Temp(o,i,r):
 
 # default parameters
 def param(par):
-    if(not par.has_key('ot')):       par['ot']=0.
-    if(not par.has_key('nt')):       par['nt']=1
-    if(not par.has_key('dt')):       par['dt']=1.
-    if(not par.has_key('lt')):       par['lt']='t'
-    if(not par.has_key('ut')):       par['ut']='s'
+    if('ot' not in par):       par['ot']=0.
+    if('nt' not in par):       par['nt']=1
+    if('dt' not in par):       par['dt']=1.
+    if('lt' not in par):       par['lt']='t'
+    if('ut' not in par):       par['ut']='s'
             
-    if(not par.has_key('ox')):       par['ox']=0.
-    if(not par.has_key('nx')):       par['nx']=1
-    if(not par.has_key('dx')):       par['dx']=1.
-    if(not par.has_key('lx')):       par['lx']='x'
-    if(not par.has_key('ux')):       par['ux']='km'
+    if('ox' not in par):       par['ox']=0.
+    if('nx' not in par):       par['nx']=1
+    if('dx' not in par):       par['dx']=1.
+    if('lx' not in par):       par['lx']='x'
+    if('ux' not in par):       par['ux']='km'
     
-    if(not par.has_key('oy')):       par['oy']=0.
-    if(not par.has_key('ny')):       par['ny']=1
-    if(not par.has_key('dy')):       par['dy']=1.
-    if(not par.has_key('ly')):       par['ly']='y'    
-    if(not par.has_key('uy')):       par['uy']='km'
+    if('oy' not in par):       par['oy']=0.
+    if('ny' not in par):       par['ny']=1
+    if('dy' not in par):       par['dy']=1.
+    if('ly' not in par):       par['ly']='y'    
+    if('uy' not in par):       par['uy']='km'
      
-    if(not par.has_key('oz')):       par['oz']=0.
-    if(not par.has_key('nz')):       par['nz']=1
-    if(not par.has_key('dz')):       par['dz']=1.
-    if(not par.has_key('lz')):       par['lz']='z'
-    if(not par.has_key('uz')):       par['uz']='km'
+    if('oz' not in par):       par['oz']=0.
+    if('nz' not in par):       par['nz']=1
+    if('dz' not in par):       par['dz']=1.
+    if('lz' not in par):       par['lz']='z'
+    if('uz' not in par):       par['uz']='km'
 
-    if(not par.has_key('tmin')):     par['tmin']=par['ot']
-    if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
-    if(not par.has_key('xmin')):     par['xmin']=par['ox']
-    if(not par.has_key('xmax')):     par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
-    if(not par.has_key('ymin')):     par['ymin']=par['oy']
-    if(not par.has_key('ymax')):     par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
-    if(not par.has_key('zmin')):     par['zmin']=par['oz']
-    if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+    if('tmin' not in par):     par['tmin']=par['ot']
+    if('tmax' not in par):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+    if('xmin' not in par):     par['xmin']=par['ox']
+    if('xmax' not in par):     par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+    if('ymin' not in par):     par['ymin']=par['oy']
+    if('ymax' not in par):     par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
+    if('zmin' not in par):     par['zmin']=par['oz']
+    if('zmax' not in par):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
     dz=par['zmax']-par['zmin'];
     dt=par['tmax']-par['tmin'];
 
-    if(not par.has_key('nbx')):      par['nbx']=0
-    if(not par.has_key('nby')):      par['nby']=0
-    if(not par.has_key('nbz')):      par['nbz']=0
-    if(not par.has_key('tx')):       par['tx']=0.0035
-    if(not par.has_key('ty')):       par['ty']=0.0035
-    if(not par.has_key('tz')):       par['tz']=0.0035
+    if('nbx' not in par):      par['nbx']=0
+    if('nby' not in par):      par['nby']=0
+    if('nbz' not in par):      par['nbz']=0
+    if('tx' not in par):       par['tx']=0.0035
+    if('ty' not in par):       par['ty']=0.0035
+    if('tz' not in par):       par['tz']=0.0035
 
-    if(not par.has_key('nb')):       par['nb']=0
-    if(not par.has_key('nbell')):    par['nbell']=5
-    if(not par.has_key('snap')):     par['snap']='y'
-    if(not par.has_key('jsnap')):    par['jsnap']=100
-    if(not par.has_key('jdata')):    par['jdata']=1
-    if(not par.has_key('dabc')):     par['dabc']='y'
-    if(not par.has_key('ompchunk')): par['ompchunk']=1
-    if(not par.has_key('ompnth')):   par['ompnth']=0
-    if(not par.has_key('free')):     par['free']='n'
+    if('nb' not in par):       par['nb']=0
+    if('nbell' not in par):    par['nbell']=5
+    if('snap' not in par):     par['snap']='y'
+    if('jsnap' not in par):    par['jsnap']=100
+    if('jdata' not in par):    par['jdata']=1
+    if('dabc' not in par):     par['dabc']='y'
+    if('ompchunk' not in par): par['ompchunk']=1
+    if('ompnth' not in par):   par['ompnth']=0
+    if('free' not in par):     par['free']='n'
    
-    if(not par.has_key('ratio')):
+    if('ratio' not in par):
         if(dx==0.0):
             par['ratio']=1.0
         else:
             par['ratio']=1.0*(dz)/(dx)
 
-    if(not par.has_key('height')):
+    if('height' not in par):
         if(par['ratio']>=1):
             par['height']=10
         else:
             par['height']=13.625*par['ratio']
 
-    if(not par.has_key('dratio')):
+    if('dratio' not in par):
         if(dx==0.0):
             par['dratio']=1.0
         else:
             par['dratio']=1.0*(dt)/(dx)
 
-    if(not par.has_key('dheight')):
+    if('dheight' not in par):
         if(par['dratio']>1):
             par['dheight']=10
         else:
@@ -119,16 +119,16 @@ def param(par):
     else:
         par['theight3d']=11*par['tratio3d']
 
-    if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
+    if('scalebar' not in par): par['scalebar']='n'
+    if('labelattr' not in par): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
     
-    if(not par.has_key('nqz')): par['nqz']=par['nz']
-    if(not par.has_key('oqz')): par['oqz']=par['oz']
-    if(not par.has_key('dqz')): par['dqz']=par['dz']
+    if('nqz' not in par): par['nqz']=par['nz']
+    if('oqz' not in par): par['oqz']=par['oz']
+    if('dqz' not in par): par['dqz']=par['dz']
 
-    if(not par.has_key('nqx')): par['nqx']=par['nx']
-    if(not par.has_key('oqx')): par['oqx']=par['ox']
-    if(not par.has_key('dqx')): par['dqx']=par['dx']
+    if('nqx' not in par): par['nqx']=par['nx']
+    if('oqx' not in par): par['oqx']=par['ox']
+    if('dqx' not in par): par['dqx']=par['dx']
 
     par['xratio']=2
     par['yratio']=2
@@ -1096,7 +1096,7 @@ def wom(wom,wfld,velo,vmean,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    if(not par.has_key('wweight')): par['wweight']=1
+    if('wweight' not in par): par['wweight']=1
 
     wtmp = wfld + 'tmp'
     vtmp = wfld + 'vel'
@@ -1131,8 +1131,8 @@ def wom(wom,wfld,velo,vmean,par):
 # (elastic) wavefield-over-model
 def wem(wom,wfld,velo,vmean,par):
 
-    if(not par.has_key('wweight')): par['wweight']=10
-    if(not par.has_key('wclip')):   par['wclip']=1.0
+    if('wweight' not in par): par['wweight']=10
+    if('wclip' not in par):   par['wclip']=1.0
 
     Flow(velo+'-spray',
          velo,
@@ -1170,7 +1170,7 @@ def iom(iom,imag,velo,vmean,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    if(not par.has_key('iweight')): par['iweight']=1
+    if('iweight' not in par): par['iweight']=1
 
     itmp = imag + 'tmp'
     vtmp = imag + 'vel'
@@ -1256,7 +1256,7 @@ def emovie(movie,wfld,nframes,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.2
         tag = "-%02d" % iframe
         eframe(movie+tag,wfld,iframe,custom,axis,par,xscale,yscale,shift)
         
-    allframes = map(lambda x: movie+'-%02d'  % x,range(nframes))
+    allframes = [movie+'-%02d'  % x for x in range(nframes)]
     Result(movie,allframes,'Movie')
 
 # ------------------------------------------------------------
@@ -1267,12 +1267,12 @@ def edata(plot,data,custom,par):
          'scale axis=123 | byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
     
     for i in range(2):
-	ctag = "-%d"%i
+        ctag = "-%d"%i
 	
         Plot(  plot+ctag,[plot+'_plt',plot+'_bar'],
                'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
                + dgrey('screenratio=1.75 screenht=20 %s' % custom,par))
-    pplot.p1x2(plot,plot+'-0',plot+'-1',0.5,0.5,-11)
+    pplot.p1x2(plot,plot+'-0',plot+'-1',0.5,0.5,-11)  
 
     #    Result(plot+str(i+1),[plot+'_plt',plot+'_bar'],
     #           'window n2=1 f2=%d bar=${SOURCES[1]} | transp |' % i
@@ -1314,7 +1314,7 @@ def ewavelet3d(wavelet,custom,par):
 # acoustic RTM
 def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
 
-    if(not par.has_key('nbuf')): par['nbuf']=100
+    if('nbuf' not in par): par['nbuf']=100
     
     swfl = imag+'_us' #   source wavefield
     rwfl = imag+'_ur' # receiver wavefield
@@ -1349,7 +1349,7 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
 # elastic RTM
 def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
 
-    if(not par.has_key('nbuf')): par['nbuf']=100
+    if('nbuf' not in par): par['nbuf']=100
     
     swfl = imag+'_us' #   source wavefield
     rwfl = imag+'_ur' # receiver wavefield
