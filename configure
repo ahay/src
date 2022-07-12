@@ -30,6 +30,10 @@ findprog ()
 
 findprog python
 python=$prog
+if test "$python" = "no"; then
+    findprog python3
+    python=$prog
+fi
 echo "checking for Python ... $python"
 if test "$python" = "no"; then
     fatal_error "Please install Python before proceeding: http://www.python.org"
@@ -121,6 +125,7 @@ eval $command2
 echo "------------------------"
 echo "Done with configuration."
 
+chmod +x framework/setenv.py
 M8R_PY_PATH=`RSFROOT="$root" framework/setenv.py`
 if [ -n "$PYTHONPATH" ]; then
 PYTHONPATH=$M8R_PY_PATH:${PYTHONPATH}
