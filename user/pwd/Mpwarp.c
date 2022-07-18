@@ -47,9 +47,9 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("rect1",&rect[0])) rect[0]=1;
     /* shift smoothness on 1st axis */
-    rect[1]=1;
-    if (!sf_getint("rect2",&rect[2])) rect[2]=1;
+    if (!sf_getint("rect2",&rect[1])) rect[1]=1;
     /* shift smoothness on 2nd axis */
+    rect[2]=1;
 
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
     
     /* read data - first monitor, then base */
     sf_floatread(u,n,oth);
-    sf_floatread(u,n,inp);
+    sf_floatread(u+n,n,inp);
     
     /* initialize dip */
     if (NULL != ishift) {
