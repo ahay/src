@@ -87,7 +87,7 @@ int main (int argc, char *argv[])
     if (!sf_getint("rect2",&rect[1])) rect[1]=1;
     /* dip smoothness on 2nd axis */
     if (!sf_getint("rect3",&rect[2])) rect[2]=1;
-    /* dip smoothness on 3rd axuis */
+    /* dip smoothness on 3rd axis */
 
     if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial in-line dip */
