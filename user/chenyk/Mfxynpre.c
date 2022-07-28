@@ -2,7 +2,7 @@
 with frequency-axis smoothness constraint
 with frequency-dependent smoothing
 
-Reference: Wang et al. (2021), Non-stationary predictive filtering for seismic random noise suppression - A tutorial, Geophysics, 86(3), W21–W30. 
+Reference: Wang et al. (2021), Non-stationary predictive filtering for seismic random noise suppression - A tutorial, Geophysics, 86(3), W21-W30. 
 */
 
 /*
