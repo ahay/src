@@ -1,0 +1,3 @@
+uses=['sfqdome', 'sfwindow', 'sffdip', 'sfmath', 'sfpad', 'sfdip', 'sfgrey', 'sfspike', 'sfadd', 'sfplanemis2', 'sfstack', 'sfshplanemis2', 'sfcat', 'sftransp', 'sfput', 'sfgraph', 'sfmask', 'sfdd', 'sfmul', 'sfpwsmooth', 'sfbandpass', 'sfpwd', 'sfpredict']
+data=[]
+size=   30452160
