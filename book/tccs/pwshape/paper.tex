@@ -50,13 +50,12 @@ The quarterdome (qdome) 3-D seismic image was created by \cite{claerbout93}. Thi
 
 \multiplot{6}{q-compa,q-compb,q-compc,q-compd,q-compe,q-compf}{width=0.3\textwidth}{Reconstruction of 2-D synthetic data with interpolation from (a) plane-wave destruction, (b) plane-wave construction, and (c) plane-wave shaping. Parts (d), (e), and (f) correspond to the respective data misfit, computed with $\left|\left|d-d_i\right|\right|_2^2$ for the true solution $d$ and reconstruction $d_i$ at iteration $i$. Convergence was reached after 55, 28 and 6 iterations respectively.}
 
+\subsection{3-D synthetic test}
 \inputdir{qdome3}
 \multiplot{3}{qdome,hole,hole-shape}{width=0.3\textwidth}{3-D blind fill. The original qdome synthetic is shown in (a) and again in (b) with an ellipsoidal hole of missing data. The reconstruction using PWS is shown in (c).}
 
-\subsection{3-D synthetic test}
 In this experiment, we use the 3-D version of the qdome seismic image and cut a large ellipsoidal hole in the data. Using only this information, we can see how well applying 3-D PWS is able to reconstruct the original data without knowing the full original dip field. By finding the local slope of the masked image, PWS interpolation can then be applied. The 3-D impulse response is tested in Figure~\ref{fig:pws3out-3d} and shows the shaping of information to geologic structure in 3-D. Figure~\ref{fig:qdome,hole,hole-shape} shows the data (a) originally, (b) with the mask applied, and (c) with reconstruction. The resulting interpolation accurately patches the hole. The only area where the result mildly deviates from the answer is adjacent to the fault. Here, PWS smooths over the fault to make it somewhat more continuous. This effect can be neutralized by shrinking the smoothing radius to a more acceptable value.
 
-\inputdir{qdome3}
 \plot{pws3out-3d}{width=0.5\columnwidth}{3-D impulse response. 20 spikes are randomly placed in the 3-D qdome model. These peaks are smeared in a structure-guided fashion by 3-D PWS to produce this image.}
 %\plot{PWS-combo}{width=\columnwidth}{Combodata}
 %\multiplot{1}{orig,hole,PWS,PWS-subtr}{width=0.3\textwidth}{3-D blind fill. The original qdome synthetic is shown in (a) and again in (b) with an ellipsoidal hole of missing data. The reconstruction using PWS is shown in (c) with the deviation from the original in (d).}
