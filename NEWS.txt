@@ -39,10 +39,11 @@ To the reproducible documents collection:
 * tccs/wetm: Wave-equation time migration (Fomel and Kaur)
 * tccs/varipick: A variational approach for picking optimal surfaces
   from semblance-like panels (Decker and Fomel)
+* tccs/pwshape: Seismic data interpolation using plane-wave shaping
+  regularization (Swindeman and Fomel)
 
 To SCons:
 
-* upgrade to scons-4.2.0
 * added support for Rocky Linux
 
 To documentation:
