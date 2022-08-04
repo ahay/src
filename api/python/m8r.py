@@ -50,13 +50,18 @@ def view(name):
     except:
         print ('No IPython Image support.')
         return None
+    error_message = 'Failed to generate image.'
     try:
         png = name+'.png'
         makefile = os.path.join(rsf.prog.RSFROOT,'include','Makefile')
-        os.system('make -f %s %s' % (makefile,png))
+        proc = subprocess.Popen('make -f %s %s' % (makefile,png),
+                                shell=True,
+                                stderr=subprocess.PIPE,
+                                stdout=subprocess.PIPE)
+        error_message = proc.stderr.read().decode()
         return Image(filename=png)
     except:
-        print ('Failed to generate image, see command line for errors.')
+        print(error_message,file=sys.stderr)
         return None
 
 class _Simtab(dict):
