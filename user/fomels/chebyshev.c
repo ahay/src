@@ -54,6 +54,16 @@ void chebyshev_set(const float *d /* [n] data at Chebyshev points */)
     sf_cosft_inv(c,0,1);
 }
 
+void chebyshev_poly(float *c2)
+/*< return chebyshev coefficients >*/
+{
+    int i;
+
+    for (i=0; i < n; i++) {
+	c2[i] = c[i];
+    }
+}
+
 float chebyshev(float x)
 /*< interpolate >*/
 {
