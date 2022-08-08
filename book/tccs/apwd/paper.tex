@@ -1,0 +1,227 @@
+\published{SEG Expanded Abstracts, 5473-5478, (2016)}
+
+\title{Seismic time-lapse image registration using amplitude-adjusted plane-wave destruction}
+\author{Mason Phillips and Sergey Fomel}
+
+\lefthead{Phillips \& Fomel}
+\righthead{Amplitude-adjusted PWD}
+\footer{TCCS-11}
+
+\maketitle
+\begin{abstract}
+We propose a method to efficiently measure time shifts and scaling functions 
+between seismic images using amplitude-adjusted plane-wave destruction filters. 
+Plane-wave destruction can efficiently measure shifts of less than a few 
+samples, making this algorithm particularly effective for detecting small 
+shifts. Separating shifts and scales allows shifting functions to be measured 
+more accurately. When shifts are large, amplitude-adjusted plane-wave 
+destruction can also be used to refine shift estimates obtained by other 
+methods. The effectiveness of this algorithm in predicting shifting and 
+scaling functions is demonstrated by applying it to a synthetic trace and a 
+time-lapse field data example from the Cranfield CO$_2$ sequestration project.
+\end{abstract}
+
+\section{Introduction}
+Over the past 25 years, time-lapse seismic monitoring has evolved into the 
+standard method to detect spatial fluid changes in the subsurface 
+\cite[]{lumley}. In some locations, permanent stations have been installed for continuous time-lapse 
+monitoring \cite[]{berron}.
+
+%Multicomponent recievers and SH sources allow S-waves to be processed along with P waves to create multiple images of the subsurface. Similarly to time-lapse images, multicomponent images must be registered to the same frame of reference for proper interpretation \cite[]{hardage}.
+
+Many methods for analyzing time-lapse seismic data have 
+been proposed. Cross-equalization includes spatial and temporal registration to 
+compensate for different acquisition geometries and amplitude balancing to 
+scale the data to the same amplitude \cite[]{rickett}. \cite{hall} proposed a 
+3D vectorial conditioning using a deformable mesh with sensitivity to image 
+quality. \cite{williamson} explained time shifts and amplitude changes 
+by integrating classical warping and impedence inversion in the limit 
+of small offset and dip and low frequency. \cite{hale09,hale13} proposed an 
+extension of the dynamic time warping algorithm developed for speech 
+recognition and multidimensional local phase correlation scanning. 
+\cite{fomel09} proposed local similarity scanning, which was applied to 
+time-lapse registration in Cranfield by \cite{zhang13,zhang14}. More recently, 
+\cite{khalil} used the wave equation to compute shifts normal to reflectors. 
+\cite{baek} proposed warping as an inverse problem where velocity changes are 
+optimized to resolve events in time-lapse seismic images.
+
+In this paper, we adopt and extend plane-wave destruction \cite[]{fomel02,chena} for 
+automatic estimation of time-variant shifts and rescaling functions between 
+seismic images. In time-lapse seismic monitoring, sensitive acquisition and 
+processing is required to detect small shifts induced by fluid migration. 
+%In multicomponent image registration, it is important to measure shifts to high resolution to ensure that the images are in the same reference frame. 
+We show that the proposed amplitude-adjusted plane-wave destruction is particularly 
+effective in measuring small shifts and test the proposed algorithm using 
+synthetic and field data examples.
+
+\section{Theory}
+We propose to estimate local scaling functions and spatially variable temporal 
+shifts by modifying plane-wave destruction \cite[]{fomel02} to include scaling. 
+A scaling function is incorporated in the description of high-order plane-wave 
+destructors. These filters are described in the $Z$-transform notation as
+
+\begin{equation}
+C(p,Z_1,Z_2) = B(p,Z_1^{-1}) - Z_2B(p,Z_1)
+\end{equation}
+
+where $p$ is the local slope (corresponding to a time shift), $Z_1$ and $Z_2$ 
+are local shifts in time and space, respectively, and $B$ is a polynomial filter. We modify this formulation to incorporate a scaling 
+function as follows:
+
+\begin{equation}
+C(a,p,Z_1,Z_4) = B(p,Z_1^{-1})-aZ_4B(p,Z_1)
+\end{equation}
+where $a$ is a scaling coefficient and $Z_4$ represents a shift between images. In the matrix-vector notation, equation (2) is expressed as
+
+\begin{equation}
+\mathbf{C}(\mathbf{a},\mathbf{p})\mathbf{d} = \mathbf{B}_l(\mathbf{p})\mathbf{d} -\mbox{diag}(\mathbf{a})\mathbf{B}_r(\mathbf{p})\mathbf{d}
+\end{equation}
+
+where $\mathbf{B}$ and $\mathbf{C}$ denote the convolution operator with the filters $B$ and $C$, respectively, and $\mathbf{d}$ is the time-lapse data. $r$ and $l$ denote the right and left hand side of the polynomial filter $B$ in equation (2). 
+Our goal for the warped and scaled monitor image is to match the base image, therefore 
+
+\begin{equation}
+\mathbf{C}(\mathbf{a},\mathbf{p})\mathbf{d}\approx 0 .
+\end{equation}
+
+The depedence of $\mathbf{C}$ on $\mathbf{a}$ is linear, however $\mathbf{p}$ 
+enters in a nonlinear way \cite[]{chena}. We separate this problem into a 
+linear and nonlinear part and use the variable projection technique 
+\cite[]{golub,kaufman}.
+
+We describe the algorithm below.
+
+\begin{enumerate}
+\item Set initial values as $\mathbf{p} = \mathbf{0}$ and $\mathbf{a} = \mathbf{1}$.
+\item Hold the shift constant and compute the scaling weight $\mathbf{a}$ by the smooth division of the right and left side of the plane-wave destruction filter $\mathbf{C}$ in equation(3): 
+\begin{equation}
+\mathbf{a} = \left<\frac{\mathbf{B}_r(\mathbf{p})\mathbf{d}}{\mathbf{B}_l(\mathbf{p})\mathbf{d}}\right>
+\end{equation}
+\item Scale the monitor image with the estimated weight.
+\item Hold the scale $\mathbf{a}$ constant and compute the shift $\mathbf{p}$ using slope estimation by accelerated plane-wave destruction.
+\item Shift the monitor image using the estimated slope.
+\item Iterate until convergence (return to step 2).
+\end{enumerate}
+
+This algorithm efficiently shifts and scales monitor images to match the base 
+image. The estimated shifts and scaling weights are constrained to be smooth 
+using shaping regularization \cite[]{fomel07}.
+
+\section{Synthetic example}
+
+\inputdir{trace}
+\multiplot{6}{shiftd,tshifta,shifta,scalea,scaled,sunshift}{width=0.45\columnwidth}{(a-c) Exact shift (dashed) and measured shift (solid) using: (a) dynamic time warping, (b) local similarity scanning, and (c) amplitude-adjusted plane-wave destruction. (d) Exact scaling function (solid) and measured scaling function using amplitude-adjusted plane-wave destruction (dashed), (e) synthetic base trace (dashed) and monitor trace (solid), and (f) synthetic base trace (dashed) and shifted and scaled monitor trace (solid) using shifting and scaling functions measured by amplitude-adjusted plane-wave destruction.}
+
+We first test the proposed algorithm by generating a random synthetic base 
+trace, shifting function, and scaling function 
+(Figure 1). The warping and 
+scaling functions are applied to the base trace to create a synthetic monitor 
+trace. We attempt to measure the shifting and scaling 
+functions from the synthetic base and monitor traces using the proposed 
+algorithm and compare the results with those from alternative algorithms.
+
+We first apply the dynamic time warping algorithm 
+\cite[]{sakoe,herrera,hale13}. This algorithm is particularly effective when 
+measuring large shifts, but it only computes integer shifts between samples on 
+a pre-defined grid. In this synthetic example and many real examples from 
+time-lapse monitoring, shifts are quite small and dynamic time warping is not 
+always effective. Indeed, the shifting function measured with dynamic time 
+warping does not effectively measure the small shifts in the synthetic trace 
+and contains the unappealing ``stair-stepping" artifact due to the algorithm's 
+inability to measure shifts outside of the predefined sampling grid 
+(Figure~\ref{fig:shiftd}).
+
+We then apply the local similarity scan \cite[]{fomel07,fomel09} to measure the 
+local shifting function. This algorithm scans through shifts, computing local 
+similarity and picking the optimal warping path automatically. In our synthetic 
+tests, this algorithm effectively measures the low frequency component of the 
+synthetic shifting function, but fails to detect higher-frequency variations
+(Figure~\ref{fig:tshifta}).
+
+Finally, we measure the shift using the proposed amplitude-adjusted plane-wave 
+destruction algorithm. Compared to dynamic time-wapring and local similarity, 
+plane-wave destruction proves to be particularly effective when measuring 
+small, rapidly varying shifting functions. After only 5 iterations, the 
+measured shifting function converges to the pre-defined synthetic shift 
+(Figure~\ref{fig:shifta}). We are also able to effectively measure the 
+synthetic scaling function (Figure~\ref{fig:scalea}). After applying the 
+measured shifting and scaling functions to the synthetic monitor trace, the 
+result is visually indistinguishable from the synthetic base trace 
+(Figure~\ref{fig:sunshift}).
+
+%\section{Multicomponent data registration}
+%We then apply amplitude-adjusted plane-wave destruction 
+%to multicomponent field data. This dataset consists of two components, separated 
+%fast and slow PS images. 
+ 
+%We use a similarity scan to get an initial estimate of the shift between the fast and slow images and use amplitude-adjusted plane-wave destruction to compute scaling functions and to further shift the 
+%image. Plane-wave destruction 
+%is particularly effective for measuring very small shifts. Furthermore, rescaling the monitor image to match the amplitude of the 
+%two images allows local shifts to be measured even more precisely. Upon applying 
+%the algorithm, high resolution shifting and scaling functions are computed and 
+%applied to the previously shifted image to improve the correlation between the 
+%fast and slow PS image.
+
+%We interleave slices of 
+%the fast cube and the shifted and scaled slow cube (Figure~\ref{fig:interleave2}) and see that reflections become 
+%aligned effectively, indicating that the shifting and scaling functions have
+%been properly predicted.
+
+\section{Time-Lapse data registration}
+
+\inputdir{crnfld}
+\multiplot{6}{sshift5,sscale5,interleave0,interleave1,res1,res2}{width=0.45\columnwidth}{Image registration applied to time-lapse data from Cranfield CO$_2$ sequestration experiment. Slices of the (a) shift cube (b) scale cube, (c-d) the base image interleaved with the (c) monitor image and (d) shifted and scaled monitor image, (e) time-lapse difference, and (f) registered difference.}
+
+We then apply amplitude-adjusted plane-wave destruction 
+to time-lapse field data from the Cranfield CO$_2$ sequestration experiment \cite[]{zhang13,zhang14}. This dataset consists of a base and monitor image.
+ 
+Plane-wave destruction is particularly effective for measuring very small shifts. Furthermore, rescaling the monitor image to match the amplitude of the 
+base images allows local shifts to be measured even more precisely. Upon applying 
+the algorithm, high resolution shifting (Figure~\ref{fig:sshift5}) and scaling (Figure~\ref{fig:sscale5}) functions are computed and 
+applied to the previously shifted image to improve the match between the 
+base and monitor image.
+
+To display the results, we interleave a slice of
+the base cube with slices of the unaltered monitor cube (Figure~\ref{fig:interleave0}) and the shifted and scaled monitor cube (Figure~\ref{fig:interleave1}) and see that reflections become 
+aligned effectively after applying the proposed algorithm, indicating that the shifting and scaling functions have
+been properly predicted. 
+
+We finally compute the time-lapse difference (Figure~\ref{fig:res1}) and the registered difference (Figure~\ref{fig:res2}). Coherent signal can be interpreted throughout the time-lapse difference due to 
+the time shift between the images. Upon registering the images, the difference outside of the reservoir interval reduces to noise. The signal between 2.2 and 2.3 s corresponds to the reservoir where 
+CO$_2$ injection took place between the surveys.
+
+\section{Discussion and Conclusions}
+The proposed amplitude-adjusted plane-wave destruction algorithm provides high 
+resolution scaling and vertical shifting functions to be computed between 
+time-lapse seismic images. In seismic image registration, vertical shifts are 
+sometimes insufficent for matching the images. Lateral shifts may be required 
+as well \cite[]{hale09}. In our future work, we will adapt the algorithm to 
+measuring multidimensional shifts by incorporating amplitude-adjustment into 
+omnidirectional plane-wave destruction \cite[]{cheno}.
+
+The proposed algorithm utilizes a modification of plane-wave destruction 
+filters to acquire high-resolution shifting and scaling functions between 
+monitor images and a base image. Plane-wave destruction is particularly 
+effective for measuring small shifts. When shifts are small, amplitude-adjusted 
+plane-wave destruction can be used as a standalone algorithm to efficiently 
+measure shifting and scaling functions between seismic images. When shifts are 
+large, the proposed algorithm can be used to refine shift predictions from 
+other registration algorithms. Separating scaling and shifting allows local 
+shifts to be measured more precisely. The proposed algorithm has immediate 
+applications to processing data from time-lapse seismic monitoring experiments.
+
+\section{Acknowledgments}
+We thank National Energy Technology Laboratory (NETL), the Southeast Regional Carbon Sequestration Partnership (SECARB), and Denbury Resources
+for providing the data and sponsors of the 
+Texas Consortium for Computational Seismology (TCCS) for financial support. The computational examples 
+reported in this paper are reproducible using the Madagascar open-source 
+software \cite[]{fomel13}.
+
+%\inputdir{cranfield}
+%\multiplot*{6}{sshift5,sscale5,interleave0,interleave2,res1,res2}{width=\columnwidth}{Slices of the (a) shift cube (b) scale cube, (c-d) the base image interleaved with the (c) monitor image and (d) shifted and scaled monitor image, (e) time-lapse difference, and (f) registered difference.}
+
+%\inputdir{harken}
+%\multiplot*{6}{interleave0,sshift11,interleave2,sscale10,res,sfrac}{width=\columnwidth}{Slice of (a) PS fast cube interleaved with slice of PS slow cube, (b) scaling function cube measured with amplitude-adjusted plane-wave destruction, (c) PS fast cube interleaved with slice of PS slow cube shifted and scaled with amplitude-adjusted plane-wave destruction, (d) scaling function cube measured with amplitude-adjusted plane-wave destruction, (e) residual cube between fast image and shifted slow image and (f) fracture intensity attribute.}
+%\onecolumn
+\bibliographystyle{seg}
+\bibliography{paper,SEP2}
