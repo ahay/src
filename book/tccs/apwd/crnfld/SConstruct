@@ -1,0 +1,191 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+segy = {'baseline':'2007_baseline_dvd.sgy',
+        'monitor': '2010_Match_dvd.sgy'}
+
+for case in segy.keys():
+    Fetch(segy[case],'cranfield',server)
+    Flow([case,'t'+case,case+'.asc',case+'.bin'],
+         segy[case],
+         'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+    Flow(case+'3',case,
+         '''
+         intbin xk=iline yk=xline ymin=109 ymax=351 |
+         put label2=Inline label3=Crossline |
+         window min1=1 max1=2.5
+         ''')
+    Flow(case+'2',case+'3','window n3=1 f3=100 n2=200')
+    Flow(case+'1',case+'2','window n2=1 f2=100')
+
+##############################################################################
+
+Flow('traces','baseline1 monitor1','cat ${SOURCES[1]} axis=2 o=0 d=1 | put label2=Trace')
+Result('traces','grey title=Traces')
+
+Flow('slices','baseline2 monitor2','cat ${SOURCES[1]} axis=3 o=0 d=1 | put label3=Slices | transp plane=23')
+Result('slices','transp plane=23 | grey title=Slices')
+
+############################
+##### TRACE PROCESSING #####
+############################
+Flow('tzero','traces','math output=0')
+dip = 'tzero'
+scales = []
+shifts = []
+for it in range(1,6):
+    left = 'tleft'+str(it)
+    right = 'tright'+str(it)
+    Flow(left,['traces',dip],'pwd1 left=y dip=${SOURCES[1]} order=5 | window n2=1')
+    Flow(right,['traces',dip],'pwd1 left=n dip=${SOURCES[1]} order=5 | window n2=1')
+
+    scale = 'tscale'+str(it)
+    Flow(scale,[right,left],'divn den=${SOURCES[1]} rect1='+str(50+30/it))
+    scales.append(scale)
+
+    rescale = 'trescale'+str(it)
+    Flow(rescale,['traces',scale,'baseline1'],'window f2=1 | mul ${SOURCES[1]} | cat ${SOURCES[2]} order=2,1 axis=2')
+    
+    dip = 'tdip'+str(it)
+    Flow(dip,rescale,'fdip rect1=60 order=5 | scale dscale=0.002')
+    shifts.append(dip)
+
+Flow('tshifts',shifts,'cat axis=3 ${SOURCES[1:%d]} | window n2=1' % it)
+Flow('tscales',scales,'cat axis=2 ${SOURCES[1:%d]}' % it)
+Result('tshifts','transp plane=24 | graph title="Shifts"')
+Result('tscales','transp plane=24 | graph title="Scales"')
+Flow('titime',dip,'window n2=1 | math output="x1+input"')
+Flow('tscaled',['traces','titime','baseline1',scale],'window f2=1 | mul ${SOURCES[3]} | iwarp warp=${SOURCES[1]} inv=n | cat ${SOURCES[2]} o=0 order=2,1 axis=2')
+Result('tscaled','grey title="Shift and Scale Removed"')
+
+############################
+##### SLICE PROCESSING #####
+############################
+Flow('szero','slices','math output=0')
+dip = 'szero'
+scales = []
+shifts = []
+for it in range(1,6):
+    left = 'sleft'+str(it)
+    right = 'sright'+str(it)
+    Flow(left,['slices',dip],'pwd1 left=y dip=${SOURCES[1]} order=5 | window n2=1')
+    Flow(right,['slices',dip],'pwd1 left=n dip=${SOURCES[1]} order=5 | window n2=1')
+
+    # Find scale
+    scale = 'sscale'+str(it)
+    Flow(scale,[right,left],'divn den=${SOURCES[1]} rect1=%d rect2=20' % (30/it+50))
+    scales.append(scale)
+		    
+    # Apply scale
+    scaled = 'srescaled'+str(it)
+    Flow(scaled,['slices',scale,'baseline2'],
+         '''
+         window f2=1 | mul ${SOURCES[1]} | cat ${SOURCES[2]} axis=3 order=2,1 | transp plane=23
+         ''')
+
+    # Measure dip
+    shift = 'sshift'+str(it)
+    Flow(shift,scaled,'fdip order=5 rect1=60 rect3=20 n4=0 | scale dscale=.002')
+    shifts.append(shift)
+
+    dip = shift
+
+min1 = '2.1'
+max1 = '2.4'
+max2='100'
+Result('baseline2','window min1=%s max1=%s max2=%s | grey title="Base"' % (min1,max1,max2))
+Result('monitor2','window min1=%s max1=%s max2=%s | grey title="Monitor"' % (min1,max1,max2))
+Flow('sshifts',shifts,'cat axis=4 ${SOURCES[1:%d]} | window n2=1' % it)
+Flow('sscales',scales,'cat axis=3 ${SOURCES[1:%d]}' % it)
+Result('sshifts','grey color=j scalebar=y mean=y title="Shifts"')
+Result('sscales','grey color=j scalebar=y mean=y title="Scales"')
+Result(dip,'window n2=1 min1=%s max1=%s max3=%s | grey color=j mean=y scalebar=y barlabel=Time barunit=s title="Shift"' % (min1,max1,max2))
+Result(scale,'grey color=j mean=y scalebar=y barlabel="Amplitude Ratio" title="Scale" min1=%s max1=%s max2=%s' % (min1,max1,max2))
+Flow('sitime',dip,'window n2=1 | math output="input+x1"')
+Flow('sshifted','slices sitime','window f2=1 | iwarp warp=${SOURCES[1]} inv=n')
+Flow('sscaled',['sshifted',scale],'mul ${SOURCES[1]}')
+Result('sscaled','grey title="Shifted and Scaled"')
+
+Flow('slice1','baseline2','window min1=%s max1=%s max2=%s' % (min1,max1,max2))
+Flow('slice2','monitor2','window min1=%s max1=%s max2=%s' % (min1,max1,max2))
+Flow('slice3','sscaled','window min1=%s max1=%s max2=%s' % (min1,max1,max2))
+Flow('slice4','sshifted','window min1=%s max1=%s max2=%s' % (min1,max1,max2))
+
+interleave = '''
+     interleave axis=2 ${SOURCES[1]} | put d2=2 |
+     wiggle poly=y transp=y yreverse=y
+     label1=Time unit1=s label2="Inline"
+     '''
+
+for case in ('slice1','slice2','slice3'):
+    # stack every 4 traces together
+    Flow(case+'-4',case,'boxsmooth rect2=4 | window f2=3 j2=4')
+
+for case in ('slice1','slice2','slice4'):
+    # stack every 2 traces together
+    Flow(case+'-2',case,'boxsmooth rect2=2 | window f2=1 j2=2')
+
+Result('interleave0','slice2-4 slice1-4',interleave+'title="Interleaved"')
+Result('interleave1','slice3-4 slice1-4',interleave+'title="Interleaved after Registration"')
+
+Flow('res1','slice1-2 slice2-2','math x=${SOURCES[1]} output="input-x" | window min1=%s max1=%s' % (min1,max1))
+Flow('res2','slice1-2 slice4-2','math x=${SOURCES[1]} output="input-x" | window min1=%s max1=%s' % (min1,max1))
+Result('res1','grey title="Time-Lapse Difference" label1=Time unit1=s label2="Inline"')
+Result('res2','grey title="Difference after Registration" label1=Time unit1=s label2="Inline"')
+
+###########################
+##### CUBE PROCESSING #####
+###########################
+Flow('base3','baseline3','window min2=26 max2=175 min3=175 max3=275')
+Flow('mon3','monitor3','window min2=26 max2=175 min3=175 max3=275')
+Result('base3','byte | grey3 flat=n title="Base"')
+Result('mon3','byte | grey3 flat=n title="Monitor"')
+Flow('cubes','base3 mon3','cat ${SOURCES[1]} axis=4 | transp plane=34 | transp plane=23')
+Result('cubes','transp plane=23 | transp plane=34 | byte | grey4 title="Cubes"')
+Flow('czero','cubes','math output=0')
+dip = 'czero'
+scales = []
+shifts = []
+for it in range(1,6):
+    left = 'cleft'+str(it)
+    right = 'cright'+str(it)
+    Flow(left,['cubes',dip],'pwd1 left=y dip=${SOURCES[1]} order=5 | window n2=1')
+    Flow(right,['cubes',dip],'pwd1 left=n dip=${SOURCES[1]} order=5 | window n2=1')
+
+    # Find scale
+    scale = 'cscale'+str(it)
+    Flow(scale,[right,left],'divn den=${SOURCES[1]} rect1=%d rect2=20 rect3=20' % (30/it+50))
+    scales.append(scale)
+
+    # Apply scale
+    scaled = 'cscaled'+str(it)
+    Flow(scaled,['cubes',scale,'base3'],
+         '''
+         window f2=1 | mul ${SOURCES[1]} | cat ${SOURCES[2]} axis=4 order=2,1 | transp plane=34 | transp plane=23
+         ''')
+
+    # Measure dip
+    shift = 'cshift'+str(it)
+    Flow(shift,scaled,'fdip order=5 rect1=60 rect3=20 n4=0 | smooth rect4=20 | scale dscale=.002')
+    shifts.append(shift)
+
+    dip = shift
+
+Flow('cshifts',shifts,'cat axis=5 ${SOURCES[1:%d]} | window n2=1' % it)
+Flow('cscales',scales,'cat axis=4 ${SOURCES[1:%d]}' % it)
+Result('cshifts','byte bar=bar.rsf mean=y | grey4 color=j scalebar=y title="Shifts"')
+Result('cscales','byte bar=bar.rsf mean=y | grey4 color=j scalebar=y title="Scales"')
+Result(dip,'window n2=1 | byte mean=y bar=bar.rsf | grey4 color=j title="Shift (s)"')
+Result(scale,'byte mean=y bar=bar.rsf | grey4 color=j title="Scale"')
+
+
+Flow('citime',dip,'window n2=1 | math output="x1+input"')
+Flow('cshifted','mon3 citime','iwarp warp=${SOURCES[1]} inv=n')
+Flow('crescaled',['cshifted',scale],'mul ${SOURCES[1]}')
+Result('crescaled','byte | grey3 title="Shifted and Scaled"')
+
+Plot('interleave0','slice2-4 slice1-4',interleave+'title="Interleaved Before Shift"')
+Plot('interleave1','slice3-4 slice1-4',interleave+'title="Interleaved After Shift"')
+Result('interleave','interleave0 interleave1','SideBySideAniso')
+End()
+

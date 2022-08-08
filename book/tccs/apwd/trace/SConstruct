@@ -1,0 +1,90 @@
+from rsf.proj import *
+
+# make a synthetic trace
+Flow('trace',None,'spike n1=500 | noise rep=y seed=2015 | math output="input^3" | pad beg1=50 end1=50 | ricker1 frequency=10 | window f1=30 n1=500')
+Result('trace','graph plotfat=4 title=Trace')
+
+# shift it
+Flow('shift','trace','noise rep=y seed=112015 | smooth rect1=50 repeat=2 | scale dscale=0.15 | put label2=Shift unit2=s')
+Result('shift','graph min2=-.04 max2=.03 plotfat=4 title="Time Shift" ')
+
+Flow('time','shift','math output=x1+input')
+
+# Now scale it
+Flow('scale','trace','noise rep=y seed=122015 | smooth rect1=100 repeat=2 | math output="1+5*input" ')
+Result('scale','graph plotfat=4 title="Scale"')
+
+Flow('scaled','trace scale time','mul ${SOURCES[1]} | iwarp warp=${SOURCES[2]} | cat ${SOURCES[0]} order=2,1 axis=2')
+Result('scaled','graph dash=1,0 plotfat=4 title="Synthetic Traces" ')
+
+Flow('s1.asc','trace','dd line=1 form=ascii --out=$TARGET')
+Flow('s2.asc','scaled','window f2=1 | dd line=1 form=ascii --out=$TARGET')
+Flow('shift.asc','shift','dd line=1 form=ascii --out=$TARGET')
+Flow('scale.asc','scale','dd line=1 form=ascii --out=$TARGET')
+
+# Iterative rescaling
+
+Flow('dip0','scaled','math output=0')
+dip = 'dip0'
+scales = []
+shifts = []
+for it in range(1,11):
+    left = 'left%d' % it
+    right = 'right%d' % it    
+    Flow(left, ['scaled',dip],'pwd1 left=y dip=${SOURCES[1]} order=2 | window n2=1')
+    Flow(right,['scaled',dip],'pwd1 left=n dip=${SOURCES[1]} order=2 | window n2=1')
+
+    scale = 'scale%d' % it
+    Flow(scale,[right,left],'divn rect1=20 den=${SOURCES[1]}')
+    scales.append(scale)
+
+    rescale = 'rescale%d' % it
+    Flow(rescale,['scaled',scale,'trace'],'window f2=1 | mul ${SOURCES[1]} | cat  ${SOURCES[2]} order=2,1 axis=2')
+
+    sdip = 'sdip%d' % it
+    Flow(sdip,rescale,'dip rect1=10 order=2')
+    shifts.append(sdip)
+
+    dip = sdip
+
+Flow('scales',scales,'cat ${SOURCES[1:%d]} axis=2 | math output=1/input' % it)
+Flow('shifts',shifts,'cat ${SOURCES[1:%d]} axis=3 | window n2=1' % it)
+Result('scales','transp plane=23 | graph title=Scales')
+Result('shifts','transp plane=23 | graph title=Shifts')
+Flow('scalea','scales scale','window f2=%d | cat ${SOURCES[1]} axis=2 order=2,1' % (it-1))
+Result('scalea','graph dash=1,0 plotfat=4 label2=Scale title="Scale Predicted by APWD"')
+Flow('shifta','shifts shift','window f2=%d | math output=.004*input | cat ${SOURCES[1]} axis=2 order=2,1' % (it-1))
+Result('shifta','graph min2=-.04 max2=.03 dash=1,0 plotfat=4 title="Shift Predicted by APWD"')
+Flow('sitime',dip,'window n2=1 | scale dscale=0.004 | math output=x1-input')
+Flow('sunshift',['scaled','sitime','trace',scale],'window f2=1 |  mul ${SOURCES[3]} | iwarp warp=${SOURCES[1]} | cat ${SOURCES[2]} order=2,1 axis=2')
+Result('sunshift','graph plotfat=4 dash=1,0 title="Shift and Scale Removed by APWD" ')
+
+################################
+##### DYNAMIC TIME WARPING #####
+################################
+Flow('dtwshift','dtwshift.asc','asc2rsf')
+Flow('shiftd','dtwshift shift','cat ${SOURCES[1]} axis=2 order=2,1 | put label2=Shift unit2=s')
+Result('shiftd','graph min2=-.04 max2=.03 dash=1,0 plotfat=4 title="Shift Predicted by DTW"')
+Flow('ditime','dtwshift','math output=".004*(x1-20)+input"')
+Flow('dunshift','scaled ditime trace','window f2=1 | iwarp warp=${SOURCES[1]} inv=n | cat axis=2 order=2,1 ${SOURCES[2]}')
+Result('dunshift','graph plotfat=4 dash=1,0 title="DTW Shift Removed"')
+
+############################
+##### LOCAL SIMILARITY #####
+############################
+Flow('tscan1','scaled trace','window f2=1 | warpscan other=${SOURCES[1]} shift=y ng=101 dg=0.0005 g0=-0.02 rect1=20')
+Plot('tscan1','grey color=j allpos=y title="Local Similarity Scan" ')
+
+Flow('tpick1','tscan1','pick vel0=0.015 rect1=1')
+Plot('tpick1','graph plotcol=7 min2=-0.02 max2=0.03 transp=y yreverse=y wantaxis=n wanttitle=n pad=n')
+
+Result('tscan1','tscan1 tpick1','Overlay')
+
+Flow('tshifta','tpick1 shift','cat ${SOURCES[1]} axis=2 order=2,1')
+Result('tshifta','graph min2=-.04 max2=.03 dash=1,0 plotfat=4 title="Shift Predicted by Similarity Scan"')
+
+Flow('lsitime','tshifta','window f2=1 | math output="x1+input"')
+Flow('lsunshift','scaled lsitime trace','window f2=1 | iwarp warp=${SOURCES[1]} inv=n | cat axis=2 order=2,1 ${SOURCES[2]}')
+Result('lsunshift','graph plotfat=4 dash=1,0 title="Local Similarity Shift Removed"')
+
+End()
