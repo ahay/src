@@ -30,6 +30,9 @@ int main (int argc, char* argv[])
     inp = sf_input("in");
     out = sf_output("out");
 
+    sf_putfloat(out,"o1",0.0);
+    sf_putfloat(out,"d1",1.0);
+
     if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&nc)) sf_error("No n1= in input");
 
