@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfput', 'sfgrey', 'sfpow', 'sfscale', 'sfgraph']
-data=['data/wz/wz.25.H']
-size=     648084

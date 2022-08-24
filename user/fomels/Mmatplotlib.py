@@ -20,8 +20,7 @@
 import sys
 import m8r
 import numpy
-import matplotlib
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 
 # self-documentation
 if len(sys.argv) < 2:
