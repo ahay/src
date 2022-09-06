@@ -849,7 +849,7 @@ class WGANGP2():
                                               self.wasserstein_loss,
                                               partial_gp_loss],
                                         optimizer=optimizer,
-                                        loss_weights=[1, 1, 100])
+                                        loss_weights=[1, 1, 10])
         #-------------------------------
         # Construct Computational Graph
         #         for Generator
@@ -885,7 +885,7 @@ class WGANGP2():
         gradients_sqr_sum = K.sum(gradients_sqr,
                                   axis=np.arange(1, len(gradients_sqr.shape)))
         #   ... and sqrt
-        gradient_l2_norm = K.sqrt((1e-5)+gradients_sqr_sum)
+        gradient_l2_norm = K.sqrt(tf.clip_by_value(gradients_sqr_sum,1e-8,np.inf))
         # compute lambda * (1 - ||grad||)^2 still for each single sample
         gradient_penalty = K.square(gradient_l2_norm)
         # return the mean as loss over all the batch samples
@@ -1884,7 +1884,7 @@ def train_model3(target=None,source=None,env=None):
     keras.models.save_model(model,str(target[0]),save_format='h5')
 
 Command('modelseg.h5',['xtrain.rsf','ytrain.rsf'],action=Action(train_model3),
-        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+        varlist=['batch_size','epochs'],batch_size=32,epochs=50)
 
 def predict3(target=None,source=None,env=None):
     model = keras.models.load_model(str(source[0]), compile=False)
@@ -2109,7 +2109,7 @@ Plot('predsegsaug2',examples,'SideBySideAniso')
 Result('predsegsaug','predsegsaug1 predsegsaug2','OverUnderAniso')
 
 Command('modelsegscomb.h5',['xtrainscomb.rsf','ytrainscomb.rsf'],action=Action(train_model3),
-        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+        varlist=['batch_size','epochs'],batch_size=32,epochs=50)
 
 Command('ypredsegscomb.rsf',['modelsegscomb.h5','xtest.rsf'],action=Action(predict3),varlist=['norm'],norm=False)
 # Plot validation segmentation
@@ -2168,13 +2168,13 @@ Plot('predsegscombs2',examples,'SideBySideAniso')
 Result('predsegscombs','predsegscombs1 predsegscombs2','OverUnderAniso')
 
 Command('modelsegsicomb.h5',['xtrainsicomb.rsf','ytrainsicomb.rsf'],action=Action(train_model3),
-        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+        varlist=['batch_size','epochs'],batch_size=32,epochs=50)
 Command('modelsegsccomb.h5',['xtrainsccomb.rsf','ytrainsccomb.rsf'],action=Action(train_model3),
-        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+        varlist=['batch_size','epochs'],batch_size=32,epochs=50)
 Command('modelsegscscomb.h5',['xtrainscscomb.rsf','ytrainscscomb.rsf'],action=Action(train_model3),
-        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+        varlist=['batch_size','epochs'],batch_size=32,epochs=50)
 Command('modelsegscdcomb.h5',['xtrainscdcomb.rsf','ytrainscdcomb.rsf'],action=Action(train_model3),
-        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+        varlist=['batch_size','epochs'],batch_size=32,epochs=50)
 
 
 Flow('mapped_xblind_patch_i_transp','mapped_xblind_patch_i','transp plane=12 | transp plane=45')
