@@ -4,6 +4,7 @@ import numpy as np
 from tensorflow import keras
 import m8r
 import glob
+import atexit
 
 # for reproducibility
 from tensorflow import random
@@ -187,6 +188,8 @@ def train_model(target=None, source=None, env=None):
     best_model_path = str(target[0])
 
     strategy = tf.distribute.MirroredStrategy()
+    atexit.register(strategy._extended._collective_ops._pool.close)
+
     with strategy.scope():
         inputs = Input(input_size)
         conv1 = Conv3D(16, (3,3,3), activation=None, padding='same', kernel_initializer=Orthogonal(gain=1.1))(inputs)
