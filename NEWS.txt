@@ -3,7 +3,7 @@
 ===Additions and enhancements===
 
 To the reproducible documents collection:
-
+q
 * zju/diffrlrra: Separation and imaging of seismic diffractions using
   a localized rank-reduction method with adaptively selected ranks
   (Wang, Liu, and Chen)  
@@ -41,6 +41,10 @@ To the reproducible documents collection:
   from semblance-like panels (Decker and Fomel)
 * tccs/pwshape: Seismic data interpolation using plane-wave shaping
   regularization (Swindeman and Fomel)
+* tccs/apwd: Seismic time-lapse image registration using
+  amplitude-adjusted plane-wave destruction (Phillips and Fomel)
+* tccs/dlaugment: Seismic data augmentation for automatic fault\old{s}
+  picking using deep learning (Pham and Fomel)
 
 To SCons:
 
