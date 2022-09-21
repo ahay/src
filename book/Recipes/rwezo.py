@@ -1,10 +1,10 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import pplot,fdmod
+from . import pplot,fdmod
 
 def param(par):
-    if(not par.has_key('nsz')): par['nsz']=3
-    if(not par.has_key('nsx')): par['nsx']=3
+    if('nsz' not in par): par['nsz']=3
+    if('nsx' not in par): par['nsx']=3
 
     par['dw']=1/(par['nT']*par['dT'])
 #    par['nw']=par['nT']/500*100
@@ -20,14 +20,14 @@ def param(par):
     par['gmax']=par['og'] + (par['ng']-1) * par['dg']
     # ------------------------------------------------------------
 
-    if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
-    if(not par.has_key('height')):   par['height']=par['ratio']*14
+    if('ratio' not in par):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
+    if('height' not in par):   par['height']=par['ratio']*14
     if(par['height']>10): par['height']=10
     
-    if(not par.has_key('ntap')):      par['ntap']=10
-    if(not par.has_key('prefix')):    par['prefix']=''
-    if(not par.has_key('scalebar')):  par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
+    if('ntap' not in par):      par['ntap']=10
+    if('prefix' not in par):    par['prefix']=''
+    if('scalebar' not in par):  par['scalebar']='n'
+    if('labelattr' not in par): par['labelattr']=' labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
     # parallel2=n
 
 def cgrey(custom,par):
