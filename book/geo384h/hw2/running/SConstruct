@@ -1,37 +1,41 @@
 from rsf.proj import *
 
 # Download data
-Fetch('austin-w.HH','bay')
+Fetch('bay.h','bay')
 
 # Convert format
-Flow('dem','austin-w.HH','dd form=native')
+Flow('bay','bay.h',
+     '''
+     dd form=native |
+     window f2=500 n2=1500 
+     ''')
 
 # Display
 def plot(title):
     return '''
-    grey clip=250 allpos=y title="%s" 
-    screenratio=1
+    grey allpos=y title="%s" yreverse=n 
+    label1=South-North label2=West-East 
+    screenratio=0.8
     ''' % title
 
-Result('dem',plot('Digital Elevation Map'))
+Result('bay',plot('Digital Elevation Map'))
 
 # Program for running average
-run = Program('running.c')
+run = Program('run.c')
 
 # COMMENT ABOVE AND UNCOMMENT BELOW IF YOU WANT TO USE PYTHON 
-# run = Command('running.exe','running.py','cp $SOURCE $TARGET')
+# run = Command('run.exe','run.py','cp $SOURCE $TARGET')
 # AddPostAction(run,Chmod(run,0o755))
-
 
 w = 30
 
 # !!! CHANGE BELOW !!!
-Flow('ave','dem %s' % run[0],
+Flow('ave','bay %s' % run[0],
      './${SOURCES[1]} w1=%d w2=%d how=fast' % (w,w))
 Result('ave',plot('Signal'))
 
 # Difference
-Flow('res','dem ave','add scale=1,-1 ${SOURCES[1]}')
+Flow('res','bay ave','add scale=1,-1 ${SOURCES[1]}')
 Result('res',plot('Noise') + ' allpos=n')
 
 #############################################################
@@ -41,7 +45,7 @@ import sys
 if sys.platform=='darwin':
      gtime = WhereIs('gtime')
      if not gtime:
-          print("For computing CPU time, please install gtime.")
+          print("For computing CPU time, install gtime.")
 else:
      gtime = WhereIs('gtime') or WhereIs('time')
 
@@ -64,7 +68,7 @@ for case in ('fast','slow'):
 
         # measure CPU time
         Flow(iwind,None,'spike n1=1 mag=%d' % (w*w)) 
-        Flow(itime,'dem %s' % run[0],
+        Flow(itime,'bay %s' % run[0],
              '''
              ( (%s -f "%%S %%U"
              ./${SOURCES[1]} < ${SOURCES[0]} 

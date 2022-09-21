@@ -26,7 +26,7 @@ Flow('der1','data','igrad')
 Flow('der2','data','transp | igrad | transp')
 
 ders = []
-for alpha in range(0,360,10):
+for alpha in range(0,360,15):
     der = 'der%d' % alpha
     
     # Directional derivative
@@ -40,24 +40,12 @@ for alpha in range(0,360,10):
 Flow('ders',ders,
      '''
      cat axis=3 ${SOURCES[1:%d]} |
-     put o3=0 d3=10
+     put o3=0 d3=15
      ''' % len(ders))
-
-# Semblance
-
-Flow('ders2','ders','mul $SOURCE')
-Flow('stack','ders2','stack axis=2 norm=n | stack axis=1 norm=n')
-Flow('stack2','ders2',
-     'mul $SOURCE | stack axis=2 norm=n | stack axis=1 norm=n')
-Flow('sembl','stack stack2',
-     'mul ${SOURCES[0]} | div ${SOURCES[1]} | scale axis=1')
-Result('sembl',
-       'graph title=Semblance label1=Degree unit1="\^o\_" ')
-    
 Plot('ders','grey gainpanel=all wanttitle=n',view=1)
 
 # !!! MODIFY BELOW !!! 
-alpha=30 
+alpha=45 
 
 Result('der','der%d' % alpha,
        '''
@@ -95,7 +83,7 @@ Flow('hflt hlag','ss alag',
 # Helical derivative
 
 Flow('helder','data hflt hlag','helicon filt=${SOURCES[1]}')
-Result('helder','grey title="Helical Derivative" ')
+Result('helder','grey mean=y title="Helical Derivative" ')
 
 def plotfilt(title):
     return '''

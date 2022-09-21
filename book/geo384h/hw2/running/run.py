@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import numpy
+import numpy as np
 import m8r
 
 def slow_median(data):
@@ -11,7 +11,7 @@ def slow_median(data):
     for k in range(n):
         item1 = data[k]
 
-	    # assume everything up to k is sorted
+        # assume everything up to k is sorted
         for k2 in range(k,-1,-1):
             item2 = data[k2-1]
             if item1 >= item2:
@@ -33,15 +33,15 @@ n2 = inp.int('n2')
 n3 = inp.leftsize(2)
 
 # input and output 
-data = numpy.zeros([n1,n2],'f')
-signal = numpy.zeros([n1,n2],'f')
+data = np.zeros([n2,n1],'f')
+signal = np.zeros([n2,n1],'f')
 
 # sliding window
 w1 = par.int('w1',5)
 w2 = par.int('w2',5)
 
 nw = w1*w2
-win = numpy.zeros([w1,w2],'f')
+win = np.zeros([w2,w1],'f')
 
 how = par.string('how','fast')
 # what to compute 
@@ -52,7 +52,7 @@ for i3 in range(n3):
     inp.read(data)
 
     for i2 in range(n2):
-        sys.stderr.write("%d of %d\n" % (i2,n2))
+        sys.stderr.write("\r%d of %d" % (i2,n2))
         s2 = max(0,min(n2-w2,i2-w2/2-1))
         for i1 in range(n1):
             s1 = max(0,min(n1-w1,i1-w1/2-1))
@@ -61,16 +61,17 @@ for i3 in range(n3):
             win = data[s2:s2+w2,s1:s1+w1]
 
             if how[0] == 'f': # fast median
-                signal[i2,i1] = numpy.median(win)
+                signal[i2,i1] = np.median(win)
             elif how[0] == 's': # slow median
                 signal[i2,i1] = slow_median(win.flatten())
             elif how[0] == 'm': # mean
-                # !!! ADD CODE !!! */
+                # !!! ADD CODE !!! 
                 pass
             else:
-                sys.stderr.write("Unknown method \"%s\"" % how)
+                sys.stderr.write(
+                    "Unknown method \"%s\"\n" % how)
                 sys.exit(1)
-	
+    sys.stderr.write("\n") 	
     # write out
     out.write(signal)
 
