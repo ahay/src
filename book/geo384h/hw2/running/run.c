@@ -69,7 +69,8 @@ int main(int argc, char* argv[])
 		for (j2=0; j2 < w2; j2++) {
 		    for (j1=0; j1 < w1; j1++) {
 			win[j2][j1] = data[s2+j2][s1+j1];
-		    }}
+		    }
+		}
 
 		switch (how[0]) {
 		    case 'f': /* fast median */

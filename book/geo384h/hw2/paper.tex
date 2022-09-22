@@ -48,51 +48,28 @@ a zero-mean Gaussian distribution: $E[a_n]=0$, $E[a_n^2]=\sigma^2$,
 $E[a_n^4]=3\,\sigma^4$. Find the mathematical expectation of
 $\phi[\mathbf{a}]$.
 
-\item The matrix in equation~(\ref{eq:conv}) represents a convolution operator with zero boundary conditions.
+\item Consider the parabolic filter $F(Z)$ defines as
 \begin{equation}
-\label{eq:conv}
-\mathbf{F} = \left[\begin{array}{llllll}
-f_1 & f_0 & 0   & 0   & 0   & 0   \\
-f_2 & f_1 & f_0 & 0   & 0   & 0   \\
-f_3 & f_2 & f_1 & f_0 & 0   & 0   \\
-0   & f_3 & f_2 & f_1 & f_0 & 0   \\
-0   & 0   & f_3 & f_2 & f_1 & f_0 \\
-0   & 0   & 0   & f_3 & f_2 & f_1 \\
-\end{array}\right]\;.
-\end{equation}
-
-The operator is implemented in the C code below.
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=conv.c,firstline=15]{conv.c}
+\label{eq:parab}
+F(Z) = 1 + 4 Z + 9 Z^2 + \ldots + N^2 Z^{N-1}\;.
+\end{equation} 
 
 \begin{enumerate}
-\item Modify the matrix and the program to implement periodic boundary conditions.
-\item Add the code for the adjoint (matrix transpose) operator.
+\item Show that this filter can be implemented using recursive filtering (polynomial division).
+\item What is the advantage of recursive filtering? Does it depend on $N$?
 \end{enumerate}
 
-\item The following C code (included in \texttt{filter.c} file in
-  directory \texttt{geo391/hw3}) implements a recursive filtering
-  operator.
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=filter.c,firstline=13]{filter.c}
-
-\begin{enumerate}
-\item Express this filter in the $Z$-transform notation as a ratio
-  of two polynomials.
-\item Add code for the adjoint operator.
-\end{enumerate}
+\item Show that, using the helix transform and imposing helical boundary conditions, it is possible to compute a 2-D digital Fourier transform using 1-D FFT program. Assuming the input data is of size $N \times N$, would this approach have any computational advantages?
 
 \end{enumerate}
 
 \section{Running median and running mean filters}
 \inputdir{running}
 
-\sideplot{dem}{width=0.9\textwidth}{Digital elevation map of the 
-west Austin area.}
+\sideplot{bay}{width=0.9\textwidth}{Digital elevation map of the San Francisco
+  Bay Area.}
 
-We return the digital elevation map of the West Austin Area, shown in Figure~\ref{fig:dem}.
+We return the digital elevation map of the  San Francisco Bay Area, shown in Figure~\ref{fig:dem}.
 
 In this exercise, we will separate the data into ``signal'' and
 ``noise'' by applying running mean and median filters.  The result of
@@ -106,10 +83,10 @@ by removing local outliers.
 The algorithm is implemented in programs below.
 
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=running/running.c]{running/running.c}
+\lstinputlisting[frame=single,title=running/run.c]{running/run.c}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\lstinputlisting[frame=single,title=running/running.py]{running/running.py}
+\lstinputlisting[frame=single,title=running/run.py]{running/run.py}
 
 \begin{enumerate}
 \item Change directory to \texttt{hw2/running}.
@@ -118,7 +95,7 @@ The algorithm is implemented in programs below.
 scons view
 \end{verbatim}
 to reproduce the figures on your screen.
-\item Modify the \texttt{running.c} program and the
+\item Modify the \texttt{run.c} program (alternatively, \texttt{run.py} script) and the
   \texttt{SConstruct} file to compute running mean instead of running
   median. Compare the results.
 \item \textbf{EXTRA CREDIT} for improving the efficiency of the
@@ -128,10 +105,10 @@ scons time.vpl
 \end{verbatim}
   to display a figure that compares the efficiency of running median
   computations using the slow sorting from function \texttt{median} in
-  program \texttt{running.c} and the fast quantile algorithm (library
-  function \texttt{sf\_quantile} ). Your goal is to make the algorithm
-  even faster. Consider parallelization, reusing previous windows,
-  other fast sorting strategies, etc.
+  program \texttt{run.c} (or \texttt{run.py}) and the fast median
+  algorithm. Your goal is to make the algorithm even faster. You may
+  consider parallelization, reusing previous windows, other fast
+  sorting strategies, etc.
 \end{enumerate}
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
@@ -200,8 +177,6 @@ Modify the \texttt{SConstruct} file to use filter~(\ref{eq:lap9}) instead of~(\r
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=helix/SConstruct]{helix/SConstruct}
 
-\newpage
-
 \section{Completing the assignment}
 
 \begin{enumerate}
@@ -223,5 +198,5 @@ to remove intermediate files.
 scons pdf
 \end{verbatim}
 to create the final document.
-\item Submit your result (file \texttt{paper.pdf}) by e-mail.
+\item Submit your result (file \texttt{paper.pdf}.)
 \end{enumerate}
