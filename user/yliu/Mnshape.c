@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     /* regularization parameter */
     eps *= eps;
 
-    if (!sf_getint("rect",&rect)) rect=1;
+    if (!sf_getint("rect",&nr)) nr=1;
     /* shaping radius */
 
     /* input data, output model */
