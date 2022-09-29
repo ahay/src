@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sftahsort', 'sftahwindow', 'sftahwrite', 'sfdd', 'sfheadermath', 'sfcmplx', 'sfmath', 'sfwindow', 'sfgraph', 'sfbox', 'sfintbin3', 'sfstack', 'sfgrey', 'sfpow', 'sfagc', 'sfltft', 'sfreal', 'sfbyte', 'sftransp', 'sfgrey3', 'sfthreshold2', 'sfmutter', 'sfadd', 'sfcat', 'sfcp', 'sftahagc', 'sftahmute', 'sftahpef', 'sftahstatic', 'sftahnmo', 'sftahstack', 'sfwiggle', 'sftahmakeskey', 'sftvmf', 'sfvscan', 'sflinear', 'sfdix', 'sftime2depth', 'sfput', 'sfbandpass', 'sfshapeagc', 'sffft1', 'sfzomig3', 'sffxdecon', 'sfdip', 'sfpwspray2', 'sflum']
+data=['http://s3.amazonaws.com/teapot/fetch/npr3_field.sgy', 'data/teapot/rms_vel.txt']
+size=      49632
