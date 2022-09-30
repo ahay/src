@@ -5,6 +5,7 @@ from tensorflow import keras
 import m8r
 import glob
 import atexit
+from tensorflow.keras.utils import Sequence
 
 # for reproducibility
 from tensorflow import random
@@ -23,6 +24,19 @@ import math
 from tensorflow.keras import backend as K
 import pickle
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        # Currently, memory growth needs to be the same across GPUs
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+
+        logical_gpus = tf.config.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e:
+        # Memory growth must be set before GPUs have been initialized
+        print(e)
 
 def cross_entropy_balanced(smooth=1e-6):
     """Return a callable that computes weighted softmax cross entropy loss."""
@@ -163,6 +177,19 @@ def get_deconv_filter(shape, dtype=None):
     init = tf.constant_initializer(value=weights)
     return init
 
+class DataGenerator(Sequence):
+    def __init__(self, x_set, y_set, batch_size):
+        self.x, self.y = x_set, y_set
+        self.batch_size = batch_size
+
+    def __len__(self):
+        return int(np.ceil(len(self.x) / float(self.batch_size)))
+
+    def __getitem__(self, idx):
+        batch_x = self.x[idx * self.batch_size:(idx + 1) * self.batch_size]
+        batch_y = self.y[idx * self.batch_size:(idx + 1) * self.batch_size]
+        return batch_x, batch_y
+
 def train_model(target=None, source=None, env=None):
     
     input_size = env.get('input_size')
@@ -186,6 +213,9 @@ def train_model(target=None, source=None, env=None):
 
 
     best_model_path = str(target[0])
+
+    train_gen = DataGenerator(x_train, y_train, batch_size)
+    test_gen = DataGenerator(x_val, y_val, batch_size)
 
     strategy = tf.distribute.MirroredStrategy()
     atexit.register(strategy._extended._collective_ops._pool.close)
@@ -295,8 +325,8 @@ def train_model(target=None, source=None, env=None):
         callbacks_list = [checkpoint, early]
 
         history = model.fit(
-            x_train, y_train,
-            validation_data = (x_val, y_val),
+            train_gen,
+            validation_data = test_gen,
             epochs = num_epochs,
             batch_size = batch_size,
             callbacks = callbacks_list,
