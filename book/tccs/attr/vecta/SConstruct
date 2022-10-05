@@ -30,7 +30,7 @@ nails = Split('''
 
 Flow('nails0.asc',None,
      'echo %s n1=2 n2=%d in=$TARGET data_format=ascii_float' %
-     (string.join(nails,' '),len(nails)/2))
+     (' '.join(nails),len(nails)/2))
 Flow('nails','nails0.asc','dd form=native')
 Flow('nreal','nails','window n1=1')
 Flow('nimag','nails','window f1=1')

@@ -1,6 +1,6 @@
 from rsf.proj import *
 import math, string, sys
-import version
+import rsf.recipes.version as version
 
 warp0 = '''
 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
