@@ -1,0 +1,60 @@
+from rsf.proj import *
+
+# Download data
+Fetch('slice.rsf','ctscan')
+Flow('circle','slice','dd type=float')
+
+grey = 'grey wanttitle=n screenratio=1 bias=128 clip=105'
+
+Result('circle',grey)
+
+# Rotate program
+# exe = Program('rotate.c')
+
+# UNCOMMENT ABOVE AND COMMENT BELOW IF YOU WANT TO USE C 
+exe = Command('rotate.exe','rotate.py','cp $SOURCE $TARGET')
+AddPostAction(exe,Chmod(exe,0o755))
+
+rotate = str(exe[0])
+
+# Rotate by 90 degrees
+Flow('rotate',['circle',rotate],
+     './${SOURCES[1]} angle=90 interp=nearest')
+
+Result('rotate',grey)
+
+# Mask for the circle
+Flow('mask','circle',
+     '''
+     put d1=1 o1=-255.5 d2=1 o2=-255.5 |
+     math output="sqrt(x1*x1+x2*x2)" |
+     mask min=255.5 | dd type=float | 
+     smooth rect1=3 rect2=3 |
+     mask max=0 | dd type=float |
+     put d1=0.1914 o1=0 d2=0.1914 o2=0
+     ''')
+
+for case in ('nearest','linear'): # !!! MODIFY ME !!!
+    new = 'circle'
+    rotates = []
+    for r in range(18):
+        old = new
+        new = '%s-circle%d' % (case,r)
+        Flow(new,[old,rotate],
+             './${SOURCES[1]} angle=20 interp=%s' % case)
+        Plot(new,grey)
+        rotates.append(new)
+
+    # Movie of rotating circle
+    Plot(case,rotates,'Movie',view=1)
+
+    # Plot error
+    Result(case,[new,'circle','mask'],
+           '''
+           add scale=1,-1 ${SOURCES[1]} |
+           add mode=p ${SOURCES[2]} |
+           %s bias=0 scalebar=y clip=12
+           wanttitle=y title="Error of %s Interpolation"
+           ''' % (grey,case.capitalize()))
+
+End()

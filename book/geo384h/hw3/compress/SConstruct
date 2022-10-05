@@ -1,0 +1,102 @@
+from rsf.proj import *
+
+# Get data
+##########
+Fetch('horizon.asc','hall')
+
+# Convert format
+Flow('data','horizon.asc',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=3 n2=57036 | 
+     dd form=native | window n1=1 f1=-1 | add add=-65 | 
+     put 
+     n2=291 o2=35.031 d2=0.01 label2=y unit2=km 
+     n1=196 o1=33.139 d1=0.01 label1=x unit1=km |
+     costaper nw1=25 nw2=25 
+     ''')
+
+# Display
+def plot(title):
+    return '''
+    grey color=j title="%s" 
+    transp=y yreverse=n clip=14
+    ''' % title
+Result('data',plot('Horizon'))
+
+# 2-D Fourier Transform
+#######################
+Flow('fft','data',
+     'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Plot('fft',
+     '''
+     math output="abs(input)" | real | 
+     grey title="Fourier Transform" allpos=y screenratio=1
+     ''')
+
+# A. Compression by Windowing
+#############################
+
+cut = 8 # !!! CHANGE ME !!!
+
+# Create a frame
+Flow('frame','fft','real | math output="sqrt(x1*x1+x2*x2)" ')
+Plot('frame',
+     '''
+     contour nc=1 c0=%g plotfat=5 plotcol=3
+     wantaxis=n wanttitle=n screenratio=1
+     ''' % cut)
+Result('fft','fft frame','Overlay')
+
+# Cut a hole
+Flow('fcut','frame fft',
+     '''
+     mask max=%g | 
+     dd type=float | rtoc |
+     mul ${SOURCES[1]}
+     ''' % cut)
+
+# Inverse FFT
+Flow('sig','fcut',
+     'fft3 axis=2 inv=y | fft3 axis=1 inv=y | real')
+Result('sig',plot('Compression Signal'))
+
+Flow('cut','data sig','add scale=1,-1 ${SOURCES[1]}')
+Result('cut',plot('Compression Noise') + 'color=I')
+
+# B. Compression by Thresholding
+################################
+
+thr = 80 # !!! CHANGE ME !!!
+
+# Plot histogram
+Plot('hist','fft',
+     '''
+     math output="abs(input)" | real |
+     histogram o1=0 d1=%g n1=101 |
+     dd type=float | scale axis=1 |
+     bargraph title="Scaled Histogram" pad1=n
+     label1= unit1= label2= unit2=
+     ''' % (0.03*thr))
+Flow('line.asc',None,
+     'echo 0 0 0 1 n1=4 data_format=ascii_float in=$TARGET')
+Plot('line','line.asc',
+     '''
+     dd type=complex form=native | 
+     graph min1=-1 max1=2 plotcol=5 
+     wantaxis=n wanttitle=n dash=1
+     ''')
+Result('hist','hist line','Overlay')
+
+# Thresholding
+Flow('fthr','fft','thr thr=%g' % thr)
+
+# Inverse FFT
+Flow('thr','fthr',
+     'fft3 axis=2 inv=y | fft3 axis=1 inv=y | real')
+Result('thr',plot('Compression Signal'))
+
+# Subtract from Data
+Flow('noi','data thr','add scale=1,-1 ${SOURCES[1]}')
+Result('noi',plot('Compression Noise') + 'color=I')
+
+End()
