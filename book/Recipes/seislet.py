@@ -1,5 +1,5 @@
 from rsf.proj import *
-import random, string, math
+import random, math
 
 random.seed(2005)
 nr = 0
@@ -129,9 +129,9 @@ def seislet(data,              # data name
 #        Result(diff,'grey  title="Scale=%d" ' % scale)
 
     nr = n1
-    k1 = string.join(map(rnd,range(nsp)),',')
+    k1 = ','.join([rnd(x) for x in range(nsp)])
     nr = n2
-    k2 = string.join(map(rnd,range(nsp)),',')
+    k2 = ','.join([rnd(x) for x in range(nsp)])
 
     imps = data+'imps'
     Flow(imps,dip,
@@ -184,11 +184,11 @@ def diplet(data,              # data name
         Result(rec,'grey  title="Inverse Seislet Frame (%d%%)" ' % c)
 
     nr = n1
-    k1 = string.join(map(rnd,range(nsp)),',')
+    k1 = ','.join([rnd(x) for x in range(nsp)])
     nr = n2
-    k2 = string.join(map(rnd,range(nsp)),',')
+    k2 = ','.join([rnd(x) for x in range(nsp)])
     nr = np
-    k3 = string.join(map(rnd,range(nsp)),',')
+    k3 = '.'.join([rnd(x) for x in range(nsp)])
 
     imps = data+'dimps'
     Flow(imps,dips,

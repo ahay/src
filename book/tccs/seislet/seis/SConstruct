@@ -40,7 +40,7 @@ Flow('synt','vrms',
      mag=1,1,1,1,-1,1,1,-1,1,1,1,-1,1,1,-1,1,1 |
      bandpass flo=4 fhi=20 |
      inmo velocity=$SOURCE half=n
-     ''' % string.join(map(str,range (100,916,48)),','), stdin=0)
+     ''' % ','.join([str(x) for x in range (100,916,48)]), stdin=0)
 
 seislet('synt',1001,128,rect1=40,rect2=5,pmin=0,p0=1)
 
