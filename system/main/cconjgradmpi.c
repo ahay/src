@@ -79,8 +79,8 @@ int main(int argc, char* argv[])
     mod = sf_input("mod");
 
     out = sf_output("--output");
-    sf_fileflush(out,mod);
     sf_settype(out,SF_COMPLEX);
+    sf_fileflush(out,mod);
 
     if (SF_COMPLEX != sf_gettype(mod) ||
 	SF_COMPLEX != sf_gettype(dat)) 
