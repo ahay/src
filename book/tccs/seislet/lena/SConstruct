@@ -1,5 +1,5 @@
 from rsf.proj import *
-import random, string
+import random
 
 random.seed(2005)
 
@@ -55,8 +55,8 @@ Result('slena',grey('Seismic Lena',0))
 
 
 nsp = 100
-k2 = string.join(map(lambda x: str(random.randint(1,512)), xrange(nsp)),',')
-k1 = string.join(map(lambda x: str(random.randint(1,512)), xrange(nsp)),',')
+k2 = ','.join([str(random.randint(1,512)) for x in  range(nsp)])
+k1 = ','.join([str(random.randint(1,512)) for x in  range(nsp)])
     
 Flow('imps',None,
      '''
@@ -66,12 +66,12 @@ Flow('imps',None,
      ''' % (nsp,k1,k2))
 Result('imps',grey('Wavelets',0))
 
-k1 = string.join(map(lambda x: str(x+1), xrange(512)),',')
+k1 = ','.join([str(x+1) for x in range(512)])
 
 Flow('spikes',None,
      'math n1=128 n2=128 output="abs(x1-x2)" | mask max=0.5 | dd type=float') 
 for type in ('haar','linear'):
-    Type = string.capitalize(type)
+    Type = type.capitalize()
     imps = 'i'+type
     Flow(imps,'spikes','dwt type=%s inv=y adj=y' % type)
     Result(imps,

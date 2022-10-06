@@ -215,11 +215,11 @@ def rnd(x):
 nsp=200         # number of spikes
 nr = 800
 eps=0.1         # regularization
-k1 = string.join(map(rnd,range(nsp)),',')
+k1 = ','.join([rnd(x) for x in range(nsp)])
 nr = 128
-k2 = string.join(map(rnd,range(nsp)),',')
+k2 = ','.join([rnd(x) for x in range(nsp)])
 nr = 50
-k3 = string.join(map(rnd,range(nsp)),',')
+k3 = ','.join([rnd(x) for x in range(nsp)])
 
 Flow('rrdipimps','rrdiplet rrdips',
      '''
@@ -277,11 +277,11 @@ Plot('cinv',
 nsp=200         # number of spikes
 nr = 800
 eps=0.1         # regularization
-k1 = string.join(map(rnd,range(nsp)),',')
+k1 = ','.join([rnd(x) for x in range(nsp)])
 nr = 128
-k2 = string.join(map(rnd,range(nsp)),',')
+k2 = ','.join([rnd(x) for x in range(nsp)])
 nr = 50
-k3 = string.join(map(rnd,range(nsp)),',')
+k3 = ','.join([rnd(x) for x in range(nsp)])
 
 Flow('cdipimps','cdiplet cdips',
      '''
