@@ -1,0 +1,213 @@
+%\title{Estimating the inverse Hessian for amplitude correction of migrated images using deep learning }
+%\title{Improving resolution of migrated images by approximating the inverse Hessian using deep learning}
+\relax\footnotetext[1]{Parts of this paper were first published in SEG 2019}
+%\author{Harpreet Kaur$^*$\footnotemark[1], Nam Pham\footnotemark[1] and Sergey Fomel\footnotemark[1]}
+%\author{Harpreet Kaur*, Nam Pham, and Sergey Fomel, The University of Texas at Austin}
+%\maketitle
+
+%\address{
+%\footnotemark[1] Bureau of Economic Geology \\
+%John A. and Katherine G. Jackson School of Geosciences \\
+%The University of Texas at Austin \\
+%Austin, TX 78713\\
+%*harpreet@utexas.edu 
+%}
+%\righthead{High-resolution seismic imaging using DNN}
+
+\begin{abstract}
+\hspace{\parindent} We propose to estimate migrated images with meaningful amplitudes similar to least-squares migrated images by approximating the inverse Hessian using generative adversarial networks (GANs) in a conditional setting. We use the framework of CycleGAN and extend it to the conditional CycleGAN such that the mapping from the migrated image to the true reflectivity is subjected to a velocity attribute condition. This approach gives results\old{similar} \new{comparable} to iterative inversion\old{by approximating the inverse Hessian} \new{but} at a significantly reduced cost. This algorithm is applied after migration and is computationally efficient. \new{In numerical experiments with synthetic and real datasets the}\old{The} proposed method improves image resolution, attenuates noise, reduces migration artifacts, and enhances reflection amplitudes. We train the network with three different data sets and test on \old{two}\new{three} other data sets which are not a part of training. Tests on validation data sets verify the effectiveness of the proposed approach. 
+
+\end{abstract}
+
+\section{Introduction}
+%%%Seismic imaging algorithms often use adjoint of forward modeling operator to estimate subsurface model. Although adjoint operation is more robust yet it is less accurate than inverse operation because most of the operators used in seismic processing are non unitary i.e. $L^TL\neq I$ \cite[]{claerbout2001basic,rickett2003illumination}. 
+
+\hspace{\parindent} The ultimate goal of seismic imaging is to retrieve a high-resolution image of the true reflectivity of the Earth's subsurface\old{structure} \new{structures}. Obtaining high-resolution images becomes especially important for unconventional reservoir characterization to detect small-scale geological features controlling production efficiency. However, imaging algorithms often use the adjoint of the forward modeling operator rather than the inverse operator to estimate the subsurface model and therefore are unable to fully reverse seismic wave propagation effects \cite[]{claerbout2001basic,rickett2003illumination,clapp2005imaging}. Hence, standard depth migration often suffers from low resolution, uneven amplitude, limited bandwidth, and migration artifacts.
+
+Various formulations have been proposed for amplitude corrections during the migration process. \cite {bleistein1987imaging} derived the inverse operators for the Kirchhoff migration, which, being proportional to the geometrical-optics reflection coefficient, allow for interpretation of amplitude of the migrated image. \cite{hu2001poststack} proposed the deconvolution operator to estimate the inverse Hessian for reflection amplitude enhancement in post-stack migration. \cite{rickett2003illumination} developed a normalization scheme for the wave-equation migration to compensate for irregular illumination and reduce amplitude distortions. \cite{guitton2004amplitude,greer2018improving} proposed to approximate the Hessian of an imaging operator using nonstationary matching filters for amplitude and kinematic corrections of migrated images. 
+
+An alternative approach to preserve the amplitudes with wave equation migration is to formulate it as an inverse problem \new{using iterative least-squares migration \cite[]{chavent1999optimal,ronen2000least,kuhl2003least,valenciano2006target}}. Least-squares migration with regularization has proved effective with incomplete surface data \cite[]{nemeth1999least} and irregular surface illumination due to complex structures \cite[]{prucha1999angle}. Currently, least-squares migration is applied in either the data or the model domain. The model domain approach solves the Hessian matrix with few iterations but requires substantial memory, whereas the data domain approach requires less memory with more migration iterations to solve the inversion problem \cite[]{wang2016least}. 
+%%%Following a similar approach, we propose to estimate inverse of Hessian using deep neural networks to produce seismic images at a much reduced cost and at a higher resolution. 
+
+\old{Since both inversion processes are expensive}\new{In this paper}, we propose to\old{estimate} \new{approximate the effect of} the inverse Hessian using the deep neural network (DNN) and thus circumvent the need for the iterative inversion. This adaptive nonlinear model makes the algorithm highly flexible, and computationally efficient and produces seismic images with correct amplitudes at a\old{higher}\new{high} resolution and reduced cost. We test the proposed method using\old{different}\new{a variety of synthetic and real} examples.     
+
+
+\section{Theory}
+\hspace{\parindent} Wave equation imaging, particularly by the reverse-time-migration (RTM) is currently the preferred method of seismic depth migration in complex areas \cite[]{liu2011effective}. It makes use of the adjoint operator $\mathbf L^T$ to approximate the inverse of the forward modeling. Since $\mathbf L^T$ is not the exact inverse to the forward modeling operator, the migrated image is only a rough approximation to reflectivity \cite[]{hu2001poststack}. The accuracy of this approximation\old{is} \new{can be} further degraded by limited aperture, spatial aliasing, and non-uniform illumination due to complex overburden \cite[]{claerbout1992earth,wang2016least}. Because of these effects, the final image may be blurred\old{with} \new{and exhibit} uneven amplitudes \cite[]{gray1997true,guitton2004amplitude}. A migration method capable of undoing such distortions is called a ``true amplitude migration'' \cite[]{gray1997true}; least-squares inversion is one such method.
+
+Least-squares migration can be implemented as \new{an} iterative inversion \old{i.e. data domain iterative least squares migration} \cite[]{nemeth1999least,wang2016least} or\old{single iteration inversion i.e. image domain least squares migration}\new{approximated by a single operator} \cite[]{hu2001poststack,rickett2003illumination,guitton2004amplitude,wang2016least}. Instead of data domain approach where each iteration requires at least one migration and one modeling, Hessian of the least-squares objective function can be approximated, and the problem can be solved in image domain where each iteration requires relatively cheap matrix-vector multiplication \new{\cite[]{hou2015approximate}}. 
+
+Given a vector of seismic data $\mathbf d$ and a linear modeling operator $\mathbf L$, our aim is to find model $\mathbf m$ that best represents data $\mathbf d$. The model of Earth can be parameterized in terms of reflectivity or impedance as a function of depth or time \cite[]{guitton2004amplitude,guitton2017fast}. The linear modeling operator $\mathbf L$ is mathematically related to the migration operator by its adjoint \cite[]{claerbout1985imaging,guitton2004amplitude}  
+\begin{equation}
+\mathbf m_1=\mathbf L^T \mathbf d
+\label{eq:adj}
+\end{equation}
+where $\mathbf{m_1}$ is the migrated image from the data vector $\mathbf d$. Here migration operator ($\mathbf {L^T}$) can be any operator like the Kirchhoff migration operator, the downward continuation operator, or the RTM operator. In this work, we use the RTM operator. 
+
+The objective function $f(\mathbf m)$ needs to be minimized for estimating true reflectivity ($m$) in the least squares formulation.
+\begin{equation}
+%%%f(m)=\parallel r_d \parallel^2=\parallel Lm-d \parallel^2
+f(\mathbf m)=\parallel \mathbf {Lm}-\mathbf d \parallel^2
+\label{eq:objective}
+\end{equation}
+
+The least-squares estimate $m$ of the model is then given by:
+\begin{equation}
+\mathbf m=\mathbf{(L^TL)^{-1}L^Td}
+\label{eq:lsqrestimate}
+\end{equation}
+\begin{equation}
+\mathbf m=\mathbf{(L^TL)^{-1}m_1}
+\label{eq:refmig}
+\end{equation}
+
+Here, $\mathbf {(L^TL)^{-1}}$ is the inverse Hessian which can also be described as a deconvolution operator for the amplitude correction of migrated images \cite[]{hu2001poststack}. The problem here is to approximate the inverse Hessian which involves large computational cost and is sometimes not feasible to compute. In this paper, we adopt generative adversarial networks (GANs) to train the network to approximate the inverse Hessian. This computed Hessian inverse can then be applied to the migrated image, equation~(\ref{eq:adj}), for test data sets to simulate the result of least-squares inversion, equation~(\ref{eq:lsqrestimate}), at a significantly reduced cost. 
+
+To approximate the inverse Hessian, we start with true reflectivity model $\mathbf m$ which we compute by converting acoustic impedance to reflectivity. Next, we model data $\mathbf d$ using $\mathbf m$ as follows:
+\begin{equation}
+\mathbf d=\mathbf{Lm}
+\label{eq:remod}
+\end{equation}
+Then, we migrate data $\mathbf d$ with adjoint operator $\mathbf {L^T}$ to get $\mathbf {m_1}$ equation~(\ref{eq:adj}). The relationship between $\mathbf m$ and $\mathbf{m_1}$ is given by equation~(\ref{eq:refmig}). Knowing $\mathbf{m}$ and $\mathbf{m_1}$, the inverse Hessian can be approximated using deep neural networks (DNNs) and then applied to $\mathbf{m_1}$ equation~(\ref{eq:refmig}) to simulate the least-squares inverse solution for the test data sets. Once the neural network learns to approximate the inverse Hessian, validation data sets (not previously seen by the network during training) constituting migrated image and the corresponding velocity model can be given as an input to the neural network to compute the true reflectivity. \new{In the absence of true reflectivity, an}\old{An} alternative to the proposed approach for training the neural network is by using the first migrated and second migrated image to approximate the inverse of Hessian using deep neural networks \cite[]{guitton2004amplitude,greer2018improving}. 
+
+\section{Implementation of deep neural network : GAN}
+\hspace{\parindent} Generative adversarial networks (GANs) are deep neural net architectures introduced by \cite{goodfellow2014generative} to sidestep the difficulty of approximating many intractable probabilistic computations \cite[]{mirza2014conditional}. In the GAN framework, a generator, and a discriminator network are trained jointly where a generative model ($G$) captures the data distribution, and a discriminative model ($D$) estimates the probability that a sample came from training data rather than $G$ \cite[]{goodfellow2014generative}. The network learns how to capture characteristics of input images to translate these characteristics into the output image. Assuming that an underlying relationship exists between the source and the target domain, the network seeks to learn that relationship. The network implicitly learn a latent, low dimensional representation of an arbitrary high-dimensional data.\\ 
+
+
+Adversarial networks have the advantage that Markov chains are not needed; only backpropagation is used to obtain gradients \cite[]{mirza2014conditional}. These networks need some kind of regularization, which can guarantee that the learned function can map an individual input $x_i$ to the desired output $y_i$. This regularization was introduced by \cite {zhu2017unpaired} in CycleGAN by incorporating cyclic loss, which ensures that the transformation from source distribution to target distribution and then back to source distribution should give samples from the source distribution. However, in an unconditional generative model, there is no control on modes of data being generated. By conditioning the model with additional information, it is possible to direct the data-generation process \cite[]{mirza2014conditional}. \\
+
+
+We extend CycleGAN to conditional CycleGAN\old{such} \new{by requiring} that mapping \old{from $x$ to $y$ is subjected to attribute condition $z$} \new{from $x_A$ to $x_B$ is subjected to an attribute condition of the corresponding velocity model} \cite[]{lu2017conditional}, where $x_A$ is migrated image ($m_1$) \new{along with the corresponding velocity model} and $x_B$ is true reflectivity ($m$) \old{and $z$ is the corresponding velocity model}. This makes it possible to engage the learned generative model in different ``modes'' by providing it with different contextual information \cite[]{gauthier2014conditional}. Further, the network uses Adversarial loss $L_{GAN}$ \cite[]{goodfellow2014generative,benaim2017one,zhu2017unpaired}, Cyclic loss $L_{cycle}$ \cite[]{zhu2017unpaired}, Self-distance loss $L_{self-distance}$ \cite[]{benaim2017one,selfdistance} and Identity loss $L_{Identity}$ \cite[]{zhu2017unpaired} which adds to give total loss function $L_{total}$ to reduce the space of possible mapping functions and to regularize the model.
+
+\begin{description}
+\item[Adversarial \old{constraint} \new{loss function}] \hfill \\ The training data sets consists of two discrete distributions, $\hat{p_A}$ and $\hat{p_B}$ sampled from the source and the target distributions, $p_{A}$ and $p_{B}$ \new{respectively}. \new{We denote the data distributions as $x_A \sim \hat{p_A}$ and $x_B \sim \hat{p_B}$.} For the proposed algorithm, the source distribution is migrated image with incorrect amplitudes computed using adjoint of forward modeling operator (equation~\ref{eq:adj}) and the target distribution is image with true amplitudes (equation~\ref{eq:lsqrestimate}). For the mapping function G: $A$ $\rightarrow$ $B$ and its discriminator $D_{B}$, the objective function is given as \cite[]{benaim2017one,zhu2017unpaired,goodfellow2014generative} 
+\begin{eqnarray}
+\begin{split}
+\mathcal L_{GAN}(G_{AB},D_{B},\hat{p}_A,\hat{p}_B)=E_{x_B \sim \hat{p}_B}[log {D_B}({x_B})] \\+ E_{x_A \sim \hat{p}_A}[log ({1-D_B}(G_{AB}({x_A})))]
+\end{split}
+\label{eq:adversarial}
+\end{eqnarray}
+
+\new{Here $E_{x_B \sim \hat{p}_B}$ is the expected value over all the real data instances and $E_{x_A \sim \hat{p}_A}$ is the expected value over all generated fake instances.} This objective function is simultaneously maximized over $D_B$ and minimised over $G_{AB}$. \new{The main goal of adversarial loss is to match the distribution of generated images to the data distribution of target domain.}
+
+\item[Cycle \old{consistancy} \new{consistency} \old{constraint} \new{loss function}] \hfill \\ Adversarial losses alone cannot guarantee that the learned function accurately maps input $A_{i}$ to desired output $B_{i}$. Addition of this constraint makes sure that mapping of given data sample from domain A to domain B and then back to domain A results in identical sample. It reduces the space of possible mapping functions. Its objective function has the following form \cite[]{zhu2017unpaired}:
+\begin{equation}
+\mathcal L_{cycle}(G_{AB},G_{BA},D_{B},\hat{p}_A)=E_{x \sim \hat{p}_A}\parallel G_{BA}(G_{AB}(x))-x \parallel_1
+\label{eq:cycle}
+\end{equation} 
+\new{The main goal of cycle consistency loss function is that if a sample from domain $A$ is translated to domain $B$ using $G_{AB}$ then the translation of this generated domain $B$ sample back to domain $A$ using generator $G_{BA}$ should result in the identical sample.}
+
+\item[Identity \old{constraint} \new{loss function}] \hfill \\ We apply an additional constraint on generator such that $G_{AB}$ applied to samples from domain B performs the identity mapping \cite[]{benaim2017one,taigman2016unsupervised}. It regularizes the generator to be near an identity mapping when real samples of the target domain are provided as input to the generator \cite[]{zhu2017unpaired}. Its objective function is given as:
+\begin{equation}
+\mathcal L_{Identity}(G_{AB},\hat{p}_B)=E_{x \sim \hat{p}_B}\parallel x-G_{AB}(x) \parallel_1
+\label{eq:Identity}
+\end{equation}
+
+\item[Self distance \old{constraint} \new{loss function}] \hfill \\ In order to recover the alignment more effectively, we use self-distance loss in addition to cycle consistency loss. It employs one sample at a time and compares the distances between two parts of the input sample and two parts of the generated sample \cite[]{benaim2017one,selfdistance}. It is defined as follows:
+Let $L$,$R$ :$R^{h \times w}$ $\rightarrow$ $R^{h \times w/2}$ be the operators that given an input image, return the left and right part of it. Then, self-distance loss equation is given as:
+\begin{equation}
+\begin{split}
+\mathcal L_{self-dis}(G_{AB},\hat{p}_A)=E_{x \sim \hat{p}_A}\mid 1/{\sigma_{A}}(\parallel L(x)-R(x) \parallel_1-\mu_{A})\\-1/\sigma_{B}(\parallel L(G_{AB}(x))-R(G_{AB}(x))\parallel_1-\mu_{B})\mid
+\end{split}
+\label{eq:selfdis}
+\end{equation}
+\new{where $\mu_{A}$ and $\sigma_{A}$ are the mean and standard deviations of the pairwise distances between the two halves of the image in the training set from domain A, and similarly $\mu_{B}$ and $\sigma_{B}$ are the mean and standard deviations of the pairwise distances between the two halves of the image in the training set from domain B.}
+\end{description}
+
+\section {Network architecture and Training}
+While training the networks $G_{AB}$, $G_{BA}$, $D_{A}$ and $D_{B}$, the full objective function takes the following form:
+\begin{equation}
+\begin{split}
+\mathcal L_{total}(G,D)=\alpha_{1A}\mathcal L_{GAN}(G_{AB},D_{B},\hat{p}_A,\hat{p}_B)+\alpha_{1B}\mathcal L_{GAN}(G_{BA},D_{A},\hat{p}_B,\hat{p}_A)+\\ 
+\alpha_{2A}\mathcal L_{cycle}(G_{AB},G_{BA},\hat{p}_A)+\alpha_{2B}\mathcal L_{cycle}(G_{BA},G_{AB},\hat{p}_B)+\\
+\alpha_{3A}\mathcal L_{self-distance}(G_{AB},\hat{p}_A)+\alpha_{3B}\mathcal L_{self-distance}(G_{BA},\hat{p}_B)+\\ 
+\alpha_{4A}\mathcal L_{Identity}(G_{AB},\hat{p}_B)+\alpha_{4B}\mathcal L_{Identity}(G_{BA},\hat{p}_A)
+\end{split}
+\label{eq:objfn}
+\end{equation}
+
+In equation~(\ref{eq:objfn}), parameters $\alpha_{iA}$ and $\alpha_{iB}$ are trade-off parameters. After experimentation, we chose them as follows:
+\begin{eqnarray}
+\alpha_{1A}=\alpha_{1B}=\alpha_{3A}=\alpha_{3B}=1 \\
+\alpha_{2A}=\alpha_{2B}\\
+\alpha_{4A}=\alpha_{4B}=5 
+\label{eq:tradeoff}
+\end{eqnarray}
+ 
+We apply max-pooling with a stride in the generator and the discriminator network with nine residual blocks in the transformation layer of the generator. We use instance normalization to counteract the internal covariant shift and reduce the oscillations when approaching the minimum point \cite[]{johnson2016perceptual}. In comparison to batch normalization, instance normalization removes instance specific information from the data, which simplifies generation and leads to improved learning \cite[]{DBLP:journals/corr/UlyanovVL16}. For GAN loss, the algorithm uses binary cross entropy (BCE) error because it can find a better local optimum than the Mean square error (MSE) loss function \cite[]{golik2013cross}. We use the history of images for the discriminator, rather than only the last image generated \cite[]{benaim2017one}. To keep output finite, we use Leaky ReLU (LReLU) as the activation function for efficient gradient propagation to increase performance of the network by allowing a small non-zero gradient when the unit is not active \cite[]{maas2013rectifier}
+%We apply max-pooling with a stride in the generator and the discriminator network with nine residual blocks in the transformation layer of the generator. We use instance normalization to counteract the internal covariant shift and reduce the oscillations when approaching the minimum point \cite[]{johnson2016perceptual}. For GAN loss, the algorithm uses binary cross entropy (BCE) error because it can find a better local optimum than the Mean square error (MSE) loss function \cite[]{golik2013cross}. We use the history of images for the discriminator, rather than only the last image generated \cite[]{benaim2017one}. To keep output finite, we use Leaky ReLU (LReLU) as the activation function for efficient gradient propagation to increase performance of the network by allowing a small non-zero gradient when the unit is not active \cite[]{maas2013rectifier}
+
+\section{Numerical Examples}
+\hspace{\parindent} To train the algorithm to compute the inverse Hessian, we select three different \old{synthetic} velocity models: the Marmousi model \cite[]{bourgeois1991marmousi}, the SEG/EAGE salt model  and the BP 2.5D model \cite[]{etgen1998strike}. All \new{models} have significant structural complexity \old{and geological diversity}. 
+
+%\multiplot{3}{refpt,zomigt,migvelbce}{width=0.45\textwidth}{(a) Reflectivity for the 1997 BP 2.5d benchmark model ($m$). (b) RTM image ($m_1$). (c) Image estimated after applying the inverse Hessian computed by deep neural network to (b).}
+\subsection{Training data sets}
+
+\subsection{1997 BP 2.5 model}
+\hspace{\parindent} We demonstrate the training algorithm using the BP 2.5D model \cite[]{etgen1998strike} \new{which is one of the three training models}. Using the velocity model Figure \ref{fig:veltm}, we first compute acoustic impedances and then convert them into corresponding reflectivities to obtain $m$ in Figure \ref{fig:refpt}. Next, we generate post-stack data sets in Figure \ref{fig:exp} from these reflectivity models using the low-rank wave extrapolation. Then, we migrate these data sets using the low-rank \new{zer-offset} RTM \cite[]{fomel2013seismic} to compute migrated image ($m_1$) in Figure \ref{fig:zomigt}. This approach is similar to \cite[]{guitton2004amplitude}, where $m$ is equivalent to the first migrated image and $m_1$ corresponds to the second migrated image, modeled and migrated from $m$. Using $m$ and $m_1$ conditioned with the respective velocity models as inputs, we train the neural network to compute the inverse Hessian. For training, we divide the inputs into $200\times200$ sample patches having 108 patches for the Marmousi data set, \old{250 patches for the Sigsbee data set} \new{16 patches for the SEG/EAGE salt model}, and 42 patches for the BP 2.5D data set. Next, we apply the inverse Hessian computed by DNN to the migrated images $m_1$ to recover true reflectivities for respective data sets in Figure \ref{fig:migvelbce}. Considerable improvement is seen in the image approximated by deep neural network (DNN) in Figure \ref{fig:migvelbce} for the BP 2.5D data set. Figure \ref{fig:box1} highlights various regions for a closer comparative analysis of migrated image, true reflectivity and approximated image (DNN output). Thrust zone separating Canadian foothills on the left from North sea on the right \cite[]{etgen1998strike} is clearly delineated in the approximated image in Figure \ref{fig:zoom}(c) as compared to the migrated image in Figure \ref{fig:zoom}(a) and is very similar to true reflectivity in Figure \ref{fig:zoom}(b). Apart from this, beds on the either side of the thrust zone are clearly visible in output image by DNN in Figure \ref{fig:zoom12}(c) and reflector at the bottom is evident in Figure \ref{fig:zoom13}(c). Also, spatial resolution of the image is increased, and \old{noise attenuation is evident} \new{migration artifacts are suppressed}. Moreover, amplitude behavior of output DNN image is very similar to reflectivity which shows that our algorithm corrects the amplitudes of migrated images.        
+
+\inputdir{twohalf}
+\multiplot*{5}{veltm,refpt,exp,zomigt,migvelbce}{width=0.40\textwidth}{(a) The BP 2.5d velocity model. (b) Reflectivity for the the 1994 BP 2.5d benchmark model (i.e. $m$). (c) Post-stack data created from reflectivity model. (d) RTM image (i.e. $m_1$). (e) Image estimated after applying the inverse Hessian computed by deep neural network to (d).}
+\plot{box1}{width=0.95\textwidth}{The blue box indicates the area zoomed in Figure \ref{fig:zoom,zoom12,zoom13} for comparative analysis.}
+\multiplot{3*}{zoom,zoom12,zoom13}{width=0.95\textwidth}{Zoomed in sections with migrated image on the left, true reflectivity in the middle, and DNN output image on the right; (a) over the thrust zone; (b) over the beds on the right of thrust zone; (c) over the reflector at the bottom. Migration artifacts are suppressed with reflectors, thrust zone, and faults being clearly visible in DNN output image as compared to migrated image.}
+\subsection{Validation data sets}
+
+\hspace{\parindent} To test the efficiency of training, we use two different models:the SEG/EAGE Overthrust model \cite[]{aminzadeh19953} and the BP 2004 gas model \cite[]{bp2004}. Similar to the training data sets, we divide test data sets also into patches of $200\times200$ samples with total 60 patches having 42 patches for the SEG/EAGE Overthrust model and 18 patches for the BP 2004 gas cloud model. \new{It is important to stress that the}\old{The} network has not yet seen what true reflectivity looks like for these testing model as they were not a part of training. The \new{conditional CycleGAN} network\old{applied} \new{applies} the learned weights during the training phase to the migrated images of validation data sets.
+
+\subsection{SEG/EAGE Overthrust model}
+\hspace{\parindent} For the first testing example, we use the SEG/EAGE Overthrust model in Figure \ref{fig:velo}. The $20\ km\times4.67\ km$ model has a spatial sampling of 25 m in vertical and horizontal directions \cite[]{aminzadeh19953}. We generate post-stack data using low-rank extrapolation in Figure \ref{fig:exp2}. We use low-rank RTM to obtain the migrated image in Figure \ref{fig:mig2}. Next, we input the migrated image conditioned with the corresponding velocity model to the trained neural network to apply inverse Hessian learned during the training phase to obtain the output image in Figure \ref{fig:migvel1bce}. We highlight certain areas of the image in Figure \ref{fig:box1over} to extract zoomed in sections for detailed analysis. In the approximated image by DNN, fault zones are clearly demarcated in Figure \ref{fig:zoom12over}(c) along with considerable noise attenuation in Figure \ref{fig:zoomover}(c) as compared to the original migrated images in Figure \ref{fig:zoom12over}(a) and \ref{fig:zoomover}(a). Also, amplitudes of the approximated images are closer to true reflectivities in Figure \ref{fig:zoom12over}(b) and \ref{fig:zoomover}(b).% In the output image by DNN, fault zones are clearly demarcated, and considerable noise attenuation can be observed compared to the original migrated images.
+\inputdir{overthrust}
+\multiplot*{5}{velo,refo,exp2,mig2,migvel1bce}{width=0.40\textwidth}{(a) The SEG/EAGE Overthrust velocity model. (b) Reflectivity (i.e. $m$). (c) Post-stack data generated from reflectivity model. (d) RTM image (i.e. $m_1$). (e) Image estimated after applying the inverse Hessian computed by deep neural network to (d).}
+%\multiplot*{2}{mig2,migvel1bce}{width=0.45\textwidth}{SEG/EAGE Overthrust model (a) RTM image ($m_1$). (b) Image estimated after applying the inverse Hessian computed by the deep neural network to (a). }
+\plot{box1over}{width=0.95\textwidth}{The blue box indicates the area zoomed in Figure \ref{fig:zoom12over,zoomover} for comparative analysis.}
+\multiplot{2*}{zoom12over,zoomover}{width=0.95\textwidth}{Zoomed in sections with the migrated image on the left, true reflectivity in the middle and the DNN output image on the right; (a) over the fault zone; (b) over the reflectors. There is a considerable noise attenuation with faults being clearly delineated in the output DNN image as compared to the migrated image.}
+%%%\subsection{SEG/EAGE Salt model}
+ 
+%For the first testing example, we use SEG/EAGE salt model (Figure \ref{fig:vel2}) with dimensions 15,600m * 4020m and spatial sampling interval of 20m in horizontal and vertical direction. We generate post stack data set using acoustic finite difference modelling (Figure \ref{fig:dexp2}). Next we input migrated image (Figure \ref{fig:mig}) to our trained neural network. Network outputs corrected image with approximated Hessian (Figure \ref{fig:migpsalt}) which is close to true reflectivity of the model (Figure \ref{fig:refseg}). Next we highlight certain area (Figure \ref{fig:box1seg}) for finer analysis.  Having a closer look at zoomed in sections we see that, migration artifacts marked are removed in approximated image along with noise attenuation (Figure \ref{fig:zoomseg}(c)) as compared to original migrated image (Figure \ref{fig:zoomseg}(a)). Also, the salt boundary is clearly delineated in the approximated image (Figure \ref{fig:zoom13seg}(c)) as compared to original migrated image (Figure \ref{fig:zoom13seg}(a)) with amplitudes similar to true reflectivity (Figure \ref{fig:zoom13seg}(b)) of the model.  In all the approximated images true amplitudes have been recovered. 
+
+\subsection{BP 2004 model}
+\hspace{\parindent} For the final example, we use a portion of the BP 2004 velocity model which has previously been used by \cite{sun2016q} for least-squares reverse time migration (LSRTM). The model features a low-velocity, low-Q area, which is assumed to be caused by the presence of gas chimney (Figure \ref{fig:velrekm}). The model has 12.5 m sampling along vertical and horizontal directions. A total of 31 shots with a spacing of 162.5 m are modeled (Figure \ref{fig:data0}) using a Ricker wavelet with 22.5 Hz peak frequency \cite[]{sun2016q}. Performing dispersion only RTM leads to results shown in Figure \ref{fig:rtm0}, which suffers from poor illumination below the gas chimney. We input the RTM image conditioned with the velocity model to the neural network; using previous training, the network outputs Figure \ref{fig:migprtm0velkmbce}, which is better than the result obtained after 100 iterations of LSRTM in Figure \ref{fig:rtm100iterre}. Overall there is considerable noise attenuation, suppression of migration artifacts and evident increase in resolution of approximated image.  
+%%%\inputdir{marmousi/lowrank}
+%%%\multiplot{5}{velm,refpm,expm,zomig,Comparem}{width=0.45\textwidth}{ (a) Velocity model for the Marmousi data set (b) Reflectivity for the %Marmousi model (i.e. $m$) (c) Post-stack data created from reflectivity model (d) Migration result of the Marmousi data set (i.e. $m_1$) (e) Image estimated after applying the inverse Hessian computed by deep neural network to (d) }
+ 
+%%%\inputdir{sigsbee/lowrank}
+%%%\multiplot{4}{vels,refs,zodata,zomigs,Compares}{width=0.45\textwidth}{ (a) Velocity model for the Sigsbee data set (b) Reflectivity for the Sigsbee model (i.e. $m$) (c) Post-stack data created from reflectivity model (d) Migration result of the Sigsbee data set (i.e. $m_1$) (e) Image estimated after applying the inverse Hessian computed by deep neural network to (d)}
+
+
+\new{\subsection{Analyzing the effect of velocity model on the DNN output}
+\hspace{\parindent} We analyze the effect of using the velocity model as a conditioner on the DNN output by examining three different scenarios for BP 2.5D model and SEG/EAGE overthrust model which includes DNN output with exact velocity model as a conditioner, DNN output without velocity model as a conditioner, and DNN output with smooth velocity model as a conditioner. We first compare the DNN output with exact velocity model as a conditioner as shown in Figure \ref{fig:migvelbce} and  DNN output without velocity model as a conditioner as shown in Figure \ref{fig:migptwo}. Comparing the two results, we can see that with exact velocity model as a conditioner, the reflectors on the left of the thrust zone are more clearly demarcated in the DNN output as shown in Figure \ref{fig:migvelbce} as compared to the DNN output without using the velocity model as a conditioner as shown in Figure \ref{fig:migptwo}. Also, the bottom reflector is more continuous and noise is attenuated better when we use the velocity model as a conditioner. Next, we analyze the effect of using smooth velocity model as a conditioner on the DNN output with different smoothing radii. We start with a smoothing radius of 20 grids as shown in Figure \ref{fig:veltmsm} with corresponding DNN output shown in Figure \ref{fig:migvelsmooth20}. We further increase the smoothing radius to 40 grids. The smooth velocity model is shown in Figure \ref{fig:veltmsm40} with the corresponding DNN output as shown in Figure \ref{fig:migvelsmooth40}. Analyzing the effect of smooth velocity model as a conditioner we can see that with the increase in the smoothing radii, some of the events on the left of the thrust zone are not recovered however, the increase in the smoothing radii does not significantly effect the output of the DNN. Therefore, the use of velocity model as a conditioner helps to improve the image but at the same time it is not the primary source of information for the DNN output. We repeat the same experiment on the SEG/EAGE overthrust model. Figure \ref{fig:migvel1bce} and Figure \ref{fig:migpo} shows a comparison of the DNN output with and without using the velocity model as a conditioner respectively. With the use of velocity model as a conditioner, reflectors are more clearly demarcated and noise is better attenuated. Further, we analyse the effect of using the velocity model with increasing smoothing radii. Figure \ref{fig:velremapsm10} shows the velocity model with a smoothing radius of 10 grids with corresponding DNN output shown in Figure \ref{fig:migvelsmooth20over10}. We further increase the smoothing radius to 20 grids. The smooth velocity model is shown in Figure \ref{fig:velremapsm} with the corresponding DNN output as shown in Figure \ref{fig:migvelsmooth40over20}. The use of velocity model as a conditioner whether it is smoothed version or the exact model helps to improve the resolution of the migrated images, reduce migration artifacts and enhances the reflectors.}
+%\inputdir{segsalt/lowrank}
+%\multiplot{5}{vel2,refseg,dexp2,mig,migpsalt}{width=0.40\textwidth}{ (a) Velocity model for the SEG/EAGE Salt data set (b) Reflectivity model (i.e. $m$) (c) Poststack data generated from reflectivity model (d) RTM image (i.e. $m_1$) (e) Image estimated after applying the inverse Hessian computed by deep neural network to (d) }
+%\plot{box1seg}{width=0.45\textwidth}{Zoomed out portions}
+%\multiplot{2*}{zoomseg,zoom13seg}{width=0.95\textwidth}{Zoomed out sections with migrated image on the left, true reflectivity in the middle and DNN output image on the right over the salt. Salt boundary is clearly delineated with correct amplitudes in the output DNN image as compared to migrated image}
+
+\inputdir{bpgas}
+\multiplot*{6}{velrekm,refre,data0,rtm0,migprtm0velkmbce,rtm100iterre}{width=0.40\textwidth}{(a) The BP 2004 velocity model. (b) Reflectivity model (i.e. $m$). (c) Pre-stack data generated from reflectivity model. (d) RTM image (i.e. $m_1$). (e) Image estimated after applying the inverse Hessian computed by deep neural network to (d). (f) Image obtained after 100 iterations of least-squares RTM.}
+%\multiplot*{3}{rtm0,migprtm0velkmbce,rtm100iterre}{width=0.45\textwidth}{BP 2004 model (a) RTM image ($m_1$). (b) Image estimated after applying the inverse Hessian computed by the deep neural network to (a). (c) Image obtained after 100 iterations of least-squares RTM.  }
+
+\inputdir{twohalf}
+\multiplot*{2}{migvelbce,migptwo}{width=0.45\textwidth}{Image estimated after applying the inverse Hessian computed by deep neural network to Figure \ref{fig:zomigt} (a) with velocity model as a conditioner ; (b) Without velocity model as a conditioner.}
+\multiplot*{4}{veltmsm,migvelsmooth20,veltmsm40,migvelsmooth40}{width=0.45\textwidth}{(a) The smoothed BP 2.5d velocity model with smoothing radius of 20 grids. (b) Image estimated after applying the inverse Hessian computed by deep neural network to Figure \ref{fig:zomigt} using the smoothed velocity model in (a) as a conditioner. (c) The smoothed BP 2.5d velocity model with smoothing radius of 40 grids. (d) Image estimated after applying the inverse Hessian computed by deep neural network to Figure \ref{fig:zomigt} using the smoothed velocity model in (c) as a conditioner.}
+
+\inputdir{overthrust}
+\multiplot*{2}{migvel1bce,migpo}{width=0.45\textwidth}{Image estimated after applying the inverse Hessian computed by deep neural network to Figure \ref{fig:mig2} (a) with velocity model as a conditioner ; (b) Without velocity model as a conditioner.}
+\multiplot*{4}{velremapsm10,migvelsmooth20over10,velremapsm,migvelsmooth40over20}{width=0.45\textwidth}{(a) The smoothed SEG/EAGE overthrust velocity model with smoothing radius of 10 grids. (b) Image estimated after applying the inverse Hessian computed by deep neural network to Figure \ref{fig:mig2} using the smoothed velocity model in (a) as a conditioner. (c) The smoothed smoothed SEG/EAGE overthrust velocity model with smoothing radius of 20 grids. (d) Image estimated after applying the inverse Hessian computed by deep neural network to Figure \ref{fig:mig2} using the smoothed velocity model in (c) as a conditioner.}
+\new{
+\inputdir{viking}
+\subsection{Field data example}
+\hspace{\parindent} For the field example, we use the Viking Graben Data set shown in Figure \ref{fig:slicefinal}. We use the velocity model shown in Figure \ref{fig:vofz} to obtain the migrated image in Figure \ref{fig:rtm1} using low-rank RTM. We input the migrated image conditioned with the corresponding velocity model to the trained neural network to apply the weights associated with the inverse Hessian learned during the training phase to produce the output image in Figure \ref{fig:migvel1bceseg1}. There is evident increase in resolution of the recovered image along with the improved delineation of the fault zones in the lower part of the image.  
+}
+\multiplot*{4}{slicefinal,vofz,rtm1,migvel1bceseg1}{width=0.45\textwidth}{(a) Post-stack data. (b) The Dix velocity model in depth. (c) RTM image (i.e. $m_1$). (d) Image estimated after applying the inverse Hessian computed by deep neural network to (c).}
+
+\section{Conclusions}
+\hspace{\parindent} We present a robust method for correcting amplitudes of migrated images using deep neural networks. In the proposed approach, the relationship between the migrated image $m$ and the true reflectivity $m_1$, the inverse Hessian \new{operator}, is captured by the neural networks during the training phase, \new{and}\old{which} can then be applied to the original migrated image conditioned with the velocity model in the testing phase to obtain an image\old{equivalent} \new{analogous} to \new{a} least-squares migrated image \new{but} at a significantly reduced cost. Using \new{a variety of}\old{different} synthetic and \new{field} examples, we demonstrate that this approach is capable of recovering true amplitudes, suppressing migration artifacts, improving the resolution, and attenuating considerable noise in the\old{approximated}\new{recovered} images. %We use the Nvidia Titan Xp GPU with Madagascar software package \cite[]{fomel2013madagascar} and Pytorch \cite[]{paszke2017automatic} for all the computations in this paper.  
+
+%\section{Acknowledgments}
+%We thank the sponsors of Texas Consortium of Computational Seismology for financial support. We acknowledge Nvidia for providing a Titan Xp GPU for running this algorithm. The computations in this paper are done using Madagascar software package \cite[]{fomel2013madagascar} and Pytorch \cite[]{paszke2017automatic}. 
+
+
+\newpage
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{refseg}
+

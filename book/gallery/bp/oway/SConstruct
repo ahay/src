@@ -1,0 +1,13 @@
+from rsf.proj import *
+
+from rsf.gallery import bp
+
+bp.getvel('bpvel')
+bp.zodata('zodata')
+
+# From velocity to slowness
+Flow('bpslow','bpvel','transp | transp plane=23 | math output=1/input')
+
+
+
+End()

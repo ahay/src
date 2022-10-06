@@ -1,0 +1,207 @@
+from rsf.proj import *
+from rsf.gallery import twohalf
+
+# get velocity model
+twohalf.getvel('vel')
+Result('velt','vel','grey title="BP 2.5D model" color=j mean=y barreverse=y maxval=5000 minval=1900 scalebar=y label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5  screenratio=0.75 screenht=9')
+Flow('veltm','vel','math output="input*0.001"')
+Result('veltm','vel','grey title="BP 2.5D model" color=j mean=y barreverse=y maxval=5000 minval=1900 scalebar=y label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5  screenratio=0.75 screenht=9 barunit=km/s')
+# get data
+Fetch('thexp.rsf','bp')
+Flow('exp','thexp','dd form=native')
+Result('exp','grey title="Post stack data" label1=Time label2=Distance unit1=s unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9 ')
+# lowrank decomposition
+Flow('fft','vel','transp | fft1 | fft3 axis=2 pad=1')
+Flow('right left','vel fft',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2012 dt=0.001 fft=${SOURCES[1]} left=${TARGETS[1]} 
+     ''')
+Flow('ref','vel',
+     '''depth2time velocity=$SOURCE nt=12001 dt=0.001 |
+     ai2refl | ricker1 frequency=20 |
+     time2depth velocity=$SOURCE|remap1 n1=642 d1=6.25
+     ''')
+Flow('refpt','vel',
+     '''depth2time velocity=$SOURCE nt=12001 dt=0.001 |
+     ai2refl | ricker1 frequency=20 |
+     time2depth velocity=$SOURCE
+     ''')
+Result('refpt','grey title="Reflectivity" scalebar=n  barlabel= barunit= label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5  screenratio=0.75 screenht=9 ')
+# High-resolution zero-offset migration
+Flow('zomigt','exp left right',
+     '''
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=321 dz=12.5
+     ''')
+Flow('zomigtre','zomigt','remap1 n1=642 d1=6.25')
+
+Plot('zomigt','grey scalebar=n wanttitle=n barlabel= barunit= label1=z label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9')
+Result('zomigt','grey scalebar=n title="Migrated image" barlabel= barunit=  label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9')
+Flow('velre','vel','remap1 n1=642 d1=6.25')
+Flow('modref','cattwo.asc',
+     '''echo in=$SOURCE data_format=ascii_float n1=600 n2=1600|
+        dd form=native|
+        put n1=600 d1=6.25 o1=0 label1=z unit1=m
+        n2=1600 d2=12.5 o2=0 label2=x unit2=m
+     ''')
+Flow('migpatch','zomigt','patch w=200')
+Flow('refpatch','refpt','patch w=200')
+Flow('velpatch','vel','patch w=200')
+Flow('velpatchm','veltm','patch w=200')
+Flow('modrefp','catpatchtwo.asc',
+     '''echo in=$SOURCE data_format=ascii_float n1=200 n2=200 n3=3 n4=14|
+        dd form=native|
+        put n1=200 d1=12.5 o1=0 label1=z unit1=km
+        n2=200 d2=12.5 o2=0 label2=x unit2=km
+        n3=3 d3=12.5 o3=0
+        n4=14 
+     ''')
+Flow('migptwo','modrefp','patch inv=y weight=y n0=321,1761')
+Plot('migptwo','grey scalebar=n wanttitle=n unit2=m unit1=m ')
+Result('migptwo','grey title="Output by DNN" scalebar=n  barlabel= barunit=  label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9 ')
+#Zoom out interesting areas 
+min1,max1=2000,3100
+min2,max2=6000,12000
+min12,max12=1800,3000
+min22,max22=13000,17000
+min13,max13=3200,4000
+min23,max23=0,13000
+min14,max14=100,1500
+min24,max24=11000,14000
+Flow('box1.asc',None,
+     '''
+     echo %s n1=2 n2=5 data_format=ascii_float in=$TARGET
+     ''' % ' '.join(map(str,(min1,min2,max1,min2,
+                             max1,max2,min1,max2,min1,min2))))
+Plot('box1','box1.asc',
+     '''
+     dd form=native type=complex | window |
+     graph transp=y yreverse=y min1=0 max1=4000 min2=0 max2=22000
+     wanttitle=n plotfat=5 plotcol=6 wantaxis=n screenratio=0.75 screenht=9
+     ''')
+Flow('box12.asc',None,
+     '''
+     echo %s n1=2 n2=5 data_format=ascii_float in=$TARGET
+     ''' % ' '.join(map(str,(min12,min22,max12,min22,
+                             max12,max22,min12,max22,min12,min22))))
+Plot('box12','box12.asc',
+     '''
+     dd form=native type=complex | window |
+     graph transp=y yreverse=y min1=0 max1=4000 min2=0 max2=22000
+     wanttitle=n plotfat=5 plotcol=6 wantaxis=n screenratio=0.75 screenht=9
+     ''')
+Flow('box13.asc',None,
+     '''
+     echo %s n1=2 n2=5 data_format=ascii_float in=$TARGET
+     ''' % ' '.join(map(str,(min13,min23,max13,min23,
+                             max13,max23,min13,max23,min13,min23))))
+Plot('box13','box13.asc',
+     '''
+     dd form=native type=complex | window |
+     graph transp=y yreverse=y min1=0 max1=4000 min2=0 max2=22000
+     wanttitle=n plotfat=5 plotcol=6 wantaxis=n screenratio=0.75 screenht=9
+     ''')
+Flow('box14.asc',None,
+     '''
+     echo %s n1=2 n2=5 data_format=ascii_float in=$TARGET
+     ''' % ' '.join(map(str,(min14,min24,max14,min24,
+                             max14,max24,min14,max24,min14,min24))))
+Plot('box14','box14.asc',
+     '''
+     dd form=native type=complex | window |
+     graph transp=y yreverse=y min1=0 max1=4000 min2=0 max2=22000
+     wanttitle=n plotfat=5 plotcol=6 wantaxis=n screenratio=0.75 screenht=9
+     ''')
+Result('box1','zomigt box1 box12 box13','Overlay')
+
+for i in range (3):
+    case=('zomigt','refpt','migvelbce')[i]
+    zoom = case + '-zoom'
+    Flow(zoom,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom,'grey title=%s barlabel= barunit=  label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9 ' % ('abc'[i]))
+Result('zoom','zomigt-zoom refpt-zoom migvelbce-zoom','SideBySideIso')
+
+for i in range (3):
+    case=('zomigt','refpt','migvelbce')[i]
+    zoom12 = case + '-zoom12'
+    Flow(zoom12,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min12,max12,min22,max22))
+    Plot(zoom12,'grey title=%s barlabel= barunit=  label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9 ' % ('abc'[i]))
+Result('zoom12','zomigt-zoom12 refpt-zoom12 migvelbce-zoom12','SideBySideIso')
+
+for i in range (3):
+    case=('zomigt','refpt','migvelbce')[i]
+    zoom13 = case + '-zoom13'
+    Flow(zoom13,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min13,max13,min23,max23))
+    Plot(zoom13,'grey title=%s barlabel= barunit=  label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9' % ('abc'[i]))
+
+Result('zoom13','zomigt-zoom13 refpt-zoom13 migvelbce-zoom13','SideBySideIso')
+
+for i in range (3):
+    case=('zomigt','refpt','migvelbce')[i]
+    zoom14 = case + '-zoom14'
+    Flow(zoom14,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min14,max14,min24,max24))
+    Plot(zoom14,'grey title=%s barlabel= barunit=  label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9' % ('abc'[i]))
+Result('zoom14','zomigt-zoom14 refpt-zoom14 migvelbce-zoom14','SideBySideIso')
+#Create labels
+Plot('a',None,
+     'box x0=10.413333 y0=6.908333 label="F" xt=1 yt=-1')
+Plot('f',None,
+     'box x0=3.898333 y0=3.915000 label="A" xt=-1 yt=1')
+Plot('b',None,
+     'box x0=6.386667 y0=6.108333 label="B"  xt=-1 yt=1')
+Plot('c',None,
+     'box x0=7.586667 y0=4.308333 label="C"  xt=-1 yt=1')
+
+Flow('modrefpt','catpatchtwotest.asc',
+     '''echo in=$SOURCE data_format=ascii_float n1=200 n2=200 n3=3 n4=14|
+        dd form=native|
+        put n1=200 d1=12.5 o1=0 label1=z unit1=m
+        n2=200 d2=12.5 o2=0 label2=x unit2=m
+        n3=3 d3=12.5 o3=0
+        n4=14 
+     ''')
+Flow('migpt','modrefpt','patch inv=y weight=y n0=321,1761')
+Plot('migptwo','grey scalebar=n wanttitle=n')
+Plot('migvelbce','grey scalebar=n wanttitle=n')
+Result('migpt','grey scalebar=y wanttitle=n')
+Result('Comparet','migvelbce a b f c','Overlay')
+
+
+Flow('modrefvel','modtwohalfvel.asc',
+     '''echo in=$SOURCE data_format=ascii_float n1=200 n2=200 n3=3 n4=14|
+        dd form=native|
+        put n1=200 d1=12.5 o1=0 label1=z unit1=m
+        n2=200 d2=12.5 o2=0 label2=x unit2=m
+        n3=3 d3=12.5 o3=0
+        n4=14 
+     ''')
+Flow('migvel','modrefvel','patch inv=y weight=y n0=321,1761')
+Result('migvel','grey title="Output by DNN" scalebar=n  barlabel= barunit=  label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9 scalebar=n ')
+Flow('modrefvelbce','modtwovelkmbce.asc',
+     '''echo in=$SOURCE data_format=ascii_float n1=200 n2=200 n3=3 n4=14|
+        dd form=native|
+        put n1=200 d1=12.5 o1=0 label1=z unit1=m
+        n2=200 d2=12.5 o2=0 label2=x unit2=m
+        n3=3 d3=12.5 o3=0
+        n4=14 
+     ''')
+Flow('migvelbce','modrefvelbce','patch inv=y weight=y n0=321,1761')
+Result('migvelbce','grey title="Output by DNN" scalebar=n  barlabel= barunit=  label2=Distance label1=Depth unit1=m unit2=m labelsz=13 titlesz=15 titlefat=6 labelfat=5 screenratio=0.75 screenht=9 scalebar=n ')
+
+End()
