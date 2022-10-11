@@ -20,6 +20,9 @@ extern "C" {
 #include <rsf.h>
 }
 
+// forward declaration
+class oRSF;
+
 class iRSF {
 public:
     // constructor
@@ -28,6 +31,8 @@ public:
     ~iRSF();
     // file size
     int size (int dim=0);
+    // file dimensions
+    int filedims ( int *n );    
     // file data type
     int type (void);
     // reading data
@@ -62,6 +67,13 @@ public:
     void get (const char* name, int size, bool* value, 
  	      const bool* defolt) const;
     void get (const char* name, int size, bool* value) const;
+    // copy from iRSF to oRSF
+    friend void cp( iRSF& in, oRSF& out );
+    // shift grid after axis one dimension forward
+    friend off_t shiftdim( iRSF& in, oRSF& out, int axis );
+    // unshift grid after axis one dimension forward
+    friend off_t unshiftdim( iRSF& in, oRSF& out, int axis );
+	
 private:
     sf_file file_;
     // copy constructor - undefined to prevent misuse
@@ -96,6 +108,13 @@ public:
 //     void put (const char* name, int size, const float* value) const;
     void flush(void);
     int bufsiz(void);
+    // copy from iRSF to oRSF
+    friend void cp( iRSF& in, oRSF& out );
+    // shift grid after axis one dimension forward
+    friend off_t shiftdim( iRSF& in, oRSF& out, int axis );
+    // unshift grid after axis one dimension forward
+    friend off_t unshiftdim( iRSF& in, oRSF& out, int axis );
+
 private:
     sf_file file_; 
     // copy constructor - undefined to prevent misuse
