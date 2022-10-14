@@ -65,8 +65,8 @@ Result('smqts',
        '''
        window min1=0.|clip clip=150|
        grey color=j scalebar=y allpos=y screenratio=0.8 crowd1=0.75 
-       crowd2=0.75 polarity=n label2="Trace" label1="Time(s)" labelfat=3
-       title=n title="" font=2 parallel2=n n2tic=20 nbartic=20
+       crowd2=0.75 polarity=n label2="Trace" label1="Time" unit2= labelfat=3
+       wanttitle=n font=2 parallel2=n n2tic=20 nbartic=20
        ''')
 
 ## implement inverse Q filter with equivalent Q value
@@ -75,7 +75,7 @@ Flow('ineq','qts zpo',
      convert0eq repos=${SOURCES[1]} | smooth rect2=40 rect1=1
      ''')
 
-Flow('asf','powdata','fft1|spray axis=2 d=0.004 n=751 o=1.|transp')
+Flow('asf','powdata','fft1 | spray axis=2 d=0.004 n=751 o=1.|transp')
 
 Flow('cmtf','asf ineq',
      '''
@@ -85,8 +85,8 @@ Flow('cmtf','asf ineq',
 Flow('cmsig','cmtf','transp | fft1 inv=y | window n1=1 f1=0')
 Result('cmsig',
        '''         
-       grey label2="Trace" label1="Time" title="" font=2 
-       lablefat=3 parallel2=n n2tic=20 clip=3500
+       grey label2="Trace" unit2= label1="Time" unit1=s title="" font=2 
+       lablefat=3 parallel2=n n2tic=20 clip=3500 wanttitle=n
        ''')
 
 End()
