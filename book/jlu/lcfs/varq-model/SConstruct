@@ -1,0 +1,460 @@
+from rsf.proj import *
+from math import *
+import math
+
+## ------------------------------ LCFS------ --------------------------
+## synthetic data
+Flow('vasignal',None,
+     ''' 
+     modtraceq n1=1001 d1=0.001 o1=0. nc=6 fm=50
+     at=100,200,400,600,700,900 q=99999,50,80,30,100,120
+     ''')
+Result('vasignal',
+       '''
+       graph pad=n screenratio=0.8 crowd1=0.3 crowd2=0.75 
+       label2=Amplitude unit2= label1=Time unit1=s title= 
+       yreverse=y transp=y wherexlabel=t parallel2=n n2tic=20
+       labelfat=3 plotfat=4 plotcol=7 font=2 axisfat=3 
+       ''')
+
+## --------------------- estimate Q using LTFT -----------------------
+## LTFT
+Flow('attf','vasignal','ltft rect=10')
+Flow('mattf','attf','math output="abs(input)" | real | window min1=0.')
+Plot('mattf',
+     '''
+     scale axis=2 |     
+     grey wanttitle=n max2=150 min2=0 color=j screenratio=0.8 scalebar=n
+     barwidth=0.2 crowd1=0.3 crowd2=0.75 wherexlabel=t allpos=y clip=0.8
+     n1tic=20 grid=y g1num=50 label2="Frequency" label1="Time" unit1=s
+     labelfat=3 font=2 axisfat=3 parallel2=n n2tic=20
+     ''')
+
+## determine bandwidth using peak frequency
+dw = 0.976562    ## need to be modified
+Flow('pf','mattf',
+     '''
+     transp | findmax1 verb=n|dd type=float |
+     math output="(input-1)*%g*2.5"|clip clip=150|smooth rect1=1
+     ''' % dw)
+
+## local centroid frequency
+Flow('bw cf var2','attf pf',
+     '''          
+     window max2=150 | 
+     lcf trange=${SOURCES[1]} avef=${TARGETS[1]} var2=${TARGETS[2]} rect1=65
+     ''')
+Plot('cf',
+       '''
+       graph max2=150 min2=0 pad=n screenratio=0.8 crowd1=0.3
+       crowd2=0.75 wanttitle=n yreverse=y transp=y wherexlabel=t dash=0
+       label2="" unit2="" g1num=50 plotfat=6 grid=n
+       labelfat=0 plotcol=7 font=2 parallel2=n n2tic=20
+       ''')
+Result('vfp',' mattf cf','Overlay')
+
+## equivalent Q value
+Flow('repos',None,'math n1=1 o1=0. d1=1 output="100" | dd type=int')
+Flow('qts','cf var2 repos',
+     ''' 
+     lcfseq var2=${SOURCES[1]} repos=${SOURCES[2]}
+     ''')
+
+## true equivalent Q value
+Flow('trueq','qts repos','convert0eq repos=${SOURCES[1]}')
+
+## interval Q value
+Flow('intq','cf var2',
+     ''' 
+     lcfsiq var2=${SOURCES[1]}|clip clip=500 | smooth rect1=60
+     ''')
+
+## theoretical Q value
+Flow('tq teq',None,
+     ''' 
+     theoreqiq teq=${TARGETS[1]} n1=1001 d1=0.001 o1=0. nc=6 
+     at=100,200,400,600,700,900 q=99999,50,80,30,100,120 |
+     dd type=float
+     ''')
+
+## Q estimation using the LCFS method and theoretical Q
+Result('vqq','tq qts intq teq',
+       '''
+       cat axis=2 ${SOURCES[1:4]} |
+       graph plotcol=7,5,4,3 dash=3,0,0,3 pad=n screenratio=0.8  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y yreverse=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=150 o1num=0 d1num=50 n1tic=3
+       ''')
+
+## inverse Q filtering
+Flow('asf','vasignal','fft1 | spray axis=2 d=0.001 n=1001 | transp')
+Flow('cmtf','asf trueq',
+     '''
+     invqfilt eqt=${SOURCES[1]} gim=18
+     ''')
+Flow('vcmsig','cmtf','transp | fft1 inv=y|window n1=1 f1=0')
+Result('vcmsig',
+       '''
+       graph pad=n screenratio=0.8 crowd1=0.3 crowd2=0.75
+       label2=Amplitude unit2= label1=Time unit1=s 
+       title= yreverse=y transp=y wherexlabel=t plotfat=4
+       labelfat=3 plotcol=7 font=2 axisfat=3 parallel2=n n2tic=20 
+       ''')
+
+## ----------------------------- CFS ------------------------------
+## centroid frequency
+Flow('bw1 cf1 var21','attf pf',
+     '''          
+     window max2=120 |
+     lcf avef=${TARGETS[1]} var2=${TARGETS[2]} rect1=1
+     ''')
+Plot('cf1',
+       '''
+       graph max2=150 min2=0 pad=n screenratio=0.8 crowd1=0.3
+       crowd2=0.75 wanttitle=n yreverse=y transp=y wherexlabel=t dash=0
+       label2="" unit2="" g1num=50 plotfat=6 grid=n
+       labelfat=0 plotcol=7 font=2 parallel2=n n2tic=20
+       ''')
+Result('fp1',' mattf cf1','Overlay')
+
+## equivalent Q value
+Flow('rcf','cf1','window n1=1 f1=100|spray axis=1 n=1001')#centroid frequency
+Flow('reva','var21','window n1=1 f1=100|spray axis=1 n=1001')#variance
+
+Flow('qts1','cf1 rcf reva var21',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} r2=${SOURCES[3]}
+     output="%g*(x1-0.1)*((r2+r2)/2)/(r-input)"
+     '''%(math.pi))
+
+## interval Q value
+Flow('intq1','cf1 var21',
+     ''' 
+     lcfsiq var2=${SOURCES[1]}|clip clip=500|smooth rect1=1
+     ''')
+
+dt=0.001
+Flow('qts11','qts1','window n1=101')
+Flow('qts12','qts1','window f1=100 n1=900 | put o1=0.101')
+Flow('qts13','qts1','window f1=101 n1=900')
+Flow('qts14','qts13 qts12',
+     '''
+     math o1=0.101 r=${SOURCES[1]} output="%g/((x1-0.1)/input-(x1-0.101)/r)"
+     ''' % dt)
+Flow('estq1','qts11 qts14','cat axis=1 o=0 ${SOURCES[1:2]}')
+
+## Q estimation using the LCFS method and theoretical Q
+Result('qq1','tq qts1 estq1 teq',
+       '''
+       cat axis=2 ${SOURCES[1:4]} |
+       graph plotcol=7,5,4,3 dash=3,0,0,3 pad=n screenratio=0.8  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y yreverse=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=150 o1num=0 d1num=50 n1tic=3
+       ''')
+
+## ----------------------------- SR1 -------------------------------
+## pick spectra
+Flow('sp1','mattf','window n1=150')
+Flow('sp2','mattf','window f1=150 n1=150')
+Flow('sp3','mattf','window f1=300 n1=200')
+Flow('sp4','mattf','window f1=500 n1=150')
+Flow('sp5','mattf','window f1=650 n1=150')
+Flow('sp6','mattf','window f1=800 n1=200')
+
+Flow('f1-1','sp1','window n1=1 f1=101')
+Flow('f2-1','sp2','window n1=1 f1=52')
+Flow('f3-1','sp3','window n1=1 f1=103')
+Flow('f4-1','sp4','window n1=1 f1=107')
+Flow('f5-1','sp5','window n1=1 f1=58')
+Flow('f6-1','sp6','window n1=1 f1=109')
+
+## spectra ratio
+Flow('ldiv1-1','f2-1 f1-1',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+     math output="-log(abs(input))"
+     ''')
+Flow('ldiv2-1','f3-1 f2-1',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+     math output="-log(abs(input))"
+     ''')
+Flow('ldiv3-1','f4-1 f3-1',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+     math output="-log(abs(input))"
+     ''')
+Flow('ldiv4-1','f5-1 f4-1',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+     math output="-log(abs(input))"
+     ''')
+Flow('ldiv5-1','f6-1 f5-1',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+     math output="-log(abs(input))"
+     ''')
+
+## sr-q
+Flow('srq1-1','ldiv1-1',
+     '''
+     window min1=30 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.101/input" |
+     spray o=0.1 n=100 | transp
+     ''' %(math.pi))
+Flow('srq2-1','ldiv2-1',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.201/input" |
+     spray o=0.2 n=200 | transp
+     ''' %(math.pi))
+Flow('srq3-1','ldiv3-1',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.204/input" |
+     spray o=0.4 n=200 | transp
+     ''' %(math.pi))
+Flow('srq4-1','ldiv4-1',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.101/input" |
+     spray o=0.6 n=100 | transp
+     ''' %(math.pi))
+Flow('srq5-1','ldiv5-1',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.201/input" |
+     spray o=0.7 n=301 | transp
+     ''' %(math.pi))
+Flow('srq-1','srq1-1 srq2-1 srq3-1 srq4-1 srq5-1',
+     '''
+     cat axis=1 ${SOURCES[1:5]}|put o1=0.1 d1=0.001
+     ''')
+
+## convert interval Q value to equivalent Q value
+Flow('wteq','teq','window min1=0.1')
+Flow('sreq-1','srq-1','iq2eq')
+
+Result('difsrq-1','tq srq-1 sreq-1 wteq',
+       '''
+       window min1=0.1|cat axis=2 ${SOURCES[1:4]}|
+       graph plotcol=7,5,4,3 dash=3,0,0,3 pad=n screenratio=0.8  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y yreverse=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=150 o1num=0 d1num=50 n1tic=3    
+       ''')
+
+## ----------------------------- SR2 -------------------------------
+## pick spectra
+Flow('f1-2','sp1','window n1=1 f1=90')
+Flow('f2-2','sp2','window n1=1 f1=40')
+Flow('f3-2','sp3','window n1=1 f1=110')
+Flow('f4-2','sp4','window n1=1 f1=100')
+Flow('f5-2','sp5','window n1=1 f1=60')
+Flow('f6-2','sp6','window n1=1 f1=110')
+
+## spectra ratio
+Flow('ldiv1-2','f2-2 f1-2',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+      math output="-log(abs(input))"
+     ''')
+Flow('ldiv2-2','f3-2 f2-2',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+      math output="-log(abs(input))"
+     ''')
+Flow('ldiv3-2','f4-2 f3-2',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+      math output="-log(abs(input))"
+     ''')
+Flow('ldiv4-2','f5-2 f4-2',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+      math output="-log(abs(input))"
+     ''')
+Flow('ldiv5-2','f6-2 f5-2',
+     '''
+     math den=${SOURCES[1]} output="input/den"|window max1=200|
+      math output="-log(abs(input))"
+     ''')
+
+## sr-q
+Flow('srq1-2','ldiv1-2',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.1/input" |
+     spray o=0.1 n=100 | transp
+     ''' %(math.pi))
+Flow('srq2-2','ldiv2-2',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.22/input" |
+     spray o=0.2 n=200 | transp
+     ''' %(math.pi))
+Flow('srq3-2','ldiv3-2',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.19/input" |
+     spray o=0.4 n=200 | transp
+     ''' %(math.pi))
+Flow('srq4-2','ldiv4-2',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.11/input" |
+     spray o=0.6 n=100 | transp
+     ''' %(math.pi))
+Flow('srq5-2','ldiv5-2',
+     '''
+     window min1=40 max1=80 | lineslope |
+     window n1=1 | math output="%g*0.2/input" |
+     spray o=0.7 n=301 | transp
+     ''' %(math.pi))
+Flow('srq-2','srq1-2 srq2-2 srq3-2 srq4-2 srq5-2',
+     '''
+     cat axis=1 ${SOURCES[1:5]}|put o1=0.1 d1=0.001
+     ''')
+
+## convert interval Q value to equivalent Q value
+Flow('sreq-2','srq-2','iq2eq')
+
+Result('difsrq-2','tq srq-2 sreq-2 wteq',
+       '''
+       window min1=0.1|cat axis=2 ${SOURCES[1:4]}|
+       graph plotcol=7,5,4,3 dash=3,0,0,3 pad=n screenratio=0.8  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y yreverse=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=150 o1num=0 d1num=50 n1tic=3    
+       ''')
+
+## ---------------------------- CFS1 -------------------------------
+## centroid frequency
+Flow('zbw zcf zvar2','attf pf',
+     '''          
+     window max2=150 |
+     lcf trange=${SOURCES[1]} avef=${TARGETS[1]} var2=${TARGETS[2]} rect1=1
+     ''')
+Flow('cf1-1','zcf','window n1=1 f1=101')
+Flow('cf2-1','zcf','window n1=1 f1=202')
+Flow('cf3-1','zcf','window n1=1 f1=403')
+Flow('cf4-1','zcf','window n1=1 f1=607')
+Flow('cf5-1','zcf','window n1=1 f1=708')
+Flow('cf6-1','zcf','window n1=1 f1=909')
+Flow('var1-1','zvar2','window n1=1 f1=101')
+Flow('var2-1','zvar2','window n1=1 f1=202')
+Flow('var3-1','zvar2','window n1=1 f1=403')
+Flow('var4-1','zvar2','window n1=1 f1=607')
+Flow('var5-1','zvar2','window n1=1 f1=708')
+Flow('var6-1','zvar2','window n1=1 f1=909')
+
+## cfsq
+Flow('cq1-1','cf2-1 cf1-1 var1-1',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.101*r1/(r-input)"|
+     spray axis=1 n=100 d=0.001 o=0.1
+     '''%(math.pi))
+Flow('cq2-1','cf3-1 cf2-1 var2-1',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.201*r1/(r-input)"|
+     spray axis=1 n=200 d=0.001 o=0.2
+     '''%(math.pi))
+Flow('cq3-1','cf4-1 cf3-1 var3-1',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.202*r1/(r-input)"|
+     spray axis=1 n=200 d=0.001 o=0.4
+     '''%(math.pi))
+Flow('cq4-1','cf5-1 cf4-1 var4-1',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.104*r1/(r-input)"|
+     spray axis=1 n=100 d=0.001 o=0.6
+     '''%(math.pi))
+Flow('cq5-1','cf6-1 cf5-1 var5-1',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.201*r1/(r-input)"|
+     spray axis=1 n=301 d=0.001 o=0.7
+     '''%(math.pi))
+Flow('cfsq-1','cq1-1 cq2-1 cq3-1 cq4-1 cq5-1',
+     '''
+     cat axis=1 ${SOURCES[1:5]}|put o1=0.1 d1=0.001
+     ''')
+
+## convert interval Q value to equivalent Q value
+Flow('cfseq-1','cfsq-2','iq2eq')
+
+Result('difcfsq-1','tq cfsq-1 cfseq-2 wteq',
+       '''
+       window min1=0.1 | cat axis=2 ${SOURCES[1:4]} |
+       graph plotcol=7,5,4,3 dash=3,0,0,3 pad=n screenratio=0.8  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y yreverse=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=150 o1num=0 d1num=50 n1tic=3    
+       ''')
+
+## ---------------------------- CFS2 -------------------------------
+## centroid frequency
+Flow('cf1-2','zcf','window n1=1 f1=100')
+Flow('cf2-2','zcf','window n1=1 f1=200')
+Flow('cf3-2','zcf','window n1=1 f1=400')
+Flow('cf4-2','zcf','window n1=1 f1=600')
+Flow('cf5-2','zcf','window n1=1 f1=700')
+Flow('cf6-2','zcf','window n1=1 f1=900')
+Flow('var1-2','zvar2','window n1=1 f1=100')
+Flow('var2-2','zvar2','window n1=1 f1=200')
+Flow('var3-2','zvar2','window n1=1 f1=400')
+Flow('var4-2','zvar2','window n1=1 f1=600')
+Flow('var5-2','zvar2','window n1=1 f1=700')
+Flow('var6-2','zvar2','window n1=1 f1=900')
+
+## cfsq
+Flow('cq1-2','cf2-2 cf1-2 var1-2',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.1*r1/(r-input)" |
+     spray axis=1 n=100 d=0.001 o=0.1
+     '''%(math.pi))
+Flow('cq2-2','cf3-2 cf2-2 var2-2',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.2*r1/(r-input)" |
+     spray axis=1 n=200 d=0.001 o=0.2
+     '''%(math.pi))
+Flow('cq3-2','cf4-2 cf3-2 var3-2',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.2*r1/(r-input)" |
+     spray axis=1 n=200 d=0.001 o=0.4
+     '''%(math.pi))
+Flow('cq4-2','cf5-2 cf4-2 var4-2',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.1*r1/(r-input)" |
+     spray axis=1 n=100 d=0.001 o=0.6
+     '''%(math.pi))
+Flow('cq5-2','cf6-2 cf5-2 var5-2',
+     ''' 
+     math r=${SOURCES[1]} r1=${SOURCES[2]} output="%g*0.2*r1/(r-input)" |
+     spray axis=1 n=301 d=0.001 o=0.7
+     '''%(math.pi))
+Flow('cfsq-2','cq1-2 cq2-2 cq3-2 cq4-2 cq5-2',
+     '''
+     cat axis=1 ${SOURCES[1:5]}|put o1=0.1 d1=0.001
+     ''')
+
+## convert interval Q value to equivalent Q value
+Flow('cfseq-2','cfsq-2','iq2eq')
+
+Result('difcfsq-2','tq cfsq-2 cfseq-2 wteq',
+       '''
+       window min1=0.1|cat axis=2 ${SOURCES[1:4]}|
+       graph plotcol=7,5,4,3 dash=3,0,0,3 pad=n screenratio=0.8  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y yreverse=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=150 o1num=0 d1num=50 n1tic=3    
+       ''')
+
+End()

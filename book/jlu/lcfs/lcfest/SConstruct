@@ -1,0 +1,166 @@
+from rsf.proj import *
+from math import *
+import math
+
+## -------------------------- model -----------------------------
+nf6=600
+nt6=1001
+dt6=0.001
+nlevel6=0
+ot=0
+
+## random reflectivity
+Flow('ref',None,
+     '''
+     math n1=%d d1=%g o1=%g output=0 | noise seed=22012 var=1 
+     ''' % (nt6,dt6,ot))
+Result('ref',
+       '''
+       graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude label1=Time 
+       unit1=s crowd2=0.3 wanttitle=n plotfat=4 labelfat=3 plotcol=7 font=2
+       axisfat=3 parallel2=n 
+       ''')
+
+## synthetic data
+Flow('rfreq','ref','math output="100-75*x1*x1"')
+Flow('phase','ref','math output=0')
+Flow('sig','ref rfreq phase',
+     '''
+     ricker2 tfreq=${SOURCES[1]} tphase=${SOURCES[2]} norm=n hiborder=100  | 
+     noise seed=32012 var=%g | agc rect1=100 
+     ''' % nlevel6)
+Result('sig',
+       '''
+       graph pad=n screenratio=0.8 crowd1=0.75 label2=Amplitude label1=Time 
+       unit1=s crowd2=0.3 wanttitle=n plotfat=4 labelfat=3 plotcol=7 font=2
+       axisfat=3 parallel2=n 
+       ''')
+
+## theoretical time-frequency spectra
+Flow('rickers',None,
+     '''
+     math n1=1001 n2=1001 o1=0 o2=0 d1=0.001 d2=0.001 
+     output="(1-2*(%g*(100-75*x2*x2)*(x1-0.5))*(%g*(100-75*x2*x2)*(x1-0.5)))
+     *exp(-(%g*(100-75*x2*x2)*(x1-0.5))*(%g*(100-75*x2*x2)*(x1-0.5)))" |
+     scale axis=1 
+     ''' %(math.pi,math.pi,math.pi,math.pi) )
+Flow('spec-r','rickers','spectra')
+Plot('spec-r',
+     '''
+     scale axis=1 |window max1=250 |
+     grey wanttitle=n color=j screenratio=0.8 scalebar=n bartype=v
+     barwidth=0.2 crowd2=0.75  crowd1=0.3 wherexlabel=t allpos=y transp=n
+     label2=Time unit2=s label1=Frequency unit1=Hz n1tic=20 grid=n g1num=50
+     labelfat=3 font=2 parallel2=n n2tic=20
+     ''')
+
+## theoretical centroid frequency
+Flow('num-r','spec-r',' math output="input*x1" | stack axis=1 norm=n')
+Flow('den-r','spec-r','math output="input" |  stack axis=1  norm=n')
+Flow('lcf-r3',None,
+     '''
+     math n1=1001 o1=0 d1=0.001 output="2*(100-75*x1*x1)/sqrt(%g)"
+     ''' %(math.pi))
+
+Plot('lcf-r3',
+     '''
+     graph max2=250 min2=0 pad=n screenratio=0.8 crowd1=0.3 grid=n
+     crowd2=0.75 wanttitle=n yreverse=y transp=y wherexlabel=t dash=0
+     label2="" label1=Time unit1=s unit2= g1num=50 plotcol=7 plotfat=4
+     labelfat=3 font=2 parallel2=n  n2tic=20
+     ''')
+Result('fpp','spec-r lcf-r3','Overlay')
+
+## -------------------------- S transform -----------------------------
+Flow('sigst','sig','st')
+Result('sigst',
+       '''
+       math output="abs(input)" | real| scale axis=2 | window max2=250 |
+       grey wanttitle=n color=j screenratio=0.8 scalebar=n bartype=v
+       barwidth=0.2 crowd2=0.75  crowd1=0.3 wherexlabel=t allpos=y 
+       label1=Time unit1=s label2=Frequency unit2=Hz n1tic=20 grid=n g1num=50
+       labelfat=3 font=2 parallel2=n n2tic=20
+       ''')
+Flow('st_bw st_cf st_var2','sigst',
+     '''
+     lcf rect1=50 avef=${TARGETS[1]} var2=${TARGETS[2]}
+     ''')
+Plot('st_cf',
+     '''
+     graph max2=250 min2=0 pad=n screenratio=0.8 crowd1=0.3 grid=n
+     crowd2=0.75 wanttitle=n yreverse=y transp=y wherexlabel=t dash=0
+     label2="" label1=Time unit1=s unit2= g1num=50 plotcol=3 plotfat=6     
+     ''')
+
+## -------------------------- LTFT -----------------------------
+Flow('sigltft','sig','ltft rect=10')
+Result('sigltft',
+       '''
+       math output="abs(input)" | real|scale axis=2 |window max2=250 |
+       grey wanttitle=n color=j screenratio=0.8 scalebar=n bartype=v
+       barwidth=0.2 crowd2=0.75  crowd1=0.3 wherexlabel=t allpos=y 
+       label1=Time unit1=s label2=Frequency unit2=Hz n1tic=20 n2tic=20
+       labelfat=3 font=2 parallel2=n grid=n g1num=100
+       ''')
+
+Flow('ltft_bw ltft_cf ltft_var2','sigltft',
+     '''
+     lcf rect1=50 avef=${TARGETS[1]} var2=${TARGETS[2]}
+     ''')
+
+Plot('ltft_cf',
+     '''
+     graph max2=250 min2=0 pad=n screenratio=0.8 crowd1=0.3 grid=n
+     crowd2=0.75 wanttitle=n yreverse=y transp=y wherexlabel=t dash=0
+     label2="" label1=Time unit1=s unit2= g1num=50 plotcol=6 plotfat=6     
+     ''')
+
+Result('difcf','lcf-r3 st_cf ltft_cf',
+       '''
+       cat axis=2 ${SOURCES[1:3]}  |
+       graph plotcol=7,5,6,3 dash=0,0,0,1 plotfat=4
+       max2=200 min2=0 pad=n screenratio=0.8 crowd1=0.75 grid=n
+       crowd2=0.3 wanttitle=n yreverse=n transp=n wherexlabel=b
+       label2="Frequency" label1=Time unit1=s unit2=Hz g1num=50 parallel2=n
+       ''')
+
+## Amplitude spectra of the Ricker wavelet and the Gaussian spectra
+## ------------------------ ricker wavelet --------------------------
+Flow('spik0',None,
+     '''
+     spike n1=1001 d1=0.001 o1=0 n2=1 nsp=1 mag=1 k1=200
+     ''' )
+Flow('ric','spik0','ricker1 frequency=50')
+Flow('ricft','ric','fft1|math output="abs(input)" | real')
+
+## --------------------- Gaussian spectra ------------------------
+## cf 
+Flow('den','ricft','stack axis=1 norm=n')
+Flow('num','ricft','math output="input*x1"|stack axis=1 norm=n')
+Flow('fc','num den','math r=${SOURCES[1]} output="input/r"')
+Flow('fcc','fc','spray axis=1 n=513 d=0.976562 o=0.')
+Flow('numvar','ricft fcc',
+     '''
+     math r=${SOURCES[1]} output="input*(x1-r)*(x1-r)"| stack axis=1 norm=n  
+     ''')
+Flow('var2','numvar den','math r=${SOURCES[1]} output="input/r"')
+Flow('vvar','var2','spray axis=1 n=513 d=0.976562 o=0.')
+
+## Gaussian spectra
+Flow('gau','ricft fcc vvar',
+     '''
+     math r1=${SOURCES[1]} r2=${SOURCES[2]} 
+     output="exp(-(x1-r1)*(x1-r1)/(2*r2))"
+     ''')
+
+Result('gau-ric','ricft gau',
+       '''
+       cat axis=2 ${SOURCES[1:2]}  |
+       graph plotcol=7,7 dash=0,3 pad=n yreverse=n min2=0 max2=1
+       label2=Amplitude unit2= label1=Frequency unit1=Hz wanttitle=n
+       g2num=50 plotfat=4 font=2 parallel2=n labelfat=3 max1=200
+       n2tic=20 wherexlabel=b crowd2=0.55 crowd1=0.45 
+       ''')
+
+
+End()

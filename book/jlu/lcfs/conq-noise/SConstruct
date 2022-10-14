@@ -1,0 +1,220 @@
+from rsf.proj import *
+from math import *
+import math
+
+## --------------------- noise data1 -----------------------
+## synthetic data
+Flow('asignal',None,
+     ''' 
+     modtraceq n1=1001 d1=0.001 o1=0. nc=6 fm=50
+     at=100,200,400,600,700,900 q=99999,60,60,60,60,60|
+     noise var=0.05 seed=1800
+     ''')
+Result('asignal',
+       '''
+       graph pad=n screenratio=0.8 crowd1=0.3 crowd2=0.75 
+       label2=Amplitude unit2= label1=Time unit1=s title= 
+       yreverse=y transp=y wherexlabel=t parallel2=n n2tic=20
+       labelfat=3 plotfat=4 plotcol=7 font=2 axisfat=3 
+       ''')
+
+## --------------------- estimate Q using LTFT -----------------------
+## LTFT
+Flow('attf','asignal','ltft rect=10')
+Flow('mattf','attf','math output="abs(input)" |real|window min1=0.')
+Plot('mattf',
+     '''
+     scale axis=2|     
+     grey wanttitle=n max2=150 min2=0 color=j screenratio=0.8 scalebar=n
+     barwidth=0.2 crowd1=0.3 crowd2=0.75 wherexlabel=t allpos=y clip=0.8
+     n1tic=20 grid=y g1num=50 label2="Frequency" label1="Time" unit1=s
+     labelfat=3 font=2 axisfat=3 parallel2=n n2tic=20
+     ''')
+
+## determining bandwidth using peak frequency
+dw = 0.976562    ## need to be modified
+Flow('pf','mattf',
+     '''
+     transp|findmax1 verb=n|dd type=float|
+     math output="(input-1)*%g*2.5"|clip clip=110|smooth rect1=1
+     ''' % dw)
+
+## local centroid frequency
+Flow('bw cf var2','attf pf',
+     '''          
+     window max2=150 |
+     lcf trange=${SOURCES[1]} avef=${TARGETS[1]} var2=${TARGETS[2]} rect1=65
+     ''')
+Plot('cf',
+       '''
+       graph max2=150 min2=0 pad=n screenratio=0.8 crowd1=0.3
+       crowd2=0.75 wanttitle=n yreverse=y transp=y wherexlabel=t dash=0
+       label2="" unit2="" g1num=50 plotfat=6 grid=n
+       labelfat=0 plotcol=7 font=2 parallel2=n n2tic=20
+       ''')
+Result('fp',' mattf cf','Overlay')
+
+## equivalent Q value
+Flow('repos',None,'math n1=1 o1=0. d1=1 output="100"|dd type=int')
+Flow('qts','cf var2 repos',
+     ''' 
+     lcfseq var2=${SOURCES[1]} repos=${SOURCES[2]}
+     ''')
+
+## theoretical Q-value
+Flow('tq teq',None,
+     ''' 
+     theoreqiq teq=${TARGETS[1]} n1=1001 d1=0.001 o1=0. nc=6 
+     at=100,200,400,600,700,900 q=99999,60,60,60,60,60|
+     dd type=float
+     ''')
+
+## Q estimation using the LCFS method and theoretical Q
+Result('qq','tq qts',
+       '''
+       cat axis=2 ${SOURCES[1:2]}  |
+       graph plotcol=7,5 dash=3,0 pad=n screenratio=0.8 yreverse=y  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=100 o1num=0 d1num=50 n1tic=3
+       ''')
+
+## --------------------- noise data2 -----------------------
+## synthetic data
+Flow('asignal1',None,
+     ''' 
+     modtraceq n1=1001 d1=0.001 o1=0. nc=6 fm=50
+     at=100,200,400,600,700,900 q=99999,60,60,60,60,60|
+     noise var=0.4 seed=1800
+     ''')
+Result('asignal1',
+       '''
+       graph pad=n screenratio=0.8 crowd1=0.3 crowd2=0.75 
+       label2=Amplitude unit2= label1=Time unit1=s title= 
+       yreverse=y transp=y wherexlabel=t parallel2=n n2tic=20
+       labelfat=3 plotfat=4 plotcol=7 font=2 axisfat=3 
+       ''')
+
+## LTFT
+Flow('attf1','asignal1','ltft rect=10')
+Flow('mattf1','attf1','math output="abs(input)" |real|window min1=0.')
+Plot('mattf1',
+     '''
+     scale axis=2|     
+     grey wanttitle=n max2=150 min2=0 color=j screenratio=0.8 scalebar=n
+     barwidth=0.2 crowd1=0.3 crowd2=0.75 wherexlabel=t allpos=y clip=0.8
+     n1tic=20 grid=y g1num=50 label2="Frequency" label1="Time" unit1=s
+     labelfat=3 font=2 axisfat=3 parallel2=n n2tic=20
+     ''')
+
+## determine bandwidth using peak frequency
+dw1 = 0.976562    ## need to be modified
+Flow('pf1','mattf1',
+     '''
+     transp|findmax1 verb=n|dd type=float|
+     math output="(input-1)*%g*2.5"|clip clip=110|smooth rect1=1
+     ''' % dw1)
+
+## local centroid frequency
+Flow('bw1 cf1 var21','attf1 pf1',
+     '''          
+     window max2=150 |
+     lcf trange=${SOURCES[1]} avef=${TARGETS[1]} var2=${TARGETS[2]} rect1=65
+     ''')
+Plot('cf1',
+       '''
+       graph max2=150 min2=0 pad=n screenratio=0.8 crowd1=0.3
+       crowd2=0.75 wanttitle=n yreverse=y transp=y wherexlabel=t dash=0
+       label2="" unit2="" g1num=50 plotfat=6 grid=n
+       labelfat=0 plotcol=7 font=2 parallel2=n n2tic=20
+       ''')
+Result('fp1',' mattf1 cf1','Overlay')
+
+## equivalent Q value
+Flow('qts1','cf1 var21 repos',
+     ''' 
+     lcfseq var2=${SOURCES[1]} repos=${SOURCES[2]}
+     ''')
+
+## Q estimation using the LCFS method and theoretical Q
+Result('qq1','tq qts1',
+       '''
+       cat axis=2 ${SOURCES[1:2]}  |
+       graph plotcol=7,5 dash=3,0 pad=n screenratio=0.8 yreverse=y  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=100 o1num=0 d1num=50 n1tic=3
+       ''')
+
+## --------------------- noise data3 -----------------------
+## synthetic data
+Flow('asignal2',None,
+     ''' 
+     modtraceq n1=1001 d1=0.001 o1=0. nc=6 fm=50
+     at=100,200,400,600,700,900 q=99999,60,60,60,60,60|
+     noise var=2.5 seed=1800
+     ''')
+Result('asignal2',
+       '''
+       graph pad=n screenratio=0.8 crowd1=0.3 crowd2=0.75 
+       label2=Amplitude unit2= label1=Time unit1=s title= 
+       yreverse=y transp=y wherexlabel=t parallel2=n n2tic=20
+       labelfat=3 plotfat=4 plotcol=7 font=2 axisfat=3 
+       ''')
+
+## --------------------- estimate Q using LTFT -----------------------
+## LTFT
+Flow('attf2','asignal2','ltft rect=11')
+Flow('mattf2','attf2','math output="abs(input)" |real|window min1=0.')
+Plot('mattf2',
+     '''
+     scale axis=2|     
+     grey wanttitle=n max2=150 min2=0 color=j screenratio=0.8 scalebar=n
+     barwidth=0.2 crowd1=0.3 crowd2=0.75 wherexlabel=t allpos=y clip=0.8
+     n1tic=20 grid=y g1num=50 label2="Frequency" label1="Time" unit1=s
+     labelfat=3 font=2 axisfat=3 parallel2=n n2tic=20
+     ''')
+
+## determine bandwidth using peak frequency
+dw = 0.976562    ## need to be modified
+Flow('pf2','mattf2',
+     '''
+     transp|findmax1 verb=n|dd type=float|
+     math output="(input-1)*%g*2.5"|clip clip=110|smooth rect1=1
+     ''' % dw)
+
+## local centroid frequency
+Flow('bw2 cf2 var22','attf2 pf2',
+     '''          
+     window max2=150 |
+     lcf trange=${SOURCES[1]} avef=${TARGETS[1]} var2=${TARGETS[2]} rect1=70
+     ''')
+Plot('cf2',
+       '''
+       graph max2=150 min2=0 pad=n screenratio=0.8 crowd1=0.3
+       crowd2=0.75 wanttitle=n yreverse=y transp=y wherexlabel=t dash=0
+       label2="" unit2="" g1num=50 plotfat=6 grid=n
+       labelfat=0 plotcol=7 font=2 parallel2=n n2tic=20
+       ''')
+Result('fp2',' mattf2 cf2','Overlay')
+
+## equivalent Q value
+Flow('qts2','cf2 var22 repos',
+     ''' 
+     lcfseq var2=${SOURCES[1]} repos=${SOURCES[2]}
+     ''')
+
+## Q estimation using the LCFS method and theoretical Q
+Result('qq2','tq qts2',
+       '''
+       cat axis=2 ${SOURCES[1:2]}  |
+       graph plotcol=7,5 dash=3,0 pad=n screenratio=0.8 yreverse=y  
+       crowd1=0.3 crowd2=0.75 wanttitle=n transp=y
+       label2=Q unit2= label1=Time unit1=s 
+       wherexlabel=t plotfat=4 font=2 parallel2=n labelfat=3 
+       n2tic=20 min1=0.1 min2=0 max2=100 o1num=0 d1num=50 n1tic=3
+       ''')
+
+End()

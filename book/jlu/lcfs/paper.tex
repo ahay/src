@@ -1,0 +1,701 @@
+\published{Applied Geophysics, 17, 844-856, (2020)}
+
+\title{Continuous time-varying Q-factor estimation method in the
+  time-frequency domain}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+{}
+    
+\address{
+College of Geo-explorqation Science and Technology,\\
+Jilin University \\
+No.938 Xi minzhu street \\
+Changchun, China, 130026}
+
+\author{Qinghan Wang, Yang Liu, Cai Liu, and Zhisheng Zheng}
+
+\maketitle
+
+\begin{abstract}
+  The Q-factor is an important physical parameter for characterizing
+  the absorption and attenuation of seismic waves propagating in
+  underground media, which is of great significance for improving the
+  resolution of seismic data, oil and gas detection, and reservoir
+  description. In this paper, the local centroid frequency is defined
+  using shaping regularization and used to estimate the Q values of
+  the formation. We propose a continuous time-varying Q-estimation
+  method in the time-frequency domain according to the local centroid
+  frequency, namely, the local centroid frequency shift (LCFS)
+  method. This method can reasonably reduce the calculation error
+  caused by the low accuracy of the time picking of the target
+  formation in the traditional methods. The theoretical and real
+  seismic data processing results show that the time-varying Q values
+  can be accurately estimated using the LCFS method. Compared with the
+  traditional Q-estimation methods, this method does not need to
+  extract the top and bottom interfaces of the target formation; it
+  can also obtain relatively reasonable Q values when there is no
+  effective frequency spectrum information. Simultaneously, a
+  reasonable inverse Q filtering result can be obtained using the
+  continuous time-varying Q values.
+\end{abstract}
+
+\section{Introduction}
+The viscoelasticity and heterogeneity of subsurface media result in
+amplitude attenuation and phase distortion of seismic waves
+propagating in the media, considerably reducing the seismic data
+resolution. The study of the absorption and attenuation
+characteristics of underground media is of great significance to the
+inversion of geophysical properties and the distribution analysis of
+oil and gas reservoirs. The Q-factor is an important parameter for
+describing the above characteristics that reflect the formation
+structure and the comprehensive effect of fluid properties such as
+saturation, porosity , and permeability \cite[]{Winkler82}. The
+Q-estimation methods are implemented in the time domain, frequency
+domain, or time-frequency domain.
+
+The time-domain methods mainly include the amplitude decay method, the
+rise-time method \cite[]{Kjartansson79}, the wavelet modeling method
+\cite[]{Jannsen85}, and the analytic signal method
+\cite[]{Engelhard96}. The signal-to-noise ratio of acquired seismic
+data is low and the amplitude information is unreliable because of the
+influence of several environmental factors and complex medium
+structure. Thus, the accuracy and stability of Q values estimated in
+the time domain often cannot meet actual production
+requirements. Frequency information is relatively less affected by
+noise and data amplitude, so its stability is generally better than
+that of the time-domain method \cite[]{Gong09, Yan01}. The frequency
+domain methods include the spectral ratio (SR) method \cite[]{Bath74},
+the matching method \cite[]{Raikes84}, the spectral modeling method
+\cite[]{Jannsen85}, etc. The SR method is a widely used method with
+high accuracy in estimating the Q values without noise; however, it is
+greatly affected by the selected spectral bandwidth and noise
+\cite[]{Tonn91}. Considering these factors, some scholars improved the
+SR method. \cite{Wang15a} calculated the Q values using the
+logarithmic spectral area difference (LSAD) method, and \cite{Liu18}
+introduced frequency-based linear fitting in the SR
+method. \cite{Quan97} proposed the centroid frequency shift (CFS)
+method based on the fact that the centroid frequency experiences a
+downshift when seismic waves propagate in viscoelastic media. This
+method deduces the relationship between the Q-factor and the centroid
+frequency when the amplitude spectrum shape is Gaussian, rectangular,
+or triangular. However, these are different from the shape of the
+actual seismic amplitude spectrum, so the CFS method may produce
+systematic errors. Some scholars analyzed and improved the CFS method,
+such as the Q-estimation method based on the combinations of
+statistical frequency attributes \cite[]{Zhao13} and the Q-value
+inversion using the centroid frequency of the energy spectrum
+\cite[]{Wang15b}. Both techniques avoid the assumption of the
+amplitude spectrum of seismic wavelets. \cite{Zhang02} proposed the
+peak frequency shift (PFS) method to estimate the Q values of common
+midpoint (CMP) gathers, and \cite{Gao07} used this method to estimate
+the Q values of vertical seismic profiling (VSP) data. \cite{Li15a}
+fitted the amplitude spectrum using the frequency-weighted-exponential
+function and derived a formula for estimating the Q value. \cite{Hu13}
+established the relationship between the centroid and peak frequencies
+under the assumption of the Ricker wavelet and proposed an improved
+frequency shift (IFS) method.  \cite{Li15b} estimated the Q values
+using the dominant and centroid frequencies. These frequency-domain
+methods must use the Fourier transform to calculate the frequency
+spectrum of the seismic signal in the selected time window. However,
+the actual seismic reflection data interfere with each other, causing
+some difficulties in selecting the appropriate type and length of the
+time window function. Furthermore, the frequency spectrum obtained
+using the Fourier transform reflects the average eff ect of a certain
+frequency component, reducing calculation accuracy of the Q-factors.
+
+Several scholars calculate the Q values in the timefrequency domain to
+avoid selecting time windows and reduce the influence of spectral
+interference between adjacent seismic refl ection
+waves. \cite{Reine09} compared the Q-factors estimated using the SR
+method in four different time-frequency transform domains and
+concluded that the time-frequency transform with the variable window
+could achieve more accurate and stable calculation results.
+\cite{Wang04} transformed poststack seismic data from the time domain
+to the time-frequency domain using the Gabor transform and then
+calculated the Q values according to the one-dimensional function of
+the product of frequency and time. \cite{Lupinacci15} estimated the
+Q-factors of the poststack seismic section in the Gabor transform
+domain using three different methods.  \cite{An15} used the energy
+density ration method to estimate the Q values of CMP gathers based on
+an improved S-transform. \cite{Hao16} derived the Q-estimation formula
+of the SR method in the generalized S-transform domain.  \cite{Liu11}
+improved the division operation of the SR method using shaping
+regularization and proposed a stable Q-estimation method based on the
+S-transform. Both \cite{Liu16a} and \cite{Liu16b} estimated the
+Q-factors based on the local time-frequency transform
+(LTFT). \cite{Wu18} proposed a continuous spectral ratio slope method
+based on the generalized S-transform to avoid the extraction of target
+layers. Because the time-frequency transform can characterize the
+local attributes of the seismic data, this paper develops a continuous
+time-varying Q-estimation method in the time-frequency domain. The
+LTFT is an adaptive time-frequency transform proposed by \cite{Liu13},
+based on the Fourier transform and solves the underdetermined problem
+of the least-squares solution of the adaptive Fourier series through
+shaping regularization \cite[]{Fomel07b}. LTFT can adjust the
+frequency range and frequency sampling interval while providing
+variable resolution in the time direction.
+
+When estimating the Q value in the frequency domain, accurately
+extracting the instantaneous spectrum of the target layer’s top and
+bottom interfaces is necessary. However, this is often difficult to
+achieve in actual data processing. This paper proposes a continuous
+time-varying Q-estimation method in the time-frequency domain based on
+the local centroid frequency to avoid picking up the target layer. The
+local centroid frequency is obtained by solving the inversion problem
+of the centroid frequency in the time-frequency domain within the
+constraint of the shaping regularization condition
+\cite[]{Fomel07b}. This frequency is not calculated according to the
+instantaneous spectrum information at a specific moment but by
+adjusting the smoothing parameter to use the spectrum information
+around the moment.  Therefore, we can get a relatively stable local
+centroid frequency at times without effective spectrum information. In
+this paper, the local centroid frequency and CFS method are combined
+to calculate the timevarying equivalent Q-factors and the time-varying
+interval Q-factors. Furthermore, we implement inverse Q filtering
+processing \cite[]{Wang02, Wang06} using the continuous time-varying
+equivalent Q-factors.
+
+\section{Theory}
+
+\subsection{Local centroid frequency}
+
+The centroid frequency $f_c$ with respect to the amplitude spectrum $F(f)$
+can be defined as \cite[]{Quan97}
+\begin{equation}
+  \label{eq:1}
+  f_c=\frac{\int_{0}^{\infty} fF(f)df}{\int_{0}^{\infty} F(f)df},
+\end{equation}
+where $F(f)$ is the Fourier amplitude spectrum of the signal, and the
+centroid frequency $f_c$ represents the first moment along the frequency
+direction of the amplitude spectrum.
+
+The variance $\sigma_c^2$ of the centroid frequency can be defined as
+\begin{equation}
+  \label{eq:2}
+  \sigma_c^2=\frac{\int_{0}^{\infty} (f-f_c)^2F(f)df}{\int_{0}^{\infty} F(f)df},
+\end{equation}
+
+The time-frequency spectrum $B(f,t)$ replaces the Fourier amplitude spectrum
+$F(f)$ in equations~\ref{eq:1} and equations~\ref{eq:2}, and the
+instantaneous centroid frequency $f_c(t)$ and instantaneous variance
+$\sigma_c^2(t)$ of the amplitude spectrum are defined as
+\begin{equation}
+  \label{eq:3}
+  f_c(t)=\frac{\int_{0}^{\infty} fB(f,t)df}{\int_{0}^{\infty} B(f,t)df},
+\end{equation}
+\begin{equation}
+  \label{eq:4}
+  \sigma_c^2(t)=\frac{\int_{0}^{\infty} (f-f_c(t))^2B(f,t)df}
+        {\int_{0}^{\infty} B(f,t)df}.
+\end{equation}
+
+The above equations show that the instantaneous centroid frequency and
+variance are calculated instantaneously using the amplitude spectrum
+information at a specific time. However, at times without effective
+spectrum information, reasonable results cannot be obtained using this
+calculation method.
+
+\cite{Fomel07a} defined the local attributes of the seismic signals
+such as local frequency and local similarity using shaping
+regularization. In this paper, we use a similar method to define the
+local centroid frequency and local variance. Equation~\ref{eq:3} shows
+that the instantaneous centroid frequency is a division regarding two
+integrals and can be expressed in linear algebraic notation as
+\begin{equation}
+  \label{eq:5}
+  \mathbf{f}=\mathbf{L}^{-1}\mathbf{n},
+\end{equation}
+where 
+$\mathbf{n}=[\int_{0}^{\infty}fB(f,t_0)df \cdots \int_{0}^{\infty}fB(f,t_n)df]^T$
+represents the vector of the numerator in equation~\ref{eq:3}, $\mathbf{f}$
+represents the vector of the instantaneous centroid frequency $f_c(t)$, and
+$\mathbf{L}=\begin{bmatrix}\int_{0}^{\infty}B(f,t_0)df & 0 & \cdots & 0 \\ 0 & \int_{0}^{\infty}B(f,t_1)df & \cdots & 0 \\ \vdots & \vdots & \ddots & \vdots \\ 0 & \cdots & 0 \int_{0}^{\infty}B(f,t_n)df \end{bmatrix}$
+is a diagonal matrix composed of the denominators in equation~\ref{eq:3}.
+Equation~\ref{eq:5} can be regarded as an inversion problem. We use the
+least-squares criterion to calculate $\mathbf{f}$ to meet the objective 
+function $\min\parallel{\mathbf{n}-\mathbf{L}\mathbf{f}}\parallel_2^2$, where
+$\parallel \cdot \parallel_2^2$ represents the $l_2$ norm. The
+regularization condition is added to constrain the inversion problem to
+satisfy the local property. For example, the traditional Tikhonov
+regularization constrains the model $\mathbf{f}$ to satisfy the local
+smoothness, and the objective function becomes
+\begin{equation}
+  \label{eq:6}
+  \begin{cases}
+    \mathbf{L}\mathbf{f}=\mathbf{n} \\
+    \varepsilon\mathbf{D}\mathbf{f}\approx0
+  \end{cases},
+\end{equation}
+where $\varepsilon$ controls the weight of the regularization term and
+$\mathbf{D}$ is the Tikhonov regularization operator. In this case, the
+least-squares solution of the objective function under the regularization
+constraint is the local centroid frequency
+\begin{equation}
+  \label{eq:7}
+  \mathbf{f}_{loc}=(\mathbf{L}^{T}\mathbf{L}+\varepsilon^2\mathbf{D}^{T}
+    \mathbf{D})^{-1}\mathbf{L}^{T}\mathbf{n}.
+\end{equation}
+
+The theory of shaping regularization comes from data smoothing. It has
+fewer parameters and a faster convergence speed than the traditional
+Tikhonov regularization method. When considering shaping
+regularization, the shaping operator $\mathbf{S}$ can be defined as
+\begin{equation}
+  \label{eq:8}
+  \mathbf{S}=(\mathbf{I}+\varepsilon^2\mathbf{D}^{T}\mathbf{D})^{-1},
+\end{equation}
+and,
+\begin{equation}
+  \label{eq:9}
+  \varepsilon^2\mathbf{D}^{T}\mathbf{D}=\mathbf{S}^{-1}\mathbf{I}.
+\end{equation}
+
+The least-squares solution under the shaping regularization constraint can
+be obtained by substituting the above equation into equation~\ref{eq:7}
+\begin{equation}
+  \label{eq:10}
+  \mathbf{f}_{loc}=(\mathbf{L}^{T}\mathbf{L}+\mathbf{S}^{-1}-\mathbf{I})^{-1}
+  \mathbf{L}^{T}\mathbf{n}
+  =[\mathbf{I}+\mathbf{S}(\mathbf{L}^{T}\mathbf{L}-\mathbf{I})]^{-1}\mathbf{S}
+  \mathbf{L}^{T}\mathbf{n},
+\end{equation}
+when the iterative algorithm is used to solve the above problem, the scale
+parameter $\lambda$ can be introduced to improve the convergence speed and
+preserve physical dimensionality. Usually, $\lambda$ is chosen as the
+least-squares norm of $\mathbf{L}$ \cite[]{Fomel07a}, and the local centroid
+frequency $\mathbf{f}_{loc}$ is
+\begin{equation}
+  \label{eq:11}
+  \mathbf{f}_{loc}=[\lambda^2\mathbf{I}+\mathbf{S}(\mathbf{L}^{T}\mathbf{L}-
+    \lambda^2\mathbf{I})]^{-1}\mathbf{S}\mathbf{L}^{T}\mathbf{n}.
+\end{equation}
+
+Similarly, the local variance $\mathbf{\sigma}_{loc}^2$ can be
+calculated using the above method. When calculating the local centroid
+frequency, only one smoothing parameter is needed to control the
+locality and smoothness of the local centroid frequency. The local
+centroid frequency is not calculated instantaneously using the
+information at a specific time or calculated globally in a time window
+but is calculated locally using the information around the time. Thus,
+a relatively reasonable local centroid frequency can be continuously
+and smoothly calculated at the time of missing information (such as
+when the amplitude spectrum is zero). In this paper, we use the local
+centroid frequency to estimate the continuous time-varying Q values of
+the formation.
+
+\subsection{Local centroid frequency shift (LCFS) method}
+
+Seismic waves propagating in underground media experience amplitude
+attenuation and phase distortion. High-frequency components attenuate faster
+than low-frequency components, so the centroid frequency of the amplitude
+spectrum experiences a downshift in the propagation process. \cite{Quan97}
+proposed the CFS method according to the above phenomenon.
+
+When considering seismic wave propagation in the viscoelastic medium, the
+amplitude spectrum of seismic waves with different travel times can be
+approximately expressed as \cite[]{Zhang02}
+\begin{equation}
+  \label{eq:12}
+  B(f,t)=A(t)B(f,t_0)\exp(-\frac{\pi f \Delta t}{Q}),
+\end{equation}
+where Q is the quality factor, $\Delta t=t-t_0$ is the travel time difference
+, $A(t)$ is a frequency-independent factor (including spherical diffusion,
+transmission loss, etc.), $B(f,t_0)$ is the seismic amplitude spectrum at
+time $t_0$, and $B(f,t)$ is the amplitude spectrum at travel time $t$.
+
+The CFS method assumes that the amplitude spectrum of the source wavelet
+satisfies the Gaussian distribution and can be expressed as
+\begin{equation}
+  \label{eq:13}
+  B(f,t_0)=\exp(-\frac{(f-f_c(t_0))^2}{2\sigma_c^2(t_0)}),
+\end{equation}
+where $f_c(t_0)$ and $\sigma_c^2(t_0)$ represent the instantaneous centroid
+frequency and instantaneous variance of the amplitude spectrum at time $t_0$,
+respectively. The timevarying Q-factors estimated using the CFS method can
+be obtained from equations~\ref{eq:3}, ~\ref{eq:4}, and ~\ref{eq:12}:
+\begin{equation}
+  \label{eq:14}
+  Q(t)=\frac{\pi\sigma_c^2(t_0)(t-t_0)}{f_c(t_0)-f_c(t)}.
+\end{equation}
+
+By replacing the instantaneous centroid frequency and instantaneous variance
+in equation~\ref{eq:14} with the local centroid frequency and local variance,
+the time-varying Q-estimation equation can be rewritten as
+\begin{equation}
+  \label{eq:15}
+  Q_{loc}(t)=\frac{\pi\sigma_{loc}^2(t_0)(t-t_0)}{f_{loc}(t_0)-f_{loc}(t)}.
+\end{equation}
+where $f_{loc}(t_0)$ and $\sigma_{loc}^2(t_0)$ represent the local centroid
+frequency and local variance of the amplitude spectrum at time $t_0$,
+respectively, and $f_{loc}(t)$ is the local centroid frequency of the
+amplitude spectrum at time $t$. The above method of estimating the Q
+values using the local centroid frequency is called the LCFS. It can be seen
+from the equation that this method must estimate the Q value in the
+time-frequency domain.
+
+The CFS method assumes that the amplitude spectrum of the source
+wavelet is Gaussian spectrum and that the variance of the amplitude
+spectrum does not change with the attenuation effect. However, the
+amplitude spectrum of the actual seismic wave usually does not satisfy
+the Gaussian distribution. The absorption and attenuation effect would
+make the variance smaller and the bandwidth narrower, so the CFS
+method would produce the systematic error proportional to the travel
+time difference $\Delta t$. When the travel time difference of the two
+reflected waves is small, the variances of the two waves are
+approximately equal. Thus, this paper improves the Q-estimation
+accuracy by reducing the travel time difference. Assuming that each
+time sampling point corresponds to a stratum interface, the above
+equation can be used to calculate the interval Q-factors between every
+two adjacent time sampling points. Then, the interval Q-factors can be
+used to further estimate the equivalent Q-factors between the
+reference and the target layers. The amplitude spectrum of layer $n$
+can be expressed as \cite[]{Zhang02}
+\begin{equation}
+  \label{eq:16}
+  B(f,t_n)=A(t_n)B(f,t_0)\exp(-\pi f\sum_{i=1}^n\frac{\Delta t_i}{Q_i}),
+  i=1,2,\cdots,n ,
+\end{equation}
+where $\Delta t_i=t_i-t_{i-1}$ and $Q_i$ are the travel time and quality
+factor in layer $i$, respectively.
+
+The above equation can be expressed by the equivalent Q theory as
+\begin{equation}
+  \label{eq:17}
+  \exp(-\pi f\frac{t_n}{Q_{n,eff}})=\exp(-\pi f\sum_{i=1}^n\frac{\Delta t_i}
+      {Q_i}),
+\end{equation}
+
+The above equation can be simplifi ed to
+\begin{equation}
+  \label{eq:18}
+  Q_{n,eff}=\frac{t_n}{\sum_{i=1}^n\frac{\Delta t_i}{Q_i}},
+\end{equation}
+where $t_n=\sum_{i=1}^n\Delta t_i$ represents the total travel time of a
+reflection.
+
+By substituting the equation of interval Q-factors estimated using the LCFS
+method into the above equation, the equivalent Q-factor of layer $n$ ($n$th
+time sampling point) can be expressed as
+\begin{equation}
+  \label{eq:19}
+  Q_{n,eff}=\frac{t_n}{\sum_{i=1}^n\frac{\Delta t_i}{\frac{\pi\sigma_{loc}^2
+        (t_{i-1})\Delta t_i}{f_{loc}(t_{i-1})-f_{loc}(t_i)}}}=\frac{\pi t_n}
+  {\sum_{i=1}^n\frac{f_{loc}(t_{i-1})-f_{loc}(t_i)}{\sigma_{loc}^2(t_{i-1})}}
+\end{equation}
+where $Q_{n,eff}$ represents the equivalent Q-factor from the reference layer
+to layer $n$ estimated using the LCFS method.
+
+\section{Synthetic data processing}
+
+\subsection{Estimation of local centroid frequency}
+
+To verify the feasibility of calculating the local centroid frequency
+using the LTFT method, a nonstationary signal
+(Figure~\ref{fig:ref,sig}b) is generated by convolving the Ricker
+wavelet with a random reflection coefficient
+(Figure~\ref{fig:ref,sig}a). The dominant frequency of the signal is a
+function varying with time $f_d(t)=100-75t^2$.
+Figure~\ref{fig:fpp,sigltft,sigst}a shows a time-frequency spectrum
+consisting of the Ricker wavelet’s frequency spectrum (the dominant
+frequency is $f_d(t)=100-75t^2$). According to the dominant frequency
+of the Ricker wavelet, we can calculate the theoretical centroid
+frequency (black line in Figure~\ref{fig:fpp,sigltft,sigst}a) of the
+Ricker wavelet $f_c(t)=2f_d(t)/\surd{\pi}$ \cite[]{Hu13}.
+Figures~\ref{fig:fpp,sigltft,sigst}b and ~\ref{fig:fpp,sigltft,sigst}c
+show the time-frequency spectrum of the synthetic signal obtained
+using the LTFT and S-transform, respectively. We estimated the local
+centroid frequency from these two time-frequency spectra, as shown in
+Figure 3 (the blue line is estimated from the LTFT, and the purple
+line is estimated from the S-transform). Compared with the theoretical
+centroid frequency (black line in Figures~\ref{fig:fpp,sigltft,sigst}a
+and ~\ref{fig:difcf}), the local centroid frequency obtained using the
+LTFT method is closer to the theoretical curve, so the LTFT analysis
+method is selected for calculating the local centroid frequency and
+time-varying Q-factors.
+
+\inputdir{lcfest}
+\multiplot{2}{ref,sig}{width=0.47\columnwidth}{Theoretical model. Random
+              reflectivity series (a), synthetic nonstationary signal (b).}
+\multiplot{3}{fpp,sigltft,sigst}{width=0.3\columnwidth}{Time-frequency 
+              spectrum. Theoretical time-frequency spectrum (the black line 
+              represents the theoretical centroid frequency) (a), 
+              time-frequency spectrum of the LTFT (b), time-frequency 
+              spectrum of the S-transform (c).}
+\plot{difcf}{width=0.5\columnwidth}{Local centroid frequency estimation
+      (the black line represents the theoretical centroid frequency, the
+      blue line is estimated using the LTFT method, and the purple line is
+      estimated using the S-transform).}
+
+\subsection{Attenuated model with constant Q-factors}
+
+Although the CFS and LCFS methods assume that the amplitude spectrum
+is Gaussian shape, they are still applicable to other spectra that fit
+well to the Gaussian spectrum, such as the Ricker wavelet
+\cite[]{Quan97}. The solid line in Figure~\ref{fig:gau-ric} is the
+amplitude spectrum of the Ricker wavelet (the dominant frequency is 50
+Hz). According to the centroid frequency ($f_c=56.42$ Hz) and variance
+($\sigma_{loc}^2=566.9$) of the amplitude spectrum, the Gaussian
+spectrum can be synthesized (dotted line in
+Figure~\ref{fig:gau-ric}). The two amplitude spectra can be well
+fitted. In this paper, the Ricker wavelet is selected as the source
+wavelet to verify the effectiveness of the LCFS method in estimating
+the Q-factors. The Ricker wavelet with the dominant frequency of 50 Hz
+is used as the source wavelet to convolute with the reflectivity
+series to generate the attenuation model
+(Figure~\ref{fig:asignal,fp,qq,cmsig}a). The time sampling interval is
+1 ms, and the maximum propagation time is 1 s. There is one reflection
+interface at 0.1, 0.2, 0.4, 0.6, 0.7, and 0.9 s respectively, and the
+Q-factor of the formation is set to a constant value of 60, wherein
+the first layer is set to be
+unattenuated. Figure~\ref{fig:asignal,fp,qq,cmsig}b shows the
+time-frequency spectrum of the attenuated signal obtained using the
+LTFT method. The LTFT method can accurately represent the
+time-frequency characteristics, wherein the black line is the local
+centroid frequency estimated using shaping regularization. By taking
+the local centroid frequency at 0.1 s as the referzence value, the
+time-varying Q-value curve calculated using equation~\ref{eq:19} is
+shown as the red line in Figure~\ref{fig:asignal,fp,qq,cmsig}c. The
+black dotted line is the theoretical Q value. We can see that the
+time-varying Q value estimated using the proposed method is close to
+the theoretical Q value. Inverse Q filtering is performed using the
+estimated time-varying Q-factors, and the result is shown in
+Figure~\ref{fig:asignal,fp,qq,cmsig}d. It can be seen that the
+amplitude and phase of the wavelets are well recovered.
+Figure~\ref{fig:fp1,qq1,cmsig1} is the result estimated using the
+proposed method in the S-transform
+domain. Figure~\ref{fig:fp1,qq1,cmsig1}a is the time-frequency
+spectrum of the S-transform, and the black line is the local centroid
+frequency. Figure~\ref{fig:fp1,qq1,cmsig1}b shows the time-varying Q
+values estimated using the LCFS method, where the estimated result
+before 0.6 s has a large error relative to the result estimated using
+the LTFT method, and the estimated result after 0.6 s is close to the
+theoretical one.  Figure~\ref{fig:fp1,qq1,cmsig1}c shows the inverse Q
+filtering result, and it can be seen that the amplitude and phase are
+also reasonably recovered.  According to the attenuation model test
+with constant Q, we conclude that the LCFS method can also get
+relatively accurate results at times without spectrum information, and
+more reasonable results can be obtained using a reasonable
+time-frequency transform.
+
+The traditional methods for estimating Q-factors in the time-frequency
+domain need to extract spectral information from the target layer’s
+top and bottom interfaces. In contrast, the method proposed in this
+paper only needs to extract information from a reference interface. We
+compare the proposed method with the traditional SR and CFS methods to
+further clarify its effect.  We first extract the frequency spectrum
+of the corresponding time at the maximum amplitude of the six
+interfaces (extracted in Figure~\ref{fig:asignal,fp,qq,cmsig}b) and
+estimate the Q-factors using the SR and CFS methods and interpolate
+them. The results are shown in the red lines in
+Figures~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2}a and
+~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2}b, respectively (the
+black dotted line represents the theoretical value). Then, we change
+the picking time and estimate the Q-factors using the SR
+(Figure~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2}c) and CFS
+(Figure~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2}d) methods. In
+Figure~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2}, we can see
+that the conventional Q-estimation methods need to pick the reflection
+interface accurately, but it is difficult to achieve in the actual
+seismic data processing.
+
+We estimated Q-factors in noise-added attenuated signals to confirm
+the stability and effectiveness of the LCFS method. Random noise of
+diff erent levels is added to the attenuated signal, as shown in
+Figures~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}a,
+~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}d, and
+~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}g,
+respectively.  The time-frequency distributions
+(Figures~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}b,
+~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}e, and
+~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}h) of the
+noise-added signals are calculated using the LTFT method, wherein the
+black lines represent the local centroid frequencies. The red lines in
+Figures~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}c,
+~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}f, and
+~\ref{fig:asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}i represent
+the time-varying Q-factors estimated using the proposed method. From
+the processing results of the noise-added signals, the LCFS method can
+also obtain relatively stable Q-factors in the presence of noise.
+
+\inputdir{lcfest}
+\plot{gau-ric}{width=0.5\columnwidth}{Amplitude spectrum of the Ricker
+      wavelet (solid line) and the Gaussian spectrum (dotted line).}
+
+\inputdir{conq-model}
+\multiplot{4}{asignal,fp,qq,cmsig}{width=0.2\columnwidth}{Attenuated model
+              and estimated results. The attenuated model with constant Q
+              (a), the time-frequency spectrum of the LTFT (the black line
+              represents the local centroid frequency) (b), Q estimated
+              using the LCFS method (red line) and theoretical Q (black
+              dotted line) (c), inverse Q filtering result (d).}
+\multiplot{3}{fp1,qq1,cmsig1}{width=0.2\columnwidth}{Results estimated
+              using the S-transform. The time-frequency spectrum of the
+              S-transform (the black line represents the local centroid
+              frequency) (a), Q estimated using the LCFS method (red line)
+              and theoretical Q (black dotted line) (b), inverse Q filtering
+              result (c).}
+\multiplot{4}{difsrq-1,difcfsq-1,difsrq-2,difcfsq-2}{width=0.2\columnwidth}{
+              Estimated Q-factors using different methods (red line:
+              estimated Q-factors; black dotted lines: theoretical
+              Q-factors). The SR method (maximum amplitude) (a), CFS method
+              (maximum amplitude) (b), SR method (nonmaximum amplitude) (c),
+              CFS method (nonmaximum amplitude) (d).}
+
+\inputdir{conq-noise}
+\multiplot{9}{asignal,fp,qq,asignal1,fp1,qq1,asignal2,fp2,qq2}
+             {width=0.25\columnwidth}{Noise-added attenuated signal and
+              estimated results. The noise-added attenuated signal, and
+              noise intensity increases gradually (a), (d), (g), the
+              time-frequency spectrum of the LTFT (black lines represent the
+              local centroid frequencies) (b), (e), (h), Q estimated using
+              the LCFS method (red line) and theoretical Q
+              (black dotted line) (c), (f), (i).}
+
+\subsection{Attenuated model with variable Q-factors}
+
+We synthesized an attenuated model with variable Q-factors to further verify
+the applicability of the proposed method. The time sampling interval of the
+synthetic signal is 1 ms, and there is a reflection interface at 0.1, 0.2,
+0.4, 0.6, 0.7, and 0.9 s respectively. The attenuated seismic trace is
+synthesized according to the variable Q model (from 0 to 0.1 s, Q is
+infinite; from 0.1 to 0.2 s, Q is 50; from 0.2 to 0.4 s, Q is 80; from 0.4 to
+0.6 s, Q is 30; from 0.6 to 0.7 s, Q is 100; from 0.7 to 0.9 s, Q is 120), as
+shown in Figure~\ref{fig:vasignal,vfp,vqq,vcmsig}a. The timefrequency
+spectrum (Figure~\ref{fig:vasignal,vfp,vqq,vcmsig}b) and the local centroid
+frequency (black line in Figure~\ref{fig:vasignal,vfp,vqq,vcmsig}b) are
+obtained using the LTFT method. The results of the time-varying Q values (as
+shown in Figure~\ref{fig:vasignal,vfp,vqq,vcmsig}c, the green dotted line
+represents the theoretical equivalent Q, the red line represents the
+estimated time-varying equivalent Q, the black dotted line represents the
+theoretical interval Q, and the purple line represents the time-varying
+interval Q calculated using the adjacent time information) using the LCFS
+method show that the error of the time-varying equivalent Q-factors estimated
+using this method is small and close to the trend of the theoretical
+equivalent Q-factors. However, the error of the time-varying interval
+Q-factors is large except for the third layer, which is mainly caused by the
+instability of the traditional Q-factor inversion method.
+Figure~\ref{fig:vasignal,vfp,vqq,vcmsig}d shows the inverse Q
+filtering result calculated according to the time-varying equivalent Q, and
+the amplitude and phase of the wavelet are well compensated.
+
+As with the attenuated model with constant Q, the proposed method is compared
+with the SR and CFS methods. We extract the spectrum information at the
+moment of the maximum amplitude in Figure~\ref{fig:vasignal,vfp,vqq,vcmsig}b
+and estimate the interval Q-factors using the SR and CFS methods, as shown by
+the purple line in
+Figures~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}a
+and ~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}b. Then, we
+change the picking time of the spectrum information. The Q-factors estimated
+using the SR and CFS methods are shown as purple lines in
+Figures~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}c and
+~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}d, respectively. It
+can be seen that the accuracy of the interface picking has a great influence
+on the estimated result of Q. The equivalent Q-factors are calculated
+according to the estimated interval Q-factors (the red lines in
+Figures~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}a,
+~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}b,
+~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}c, and
+~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}d). Compared with the
+time-varying equivalent Q-factors estimated using the LCFS method, the error
+of the traditional method is larger. The CFS method can also calculate
+continuous Q-factors without the extraction of interfaces.
+Figure~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}e is the
+time-frequency spectrum of the attenuated signal (
+Figure~\ref{fig:vasignal,vfp,vqq,vcmsig}a), and the black line represents the
+instantaneous centroid frequency calculated using equation~\ref{eq:3}. We
+select the instantaneous centroid frequency at 0.1 s as the reference value
+and calculate the time-varying equivalent Q-factors (red line in
+Figure~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}f) and the
+time-varying interval Q-factors (purple line in
+Figure~\ref{fig:difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}f) based on the
+instantaneous centroid frequency. Compared with the LCFS method, this method
+can only obtain relatively accurate equivalent Q-factors when the spectrum is
+available. Moreover, the estimated time-varying interval Q-factors are 
+extremely unstable.            
+          
+\inputdir{varq-model}
+\multiplot{4}{vasignal,vfp,vqq,vcmsig}{width=0.2\columnwidth}{Attenuated 
+              modeland estimated results. The attenuated model with variable 
+              Q (a), the time-frequency spectrum of the LTFT (the black line
+              represents the local centroid frequency) (b), Q estimated
+              using the LCFS method (the green dotted line represents the
+              theoretical equivalent Q, the red line represents the
+              estimated time-varying equivalent Q, black dotted line
+              represents the theoretical interval Q, and the purple line
+              represents the estimated time-varying interval Q calculated)
+              (c), inverse Q filtering result (d).}
+\multiplot{6}{difsrq-1,difcfsq-1,difsrq-2,difcfsq-2,fp1,qq1}
+             {width=0.2\columnwidth}{Q-factors estimated using different
+              methods. The SR method (maximum amplitude) (a), CFS method
+              (maximum amplitude) (b), SR method (nonmaximum amplitude) (c),
+              CFS method (nonmaximum amplitude) (d), time-frequency spectrum
+              of the LTFT (the black line represents the instantaneous
+              centroid frequency) (e), Q estimated using the CFS method based
+              on instantaneous centroid frequency (f).}
+
+\subsection{Field data}
+
+For the field data test, we select a 2D poststack seismic section
+(Figure~\ref{fig:powdata,agcpowdata,smqts,cmsig}a) that contains 201
+seismic traces, each of which has a time length of 3 s and a time
+sampling interval of 4 ms. For comparison, we perform the automatic
+gain control (AGC) processing on the original seismic section. The
+processed result after AGC is shown in
+Figure~\ref{fig:powdata,agcpowdata,smqts,cmsig}b. AGC can enhance the
+weak amplitude of the deep part, but it cannot improve the resolution
+of the deep data. Next, we estimate the time-varying equivalent
+Q-factors for each seismic trace using the LCFS method and select the
+time corresponding to the maximum value of the local centroid
+frequency as the reference time. The estimated equivalent Q profile is
+smoothed to some extent in the spatial direction to preserve the
+lateral continuity.  Figure~\ref{fig:powdata,agcpowdata,smqts,cmsig}c
+shows that the Q-factors calculated using the LCFS method have a
+reasonable distribution range and the characteristics of continuous
+variation in the direction of time and
+space. Figure~\ref{fig:powdata,agcpowdata,smqts,cmsig}d shows the
+seismic section after inverse Q filtering based on the time-varying
+equivalent Q-factors. Comparing
+Figures~\ref{fig:powdata,agcpowdata,smqts,cmsig}a,
+~\ref{fig:powdata,agcpowdata,smqts,cmsig}b, and
+~\ref{fig:powdata,agcpowdata,smqts,cmsig}d, we can see that the
+resolution of the deep part of the seismic data after inverse Q
+filtering has improved, the absorption and attenuation of the
+formation are reasonably compensated, and the original structural
+characteristics are well maintained.
+          
+\inputdir{rdata}
+\multiplot{4}{powdata,agcpowdata,smqts,cmsig}{width=0.45\columnwidth}
+             {Processing result of field data. Poststack field data (a), 
+               the seismic data after AGC (b), the estimated time-varying
+               equivalent Q-factors (c), the seismic data after inverse Q
+               filtering (d).}
+
+\section{Conclusion}
+             
+We define the local centroid frequency using shaping regularization in
+the time-frequency domain and discuss the theoretical basis of the
+local centroid frequency in detail in this paper. The local centroid
+frequency is calculated locally using information around a certain
+time so that a reasonable result still can be obtained at the time
+without information. By combining the local centroid frequency with
+the CFS method, we propose a continuous time-varying Q-estimation
+method, namely, the LCFS method. The theoretical model shows that the
+proposed method can obtain reasonable time-varying Q-factors even in
+an environment with random noise. Compared with the traditional
+methods, the proposed method avoids picking the target layer and can
+still obtain a stable estimation result in the absence of spectrum
+information. At the same time, experiments with synthetic examples and
+field data confirm that the inverse Q filtering method based on
+continuous time-varying Q-factors can better recover the phase and
+amplitude of the attenuation signal and improve the resolution of
+seismic data.
+
+\section{Acknowledgments}
+
+We would like to thank Guochang Liu of China University of Petroleum
+(Beijing) for his discussion and suggestions.
+
+
+
+\bibliographystyle{seg}
+\bibliography{paper}
