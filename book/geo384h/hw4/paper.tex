@@ -1,0 +1,345 @@
+\author{Boris Delaunay}
+%%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 4}
+
+\begin{abstract}
+  This homework has four parts. 
+  \begin{enumerate}
+  \item Theoretical questions related to linear estimation.
+  \item Attenuation of surface-wave noise in 
+        seismic data using match filtering.
+  \item Irregular data interpolation contest.
+  \item Analyzing your own data.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://www.ahay.org/}
+\item \LaTeX\ environment with \texttt{SEG}\TeX\ available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. Please ask for help if you don't know where
+to start.
+
+The homework code is available from the \texttt{Madagascar} repository
+by running
+\begin{verbatim}
+svn co https://github.com/ahay/src/trunk/book/geo384h/hw4
+\end{verbatim}
+
+\section{Theoretical part}
+
+You can either write your answers to theoretical questions on paper or
+edit them in the file \texttt{hw4/paper.tex}. Please show all the
+mathematical derivations that you perform.
+
+\begin{enumerate}
+
+\item \item The following equality for the posterior model covariance was given in lecture notes without a proof:
+\begin{equation}
+  \label{eq:cpost}
+\widehat{\mathbf{C}_m} = \left(\mathbf{F}^T\,\mathbf{C}_n^{-1}\,\mathbf{F} + \mathbf{C}_{m}^{-1}\right)^{-1}=
+\mathbf{C}_m-\mathbf{C}_m\,\mathbf{F}^T\,\left(\mathbf{F}\,\mathbf{C}_{m}\,\mathbf{F}^T + \mathbf{C}_n\right)^{-1}\,\mathbf{F}\,\mathbf{C}_m\;.
+\end{equation}
+Prove it.
+
+\item If the model shaping operator $\mathbf{S}_m$ admits a
+symmetric splitting $\mathbf{S}_m=\mathbf{H}_m\,\mathbf{H}_m^T$ with square and invertible
+$\mathbf{H}_m$, the model shaping equation can be rewritten in a symmetric form
+\begin{equation}
+\label{eq:mshape}
+\left[\mathbf{I} + \mathbf{S}_m\,(\mathbf{B\,F - I})\right]^{-1}\,\mathbf{S}_m\,\mathbf{B\,d} 
+= \mathbf{H}_m\,\left[\mathbf{I} + \mathbf{H}_m^T\,(\mathbf{B\,F - I})\,\mathbf{H}_m\right]^{-1}\,\mathbf{H}_m^T\,\mathbf{B\,d}\;.
+\end{equation}
+\begin{enumerate}
+\item Prove equation~(\ref{eq:mshape}).
+\item Assuming a symmetric splitting for the data shaping operator $\mathbf{S}_d=\mathbf{H}_d^T\,\mathbf{H}_d$, find a symmetric form of the data shaping equation
+\begin{equation}
+\label{eq:dshape}
+\mathbf{B}\,\left[\mathbf{I} + \mathbf{S}_d\,(\mathbf{F\,B - I})\right]^{-1}\, \mathbf{S}_d\,\mathbf{d} = \hfill \ 
+\end{equation}
+\end{enumerate}
+
+\end{enumerate}
+
+%\newpage
+
+\section{Match Filtering for Attenuation of Surface Seismic Waves}
+\inputdir{match}
+
+\sideplot{data}{width=\textwidth}{Seismic shot record from sand dunes in the Middle East. The data are contaminated by ground roll propagating in the sand.}
+
+Figure~\ref{fig:data} shows a section out of a seismic shot record
+collected over sand dunes in the Middle East. The data are
+contaminated by ground roll propagating in the sand. A major data
+analysis task is to separate the signal (reflection waves) from the
+noise (surface waves).
+
+\plot{spec0}{width=0.8\textwidth}{Data spectrum. Solid line -- original data. Dashed line -- initial noise model and signal model.}
+
+A quick look at the data spectrum (Figure~\ref{fig:spec0}) shows that the
+noise is mostly concentrated at low frequencies. We can use this fact
+to create a noise model by low-pass filtering.
+
+\plot{noise0}{width=\textwidth}{(a) Noise model created by low-pass filtering of the original data. (b) Result of subtraction of the noise model from the data.}
+
+Figure~\ref{fig:noise0} shows the noise model from low-pass filtering
+and inner muting and the result of subtracting this model from the
+data. Our next task is to match the model to the true noise by solving
+the least-squares optimization problem
+\begin{equation}
+\label{eq:ls}
+\min \|\mathbf{N}\,\mathbf{f} - \mathbf{d}\|^2\;,
+\end{equation}
+where $\mathbf{d}$ is the data, $\mathbf{f}$ is a \emph{matching filter}, and
+$\mathbf{N}$ represents convolution of the noise model
+$\mathbf{n}_0$ with the filter. After minimization, $\mathbf{n} =
+\mathbf{N}\,\mathbf{f}$ becomes the new noise model, and
+$\mathbf{d}-\mathbf{n}$ becomes the estimated signal. Match filtering
+is implemented in \texttt{match.c} and \texttt{match.py}. Some parts of this program
+are left out for you to fill.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/match.c]{match/match.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/match.py]{match/match.py}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \texttt{hw6/match}
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{match.c} (or, alternatively, \texttt{match.py}) file to fill in missing parts.
+\item Test your modifications by running the dot product test.
+\begin{verbatim}
+scons dot.test
+\end{verbatim}
+Repeating this several times, make sure that the numbers in the test match.
+\item  Modify the \texttt{SConstruct} file to display the results of match filtering
+and include them in your assignment.
+\item \textbf{EXTRA CREDIT} for improving the results by finding either better parameters or a better algorithm. 
+\end{enumerate}
+
+%\newpage
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=match/SConstruct]{match/SConstruct}
+
+\section{Spatial interpolation contest}
+\inputdir{invint}
+
+In 1997, the European Communities organized a Spatial Interpolation
+Comparison. Many different organizations participated with the results
+published in a special issue of the \emph{Journal of Geographic
+Information and Decision Analysis} \cite[]{dubois} and a separate
+report \cite[]{rain}.
+
+\sideplot{elev}{width=\textwidth}{Digital elevation map of Switzerland.}
+
+The comparison used a dataset from rainfall measurements in
+Switzerland on the 8th of May 1986, the day of the Chernobyl disaster.
+Figure~\ref{fig:elev} shows the data area: the Digital Elevation Model
+of Switzerland with superimposed country's borders.  A total of 467
+rainfall measurements were taken that day. A randomly selected subset
+of 100 measurements was used as the input data the 1997 Spatial
+Interpolation Comparison in order to interpolate other measurements
+using different techniques and to compare the results with the known
+data. Figure~\ref{fig:raindata} shows the spatial locations of the
+selected data samples and the full dataset.
+
+\plot{raindata}{width=\textwidth}{Left: locations of weather stations used as input data in the spatial interpolation contest.
+Right: all weather stations locations.}
+
+In this assignment, you will try different techniques of spatial data
+interpolation and will participate in the interpolation contest.
+
+\subsection{Delaunay triangulation}
+
+The first technique we are going to try is Delaunay triangulation with
+linear interpolation of rainfall values inside each triangle. The
+result is shown in Figure~\ref{fig:trian}. Does it succeed in hiding
+the acquisition footprint? Figure~\ref{fig:trian-pred} provides a
+comparison between interpolated and known data values. It also
+indicates the value of the correlation coefficient.
+
+\multiplot{2}{trian,trian-pred}{width=0.45\textwidth}{(a) Rainfall data
+interpolated using Delaunay triangulation. (b) Correlation between
+interpolated and true data values.}
+
+\subsection{Gradient regularization}
+
+An alternative technique is a solution of the regularized
+least-squares optimization problem
+\begin{equation}
+\label{eq:laplace}
+\min\left( |\mathbf{F}\,\mathbf{m} - \mathbf{d}|^2 + \epsilon^2 |\mathbf{R}\,\mathbf{m}|^2\right)\;,
+\end{equation}
+where $\mathbf{d}$ is irregular data, $\mathbf{m}$ is model estimated
+on a regular grid, $\mathbf{F}$ is forward interpolation from the
+regular grid to irregular locations, $\epsilon$ is a scaling
+parameter, and $\mathbf{R}$ is the regularization operator related to
+the inverse of the assumed model covariance. In our experiment,
+$\mathbf{R}$ is the finite-difference gradient filter.
+
+\plot{inter0}{width=\textwidth}{Rainfall data
+interpolated using regularization with the gradient filter.}
+
+Figure~\ref{fig:inter0} shows the interpolation result after 10 and
+100 iterations. 100 iterations are not enough to converge to an
+acceptable solution, which is evident from the correlation analysis in
+Figure~\ref{fig:inter0-100-pred}.
+
+\sideplot{inter0-100-pred}{width=0.8\textwidth}{Correlation between
+  interpolated and true data values for regularization with 100 iterations.}
+
+\subsection{Helical derivative preconditioning}
+
+An alternative to the optimization problem~(\ref{eq:laplace}) is the
+problem of minimizing $|\mathbf{x}|^2+|\mathbf{r}|^2$ under the
+constraint 
+\begin{equation}
+\label{eq:precon}
+\mathbf{F}\,\mathbf{P}\,\mathbf{x} + \epsilon\,\mathbf{r} = \mathbf{d}\;.
+\end{equation}
+The model $\mathbf{m}$ is defined by
+$\mathbf{m}=\mathbf{P}\,\mathbf{x}$, and the \emph{preconditioning}
+operator $\mathbf{P}$ is related to the regularization operator
+$\mathbf{R}$ according to
+\begin{equation}
+\label{eq:covar}
+\mathbf{P}\,\mathbf{P}^T = \left(\mathbf{R}^T\,\mathbf{R}\right)^{-1}\;.        
+\end{equation}
+
+The autocorrelation of the gradient filter $\mathbf{R}^T\,\mathbf{R}$
+is the Laplacian filter, which can be represented as a five-point polynomial
+\begin{equation}
+\label{eq:lap2}
+L_2(Z_1,Z_2) = 4 - Z_1 - Z_1^{-1} - Z_2 - Z_2^{-1}\;.
+\end{equation} 
+To invert the Laplacian filter, we can put on a helix, where it takes
+the form
+\begin{equation}
+\label{eq:lap1}
+L_H(Z) = 4 - Z - Z^{-1} - Z^{N_1} - Z^{-N_1}\;,
+\end{equation} 
+and factor it into two minimum-phase parts $L_H(Z) = D(Z)\,D(1/Z)$
+using the Wilson-Burg algorithm \cite[]{burg}. 
+
+\plot{inter1}{width=\textwidth}{Rainfall data
+interpolated using preconditioning with the inverse helical filter.}
+
+Figure~\ref{fig:inter1} shows the interpolation result using
+conjugate-gradient optimization with equation~(\ref{eq:precon}) after
+10 and 100 iterations. The corresponding correlation analysis is shown
+in Figure~\ref{fig:inter1-100-pred}.
+
+\sideplot{inter1-100-pred}{width=0.8\textwidth}{Correlation between
+  interpolated and true data values for preconditioning with 100
+  iterations.}
+
+\subsection{Shaping regularization}
+
+For the shaping regularization approach, we are going to try the simple iteration
+\begin{equation}
+\label{eq:mshape1}
+\mathbf{m}_{n+1} = \mathbf{S}_m\left[\mathbf{m}_{n} + \tilde{\mathbf{m}} -  \mathbf{B\,F\,m}_n\right]\;,
+\end{equation}
+where the forward operator $\mathbf{F}$ is bilinear interpolation, the
+backward operator $\mathbf{B}$ is interpolation by Delaunay
+triangulation, and the model shaping operator $\mathbf{S}_m$ is
+triangle smoothing.
+
+Figure~\ref{fig:shaping} shows the interpolation result using
+10 shaping iterations. The corresponding correlation analysis is shown
+in Figure~\ref{fig:shaping10-pred}.
+
+\sideplot{shaping}{width=\textwidth}{Rainfall data
+interpolated using shaping regularization.}
+
+\sideplot{shaping10-pred}{width=0.8\textwidth}{Correlation between
+  interpolated and true data values for shaping regularization with 10
+  iterations.}
+
+Your task:
+\begin{enumerate}
+\item Change directory to \texttt{hw4/invint}
+\item Run 
+\begin{verbatim}
+scons view
+\end{verbatim}
+to reproduce the figures on your screen.
+\item Modify the \texttt{SConstruct} file to accomplish the following
+  tasks:
+\begin{enumerate}
+\item Find out 
+the number of conjugate-gradient iterations needed for the gradient regularization method to achieve a result 
+ comparable with the preconditioning method.
+\item Find out 
+the number of iterations~(\ref{eq:mshape1}) needed for the shaping regularization method to achieve a result 
+ comparable with the preconditioning method.
+\end{enumerate}
+\item What can you conclude about the four methods used in this comparison?
+\item \textbf{EXTRA CREDIT} Participate in the Spatial Interpolation Contest. Find and
+implement a method that would provide a better interpolation of the
+missing values than either of the methods we tried so far. You can
+change any of the parameters in the existing methods or write your own
+program but you can use only the 100 original data points as input.
+\end{enumerate}
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=invint/invint.c]{invint/invint.c}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=invint/SConstruct]{invint/SConstruct}
+
+%\newpage
+
+\section{Your own data}
+
+Your final task is to apply one of the data analysis techniques to your own data.
+\begin{enumerate}
+\item Select a dataset suitable for this application.
+\item Apply one of the algorithms of either this homework or the
+  previous homework (data interpolation, data compression, match
+  filtering) and choose appropriate parameters.
+\item Attach the results.
+\end{enumerate}
+
+\newpage
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \texttt{hw4}.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Delaunay's.
+\item Run
+\begin{verbatim}
+sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+sftour scons -c
+\end{verbatim}
+to remove intermediate files.
+\item Run
+\begin{verbatim}
+scons pdf
+\end{verbatim}
+to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+e-mail.
+\end{enumerate}
+
+\bibliographystyle{seg}
+\bibliography{hw4}
