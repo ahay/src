@@ -31,6 +31,7 @@ xjtu
 '''
 
 nonreproducible = '''
+tongji/lrmode/twolayer3dtti
 data/teapotdome/fetch
 data/teapotdome/scdecon
 data/teapotdome/vels
