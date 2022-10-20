@@ -1,0 +1,124 @@
+from rsf.proj import *
+from math import *
+import math
+
+##  ---------------- 1D model ---------------------
+## minimum-phase wavelet
+Flow('spike1', None, 'spike n1=1001 d1=0.001 o1=0 label1=Sample unit1=')
+Flow('wave', 'spike1',
+     '''
+     math output="2*%g*%g*(x1-%g)" |
+     math output="exp(-input*input/25)*sin(input)"
+     '''% (math.pi,30,0.) )
+Result('wave',
+       '''
+       window max1=0.3|graph yreverse=n title= font=2
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2 
+       n2tic=3 max2=1 min2=-1 o2num=-1 d2num=1 min1=0.
+       labelfat=3 plotfat=4 plotcol=7 
+       ''')
+
+## reflectivity
+Flow('refl',None,
+     '''
+     spike d1=0.001 o1=0. n1=1001 nsp=8
+     mag=1,-1,2,-2,3,-3,1.5,-1.5
+     k1=100,200,300,400,500,600,700,800
+     ''')
+Result('refl',       
+       '''
+       window min1=0.|graph yreverse=n title= font=2
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2 
+       min1=0. max2=1. min2=-1. o2num=-1. d2num=1. n2tic=3 
+       plotfat=4 labelfat=3 axisfat=3 plotcol=7
+       ''')
+
+## 1D model
+Flow('spike', None, 'spike n1=1001 d1=1 o1=0 label1=Sample unit1=')
+
+fre = [45,45,35,35,25,25,20,20]
+at = [100,200,300,400,500,600,700,850]
+am = [1,1,1,1,1,1,1,1]
+waves = []
+for j in range(8):
+    wave = 'wave%d' % j
+
+    k = pow(-1,j)
+    Flow(wave, 'spike',
+         '''
+         math output="%d*2*%g*(%g)*(x1-%d)*0.001" |
+         math output="%g*exp(-input*input/25)*sin(input)"| 
+         window f1=%d | pad beg1=%d 
+         '''
+         % (k,math.pi,fre[j],at[j],am[j],at[j],at[j]) )
+    waves.append(wave)
+    
+Flow('in', waves, 'add ${SOURCES[1:%d]} | put d1=0.001' % len(waves))
+Result('in',
+       '''
+       window min1=0.|graph yreverse=n title=
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2 
+       plotcol=7 min1=0. font=2 n2tic=3 max2=1 min2=-1 o2num=-1 
+       d2num=1 plotfat=4 labelfat=3 axisfat=3
+       ''')
+
+Flow('pad_in','in',
+     '''
+     cat $SOURCE axis=1 o=-1.001 d=0.001
+     ''')
+
+##  --------- streaming PEF with constant prediction step --------------
+Flow('spef1','pad_in',
+     '''
+     spefcstep lambda1=0.2 lambda2=0
+     na=10 ngp=0 verb=n | window min1=0.
+     ''')
+Result('spef1',
+       '''
+       window min1=0.|graph yreverse=n title= font=2 plotcol=7
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2  min1=0. 
+       plotfat=4 labelfat=3 o2num=-1 d2num=1 n2tic=3 max2=1 min2=-1
+       ''')
+
+##  --------- streaming PEF with varying prediction step --------------
+## local frequency
+Flow('lfe','in','iphase rect1=80 order=200 hertz=y complex=n niter=100')
+Result('lfe',
+       '''
+       graph max2=46 min2=16 min1=0. title= label1=Time label2=Frequency
+       unit1=s unit2=Hz crowd1=0.8 crowd2=0.2 font=2
+       plotcol=7 plotfat=4 labelfat=3 axisfat=3
+       ''')
+
+## time-varying prediction step
+Flow('l0',None,'math n1=1001 d1=0.001 o1=-1.001 output="2."')
+Flow('vlag0','lfe','math output="0.232/(input*0.001)"')
+Flow('vlag','l0 vlag0',
+     '''
+     cat axis=1 ${SOURCES[1:2]} o=-1.001 d=0.001|
+     math output="input-1"|dd type=int
+     ''')
+Result('vvlag','vlag',
+       '''
+       dd type=float|math output="input+1" |
+       graph crowd1=0.8 crowd2=0.2 min1=0. min2=3 max2=15 n2tic=6 
+       o2num=3 d2num=2 label1="Time" label2="Prediction step"
+       plotcol=7 plotfat=4 labelfat=3 axisfat=3 unit1=s font=2 title=
+       ''')
+
+## SPEF with time-varying prediction step
+Flow('vlag_spef','pad_in vlag',
+     '''
+     spefvstep lag=${SOURCES[1]} lambda1=0.2 na=10 lambda2=0. verb=n |
+     window min1=0.
+     ''')
+Result('dif','vlag_spef in',
+       '''
+       cat axis=2 ${SOURCES[1:2]} |
+       graph title="" plotcol=7,7 dash=0,1 min1=0.
+       plotfat=3 label2=Amp label1=Time unit1=s
+       font=2 labelfat=2 titlefat=2 crowd1=0.8 crowd2=0.2
+       max2=1 min2=-1 o2num=-1 d2num=1 n2tic=3 plotfat=4 labelfat=3
+       ''')
+
+End()
