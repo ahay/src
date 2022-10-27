@@ -43,12 +43,13 @@ q
   regularization (Swindeman and Fomel)
 * tccs/apwd: Seismic time-lapse image registration using
   amplitude-adjusted plane-wave destruction (Phillips and Fomel)
-* tccs/dlaugment: Seismic data augmentation for automatic fault\old{s}
+* tccs/dlaugment: Seismic data augmentation for automatic fault
   picking using deep learning (Pham and Fomel)
 
 To SCons:
 
 * added support for Rocky Linux
+* upgraded to SCons-4.4.0
 
 To documentation:
 

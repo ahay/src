@@ -143,7 +143,7 @@ echo "Done with configuration."
 
 chmod +x framework/setenv.py
 M8R_PY_PATH=`RSFROOT=$root framework/setenv.py`
-echo $M8R_PY_PATH
+# echo $M8R_PY_PATH
 if [ -n "$PYTHONPATH" ]; then
 PYTHONPATH=$M8R_PY_PATH:${PYTHONPATH}
 else
