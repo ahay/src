@@ -26,7 +26,7 @@ int main (int argc, char* argv[])
 {
     bool verb;
     
-    float o1, o2, d1, d2;	
+    float o1, d1;	
     int   n1, n2, i2, i1, zp;
     int   maxpo;
     float max_value;
@@ -52,6 +52,8 @@ int main (int argc, char* argv[])
 
     if (NULL != sf_getstring("max_val")) {
 	max_val=sf_output("max_val");
+    } else {
+	max_val= NULL;
     }
 
     if (NULL != sf_getstring("zeropo")) {

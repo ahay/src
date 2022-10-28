@@ -45,6 +45,10 @@ q
   amplitude-adjusted plane-wave destruction (Phillips and Fomel)
 * tccs/dlaugment: Seismic data augmentation for automatic fault
   picking using deep learning (Pham and Fomel)
+* jlu/lcfs: Continuous time-varying Q-factor estimation method in the
+  time-frequency domain (Wang, Liu, Liu, and Zheng) 
+* jlu/spefdecon: Multichannel adaptive deconvolution based on
+  streaming prediction-error filter (Wang, Liu, Liu, and Zheng)
 
 To SCons:
 
