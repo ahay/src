@@ -1,14 +1,16 @@
 from rsf.proj import *
 from math import *
 import math
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 ##  -------------------------- real data -----------------------------
 ## real data
-Flow('bin','bin.H','dd form=native')
-Flow('data','bin','window n3=1 f3=56 | put o1=0. | smooth rect1=5 rect2=5')
+Fetch('bin.H','yang')
+Flow('data','bin.H','dd form=native | smooth rect1=5 rect2=5')
 Result('data',
        '''                  
-       put o1=2.5|
+       put o1=2.5 |
        grey label2="CDP" label1="Time" crowd2=0.8 crowd1=0.4
        title="" labelfat=3 font=2 color=g clip=3500
        ''')

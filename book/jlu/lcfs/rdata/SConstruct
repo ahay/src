@@ -1,9 +1,12 @@
 from rsf.proj import *
 from math import *
 import math
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 ## ----------------------------------------------------------------
 ## field data
+Fetch('ln472_invtpow.sgy','yang')
 Flow('powdata','ln472_invtpow.sgy',
      '''
      segyread read=d    
