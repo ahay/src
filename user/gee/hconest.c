@@ -32,7 +32,7 @@ void hconest_init(float *x_in, sf_filter aa_in)
     aa = aa_in;
 }
 
-void hconest_lop(bool adj, bool add, int na, int ny, float *a, float *y)
+void hconest_lop(bool adj,bool add,int na,int ny,float *a,float *y)
 /*< linear operator >*/
 {
     int  ia, ix, iy;
