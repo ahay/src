@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfmath', 'sfbin', 'sfmask', 'sfgrey', 'sfwilson', 'sfnoise', 'sffft3', 'sfreal', 'sfrotate', 'sfput', 'sfpad', 'sfrtoc', 'sfclip2', 'sffft1', 'sfspectra2', 'sfhpef', 'sfhelicon']
-data=['data/seab/apr18.h']
-size=    7817128
