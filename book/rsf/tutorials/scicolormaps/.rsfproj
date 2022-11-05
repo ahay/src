@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfgrey', 'sfspike', 'sfmath', 'sfcat', 'sfunif2', 'sfput', 'sfai2refl', 'sfricker1', 'sfwindow', 'sfintbin', 'sflapfill', 'sfscale', 'sfclip2']
+data=['data/imgs/mona.img', 'https://raw.githubusercontent.com/agile-geoscience/notebooks/master/data/st-helens_before.txt', 'https://raw.githubusercontent.com/agile-geoscience/notebooks/master/data/Penobscot_HorB.txt', 'data/marm/marmsmooth.HH']
+size=    9584320

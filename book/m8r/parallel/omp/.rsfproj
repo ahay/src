@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfbandpass', 'sfgrey', 'sfadd', 'sfomp', 'sftransp']
+data=[]
+size=      80000

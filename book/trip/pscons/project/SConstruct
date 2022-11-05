@@ -53,3 +53,5 @@ Result('movie', 'Fwfl', 'grey gainpanel=a pclip=99 color=j scalebar=y')
 Result('snap', 'Fwfl', 'window f3=80 n3=1 | grey pclip=99 color=j title="snapshot at t=0.4s"')
 #View the data recorded at receiver:
 Result('data', 'Fdat', 'window | grey title="Data recorded at receiver" unit2= label2=amplitude')
+
+End()
