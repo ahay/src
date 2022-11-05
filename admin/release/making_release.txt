@@ -1,13 +1,13 @@
 1. Creating a new branch and check it out
 
-git checkout -b madagascar-3.1
-git push origin madagascar-3.1
+git checkout -b madagascar-4.0
+git push origin madagascar-4.0
 
 or
 
-svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-3.1 -m 'new release'
-svn co https://github.com/ahay/src/branches/madagascar-3.1
-cd madagascar-3.0
+svn copy  https://github.com/ahay/src/trunk  https://github.com/ahay/src/branches/madagascar-4.0 -m 'new release'
+svn co https://github.com/ahay/src/branches/madagascar-4.0
+cd madagascar-4.0
 
 2. Edit VERSION.txt to remove -git
 
