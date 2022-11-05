@@ -6,10 +6,11 @@ ssl._create_default_https_context = ssl._create_unverified_context
 # Fetch the dataset
 ####################
 tgz = '2D_Land_data_2ms.tgz'
-Fetch(tgz,
-      server='https://www.freeusp.org',
-      top='RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
-      dir='Data')
+#Fetch(tgz,
+#      server='https://www.freeusp.org',
+#      top='RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
+#      dir='Data')
+Fetch(tgz,'freeusp')
 files = list(map(lambda x: 'Line_001.'+x,Split('TXT SPS RPS XPS sgy')))
 Flow(files,tgz,
      'gunzip -c $SOURCE | tar -xvf -',stdin=0,stdout=-1)
