@@ -1,0 +1,3 @@
+uses=['sfqdome', 'sfsmooth', 'sfbyte', 'sfgrey3', 'sfnoise', 'sfmath', 'sfstack', 'sffxspfdenoise2', 'sfadd', 'sfwindow', 'sfreverse', 'sfput', 'sfcat', 'sffxyspfdenoise3', 'sffft1', 'sftransp', 'sfcshifts2', 'sfclpf']
+data=[]
+size= 2083440000
