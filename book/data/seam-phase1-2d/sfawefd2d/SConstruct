@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 #Velocity model:
 #Flow('Fvel', None, 'spike mag=1500,3000 nsp=2 k1=1,101 l1=100,200 d1=4 d2=4 label1=z label2=x n1#=200 n2=200 o1=2 o2=2 unit1=m unit2=m')
 Flow('Fvel','../fetch/vp.rsf', 
@@ -46,7 +48,7 @@ Flow(['Fdat', 'Fwfl'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOU
 
 
 #View the wavefield movie:
-Result('movie', 'Fwfl', 'grey gainpanel=a pclip=99 color=j scalebar=y')
+Plot('movie', 'Fwfl', 'grey gainpanel=a pclip=99 color=j scalebar=y',view=1)
 # View a wavefield snapshot:
 Result('snap', 'Fwfl', 'window f3=40 n3=1 | grey pclip=99 color=j title="snapshot at t=1.280s"')
 #View the data recorded at receiver:

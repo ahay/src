@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 Flow('headerattr.txt','../fetch/shots-receivers-23900_hdr.rsf',
      'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
@@ -131,7 +133,7 @@ Flow(['every10shot.rsf','every10shot_hdr.rsf'],
 
 Plot('every10shot','sfgrey title="every10shot"',view=1)
 
-Result('vp','../fetch/vp.rsf',"sfgrey title='Vp' scalebar=y color=j")
+#Result('vp','../fetch/vp.rsf',"sfgrey title='Vp' scalebar=y color=j")
 
        
 End()

@@ -53,9 +53,9 @@ Result('shots','grey color=g ')
 # It is strange that MPI implementation is much slower than one core sequential implemenation.
 # try: scons NP=2
 
-if not WhereIs('mpirun'):
-    sys.stderr.write("\nNo MPI.\n")
-    sys.exit(1)
+#if not WhereIs('mpirun'):
+#    sys.stderr.write("\nNo MPI.\n")
+#    sys.exit(1)
 
 NP = int(ARGUMENTS.get('NP','8'))
 
