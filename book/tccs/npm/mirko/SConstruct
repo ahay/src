@@ -203,7 +203,7 @@ Result('mgroup',group,'Overlay')
 # initiation for matlab
 
 matlab = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'mirko'
 matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
 

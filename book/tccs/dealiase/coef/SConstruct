@@ -62,7 +62,7 @@ Grey('hyper-seiss','clip=10 label2="Spatial scale" label1="Temporal scale" unit1
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Curve'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

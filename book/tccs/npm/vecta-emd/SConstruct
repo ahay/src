@@ -88,7 +88,7 @@ Flow('dataemds', tfemdt, 'cat axis=2 ${SOURCES[1:%d]}' % len(tfemdt))
 # MatLab initiation
 
 matlab = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'VectaTrace'
 matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
 if not matlab:

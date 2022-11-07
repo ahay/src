@@ -20,7 +20,7 @@ def Grey2(data,other):
 # INITIALIZATION
 #######################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'steer'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

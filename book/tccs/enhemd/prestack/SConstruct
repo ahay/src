@@ -70,7 +70,7 @@ Result('pgath','gath dip paint flat gath-rec','SideBySideAniso')
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'FX_EMD'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

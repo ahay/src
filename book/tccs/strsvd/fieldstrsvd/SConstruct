@@ -83,7 +83,7 @@ Grey1('field-gsvd','title=GSVD')
 # INITIALIZATION
 #######################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'synthlsvd'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

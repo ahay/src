@@ -197,7 +197,7 @@ Greyfk('fk-bei-seisvd', 'allpos=y color=j label1=Frequency unit1=Hz label2=Waven
 # INITIALIZATION
 ########################################################################
 matlab = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Spitz'
 matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
 

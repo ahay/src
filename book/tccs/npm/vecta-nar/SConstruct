@@ -109,7 +109,7 @@ def nar_tran(Slice):
 nar_tran('data')
 
 matlab = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'VectaTraceNar'
 matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
 if not matlab:

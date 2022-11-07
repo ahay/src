@@ -282,7 +282,18 @@ Flow('incg20','zero16 inimg16 mask csource vel_ext left right bleft bright',
      ''')
 
 # ## LSRTM of complete data for comparison
+
 # <muteshots16.rsf sfcconjgrad sflrrtm mod=inimg16.rsf src=csource.rsf tmpwf=tmpwf.rsf vel=vel_ext.rsf left=left.rsf right=right.rsf leftb=bleft.rsf rightb=bright.rsf verb=n pad1=1 spz=10 gpz=10 gpl=901 snapinter=1 top=50 bot=50 lft=50 rht=50 rectz=2 rectx=2 repeat=2 srctrunc=0.4 wantwf=n wantrecord=y illum=n roll=n shtbgn=0 shtend=900 shtint=60>benchmark20.rsf niter=20
+
+Flow('benchmark20','muteshots16 inimg16 csource vel_ext left right bleft bright',
+     '''
+     cconjgradmpi mpilrrtm mod=${SOURCES[1]}  
+     src=${SOURCES[2]} vel=${SOURCES[3]} left=${SOURCES[4]} right=${SOURCES[5]} 
+     leftb=${SOURCES[6]} rightb=${SOURCES[7]} verb=n pad1=1 spz=10 gpz=10 gpl=901 
+     snapinter=1 top=50 bot=50 lft=50 rht=50 rectz=2 rectx=2 repeat=2 
+     srctrunc=0.4 wantwf=n wantrecord=y illum=n roll=n shtbgn=0 
+     shtend=900 shtint=60 niter=20
+     ''')
 
 # ## LSRTM of incomplete data with python script
 # python synincg.py data=zero16.rsf init=inimg16.rsf niter=20 result=ininv20.rsf
@@ -314,6 +325,8 @@ Flow('incg20','zero16 inimg16 mask csource vel_ext left right bleft bright',
 Flow('dipmask','inimg16','real |math output=1 | cut max1=100')
 Flow('windip0','inimg16 dipmask','real |fdip mask=${SOURCES[1]} rect1=15 rect2=20')
 Result('windip0','grey color=j scalebar=y title=Dip clip=0.5 minval=-0.5 maxval=0.5')
+
+
 # python syninshape.py data=zero16.rsf init=inimg16.rsf dip=windip0.rsf niter=20 result=inshape20.rsf
 #
 # Data misfit change of LSRTM-SR with incomplete data

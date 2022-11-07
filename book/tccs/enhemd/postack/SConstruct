@@ -49,7 +49,7 @@ Plot('post-gath-rec','grey labelsz=12 titlesz=12.5 title="Mapped back" ')
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'FX_EMD'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

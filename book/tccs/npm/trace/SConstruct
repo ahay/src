@@ -183,7 +183,7 @@ Plot('tgroup', groups, 'Overlay')
 # initiation for matlab
 
 matlab = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'trace'
 matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
 
