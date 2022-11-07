@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sftahsort', 'sftahmakeskey', 'sftahwrite', 'sfpow', 'sfgrey']
+data=['https://s3.amazonaws.com/open.source.geoscience/open_data/bpmodel94/README.txt', 'https://s3.amazonaws.com/open.source.geoscience/open_data/bpmodel94/README_Modification', 'https://s3.amazonaws.com/open.source.geoscience/open_data/bpmodel94/optimum.jpg', 'https://s3.amazonaws.com/open.source.geoscience/open_data/bpmodel94/Model94_shots.segy.gz', 'https://s3.amazonaws.com/open.source.geoscience/open_data/bpmodel94/velocity.segy.gz']
+size=   35839740
