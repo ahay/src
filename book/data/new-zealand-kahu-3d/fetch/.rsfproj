@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sftahread', 'sftahheadermath', 'sftahwrite', 'sfwindow', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfput', 'sftransp']
+data=['http://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/KAHU-3D/KAHU-3D-PR3177-FM.3D.Final_Migration.sgy']
+size= 12792492776

@@ -12,7 +12,7 @@ if pdfread:
    Fetch('%s.pdf'%file,dir='g3d1206-002a',
          server='https://s3.amazonaws.com',
          top='open.source.geoscience/open_data/boem')
-   Result(file,file+'.pdf',
+   Flow(file,file+'.pdf',
          pdfread + ' $SOURCE',stdin=0,stdout=0)
 
 file='G3D1206_002_L87_080'

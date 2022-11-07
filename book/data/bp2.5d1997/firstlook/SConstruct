@@ -3,6 +3,8 @@ from rsf.proj import *
 # files have names like:
 #wget ftp://software.seg.org/pub/datasets/2D/1997_2.5D/1997_2.5D_shots.segy.gz
 
+SConscript('../fetch/SConstruct')
+
 for filename in ['model','vsmooth','vsmoother']:
     #filename='1997_2.5D_shots'
     #         1997_2.5D_shots.segy.gz

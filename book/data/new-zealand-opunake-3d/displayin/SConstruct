@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 Flow('headerattr.txt','../fetch/Opunake_hdr.rsf',
      'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 

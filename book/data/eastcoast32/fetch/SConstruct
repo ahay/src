@@ -52,7 +52,7 @@ Fetch('32obslog.pdf',
 pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
     WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 if pdfread:
-   Result('observerlog','32obslog.pdf',
+   Flow('observerlog','32obslog.pdf',
 	  pdfread + ' ${SOURCES[0]}',stdin=0)
 
 
