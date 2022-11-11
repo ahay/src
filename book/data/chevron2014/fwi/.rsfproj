@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sftahsort', 'sftahwrite', 'sfbyte', 'sfgrey3', 'sfput', 'sfwindow', 'sfgrey', 'sfpow', 'sffwi2d']
+data=['http://s3.amazonaws.com/open.source.geoscience/open_data/seg_workshop_fwi_2014/seg_workshop_fwi_2014.tar.gz.partaa', 'http://s3.amazonaws.com/open.source.geoscience/open_data/seg_workshop_fwi_2014/seg_workshop_fwi_2014.tar.gz.partab']
+size= 25712904524

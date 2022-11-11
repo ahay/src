@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sftahread', 'sftahheadermath', 'sftahwrite', 'sfwindow', 'sfgrey', 'sfput', 'sfbyte', 'sfgrey3']
+data=['http://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/OPUNAKE-3D/OPUNAKE3D-PR3461-FS.3D.Final_Stack.sgy']
+size= 10873232640

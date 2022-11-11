@@ -572,7 +572,7 @@ class Project(Environment):
             if (not re.search(suffix + '$',file)) and ('.' not in file):
                 file = file + suffix
             targets.append(file)
-        if suffix == sfsuffix and re.search('/',targets[0]):
+        if suffix == sfsuffix and re.search('/',targets[0]) and 1 == stdout:
             subdir = os.path.dirname(os.path.join(self.path,targets[0]))
             rsf.path.mkdir(subdir)
             command = command + ' --out=%s' % os.path.join(self.path,'${TARGET}@')
