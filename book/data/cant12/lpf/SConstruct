@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../shot/SConstruct')
+
 shots='../shot/shot.rsf'
 multiples='../srme/multiple.rsf'
 

@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../lpf/SConstruct')
+
 # using CMPs after demultiple
 data='../lpf/cmp.rsf'
 vel='../vel/vels.rsf'

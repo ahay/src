@@ -1,5 +1,6 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
 
 #<../fetch/shots_hdr.rsf 
 #91 headers, 1312800 traces
@@ -60,7 +61,7 @@ Result('zoomqcshots','qcshots',
        ''')
 
 rsf='Vp_Model'
-Flow([rsf,rsf+'_hdr',rsf+'.asc',rsf+'.bin'],'../fetch/ModelParams/Vp_Model.sgy',
+Flow([rsf,rsf+'_hdr',rsf+'.asc',rsf+'.bin'],'ModelParams/Vp_Model.sgy',
          '''
          sfsegyread \
 	    tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} \

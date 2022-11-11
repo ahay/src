@@ -49,11 +49,11 @@ Fetch('ModelParams.tar.gz',dir='bptti2007',
       server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',
       usedatapath=0)
 
-Flow('Modelparms ',
+Command('ModelParams/Vp_Model.sgy',
      'ModelParams.tar.gz',
       '''
-        tar -xvz
-      ''',stdout=-1)
+      tar -xvz < $SOURCE
+      ''')
 
 Fetch('OtherFiles-2.tar.gz',dir='bptti2007',
       server='https://s3.amazonaws.com',top='open.source.geoscience/open_data',

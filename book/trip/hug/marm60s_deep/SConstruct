@@ -27,7 +27,7 @@ penv = {'stampede' :  { 'batch' : 'slurm',
                         'suffix': 'pbs', },
        }
 
-print penv['stampede']['bcmd']
+print(penv['stampede']['bcmd'])
 ######## abbreviations for commands used in flows - put these first, if
 ######## you use abbreviations
 # example:
@@ -125,8 +125,7 @@ exe_stampede_30min = {'platf':'stampede','nodes':'2','ppn':'16','wall':'00:30:00
 Flow('bornbigm.su','bornbig.su', linmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=0.7 mute_zotime=0 mute_width=200',stdin=0,stdout=0)
 Flow('bornbigm2.su','bornbigm.su', linmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=0.7 mute_zotime=0 mute_width=200',stdin=0,stdout=0)
 
-jobs_common = 
-     [
+jobs_common = [
         { 'job': 'bornbig',
           'pre': '/bin/cp ../line100m.su ../bornbig.su',
           'src': ['line100m.su', 'wavelet_line100m.su', 'csq24big.rsf', 'dcsq24.rsf'],
@@ -166,8 +165,7 @@ Flow('ata_lsmig_80pct_altcheb.rsf', 'a_lsmig_80pct_altcheb.rsf',
      'output=${TARGETS[0]} ' +
      'axis=2 adjoint=1', stdin=0, stdout=0);
 
-jobs_cheb_fixed = 
-     [
+jobs_cheb_fixed = [
 	{ 'job': 'lsmig_80pct_altcheb',
           'src': ['mig_80pct.rsf', 'wavelet_line100m.su',  'csqbig80pct_ext.rsf'],
           'tgt': ['lsmig_80pct_altcheb.rsf'],
@@ -204,8 +202,7 @@ jobs_cheb_fixed =
      ]
 
 #### smaller smoothing kernel, diva jobs
-jobs_100m_diva = 
-     [
+jobs_100m_diva = [
         { 'job': 'born100m',
           'pre': '/bin/cp ../line100m.su ../born100m.su',
           'src': ['line100m.su', 'wavelet_line100m.su', 'csq24sm.rsf', 'dcsq24.rsf'],
@@ -366,13 +363,13 @@ jobs_100m_diva =
 # loop for jobs defined in jobs dictionary
 for jobs in ['jobs_common', 'jobs_cheb_fixed', 'jobs_cg', 'jobs_100m_diva']:
     for i in range(len(jobs)):
-    	sig = getFlowSignature(jobs[i]['job']+'.work',jobs[i], penv)
-    	if sig == None:
-           print 'Error return from iwave.getFlowSignature - cannot set up job = ' + i
+        sig = getFlowSignature(jobs[i]['job']+'.work',jobs[i], penv)
+        if sig == None:
+            print('Error return from iwave.getFlowSignature - cannot set up job = ' + i)
         else:
 #        print 'sig.cmd = ' + sig['cmd'] + '\n'
 #        print 'sig.src = ' + ' '.join(sig['src']) + '\n'
 #        print 'sig.tgt = ' + ' '.join(sig['tgt']) + '\n'
-      	   Flow(sig['tgt'], sig['src'], sig['cmd'], stdin=0, stdout=0, workdir=sig['dir'])
+            Flow(sig['tgt'], sig['src'], sig['cmd'], stdin=0, stdout=0, workdir=sig['dir'])
 
 End()

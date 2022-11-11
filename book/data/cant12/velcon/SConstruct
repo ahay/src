@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../stkdemul/SConstruct')
+
 data='../stkdemul/dmostk.rsf'
 mute='../vel/vel.rsf' # stacking velocity
 #mask='../vel/vel.rsf' # mute around hand picked velocities

@@ -21,9 +21,9 @@ for n in range(403,413):
         
 #	inp = '/work/02167/karls/data/cant12/fetch/cant12.%d.segy' % n
 
-        out = 'cant12-%d' % n
+	out = 'cant12-%d' % n
 
-        Flow([out,'t'+out,out+'.asc',out+'.bin'],inp,
+	Flow([out,'t'+out,out+'.asc',out+'.bin'],inp,
              'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
 	
 	# mask out traces with trid > 2   ,  key# 7 (f1=7) on header file
@@ -32,14 +32,14 @@ for n in range(403,413):
 
         # Prepare for binning
         ######################
-        part  = 'part%d' % n
-        tpart = 'tpart%d' % n
+	part  = 'part%d' % n
+	tpart = 'tpart%d' % n
 
 	# masked header 
-        Flow(tpart,['t'+out,mask],'headerwindow mask=${SOURCES[1]}')
+	Flow(tpart,['t'+out,mask],'headerwindow mask=${SOURCES[1]}')
         
         # extract masked shots 
-        Flow(part,[out, mask, tpart],
+	Flow(part,[out, mask, tpart],
 	     '''
              headerwindow mask=${SOURCES[1]} | 
              intbin head=${SOURCES[2]} xk=tracf yk=fldr |
@@ -57,8 +57,8 @@ for n in range(403,413):
                  d3=12.5          unit3="m" label3="Shot"
              ''')
 
-        parts.append(part)
-        tparts.append(tpart)
+	parts.append(part)
+	tparts.append(tpart)
 	coords.append(coord)
 
 # concatenate shot files

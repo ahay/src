@@ -240,7 +240,7 @@ for idepth in range(par['nzvs']):
 	Plot('vs'+tag,fdmod.rrplot('plotcol=8',par))
 
 limits = int(par['ozvs']), int(par['ozvs'] + par['nzvs']*par['dzvs']), int(par['dzvs'])
-vs_all = map(lambda x: 'vs'+'_%04d'  % x,range(*limits))
+vs_all =['vs'+'_%04d'  % x for x in range(*limits)]
 
 # ------------------------------------------------------------
 # Define velocity and density --------------------------------
@@ -342,7 +342,7 @@ Join()
 Result('shot_00200_0000','transp | grey wantscalebar=n polarity=n pclip=98')
 
 limits = int(par['x_left']), int(par['x_left'] + par['nshots']*par['dx']), int(par['dx'])
-shot_all = map(lambda x: 'shot'+'_%05d_%04d'  % (x,0.0),range(*limits))
+shot_all = ['shot'+'_%05d_%04d'  % (x,0.0) for x in range(*limits)]
 Flow('shot_all',shot_all,'cat axis=3 ${SOURCES[1:%d]}' % par['nshots'])
 
 # ------------------------------------------------------------

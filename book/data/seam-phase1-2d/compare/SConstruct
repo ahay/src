@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 Plot('awe_shot1', '../sfawefd2d_split/shots.rsf', 'window max1=5 max2=8000 f3=1 n3=1 | grey title="sfawefd2d shot1" unit2= label2=amplitude')
 
 Plot('mshot_shot1', '../sfmshots1/mshots.rsf', 'window max1=5 max2=8000 f3=1 n3=1 | grey title="sfmshots shot1" unit2= label2=amplitude')

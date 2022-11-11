@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfcat', 'sfheaderattr', 'sftahread', 'sftahheadermath', 'sftahwrite', 'sfwindow', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfput', 'sftransp']
+data=['http://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/TUI3D-PR2830-MIG/PEP38460_SUBLINE-3751-4050_XLINES-756-3230_3D_MIGRATION_TVF.SGY', 'http://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/TUI3D-PR2830-MIG/PEP38460_SUBLINE-4051-4500_XLINES-756-3230_3D_MIGRATION_TVF.SGY']
+size= 29341795392

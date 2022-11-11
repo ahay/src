@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfwindow', 'sfagc', 'sfgrey', 'sfdd', 'sfscale', 'sfgraph', 'sfput', 'sfcat', 'sfspray', 'sfadd', 'sfrtoc', 'sfmath', 'sfintbin', 'sftransp', 'sfbyte', 'sfgrey3', 'sfwiggle', 'sfdatstretch', 'sfshot2cmp', 'sfstack', 'sfmutter', 'sfspectra2', 'sfspike', 'sfbandpass', 'sfspectra', 'sfltft', 'sfreal', 'sfthreshold2', 'sfvscan', 'sfpick', 'sfnmo', 'sfmig2']
+data=['data/freeusp/2D_Land_data_2ms.tgz']
+size= 47056602176

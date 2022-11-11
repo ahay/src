@@ -5,7 +5,7 @@ End(
 
 #lclass='segabs',
 
-use='amsmath,setspace,wasysym,graphicx,float,subfigure',
+use='amsmath,setspace,wasysym,float',
 
 include=r'''
 \newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
