@@ -127,6 +127,7 @@ typedef struct Segy {
     const char *desc;
 } segy;
 
+
 static const segy bheadkey[] = {
     {"jobid",4, "job identification number"},
     {"lino",4, "line number (only one line per reel)"},
@@ -143,6 +144,7 @@ static const segy bheadkey[] = {
      "\n\t3 = fixed point, 2 byte (16 bits)"
      "\n\t4 = fixed point w/gain code, 4 byte (32 bits)"
      "\n\t5 = IEEE floating point, 4 byte (32 bits)"
+     "\n\t7 = fixed point, 1 byte (8 bits)"    
      "\n\t8 = two's complement integer, 1 byte (8 bits)"},
     {"fold",2,	  "CDP fold expected per CDP ensemble"},
     {"tsort",2,  "trace sorting code:" 
@@ -431,9 +433,11 @@ void other_init(int nkeys, sf_file hdr)
 /* Big-endian to Little-endian conversion and back */
 static int convert2(const char* buf);
 static int convert4(const char* buf);
+static int convert1(const char* buf);
 static float fconvert4(const char* buf);
 static void insert2(int y, char* buf);
 static void insert4(int y, char* buf);
+static void insert1(int y, char* buf);
 static void finsert4(float y, char* buf);
 static void swapb(byte *x, byte *y);
 
@@ -534,6 +538,34 @@ static void insert4(int y, char* buf)
     
     memcpy(buf,x.b,4);
 }
+
+
+static int convert1(const char* buf)
+/* convert buf to 1-byte int */
+{
+    union {
+	byte b[1];
+	signed char s;
+    } x;
+
+    memcpy(x.b,buf,1);    
+
+    return (int) x.s;
+}
+
+static void insert1(int y, char* buf)
+/* convert 1-byte int to buf */
+{
+    union {
+	byte b[1];
+	signed char s;
+    } x;
+
+    x.s=(signed char) y;
+    
+    memcpy(buf,x.b,1);
+}
+
 
 static void finsert4(float y, char* buf)
 /* convert 4-byte float to buf */
@@ -728,12 +760,13 @@ static float ibm2float (const char* num)
 void segy2trace(const char* buf, float* trace, int ns, int format)
 /*< Extract a floating-point trace[nt] from buffer buf.
 ---
-format: 1: IBM, 2: int4, 3: int2, 5: IEEE
+format: 1: IBM, 2: int4, 3: int2, 5: IEEE, 7: int1
 >*/
 {
     int i, nb;
 
-    nb = (3==format)? 2:4;
+    //nb = (3==format)? 2:4;
+    nb = ((7 == format)? 1: ((3 == format)? 2: 4));
 
     for (i=0; i < ns; i++, buf += nb) {
 	switch (format) {
@@ -741,6 +774,7 @@ format: 1: IBM, 2: int4, 3: int2, 5: IEEE
 	    case 2: trace[i] = (float) convert4(buf); break; /* int4 */
 	    case 3: trace[i] = (float) convert2(buf); break; /* int2 */
 	    case 5: trace[i] = fconvert4(buf);        break; /* IEEE float */
+      case 7: trace[i] = (float) convert1(buf); break; /* int1 */
 	    default: sf_error("Unknown format %d",format); break;
 	}
     }
@@ -762,6 +796,7 @@ format: 1: IBM, 2: int4, 3: int2, 5: IEEE
       case 2: insert4((int) trace[i],buf); break; /* int4 */
       case 3: insert2((int) trace[i],buf); break; /* int2 */
       case 5: finsert4((float) trace[i],buf); break; /* IEEE float */
+      case 7: insert1((int) trace[i],buf); break; /* int1 */
       default: sf_error("Unknown format %d",format); break;
       }
     }
