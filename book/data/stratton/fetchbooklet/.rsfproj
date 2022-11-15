@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sftahread', 'sftahheadermath', 'sftahwrite', 'sfwindow', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfput', 'sftransp', 'sfwiggle', 'sftahsort', 'sftahgethw']
+data=['http://s3.amazonaws.com/open.source.geoscience/open_data/stratton/segy/processed/Stratton3d.sgy', 'http://s3.amazonaws.com/open.source.geoscience/open_data/stratton/segy/processed/Stratton3D_32bit.sgy']
+size= 1159867520
