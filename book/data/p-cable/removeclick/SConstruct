@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../segy/SConstruct')
+
 Flow('input','../segy/DeconShots3.rsf',
      '''
       sftahsort input=${SOURCES} sort=tracl:1,1000 \

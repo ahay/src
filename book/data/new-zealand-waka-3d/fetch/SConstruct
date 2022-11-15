@@ -76,21 +76,21 @@ Flow(['image.rsf','image_hdr.rsf'],['BO_WAKA3D-PR3988-FS_3D_Final_Stack.rsf','BO
 	  verbose=1
      ''',stdout=0, stdin=0)
        
-Result("image","window j3=100 |  sfgrey title='waka-3d'")
+Plot("image","window j3=100 |  sfgrey title='waka-3d'",view=1)
 #Result("zoomimage","image",
 #       "window min1=1 max1=2 j3=10 | sfgrey title='waka-3d'")
-Result("image3df","image",
+Plot("image3df","image",
        '''
        byte 
        | grey3 frame1=1350 frame2=2875 frame3=400 title='waka-3d'
-       ''')
+       ''',view=1)
 
-Result("image3d","image",
+Plot("image3d","image",
        '''
        byte 
        | grey3 frame1=1350 frame2=2875 frame3=400 \
          title='waka-3d' flat=n
-       ''')
+       ''',view=1)
 
 Plot('image1400','image',
      '''
@@ -105,11 +105,4 @@ Plot('imagex1213','image',
      ''')
 Result("imageilxl","image1400 imagex1213",'SideBySideAniso')
 
-Result("imageslice","image",
-	'''
-	sfwindow min1=3 max1=3.004            \
-	| sftransp plane=13                   \
-	| sfgrey gainpanel=a title='waka-3d'
-	''')
-   
 End()

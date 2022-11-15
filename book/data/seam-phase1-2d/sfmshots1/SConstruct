@@ -2,6 +2,8 @@ from rsf.proj import *
 
 # near trace gather - ned to drive off sx,gx headers - tahheadermath?
 
+SConscript('../fetch/SConstruct')
+
 Flow('vel','../fetch/vp.rsf', 
 	'''
      	sfput unit1="m" unit2="m" d1=10 d2=20 label1=Depth label2=Distance

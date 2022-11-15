@@ -117,8 +117,8 @@ class _Simtab(dict):
         if val:
             if val[0] == 'y' or val[0] == 'Y' or val[0] == '1':
                 return True,True
-        else:
-            return True,False
+            else:
+                return True,False
         return False,None
     def getbools(self,key,n):
         val = self.get(key)
@@ -1429,12 +1429,13 @@ if __name__ == "__main__":
 #    no_swig()
     # Testing getpar
     par = Par(["prog","a=5","b=as","a=100","float=5.625",
-               "true=y"]) #,"par=%s" % sys.argv[0]])
+               "true=y","false=n"]) #,"par=%s" % sys.argv[0]])
     assert 100 == par.int("a")
     assert not par.int("c")
     assert 10 == par.int("c",10)
     assert 5.625 == par.float("float")
     assert par.bool("true")
+    assert not par.bool("false")
     #assert "Time (sec)" == par.string("label")
     #assert "Time (sec)" == par.string("label","Depth")
     assert not par.string("nolabel")

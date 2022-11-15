@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sfgrey']
+data=['http://s3.amazonaws.com/open.source.geoscience/open_data/stratton/segy/VSP/NVSP1.SGY', 'http://s3.amazonaws.com/open.source.geoscience/open_data/stratton/segy/VSP/NVSP2.SGY']
+size=     791328

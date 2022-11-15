@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sftahread', 'sftahheadermath', 'sftahwrite', 'sfwindow', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfput']
+data=['http://s3.amazonaws.com/open.source.geoscience/open_data/stratton/segy/inversions/slowness.sgy']
+size=  126252880
