@@ -192,6 +192,12 @@ Flow("fxsnr", "data fxdiff", "snr2 noise=${SOURCES[1]}")
 #! Follow "python curvelet_denoise.py" to generate "ct_denoise.rsf"
 ### curvelet
 #Flow("ct_denoise", "ct_denoise.H", "dd form=native")
+
+import sys
+python = sys.executable
+
+Command('ct_denoise.rsf','curvelet_denoise2d.py',python + ' $SOURCE')
+
 Result(
     "cm-ct", "ct_denoise", """
     put d1=0.002 d2=0.25 o1=1.2 o2=0 label1=Time unit1=s label2=Trace |

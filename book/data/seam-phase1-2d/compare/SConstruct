@@ -11,6 +11,8 @@ Plot('seam_shot1', '../fetch/shots.rsf', 'window max1=5 max2=8 f3=1 n3=1 | grey 
 
 Result('cmp_shot1','seam_shot1 awe_shot1 mshot_shot1','SideBySideAniso')
 
+SConscript('../pscons/SConstruct')
+
 Plot('awe_shot1f20', '../pscons/shots.rsf', 'window max1=5 max2=8000 f3=1 n3=1 | grey title="sfawefd2d shot1 freqency=20 " unit2= label2=amplitude')
 Result('cmp_shot1f20','seam_shot1 awe_shot1f20 mshot_shot1','SideBySideAniso')
 

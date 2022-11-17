@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 #(sftahread input=../fetch/npr3_field.rsf | sftahgethw key=tracl,tracr,fldr,tracf,ep,cdp,cdpt,sx,sy,gx,gy >/dev/null )|& more
 #(sftahread input=../fetch/npr3_gathers.rsf | sftahgethw key=tracl,tracr,fldr,tracf,ep,cdp,cdpt,sx,sy,gx,gy >/dev/null )|& more
 

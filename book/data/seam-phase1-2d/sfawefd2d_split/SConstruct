@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-SConscript('../fetch/SConsctruct')
+SConscript('../fetch/SConstruct')
 
 #Velocity model:
 #Flow('Fvel', None, 'spike mag=1500,3000 nsp=2 k1=1,101 l1=100,200 d1=4 d2=4 label1=z label2=x n1=200 n2=200 o1=2 o2=2 unit1=m unit2=m')

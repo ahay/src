@@ -567,7 +567,7 @@ int main(int argc, char *argv[])
     vinit=sf_input ("vinit");     /* initial velocity model, unit=m/s */
     shots=sf_input("shots");   /* recorded shots from exact velocity model */
     if(rank==0){/* only the 1st cpu output info */
-	vupdates=sf_output("out"); /* updated velocity in iterations */ 
+	vupdates=sf_output("--output"); /* updated velocity in iterations */ 
 	grads=sf_output("grads");  /* gradient in iterations */ 
 	illums=sf_output("illums");/* source illumination in iterations */
 	objs=sf_output("objs");    /* values of objective function in iterations */

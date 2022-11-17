@@ -319,6 +319,12 @@ Flow("snr3", "sig0 noi3",
 
 #! Need to install python package: pylops, curvelops
 #! Follow "python curvelet_denoise.py" to generate "ct_denoise.rsf"
+
+import sys
+python = sys.executable
+
+Command('ct_denoise.rsf','curvelet_denoise3d.py',python + ' $SOURCE')
+
 ### curvelet
 Result("cmpct", "ct_denoise", 
        """
