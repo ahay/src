@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sftahsort', 'sftahmakeskey', 'sftahwrite', 'sftahnmo', 'sftahstack', 'sfcat', 'sfput', 'sfwindow', 'sfgrey']
+data=['PRIVATE']
+size= 1751344648
