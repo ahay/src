@@ -1,7 +1,9 @@
 """denoise test in 3d model"""
 from rsf.prog import RSFROOT
 from rsf.proj import *
+from rsf.recipes.beg import server
 
+Fetch('image3d.rsf','cup',server)
 ###
 # To finishing fx-emdpf denoising part, it needs to install Matlab,
 # and rebuild Madagascar with "API=Matlab" option.
