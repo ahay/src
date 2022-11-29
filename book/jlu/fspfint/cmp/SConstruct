@@ -1,5 +1,8 @@
 # from inspect import isclass
 from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch('cmp2861-2876-4500ms-nmomute.sgy','yang',server)
 
 def cubeplot(clip="", extra=""):
     return """
