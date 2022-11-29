@@ -156,24 +156,24 @@ if __name__ == "__main__":
         if re.match(r"^\*", line):
            continue 
         if re.match(r"^\HANDVEL|^\VFUNC", line):
-           if 3 != len(line.split()):
-           	 sys.stderr.write("wrong input file format\n")
-           	 sys.stderr.write("%s\n"%(line))
-                 sys.exit(2)
-           # get inline and xline
-           i=line.split()[1]
-           x=line.split()[2]
-           if i in inline.keys():
-           	inline[i].append(x)
-           else:
-           	inline[i]=[x]
-	   if (i,x) in loc.keys():
-		 sys.stderr.write("duplicate location %s,%s\n"%(i,x))
-                 sys.exit(2)
-           else:
-		 loc[i,x]=[]
+            if 3 != len(line.split()):
+                sys.stderr.write("wrong input file format\n")
+                sys.stderr.write("%s\n"%(line))
+                sys.exit(2)
+            # get inline and xline
+            i=line.split()[1]
+            x=line.split()[2]
+            if i in inline.keys():
+                inline[i].append(x)
+            else:
+                inline[i]=[x]
+            if (i,x) in loc.keys():
+                sys.stderr.write("duplicate location %s,%s\n"%(i,x))
+                sys.exit(2)
+            else:
+                loc[i,x]=[]
         else:
-           loc[i,x]= loc[i,x] + line.split()
+            loc[i,x]= loc[i,x] + line.split()
     
     #for y in inline.keys():
     	#for x,v in inline[y].items():
