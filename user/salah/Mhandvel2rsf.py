@@ -155,7 +155,7 @@ if __name__ == "__main__":
         line=line.strip()
         if re.match(r"^\*", line):
            continue 
-        if re.match(r"^\HANDVEL|^\VFUNC", line):
+        if re.match(r"^HANDVEL|^VFUNC", line):
             if 3 != len(line.split()):
                 sys.stderr.write("wrong input file format\n")
                 sys.stderr.write("%s\n"%(line))
