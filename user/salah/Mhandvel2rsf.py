@@ -198,7 +198,7 @@ if __name__ == "__main__":
         p.start()
     #print len(jobs)
     for job in jobs:
-	job.join()
+        job.join()
     # concatinate traces in the second axis
     cmd='''
         %s axis=2 %s | %s  n3=%d o3=%f d3=%f n2=%d o2=%f d2=%f label1=time label2=xline label3=inline| %s plane=23
@@ -211,11 +211,7 @@ if __name__ == "__main__":
     # removing temp files of individual traces
     for tmp in vs:
         try:
-           subprocess.call(sfrm + ' ' + tmp,shell=True)
+            subprocess.call(sfrm + ' ' + tmp,shell=True)
         except:
-           pass
+            pass
     sys.exit(0)
-
-
-
-
