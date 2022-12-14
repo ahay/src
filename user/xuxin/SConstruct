@@ -8,7 +8,6 @@ integral1 pseudodepth zomiso zomvti
 
 mpi_progs = '''
 mpirtmiso
-mpirtmvti
 '''
 
 place = ''

@@ -7,8 +7,7 @@ addevent coherence comp ldip lphfreq mflt odip pca pwdfreq resample signal wavmo
 '''
 
 pyprogs='''
-prefilt pygraph subplot shuffle asc2rsf
-sos fpca
+shuffle asc2rsf
 '''
 pymods='''
 pcmf

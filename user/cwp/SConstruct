@@ -29,12 +29,6 @@ targets.c_mpi = \
 '''
 
 targets.py = '''
-dbmerge
-foldmap3D
-padpt3D
-sharadwav
-marsiswav
-staticcorr
 '''
 
 if glob_build:

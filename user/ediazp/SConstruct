@@ -22,7 +22,6 @@ targets.c = '''
 # Python targets
 targets.py = '''
 nderiv
-velan
 '''
 
 try:  # distributed version

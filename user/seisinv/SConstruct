@@ -26,8 +26,6 @@ kirchinvs
 
 # F90 mains
 targets.f90 = '''
-velxf3 
-velinvnew
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

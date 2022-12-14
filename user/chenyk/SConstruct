@@ -21,7 +21,6 @@ clapack cblas eno1 eno2 eno3 spline
 '''
 
 pyprogs='''
-pyran
 '''
 pymods='''
 
