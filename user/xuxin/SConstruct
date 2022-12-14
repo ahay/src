@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-integral1 pseudodepth zomiso zomvti
+integral1 pseudodepth
 '''
 
 mpi_progs = '''
