@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-convft corrft stackn zerocross
+convft stackn zerocross
 '''
  
 #pyprogs = 'fft rcat results zoom'

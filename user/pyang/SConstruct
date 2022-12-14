@@ -6,16 +6,12 @@ import bldutil
 ######################################################################
 # 1. C main programs
 progs = '''
-cohn checkptdemo fwi2d fbrec2d istseislet lsrtm2d lsprtm2d 
-mythresh mshots mcaseislet modeling2d mysnr
-pocsseislet rtm2d rtmadcig rtmodcig rtmva2d
-Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
-viscoa2d viscoe2d excitationic
+Testaniso Testeb Testelastic2d Testfd2d Testfd3d Testspml checkptdemo dlct excitationic fbrec2d fpocs2d fpocs3d fwi2d istseislet lsinterp2d lsprtm2d lsrtm2d mcaseislet modeling2d mshots mwni2d myradon2 mysnr pocs ps2d rtm2d rtmadcig rtmva2d viscoa2d viscoe2d
 '''
 # lsprtm2d
 progs_fftw='''
-dlct fpocs2d fpocs3d istinterp lsinterp2d istpad 
-pocs3d pocs ps2d mwni2d  myradon2
+dlct fpocs2d fpocs3d lsinterp2d  
+pocs ps2d mwni2d  myradon2
 '''
 #
 
@@ -33,7 +29,7 @@ mpifwi
 ######################################################################
 # 4. CUDA main programs
 cuda_progs = '''
-fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d 
+fbrec genshots gpufd3d gpufwi gpurtm
 '''
 
 ######################################################################
