@@ -3,24 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-apef apef2 apefsignoi atm1 atm2 bilstack c1coh convert0eq difference
-doeps domf dominantf donf dowmf duffing duffing1 duffing2 duwt dwt2
-dwt97 epsf fagrad fbpick findrefmax1 findwellcoord findzeroendt
-fkoclet fkoclet3 fourbreg2 fourmis2 freqreg freshape fxspfdenoise2
-fxspfint2 fxyspf fxyspfdenoise3 fxyspfint3 geoconvert gravcon groll
-hv2d judgechaos initial instattr instsnr intbin4 internalmult invqfilt
-iq2eq kuwahara lcf lcfseq lcfsiq lineslope localsnr locorr lpad2 lpf2
-lpfdenoise1 lpfdenoise2 lrmf ltft lum lum2 lumsmoother lumsharpener
-matchoper mean mf mig2 miss4 miss43 mkcmp mlm modatten1 modtraceq mtm
-mtres mlwm multiple mvo mvo1 ndecon nmradon nmult nonloc nshape oclet
-oshift1 pick31 pseudoprim pwcsemb pwd2 pwsfault pwsfault3 pwsmooth3
-radonoper recoverfulleq reversval rtft saltpepper sclet seisavf
-seisbreg2 seishrink seismis2 seispocs seisreg2 seisxwell sharpsimi snr
-spefcstep spefvstep sphase st stft sv2d svd svddenoise swell testapef
-testcasoper testmatch theoreqiq threshold2 threshold3 tslread tvmf
-txrna txrna2 txrna3 txspf txspfint2 txspfvsint2 txsorth txyspfint3
-txyspfvsint3 v2d variogram variogram2 vconvert virtualdata wavemis2
-winscan wmf zcwt
+apef apefsignoi convert0eq difference domf findrefmax1 findzeroendt fkoclet fourmis2 freshape fxspfdenoise2 fxspfint2 fxyspfdenoise3 fxyspfint3 gravcon invqfilt iq2eq lcf lcfseq lcfsiq lineslope lpfdenoise2 ltft lum mean mf mig2 miss4 miss43 modatten1 modtraceq mtm multiple mvo oshift1 pick31 pwsmooth pwsmooth3 recoverfulleq saltpepper seisbreg2 spefcstep spefvstep st stft sv2d svd svddenoise theoreqiq threshold2 tvmf txrna2 txrna3 txsorth txspf txspfint2 txspfvsint2 txyspfint3 txyspfvsint3 v2d
 '''
 
 try:  # distributed version
