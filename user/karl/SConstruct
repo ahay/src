@@ -13,34 +13,9 @@ except:
     root = None
     SConscript(os.path.join(RSFSRC,'system/seismic/SConstruct'))
 
-progs = ''' 
-tahgethw
-tahread
-tahwrite
-tahnmo
-tahmakeskey
-tahstack
-tahsort
-tahscscale
-lintshape2d
-tah5dinterp
-karlistinterp
-karlpocs
-tahmakeevent
-tahheadermath
-make_ix_indx
-tahmute
-tahremoveclick
-tahgain
-tahfilter
-tahagc
-tahpef
-tahstatic
-tahwindow
-tahmakesloc
-tahscdecon
-tahspecbal
-'''
+progs = '''
+karlpocs lintshape2d tahagc tahfilter tahgain tahgethw tahheadermath tahmakeevent tahmakeskey tahmute tahnmo tahpef tahread tahremoveclick tahscdecon tahscscale tahsort tahstack tahstatic tahwindow tahwrite
+''' 
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],
             LIBPATH=[RSFSRC+'/lib'],
