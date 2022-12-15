@@ -98,10 +98,10 @@ int main(int argc, char* argv[])
     /* if y, do steep-dip PEF estimation */
 
     for (j=0; j < dim1; j++) {
-	sprintf(varname,"d%d",j+1);
+	snprintf(varname,5,"d%d",j+1);
 	if (!sf_histfloat(dat,varname,d+j)) 
 	    sf_error("No %s= in input",varname);
-	sprintf(varname,"o%d",j+1);
+	snprintf(varname,5,"o%d",j+1);
 	if (!sf_histfloat(dat,varname,o+j)) 
 	    sf_error("No %s= in input",varname);
     }
@@ -140,13 +140,13 @@ int main(int argc, char* argv[])
     sf_putint(lag,"n1",na);
 
     for (j=0; j < dim; j++) {
-	sprintf(varname,"n%d",j+2);
+	snprintf(varname,5,"n%d",j+2);
 	sf_putint(lag,varname,1);
 	if (j < dim1) {
 	    sf_putint(pef,varname,k[j]);
-	    sprintf(varname,"o%d",j+2);
+	    snprintf(varname,5,"o%d",j+2);
 	    sf_putfloat(pef,varname,o[j]+0.5*w[j]*d[j]);
-	    sprintf(varname,"d%d",j+2);
+	    snprintf(varname,5,"d%d",j+2);
 	    sf_putfloat(pef,varname,(n[j]-w[j])/(k[j]-1.)*d[j]);
 	} else if (j == dim1) {
 	    sf_putint(pef,varname,n123/n1);

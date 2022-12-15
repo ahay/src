@@ -44,7 +44,7 @@ int main (int argc, char* argv[])
     bool info, trail;
     const char *type[] = {"uchar","char","int","float","complex","short","double","long"};
     const char *form[] = {"ascii","xdr","native"};
-    char pad[] = "              ", out[25];
+    char pad[] = "              ", out[26];
 
     sf_init (argc,argv);
 
@@ -117,7 +117,7 @@ int main (int argc, char* argv[])
 
 	size = 1;
 	for (j=0; j < dim; j++) {
-	    snprintf(key,8,"n%d",j+1);
+	    snprintf(key,7,"n%d",j+1);
 	    if (!sf_histlargeint(file,key,&nj)) break;
 
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -128,23 +128,23 @@ int main (int argc, char* argv[])
 	    printf("%s%s%s",pad+10,out,pad+strlen(out));
 	    size *= nj;
 
-	    snprintf(key,8,"d%d",j+1);
+	    snprintf(key,7,"d%d",j+1);
 	    if (sf_histfloat(file,key,&fj)) {
-		snprintf(out,15,"%s=%g ",key,fj);
+		snprintf(out,25,"%s=%g ",key,fj);
 	    } else {
-		snprintf(out,15,"%s=? ",key);
+		snprintf(out,25,"%s=? ",key);
 	    }
 	    printf(" %s%s",out,pad+strlen(out));
 
-	    snprintf(key,8,"o%d",j+1);
+	    snprintf(key,7,"o%d",j+1);
 	    if (sf_histfloat(file,key,&fj)) {
-		snprintf(out,15,"%s=%g ",key,fj);
+		snprintf(out,25,"%s=%g ",key,fj);
 	    } else {
-		snprintf(out,15,"%s=? ",key);
+		snprintf(out,25,"%s=? ",key);
 	    }
 	    printf(" %s%s",out,pad+strlen(out));
 
-	    snprintf(key,8,"label%d",j+1);
+	    snprintf(key,7,"label%d",j+1);
 	    if (NULL != (val = sf_histstring(file,key))) {
 		printf("%s=\"%s\" ",key,val);
 	    }

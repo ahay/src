@@ -180,7 +180,7 @@ char** sf_split(sf_file inp          /* input file */,
     commands =  (char**) sf_alloc(jobs,sizeof(char*));
 
     for (job=0; job < jobs; job++) {
-	commands[job] = sf_charalloc(SF_CMDLEN);
+	commands[job] = sf_charalloc(jobs*SF_CMDLEN+1);
 	cmdline = commands[job];
 
 	if (job < bigjobs) {
@@ -253,11 +253,11 @@ char** sf_split(sf_file inp          /* input file */,
 
 	    sf_fileclose(in);
 
-	    snprintf(cmdline,SF_CMDLEN,"%s %s=%s",splitcmd,splitinp[i]+1,splitname);
+	    snprintf(cmdline,jobs*SF_CMDLEN,"%s %s=%s",splitcmd,splitinp[i]+1,splitname);
 	    strncpy(splitcmd,cmdline,SF_CMDLEN);
 	}	
 
-	snprintf(cmdline,SF_CMDLEN,"%s %s < %s > %s",command,splitcmd,iname,oname);
+	snprintf(cmdline,jobs*SF_CMDLEN,"%s %s < %s > %s",command,splitcmd,iname,oname);
     }
 
     return commands;
@@ -269,7 +269,7 @@ void sf_out(sf_file out        /* output file */,
 	    const char *iname  /* name of the input file */)
 /*< prepare output >*/
 {
-    char *oname, cmdline[SF_CMDLEN];
+    char *oname, *cmdline;
     int ndim, job;
     off_t n[SF_MAX_DIM];
     sf_file inp;
@@ -278,9 +278,11 @@ void sf_out(sf_file out        /* output file */,
     ofile = sf_tempfile(&oname,"w+b");
     fclose(ofile);
 
-    snprintf(cmdline,SF_CMDLEN,"%s %s --dryrun=y < %s > %s",
+    cmdline = sf_charalloc(jobs*SF_CMDLEN+1);
+    snprintf(cmdline,jobs*SF_CMDLEN,"%s %s --dryrun=y < %s > %s",
 	     command,splitcommand,iname,oname);
     sf_system(cmdline);
+    free(cmdline);
     
     inp = sf_input(oname);
     ndim = sf_largefiledims (inp,n);

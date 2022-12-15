@@ -191,7 +191,7 @@ int main (int argc, char* argv[])
     }
     
     for (nsiz=1, i=0; i < dim; i++) {
-	sprintf(xkey,"x%d",i+1);
+	snprintf(xkey,4,"x%d",i+1);
 	
 	if (NULL != sf_histstring(out,xkey)) 
 	    sf_error("illegal use of %s parameter",xkey);
