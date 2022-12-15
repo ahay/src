@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     int n1, n2, n3, i2, i3, iw, n, dim;
     float o1, d1, m1, a1, m2, a2, f;
     sf_complex *data, *data2=NULL;
-    char key[5];
+    char key[7];
     sf_file in, in2, ma, ma2, out, out2=NULL;
 
     sf_init(argc,argv);
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("dim",&dim)) dim=1;
     /* data dimensionality */
-    sprintf(key,"n%d",dim+1);
+    snprintf(key,7,"n%d",dim+1);
 
     if (!sf_histint(in,key,&n3)) n3=1;
 

@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 	    n2 *= n[i];
     }
 
-    sprintf(key,"n%d",dim1+1);
+    snprintf(key,6,"n%d",dim1+1);
     if (!sf_histint(fit,key,&nc)) sf_error("No %s= in fit",key);
 
     if (NULL != sf_getstring("coef")) {
