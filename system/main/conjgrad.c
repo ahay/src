@@ -169,6 +169,8 @@ int main(int argc, char* argv[])
 
 		if (NULL == x0) {
 		    for (i=0; i < nbuf; i++) { buf[i] = 0.0f; }
+
+		    to = NULL;
 		} else {
 		    close(p[2][0]);
 		    close(STDOUT_FILENO);
@@ -213,6 +215,8 @@ int main(int argc, char* argv[])
 		    close(STDIN_FILENO);
 		    DUP(p[3][0]);
 		    from = sf_input("in");
+		} else {
+		    from = NULL;
 		}
 
 		Rfile = fopen(R,"wb");
