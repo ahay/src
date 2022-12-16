@@ -59,7 +59,7 @@ if pdfread:
 Fetch('report.pdf',server='%s'%reportserver,top='%s'%reporttop,
 	           dir='%s'%reportdir)
 if pdfread:
-   Result('report','report.pdf',
+   Flow('report','report.pdf',
 	  pdfread + ' ${SOURCES[0]}',stdin=0)
 
 

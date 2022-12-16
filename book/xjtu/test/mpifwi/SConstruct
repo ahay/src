@@ -61,7 +61,7 @@ NP = int(ARGUMENTS.get('NP','8'))
 
 Flow('vsnaps grads objs illums','smvel shots',
 	'''
-	sfmpifwi vinit=${SOURCES[0]} shots=${SOURCES[1]} grads=${TARGETS[1]} objs=${TARGETS[2]}
+	mpifwi vinit=${SOURCES[0]} shots=${SOURCES[1]} grads=${TARGETS[1]} objs=${TARGETS[2]}
 	illums=${TARGETS[3]} niter=10
 	''',stdin=0, np=NP)
 
