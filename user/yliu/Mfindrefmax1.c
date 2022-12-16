@@ -28,7 +28,7 @@ int main (int argc, char* argv[])
     
     float o1, d1;	
     int   n1, n2, i2, i1, zp;
-    int   maxpo;
+    int   maxpo=0;
     float max_value;
     float *column,*max; 
     int *zepo, *max_pt;	
@@ -58,6 +58,8 @@ int main (int argc, char* argv[])
 
     if (NULL != sf_getstring("zeropo")) {
 	zeropo = sf_input("zeropo");
+    } else {
+	zeropo = NULL;
     }
     
     sf_putint(out,"n1",n2);

@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a,b,c, mean, d1;
     sf_complex *cnum, *cden, *crat, *ctrace;
-    char key[6];
+    char key[7];
     bool hertz, band, cmplx, verb;
     sf_file in, out;
 	

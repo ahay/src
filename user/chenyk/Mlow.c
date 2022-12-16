@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     bool verb;
     int i, dim, n[SF_MAX_DIM], nd, rect[SF_MAX_DIM], niter;
     float *noi, *sig, *rat, eps;
-    char key[6];
+    char key[7];
     sf_file fnoi, fsig, flow;
 
     sf_init(argc,argv);
