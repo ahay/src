@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
 		sf_floatread(mags, nw, fmag);
 	}else{
 		fmag=NULL;
+		mags=NULL;
 		if (!sf_getfloat("mag",&mag)) mag=1.0;
 	}
 

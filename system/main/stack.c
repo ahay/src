@@ -66,6 +66,7 @@ int main(int argc, char* argv[])
     else if ( sf_gettype(in) == SF_COMPLEX )
 	isreal = false;
     else
+	isreal = false;
 	sf_error("Incorrect data type in input");
 
     /* ------------------------------------------------------------ */
@@ -168,12 +169,16 @@ int main(int argc, char* argv[])
     if(norm) fold = sf_intalloc(nBELOW);
 
     if(isreal) {
-	dinR  = sf_floatalloc(nBELOW);
-	douR  = sf_floatalloc(nBELOW);
+	dinR = sf_floatalloc(nBELOW);
+	douR = sf_floatalloc(nBELOW);
+	dinC = NULL;
+	douC = NULL;
 	stkR = (min || max) ? NULL :            (double*) sf_alloc(nBELOW,sizeof(double));
     } else {
-	dinC  = sf_complexalloc(nBELOW);
-	douC  = sf_complexalloc(nBELOW);
+	dinR = NULL;
+	douR = NULL;
+	dinC = sf_complexalloc(nBELOW);
+	douC = sf_complexalloc(nBELOW);
 	stkC = (min || max) ? NULL : (sf_double_complex*) sf_alloc(nBELOW,sizeof(sf_double_complex));
     }
 

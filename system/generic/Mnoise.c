@@ -87,8 +87,10 @@ int main (int argc, char* argv[])
   if(isreal) {
     nbuf = BUFSIZ/sizeof(float);
     datR = sf_floatalloc(nbuf);
+    datC = NULL;
   } else {
     nbuf = BUFSIZ/sizeof(sf_complex);
+    datR = NULL;
     datC = sf_complexalloc(nbuf);
   }
 
