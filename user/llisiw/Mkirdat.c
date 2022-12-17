@@ -240,6 +240,7 @@ int main(int argc, char* argv[])
 		filt_set(tau);
 		
 		shift = 0;
+		delta = 0.0;
 		for (it=0; it < nt; it++) {
 		    if (((float)it)*dt < tau) 
 			continue;

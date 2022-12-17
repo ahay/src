@@ -291,7 +291,7 @@ void forward_modeling_d(sf_file Fdat, sf_mpi *mpipar, sf_sou soupar, sf_acqui ac
 
 	float dx, dz, idt;
 	float **vv, **den, **v2d, **iden, **dd, *bcxp, *bczp, *bcxv, *bczv;
-	float **px, **pz, **p, **vx, **vz, **term, *rr, *sendbuf, *recvbuf, ***ddall;
+	float **px, **pz, **p, **vx, **vz, **term, *rr, *sendbuf, *recvbuf, ***ddall=NULL;
 
 	//sf_file Fwav;
 	MPI_Comm comm=MPI_COMM_WORLD;
