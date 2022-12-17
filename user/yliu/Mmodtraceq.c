@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     bool  verb;
     int   n1, nc, fm, *q=NULL, *at=NULL, nw, nt, wr, i1, iw, i, nwc;
     float d1, o1, dw, w0, w, qr;
-    float *R, *trace, *T, *tra, *b;
+    float *R, *trace, *T, *tra;
     /* char  key[7]; */
     kiss_fft_cpx *bs, *ibs, *enat, *eenat;
     kiss_fftr_cfg icfg;
@@ -86,7 +86,6 @@ int main(int argc, char *argv[])
     nwc=nw*nc;
 
     R = sf_floatalloc(nw);
-    b = sf_floatalloc(nw);
     enat = (kiss_fft_cpx*)sf_complexalloc(nwc);
     eenat = (kiss_fft_cpx*)sf_complexalloc(nwc);
     bs = (kiss_fft_cpx*)sf_complexalloc(nwc);

@@ -24,14 +24,13 @@ int main(int argc, char *argv[])
 {
     int   n1, nc, fm, *at=NULL;
     float *q=NULL, mag;
-    int   nw, nt, wr, i1, iw, i, nwc, nm;
+    int   nw, nt, wr, i1, iw, i, nwc;
     float d1, o1, dw, w0, w;
-    float *strace, *trace, *T, *tra, *b;
-    float *min, *minp, *ric1, *rick1, *ric2, *rick2, *rick;
+    float *trace, *T;
+    float *min, *minp;
     kiss_fft_cpx *R, *bs, *ibs, *enat, *eenat;
-    kiss_fftr_cfg cfg, icfg;
-    
-    sf_file inp = NULL, out;
+    kiss_fftr_cfg cfg, icfg;   
+    sf_file out;
 
     sf_init(argc, argv);
 
@@ -53,7 +52,7 @@ int main(int argc, char *argv[])
 
     if (nc >= 1) {
 	at = sf_intalloc(nc);
-	q = sf_intalloc(nc);
+	q = sf_floatalloc(nc);
 
 	/* snprintf(key,6,"at"); */
 	if (!sf_getints("at",at,nc)) {
@@ -83,20 +82,12 @@ int main(int argc, char *argv[])
     nwc=nw*nc;
 
     R = (kiss_fft_cpx*)sf_complexalloc(nw);
-    b = sf_floatalloc(nw);
     min = sf_floatalloc(n1);
     minp = sf_floatalloc(n1);
-    ric1 = sf_floatalloc(nt);
-    rick1 = sf_floatalloc(nt);
-    ric2 = sf_floatalloc(nt);
-    rick2 = sf_floatalloc(nt);
-    rick = sf_floatalloc(nt);
     enat = (kiss_fft_cpx*)sf_complexalloc(nwc);
     eenat = (kiss_fft_cpx*)sf_complexalloc(nwc);
     bs = (kiss_fft_cpx*)sf_complexalloc(nwc);
     ibs = (kiss_fft_cpx*)sf_complexalloc(nw);
-    tra = sf_floatalloc(nt);
-    strace = sf_floatalloc(nt);
     trace = sf_floatalloc(n1);
     T = sf_floatalloc(nc);
     

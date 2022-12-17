@@ -58,7 +58,7 @@ int main (int argc, char *argv[])
 
   sf_file Fot = NULL;
   bool     otIsFile = false;
-  float   * ot;
+  float   *ot = NULL;
 
   /*------------------------------------------------------------*/
   sf_init(argc, argv);

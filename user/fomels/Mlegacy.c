@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool adj;
-    char key[3];
+    char key[4];
     int n1, n2, i, n12, dim, n[SF_MAX_DIM];
     float *legacy, *hires, *merge, *hwght, *lwght, **nr;
     sf_file in, out, hweight, lweight, rect;
