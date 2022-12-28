@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
 	repos = sf_input("repos");
 	repo = sf_intalloc(n2);
     } else {
+	repos = NULL;
+	repo = NULL;
 	sf_error("need repos.");
     }
 
