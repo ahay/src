@@ -36,14 +36,14 @@ import rsf.api as rsf
 if sys.version_info[0] >= 3:
     from subprocess import getoutput
 else:
-    from subprocess import getoutput
+    from commands import getoutput
 
 try:
     import subprocess
     have_subprocess=True
 except: # Python < 2.4
     have_subprocess=False
-    import subprocess
+    import commands
 
 # Operating system return codes
 unix_success = 0
