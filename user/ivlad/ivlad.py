@@ -36,14 +36,14 @@ import rsf.api as rsf
 if sys.version_info[0] >= 3:
     from subprocess import getoutput
 else:
-    from commands import getoutput
+    from subprocess import getoutput
 
 try:
     import subprocess
     have_subprocess=True
 except: # Python < 2.4
     have_subprocess=False
-    import commands
+    import subprocess
 
 # Operating system return codes
 unix_success = 0
@@ -275,7 +275,7 @@ def getout(prog, arg=None, stdin=None, verb=False, raiseIfNoneOut=False):
                 raise m8rex.NotAValidFile(stdin)
         try:
             s = subprocess.Popen(cmdlist,stdin=finp,stdout=subprocess.PIPE)
-            output = s.communicate()[0]
+            output = s.communicate()[0].decode('utf-8')
         except:
             raise m8rex.FailedExtCall(cat_cmd(cmdlist, stdin))
     else: # no subprocess module present
@@ -326,7 +326,7 @@ def ndims(filename):
     nlist = [1] * max_dims
 
     for dim in range(1,max_dims+1):
-        sfget_out = getout('sfget',['parform=n','n'+str(dim)],filename)
+        sfget_out = getout('sfget',['parform=n','n%d' % dim],filename)
         if len(sfget_out) > 0:
             curr_n = int(sfget_out)
             if curr_n > 1:
@@ -601,7 +601,7 @@ def data_file_nm():
 
 def chk_file_dims(filenm, ndims, verb=False):
 
-    if int(getout('sfleftsize', 'i='+str(ndims), filenm, verb)) > 1:
+    if int(getout('sfleftsize', 'i=%d' % ndims, filenm, verb)) > 1:
         raise m8rex.NdimsMismatch(filenm, ndims)
 
 ################################################################################
