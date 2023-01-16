@@ -87,7 +87,7 @@ void sf_init(int argc,char *argv[])
     /* set prog */
     tprog = strrchr(argv[0],'/');
     tprog = (NULL == tprog)? argv[0]:tprog+1;
-    prog_len = strlen(tprog) + 1;
+    prog_len = strlen(tprog)+1;
     strncpy(prog,tprog,prog_len);
     
     /* no pars and input from terminal */

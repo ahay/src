@@ -47,6 +47,8 @@ int main(int argc, char *argv[])
 	zpo = sf_input("zpo");
 	pos = sf_intalloc(n2);	
     } else {
+	zpo = NULL;
+	pos = NULL;
 	sf_error("need the position file");
     }
 

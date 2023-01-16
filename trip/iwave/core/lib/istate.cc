@@ -439,7 +439,7 @@ namespace TSOpt {
     try {
       return *(axes.at(i)); 
     }
-    catch (out_of_range) {
+    catch (out_of_range const&) {
       RVLException e;
       e<<"Error: IWaveSampler::getAxis\n";
       e<<"  axis index "<<i<<" out of range = [0, "<<axes.size()<<"\n";

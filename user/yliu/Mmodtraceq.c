@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 {
     bool  verb;
     int   n1, nc, fm, *q=NULL, *at=NULL, nw, nt, wr, i1, iw, i, nwc;
-    float d1, o1, dw, w0, w, qr;
+    float d1, o1, dw, w0, w;
     float *R, *trace, *T, *tra;
     /* char  key[7]; */
     kiss_fft_cpx *bs, *ibs, *enat, *eenat;
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     dw = 1./(nt*d1);
     w0 = 0.;
     wr = 500.;
-    qr = 500.;
+    /* qr = 500.; */
 
     sf_putint(out,"n1",n1);
     sf_putfloat(out,"d1",d1);

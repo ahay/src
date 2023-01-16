@@ -28,7 +28,7 @@ static void rotate (size_t n1, int dim,
 int main(int argc, char* argv[])
 {
     sf_file in, out;
-    char *buf, *buf2, key[5];
+    char *buf, *buf2, key[7];
 /* Want them to be arbitrary, neither float nor complex */
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
     int i, dim, dim1, dim2, rot[SF_MAX_DIM], esize;
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
     dim2=0;
     for (i=0; i < dim; i++) {	
-	snprintf(key,5,"rot%d",i+1);
+	snprintf(key,6,"rot%d",i+1);
 	if (!sf_getint(key,rot+i)) rot[i]=0;
 	/*( rot#=(0,0,...) length of #-th axis that is moved to the end )*/
 	if (rot[i] < 0) rot[i] += n[i];

@@ -290,7 +290,7 @@ namespace RVL {
 	return (getDCF().compare(stdsp.getDCF()) && 
 		getLAP().compare(stdsp.getLAP()));
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	return 0;
       }
     }
