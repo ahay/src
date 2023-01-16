@@ -74,7 +74,7 @@ namespace TSOpt {
                     trout.data[i] = trin.data[i]*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
             }
         }
-        catch (bad_cast) {
+        catch (bad_cast const&) {
             RVLException e;
             e<<"Error: SEGYLinMute::operator()\n";
             e<<"input LDC not segytrace\n";
@@ -222,7 +222,7 @@ namespace TSOpt {
                 }
             }
         }
-        catch (bad_cast) {
+        catch (bad_cast const&) {
             RVLException e;
             e<<"Error: SEGYTaperMute::operator()\n";
             e<<"input LDC not segytrace\n";
@@ -271,7 +271,7 @@ namespace TSOpt {
                     = trout.data[i-1]+trin.data[i-1]*dt;
             }
         }
-        catch (bad_cast) {
+        catch (bad_cast const&) {
             RVLException e;
             e<<"Error: SEGYFwdInt::operator()\n";
             e<<"input LDC not segytrace\n";
@@ -320,7 +320,7 @@ namespace TSOpt {
                     = trout.data[i+1]+trin.data[i+1]*dt;
             }
         }
-        catch (bad_cast) {
+        catch (bad_cast const&) {
             RVLException e;
             e<<"Error: SEGYAdjInt::operator()\n";
             e<<"input LDC not segytrace\n";

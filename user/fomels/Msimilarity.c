@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     bool verb;
     int dim, dim1, i, n1, i2, n2, niter, n[SF_MAX_DIM]; 
     int rect[SF_MAX_DIM];
-    char key[6];	
+    char key[7];	
     float *one, *two, *rat1, *rat2, eps;
     sf_file in, other, out;
 
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 
     dim1 = -1;
     for (i=0; i < dim; i++) {
-	snprintf(key,6,"rect%d",i+1);
+	snprintf(key,7,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
 	/*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
 	if (rect[i] > 1) dim1 = i+1;

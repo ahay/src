@@ -271,7 +271,7 @@ namespace RVL {
       try {
 	return *(this->at(i));
       }
-      catch (out_of_range) {
+      catch (out_of_range const&) {
 	RVLException e;
 	e<<"attempt to access component "<<i<<" of StdProductDC of size "<<this->size()<<"\n";
 	throw e;
@@ -282,7 +282,7 @@ namespace RVL {
       try {
 	return *(this->at(i));
       }
-      catch (out_of_range) {
+      catch (out_of_range const&) {
 	RVLException e;
 	e<<"attempt to access component "<<i<<" of StdProductDC of size "<<this->size()<<"\n";
 	throw e;

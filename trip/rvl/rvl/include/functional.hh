@@ -492,7 +492,7 @@ namespace RVL {
 	  dynamic_cast<const FunctionalProductDomain<Scalar> &>(fref);
 	return pf.getProductDomain();
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	RVLException e;
 	e<<"Error: FunctionalEvaluation::getProductDomain\n";
 	e<<"referenced Functional does not have ProductSpace domain\n";

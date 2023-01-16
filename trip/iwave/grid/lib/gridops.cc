@@ -178,7 +178,7 @@ namespace TSOpt {
       }
       // cerr<<"GridWindowFO::operator() end\n";
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"\nError: GridMaskFO::operator()\n";
       e<<"at least one arg is not ContentPackage<ireal,RARR>\n";
@@ -281,7 +281,7 @@ namespace TSOpt {
 	}
       }
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"Error: GridWindowOp constructor\n";
       e<<"  either domain or range is neither product nor a GridSpace,\n";
@@ -455,7 +455,7 @@ namespace TSOpt {
       }
       // cerr<<"GridWindowFO::operator() end\n";
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"\nError: GridWindowFO::operator()\n";
       e<<"at least one arg is not ContentPackage<ireal,RARR>\n";
@@ -543,7 +543,7 @@ namespace TSOpt {
 	}
       }
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"Error: GridWindowOp constructor\n";
       e<<"  either domain or range is neither product nor a GridSpace,\n";
@@ -912,7 +912,7 @@ namespace TSOpt {
 #endif // > 0
       // cerr<<"GridFwdDerivFO::operator() end\n";
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"Error: GridFwdDerivFO::operator()\n";
       e<<"input type error - not CP<ireal,RARR>\n";
@@ -1244,7 +1244,7 @@ namespace TSOpt {
 #endif // > 0
       // cerr<<"GridAdjDerivFO::operator() end\n";
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"Error: GridAdjDerivFO::operator()\n";
       e<<"input type error - not CP<ireal,RARR>\n";
@@ -1294,7 +1294,7 @@ namespace TSOpt {
 	}
       }
     }
-    catch (RVLException e) {
+    catch (RVLException & e) {
       e<<"\ncalled from GridDerivOp constructor\n";
       throw e;
     }
@@ -1714,7 +1714,7 @@ namespace TSOpt {
 	throw e;
       }
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"Error: GridFwdExtendFO::operator()\n";
       e<<"  input type error - not CP<ireal,RARR>\n";
@@ -2091,7 +2091,7 @@ namespace TSOpt {
 	throw e;
       }
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"Error: GridAdjExtendFO::operator()\n";
       e<<"  input type error - not CP<ireal,RARR>\n";
@@ -2252,7 +2252,7 @@ namespace TSOpt {
 	}
       }
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"Error: GridExtendOp constructor\n";
       e<<"  at least one factor in input space is not a GridSpace\n";

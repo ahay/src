@@ -47,18 +47,18 @@ int main (int argc, char *argv[])
 
     for (i=0; i < dim; i++) {
 	/* get o's */
-	snprintf(key,3,"o%d",i+1);
+	snprintf(key,4,"o%d",i+1);
 	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
 	
         /* get d's */
-	snprintf(key,3,"d%d",i+1);
+	snprintf(key,4,"d%d",i+1);
 	if (!sf_histfloat(in,key,d+i)) d[i]=1.;
 
 	/* get j's */
-	snprintf(key,3,"j%d",i+1);
+	snprintf(key,4,"j%d",i+1);
 	if (!sf_getint(key,j+i)) {
 	    /*( j#=(1,...) jump in #-th dimension )*/
-	    snprintf(key,3,"d%d",i+1);
+	    snprintf(key,4,"d%d",i+1);
 	    if (sf_getfloat(key,&a)) {
 		/*( d#=(d1,d2,...) sampling in #-th dimension )*/
 		j[i] = 0.5 + a/d[i];
@@ -68,10 +68,10 @@ int main (int argc, char *argv[])
 	} 
 
 	/* get f's */	
-	snprintf(key,3,"f%d",i+1);
+	snprintf(key,4,"f%d",i+1);
 	if (!sf_getlargeint(key,f+i)) {
 	    /*( f#=(0,...) window start in #-th dimension )*/
-	    snprintf(key,5,"min%d",i+1);
+	    snprintf(key,6,"min%d",i+1);
 	    if (sf_getfloat(key,&a)) {
 		/*( min#=(o1,o2,,...) minimum in #-th dimension )*/
 		f[i] = 0.5 + (a - o[i]) / d[i];
@@ -95,10 +95,10 @@ int main (int argc, char *argv[])
 	d[i] *= j[i];
 
 	/* get n's */
-	snprintf(key,3,"n%d",i+1);
+	snprintf(key,4,"n%d",i+1);
 	if (!sf_getint(key,m+i)) { 
 	    /*( n#=(0,...) window size in #-th dimension )*/
-	    snprintf(key,5,"max%d",i+1);
+	    snprintf(key,6,"max%d",i+1);
 	    if (sf_getfloat(key,&a)) {
 		/*( max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...) 
 		  maximum in #-th dimension )*/

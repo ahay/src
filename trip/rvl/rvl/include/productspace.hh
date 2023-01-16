@@ -71,7 +71,7 @@ namespace RVL {
 	}
 	return true;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	return false;
       }
     }
@@ -87,7 +87,7 @@ namespace RVL {
 	}
 	return true;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	return false;
       }
     }
@@ -118,7 +118,7 @@ namespace RVL {
 	}
 	return res;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	RVLException e; e<<"Error: ProductSpace::inner\n";
 	e<<"inputs not (both) product vectors\n";
 	throw e;
@@ -143,7 +143,7 @@ namespace RVL {
 	e<<"\ncalled from ProductSpace::zero\n";
 	throw e;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	RVLException e; e<<"Error: ProductSpace::zero\n";
 	e<<"input not product vector\n";
 	throw e;
@@ -178,7 +178,7 @@ namespace RVL {
 	e<<"\ncalled from ProductSpace::linComb\n";
 	throw e;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	RVLException e; e<<"Error: ProductSpace::linComb\n";
 	e<<"inputs not all product vectors\n";
 	throw e;
@@ -332,7 +332,7 @@ namespace RVL {
 	}
 	return true;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	return false;
       }
     }
@@ -346,7 +346,7 @@ namespace RVL {
 	if (psp[0] != subspc) return false;
 	return true;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	try {
 	  const ProductSpace<Scalar> & psp 
 	    = dynamic_cast<const ProductSpace<Scalar> &>(sp);	
@@ -356,7 +356,7 @@ namespace RVL {
 	  }
 	  return true;
 	}
-	catch (bad_cast) {
+	catch (bad_cast const&) {
 	  return false;
 	}
       }
@@ -387,7 +387,7 @@ namespace RVL {
 	}
 	return res;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	RVLException e; e<<"Error: CartesianPowerSpace::inner\n";
 	e<<"inputs not (both) product vectors\n";
 	throw e;
@@ -412,7 +412,7 @@ namespace RVL {
 	e<<"\ncalled from CartesianPowerSpace::zero\n";
 	throw e;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	RVLException e; e<<"Error: CartesianPowerSpace::zero\n";
 	e<<"input not product vector\n";
 	throw e;
@@ -441,7 +441,7 @@ namespace RVL {
 	e<<"\ncalled from CartesianPowerSpace::linComb\n";
 	throw e;
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	RVLException e; e<<"Error: CartesianPowerSpace::linComb\n";
 	e<<"inputs not all product vectors\n";
 	throw e;
