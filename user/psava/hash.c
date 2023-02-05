@@ -7,7 +7,7 @@
 /*------------------------------------------------------------*/
 /* hash table elements (points) */
 typedef struct {
-    pt3d * p;       /* coordinates (x,y,z) */
+    pt3d       * p; /*     coordinates (x,y,z) */
     unsigned int i; /* index in the full cloud */
 } point;
 
@@ -15,7 +15,9 @@ typedef struct {
 point * hashTable;
 
 /*------------------------------------------------------------*/
-unsigned int hash(unsigned int nhash, pt3d * p, pt3d * o)
+unsigned int hash(unsigned int nhash, 
+                            pt3d * p, 
+                            pt3d * o)
 /*< hash function >*/
 {
     /* distance from reference point */
@@ -53,7 +55,10 @@ void htClose()
 }
 
 /*------------------------------------------------------------*/
-bool htInsert(unsigned int nhash, pt3d * p, pt3d * o, unsigned int i)
+bool htInsert(unsigned int nhash, 
+                        pt3d * p, 
+                        pt3d * o, 
+            unsigned int   i)
 /*< insert in hash table >*/
 {
     if( p == NULL ) return false;
@@ -65,7 +70,6 @@ bool htInsert(unsigned int nhash, pt3d * p, pt3d * o, unsigned int i)
     for(unsigned int j = 0; j < nhash; j++ ) {
         unsigned int t = (h + j) % nhash;
         if( hashTable[t].p == NULL) {
-            /* insert */
             hashTable[t].p = p;
             hashTable[t].i = i;
             return true;
@@ -75,7 +79,9 @@ bool htInsert(unsigned int nhash, pt3d * p, pt3d * o, unsigned int i)
 }
 
 /*------------------------------------------------------------*/
-bool htDelete(unsigned int nhash, pt3d * q, pt3d * o)
+bool htDelete(unsigned int nhash, 
+                        pt3d * q, 
+                        pt3d * o)
 /*< delete from hash table >*/
 {
     if( q == NULL ) return false;
@@ -89,7 +95,6 @@ bool htDelete(unsigned int nhash, pt3d * q, pt3d * o)
             if( SF_ABS(hashTable[t].p->x - q->x) < EPS) {
                 if( SF_ABS(hashTable[t].p->y - q->y) < EPS) {
                     if( SF_ABS(hashTable[t].p->z - q->z) < EPS) {
-                        /* delete */
                         hashTable[t].p = NULL;
                         hashTable[t].i = -1;
 
@@ -104,7 +109,9 @@ bool htDelete(unsigned int nhash, pt3d * q, pt3d * o)
 }
 
 /*------------------------------------------------------------*/
-unsigned int htLookup(unsigned int nhash, pt3d * q, pt3d * o)
+unsigned int htLookup(unsigned int nhash, 
+                                pt3d * q, 
+                                pt3d * o)
 /*< lookup in hash table >*/
 {
     if( q == NULL ) return -1;
@@ -133,7 +140,7 @@ unsigned int htLookup(unsigned int nhash, pt3d * q, pt3d * o)
 unsigned int htRetrieve(unsigned int t)
 /*< retrieve hash table >*/
 {
-  return hashTable[t].i;
+    return hashTable[t].i;
 }
 
 /*------------------------------------------------------------*/
