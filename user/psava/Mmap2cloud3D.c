@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
   float **   y = NULL;
   float **   z = NULL;
   float ** msk = NULL; /* mask array */
-  int     nout;        /* count of output */
+  int     nout;        /* count output */
 
   float dou[NCO];
 
