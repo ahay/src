@@ -104,34 +104,36 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   for(int i1 = 0; i1 < n1; i1++) {
 
-    if( msk[i1] != 0  ) {
+    /* compute vector a */
+    if( i1 < n1 - 1) {
+      ax = x[i1 + 1] - x[i1];
+      az = z[i1 + 1] - z[i1];
+    } else {
+      ax = x[i1] - x[i1 - 1];
+      az = z[i1] - z[i1 - 1];
+    }
 
-      /* compute vector a */
-      if( i1 < n1 - 1) {
-        ax = x[i1 + 1] - x[i1];
-        az = z[i1 + 1] - z[i1];
-      } else {
-        ax = x[i1] - x[i1 - 1];
-        az = z[i1] - z[i1 - 1];
+    /* compute the normal */
+    nx = -az;
+    nz = +ax;
+    nn = sqrtf(nx*nx + nz*nz);
+
+    /* output cloud point */
+    dou[0] = x[i1];
+    dou[1] = z[i1];
+
+    dou[2] = - nx/nn;
+    dou[3] = - nz/nn;
+
+    dou[4] = 0.0;
+    dou[5] = 0.0;
+
+    if( mask == true ) {
+      if( msk[i1] != 0  ) {
+        sf_floatwrite(dou, NCO, Fou);
       }
-
-      /* compute the normal */
-      nx = -az;
-      nz = +ax;
-      nn = sqrtf(nx*nx + nz*nz);
-
-      /* output cloud point */
-      dou[0] = x[i1];
-      dou[1] = z[i1];
-
-      dou[2] = - nx/nn;
-      dou[3] = - nz/nn;
-
-      dou[4] = 0.0;
-      dou[5] = 0.0;
-
+    } else {
       sf_floatwrite(dou, NCO, Fou);
-      
     }
   }
 

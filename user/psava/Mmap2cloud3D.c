@@ -120,52 +120,55 @@ int main(int argc, char* argv[])
   for(int i2 = 0; i2 < n2; i2++) {
     for(int i1 = 0; i1 < n1; i1++) {
 
-      if( msk[i2][i1] != 0 ) {
-
-        /* compute vector a */
-        if(i2 < n2 - 1) {
-          ax = x[i2 + 1][i1] - x[i2][i1];
-          ay = y[i2 + 1][i1] - y[i2][i1];
-          az = z[i2 + 1][i1] - z[i2][i1];
-        } else {
-          ax = x[i2  ][i1] - x[i2 - 1][i1];
-          ay = y[i2  ][i1] - y[i2 - 1][i1];
-          az = z[i2  ][i1] - z[i2 - 1][i1];
-        }
-
-        /* compute vector b */
-        if(i1 < n1 - 1) {
-          bx = x[i2][i1 + 1] - x[i2][i1];
-          by = y[i2][i1 + 1] - y[i2][i1];
-          bz = z[i2][i1 + 1] - z[i2][i1];
-        } else {
-          bx = x[i2][i1  ] - x[i2][i1 - 1];
-          by = y[i2][i1  ] - y[i2][i1 - 1];
-          bz = z[i2][i1  ] - z[i2][i1 - 1];
-        }
-
-        /* compute the normal */
-        nx = ay*bz - by*az;
-        ny = az*bx - bz*ax;
-        nz = ax*by - bx*ay;
-        nn = sqrtf(nx*nx + ny*ny + nz*nz);
-
-        /* output cloud point */
-        dou[0] = x[i2][i1];
-        dou[1] = y[i2][i1];
-        dou[2] = z[i2][i1];
-
-        dou[3] = - nx/nn;
-        dou[4] = - ny/nn;
-        dou[5] = - nz/nn;
-
-        dou[6] = 0.0;
-        dou[7] = 0.0;
-        dou[8] = 0.0;
-
-        sf_floatwrite(dou, NCO, Fou);
-
+      /* compute vector a */
+      if(i2 < n2 - 1) {
+        ax = x[i2 + 1][i1] - x[i2][i1];
+        ay = y[i2 + 1][i1] - y[i2][i1];
+        az = z[i2 + 1][i1] - z[i2][i1];
+      } else {
+        ax = x[i2  ][i1] - x[i2 - 1][i1];
+        ay = y[i2  ][i1] - y[i2 - 1][i1];
+        az = z[i2  ][i1] - z[i2 - 1][i1];
       }
+
+      /* compute vector b */
+      if(i1 < n1 - 1) {
+        bx = x[i2][i1 + 1] - x[i2][i1];
+        by = y[i2][i1 + 1] - y[i2][i1];
+        bz = z[i2][i1 + 1] - z[i2][i1];
+      } else {
+        bx = x[i2][i1  ] - x[i2][i1 - 1];
+        by = y[i2][i1  ] - y[i2][i1 - 1];
+        bz = z[i2][i1  ] - z[i2][i1 - 1];
+      }
+
+      /* compute the normal */
+      nx = ay*bz - by*az;
+      ny = az*bx - bz*ax;
+      nz = ax*by - bx*ay;
+      nn = sqrtf(nx*nx + ny*ny + nz*nz);
+
+      /* output cloud point */
+      dou[0] = x[i2][i1];
+      dou[1] = y[i2][i1];
+      dou[2] = z[i2][i1];
+
+      dou[3] = - nx/nn;
+      dou[4] = - ny/nn;
+      dou[5] = - nz/nn;
+
+      dou[6] = 0.0;
+      dou[7] = 0.0;
+      dou[8] = 0.0;
+
+      if( mask == true ) {
+        if( msk[i2][i1] != 0 ) {
+          sf_floatwrite(dou, NCO, Fou);
+        }
+      } else {
+        sf_floatwrite(dou, NCO, Fou);
+      }
+
     }
   }
 
