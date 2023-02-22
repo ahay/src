@@ -8,11 +8,15 @@ Copyright (C) 2022 Colorado School of Mines
 
 #define NCO 9         // x,y,z, nx,ny,nz, vx,vy,vz
 
+/*------------------------------------------------------------*/
+/*------------------------------------------------------------*/
+/*------------------------------------------------------------*/
+/*------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
   bool verb, isreal, norm;
-  bool allopen = false;
 
+  bool allopen = false;
   const char **fname; // array of file names
   int nFILES;         //     number of input files
   int nCLOUD;         //     number of point clouds
@@ -35,7 +39,8 @@ int main(int argc, char *argv[])
   sf_complex * winC = NULL; /* win data complex */
 
   float      * fold = NULL;
-  int ihash;
+  int         ihash;
+  int          hashscale;
 
   float      * jnk = NULL;
   jnk = sf_floatalloc(NCO);
@@ -43,6 +48,8 @@ int main(int argc, char *argv[])
   /*------------------------------------------------------------*/
   /* init RSF */
   sf_init(argc,argv);
+
+  // default behavior
   if (!sf_getbool("verb", &verb)) verb = false; /* verbosity */
   if (!sf_getbool("norm", &norm)) norm = true;  /* fold normalization */
 
@@ -141,7 +148,9 @@ int main(int argc, char *argv[])
 
   /*------------------------------------------------------------*/
   /* define the hash table */
-  unsigned int nhash = 2 * sf_n(aa);
+  if (!sf_getint("hashscale", &hashscale)) hashscale = 2;
+  if(verb) sf_warning("hashscale=%d",hashscale);
+  unsigned int nhash = hashscale * sf_n(aa);
   htInit( nhash );
 
   if(verb) fprintf(stderr,"make hash table: ");
