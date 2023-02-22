@@ -15,7 +15,7 @@ Python is a highly popular scripting programming languages. It is used by Madaga
 This chapter focuses on the latter case.
 
 \section{File objects}
-\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstset{language=python,showstringspaces=false}
 
 The \texttt{File} class in the Madagascar interface defines an RSF file object. Suppose we have a file \texttt{spike.rsf} created with
 \begin{verbatim}
@@ -33,10 +33,35 @@ spike = m8r.spike(n1=5,k1=2)[0]
 \end{lstlisting}
 Running \texttt{type(spike)} identifies \texttt{spike} as an object of
 \texttt{m8r.File} class. Printing file by running
-\texttt{print(spike)} outputs the name of the associated RSF file
-on disk.
+\texttt{print(spike)} outputs the name of the associated RSF file.
 
 \subsection{Extracting file attributes}
+
+Data attributes can be extracted from the file objects. We can ask, for example, for the mean
+value with
+\begin{lstlisting}
+spike.mean()
+\end{lstlisting}
+or the standard deviation with
+\begin{lstlisting}
+spike.std()
+\end{lstlisting}
+
+The following table shows different attributes and their descriptions:
+
+\begin{tabular}{ l | l }
+  \hline 
+  rms & root mean square \\
+  \hline   mean & mean value \\
+  \hline  norm & the square norm \\
+  \hline var & variance \\
+  \hline std & standard deviation \\
+  \hline max & maximum value \\
+  \hline min & minimum value \\
+  \hline nonzero & number of nonzero values \\
+  \hline samples & number of samples \\
+  \hline
+\end{tabular}
 
 \subsection{Operations on files}
 
