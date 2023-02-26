@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
   sf_file   Fdall = NULL; /* all  data */
   sf_file   Fcall = NULL; /* all cloud */
 
-  sf_axis aa,aw,af;
-  int     ja,jw,jf;
+  sf_axis       aa,aw,af;
+  unsigned long ja,jw,jf;
 
   pt3d       * aco  = NULL; /* all cloud coordinates */
   pt3d       * wco  = NULL; /* win cloud coordinates */
@@ -39,8 +39,10 @@ int main(int argc, char *argv[])
   sf_complex * winC = NULL; /* win data complex */
 
   float      * fold = NULL;
-  int         ihash;
-  int          hashscale;
+
+  unsigned long nhash;
+  unsigned long ihash;
+  int hashscale;
 
   float      * jnk = NULL;
   jnk = sf_floatalloc(NCO);
@@ -119,6 +121,10 @@ int main(int argc, char *argv[])
   Fdall = sf_output("out"); // open all  data
   aa = sf_iaxa(Fcall, 2);
 
+  if (!sf_getint("hashscale", &hashscale)) hashscale = 2;
+  if(verb) sf_warning("hashscale=%d",hashscale);
+  nhash = hashscale * sf_n(aa);
+
   // shape all data file
   sf_oaxa(Fdall, aa, 1);
   sf_oaxa(Fdall, af, 2);
@@ -148,14 +154,11 @@ int main(int argc, char *argv[])
 
   /*------------------------------------------------------------*/
   /* define the hash table */
-  if (!sf_getint("hashscale", &hashscale)) hashscale = 2;
-  if(verb) sf_warning("hashscale=%d",hashscale);
-  unsigned int nhash = hashscale * sf_n(aa);
   htInit( nhash );
 
   if(verb) fprintf(stderr,"make hash table: ");
   for(ja = 0; ja < sf_n(aa); ja++) {
-      if(verb) fprintf(stderr,"%8d\b\b\b\b\b\b\b\b",sf_n(aa)-ja-1);
+      if(verb) fprintf(stderr,"%11lu\b\b\b\b\b\b\b\b\b\b\b",sf_n(aa)-ja-1);
       htInsert( nhash, &aco[ja], &o, ja );
   }
   if(verb) fprintf(stderr,"\n");
@@ -164,7 +167,7 @@ int main(int argc, char *argv[])
   /* main loop */
   /*------------------------------------------------------------*/
   for(jf = 0; jf < sf_n(af); jf++) {
-    if(verb) fprintf(stderr,"%8d\b\b\b\b\b\b\b\b",sf_n(af)-jf-1);
+    if(verb) fprintf(stderr,"%11lu\b\b\b\b\b\b\b\b\b\b\b",sf_n(af)-jf-1);
 
     // reset out data & fold
     #ifdef _OPENMP
