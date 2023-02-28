@@ -158,10 +158,11 @@ int main(int argc, char *argv[])
 
   if(verb) fprintf(stderr,"make hash table: ");
   for(ja = 0; ja < sf_n(aa); ja++) {
-      if(verb && ja%100==0) fprintf(stderr,"%11lu\b\b\b\b\b\b\b\b\b\b\b",sf_n(aa)-ja-1);
+      if(verb && ja%1000==0) fprintf(stderr,"%12lu\b\b\b\b\b\b\b\b\b\b\b\b",sf_n(aa)-ja-1);
       htInsert( nhash, &aco[ja], &o, ja );
   }
-  if(verb) fprintf(stderr,"\n");
+  if(verb) fprintf(stderr,"            \n");
+
 
   /*------------------------------------------------------------*/
   /* main loop */
