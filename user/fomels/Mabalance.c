@@ -25,7 +25,7 @@ int main (int argc, char* argv[])
     bool reverse;
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *trace, *hilb, *trace2, *hilb2, *num, *den, *rat, *org, c, mean;
-    char key[6];
+    char key[8];
     sf_file in, out, ref, weight;
 
     sf_init (argc,argv);
@@ -48,7 +48,7 @@ int main (int argc, char* argv[])
     n1 = n[0];
     n12 = 1;
     for (i=0; i < dim; i++) {
-	snprintf(key,6,"rect%d",i+1);
+	snprintf(key,7,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
 	n12 *= n[i];
     }

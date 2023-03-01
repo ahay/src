@@ -17,6 +17,10 @@
 1.0
 >>> spike[2]
 1.0
+>>> spike.samples()
+10.0
+>>> spike.nonzero()
+10.0
 >>> spike2 = spike+spike
 >>> spike2.rms()
 2.0

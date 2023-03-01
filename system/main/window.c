@@ -34,7 +34,7 @@ int main (int argc, char *argv[])
     off_t i0, j[SF_MAX_DIM];
     off_t n[SF_MAX_DIM], m[SF_MAX_DIM], f[SF_MAX_DIM], *table, maxsize;
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
-    char key[7], *label[SF_MAX_DIM], *unit[SF_MAX_DIM], *buf;
+    char key[8], *label[SF_MAX_DIM], *unit[SF_MAX_DIM], *buf;
     bool squeeze, verb;
     sf_file in, out;
 
@@ -49,18 +49,18 @@ int main (int argc, char *argv[])
 
     for (i=0; i < dim; i++) {
 	/* get o's */
-	snprintf(key,3,"o%d",i+1);
+	snprintf(key,4,"o%d",i+1);
 	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
 	
         /* get d's */
-	snprintf(key,3,"d%d",i+1);
+	snprintf(key,4,"d%d",i+1);
 	if (!sf_histfloat(in,key,d+i)) d[i]=1.;
 
 	/* get j's */
-	snprintf(key,3,"j%d",i+1);
+	snprintf(key,4,"j%d",i+1);
 	if (!sf_getint(key,&tmp)) {
 	    /*( j#=(1,...) jump in #-th dimension )*/
-	    snprintf(key,3,"d%d",i+1);
+	    snprintf(key,4,"d%d",i+1);
 	    if (sf_getfloat(key,&a)) {
 		/*( d#=(d1,d2,...) sampling in #-th dimension )*/
 		j[i] = 0.5 + a/d[i];
@@ -71,10 +71,10 @@ int main (int argc, char *argv[])
             j[i] = tmp;
 
 	/* get f's */	
-	snprintf(key,3,"f%d",i+1);
+	snprintf(key,4,"f%d",i+1);
 	if (!sf_getlargeint(key,f+i)) {
 	    /*( f#=(0,...) window start in #-th dimension )*/
-	    snprintf(key,5,"min%d",i+1);
+	    snprintf(key,6,"min%d",i+1);
 	    if (sf_getfloat(key,&a)) {
 		/*( min#=(o1,o2,,...) minimum in #-th dimension )*/
 		f[i] = 0.5 + (a - o[i]) / d[i];
@@ -92,10 +92,10 @@ int main (int argc, char *argv[])
 	d[i] *= j[i];
 
 	/* get n's */
-	snprintf(key,3,"n%d",i+1);
+	snprintf(key,4,"n%d",i+1);
 	if (!sf_getlargeint(key,m+i)) {
 	    /*( n#=(0,...) window size in #-th dimension )*/
-	    snprintf(key,5,"max%d",i+1);
+	    snprintf(key,6,"max%d",i+1);
 	    if (sf_getfloat(key,&a)) {
 		/*( max#=(o1+(n1-1)*d1,o2+(n1-1)*d2,,...) maximum in #-th dimension )*/
 		m[i] = 1.5 + (a - o[i]) / d[i];
@@ -111,11 +111,11 @@ int main (int argc, char *argv[])
 #endif
 
 	/* get labels */
-	snprintf(key,7,"label%d",i+1);
+	snprintf(key,8,"label%d",i+1);
 	label[i] = sf_histstring(in,key);
 
 	/* get units */
-	snprintf(key,6,"unit%d",i+1);
+	snprintf(key,7,"unit%d",i+1);
 	unit[i] = sf_histstring(in,key);
     }
 
@@ -146,14 +146,14 @@ int main (int argc, char *argv[])
 
     for (i=i0=0; i0 < dim; i0++) {
 	if (squeeze && 1==m[i0]) continue;
-	snprintf(key,3,"n%d",(i+1)%10u);
+	snprintf(key,4,"n%d",(i+1)%10u);
 	sf_putlargeint(out,key,m[i0]);
-	snprintf(key,3,"o%d",(i+1)%10u);
+	snprintf(key,4,"o%d",(i+1)%10u);
 	sf_putfloat(out,key,o[i0]);
-	snprintf(key,3,"d%d",(i+1)%10u);
+	snprintf(key,4,"d%d",(i+1)%10u);
 	sf_putfloat(out,key,d[i0]);
 	if (NULL != label[i0]) {
-	    snprintf(key,7,"label%d",(i+1)%10u);
+	    snprintf(key,8,"label%d",(i+1)%10u);
 	    sf_putstring(out,key,label[i0]);
 	}
 	if (NULL != unit[i0]) {
@@ -166,18 +166,18 @@ int main (int argc, char *argv[])
     if (squeeze) {
 	for (i0=0; i0 < dim; i0++) {
 	    if (1 != m[i0]) continue;
-	    snprintf(key,3,"n%d",(i+1)%10u);
+	    snprintf(key,4,"n%d",(i+1)%10u);
 	    sf_putlargeint(out,key,m[i0]);
-	    snprintf(key,3,"o%d",(i+1)%10u);
+	    snprintf(key,4,"o%d",(i+1)%10u);
 	    sf_putfloat(out,key,o[i0]);
-	    snprintf(key,3,"d%d",(i+1)%10u);
+	    snprintf(key,4,"d%d",(i+1)%10u);
 	    sf_putfloat(out,key,d[i0]);
 	    if (NULL != label[i0]) {
-		snprintf(key,7,"label%d",(i+1)%10u);
+		snprintf(key,8,"label%d",(i+1)%10u);
 		sf_putstring(out,key,label[i0]);
 	    }
 	    if (NULL != unit[i0]) {
-		snprintf(key,6,"unit%d",(i+1)%10u);
+		snprintf(key,7,"unit%d",(i+1)%10u);
 		sf_putstring(out,key,unit[i0]);
 	    }
 	    i++;

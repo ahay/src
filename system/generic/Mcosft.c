@@ -40,14 +40,14 @@ int main (int argc, char* argv[])
     dim = sf_filedims (in,n);
     dim1 = -1;
     for (i=0; i < dim; i++) {
-	snprintf(key,6,"sign%d",i+1);
+	snprintf(key,7,"sign%d",i+1);
 	if (1==n[i] || !sf_getint(key,sign+i)) sign[i]=0;
 	/*( sign#=0 transform along #-th dimension 
 	  [+1 forward or -1 backward] )*/ 
 	if (sign[i]) {
 	    dim1 = i;
-	    snprintf(key,3,"o%d",i+1);
-	    snprintf(key2,3,"u%d",i+1);
+	    snprintf(key,4,"o%d",i+1);
+	    snprintf(key2,4,"u%d",i+1);
 	    if (sign[i] > 0) {
 		if (!sf_histfloat(in,key,o+i)) o[i]=0.;
 		sf_putfloat(out,key,0.);
@@ -57,7 +57,7 @@ int main (int argc, char* argv[])
 		    !sf_getfloat(key,o+i)) o[i]=0.;
 		sf_putfloat(out,key,o[i]);
 	    }
-	    snprintf(key,3,"d%d",i+1);
+	    snprintf(key,4,"d%d",i+1);
 	    if (!sf_histfloat(in,key,d+i)) d[i]=1.;
 	    sf_putfloat(out,key,
 			1./(2*kiss_fft_next_fast_size(n[i]-1)*d[i]));

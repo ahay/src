@@ -522,7 +522,7 @@ namespace RVL {
       try {
 	this->export_apply(work,x,val);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from LeastSquaresFcnlGN::apply\n";
 	throw e;
       }
@@ -532,7 +532,7 @@ namespace RVL {
       try {
 	this->export_applyGradient(work,x,g);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from LeastSquaresFcnlGN::applyGradient\n";
 	throw e;
       }
@@ -543,7 +543,7 @@ namespace RVL {
       try {
 	this->export_applyHessian(work,x,dx,dy);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from LeastSquaresFcnlGN::applyHessian\n";
 	throw e;
       }
@@ -624,7 +624,7 @@ namespace RVL {
       try {
 	this->export_apply(work,x,val);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from StdLeastSquaresFcnlGN::apply\n";
 	throw e;
       }
@@ -634,7 +634,7 @@ namespace RVL {
       try {
 	this->export_applyGradient(work,x,g);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from StdLeastSquaresFcnlGN::applyGradient\n";
 	throw e;
       }
@@ -645,7 +645,7 @@ namespace RVL {
       try {
 	this->export_applyHessian(work,x,dx,dy);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from StdLeastSquaresFcnlGN::applyHessian\n";
 	throw e;
       }
@@ -738,7 +738,7 @@ namespace RVL {
       try {
 	this->export_apply(work,x,val);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from RegLeastSquaresFcnlGN::apply\n";
 	throw e;
       }
@@ -748,7 +748,7 @@ namespace RVL {
       try {
 	this->export_applyGradient(work,x,g);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from RegLeastSquaresFcnlGN::applyGradient\n";
 	throw e;
       }
@@ -759,7 +759,7 @@ namespace RVL {
       try {
 	this->export_applyHessian(work,x,dx,dy);
       }
-      catch (RVLException e) {
+      catch (RVLException & e) {
 	e<<"\ncalled from RegLeastSquaresFcnlGN::applyHessian\n";
 	throw e;
       }

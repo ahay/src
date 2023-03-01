@@ -34,17 +34,17 @@ static void check_zeros (sf_file file, int esize, off_t size,
 
 int main (int argc, char* argv[])
 {
-    int i, j, ncheck, esize, nin, dim=SF_MAX_DIM;
+    int i, j, j1, ncheck, esize, nin, dim=SF_MAX_DIM;
     off_t nj, size, n[SF_MAX_DIM];
     float check, fj;
-    char *label, *dataname, key[8], *val;
+    char *label, *dataname, key[7], *val;
     const char **filename;
     char buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
     bool info, trail;
     const char *type[] = {"uchar","char","int","float","complex","short","double","long"};
     const char *form[] = {"ascii","xdr","native"};
-    char pad[] = "              ", out[26];
+    char pad[] = "              ", out[30];
 
     sf_init (argc,argv);
 
@@ -117,39 +117,41 @@ int main (int argc, char* argv[])
 
 	size = 1;
 	for (j=0; j < dim; j++) {
-	    snprintf(key,7,"n%d",j+1);
+	    j1 = (j+1)%10;
+	    
+	    snprintf(key,3,"n%d",j1);
 	    if (!sf_histlargeint(file,key,&nj)) break;
 
 #if defined(__cplusplus) || defined(c_plusplus)
-	    snprintf(out,25,"%s=%lu",key,(long) nj);
+	    snprintf(out,28,"%s=%lu",key,(long) nj);
 #else
-	    snprintf(out,25,"%s=%llu",key,(long long) nj);
+	    snprintf(out,28,"%s=%llu",key,(long long) nj);
 #endif
 	    printf("%s%s%s",pad+10,out,pad+strlen(out));
 	    size *= nj;
 
-	    snprintf(key,7,"d%d",j+1);
+	    snprintf(key,3,"d%d",j1);
 	    if (sf_histfloat(file,key,&fj)) {
-		snprintf(out,25,"%s=%g ",key,fj);
+		snprintf(out,28,"%s=%g ",key,fj);
 	    } else {
-		snprintf(out,25,"%s=? ",key);
+		snprintf(out,28,"%s=? ",key);
 	    }
 	    printf(" %s%s",out,pad+strlen(out));
 
-	    snprintf(key,7,"o%d",j+1);
+	    snprintf(key,3,"o%d",j1);
 	    if (sf_histfloat(file,key,&fj)) {
-		snprintf(out,25,"%s=%g ",key,fj);
+		snprintf(out,28,"%s=%g ",key,fj);
 	    } else {
-		snprintf(out,25,"%s=? ",key);
+		snprintf(out,28,"%s=? ",key);
 	    }
 	    printf(" %s%s",out,pad+strlen(out));
 
-	    snprintf(key,7,"label%d",j+1);
+	    snprintf(key,7,"label%d",j1);
 	    if (NULL != (val = sf_histstring(file,key))) {
 		printf("%s=\"%s\" ",key,val);
 	    }
 
-	    snprintf(key,7,"unit%d",j+1);
+	    snprintf(key,6,"unit%d",j1);
 	    if (NULL != (val = sf_histstring(file,key))) {
 		printf("%s=\"%s\" ",key,val);
 	    }

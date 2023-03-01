@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     off_t i3, n3;
     size_t n;
     sf_file in, out;
-    char key1[7], key2[7], *val, *trace;
+    char key1[12], key2[12], *val, *trace;
 
     sf_init (argc, argv);
     in = sf_input ("in");
@@ -45,37 +45,37 @@ int main(int argc, char* argv[])
 
     n = (size_t) esize;
     for (j=0; j < axis-1; j++) {
-	sprintf(key2,"n%d",j+1);
+	snprintf(key2,12,"n%d",j+1);
 	if (!sf_histint(in,key2,&ni)) break;
 	n *= ni;
     }
 
     if (!sf_getint("n",&n2)) sf_error("Need n=");
     /* Size of the newly created dimension */    
-    sprintf(key1,"n%d",axis);
+    snprintf(key1,12,"n%d",axis);
     sf_putint(out,key1,n2);
 
     if (sf_getfloat("d",&f)) {
 	/* Sampling of the newly created dimension */ 
-	sprintf(key1,"d%d",axis);
+	snprintf(key1,4,"d%d",axis);
 	sf_putfloat(out,key1,f);
     }
     
     if (sf_getfloat("o",&f)) {
 	/* Origin of the newly created dimension */
-	sprintf(key1,"o%d",axis);
+	snprintf(key1,4,"o%d",axis);
 	sf_putfloat(out,key1,f);
     }
 
     if (NULL != (val = sf_getstring("label"))) {
 	/* Label of the newly created dimension */
-	sprintf(key1,"label%d",axis);
+	snprintf(key1,8,"label%d",axis);
 	sf_putstring(out,key1,val);
     }
 
     if (NULL != (val = sf_getstring("unit"))) {
 	/* Units of the newly created dimension */
-	sprintf(key1,"unit%d",axis);
+	snprintf(key1,7,"unit%d",axis);
 	sf_putstring(out,key1,val);
     }
 

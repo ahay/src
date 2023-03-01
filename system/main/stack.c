@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 	isreal = false;
     } else {
 	isreal = false;
-    sf_error("Incorrect data type in input");
+	sf_error("Incorrect data type in input");
     }
     /* ------------------------------------------------------------ */
   

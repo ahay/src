@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool adj;
-    char key[4];
+    char key[3];
     int n1, n2, i, n12, dim, n[SF_MAX_DIM];
     float *legacy, *hires, *merge, *hwght, *lwght, **nr;
     sf_file in, out, hweight, lweight, rect;
@@ -50,10 +50,10 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,1);    
     if (adj) {
 	n2 /= 2;
-	snprintf(key,3,"n%d",dim);
+	snprintf(key,3,"n%d",dim%10u);
 	sf_putint(out,key,1);
     } else {
-	snprintf(key,3,"n%d",dim+1);
+	snprintf(key,3,"n%d",(dim+1)%10u);
 	sf_putint(out,key,2);
     }
 	

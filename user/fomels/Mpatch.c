@@ -45,7 +45,7 @@ int main (int argc, char *argv[])
     int n[SF_MAX_DIM], p[SF_MAX_DIM], w[SF_MAX_DIM]; 
     off_t nall, n12;
     float *u, *t, *r;
-    char key[4], *tmpname, *whtname;
+    char key[3], *tmpname, *whtname;
     FILE *tmp=NULL, *wht=NULL;
     sf_file in, out;
 
@@ -76,9 +76,9 @@ int main (int argc, char *argv[])
 	/* data dimensions (for inv=y) */
 
 	for (j=0; j < dim; j++) {
-	    snprintf(key,4,"n%d",j+1);
+	    snprintf(key,3,"n%d",(j+1)%10u);
 	    sf_putint(out,key,n[j]);
-	    snprintf(key,4,"n%d",dim+j+1);
+	    snprintf(key,3,"n%d",(dim+j+1)%10u);
 	    sf_putint(out,key,1);
 	}	
     } else {
@@ -97,7 +97,7 @@ int main (int argc, char *argv[])
 	}
 
 	for (j=0; j < dim; j++) {
-	    snprintf(key,4,"n%d",j+1);
+	    snprintf(key,3,"n%d",(j+1)%10u);
 	    sf_putint(out,key,w[j]);
 	}
 
@@ -113,7 +113,7 @@ int main (int argc, char *argv[])
 	}
 
 	for (j=0; j < dim; j++) {
-	    snprintf(key,4,"n%d",(dim+j+1)%100u);
+	    snprintf(key,3,"n%d",(dim+j+1)%10u);
 	    sf_putint(out,key,p[j]);
 	}
     }

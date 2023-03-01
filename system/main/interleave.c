@@ -21,7 +21,7 @@ int main (int argc, char* argv[])
     off_t n[SF_MAX_DIM], n1, i2, n2, nleft;
     size_t nbuf, esize;
     sf_file *in=NULL, out=NULL;
-    char key[4], buf[BUFSIZ];
+    char key[3], buf[BUFSIZ];
 
     sf_init(argc,argv);
     in = (sf_file*) sf_alloc ((size_t) argc,sizeof(sf_file));
@@ -58,7 +58,7 @@ int main (int argc, char* argv[])
     }
 
     out = sf_output ("out");
-    snprintf(key,3,"n%d",axis);
+    snprintf(key,3,"n%d",axis%10u);
     sf_putint(out,key,n[axis-1]*nin);
     sf_setformat(out,sf_histstring(in[0],"data_format"));
 
@@ -86,13 +86,13 @@ static void check_compat (size_t esize,
 			  int nin, sf_file *in, int dim, const off_t *n)
 {
     int ni, id, i;
-    char key[4];
+    char key[3];
 
     for (i=1; i < nin; i++) {
 	if (esize != sf_esize(in[i]))
 	    sf_error ("esize mismatch: need %d",esize);
 	for (id=0; id < dim; id++) {
-	    snprintf(key,3,"n%d",id+1);
+	    snprintf(key,3,"n%d",(id+1)%10u);
 	    if (!sf_histint(in[i],key,&ni) || ni != n[id])
 		sf_error("%s mismatch: need %d",key,n[id]);
 	}
