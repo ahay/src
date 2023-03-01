@@ -38,12 +38,12 @@ int main(int argc, char* argv[])
     char key[7], *prog;
     bool norm, rms, min=false, max=false, prod=false, all=false;
 
-    float          tR;
+    float          tR=0.0;
     float      * dinR;
     float      * douR;
     double     * stkR;
 
-    sf_complex     tC;
+    sf_complex     tC=0.0;
     sf_complex * dinC;
     sf_complex * douC;
     sf_double_complex * stkC;
@@ -61,14 +61,14 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     /* ------------------------------------------------------------ */
-    if      ( sf_gettype(in) == SF_FLOAT )
+    if      ( sf_gettype(in) == SF_FLOAT ) {
 	isreal = true;
-    else if ( sf_gettype(in) == SF_COMPLEX )
+    } else if ( sf_gettype(in) == SF_COMPLEX ) {
 	isreal = false;
-    else
+    } else {
 	isreal = false;
-	sf_error("Incorrect data type in input");
-
+    sf_error("Incorrect data type in input");
+    }
     /* ------------------------------------------------------------ */
   
     dim = sf_filedims(in,ndims);
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 
     nBELOW = 1;
     for ( j = 0; j < lim; j++) {
-	snprintf(key,4,"n%d",j+1);
+	snprintf(key,3,"n%d",(j+1)%10u);
 	if (!sf_histint(in,key,&ni)) break;
 	nBELOW *= ni;
     }
@@ -105,13 +105,13 @@ int main(int argc, char* argv[])
 	nBELOW = 1;
 
 	for (j = 0; j < lim; j++) {
-	    snprintf(key,4,"n%d",j+1);
+	    snprintf(key,3,"n%d",(j+1)%10u);
 	    sf_putint(out,key,1);
 	}
 
     } else {
 
-	snprintf(key,4,"n%d",axis);
+	snprintf(key,3,"n%d",axis%10u);
 	if (!sf_histint(in,key,&ntmp)) sf_error("No %s= in input",key);
 	nAXIS = ntmp;
 
@@ -174,11 +174,13 @@ int main(int argc, char* argv[])
 	dinC = NULL;
 	douC = NULL;
 	stkR = (min || max) ? NULL :            (double*) sf_alloc(nBELOW,sizeof(double));
+	stkC = NULL;
     } else {
 	dinR = NULL;
 	douR = NULL;
 	dinC = sf_complexalloc(nBELOW);
 	douC = sf_complexalloc(nBELOW);
+	stkR = NULL;
 	stkC = (min || max) ? NULL : (sf_double_complex*) sf_alloc(nBELOW,sizeof(sf_double_complex));
     }
 
