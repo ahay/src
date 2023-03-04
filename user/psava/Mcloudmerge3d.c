@@ -6,7 +6,7 @@ Copyright (C) 2022 Colorado School of Mines
 #include <rsf.h>
 #include "hash.h"
 
-#define NCO 9         // x,y,z, nx,ny,nz, vx,vy,vz
+#define NCO 9         /* x,y,z, nx,ny,nz, vx,vy,vz */
 
 /*------------------------------------------------------------*/
 /*------------------------------------------------------------*/
@@ -17,10 +17,10 @@ int main(int argc, char *argv[])
   bool verb, isreal, norm;
 
   bool allopen = false;
-  const char **fname; // array of file names
-  int nFILES;         //     number of input files
-  int nCLOUD;         //     number of point clouds
-  int nopen;          // max number of open files
+  const char **fname; /* array of file names */
+  int nFILES;         /*     number of input files */
+  int nCLOUD;         /*     number of point clouds */
+  int nopen;          /* max number of open files */
 
   /* I/O files */
   sf_file * Fdwin = NULL; /* win  data */
@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
   sf_file   Fdall = NULL; /* all  data */
   sf_file   Fcall = NULL; /* all cloud */
 
-  sf_axis       aa,aw,af;
-  unsigned long ja,jw,jf;
+  sf_axis            aa,aw,af;
+  unsigned long long ja,jw,jf;
 
   pt3d       * aco  = NULL; /* all cloud coordinates */
   pt3d       * wco  = NULL; /* win cloud coordinates */
@@ -40,9 +40,9 @@ int main(int argc, char *argv[])
 
   float      * fold = NULL;
 
-  unsigned long nhash;
-  unsigned long ihash;
-  int hashscale;
+  unsigned long long nhash;
+  unsigned long long ihash;
+  float hashscale;
 
   float      * jnk = NULL;
   jnk = sf_floatalloc(NCO);
@@ -121,9 +121,10 @@ int main(int argc, char *argv[])
   Fdall = sf_output("out"); // open all  data
   aa = sf_iaxa(Fcall, 2);
 
-  if (!sf_getint("hashscale", &hashscale)) hashscale = 2;
-  if(verb) sf_warning("hashscale=%d",hashscale);
+  if (!sf_getfloat("hashscale", &hashscale)) hashscale = 2.0;
+  if(verb) sf_warning("hashscale=%f",hashscale);
   nhash = hashscale * sf_n(aa);
+  htInit( nhash ); /* initialize the hash table */
 
   // shape all data file
   sf_oaxa(Fdall, aa, 1);
@@ -154,11 +155,9 @@ int main(int argc, char *argv[])
 
   /*------------------------------------------------------------*/
   /* define the hash table */
-  htInit( nhash );
-
   if(verb) fprintf(stderr,"make hash table: ");
   for(ja = 0; ja < sf_n(aa); ja++) {
-      if(verb && ja%1000==0) fprintf(stderr,"%12lu\b\b\b\b\b\b\b\b\b\b\b\b",sf_n(aa)-ja-1);
+      if(verb && (sf_n(aa)-ja-1)%1000==0) fprintf(stderr,"%12llu\b\b\b\b\b\b\b\b\b\b\b\b",sf_n(aa)-ja-1);
       htInsert( nhash, &aco[ja], &o, ja );
   }
   if(verb) fprintf(stderr,"            \n");
@@ -168,7 +167,7 @@ int main(int argc, char *argv[])
   /* main loop */
   /*------------------------------------------------------------*/
   for(jf = 0; jf < sf_n(af); jf++) {
-    if(verb) fprintf(stderr,"%11lu\b\b\b\b\b\b\b\b\b\b\b",sf_n(af)-jf-1);
+    if(verb) fprintf(stderr,"%12llu\b\b\b\b\b\b\b\b\b\b\b\b",sf_n(af)-jf-1);
 
     // reset out data & fold
     #ifdef _OPENMP
