@@ -248,8 +248,6 @@ int main(int argc, char *argv[])
           ja = htLookup( nhash, &wco[jw], &o, ddMIN);
           if(isreal) allR[ ja ] += winR[ jw ];
           else       allC[ ja ] += winC[ jw ];
-          //if(isreal) allR[ ja ] = winR[ jw ];
-          //else       allC[ ja ] = winC[ jw ];
           if(norm && jf==0) fold[ ja ]++;
       }
 
