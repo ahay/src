@@ -202,9 +202,9 @@ int main(int argc, char *argv[])
       for(jw = 0; jw < sf_n(aw); jw++) {
         if(allopen) sf_floatread( jnk,NCO,Fcwin[jCLOUD]);
         else        sf_floatread( jnk,NCO,Fcwin[     0]);
-        wco[jw].x  = jnk[0];
-        wco[jw].y  = jnk[1];
-        wco[jw].z  = jnk[2];
+        wco[jw].x = jnk[0];
+        wco[jw].y = jnk[1];
+        wco[jw].z = jnk[2];
       }
 
       // read win data
@@ -233,10 +233,11 @@ int main(int argc, char *argv[])
         shared(aw, wco, winR,winC, allR,allC, o, fold,isreal)
       #endif
       for(jw = 0; jw < sf_n(aw); jw++) {
-          ihash = htLookup( nhash, &wco[jw], &o);
-          if(isreal) allR[ ihash ] += winR[ jw ];
-          else       allC[ ihash ] += winC[ jw ];
-          if(norm && jf==0) fold[ ihash ]++;
+          ja = htLookup( nhash, &wco[jw], &o);
+          //;       htDelete( nhash, &wco[jw], &o);
+          if(isreal) allR[ ja ] += winR[ jw ];
+          else       allC[ ja ] += winC[ jw ];
+          if(norm && jf==0) fold[ ja ]++;
       }
 
       free(wco);             // clear win cloud
@@ -253,7 +254,7 @@ int main(int argc, char *argv[])
     // normalize by fold
     if(norm) {
       for(ja = 0; ja < sf_n(aa); ja++) {
-        fold[ja] = SF_MAX(fold[ja],1);
+        fold[ ja ] = SF_MAX(fold[ja],1);
       }
       if(isreal) for(ja = 0; ja < sf_n(aa); ja++) { allR[ja] /= fold[ja]; }
       else       for(ja = 0; ja < sf_n(aa); ja++) { allC[ja] /= fold[ja]; }

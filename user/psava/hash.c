@@ -52,8 +52,8 @@ unsigned long long hashF1a(const unsigned long long nhash,
     const unsigned long long FNV_PRIME  = 1099511628211ull;
 
     double h = sqrtf( pow(p->x - o->x, 2) + 
-                     pow(p->y - o->y, 2) + 
-                     pow(p->z - o->z, 2) );
+                      pow(p->y - o->y, 2) + 
+                      pow(p->z - o->z, 2) );
     const unsigned char* b = (unsigned char*) &h;
 
     unsigned long long hindx = FNV_OFFSET;
@@ -75,8 +75,8 @@ unsigned long long hashF2a(const unsigned long long nhash,
     const unsigned long long FNV_PRIME  = 1099511628211ull;
 
     double h = sqrtf( pow(p->x - o->x, 2) + 
-                     pow(p->y - o->y, 2) + 
-                     pow(p->z - o->z, 2) );
+                      pow(p->y - o->y, 2) + 
+                      pow(p->z - o->z, 2) );
     const unsigned char* b = (unsigned char*) &h;
 
     unsigned long long hindx = FNV_OFFSET;
@@ -173,7 +173,21 @@ bool htDelete(unsigned long long nhash,
     /* then search for an open slot using open addressing */
     for( jhash = 0; jhash < nhash; jhash++ ) {
         unsigned long long t = (h + jhash) % nhash;
+        
+        if( hashTable[ t ].p != NULL) {
+            double d = sqrtf( pow(hashTable[ t ].p->x - q->x, 2) + 
+                              pow(hashTable[ t ].p->y - q->y, 2) + 
+                              pow(hashTable[ t ].p->z - q->z, 2) );
 
+            if( d < SF_EPS ) {
+                hashTable[ t ].p = NULL;
+                hashTable[ t ].i = -1;
+
+                return true; // found & deleted
+            }
+        }
+
+        /*
         if( hashTable[ t ].p != NULL) {
             if( SF_ABS(hashTable[ t ].p->x - q->x) < SF_EPS) {
                 if( SF_ABS(hashTable[ t ].p->y - q->y) < SF_EPS) {
@@ -181,15 +195,16 @@ bool htDelete(unsigned long long nhash,
                         hashTable[ t ].p = NULL;
                         hashTable[ t ].i = -1;
 
-                        return true; /* found & deleted */
+                        return true; // found & deleted
                     }
                 }
             }
         }
+        */
 
     }
 
-    return false; /* not found & deleted */
+    return false; // not found & deleted
 }
 
 /*------------------------------------------------------------*/
@@ -210,12 +225,14 @@ unsigned long long htLookup(unsigned long long nhash,
     for( jhash = 0; jhash < nhash; jhash++ ) {
         unsigned long long t = (h + jhash) % nhash;
 
-        double d = sqrtf( pow(hashTable[ t ].p->x - q->x, 2) + 
-                          pow(hashTable[ t ].p->y - q->y, 2) + 
-                          pow(hashTable[ t ].p->z - q->z, 2) );
+        if( hashTable[ t ].p != NULL) {
+            double d = sqrtf( pow(hashTable[ t ].p->x - q->x, 2) + 
+                              pow(hashTable[ t ].p->y - q->y, 2) + 
+                              pow(hashTable[ t ].p->z - q->z, 2) );
 
-        if( d < SF_EPS * SF_EPS) {
-            return hashTable[ t ].i; // found
+            if( d < SF_EPS ) {
+                return hashTable[ t ].i; // found
+            }
         }
 
         /*
