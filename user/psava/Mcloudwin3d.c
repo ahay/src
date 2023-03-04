@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
   float      * dou=NULL;
 
   bool * fin;
+  off_t * gwmap;
 
   jnk = sf_floatalloc( NCO );
 
@@ -161,10 +162,12 @@ int main(int argc, char* argv[])
     dou = sf_floatalloc( nw * NCO );
     for(int i = 0; i < nw * NCO; i++) dou[i] = 0.0;
 
+    // keep indices in all cloud
+    gwmap = sf_largeintalloc( nw );
     iw = 0;
     for( ig = 0; ig < ng; ig++) {
-      if( fin[ig] ) {
-        dou[ iw * NCO ] = ig;
+      if( fin[ig] == 1 ) {
+        gwmap[ iw ] = ig;
         iw++;
       }
     }
@@ -177,7 +180,7 @@ int main(int argc, char* argv[])
   shared(  nw, dou, din )
 #endif
     for( iw = 0; iw < nw; iw++ ) {
-      ig = dou[ iw * NCO ];
+      ig = gwmap[ iw ];
       for(ico = 0; ico < NCO; ico++) {
         dou[iw * NCO + ico] = din[ig * NCO + ico];
       }
@@ -188,6 +191,7 @@ int main(int argc, char* argv[])
     sf_floatwrite(dou, nw * NCO, Fou);
 
     // deallocate arrays
+    free(gwmap);
     free(din);
     free(dou);
 
@@ -201,7 +205,7 @@ int main(int argc, char* argv[])
 
       for( ig = 0; ig < sf_n(ag); ig++) {
 
-        sf_floatread( jnk,NCO,Fin);
+        sf_floatread(jnk, NCO, Fin);
         gco.x  = jnk[0];
         gco.y  = jnk[1];
         gco.z  = jnk[2];
@@ -212,8 +216,8 @@ int main(int argc, char* argv[])
 
         for( io = 0; io < sf_n(ao); io++ ) {
           if( isInCone( &oco[io], &gco, &gno, cosapt) ) {
-            if( ipass == 0) ncount++;         // count points
-            else sf_floatwrite( jnk,NCO,Fou); // write points
+            if( ipass == 0) ncount++;          // count points
+            else sf_floatwrite(jnk, NCO, Fou); // write points
             break;
           }
         }

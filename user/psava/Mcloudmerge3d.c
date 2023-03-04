@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
   Fdall = sf_output("out"); // open all  data
   aa = sf_iaxa(Fcall, 2);
 
-  if (!sf_getfloat("hashscale", &hashscale)) hashscale = 2.0;
+  if( !sf_getfloat("hashscale", &hashscale)) hashscale = 2.0;
   if(verb) sf_warning("hashscale=%f",hashscale);
   nhash = hashscale * sf_n(aa);
   htInit( nhash ); /* initialize the hash table */
@@ -147,6 +147,18 @@ int main(int argc, char *argv[])
   o.y /= sf_n(aa);
   o.z /= sf_n(aa);
 
+  /*------------------------------------------------------------*/
+  /* find smallest point separation */
+  double dd, ddMIN = DBL_MAX;
+  for(ja = 1; ja < sf_n(aa); ja++) {
+
+    dd = sqrtf(pow( aco[ja].x - aco[ja-1].x, 2) + 
+               pow( aco[ja].y - aco[ja-1].y, 2) + 
+               pow( aco[ja].z - aco[ja-1].z, 2) );
+    ddMIN = SF_MIN(ddMIN, dd);
+  }
+
+  /*------------------------------------------------------------*/
   // allocate all data storage
   if(isreal) allR = sf_floatalloc  ( sf_n(aa) );
   else       allC = sf_complexalloc( sf_n(aa) );
@@ -184,24 +196,24 @@ int main(int argc, char *argv[])
     for(int jCLOUD = 0; jCLOUD < nCLOUD; jCLOUD++) {
 
       // open cloud/data files
-      if(!allopen) {
-        Fcwin[0] = sf_input( fname[jCLOUD]        );
-        Fdwin[0] = sf_input( fname[jCLOUD+nCLOUD] );
+      if( ! allopen ) {
+        Fcwin[0] = sf_input( fname[jCLOUD]          );
+        Fdwin[0] = sf_input( fname[jCLOUD + nCLOUD] );
       }
 
       // get the size of the cloud
-      if(allopen) aw = sf_iaxa(Fcwin[jCLOUD], 2);
-      else        aw = sf_iaxa(Fcwin[     0], 2);
+      if( allopen ) aw = sf_iaxa(Fcwin[jCLOUD], 2);
+      else          aw = sf_iaxa(Fcwin[     0], 2);
 
       // skip empty clouds
       if(sf_n(aw) == 0) continue;
 
       // read win cloud
       wco = (pt3d *) sf_alloc(sf_n(aw), sizeof(*wco));
-      if(allopen) sf_seek(Fcwin[jCLOUD],0,SEEK_SET);
+      if( allopen ) sf_seek(Fcwin[jCLOUD],0,SEEK_SET);
       for(jw = 0; jw < sf_n(aw); jw++) {
-        if(allopen) sf_floatread( jnk,NCO,Fcwin[jCLOUD]);
-        else        sf_floatread( jnk,NCO,Fcwin[     0]);
+        if( allopen ) sf_floatread( jnk,NCO,Fcwin[jCLOUD]);
+        else          sf_floatread( jnk,NCO,Fcwin[     0]);
         wco[jw].x = jnk[0];
         wco[jw].y = jnk[1];
         wco[jw].z = jnk[2];
@@ -210,7 +222,7 @@ int main(int argc, char *argv[])
       // read win data
       if(isreal) {
         winR = sf_floatalloc( sf_n(aw) );
-        if(allopen){
+        if( allopen ){
           sf_floatread  (winR, sf_n(aw), Fdwin[jCLOUD]);
         } else {
           sf_seek(Fdwin[0], jf*sf_n(aw)*sizeof(float),SEEK_SET);
@@ -218,7 +230,7 @@ int main(int argc, char *argv[])
         }
       } else {
         winC = sf_complexalloc( sf_n(aw) );
-        if(allopen){
+        if( allopen ){
           sf_complexread(winC, sf_n(aw), Fdwin[jCLOUD]);
         } else {
           sf_seek(Fdwin[0], jf*sf_n(aw)*sizeof(sf_complex),SEEK_SET);
@@ -230,13 +242,14 @@ int main(int argc, char *argv[])
       #ifdef _OPENMP
       #pragma omp parallel for schedule(dynamic) \
         private(jw,ihash) \
-        shared(aw, wco, winR,winC, allR,allC, o, fold,isreal)
+        shared(aw, wco, winR,winC, allR,allC, o, fold,isreal, ddMIN)
       #endif
       for(jw = 0; jw < sf_n(aw); jw++) {
-          ja = htLookup( nhash, &wco[jw], &o);
-          //;       htDelete( nhash, &wco[jw], &o);
+          ja = htLookup( nhash, &wco[jw], &o, ddMIN);
           if(isreal) allR[ ja ] += winR[ jw ];
           else       allC[ ja ] += winC[ jw ];
+          //if(isreal) allR[ ja ] = winR[ jw ];
+          //else       allC[ ja ] = winC[ jw ];
           if(norm && jf==0) fold[ ja ]++;
       }
 
@@ -244,9 +257,9 @@ int main(int argc, char *argv[])
       if(isreal) free(winR); // clear win data
       else       free(winC);
 
-      if(!allopen) {
-        sf_fileclose(Fcwin[0]); // close cloud/data files
-        sf_fileclose(Fdwin[0]);
+      if( ! allopen ) {
+        sf_fileclose(Fcwin[0]); // close cloud files
+        sf_fileclose(Fdwin[0]); // close  data files
       }
 
     } // end loop over clouds
@@ -265,7 +278,7 @@ int main(int argc, char *argv[])
     else       sf_complexwrite(allC, sf_n(aa), Fdall);
 
   } // end loop over frequencies
-  if(verb) fprintf(stderr,"\n");
+  if(verb) fprintf(stderr,"            \n");
 
   /*------------------------------------------------------------*/
   htClose();
