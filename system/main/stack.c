@@ -38,12 +38,12 @@ int main(int argc, char* argv[])
     char key[7], *prog;
     bool norm, rms, min=false, max=false, prod=false, all=false;
 
-    float          tR;
+    float          tR=0.0;
     float      * dinR;
     float      * douR;
     double     * stkR;
 
-    sf_complex     tC;
+    sf_complex     tC=0.0;
     sf_complex * dinC;
     sf_complex * douC;
     sf_double_complex * stkC;
