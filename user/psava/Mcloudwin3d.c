@@ -33,28 +33,27 @@ bool isInCone(pt3d *oco, pt3d *gco, vc3d *gno, float cosapt)
 int main(int argc, char* argv[])
 {
   bool verb, fast;
-  float apt, cosapt;       /* aperture */
+  float apt, cosapt;         /* aperture */
 
   /* I/O files */
-  sf_file Fin = NULL;      /* input   cloud */
-  sf_file Fou = NULL;      /* output  cloud */
-  sf_file Fo  = NULL;      /* orbit   */
+  sf_file Fin = NULL;        /* input   cloud */
+  sf_file Fou = NULL;        /* output  cloud */
+  sf_file Fo  = NULL;        /* orbit   */
 
-  sf_axis ao,ag,aw;        /* cube axes */
+  sf_axis ao,ag,aw;          /* cube axes */
   size_t  no,ng,nw;
   size_t  io,ig,iw;
   size_t ncount = 0;
   int ico;
 
-  pt3d       * oco=NULL;   /* orbit coordinates  */
-  pt3d         gco;        /* ground coordinate  */
-  vc3d         gno;        /* ground normal */
-  float      * jnk=NULL;
-  float      * din=NULL;
-  float      * dou=NULL;
-
-  bool * fin;
-  off_t * gwmap;
+  pt3d       * oco   = NULL; /* orbit coordinates  */
+  pt3d         gco;          /* ground coordinate  */
+  vc3d         gno;          /* ground normal */
+  float      * jnk   = NULL;
+  float      * din   = NULL;
+  float      * dou   = NULL;
+  bool       * fin   = NULL;
+  off_t      * gwmap = NULL;
 
   jnk = sf_floatalloc( NCO );
 
@@ -93,13 +92,12 @@ int main(int argc, char* argv[])
   /*------------------------------------------------------------*/
   /* orbit coordinates */
   oco = (pt3d*) sf_alloc(no,sizeof(*oco));
-  //ono = (vc3d*) sf_alloc(no,sizeof(*ono));
 
   for( io = 0; io < no; io++) {
     sf_floatread( jnk,NCO,Fo);
-    oco[io].x  = jnk[0];
-    oco[io].y  = jnk[1];
-    oco[io].z  = jnk[2];
+    oco[io].x = jnk[0];
+    oco[io].y = jnk[1];
+    oco[io].z = jnk[2];
   }
 
   /* ground coordinates */
@@ -177,7 +175,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
   #pragma omp parallel for schedule(dynamic) \
   private( iw, ig, ico) \
-  shared(  nw, dou, din )
+  shared(  nw, dou, din, gwmap)
 #endif
     for( iw = 0; iw < nw; iw++ ) {
       ig = gwmap[ iw ];
@@ -240,7 +238,6 @@ int main(int argc, char* argv[])
   /* deallocate arrays */
   free(jnk);
   free(oco);
-  //free(ono);
 
   exit (0);
 }
