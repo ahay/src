@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-apef apefsignoi convert0eq difference domf findrefmax1 findzeroendt fkoclet fourmis2 freshape fxspfdenoise2 fxspfint2 fxyspfdenoise3 fxyspfint3 gravcon invqfilt iq2eq lcf lcfseq lcfsiq lineslope lpfdenoise2 ltft lum mean mf mig2 miss4 miss43 modatten1 modtraceq mtm multiple mvo oshift1 pick31 pwsmooth3 recoverfulleq saltpepper seisbreg2 spefcstep spefvstep st stft sv2d svd svddenoise theoreqiq threshold2 tvmf txrna2 txrna3 txsorth txspf txspfint2 txspfvsint2 txyspfint3 txyspfvsint3 v2d
+difference domf fxspfdenoise2 fxyspfdenoise3 gravcon lpfdenoise2 ltft mtm mvo saltpepper st stft svd svddenoise
 '''
 
 try:  # distributed version

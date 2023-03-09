@@ -6,7 +6,6 @@ waves = '''
 rtm wave wave24
 '''
 other = '''
-acd2d eacd2d vam
 '''
 
 try:  # distributed version

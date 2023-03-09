@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-dealias dijkstra dip dip2 diplet dixshape explanesignoi expsignoi fdip planemis2 planemis3 planesignoi pmshape2 predict pwcoh pwd pwd1 pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwsmooth pwspray pwspray2 pwspray3 seisigk seislet shplanemis2 shplanemis3 trismooth2 twodip2
+dip fdip planemis2 planemis3 pwd pwpaint2 pwsmooth pwspray pwspray2 seislet
 '''
 
 try:  # distributed version
@@ -82,7 +82,7 @@ for prog in mains:
 
 for prog in Split(
     '''
-    allp3 gauss2 matmult predict predict2 pwdsl pwsmooth pwsmooth2 pwsmooth3 pwspray trisl
+    allp3 gauss2 matmult predict predict2 pwdsl pwsmooth pwspray 
     '''):
     sources = ['Test' + prog,prog]
     bldutil.depends(env,sources,prog)

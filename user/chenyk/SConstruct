@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-addtrace bin2rsf blend cabs diff emd fxdecon halfthr low mutter3 norm prekirch rmtrace rsf2bin selfblend simidenoise simidenoise1 snr2 snr3 svmf threshold1 tsmf zerotrace
+bin2rsf cabs fxdecon simidenoise1 threshold1
 '''
 
 ccprogs = ''

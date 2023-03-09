@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-kirmod_newton time2depthweak vtihti2ort
+vtihti2ort
 '''
 
 # gausssource rays3a quarticlayer quartic expand3 vtihti2ort cij2moveout

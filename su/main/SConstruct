@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-makevel pef sinc traces
+makevel
 '''
 
 try: # distributed version
