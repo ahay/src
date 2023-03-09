@@ -1,3 +1,0 @@
-uses=['sftraces', 'sfspike', 'sfnoise', 'sfconv', 'sfwiggle', 'sfpow', 'sffft1', 'sfmath', 'sfwindow', 'sfpef', 'sftrapez']
-data=[]
-size=      99292

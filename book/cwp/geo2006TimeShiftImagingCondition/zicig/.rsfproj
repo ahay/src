@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfscale', 'sfput', 'sfwindow', 'sfspray', 'sfcat', 'sfmath', 'sftransp', 'sfpad', 'sfsmooth', 'sfgrey', 'sfdip', 'sfremap1', 'sfpwd', 'sfbandpass', 'sfslant', 'sftan2ang', 'sftwodip2', 'sfpwdsigk', 'sftshift']
-data=['data/sigsbee/sigsbee2a_migvel.sgy', 'data/sigsbee/sigsbee2a_stratigraphy.sgy', 'data/sigsbee/SRC0x.hh', 'data/sigsbee/SRC0t.hh', 'data/sigsbee/SRC2x.hh', 'data/sigsbee/SRC2t.hh']
-size=  813193248

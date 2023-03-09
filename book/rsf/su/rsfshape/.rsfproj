@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfconjgrad', 'sfconvf', 'sfcat', 'sfdots', 'sfgraph']
-data=['data/cwp/data.sgy']
-size=      15696

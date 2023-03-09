@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfmask', 'sfdd', 'sfmath', 'sfcat', 'sftransp', 'sfscale', 'sfput', 'sfgrey', 'sfheaderwindow', 'sfcut', 'sfreverse', 'sfcostaper', 'sfremap1', 'sffft1', 'sffft3', 'sfisolr2', 'sfspline', 'sffftexp0']
-data=['data/sigsbee/sigsbee2a_nfs.sgy', 'data/sigsbee/sigsbee2a_migvel.sgy', 'data/sigsbee/sigexp.rsf', 'data/sigsbee/sigsbee2a_stratigraphy.sgy']
-size= 1404604944

@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfsmooth', 'sfgrey', 'sfrtoc', 'sffft3', 'sfreal', 'sffft1']
-data=['data/alaska/alaska.H']
-size=     148224

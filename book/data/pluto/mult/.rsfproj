@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfcat', 'sfwindow', 'sfgrey']
-data=['data/pluto/mult.H']
-size=  947520000

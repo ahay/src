@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfmask', 'sfheaderwindow', 'sfwiggle', 'sfgrey', 'sftpow']
-data=['PRIVATE']
-size=  765644160

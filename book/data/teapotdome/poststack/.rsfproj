@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfheaderattr', 'sftahread', 'sftahwrite', 'sfgrey']
-data=['http://s3.amazonaws.com/teapot/filt_mig.sgy']
-size=  827094720

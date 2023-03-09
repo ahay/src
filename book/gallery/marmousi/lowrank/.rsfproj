@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfscale', 'sfput', 'sfgrey', 'sftransp', 'sffft1', 'sffft3', 'sfisolr2', 'sfreverse', 'sffftexp0', 'sfspike', 'sfsmooth']
-data=['data/marm/marmvel.hh', 'data/marm/marmexp.hh']
-size=  123629712

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfboxsmooth', 'sfsmooth', 'sffft1', 'sftransp', 'sfconstfdmig2', 'sfwindow', 'sfgrey']
-data=[]
-size=      49920

@@ -1,5 +1,0 @@
-GRIDPP Unit Test 15
-Create GridSpace, two vectors in it, assign 1.0 to all samples,
-print out inner product - should be 9.471
-test11 result: inner product = 9.471
-

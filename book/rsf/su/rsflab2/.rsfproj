@@ -1,3 +1,0 @@
-uses=['sfsuread', 'sfgrey']
-data=['data/cwp/sonar.su']
-size=    7008000

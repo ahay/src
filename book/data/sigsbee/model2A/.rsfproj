@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfscale', 'sfwindow', 'sfgrey']
-data=['data/sigsbee/sigsbee2a_migration_velocity.sgy', 'data/sigsbee/sigsbee2a_stratigraphy.sgy', 'data/sigsbee/sigsbee2a_reflection_coefficients.sgy']
-size=   43426080

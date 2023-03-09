@@ -1,3 +1,0 @@
-uses=['sfsuread', 'sfput', 'sfwiggle', 'sfcosft', 'sfstolt', 'sfgazdag']
-data=['data/cwp/simple.su']
-size=     641280

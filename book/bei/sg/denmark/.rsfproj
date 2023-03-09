@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfsmooth', 'sfpow', 'sfgrey', 'sfmutter']
-data=['data/wz/wz.35.H']
-size=     156800

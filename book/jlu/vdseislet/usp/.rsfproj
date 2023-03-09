@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfagc', 'sfgrey', 'sfintbin', 'sfput', 'sftransp', 'sfbyte', 'sfgrey3', 'sfmutter', 'sfbandpass', 'sfspectra2', 'sfltft', 'sfthreshold2', 'sfadd', 'sfshot2cmp', 'sfvscan', 'sfpick', 'sfv2d', 'sfseislet', 'sfcut', 'sfsmooth', 'sfdip', 'sfnmo', 'sfstack']
-data=['http://www.freeusp.org/RaceCarWebsite/TechTransfer/Tutorials/Processing_2D/Data/2D_Land_data_2ms.tgz']
-size= 47787054504

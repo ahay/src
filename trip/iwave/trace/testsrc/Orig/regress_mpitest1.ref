@@ -1,5 +1,0 @@
-MPISEGYPP Unit Test 1
-create MPISEGYSpace, construct Vector in space
-assign to perm old file=mpitest1.su
-all data samples in file = 12.0, compute max and min
-mpitest1 result: max=12 min=12

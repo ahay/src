@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfscale', 'sfwindow', 'sfgrey', 'sfmask', 'sfdd', 'sfsmooth', 'sfadd', 'sfmath', 'sfgraph', 'sfspike', 'sfcat', 'sftransp', 'sfcp', 'sfhwt2d', 'sfeikonal', 'sfcontour', 'sfreverse', 'sfwdf', 'sfxcor2d']
-data=['data/sigsbee/sigsbee2a_stratigraphy.sgy']
-size= 19577223260

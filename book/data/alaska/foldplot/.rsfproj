@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfdd', 'sffold', 'sfgrey', 'sfwindow', 'sfbin']
-data=['nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23535.SGY', 'nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23536.SGY', 'nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23537.SGY']
-size=   67692288

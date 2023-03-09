@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfintbin', 'sfwindow', 'sfpow', 'sfbandpass', 'sfbyte', 'sftransp', 'sfgrey3', 'sfheadermath', 'sfdd', 'sfscale', 'sfmul', 'sfstack', 'sfcut', 'sfmask', 'sfspray', 'sfheaderwindow', 'sfwiggle', 'sfgrey', 'sfvscan', 'sfpick', 'sfgraph', 'sfnmo', 'sfomp', 'sfremap1', 'sfshapeagc']
-data=['data/viking/paracdp.segy']
-size= 2882806648

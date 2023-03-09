@@ -1,6 +1,0 @@
-\form#0:\[ \rho(\mathbf{x})\frac{\partial\mathbf{v}}{\partial t} + \nabla p = 0, \]
-\form#1:\[ \frac{1}{\kappa(\mathbf{x})}\frac{\partial p}{\partial t} + \nabla \cdot \mathbf{v} = f(\mathbf{x},t;\mathbf{x}_s). \]
-\form#2:$ p $
-\form#3:$v_x$
-\form#4:$v_y$
-\form#5:$p$
