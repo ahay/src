@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfenvelope', 'sfcausint', 'sfmath', 'sfmask', 'sfwindow', 'sfgrey', 'sfpatch', 'sfpad', 'sfcat', 'sfput', 'sffft1', 'sfclpf', 'sftransp', 'sfadd', 'sfortho', 'sfsimilarity', 'sfgraph', 'sfbox']
-data=['PRIVATE']
-size=  822212192

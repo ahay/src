@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfwiggle', 'sfgraph', 'sfbox', 'sfspectra', 'sfmf', 'sfbandpass', 'sftvmf', 'sfadd', 'sfput', 'sfsegyread']
-data=['data/dragon/dragon.HH', 'data/dragon/nmo_stack_agc.sgy', 'data/dragon/tvmf_agc.sgy']
-size=   80249980

@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfadd', 'sfput', 'sfspray', 'sfcat', 'sfmakevel', 'sfsmooth', 'sfpad', 'sfgrey', 'sfsuread', 'sfgraph']
-data=['data/marmousi/line100m.su', 'data/marmousi/wavelet_base.su', 'data/marmousi/velocity.HH', 'data/marmousi/hdr6km.su']
-size=    3326400

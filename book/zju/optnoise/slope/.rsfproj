@@ -1,3 +1,0 @@
-uses=['sfcp', 'sfput', 'sfgrey', 'sfnoise', 'sfbandpass', 'sfdip', 'sfriesz', 'sfwindow', 'sfscale', 'sfdivn']
-data=[]
-size=     644000

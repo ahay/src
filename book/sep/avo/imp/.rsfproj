@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfgrey', 'sfbox', 'sfmul']
-data=['data/avo/pimp.HH', 'data/avo/simp.HH']
-size=    1206000

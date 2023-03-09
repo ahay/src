@@ -1,5 +1,0 @@
-from rsf.tex import *
-
-End(lclass='geophysics',
-    use='amsmath,amssymb,listings,multirow,array',
-    color='vp0 epsi del the')

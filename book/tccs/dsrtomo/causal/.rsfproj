@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfscale', 'sfput', 'sfwindow', 'sfgrey', 'sfrays2', 'sfgraph', 'sfdsreiko', 'sfeikonal', 'sfcat']
-data=['data/marm/marmsmooth.HH']
-size=  432752544

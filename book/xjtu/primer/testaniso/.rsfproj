@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfput', 'sfmath', 'sfgrey', 'sfTestaniso']
-data=['pub/datasets/2D/Hess_VTI/timodel_vp.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_epsilon.segy.gz']
-size= 5443281000

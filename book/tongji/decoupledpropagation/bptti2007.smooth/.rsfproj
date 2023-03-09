@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfmath', 'sfgrey', 'sfwindow', 'sfresamp', 'sfsmooth', 'sftti2devectorlrsvdkspace_double_stiffness']
-data=['LOCAL']
-size=  532997564

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfmath', 'sfcat', 'sfwindow', 'sfgraph', 'sfmoveout', 'sfbandpass', 'sfgrey', 'sfadd', 'sfscale', 'sfcostaper', 'sffft1', 'sfreal', 'sftransp', 'sfimag', 'sfiwarp', 'sfcmplx']
-data=[]
-size=    4080424

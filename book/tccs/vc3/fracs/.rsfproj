@@ -1,3 +1,0 @@
-uses=['sfwindow', 'sfbyte', 'sfgrey3', 'sftransp', 'sfgrey', 'sft2stretch', 'sfpad', 'sffft1', 'sffft3', 'sfreal', 'sfmath', 'sfnoise', 'sfjpg2byte', 'sfdd', 'sfreverse', 'sfput']
-data=['PRIVATE', 'PRIVATE']
-size= 44748759020

@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End (use='amsmath',color='illus grid tree fmod dimod fmod-2 fmod-3 fmod-4 dimod-4')

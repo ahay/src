@@ -1,3 +1,0 @@
-uses=['sfwindow', 'sftransp', 'sfbyte', 'sfgrey3', 'sfgrey', 'sfslant', 'sfput', 'sftan2ang', 'sfstack', 'sfspray', 'sfsimilarity', 'sfthreshold', 'sfsmooth', 'sfmath']
-data=['data/sigsbee/SRC0x.hh']
-size= 4654964580

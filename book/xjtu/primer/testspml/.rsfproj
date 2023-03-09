@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfTestspml', 'sfgrey', 'sfwindow']
-data=[]
-size=   64480000

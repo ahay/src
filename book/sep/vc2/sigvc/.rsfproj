@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfput', 'sfsmooth', 'sfpad', 'sfhalfint', 'sfpreconstkirch', 'sfwindow', 'sfcat', 'sftransp', 'sfcosft', 'sffourvc', 'sfmath', 'sfclip2', 'sfmul', 'sfdivn', 'sfstack', 'sfgrey', 'sfscale', 'sfpick', 'sfslice', 'sfagc', 'sfcontour', 'sfvscan']
-data=[]
-size=  491854500

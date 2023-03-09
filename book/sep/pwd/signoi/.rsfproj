@@ -1,3 +1,0 @@
-uses=['sfmake', 'sfgrey', 'sfput', 'sftwodip2', 'sfwindow', 'sfplanesignoi', 'sfnoise', 'sftrismooth2', 'sfpwdsigk', 'sfsmooth', 'sfadd']
-data=[]
-size=     127500

@@ -1,4 +1,0 @@
-from rsf.tex import *
-
-End(use='amsmath,amsfonts,listings,color,hyperref',  color='vel den GxW GxGB Gxerror Mexact Mlrerr Mapperr Mfd10err slicel et trec19 em mrec7 ea2 ea4 ea8 fre frec15 tvel0 tdvel0 Mlr Mfd Mlrt Mfdt Mlrv Mfdv geo rpp tpp')
-

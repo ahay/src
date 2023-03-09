@@ -1,3 +1,0 @@
-uses=['sfput', 'sfwiggle', 'sfwindow', 'sfspectra', 'sfgraph', 'sftransp', 'sfsaltpepper', 'sfbandpass', 'sftvmf', 'sfmf']
-data=['PRIVATE']
-size=    5772016

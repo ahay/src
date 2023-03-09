@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfmath', 'sfwindow', 'sfsmooth', 'sfgrey', 'sftti2desep', 'sftti2dpseudop']
-data=['LOCAL']
-size=  597974176

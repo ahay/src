@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfricker1', 'sfenvelope', 'sfcat', 'sfput', 'sfdots', 'sfwindow', 'sfmath', 'sfdatstretch', 'sfcut', 'sfstack', 'sfpad', 'sflocalskew', 'sfmul', 'sfwiggle', 'sfgrey', 'sfpick', 'sfgraph', 'sfphaserot']
-data=[]
-size=    1729876

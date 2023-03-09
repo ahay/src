@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfsmooth', 'sfconflict', 'sfdd', 'sfwindow', 'sftpow', 'sfpad', 'sfcat', 'sfgrey', 'sfdip', 'sfpwd', 'sfnoise', 'sfpwdsmooth2', 'sflopef', 'sfdecon']
-data=['data/book/iee/WGstack.H', 'data/wz/wz.27.H']
-size=    4808120

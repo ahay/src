@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfscale', 'sfwindow', 'sfput', 'sfsmooth', 'sfspike', 'sfricker1', 'sfreverse', 'sftransp', 'sfmath', 'sfintegral1', 'sfderiv', 'sfdd', 'sfpseudodepth', 'sfzomvti', 'sfgrey', 'sfcontour', 'sfadd']
-data=['pub/datasets/2D/Hess_VTI/timodel_vp.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_delta.segy.gz', 'pub/datasets/2D/Hess_VTI/timodel_epsilon.segy.gz']
-size=  432664688

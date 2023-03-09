@@ -1,7 +1,0 @@
-hat(x)=(heaviside(x+1)-heaviside(x-1))*(1-abs(x))
-phat=plot(hat(x),x,-2,2,thickness=3,aspect_ratio=4/golden_ratio)
-w=var('w')
-linf(w)=integrate(2*cos(w*x)*(1-x),(x,0,1))
-what=plot(linf(w),w,-2*pi,2*pi,thickness=3,color='red',aspect_ratio=4*pi/golden_ratio,ticks=[[-pi,pi],None])
-both=graphics_array([phat,what])
-both.save(frame=true,tick_formatter='latex',fontsize=12,filename='junk_sage.pdf')

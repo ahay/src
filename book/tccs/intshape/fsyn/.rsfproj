@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfricker1', 'sfnoise', 'sfput', 'sfwindow', 'sfthreshold1', 'sfmask', 'sfspray', 'sfdd', 'sfmath', 'sfadd', 'sfsnr2', 'sfgrey', 'sfrtoc', 'sffft3', 'sfreal', 'sfmul', 'sfcp', 'sfcabs', 'sfwiggle', 'sfcat', 'sfgraph']
-data=[]
-size=  101188564

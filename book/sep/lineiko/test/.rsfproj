@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfmath', 'sfdd', 'sfcut', 'sflineiko', 'sfsmooth', 'sfadd', 'sfeikonal', 'sfcontour3']
-data=[]
-size=   24727224

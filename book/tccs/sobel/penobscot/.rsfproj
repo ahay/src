@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftransp', 'sfbyte', 'sfgrey3', 'sffdip', 'sfwindow', 'sfpwspray2', 'sfmedian', 'sfgrad3', 'sfsmooth', 'sfmath', 'sfpwd', 'sfpwsmooth', 'sfclip2', 'sfcat', 'sfput', 'sfscale', 'sfpick', 'sfslice', 'sfcoherence', 'sfderiv', 'sfspray', 'sfmatrix', 'sfsvd', 'sfdip', 'sfboxsmooth', 'sfstack']
-data=['https://github.com/seg/tutorials-2015/raw/master/1512_Semblance_coherence_and_discontinuity/data/penobscot_subset.bin']
-size= 2145052800

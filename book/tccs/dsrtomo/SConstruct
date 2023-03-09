@@ -1,4 +1,0 @@
-from rsf.tex import *
-
-End(color='modl imp exp marmsmooth causal grad stdh dsrh data marm tomo ntomo',
-    hires='causal grad marm tomo ntomo')

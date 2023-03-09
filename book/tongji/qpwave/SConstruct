@@ -1,9 +1,0 @@
-from rsf.tex import *
-
-End(use='amsmath,amsfonts,listings,color',
-    color='''
-vp0 epsi del the adxNT adzNT apxNT apzNT apvxNT apvzNT adxx1 adzz1
-apxx1 apzz1 adxx adzz apxx apzz apvxx apvzz apvxx1 apvxx2 apvxx3
-apvxx4 apvxx5 apvzz1 apvzz2 apvzz3 apvzz4 apvzz5 hessvp0 hessepsilon
-hessdelta apvx apvy apvz taperK
-''')
