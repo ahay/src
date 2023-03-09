@@ -48,16 +48,16 @@ class TestFlow(unittest.TestCase):
         self.assertEqual(cm.exception.code, 1)
     
     def test_conjgrad_with_suffix(self):
-        output = Flow([], 'conjgrad sfrtm2d', '', stdin=0)
-        self.assertEqual(output, 'sfconjgrad sfrtm2d > $TARGET')
+        output = Flow([], 'conjgrad sfcausint', '', stdin=0)
+        self.assertEqual(output, 'sfconjgrad sfcausint > $TARGET')
 
     def test_conjgrad_search_next_command(self):
-        output = Flow([], 'conjgrad niter=10 rtm2d', '', stdin=0)
-        self.assertEqual(output, 'sfconjgrad niter=10 sfrtm2d > $TARGET')
+        output = Flow([], 'conjgrad niter=10 causint', '', stdin=0)
+        self.assertEqual(output, 'sfconjgrad niter=10 causint > $TARGET')
 
     def test_conjgrad_without_suffix(self):
-        output = Flow([], 'conjgrad rtm2d', '', stdin=0)
-        self.assertEqual(output, 'sfconjgrad sfrtm2d > $TARGET')
+        output = Flow([], 'conjgrad causint', '', stdin=0)
+        self.assertEqual(output, 'sfconjgrad sfcausint > $TARGET')
 
     def test_conjgrad_with_mpi(self):
         output = Flow([], 'conjgradmpi mpifwi', '', stdin=0, mpirun='mpirun -np 16')

@@ -115,7 +115,7 @@ git rm -r book/bei book/geo384w
 or
 
 svn delete system/seismic trip
-svn delete book/bei book/geo384w (and everything else seismic-related
+svn delete book/bei book/geo384w book/geo384s (and everything else seismic-related
 in book)
 
 python admin/release/cleanup.py > list.txt
@@ -134,10 +134,10 @@ cp dist/madagascar-framework-3.1.tar.gz ~
 
 17. Announce on the blog
 
-18. Edit $RSFSRC/VERSION.txt to 3.2-git
+18. Edit $RSFSRC/VERSION.txt to 4.1-git
 
 19. Edit $RSFSRC/NEWS.txt to record the time of the release. Add
-release notes to http://www.ahay.org/wiki/Release_Notes
+release notes to https://reproducibility.org/wiki/Release_Notes
 
 20. Edit  https://en.wikipedia.org/wiki/Madagascar_%28software%29 to update release information
 
