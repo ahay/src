@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
 
   // read all cloud
   pt3d o; // reference point
+  o.x = o.y = o.z = 0.0;
   aco = (pt3d *) sf_alloc(sf_n(aa), sizeof(*aco));
   for(ja = 0; ja < sf_n(aa); ja++) {
       sf_floatread( jnk,NCO,Fcall);

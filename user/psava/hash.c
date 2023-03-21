@@ -29,8 +29,8 @@ void print_binary(unsigned long long num)
 
 /*------------------------------------------------------------*/
 unsigned long long hashF1a(const unsigned long long nhash, 
-                                const        pt3d * p, 
-                                const        pt3d * o)
+                           const                 pt3d * p, 
+                           const                 pt3d * o)
 /*< Fowler–Noll–Vo-1a hash function >*/
 {
     const unsigned long long FNV_OFFSET = 14695981039346656037ull;
@@ -43,34 +43,11 @@ unsigned long long hashF1a(const unsigned long long nhash,
 
     unsigned long long hindx = FNV_OFFSET;
     for (int i = 0; i < sizeof(double); i++) {
-        hindx = (hindx * FNV_PRIME) % (1<<31);
-        hindx ^= b[i];
-    }
-
-    return hindx % nhash;
-}
-
-/*------------------------------------------------------------*/
-unsigned long long hashF2a(const unsigned long long nhash, 
-                                const        pt3d * p, 
-                                const        pt3d * o)
-/*< Fowler–Noll–Vo-2a hash function >*/
-{
-    const unsigned long long FNV_OFFSET = 14695981039346656037ull;
-    const unsigned long long FNV_PRIME  = 1099511628211ull;
-
-    double h = sqrtf( pow(p->x - o->x, 2) + 
-                      pow(p->y - o->y, 2) + 
-                      pow(p->z - o->z, 2) );
-    const unsigned char* b = (unsigned char*) &h;
-
-    unsigned long long hindx = FNV_OFFSET;
-    for (int i = 0; i < sizeof(double); i++) {
         hindx ^= b[i];
         hindx *= FNV_PRIME;
     }
-    hindx *= FNV_PRIME;
-    hindx &= 0xffffffffffffffff;
+    //hindx *= FNV_PRIME;
+    //hindx &= 0xffffffffffffffff;
 
     return hindx % nhash;
 }
@@ -99,15 +76,15 @@ void htClose()
 
 /*------------------------------------------------------------*/
 unsigned long long htInsert( unsigned long long nhash, 
-                                         pt3d * p, 
-                                         pt3d * o, 
-                             unsigned long long i)
+                                             pt3d * p, 
+                                             pt3d * o, 
+                             unsigned long long     i)
 /*< insert in hash table >*/
 {
     if( p == NULL ) return -1;
 
     // start with the computed hash index
-    unsigned long long hindx = hashF2a( nhash, p, o );
+    unsigned long long hindx = hashF1a( nhash, p, o );
 
     // then search for an open slot using open addressing
     for(unsigned long long jhash = 0; jhash < nhash; jhash++ ) {
@@ -151,7 +128,7 @@ bool htDelete(unsigned long long nhash,
     if( q == NULL ) return false;
 
     // start with the computed hash index
-    unsigned long long hindx = hashF2a( nhash, q, o );
+    unsigned long long hindx = hashF1a( nhash, q, o );
 
     // then search for an open slot using open addressing
     for(unsigned long long jhash = 0; jhash < nhash; jhash++ ) {
@@ -185,7 +162,7 @@ unsigned long long htLookup(unsigned long long nhash,
     if( q == NULL ) return -1;
 
     // start with the computed hash index
-    unsigned long long hindx = hashF2a( nhash, q, o );
+    unsigned long long hindx = hashF1a( nhash, q, o );
 
     // then search for an open slot using open addressing
     for(unsigned long long jhash = 0; jhash < nhash; jhash++ ) {
