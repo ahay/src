@@ -26,10 +26,10 @@ except ImportError:
     sys.exit(1)
 
 setup(name='madagascar-framework',
-      version='3.0',
+      version='4.0',
       maintainer='Sergey Fomel',
       maintainer_email='sergey.fomel@gmail.com',
-      url='http://www.ahay.org/',
+      url='https://reproducibility.org/',
       description='Madagascar Utilities for Reproducible Research',
       py_modules = ['rsf.'+x for x in 'path doc flow proj prog tex book suproj conf use'.split()],
       scripts=['rsf/'+x for x in 'latex2wiki sfdoc sftour'.split()],
