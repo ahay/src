@@ -46,8 +46,8 @@ unsigned long long hashF1a(const unsigned long long nhash,
         hindx ^= b[i];
         hindx *= FNV_PRIME;
     }
-    //hindx *= FNV_PRIME;
-    //hindx &= 0xffffffffffffffff;
+    hindx *= FNV_PRIME;
+    hindx &= 0xffffffffffffffff;
 
     return hindx % nhash;
 }
