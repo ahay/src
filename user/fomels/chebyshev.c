@@ -85,6 +85,7 @@ void cchebyshev_set(const sf_complex *d /* [n] data at Chebyshev points */)
 	ci[i] = cimagf(d[i]);
     }
     sf_cosft_inv(c,0,1);
+    sf_cosft_inv(ci,0,1);
 }
 
 void chebyshev_poly(float *c2)
