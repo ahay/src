@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-integral1 pseudodepth
+integral1 
 '''
 
 mpi_progs = '''
