@@ -678,10 +678,7 @@ DocCmd: %s
                         ''' % (book,proj,proj)
                 usedoc += bigsection(book.upper(),'#000000','#ffd8c8',bookdoc)
             contents += bigsection('Used In','#ffffff', '#eeaa77',usedoc)
-        if sys.version_info[0] >= 3:
-            hfile.write(page(self.name,contents.encode('utf-8')))
-        else:
-            hfile.write(page(self.name,contents))
+        hfile.write(page(self.name,contents))
         hfile.close()
 
 comment = None
@@ -741,7 +738,7 @@ def html(dir,known_version):
         names.sort()
         content = content + bigsection(dir,'#ffffff', '#ee77aa',
                                        multicolumn(names,link))
-    file.write(page('all programs',content.encode('utf-8')))
+    file.write(page('all programs',content))
     file.close()
 
 def text(dir,name):

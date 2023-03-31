@@ -52,7 +52,7 @@ class TestFlow(unittest.TestCase):
         self.assertEqual(output, 'sfconjgrad sfcausint > $TARGET')
 
     def test_conjgrad_search_next_command(self):
-        output = Flow([], 'conjgrad niter=10 causint', '', stdin=0)
+        output = Flow([], 'conjgrad niter=10 sfcausint', '', stdin=0)
         self.assertEqual(output, 'sfconjgrad niter=10 sfcausint > $TARGET')
 
     def test_conjgrad_without_suffix(self):

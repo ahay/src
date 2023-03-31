@@ -177,8 +177,18 @@ Fetch('wz.35.H','wz')
 \end{lstlisting}
 signifies that the file \texttt{wz.35.H} will be downloaded from the default Madagascar data server, where it is stored in the \texttt{wz} directory.
 
-The optional parameters in \texttt{Fetch} are summarized in Table...
+The optional parameters in \texttt{Fetch} are summarized in Table~\ref{tbl:fetch}.
 
+\tabl{fetch}{Optional parameters for \texttt{Fetch}}{
+  \begin{tabular}{l|l|l} \hline
+    parameter & meaning & default \\ \hline
+    server & URL of the data server & \url{https://reproducibility.org} \\
+    top & top directory on the server & \texttt{data} \\
+    usedatapath & if download to the data path & \texttt{True} \\ \hline 
+    \end{tabular}
+  }
+
+Explain server=local...
 
 \subsubsection{Flow(target[s],source[s],command,[options])}
 \subsubsection{Plot(target,[source],command,[options])}

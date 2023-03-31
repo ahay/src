@@ -19,16 +19,29 @@
 #include <rsf.h>
 
 static int n;
-static float m, h, *c;
+static float m, h, *c, *ci=NULL;
 
-void chebyshev_init(int n1,                 /* data size */
+void chebyshev_init(int n1,                /* data size */
 		    float xmin, float xmax /* axis range */)
 /*< initialize >*/
 {
     n = n1;
 
     c = sf_floatalloc(n);
+    sf_cosft_init(n);
 
+    m = (xmin+xmax)*0.5f;
+    h = 2.0f/(xmax-xmin);
+}
+
+void cchebyshev_init(int n1,               /* data size */
+		    float xmin, float xmax /* axis range */)
+/*< initialize >*/
+{
+    n = n1;
+
+    c = sf_floatalloc(n);
+    ci = sf_floatalloc(n);
     sf_cosft_init(n);
 
     m = (xmin+xmax)*0.5f;
@@ -43,6 +56,14 @@ void chebyshev_close(void)
     sf_cosft_close();
 }
 
+void cchebyshev_close(void)
+/*< free allocated storage >*/
+{
+    free(c);
+    free(ci);
+    sf_cosft_close();
+}
+
 void chebyshev_set(const float *d /* [n] data at Chebyshev points */)
 /*< compute Chebyshev coefficients >*/
 {
@@ -52,6 +73,19 @@ void chebyshev_set(const float *d /* [n] data at Chebyshev points */)
 	c[i] = d[i];
     }
     sf_cosft_inv(c,0,1);
+}
+
+void cchebyshev_set(const sf_complex *d /* [n] data at Chebyshev points */)
+/*< compute Chebyshev coefficients >*/
+{
+    int i;
+
+    for (i=0; i < n; i++) {
+	c[i] = crealf(d[i]);
+	ci[i] = cimagf(d[i]);
+    }
+    sf_cosft_inv(c,0,1);
+    sf_cosft_inv(ci,0,1);
 }
 
 void chebyshev_poly(float *c2)
@@ -64,11 +98,20 @@ void chebyshev_poly(float *c2)
     }
 }
 
+void cchebyshev_poly(sf_complex *c2)
+/*< return chebyshev coefficients >*/
+{
+    int i;
+
+    for (i=0; i < n; i++) {
+	c2[i] = sf_cmplx(c[i],ci[i]);
+    }
+}
+
 float chebyshev(float x)
 /*< interpolate >*/
 {
     int i;
-
     float c0, c1, c2;
 
     x = (x-m)*h;
@@ -83,6 +126,32 @@ float chebyshev(float x)
     return c0;
 }
 
+sf_complex cchebyshev(float x)
+/*< interpolate >*/
+{
+    int i;
+    float cr, cj, c1, c2;
 
+    x = (x-m)*h;
+    
+    c1 = 0.0f;
+    cr = c[n-1];
+    for (i=n-2; i > 0; i--) {
+	c2 = c1;
+	c1 = cr;
+	cr = 2*(c[i] + x*cr) - c2;
+    }
+    cr = c[0] + x*cr - c1;
 
+    c1 = 0.0f;
+    cj = ci[n-1];
+    for (i=n-2; i > 0; i--) {
+	c2 = c1;
+	c1 = cj;
+	cj = 2*(ci[i] + x*cj) - c2;
+    }
+    cj = ci[0] + x*cj - c1;
+    
+    return sf_cmplx(cr,cj);
+}
 
