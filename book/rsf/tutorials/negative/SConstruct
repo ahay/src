@@ -17,12 +17,11 @@ Result('sig','graph label2=amplitude grid=y plotfat=5 title="Ricker wavelet"')
 Flow('spec','sig','rtoc | fft3 axis=1')
 
 # amplitude spectrum
-Result('spec',
+Result('amp','spec',
        '''
        window min1=-100 max1=100 | math output="abs(input)" | real | 
-       graph title="Spectrum" grid=y plotfat=5 
+       graph title="Amplitude" grid=y plotfat=5 
        ''')
 
-# phase spectrum
 
 End()
