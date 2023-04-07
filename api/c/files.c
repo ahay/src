@@ -226,7 +226,7 @@ off_t sf_shiftdim(sf_file in, sf_file out, int axis)
     int j, ni;
     float f;
     off_t n3;
-    char key1[7], key2[7], *val;
+    char key1[12], key2[12], *val;
 
     n3 = 1;
     for (j=axis; j < SF_MAX_DIM; j++) {

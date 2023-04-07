@@ -247,12 +247,13 @@ int main(int argc, char* argv[])
 	  break;
 	}
       }
-    }
-    if(verbose>1){
-      fprintf(stderr,"keyvalue=%d,key_min=%d,key_max=%d,",
-	              keyvalue   ,key_min   ,key_max);
-      if(rejecttrace)fprintf(stderr,"rejecttrace=true\n");
-      else fprintf(stderr,"rejecttrace=false\n");
+    
+      if(verbose>1){
+	  fprintf(stderr,"keyvalue=%d,key_min=%d,key_max=%d,",
+		  keyvalue   ,key_min   ,key_max);
+	  if(rejecttrace)fprintf(stderr,"rejecttrace=true\n");
+	  else fprintf(stderr,"rejecttrace=false\n");
+      }
     }
 
     if(!rejecttrace){

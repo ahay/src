@@ -333,7 +333,7 @@ void sf_join(sf_file out /* output file */,
 {
     int i, job, dim, esize, *naxis, ni;    
     off_t i2, left, nbuf, n[SF_MAX_DIM], n1, n2;
-    char key[3], buf[BUFSIZ];
+    char key[12], buf[BUFSIZ];
     sf_file in;
 
     dim = sf_largefiledims(ins[0],n);

@@ -33,7 +33,7 @@ void chebcoef(const float *b, float *coef, int n)
 float chebeval(const float *coef, float x, int n) 
 /*< evaluation >*/
 {
-    float *d;
+    float *d, d0;
     int i;
     
     d = sf_floatalloc(n+2);
@@ -41,11 +41,11 @@ float chebeval(const float *coef, float x, int n)
     d[n+1]=0.0;
     d[n]=0.0;
     for(i=n-1;i>0;i--) d[i]=2.0*x*d[i+1]-d[i+2]+coef[i];
-    d[0]=x*d[1]-d[2]+0.5*coef[0];
-    
+    d0=x*d[1]-d[2]+0.5*coef[0];
+
     free(d);
 
-    return d[0];
+    return d0;
 }
 
 void chebder(float x1, float x2, const float *coef, float *cder, int ncol) 
