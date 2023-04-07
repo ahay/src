@@ -56,9 +56,9 @@ int main(int argc, char *argv[])
   if (!sf_getbool("norm", &norm)) norm = true;  /* fold normalization */
 
   /*------------------------------------------------------------*/
-  nopen = sysconf(_SC_OPEN_MAX);
+  nopen = sysconf(_SC_OPEN_MAX); /* max number of open files (system) */
   if(verb) sf_warning("max open files: %d",nopen);
-  if(verb) sf_warning("   total files: %d",argc);
+  if(verb) sf_warning("total in files: %d",argc);
   if(argc < nopen) {
     allopen = true;
     if(verb) sf_warning("opening all files");
@@ -88,8 +88,8 @@ int main(int argc, char *argv[])
   /*------------------------------------------------------------*/
   // allocate files
   if(allopen) {
-    Fdwin = (sf_file*) sf_alloc( (size_t) argc, sizeof(sf_file) );
-    Fcwin = (sf_file*) sf_alloc( (size_t) argc, sizeof(sf_file) );
+    Fdwin = (sf_file*) sf_alloc( (size_t) nCLOUD, sizeof(sf_file) );
+    Fcwin = (sf_file*) sf_alloc( (size_t) nCLOUD, sizeof(sf_file) );
 
     // open cloud/data files
     for(int jCLOUD = 0; jCLOUD < nCLOUD; jCLOUD++) {
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
   Fdall = sf_output("out"); // open all  data
   aa = sf_iaxa(Fcall, 2);
 
-  if( !sf_getfloat("hashscale", &hashscale)) hashscale = 2.0;
+  if(    !sf_getfloat("hashscale",  &hashscale)) hashscale = 2.0;
   if(verb) sf_warning("hashscale=%f",hashscale);
   nhash = hashscale * sf_n(aa);
   htInit( nhash ); /* initialize the hash table */
