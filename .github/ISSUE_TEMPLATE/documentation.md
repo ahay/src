@@ -3,7 +3,7 @@ name: Documentation
 about: Documentation of readme, wikis, etc
 title: "[DOC]"
 labels: documentation
-assignees: Dirack
+assignees: 
 
 ---
 
