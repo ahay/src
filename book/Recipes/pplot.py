@@ -1,6 +1,6 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import fdmod 
+import rsf.recipes.fdmod as fdmod
 
 # ------------------------------------------------------------
 def multip(plot,allplots,ny,nx,ys,xs,yc,xc):

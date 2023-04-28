@@ -2022,7 +2022,7 @@ void xt_clear_images(xtFrameList* list)
 	    do{
 		/* free the image associated with this frame */
 		if( curr->image != 0 )
-		    XDestroyImage( curr->image ); curr->image=0;
+		    XDestroyImage( curr->image );
 		curr->image= 0;
 
 		/* free the pixmap associated with this frame */
