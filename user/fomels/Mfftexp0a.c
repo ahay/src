@@ -127,13 +127,13 @@ int main(int argc, char* argv[])
 	sf_putstring(snaps,"label2","Distance");
 
 	if(adj){
-		sf_putint(snaps,"n3",nt/snap);
-		sf_putfloat(snaps,"d3",-dt*snap);
-		sf_putfloat(snaps,"o3",(nt-1)*dt);
+	    sf_putint(snaps,"n3",nt/snap);
+	    sf_putfloat(snaps,"d3",-dt*snap);
+	    sf_putfloat(snaps,"o3",(nt-1)*dt);
 	} else{
-		sf_putint(snaps,"n3",nt/snap);
-		sf_putfloat(snaps,"d3",dt*snap);
-		sf_putfloat(snaps,"o3",t0);
+	    sf_putint(snaps,"n3",nt/snap);
+	    sf_putfloat(snaps,"d3",dt*snap);
+	    sf_putfloat(snaps,"o3",t0);
 	}
 
     } else {
@@ -179,11 +179,11 @@ int main(int argc, char* argv[])
     wave = sf_complexalloc2(nk,m2);
     wave2  = sf_floatalloc2(nzx2,m2);
 
-	for (ik = 0; ik < nk; ik++) {
-		for (im = 0; im < m2; im++) {
-			wave[im][ik] = sf_cmplx(0.,0.);
-		}
+    for (ik = 0; ik < nk; ik++) {
+	for (im = 0; im < m2; im++) {
+	    wave[im][ik] = sf_cmplx(0.,0.);
 	}
+    }
 
     for (iz=0; iz < nzx; iz++) {
 	prev[iz]=0.;
@@ -198,45 +198,48 @@ int main(int argc, char* argv[])
 
     if(adj){ /* migration */
 
-    /* scheme: p(t-dt) = 2p(t) - p(t+dt) + A'p(t) + src(t) */
+	/* scheme: p(t-dt) = 2p(t) - p(t+dt) + A'p(t) + src(t) */
 
-    float *c; /* c is used to store 2*p(t) - p(t+dt) */
+	float *c; /* c is used to store 2*p(t) - p(t+dt) */
 
-    c = sf_floatalloc(nzx2);
-    sf_floatread(dat[0],ntx,data);
+	c = sf_floatalloc(nzx2);
+	sf_floatread(dat[0],ntx,data);
 
 	sf_complex *ctmp;
 	ctmp = sf_complexalloc(nk);
 
-
-    /* time stepping */
-    for (it=nt-1;it>-1; it--) {
-	
-	sf_warning("it=%d;",it);
-
-
-
-	/* update P(t) and P(t+dt) */
-	for (ix = 0; ix < nx; ix++) {
-	for (iz=0; iz < nz; iz++) {
-		i = ix+iz*nx;  /* original grid */
-		j = ix+iz*nx2; /* padded grid */
-			
-		c[j] = curr[j];
-		old = curr[j];
-		c[j] += c[j] - prev[i];
-		prev[i] = old;
-
-	}
-	}
-
 	/* for forward ffts of each rank column */
 	fft2_allocate(ctmp);
+	/* for inverse fft */
+	ifft2_allocate(cwave);
 
-	/* matrix multiplication */
-	for (im = 0; im < m2; im++) {
-	for (ix = 0; ix < nx; ix++) {
+	/* time stepping */
+	for (it=nt-1;it>-1; it--) {
+	
+	    sf_warning("it=%d;",it);
+
+
+
+	    /* update P(t) and P(t+dt) */
+	    for (ix = 0; ix < nx; ix++) {
 		for (iz=0; iz < nz; iz++) {
+		    i = ix+iz*nx;  /* original grid */
+		    j = ix+iz*nx2; /* padded grid */
+			
+		    c[j] = curr[j];
+		    old = curr[j];
+		    c[j] += c[j] - prev[i];
+		    prev[i] = old;
+
+		}
+	    }
+
+
+
+	    /* matrix multiplication */
+	    for (im = 0; im < m2; im++) {
+		for (ix = 0; ix < nx; ix++) {
+		    for (iz=0; iz < nz; iz++) {
 			i = ix+iz*nx;  /* original grid */
 			j = ix+iz*nx2; /* padded grid */
 
@@ -245,60 +248,58 @@ int main(int argc, char* argv[])
 		}
 		fft2(currm,ctmp);
 		for (ik=0;ik<nk;ik++){
-			/* copy data to wave*/
-			wave[im][ik] =  ctmp[ik];
+		    /* copy data to wave*/
+		    wave[im][ik] =  ctmp[ik];
 
-		}
-	}
-
-	/* for inverse fft */
-
-	fft2_allocate(cwave);
-
-	for (ik = 0; ik < nk; ik++) {
-		cc = sf_cmplx(0.,0.);
-		for (im = 0; im < m2; im++) {
-			cc += wave[im][ik]*rht[ik][im];
-		}	 
-		cwave[ik] = cc;
-	}
-
-	ifft2(curr,cwave);
-		
-
-	for (ix = 0; ix < nx; ix++) {
-	for (iz=0; iz < nz; iz++) {
-		i = ix+iz*nx;  /* original grid */
-		j = ix+iz*nx2; /* padded grid */
-
-	/* p(t-dt) = 2p(t) - p(t+dt) + A'p(t)  */
-		curr[j] += c[j];
-	}
-	}
-
-	/* inject data */
-	for (ix=0; ix < nx; ix++) {
-		curr[ix] += dat[ix][it];
-	}
-
-
-	/* output snap wavefield */
-	if (NULL != snaps && 0 == it%snap) {
-	    for (ix=0; ix < nx; ix++) {
-		for (iz=0; iz < nz; iz++) {
-		    img[ix][iz] = curr[ix+iz*nx2];
 		}
 	    }
 
-	    sf_floatwrite(img[0],nzx,snaps);
-	}
+
+
+	    for (ik = 0; ik < nk; ik++) {
+		cc = sf_cmplx(0.,0.);
+		for (im = 0; im < m2; im++) {
+		    cc += wave[im][ik]*rht[ik][im];
+		}	 
+		cwave[ik] = cc;
+	    }
+
+	    ifft2(curr,cwave);
+		
+
+	    for (ix = 0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    i = ix+iz*nx;  /* original grid */
+		    j = ix+iz*nx2; /* padded grid */
+
+		    /* p(t-dt) = 2p(t) - p(t+dt) + A'p(t)  */
+		    curr[j] += c[j];
+		}
+	    }
+
+	    /* inject data */
+	    for (ix=0; ix < nx; ix++) {
+		curr[ix] += dat[ix][it];
+	    }
+
+
+	    /* output snap wavefield */
+	    if (NULL != snaps && 0 == it%snap) {
+		for (ix=0; ix < nx; ix++) {
+		    for (iz=0; iz < nz; iz++) {
+			img[ix][iz] = curr[ix+iz*nx2];
+		    }
+		}
+
+		sf_floatwrite(img[0],nzx,snaps);
+	    }
 
 
 	}/* End of time stepping */
 
 	/* collect imag at time 0 */
 	for (ix=0; ix < nx; ix++) {
-	for (iz=0; iz < nz; iz++) {
+	    for (iz=0; iz < nz; iz++) {
 		img[ix][iz] = curr[ix+iz*nx2];
 	    }
 	}
@@ -317,77 +318,75 @@ int main(int argc, char* argv[])
 
 	/* transpose & initialize exploding refl*/
 	for (ix=0; ix < nx; ix++) {
-	for (iz=0; iz < nz; iz++) {
+	    for (iz=0; iz < nz; iz++) {
 		curr[ix+iz*nx2]=img[ix][iz];
 	    }
 	}
 	/* Initialize recorded data */
 
 	for (ix=0; ix < nx; ix++) {
-	for (it=0; it < nt; it++) {
+	    for (it=0; it < nt; it++) {
 		dat[ix][it] = 0.0f;
 	    }
 	}
 
+	/* Alloc for forward (cwave) only */
+	fft2_allocate(cwave);
+	/* Alloc for inverse (cwavem) only */
+	ifft2_allocate(cwavem);
+
 	/* time stepping */
 
 	for (it=0; it<nt; it++) {
-		sf_warning("it=%d;",it);
+	    sf_warning("it=%d;",it);
 
-	/* record data on the surface */
-	for (ix=0; ix < nx; ix++) {
-			dat[ix][it] = curr[ix];
-	}
-
-	/* matrix multiplication */
-
-	/* Alloc for forward (cwave) only */
-	fft2_allocate(cwave);
-	fft2(curr,cwave);
-
-	/* I use separated variables to do fft / ifft */
-
-	/* Alloc for inverse (cwavem) only */
-	fft2_allocate(cwavem);
-
-
-
-	for (im = 0; im < m2; im++) {
-	for (ik = 0; ik < nk; ik++) {
-
-		cwavem[ik] = cwave[ik]*rht[ik][im];
-
-	    }
-
-	    ifft2(wave2[im],cwavem);
-	}
-
-	for (ix = 0; ix < nx; ix++) {
-	for (iz=0; iz < nz; iz++) {
-		i = ix+iz*nx;  /* original grid */
-		j = ix+iz*nx2; /* padded grid */
-			
-		old = c = curr[j];
-		c += c - prev[i];
-		prev[i] = old;
-
-		for (im = 0; im < m2; im++) {
-			c += lft[im][i]*wave2[im][j];		    
-		}
-		curr[j] = c;
-	}
-	}
-
-	/* output snap wavefield */
-	if (NULL != snaps && 0 == it%snap) {
+	    /* record data on the surface */
 	    for (ix=0; ix < nx; ix++) {
+		dat[ix][it] = curr[ix];
+	    }
+
+	    /* matrix multiplication */
+
+
+	    fft2(curr,cwave);
+
+	    /* I use separated variables to do fft / ifft */
+	    for (im = 0; im < m2; im++) {
+		for (ik = 0; ik < nk; ik++) {
+
+		    cwavem[ik] = cwave[ik]*rht[ik][im];
+
+		}
+
+		ifft2(wave2[im],cwavem);
+	    }
+
+	    for (ix = 0; ix < nx; ix++) {
 		for (iz=0; iz < nz; iz++) {
-		    img[ix][iz] = curr[ix+iz*nx2];
+		    i = ix+iz*nx;  /* original grid */
+		    j = ix+iz*nx2; /* padded grid */
+			
+		    old = c = curr[j];
+		    c += c - prev[i];
+		    prev[i] = old;
+
+		    for (im = 0; im < m2; im++) {
+			c += lft[im][i]*wave2[im][j];		    
+		    }
+		    curr[j] = c;
 		}
 	    }
 
-	    sf_floatwrite(img[0],nzx,snaps);
-	}
+	    /* output snap wavefield */
+	    if (NULL != snaps && 0 == it%snap) {
+		for (ix=0; ix < nx; ix++) {
+		    for (iz=0; iz < nz; iz++) {
+			img[ix][iz] = curr[ix+iz*nx2];
+		    }
+		}
+
+		sf_floatwrite(img[0],nzx,snaps);
+	    }
 
 
 	}/* End of time stepping */

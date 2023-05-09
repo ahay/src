@@ -70,6 +70,7 @@ void tf2dprec_lop(bool adj, bool add, int nxx, int nyy, float* x, float* y)
 
 	    /* forward FFT */
 	    fft2_allocate(ctmp1);
+	    ifft2_allocate(ctmp1);
 	    fft2(tmp1[0],ctmp1);
 
 	    /* frequency weight */
@@ -105,6 +106,7 @@ void tf2dprec_lop(bool adj, bool add, int nxx, int nyy, float* x, float* y)
 
 	    /* forward FFT */
 	    fft2_allocate(ctmp1);
+	    ifft2_allocate(ctmp1);
 	    fft2(tmp1[0],ctmp1);
 
 	    /* frequency weight */

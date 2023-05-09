@@ -29,15 +29,15 @@ static float *w, *wf, **tmp1, **tmp2, *x1, *x2, *s;
 static sf_complex *ctmp1, *ctmp2; /* for 2D-fft */
 
 void sfslschain2d_init(int  n1     /* trace length */,
-		    int  n2     /* number of traces */,
-		    int  n1pad  /* dim1 for 2-D fft input */,
-		    int  n_fftx /* dim2 for 2-D fft input */,
-		    int  n_out_fft     /* dim for 2-D FFT output */,
-		    float *w1   /* weight [n1*n2] */,
-		    float *wf1  /* Fourier weight [nk = nk*n2 (from fft2)) ] */,
-		    float *y1   /* intermediate [n1*n2] */,
-		    float *y2   /* intermediate [n1*n2] */,
-		    float *src  /* source [n1*n2] */)
+		       int  n2     /* number of traces */,
+		       int  n1pad  /* dim1 for 2-D fft input */,
+		       int  n_fftx /* dim2 for 2-D fft input */,
+		       int  n_out_fft     /* dim for 2-D FFT output */,
+		       float *w1   /* weight [n1*n2] */,
+		       float *wf1  /* Fourier weight [nk = nk*n2 (from fft2)) ] */,
+		       float *y1   /* intermediate [n1*n2] */,
+		       float *y2   /* intermediate [n1*n2] */,
+		       float *src  /* source [n1*n2] */)
 /*< initialize >*/
 {
     nt = n1;
@@ -77,7 +77,7 @@ void sfslschain2d_close(void)
 }
 
 void sfslschain2d_res(const float *t /* target */,
-		 float *r       /* residual */)
+		      float *r       /* residual */)
 /*< apply the chain operator >*/
 
 {
@@ -101,22 +101,23 @@ void sfslschain2d_res(const float *t /* target */,
     /* forward FFT */
 
     fft2_allocate(ctmp2);
+    ifft2_allocate(ctmp2);
     fft2(tmp2[0],ctmp2);
 
     /* frequency weight */
     for (ik=0; ik < nk; ik++) {
-		ctmp2[ik] *= wf[ik];
-	}
+	ctmp2[ik] *= wf[ik];
+    }
     /* inverse FFT */
     ifft2(tmp2[0],ctmp2);
     /* Compute residual r */
     for(i=0; i<nt*nx; i++){
-		i1 = i%nt;
-		i2 = i/nt;
+	i1 = i%nt;
+	i2 = i/nt;
 
-		r[i]     = x1[i]-w[i]*s[i];
-		r[n+i]   = x2[i]-tmp2[i2][i1];
-		r[2*n+i] = t[i]-w[i]*x2[i];
+	r[i]     = x1[i]-w[i]*s[i];
+	r[n+i]   = x2[i]-tmp2[i2][i1];
+	r[2*n+i] = t[i]-w[i]*x2[i];
     }   
 }
 
@@ -126,7 +127,7 @@ void sfslschain2d_apply(float *y)
 {
     int i, ik, i1, i2;
 
-   /* pad with zeros */
+    /* pad with zeros */
     for (i2=0; i2 < nx; i2++) {
 	for (i1=0; i1 < nt; i1++) {
 	    i = i1+i2*nt;
@@ -151,6 +152,7 @@ void sfslschain2d_apply(float *y)
 	ctmp2[ik] *= wf[ik];
     }
     /* inverse FFT */
+    ifft2_allocate(ctmp2);
     ifft2(tmp2[0],ctmp2);
 
     for (i=0; i < n; i++) {
@@ -160,9 +162,6 @@ void sfslschain2d_apply(float *y)
 	y[i] = w[i]*tmp2[i2][i1];
     }
 }
-
-
-
 
 
 void sfslschain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y) 
@@ -206,28 +205,29 @@ void sfslschain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
 	    }
 	}
 
-    fft2_allocate(ctmp2);
+	fft2_allocate(ctmp2);
 	fft2(tmp2[0],ctmp2);
-    fft2_allocate(ctmp1);	
+	fft2_allocate(ctmp1);
+	ifft2_allocate(ctmp1);
 	fft2(tmp1[0],ctmp1);
 
-    for(id = 0; id < nx; id++){
-        dc_id[id] = id*nw;
-        nyq_id[id] = (id+1)*nw - 1;
-    }
+	for(id = 0; id < nx; id++){
+	    dc_id[id] = id*nw;
+	    nyq_id[id] = (id+1)*nw - 1;
+	}
 
 	for (ik=0; ik < nk; ik++) {
-        scale = 2.0;
-        for(id=0; id<nx; id++)
-        { 
-            if(ik==dc_id[id] || ik == nyq_id[id]){
-                scale = 1.0;
-                break;
-            }
-        }
+	    scale = 2.0;
+	    for(id=0; id<nx; id++)
+	    { 
+		if(ik==dc_id[id] || ik == nyq_id[id]){
+		    scale = 1.0;
+		    break;
+		}
+	    }
 
 	    x[3*n+ik] += 
-			scale*crealf(ctmp1[ik]*conjf(ctmp2[ik])/(nt1*nx2));
+		scale*crealf(ctmp1[ik]*conjf(ctmp2[ik])/(nt1*nx2));
 
 	    ctmp1[ik] *= wf[ik];
 	}	
@@ -264,16 +264,17 @@ void sfslschain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
 	    }
 	}
 
-    fft2_allocate(ctmp1);	
+	fft2_allocate(ctmp1);	
 	fft2(tmp1[0],ctmp1);	
 	for(ik=0; ik<nk;ik++){
-		ctmp1[ik] *=wf[ik];
+	    ctmp1[ik] *=wf[ik];
 	}
 	ifft2(tmp1[0],ctmp1);
-    fft2_allocate(ctmp2);
+	fft2_allocate(ctmp2);
+	ifft2_allocate(ctmp2);
 	fft2(tmp2[0],ctmp2);
 	for(ik=0; ik<nk;ik++){
-		ctmp2[ik] *=x[3*n+ik];
+	    ctmp2[ik] *=x[3*n+ik];
 	}
 	ifft2(tmp2[0],ctmp2);
 
@@ -289,9 +290,9 @@ void sfslschain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
 void sfslschain2d_wf(float* w_freq,float* tgt, float *src, float *w_time, int frect1, int frect2)
 /*<Solve for Wf using Separable LS approach >*/
 {
-	int i, i1,i2, id, dim, nd, niter, rect[2], ndim[SF_MAX_DIM];
-	float norm, a, **num, **den;
-	sf_complex *c_num, *c_den, *cw_freq;
+    int i, i1,i2, id, dim, nd, niter, rect[2], ndim[SF_MAX_DIM];
+    float norm, a, **num, **den;
+    sf_complex *c_num, *c_den, *cw_freq;
 
 
     num = sf_floatalloc2(nt1,nx2);  
@@ -323,15 +324,15 @@ void sfslschain2d_wf(float* w_freq,float* tgt, float *src, float *w_time, int fr
 
     /* FFT of num and den */
     fft2_allocate(c_num);	
-	fft2(num[0],c_num);
+    fft2(num[0],c_num);
 
     fft2_allocate(c_den);
-	fft2(den[0],c_den);
+    fft2(den[0],c_den);
 
 //////////////////////////////////////////
-	/* Complex smooth division*/
-	/* Imitate Mcdivn.c */
-	niter = 100;
+    /* Complex smooth division*/
+    /* Imitate Mcdivn.c */
+    niter = 100;
     //dim = sf_filedims (fnum,n);
     dim = 2; // output of 2d fft?
     nd = nk; //data size?
@@ -342,13 +343,13 @@ void sfslschain2d_wf(float* w_freq,float* tgt, float *src, float *w_time, int fr
     ndim[1] = 1;
 
 /*
-    // how to initialize smoothing radius here ?? //
-    for (i=0; i < dim; i++) {
-	snprintf(key,6,"rect%d",i+1);
-	if (!sf_getint(key,rect+i)) rect[i]=1;
-	//( rect#=(1,1,...) smoothing radius on #-th axis )
-		//nd *= n[i]; n1*n2*... but here we have nk(=nk*n2) already
-    } */
+// how to initialize smoothing radius here ?? //
+for (i=0; i < dim; i++) {
+snprintf(key,6,"rect%d",i+1);
+if (!sf_getint(key,rect+i)) rect[i]=1;
+//( rect#=(1,1,...) smoothing radius on #-th axis )
+//nd *= n[i]; n1*n2*... but here we have nk(=nk*n2) already
+} */
 ////////////////////////////////////////
 
     cdivn_init(dim, nd, ndim, rect, niter, true);
@@ -371,8 +372,8 @@ void sfslschain2d_wf(float* w_freq,float* tgt, float *src, float *w_time, int fr
     /* output the ratio to w_freq */
     cdivn (c_num, c_den, cw_freq);
     /* Convert to real */
-	for(id=0; id<nd;id++){
-		w_freq[id] =crealf(cw_freq[id]);
-	}
+    for(id=0; id<nd;id++){
+	w_freq[id] =crealf(cw_freq[id]);
+    }
 
 }

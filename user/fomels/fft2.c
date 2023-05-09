@@ -136,7 +136,7 @@ void fft2(float *inp      /* [n1*n2] */,
 }
 
 void fft2_allocate(sf_complex *inp /* [nk*n2] */)
-/*< allocate inverse transform >*/
+/*< allocate forward transform >*/
 {
 #ifdef SF_HAS_FFTW
     cfg = cmplx? 
@@ -148,6 +148,13 @@ void fft2_allocate(sf_complex *inp /* [nk*n2] */)
 			      ff[0], (fftwf_complex *) inp,
 			      FFTW_MEASURE);
     if (NULL == cfg) sf_error("FFTW failure.");
+#endif
+}
+
+void ifft2_allocate(sf_complex *inp /* [nk*n2] */)
+/*< allocate inverse transform >*/
+{
+#ifdef SF_HAS_FFTW
     icfg = cmplx? 
 	fftwf_plan_dft_2d(n2,n1,
 			  (fftwf_complex *) inp, 
