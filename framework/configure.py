@@ -921,7 +921,9 @@ def ffmpeg(context):
     #if LIBAVCODEC_VERSION_MAJOR < 54
     avcodec_init ();
     #endif
-    //avcodec_register_all ();
+    #if LIBAVCODEC_VERSION_MAJOR < 58
+    avcodec_register_all ();
+    #endif
     return 0;
     }\n'''
     ffmpeg = context.env.get('FFMPEG','avcodec avutil')
