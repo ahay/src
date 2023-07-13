@@ -23,7 +23,7 @@
 
 int main (int argc, char *argv[])
 {
-    int ir, nr, n1,n2, m1, m2, n12, nw, n3;
+    int n1,n2, m1, m2, n12, nw, n3;
     float *u1, *u2, *p1, *p2;
     sf_file in, out, ang;
     omni2 ap;
@@ -39,7 +39,7 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("Need n1= in input");
     if (!sf_histint(in,"n2",&n2)) n2=1;
     n12 = n1*n2;
-    nr = sf_leftsize(in,2);
+    sf_putint(out,"n3",2);
     
     if (!sf_histint(ang,"n1",&m1) || m1 != n1) 
 	sf_error("Need n1=%d in dip",n1);
@@ -56,23 +56,26 @@ int main (int argc, char *argv[])
     p1 = sf_floatalloc(n12);
     p2 = sf_floatalloc(n12);
 
-    for (ir=0; ir < nr; ir++) {
-	/* read dip */
+    /* read dip */
+    sf_floatread(p1,n12,ang);
+    sf_floatread(p2,n12,ang);
+    
+    /* read data */
+    sf_floatread(u1,n12,in);
+    
+    ap = opwd2_init (nw,n1,n2,p1,p2);
+    
+    /* apply */
+    opwd21(false, false, ap, u1, u2);
+    
+    /* write out */
+    sf_floatwrite(u2,n12,out);
 
-	sf_floatread(p1,n12,ang);
-	sf_floatread(p2,n12,ang);
-	
-	/* read data */
-	sf_floatread(u1,n12,in);
-		
-	ap = opwd2_init (nw,n1,n2,p1,p2);
-		
-	/* apply */
-	opwd21(false, false, ap, u1, u2);
-		
-	/* write out */
-	sf_floatwrite(u2,n12,out);
-    }
+    /* apply */
+    opwd12(false, false, ap, u1, u2);
+
+    /* write out */
+    sf_floatwrite(u2,n12,out);
 	        
     exit (0);
 }

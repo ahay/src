@@ -79,7 +79,11 @@ void odip2(int niter   /* number of nonlinear iterations */,
 
     for (iter =0; iter < niter; iter++) {
 	opwd21(true,false,ap,u,den);
-	opwd21(false,true,ap,u,den+n);
+	opwd21(false,true,ap,u,den+n); 
+
+/*	for (i=0; i < n; i++) {
+	    den[n+i] = 0.0f;
+	    } */
 
 	usum = 0.0f;
 	for(i=0; i < n; i++) {
@@ -110,7 +114,7 @@ void odip2(int niter   /* number of nonlinear iterations */,
 		one = hypotf(p[i],p[i+n])+SF_EPS;
 		p[i] /= one;
 		p[i+n] /= one;
-	    }
+	    } 
 
 	    opwd21(false,false,ap,u,dat);
 
