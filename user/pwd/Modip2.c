@@ -98,7 +98,7 @@ int main (int argc, char *argv[])
 	    sf_floatread(p+n123,n123,cs);
 	} else {
 	    for(i=0; i < n123; i++) {
-		p[n123+i] = 1.0f;
+		p[n123+i] = 0.0f;
 	    }
 	}
 

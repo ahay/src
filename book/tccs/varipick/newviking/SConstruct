@@ -408,12 +408,12 @@ Result('semblance-cont-f','semblance-cont-f semblance-cont-f-bar',
 Flow('envelope-f-bar',semblst[-1],'window max1=%g | bar gainpanel=e allpos=y'%max1tp )
 Result(name+'-envelope-f',[semblst[-1],'envelope-f-bar'],
    ''' 
-   window max1=%g |
+   window max1=%g j3=2 |
    byte gainpanel=e allpos=y| 
    grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]}
    frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power"
    point1=.9 point2=0.5 color=j flat=n framelabel1=n
-   '''%(max1tp,2*nv/3-9,frame3))
+   '''%(max1tp,2*nv/3-9,frame3/2))
 #Result('envelope-f-mov',[semblst[-1],'envelope-f-bar'],
 #   '''
 #   window j3=10 max1=%g| 

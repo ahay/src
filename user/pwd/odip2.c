@@ -71,7 +71,7 @@ void odip2(int niter   /* number of nonlinear iterations */,
 /*< estimate local dip >*/
 {
     int i, iter, k;
-    float usum, usum2, lam, mean;
+    float usum, usum2, lam, mean, one;
     omni2 ap;
  
     ap = opwd2_init (nw,n1,n2,p,p+n);
@@ -105,6 +105,11 @@ void odip2(int niter   /* number of nonlinear iterations */,
 	for (k=0; k < 8; k++) {
 	    for(i=0; i < 2*n; i++) {
 		p[i] = p0[i]+lam*dp[i];
+	    }
+	    for (i=0; i < n; i++) {
+		one = hypotf(p[i],p[i+n])+SF_EPS;
+		p[i] /= one;
+		p[i+n] /= one;
 	    }
 
 	    opwd21(false,false,ap,u,dat);
