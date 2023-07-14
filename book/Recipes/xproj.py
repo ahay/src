@@ -17,10 +17,10 @@ def Tflow(target, source, command,
 		sys.stderr.write('Tflow need %s.'%time_nm)
 		sys.exit(1)
 		
-	if type(target) is types.ListType:
+	if type(target) is list:
 		tfiles = target
 	else:
-		tfiles = string.split(target)
+		tfiles = target.split()
 	tfiles.insert(0, tfiles[0]+'_runtime')
 	pars=command.split()
 	p0=pars.pop(0)
@@ -32,7 +32,7 @@ def Tflow(target, source, command,
 		p1=os.path.join('.',p0) # Mdip.exe
 
 	pars.insert(0,p1)
-	cmd=string.join(pars,' ')
+	cmd=' '.join(pars)
 	Flow(tfiles, source,
 		'''
 		( %s -f "%%U" %s <${SOURCES[0]} >${TARGETS[1]} ) 
