@@ -19,11 +19,12 @@
 #include <rsf.h>
 
 #include "regrid.h"
+#include "hshape.h"
 
 int main(int argc, char* argv[])
 {
-    int dim, na, nx, i, j, n[SF_MAX_DIM], m[SF_MAX_DIM], ir, nr;
-    float *data, *tmp1, *tmp2, eps, r;
+    int dim, na, nx, j, n[SF_MAX_DIM], m[SF_MAX_DIM], nr;
+    float *data, eps;
     char *lagfile;
     sf_filter pef;
     sf_file inp, out, fil, lag;
@@ -35,8 +36,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=1.0f;
     /* regularization parameter */
-    eps *= eps;
-
     if (!sf_getint("rect",&nr)) nr=1;
     /* shaping radius */
 
@@ -56,8 +55,6 @@ int main(int argc, char* argv[])
     regrid(dim,m,n,pef);
     sf_fileclose(lag);
 
-    sf_helicon_init (pef);
-
     /* input data, output model */
     nx=1;
     for(j=0; j < dim; j++) {
@@ -65,24 +62,12 @@ int main(int argc, char* argv[])
     }
 
     data = sf_floatalloc(nx);
-    tmp1 = sf_floatalloc(nx);
-    tmp2 = sf_floatalloc(nx);
 
     sf_floatread(pef->flt,na,fil);
+    hshape_init(nx,nr,pef,eps);
+    
     sf_floatread(data,nx,inp);
-
-    for (ir=1; ir < nr; ir++) {
-	r = 2*sinf(SF_PI*ir/nr);
-	r = -0.5*eps/(r*r);
-
-	for (i=0; i < nx; i++) {
-	    tmp1[i] = r*data[i];
-	}
-	    
-	sf_helicon_lop(false,false,nx,nx,tmp1,tmp2);
-	sf_helicon_lop(true,true,nx,nx,data,tmp2);
-    }
-	
+    hshape(data);
     sf_floatwrite(data,nx,out);
     
     exit(0);
