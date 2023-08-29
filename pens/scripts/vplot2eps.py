@@ -36,7 +36,7 @@ def convert(vplot,eps,
     opts = os.environ.get('PSTEXPENOPTS',options)
 
     # Get bounding box info from vplot file
-    getbb = vppen + ' big=y stat=l %s < %s | head -1' % (opts,vplot)
+    getbb = vppen + ' big=y stat=l %s < %s | head -1 | cut -d : -f 2' % (opts,vplot)
 
     out = os.popen(getbb)
     head = out.read().split()
@@ -44,14 +44,14 @@ def convert(vplot,eps,
 
     # Use parameters for bounding box if supplied.
     # Otherwise use bounding box from vplot file.
-    if xbmin==None: xbbm = head[7]
+    if xbmin==None: xbbm = head[6]
     else:           xbbm = xbmin
-    if xbmax==None: xbbp = head[9]
+    if xbmax==None: xbbp = head[8]
     else:           xbbp = xbmax
 
-    if ybmin==None: ybbm = head[12]
+    if ybmin==None: ybbm = head[11]
     else:           ybbm = ybmin
-    if ybmax==None: ybbp = head[14]
+    if ybmax==None: ybbp = head[13]
     else:           ybbp = ybmax
 
     # Compute bounding box
