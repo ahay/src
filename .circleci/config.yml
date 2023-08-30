@@ -37,7 +37,6 @@ jobs:
         command: |
           echo 'export RSFROOT="$HOME/RSFROOT"'      >> $BASH_ENV
           echo 'export RSFFIGS="$HOME/RSFROOT/figs"' >> $BASH_ENV
-          echo 'export RSF_DATASERVER=https://fomel.com' >> $BASH_ENV
     
     - run: 
         name: Checkout figs
