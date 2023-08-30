@@ -69,9 +69,11 @@ def get_dataserver():
     country = get_geolocation()
     if country == "CN":
         #    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
-        return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+        # return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+        return os.environ.get('RSF_DATASERVER','https://fomel.com')
     else:
-        return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+        # return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+        return os.environ.get('RSF_DATASERVER','https://fomel.com')
 
 dataserver = None
 libs = os.environ.get('LIBS',"")
