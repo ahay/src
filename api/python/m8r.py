@@ -1434,6 +1434,7 @@ if __name__ == "__main__":
     assert not par.int("c")
     assert 10 == par.int("c",10)
     assert 5.625 == par.float("float")
+    assert 1.0 == par.float("nothing",1.0)
     assert par.bool("true")
     assert not par.bool("false")
     #assert "Time (sec)" == par.string("label")
@@ -1457,6 +1458,7 @@ if __name__ == "__main__":
     n1 = input.int("n1")
     assert 100 == n1
     assert 0.25 == input.float("d1")
+    assert 0.5 == input.float("z1",0.5)
     assert 'Time' == input.string("label1")
     n2 = 10
     output.put('n2',n2)

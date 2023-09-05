@@ -63,12 +63,12 @@ d1 = inp.float("d1")
 o1 = inp.float("o1")
 n2 = inp.size(1)
 if n2 > 1:
-    d2 = inp.float("d2")
-    o2 = inp.float("o2")
+    d2 = inp.float("d2",1.0)
+    o2 = inp.float("o2",1.0)
 else:
     d2 = 1.0
     o2 = 0.0
-
+    
 data = numpy.zeros([n1,n2],'f')
 inp.read(data)
 inp.close()
@@ -91,6 +91,10 @@ elif plot == 'plot_surface':
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot_surface.__call__(x1,x2,data,**args)
+elif plot == 'plot3D':
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot3D.__call__(x1[:,0],data[:,0],data[:,1],**args)
 else:
     sys.stderr.write('Unrecognized plotting function "%s" \n\n' % plot)
     sys.exit(2)

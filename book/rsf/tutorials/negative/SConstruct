@@ -17,11 +17,22 @@ Result('sig','graph label2=amplitude grid=y plotfat=5 title="Ricker wavelet"')
 Flow('spec','sig','rtoc | fft3 axis=1')
 
 # amplitude spectrum
-Result('amp','spec',
-       '''
-       window min1=-100 max1=100 | math output="abs(input)" | real | 
-       graph title="Amplitude" grid=y plotfat=5 
-       ''')
+Flow('amp','spec',
+     '''
+     window min1=-100 max1=100 | math output="abs(input)" | real
+     ''')
+Result('amp','graph title="Amplitude" grid=y plotfat=5')
 
+# & stands for atan2
+Flow('ang','spec',
+     '''
+     window min1=-100 max1=100 | math output="imag(input)&real(input)" | real
+     ''')
+
+Flow('p','amp ang','math a=${SOURCES[1]} output="input*sin(a)" ')
+Flow('q','amp ang','math a=${SOURCES[1]} output="input*cos(a)" ')
+Flow('pq','p q','cat axis=2 ${SOURCES[1]}')
+
+Result('spec','pq','matplotlib plot3D')
 
 End()
