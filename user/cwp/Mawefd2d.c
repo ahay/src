@@ -30,7 +30,7 @@
 
 static float* compute_fdcoef(int nop, float dz, float dx,
     bool is_optimized, const int d_order);
-static int factorial(int n);
+static float factorial(int n);
 static float* normal_fdcoef(int nop, const int d_order);
 static float* optimal_fdcoef(int nop, const int d_order);
 static float* damp_make(int ntransit);
@@ -425,11 +425,11 @@ main(int argc, char** argv)
       }
     }
 
-  static int
+  static float
     factorial(int n)
     {
       int i;
-      int result = 1;
+      float result = 1;
       for (i=1; i<=n; ++i)
         result *= i;
       return result;
@@ -441,7 +441,7 @@ main(int argc, char** argv)
       int n;
       float *cc = calloc(nop+1,sizeof(float));
       float *bb = calloc(nop+1,sizeof(float));
-      int halfN_fact = factorial(nop);
+      float halfN_fact = factorial(nop);
       halfN_fact *= halfN_fact;
       for (n=1; n<=nop; n++) {
         cc[n] = - 2.f / (n*n) * cos(n*SF_PI) * halfN_fact/factorial(nop+n)/factorial(nop-n); 
