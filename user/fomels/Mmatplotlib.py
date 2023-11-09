@@ -69,8 +69,11 @@ else:
     d2 = 1.0
     o2 = 0.0
     
-data = numpy.zeros([n1,n2],'f')
-inp.read(data)
+# data = numpy.zeros([n1,n2],'f')
+# inp.read(data)
+# inp.close()
+
+data = inp.read(shape=(n2,n1)).T
 inp.close()
 
 x1 = numpy.transpose(numpy.tile(numpy.arange(o1, o1+n1*d1, d1,dtype='f'),(n2,1)))
