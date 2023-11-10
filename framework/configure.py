@@ -433,7 +433,7 @@ def rpc(context):
         or (plat['distro'] == 'ubuntu' and int(plat['version'][:2]) >= 20)
         or plat['distro'] == 'arch'
     ):
-        context.env('CPPPATH'] = path_get(context,'CPPPATH','/usr/include/tirpc')
+        context.env['CPPPATH'] = path_get(context,'CPPPATH','/usr/include/tirpc')
         LIBS.append('tirpc')
     elif plat['OS'] == 'interix':
         LIBS.append('rpclib')
