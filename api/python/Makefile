@@ -6,6 +6,6 @@ SConstruct.jupyter: *.scons
 
 %.png: SConstruct.jupyter
 	-rm $@
-	scons -Qf SConstruct.jupyter  $@ || ( \
+	scons -Qkf SConstruct.jupyter  $@ || ( \
 	scons -Qf SConstruct.jupyter Fig/$*.vpl && \
 	vpconvert pen=gd fat=3 serifs=n bgcolor=w Fig/$*.vpl $@ )
