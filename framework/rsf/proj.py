@@ -19,10 +19,13 @@ import os, stat, sys, types, copy, re, string, ftplib, socket, json
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
-if sys.version_info[0] >= 3:
-    import urllib.request as urllib_request
-else:
-    import urllib as urllib_request
+from urllib.request import urlopen
+from shutil import copyfileobj
+import ssl
+
+context = ssl.create_default_context()
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = list(map(int,SCons.__version__.split('.')[:3]))
@@ -206,7 +209,9 @@ def retrieve(target=None,source=None,env=None):
                 else:
                     localfile=file
                 try:
-                    urllib_request.urlretrieve(rdir,localfile)
+                    with urlopen(rdir, context=context) as in_stream, open(localfile, 'wb') as out_file:
+                        copyfileobj(in_stream, out_file)
+                        
                     if not os.stat(localfile)[6]:
                         print('Could not download file "%s" ' % localfile)
                         os.unlink(localfile)
