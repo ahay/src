@@ -108,17 +108,16 @@ def plotpath(col,fat):
     wantaxis=n wanttitle=n screenht=2.8 screenwd=14.6
     ''' % (col,fat)
 
-pnames = map(lambda x,y: 'path-%d-%d' % (x,y),paths[0],paths[1])
+pnames = ['path-%d-%d' % (x,y) for x in paths[0] for y in paths[1]]
 
 Flow(['time']+pnames,'wcos',
      '''
      dijkstra ref1=150 ref2=18
      nf=%d paths=%s fin1=%s fin2=%s
      ''' % (len(pnames),
-            string.join(map(lambda x: '${TARGETS[%d]}' % x,
-                            range(1,len(pnames)+1)),':'),
-            string.join(map(str,paths[0]),','),
-            string.join(map(str,paths[1]),',')))
+            ':'.join(['${TARGETS[%d]}' % x for x in range(1,len(pnames)+1)]),
+            ','.join([str(x) for x in paths[0]]),
+            ','.join([str(x) for x in paths[1]])))
 Plot('time',
      '''
      grey color=j allpos=y
