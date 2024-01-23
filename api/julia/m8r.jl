@@ -486,8 +486,8 @@ function rsf_write(dat::AbstractArray, n=nothing, d=nothing, o=nothing,
     rsf_write(tag, dat, n, d, o, l, u)
     return tag
 end
-rsf_write(dat::AbstractArray; n=nothing, d=nothing, o=nothing, l=nothing,
-          u=nothing) = rsf_write(dat, n, d, o, l, u)
+#rsf_write(dat::AbstractArray; n=nothing, d=nothing, o=nothing, l=nothing,
+#          u=nothing) = rsf_write(dat, n, d, o, l, u)
 function rsf_write(file::RSFFile, tag::String)
     sfmv = joinpath(m8r.RSFROOT, "bin", "sfmv")
     fname = String[file.tag, tag]

@@ -13,7 +13,8 @@ Flow('test.attr','clip.jl',
             WhereIs('julia')),stdin=0)
 
 binary = Command('afdm.exe','afdm.jl','cp $SOURCE $TARGET')
-AddPostAction(binary,Chmod(binary,0755))
+AddPostAction(binary,Chmod(binary,0o755))
+
 End()
 
 
