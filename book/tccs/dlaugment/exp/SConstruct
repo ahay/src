@@ -1,0 +1,2277 @@
+from __future__ import print_function, division
+
+import tensorflow.keras.backend as K
+from functools import partial
+from tensorflow.keras.layers import concatenate
+from tensorflow.keras.layers import Lambda
+import tensorflow
+from tensorflow import keras
+from tensorflow.keras.layers import Input, Dense, Reshape, Flatten, Dropout, Concatenate
+from tensorflow.keras.layers import BatchNormalization, Activation, ZeroPadding2D, MaxPooling2D, Conv2DTranspose
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.layers import UpSampling2D, Conv2D
+#import tensorflow_probability as tfp
+#tfd = tfp.distributions
+
+import matplotlib.pyplot as plt
+
+import sys
+
+import numpy as np
+
+from tensorflow.keras.losses import mean_squared_error, mean_absolute_error
+
+from tensorflow.python.framework.ops import disable_eager_execution
+
+from rsf.proj import *
+import m8r
+import tensorflow as tf
+
+# for reproducibility
+from tensorflow import random
+import random as rdn
+np.random.seed(2021)
+random.set_seed(2021)
+rdn.seed(2021)
+
+from sklearn.model_selection import train_test_split
+
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+  try:
+    # Currently, memory growth needs to be the same across GPUs
+    for gpu in gpus:
+      tf.config.experimental.set_memory_growth(gpu, True)
+    logical_gpus = tf.config.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
+
+Fetch('faults.npz','faults')
+
+def get_data(target=None, source=None, env=None):
+  npz = str(source[0])
+  data = np.load(npz)['data']
+  labels = np.load(npz)['labels']
+  
+  # normalize data
+  mean = data.mean(axis=(1,2))[:,np.newaxis,np.newaxis]
+  std = data.std(axis=(1,2))[:,np.newaxis,np.newaxis]
+  data = (data-mean)/std
+
+  # add dimension of 1
+  data = np.expand_dims(data,axis=-1)
+  labels = np.expand_dims(labels,axis=-1)
+  
+  training_data,eval_data,training_label,eval_label=train_test_split(data,labels,test_size=0.10,random_state=42)
+
+  m8r.File(training_data,name=str(target[0]))
+  m8r.File(training_label,name=str(target[1]))
+  m8r.File(eval_data,name=str(target[2]))
+  m8r.File(eval_label,name=str(target[3]))
+
+Command(['xtrain.rsf','ytrain.rsf','xtest.rsf','ytest.rsf'],'faults.npz',
+       action=Action(get_data))
+
+# Plot training data
+examples = []
+for example in (0,40,80,120,160):
+    ytrain = 'ytrain%d' % example
+    Plot(ytrain,'ytest',
+         '''
+         window n4=1 f4=%d | put d2=1 d3=1 label2=Distance unit2=samples label1=Time unit1=samples |  
+         grey color='viridis' allpos=y transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % example)
+    examples.append(ytrain)
+
+Plot('train1',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,50,90,130,170):
+    ytrain = 'ytrain%d' % example
+    Plot(ytrain,'ytest',
+         '''
+         window n4=1 f4=%d | put d2=1 d3=1 label2=Distance unit2=samples label1=Time unit1=samples |
+         grey transp=n color='viridis' allpos=y wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % example)
+    examples.append(ytrain)
+
+Plot('train2',examples,'SideBySideAniso')
+
+examples = []
+for example in (20,60,100,140,180):
+    ytrain = 'ytrain%d' % example
+    Plot(ytrain,'ytest',
+         '''
+         window n4=1 f4=%d | put d2=1 d3=1 label2=Distance unit2=samples label1=Time unit1=samples |
+         grey transp=n color='viridis' allpos=y wantaxis=n minval=-4 maxval=4 wanttitle=n
+         ''' % example)
+    examples.append(ytrain)
+
+Plot('train3',examples,'SideBySideAniso')
+
+Result('train','train1 train2 train3','OverUnderAniso')
+
+examplesfig = []
+for example in (0,120):
+    ytrainfig = 'ytrainfig%d' % example
+    Plot(ytrainfig,'ytest',
+         '''
+         window n4=1 f4=%d | put d2=1 d3=1 label2=Distance unit2=samples label1=Time unit1=samples |
+         grey screenratio=1.0 color='viridis' allpos=y transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % example)
+    examplesfig.append(ytrainfig)
+
+Plot('trainfig1',examplesfig,'SideBySideAniso')
+
+examplesfig = []
+for example in (20,100):
+    ytrainfig = 'ytrainfig%d' % example
+    Plot(ytrainfig,'ytest',
+         '''
+         window n4=1 f4=%d | put d2=1 d3=1 label2=Distance unit2=samples label1=Time unit1=samples |
+         grey screenratio=1.0 transp=n color='viridis' allpos=y wantaxis=n minval=-4 maxval=4 wanttitle=n
+         ''' % example)
+    examplesfig.append(ytrainfig)
+
+Plot('trainfig3',examplesfig,'SideBySideAniso')
+Result('trainfig','trainfig1 trainfig3','OverUnderAniso')
+
+examples = []
+examplesaug = []
+exampleffts = []
+for example in (0,40,80,120,160):
+    xtrain = 'xtrain%d' % example
+    xtrainfft = 'xtrainfft%d' % example
+    xtrainaug = 'xtrainaug%d' % example
+    Plot(xtrain,'xtest',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % example)
+    Plot(xtrainaug,'xtestaug',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % (200+example))
+    Plot(xtrainfft, 'xtest',
+         '''
+         window n4=1 f4=%d |
+         fft1 | fft3 | math output="abs(input)" | real | grey wantaxis=n allpos=y color=viridis wanttitle=n
+         ''' % example)
+    examples.append(xtrain)
+    examplesaug.append(xtrainaug)
+    exampleffts.append(xtrainfft)
+
+Plot('trains1',examples,'SideBySideAniso')
+Plot('trainsaug1',examplesaug,'SideBySideAniso')
+Plot('trainffts1',exampleffts,'SideBySideAniso')
+
+examples = []
+examplesaug = []
+exampleffts = []
+for example in (10,50,90,130,170):
+    xtrain = 'xtrain%d' % example
+    xtrainfft = 'xtrainfft%d' % example
+    xtrainaug = 'xtrainaug%d' % example
+    Plot(xtrain,'xtest',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % example)
+    Plot(xtrainaug,'xtestaug',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % (200+example))
+    Plot(xtrainfft, 'xtest',
+         '''
+         window n4=1 f4=%d |
+         fft1 | fft3 | math output="abs(input)" | real | grey wantaxis=n allpos=y color=viridis wanttitle=n
+         ''' % example)
+    examples.append(xtrain)
+    examplesaug.append(xtrainaug)
+    exampleffts.append(xtrainfft)
+
+Plot('trains2',examples,'SideBySideAniso')
+Plot('trainsaug2',examplesaug,'SideBySideAniso')
+Plot('trainffts2',exampleffts,'SideBySideAniso')
+
+examples = []
+examplesaug = []
+exampleffts = []
+for example in (20,60,100,140,180):
+    xtrain = 'xtrain%d' % example
+    xtrainfft = 'xtrainfft%d' % example
+    xtrainaug = 'xtrainaug%d' % example
+    Plot(xtrain,'xtest',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % example)
+    Plot(xtrainaug,'xtestaug',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % (200+example))
+    Plot(xtrainfft, 'xtest',
+         '''
+         window n4=1 f4=%d |
+         fft1 | fft3 | math output="abs(input)" | real | grey wantaxis=n allpos=y color=viridis wanttitle=n
+         ''' % example)
+    examples.append(xtrain)
+    examplesaug.append(xtrainaug)
+    exampleffts.append(xtrainfft)
+
+Plot('xtrain200-2','xtest',
+     '''
+     window n4=1 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples |
+     grey barlabel="Amplitude" transp=n wantaxis=y title="Synthetic seismic data" scalebar=y minval=-3 maxval=3
+     ''')
+Plot('xtrainfft200-2', 'xtest',
+     '''
+     window n4=1 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples
+ label1=Distance unit1=samples | transp | 
+     fft1 | fft3 | math output="abs(input)" | real | grey barlabel="Amplitude" wantaxis=y allpos=y color=viridis scalebar=y minval=0 maxval=1500 title="FK of the synthetic seismic data"
+     ''')
+
+Plot('trains3',examples,'SideBySideAniso')
+Plot('trainsaug3',examplesaug,'SideBySideAniso')
+Plot('trainffts3',exampleffts,'SideBySideAniso')
+
+Result('trains','trains1 trains2 trains3','OverUnderAniso')
+Result('trainsaug','trainsaug1 trainsaug2 trainsaug3','OverUnderAniso')
+Result('trainffts','trainffts1 trainffts2','OverUnderAniso')
+
+examplesfig = []
+examplesaugfig = []
+examplefftsfig = []
+for example in (0,120):
+    xtrainfig = 'xtrainfig%d' % example
+    xtrainfftfig = 'xtrainfftfig%d' % example
+    xtrainaugfig = 'xtrainaugfig%d' % example
+    Plot(xtrainfig,'xtest',
+         '''
+         window n4=1 f4=%d |
+         grey screenratio=1.0 transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % example)
+    Plot(xtrainaugfig,'xtestaug',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % (200+example))
+    Plot(xtrainfftfig, 'xtest',
+         '''
+         window n4=1 f4=%d |
+         fft1 | fft3 | math output="abs(input)" | real | grey wantaxis=n allpos=y color=viridis wanttitle=n
+         ''' % example)
+    examplesfig.append(xtrainfig)
+    examplesaugfig.append(xtrainaugfig)
+    examplefftsfig.append(xtrainfftfig)
+Plot('trains1fig',examplesfig,'SideBySideAniso')
+
+examplesfig = []
+examplesaugfig = []
+examplefftsfig = []
+for example in (20,100):
+    xtrainfig = 'xtrainfig%d' % example
+    xtrainfftfig = 'xtrainfftfig%d' % example
+    xtrainaugfig = 'xtrainaugfig%d' % example
+    Plot(xtrainfig,'xtest',
+         '''
+         window n4=1 f4=%d |
+         grey screenratio=1.0 transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % example)
+    Plot(xtrainaugfig,'xtestaug',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n wanttitle=n minval=-4 maxval=4
+         ''' % (200+example))
+    Plot(xtrainfftfig, 'xtest',
+         '''
+         window n4=1 f4=%d |
+         fft1 | fft3 | math output="abs(input)" | real | grey wantaxis=n allpos=y color=viridis wanttitle=n
+         ''' % example)
+    examplesfig.append(xtrainfig)
+    examplesaugfig.append(xtrainaugfig)
+    examplefftsfig.append(xtrainfftfig)
+Plot('trains3fig',examplesfig,'SideBySideAniso')
+Result('trainsfig','trains1fig trains3fig','OverUnderAniso')
+
+# Large amount of credit goes to:
+# https://github.com/keras-team/keras-contrib/blob/master/examples/improved_wgan.py
+# which I've used as a reference for this implementation
+
+disable_eager_execution()
+
+class RandomWeightedAverage(tf.keras.layers.Layer):
+    def __init__(self, batch_size=32):
+        super().__init__()
+        self.batch_size = batch_size
+
+    def call(self, inputs, **kwargs):
+        alpha = tf.random.uniform((self.batch_size, 1, 1, 1))
+        return (alpha * inputs[0]) + ((1 - alpha) * inputs[1])
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0]
+
+class WGANGPP():
+    def __init__(self, latent_type):
+        self.img_rows = 128
+        self.img_cols = 128
+        self.channels = 1
+        self.img_shape = (self.img_rows, self.img_cols, self.channels)
+        self.latent_dim = 128
+        self.latent_type = latent_type
+
+        # Following parameter and optimizer set as recommended in paper
+        self.n_critic = 5
+        optimizer = keras.optimizers.RMSprop(learning_rate=0.0005)
+
+        # Build the generator and critic
+        self.generator = self.build_generator()
+        self.critic = self.build_critic()
+
+        #-------------------------------
+        # Construct Computational Graph
+        #       for the Critic
+        #-------------------------------
+
+        # Freeze generator's layers while training critic
+        self.generator.trainable = False
+
+        # Image input (real sample)
+        real_img = Input(shape=self.img_shape)
+
+        # Noise input
+        z_disc = Input(shape=(self.latent_dim,))
+        # Generate image based of noise (fake sample)
+        fake_img = self.generator(z_disc)
+
+        # Discriminator determines validity of the real and fake images
+        fake = self.critic(fake_img)
+        valid = self.critic(real_img)
+
+        # Construct weighted average between real and fake images
+        interpolated_img = RandomWeightedAverage()([real_img, fake_img])
+        # Determine validity of weighted sample
+        validity_interpolated = self.critic(interpolated_img)
+
+        # Use Python partial to provide loss function with additional
+        # 'averaged_samples' argument
+        partial_gp_loss = partial(self.gradient_penalty_loss,
+                          averaged_samples=interpolated_img)
+        partial_gp_loss.__name__ = 'gradient_penalty' # Keras requires function names
+
+        self.critic_model = keras.Model(inputs=[real_img, z_disc],
+                            outputs=[valid, fake, validity_interpolated])
+        self.critic_model.compile(loss=[self.wasserstein_loss,
+                                              self.wasserstein_loss,
+                                              partial_gp_loss],
+                                        optimizer=optimizer,
+                                        loss_weights=[1, 1, 10])
+        #-------------------------------
+        # Construct Computational Graph
+        #         for Generator
+        #-------------------------------
+
+        # For the generator we freeze the critic's layers
+        self.critic.trainable = False
+        self.generator.trainable = True
+
+        # Sampled noise for input to generator
+        z_gen = Input(shape=(self.latent_dim,))
+        # Generate images based of noise
+        img = self.generator(z_gen)
+        # Discriminator determines validity
+        valid = self.critic(img)
+        # Defines generator model
+        self.generator_model = keras.Model(z_gen, valid)
+        self.generator_model.compile(loss=self.wasserstein_loss, optimizer=optimizer)
+
+
+    def gradient_penalty_loss(self, y_true, y_pred, averaged_samples):
+        """
+        Computes gradient penalty based on prediction and weighted real / fake samples
+        """
+        gradients = K.gradients(y_pred, averaged_samples)[0]
+        # compute the euclidean norm by squaring ...
+        gradients_sqr = K.square(gradients)
+        #   ... summing over the rows ...
+        gradients_sqr_sum = K.sum(gradients_sqr,
+                                  axis=np.arange(1, len(gradients_sqr.shape)))
+        #   ... and sqrt
+        gradient_l2_norm = K.sqrt(gradients_sqr_sum)
+        # compute lambda * (1 - ||grad||)^2 still for each single sample
+        gradient_penalty = K.square(1 - gradient_l2_norm)
+        # return the mean as loss over all the batch samples
+        return K.mean(gradient_penalty)
+
+
+    def wasserstein_loss(self, y_true, y_pred):
+        return K.mean(y_true * y_pred)
+
+    def build_generator(self):
+
+        model = keras.Sequential()
+
+        model.add(Dense(256*16*16, activation="relu", input_dim=self.latent_dim))
+        model.add(Reshape((16,16,256)))
+        #model.add(UpSampling2D())
+        model.add(Conv2DTranspose(filters=128, kernel_size=(2,2), strides=(2,2), padding='same'))
+        model.add(Conv2D(128, kernel_size=3, padding="same"))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(Activation("relu"))
+        #model.add(UpSampling2D())
+        model.add(Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same'))
+        model.add(Conv2D(64, kernel_size=3, padding="same"))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(Activation("relu"))
+        #model.add(UpSampling2D())
+        model.add(Conv2DTranspose(filters=32, kernel_size=(2,2), strides=(2,2), padding='same'))
+        model.add(Conv2D(32, kernel_size=3, padding="same"))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(Activation("relu"))
+        model.add(Conv2D(self.channels, kernel_size=3, padding="same"))
+        model.add(Activation("sigmoid"))
+
+        model.summary()
+
+        noise = Input(shape=(self.latent_dim,))
+        img = model(noise)
+
+        return keras.Model(noise, img)
+
+    def build_critic(self):
+
+        model = keras.Sequential()
+
+        model.add(Conv2D(16, kernel_size=3, strides=2, input_shape=self.img_shape, padding="same"))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(32, kernel_size=3, strides=2, padding="same"))
+        model.add(ZeroPadding2D(padding=((0,1),(0,1))))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(64, kernel_size=3, strides=2, padding="same"))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(128, kernel_size=3, strides=1, padding="same"))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Reshape((-1,)))
+        model.add(Dense(1))
+
+        model.summary()
+
+        img = Input(shape=self.img_shape)
+        validity = model(img)
+
+        return keras.Model(img, validity)
+
+    def train(self, epochs, batch_size, X_train, model_name, sample_interval):        
+        d_loss_tot = []
+        g_loss_tot = []
+
+        # Load the dataset
+        #X_train = training_label
+
+        ## Rescale -1 to 1
+        #X_train = (X_train.astype(np.float32) - 127.5) / 127.5
+        #X_train = np.expand_dims(X_train, axis=3)
+
+        # Adversarial ground truths
+        valid = -np.ones((batch_size, 1))
+        fake =  np.ones((batch_size, 1))
+        dummy = np.zeros((batch_size, 1)) # Dummy gt for gradient penalty
+        
+        for epoch in range(epochs+1):
+            dlosstot = 0
+            glosstot = 0
+            np.random.shuffle(np.array(X_train))
+            print('Start epoch '+str(epoch))
+            minibatches_size = batch_size * self.n_critic
+            for i in range(int(X_train.shape[0] // (batch_size * self.n_critic))):
+                discriminator_minibatches = X_train[i * minibatches_size:(i + 1) * minibatches_size]
+                for j in range(self.n_critic):
+
+                    # ---------------------
+                    #  Train Discriminator
+                    # ---------------------
+
+                    # Select a random batch of images
+                    #idx = np.random.randint(0, X_train.shape[0], batch_size)
+                    #imgs = X_train[idx]
+                    imgs = discriminator_minibatches[j * batch_size:(j + 1) * batch_size]
+                    # Sample generator input
+                    if self.latent_type == 'gaussian':
+                        noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
+                    elif self.latent_type == 'power':
+                        noise = np.random.power(0.2, (batch_size, self.latent_dim))
+                    # Train the critic
+                    d_loss = self.critic_model.train_on_batch([imgs, noise],
+                                                                [valid, fake, dummy])
+
+                # ---------------------
+                #  Train Generator
+                # ---------------------
+
+                g_loss = self.generator_model.train_on_batch(np.random.normal(0, 1, (batch_size, self.latent_dim)), valid)
+                dlosstot = dlosstot + d_loss[0]
+                glosstot = glosstot + g_loss
+            # Plot the progress
+            print ("%d [D loss: %f] [G loss: %f]" % (epoch, dlosstot/batch_size, glosstot/batch_size))
+            d_loss_tot.append(dlosstot/batch_size)
+            g_loss_tot.append(glosstot/batch_size)
+
+            # If at save interval => save generated image samples
+            if epoch % sample_interval == 0:
+                #self.sample_images(epoch)
+                if self.latent_type == 'gaussian':
+                    self.generator.save('wpgangen'+str(epoch)+'.hdf5')
+                elif self.latent_type == 'power':
+                    self.generator.save('wpgangenp'+str(epoch)+'.hdf5')
+                #self.critic.save('wpgandis'+str(epoch)+'.hdf5')
+        
+        self.generator.save(model_name)
+        
+        return d_loss_tot, g_loss_tot
+
+    def sample_images(self, epoch):
+        r, c = 5, 5
+        
+        if self.latent_type == 'gaussian':
+            noise = np.random.normal(0, 1, (r * c, self.latent_dim))
+        elif self.latent_type == 'power':
+            noise = np.random.power(0.2, (r * c, self.latent_dim))
+        gen_imgs = self.generator.predict(noise)
+
+        # Rescale images 0 - 1
+        #gen_imgs = 0.5 * gen_imgs + 0.5
+
+        fig, axs = plt.subplots(r, c, figsize=(15,15))
+        cnt = 0
+        for i in range(r):
+            for j in range(c):
+                axs[i,j].imshow(gen_imgs[cnt, :,:,0], cmap='gray', vmin=0, vmax=1)
+                axs[i,j].axis('off')
+                cnt += 1
+        fig.savefig("images/fault2_%d.png" % epoch)
+        plt.close()
+
+def train_model(target=None,source=None,env=None):
+    x_train = m8r.File(str(source[0]))[:]
+    batch_size=env.get('batch_size')
+    epochs=env.get('epochs')
+    sample_interval=env.get('sample_interval')
+    latent_type=env.get('latent_type')
+
+    #strategy = tf.distribute.MirroredStrategy()
+    #with strategy.scope():
+    wgan = WGANGPP(latent_type)
+    d_loss_tot, g_loss_tot = wgan.train(epochs=epochs, batch_size=batch_size, X_train=x_train, model_name=str(target[0]), sample_interval=sample_interval)
+    
+    m8r.File(np.array(d_loss_tot),name=str(target[1]))
+    m8r.File(np.array(g_loss_tot),name=str(target[2]))
+  
+Command(['modelP.hdf5','d_trainP.rsf','g_trainP.rsf'],'ytrain.rsf',action=Action(train_model),
+        varlist=['batch_size','epochs','sample_interval','latent_type'],batch_size=32,epochs=701,sample_interval=100,latent_type='power')   
+
+Plot('g_trainP','graph title="Loss curve" max2=12 min2=-7 plotcol=4 unit2= label2=Loss unit1= label1=Epoch')
+Plot('d_trainP','graph wanttitle=n wantaxis=n title="Loss curve" max2=12 min2=-7 plotcol=3 unit2= label2=Loss unit1= label1=Epoch')
+Result('lossfaultP','g_trainP d_trainP','Overlay')
+
+Command(['model.hdf5','d_train.rsf','g_train.rsf'],'ytrain.rsf',action=Action(train_model),
+        varlist=['batch_size','epochs','sample_interval','latent_type'],batch_size=32,epochs=701,sample_interval=100,latent_type='gaussian')
+
+Plot('g_trainP','graph title="Loss curve" max2=12 min2=-7 plotcol=4 unit2= label2=Loss unit1= label1=Epoch')
+Plot('d_trainP','graph wanttitle=n wantaxis=n title="Loss curve" max2=12 min2=-7 plotcol=3 unit2= label2=Loss unit1= label1=Epoch')
+Result('lossfaultP','g_trainP d_trainP','Overlay')
+
+Plot('g_train','graph title="Loss curve" max2=12 min2=-7 plotcol=4 unit2= label2=Loss unit1= label1=Epoch')
+Plot('d_train','graph wanttitle=n wantaxis=n title="Loss curve" max2=12 min2=-7 plotcol=3 unit2= label2=Loss unit1= label1=Epoch')
+Result('lossfault','g_train d_train','Overlay')
+
+def predict(target=None,source=None,env=None):
+    model = keras.models.load_model(str(source[0]))
+    nosamp = env.get('number_sample')
+    latent_type = env.get('latent_type')
+    if latent_type == 'gaussian':
+        noise = np.random.normal(0,1,(nosamp,128))
+    elif latent_type == 'power':
+        noise = np.random.power(0.2,(nosamp,128))
+    y_pred = model.predict(noise)
+    y_pred[y_pred>=0.5]=1.0
+    y_pred[y_pred<0.5]=0.0
+    m8r.File(y_pred,name=str(target[0]))
+
+Command('ypredP.rsf','modelP.hdf5',action=Action(predict), varlist=['number_sample','latent_type'],number_sample=2000,latent_type='power')
+
+Command('ypred.rsf','model.hdf5',action=Action(predict), varlist=['number_sample','latent_type'],number_sample=2000,latent_type='gaussian')
+
+
+Command('ypred100.rsf','wpgangen100.hdf5',action=Action(predict), varlist=['number_sample','latent_type'],number_sample=2000,latent_type='gaussian')
+
+Command('ypred300.rsf','wpgangen300.hdf5',action=Action(predict), varlist=['number_sample','latent_type'],number_sample=2000,latent_type='gaussian')
+
+Command('ypred600.rsf','wpgangen600.hdf5',action=Action(predict), varlist=['number_sample','latent_type'],number_sample=2000,latent_type='gaussian')
+
+Command('ypredp100.rsf','wpgangenp100.hdf5',action=Action(predict), varlist=['number_sample','latent_type'],number_sample=2000,latent_type='power')
+
+Command('ypredp300.rsf','wpgangenp300.hdf5',action=Action(predict), varlist=['number_sample','latent_type'],number_sample=2000,latent_type='power')
+
+Command('ypredp600.rsf','wpgangenp600.hdf5',action=Action(predict), varlist=['number_sample','latent_type'],number_sample=2000,latent_type='power')
+
+examples = []
+for example in (1000,1400):
+    ytest = 'ytest100_%d' % example
+    Plot(ytest,'ypred100',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 color=viridis allpos=y screenratio=1.5 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test100',examples,'SideBySideAniso')
+
+examples = []
+for example in (1000,1400):
+    ytest = 'ytest300_%d' % example
+    Plot(ytest,'ypred300',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 color=viridis screenratio=1.5 allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test300',examples,'SideBySideAniso')
+
+examples = []
+for example in (1000,1400):
+    ytest = 'ytest600_%d' % example
+    Plot(ytest,'ypred600',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 screenratio=1.5 color=viridis allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test600',examples,'SideBySideAniso')
+
+examples = []
+for example in (1000,1400):
+    ytest = 'ytestp100_%d' % example
+    Plot(ytest,'ypredp100',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 color=viridis allpos=y screenratio=1.5 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('testp100',examples,'SideBySideAniso')
+
+examples = []
+for example in (1000,1400):
+    ytest = 'ytestp300_%d' % example
+    Plot(ytest,'ypredp300',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 color=viridis screenratio=1.5 allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('testp300',examples,'SideBySideAniso')
+
+examples = []
+for example in (1000,1400):
+    ytest = 'ytestp600_%d' % example
+    Plot(ytest,'ypredp600',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 screenratio=1.5 color=viridis allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('testp600',examples,'SideBySideAniso')
+
+Result('testtrain','test100 test300 test600','OverUnderAniso')
+Result('testtrainp','testp100 testp300 testp600','OverUnderAniso')
+
+examples = []
+for example in (800,1200):
+    ytest = 'ytest%d' % example
+    Plot(ytest,'ypred',
+         '''
+         window n4=1 f4=%d | 
+         grey transp=n wantaxis=n titlesz=24 screenratio=1.0 color=viridis allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test1',examples,'SideBySideAniso')
+
+examples = []
+for example in (100,140):
+    ytest = 'ytest%d' % example
+    Plot(ytest,'ypred',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n screenratio=1.0 titlesz=24 color=viridis allpos=y wanttitle=n 
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test2',examples,'SideBySideAniso')
+
+examples = []
+for example in (1100,1500):
+    ytest = 'ytest%d' % example
+    Plot(ytest,'ypred',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 color=viridis screenratio=1.0 allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test3',examples,'SideBySideAniso')
+
+Result('test','test1 test3','OverUnderAniso')
+
+examples = []
+for example in (800,1200):
+    ytest = 'ytestp%d' % example
+    Plot(ytest,'ypredP',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 screenratio=1.0 color=viridis allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test1p',examples,'SideBySideAniso')
+
+examples = []
+for example in (100,140):
+    ytest = 'ytestp%d' % example
+    Plot(ytest,'ypredP',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n screenratio=1.0 titlesz=24 color=viridis allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test2p',examples,'SideBySideAniso')
+
+examples = []
+for example in (1100,1500):
+    ytest = 'ytestp%d' % example
+    Plot(ytest,'ypredP',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 color=viridis screenratio=1.0 allpos=y wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+
+Plot('test3p',examples,'SideBySideAniso')
+
+Result('testp','test1p test3p','OverUnderAniso')
+
+Result('xtrainplot','xtrain200-2 xtrainfft200-2','SideBySideIso')
+
+class RandomWeightedAverage2(tf.keras.layers.Layer):
+    def __init__(self, batch_size=32):
+        super().__init__()
+        self.batch_size = batch_size
+
+    def call(self, inputs, **kwargs):
+        alpha = tf.random.uniform((self.batch_size, 1, 1, 1))
+        return (alpha * inputs[0]) + ((1 - alpha) * inputs[1])
+
+    def compute_output_shape(self, input_shape):
+        return input_shape[0]
+
+class WGANGP2():
+    def __init__(self):
+        self.img_rows = 128
+        self.img_cols = 128
+        self.channels = 1
+        self.img_shape = (self.img_rows, self.img_cols, self.channels)
+        self.latent_dim = 128
+
+        # Following parameter and optimizer set as recommended in paper
+        self.n_critic = 5
+        optimizer = keras.optimizers.RMSprop(learning_rate=0.00001)
+
+        # Build the generator and critic
+        self.generator = self.build_generator()
+        self.critic = self.build_critic()
+
+        #-------------------------------
+        # Construct Computational Graph
+        #       for the Critic
+        #-------------------------------
+
+        # Freeze generator's layers while training critic
+        self.generator.trainable = False
+
+        # Image input (real sample)
+        real_img = Input(shape=self.img_shape)
+        real_mask = Input(shape=self.img_shape)
+
+        # Noise input
+        #z_disc = Input(shape=(self.latent_dim,))
+        # Generate image based of noise (fake sample)
+        #fake_img = self.generator([z_disc,real_mask])
+        fake_img = self.generator([real_img,real_mask])
+
+        # Discriminator determines validity of the real and fake images
+        fake = self.critic([fake_img,real_mask])
+        valid = self.critic([real_img,real_mask])
+
+        # Construct weighted average between real and fake images
+        interpolated_img = RandomWeightedAverage2()([real_img, fake_img])
+        # Determine validity of weighted sample
+        validity_interpolated = self.critic([interpolated_img,real_mask])
+
+        # Use Python partial to provide loss function with additional
+        # 'averaged_samples' argument
+        partial_gp_loss = partial(self.gradient_penalty_loss,
+                          averaged_samples=interpolated_img)
+        partial_gp_loss.__name__ = 'gradient_penalty' # Keras requires function names
+
+        #self.critic_model = keras.Model(inputs=[real_img, z_disc, real_mask],
+                            #outputs=[valid, fake, validity_interpolated])
+        self.critic_model = keras.Model(inputs=[real_img, real_mask],
+                            outputs=[valid, fake, validity_interpolated])
+        self.critic_model.compile(loss=[self.wasserstein_loss,
+                                              self.wasserstein_loss,
+                                              partial_gp_loss],
+                                        optimizer=optimizer,
+                                        loss_weights=[1, 1, 10])
+        #-------------------------------
+        # Construct Computational Graph
+        #         for Generator
+        #-------------------------------
+
+        # For the generator we freeze the critic's layers
+        self.critic.trainable = False
+        self.generator.trainable = True
+
+        # Sampled noise for input to generator
+        #z_gen = Input(shape=(self.latent_dim,))
+        real_img_gen = Input(shape=self.img_shape)
+        mask_gen = Input(shape=self.img_shape)
+        # Generate images based of noise
+        #img = self.generator([z_gen,mask_gen])
+        img = self.generator([real_img_gen,mask_gen])
+        # Discriminator determines validity
+        valid = self.critic([img,mask_gen])
+        # Defines generator model
+        #self.generator_model = keras.Model([z_gen, mask_gen], [valid,img])
+        self.generator_model = keras.Model([real_img_gen, mask_gen], [valid,img])
+        self.generator_model.compile(loss=[self.wasserstein_loss,'mse'], optimizer=optimizer, loss_weights=[1, 25])
+
+
+    def gradient_penalty_loss(self, y_true, y_pred, averaged_samples):
+        """
+        Computes gradient penalty based on prediction and weighted real / fake samples
+        """
+        gradients = K.gradients(y_pred, averaged_samples)[0]
+        # compute the euclidean norm by squaring ...
+        gradients_sqr = K.square(gradients)
+        #   ... summing over the rows ...
+        gradients_sqr_sum = K.sum(gradients_sqr,
+                                  axis=np.arange(1, len(gradients_sqr.shape)))
+        #   ... and sqrt
+        gradient_l2_norm = K.sqrt(tf.clip_by_value(gradients_sqr_sum,1e-8,np.inf))
+        # compute lambda * (1 - ||grad||)^2 still for each single sample
+        gradient_penalty = K.square(gradient_l2_norm)
+        # return the mean as loss over all the batch samples
+        return K.mean(gradient_penalty)
+
+
+    def wasserstein_loss(self, y_true, y_pred):
+        return K.mean(y_true * y_pred)
+
+    def build_generator(self):
+
+        #noise = Input(shape=(self.latent_dim,),name='noise')
+        iga = Input(shape=(128,128,1),name='inpim')
+        iga1 = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(iga)
+        iga1 = BatchNormalization(momentum=0.9)(iga1)
+        iga1 = LeakyReLU(alpha=0.2)(iga1)
+        iga1 = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(iga1)
+        iga1 = BatchNormalization(momentum=0.9)(iga1)
+        iga1 = LeakyReLU(alpha=0.2)(iga1)
+        iga1 = MaxPooling2D(strides=(2,2),padding='same')(iga1)
+        iga1 = Conv2D(32, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(iga1)
+        iga1 = BatchNormalization(momentum=0.9)(iga1)
+        iga1 = LeakyReLU(alpha=0.2)(iga1)
+        iga1 = Conv2D(32, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(iga1)
+        iga1 = BatchNormalization(momentum=0.9)(iga1)
+        iga1 = LeakyReLU(alpha=0.2)(iga1)
+        iga1 = MaxPooling2D(strides=(2,2),padding='same')(iga1)
+        iga1 = Conv2D(64, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(iga1)
+        iga1 = BatchNormalization(momentum=0.9)(iga1)
+        iga1 = LeakyReLU(alpha=0.2)(iga1)
+        iga1 = Conv2D(64, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(iga1)
+        iga1 = BatchNormalization(momentum=0.9)(iga1)
+        iga1 = LeakyReLU(alpha=0.2)(iga1)
+        iga1 = MaxPooling2D(strides=(2,2),padding='same')(iga1)
+        iga1 = Reshape((-1,))(iga1)
+        miga1 = Dense(128)(iga1)
+        viga1 = Dense(128)(iga1)
+        noise = miga1 + tf.exp(viga1 * 0.5) * tf.random.normal(tf.shape(miga1), mean=0.0, stddev=1.0, dtype=tf.float32)
+        
+        noise2 = Dense(256 * 4 * 4, input_dim=self.latent_dim)(noise)
+        noise2 = BatchNormalization(momentum=0.9)(noise2)
+        noise2 = LeakyReLU(alpha=0.2)(noise2)
+        noise2 = Reshape((4,4,256))(noise2)
+        noise2 = UpSampling2D()(noise2)
+        #noise2 = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(noise2)
+        noise2 = Conv2D(128, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(noise2)
+        noise2 = BatchNormalization(momentum=0.9)(noise2)
+        noise2 = LeakyReLU(alpha=0.2)(noise2)
+        noise2 = Conv2D(128, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(noise2)
+        noise2 = BatchNormalization(momentum=0.9)(noise2)
+        noise2 = LeakyReLU(alpha=0.2)(noise2)
+        noise2 = Conv2D(128, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(noise2)
+        noise2 = BatchNormalization(momentum=0.9)(noise2)
+        imgnoise = LeakyReLU(alpha=0.2)(noise2)
+        
+        inputmask = Input(shape=(128,128,1),name='mask')
+        img = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(inputmask)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = MaxPooling2D(strides=(2,2),padding='same')(img)
+        
+        # Merge
+        img2_2 = UpSampling2D()(img)
+        #img2_2 = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(img)
+        
+        img = Conv2D(32, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = Conv2D(32, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = MaxPooling2D(strides=(2,2),padding='same')(img)        
+        
+        # Merge 1
+        img2 = UpSampling2D()(img)
+        #img2 = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(img)
+        
+        img = Conv2D(64, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = Conv2D(64, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = MaxPooling2D(strides=(2,2),padding='same')(img)
+                
+        # Merge 2
+        img3 = UpSampling2D()(img)
+        #img3 = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(img)
+        
+        img = Conv2D(128, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = Conv2D(128, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = MaxPooling2D(strides=(2,2),padding='same')(img)
+                
+        # Merge 3
+        img4 = UpSampling2D()(img)
+        #img4 = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(img)
+        
+        img = Conv2D(256, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = Conv2D(256, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(img)
+        img = BatchNormalization(momentum=0.9)(img)
+        img = LeakyReLU(alpha=0.2)(img)
+        img = Dropout(0.2)(img)
+                
+        # Variational
+        mean = Dense(256)(img)
+        logvar = Dense(256)(img)
+        #latent = tfp.layers.DistributionLambda(lambda t: tfd.Normal(loc=t[0], scale=t[1]))([mean,std])
+        latent = mean + tf.exp(logvar * 0.5) * tf.random.normal(tf.shape(mean), mean=0.0, stddev=1.0, dtype=tf.float32)
+        latent = Conv2D(128, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(latent)
+        latent = BatchNormalization(momentum=0.9)(latent)
+        latent = LeakyReLU(alpha=0.2)(latent)
+        latent = Conv2D(128, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(latent)
+        latent = BatchNormalization(momentum=0.9)(latent)
+        latent = LeakyReLU(alpha=0.2)(latent)
+        
+        # Concatenate (8x8x128)
+        cat = Concatenate(axis=-1)([imgnoise,latent])
+        cat = UpSampling2D()(cat)
+        #cat = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(cat)
+        cat = Conv2D(64, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat)
+        cat = BatchNormalization(momentum=0.9)(cat)
+        cat = LeakyReLU(alpha=0.2)(cat)
+        cat = Conv2D(64, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat)
+        cat = BatchNormalization(momentum=0.9)(cat)
+        cat = LeakyReLU(alpha=0.2)(cat)
+        
+        # Merge 3 (16x16x64)
+        cat2 = Concatenate(axis=-1)([cat,img4])
+        cat2 = UpSampling2D()(cat2)
+        #cat2 = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(cat2)
+        cat2 = Conv2D(32, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat2)
+        cat2 = BatchNormalization(momentum=0.9)(cat2)
+        cat2 = LeakyReLU(alpha=0.2)(cat2)
+        cat2 = Conv2D(32, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat2)
+        cat2 = BatchNormalization(momentum=0.9)(cat2)
+        cat2 = LeakyReLU(alpha=0.2)(cat2)
+        
+        # Merge 2 (32x32x32) 
+        cat3 = Concatenate(axis=-1)([cat2,img3])
+        cat3 = UpSampling2D()(cat3)
+        #cat3 = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(cat3)
+        cat3 = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat3)
+        cat3 = BatchNormalization(momentum=0.9)(cat3)
+        cat3 = LeakyReLU(alpha=0.2)(cat3)
+        cat3 = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat3)
+        cat3 = BatchNormalization(momentum=0.9)(cat3)
+        cat3 = LeakyReLU(alpha=0.2)(cat3)
+        
+        # Merge 1 (64x64x16) 
+        cat4 = Concatenate(axis=-1)([cat3,img2])
+        cat4 = UpSampling2D()(cat4)
+        #cat4 = Conv2DTranspose(filters=64, kernel_size=(2,2), strides=(2,2), padding='same')(cat4)
+        cat4 = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat4)
+        cat4 = BatchNormalization(momentum=0.9)(cat4)
+        cat4 = LeakyReLU(alpha=0.2)(cat4)
+        cat4 = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat4)
+        cat4 = BatchNormalization(momentum=0.9)(cat4)
+        cat4 = LeakyReLU(alpha=0.2)(cat4)
+        
+        # Merge (128x128x8) 
+        cat5 = Concatenate(axis=-1)([cat4,img2_2])
+        cat5 = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat5)
+        cat5 = BatchNormalization(momentum=0.9)(cat5)
+        cat5 = LeakyReLU(alpha=0.2)(cat5)
+        cat5 = Conv2D(16, kernel_size=3, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal())(cat5)
+        cat5 = BatchNormalization(momentum=0.9)(cat5)
+        cat5 = LeakyReLU(alpha=0.2)(cat5)
+        cat5 = Conv2D(1,kernel_size=1, padding='same', kernel_initializer=tf.keras.initializers.Orthogonal())(cat5)        
+        
+        model = keras.Model(inputs=[iga, inputmask], outputs=[cat5])
+        model.summary()
+        
+        return model
+
+    def build_critic(self):
+        inputmask = Input(shape=(128,128,1))
+        inputimage = Input(shape=(128,128,1))
+        inputcat = Concatenate(axis=-1)([inputimage,inputmask])
+
+        model = keras.Sequential()
+
+        model.add(Conv2D(16, kernel_size=3, strides=2, input_shape=(128,128,2), padding="same", kernel_initializer=tf.keras.initializers.Orthogonal()))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(32, kernel_size=3, strides=2, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal()))
+        model.add(ZeroPadding2D(padding=((0,1),(0,1))))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(64, kernel_size=3, strides=2, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal()))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Conv2D(128, kernel_size=3, strides=1, padding="same", kernel_initializer=tf.keras.initializers.Orthogonal()))
+        #model.add(BatchNormalization(momentum=0.8))
+        model.add(LeakyReLU(alpha=0.2))
+        model.add(Dropout(0.25))
+        model.add(Reshape((-1,)))
+        model.add(Dense(1))
+
+        model.summary()
+
+        #img = Input(shape=self.img_shape)
+        validity = model(inputcat)
+
+        return keras.Model([inputimage,inputmask], validity)
+
+    def train(self, epochs, batch_size, X_train, X_label, model_name, sample_interval):
+        d_loss_tot = []
+        g_loss_tot = []
+
+        # Load the dataset
+        #X_train, X_label = training_data, training_label
+
+        ## Rescale -1 to 1
+        #X_train = (X_train.astype(np.float32) - 127.5) / 127.5
+        #X_label = np.expand_dims(X_label, axis=3)
+
+        # Adversarial ground truths
+        valid = -np.ones((batch_size, 1))
+        fake =  np.ones((batch_size, 1))
+        dummy = np.zeros((batch_size, 1)) # Dummy gt for gradient penalty
+        for epoch in range(epochs+1):
+            dlosstot = 0
+            glosstot = 0
+            
+            import sklearn
+            #np.random.shuffle(X_train)
+            X_train, X_label = sklearn.utils.shuffle(np.array(X_train), np.array(X_label))
+            minibatches_size = batch_size * self.n_critic
+            for i in range(int(X_train.shape[0] // (batch_size * self.n_critic))):
+                discriminator_minibatches = X_train[i * minibatches_size:(i + 1) * minibatches_size]
+                discriminator_label_minibatches = X_label[i * minibatches_size:(i + 1) * minibatches_size]
+                for j in range(self.n_critic):
+
+                    # ---------------------
+                    #  Train Discriminator
+                    # ---------------------
+
+                    # Select a random batch of images
+                    #idx = np.random.randint(0, X_train.shape[0], batch_size)
+                    #imgs = X_train[idx]
+                    imgs = discriminator_minibatches[j * batch_size:(j + 1) * batch_size]
+                    msk = discriminator_label_minibatches[j * batch_size:(j + 1) * batch_size]
+                    noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
+                    #d_loss = self.critic_model.train_on_batch([imgs, noise, msk], [valid, fake, dummy])
+                    d_loss = self.critic_model.train_on_batch([imgs, msk], [valid, fake, dummy])
+                    
+            
+            #for _ in range(self.n_critic):
+
+                # ---------------------
+                #  Train Discriminator
+                # ---------------------
+
+                # Select a random batch of images
+                #idx = np.random.randint(0, X_train.shape[0], batch_size)
+                #imgs = X_train[idx]
+                #msk = X_label[idx]
+                # Sample generator input
+                #noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
+                # Train the critic
+                #d_loss = self.critic_model.train_on_batch([imgs, noise, msk],
+                                                                #[valid, fake, dummy])
+
+            # ---------------------
+            #  Train Generator
+            # ---------------------
+
+                #g_loss = self.generator_model.train_on_batch([noise,msk], [valid,imgs])
+                g_loss = self.generator_model.train_on_batch([imgs,msk], [valid,imgs])
+                dlosstot = dlosstot + d_loss[0]
+                glosstot = glosstot + g_loss[2]
+            # Plot the progress
+            print ("%d [D loss: %f] [G loss: %f]" % (epoch, dlosstot/batch_size, glosstot/batch_size))
+            d_loss_tot.append(dlosstot/batch_size)
+            g_loss_tot.append(glosstot/batch_size)
+
+            # If at save interval => save generated image samples
+            if epoch % sample_interval == 0:
+                #self.sample_images(epoch)
+                self.generator.save('wgangenseis'+str(epoch)+'.hdf5')
+                #self.critic.save('wgandisseis'+str(epoch)+'.hdf5')
+            self.generator.save(model_name)
+                
+        return d_loss_tot, g_loss_tot
+
+    def sample_images(self, epoch):
+        r, c = 5, 5
+        X_train, X_label = eval_data, eval_label
+        X_label = np.expand_dims(X_label,-1)
+        noise = np.random.normal(0, 1, (r * c, self.latent_dim))
+        idxt = np.random.randint(0, X_train.shape[0], r*c)
+        maskt = X_label[idxt]
+        igt = X_train[idxt]
+        #gen_imgs = self.generator.predict([noise,maskt])
+        gen_imgs = self.generator.predict([igt,maskt])
+
+        # Rescale images 0 - 1
+        #gen_imgs = 0.5 * gen_imgs + 0.5
+
+        fig, axs = plt.subplots(r, c, figsize=(15,15))
+        cnt = 0
+        for i in range(r):
+            for j in range(c):
+                axs[i,j].imshow(gen_imgs[cnt, :,:,0], cmap='gray')
+                axs[i,j].axis('off')
+                cnt += 1
+        fig.savefig("images/seismicmsew_%d.png" % epoch)
+        plt.close()
+
+def train_model2(target=None,source=None,env=None):
+    x_train = m8r.File(str(source[0]))[:]
+    y_train = m8r.File(str(source[1]))[:]
+    batch_size=env.get('batch_size')
+    epochs=env.get('epochs')
+    sample_interval=env.get('sample_interval')
+
+    #strategy = tf.distribute.MirroredStrategy()
+    #with strategy.scope():
+    wgan = WGANGP2()
+    d_loss_tot, g_loss_tot = wgan.train(epochs=epochs, batch_size=batch_size, X_train=x_train, X_label=y_train, model_name=str(target[0]), sample_interval=sample_interval)
+
+    m8r.File(np.array(d_loss_tot),name=str(target[1]))
+    m8r.File(np.array(g_loss_tot),name=str(target[2]))
+
+Command(['models25.hdf5','d_trains25.rsf','g_trains25.rsf'],['xtrain.rsf','ytrain.rsf'],action=Action(train_model2),
+        varlist=['batch_size','epochs','sample_interval'],batch_size=32,epochs=14001,sample_interval=2000)
+
+Plot('g_trains25','graph title="Loss curve" max2=0.6 min2=0 plotcol=4 unit2= label2=Loss unit1= label1=Epoch')
+Plot('d_trains25','graph title="Loss curve" min2=-33 max2=-0.1 plotcol=3 unit2= label2=Loss unit1= label1=Epoch')
+Result('lossseis','g_trains25 d_trains25','Overlay')
+
+def predict2(target=None,source=None,env=None):
+    model = keras.models.load_model(str(source[0]))
+    faults = m8r.File(str(source[2]))[:]
+    seis = m8r.File(str(source[1]))[:]
+    seis = np.reshape(seis,(-1,128,128,1))
+    norm = env.get('norm')
+    if norm:
+        means = np.reshape(np.mean(seis,axis=(1,2)),(-1,1,1,1))
+        stds = np.reshape(np.std(seis,axis=(1,2)),(-1,1,1,1))
+        seis = (seis-means)/stds    
+    print(seis.shape)
+    print(faults.shape)
+    if seis.shape[0] < 2000:
+        seis = np.repeat(seis,int(4000/seis.shape[0]),0)    
+    y_pred = model.predict([seis[:2000],faults[:2000]])
+    m8r.File(y_pred,name=str(target[0]))
+
+def pred2(target=None,source=None,env=None):
+    model = keras.models.load_model(str(source[0]))
+    faults = m8r.File(str(source[2]))[:]
+    seis = m8r.File(str(source[1]))[:]
+    seis = np.reshape(seis,(-1,128,128,1))
+    seis = np.transpose(seis,(0,2,1,3))
+    norm = env.get('norm')
+    if norm:
+        means = np.reshape(np.mean(seis,axis=(1,2)),(-1,1,1,1))
+        stds = np.reshape(np.std(seis,axis=(1,2)),(-1,1,1,1))
+        seis = (seis-means)/stds
+    print(seis.shape)
+    print(faults.shape)
+    if seis.shape[0] < 2000:
+        seis = np.repeat(seis,int(4000/seis.shape[0]),0)
+    y_pred = model.predict([seis[:2000],faults[:2000]])
+    m8r.File(y_pred,name=str(target[0]))
+
+
+Flow('ypredcut','ypred','window n4=200 | transp plane=43 | transp plane=23 | transp plane=12')
+Command('ypreds.rsf',['models25.hdf5','xtest.rsf','ypred.rsf'],action=Action(predict2),varlist=['norm'],norm=False)
+
+examples = []
+exampleffts = []
+for example in (800,1200):
+    ytest = 'ytests%d' % example
+    ytestfft = 'ytestffts%d' % example
+    Plot(ytest,'ypreds',
+         '''
+         window n4=1 f4=%d |
+         grey minval=-4 screenratio=1.0 maxval=4 transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypreds',
+         '''
+         window n4=1 f4=%d | transp | 
+         fft1 | fft3 | math output="abs(input)" | real | grey wantaxis=n allpos=y color=viridis titlesz=24 wanttitle=n
+         ''' % example) 
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('tests1',examples,'SideBySideAniso')
+Plot('testffts1',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (100,140):
+    ytest = 'ytests%d' % example
+    ytestfft = 'ytestffts%d' % example
+    Plot(ytest,'ypreds',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n screenratio=1.0 wantaxis=n minval=-4 maxval=4 titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypreds',
+         '''
+         window n4=1 f4=%d | transp | 
+         fft1 | fft3 | math output="abs(input)" | real | grey wantaxis=n allpos=y color=viridis titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('tests2',examples,'SideBySideAniso')
+Plot('testffts2',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (1100,1500):
+    ytest = 'ytests%d' % example
+    ytestfft = 'ytestffts%d' % example
+    Plot(ytest,'ypreds',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n screenratio=1.0 wantaxis=n titlesz=24 minval=-4 maxval=4 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypreds',
+         '''
+         window n4=1 f4=%d | transp | 
+         fft1 | fft3 | math output="abs(input)" | real | grey wantaxis=n allpos=y color=viridis titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('tests3',examples,'SideBySideAniso')
+Plot('testffts3',exampleffts,'SideBySideAniso')
+
+Result('tests','tests1 tests3','OverUnderAniso')
+Result('testffts','testffts1 testffts2','OverUnderAniso')
+
+Plot('ytests1200-2','ypreds',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples |
+     grey minval=-3 maxval=3 transp=n barlabel=Amplitude wantaxis=y title="Generated seismic data" scalebar=y
+     ''')
+Plot('ytestffts1200-2', 'ypreds',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples | transp | 
+     fft1 | fft3 | math output="abs(input)" | real | grey minval=0 maxval=1500 barlabel=Amplitude wantaxis=y allpos=y color=viridis title="FK of the generated seismic data" scalebar=y
+     ''')
+
+Result('ytestsplot','ytests1200-2 ytestffts1200-2','SideBySideIso')
+
+Result('ytests1200-2','ypreds',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Depth unit2=samples label1=Distance unit1=samples |
+     grey minval=-3 maxval=3 transp=n barlabel=Amplitude wantaxis=y title="Generated seismic data" scalebar=y
+     ''')
+
+# Read style
+Fetch('class2021_faults.sgy','faults')
+Flow(['xblind.rsf','xblind_hdr.rsf',
+      'xblind.thdr','xblind.bhdr'],
+     'class2021_faults.sgy',
+     '''
+     sfsegyread tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}  bfile=${TARGETS[3]}
+     ''')
+Flow('mapped_xblind','xblind xblind_hdr','intbin head=${SOURCES[1]} xk=iline yk=xline | put label1=Depth unit1=km label2=Inline unit2= label3=Crossline unit3= | window min1=1.2') 
+Result('xblindi','mapped_xblind','put label1=Time unit1=s | window f2=175 n2=1 | grey scalebar=y barlabel=Amplitude pclip=90 title="Inline slice"')
+Result('xblindt','mapped_xblind','put label1=Time unit1=s | window min1=2 max1=2 | grey scalebar=y barlabel=Amplitude pclip=90 title="Time slice"')
+Result('xblindt2','mapped_xblind','put label1=Time unit1=s | window min1=3 max1=3 | grey scalebar=y barlabel=Amplitude pclip=90 title="Time slice"')
+
+x=1400
+y=137
+w=128
+w1=128
+Flow('frame.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+        " ".join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame','frame.asc',
+        '''
+        dd type=complex form=native | 
+        graph pad=n plotfat=15 plotcol=2 min2=0 max2=576 min1=1300 max1=1651  
+        wantaxis=n screenratio=1.64 wanttitle=n yreverse=y scalebar=n 
+        ''')
+#Plot('frame','frame.asc',
+        #'''
+        #dd type=complex form=native |
+        #graph pad=n plotfat=15 plotcol=2 min2=0 max2=576 min1=1300 max1=1651
+        #wantaxis=n wanttitle=n yreverse=y scalebar=n
+        #''')
+x=1400
+y=337
+w=128
+w1=128
+Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+        " ".join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame2','frame2.asc',
+        '''
+        dd type=complex form=native | 
+        graph pad=n plotfat=15 plotcol=3 min2=0 max2=576 min1=1300 max1=1651
+        wantaxis=n screenratio=1.64 wanttitle=n yreverse=y scalebar=n
+        ''')
+#Plot('frame2','frame2.asc',
+        #'''
+        #dd type=complex form=native |
+        #graph pad=n plotfat=15 plotcol=3 min2=0 max2=576 min1=1300 max1=1651
+        #wantaxis=n wanttitle=n yreverse=y scalebar=n
+        #''')
+Result('xblindc','xblindc frame frame2','Overlay')
+Result('xblindi2','mapped_xblind','put label1=Time unit1=s | window f2=100 n2=1 | grey pclip=90 title="Inline slice" scalebar=y barlabel=Amplitude')
+Result('xblindi3','mapped_xblind','put label1=Time unit1=s | window f2=0 n2=1 | grey pclip=90 title="Inline slice" scalebar=y barlabel=Amplitude')
+Result('xblindc-2','mapped_xblind','put label1=Time unit1=s | window f3=185 n3=1 | grey pclip=90 title="Crossline slice" scalebar=y barlabel=Amplitude')
+Plot('xblindc','mapped_xblind','put label1=Time unit1=s | window f3=185 n3=1 | grey screenratio=1.64 pclip=90 title="Crossline slice" scalebar=n wanttitle=n barlabel=Amplitude')
+#Plot('xblindc','mapped_xblind','window f3=185 n3=1 | grey pclip=90 title="Crossline slice" scalebar=n wanttitle=n barlabel=Amplitude')
+Result('xblindc2','mapped_xblind','put label1=Time unit1=s | window f3=0 n3=1 | grey pclip=90 title="Crossline slice" scalebar=y barlabel=Amplitude')
+Result('xblindc3','mapped_xblind','put label1=Time unit1=s | window f3=100 n3=1 | grey pclip=90 title="Crossline slice" scalebar=y barlabel=Amplitude')
+Plot('xblindcpatch','mapped_xblind','put label1=Time unit1=s | window f3=185 n3=1 n1=128 f1=137 f2=100 n2=128 | grey scalebar=y barlabel=Amplitude pclip=90 wanttitle=y title="A small patch with cyan border"')
+Plot('xblindfftc','mapped_xblind','put label1=Time unit1=s | window f3=185 n3=1 n1=128 f1=137 f2=100 n2=128 | fft1 | fft3 | math output="abs(input)" | real | grey unit2= allpos=y color=viridis title="FK of a small patch" scalebar=y barlabel=Amplitude')
+Plot('xblindcpatch2','mapped_xblind','put label1=Time unit1=s | window f2=100 n2=128 n1=128 f1=337 f3=185 n3=1 | grey scalebar=y barlabel=Amplitude pclip=90 wanttitle=y title="A small patch with green border"')
+Plot('xblindfftc2','mapped_xblind','put label1=Time unit1=s | window f2=100 n2=128 n1=128 f1=337 f3=185 n3=1 | fft1 | fft3 | math output="abs(input)" | real | grey unit2= allpos=y color=viridis title="FK of a small patch" scalebar=y barlabel=Amplitude')
+Result('xblindfftc','xblindcpatch xblindcpatch2','OverUnderIso')
+
+#Result('xblindffti','xblindffti-2 xblindffti2-2','SideBySideIso')
+#Result('xblindfftc','mapped_xblind','window f3=185 n3=1 | fft1 | fft3 | math output="abs(input)" | real | grey allpos=y color=viridis title="Crossline slice" scalebar=y barlabel=Amplitude')
+
+Flow('mapped_xblind_patch_c','mapped_xblind','patch w=128,128,371')
+Flow('mapped_xblind_patch_i','mapped_xblind','transp plane=23 | patch w=128,128,351')
+
+Flow('mapped_xblind_patch_c_s','mapped_xblind','window max1=2.5 | patch w=128,128,371 p=3,3,1')
+Flow('mapped_xblind_patch_c_d','mapped_xblind','window min1=2.5 | patch w=128,128,371 p=2,3,1')
+
+Result('xblindcs','mapped_xblind','put label1=Time unit1=s | window f2=175 n2=1 max1=2.5 | grey pclip=90 title="Crossline slice shallow" scalebar=y barlabel=Amplitude')
+Result('xblindcd','mapped_xblind','put label1=Time unit1=s | window f2=175 n2=1 min1=2.5 | grey pclip=90 title="Crossline slice deep" scalebar=y barlabel=Amplitude')
+
+Result('xblindfftcs','mapped_xblind','put label1=Time unit1=s | window f2=175 n2=1 max1=2.5 | fft1 | fft3 | math output="abs(input)" | real | grey allpos=y color=viridis scalebar=y barlabel=Amplitude title="Crossline slice shallow"')
+Result('xblindfftcd','mapped_xblind','put label1=Time unit1=s | window f2=175 n2=1 min1=2.5 | fft1 | fft3 | math output="abs(input)" | real | grey allpos=y color=viridis title="Crossline slice deep" scalebar=y barlabel=Amplitude')
+
+Result('xblindfftcspatch','mapped_xblind_patch_c_s','put label1=Time unit1=s | window n3=1 n4=1 n5=1 | fft1 | fft3 | math output="abs(input)" | real | grey allpos=y color=viridis title="Crossline slice shallow" scalebar=y barlabel=Amplitude')
+
+Result('xblindfftcdpatch','mapped_xblind_patch_c_d','put label1=Time unit1=s | window n3=1 n4=1 n5=1 | fft1 | fft3 | math output="abs(input)" | real | grey allpos=y color=viridis title="Crossline slice deep" scalebar=y barlabel=Amplitude')
+
+#Flow('ypredcut2','ypred','window n4=40 | transp plane=43 | transp plane=23 | transp plane=12')
+Command('ypredsc.rsf',['models25.hdf5','mapped_xblind_patch_c.rsf','ypred.rsf'],action=Action(pred2),varlist=['norm'],norm=True)
+
+examples = []
+exampleffts = []
+for example in (0,400,800,1200,1600):
+    ytest = 'ytestsc%d' % example
+    ytestfft = 'ytestfftsc%d' % example
+    Plot(ytest,'ypredsc',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredsc',
+         '''
+         window n4=1 f4=%d | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testsc1',examples,'SideBySideAniso')
+Plot('testfftsc1',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (20,60,100,140,180):
+    ytest = 'ytestsc%d' % example
+    ytestfft = 'ytestfftsc%d' % example
+    Plot(ytest,'ypredsc',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredsc',
+         '''
+         window n4=1 f4=%d | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testsc2',examples,'SideBySideAniso')
+Plot('testfftsc2',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (300,700,1100,1500,1900):
+    ytest = 'ytestsc%d' % example
+    ytestfft = 'ytestfftsc%d' % example
+    Plot(ytest,'ypredsc',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredsc',
+         '''
+         window n4=1 f4=%d | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testsc3',examples,'SideBySideAniso')
+Plot('testfftsc3',exampleffts,'SideBySideAniso')
+
+Result('testsc','testsc1 testsc2 testsc3','OverUnderAniso')
+Result('testfftsc','testfftsc1 testfftsc2','OverUnderAniso')
+
+Command('ypredsi.rsf',['models25.hdf5','mapped_xblind_patch_i.rsf','ypred.rsf'],action=Action(pred2),varlist=['norm'],norm=True)
+
+examples = []
+exampleffts = []
+for example in (0,400,800,1200,1600):
+    ytest = 'ytestsi%d' % example
+    ytestfft = 'ytestfftsi%d' % example
+    Plot(ytest,'ypredsi',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredsi',
+         '''
+         window n4=1 f4=%d | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testsi1',examples,'SideBySideAniso')
+Plot('testfftsi1',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (20,60,100,140,180):
+    ytest = 'ytestsi%d' % example
+    ytestfft = 'ytestfftsi%d' % example
+    Plot(ytest,'ypredsi',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredsi',
+         '''
+         window n4=1 f4=%d | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testsi2',examples,'SideBySideAniso')
+Plot('testfftsi2',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (300,700,1100,1500,1900):
+    ytest = 'ytestsi%d' % example
+    ytestfft = 'ytestfftsi%d' % example
+    Plot(ytest,'ypredsi',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredsi',
+         '''
+         window n4=1 f4=%d | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testsi3',examples,'SideBySideAniso')
+Plot('testfftsi3',exampleffts,'SideBySideAniso')
+
+Result('testsi','testsi1 testsi2 testsi3','OverUnderAniso')
+Result('testfftsi','testfftsi1 testfftsi2','OverUnderAniso')
+
+Command('ypredscs.rsf',['models25.hdf5','mapped_xblind_patch_c_s.rsf','ypred.rsf'],action=Action(pred2),varlist=['norm'],norm=True)
+
+examples = []
+exampleffts = []
+for example in (800,1200):
+    ytest = 'ytestscs%d' % example
+    ytestfft = 'ytestfftscs%d' % example
+    Plot(ytest,'ypredscs',
+         '''
+         window n4=1 f4=%d |
+         grey screenratio=1.0 transp=n wantaxis=n titlesz=24 minval=-4 maxval=4 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredscs',
+         '''
+         window n4=1 f4=%d | transp | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testscs1',examples,'SideBySideAniso')
+Plot('testfftscs1',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (100,140):
+    ytest = 'ytestscs%d' % example
+    ytestfft = 'ytestfftscs%d' % example
+    Plot(ytest,'ypredscs',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n screenratio=1.0 wantaxis=n minval=-4 maxval=4 titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredscs',
+         '''
+         window n4=1 f4=%d | transp | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testscs2',examples,'SideBySideAniso')
+Plot('testfftscs2',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (1100,1500):
+    ytest = 'ytestscs%d' % example
+    ytestfft = 'ytestfftscs%d' % example
+    Plot(ytest,'ypredscs',
+         '''
+         window n4=1 f4=%d |
+         grey screenratio=1.0 minval=-4 maxval=4 transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredscs',
+         '''
+         window n4=1 f4=%d | transp | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testscs3',examples,'SideBySideAniso')
+Plot('testfftscs3',exampleffts,'SideBySideAniso')
+
+Result('testscs','testscs1 testscs3','OverUnderAniso')
+Result('testfftscs','testfftscs1 testfftscs2','OverUnderAniso')
+
+Plot('ytestscs1200-2','ypredscs',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples |
+     grey minval=-3 maxval=3 transp=n barlabel=Amplitude wantaxis=y title="Generated seismic data" scalebar=y
+     ''')
+Plot('ytestfftscs1200-2', 'ypredscs',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples | transp | 
+     fft1 | fft3 | math output="abs(input)" | real | grey minval=0 maxval=1500 barlabel=Amplitude wantaxis=y allpos=y color=viridis title="FK of the generated seismic data" scalebar=y
+     ''')
+
+Result('ytestscsplot','ytestscs1200-2 ytestfftscs1200-2','SideBySideIso')
+
+Result('ytestscs1200-2','ypredscs',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples |
+     grey minval=-3 maxval=3 transp=n barlabel=Amplitude wantaxis=y title="Generated seismic data" scalebar=y
+     ''')
+
+def get_data_for_plot(target=None,source=None,env=None):
+    seis = m8r.File(str(source[0]))[:]
+    seis = np.reshape(seis,(-1,128,128,1))
+    #seis = np.transpose(seis,(0,2,1,3))
+    meanseis = np.reshape(np.mean(seis,axis=(1,2,3)),(-1,1,1,1))
+    stdseis = np.reshape(np.std(seis,axis=(1,2,3)),(-1,1,1,1))
+    seis = (seis-meanseis)/stdseis
+    m8r.File(seis,name=str(target[0]))
+
+Command('mapped_xblind_patch_c_s_plot.rsf','mapped_xblind_patch_c_s.rsf',action=Action(get_data_for_plot))
+
+Plot('stylescs1200-2','mapped_xblind_patch_c_s_plot.rsf',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label1=Time unit1=samples label2=Distance unit2=samples |
+     grey barlabel=Amplitude wantaxis=y minval=-3 maxval=3 title="Shallow section as style" scalebar=y
+     ''')
+Plot('stylefftscs1200-2', 'mapped_xblind_patch_c_s_plot.rsf',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label1=Time unit1=samples label2=Distance unit2=samples |   
+     fft1 | fft3 | math output="abs(input)" | real | grey barlabel=Amplitude minval=0 maxval=1500 wantaxis=y allpos=y color=viridis title="FK of the seismic data as style" scalebar=y
+     ''')
+
+Result('stylescsplot','stylescs1200-2 stylefftscs1200-2','SideBySideIso')
+
+Command('ypredscd.rsf',['models25.hdf5','mapped_xblind_patch_c_d.rsf','ypred.rsf'],action=Action(pred2),varlist=['norm'],norm=True)
+
+examples = []
+exampleffts = []
+for example in (800,1200):
+    ytest = 'ytestscd%d' % example
+    ytestfft = 'ytestfftscd%d' % example
+    Plot(ytest,'ypredscd',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n screenratio=1.0 wantaxis=n minval=-4 maxval=4 titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredscd',
+         '''
+         window n4=1 f4=%d | transp | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testscd1',examples,'SideBySideAniso')
+Plot('testfftscd1',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (100,140):
+    ytest = 'ytestscd%d' % example
+    ytestfft = 'ytestfftscd%d' % example
+    Plot(ytest,'ypredscd',
+         '''
+         window n4=1 f4=%d |
+         grey screenratio=1.0 transp=n minval=-4 maxval=4 wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredscd',
+         '''
+         window n4=1 f4=%d | transp | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testscd2',examples,'SideBySideAniso')
+Plot('testfftscd2',exampleffts,'SideBySideAniso')
+
+examples = []
+exampleffts = []
+for example in (1100,1500):
+    ytest = 'ytestscd%d' % example
+    ytestfft = 'ytestfftscd%d' % example
+    Plot(ytest,'ypredscd',
+         '''
+         window n4=1 f4=%d |
+         grey screenratio=1.0 minval=-4 maxval=4 transp=n wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    Plot(ytestfft, 'ypredscd',
+         '''
+         window n4=1 f4=%d | transp | fft1 | fft3 | math output="abs(input)" |
+         real | grey color=viridis allpos=y wantaxis=n titlesz=24 wanttitle=n
+         ''' % example)
+    examples.append(ytest)
+    exampleffts.append(ytestfft)
+
+Plot('testscd3',examples,'SideBySideAniso')
+Plot('testfftscd3',exampleffts,'SideBySideAniso')
+
+Result('testscd','testscd1 testscd3','OverUnderAniso')
+Result('testfftscd','testfftscd1 testfftscd2','OverUnderAniso')
+
+Plot('ytestscd1200-2','ypredscd',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples |
+     grey minval=-3 maxval=3 transp=n barlabel=Amplitude wantaxis=y title="Generated seismic data" scalebar=y
+     ''')
+Plot('ytestfftscd1200-2', 'ypredscd',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples | transp |
+     fft1 | fft3 | math output="abs(input)" | real | grey minval=0 maxval=1500 barlabel=Amplitude wantaxis=y allpos=y color=viridis title="FK of the generated seismic data" scalebar=y
+     ''')
+
+Result('ytestscdplot','ytestscd1200-2 ytestfftscd1200-2','SideBySideIso')
+
+Result('ytestscd1200-2','ypredscd',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label2=Time unit2=samples label1=Distance unit1=samples |
+     grey minval=-3 maxval=3 barlabel=Amplitude wantaxis=y transp=n title="Generated seismic data" scalebar=y
+     ''')
+
+Command('mapped_xblind_patch_c_d_plot.rsf','mapped_xblind_patch_c_d.rsf',action=Action(get_data_for_plot))
+
+Plot('stylescd1200-2','mapped_xblind_patch_c_d_plot.rsf',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label1=Time unit1=samples label2=Distance unit2=samples |
+     grey barlabel=Amplitude wantaxis=y minval=-3 maxval=3 title="Deep section as style" scalebar=y
+     ''')
+Plot('stylefftscd1200-2', 'mapped_xblind_patch_c_d_plot.rsf',
+     '''
+     window n4=1 f4=600 n1=1 | put d2=1 d1=1 o2=0 o1=0 label1=Time unit1=samples label2=Distance unit2=samples |  
+     fft1 | fft3 | math output="abs(input)" | real | grey barlabel=Amplitude minval=0 maxval=1500 wantaxis=y allpos=y color=viridis title="FK of the seismic data as style" scalebar=y
+     ''')
+
+Result('stylescdplot','stylescd1200-2 stylefftscd1200-2','SideBySideIso')
+
+from tensorflow import keras
+from tensorflow.keras import layers
+
+def mean_iou(y_true, y_pred):
+    alpha = 0.7
+    beta  = 0.3
+    #ones = K.ones(K.shape(y_true))
+    p0 = y_pred      # proba that voxels are class i
+    p1 = 1. -y_pred # proba that voxels are not class i
+    g0 = y_true
+    g1 = 1. -y_true
+    
+    num = K.sum(p0*g0, (0,1,2))
+    den = num + alpha*K.sum(p0*g1,(0,1,2)) + beta*K.sum(p1*g0,(0,1,2))
+    
+    T = K.sum(num/den) # when summing over classes, T has dynamic range [0 Ncl]
+    
+    Ncl = 1
+    return Ncl-T
+
+def train_model3(target=None,source=None,env=None):
+    keras.backend.clear_session()
+
+    # can take arbitrary input size
+    image = keras.Input((None,None,1),name='input')
+    
+    conv1 = layers.Conv2D(16, (3,3), padding='same')(image)
+    conv1 = layers.BatchNormalization()(conv1)
+    conv1 = layers.Activation('relu')(conv1)
+    conv1 = layers.Conv2D(16, (3,3), padding='same')(conv1)
+    conv1 = layers.BatchNormalization()(conv1)
+    conv1 = layers.Activation('relu')(conv1)
+    
+    pool1 = layers.MaxPooling2D(pool_size=(2,2))(conv1)
+    conv2 = layers.Conv2D(32, (3,3), padding='same')(pool1)
+    conv2 = layers.BatchNormalization()(conv2)
+    conv2 = layers.Activation('relu')(conv2)
+    conv2 = layers.Conv2D(32, (3,3), padding='same')(conv2)
+    conv2 = layers.BatchNormalization()(conv2)
+    conv2 = layers.Activation('relu')(conv2)
+    
+    pool2 = layers.MaxPooling2D(pool_size=(2,2))(conv2)
+    conv3 = layers.Conv2D(64, (3,3), padding='same')(pool2)
+    conv3 = layers.BatchNormalization()(conv3)
+    conv3 = layers.Activation('relu')(conv3)
+    conv3 = layers.Conv2D(64, (3,3), padding='same')(conv3)
+    conv3 = layers.BatchNormalization()(conv3)
+    conv3 = layers.Activation('relu')(conv3)
+    
+    pool3 = layers.MaxPooling2D(pool_size=(2,2))(conv3)
+    conv4 = layers.Conv2D(128, (3,3), padding='same')(pool3)
+    conv4 = layers.BatchNormalization()(conv4)
+    conv4 = layers.Activation('relu')(conv4)
+    conv4 = layers.Conv2D(128, (3,3), padding='same')(conv4)
+    conv4 = layers.BatchNormalization()(conv4)
+    conv4 = layers.Activation('relu')(conv4)
+    
+    conv4 = layers.SpatialDropout2D(0.5)(conv4)
+    
+    up5 = layers.concatenate([layers.UpSampling2D(size=(2,2))(conv4), conv3], axis=-1)
+    conv5 = layers.Conv2D(64, (3,3), activation='relu', padding='same')(up5)
+    conv5 = layers.Conv2D(64, (3,3), activation='relu', padding='same')(conv5)
+
+    up6 = layers.concatenate([layers.UpSampling2D(size=(2,2))(conv5), conv2], axis=-1)    
+    conv6 = layers.Conv2D(32, (3,3), activation='relu', padding='same')(up6)
+    conv6 = layers.Conv2D(32, (3,3), activation='relu', padding='same')(conv6)
+    
+    up7 = layers.concatenate([layers.UpSampling2D(size=(2,2))(conv6), conv1], axis=-1)
+    conv7 = layers.Conv2D(16, (3,3), activation='relu', padding='same')(up7)
+    conv7 = layers.Conv2D(16, (3,3), activation='relu', padding='same')(conv7)
+
+    conv8 = layers.Conv2D(1, (1,1), activation='sigmoid')(conv7)
+    
+    model = keras.Model(inputs=[image], outputs=[conv8])
+
+    model.summary()
+
+    from tensorflow.keras.callbacks import ModelCheckpoint
+
+    checkpoint = ModelCheckpoint(str(target[0]),monitor='val_accuracy',mode='max', verbose=1,save_best_only=True)
+    callbacks = [checkpoint]
+
+    model.compile(loss=mean_iou,
+              optimizer='adam',
+              metrics=['accuracy'])
+
+    # train model
+    x_train = m8r.File(str(source[0]))[:]
+    print(x_train.shape)
+    y_train = m8r.File(str(source[1]))[:]
+    
+    batch_size=env.get('batch_size')
+    epochs=env.get('epochs')
+    model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.2,callbacks=callbacks)
+
+    # save model
+    keras.models.save_model(model,str(target[0]),save_format='h5')
+
+Command('modelseg.h5',['xtrain.rsf','ytrain.rsf'],action=Action(train_model3),
+        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+
+def predict3(target=None,source=None,env=None):
+    model = keras.models.load_model(str(source[0]), compile=False)
+    x_test = m8r.File(str(source[1]))[:]
+    norm = env.get('norm')
+    if norm:
+        means = np.reshape(np.mean(x_test,axis=(1,2)),(-1,1,1,1))
+        stds = np.reshape(np.std(x_test,axis=(1,2)),(-1,1,1,1))
+        x_test = (x_test-means)/stds
+    y_pred = model.predict(x_test)
+    # thresholding probability
+    #labels_pred = y_pred
+    #labels_pred[y_pred>=0.5]=1
+    #labels_pred[y_pred<0.5]=0
+    y_pred = y_pred[...,0]
+    m8r.File(y_pred,name=str(target[0]))
+
+def predict4(target=None,source=None,env=None):
+    model = keras.models.load_model(str(source[0]), compile=False)
+    x_test = m8r.File(str(source[1]))[:]
+    norm = env.get('norm')
+    x_test = np.reshape(x_test,(-1,128,128,1))
+    if norm:
+        means = np.reshape(np.mean(x_test,axis=(1,2)),(-1,1,1,1))
+        stds = np.reshape(np.std(x_test,axis=(1,2)),(-1,1,1,1))
+        x_test = (x_test-means)/stds
+    y_pred = model.predict(x_test)
+    # thresholding probability
+    #labels_pred = y_pred
+    #labels_pred[y_pred>=0.5]=1
+    #labels_pred[y_pred<0.5]=0
+    y_pred = y_pred[...,0]
+    m8r.File(y_pred,name=str(target[0]))
+
+Command('ypredseg.rsf',['modelseg.h5','xtest.rsf'],action=Action(predict3),varlist=['norm'],norm=False)
+
+# Plot validation segmentation
+examples = []
+for example in (0,40,80,120,180):
+    ypredseg = 'ypredseg%d' % example
+    Plot(ypredseg,'ypredseg',
+         '''
+         window n4=1 f4=%d |
+         grey color=viridis allpos=y transp=n wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predseg1',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,50,90,130,170):
+    ypredseg = 'ypredseg%d' % example
+    Plot(ypredseg,'ypredseg',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n color=viridis allpos=y wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predseg2',examples,'SideBySideAniso')
+
+Result('predseg','predseg1 predseg2','OverUnderAniso')
+
+def get_data2(target=None, source=None, env=None):
+
+  data = m8r.File(str(source[0]))[:]
+  labels = m8r.File(str(source[1]))[:]
+
+  # normalize data
+  mean = data.mean(axis=(1,2,3))[:,np.newaxis,np.newaxis,np.newaxis]
+  std = data.std(axis=(1,2,3))[:,np.newaxis,np.newaxis,np.newaxis]
+  data = (data-mean)/std
+
+  print(data.shape)
+  print(labels.shape)
+
+  training_data,eval_data,training_label,eval_label=train_test_split(data,labels,test_size=0.10,random_state=42)
+
+  m8r.File(training_data,name=str(target[0]))
+  m8r.File(training_label,name=str(target[1]))
+  m8r.File(eval_data,name=str(target[2]))
+  m8r.File(eval_label,name=str(target[3]))
+
+Command(['xtrains.rsf','ytrains.rsf','xtests.rsf','ytests.rsf'],['ypreds.rsf','ypred.rsf'], action=Action(get_data2))
+
+Flow('xtrainscomb','xtrain xtrains','cat ${SOURCES[1]} axis=4')
+Flow('ytrainscomb','ytrain ytrains','cat ${SOURCES[1]} axis=4')
+Flow('xtestscomb','xtest xtests','cat ${SOURCES[1]} axis=4')
+Flow('ytestscomb','ytest ytests','cat ${SOURCES[1]} axis=4')
+
+Command(['xtrainsc.rsf','ytrainsc.rsf','xtestsc.rsf','ytestsc.rsf'],['ypredsc.rsf','ypred.rsf'], action=Action(get_data2))
+
+Flow('xtrainsccomb','xtrain xtrainsc','cat ${SOURCES[1]} axis=4')
+Flow('ytrainsccomb','ytrain ytrainsc','cat ${SOURCES[1]} axis=4')
+Flow('xtestsccomb','xtest xtestsc','cat ${SOURCES[1]} axis=4')
+Flow('ytestsccomb','ytest ytestsc','cat ${SOURCES[1]} axis=4')
+
+Command(['xtrainsi.rsf','ytrainsi.rsf','xtestsi.rsf','ytestsi.rsf'],['ypredsi.rsf','ypred.rsf'], action=Action(get_data2))
+
+Flow('xtrainsicomb','xtrain xtrainsi','cat ${SOURCES[1]} axis=4')
+Flow('ytrainsicomb','ytrain ytrainsi','cat ${SOURCES[1]} axis=4')
+Flow('xtestsicomb','xtest xtestsi','cat ${SOURCES[1]} axis=4')
+Flow('ytestsicomb','ytest ytestsi','cat ${SOURCES[1]} axis=4')
+
+Command(['xtrainscs.rsf','ytrainscs.rsf','xtestscs.rsf','ytestscs.rsf'],['ypredscs.rsf','ypred.rsf'], action=Action(get_data2))
+
+Flow('xtrainscscomb','xtrain xtrainscs','cat ${SOURCES[1]} axis=4')
+Flow('ytrainscscomb','ytrain ytrainscs','cat ${SOURCES[1]} axis=4')
+Flow('xtestscscomb','xtest xtestscs','cat ${SOURCES[1]} axis=4')
+Flow('ytestscscomb','ytest ytestscs','cat ${SOURCES[1]} axis=4')
+
+Command(['xtrainscd.rsf','ytrainscd.rsf','xtestscd.rsf','ytestscd.rsf'],['ypredscd.rsf','ypred.rsf'], action=Action(get_data2))
+
+Flow('xtrainscdcomb','xtrain xtrainscd','cat ${SOURCES[1]} axis=4')
+Flow('ytrainscdcomb','ytrain ytrainscd','cat ${SOURCES[1]} axis=4')
+Flow('xtestscdcomb','xtest xtestscd','cat ${SOURCES[1]} axis=4')
+Flow('ytestscdcomb','ytest ytestscd','cat ${SOURCES[1]} axis=4')
+
+Command('ypredsegs.rsf',['modelseg.h5','xtests.rsf'],action=Action(predict3),varlist=['norm'],norm=False)
+
+# Plot validation segmentation
+examples = []
+for example in (0,40,80,120,180):
+    ypredseg = 'ypredsegs%d' % example
+    Plot(ypredseg,'ypredsegs',
+         '''
+         window n4=1 f4=%d |
+         grey color=viridis allpos=y transp=n wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegs1',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,50,90,130,170):
+    ypredseg = 'ypredsegs%d' % example
+    Plot(ypredseg,'ypredsegs',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n color=viridis allpos=y wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegs2',examples,'SideBySideAniso')
+
+Result('predsegs','predsegs1 predsegs2','OverUnderAniso')
+
+def get_data_aug(target=None, source=None, env=None):
+
+  data = m8r.File(str(source[0]))[:]
+  labels = m8r.File(str(source[1]))[:]
+  
+  print(data.shape)
+  print(labels.shape)
+
+  training_data = np.concatenate((data, np.flip(data,axis=2)),axis=0)
+  training_label = np.concatenate((labels, np.flip(labels,axis=2)),axis=0)
+
+  m8r.File(training_data,name=str(target[0]))
+  m8r.File(training_label,name=str(target[1]))
+
+Command(['xtrainaug.rsf','ytrainaug.rsf'],['xtrain.rsf','ytrain.rsf'], action=Action(get_data_aug))
+Command(['xtestaug.rsf','ytestaug.rsf'],['xtest.rsf','ytest.rsf'], action=Action(get_data_aug))
+
+Command('modelsegaug.h5',['xtrainaug.rsf','ytrainaug.rsf'],action=Action(train_model3),
+        varlist=['batch_size','epochs'],batch_size=16,epochs=50)  
+
+Command('ypredsegaug.rsf',['modelsegaug.h5','xtest.rsf'],action=Action(predict3),varlist=['norm'],norm=False)
+# Plot validation segmentation
+examples = []
+for example in (0,40,80,120,180):
+    ypredseg = 'ypredsegaug%d' % example
+    Plot(ypredseg,'ypredsegaug',
+         '''
+         window n4=1 f4=%d |
+         grey color=viridis allpos=y transp=n wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegaug1',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,50,90,130,170):
+    ypredseg = 'ypredsegaug%d' % example
+    Plot(ypredseg,'ypredsegaug',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n color=viridis allpos=y wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegaug2',examples,'SideBySideAniso')
+
+Result('predsegaug','predsegaug1 predsegaug2','OverUnderAniso')
+
+Command('ypredsegsaug.rsf',['modelsegaug.h5','xtests.rsf'],action=Action(predict3),varlist=['norm'],norm=False)
+# Plot validation segmentation
+examples = []
+for example in (0,40,80,120,180):
+    ypredseg = 'ypredsegsaug%d' % example
+    Plot(ypredseg,'ypredsegsaug',
+         '''
+         window n4=1 f4=%d |
+         grey color=viridis allpos=y transp=n wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegsaug1',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,50,90,130,170):
+    ypredseg = 'ypredsegsaug%d' % example
+    Plot(ypredseg,'ypredsegsaug',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n color=viridis allpos=y wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegsaug2',examples,'SideBySideAniso')
+
+Result('predsegsaug','predsegsaug1 predsegsaug2','OverUnderAniso')
+
+Command('modelsegscomb.h5',['xtrainscomb.rsf','ytrainscomb.rsf'],action=Action(train_model3),
+        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+
+Command('ypredsegscomb.rsf',['modelsegscomb.h5','xtest.rsf'],action=Action(predict3),varlist=['norm'],norm=False)
+# Plot validation segmentation
+examples = []
+for example in (0,40,80,120,180):
+    ypredseg = 'ypredsegscomb%d' % example
+    Plot(ypredseg,'ypredsegscomb',
+         '''
+         window n4=1 f4=%d |
+         grey color=viridis allpos=y transp=n wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegscomb1',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,50,90,130,170):
+    ypredseg = 'ypredsegscomb%d' % example
+    Plot(ypredseg,'ypredsegscomb',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n color=viridis allpos=y wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegscomb2',examples,'SideBySideAniso')
+
+Result('predsegscomb','predsegscomb1 predsegscomb2','OverUnderAniso')
+
+Command('ypredsegscombs.rsf',['modelsegscomb.h5','xtests.rsf'],action=Action(predict3),varlist=['norm'],norm=False)
+# Plot validation segmentation
+examples = []
+for example in (0,40,80,120,180):
+    ypredseg = 'ypredsegscombs%d' % example
+    Plot(ypredseg,'ypredsegscombs',
+         '''
+         window n4=1 f4=%d |
+         grey color=viridis allpos=y transp=n wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+  
+Plot('predsegscombs1',examples,'SideBySideAniso')
+
+examples = []
+for example in (10,50,90,130,170):
+    ypredseg = 'ypredsegscombs%d' % example
+    Plot(ypredseg,'ypredsegscombs',
+         '''
+         window n4=1 f4=%d |
+         grey transp=n color=viridis allpos=y wantaxis=n wanttitle=n
+         ''' % example)
+    examples.append(ypredseg)
+
+Plot('predsegscombs2',examples,'SideBySideAniso')
+
+Result('predsegscombs','predsegscombs1 predsegscombs2','OverUnderAniso')
+
+Command('modelsegsicomb.h5',['xtrainsicomb.rsf','ytrainsicomb.rsf'],action=Action(train_model3),
+        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+Command('modelsegsccomb.h5',['xtrainsccomb.rsf','ytrainsccomb.rsf'],action=Action(train_model3),
+        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+Command('modelsegscscomb.h5',['xtrainscscomb.rsf','ytrainscscomb.rsf'],action=Action(train_model3),
+        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+Command('modelsegscdcomb.h5',['xtrainscdcomb.rsf','ytrainscdcomb.rsf'],action=Action(train_model3),
+        varlist=['batch_size','epochs'],batch_size=16,epochs=50)
+
+
+Flow('mapped_xblind_patch_i_transp','mapped_xblind_patch_i','transp plane=12 | transp plane=45')
+Flow('mapped_xblind_patch_c_transp','mapped_xblind_patch_c','transp plane=12 | transp plane=45')
+Command('ypredsegi.rsf',['modelseg.h5','mapped_xblind_patch_i_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafi','ypredsegi','put n3=351 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=371,351,576 | transp plane=13 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Command('ypredsegc.rsf',['modelseg.h5','mapped_xblind_patch_c_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True) 
+
+Flow('ypredsegafc','ypredsegc','put n3=371 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=351,371,576 | transp plane=13 | transp plane=23 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Flow('ypredsegaf','ypredsegafi ypredsegafc','math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2."')
+
+Result('ypredsegafi','ypredsegaf','put label1=Time unit1=s | dd type=float | window f2=175 n2=1 | grey allpos=y color=viridis title="Inline slice" clip=0.5 label2=Crossline unit2= scalebar=y barlabel=Probability')
+Result('ypredsegaft','ypredsegaf','put label1=Time unit1=s | dd type=float | window min1=2 max1=2 | grey allpos=y color=viridis title="Time slice" clip=0.5 scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegaft2','ypredsegaf','put label1=Time unit1=s | dd type=float | window min1=3 max1=3 | grey allpos=y color=viridis title="Time slice" clip=0.5 scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafc','ypredsegaf','put label1=Time unit1=s | dd type=float | window f3=185 n3=1 | grey allpos=y color=viridis title="Crossline slice" clip=0.5 scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafi2','ypredsegaf','put label1=Time unit1=s | dd type=float | window f2=100 n2=1 | grey allpos=y color=viridis title="Inline slice" clip=0.5 scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafi3','ypredsegaf','put label1=Time unit1=s | dd type=float | window f2=0 n2=1 | grey allpos=y color=viridis title="Inline slice" clip=0.5 scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafc2','ypredsegaf','put label1=Time unit1=s | dd type=float | window f3=0 n3=1 | grey allpos=y color=viridis title="Crossline slice" clip=0.5 scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafc3','ypredsegaf','put label1=Time unit1=s | dd type=float | window f3=100 n3=1 | grey allpos=y color=viridis title="Crossline slice" clip=0.5 scalebar=y label2=Inline unit2= barlabel=Probability')
+
+Command('ypredsegscscombi.rsf',['modelsegscscomb.h5','mapped_xblind_patch_i_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafscscombi','ypredsegscscombi','put n3=351 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=371,351,576 | transp plane=13 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Command('ypredsegscscombc.rsf',['modelsegscscomb.h5','mapped_xblind_patch_c_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafscscombc','ypredsegscscombc','put n3=371 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=351,371,576 | transp plane=13 | transp plane=23 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Flow('ypredsegafscscomb','ypredsegafscscombi ypredsegafscscombc','math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2."')
+
+Result('ypredsegafscscombi','ypredsegafscscomb','put label1=Time unit1=s | dd type=float | window f2=175 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscscombt','ypredsegafscscomb','put label1=Time unit1=s | dd type=float | window min1=2 max1=2 | grey allpos=y color=viridis clip=0.5 title="Time slice" scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafscscombt2','ypredsegafscscomb','put label1=Time unit1=s | dd type=float | window min1=3 max1=3 | grey allpos=y color=viridis clip=0.5 title="Time slice" scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafscscombc','ypredsegafscscomb','put label1=Time unit1=s | dd type=float | window f3=185 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafscscombi2','ypredsegafscscomb','put label1=Time unit1=s | dd type=float | window f2=100 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscscombi3','ypredsegafscscomb','put label1=Time unit1=s | dd type=float | window f2=0 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscscombc2','ypredsegafscscomb','put label1=Time unit1=s | dd type=float | window f3=0 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafscscombc3','ypredsegafscscomb','put label1=Time unit1=s | dd type=float | window f3=100 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+
+Command('ypredsegscdcombi.rsf',['modelsegscdcomb.h5','mapped_xblind_patch_i_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafscdcombi','ypredsegscdcombi','put n3=351 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=371,351,576 | transp plane=13 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Command('ypredsegscdcombc.rsf',['modelsegscdcomb.h5','mapped_xblind_patch_c_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafscdcombc','ypredsegscdcombc','put n3=371 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=351,371,576 | transp plane=13 | transp plane=23 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Flow('ypredsegafscdcomb','ypredsegafscdcombi ypredsegafscdcombc','math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2."')
+
+Result('ypredsegafscdcombi','ypredsegafscdcomb','put label1=Time unit1=s | dd type=float | window f2=175 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscdcombt','ypredsegafscdcomb','put label1=Time unit1=s | dd type=float | window min1=2 max1=2 | grey allpos=y color=viridis clip=0.5 title="Time slice" scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafscdcombt2','ypredsegafscdcomb','put label1=Time unit1=s | dd type=float | window min1=3 max1=3 | grey allpos=y color=viridis clip=0.5 title="Time slice" scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafscdcombc','ypredsegafscdcomb','put label1=Time unit1=s | dd type=float | window f3=185 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafscdcombi2','ypredsegafscdcomb','put label1=Time unit1=s | dd type=float | window f2=100 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscdcombi3','ypredsegafscdcomb','put label1=Time unit1=s | dd type=float | window f2=0 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscdcombc2','ypredsegafscdcomb','put label1=Time unit1=s | dd type=float | window f3=0 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafscdcombc3','ypredsegafscdcomb','put label1=Time unit1=s | dd type=float | window f3=100 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+
+Command('ypredsegscombi.rsf',['modelsegscomb.h5','mapped_xblind_patch_i_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafscombi','ypredsegscombi','put n3=351 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=371,351,576 | transp plane=13 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Command('ypredsegscombc.rsf',['modelsegscomb.h5','mapped_xblind_patch_c_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafscombc','ypredsegscombc','put n3=371 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=351,371,576 | transp plane=13 | transp plane=23 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Flow('ypredsegafscomb','ypredsegafscombi ypredsegafscombc','math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2."')
+
+Result('ypredsegafscombi','ypredsegafscomb','put label1=Time unit1=s | dd type=float | window f2=175 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscombt','ypredsegafscomb','put label1=Time unit1=s | dd type=float | window min1=2 max1=2 | grey allpos=y color=viridis clip=0.5 title="Time slice" scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafscombt2','ypredsegafscomb','put label1=Time unit1=s | dd type=float | window min1=3 max1=3 | grey allpos=y color=viridis clip=0.5 title="Time slice" scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafscombc','ypredsegafscomb','put label1=Time unit1=s | dd type=float | window f3=185 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafscombi2','ypredsegafscomb','put label1=Time unit1=s | dd type=float | window f2=100 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscombi3','ypredsegafscomb','put label1=Time unit1=s | dd type=float | window f2=0 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafscombc2','ypredsegafscomb','put label1=Time unit1=s | dd type=float | window f3=0 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafscombc3','ypredsegafscomb','put label1=Time unit1=s | dd type=float | window f3=100 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+
+Command('ypredsegaugi.rsf',['modelsegaug.h5','mapped_xblind_patch_i_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafaugi','ypredsegaugi','put n3=351 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=371,351,576 | transp plane=13 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Command('ypredsegaugc.rsf',['modelsegaug.h5','mapped_xblind_patch_c_transp.rsf'],action=Action(predict4),varlist=['norm'],norm=True)
+
+Flow('ypredsegafaugc','ypredsegaugc','put n3=371 n4=5 n5=7 n6=1 | transp plane=23 | transp plane=56 | patch inv=y weight=y n0=351,371,576 | transp plane=13 | transp plane=23 | put d1=0.004 o1=1.2 d2=1 d3=1 o2=1300 o3=6470')
+
+Flow('ypredsegafaug','ypredsegafaugi ypredsegafaugc','math x=${SOURCES[0]} y=${SOURCES[1]} output="(x+y)/2."')
+
+Result('ypredsegafaugi','ypredsegafaug','put label1=Time unit1=s | dd type=float | window f2=175 n2=1 | grey allpos=y clip=0.5 color=viridis title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafaugt','ypredsegafaug','put label1=Time unit1=s | dd type=float | window min1=2 max1=2 | grey allpos=y clip=0.5 color=viridis title="Time slice" scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafaugt2','ypredsegafaug','put label1=Time unit1=s | dd type=float | window min1=3 max1=3 | grey allpos=y clip=0.5 color=viridis title="Time slice" scalebar=y barlabel=Probability label1=Inline unit1= label2=Crossline unit2= ')
+Result('ypredsegafaugc','ypredsegafaug','put label1=Time unit1=s | dd type=float | window f3=185 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafaugi2','ypredsegafaug','put label1=Time unit1=s | dd type=float | window f2=100 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafaugi3','ypredsegafaug','put label1=Time unit1=s | dd type=float | window f2=0 n2=1 | grey allpos=y color=viridis clip=0.5 title="Inline slice" scalebar=y barlabel=Probability label2=Crossline unit2= ')
+Result('ypredsegafaugc2','ypredsegafaug','put label1=Time unit1=s | dd type=float | window f3=0 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+Result('ypredsegafaugc3','ypredsegafaug','put label1=Time unit1=s | dd type=float | window f3=100 n3=1 | grey allpos=y color=viridis clip=0.5 title="Crossline slice" scalebar=y barlabel=Probability label2=Inline unit2= ')
+
+End()  

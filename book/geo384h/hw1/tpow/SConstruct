@@ -20,8 +20,8 @@ Result('tpow','data tpow','SideBySideAniso')
 # Compute objective function
 prog = Program('objective.c')
 
-# COMMENT ABOBE AND UNCOMMENT BELOW IF YOU WANT TO USE PYTHON 
-# prog = Command('objective.exe','objective.py','cp $SOURCE $TARGET')
+# COMMENT ABOVE AND UNCOMMENT BELOW IF YOU WANT TO USE PYTHON 
+# prog = Command('obj.exe','objective.py','cp $SOURCE $TARGET')
 # AddPostAction(prog,Chmod(prog,0o755))
 
 Flow('ofunc','data %s' % prog[0],

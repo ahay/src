@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sftahsort', 'sftahwrite', 'sfwindow', 'sfgrey', 'sfbyte', 'sfgrey3', 'sfput', 'sftransp']
+data=['http://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/Keri_3D/Kerry3D.segy']
+size= 2268080640

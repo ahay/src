@@ -1,0 +1,962 @@
+\published{Geophysical Journal International, 229, 370-389, (2022)}
+
+\title{Seismic data interpolation using streaming prediction filter in the frequency domain}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{GJI-S-21-0486}
+
+\address{
+    \footnotemark[1] College of Geo-exploration Science and Technology,\\
+    Jilin University, Changchun, China}
+
+\author{Zhisheng Zheng\footnotemark[1], Yang Liu\footnotemark[1], Cai Liu\footnotemark[1]}
+
+\footer{GJI-S-21-0486}
+\lefthead{Zheng et al.}
+\righthead{Interpolation by SPF}
+
+\maketitle
+
+\begin{abstract}
+  Surface conditions and economic factors restrict field geometries,
+  so seismic data acquisition typically obtains field data with
+  irregular spatial distribution, which can adversely affect the
+  subsequent data processing and interpretation. Therefore, data
+  interpolation techniques are used to convert field data into
+  regularly distributed data and reconstruct the missing traces.
+  Recently, the mainstream methods have implemented iterative
+  algorithms to solve data interpolation problems, which require
+  substantial computational resources and restrict their application
+  in high dimensions.  In this study, we proposed the $f$-$x$ and
+  $f$-$x$-$y$ streaming prediction filters (SPFs) to reconstruct
+  missing seismic traces without iterations. According to the
+  streaming computation framework, we directly derived an analytic
+  solution to the overdetermined least-squares problem with local
+  smoothness constraints for estimating SPFs in the frequency
+  domain. We introduced different processing paths and filter forms to
+  reduce the interference of missing traces, which can improve the
+  accuracy of filter coefficients. Meanwhile, we utilized a two-step
+  interpolation strategy to guarantee the effective interpolation of
+  the irregularly missing traces.  Numerical examples show that the
+  proposed methods effectively recover the missing traces in seismic
+  data when compared with the traditional Fourier Projection Onto
+  Convex Sets (POCS) method. In particular, the frequency domain SPFs
+  are suitable for high-dimensional seismic data interpolation with
+  the advantages of low computational cost and reasonable
+  nonstationary signal reconstruction.
+
+\end{abstract}
+
+
+\section{Introduction}
+
+With the limitation of field geometries, uniform data acquisition is
+rarely achieved in practice; instead, it always displays irregular or
+undersampled data distribution in spatial directions. However, many
+subsequent processing steps, such as multiple elimination and
+migration, are based on the prerequisite of regular data distribution.
+Seismic data interpolation has become a key technique in seismic data
+processing workflows. A failed interpolation method may create
+artifacts, which affect the accuracy of seismic imaging. Recently,
+high-density and wide-azimuth seismic acquisition can achieve
+large-scale field data; however, increasing computational costs and
+nonstationary signal recovery have posed challenges to data
+interpolation.  Many interpolation methods have been proposed to
+reconstruct missing data, which are based on signal processing or
+seismic kinematic/dynamic principles.  Low-rank
+methods~\citep{Trickett10,Gao13,Chen16,Gao17} assume that seismic data
+are low rank in the mapping domain, and rank-reduction operators are
+used to recover the missing data.  Plane wave
+decomposition~\citep{Fomel02, Hellman16} reconstructs missing data by
+using local slope information.  Compressive sensing framework with
+different sparse domains, e.g., Fourier transform~\citep{Abma06,
+  Wang10} and seislet transform~\citep{Fomel10, Liu10, Gao15},
+iteratively recover the missing traces.  Machine learning has become a
+popular research direction, and is also used for data
+interpolation~\citep{Jia17,Oliveira18, Mandelli19, Kaur19, Zhang20}.
+However, these methods always encounter high computational cost.
+
+Prediction filter (PF) provide an important approach for seismic data
+interpolation. \citet{Spitz91} proved that high-frequency components
+can be estimated with the PF calculated from low-frequency components,
+and an $f$-$x$ interpolation method beyond aliasing was proposed.
+\citet{Sacchi97} used an autoregression moving average (ARMA) model to
+calculate the PF and interpolated near-offset missing gaps in the
+$f$-$x$ domain. \citet{Porsani99} proposed a half-step PF to
+efficiently interpolate missing data. \citet{Wang02} extended
+different kinds of PFs in high dimensions to implement the $f$-$x$
+interpolation algorithm. \citet{Abma05} made comparison of several PF
+interpolation methods. \citet{Naghizadeh09} used an exponentially
+weighted recursive least squares (EWRLS) for the adaptive PF to
+interpolate data in the $f$-$x$ domain. \citet{Wangy10} created the
+virtual traces from marine seismic data and utilized the matching
+filter or nonstationary prediction error filter (PEF) to fill gaps.
+\citet{Liu11} proposed an approach to interpolate aliased data based
+on adaptive PEF and regularized nonstationary autoregression (RNA) in
+the $t$-$x$-$y$ domain. \citet{Li17} proposed multidimensional
+adaptive PEF to reconstruct seismic data in the frequency domain.
+\citet{Liug18} introduced an efficient method based on the $f$-$x$ RNA
+for regular and irregular missing data interpolation in the $f$-$x$
+domain. \citet{Liu19} designed the multiscale and multidirectional
+PEF to improve the accuracy of filter coefficients while
+reconstructing seismic data.
+
+It is difficult to balance the computational cost and the
+interpolation accuracy while dealing with large-scale data in most
+iterative methods. However, the framework of the streaming
+computation~\citep{Sacchi09, Fomel16} can directly solve the
+nonstationary autoregression problem. \citet{Liuy18} proposed an
+orthogonal $t$-$x$ streaming PF (SOPF) for random noise attenuation,
+and~\citet{Guo20} provided an initial idea for the $f$-$x$ SPF with a
+1D spatial constraint and tried to efficiently eliminate seismic
+random noise. Therefore, we further improved the noniterative
+framework of the streaming computation in the frequency domain and
+used the SPF with new frequency-domain constraints for seismic data
+interpolation. The new adaptive PF can reduce the computational cost
+in the interpolation problem while capturing details of nonstationary
+seismic data.  In this study, we first discussed the two-step
+interpolation strategy for PF. With the two-step strategy, we derived
+the theory of the new $f$-$x$ SPF and $f$-$x$-$y$ SPF based on the
+streaming framework.  The relevant interpolation algorithm and filter
+design were developed to help the SPF solve the problem of the
+nonstationary data reconstruction with a feasible computational
+cost. Numerical examples demonstrate the effectiveness and efficiency
+of the proposed methods.
+
+\section{Theory}
+
+\subsection{Two-step interpolation strategy}
+
+The classical method for restoring missing data is to ensure that the
+restored data, after specified filtering, have minimum
+energy~\citep{Claerbout92}.  Data interpolation by prediction
+filtering can be divided into two problems~\citep{Liu11}: filter
+estimation and data reconstruction with filters.  The first step is to
+calculate the filter by minimizing the following autoregression
+problem:
+\begin{equation}
+    \label{eq:step1}
+    \min_{\mathbf{F}} \| \mathbf{g} - \mathbf{G}^{\mathsf{T}} \mathbf{F} \|_{2}^{2},
+\end{equation}
+where $\{\bullet\}^{\mathsf{T}}$ denotes the transpose operator,
+$\mathbf{F}$ is adaptive PF, $\mathbf{g}$ is the data matrix, and
+$\mathbf{G}$ is the translation of $\mathbf{g}$.  In the second step,
+the missing data are restored by minimizing the least-squares problem:
+\begin{equation}
+    \label{eq:step2}
+    \min_{\hat{\mathbf{g}}} \| \hat{\mathbf{g}} - \mathbf{G}^{\mathsf{T}}\mathbf{F} \|_{2}^{2},
+\end{equation}
+where $\hat{\mathbf{g}}$ is the reconstructed data.
+
+In the time-space or frequency-space domain, Eq.~(\ref{eq:step1}) and
+(\ref{eq:step2}), established by the prediction filtering theory, are
+designed to solve different variables, and they are solved
+individually.  The number of unknown filter coefficients in adaptive
+PF $\mathbf{F}$ is often greater than the number of known data in
+$\mathbf{g}$, in other words, the number of unknowns is greater than
+the number of equations.  Eq.~(\ref{eq:step1}) usually presents an
+ill-posed problem, and different regularization terms have been
+introduced to stabilize the filter solution $\mathbf{F}$.  Further
+discussion will be provided in the next section. Meanwhile, we
+extended the framework of the streaming computation in the frequency
+domain and proposed a local and multidimensional smoothness to
+constrain Eq.~(\ref{eq:step1}) in the frequency domain.
+
+\subsection{$f$-$x$ streaming prediction filter}
+
+In the $f$-$x$ domain, the PF predicts the data along the spatial
+direction, and the relationship between data and prediction filter can
+be summarized as
+\begin{equation}
+    \label{eq:fxar}
+    \begin{aligned}
+        g_{m,n}
+         & \approx \sum_{p} g_{m,n-p} f_{m,n,p}                    \\
+         & \approx \mathbf{G}_{m,n}^{\mathsf{T}} \mathbf{F}_{m,n},
+    \end{aligned}
+\end{equation}
+where $m$ and $n$ are the indices of the seismic data sample $g_{m,n}$
+along the frequency $f$ axis and space $x$ axis, respectively.  Vector
+$\mathbf{F}_{m,n}$ is the group of filter coefficients $f_{m,n,p}$ in
+the adaptive prediction filter, and each group $\mathbf{F}_{m,n}$
+corresponds to a data sample $g_{m,n}$.  Vector $\mathbf{G}_{m,n}$
+denotes several data points $g_{m,n-p}$ with spatial shift $p$ near
+$g_{m,n}$.  Spatial shift $p$ is related to the filter size (the
+number of filter coefficients in $\mathbf{F}_{m,n}$), and the filter
+size should theoretically be larger than or equal to the number of
+seismic events contained in the local space window.  When the causal
+filter structure is considered, as shown in Fig.~\ref{fig:causal2d},
+the spatial shift is chosen as $ p \in [1, 3] $, vector
+$\mathbf{G}_{m,n}$ can be expressed as $ \mathbf{G}_{m,n} = \{
+g_{m,n-1}, g_{m,n-2}, g_{m,n-3} \} $, and $ \mathbf{F}_{m,n} = \{
+f_{m,n,1}, f_{m,n,2}, f_{m,n,3} \} $.  For the non-causal filter
+structure (Fig.~\ref{fig:noncausal2d}), the spatial shift is $ p \in
+[-3,-1] \cup [1, 3] $, and vector $\mathbf{G}_{m,n}$ and
+$\mathbf{F}_{m,n}$ can be represented as $ \mathbf{G}_{m,n} = \{
+g_{m,n+3}, g_{m,n+2}, g_{m,n+1}, g_{m,n-1}, g_{m,n-2}, g_{m,n-3} \} $,
+$ \mathbf{F}_{m,n} = \{ f_{m,n,-3}, f_{m,n,-2}, f_{m,n,-1},
+f_{m,n,1},\\ f_{m,n,2}, f_{m,n,3} \} $.
+
+With Eq.~(\ref{eq:fxar}), we established the following minimization
+problem, like Eq.~(\ref{eq:step1}), to calculate filter
+$\mathbf{F}_{m,n}$:
+\begin{equation}
+    \label{eq:fxcost1}
+    \min_{\mathbf{F}_{m,n}} \| g_{m,n}
+    - \mathbf{G}_{m,n}^{\mathsf{T}} \mathbf{F}_{m,n} \|_{2}^{2}.
+\end{equation}
+According to the above explanation of vector $\mathbf{F}_{m,n}$, there
+are several unknown filter coefficients, yet we established only one
+equation.  Eq.~(\ref{eq:fxcost1}) describes an ill-posed problem,
+which requires constraints to obtain a stable solution.  The framework
+of the streaming computation~\citep{Sacchi09, Fomel16, Liuy18}
+establishes the constraint relationship by using local smoothness.  We
+extended this method into the frequency domain, including the $f$-$x$
+domain and the $f$-$x$-$y$ domain (the next section) to stabilize the
+filter coefficient solution.  Additionally, we discussed in detail the
+effects of filter structure and processing path, and provided the
+corresponding interpolation algorithms. Here, multiple constraints
+based on local smoothness are used to constrain the solution of
+Eq.~(\ref{eq:fxcost1}):
+\begin{equation}
+    \label{eq:fxcost2}
+    \begin{aligned}
+        \min_{\mathbf{F}_{m,n}} \| g_{m,n}
+         & - \mathbf{G}_{m,n}^{\mathsf{T}} \mathbf{F}_{m,n} \|_{2}^{2}
+        + \lambda_{f}^{2} \| \mathbf{F}_{m,n} - \mathbf{F}_{m-1,n} \|_{2}^{2}     \\
+         & + \lambda_{x}^{2} \| \mathbf{F}_{m,n} - \mathbf{F}_{m,n-1} \|_{2}^{2},
+    \end{aligned}
+\end{equation}
+where $\lambda_{f}$ and $\lambda_{x}$ are the weights of the
+regularization terms along the frequency $f$ and space $x$ axes.  $
+\lambda_{f}^{2} \| \mathbf{F}_{m,n} - \mathbf{F}_{m-1,n} \|_{2}^{2} $
+shows the local smoothness along the frequency direction
+($\lambda_{f}\mathbf{F}_{m,n} \approx \lambda_{f}\mathbf{F}_{m-1,n}
+$).  Likewise, $ \lambda_{x}^{2} \| \mathbf{F}_{m,n} -
+\mathbf{F}_{m,n-1} \|_{2}^{2} $ controls the local smoothness along
+the space direction as $\lambda_{x}\mathbf{F}_{m,n} \approx
+\lambda_{x}\mathbf{F}_{m,n-1} $.  The block matrix
+Eq.~(\ref{eq:fxmatrix}) has the same solution as
+Eq.~(\ref{eq:fxcost2}), and it demonstrates the effect of the local
+smoothness constraints; when $\mathbf{F}_{m-1,n}$ and
+$\mathbf{F}_{m,n-1}$ are considered known, the local smoothness
+conditions ($\lambda_{f}\mathbf{F}_{m,n} \approx
+\lambda_{f}\mathbf{F}_{m-1,n} $ and $\lambda_{x}\mathbf{F}_{m,n}
+\approx \lambda_{x}\mathbf{F}_{m,n-1} $), as newly added equations,
+can be used to stabilize the solution of $\mathbf{F}_{m,n}$:
+\begin{equation}
+    \label{eq:fxmatrix}
+    \begin{bmatrix}
+        \mathbf{G}_{m,n}^{\mathsf{T}} \\
+        \lambda_{f} \mathbf{I}        \\
+        \lambda_{x} \mathbf{I}
+    \end{bmatrix}
+    \mathbf{F}_{m,n}
+    \approx
+    \begin{bmatrix}
+        g_{m,n}                        \\
+        \lambda_{f} \mathbf{F}_{m-1,n} \\
+        \lambda_{x} \mathbf{F}_{m,n-1}
+    \end{bmatrix}.
+\end{equation}
+One can obtain the following least-squares solution of
+Eq.~(\ref{eq:fxcost2}) and~(\ref{eq:fxmatrix}):
+\begin{equation}
+    \label{eq:fxls}
+    \begin{aligned}
+        \mathbf{F}_{m,n}=
+         & {( \lambda_{f}^{2} \mathbf{I}
+        + \lambda_{x}^{2} \mathbf{I}
+        + \mathbf{G}_{m,n}^{*}\mathbf{G}_{m,n}^{\mathsf{T}} )}^{-1} \\
+         & ( g_{m,n}\mathbf{G}_{m,n}^{*}
+        + \lambda_{f}^{2}\mathbf{F}_{m-1,n}
+        + \lambda_{x}^{2}\mathbf{F}_{m,n-1} ),
+    \end{aligned}
+\end{equation}
+where $\{\bullet\}^{*}$ denotes the conjugate operator. Let
+\begin{equation}
+    \begin{cases}
+        \lambda^{2} = \lambda_{f}^{2} + \lambda_{x}^{2} \\
+        \lambda^{2} \mathbf{\tilde{F}}_{m,n}
+        = \lambda_{f}^{2}\mathbf{F}_{m-1,n}
+        + \lambda_{x}^{2}\mathbf{F}_{m,n-1}
+    \end{cases},
+\end{equation}
+we get a simplified equation:
+\begin{equation}
+    \label{eq:simplels}
+    \mathbf{F}_{m,n} =
+    {( \lambda^{2} \mathbf{I}
+    + \mathbf{G}_{m,n}^{*} \mathbf{G}_{m,n}^{\mathsf{T}} )}^{-1}
+    ( g_{m,n} \mathbf{G}_{m,n}^{*}
+    + \lambda^{2} \mathbf{\tilde{F}}_{m,n} ).
+\end{equation}
+Meanwhile, $(\lambda^{2}\mathbf{I} +
+\mathbf{G}_{m,n}^{*}\mathbf{G}_{m,n}^{\mathsf{T}}) $ has the
+analytical inversion $ \frac{1}{\lambda^{2}}(\mathbf{I} -
+\frac{\mathbf{G}_{m,n}^{*}\mathbf{G}_{m,n}^{\mathsf{T}}} {\lambda^{2}
+  + \mathbf{G}_{m,n}^{\mathsf{T}}\mathbf{G}_{m,n}^{*} } ) $ when one
+extends the Sherman-Morrison formula~\citep{Sherman50, Bartlett51,
+  Hager89} to the complex space. We can obtain the analytical solution
+of the $f$-$x$ SPF:
+\begin{equation}
+    \label{eq:fxsolution}
+    \begin{aligned}
+        \mathbf{F}_{m,n}
+         & = \frac{1}{\lambda^{2}}(\mathbf{I}
+        - \frac{ \mathbf{G}_{m,n}^{*}\mathbf{G}_{m,n}^{\mathsf{T}} }
+        { \lambda^{2} + \mathbf{G}_{m,n}^{\mathsf{T}}\mathbf{G}_{m,n}^{*} })
+        ( g_{m,n} \mathbf{G}_{m,n}^{*}
+        + \lambda^{2} \mathbf{\tilde{F}}_{m,n} ) \\
+         & = \mathbf{\tilde{F}}_{m,n}
+        + \frac{ g_{m,n} - \mathbf{G}_{m,n}^{\mathsf{T}}\mathbf{\tilde{F}}_{m,n} }
+        { \lambda^{2} + \mathbf{G}_{m,n}^{\mathsf{T}}\mathbf{G}_{m,n}^{*} }
+        \mathbf{G}_{m,n}^{*}.
+    \end{aligned}
+\end{equation}
+Eq.~(\ref{eq:fxsolution}) shows a recursive relationship from the
+previous filters ($\mathbf{F}_{m-1,n}$ and $\mathbf{F}_{m,n-1}$) to
+current filter $\mathbf{F}_{m,n}$. For data interpolation,
+Eq.~(\ref{eq:step2}) becomes a well-posed problem, and the unknown
+data sample can be calculated by
+\begin{equation}
+    \label{eq:fxstep2}
+    \hat{g}_{m,n} = \mathbf{G}_{m,n}^{\mathsf{T}} \mathbf{F}_{m,n}.
+\end{equation}
+
+In 2D data interpolation, we proposed the following
+Algorithm~\ref{alg:fxinterp} to reconstruct the missing seismic data
+by using the 2D $f$-$x$ SPF.  To start, $\mathbf{F}_{m-1,n}$ and
+$\mathbf{F}_{m,n-1}$ are initialized to $\mathbf{0}$. When the
+processing path in Algorithm~\ref{alg:fxinterp} is followed, both
+$\mathbf{F}_{m-1,n}$ and $\mathbf{F}_{m,n-1}$ are known.  We designed
+a space-causal filter form (Fig.~\ref{fig:causal2d}) for the $f$-$x$
+SPF. Fig.~\ref{fig:noncausal2d} suggests that the space-noncausal form
+may involve the interference of the unknown data samples, but the
+causal one can avoid this problem.
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\begin{algorithm}
+    % \setstretch{1.2}
+    \caption{$f$-$x$ SPF interpolation algorithm}
+    \label{alg:fxinterp}
+    \begin{algorithmic}[1]
+        \REQUIRE
+        $g_{m,n}$, $\mathbf{G}_{m,n}$, $\lambda_{f}$, and $\lambda_{x}$;
+        \ENSURE
+        $\hat{g}_{m,n}$;
+
+        \STATE $ \mathbf{F}_{m-1,n} = \mathbf{F}_{m,n-1} = \mathbf{0} $
+        \FOR {loop over frequency direction}
+        \FOR {loop over space direction}
+        \IF {encounter known data point}
+        \STATE $ \mathbf{F}_{m,n} = \mathbf{\tilde{F}}_{m,n} +
+            \frac{ g_{m,n} - \mathbf{G}_{m,n}^{\mathsf{T}} \mathbf{\tilde{F}}_{m,n} }
+            { \lambda^{2} + \mathbf{G^{T}}_{m,n} \mathbf{G^{*}}_{m,n} }
+            \mathbf{G}_{m,n}^{*} $
+        \ELSIF {encounter missing data point}
+        \STATE $ \hat{g}_{m,n} = \mathbf{G}_{m,n}^{\mathsf{T}} \mathbf{F}_{m,n} $
+        \ENDIF
+        \ENDFOR
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+\inputdir{.}
+\multiplot{2}{causal2d,noncausal2d}
+{width=0.47\columnwidth}
+{Space-causal filter form (a) and space-noncausal filter form (b)
+    in the $f$-$x$ domain. Solid circle denotes known sample,
+    and hollow circle denotes unknown sample.}
+
+\subsection{$f$-$x$-$y$ streaming prediction filter}
+
+The extension to the 3D $f$-$x$-$y$ domain is straightforward as the
+$f$-$x$-$y$ SPF can also efficiently perform data interpolation in
+high dimensions.  In the $f$-$x$-$y$ domain, the prediction
+relationship for seismic data in a certain frequency slice is
+expressed as
+\begin{equation}
+    \label{eq:fxyar}
+    \begin{aligned}
+        g_{m,n,l}
+         & \approx \sum_{p} \sum_{q} g_{m,n-p,l-q} f_{m,n,l,p,q}       \\
+         & \approx \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{F}_{m,n,l},
+    \end{aligned}
+\end{equation}
+where $m$, $n$, and $l$ denote the indices of data sample $g_{m,n,l}$
+along the $f$, $x$, and $y$ axes, respectively.  Vector
+$\mathbf{F}_{m,n,l}$ is a group of filter coefficients in the
+$f$-$x$-$y$ SPF, vector $\mathbf{G}_{m,n,l}$ contains the data points
+with spatial shifts $p$ ($x$ axis) and $q$ ($y$ axis) near
+$g_{m,n,l}$.  Similar to the case of the $f$-$x$ SPF, the range of
+spatial shifts $p$ and $q$ depends on the number of seismic events in
+the local window of space $x$ and space $y$.  As shown in
+Fig.~\ref{fig:causal3d,noncausal3d}, when $p \in \{ -1, 1\}$ and $q
+\in \{ 1, 3\} $, vector $\mathbf{G}_{m,n,l}$ can be flattened as
+$\mathbf{G}_{m,n,l} = \{ g_{m,n+1,l-1}, g_{m,n+1,l-2}, \cdots
+,g_{m,n-1,l-3}\}$, and $\mathbf{F}_{m,n,l} = \{ f_{m,n,l,-1, 1},
+f_{m,n,l,-1, 2}, \cdots ,f_{m,n,l, 1, 3}\}$.  For the space-noncausal
+case, $ p \in \{-1, 1\} $, $q \in \{-3, 3\}$, and $\left | p \right |
++ \left | q \right | \neq 0 $, $\mathbf{G}_{m,n,l}$ can be expressed
+as follows: $ \mathbf{G}_{m,n,l} = \{ g_{m,n+1,l+3},\\ g_{m,n+1,l+2},
+\cdots, g_{m,n,l+1}, g_{m,n,l-1}, \cdots , g_{m,n-1,l-3} \} $, and $
+\mathbf{F}_{m,n,l} = \{ f_{m,n,l, -1, -3}, f_{m,n,l, -1, -2},\\
+\cdots, f_{m,n,l, 0, -1}, f_{m,n,l, 0, 1}, \cdots, f_{m,n,l, 1, 3}
+\}$.
+
+The cost function is defined as
+\begin{equation}
+    \label{eq:fxycost1}
+    J_{m,n,l} = \| g_{m,n,l} - \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{F}_{m,n,l} \|_{2}^{2}.
+\end{equation}
+Assuming that the adaptive PF at position $(m,n,l)$ is similar to
+another near positions $(m-1,n,l)$, $(m,n-1,l)$, and $(m,n,l-1)$ in
+the $f$-$x$-$y$ domain, we can minimize the new cost function
+Eq.~(\ref{eq:fxycost2}) to solve the overdetermined problem:
+\begin{equation}
+    \label{eq:fxycost2}
+    \begin{aligned}
+        \hat{J}_{m,n,l}
+         & = J_{m,n,l} + \lambda_{f}^{2} \| \mathbf{F}_{m,n,l} - \mathbf{F}_{m-1,n,l} \|_{2}^{2} \\
+         & + \lambda_{x}^{2} \| \mathbf{F}_{m,n,l} - \mathbf{F}_{m,n-1,l} \|_{2}^{2}             \\
+         & + \lambda_{y}^{2} \| \mathbf{F}_{m,n,l} - \mathbf{F}_{m,n,l-1} \|_{2}^{2},
+    \end{aligned}
+\end{equation}
+where $\lambda_{f}$, $\lambda_{x}$, and $\lambda_{y}$ are the constant
+weights of the regularization terms, which describe the local
+smoothness constraints along different directions. The simplified
+block matrix can be written as
+\begin{equation}
+    \label{eq:fxymatrix}
+    \begin{bmatrix}
+        \mathbf{G}_{m,n,l}^{\mathsf{T}} \\
+        \lambda_{f} \mathbf{I}          \\
+        \lambda_{x} \mathbf{I}          \\
+        \lambda_{y} \mathbf{I}
+    \end{bmatrix}
+    \mathbf{F}_{m,n,l}
+    \approx
+    \begin{bmatrix}
+        g_{m,n,l}                        \\
+        \lambda_{f} \mathbf{F}_{m-1,n,l} \\
+        \lambda_{x} \mathbf{F}_{m,n-1,l} \\
+        \lambda_{y} \mathbf{F}_{m,n,l-1}
+    \end{bmatrix}.
+\end{equation}
+Similar to the 2D case, the analytic solution of the $f$-$x$-$y$ SPF
+is given by
+\begin{equation}
+    \label{eq:fxysolution}
+    \mathbf{F}_{m,n,l} = \mathbf{\tilde{F}}_{m,n,l} +
+    \frac{ g_{m,n,l} - \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{\tilde{F}}_{m,n,l} }
+    { \lambda^{2} + \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{G}_{m,n,l}^{*} }
+    \mathbf{G}_{m,n,l}^{*},
+\end{equation}
+where
+\begin{equation}
+    \begin{cases}
+        \lambda^{2} = \lambda_{f}^{2}+\lambda_{x}^{2}+\lambda_{y}^{2} \\
+        \lambda^{2} \mathbf{\tilde{F}}_{m,n,l}
+        = \lambda_{f}^{2} \mathbf{F}_{m-1,n,l}
+        + \lambda_{x}^{2} \mathbf{F}_{m,n-1,l}
+        + \lambda_{y}^{2} \mathbf{F}_{m,n,l-1}
+    \end{cases}.
+\end{equation}
+
+Furthermore, the unknown data sample in the 3D data cube can
+be calculated as
+\begin{equation}
+    \label{eq:fxystep2}
+    \hat{g}_{m,n,l} = \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{F}_{m,n,l}.
+\end{equation}
+
+Because the $f$-$x$-$y$ SPF predicts data along two spatial
+directions, we defined a new processing path in the space plane with
+zigzag shape (Fig.~\ref{fig:causal3d}) to prevent unnecessary filter
+initialization. Meanwhile, the $f$-$x$-$y$ SPF was assigned to the
+proposed filter form (Fig.~\ref{fig:causal3d}), which can better
+reduce the influence of unknown data samples than the noncausal filter
+in spatial directions (Fig.~\ref{fig:noncausal3d}).  Following the
+processing path of Algorithm~\ref{alg:fxyinterp} for data processing,
+$\mathbf{F}_{m-1,n,l}$, $\mathbf{F}_{m,n-1,l}$, and
+$\mathbf{F}_{m,n,l-1}$ can be seen as known, requiring only
+calculating Eq.~(\ref{eq:fxysolution}) and~(\ref{eq:fxystep2}) to
+obtain the results.
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\begin{algorithm}
+    % \setstretch{1.2}
+    \caption{$f$-$x$-$y$ SPF interpolation algorithm}
+    \label{alg:fxyinterp}
+    \begin{algorithmic}[1]
+        \REQUIRE
+        $g_{m,n,l}$, $\mathbf{G}_{m,n,l}$, $\lambda_{f}$, $\lambda_{x}$,
+        and $\lambda_{y}$;
+        \ENSURE
+        $\hat{g}_{m,n,l}$;
+
+        \STATE $ \mathbf{F}_{m-1,n,l}=\mathbf{F}_{m,n-1,l}
+            =\mathbf{F}_{m,n,l-1} = \mathbf{0} $
+        \FOR {loop over frequency direction}
+        \FOR {loop over space $y$ direction}
+
+        \IF {space $y$ == even number}
+        \FOR {forward loop over space $x$ direction}
+        \IF {encounter known data point}
+        \STATE
+        $ \mathbf{F}_{m,n,l} = \mathbf{\tilde{F}}_{m,n,l} +
+            \frac{ g_{m,n,l} - \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{\tilde{F}}_{m,n,l} }
+            { \lambda^{2} + \mathbf{G^{T}}_{m,n,l} \mathbf{G^{*}}_{m,n,l} }
+            \mathbf{G}_{m,n,l}^{*} $
+        \ELSIF {encounter missing data point}
+        \STATE $ \hat{g}_{m,n,l} = \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{F}_{m,n,l} $
+        \ENDIF
+        \ENDFOR
+        \ELSIF {space $y$ == odd number}
+        \FOR {backward loop over space $x$ direction}
+        \IF {encounter known data point}
+        \STATE
+        $ \mathbf{F}_{m,n,l} = \mathbf{\tilde{F}}_{m,n,l} +
+            \frac{ g_{m,n,l} - \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{\tilde{F}}_{m,n,l} }
+            { \lambda^{2} + \mathbf{G^{T}}_{m,n,l} \mathbf{G^{*}}_{m,n,l} }
+            \mathbf{G}_{m,n,l}^{*} $
+        \ELSIF {encounter missing data point}
+        \STATE $ \hat{g}_{m,n,l} = \mathbf{G}_{m,n,l}^{\mathsf{T}} \mathbf{F}_{m,n,l} $
+        \ENDIF
+        \ENDFOR
+        \ENDIF
+
+        \ENDFOR
+        \ENDFOR
+    \end{algorithmic}
+\end{algorithm}
+
+\multiplot{2}{causal3d,noncausal3d}
+{width=0.47\columnwidth}
+{Proposed filter form (a) and space-noncausal filter form (b) in
+    the $f$-$x$-$y$ domain. Solid circle denotes known trace,
+    and hollow circle denotes unknown trace.}
+
+\section{Numerical examples}
+
+\subsection{2D data interpolation using the $f$-$x$ SPF}
+
+We generated a 2D synthetic model with one linear event and two curve
+events to evaluate the interpolation ability of the $f$-$x$ SPF.  The
+curve events bend in opposite directions (Fig.~\ref{fig:mod}
+and~\ref{fig:fkmod}), which challenges the adaptability of
+interpolation method.  For a missing trace interpolation test
+(Fig.~\ref{fig:gap}), we removed $40\%$ of the randomly selected
+traces, which caused the appearance of aliasing
+(Fig.~\ref{fig:fkgap}).  For comparison, we used the 2D Fourier
+Project Onto Convex Sets (POCS) to recover the missing traces
+(Fig.~\ref{fig:pocs}). The interpolation result from the 2D Fourier
+POCS showed that the linear event was interpolated, but many
+discontinuities were present on the curve events.  The interpolated
+error was slightly larger in the locations missing traces
+(Fig.~\ref{fig:errpocs}), which is caused by strongly variable slopes.
+The seislet POCS method \citep{Gan16} shows a clean interpolation
+result (Fig.~\ref{fig:stpocs}), but it produces interpolation errors
+where the events intersect (Fig.~\ref{fig:errstpocs}).  We designed
+the $f$-$x$ SPF with $\lambda_{f}=0.2$, $\lambda_{x}=0.5$, and 30
+(space) filter coefficients.  The proposed method provided successful
+amplitude preservation, and the missing traces were interpolated
+reasonably well (Fig.~\ref{fig:fxspf}).  The difference between the
+interpolated and original traces showed that most of the redundant
+fluctuations and artifacts were smaller than those created by the
+Fourier POCS (Fig.~\ref{fig:errfxspf}).  The $F$-$K$ spectra
+(Fig.~\ref{fig:fkpocs,fkstpocs,fkfxspf}) showed that the $f$-$x$ SPF
+recovered the missing data and successfully suppressed aliasing.
+
+\inputdir{curve}
+\multiplot{4}{mod,fkmod,gap,fkgap}{width=0.47\columnwidth} {Synthetic
+  model (a) and $F$-$K$ spectrum (b).  Model with $40\%$ of the data
+  traces randomly removed (c) and $F$-$K$ spectrum (d).}
+
+\multiplot{6}{pocs,errpocs,stpocs,errstpocs,fxspf,errfxspf}
+{width=0.47\columnwidth} {Reconstructed result (a) and interpolation
+  error (b) using the 2D Fourier POCS, reconstructed result (c) and
+  interpolation error (d) using the 2D seislet POCS, reconstructed
+  result (e) and interpolation error (f) using the 2D $f$-$x$ SPF.}
+
+\multiplot{3}{fkpocs,fkstpocs,fkfxspf} {width=0.47\columnwidth}
+{$F$-$K$ spectrum of the interpolation result using the 2D Fourier
+  POCS (a), $F$-$K$ spectrum of the interpolation result using the 2D
+  seislet POCS (b), $F$-$K$ spectrum of the interpolation result using
+  the 2D $f$-$x$ SPF (c).}
+
+Fig.~\ref{fig:sean} shows a marine shot gather from a deepwater Gulf
+of Mexico survey with $40\%$ of the data traces randomly removed
+(Fig.~\ref{fig:gapsn}).  The $F$-$K$ spectra (Fig.~\ref{fig:fksn}
+and~\ref{fig:fkgapsn}) reflect the impact caused by missing data.
+Fig.~\ref{fig:pocssn} shows the interpolated result using the 2D
+Fourier POCS, which fails to recover steeply dipping events at the
+far-offset positions (Fig.~\ref{fig:errpocssn}).  In the interpolation
+result of seislet POCS, discontinuities of seismic events are present
+(Fig.~\ref{fig:stpocssn}), and some energy remains in the
+interpolation error profile (Fig.~\ref{fig:errstpocssn}).  We designed
+the $f$-$x$ SPF with $\lambda_{f}=0.05$, $\lambda_{x}=0.1$, and 20
+(space) coefficients. Fig.~\ref{fig:fxspfsn} and \ref{fig:errfxspfsn}
+show the interpolated result using the proposed method and the
+difference between the interpolated and original traces plotted at the
+same clip value. The reconstructed data naturally filled the broken
+events; meanwhile, the steeply dipping events and diffraction events
+were reasonably interpolated.  The $F$-$K$ spectrum of the
+interpolation result using the $f$-$x$ SPF (Fig.~\ref{fig:fkfxspfsn})
+is similar to that of the original data (Fig.~\ref{fig:fksn}); it
+suppresses the low-frequency interference compared to the seislet POCS
+(Fig.~\ref{fig:fkstpocssn}), and gives a cleaner spectrum than the
+Fourier POCS (Fig.~\ref{fig:fkpocssn}).
+
+\inputdir{sean} 
+\multiplot{4}{sean,fksn,gapsn,fkgapsn} {width=0.47\columnwidth} {Field
+  data (a) and $F$-$K$ spectrum (b). Data with $40\%$ of the seismic
+  traces randomly removed (c) and $F$-$K$ spectrum (d).}
+
+\multiplot{6}{pocssn,errpocssn,stpocssn,errstpocssn,fxspfsn,errfxspfsn}
+{width=0.47\columnwidth} {Reconstructed result (a) and interpolation
+  error (b) using the 2D Fourier POCS, reconstructed result (c) and
+  interpolation error (d) using the 2D seislet POCS, reconstructed
+  result (e) and interpolation error (f) using the 2D $f$-$x$ SPF.}
+
+\multiplot{3}{fkpocssn,fkstpocssn,fkfxspfsn} {width=0.47\columnwidth}
+{$F$-$K$ spectrum of the interpolation result using the 2D Fourier
+  POCS (a), $F$-$K$ spectrum of the interpolation result using the 2D
+  seislet POCS (b), $F$-$K$ spectrum of the interpolation result using
+  the 2D $f$-$x$ SPF (c).}
+
+\subsection{3D data interpolation using the $f$-$x$-$y$ SPF}
+
+For the 3D data interpolation test, we selected a 3D synthetic model
+(Fig.~\ref{fig:qdome}) containing curve events and faults, and the
+data cube randomly removed $70\%$ of the seismic traces, where the
+faults were hard to distinguish (Fig.~\ref{fig:gapqd}).  The
+$F$-$K_{x}$-$K_{y}$ spectrum of the synthetic model and the missing
+data model are shown in Fig.~\ref{fig:fkqd} and~\ref{fig:fkgapqd},
+respectively. Because currently seislet transform can only handle 2D
+datasets, here we evaluated the recovery ability of the $f$-$x$-$y$
+SPF by comparing with the 2D seislet POCS method and the 3D Fourier
+POCS method.  The parameters of the $f$-$x$-$y$ SPF are
+$\lambda_{f}=0.0005$, $\lambda_{x}=0.001$, $\lambda_{y}=0.0008$, and
+11 (space $x$) $\times$ 6 (space $y$) filter coefficients.  The 2D
+seislet POCS does not reconstruct the missing data well
+(Fig.~\ref{fig:stpocsqd}), and generates large interpolation errors
+(Fig.~\ref{fig:errstpocsqd}).  The interpolated results
+(Fig.~\ref{fig:pocsqd} and \ref{fig:spfqd}) show that both the 3D
+Fourier POCS and the $f$-$x$-$y$ SPF can recover the missing traces
+even when faults are present. However, the interpolation errors
+(Fig.~\ref{fig:errpocsqd} and \ref{fig:errspfqd}) display that the
+$f$-$x$-$y$ SPF produces less error and preserves the amplitude of the
+events reasonably better than the 3D Fourier POCS.  The comparison of
+the $F$-$K_{x}$-$K_{y}$ spectra is shown in
+Fig.~\ref{fig:fkstpocsqd,fkpocsqd,fkspfqd}, the $f$-$x$-$y$ SPF
+reduces the influence of aliasing.  More importantly, the $f$-$x$-$y$
+SPF significantly reduces the computational cost by avoiding the
+iterative algorithm especially in higher dimensions.  Compared with
+the Fourier POCS, the proposed methods solve the problem without
+iterations, which reduces the computational cost
+(Table~\ref{tb:cost}).  Table~\ref{tb:time} shows the time consumption
+of each method, and the computation platform uses 2.0GHz E5-2650 CPU.
+
+To further evaluate the interpolation ability of the proposed methods,
+we defined the signal-to-noise ratio (SNR) as a measurement:
+\begin{equation}
+    \label{eq:snr}
+    SNR = 10 \log_{10} \left(
+    \frac{\Arrowvert \mathbf{D} \Arrowvert_{2}^{2}}
+    {\Arrowvert\mathbf{D} - \hat{\mathbf{D}}\Arrowvert_{2}^{2}}
+    \right),
+\end{equation}
+where $\mathbf{D}$ denotes original data, and $\hat{\mathbf{D}}$
+denotes interpolation result. The traces in the 3D model
+(Fig.~\ref{fig:qdome}) have been randomly removed from $5\%$ to
+$95\%$. The interpolation results of the $f$-$x$-$y$ SPF are shown in
+Fig.~\ref{fig:gap3d-5,intp3d-5,gap3d-95,intp3d-95}.  The proposed SPF
+interpolation method in the frequency domain reconstructs data even
+under the severely degraded circumstance.  Fig.~\ref{fig:snr3d} shows
+that the SPF in higher dimensions can effectively improve the SNR.
+
+\inputdir{qdome} 
+\multiplot{4}{qdome,fkqd,gapqd,fkgapqd} {width=0.47\columnwidth}
+{Synthetic 3D model (a) and $F$-$K_{x}$-$K_{y}$ spectrum (b).  Model
+  with $70\%$ of the data traces randomly removed (c) and
+  $F$-$K_{x}$-$K_{y}$ spectrum (d).}
+
+\multiplot{6}{stpocsqd,errstpocsqd,pocsqd,errpocsqd,spfqd,errspfqd}
+{width=0.47\columnwidth} {Reconstructed result (a) and interpolation
+  error (b) using the 2D seislet POCS, reconstructed result (c) and
+  interpolation error (d) using the 3D Fourier POCS, reconstructed
+  result (e) and interpolation error (f) using the 3D $f$-$x$-$y$
+  SPF.}
+
+\multiplot{3}{fkstpocsqd,fkpocsqd,fkspfqd} {width=0.47\columnwidth}
+{$F$-$K_{x}$-$K_{y}$ spectrum of the interpolation result using the 2D
+  seislet POCS (a), $F$-$K_{x}$-$K_{y}$ spectrum of the interpolation
+  result using the 3D Fourier POCS (b), $F$-$K_{x}$-$K_{y}$ spectrum
+  of the interpolation result using the 3D $f$-$x$-$y$ SPF (c).}
+
+\inputdir{snr}
+\multiplot{4}{gap3d-5,intp3d-5,gap3d-95,intp3d-95}
+{width=0.47\columnwidth} {Model with $5\%$ of the data traces randomly
+  removed (a), interpolated data using the 3D $f$-$x$-$y$ SPF
+  corresponding to Fig.~\ref{fig:gap3d-5} (b), model with $95\%$ of
+  the data traces randomly removed (c), and interpolated data using
+  the 3D $f$-$x$-$y$ SPF corresponding to Fig.~\ref{fig:gap3d-95}
+  (d).}
+
+\plot{snr3d} {width=0.47\columnwidth} {The SNR changing with different
+  degree of trace missing (range from $5\%$ to $95\%$). Dash line is
+  the SNR of the model with trace missing and solid line is the SNR of
+  interpolation result.}
+
+We used 3D field common mid-point (CMP) gathers after normal moveout
+(NMO) to further test the proposed method (Fig.~\ref{fig:gapcmp}).
+Fig.~\ref{fig:mask} shows data binning, where the blank space denotes
+approximately $75\%$ of the missing traces. A large amount of missing
+traces lead to the spatial aliasing artifacts as shown in
+Fig.~\ref{fig:fkgapcmp}.  The 2D seislet POCS works well with the
+horizontal events, but the data interpolation result is not reasonable
+where curve and horizontal events intersect
+(Fig.~\ref{fig:stpocscmp}).  The 3D Fourier POCS can recover most
+horizontal events, however, some large gaps remain in
+Fig.~\ref{fig:pocscmp}.  We chose $\lambda_{f}=6$, $\lambda_{x}=60$,
+$\lambda_{y}=15$, and 101 (space $x$) $\times$ 5 (space $y$) filter
+coefficients for the $f$-$x$-$y$ SPF.  The design of the filter
+coefficients is large, which increases the computational
+time-consumption of the $f$-$x$-$y$ SPF.  The interpolation result
+using the 3D $f$-$x$-$y$ SPF (Fig.~\ref{fig:spfcmp}) shows that the
+missing traces are reasonably reconstructed, the broken events are
+well recovered, and the continuity of both linear and curve events are
+interpolated well. A close-up comparison at TraceY=8
+(Fig.~\ref{fig:stpocszoom}, \ref{fig:pocszoom}, and~\ref{fig:spfzoom})
+shows that the $f$-$x$-$y$ SPF can handle more gaps and recover the
+amplitude of nonstationary events better than the 2D seislet POCS and
+the 3D Fourier POCS.  The $F$-$K_{x}$-$K_{y}$ spectra
+(Fig.~\ref{fig:fkgapcmp,fkstpocscmp,fkpocscmp,fkspfcmp}) demonstrate
+that the $f$-$x$-$y$ SPF can handle aliasing, and the energy is
+converged in the $F$-$K_{x}$-$k_{y}$ spectrum
+(Fig.~\ref{fig:fkspfcmp}).
+
+\begin{table}
+    % \setlength{\arraycolsep}{0.0em}
+    \renewcommand\tabcolsep{3.5pt} 
+    \renewcommand{\arraystretch}{1.3} 
+    \caption{
+        Comparison of computational cost: the $f$-$x$ SPF, the 2D
+        Fourier POCS, the $f$-$x$-$y$ SPF, and the 3D Fourier POCS. }
+    \label{tb:cost}
+    \centering
+    \begin{threeparttable}
+        \begin{tabular}{|c|c|c|}
+            \toprule
+                            & Storage space
+                            & Computational time                                  \\
+            \midrule
+            2D Fourier POCS & $ O(N_{f}N_{k_{x}}) $
+                            & $ O(N_{t}N_{x}\log(N_{t}N_{x}) N_{iter}) $          \\
+            $f$-$x$ SPF     & $ O(N_{a}N_{x}) $
+                            & $ O(N_{a}N_{f}N_{x}) $                              \\
+            3D Fourier POCS & $ O(N_{f}N_{k_{x}}N_{k_{y}}) $
+                            & $ O(N_{t}N_{x}N_{y}\log(N_{t}N_{x}N_{y})N_{iter}) $ \\
+            $f$-$x$-$y$ SPF & $ O(N_{a}N_{x}N_{y}) $
+                            & $ O(N_{a}N_{f}N_{x}N_{y}) $                         \\
+            \bottomrule
+        \end{tabular}
+
+        \begin{tablenotes}[para, flushleft]
+            % \footnotesize
+            % \item\textit{Note:}
+            $N_{t}$ is the data size along the time axis,
+            $N_{f}$ is the data size along the frequency axis,
+            $N_{x}$ and $N_{y}$ are the data size along the space
+            $x$ and $y$ axis, respectively.
+            $N_{k_{x}}$ and $N_{k_{y}}$ are the data size along
+            the wavenumber $k_{x}$ and $k_{y}$ axis, respectively.
+            $N_{a}$ is the filter size,
+            and $N_{iter}$ is the number of iterations.
+
+        \end{tablenotes}
+    \end{threeparttable}
+
+\end{table}
+
+\begin{table}
+    % \setlength{\arraycolsep}{0.0em}
+    \renewcommand\tabcolsep{3.5pt} 
+    \renewcommand{\arraystretch}{1.3} 
+    \caption{Comparison of time consumption.}
+    \label{tb:time}
+    \centering
+    \resizebox{\textwidth}{20mm}{
+        \begin{threeparttable}
+            \begin{tabular}{|c|c|c|c|c|}
+                \toprule
+                             & 2D synthetic model   & 2D field data        & 3D synthetic model      & 3D field data           \\
+                Model size   & $501 \times 201$     & $500 \times 180$     & $200\times151\times100$ & $1000\times400\times16$ \\
+                \midrule
+                seislet POCS & $4.23\times10^{1}$s  & $3.89\times10^{1}$s  & $1.81\times10^{3}$s     & $7.41\times10^{3}$s     \\
+                Fourier POCS & $3.15\times10^{0}$s  & $3.55\times10^{0}$s  & $1.03\times10^{2}$s     & $4.61\times10^{2}$s     \\
+                SPF          & $4.00\times10^{-1}$s & $2.68\times10^{-1}$s & $3.38\times10^{1}$s     & $3.63\times10^{2}$s     \\
+                \bottomrule
+            \end{tabular}
+        \end{threeparttable}}
+\end{table}
+
+
+\inputdir{cmp}
+\multiplot{2}{gapcmp,mask} {width=0.47\columnwidth} {3D field data
+  with trace missing (a) and data binning of the field data (b).}
+
+\multiplot{2}{stpocscmp,stpocszoom} {width=0.47\columnwidth}
+{Reconstructed result using the 2D seislet POCS (a), and close-up of
+  the interpolated result (b).}
+
+\multiplot{2}{pocscmp,pocszoom} {width=0.47\columnwidth}
+{Reconstructed result using the 3D Fourier POCS (a), and close-up of
+  the interpolated result (b).}
+
+\multiplot{2}{spfcmp,spfzoom} {width=0.47\columnwidth} {Reconstructed
+  result using the 3D $f$-$x$-$y$ SPF (a), and close-up of the
+  interpolated result (b).}
+
+\multiplot{4}{fkgapcmp,fkstpocscmp,fkpocscmp,fkspfcmp}
+{width=0.47\columnwidth} {The $F$-$K_{x}$-$K_{y}$ spectrum of the 3D
+  field data (a), the $F$-$K_{x}$-$K_{y}$ spectrum of the
+  reconstructed result using the 2D seislet POCS (b), the
+  $F$-$K_{x}$-$K_{y}$ spectrum of the reconstructed result using the
+  3D Fourier POCS (c), the $F$-$K_{x}$-$K_{y}$ spectrum of the
+  reconstructed result using the 3D $f$-$x$-$y$ SPF (d).}
+
+\section{Discussion}
+
+We first discussed the value selection of the weights $\lambda_{f}$,
+$\lambda_{x}$, and $\lambda_{y}$.  Currently, we considered them as
+empirical parameters, but there are still some ways to determine their
+value range.  1) In Eq.~(\ref{eq:fxsolution})
+and~(\ref{eq:fxysolution}), $\lambda^2$ and
+$\mathbf{G}_{m,n,l}^{\mathsf{T}}\mathbf{G}_{m,n,l}^{*}$ (or
+$\mathbf{G}_{m,n}^{\mathsf{T}}\mathbf{G}_{m,n}^{*}$) are the
+denominator of the filter update term.  It is expected that
+$\lambda^{2}$ can influence the filter update, so $\lambda^2$ and
+$\mathbf{G}_{m,n,l}^{\mathsf{T}}\mathbf{G}_{m,n,l}^{*}$ (or
+$\mathbf{G}_{m,n}^{\mathsf{T}}\mathbf{G}_{m,n}^{*}$) should have a
+similar order of magnitude, where $\lambda^{2} =
+\lambda_{f}^{2}+\lambda_{x}^{2}+\lambda_{y}^{2}$ (or $\lambda^{2} =
+\lambda_{f}^{2}+\lambda_{x}^{2}$).  2) In terms of the prediction
+filtering theory in the frequency domain, the filter predicts the data
+sample along the spatial direction, not along the frequency
+direction. $\lambda_{x}$ and $\lambda_{y}$ in the spatial direction
+should be similar, and their values can be scaled according to the
+size of dataset. $\lambda_{f}$ mainly stabilizes the filter in the
+frequency direction, and it generally smaller than $\lambda_{x}$ and
+$\lambda_{y}$.  3) The regularization terms' weight affect the data
+interpolation result to a certain extent. The values of $\lambda_{f}$,
+$\lambda_{x}$, and $\lambda_{y}$ can be set according to the previous
+method, and then they can be adjusted according to the interpolation
+effect.
+
+For the case of regular decimation, we tested the synthetic 2D and 3D
+model in Fig.~\ref{fig:alias,intp} and~\ref{fig:aliasqd,intpqd}.  In
+the 2D case, we used ten seismic traces to initialize the $f$-$x$ SPF,
+in which the filter could reconstruct the missing data.  As shown in
+Fig.~\ref{fig:intp}, the artifacts affect the data interpolation
+quality for traces with large slope differences between the seismic
+events.  For the 3D data (Fig.~\ref{fig:aliasqd,intpqd}), the
+$f$-$x$-$y$ SPF can directly recover the missing traces. Although the
+regular decimation of the 3D model has strong spatial aliasing, we
+still obtained a reasonable interpolation result.
+
+\inputdir{curve}
+\multiplot{2}{alias,intp} {width=0.47\columnwidth} {Regular decimation
+  of synthetic 2D model (a), and interpolated result using the 2D
+  $f$-$x$ SPF (b).}
+
+\inputdir{qdome}
+\multiplot{2}{aliasqd,intpqd} {width=0.47\columnwidth} {Regular
+  decimation of synthetic 3D model (a), and interpolated result using
+  the 3D $f$-$x$-$y$ SPF (b).}
+
+%% low SNR
+% curve
+We also tested the effectiveness of the proposed method in the case of
+low SNR.  We added stronger noise to both the 2D and 3D synthetic
+model (Fig.~\ref{fig:noisemod} and~\ref{fig:noiseqdome}), which both
+had randomly decimated seismic traces.  The strong random noise
+influenced the local slope calculation, which further affected the
+seislet transform.  By using the 2D seislet POCS, the interpolation
+result of the 2D model (Fig.~\ref{fig:noisestpocs}
+and~\ref{fig:noiseerrstpocs}) shows some smearing, and the 3D model
+cannot be reconstructed (Fig.~\ref{fig:noisestpocsqd}
+and~\ref{fig:noiseerrstpocsqd}).  For the 2D Fourier POCS method,
+there are some parts of the upward curve that are not recovered in the
+2D model (Fig.~\ref{fig:noisepocs}
+and~\ref{fig:noiseerrpocs}). Additionally, the 3D Fourier POCS method
+produces a reasonable reconstruction result
+(Fig.~\ref{fig:noisepocsqd}), although leakage signal of the seismic
+events presents in the interpolation error profile
+(Fig.~\ref{fig:noiseerrpocsqd}).  Because the PF can be used to
+attenuate random noise, and it may reduce the impact of random noise
+to some extent, our proposed methods (the $f$-$x$ SPF and the
+$f$-$x$-$y$ SPF) yield better reconstruction results
+(Fig.~\ref{fig:noisefxspf},~\ref{fig:noiseerrfxspf},
+\ref{fig:noisespfqd}, and~\ref{fig:noiseerrspfqd}) under low SNR than
+other methods.
+
+\inputdir{noise_curve}
+\multiplot{2}{noisemod,noisegap} {width=0.47\columnwidth} {Synthetic
+  model with random noise (a), model with 40\% of the data traces
+  randomly removed (b).}
+
+\multiplot{6}{noisestpocs,noiseerrstpocs,noisepocs,noiseerrpocs,noisefxspf,noiseerrfxspf}
+{width=0.47\columnwidth} {Reconstructed result (a) and interpolation
+  error (b) using the 2D seislet POCS, Reconstructed result (c) and
+  interpolation error (d) using the 2D Fourier POCS, reconstructed
+  result (e) and interpolation error (f) using the 2D $f$-$x$ SPF.}
+
+\inputdir{noise_qdome}
+\multiplot{2}{noiseqdome,noisegapqd} {width=0.47\columnwidth}
+{Synthetic 3D model with random noise (a), model with $70\%$ of the
+  data traces randomly removed (b).}
+
+\multiplot{6}{noisestpocsqd,noiseerrstpocsqd,noisepocsqd,noiseerrpocsqd,noisespfqd,noiseerrspfqd}
+{width=0.47\columnwidth} {Reconstructed result (a) and interpolation
+  error (b) using the 2D seislet POCS, reconstructed result (c) and
+  interpolation error (d) using the 3D Fourier POCS, reconstructed
+  result (e) and interpolation error (f) using the 3D $f$-$x$-$y$
+  SPF.}
+
+\section{Conclusion}
+
+We introduced a fast approach to adaptive PF for missing data
+interpolation in the frequency domain.  Instead of using the iterative
+optimization algorithm, we proposed a two-step interpolation strategy
+with noniterative SPF in the $f$-$x$ and $f$-$x$-$y$ domains.  The
+proposed method employs a local and multidimensional similarity to
+constrain the autoregression equations for adaptive PFs in the
+frequency domain, which are based on the streaming computation
+framework. The SPF in the frequency domain provides a fast and
+reasonably accurate estimation of nonstationary seismic data.  To
+guarantee the interpolation results, we also designed the filter
+structure and the processing path according to the characteristics of
+the interpolation problem. The synthetic and field examples show that
+the proposed SPF in the frequency domain can depict nonstationary
+signal variation and provide a reliable description of complex
+wavefield with low computational cost even when analyzing large-scale
+seismic data. The properties are suitable for missing data
+interpolation in practice. Finally, we discussed the problems of
+parameter selection, interpolation of regularly decimated data, and
+interpolation of low SNR data; the proposed methods can cope with such
+problems.
+
+\section{Acknowledgement}
+This work was supported by the National Natural Science Foundation of
+China (grant nos. 41974134 and 41774127) and the National key Research
+and Development Program of China (grant no. 2018YFC0603701).
+
+
+\bibliographystyle{seg}
+\bibliography{paper}

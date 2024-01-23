@@ -3,6 +3,8 @@ from rsf.proj import *
 # or
 #wget https://s3.amazonaws.com/open.source.geoscience/open_data/bpvelanal2004/shots0001_0200.segy.gz
 
+SConscript('../fetch/SConstruct')
+
 acroread='open'
 
 # fetch the text and jpg files

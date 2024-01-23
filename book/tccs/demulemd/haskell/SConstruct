@@ -94,7 +94,7 @@ Result('hm-near-offset-tx','cmp-trace back-trace hm-trace','SideBySideAniso')
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun/'
+matROOT = '../Matfun/'
 matfun = 'FXEMDM'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

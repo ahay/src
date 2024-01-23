@@ -5,10 +5,10 @@ from rsf.proj import *
 rawsegy=['L23535','L23536','L23537']
 
 for file in rawsegy  :
-    Fetch(file+'.SGY',
-          server='http://certmapper.cr.usgs.gov',
-          top='nersl/NPRA/SEISMIC/1981/31_81',
-      	  dir='DMUX')
+    Fetch(file+'.SGY','alaska')
+#          server='http://certmapper.cr.usgs.gov',
+#          top='nersl/NPRA/SEISMIC/1981/31_81',
+#      	  dir='DMUX')
     
     # Convert from SEGY to RSF
     Flow([file, file+'.bin',  file+'.asc', 't'+file],

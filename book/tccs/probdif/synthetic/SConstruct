@@ -705,23 +705,23 @@ for n in range(5):
                 .5*(pmax1-pmin1)/dt,nv/2,0,
                 point1,point2,
                 allpos[k]))
-        Result(item+'3-mov-%i'%n,item,
-           '''
-           window min1=%g max1=%g  min3=%g max3=%g|
-           byte gainpanel=2 allpos=%s |
-           grey3 unit2="km/s" label2=Velocity 
-           color=%s title="%s" flat=n
-           frame1=%i frame2=%i frame3=%i 
-           point1=%g point2=%g 
-           allpos=%s
-           screenht=28 screenratio=2
-           larnersz=85 titlesz=16
-           movie=3 dframe=10
-           '''%(pmin1,pmax1,pmin2,pmax2,
-                allpos[k],colorlst[k],titles[k],
-                .5*(pmax1-pmin1)/dt,nv/2,0,
-                point1,point2,
-                allpos[k]))                
+#        Result(item+'3-mov-%i'%n,item,
+#           '''
+#           window min1=%g max1=%g  min3=%g max3=%g|
+#           byte gainpanel=2 allpos=%s |
+#           grey3 unit2="km/s" label2=Velocity 
+#           color=%s title="%s" flat=n
+#           frame1=%i frame2=%i frame3=%i 
+#           point1=%g point2=%g 
+#           allpos=%s
+#           screenht=28 screenratio=2
+#           larnersz=85 titlesz=16
+#           movie=3 dframe=10
+#           '''%(pmin1,pmax1,pmin2,pmax2,
+#                allpos[k],colorlst[k],titles[k],
+#                .5*(pmax1-pmin1)/dt,nv/2,0,
+#                point1,point2,
+#                allpos[k]))                
         plst.append(item+'-%i'%n)
         plst3.append(item+'3-%i'%n)
     Plot(plst[4]+'-o',[plst[4],'v-exp-%i'%n,'v-exp-low-%i'%n,'v-exp-high-%i'%n,'vtrue-%i'%n],'Overlay')

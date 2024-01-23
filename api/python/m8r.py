@@ -50,13 +50,18 @@ def view(name):
     except:
         print ('No IPython Image support.')
         return None
+    error_message = 'Failed to generate image.'
     try:
         png = name+'.png'
         makefile = os.path.join(rsf.prog.RSFROOT,'include','Makefile')
-        os.system('make -f %s %s' % (makefile,png))
+        proc = subprocess.Popen('make -f %s %s' % (makefile,png),
+                                shell=True,
+                                stderr=subprocess.PIPE,
+                                stdout=subprocess.PIPE)
+        error_message = proc.stderr.read().decode()
         return Image(filename=png)
     except:
-        print ('Failed to generate image, see command line for errors.')
+        print(error_message,file=sys.stderr)
         return None
 
 class _Simtab(dict):
@@ -112,8 +117,8 @@ class _Simtab(dict):
         if val:
             if val[0] == 'y' or val[0] == 'Y' or val[0] == '1':
                 return True,True
-        else:
-            return True,False
+            else:
+                return True,False
         return False,None
     def getbools(self,key,n):
         val = self.get(key)
@@ -595,7 +600,7 @@ class _File(File):
         File.__del__(self) # this removes file if it is temporary
     def settype(self,type):
         if _swig_:
-            for i,filetype in enumerate(_File.type):
+            for i,filetype in enumerate(_File.types):
                 if type == filetype:
                     self.type = type
                     c_rsf.sf_settype(self.file,i)
@@ -1424,12 +1429,14 @@ if __name__ == "__main__":
 #    no_swig()
     # Testing getpar
     par = Par(["prog","a=5","b=as","a=100","float=5.625",
-               "true=y"]) #,"par=%s" % sys.argv[0]])
+               "true=y","false=n"]) #,"par=%s" % sys.argv[0]])
     assert 100 == par.int("a")
     assert not par.int("c")
     assert 10 == par.int("c",10)
     assert 5.625 == par.float("float")
+    assert 1.0 == par.float("nothing",1.0)
     assert par.bool("true")
+    assert not par.bool("false")
     #assert "Time (sec)" == par.string("label")
     #assert "Time (sec)" == par.string("label","Depth")
     assert not par.string("nolabel")
@@ -1451,6 +1458,7 @@ if __name__ == "__main__":
     n1 = input.int("n1")
     assert 100 == n1
     assert 0.25 == input.float("d1")
+    assert 0.5 == input.float("z1",0.5)
     assert 'Time' == input.string("label1")
     n2 = 10
     output.put('n2',n2)

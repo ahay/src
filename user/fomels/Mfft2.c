@@ -63,12 +63,12 @@ int main(int argc, char* argv[])
 
     f = sf_floatalloc(nz2*nx2);
     c = sf_complexalloc(nk);
-
-    fft2_allocate(c);
 	
     if (inv) {
+	ifft2_allocate(c);
 	if (!sf_histint(freq,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in input",nk);
     } else {
+	fft2_allocate(c);
 	sf_putint(freq,"n1",nk);
 	sf_putint(freq,"n2",1);
     }

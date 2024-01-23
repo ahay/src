@@ -1,3 +1,3 @@
 uses=['sfspike', 'sfpad', 'sfwiggle', 'sfrtoc', 'sffft3', 'sffft1', 'sfadd']
 data=[]
-size=    2414080
+size=    2086272

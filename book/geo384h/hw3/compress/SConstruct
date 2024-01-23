@@ -74,7 +74,7 @@ Plot('hist','fft',
      math output="abs(input)" | real |
      histogram o1=0 d1=%g n1=101 |
      dd type=float | scale axis=1 |
-     graph title="Scaled Histogram" pad1=n
+     bargraph title="Scaled Histogram" pad1=n
      label1= unit1= label2= unit2=
      ''' % (0.03*thr))
 Flow('line.asc',None,

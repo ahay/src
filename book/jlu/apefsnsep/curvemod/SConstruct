@@ -1,0 +1,231 @@
+from rsf.proj import *
+import ssl
+
+ssl._create_default_https_context = ssl._create_unverified_context
+###
+# To finishing curvelet denoising part, it needs to install pylops and curvelops.
+# pylops : pip install pylops
+# curvelops : follow the instructions in the link: https://github.com/PyLops/curvelops
+###
+
+### curve model
+input = 'input.curve.segy' 
+Fetch(input,'yang')
+
+Flow("curve hcurve bcurve",
+     input,
+     """
+    segyread tape=$SOURCE read=d hfile=${TARGETS[1]} bfile=${TARGETS[2]}
+    """,
+     stdin=0)
+Flow("curve2", "curve", "window min1=1.2 max1=2 | bandpass fhi=60")
+
+# Nonstationary PEFs
+Flow("cpad cmask", "curve2", "lpad jump=4 mask=${TARGETS[1]}")
+Flow("cdmask", "cpad", "math output=1.")
+Flow(
+    "capef", "cpad cdmask", """
+    apef a=20,3 jump=4 rect1=20 rect2=3 niter=200 verb=y
+    maskin=${SOURCES[1]}
+    """)
+Flow("data", "cpad capef cmask",
+     "miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y")
+Result(
+    "cm-data", "data", """
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+# FK
+Flow("fkdata", "data", 'fft1 | fft3 axis=2 | math output="abs(input)" | real')
+Result(
+    "cm-fkdata", "fkdata", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2
+    label1=Frequency label2=Wavenumber unit1=Hz screenht=6. screenratio=0.5
+    """)
+
+# Add noise
+Flow(
+    "noiz", "data", """
+    noise rep=n type=n seed=20106 range=0.0234818 |
+    smooth rect1=3
+    """)
+Result(
+    "cm-noiz", "noiz", """
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+# FK
+Flow("fknoiz", "noiz", "fft1 | fft3 axis=2 | math output='abs(input)' | real")
+Result(
+    "cm-fknoiz", "fknoiz", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2
+    label1=Frequency label2=Wavenumber unit1=Hz screenht=6. screenratio=0.5
+    """)
+# snr
+Flow("diff", "data noiz", "add scale=1,-1 ${SOURCES[1]}")
+Flow("snr", "data diff", "snr2 noise=${SOURCES[1]}")
+
+##############################################################################
+### PEF
+# hpef
+Flow("hnpef hnlag", "noiz", "hpef a=5,1 lag=${TARGETS[1]} ")
+Flow("hspef hslag", "noiz", "hpef a=11,4 lag=${TARGETS[1]} ")
+Flow(
+    "hsign", "noiz hspef hnpef", """
+    signoi epsilon=1.0 sfilt=${SOURCES[1]} nfilt=${SOURCES[2]}
+    spitz=n niter=100
+    """)
+Result(
+    "cm-pef", "hsign", """
+    window n3=1 f3=0 |
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+Result(
+    "cm-pefnoiz", "hsign", """
+    window n3=1 f3=1 |
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+# FK
+Flow(
+    "fkhsign", "hsign",
+    'window n3=1 f3=0 | fft1 | fft3 axis=2 | math output="abs(input)" | real')
+Result(
+    "cm-fkpef", "fkhsign", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2
+    label1=Frequency label2=Wavenumber unit1=Hz screenht=6. screenratio=0.5
+    """)
+# snr
+Flow("hdiff", "data hsign", "add scale=1,-1 ${SOURCES[1]}")
+Flow("hsnr", "data hdiff", "snr2 noise=${SOURCES[1]}")
+
+### APEF
+Flow(
+    "anpef anpfpred", "noiz", """
+    apef a=9,1 rect1=300 rect2=1 niter=200
+    jump=1 pred=${TARGETS[1]} verb=y
+    """)
+Flow(
+    "aspef aspefpred", "noiz", """
+    apef a=11,4 rect1=30 rect2=15 niter=200
+    jump=1 pred=${TARGETS[1]} verb=y
+    """)
+Flow(
+    "asign", "noiz aspef anpef", """
+    apefsignoi sfilt=${SOURCES[1]} nfilt=${SOURCES[2]}
+    niter=1000 eps=0.25 verb=y
+    """)
+Flow("anoiz", "noiz asign", "add scale=1,-1 ${SOURCES[1]}")
+Result(
+    "cm-apef", "asign", """
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+Result(
+    "cm-apefnoiz", "anoiz", """
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+# FK
+Flow("fkasign", "asign",
+     " fft1 | fft3 axis=2 | math output='abs(input)' | real")
+Result(
+    "cm-fkapef", "fkasign", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2
+    label1=Frequency label2=Wavenumber unit1=Hz screenht=6. screenratio=0.5
+    """)
+# snr
+Flow("adiff", "data asign", "add scale=1,-1 ${SOURCES[1]}")
+Flow("asnr", "data adiff", "snr2 noise=${SOURCES[1]}")
+
+### FX decon
+Flow("patch", "noiz", "patch w=401,80")
+Flow("wpatch", "patch", "window")
+fxds = []
+mpas = []
+for nw in range(0, 5):
+    data = "data%d" % nw
+    fxd = "fx%d" % nw
+    Flow(data, "wpatch", "window n3=1 f3=%d" % nw)
+    Flow(fxd, data, "fxdecon lenf=8 n2w=10")
+    fxds.append(fxd)
+
+Flow(
+    "fxpatch", fxds, """
+    cat ${SOURCES[1:%d]} axis=3 | transp plane=34 |
+    patch inv=y weight=y
+    """ % len(fxds))
+Flow("fxdif", "noiz fxpatch", "add scale=1,-1 ${SOURCES[1]}")
+
+Result(
+    "cm-fx", "fxpatch", """
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+Result(
+    "cm-fxnoiz", "fxdif", """
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+
+Flow("fkfxpatch", "fxpatch",
+     " fft1 | fft3 axis=2 | math output='abs(input)' | real")
+Result(
+    "cm-fkfx", "fkfxpatch", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2
+    label1=Frequency label2=Wavenumber unit1=Hz screenht=6. screenratio=0.5
+    """)
+# snr
+Flow("fxdiff", "data fxpatch", "add scale=1,-1 ${SOURCES[1]}")
+Flow("fxsnr", "data fxdiff", "snr2 noise=${SOURCES[1]}")
+
+#! Need to install python package: pylops, curvelops
+#! Follow "python curvelet_denoise.py" to generate "ct_denoise.rsf"
+### curvelet
+#Flow("ct_denoise", "ct_denoise.H", "dd form=native")
+
+import sys
+python = sys.executable
+
+Command('ct_denoise.rsf','curvelet_denoise2d.py',python + ' $SOURCE')
+
+Result(
+    "cm-ct", "ct_denoise", """
+    put d1=0.002 d2=0.25 o1=1.2 o2=0 label1=Time unit1=s label2=Trace |
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+Flow("ct_denoise_err", "noiz ct_denoise", "add scale=1,-1 ${SOURCES[1]}")
+Result(
+    "cm-ctnoiz", "ct_denoise_err", """
+    put d1=0.002 d2=0.25 o1=1.2 o2=0 label1=Time unit1=s label2=Trace  |
+    grey yreverse=y transp=y poly=y label2=Position title=
+    screenratio=0.4 screenht=6. labelsz=5. titlesz=7 clip=0.02
+    labelfat=2 font=2 titlefat=2 unit2=km
+    """)
+# FK
+Flow(
+    "fkct", "ct_denoise", """
+    put d1=0.002 d2=0.25 o1=1.2 o2=0 |
+    fft1 | fft3 axis=2 | math output="abs(input)" | real
+    """)
+Result(
+    "cm-fkct", "fkct", """
+    grey scalebar=n title= unit2= color=i max1=100 labelfat=2 font=2
+    label1=Frequency label2=Wavenumber unit1=Hz screenht=6. screenratio=0.5
+    """)
+# snr
+Flow("ctdiff", "data ct_denoise", "add scale=1,-1 ${SOURCES[1]}")
+Flow("ctsnr", "data ctdiff", "snr2 noise=${SOURCES[1]}")
+
+End()

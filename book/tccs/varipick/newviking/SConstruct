@@ -1,0 +1,834 @@
+from rsf.proj import *
+import math
+def getstring(par):
+    return "\`< ${SOURCES[1]} $RSFROOT/bin/sfget %s parform=n \`"%par
+def getstring2(par):
+    return "`< ${SOURCES[1]} $RSFROOT/bin/sfget %s parform=n `"%par
+def stringmath(inp,action):
+    return "` echo "+inp+action+" | bc `" 
+def pooling3(pooled,infile,pool1,pool2,pool3,pooltype='mean'):
+  Flow(pooled,[infile,infile],
+     '''
+     patch p=%s,%s,%s w=%i,%i,%i |
+     stack axis=1 %s=y |
+     stack axis=1 %s=y |
+     stack axis=1 %s=y |
+     put d1=%s d2=%s d3=%s o1=%s o2=%s o3=%s
+     '''%(stringmath(getstring('n1'),'/%i+1'%pool1),
+          stringmath(getstring('n2'),'/%i'%pool2),
+          stringmath(getstring('n3'),'/%i'%pool3),
+          (pool1*2),(pool2*2),(pool3*2),
+          pooltype,pooltype,pooltype,
+          stringmath(getstring('d1'),'*%i'%pool1),
+          stringmath(getstring('d2'),'*%i'%pool2),
+          stringmath(getstring('d3'),'*%i'%pool3),
+          stringmath(getstring('o1'),'+%g'%(pool1/2)+'*'+getstring('d1')),
+          stringmath(getstring('o2'),'+%g'%(pool2/2)+'*'+getstring('d2')),
+          stringmath(getstring('o3'),'+%g'%(pool3/2)+'*'+getstring('d3'))
+          ))
+
+def make_linear_vel(outfile,infile):
+   Flow(outfile,[infile,infile],
+       '''
+       window n2=1 | 
+       math output="(%s-1)*%s/(%s-1)/%s*(x1-%s)+%s" 
+       '''%(getstring2('n2'),getstring2('d2'),
+            getstring2('n1'),getstring2('d1'),
+            getstring2('o1'),getstring2('o2')))
+#def make_linear_vel(outfile,infile):
+#   Flow(outfile,[infile,infile],
+#       '''
+#       window n2=1 | 
+#       math output="(3.2-1.4)/(%s-1)/%s*(x1-%s)+%s-.1"|
+#       clip2 lower=%s 
+#       '''%(getstring2('n1'),getstring2('d1'),
+#            getstring2('o1'),getstring2('o2'),getstring2('o2')))
+name  = 'viking'
+# sampling
+nt = 1001
+dt = 0.004
+to = 0.
+nx = 2142
+dx = 0.0125
+xo = 1.619
+nh = 60
+dh = 0.01
+h0 = 1.4
+
+max1t = 4 #3.75
+max1tp=3.8
+
+nv = 181 # was 181
+dv = 0.01
+vo = 1.4
+
+min3 = 4
+max3 = 24
+
+panelcoord = 10#18.25
+
+frame3 = (panelcoord-min3)/dx
+# Download pre-processed CMP gathers
+# from the Viking Graben dataset
+Fetch('paracdp.segy','viking')
+
+# Convert to RSF
+Flow('paracdp tparacdp','paracdp.segy',
+     'segyread tfile=${TARGETS[1]}')
+
+# Convert to CDP gathers, time-power gain and high-pass filter
+Flow('cmps','paracdp',
+     '''
+     intbin xk=cdpt yk=cdp | window max1=4 | 
+     pow pow1=2 | bandpass flo=5 |
+     put label3=Midpoint unit3=km o3=1.619 d3=0.0125
+     ''')
+# currently muting nears change cut n2=25 to cut f2=25 to mute fars
+# mute far offsets
+#Flow('cmps','cmps-p',
+#   '''
+#   math output=1| cut f2=25 | smooth rect2=5|
+#   add mode=p ${SOURCE}
+#   ''')
+
+Result(name+'-cmps','cmps',
+   '''
+   window min3=%g max3=%g max1=%g|
+   byte gainpanel=e | 
+   grey3 title="Viking Graben CMP Gathers" 
+   frame1=0 unit2= label2=Trace frame2=%i frame3=%i
+   point1=.9 point2=0.5 flat=n framelabel1=n
+   '''%(min3,max3,max1tp,nh/4,frame3))
+
+#Result('cmps-m','cmps',
+#   '''
+#   window j3=10 |
+#   byte gainpanel=e | 
+#   grey3 title="Viking Graben CMP Gathers" 
+#   frame1=0 unit2=  label2=Trace frame2=%i frame3=%i movie=3
+#   point1=.9 point2=0.5 flat=n
+#   '''%(nh/3,15))
+# Extract offsets
+Flow('offsets mask','tparacdp',
+     '''
+     headermath output=offset | 
+     intbin head=$SOURCE xk=cdpt yk=cdp mask=${TARGETS[1]} | 
+     dd type=float |
+     scale dscale=0.001
+     ''')
+
+# Window bad traces
+Flow('maskbad','cmps',
+     'mul $SOURCE | stack axis=1 | mask min=1e-20')
+
+Flow('mask2','maskbad mask','spray axis=1 n=1 | mul ${SOURCES[1]}')
+
+# NMO stack with an ensemble of constant velocities
+Flow('stacks','cmps offsets mask2',
+     '''
+     stacks half=n v0=%g nv=%i dv=%g 
+     offset=${SOURCES[1]} mask=${SOURCES[2]}
+     '''%(vo,nv,dv),split=[3,'omp'])
+# try nmo scan
+#Flow('vscan','cmps offsets mask2','vscan v0=%g dv=%g nv=%i offset=${SOURCES[1]} mask=${SOURCES[2]} half=n'%(vo,dv,nv),split=[3,'omp'])
+# Taper midpoint
+Flow('stackst','stacks','costaper nw3=100 nw1=100')
+
+Result('stacks','stackst',
+       '''
+       byte gainpanel=all | transp plane=23 memsize=5000 |
+       grey3 frame1=500 frame2=100 frame3=30 point1=0.8 point2=0.8
+       title="Constant-Velocity Stacks" label3=Velocity unit3=km/s
+       ''')
+
+# Apply double Fourier transform (cosine transform)
+Flow('cosft','stackst','pad n3=2401 pad n1=1401 | cosft sign1=1 sign3=1')
+
+# Transpose f-v-k to v-f-k
+Flow('transp','cosft','transp',split=[3,'omp'])
+
+# Fowler DMO: mapping velocities
+Flow('map','transp',
+     '''
+     math output="x1/sqrt(1+0.25*x3*x3*x1*x1/(x2*x2))" | 
+     cut n2=1
+     ''')
+
+Result('map',
+       '''
+       byte gainpanel=all allpos=y bar=bar.rsf | 
+       grey3 title="Fowler Map" label1=Velocity 
+       unit1=km/s label3=Wavenumber barlabel=Velocity barunit=km/s
+       frame1=50 frame2=500 frame3=1000 color=x scalebar=y 
+       ''')
+
+Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp',
+     split=[3,'omp'])
+
+# Inverse Fourier transform
+Flow('dmo','fowler','cosft sign1=-1 sign3=-1 | window n3=2142 n1=1001')
+
+#Result('dmo',
+#       '''
+#       byte gainpanel=all | transp plane=23 memsize=5000 |
+#       grey3 frame1=500 frame2=100 frame3=30 point1=0.8 point2=0.8
+#       title="Constant-Velocity DMO Stacks" 
+#       label3=Velocity unit3=km/s
+#       ''')
+
+Result('dmo',
+       '''
+       byte gainpanel=all | transp plane=23 memsize=5000 |
+       grey3 frame1=500 frame2=100 frame3=30 point1=0.8 point2=0.8
+       title="Constant-Velocity DMO Stacks" 
+       label3=Velocity unit3=km/s
+       ''')
+
+#Result('dmo-mov','dmo',
+#       '''
+#       window min3=3.994 n3=1601|
+#       byte gainpanel=all | transp plane=23 memsize=5000 |
+#       grey 
+#       title="Constant-Velocity DMO Stacks" 
+#       label3=Velocity unit3=km/s
+#       ''')
+Flow('dmo-bar','dmo','bar gainpanel=all')
+#Result('dmo-mov-bar','dmo dmo-bar',
+#       '''
+#       window min3=3.994 n3=1601|
+#       byte gainpanel=all | transp plane=23 memsize=5000 |
+#       grey 
+#       title="Constant-Velocity DMO Stacks"  maxval=4e7 minval=-4e7
+#       label3=Velocity unit3=km/s scalebar=y barlabel="Amplitude" bar=${SOURCES[1]}
+#       ''')
+
+# Compute envelope for picking
+Flow('envelope','dmo','envelope | scale axis=2',split=[3,'omp'])
+
+
+#smoothed envelope
+Flow('envelope-s','envelope',
+   'smooth rect1=15 rect2=5 rect3=15 |   math output="input*input/x2/x2*x1*x1*20" |window max2=2.25 ')
+Flow('envelope-s1','envelope',
+   'smooth rect1=15 rect2=5 rect3=15 |   math output="input*input/x2/x2*x1*x1*20"  ')
+
+
+Flow('envelope-s-bar','envelope-s1','window j3=5 | bar gainpanel=e allpos=y' )
+Result('envelope-s',['envelope-s1','envelope-s-bar'],
+   '''
+   window j3=10 | 
+   byte gainpanel=e allpos=y| 
+   grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]}
+   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel=Envelope
+   point1=.9 point2=0.5 color=j flat=n
+   '''%(141/3,30))
+#Result('envelope-s-mov',['envelope-s1','envelope-s-bar'],
+#   '''
+#   window j3=10 | 
+#   byte gainpanel=e allpos=y| 
+#   grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} color=j
+#   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel=Envelope movie=3
+#   point1=.9 point2=0.5 flat=n
+#   '''%(141/3,15))
+# make mute
+#    mutter inner=y t0=2.1 x0=1.95 v0=0.11|
+#    cut f1=486 n2=55| smooth rect2=3 rect1=5|
+#    cut f1=500 n2=60| smooth rect2=3 rect1=5|
+#   
+
+#costaper = 10 works well 
+
+#Flow('envelope-mute','envelope',
+#    '''
+#    window n3=1 min3=22| math output=1|
+#    mutter inner=n v0=0.3 t0=-14|
+#    mutter inner=n v0=1 t0=-2.9|
+#    mutter inner=n v0=0.35 t0=-9.5|
+#    mutter inner=y t0=2.6 x0=1.85 v0=0.35|
+#    cut f1=406 n2=45|    costaper nw2=8|
+#    math output="(input-1)*0.5+1"
+#    ''')
+
+
+#    mutter inner=n v0=1 t0=-2.6|
+#
+#    mutter inner=n v0=0.6 t0=-5.1|
+
+
+# before velocity extended this was mute
+#Flow('envelope-mute','envelope',
+#    '''
+#    window n3=1 min3=22| math output=1|
+#    mutter inner=n v0=.58 t0=-5.2|
+#    mutter inner=y t0=.5 x0=1.4 v0=0.45| costaper nw2=8|
+#    math output="(input-1)*0.75+1"
+#    ''')
+
+Flow('envelope-mute','envelope',
+    '''
+    window n3=1 min3=22| math output=1|
+    mutter inner=y t0=.2 x0=1.4 v0=.35 half=n|
+    mutter inner=y t0=2.5 x0=2.2 v0=.5 half=n|
+    costaper nw2=5|
+    math output="(input-1)*0.75+1" 
+
+    ''')
+# need a special mute to kill the bump
+
+
+#Flow('envelope-mute','envelope',
+#    '''
+#    window n3=1 min3=22| math output=1|
+#    mutter inner=y t0=2. x0=1.85 v0=0.5|
+#    mutter inner=n v0=0.3 t0=-14|
+#    cut f1=406 n2=45| cut f1=%i n2=%i|   costaper nw2=8|
+#    math output="(input-1)*0.5+1"
+#    '''%(2.25/dt,(2.1-vo)/dv))
+n3env = 1601
+o3env = 3.994
+d3env = 0.0125
+nx = n3env
+xo = o3env
+dx = d3env
+
+# window bad envelope data
+Flow('envelope-prem','envelope','window min3=%g max3=%g | costaper nw2=10'%(min3,max3))
+# apply mute
+Flow('envelope-pre-a','envelope-mute envelope-prem',
+   '''
+   spray axis=3 n=%i d=%g o=%g|
+   add mode=p ${SOURCES[1]} 
+   '''%(nx,dx,xo))
+# old envelope-pre before increasing velocity range
+#Flow('envelope-pre','envelope-pre-a',
+#    '''
+#    math output=1|
+#    cut f1=%i n1=%i f2=%i n2=%i f3=%i |
+#    math output="(input-1)*0.75+1"|
+#    add mode=p ${SOURCE}
+#    '''%(1.4/dt,(2.45-1.4)/dt,(2.05-vo)/dv,(2.6-2.05)/dv,0))
+Flow('envelope-pre','envelope-pre-a',
+    '''
+    cp
+    ''')
+
+
+#(14-xo)/dx
+#,2.1/dt,(2.6-2.1)/dt,(2.2-vo)/dv,(2.6-2.2)/dv,(14-xo)/dx
+#,         1.4/dt,(2.2-1.4)/dt,(2.25-vo)/dv,(2.6-2.2)/dv,(14-xo)/dx)
+Result('envelope-pre',
+   'window n3=1 min3=16|grey color=j allpos=y')
+# window bad dmo data
+Flow('dmo-w','dmo','window min3=4 max3=24 max1=%g'%max1t)
+
+
+divep = 0.0001
+
+scl = 0.04
+Flow('envelope-prec','envelope-pre','stack axis=2 |stack axis=2|smooth rect1=10')
+Flow('envelope-correction','envelope-prec envelope-pre',
+    '''
+    spray axis=2 n=%i d=%g o=%g |  spray axis=3 n=%i d=%g o=%g|
+    math A=${SOURCES[1]} output="%g*A/(input+%g)"
+    '''%(nv,dv,vo, n3env,d3env,o3env,scl,divep))
+minlevel=1
+nsmoothings = 10
+smoothstrong = 5
+saniso1 = 6
+saniso2 = 1
+saniso3 = 3
+semb_in   = 'envelope-pre'
+semblst = []
+derivlst = [] 
+sclbase = 0.5
+
+j=1
+Flow('illustration','envelope',
+          '''
+          scale dscale=%g|
+          smooth rect1=%i rect2=%i rect3=%i  |
+          math output="input*input*(x1+.1)*(x1+.1)/x2" |
+          window max1=%g | costaper nw2=5 | 
+          window min3=3.994 n3=1601 |transp plane=23 memsize=5000
+          '''%(2*j+sclbase,j*smoothstrong*saniso1, j*smoothstrong*saniso2, j*smoothstrong*saniso3,max1t))
+
+#Result('stack-power-illustration','illustration',
+#   '''
+#   grey gainpanel=a title="DMO Stack Power" color=j allpos=y
+#   scalebar=y barlabel="Stack Power" maxval=0.6
+#   ''')
+Flow('stack-power-illustration-window','illustration','window n2=1 min2=%g'%panelcoord)
+
+
+for i in range(nsmoothings):
+   j = i+minlevel
+   this_one = semb_in+'-%i'%i
+#   last_one = semb_in+'-%i'%(i-1)
+# was scale dscale=10 at the end
+#   Flow(this_one,semb_in,
+#          '''
+#          scale dscale=%g|
+#          smooth rect1=%i rect2=%i rect3=%i  |
+#          math output="input*input/x2/x2*x1*x1*20" |
+#          window max1=%g
+#          '''%(2*j,j*smoothstrong*saniso1, j*smoothstrong*saniso2, j*smoothstrong*saniso3,max1t))
+
+
+#          math output="input*input*(x1+.1)*(x1+.1)/x2" |
+   Flow(this_one,semb_in,
+          '''
+          scale dscale=%g|
+          smooth rect1=%i rect2=%i rect3=%i  |
+          math output="input*input*(x1+.1)*(x1+.1)/x2" |
+          window max1=%g | costaper nw2=5
+          '''%(2*j+sclbase,j*smoothstrong*saniso1, j*smoothstrong*saniso2, j*smoothstrong*saniso3,max1t))
+   deriv = semb_in+'-deriv-%i'%i
+   Flow(deriv,this_one,'transp plane=12 | sfderiv scale=y| transp plane=12')
+   semblst.append(this_one)
+   derivlst.append(deriv)
+#semblance = 'envelope-s'
+#dsemblance = semblance+'-dv'
+Flow('semblance-cont',semblst,'cat axis=4 ${SOURCES[1:%i]} | window max1=%g j3=10 '%(len(semblst),max1tp))
+
+semblst.reverse()
+derivlst.reverse()
+
+Flow('semblance-cont-r',semblst,'cat axis=4 ${SOURCES[1:%i]} | window max1=%g j3=10 '%(len(semblst),max1tp))
+Flow('semblance-cont-f','semblance-cont semblance-cont-r','cat axis=4 ${SOURCES[1]} | clip2 lower=0 |scale axis=3')
+Flow('semblance-cont-f-bar','semblance-cont-f','byte allpos=y gainpanel=e minval=0')
+
+Result('semblance-cont-f','semblance-cont-f semblance-cont-f-bar', 
+   '''
+   byte  allpos=y gainpanel=e minval=0|
+   grey4 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} 
+   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power"
+   point1=.9 point2=0.5 color=j flat=n framelabel1=n minval=0
+   '''%(2*nv/3-9,frame3/10))   
+
+Flow('envelope-f-bar',semblst[-1],'window max1=%g | bar gainpanel=e allpos=y'%max1tp )
+Result(name+'-envelope-f',[semblst[-1],'envelope-f-bar'],
+   ''' 
+   window max1=%g j3=2 |
+   byte gainpanel=e allpos=y| 
+   grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]}
+   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power"
+   point1=.9 point2=0.5 color=j flat=n framelabel1=n
+   '''%(max1tp,2*nv/3-9,frame3/2))
+#Result('envelope-f-mov',[semblst[-1],'envelope-f-bar'],
+#   '''
+#   window j3=10 max1=%g| 
+#   byte gainpanel=e allpos=y| 
+#   grey3 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} color=j
+#   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power" movie=3
+#   point1=.9 point2=0.5 flat=n
+#   '''%(max1tp,2*nv/3-9,0))
+
+
+lmbda = 1
+rho = 0.005 * 2 # get iterations with0.001
+niter = 20
+epsilon = 0.001
+
+vmod = name+'-linear-vel'
+flatvel = name+'-flat-vel'
+make_linear_vel(vmod,this_one)
+#Flow(vmod,vmod+'-p','math output="(input-1.4)*1.2+1.4"')
+Flow(flatvel,vmod,'math output=1.8')
+initial_model =  vmod
+searchtype = 'lbfgs'
+updatelst = [initial_model]
+
+scr1a = .8
+
+# no continuation
+
+nocontinuation = name+'-no-continuation-velo'
+nocontup = name+'-no-continuation-upd'
+Flow([nocontinuation,nocontup+'-pre'],[semblst[len(semblst)-1],derivlst[len(derivlst)-1],initial_model],
+      '''
+      varipick dsemb=${SOURCES[1]} vo=${SOURCES[2]} updates=${TARGETS[1]}
+      lambda=%g rho=%g niter=%i epsilon=%g type=%s
+      '''%(lmbda,rho,niter,epsilon,searchtype))
+Flow(nocontup,[initial_model,nocontup+'-pre'],'cat axis=3 ${SOURCES[1]}')
+nocontcosts = name+'-no-continuation-costs'
+Flow(nocontcosts,[nocontup,semblst[len(semblst)-1]],
+      '''
+      varicost semb=${SOURCES[1]}
+      lambda=%g  epsilon=%g
+      '''%(lmbda,epsilon))
+
+
+# continuation
+cor = 0.06
+for i in range(len(semblst)):
+    if i == 0:
+       model_in = initial_model
+    else:
+       model_in = name+'-velo-out-%i'%(i-1)
+    updates = name+'-updates-%i'%(i)
+    vpicked = name+'-velo-out-%i'%(i)
+#    vmod = name+'-input' 
+    thislmbda = lmbda#*(nsmoothings-i)
+    Flow([vpicked,updates],[semblst[i],derivlst[i],model_in],
+      '''
+      varipick dsemb=${SOURCES[1]} vo=${SOURCES[2]} updates=${TARGETS[1]}
+      lambda=%g rho=%g niter=%i epsilon=%g type=%s
+      '''%(thislmbda,rho,niter,epsilon,searchtype))
+
+    vl = []
+    vellistpan = [vpicked,model_in]
+    plotcollst = [0,7]#[3,4]
+    plotfatlst = [15,25]
+    dashlst = [1,0]
+    if i == len(semblst)-1:
+        vellistpan.append(initial_model)
+        vellistpan.insert(1,nocontinuation)
+
+        dashlst.append(0)
+        dashlst.insert(1,1)
+        plotcollst.append(5)
+        plotcollst.insert(1,3)
+        plotfatlst.append(25)
+        plotfatlst.insert(1,20)
+    for q in range(len(vellistpan)):
+        velo = vellistpan[q]
+        v = velo+'-p-%i'%i
+        Flow(v,velo,'window n2=1 min2=%g'%panelcoord)
+        Plot(v,
+           '''
+           graph transp=y min1=%g max1=%g min2=%g max2=%g
+           title= label1= label2= unit1= unit2= scalebar=y
+           plotfat=%i n1tic=0 n2tic=0 
+           dash=%i plotcol=%i screenratio=%g
+           '''%(max1tp,0,1.4,(nv-1)*dv+1.4-cor,plotfatlst[q],dashlst[q]*8,plotcollst[q],scr1a))
+        vl.append(v)
+
+# dash used to be 
+# make plot
+    smb = semblst[i]+'-p'
+    Flow(smb,semblst[i],'window n3=1 min3=%g'%panelcoord)
+    if i > 2/3*len(semblst):
+        panttl="Weak Smoothing"
+    elif i > len(semblst)*1/3:
+        panlttl = "Moderate Smoothing"
+    else:
+        panttl = "Strong Smoothing"
+    if i == 4:
+        panttl = "Moderate Smoothing"
+    if i == len(semblst)-1:
+        panttl = "Least Smoothing"
+    Plot(smb,
+       '''
+       grey title="%s" 
+       color=j allpos=y scalebar=y barlabel="Stack Power" 
+       label2=Velocity unit2=km/s labelsz=12 titlesz=14
+       min1=%g max1=%g min2=%g max2=%g screenratio=%g
+       '''%(panttl,0,max1tp,vo,(nv-1)*dv+vo-cor,scr1a))
+    vl.append(smb)
+    vl.reverse()
+    Result('viking-velo-gather-%i'%i,vl,'Overlay')
+    updatelst.append(updates)
+
+Result('stack-power-illustration-window','stack-power-illustration-window',
+       '''
+       grey title="Stack Power at %g km" 
+       color=j allpos=y scalebar=y barlabel="Stack Power" 
+       label2=Velocity unit2=km/s
+       min1=%g max1=%g min2=%g max2=%g 
+       '''%(panelcoord,0,max1tp,vo,(nv-1)*dv+vo-cor))
+
+Result('stack-power-illustration-window-muted',semblst[-1],
+       '''
+       window n3=1 min3=%g |
+       grey title="Muted Stack Power at %g km" 
+       color=j allpos=y scalebar=y barlabel="Stack Power" 
+       label2=Velocity unit2=km/s
+       min1=%g max1=%g min2=%g max2=%g 
+       '''%(panelcoord,panelcoord,0,max1tp,vo,(nv-1)*dv+vo-cor))
+
+Result('stack-power-illustration-window-muted-envelope',semblst[-1],
+       '''
+       window n3=1 min3=%g |
+       grey title="DMO Picking Envelope at %g km" 
+       color=j allpos=y scalebar=y barlabel="Stack Power" 
+       label2=Velocity unit2=km/s
+       min1=%g max1=%g min2=%g max2=%g 
+       '''%(panelcoord,panelcoord,0,max1tp,vo,(nv-1)*dv+vo-cor))
+
+Plot('stack-power-illustration-window-muted-envelope',semblst[-1],
+       '''
+       window n3=1 min3=%g |
+       grey title="DMO Picking Envelope at %g km" 
+       color=j allpos=y scalebar=y barlabel="Stack Power" 
+       label2=Velocity unit2=km/s
+       min1=%g max1=%g min2=%g max2=%g 
+       '''%(panelcoord,panelcoord,0,max1tp,vo,(nv-1)*dv+vo-cor))
+
+# pick velocity for window
+Flow('illustration-window-pick',semblst[-1],
+    '''
+    window n3=1 min3=%g |
+    pick rect1=20
+    '''%panelcoord)
+
+Plot('illustration-window-pick',
+           '''
+           graph transp=y min1=%g max1=%g min2=%g max2=%g
+           title= label1= label2= unit1= unit2= scalebar=y
+           plotfat=%i n1tic=0 n2tic=0 
+           plotcol=%i dash=2
+           '''%(max1tp,0,1.4,(nv-1)*dv+1.4-cor,15,4))
+Result('stack-power-illustration-window-muted-envelope-pick','stack-power-illustration-window-muted-envelope illustration-window-pick','Overlay')
+
+upd = initial_model+'-updates'
+
+Flow(upd,updatelst,'cat axis=3 ${SOURCES[1:%i]}'%(len(updatelst)))
+costs = upd+'-costs'
+
+Flow(costs,[upd,semblst[len(semblst)-1]],
+      '''
+      varicost semb=${SOURCES[1]}
+      lambda=%g  epsilon=%g
+      '''%(thislmbda,epsilon))
+Result(costs,'graph title="Viking Continuation Costs" label1=Iteration label2=Cost unit2= unit1=')
+
+Result(nocontcosts,'graph title="Viking Costs" label1=Iteration label2=Cost unit2= unit1=')
+costmin = 73.6
+costmax = 78.45
+nitermax = 182
+costscr = .5
+plotcoststuff = ''' label1=Iteration label2="Cost" unit1= unit2= min2=%g max2=%g min1=%g max1=%g plotfat=12 screenratio=%g'''%(costmin,costmax,0,nitermax,costscr)
+Plot(nocontcosts,'graph plotcol=6 title= '+plotcoststuff)
+Plot(costs,'graph plotcol=5  title="Convergence Costs"'+plotcoststuff)
+Result(name+'-costs-combined',[costs,nocontcosts],'Overlay')
+def plotvels(velo,title,clip):
+   Result(velo,
+      '''
+      clip clip=%g|
+      grey color=j bias=1.4 scalebar=y barlabel="Velocity" barunits="km/s"
+      title="%s" allpos=y  label2=Distance unit2=km min1=%g max1=%g
+      '''%(clip,title,0,max1tp))
+# plotting function for velocity fields
+plotvel = ''' grey mean=y color=j scalebar=y barunit=km/s barlabel=Velocity label2=Midpoint unit2=km '''
+plotstk = ''' grey label2=Midpoint unit2=km'''
+#plotvels(upd,'Continuation Convergence',3)
+#plotvels(nocontup,'Non-Continuation Convergence',3)
+drect1 = 200
+drect2 = 400
+nz = nt+80#-100
+dz = 0.004
+zo = 0.
+# time to depth conversion
+timedepth = '''
+      time2depth velocity=${SOURCES[1]} nz=%i dz=%g z0=%g intime=y twoway=y |
+      put label1=Depth unit1=m
+      '''%(nz,dz,zo)
+
+
+windowlst = []
+windowlst.append('window min1=1.5 max1=3 min2=15 max2=24 | ')
+windowlst.append('window min1=1.2 max1=2.2 min2=6 max2=14 | ')
+windowlst.append('window min1=1.8 max1=2.5 min2=14 max2=18 | ')
+windowlst.append('window min1=.4 max1=.8 min2=18 max2=24 | ')
+
+
+
+vellist = [initial_model,vpicked,nocontinuation]
+titlelst = ['Starting Model','Continuation Model','Non-Continuation Model']
+
+# semblance overlays
+panels = [5,8,9,10,11,12,15,17,18.25,19,22]
+
+colist = [4,0,7]
+dashlst = [0,1,2]
+scr1 = 1.4
+
+for p in range(len(panels)):
+    pan = panels[p]
+    smb = semblst[len(semblst)-1]+'-%i'%p
+    Flow(smb,semblst[len(semblst)-1],'window n3=1 min3=%g'%pan)
+    Plot(smb,
+       '''
+       grey title="Envelope at %g km" 
+       color=j allpos=y scalebar=y barlabel="Stack Power" 
+       label2=Velocity unit2=km/s
+       min1=%g max1=%g min2=%g max2=%g screenratio=%g
+       '''%(pan,0,max1t,1.4,(nv-1)*dv+vo,scr1))
+    vl = [smb]
+    for q in range(len(vellist)):
+        velo = vellist[q]
+        v = velo+'-%i'%p
+        Flow(v,velo,'window n2=1 min2=%g'%pan)
+        Plot(v,
+           '''
+           graph transp=y min1=%g max1=%g min2=%g max2=%g
+           title= label1= label2= unit1= unit2= scalebar=y
+           plotfat=12 n1tic=0 n2tic=0
+           dash=%i plotcol=%i screenratio=%g
+           '''%(max1t,0,1.4,(nv-1)*dv+1.4,dashlst[q],colist[q],scr1))
+        vl.append(v)
+    Result('gather-%i'%p,vl,'Overlay')
+for i in range(len(vellist)):
+   velo = vellist[i]
+   title = titlelst[i]
+   # plot the velocity
+   Result(velo,plotvel+' title="%s" max1=%g'%(title,max1tp))
+   # Take a slice
+   slic = velo+'-slice'
+   Flow(slic,['dmo-w',velo],'slice pick=${SOURCES[1]} | smooth rect2=2')
+   Result(slic,plotstk+' title="%s DMO Stack"  max1=%g'%(title,max1tp))
+   # calculate slope
+   slope = velo+'-slope'
+#   Flow(slope,slic,'dip rect1=%i rect2=%i'%(drect1,drect2))
+#   Result(slope,'grey color=j scalebar=y label2=Midpoint unit2=km barlabel=Slope barunit=samples title="%s Slope"'%title)
+   # amplify reflections
+   refl = velo+'-refl'
+#   Flow(refl,[slic,slope],'pwspray ns=10 dip=${SOURCES[1]} | stack axis=2')
+#   Result(refl,plotstk+' title="%s Reflections"'%title)
+   # remove reflections
+   difr = velo+'-difr'
+#   Flow(difr,[slic,refl],'math A=${SOURCES[1]} output="input-A"')
+#   Result(difr,plotstk+' title="%s Diffractions"'%title)
+#   for k in range(len(windowlst)):
+#      Result(difr+'-z-%i'%k,difr,windowlst[k]+plotstk+
+#         '''
+#          title="Zoomed %s Diffractions"
+#         '''%title)
+#   miglst = [difr,refl,slic]
+   miglst = [slic]
+   colorlst = []
+#   typelst = ['Diffraction','Reflection','Complete']
+   typelst = ['']
+   imtypelst = []
+   imglst = []
+   for j in range(len(miglst)):
+       data = miglst[j]
+       typ  = typelst[j]
+       img = data+'-img'
+       Flow(img,[data,velo],
+          '''
+          put n3=1 o3=0 d3=1 label3="Offset" unit3=km | 
+          mig2 vel=${SOURCES[1]}''')
+       imglst.append(img)
+       colorlst.append('i')
+       imtypelst.append(typ+' Image')
+       Result(img,'grey title="%s %s Image" max1=%g'%(title,typ,max1tp))
+       Result(img+'-sb',img,'grey scalebar=y title="%s %s Image"'%(title,typ))
+       Plot(img,'grey title="%s %s Image"'%(title,typ))
+       for k in range(len(windowlst)):
+          Result(img+'-z-%i'%k,img,windowlst[k]+plotstk+
+             ''' 
+               title="Zoomed %s %s Image"
+             '''%(title,typ))
+   # calculate dix velocity
+   dix = velo+'-dix'
+   Flow(dix,velo,'dix rect1=10 rect2=10 | clip2 lower=%g'%vo)
+   Result(dix,plotvel+' title="%s Interval Velocity" max1=%g'%(title,max1tp))
+   # calculate dix velocity without smoothing
+   dixnosmooth = velo+'-dix-no'
+   Flow(dixnosmooth,velo,'dix ')
+   Result(dixnosmooth,plotvel+' title="Unsmoothed %s Interval Velocity"'%title)
+   # transform dix velocity to depth
+   dixdepth = dix+'-depth'
+   Flow(dixdepth,[dix,dix],timedepth)
+   # derivatives of dix velocity squared
+   dv2dt0 = dix+'-dv2dt0'
+   Flow(dv2dt0,dix,'math output="input*input" | smoothder')
+   dv2dx0 = dix+'-dv2dx0'
+   Flow(dv2dx0,dix,'math output="input*input" | transp memsize=10000| smoothder | transp memsize=10000')
+   # and strech to depth
+   alpha = dix+'-alpha'
+   Flow(alpha,[dv2dt0,dix],timedepth)
+   beta = dix+'-beta'
+   Flow(beta,[dv2dx0,dix],timedepth)
+   # reference velocity squared
+   refdix = dix+'-ref'
+   Flow(refdix,dixdepth,'math output="input*input"')
+   refvz = refdix+'-vz'
+   Flow(refvz,dixdepth,
+      '''
+      window n2=1 f2=%i |
+      math output="input*input" |
+      spray axis=2 n=%i o=%g d=%g
+      '''%((nx-1)/2,nx,xo,dx))
+   indepth = dix+'-indepth'
+   indx0 = dix+'-dx0'
+   indt0 = dix+'-dt0'
+   indv  = dix+'-dv'
+   # do the conversion
+   Flow([indepth,indx0,indt0,indv],[refdix,refdix,refvz,alpha,beta],
+      '''
+      time2depthweak zsubsample=50 nsmooth=16
+      velocity=${SOURCES[1]} refvelocity=${SOURCES[2]} dvdx0=${SOURCES[3]} dvdt0=${SOURCES[4]}
+      outdx0=${TARGETS[1]} outdt0=${TARGETS[2]} outdv=${TARGETS[3]}
+      ''')
+       
+   finalv = dix+'-finalv'
+   Flow(finalv,[refvz,indv],'math est=${SOURCES[1]} output="sqrt(input+est)" | put d3=1 o3=0 ')
+   diff1  = dix+'-diff1'
+   Flow(diff1,[finalv,dixdepth],'math est=${SOURCES[1]} output="input-est" | put d3=1 o3=0 ')
+   diff = dix+'-diff'
+   Flow(diff,[finalv,dixdepth],'math est=${SOURCES[1]} output="input-est" | put d3=1 o3=0 ')
+   reft0 = dix+'-reft0'
+   Flow(reft0,refvz,'math output="2*1/sqrt(input)*%g" | causint '%(dz)) # two-way
+   finalt0 = dix+'-finalt0'
+   Flow(finalt0,[reft0,indt0],'math dt=${SOURCES[1]} output="input+dt"')
+   refx0 = dix+'-refx0'
+   Flow(refx0,refvz,'math output="x2"')
+   finalx0 = dix+'-finalx0'
+   Flow(finalx0,[refx0,indx0],'math dx=${SOURCES[1]} output="input+dx"')
+   dixcoord = dix+'-coord'
+   Flow(dixcoord,[reft0,refx0],'cat axis=3 ${SOURCES[1]} | transp plane=23 memsize=10000| transp plane=12 memsize=10000')
+   finalcoord = dix+'-finalcoord'
+   Flow(finalcoord,[finalt0,finalx0],'cat axis=3 ${SOURCES[1]} | transp plane=23 memsize=10000| transp plane=12 memsize=10000')
+   # make coordinate plots
+   tcoord = finalcoord+'-t'
+   Plot(tcoord,finalcoord,'window n1=1 | contour title= unit1= label1= unit2= label2= dc=.250 plotcol=1')
+   xcoord = finalcoord+'-x'
+   Plot(xcoord,finalcoord,'window n1=1 f1=1 | contour title= unit1= label1= unit2= label2= dc=1 plotcol=1')
+   imtypelst.append('Interval Velocity')
+   imglst.append(dix)
+   colorlst.append('j')
+   lblsz = 6
+   ttlsz = 8
+   scrwd = 16
+   scrht = scrwd*((nz-1)*dz-zo)/((nx-1)*dx-xo)*1.5
+   for q in range(len(imglst)):
+       img = imglst[q]
+       color = colorlst[q]
+       imtype = imtypelst[q]
+       scale = 'n'
+       if color == 'j':
+           scale = 'y'
+       imgd = img+'-depthmapped'
+       if img == dix:
+           extra = '| clip2 lower=%g'%vo
+       else:
+           extra = ''
+       Flow(imgd,[img,finalcoord],'inttest2 interp=spline nw=8 coord=${SOURCES[1]} %s'%extra)
+       Result(imgd,
+          '''
+          grey color=%s scalebar=%s mean=%s title="%s %s in Depth" 
+          label2=Midpoint unit2=km label1=Depth unit1=km
+          barlabel="Interval Velocity" barunit="km/s" 
+          '''%(color,scale,scale,title,imtype))
+       Result(imgd+'-aspect',imgd,
+          '''
+          grey color=%s scalebar=%s mean=%s title="%s %s in Depth" 
+          label2=Midpoint unit2=km label1=Depth unit1=km 
+          barlabel="Interval Velocity" barunit="km/s" screenht=%g screenwd=%g labelsz=%g titlesz=%g
+          '''%(color,scale,scale,title,imtype,scrht,scrwd,lblsz,ttlsz))
+       Result(imgd+'-aspect-bar',imgd,
+          '''
+          grey color=%s scalebar=y mean=%s title="%s %s in Depth" 
+          label2=Midpoint unit2=km label1=Depth unit1=km  scalebar=y
+          barlabel="Interval Velocity" barunit="km/s" screenht=%g screenwd=%g labelsz=%g titlesz=%g
+          '''%(color,scale,title,imtype,scrht,scrwd,lblsz,ttlsz))
+       Plot(imgd,
+          '''
+          grey color=%s scalebar=%s mean=%s title="%s %s in Depth" 
+          label2=Midpoint unit2=km label1=Depth unit1=km 
+          barlabel="Interval Velocity" barunit="km/s" 
+          '''%(color,scale,scale,title,imtype))
+       Result(imgd+'-coord',[imgd,tcoord,xcoord],'Overlay')
+End()

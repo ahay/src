@@ -54,7 +54,7 @@ Grey('sig-seis','clip=30 label2="Spatial scale" label1="Temporal scale" unit1=')
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Curve'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

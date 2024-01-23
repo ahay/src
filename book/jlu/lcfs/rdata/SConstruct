@@ -1,0 +1,95 @@
+from rsf.proj import *
+from math import *
+import math
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
+## ----------------------------------------------------------------
+## field data
+Fetch('ln472_invtpow.sgy','yang')
+Flow('powdata','ln472_invtpow.sgy',
+     '''
+     segyread read=d    
+     ''')
+Result('powdata',
+       '''     
+       grey label2="Trace" label1="Time" title="" font=2 
+       lablefat=3 parallel2=n n2tic=20 clip=3500
+       ''')
+
+## apply power gain and AGC
+Flow('agcpowdata','powdata','agc rect1=200 rect2=200 repeat=1')
+Result('agcpowdata',
+       '''          
+       grey label2="Trace" label1="Time" title="" font=2 
+       lablefat=3 parallel2=n n2tic=20 clip=5.2
+       ''')
+
+## find zero position
+Flow('pp','powdata','findzeroendt | transp')
+
+## calculate time-frequency spectra
+Flow('attf','powdata','ltft rect=5')
+Flow('mattf','attf','math output="abs(input)" | real')
+
+## determine bandwidth using peak frequency
+dw=0.325521
+Flow('pf','mattf',
+     '''
+     transp | findmax1 verb=n|dd type=float|math output="(input-1)*%g*2.5" |
+     dd type=float
+     ''' % dw)
+Flow('smpf','pf','smooth rect1=10')
+
+## calculate local centroid frequency
+Flow('bw cf var2','attf smpf',
+     '''          
+     window max2=100 | lcf trange=${SOURCES[1]}   
+     avef=${TARGETS[1]} var2=${TARGETS[2]} rect1=80
+     ''')
+
+## find reference cf and var2
+Flow('zpo','cf pp',
+     '''
+     findrefmax1 zeropo=${SOURCES[1]} | transp
+     ''')
+
+## lcfs
+Flow('qts','cf var2 zpo',
+     ''' 
+     lcfseq var2=${SOURCES[1]} repos=${SOURCES[2]}
+     ''')
+Flow('smqts','qts zpo pp',
+     '''
+     smooth rect2=10 rect1=30 |
+     recoverfulleq zpo=${SOURCES[1]} zeropo=${SOURCES[2]}
+     ''')
+Result('smqts',
+       '''
+       window min1=0.|clip clip=150|
+       grey color=j scalebar=y allpos=y screenratio=0.8 crowd1=0.75 
+       crowd2=0.75 polarity=n label2="Trace" label1="Time" unit2= labelfat=3
+       wanttitle=n font=2 parallel2=n n2tic=20 nbartic=20
+       ''')
+
+## implement inverse Q filter with equivalent Q value
+Flow('ineq','qts zpo',
+     '''
+     convert0eq repos=${SOURCES[1]} | smooth rect2=40 rect1=1
+     ''')
+
+Flow('asf','powdata','fft1 | spray axis=2 d=0.004 n=751 o=1.|transp')
+
+Flow('cmtf','asf ineq',
+     '''
+     invqfilt eqt=${SOURCES[1]} gim=22
+     ''')
+
+Flow('cmsig','cmtf','transp | fft1 inv=y | window n1=1 f1=0')
+Result('cmsig',
+       '''         
+       grey label2="Trace" unit2= label1="Time" unit1=s title="" font=2 
+       lablefat=3 parallel2=n n2tic=20 clip=3500 wanttitle=n
+       ''')
+
+End()

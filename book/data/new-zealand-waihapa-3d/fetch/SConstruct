@@ -71,7 +71,7 @@ Flow(['image.rsf','image_hdr.rsf'],['3D-Waihapa.rsf','3D-Waihapa_hdr.rsf'],
 	  verbose=1
      ''',stdout=0, stdin=0)
        
-Result("image","sfgrey title='3D-Waihapa'")
+#Result("image","sfgrey title='3D-Waihapa'")
 #Result("zoomimage","image",
 #       "window min1=1 max1=2 j3=10 | sfgrey title='3D-Waihapa'")
 Result("image3df","image",

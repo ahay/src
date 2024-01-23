@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     bool spitz, prec, verb;
     int niter, sa, na, j, dim, nx, n[SF_MAX_DIM], m[SF_MAX_DIM];
     float *dd, *ss, eps, na0, sa0;
-    char varname[6], *lagfile;
+    char varname[4], *lagfile;
     sf_filter naa, saa;
     sf_file spef, npef, dat, signoi, slag, nlag;
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=20;
     /* number of iterations */
 
-    sprintf(varname,"n%d",dim+1);
+    snprintf(varname,3,"n%d",(dim+1)%10u);
     sf_putint(signoi,varname,2);
 
     nx=1;

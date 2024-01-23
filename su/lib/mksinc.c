@@ -94,7 +94,7 @@ Author:  Dave Hale, Colorado School of Mines, 06/02/89
 *****************************************************************************/
 {
 	int j;
-	double a[20],s[20], work[20], fmax;
+	double a[20], s[20], work[20], fmax;
 
 	/* compute auto-correlation and cross-correlation arrays */
 	fmax = 0.066+0.265*log((double)lsinc);

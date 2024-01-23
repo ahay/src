@@ -106,16 +106,247 @@ Flow('right left','velp fft qp',
 ##########################
 # Data
 
-Flow('data5 wav','vel csource5 left right',
-     '''
-     mpifwigradlr verb=y Fdat=${TARGETS[0]} Fvel=${SOURCES[0]} Fsrc=${SOURCES[1]} 
-     Fleft=${SOURCES[2]} Fright=${SOURCES[3]} function=1 ns=26 ds=0.2 s0=0. nb=50 w0=1500 scalet=1 
-     Fwav=${TARGETS[1]}
-     ''',stdin=0,stdout=-1)
+for case in (5,9,15):
+    data = 'data%d' % case
+    wav = 'wav%d' % case
+    csource = 'csource%d' % case
 
-Result('data5','real |grey title=')
-Result('data9','real |grey title=')
-Result('data15','real |grey title=')
+    Flow([data,wav],['vel',csource,'left','right'],
+         '''
+         mpifwigradlr verb=y Fdat=${TARGETS[0]} Fvel=${SOURCES[0]} Fsrc=${SOURCES[1]} 
+         Fleft=${SOURCES[2]} Fright=${SOURCES[3]} function=1 ns=26 ds=0.2 s0=0. nb=50 w0=1500 scalet=1 
+         Fwav=${TARGETS[1]}
+         ''',stdin=0,stdout=-1)
+    Plot(data,'real |grey title=',view=1)
+
+Flow('1right 1left','velp fft qp',
+     '''
+     zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500 fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+     mode=0 rev=n sign=0 abc=1 nbt=50 nbb=50 nbl=50 nbr=50 ct=0.008 cb=0.008 cl=0.008 cr=0.008 compen=n
+     ''')
+Flow('temgrad 1misfit0 wav11 wav12 res1','data5 vel0 csource5 1left 1right q',
+     '''
+     mpifwigradlr Fdat=${SOURCES[0]} Fvel=${SOURCES[1]} Fsrc=${SOURCES[2]} 
+     Fleft=${SOURCES[3]} Fright=${SOURCES[4]} Fleftb=${SOURCES[3]} Frightb=${SOURCES[4]} 
+     Fq=${SOURCES[4]} function=3 scomp=n ns=26 ds=0.2 s0=0 nb=50 w0=1500 
+     Fgrad=${TARGETS[0]} Fmisfit=${TARGETS[1]} Fwav=${TARGETS[2]} Fwav2=${TARGETS[3]} Fres=${TARGETS[4]}
+     ''',stdin=0,stdout=-1)
+Flow('scale.p','temgrad',
+     '''
+     smooth rect1=3 rect2=3 | cut n1=10 | math output="abs(input)" |
+     stack axis=0 max=y | math output="0.3/input" | disfil number=n format="rscale=%g" 
+     ''')
+Flow('1grad0','temgrad scale.p','smooth rect1=3 rect2=3 | cut n1=10 | scale par=${SOURCES[1]}')
+
+newvel = 'vel0'
+newgrad = '1grad0'
+misfit = '1misfit0'
+for it in range(20):
+    newdir = 'dir%d' % (it+1)
+
+    if 0==it:
+        Flow(newdir,newgrad,'math output="-input" ')
+    else:
+        Flow(newdir,[olddir,oldgrad,newgrad],
+             'fwidir grad0=${SOURCES[1]} grad1=${SOURCES[2]} option=dai')
+
+    olddir=newdir
+    oldgrad=newgrad
+    oldvel=newvel
+
+    newgrad='1grad%d' % (it+1)
+    newvel='1vel%d' % (it+1)
+
+    # Wolfe conditions
+    alpha1=0.
+    alpha2=0.
+
+    fcost = 'fcost%d.p' % (it+1)
+    Flow(fcost,misfit,'disfil number=n format="%g" ')
+
+    misfit='1misfit%d' % (it+1)
+#    for ils in range(4): # line search
+    Flow(newvel,[oldvel,olddir],'fwiupdate direction=${SOURCES[1]} alpha0=1 max=0.1 | sfclip2 lower=1.51')
+
+    velp = 'velp-%d' % it
+    Flow(velp,newvel,'pad2 top=50 bottom=50 left=50 right=50')
+    right = '1right%d' % it
+    left = '1left%d' % it
+    Flow([right,left],[velp,'fft','qp'],
+         '''
+         zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500 fft=${SOURCES[1]} q=${SOURCES[2]} 
+         left=${TARGETS[1]} mode=0 rev=n sign=0 abc=1 nbt=50 nbb=50 nbl=50 nbr=50 
+         ct=0.008 cb=0.008 cl=0.008 cr=0.008 compen=n
+         ''')
+    temgrad = 'temgrad%d' % it
+    wav11 = 'wav11%d' % it
+    wav12 = 'wav12%d' % it
+    res1 = 'res1%d' % it
+    Flow([temgrad,misfit,wav11,wav12,res1],['data5',newvel,'csource5',left,right,'q'],
+         '''
+         mpifwigradlr Fdat=${SOURCES[0]} Fvel=${SOURCES[1]} Fsrc=${SOURCES[2]} 
+         Fleft=${SOURCES[3]} Fright=${SOURCES[4]} Fleftb=${SOURCES[3]} Frightb=${SOURCES[4]} Fq=${SOURCES[5]} 
+         function=3 scomp=n ns=26 ds=0.2 s0=0 nb=50 w0=1500 
+         Fgrad=${TARGETS[0]} Fmisfit=${TARGETS[1]} Fwav=${TARGETS[2]} Fwav2=${TARGETS[3]} Fres=${TARGETS[4]}
+         ''',stdin=0,stdout=-1)    
+    Flow(newgrad,[temgrad,'scale.p'],'smooth rect1=3 rect2=3 | cut n1=10 | sfscale par=${SOURCES[1]}')
+
+newvel='1vel20'
+data='data9'
+sou='csource9'
+
+# calculate gradient
+Flow('velp2',newvel,'pad2 top=50 bottom=50 left=50 right=50')
+Flow('2right 2left','velp2 fft qp',
+     '''
+     zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500 fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+     mode=0 rev=n sign=0 abc=1 nbt=50 nbb=50 nbl=50 nbr=50 ct=0.008 cb=0.008 cl=0.008 cr=0.008 compen=n
+     ''')
+Flow('temgrad22 2misfit0 wav211 wav212 res21','data9 1vel20 csource9 2left 2right q',
+     '''
+     mpifwigradlr Fdat=${SOURCES[0]} Fvel=${SOURCES[1]} Fsrc=${SOURCES[2]} 
+     Fleft=${SOURCES[3]} Fright=${SOURCES[4]} Fleftb=${SOURCES[3]} Frightb=${SOURCES[4]} 
+     Fq=${SOURCES[4]} function=3 scomp=n ns=26 ds=0.2 s0=0 nb=50 w0=1500 
+     Fgrad=${TARGETS[0]} Fmisfit=${TARGETS[1]} Fwav=${TARGETS[2]} Fwav2=${TARGETS[3]} Fres=${TARGETS[4]}
+     ''',stdin=0,stdout=-1)
+Flow('scale2.p','temgrad22',
+     '''
+     smooth rect1=3 rect2=3 | cut n1=10 | math output="abs(input)" |
+     stack axis=0 max=y | math output="0.3/input" | disfil number=n format="rscale=%g" 
+     ''')
+Flow('2grad0','temgrad22 scale2.p','smooth rect1=3 rect2=3 | cut n1=10 | scale par=${SOURCES[1]}')
+
+newgrad = '2grad0'
+misfit = '2misfit0'
+
+for it in range(20):
+    newdir = 'dir2%d' % (it+1)
+
+    if 0==it:
+        Flow(newdir,newgrad,'math output="-input" ')
+    else:
+        Flow(newdir,[olddir,oldgrad,newgrad],
+             'fwidir grad0=${SOURCES[1]} grad1=${SOURCES[2]} option=dai')
+
+    olddir=newdir
+    oldgrad=newgrad
+    oldvel=newvel
+
+    newgrad='2grad%d' % (it+1)
+    newvel='2vel%d' % (it+1)
+
+    # Wolfe conditions
+    alpha1=0.
+    alpha2=0.
+
+    fcost = 'fcost2%d.p' % (it+1)
+    Flow(fcost,misfit,'disfil number=n format="%g" ')
+
+    misfit='2misfit%d' % (it+1)
+#    for ils in range(4): # line search
+    Flow(newvel,[oldvel,olddir],'fwiupdate direction=${SOURCES[1]} alpha0=1 max=0.06 | sfclip2 lower=1.51')
+
+    velp = 'velp2-%d' % it
+    Flow(velp,newvel,'pad2 top=50 bottom=50 left=50 right=50')
+    right = '2right%d' % it
+    left = '2left%d' % it
+    Flow([right,left],[velp,'fft','qp'],
+         '''
+         zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500 fft=${SOURCES[1]} q=${SOURCES[2]} 
+         left=${TARGETS[1]} mode=0 rev=n sign=0 abc=1 nbt=50 nbb=50 nbl=50 nbr=50 
+         ct=0.008 cb=0.008 cl=0.008 cr=0.008 compen=n
+         ''')
+    temgrad = '2temgrad%d' % it
+    wav11 = 'wav211%d' % it
+    wav12 = 'wav212%d' % it
+    res1 = '2res%d' % it
+    Flow([temgrad,misfit,wav11,wav12,res1],['data5',newvel,'csource5',left,right,'q'],
+         '''
+         mpifwigradlr Fdat=${SOURCES[0]} Fvel=${SOURCES[1]} Fsrc=${SOURCES[2]} 
+         Fleft=${SOURCES[3]} Fright=${SOURCES[4]} Fleftb=${SOURCES[3]} Frightb=${SOURCES[4]} Fq=${SOURCES[5]} 
+         function=3 scomp=n ns=26 ds=0.2 s0=0 nb=50 w0=1500 
+         Fgrad=${TARGETS[0]} Fmisfit=${TARGETS[1]} Fwav=${TARGETS[2]} Fwav2=${TARGETS[3]} Fres=${TARGETS[4]}
+         ''',stdin=0,stdout=-1)    
+    Flow(newgrad,[temgrad,'scale2.p'],'smooth rect1=3 rect2=3 | cut n1=10 | sfscale par=${SOURCES[1]}')
+
+newvel='2vel20'
+data='data15'
+sou='csource15'
+
+# calculate gradient
+Flow('velp3',newvel,'pad2 top=50 bottom=50 left=50 right=50')
+Flow('3right 3left','velp3 fft qp',
+     '''
+     zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500 fft=${SOURCES[1]} q=${SOURCES[2]} left=${TARGETS[1]}
+     mode=0 rev=n sign=0 abc=1 nbt=50 nbb=50 nbl=50 nbr=50 ct=0.008 cb=0.008 cl=0.008 cr=0.008 compen=n
+     ''')
+Flow('temgrad32 3misfit0 wav311 wav312 res31','data15 2vel20 csource15 3left 3right q',
+     '''
+     mpifwigradlr Fdat=${SOURCES[0]} Fvel=${SOURCES[1]} Fsrc=${SOURCES[2]} 
+     Fleft=${SOURCES[3]} Fright=${SOURCES[4]} Fleftb=${SOURCES[3]} Frightb=${SOURCES[4]} 
+     Fq=${SOURCES[4]} function=3 scomp=n ns=26 ds=0.2 s0=0 nb=50 w0=1500 
+     Fgrad=${TARGETS[0]} Fmisfit=${TARGETS[1]} Fwav=${TARGETS[2]} Fwav2=${TARGETS[3]} Fres=${TARGETS[4]}
+     ''',stdin=0,stdout=-1)
+Flow('scale3.p','temgrad32',
+     '''
+     smooth rect1=3 rect2=3 | cut n1=10 | math output="abs(input)" |
+     stack axis=0 max=y | math output="0.3/input" | disfil number=n format="rscale=%g" 
+     ''')
+Flow('3grad0','temgrad32 scale3.p','smooth rect1=3 rect2=3 | cut n1=10 | scale par=${SOURCES[1]}')
+
+newgrad = '3grad0'
+misfit = '3misfit0'
+
+for it in range(20):
+    newdir = 'dir3%d' % (it+1)
+
+    if 0==it:
+        Flow(newdir,newgrad,'math output="-input" ')
+    else:
+        Flow(newdir,[olddir,oldgrad,newgrad],
+             'fwidir grad0=${SOURCES[1]} grad1=${SOURCES[2]} option=dai')
+
+    olddir=newdir
+    oldgrad=newgrad
+    oldvel=newvel
+
+    newgrad='3grad%d' % (it+1)
+    newvel='3vel%d' % (it+1)
+
+    # Wolfe conditions
+    alpha1=0.
+    alpha2=0.
+
+    fcost = 'fcost3%d.p' % (it+1)
+    Flow(fcost,misfit,'disfil number=n format="%g" ')
+
+    misfit='3misfit%d' % (it+1)
+#    for ils in range(4): # line search
+    Flow(newvel,[oldvel,olddir],'fwiupdate direction=${SOURCES[1]} alpha0=1 max=0.015 | sfclip2 lower=1.51')
+
+    velp = 'velp3-%d' % it
+    Flow(velp,newvel,'pad2 top=50 bottom=50 left=50 right=50')
+    right = '3right%d' % it
+    left = '3left%d' % it
+    Flow([right,left],[velp,'fft','qp'],
+         '''
+         zfraclr2 seed=2010 npk=30 eps=1e-7 dt=0.002 w0=1500 fft=${SOURCES[1]} q=${SOURCES[2]} 
+         left=${TARGETS[1]} mode=0 rev=n sign=0 abc=1 nbt=50 nbb=50 nbl=50 nbr=50 
+         ct=0.008 cb=0.008 cl=0.008 cr=0.008 compen=n
+         ''')
+    temgrad = '3temgrad%d' % it
+    wav11 = 'wav311%d' % it
+    wav12 = 'wav312%d' % it
+    res1 = '3res%d' % it
+    Flow([temgrad,misfit,wav11,wav12,res1],['data5',newvel,'csource5',left,right,'q'],
+         '''
+         mpifwigradlr Fdat=${SOURCES[0]} Fvel=${SOURCES[1]} Fsrc=${SOURCES[2]} 
+         Fleft=${SOURCES[3]} Fright=${SOURCES[4]} Fleftb=${SOURCES[3]} Frightb=${SOURCES[4]} Fq=${SOURCES[5]} 
+         function=3 scomp=n ns=26 ds=0.2 s0=0 nb=50 w0=1500 
+         Fgrad=${TARGETS[0]} Fmisfit=${TARGETS[1]} Fwav=${TARGETS[2]} Fwav2=${TARGETS[3]} Fres=${TARGETS[4]}
+         ''',stdin=0,stdout=-1)    
+    Flow(newgrad,[temgrad,'scale3.p'],'smooth rect1=3 rect2=3 | cut n1=10 | sfscale par=${SOURCES[1]}')
+
 
 # Inversion result
 Result('arrow1',None,'box  screenratio=0.5 x0=8.5 y0=3.5 xt=-0.5 yt=0.5 length=0.4 label= boxit=n pscale=0.8')

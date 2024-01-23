@@ -298,7 +298,7 @@ void pml_close(void)
     free(*txxn1x);
     free(txxn1x);
     free(*txxn0x);
-    free(txxn1x);
+    free(txxn0x);
 }
 
 

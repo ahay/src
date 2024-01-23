@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     int dim, dim1, nw[SF_MAX_DIM], s[SF_MAX_DIM], n[SF_MAX_DIM];
     int i, j, iw, n1, n2, i0, i2;
     float *data, *w[SF_MAX_DIM], wi;
-    char key[4];
+    char key[6];
     sf_file in=NULL, out=NULL;
 
     sf_init(argc,argv);
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     dim = sf_filedims (in,n);
     dim1 = -1;
     for (i=0; i < dim; i++) {
-	snprintf(key,4,"nw%d",i+1);
+	snprintf(key,5,"nw%d",i+1);
 	if (!sf_getint(key,nw+i)) nw[i]=0;
 	/*( nw#=0 tapering on #-th axis )*/
 	if (nw[i] > 0) {

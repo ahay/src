@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfmutter', 'sfput', 'sfwindow', 'sfvscan', 'sfcostaper', 'sfmath', 'sfcut', 'sfsmooth', 'sfspray', 'sfbar', 'sfscale', 'sfadd', 'sftransp', 'sfderiv', 'sfbyte', 'sfclip2', 'sfgrey', 'sfvaripick', 'sfcat', 'sfvaricost', 'sfvariminim', 'sfstack', 'sfpad2', 'sfgraph', 'sfgrey3', 'sfnmo', 'sfslice', 'sfdip', 'sfpwspray', 'sfwiggle', 'sfkirchnew']
+data=['data/midpts/midpts.hh']
+size= 86028628576

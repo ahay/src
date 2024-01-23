@@ -396,9 +396,11 @@ static void ffmpeg_init (void) {
 #endif
 #if LIBAVCODEC_VERSION_INT < 0x363b64 /* 54.59.100 @ ffmpeg-1.0 */
 #define AV_CODEC_ID_MPEG1VIDEO CODEC_ID_MPEG1VIDEO 
-#endif 
-    /* register all the codecs */
+#endif
+#if LIBAVCODEC_VERSION_MAJOR < 58
+    /*register all the codecs */
     avcodec_register_all ();
+#endif
 
     /* find the mpeg1 video encoder */
     codec = avcodec_find_encoder (AV_CODEC_ID_MPEG1VIDEO);
@@ -531,8 +533,17 @@ static void ffmpeg_write (void) {
     av_init_packet (&mpeg_pkt);
     mpeg_pkt.data = NULL;
     mpeg_pkt.size = 0;
+#if LIBAVCODEC_VERSION_MAJOR < 58
     if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, mpeg_frame, &mpeg_gout) < 0)
         ERR (FATAL, name, "MPEG encoding error\n");
+#else
+    if (avcodec_send_frame(codec_ctx, mpeg_frame) < 0)
+	ERR (FATAL, name, "MPEG send frame error\n");
+    mpeg_gout = avcodec_receive_packet(codec_ctx, &mpeg_pkt);
+    if (mpeg_gout == AVERROR(EAGAIN) || mpeg_gout == AVERROR_EOF ||
+	mpeg_gout < 0)
+	ERR (FATAL, name, "MPEG receive packet error\n");
+#endif    
     if (mpeg_gout) {
         fwrite (mpeg_pkt.data, 1, mpeg_pkt.size, pltout);
 
@@ -559,8 +570,17 @@ static void ffmpeg_finish (void) {
     }
 #else
     for (mpeg_gout = 1; mpeg_gout; i++) {
+#if LIBAVCODEC_VERSION_MAJOR < 58
         if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, NULL, &mpeg_gout) < 0)
             ERR (FATAL, name, "MPEG encoding error\n");
+#else
+	if (avcodec_send_frame(codec_ctx, NULL) < 0)
+	    ERR (FATAL, name, "MPEG send frame error\n");
+	mpeg_gout = avcodec_receive_packet(codec_ctx, &mpeg_pkt);
+	if (mpeg_gout == AVERROR(EAGAIN) || mpeg_gout == AVERROR_EOF ||
+	    mpeg_gout < 0)
+	    ERR (FATAL, name, "MPEG receive packet error\n");
+#endif
         if (mpeg_gout) {
             fwrite (mpeg_pkt.data, 1, mpeg_pkt.size, pltout);
 #if VERSION_CHECK(LIBAVCODEC_VERSION_INT, <, 57, 8, 0, 57, 12, 100)

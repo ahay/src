@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 Flow('headerattr.txt','../fetch/SEG14.Pisoelastic_hdr.rsf',
      'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
@@ -82,6 +84,8 @@ Flow('sxrxsub',
      ''')
 
 Result('sxrxsub','grey')
+
+SConscript('../ntg/SConstruct')
 
 Flow('velsub','../ntg/Vpstart.rsf',
      '''

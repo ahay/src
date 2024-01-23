@@ -19,33 +19,6 @@ Denver, CO 80247
 \lefthead{Sun, Fomel, Sripanich \& Fowler}
 \righthead{Low-rank elastic wave extrapolation}
 
-\newcommand{\diycommand}[2]{
-    \providecommand{#1}{#2}
-    \renewcommand{#1}{#2}
-}
-
-\diycommand{\a}{\mathbf{a}}
-\diycommand{\x}{\mathbf{x}}
-\diycommand{\k}{\mathbf{k}}
-\diycommand{\A}{\mathbf{A}}
-\diycommand{\B}{\mathbf{B}}
-\diycommand{\C}{\mathbf{C}}
-\diycommand{\D}{\mathbf{D}}
-\diycommand{\I}{\mathbf{I}}
-\diycommand{\L}{\mathbf{L}}
-\diycommand{\S}{\mathbf{S}}
-\diycommand{\u}{\mathbf{u}}
-\diycommand{\eps}{\varepsilon}
-\diycommand{\Fi}{\Phi}
-\diycommand{\La}{\Lambda}
-\diycommand{\Ga}{\Gamma}
-\diycommand{\w}{\mathbf{w}}
-\diycommand{\M}{\mathbf{M}}
-
-%\newcommand{\Fi}{\mathbf{\Phi}}
-%\newcommand{\La}{\mathbf{\Lambda}}
-%\newcommand{\Ga}{\mathbf{\Gamma}}
-
 \begin{abstract}
     Conventional solutions of elastic wave equations rely on inaccurate finite-difference approximations of the time derivative, which result in strict dispersion and stability conditions and limitations. In this work, we derive a general solution to the elastic anisotropic wave equation, in the form of a Fourier Integral Operator (FIO). The proposed method is a generalization of the previously developed recursive integral time extrapolation operators from acoustic to elastic media, and can accurately propagate waves in time using the form of the analytical solution in homogeneous media. The formulation is closely connected to elastic wave mode decomposition, and can be applied to the most general anisotropic medium. The numerical calculation of the FIO makes use of a low-rank approximation to enable highly accurate and stable wave extrapolations. We present numerical examples including wave propagation in $3$D heterogeneous orthorhombic and triclinic models.
 \end{abstract}
@@ -65,20 +38,20 @@ In this paper, we introduce a general framework for elastic wave extrapolation i
 Following the notation of \cite{rite}, a generic linear second-order in time wave equation can be expressed in the following form
 \begin{equation}
 \label{eq:we}
-\left( \frac{\partial^2}{\partial t^2} + \A \right) \u(\x,t) = 0 \;,
+\left( \frac{\partial^2}{\partial t^2} + \A \right) \uu(\x,t) = 0 \;,
 \end{equation}
-where $\u$ is the wavefield, $\x$ is the spatial location, $t$ is time, and $\A$ is the a matrix operator containing material parameters and spatial derivative operators. Equation~\ref{eq:we} can also be expressed using the first-order system
+where $\uu$ is the wavefield, $\x$ is the spatial location, $t$ is time, and $\A$ is the a matrix operator containing material parameters and spatial derivative operators. Equation~\ref{eq:we} can also be expressed using the first-order system
 \begin{equation}
 \label{eq:we1st}
-\frac{\partial}{\partial t} \begin{bmatrix}   \u \\ \u_t \end{bmatrix} 
-= \begin{bmatrix}   0 & \I \\ -\A & 0 \end{bmatrix} \begin{bmatrix}   \u \\ \u_t \end{bmatrix} \equiv \B \begin{bmatrix}   \u \\ \u_t \end{bmatrix} \;,
-% \equiv \B \u
+\frac{\partial}{\partial t} \begin{bmatrix}   \uu \\ \uu_t \end{bmatrix} 
+= \begin{bmatrix}   0 & \I \\ -\A & 0 \end{bmatrix} \begin{bmatrix}   \uu \\ \uu_t \end{bmatrix} \equiv \B \begin{bmatrix}   \uu \\ \uu_t \end{bmatrix} \;,
+% \equiv \B \uu
 \end{equation}
-where $\u_t \equiv \partial \u/\partial t$. The solution of equation~\ref{eq:we1st} can be formulated using the definition of the matrix exponential:
+where $\uu_t \equiv \partial \uu/\partial t$. The solution of equation~\ref{eq:we1st} can be formulated using the definition of the matrix exponential:
 \begin{equation}
 \label{eq:sol-we1st}
-\begin{bmatrix}   \u(t) \\ \u_t(t) \end{bmatrix} = e^{\B t} \begin{bmatrix}   \u(0) \\ \u_t(0) \end{bmatrix}
-%\u(t) = e^{\B t} \u(0) \;.
+\begin{bmatrix}   \uu(t) \\ \uu_t(t) \end{bmatrix} = e^{\B t} \begin{bmatrix}   \uu(0) \\ \uu_t(0) \end{bmatrix}
+%\uu(t) = e^{\B t} \uu(0) \;.
 \end{equation}
 Defining $\Fi \equiv \sqrt{\A}$, the eigenvalue decomposition of $\B$ can be written as \cite[]{rite}
 \begin{equation}
@@ -93,34 +66,34 @@ where
 
 The solution to the first-order system~\ref{eq:sol-we1st} can now be written as
 \begin{equation}
-\begin{bmatrix} \u(t) \\ \u_t(t) \end{bmatrix} = \S e^{\La t} \S^{-1} \begin{bmatrix} \u(0) \\ \u_t(0) \end{bmatrix} \;.
+\begin{bmatrix} \uu(t) \\ \uu_t(t) \end{bmatrix} = \S e^{\La t} \S^{-1} \begin{bmatrix} \uu(0) \\ \uu_t(0) \end{bmatrix} \;.
 \end{equation}
 To simplify the system, we can define the analytical wavefield
 \begin{equation}
-\begin{bmatrix} \hat{\u}_1(t) \\ \hat{\u}_2(t) \end{bmatrix} = \S^{-1} \begin{bmatrix} \u(t) \\ \u_t(t) \end{bmatrix} = \frac{1}{\sqrt{2}}  \begin{bmatrix}  \u(t)-i\Fi^{-1}\u_t(t) \\ \u(t)+i\Fi^{-1}\u_t(t) \end{bmatrix} \;.
+\begin{bmatrix} \hat{\uu}_1(t) \\ \hat{\uu}_2(t) \end{bmatrix} = \S^{-1} \begin{bmatrix} \uu(t) \\ \uu_t(t) \end{bmatrix} = \frac{1}{\sqrt{2}}  \begin{bmatrix}  \uu(t)-i\Fi^{-1}\uu_t(t) \\ \uu(t)+i\Fi^{-1}\uu_t(t) \end{bmatrix} \;.
 \end{equation}
 The solution to equation~\ref{eq:we} finally takes the form
 \begin{equation}
     \label{eq:osteps}
-\begin{bmatrix} \hat{\u}_1(t) \\ \hat{\u}_2(t) \end{bmatrix} = e^{\La t} \begin{bmatrix} \hat{\u}_1(0) \\ \hat{\u}_2(0) \end{bmatrix} = \begin{bmatrix} e^{i\Fi t} & 0 \\ 0 & e^{-i\Fi t} \end{bmatrix} \begin{bmatrix} \hat{\u}_1(0) \\ \hat{\u}_2(0) \end{bmatrix} \;.
+\begin{bmatrix} \hat{\uu}_1(t) \\ \hat{\uu}_2(t) \end{bmatrix} = e^{\La t} \begin{bmatrix} \hat{\uu}_1(0) \\ \hat{\uu}_2(0) \end{bmatrix} = \begin{bmatrix} e^{i\Fi t} & 0 \\ 0 & e^{-i\Fi t} \end{bmatrix} \begin{bmatrix} \hat{\uu}_1(0) \\ \hat{\uu}_2(0) \end{bmatrix} \;.
 \end{equation}
 
 Selecting the first of the two decoupled solutions of equation~\ref{eq:osteps} leads to a time extrapolation operator
 \begin{equation}
 \label{eq:os}
-\hat{\u}(\x,t+\Delta t) = e^{i\Fi\Delta t} \hat{\u}(\x,t) \;,
+\hat{\uu}(\x,t+\Delta t) = e^{i\Fi\Delta t} \hat{\uu}(\x,t) \;,
 \end{equation}
-where $\hat{\u} =(\u-i\Fi^{-1}\u_t)/\sqrt{2}$.
+where $\hat{\uu} =(\uu-i\Fi^{-1}\uu_t)/\sqrt{2}$.
 
-For acoustic isotropic constant-density wave equations for pressure waves, $\A = v^2|\k|^2$ where $v$ is velocity and $|\k|^2$ is the Laplacian operator.  This corresponds to the one-step extrapolation method proposed by \cite[]{zhang09}.
+For acoustic isotropic constant-density wave equations for pressure waves, $\A = v^2|\kk|^2$ where $v$ is velocity and $|\kk|^2$ is the Laplacian operator.  This corresponds to the one-step extrapolation method proposed by \cite[]{zhang09}.
 
-The wavefield $\hat{\u}$ is an analytical signal, with its imaginary part being the Hilbert transform of its real part \cite[]{zhang09}. To see this, we can perform Hilbert transform to the real-valued wavefield $\u$ in the frequency domain, and use the dispersion relation $\omega^2 = \Phi^2$ and derivative property of Fourier Transform
+The wavefield $\hat{\uu}$ is an analytical signal, with its imaginary part being the Hilbert transform of its real part \cite[]{zhang09}. To see this, we can perform Hilbert transform to the real-valued wavefield $\uu$ in the frequency domain, and use the dispersion relation $\omega^2 = \Phi^2$ and derivative property of Fourier Transform
 \newcommand{\sign}{\text{sign}}
 \begin{equation}
     \label{eq:hilb}
-    \u(t) \xrightarrow{\mathscr{F}} \u(\omega) \xrightarrow{\mathscr{H}} i\,\sign(\omega) \u(\omega) = \frac{i\,\omega}{|\omega|} \u(\omega) = \frac{i\,\omega}{\Fi} \u(\omega) \xrightarrow{\mathscr{F}^{-1}} = \Fi^{-1}\u_t(t) \;,
+    \uu(t) \xrightarrow{\mathscr{F}} \uu(\omega) \xrightarrow{\mathscr{H}} i\,\sign(\omega) \uu(\omega) = \frac{i\,\omega}{|\omega|} \uu(\omega) = \frac{i\,\omega}{\Fi} \uu(\omega) \xrightarrow{\mathscr{F}^{-1}} = \Fi^{-1}\uu_t(t) \;,
 \end{equation}
-where $\mathscr{F}$ and $\mathscr{F}^{-1}$ denotes forward and inverse Fourier transform in time. The output corresponds to the imaginary part of analytical wavefield $\hat{\u}$.
+where $\mathscr{F}$ and $\mathscr{F}^{-1}$ denotes forward and inverse Fourier transform in time. The output corresponds to the imaginary part of analytical wavefield $\hat{\uu}$.
 
 \subsection{Homogeneous Media}
 We first assume homogeneous model properties and investigate the form of time stepping solutions in general elastic media. For elastic anisotropic wave equations, the matrix operator $\A$ corresponds to the spatial Fourier transform of the matrix $-\Ga/\rho = -\D\C\D^\intercal/\rho$, where $\Ga$ is the Christoffel matrix, $\rho$ is density, $\C$ is the elastic stiffness tensor expressed in Voigt notation as a $6\times6$ matrix, and $\D$ is the derivative matrix operator give by
@@ -146,53 +119,53 @@ For example, the Christoffel matrix $\tilde{\Ga}$ in the case of orthorhombic an
 \end{equation}
 
 The square root matrix $\Fi$ is analogous to the phase function in the acoustic case, and corresponds to the angular frequency $\omega$ according to the dispersion relation. Since the matrix $\tilde{\Ga}$ is symmetric positive definite (SPD), it can be diagonalized with its eigenvalues corresponding to the square of phase velocity of separate wave modes and its orthogonal eigenvectors corresponding to the polarization directions:
-\begin{align}
+\begin{eqnarray}
     \label{eq:chris-eigen}
-\A = \frac{\tilde{\Ga}}{\rho} =& \mathbf{Q} \mathbf{V} \mathbf{Q}^\intercal \\ \nonumber 
-=& \begin{bmatrix} \a_p & \a_{s1} & \a_{s2}\end{bmatrix} \begin{bmatrix} v_p^2 k^2 & 0 & 0 \\ 0 & v_{s1}^2 k^2 & 0 \\ 0 & 0 & v_{s2}^2 k^2 \end{bmatrix} \begin{bmatrix} \a_p^\intercal \\ \a_{s1}^\intercal \\ \a_{s2}^\intercal \end{bmatrix} \;.
-\end{align}
+\A = \frac{\tilde{\Ga}}{\rho} &=& \mathbf{Q} \mathbf{V} \mathbf{Q}^\intercal \\ \nonumber 
+&=& \begin{bmatrix} \ba_p & \ba_{s1} & \ba_{s2}\end{bmatrix} \begin{bmatrix} v_p^2 k^2 & 0 & 0 \\ 0 & v_{s1}^2 k^2 & 0 \\ 0 & 0 & v_{s2}^2 k^2 \end{bmatrix} \begin{bmatrix} \ba_p^\intercal \\ \ba_{s1}^\intercal \\ \ba_{s2}^\intercal \end{bmatrix} \;.
+\end{eqnarray}
 Since $\mathbf{Q}$ is orthogonal, $\mathbf{Q}^\intercal$ projects the input vector to its column space. The square root of $\tilde{\Ga}$ is found by taking the square root of the eigenvalues in the diagonal matrix. Analogously, the wave extrapolation operator, $e^{i\Fi \Delta t}$, can be computed as:
-\begin{align}
+\begin{eqnarray}
 \label{eq:sqrt}
 &e^{i\Fi \Delta t} = \\ \nonumber
-&\begin{bmatrix} \a_p & \a_{s1} & \a_{s2}\end{bmatrix} \begin{bmatrix} 
+&\begin{bmatrix} \ba_p & \ba_{s1} & \ba_{s2}\end{bmatrix} \begin{bmatrix} 
 e^{i v_p k \Delta t} & 0 & 0 \\ 
 0 & e^{i v_{s1} k \Delta t} & 0 
 \\ 0 & 0 & e^{i v_{s2} k \Delta t} 
 \end{bmatrix} 
-\begin{bmatrix} \a_p^\intercal \\ \a_{s1}^\intercal \\ \a_{s2}^\intercal \end{bmatrix} \;.
-\end{align}
+\begin{bmatrix} \ba_p^\intercal \\ \ba_{s1}^\intercal \\ \ba_{s2}^\intercal \end{bmatrix} \;.
+\end{eqnarray}
 An analogous idea of using matrix exponentials for wave propagation was studied previously by \cite{kosloff87} in application to the one-way wave equation. Physically, the operator in equation~\ref{eq:sqrt} first decomposes the input vector wavefield into three wave modes, phase shifts them using the corresponding phase velocities, and then aligns them in the polarization directions of the decomposed wave modes. The operator defined in equation~\ref{eq:sqrt} can be expressed as a summation of rank-one matrices
 \begin{equation}
 \label{eq:rankone}
-e^{i\Fi \Delta t} = \sum\limits_{i=p,s1,s2} e^{i v_i k \Delta t} \a_i \a_i^\intercal \; .
+e^{i\Fi \Delta t} = \sum\limits_{i=p,s1,s2} e^{i v_i k \Delta t} \ba_i \ba_i^\intercal \; .
 \end{equation}
-Note that $\a_i \a_i^\intercal$ term in equation~\ref{eq:rankone} is the wave mode decomposition operator \cite[]{joethesis,zm}.
+Note that $\ba_i \ba_i^\intercal$ term in equation~\ref{eq:rankone} is the wave mode decomposition operator \cite[]{joethesis,zm}.
 
-In 3D, we can transform the input vector in the wavenumber domain $\hat{\u}(k) = \begin{bmatrix} \hat{u}_x(k) & \hat{u}_y(k) & \hat{u}_z(k) \end{bmatrix}^\intercal$. To apply the Fourier integral operator, we omit the pair of forward and backward Fourier transforms and formally write
-\begin{align}
+In 3D, we can transform the input vector in the wavenumber domain $\hat{\uu}(k) = \begin{bmatrix} \hat{u}_x(k) & \hat{u}_y(k) & \hat{u}_z(k) \end{bmatrix}^\intercal$. To apply the Fourier integral operator, we omit the pair of forward and backward Fourier transforms and formally write
+\begin{eqnarray}
     \label{eq:osop}
 %\int e^{-ix \cdot k}  dk
-e^{i\Fi \Delta t} \hat{\u}(k) =&
-\sum\limits_{i=p,s1,s2} e^{i v_i k \Delta t} \a_i \a_i^\intercal \hat{\u} \\ \nonumber
-=& \begin{bmatrix} \a_p & \a_{s1} & \a_{s2}\end{bmatrix} 
+e^{i\Fi \Delta t} \hat{\uu}(k) =&
+\sum\limits_{i=p,s1,s2} e^{i v_i k \Delta t} \ba_i \ba_i^\intercal \hat{\uu} \\ \nonumber
+=& \begin{bmatrix} \ba_p & \ba_{s1} & \ba_{s2}\end{bmatrix} 
 \begin{bmatrix} 
 e^{i v_p k \Delta t} & 0 & 0 \\ 
 0 & e^{i v_{s1} k \Delta t} & 0 \\ 
 0 & 0 & e^{i v_{s2} k \Delta t} 
 \end{bmatrix} 
-\begin{bmatrix} \a_p^\intercal \\ \a_{s1}^\intercal \\ \a_{s2}^\intercal \end{bmatrix} \hat{\u} \\ \nonumber
-%=& \; e^{i v_p k \Delta t} \, (a_{p_x} \hat{u}_x + a_{p_y} \hat{u}_y + a_{p_z} \hat{u}_z) \, \a_{p} + \\ \nonumber
-%&\; e^{i v_{s1} k \Delta t} \, (a_{s1_x} \hat{u}_x + a_{s1_y} \hat{u}_y + a_{s1_z} \hat{u}_z) \, \a_{s1} + \\ \nonumber
-%&\; e^{i v_{s2} k \Delta t} \, (a_{s2_x} \hat{u}_x + a_{s2_y} \hat{u}_y + a_{s2_z} \hat{u}_z) \, \a_{s2} \\ \nonumber
+\begin{bmatrix} \ba_p^\intercal \\ \ba_{s1}^\intercal \\ \ba_{s2}^\intercal \end{bmatrix} \hat{\uu} \\ \nonumber
+%=& \; e^{i v_p k \Delta t} \, (a_{p_x} \hat{u}_x + a_{p_y} \hat{u}_y + a_{p_z} \hat{u}_z) \, \ba_{p} + \\ \nonumber
+%&\; e^{i v_{s1} k \Delta t} \, (a_{s1_x} \hat{u}_x + a_{s1_y} \hat{u}_y + a_{s1_z} \hat{u}_z) \, \ba_{s1} + \\ \nonumber
+%&\; e^{i v_{s2} k \Delta t} \, (a_{s2_x} \hat{u}_x + a_{s2_y} \hat{u}_y + a_{s2_z} \hat{u}_z) \, \ba_{s2} \\ \nonumber
 =& \begin{bmatrix}
 s_{xx} & s_{xy} & s_{xz} \\
 s_{yx} & s_{yy} & s_{yz} \\
 s_{zx} & s_{zy} & s_{zz} \\
-\end{bmatrix} \hat{\u} \;,
-\end{align}
+\end{bmatrix} \hat{\uu} \;,
+\end{eqnarray}
 where
-\begin{align}
+\begin{eqnarray}
     \label{eq:exps}
 s_{xx} =& e^{i v_p k \Delta t} a_{p_x} a_{p_x} + e^{i v_{s1} k \Delta t} a_{s1_x} a_{s1_x} + e^{i v_{s2} k \Delta t} a_{s2_x} a_{s2_x} \;, \\ \nonumber
 s_{xy} =& e^{i v_p k \Delta t} a_{p_x} a_{p_y} + e^{i v_{s1} k \Delta t} a_{s1_x} a_{s1_y} + e^{i v_{s2} k \Delta t} a_{s2_x} a_{s2_y} \;, \\ \nonumber
@@ -201,37 +174,37 @@ s_{yy} =& e^{i v_p k \Delta t} a_{p_y} a_{p_y} + e^{i v_{s1} k \Delta t} a_{s1_y
 s_{yz} =& e^{i v_p k \Delta t} a_{p_y} a_{p_z} + e^{i v_{s1} k \Delta t} a_{s1_y} a_{s1_z} + e^{i v_{s2} k \Delta t} a_{s2_y} a_{s2_z} \;, \\ \nonumber
 s_{zz} =& e^{i v_p k \Delta t} a_{p_z} a_{p_z} + e^{i v_{s1} k \Delta t} a_{s1_z} a_{s1_z} + e^{i v_{s2} k \Delta t} a_{s2_z} a_{s2_z} \;, \\ \nonumber
 s_{yx} =& s_{xy} \;,\; s_{zx} = s_{xz} \;,\; s_{zy} = s_{yz} \;.
-\end{align}
+\end{eqnarray}
 
 Using the form of equation~\ref{eq:os}, we can also define the backward time extrapolator
 \begin{equation}
 \label{eq:os-b}
-\hat{\u}(\x,t-\Delta t) = e^{-i\Fi\Delta t} \hat{\u}(\x,t) \;.
+\hat{\uu}(\x,t-\Delta t) = e^{-i\Fi\Delta t} \hat{\uu}(\x,t) \;.
 \end{equation}
 If we require the data to be real-valued at every time step, and sum the forward and backward extrapolators, we arrive at the two-step formulation:
 \begin{equation}
 \label{eq:ts}
-\hat{\u} (\x,t+\Delta t) = 2\,\cos(\Fi \Delta t) \hat{\u}(\x,t) - \hat{\u}(\x,t-\Delta t) \;.
+\hat{\uu} (\x,t+\Delta t) = 2\,\cos(\Fi \Delta t) \hat{\uu}(\x,t) - \hat{\uu}(\x,t-\Delta t) \;.
 \end{equation}
 According to equation~\ref{eq:rankone}, the cosine term has the following interpretation:
-\begin{align}
+\begin{eqnarray}
     \label{eq:euler}
 \cos(\Fi \Delta t) =& e^{i\Fi\Delta t} + e^{-i\Fi\Delta t} \\ \nonumber 
-=& \sum\limits_{i=p,s1,s2} (e^{i v_i k \Delta t} + e^{-i v_i k \Delta t}) \a_i \a_i^\intercal \\ \nonumber
-=& \sum\limits_{i=p,s1,s2} 2\,\cos(v_i k \Delta t) \a_i \a_i^\intercal \;,
-\end{align}
+=& \sum\limits_{i=p,s1,s2} (e^{i v_i k \Delta t} + e^{-i v_i k \Delta t}) \ba_i \ba_i^\intercal \\ \nonumber
+=& \sum\limits_{i=p,s1,s2} 2\,\cos(v_i k \Delta t) \ba_i \ba_i^\intercal \;,
+\end{eqnarray}
 and can be calculated as
-\begin{align}
+\begin{eqnarray}
     \label{eq:twostep}
-\cos(\Fi \Delta t) \hat{\u}(k) = &
+\cos(\Fi \Delta t) \hat{\uu}(k) = &
 \begin{bmatrix}
 c_{xx} & c_{xy} & c_{xz} \\
 c_{yx} & c_{yy} & c_{yz} \\
 c_{zx} & c_{zy} & c_{zz} \\
-\end{bmatrix} \hat{\u} \;.
-\end{align}
+\end{bmatrix} \hat{\uu} \;.
+\end{eqnarray}
 where
-\begin{align}
+\begin{eqnarray}
     \label{eq:cosines}
 c_{xx} =& \cos(v_p k \Delta t) a_{p_x} a_{p_x} + \cos(v_{s1} k \Delta t) a_{s1_x} a_{s1_x} + \cos(v_{s2} k \Delta t) a_{s2_x} a_{s2_x} \;, \\ \nonumber
 c_{xy} =& \cos(v_p k \Delta t) a_{p_x} a_{p_y} + \cos(v_{s1} k \Delta t) a_{s1_x} a_{s1_y} + \cos(v_{s2} k \Delta t) a_{s2_x} a_{s2_y} \;, \\ \nonumber
@@ -240,7 +213,7 @@ c_{yy} =& \cos(v_p k \Delta t) a_{p_y} a_{p_y} + \cos(v_{s1} k \Delta t) a_{s1_y
 c_{yz} =& \cos(v_p k \Delta t) a_{p_y} a_{p_z} + \cos(v_{s1} k \Delta t) a_{s1_y} a_{s1_z} + \cos(v_{s2} k \Delta t) a_{s2_y} a_{s2_z} \;, \\ \nonumber
 c_{zz} =& \cos(v_p k \Delta t) a_{p_z} a_{p_z} + \cos(v_{s1} k \Delta t) a_{s1_z} a_{s1_z} + \cos(v_{s2} k \Delta t) a_{s2_z} a_{s2_z} \;, \\ \nonumber
 c_{yx} =& c_{xy} \;,\; c_{zx} = c_{xz} \;,\; c_{zy} = c_{yz} \;.
-\end{align}
+\end{eqnarray}
 Note that, because the elements of the $3\times3$ matrix $\cos(\Fi \Delta t)$ in equation~\ref{eq:twostep} are real-valued, the wavefield can stay real-valued as well. The matrix $\cos(\Fi \Delta t)$ is also closely connected with the k-space adjustment of the Christoffel matrix \cite[]{liu95,firouzi12,cheng16}. 
 
 Expanding the wave extrapolation operator in the form of equations~\ref{eq:exps} and \ref{eq:cosines} reveals a simple relationship between wave propagation and wave mode decomposition. In the one-step formulation, each individual term contained in each element of $e^{i\Fi \Delta t}$ is essentially a sequence of wave-mode decomposition, phase shift and recomposition. For example, the action of the first term in $s_{xx}$, $e^{i v_p k \Delta t} a_{p_x} a_{p_x}$, can be interpreted as projecting the x-component of a vector elastic wavefield onto the P-wave mode, phase shifting it using the P-wave phase velocity and then aligning it with the x-component of the P-wave polarization direction. If individual wave modes are needed to perform imaging, the decoupled operators can be separately applied. The operators concerning a specific wave mode are indicated by the corresponding phase velocity. The first columns in equations~\ref{eq:exps} and \ref{eq:cosines} are P-wave propagators, while the second and third columns are $S1$ and $S2$ wave propagators, respectively. In general anisotropic media beyond tilted transverse isotropic (TTI) symmetry, the two S-wave modes do not decouple easily. Therefore, in order to avoid S-wave singularities in wave propagation, the two coupled S-waves should be computed together \cite[]{sun16,cheng16}.
@@ -253,7 +226,7 @@ In heterogeneous media, the elastic wave equation can be expressed using the Ein
     \rho \ddot{u}_i = (c_{ijkl} u_{k,l})_{,j} = c_{ijkl} u_{k,lj} + c_{ijkl,j} u_{k,l} \;,
 \end{equation}
 where dot on top denotes time derivative, comma in subscript denotes spatial derivative and repeated indices imply summation. Analogously, the Christoffel matrix $\Gamma$ in the case of orthorhombic symmetry can be expanded using the chain rule
-\begin{align}
+\begin{eqnarray}
     \Gamma 
     &= \D \C(\mathbf{x}) \D^\intercal \\ \nonumber
     &= 
@@ -305,10 +278,10 @@ where dot on top denotes time derivative, comma in subscript denotes spatial der
         \partial_zC_{13}\partial_x+\partial_xC_{55}\partial_z & \partial_zC_{23}\partial_y+\partial_yC_{44}\partial_z & \partial_xC_{55}\partial_x+\partial_yC_{44}\partial_y+\partial_zC_{33}\partial_z
     \end{bmatrix}
     \;.
-\end{align}
+\end{eqnarray}
 
 After spatial Fourier transform, $-\Ga \xrightarrow{\mathscr{F}} \tilde{\Ga}$. The Christoffel matrix $\tilde{\Ga}$ in the case of orthorhombic anisotropy takes the form:
-\begin{align}
+\begin{eqnarray}
   \tilde{\Ga} 
   &=
   \begin{bmatrix}
@@ -323,43 +296,43 @@ After spatial Fourier transform, $-\Ga \xrightarrow{\mathscr{F}} \tilde{\Ga}$. T
       \partial_zC_{13}k_x+\partial_xC_{55}k_z & \partial_zC_{23}k_y+\partial_yC_{44}k_z & \partial_xC_{55}k_x+\partial_yC_{44}k_y+\partial_zC_{33}k_z
   \end{bmatrix}
   \;. 
-\end{align}
+\end{eqnarray}
 
 When the model is smoothly varying, which is the underlying assumption of wave mode separation \cite[]{cheng14}, the gradients of stiffnesses are insignificant. In such cases, the imaginary matrix can be dropped, which leads to the conventional real-valued Christoffel matrix in Equation~\ref{eq:chris}. However, in the case of strong heterogeneity, such as at medium interfaces, the gradients of stiffnesses become significant and the imaginary part needs to be taken into account. Because $\tilde{\Ga}$ becomes complex and non-Hermitian, the eigendecomposition of the generic matrix $\A$ is expressed as
-\begin{align}
+\begin{eqnarray}
 \A = \frac{\tilde{\Ga}}{\rho} =& \mathbf{Q} \mathbf{V} \mathbf{Q}^{-1} \\ \nonumber 
-=& \begin{bmatrix} \a_1 & \a_2 & \a_3\end{bmatrix} \begin{bmatrix} \nu_1^2 & 0 & 0 \\ 0 & \nu_2^2 & 0 \\ 0 & 0 & \nu_3^2 \end{bmatrix} \begin{bmatrix} \hat{\a}_1^* \\ \hat{\a}_2^* \\ \hat{\a}_3^* \end{bmatrix} \;,
-\end{align}
+=& \begin{bmatrix} \ba_1 & \ba_2 & \ba_3\end{bmatrix} \begin{bmatrix} \nu_1^2 & 0 & 0 \\ 0 & \nu_2^2 & 0 \\ 0 & 0 & \nu_3^2 \end{bmatrix} \begin{bmatrix} \hat{\ba}_1^* \\ \hat{\ba}_2^* \\ \hat{\ba}_3^* \end{bmatrix} \;,
+\end{eqnarray}
 where the superscript $*$ denotes conjugate transpose. Note that the eigenvalues $\nu_1^2\,,\nu_2^2$ and $\nu_3^2$, as well as their corresponding eigenvectors, are complex-valued. Since $\mathbf{Q}$ is square and $\mathbf{Q}^{-1} \mathbf{Q} = \mathbf{I}$:
-\begin{align}
+\begin{eqnarray}
     \begin{cases}
-        & \hat{\a_i}^* \a_j = 1 \;, i = j \;; \\ \nonumber
-        & \hat{\a_i}^* \a_j = 0 \;, i \neq j \;.
+        & \hat{\ba_i}^* \ba_j = 1 \;, i = j \;; \\ \nonumber
+        & \hat{\ba_i}^* \ba_j = 0 \;, i \neq j \;.
     \end{cases}
-\end{align}
+\end{eqnarray}
 
 Physically, this means in strongly heterogeneous media, wave mode separation cannot be clearly defined due to wave mode conversion, which is expressed as the imaginary part of eigenvalues. The polarization directions are no longer orthogonal in the real sense -- they become orthogonal complex vectors.
 
 The situation stated above does not prevent our framework from performing the correct wavefield extrapolation. The wave extrapolation operator then becomes
-\begin{align}
+\begin{eqnarray}
     \label{eq:osop2}
-e^{i\Fi \Delta t} \hat{\u}(k) =&
-\sum\limits_{i=1,2,3} e^{i \nu_i \Delta t} \a_i \hat{\a}_i^* \hat{\u} \\ \nonumber
-=& \begin{bmatrix} \a_1 & \a_2 & \a_3 \end{bmatrix} 
+e^{i\Fi \Delta t} \hat{\uu}(k) =&
+\sum\limits_{i=1,2,3} e^{i \nu_i \Delta t} \ba_i \hat{\ba}_i^* \hat{\uu} \\ \nonumber
+=& \begin{bmatrix} \ba_1 & \ba_2 & \ba_3 \end{bmatrix} 
 \begin{bmatrix} 
 e^{i \nu_1 \Delta t} & 0 & 0 \\ 
 0 & e^{i \nu_2 \Delta t} & 0 \\ 
 0 & 0 & e^{i \nu_3 \Delta t} 
 \end{bmatrix} 
-\begin{bmatrix} \hat{\a}_1^* \\ \hat{\a}_2^* \\ \hat{\a}_3^* \end{bmatrix} \hat{\u} \\ \nonumber
+\begin{bmatrix} \hat{\ba}_1^* \\ \hat{\ba}_2^* \\ \hat{\ba}_3^* \end{bmatrix} \hat{\uu} \\ \nonumber
 =& \begin{bmatrix}
     \hat{s}_{xx} & \hat{s}_{xy} & \hat{s}_{xz} \\
     \hat{s}_{yx} & \hat{s}_{yy} & \hat{s}_{yz} \\
     \hat{s}_{zx} & \hat{s}_{zy} & \hat{s}_{zz} \\
-\end{bmatrix} \hat{\u} \;,
-\end{align}
+\end{bmatrix} \hat{\uu} \;,
+\end{eqnarray}
 where
-\begin{align}
+\begin{eqnarray}
     \label{eq:exps2}
     \hat{s}_{xx} =& e^{i \nu_1 \Delta t} a_{1_x} \hat{a}_{1_x} + e^{i \nu_2 \Delta t} a_{2_x} \hat{a}_{2_x} + e^{i \nu_3 \Delta t} a_{3_x} \hat{a}_{3_x} \;, \\ \nonumber
     \hat{s}_{xy} =& e^{i \nu_1 \Delta t} a_{1_x} \hat{a}_{1_y} + e^{i \nu_2 \Delta t} a_{2_x} \hat{a}_{2_y} + e^{i \nu_3 \Delta t} a_{3_x} \hat{a}_{3_y} \;, \\ \nonumber
@@ -370,12 +343,12 @@ where
     \hat{s}_{zx} =& e^{i \nu_1 \Delta t} a_{1_z} \hat{a}_{1_x} + e^{i \nu_2 \Delta t} a_{2_z} \hat{a}_{2_x} + e^{i \nu_3 \Delta t} a_{3_z} \hat{a}_{3_x} \;, \\ \nonumber
     \hat{s}_{zy} =& e^{i \nu_1 \Delta t} a_{1_z} \hat{a}_{1_y} + e^{i \nu_2 \Delta t} a_{2_z} \hat{a}_{2_y} + e^{i \nu_3 \Delta t} a_{3_z} \hat{a}_{3_y} \;, \\ \nonumber
     \hat{s}_{zz} =& e^{i \nu_1 \Delta t} a_{1_z} \hat{a}_{1_z} + e^{i \nu_2 \Delta t} a_{2_z} \hat{a}_{2_z} + e^{i \nu_3 \Delta t} a_{3_z} \hat{a}_{3_z} \;.
-\end{align}
+\end{eqnarray}
 
 Comparing equation~\ref{eq:osop2} with equation~\ref{eq:osop}, we can see that because the eigenvalues that appear in the exponent in equation~\ref{eq:osop2} are no longer real-valued, the corresponding two-step operators to that in equation~\ref{eq:euler} cannot be constructed using Euler's formula.
 
 \subsection{Low-rank approximation}
-So far, we have laid out our basic theory of recursive integral time extrapolation of elastic waves. In mildly heterogeneous media, the Christoffel matrix is SPD. In strongly heterogeneous media, the Christoffel matrix becomes complex-valued and non-Hermitian. However, in both cases, the eigenvalues and eigenvectors of the Christoffel matrix become dependent on both spatial location and propagation direction, in other words, they are functions of both space $\x$ and wavenumber $\k$. If these operators are implemented straightforwardly, one is faced with the daunting task of computing and storing the complete eigenvalue decomposition of the Christoffel matrix using all the combinations of $\x$ and $\k$, leading to $\mathcal{O}(N_x^2)$ computational and memory complexity, where $N_x$ refers to the total number of mesh points in $3$D. To perform wave extrapolation in the form of integral operators, one would have to multiply matrices with vectors in dimension of $N_x$, leading to a computational complexity of $\mathcal{O}(N_x^2)$. This is simply infeasible for practical applications.
+So far, we have laid out our basic theory of recursive integral time extrapolation of elastic waves. In mildly heterogeneous media, the Christoffel matrix is SPD. In strongly heterogeneous media, the Christoffel matrix becomes complex-valued and non-Hermitian. However, in both cases, the eigenvalues and eigenvectors of the Christoffel matrix become dependent on both spatial location and propagation direction, in other words, they are functions of both space $\x$ and wavenumber $\kk$. If these operators are implemented straightforwardly, one is faced with the daunting task of computing and storing the complete eigenvalue decomposition of the Christoffel matrix using all the combinations of $\x$ and $\kk$, leading to $\mathcal{O}(N_x^2)$ computational and memory complexity, where $N_x$ refers to the total number of mesh points in $3$D. To perform wave extrapolation in the form of integral operators, one would have to multiply matrices with vectors in dimension of $N_x$, leading to a computational complexity of $\mathcal{O}(N_x^2)$. This is simply infeasible for practical applications.
 
 In this work, to efficiently apply the derived Fourier Integral Operators (FIOs), we proposed to apply the low-rank decomposition \cite[]{lowrank} on the mixed-domain wave extrapolation matrices. Take the wave extrapolation operator in equation~\ref{eq:osop2}, $e^{i\Fi \Delta t}$, as an example. We propose to apply low-rank approximation on each individual element of its expansion. For instance, the $\hat{s}_{xx}$ element, which operates on the x-component of the input vector wavefield and outputs to the x-component of the output vector wavefield, can be approximated as \cite[]{lowrank}:
 \begin{equation}
@@ -387,63 +360,63 @@ where $\hat{s}_{xx}(\mathbf{x},\mathbf{k}_m)=\mathbf{U}$ and $\hat{s}_{xx}(\math
 \min_{\mathbf{A}} \lVert \mathbf{\mathbf{W} - \mathbf{U} \mathbf{A} \mathbf{V}^*} \rVert_F \;.
 \end{equation}
 Similarly, $\hat{s}_{xy}$ and $\hat{s}_{xz}$ can be approximated as:
-\begin{align}
+\begin{eqnarray}
   \label{eq:lra2}
   \hat{s}_{xy}(\mathbf{x},\mathbf{k}) &\approx \sum\limits_{m=1}^M \sum\limits_{n=1}^N \hat{s}_{xy}(\mathbf{x},\mathbf{k}_m) b_{mn} \hat{s}_{xy}(\mathbf{x}_n,\mathbf{k})\;, \\
   \hat{s}_{xz}(\mathbf{x},\mathbf{k}) &\approx \sum\limits_{m=1}^M \sum\limits_{n=1}^N \hat{s}_{xz}(\mathbf{x},\mathbf{k}_m) c_{mn} \hat{s}_{xz}(\mathbf{x}_n,\mathbf{k})\;.
-\end{align}
+\end{eqnarray}
 The computation of $\hat{u}_x(\mathbf{x},t+\Delta t)$ then becomes:
-\begin{align}
+\begin{eqnarray}
     \label{eq:timestep}
     \hat{u}_x(\mathbf{x},t+\Delta t) 
     \approx & \sum\limits_{m=1}^M \hat{s}_{xx}(\mathbf{x},\mathbf{k}_m) \left( \sum\limits_{n=1}^N a_{mn} \left(\int e^{i \mathbf{x}\mathbf{k}} \hat{s}_{xx}(\mathbf{x}_n,\mathbf{k}) \hat{u}_x(\mathbf{k},t) d\mathbf{k} \right) \right) \\ \nonumber
     +       & \sum\limits_{m=1}^M \hat{s}_{xy}(\mathbf{x},\mathbf{k}_m) \left( \sum\limits_{n=1}^N b_{mn} \left(\int e^{i \mathbf{x}\mathbf{k}} \hat{s}_{xy}(\mathbf{x}_n,\mathbf{k}) \hat{u}_y(\mathbf{k},t) d\mathbf{k} \right) \right) \\ \nonumber
     +       & \sum\limits_{m=1}^M \hat{s}_{xz}(\mathbf{x},\mathbf{k}_m) \left( \sum\limits_{n=1}^N c_{mn} \left(\int e^{i \mathbf{x}\mathbf{k}} \hat{s}_{xz}(\mathbf{x}_n,\mathbf{k}) \hat{u}_z(\mathbf{k},t) d\mathbf{k} \right) \right) \;.
-\end{align}
+\end{eqnarray}
 The computation of $y$ and $z$ components can be carried out in a similar fashion. The computational cost of applying each FIO reduces to a complexity of $\mathcal{O}(N N_x \log N_x)$, where $\mathcal{O}(N_x \log N_x)$ is the complexity of one forward or inverse Fast Fourier Transform (FFT), and $N$ is the numerical rank of the low-rank approximation, which is $1$ for homogeneous media and $\mathcal{O}(1)$ for heterogeneous media.
 
 \subsection{Energy-norm imaging condition}
 The proposed method is well-suited for applications to elastic imaging and inversion using multi-component seismic data. In this section, we derive the energy-norm imaging condition using analytical wavefield, and show its connection to wave-mode decomposition.
 
-The energy norm with respect to a SPD matrix $\M$ can be defined as:
+The energy norm with respect to a SPD matrix $\MM$ can be defined as:
 \begin{equation}
     \label{eq:e-norm}
-    e^2(\u) = ||\u||_{\M} = \u^\intercal \M \u \;.
+    e^2(\uu) = ||\uu||_{\MM} = \uu^\intercal \MM \uu \;.
 \end{equation}
 In the acoustic case, the imaging condition based on the energy-norm is also referred to as the impedance sensitivity kernal \cite[]{zhu09} or the inverse scattering imaging condition \cite[]{whitmore12}:
 \begin{equation}
     \label{eq:enorm-acu}
-    I_a = \rho \u_t^\intercal \w_t + (v \nabla \u)^\intercal (v \nabla \w) \;.
+    I_a = \rho \uu_t^\intercal \w_t + (v \nabla \uu)^\intercal (v \nabla \w) \;.
 \end{equation}
 For general elastic media, the energy norm imaging condition can be expressed as \cite[]{kiyashchenko07,rocha16}
 \begin{equation}
     \label{eq:enorm-ela}
-    I_e = \rho \u_t^\intercal \w_t + \u^\intercal \D\C\D^\intercal \w \;.
+    I_e = \rho \uu_t^\intercal \w_t + \uu^\intercal \D\C\D^\intercal \w \;.
 \end{equation}
 Using the analytic wavefield, equation~\ref{eq:enorm-ela} becomes
 \begin{equation}
     \label{eq:enorm-ela2}
-    I_e = \rho ( \u_t^\intercal \w_t + \u^\intercal \A \w ) = \rho ( \u_t^\intercal \w_t + \u^\intercal \Fi^\intercal \Fi \w ) = \mathscr{R}\left[ \rho (\Fi \hat{\u})^*(\Fi \hat{\w}) \right] \;,
+    I_e = \rho ( \uu_t^\intercal \w_t + \uu^\intercal \A \w ) = \rho ( \uu_t^\intercal \w_t + \uu^\intercal \Fi^\intercal \Fi \w ) = \mathscr{R}\left[ \rho (\Fi \hat{\uu})^*(\Fi \hat{\w}) \right] \;,
 \end{equation}
 where $\mathscr{R}$ represents the operator of taking the real part. In a locally homogeneous medium, equation~\ref{eq:enorm-ela2} can be expressed as
 \begin{equation}
     \label{eq:enorm-ela3}
-    I_e = \mathscr{R}\left[ \mathscr{F}^{-1} \left[ \rho \hat{\u}^* \A \hat{\w} \right] \right] \;,
+    I_e = \mathscr{R}\left[ \mathscr{F}^{-1} \left[ \rho \hat{\uu}^* \A \hat{\w} \right] \right] \;,
 \end{equation}
 where $\mathscr{F}^{-1}$ represents inverse spatial Fourier transform. $\A$ is SPD and has the eigenvalue decomposition as equation~\ref{eq:chris-eigen}, and the part in the wavenumber domain of equation~\ref{eq:enorm-ela3} can be further expanded as
-\begin{align}
+\begin{eqnarray}
     \label{eq:decom-ic}
     \nonumber
-    \rho \hat{\u}^* \A \hat{\w} =& \rho  \left( \mathbf{Q}^\intercal \hat{\u} \right)^* \mathbf{V} \mathbf{Q}^\intercal \hat{\w} \\ \nonumber
-                                =& \begin{bmatrix} \hat{\u}_p^* & \hat{\u}_{s1}^* & \hat{\u}_{s2}^*\end{bmatrix} \begin{bmatrix} v_p^2 k^2 & 0 & 0 \\ 0 & v_{s1}^2 k^2 & 0 \\ 0 & 0 & v_{s2}^2 k^2 \end{bmatrix} \begin{bmatrix} \hat{\w}_p \\ \hat{\w}_{s1} \\ \hat{\w}_{s2} \end{bmatrix} \\
-                                =& \sum\limits_{i=p,s1,s2} v_i^2 k^2 \hat{\u}_i^* \hat{\w}_i \;.
-\end{align}
+    \rho \hat{\uu}^* \A \hat{\w} =& \rho  \left( \mathbf{Q}^\intercal \hat{\uu} \right)^* \mathbf{V} \mathbf{Q}^\intercal \hat{\w} \\ \nonumber
+                                =& \begin{bmatrix} \hat{\uu}_p^* & \hat{\uu}_{s1}^* & \hat{\uu}_{s2}^*\end{bmatrix} \begin{bmatrix} v_p^2 k^2 & 0 & 0 \\ 0 & v_{s1}^2 k^2 & 0 \\ 0 & 0 & v_{s2}^2 k^2 \end{bmatrix} \begin{bmatrix} \hat{\w}_p \\ \hat{\w}_{s1} \\ \hat{\w}_{s2} \end{bmatrix} \\
+                                =& \sum\limits_{i=p,s1,s2} v_i^2 k^2 \hat{\uu}_i^* \hat{\w}_i \;.
+\end{eqnarray}
 Equation~\ref{eq:decom-ic} corresponds to the summation of the image produced by three pure wave-mode reflections (P-P, S1-S1 and S2-S2 images) using the formula prescribed in equations~\ref{eq:enorm-acu}. Therefore, the proposed framework provides the possibility of individually accessing the contribution of each wave-mode in the elastic energy-norm imaging condition, in addition to outputing their summation.
 
-The imaging condition prescribed in equation~\ref{eq:enorm-ela3} is the cross-correlation of two positive-frequency analytical wavefields. This corresponds to the back-scattering part of the wavefield. If one instead performs cross-correlation between two wavefield with opposite signs of frequency, e.g. $\u^*$ only contains negative frequency and $\w$ only contains positive frequency, it will lead to a different forward-scattering imaging condition
+The imaging condition prescribed in equation~\ref{eq:enorm-ela3} is the cross-correlation of two positive-frequency analytical wavefields. This corresponds to the back-scattering part of the wavefield. If one instead performs cross-correlation between two wavefield with opposite signs of frequency, e.g. $\uu^*$ only contains negative frequency and $\w$ only contains positive frequency, it will lead to a different forward-scattering imaging condition
 \begin{equation}
     \label{eq:tomo-ela}
-    I_t = \mathscr{R}\left[ \mathscr{F}^{-1} \left[ \rho \hat{\u} \A \hat{\w} \right] \right] = \rho ( -\u_t^\intercal \w_t + \u^\intercal \A \w ) \;.
+    I_t = \mathscr{R}\left[ \mathscr{F}^{-1} \left[ \rho \hat{\uu} \A \hat{\w} \right] \right] = \rho ( -\uu_t^\intercal \w_t + \uu^\intercal \A \w ) \;.
 \end{equation}
 The forward-scattering imaging condition corresponds to the tomographic correlation between two wavefields. It is conventionally treated as low-frequency noise in RTM, but is what FWI needs for performing low-frequency updates in the velocity gradient \cite{diaz12,diaz13,ramos16}. Equation~\ref{eq:tomo-ela} can also be expanded in a similar fashion as equation~\ref{eq:decom-ic} to access individual contributions from each wave mode.
 

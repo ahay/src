@@ -37,6 +37,7 @@ Papers(copyr='The University of Texas at Austin',
                 'intshape': 'Yangkang Chen, Lele Zhang, and Le-wei Mo',
                 'probdif': 'Luke Decker and Sergey Fomel',
                 'dtwaniso': 'Luke Decker and Qunshan Zhang',
+		'pwshape': 'Ryan Swindeman and Sergey Fomel',
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 

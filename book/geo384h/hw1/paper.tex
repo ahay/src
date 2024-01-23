@@ -6,7 +6,7 @@
   This homework has three parts. 
   \begin{enumerate}
   \item Theoretical questions and computations related to digital representation of numbers.
-  \item Analyzing digital elevation data from the Austin area. You will apply 
+  \item Analyzing digital elevation data from the San Francisco Bay area. You will apply 
   histogram equalization to enhance the image.
   \item Analyzing seismic reflection data. You will apply an amplitude gain 
   correction to enhance the image.
@@ -84,7 +84,13 @@ Alternatively, modify the following Python script for the same task.
 \item Modify the program to find the machine epsilon for single-precision floating-point arithmetic.
 \end{enumerate}
 
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=epsilon.c]{epsilon.c}
+
+Alternatively, modify the following Python script for the same task.
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=string.py]{epsilon.py}
 
 \end{enumerate}
 
@@ -93,10 +99,10 @@ Alternatively, modify the following Python script for the same task.
 \inputdir{dem}
 
 \sideplot{byte}{width=\textwidth}{Digital elevation map of the 
-West Austin area.}
+San Francisco Bay area.}
 
-Figure~\ref{fig:byte} shows a digital elevation map of the West Austin
-area. Start by reproducing this figure on your screen.
+Figure~\ref{fig:byte} shows a digital elevation map of the San
+Francisco Bay area. Start by reproducing this figure on your screen.
 \begin{enumerate}
 \item Change directory to \verb#hw1/dem#
 \item Run
@@ -164,6 +170,8 @@ equation~(\ref{eq:int}). Choose an appropriate normalization $C$ so that the ran
 of $F$ is the same as the range of $f$.
 \item Map every pixel $f(x,y)$ to the corresponding $F(x,y)$.
 \end{enumerate}
+
+\newpage
 
 Your task:
 \begin{enumerate}
@@ -259,7 +267,7 @@ Figure~\ref{fig:tpow}.
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=tpow/SConstruct]{tpow/SConstruct}
 
-%\newpage
+\newpage
 
 \section{Completing the assignment}
 

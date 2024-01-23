@@ -96,7 +96,7 @@ for c in (1,clip,25):
            ''' % c)
 
 max=int(math.log(n2)/math.log(2))
-for m in xrange(max):
+for m in range(max):
     scale = int(math.pow(2,m))
     slet = '%sslet%d' % (data,scale)
     Flow(slet,[seis,dip],

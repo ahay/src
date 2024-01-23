@@ -1,0 +1,260 @@
+from rsf.proj import *
+
+### Define functions for convenience ###
+def recordmisfit(pre,case,itr,fill,invmask):
+        Flow(pre+'interpolatedinholes'+case+itr,[pre+fill+itr,invmask],
+            'add mode=p ${SOURCES[1]}')
+        Plot(pre+'interpolatedinholes'+case+itr,'grey title=Interpolated in Holes')
+        Flow(pre+'subtr'+case+itr,['answerinholes'+case,pre+'interpolatedinholes'+case+itr],'add scale=1,-1 ${SOURCES[1]}')
+        Plot(pre+'subtr'+case+itr,'grey title="subtraction"')
+        Flow(pre+'datamis'+case+itr,['answerinholes'+case,pre+'interpolatedinholes'+case+itr],
+			'''
+			add scale=1,-1 ${SOURCES[1]} |
+			math output="(input)*(input)" |
+			stack axis=0 |
+			math output="sqrt(input)"
+			''')
+
+def SxSplot(obj,deci,case):
+    if pre=='sh':
+        Plot(obj,'grey title="Interpolated with PWS" labelfat=4 labelsz=13. titlefat=4 titlesz=15 clip=0.0026')
+        Result(pre+'combo'+case,['qdome',deci,obj],'SideBySideAniso')
+    elif pre=='co':
+        Plot(obj,'grey title="Interpolated with PWC" labelfat=4 labelsz=13. titlefat=4 titlesz=15 clip=0.0026')
+        Result(pre+'combo'+case,['qdome',deci,obj],'SideBySideAniso')
+    else:
+        Plot(obj,'grey title="Interpolated with PWD" labelfat=4 labelsz=13. titlefat=4 titlesz=15 clip=0.0026')
+        Result(pre+'combo'+case,['qdome',deci,obj],'SideBySideAniso')
+
+def ploterr(pre,case,string):
+    Flow(pre+'err'+case,['qdome', pre+'fill'+case+string],'add scale=1,-1 ${SOURCES[1]}')
+    if pre=='sh':
+        Plot(pre+'err'+case,'grey title="Data Mismatch Using PWS" labelfat=4 labelsz=13. titlefat=4 titlesz=15 clip=0.0026')
+    elif pre=='co':
+        Plot(pre+'err'+case,'grey title="Data Mismatch Using PWC" labelfat=4 labelsz=13. titlefat=4 titlesz=15 clip=0.0026')
+    else:
+        Plot(pre+'err'+case,'grey title="Data Mismatch Using PWD" labelfat=4 labelsz=13. titlefat=4 titlesz=15 clip=0.0026')
+
+def plotitermisfit(pre,mfn,case):
+    Flow(pre+'matrix'+case,mfn,'''
+		cat ${SOURCES[0:%g]}|
+        transp plane=13|
+		put n2=1 n3=1 d1=1 o1=1 d2=0 o2=0 d3=0 o3=0 
+		'''%(maxit-1))
+    if pre=='sh':
+        string='''-Shaping
+        label1="Iteration Number" 
+        label2="2-Norm of Data misfit"
+        '''
+    else:
+        string='''
+        label1="Iteration Number" 
+        label2="2-Norm of Data misfit"
+        '''
+    Plot(pre+'misfitvsiter'+case,pre+'matrix'+case,'graph title="Matrix"'+case+string)    
+
+
+### Get Synthetic Data ###
+n1=200
+n2=100
+pad=25
+Flow('qdome',None,'qdome n1=%g d1=0.008 | window n3=1 f3=45'%n1)
+
+### Find Slope, Make Mask, and Pad and Plot Data ###
+Flow('slope','qdome','fdip rect1=5 rect2=5')
+Flow('mask','qdome','math output=1 | pad beg1=%g end1=%g beg2=%g end2=%g'%(pad,pad,pad,pad))
+Flow('slope-pad','qdome mask',
+     '''
+     pad beg1=%g end1=%g  beg2=%g end2=%g | 
+     dip rect1=5 rect2=5 mask=${SOURCES[1]}
+     ''' %(pad,pad,pad,pad))
+Plot('qdome','grey title="Input" labelfat=4 labelsz=15. titlefat=4 titlesz=15')
+Plot('slope','grey color=j scalebar=y labelfat=4 labelsz=15. titlefat=4 titlesz=15 title=Slope')
+Result('reflectors','qdome slope','SideBySideAniso')
+Flow('mask1',None,
+     'spike n1=%g n2=%g nsp=9 k2=40,52,65,10,75,88,15,20,24'%(n1,n2))
+#Flow('mask4',None,
+#     'spike n1=%g n2=%g nsp=4 k2=5,25,40,70 k1=1,1,1,1 l1=103,190,44,187'%(n1,n2))
+Plot('mask1','grey title="mask" labelfat=4 labelsz=15. titlefat=4 titlesz=15')
+
+
+### Test Performance ###
+for case in ('1'): #case 1 being mask1 and so on
+    mask = 'mask'+case
+    deci = 'deci'+case
+    fill = 'fill'+case
+    invmask='inv'+mask
+    misfitname1=[]
+    shmisfitname1=[]
+    comisfitname1=[]
+    interp1=[]
+    shinterp1=[]
+    cointerp1=[]
+    maxit=60
+    sufmaxit='-it%g'%(maxit)
+
+    Flow(mask+'-pad',mask,'pad beg1=%g end1=%g beg2=%g end2=%g'%(pad,pad,pad,pad))
+    Flow(invmask,mask,'math output="1-(input)"')
+    #Plot('invmask1','grey scalebar=y title="inverse mask"')
+    Flow('answerinholes'+case,['qdome',invmask],'add mode=p ${SOURCES[1]}')
+    Plot('answerinholes'+case,'grey title="True Answer"')
+    Flow(deci,['qdome',mask],'add mode=p ${SOURCES[1]}')
+    Plot(deci,'grey allpos=y title="Decimated Data" labelfat=4 labelsz=15. titlefat=4 titlesz=15')
+    Result('reflectors2','qdome deci1 slope','SideBySideAniso')
+
+    #Missing Data Interp using PWD
+    pre=''
+    for i in range(1,maxit+1):
+        itr='-it%g'%i
+        Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+            '''
+            pad beg1=%g end1=%g beg2=%g end2=%g |
+            planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g verb=y |
+            window f1=%g n1=%g f2=%g n2=%g
+            '''%(pad,pad,pad,pad,i,pad,n1,pad,n2))
+        recordmisfit(pre,case,itr,fill,invmask)
+        misfitname1.append(pre+'datamis'+case+itr)
+        interp1.append(pre+'fill'+case+itr)
+    SxSplot(pre+fill+sufmaxit,deci,case)
+
+    #Missing Data Interp using PWC
+    pre='co'
+    for i in range(1,maxit+1):
+        itr='-it%g'%i
+        Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+            '''
+            pad beg1=%g end1=%g beg2=%g end2=%g |
+            planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g verb=y prec=y |
+            window f1=%g n1=%g f2=%g n2=%g
+            '''%(pad,pad,pad,pad,i,pad,n1,pad,n2))
+        recordmisfit(pre,case,itr,fill,invmask)
+        comisfitname1.append(pre+'datamis'+case+itr)
+        cointerp1.append(pre+'fill'+case+itr)
+    SxSplot(pre+fill+sufmaxit,deci,case)
+#            bandpass fhi=30
+
+    #Interpolation using Plane-wave Shaping (PWS) Regularization
+    pre='sh'
+    for i in range(1,maxit+1):
+        itr='-it%g'%i
+        Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+            '''
+            pad beg1=%g end1=%g beg2=%g end2=%g |
+            shplanemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g ns=20 verb=y |
+            window f1=%g n1=%g f2=%g n2=%g
+            '''%(pad,pad,pad,pad,i,pad,n1,pad,n2))
+        recordmisfit(pre,case,itr,fill,invmask)
+        shmisfitname1.append(pre+'datamis'+case+itr)
+        shinterp1.append(pre+'fill'+case+itr)
+    SxSplot(pre+fill+sufmaxit,deci,case)
+#            bandpass fhi=30 |
+
+    cutnum=0
+    for j in range(cutnum):
+        shinterp1.pop(0)
+    Flow('movie'+case,interp1,'cat axis=3 ${SOURCES[1:%g]}'%(maxit-cutnum))
+    Plot('movie'+case,'grey title="Interpolation, frame=iteration"')
+    Flow('comovie'+case,cointerp1,'cat axis=3 ${SOURCES[1:%g]}'%(maxit-cutnum))
+    Plot('comovie'+case,'grey gainpanel=all title="Interpolation from PWC, frame=iteration"')
+    Flow('shmovie'+case,shinterp1,'cat axis=3 ${SOURCES[1:%g]}'%(maxit-cutnum))
+    Plot('shmovie'+case,'grey title="Interpolation from PWS, frame=iteration"')
+
+
+    plotitermisfit('sh',shmisfitname1,case)
+    plotitermisfit('co',comisfitname1,case)
+    plotitermisfit('',misfitname1,case)
+
+    for prefix in ('','co','sh'):
+        ploterr(prefix,case,sufmaxit)
+        
+Result('Comparison',['fill1'+sufmaxit,'cofill1'+sufmaxit,'shfill1'+sufmaxit,'err1','coerr1','sherr1'],'SideBySideAniso')
+Flow('Matrix1Comparison','matrix1 shmatrix1 comatrix1','cat axis=2 ${SOURCES[1:3]}')
+Result('Matrix1Comparison','graph title="Convergence Rate" titlefat=3 labelfat=3 min1=1 max1=%g min2=0 max2=0.001 symbol="dsc" symbolsz=7,7,7 plotfat=4,4,4 label1="Iteration" label2="Misfit"'%maxit)
+
+
+### HOLE TEST ###
+# Cut a hole
+Flow('oval','qdome',
+     '''
+     math output="((x1-0.8)/0.3)^2+((x2-0.4)/0.1)^2" |
+     mask min=1 | dd type=float
+     ''')
+Flow('hole','qdome oval','mul ${SOURCES[1]}')
+
+Result('hole','grey title="Hole" ')
+
+Flow('hole-slope','hole oval','fdip rect1=5 rect2=5 mask=${SOURCES[1]}')
+
+Result('hole-slope','grey color=j scalebar=y title=Slope')
+
+Flow('hole-pwd','hole oval hole-slope',
+     'planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=10 verb=y')
+
+Flow('hole-pwc','hole oval hole-slope',
+     '''
+     planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=50 verb=y prec=y |
+     math mask=${SOURCES[1]} image=${SOURCES[0]} output="image*mask+input*(1-mask)" 
+     ''')
+
+Flow('hole-shape','hole oval hole-slope',
+     '''
+     shplanemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=10 ns=10 verb=y |
+     math mask=${SOURCES[1]} image=${SOURCES[0]} output="image*mask+input*(1-mask)" 
+     ''')
+
+# Impulse response of the shaping filter
+
+import random
+random.seed(2015)
+
+nr = 0
+def rnd(x):
+    global nr
+    r = str(random.randint(1,nr))
+    return r
+
+nsp = 50 # number of spikes
+
+nr = n1+2*pad
+k1 = string.join(map(rnd,range(nsp)),',')
+nr = n2+2*pad
+k2 = string.join(map(rnd,range(nsp)),',')
+#PWS 2-D
+Flow('imps-pws','qdome slope-pad',
+     'pad beg1=%d beg2=%d end1=%d end2=%d | spike nsp=%d k1=%s k2=%s | pwsmooth ns=10 dip=${SOURCES[1]} | bandpass fhi=30 | window n1=%d f1=%d n2=%d f2=%d' % (pad,pad,pad,pad,nsp,k1,k2,n1,pad,n2,pad))
+#
+Flow('imps-pws-spike','qdome slope-pad',
+     'pad beg1=%d beg2=%d end1=%d end2=%d | spike nsp=%d k1=%s k2=%s' % (pad,pad,pad,pad,nsp,k1,k2))
+Plot('imps-pws-spike','''grey title="PWS Impulses" pclip=100
+    label1="Time" label2="West-East" label3="North-South" 
+    ''')
+#
+Plot('imps-pws','''grey title="PWS Impulses" pclip=100
+    label1="Time" label2="West-East" label3="North-South" 
+    labelfat=4 labelsz=13. titlefat=4 titlesz=15
+    ''')
+#PWD 2-D
+Flow('imps-pwd','qdome slope-pad',
+     'pad beg1=%d beg2=%d end1=%d end2=%d | spike nsp=%d k1=%s k2=%s | pwd dip=${SOURCES[1]} | bandpass fhi=30 | window n1=%d f1=%d n2=%d f2=%d' % (pad,pad,pad,pad,nsp,k1,k2,n1,pad,n2,pad))
+Plot('imps-pwd','''grey title="PWD Impulses" pclip=100
+    label1="Time" label2="West-East" label3="North-South" 
+    labelfat=4 labelsz=13. titlefat=4 titlesz=15
+    ''')
+#PWC 2-D
+Flow('imps-pwc','qdome slope-pad',
+     'pad beg1=%d beg2=%d end1=%d end2=%d | spike nsp=%d k1=%s k2=%s | predict adj=n dip=${SOURCES[1]} | bandpass fhi=30 | window n1=%d f1=%d n2=%d f2=%d' % (pad,pad,pad,pad,nsp,k1,k2,n1,pad,n2,pad))
+Plot('imps-pwc','''grey title="PWC Impulses" pclip=100
+    label1="Time" label2="West-East" label3="North-South" 
+    labelfat=4 labelsz=13. titlefat=4 titlesz=15
+    ''')
+Result('impulses','imps-pwd imps-pwc imps-pws','SideBySideAniso')
+
+Result('q-compa','fill1-it60','Overlay')
+Result('q-compb','cofill1-it60','Overlay')
+Result('q-compc','shfill1-it60','Overlay')
+Result('q-compd','err1','Overlay')
+Result('q-compe','coerr1','Overlay')
+Result('q-compf','sherr1','Overlay')
+
+
+End()

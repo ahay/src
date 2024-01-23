@@ -32,7 +32,7 @@ def Wig(data,other):
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Field'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

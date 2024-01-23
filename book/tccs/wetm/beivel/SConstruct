@@ -1,0 +1,560 @@
+from rsf.proj import *
+from rsf.recipes.velcon import velcon
+def Grey3(data,other):
+        Result(data,
+       '''
+       byte clip=0.2|
+       transp plane=23 |
+       grey3 flat=n  frame1=500 frame2=125 frame3=5
+       title=Data point1=0.8 point2=0.8  %s pclip=5
+       '''%other)
+#clip=0.0001 
+
+def Vel(data,other):
+        Plot(data,
+     '''
+     grey color=j allpos=y bias=1.5 clip=0.7
+     scalebar=y barreverse=y barunit=km/s
+     label2=Midpoint unit2=km label1=Time unit1=s 
+     title="NMO Velocity"  %s
+     '''%other )
+
+def Pick(data,other):
+         Result(data,
+       '''
+       byte allpos=y gainpanel=all |
+       transp plane=23 |
+       grey3 flat=n frame1=500 frame2=125 frame3=25 
+       label1=Time unit1=s color=j framelabelcol=VP_BLACK
+       label3=Velocity unit3=km/s 
+       label2=Midpoint unit2=km
+       title="Velocity Scan" point1=0.8 point2=0.8 %s 
+       '''%other)
+
+
+# Download data
+Fetch('beinew.HH','midpts')
+Flow('bei','beinew.HH',
+     '''
+     dd form=native | transp plane=23 | transp plane=34 |
+     put o1=0 label1=Time unit1=s label2=Midpoint unit2=km
+     label3=Crossline unit3=km label4=Offset unit4=km
+     ''')
+# velocity continuation
+velcon('bei',
+       nv=125,      # continuation steps
+       v0=1.5,      # initial velocity
+       dv=0.01,     # velocity step
+       nx=250,      # lateral dimension
+       nh=48,       # number of offsets
+       padt=1024,   # time padding
+       padt2=2048,  # extra time padding
+       padx=521,    # lateral padding
+       dx=0.0335,   # lateral sampling
+       n1=1000,     # time dimension
+       x0=7.705,    # lateral origin
+       srect1=15,
+       srect2=5)
+
+
+# Set dimensions
+Flow('gulf','beinew.HH',
+     '''
+     dd form=native |
+     put
+     label1=Time unit1=s
+     label2=Half-Offset unit2=km
+     label3=Midpoint unit3=km | scale axis=3
+     ''')
+
+# Display
+Grey3('gulf','title="Data (Original)"')
+
+# Velocity scan
+Flow('vscan-gulf','gulf',
+     'vscan v0=1.5 dv=0.02 nv=51 semblance=y',
+     split=[3,250], reduce='cat')
+Pick('vscan-gulf','title="Velocity Scan (Original)"')
+
+# Velocity picking
+Flow('vnmo-gulf','vscan-gulf','pick rect1=100 rect2=10')
+Vel('vnmo-gulf','')
+
+# Stacking
+##########
+Flow('nmo-gulf','gulf vnmo-gulf','nmo velocity=${SOURCES[1]}')
+Flow('stack-gulf','nmo-gulf','stack')
+# DMO
+########################
+Flow('nmo0-gulf','gulf vnmo-gulf','nmo velocity=${SOURCES[1]}')
+Flow('dstack-gulf','nmo0-gulf',
+     '''
+     window f1=250 | 
+     logstretch | fft1 | 
+     transp plane=13 memsize=1000 |
+     finstack | 
+     transp memsize=1000 |
+     fft1 inv=y | logstretch inv=y | 
+     pad beg1=250 | put unit1=s
+     ''')
+
+Plot('stack-gulf','grey title="Stack"')
+#Plot('dstack-gulf','grey title="DMO Stack"')
+#Plot('pstm-gulf','pstm','grey title="PSTM"')
+#Result('comp','stack-gulf dstack-gulf pstm-gulf','SideBySideAniso')
+
+
+# Common-offset domain prestack kirchhoff time migration (PSTM)
+Flow('tcmps','gulf','transp memsize=1000 plane=23')
+Flow('pstm','tcmps vnmo-gulf',
+     '''
+     mig2 vel=${SOURCES[1]} apt=5 antialias=1
+     ''',split=[3,48,[0]],reduce='add')
+#Kirchhoff Post stack migration
+Flow('kpstm','dstack-gulf vnmo-gulf','kirchnew velocity=${SOURCES[1]}')
+Plot('kpstm',
+     '''
+     grey title="Time Migration"
+     label1=Time unit1=s label2=Distance unit2=km
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20 
+     ''')
+# Time-to-Depth conversion
+Flow('semblance-gulf','vscan-gulf vnmo-gulf','slice pick=${SOURCES[1]}')
+Flow('vinv-gulf','vnmo-gulf semblance-gulf','dix weight=${SOURCES[1]} rect1=100 rect2=10')
+# Consider only a portion of dix velocity
+Flow('dixpart','vinv-gulf',
+     'put  d1=0.002 | put label1=Time unit1=s')
+Plot('dixpart',
+     '''
+     grey title="Dix-inverted Model"
+     color=j scalebar=y barreverse=y
+     label1=Depth unit1=km label2=Distance unit2=km barunit=km/s
+     minval=1.5 maxval=2.9 bias=2.1
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+     ''')
+
+Flow('vofz','vinv-gulf',
+     '''
+     time2depth velocity=$SOURCE intime=y nz=801 dz=0.005 |
+     put label1=Depth unit1=km|window max1=3.9
+     ''')
+Flow('vdix','vinv-gulf','pad n1=2001 |lapfill niter=250 verb=y grad=y | window n1=2000|smooth rect1=5 rect2=5 repeat=3')
+Flow('vofz1','vofz','pad n1=2001 |lapfill niter=250 verb=y grad=y | window n1=2000|smooth rect1=5 rect2=5 repeat=3')
+Plot('vofz',
+     '''
+     math output="input^2"|grey title="Dix-inverted Model"
+     color=j scalebar=y barreverse=y
+     label1=Depth unit1=km label2=Distance unit2=km barunit=km/s
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 screenratio=0.75 screenht=9
+     ''')
+Result('vnmo-gulf',
+     '''
+     grey title="Picked Migration Velocity"
+     color=j scalebar=y barreverse=y mean=y
+     label1=Time unit1=s label2=Distance unit2=km barunit=km/s
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20
+     ''')
+Plot('vinv-gulf',
+     '''
+     put d1=0.004 | grey title="Dix Velocity"
+     color=j scalebar=y barreverse=y
+     label1=Time unit1=s label2=Distance unit2=km barunit=km/s
+     minval=1.5 maxval=2.9 bias=2.1
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20
+     ''')
+Result('tmigvmig','vnmo-gulf kpstm','OverUnderAniso')
+
+#time-to-depth conversion (Sripanich and Fomel, 2017)
+# Derivatives of Dix velocity squared
+Flow('dv2dt0','vinv-gulf','math output="input^2" | smoothder')
+Flow('dv2dx0','vinv-gulf','math output="input^2" | transp | smoothder | transp')
+Flow('beta','dv2dt0 vinv-gulf',
+     '''
+     time2depth velocity=${SOURCES[1]} nz=801 dz=0.005 intime=y twoway=n|
+     put label1=Depth unit1=km | window max1=3.9 
+     ''')
+Flow('alpha','dv2dx0 vinv-gulf',
+     '''
+     time2depth velocity=${SOURCES[1]} nz=801 dz=0.005 intime=y twoway=n|
+     put label1=Depth unit1=km | window max1=3.9 
+     ''')
+Result('alphagom','alpha',
+     '''
+     grey color=j scalebar=y title="dw\_d\^/dx\_0" pclip=100
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 allpos=y minval=-0.5 maxval=1.7 allpos=y bias=-0.3
+      allpos=y barlabel="dw\_d\^/dx\_0\^" barunit="km/s\^2"
+     ''')
+Result('betagom','beta',
+     '''
+     grey color=j scalebar=y title="dw\_d\^/dt\_0" pclip=100
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 allpos=y minval=-0.5 maxval=2.3 bias=-2
+      allpos=y barlabel="dw\_d\^/dt\_0\^" barunit="km\^2\_/s\^3"
+     ''')
+     
+# Reference velocity squared
+Flow('refdix','vofz','math output="input^2" ')
+Flow('refvz','vofz','window n2=1 f2=125| math output="input^2" | spray axis=2 n=250 o=7.705 d=0.0335 ')
+
+Result('refdixgom','refdix',
+     '''
+     grey color=j scalebar=y title="Ref w\_dr\^(x,z)" 
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 allpos=y minval=2.25 maxval=7 bias=2.25 clip=4.75
+      allpos=y barlabel="v\^2\_" barunit="km\^2\_/s\^2" 
+     ''')
+Plot('refvz',
+     '''
+     grey color=j scalebar=y title="Ref w(z)" 
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 allpos=y minval=2.25 maxval=7 bias=2.25 clip=4.75
+     screenratio=0.75 screenht=9 allpos=y barlabel="v\^2\_" barunit="km\^2\_/s\^2"
+     ''')
+
+#Result('input-field','refdix alpha beta','OverUnderAniso')
+
+# Find dv2 dt0 and dx0 from sftime2depthweak #####################################################
+Flow('depth dx0 dt0 dv','refdix refvz alpha beta',
+	'''
+	time2depthweak zsubsample=50 nsmooth=16
+	velocity=$SOURCE refvelocity=${SOURCES[1]} dvdx0=${SOURCES[2]} dvdt0=${SOURCES[3]}
+	outdx0=${TARGETS[1]} outdt0=${TARGETS[2]} outdv=${TARGETS[3]}
+	''')
+Flow('finalv','refvz dv','math est=${SOURCES[1]} output="sqrt(input+est)" | put d3=1 o3=0 ')
+Result('finalvgom','finalv',
+     '''
+     math output="input^2"|grey color=j scalebar=y title=" Estimated interval v(x,z)" 
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 
+     label1=Depth unit1=km label2=Distance unit2=km barunit=km/s
+     allpos=y barlabel="v" barunit="km/s"
+     ''')
+
+Flow('diff1','finalv vofz','math est=${SOURCES[1]} output="input-est" | put d3=1 o3=0 ')
+Flow('diff','finalv vofz','math est=${SOURCES[1]} output="input^2-est^2" | put d3=1 o3=0 ')
+Plot('diff1',
+     '''
+     grey color=j scalebar=y title=" Estimated interval v(x,z) - v\_dr\^(x,z) " 
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 
+     label1=Depth unit1=km label2=Distance unit2=km barunit=km/s
+     allpos=y minval=-0.87 maxval=0.57 bias=-0.1
+     screenratio=0.75 screenht=9  barlabel="v" barunit="km/s"
+     ''')
+Plot('diff',
+     '''
+     grey color=j scalebar=y title=" Estimated interval v(x,z) - v\_dr\^(x,z) " 
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 
+     label1=Depth unit1=km label2=Distance unit2=km barunit=km/s
+     allpos=y minval=-0.87 maxval=0.57  clip=0.34 bias=-0.17
+     screenratio=0.75 screenht=9  barlabel="v" barunit="km/s"
+     ''')
+
+Flow('reft0','refvz','math output="2*1/sqrt(input)*0.005" | causint') # two-way
+Flow('finalt0','reft0 dt0','math dt=${SOURCES[1]} output="input+dt"')
+
+Flow('refx0','refvz','math output="x2"')
+Flow('finalx0','refx0 dx0','math dx=${SOURCES[1]} output="input+dx"')
+
+Flow('dixcoord','reft0 refx0',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     transp plane=23 | transp plane=12
+     ''')
+
+Flow('finalcoord','finalt0 finalx0',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     transp plane=23 | transp plane=12
+     ''')
+
+Flow('dixmapd','wetm1 dixcoord','inttest2 interp=spline nw=8 coord=${SOURCES[1]}')
+Flow('finalmapd','wetm1 finalcoord','inttest2 interp=spline nw=8 coord=${SOURCES[1]}')
+Plot('finalt0',
+     ''' 
+     contour slabelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 wanttitle=y plotcol=5 wantaxis=y title="Image Rays "
+     label1=Depth unit1=km label2=Distance unit2=km 
+     allpos=y
+     ''')
+Plot('finalx0',
+     ''' 
+     contour labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20 labelfat=4 wanttitle=n plotcol=6 wantaxis=n
+     ''')
+Result('imagerays','finalt0 finalx0','Overlay')
+Plot('dixmapd',
+     '''
+     agc rect1=200 | window  max1=3.9 | grey title="Time -> Depth (Dix)"
+     label1=Depth unit1=km label2=Distance unit2=km
+     labelsz=10 titlesz=12 titlefat=4 labelfat=4
+     ''')      
+Result('finalmapdgom','finalmapd',
+     '''
+     window  max1=3.9 | grey title="Wave Equation Time Migration -> Depth"
+     label1=Depth unit1=km label2=Distance unit2=km
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20
+     ''')      
+#Result('finalvcompare','diff1 finalv','OverUnderAniso')
+##########################################################################################
+# time-to-depth conversion (Li and Fomel, 2015)
+niter=5
+cgiter=2500
+rect1=25
+rect2=10
+eps=2
+
+Flow('inv it ix if ig ic','vofz dixpart',
+     '''
+     tdconvert niter=%d cgiter=%d eps=%g shape=y rect1=%d rect2=%d dix=${SOURCES[1]} 
+     t0=${TARGETS[1]} x0=${TARGETS[2]} f0=${TARGETS[3]} grad=${TARGETS[4]} cost=${TARGETS[5]}
+     ''' % (niter,cgiter,eps,rect1,rect2))
+# x0
+Plot('rinit','ix', 
+     '''
+     window n3=1 | contour nc=200 plotcol=7 plotfat=7
+     wantaxis=n wanttitle=n scalebar=y      
+     ''')
+Plot('pinit','vofz rinit','Overlay')
+
+# v
+Plot('inv',
+     '''
+     window max1=3.9 |
+     grey title="Inverted v(x,z) (Li and Fomel, 2015)"
+     color=j scalebar=y 
+     label1=Depth unit1=km label2=Distance unit2=km 
+     barlabel="v" barunit="km/s"
+     allpos=y minval=1.5 maxval=2.6 bias=1.5 clip=1.1 
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6 
+     screenratio=0.75 screenht=9
+     ''')
+Plot('rinv','ix',
+     '''
+     window max1=3.9 |
+     window n3=1 f3=%d | contour nc=200 plotcol=7 plotfat=7
+     wantaxis=n wanttitle=n scalebar=y 
+     ''' % niter)
+Plot('pinv','inv rinv','Overlay')
+
+# cost
+Plot('cinit','ic',
+     '''
+     window n3=1 max1=3.9 |
+     grey title="Initial f" color=j scalebar=y barreverse=y
+     label1=Depth unit1=km label2=Distance unit2=km barlabel=Cost barunit=
+     minval=-0.75 maxval=6 clip=2
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+     ''')
+
+Plot('cinv','ic',
+     '''
+     window n3=1 f3=%d max1=3.9 | grey title="Final f" color=j scalebar=y barreverse=y
+     label1=Depth unit1=km label2=Distance unit2=km barlabel=Cost barunit=
+     minval=-0.75 maxval=6 clip=2
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+     ''' % niter)
+
+Plot('dinv','inv vofz',
+     '''
+     add scale=1,-1 ${SOURCES[1]} | window max1=3.9 |
+     grey title=Update
+     color=j scalebar=y barreverse=y mean=y pclip=99.5
+     label1=Depth unit1=km label2=Distance unit2=km barunit=km/s
+     labelsz=15 titlesz=16 titlefat=8 labelfat=6
+     ''')
+
+Result('init','vinv-gulf pinit','OverUnderAniso')
+Result('inv','cinit cinv','OverUnderAniso')
+Result('dinv','pinv dinv','OverUnderAniso')
+
+# map time to depth
+Flow('t0','it','window n3=1 f3=%d | scale dscale=2' % niter)
+Flow('x0','ix','window n3=1 f3=%d' % niter)
+
+Flow('coord','t0 x0',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     transp plane=23 | transp plane=12
+     ''')
+
+Flow('mapd','wetm1 coord','inttest2 interp=spline nw=8 coord=${SOURCES[1]}')
+
+Plot('mapd',
+     '''
+     agc rect1=200 | window  max1=3.9 | grey title="Time -> Depth (Li and Fomel, 2015)"
+     label1=Depth unit1=km label2=Distance unit2=km
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''')
+
+
+###########################################################
+# Zero-offset reverse-time migration
+###########################################################
+
+Flow('fft','vofz1','transp | fft1 | fft3 axis=2 pad=1')
+Flow('right left','vofz1 fft',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2016 dt=0.001 npk=50
+     fft=${SOURCES[1]} left=${TARGETS[1]}
+     ''')
+
+Flow('rtm snaps','dstack-gulf left right',
+     '''
+     pad n1=2000|spline n1=8000 o1=0 d1=0.001 |
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=2000 dz=0.005
+     ''')
+
+Result('rtm',
+     '''
+     window  max1=3.9 | grey title="Depth Migration"
+     label1=Depth unit1=km label2=Distance unit2=km
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20
+     ''')
+
+###########################################################
+# Zero-offset reverse-time migration with proposed velocity ((Sripanich and Fomel, 2017)
+###########################################################
+
+Flow('fftsf','finalv','transp | fft1 | fft3 axis=2 pad=1')
+Flow('rightsf leftsf','finalv fftsf',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2016 dt=0.001 npk=50
+     fft=${SOURCES[1]} left=${TARGETS[1]}
+     ''')
+
+Flow('rtmsf snapssf','dstack-gulf leftsf rightsf',
+     '''
+     pad n1=2000|spline n1=8000 o1=0 d1=0.001 |
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=781 dz=0.005
+     ''')
+
+Plot('rtmsf',
+     '''
+     agc rect1=200 | window  max1=3.9 | grey title="Depth Migration"
+     label1=Depth unit1=km label2=Distance unit2=km
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''')
+
+
+###########################################################
+# Zero-offset reverse-time migration with proposed velocity (Li and Fomel, 2015)
+###########################################################
+
+Flow('fftlf','inv','transp | fft1 | fft3 axis=2 pad=1')
+Flow('rightlf leftlf','inv fftlf',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2016 dt=0.001 npk=50
+     fft=${SOURCES[1]} left=${TARGETS[1]}
+     ''')
+
+Flow('rtmlf snapslf','dstack-gulf leftlf rightlf',
+     '''
+     pad n1=2000|spline n1=8000 o1=0 d1=0.001 |
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=781 dz=0.005
+     ''')
+
+Plot('rtmlf',
+     '''
+     agc rect1=200 | window  max1=3.9 | grey title="Depth Migration"
+     label1=Depth unit1=km label2=Distance unit2=km
+     labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''')
+
+
+###########################################################
+# Wave-equation time migration
+###########################################################
+
+Flow('one','vdix','math output=1 | transp')
+Flow('zero','vdix','math output=0 | transp')
+
+#Flow('dfft','vpick2','transp | rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
+Flow('dfft','vdix','transp |fft1| fft3 axis=2 pad=1')
+Flow('dright dleft','vdix dfft one zero',
+     '''
+     transp | scale dscale=0.5 |
+     anisolr2 seed=2016 dt=0.001
+     velx=${SOURCES[2]}
+     eta=${SOURCES[3]} theta=${SOURCES[3]}
+     fft=${SOURCES[1]} left=${TARGETS[1]}
+     ''')
+
+Flow('wetm wsnaps','dstack-gulf dleft dright',
+     '''
+     pad n1=2000|spline n1=8000 o1=0 d1=0.001 |
+     reverse which=1 |
+     transp |
+     fftexp0 mig=y snap=10 snaps=${TARGETS[1]}
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=2000 dz=0.008
+     ''')
+Flow('wetm1','wetm','window n1=1000|put d1=0.004|bandpass flo=5')
+Plot('F1',None,
+     'box x0=13.713333 y0=6.108333 label="F1" xt=1 yt=1 screenht=9 screenwd=20')
+Plot('F2',None,
+     'box x0=7.498333 y0=3.915000 label="F2" xt=-1 yt=-1 screenht=9 screenwd=20')
+Plot('F3',None,
+     'box x0=11.886667 y0=6.108333 label="F3"  xt=-1 yt=1 screenht=9 screenwd=20')
+Plot('F4',None,
+     'box x0=9.686667 y0=6.108333 label="F4"  xt=-1 yt=1 screenht=9 screenwd=20')
+Plot('F5',None,
+     'box x0=5.086667 y0=6.108333 label="F5"  xt=1 yt=1 screenht=9 screenwd=20')
+Plot('dstack-gulf',
+     '''
+     grey title="Stacked section"
+     label1=Time unit1=s label2=Distance unit2=km
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=6 screenwd=20
+     ''')
+Plot('wetm1',
+     '''
+     grey title="Wave Equation Time Migration"
+     label1=Time unit1=s label2=Distance unit2=km
+     labelsz=10 titlesz=11 titlefat=5 labelfat=4 screenht=9 screenwd=20
+     ''')
+Plot('wetm1f','wetm1 F1 F2 F3 F4 F5','Overlay')
+#Result('data','dstack-gulf vnmo-gulf vinv-gulf','OverUnderAniso')
+Result('wetm1','vinv-gulf wetm1f','OverUnderAniso')
+Result('timewetm','kpstm wetm1f','OverUnderAniso')
+#Result('rtmwetm','finalmapd rtm','OverUnderAniso')
+
+# Zoom an interesting area (!!! MODIFY ME !!!)
+##############################################
+min1,max1=1,3.5
+min2,max2=10,13
+
+
+Flow('box1.asc',None,
+     '''
+     echo %s n1=2 n2=5 data_format=ascii_float in=$TARGET
+     ''' % ' '.join(map(str,(min1,min2,max1,min2,
+                             max1,max2,min1,max2,min1,min2))))
+Plot('box1','box1.asc',
+     '''
+     dd form=native type=complex | window |
+     graph transp=y yreverse=y min1=0 max1=4 min2=0 max2=26.7625
+     wanttitle=n plotfat=5 plotcol=6 wantaxis=y
+     ''')
+Result('box1','kpstm box1','Overlay')
+Result('box2','wetm1 box1','Overlay')
+Result('box3','dstack-gulf box1','Overlay')
+
+for i in range (3):
+    case=('dstack-gulf','kpstm','wetm1')[i]
+    zoom = case + '-zoom'
+    Flow(zoom,case,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g
+         ''' % (min1,max1,min2,max2))
+    Plot(zoom,'grey title=%s grid=y gridcol=5 scalebar=n label1=Time unit1=s label2=Midpoint unit2=km' % ('abc'[i]))
+Result('zoom','dstack-gulf-zoom kpstm-zoom wetm1-zoom','SideBySideIso')
+
+End()

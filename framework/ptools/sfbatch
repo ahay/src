@@ -120,7 +120,7 @@ for key in list(optional_pars.keys()):
         elif key=='path':
             path = cwd
         elif key=='job':
-            job = '-'.join([dirname,time.strftime('%Y-%m-%d@%H:%M:%S')])
+            job = '-'.join([dirname,time.strftime('%Y-%m-%d@%H-%M-%S')])
 
 #exe = ' '.join(sys.argv[1:])
 
@@ -173,7 +173,7 @@ elif batch == 'slurm':
     f.write('#SBATCH --mail-type=begin\n')
     f.write('#SBATCH --mail-type=end\n')
     f.write('#SBATCH --mail-user='+mail + '\n')
-    f.write('#SBATCH --uid=' + os.getenv('USER') + '\n')
+#    f.write('#SBATCH --uid=' + os.getenv('USER') + '\n')
     f.write('#SBATCH -o '+job+'.%j.out\n')
     f.write('#SBATCH -e '+job+'.%j.err\n')
     f.write('cd '+path+'\n')

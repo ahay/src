@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     int nd, nm, ns, nx, n1, im, min, max, id, i, ix, niter;
     int **indx, *size;
     float *model, *data, *weight, *err;
-    char name[6];
+    char name[5];
     sf_file inp, index, out, pred, error;
 
     sf_init(argc,argv);
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
     for (im=0; im < nm; im++) {
 	ns = size[im];
 	if (im > 0) {
-	    snprintf(name,6,"out%d",im+1);
+	    snprintf(name,5,"out%d",(im+1)%10u);
 	    out = sf_output(name);
 	} else {
 	    out = sf_output("out");

@@ -31,9 +31,11 @@ xjtu
 '''
 
 nonreproducible = '''
+tongji/lrmode/twolayer3dtti
 data/teapotdome/fetch
 data/teapotdome/scdecon
 data/teapotdome/vels
+data/teapotdome/canoren
 gee/pch/patch
 geo391/hw2/sorting
 rsf/bash/mpi

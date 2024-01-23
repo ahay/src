@@ -440,7 +440,7 @@ Grey('k-pwd-n','clip=0.05')
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun/'
+matROOT = '../Matfun/'
 matfun = 'LDRR'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 
@@ -553,7 +553,7 @@ Grey('k-lrr-N4-n','title="LRR (N=4)" clip=0.05')
 
 #Global
 N=30
-matROOT = '../matfun/'
+matROOT = '../Matfun/'
 matfun = 'FXY_MSSA'
 Flow('k-grr0-N30',[os.path.join(matROOT,matfun+'.m'),'k-post'],
      '''MATLABPATH=%(matlabpath)s %(matlab)s 
@@ -565,7 +565,7 @@ Grey('k-grr-N30','title="GRR (N=30)"')
 Grey('k-grr-N30-n','title="GRR (N=30)" clip=0.05')
 
 N=20
-matROOT = '../matfun/'
+matROOT = '../Matfun/'
 matfun = 'FXY_MSSA'
 Flow('k-grr0-N20',[os.path.join(matROOT,matfun+'.m'),'k-post'],
      '''MATLABPATH=%(matlabpath)s %(matlab)s 
@@ -577,7 +577,7 @@ Grey('k-grr-N20','title="GRR (N=20)"')
 Grey('k-grr-N20-n','title="GRR (N=20)" clip=0.05')
 
 N=10
-matROOT = '../matfun/'
+matROOT = '../Matfun/'
 matfun = 'FXY_MSSA'
 Flow('k-grr0-N10',[os.path.join(matROOT,matfun+'.m'),'k-post'],
      '''MATLABPATH=%(matlabpath)s %(matlab)s 
@@ -589,7 +589,7 @@ Grey('k-grr-N10','title="GRR (N=10)"')
 Grey('k-grr-N10-n','title="GRR (N=10)" clip=0.05')
 
 N=5
-matROOT = '../matfun/'
+matROOT = '../Matfun/'
 matfun = 'FXY_MSSA'
 Flow('k-grr0-N5',[os.path.join(matROOT,matfun+'.m'),'k-post'],
      '''MATLABPATH=%(matlabpath)s %(matlab)s 

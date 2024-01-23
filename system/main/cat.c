@@ -54,7 +54,7 @@ int main (int argc, char* argv[])
     float f;
     off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM], *tell; 
     sf_file *ins, in, out;
-    char *prog, key[3], buf[BUFSIZ];
+    char *prog, key[12], buf[BUFSIZ];
     const char **filename;
     bool space;
     
@@ -238,7 +238,7 @@ static void check_compat (int esize, int nin, int nopen, sf_file *ins,
 {
     int i, ni, id;
     float o, d, di, oi;
-    char key[3];
+    char key[12];
     sf_file in;
     const float tol=1.e-3;
     

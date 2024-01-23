@@ -50,10 +50,10 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,1);    
     if (adj) {
 	n2 /= 2;
-	snprintf(key,3,"n%d",dim);
+	snprintf(key,3,"n%d",dim%10u);
 	sf_putint(out,key,1);
     } else {
-	snprintf(key,3,"n%d",dim+1);
+	snprintf(key,3,"n%d",(dim+1)%10u);
 	sf_putint(out,key,2);
     }
 	

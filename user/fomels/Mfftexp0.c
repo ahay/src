@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave = sf_floatalloc2(nzx2,m2);
 
-    //fft2_allocate(cwavem);
+  
 
     for (iz=0; iz < nzx; iz++) {
 	prev[iz]=0.;
@@ -196,6 +196,8 @@ int main(int argc, char* argv[])
 	its = +1;
     }
 
+    fft2_allocate(cwave);
+    ifft2_allocate(cwavem);
 
     /* time stepping */
     for (it=it1; it != it2; it += its) {
@@ -218,10 +220,9 @@ int main(int argc, char* argv[])
 	}
 
 	/* matrix multiplication */
-	fft2_allocate(cwave);
-	fft2(curr,cwave);
+
+	fft2(curr,cwave);	
 	
-	fft2_allocate(cwavem);
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H

@@ -32,10 +32,10 @@
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], w[3], k[3], a[3], gap[3], center[3];
-    int n123, n1, dim, dim1, nk, i, j, ik, na;
+    int n123, n1, dim, dim1, nk, i, j, j1, ik, na;
     bool stp;
     float *data, d[3], o[3], *mask, vel, tgap, dabs, di;
-    char varname[6], *lagfile;
+    char varname[3], *lagfile;
     sf_filter aa, bb, ak;
     sf_file dat, pef, lag, known;
 
@@ -98,10 +98,12 @@ int main(int argc, char* argv[])
     /* if y, do steep-dip PEF estimation */
 
     for (j=0; j < dim1; j++) {
-	sprintf(varname,"d%d",j+1);
+	j1 = (j+1)%10u;
+	
+	snprintf(varname,3,"d%d",j1);
 	if (!sf_histfloat(dat,varname,d+j)) 
 	    sf_error("No %s= in input",varname);
-	sprintf(varname,"o%d",j+1);
+	snprintf(varname,3,"o%d",j1);
 	if (!sf_histfloat(dat,varname,o+j)) 
 	    sf_error("No %s= in input",varname);
     }
@@ -140,13 +142,15 @@ int main(int argc, char* argv[])
     sf_putint(lag,"n1",na);
 
     for (j=0; j < dim; j++) {
-	sprintf(varname,"n%d",j+2);
+	j1 = (j+2)%10u;
+	
+	snprintf(varname,3,"n%d",j1);
 	sf_putint(lag,varname,1);
 	if (j < dim1) {
 	    sf_putint(pef,varname,k[j]);
-	    sprintf(varname,"o%d",j+2);
+	    snprintf(varname,3,"o%d",j1);
 	    sf_putfloat(pef,varname,o[j]+0.5*w[j]*d[j]);
-	    sprintf(varname,"d%d",j+2);
+	    snprintf(varname,3,"d%d",j1);
 	    sf_putfloat(pef,varname,(n[j]-w[j])/(k[j]-1.)*d[j]);
 	} else if (j == dim1) {
 	    sf_putint(pef,varname,n123/n1);

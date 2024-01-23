@@ -262,7 +262,7 @@ Result('bei-shp',grey('Diffractions'))
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'FAULTS'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

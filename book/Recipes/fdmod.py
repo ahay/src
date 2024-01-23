@@ -1,7 +1,8 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import pplot,math
-import random
+try:    from rsf.recipes import pplot
+except: import pplot
+import math, random
 import functools, operator
 
 random.seed(1006)

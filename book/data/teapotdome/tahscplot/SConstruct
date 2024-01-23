@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../tahscscale/SConstruct')
+
 # xmin/max 788172992  809316480  that means  788172.992  809316.480 ft
 # ymin/max 939209792  976916096  that means  939209.792  976916.096 ft 
 #<../tahscscale/sxyamp.rsf sfwindow n1=1 f1=2 | sfattr  

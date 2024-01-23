@@ -24,7 +24,7 @@ double SeqSpace::inner(DataContainer const & x,
     ip(sx,sy);
     return ip.getValue();
   }
-  catch (bad_cast) {
+  catch (bad_cast const&) {
     RVLException e;
     e<<"Error: SeqSpace::inner\n";
     e<<"one or the other DC inputs not a SeqDC\n";
@@ -38,7 +38,7 @@ void SeqSpace::zero(DataContainer & x) const {
     ZeroList zip;
     zip(sx);
   }
-  catch (bad_cast) {
+  catch (bad_cast const&) {
     RVLException e;
     e<<"Error: SeqSpace::zero\n";
     e<<"DC input not a SeqDC\n";
@@ -54,7 +54,7 @@ void SeqSpace::linComb(double a, DataContainer const & x,
     LinCombList lc(a,b);
     lc(sy,sx);
   }
-  catch (bad_cast) {
+  catch (bad_cast const&) {
     RVLException e;
     e<<"Error: SeqSpace::linComb\n";
     e<<"one or the other DC inputs not a SeqDC\n";

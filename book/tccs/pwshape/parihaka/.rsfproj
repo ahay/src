@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfintbin', 'sfput', 'sfwindow', 'sfbyte', 'sfgrey3', 'sffdip', 'sfmath', 'sfpad', 'sfgrey', 'sfspike', 'sfnoise', 'sfmask', 'sfspray', 'sfdd', 'sfadd', 'sfshplanemis3', 'sfstack']
+data=['https://s3.amazonaws.com/open.source.geoscience/open_data/newzealand/Taranaiki_Basin/PARIHAKA-3D/Parihaka_PSTM_full_angle.sgy']
+size= 10253784088

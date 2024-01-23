@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-agc aliasp bandpass bin bin1 boxsmooth canny causint clip clip2
+agc aliasp bandpass bin bin1 boxsmooth burg canny causint clip clip2
 cmatmult cmatmult2 cosft costaper csmooth deriv dipfilter dsmooth dwt
 enoint2 equal expl1 expl2 extract fern fft1 fft3 grad2 grad3 heat
 histogram igrad intshow inttest1 inttest2 inttest3 impl1 impl2 impl3

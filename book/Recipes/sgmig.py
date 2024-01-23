@@ -5,21 +5,21 @@ except: from rsf.proj    import *
 def param(par):
     p  = ' '
     p  = p + ' --readwrite=y'
-    if(par.has_key('verb')):
+    if('verb' in par):
         p = p + ' verb='  +     par['verb']
-    if(par.has_key('nrmax')):
+    if('nrmax' in par):
         p = p + ' nrmax=' + str(par['nrmax'])
-    if(par.has_key('dtmax')):
+    if('dtmax' in par):
         p = p + ' dtmax=' + str(par['dtmax'])
-    if(par.has_key('tmx')):
+    if('tmx' in par):
         p = p + ' tmx='   + str(par['tmx'])
-    if(par.has_key('tmy')):
+    if('tmy' in par):
         p = p + ' tmy='   + str(par['tmy'])
-    if(par.has_key('pmx')):
+    if('pmx' in par):
         p = p + ' pmx='   + str(par['pmx'])
-    if(par.has_key('pmy')):
+    if('pmy' in par):
         p = p + ' pmy='   + str(par['pmy'])
-    if(par.has_key('misc')):
+    if('misc' in par):
         p = p + ' '      +     par['misc']
     p = p + ' '
     return p
@@ -27,9 +27,9 @@ def param(par):
 # ------------------------------------------------------------
 def freqs(par):
     f  = ' '
-    if(par.has_key('nw')): f = f + ' nw=' + str(par['nw'])
-    if(par.has_key('ow')): f = f + ' ow=' + str(par['ow'])
-    if(par.has_key('dw')): f = f + ' dw=' + str(par['dw'])
+    if('nw' in par): f = f + ' nw=' + str(par['nw'])
+    if('ow' in par): f = f + ' ow=' + str(par['ow'])
+    if('dw' in par): f = f + ' dw=' + str(par['dw'])
     f = f + ' '
     return f
 
@@ -127,7 +127,7 @@ def script(EDIR,job,imag,slow,wfld,par,ngroup,nfreqs):
     mycom = 'cp ' + bindir + '/sfcamig' + ' '+ EDIR
     os.system(mycom)
     
-    allk = map(lambda x: '%03d' % x,range(ngroup))
+    allk = ['%03d' % x for x in range(ngroup)]
     for k in allk:
         _i = '_' + imag + '.' + k + '.rsf'
         _w = '_' + wfld + '.' + k + '.rsf'
@@ -147,7 +147,7 @@ def execute(EDIR,JOB,ngroup,nfreqs,imag,slow,wfld,par):
 
     f = open(script,'w')
 
-    allk = map(lambda x: '%03d' % x,range(ngroup))
+    allk = ['%03d' % x for x in range(ngroup)]
     for k in allk:
         _i = '_' + imag + '.' + k + '.rsf'
         _w = '_' + wfld + '.' + k + '.rsf'

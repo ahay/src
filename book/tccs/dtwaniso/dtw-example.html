@@ -22,16 +22,16 @@
      padding: 1em;
      margin-left: 2em;
      margin-right: 2em; }
-     .number { color: #0080C0; }
-.op { color: #0000C0; }
+     .name { color: #000000; }
+.number { color: #0080C0; }
 .string { color: #004080; }
-.comment { color: #008000; }
-.name { color: #000000; }
-.error { color: #FF8080; }
 .keyword { color: #C00000; }
+.flow { color: #0000C0; }
 .text { color: #000000; }
 .fetch { color: #0000C0; }
-.flow { color: #0000C0; }
+.op { color: #0000C0; }
+.error { color: #FF8080; }
+.comment { color: #008000; }
 .plot { color: #0000C0; }
 .result { color: #C00000; }
 </style>
@@ -54,7 +54,7 @@
 <span class="name">pad</span> <span class="op">=</span> <span class="number">20</span>
 
 <span class="comment"># create reflectivity for matching trace</span>
-<span class="flow">Flow</span><span class="op">(</span><span class="string">'refl-m'</span><span class="op">,</span><span class="keyword">None</span><span class="op">,</span>
+<span class="flow">Flow</span><span class="op">(</span><span class="string">'refl-m'</span><span class="op">,</span><span class="name">None</span><span class="op">,</span>
    <span class="string">'''
    sigmoid n1=%i n2=%i d1=%g d2=%g reflectivity=y |
    window n2=1 f2=%i | 
@@ -195,8 +195,7 @@
 <span class="plot">Plot</span><span class="op">(</span><span class="string">'accum-sh'</span><span class="op">,</span><span class="string">'accum shifts shifts-ideal'</span><span class="op">,</span><span class="string">'Overlay'</span><span class="op">)</span>
 <span class="result">Result</span><span class="op">(</span><span class="string">'dtw-accum-sh'</span><span class="op">,</span><span class="string">'accum-a shifts-a shifts-ideal-a'</span><span class="op">,</span><span class="string">'Overlay'</span><span class="op">)</span>
 <span class="result">Result</span><span class="op">(</span><span class="string">'dtw-er-accum-sh'</span><span class="op">,</span><span class="string">'error accum-sh'</span><span class="op">,</span><span class="string">'OverUnderAniso'</span><span class="op">)</span>
-<span class="name">End</span><span class="op">(</span><span class="op">)</span>
-<span class="text"></span></font></pre></table></div><p><div class="progs"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfsigmoid.html">sfsigmoid</a><br>
+<span class="name">End</span><span class="op">(</span><span class="op">)</span><span class="text"></span></font></pre></table></div><p><div class="progs"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="http://www.ahay.org/RSF/sfsigmoid.html">sfsigmoid</a><br>
 <a href="http://www.ahay.org/RSF/sfwindow.html">sfwindow</a><br>
 <a href="http://www.ahay.org/RSF/sfscale.html">sfscale</a><br>
 <a href="http://www.ahay.org/RSF/sfmath.html">sfmath</a><br>

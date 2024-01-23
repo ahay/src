@@ -1,0 +1,103 @@
+"""snr3d test"""
+from rsf.proj import *
+
+# plot clip
+clip = 0.000760897
+
+def cubeplot(extra=""):
+    return """
+    byte gainpanel=all %s |
+    grey3 frame1=82 frame2=75 frame3=50 flat=n point1=0.7 point2=0.7
+    %s labelfat=2 wanttitle=n
+    """ % (clip, extra)
+
+
+# 3d model
+Flow("qdome", None, 
+     """
+     qdome
+     n1=200 n2=150 n3=100
+     d1=0.01 d2=0.01 d3=0.01
+     o1=0 o2=0.5 o3=-0.05 |
+     smooth rect1=3 diff1=1 | smooth rect1=4 |
+     reverse which=2 |
+     put o2=0 o3=0 d2=1 d3=1
+     label2="TraceX" label3="TraceY"
+     unit2= unit3=
+     """)
+
+# loop 5%-95%
+niter = 91
+start = 5
+snrs1 = []
+snrs2 = []
+for iter in range(niter):
+    percent = start + iter
+    mask1 = "mask1-%d" % percent
+    mask2 = "mask2-%d" % percent
+    gap3d = "gap3d-%d" % percent
+    intpl = "intpl-%d" % percent
+    intpr = "intpr-%d" % percent
+    intp3d = "intp3d-%d" % percent
+    diff1 = "diff1-%d" % percent
+    diff2 = "diff2-%d" % percent
+    snr1 = "snr1-%d" % percent
+    snr2 = "snr2-%d" % percent
+    # 1. make mask
+    # 2. make gap data
+    # 3. interpolation
+    # 4. require err
+    # 5. snr
+    Flow(mask1, "qdome",
+         """
+         window n1=1 | noise type=n rep=y seed=150 |
+         mask min=%g
+         """ % ((-50.0 + percent) / 100.0))
+    # seed=150
+    Flow(mask2, mask1, "transp plane=12")
+    Flow(gap3d, ["qdome", mask1], "headercut mask=${SOURCES[1]}")
+    Flow(diff1, ["qdome", gap3d], "add scale=1,-1 ${SOURCES[1]}")
+    Flow(snr1, ["qdome", diff1], "snr3 noise=${SOURCES[1]}")
+    Flow(intpl, gap3d + " " + mask1, 
+         """
+         fxyspfint3 mask=${SOURCES[1]}
+         lambdax=0.001 lambday=0.0008 lambdaf=0.0005
+         na1=5 na2=6 ftype=1 verb=n
+         """)
+    Flow(intpr, gap3d + " " + mask2, 
+         """
+         transp plane=23|
+         fxyspfint3 mask=${SOURCES[1]}
+         lambdax=0.001 lambday=0.0008 lambdaf=0.0005
+         na1=5 na2=6 ftype=1 verb=n |
+         transp plane=23
+         """)
+    Flow(intp3d, [intpl, intpr], 
+         """
+         add ${SOURCES[1]} scale=1,1 |
+         math output="input/2"
+         """)
+    Flow(diff2, ["qdome", intp3d], "add scale=1,-1 ${SOURCES[1]}")
+    Flow(snr2, ["qdome", diff2], "snr3 noise=${SOURCES[1]}")
+    snrs1.append(snr1)
+    snrs2.append(snr2)
+
+Flow("SNR1", snrs1, "cat axis=1 ${SOURCES[1:%d]}" % len(snrs1))
+Flow("SNR2", snrs2, "cat axis=1 ${SOURCES[1:%d]}" % len(snrs2))
+Result("snr3d", "SNR1 SNR2",
+       """
+       cat axis=2 ${SOURCES[1]} | put o1=5 |
+       graph title= unit2=dB unit1=
+       label1="Percentage of data missing" label2="SNR"
+       dash=1,0 plotcol=7,7 plotfat=5,5 min2=0 max2=40
+       min1=5 max1=95 screenht=9 screenwd=14
+       """)
+
+# 10%
+Result("gap3d-5", cubeplot())
+Result("intp3d-5", cubeplot())
+# 95%
+Result("gap3d-95", cubeplot())
+Result("intp3d-95", cubeplot())
+
+End()

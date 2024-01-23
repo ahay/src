@@ -1,6 +1,6 @@
-/* Helical shaping. */
+/* Helical shaping */
 /*
-  Copyright (C) 2008 University of Texas at Austin
+  Copyright (C) 2010 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -16,86 +16,84 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
-/*^*/
 
-#include "conv.h"
+#include "hshape.h"
 
-static sf_filter aa, bb;
-static float *t1, *t2, wt;
+static int nx, nr;
+static float eps, *tmp1, *tmp2;
+static sf_filter pef;
 
-void hshape_init( int nd       /* data size */,
-		  int ns       /* scaling */,
-		  sf_filter ff /* filter */) 
+void hshape_init(int ndat      /* data size */,
+		 int rect      /* shaping radius */,
+		 sf_filter flt /* helical filter */,
+		 float eps1    /* regularization */)
 /*< initialize >*/
 {
-    int is, ia, na;
-    sf_filter cc;
+    nx = ndat;
+    nr = rect;
+    eps = eps1*eps1;
+    pef = flt;
 
-    aa = ff;
-    na = aa->nh;
+    sf_helicon_init (pef);
 
-    bb =  sf_allocatehelix(na);
-    for (ia=0; ia < na; ia++) {
-	bb->lag[ia] = aa->lag[ia];
-	bb->flt[ia] = aa->flt[ia];
-    }
-
-    /* convolve ns times */
-    for (is=0; is < ns-1; is++) {
-	cc = conv (bb, aa, false);
-	sf_deallocatehelix(bb);
-	bb = cc;
-    }
-
-    if (0==(ns%2)) {
-	for (ia=0; ia < bb->nh; ia++) {
-	    bb->flt[ia] = - bb->flt[ia];
-	}
-    }
-
-    wt = 1.0/ns;
-    t1 = sf_floatalloc (nd);
-    t2 = sf_floatalloc (nd);
-
-    sf_polydiv_init(nd,aa);
-    sf_helicon_init(bb);
+    tmp1 = sf_floatalloc(nx);
+    tmp2 = sf_floatalloc(nx);
 }
 
-void hshape_lop( bool adj, bool add, 
-		 int nx, int ny, float* xx, float*yy)
+void hshape_close(void)
+/*< free allocated storage >*/
+{
+    free(tmp1);
+    free(tmp2);
+}
+
+void hshape_lop(bool adj, bool add, int ninp, int nout, float *inp, float *out)
 /*< linear operator >*/
 {
     int i;
+    
+    if (nx != ninp || nx != nout) sf_error("wrong dimensions");
+    
+    sf_adjnull(adj,add,ninp,nout,inp,out);
 
-    if (ny != nx) sf_error("%s: Different size",__FILE__);
-
-    sf_adjnull(adj,add,nx,ny,xx,yy);
-
-    if (adj) {
-	for (i=0; i < nx; i++) {
-	    t2[i] = wt*yy[i];
+    for (i=0; i < nx; i++) {
+	if (adj) {
+	    tmp1[i] = out[i];
+	} else {
+	    tmp1[i] = inp[i];
 	}
+    }
+    
+    hshape(tmp1);
 
-	sf_polydiv_lop (true, false, nx, nx, t1, t2);
-	sf_helicon_lop(true, true, nx, nx, xx, t1);	
-    } else {
-	sf_helicon_lop(false, false, nx, nx, xx, t1);
-	sf_polydiv_lop (false, false, nx, nx, t1, t2);
-	
-	for (i=0; i < nx; i++) {
-	    yy[i] += wt*t2[i];
+    for (i=0; i < nx; i++) {
+	if (adj) {
+	    inp[i] += tmp1[i];
+	} else {
+	    out[i] += tmp1[i];
 	}
     }
 }
 
-void hshape_close (void) 
-/*< free allocated storage >*/
+void hshape(float *data)
+/*< shaping in place >*/
 {
-    free (t1);
-    free (t2);
-    sf_deallocatehelix(bb);
-    sf_polydiv_close();
+    int i, ir;
+    float r;
+
+    for (ir=1; ir < nr; ir++) {
+	r = 2*sinf(SF_PI*ir/nr);
+	r = -0.5*eps/(r*r);
+
+	for (i=0; i < nx; i++) {
+	    tmp1[i] = r*data[i];
+	}
+	
+	sf_helicon_lop(false,false,nx,nx,tmp1,tmp2);
+	sf_helicon_lop(true,true,nx,nx,data,tmp2);
+    }
 }
 
+    
+    

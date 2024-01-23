@@ -1,0 +1,75 @@
+\published{SEG Expanded Abstracts, 3853-3858, (2015)}
+
+\title{Seismic data interpolation using plane-wave shaping regularization}
+\author{Ryan Swindeman and Sergey Fomel}
+
+\lefthead{Swindeman \& Fomel}
+\righthead{Plane-wave shaping}
+\footer{TCCS-10}
+
+\maketitle
+
+\begin{abstract}
+The problem with interpolating insufficient, irregularly sampled data is that there exist infinitely many solutions. When solving ill-posed inverse problems in geophysics, we apply regularization to constrain the model space in some way. We propose to use plane-wave shaping in iterative regularization schemes. By shaping locally planar events to the local slope, we effectively interpolate in the structure-oriented direction and preserve the most geologic dip information. In our experiments, this type of interpolation converges in fewer iterations than alternative techniques. The proposed plane-wave shaping mave have potential applications in seismic tomography and well-log interpolation.
+\end{abstract}
+
+\section{Introduction}
+Choosing the most appropriate interpolation scheme to cope with insufficient seismic data can be challenging. Often the simplest direction in which we choose to interpolate is the inline or cross-line directions. This strategy can be improved by interpolating along seismic horizons to preserve structural information. \\
+\\
+Previous work has been done in the area of image-guided interpolation. Blended-neighbor interpolation was developed by \citet[]{hale09a,hale10}. This method interpolates borehole data across seismic data to a 3D grid and can be extended to the image domain \cite[]{naeini14}. Structure-oriented filters can be applied to a seismic image to improve interpretation \cite[]{fehmers03,liu10}. Previous work taking geologic structure into account for tomography applications was done by \cite{clapp04} by using space-varying steering filters.\\
+\\
+Regularization is a technique to constrain model parameters for inversion. Solving ill-posed seismic inverse problems offers several choices in the form of regularization \cite[]{engl96,zhdanov02}. The well-known and widely used Tikhonov regularization \cite[]{tikhonov63} is reliable but can be slow to converge because it conflicts with the main goal of the data misfit term in the objective function \cite[]{harlan95}. For seismic events with a dominant local slope, the corresponding operator of this is plane-wave destruction (PWD) where traces are predicted from their neighbors and subtracted \cite[]{fomel02}. Model reparameterization, another regularization style, encourages a certain behavior by applying a preconditioning operator \cite[]{fomel03}. The analog for local plane-wave events is plane-wave construction (PWC) which is the mathematical inverse of the PWD operator \cite[]{fomel06}. A simpler form of PWC is the steering filters of \cite{clapp98}.\\
+\\
+In this paper, we investigate a different form of regularization: plane-wave shaping \cite[]{fomel07} and demonstrate the power of plane-wave shaping (PWS) regularization on a 2-D synthetic example, on a 3-D synthetic example, and on 3-D field data. We heavily decimate the data and test the interpolation schemes. By comparing the data misfit as a function of iteration number we show that using shaping regularization along structure achieves an accurate solution in fewer iterations than the alternative regularization methods, PWD and PWC.\\
+\\
+Because of the generality of using plane-wave shaping to approach regularization, this method may have utility in many areas of geophysics. Estimating a trustworthy velocity model in reflection seismology is one such inverse problem \cite[]{clapp04,woodward08}.\\
+\\
+\section{Plane-wave Shaping}
+The formulation of linear shaping regularization is \cite[]{fomel07}
+\begin{equation}
+\mathbf{\hat{m}}=\left[\mathbf{I}+\mathbf{S}\left(\mathbf{L}^T\mathbf{L}-\mathbf{I}\right)\right]^{-1}\mathbf{S}\mathbf{L}^T\mathbf{d}
+\end{equation}
+where $\mathbf{\hat{m}}$ is a vector of model parameters; $\mathbf{S}$ is the shaping operator; $\mathbf{d}$ is the data; and $\mathbf{L}$ and $\mathbf{L}^T$ are the forward and adjoint operators respectively. In interpolation problems, $\mathbf{L}$ is forward interpolation (in the case of irregular sampling) or simple masking (in the case of missing-data interpolation on a regular grid). In 1-D, shaping in Z-transform notation can be triangle smoothing  \cite[]{claerbout92}
+\begin{equation}
+T_n=\frac{1}{n^2}\left(\frac{1-Z^n}{1-Z}\right)\left(\frac{1-Z^{-n}}{1-Z^{-1}}\right)
+\end{equation}
+for a given smoothing radius $n$. One can visualize this as a convolution of two box filters producing a weighting triangle for a triangle / neighborhood radius of $n$. Increasing $n$ produces a smoother model. In 2-D the shift operator $Z$ translates into shifts along local slope. $Z$ corresponds to PWD -- which can be thought of as a differentiation -- while its inverse operator $\frac{1}{1-Z}=1+Z+Z^2+...+Z^n$ corresponds to PWC -- similar to integration. 
+\section{Interpolation Tests}
+Interpolation is a simple example of a geophysical inverse problem \cite[]{claerbout14}. The two prerequisites for local plane-wave interpolation are simply the sparse data which are to be interpolated and the structure to which the interpolation data is shaped. In the following examples, we start with a seismic image and find the image's local slope. A mask is applied to the image, leaving behind only a few nonzero traces. Following \cite{clapp98,clapp04}, we call these traces ``wells" as a reference to the applicability of this method to well log data which may be desired everywhere but only provided in certain locations. Thus, the two inputs are the wells (to be interpolated) and the dip field (giving the direction of interpolation). In this way, structural information can be well-preserved. By comparing the reconstruction to the original (non-sparse) data, we can quantify the quality of the interpolation by measuring the model error.\\
+\\
+\subsection{2-D synthetic test}
+The quarterdome (qdome) 3-D seismic image was created by \cite{claerbout93}. This model has been used for previous interpolation tests including those using both local plane-wave prediction filters \cite[]{fomel99} and steering filters \cite[]{clapp98,clapp00}. The model and corresponding dip field are displayed in Figure \ref{fig:reflectors2} along with the decimated well data and local slope calculation. In order to demonstrate the local properties of PWS, its the impulse response is tested along with PWD and PWC. By adding spikes to 50 random locations in the image and applying the operators, we can see the anisotropic response aligned with the local slope. A plot of the convergence rates is given in Figure \ref{fig:Matrix1Comparison}. PWS converges in far fewer iterations -- 6 as compared to the 55 required by PWD and 28 of PWC. By applying 2-D interpolation with PWD, PWC, and PWD; we can see a side-by-side comparison of the three methods after 60 iterations (Figure~\ref{fig:q-compa,q-compb,q-compc,q-compd,q-compe,q-compf}). Each interpolation scheme produces very similar results. The error sections -- Figures~\ref{fig:q-compd},~\ref{fig:q-compe}, and~\ref{fig:q-compf} -- indicate comparable accuracy as well.
+
+\inputdir{qdome}
+%\plot{reflectors}{width=\columnwidth}{Synthetic Example and Corresponding Dip Field. The seismic image on the left corresponds to a 2-D slice of a quarterdome and the right image is derived from the left's local slope}
+\plot{reflectors2}{width=\columnwidth}{Synthetic example reproduced from \cite{clapp04}. A 2-D slice of the quarterdome -- qdome -- synthetic seismic image is given in (a) from which (b) the decimated data -- wells -- and (c) the dip field are derived. The nine traces were preserved in the application of the mask to produce the wells, and (c) is found by taking the local slope.}
+\plot{impulses}{width=\columnwidth}{2-D impulse response. 50 spikes are placed randomly through qdome and hit with the operators of (a) PWD, (b) PWC, and (c) PWS.}
+\plot{Matrix1Comparison}{width=\columnwidth}{Convergence rate for 2-D synthetic example. This plot shows a comparison of the model error (2-norm) versus iteration number. The points denoted with "s" are derived from interpolation using PWS. The symbols "d" and "c" correspond to the same calculation using PWD and PWC respectively.}
+%\plot{deci1}{width=\columnwidth}{Decimated Synthetic Data. By applying a mask to the original image, well logs are emulated for the purpose of later interpolation.}
+%\plot{Comparison}{width=1.5\columnwidth}{Reconstruction of Synthetic with (a) plane-wave destruction interpolation(b)shaping-regularized structure-guided interpolation. Parts (c) and (d) correspond to the respective data misfit. Convergence was reached after 55 and 6 iterations respectively}
+
+\multiplot{6}{q-compa,q-compb,q-compc,q-compd,q-compe,q-compf}{width=0.3\textwidth}{Reconstruction of 2-D synthetic data with interpolation from (a) plane-wave destruction, (b) plane-wave construction, and (c) plane-wave shaping. Parts (d), (e), and (f) correspond to the respective data misfit, computed with $\left|\left|d-d_i\right|\right|_2^2$ for the true solution $d$ and reconstruction $d_i$ at iteration $i$. Convergence was reached after 55, 28 and 6 iterations respectively.}
+
+\subsection{3-D synthetic test}
+\inputdir{qdome3}
+\multiplot{3}{qdome,hole,hole-shape}{width=0.3\textwidth}{3-D blind fill. The original qdome synthetic is shown in (a) and again in (b) with an ellipsoidal hole of missing data. The reconstruction using PWS is shown in (c).}
+
+In this experiment, we use the 3-D version of the qdome seismic image and cut a large ellipsoidal hole in the data. Using only this information, we can see how well applying 3-D PWS is able to reconstruct the original data without knowing the full original dip field. By finding the local slope of the masked image, PWS interpolation can then be applied. The 3-D impulse response is tested in Figure~\ref{fig:pws3out-3d} and shows the shaping of information to geologic structure in 3-D. Figure~\ref{fig:qdome,hole,hole-shape} shows the data (a) originally, (b) with the mask applied, and (c) with reconstruction. The resulting interpolation accurately patches the hole. The only area where the result mildly deviates from the answer is adjacent to the fault. Here, PWS smooths over the fault to make it somewhat more continuous. This effect can be neutralized by shrinking the smoothing radius to a more acceptable value.
+
+\plot{pws3out-3d}{width=0.5\columnwidth}{3-D impulse response. 20 spikes are randomly placed in the 3-D qdome model. These peaks are smeared in a structure-guided fashion by 3-D PWS to produce this image.}
+%\plot{PWS-combo}{width=\columnwidth}{Combodata}
+%\multiplot{1}{orig,hole,PWS,PWS-subtr}{width=0.3\textwidth}{3-D blind fill. The original qdome synthetic is shown in (a) and again in (b) with an ellipsoidal hole of missing data. The reconstruction using PWS is shown in (c) with the deviation from the original in (d).}
+
+\subsection{Field data test}
+The Parihaka data is a 3-D (full-angle stack, anisotropic, prestack time-migrated) seismic image from New Zealand provided for use by New Zealand Petroleum and Minerals. The data is shown in Figure \ref{fig:pari-3d}. Similar to the synthetic test, we mask the data, Figure \ref{fig:p3-deci2}, and interpolate using PWS. The interpolation results are shown in Figure \ref{fig:p3-shfill2} with error section in \ref{fig:p3-sherr2}. The residual was sufficiently low after only 4 iterations.  Because this scheme amounts to some quantity of smoothing, the fault that propagates clearly in the original seismic image is now smeared, but PWS continues to maintain the structural information of this fault's existence from the offset of beds.
+\inputdir{parihaka}
+\multiplot{4}{pari-3d,p3-deci2,p3-shfill2,p3-sherr2}{width=0.4\textwidth}{Real data interpolation example. The original data is depicted in (a) and a mask is applied to heavily decimate the input to create a set of wells (b). (c) shows the interpolated result of PWS, and (d) is the difference between the reconstruction and the original. The smallest-scale features and noise are removed as a result of the smoothing.}
+
+\section{Conclusions}
+Plane-wave shaping (PWS) is a powerful tool for constraining the solutions to inverse problems that require conforming to a local plane-wave structure. The impulse response in both 2-D and 3-D verify this image-guided nature. We demonstrate its effectiveness as an interpolation scheme using simple missing-data interpolation experiments on both real and synthetic examples and show that the method converges to a low misfit in fewer iterations than alternative regularization schemes which use either PWD or PWC. The benefit of fast convergence comes from the fact that oftentimes large-scale geophysical inverse problems can only afford a small number of iterations. When stopping the inversion after only a small number of iterations, PWS produces a more accurate estimation of model parameters than PWD and PWC. This fact gives PWS high potential for geophysical applications beyond simple interpolation.
+
+
+%\onecolumn
+\bibliographystyle{seg}
+\bibliography{pwshape}
+

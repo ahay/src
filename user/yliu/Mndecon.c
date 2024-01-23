@@ -21,9 +21,9 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n12, n3, nf1, nf2, nf3, nf4, nf1234, i3, niter;
-    float *data, *model, *filt, eps;
-    sf_file inp, out, fil;
+    int i, n1, n2, n12, n3, nf1, nf2, nf3, nf4, nf1234, i3, niter;
+    float *data, *model, *filt, *weight, eps;
+    sf_file inp, out, fil, wht;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -52,8 +52,17 @@ int main(int argc, char* argv[])
     nf1234 = nf1*nf2*nf3*nf4;
     
     filt = sf_floatalloc(nf1234);
-    data = sf_floatalloc(n1*n2);
-    model = sf_floatalloc(n1*n2);
+    data = sf_floatalloc(n12);
+    model = sf_floatalloc(n12);
+
+    if (NULL != sf_getstring("weight")) {
+	wht = sf_input("weight");
+	weight = sf_floatalloc(n12);
+	sf_weight_init(weight);
+    } else {
+	wht = NULL;
+	weight = NULL;
+    }
 
     mmmult_init (filt, nf1, nf2, nf3, nf4);	
 
@@ -61,8 +70,17 @@ int main(int argc, char* argv[])
 	sf_floatread(filt,nf1234,fil);
 	sf_floatread(data,n12,inp);
 
-	sf_solver_reg(sf_copy_lop,sf_cgstep,mmmult_lop,n12,n12,n12,
-		      model,data,niter,eps,"verb",true,"end");
+	if (NULL != wht) {
+	    sf_floatread(weight,n12,wht);
+	    for (i=0; i < n12; i++) {
+		data[i] *= weight[i];
+	    }
+	    sf_solver_reg(sf_weight_lop,sf_cgstep,mmmult_lop,n12,n12,n12,
+			  model,data,niter,1.0f,"verb",true,"end");
+	} else {
+	    sf_solver_reg(sf_copy_lop,sf_cgstep,mmmult_lop,n12,n12,n12,
+			  model,data,niter,eps,"verb",true,"end");
+	}
 	sf_cgstep_close();
 
 	sf_floatwrite(model,n12,out);

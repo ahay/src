@@ -50,7 +50,7 @@ Flow('dif','ncmp back','add scale=1,-1 ${SOURCES[1]}')
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun/'
+matROOT = '../Matfun/'
 matfun = 'FXEMDM'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

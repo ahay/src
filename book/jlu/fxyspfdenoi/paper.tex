@@ -1,0 +1,887 @@
+\published{IEEE Transactions on Geoscience and Remote Sensing, 60, 1-9, Early Access, (2022)}
+
+\title{Noniterative f-x-y streaming prediction filtering for random noise attenuation on seismic data}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{IEEE-TGRS-2021-00406}
+
+\address{
+    \footnotemark[1] College of Geo-exploration Science and Technology,\\
+    Jilin University, Changchun, China}
+
+\author{Yang Liu\footnotemark[1], Zhisheng Zheng\footnotemark[1]}
+
+\footer{IEEE-TGRS-2021-00406}
+\lefthead{Liu and Zheng}
+\righthead{Noise attenuation by the $f$-$x$-$y$ SPF}
+
+\maketitle
+
+\begin{abstract}
+  Random noise is unavoidable in seismic exploration, especially under
+  complex-surface conditions and in deep-exploration environments. The
+  current problems in random noise attenuation include preserving the
+  nonstationary characteristics of the signal and reducing
+  computational cost of broadband, wide-azimuth, and high-density data
+  acquisition. To obtain high-quality images, traditional prediction
+  filters (PFs) have proved effective for random noise attenuation,
+  but these methods typically assume that the signal is
+  stationary. Most nonstationary PFs use an iterative strategy to
+  calculate the coefficients, which leads to high computational
+  costs. In this study, we extended the streaming prediction theory to
+  the frequency domain and proposed the $f$-$x$-$y$ streaming
+  prediction filter (SPF) to attenuate random noise.  Instead of using
+  the iterative optimization algorithm, we formulated a constraint
+  least-squares problem to calculate the SPF and derived an analytical
+  solution to this problem.  The multi-dimensional streaming
+  constraints are used to increase the accuracy of the SPF. We also
+  modified the recursive algorithm to update the SPF with the snaky
+  processing path, which takes full advantage of the streaming
+  structure to improve the effectiveness of the SPF in high
+  dimensions. In comparison with 2D $f$-$x$ SPF and 3D $f$-$x$-$y$
+  regularized nonstationary autoregression (RNA), we tested the
+  practicality of the proposed method in attenuating random
+  noise. Numerical experiments show that the 3D $f$-$x$-$y$ SPF is
+  suitable for large-scale seismic data with the advantages of low
+  computational cost, reasonable nonstationary signal protection, and
+  effective random noise attenuation.
+
+\end{abstract}
+
+\section{Introduction}
+
+In seismic exploration, random noise is unavoidable because it is
+composed of environmental noise, the interference of wind motion, and
+the noise from geophones \cite{Yilmaz01}. Meanwhile, complex
+subsurface media typically cause the energy loss experienced by
+seismic signals, which show low amplitude in deep exploration
+conditions. These factors result in low-quality data and make
+signal-to-noise ratio (SNR) gradually low. In obtaining high-quality
+seismic images and improving the SNR, one key problem is the
+nonstationary characteristics of the signal. Seismic data are
+time-varying in nature, and the nonstationary properties of seismic
+data display that energy, track, time-frequency spectra of seismic
+events, and statistical characteristics of random noise change with
+time and space. The denoising methods that consider such nonstationary
+features can better preserve the valid signals.  The other problem
+with denoising is the increasing computational costs, although
+broadband, wide-azimuth, and high-density data acquisition can lead to
+high-resolution and high-fidelity images.  Many authors have proposed
+methods for random noise attenuation based on different theories. The
+mean filter \cite{Bonar12} and median filter \cite{Liu09, Wu18} are
+effective denoising methods for images, but they may somewhat smear
+seismic signals when complicated structures and low SNR are
+encountered. Mathematical transforms such as wavelet transforms
+\cite{Berkner98, Yu07, Langston19} and seislet transforms
+\cite{Fomel10, Liu10, Liu15vd} can characterize the nonstationary
+properties of seismic signals and provide reasonable signal and noise
+separation based on their compression ability. Recently, deep learning
+or machine learning techniques \cite{Djarfour14, Kimiarfar16, Yu19,
+  Zhu19} have also been proposed to suppress random noise; however,
+the initialization of neural networks requires a large number of
+samples and high computational cost. For supervised and
+semi-supervised learning, the preparation of the training set may need
+the help of traditional methods to generate denoised results as a
+reference.
+
+Prediction filters (PFs) have proved effective for random noise
+attenuation, and they can be implemented in the time-space or
+frequency-space domain. When seismic events have varying slope, the
+configuration of the filter size influences the filtering results,
+especially the filter size of $t$-$x$ PFs along the time axis. There
+are few impacts on $f$-$x$ PFs because they only estimate data along
+the spatial directions. Besides, seismic events with different
+dominant frequencies are overlapped in the $t$-$x$ domain, and they
+can be naturally separated in the $f$-$x$ domain. Abma and
+Claerbout~\cite{Abma95} discussed the differences in PFs in the
+$f$-$x$ and $t$-$x$ domains.  The $f$-$x$ prediction filter for
+denoising was first introduced by Canales~\cite{Canales84}, and
+further developed by G{\"u}l{\"u}nay~\cite{Gulunay86} to a standard
+industry method known as “FXDECON”, which is equivalent to a $t$-$x$
+domain prediction filter, selecting the entire trace along the time
+direction.  Liu~\textit{et al.}~\cite{Liu12} developed the $f$-$x$
+adaptive prediction filters to suppress random noise by using
+regularized nonstationary autoregression (RNA); the regularization
+term was used to limit the global smoothness of the filter
+coefficients. The method was further extended from a two-dimensional
+(2D) to three-dimensional (3D) case for random noise attenuation
+\cite{Liug13}. The $f$-$x$-$y$ RNA provides preferable adaptive
+features because it uses an iterative algorithm to calculate the
+frequency-space-varying filter coefficients, which leads to a large
+storage and high computational time, especially in large-scale data
+processing.
+
+Local similarity constraints have been proposed to directly calculate
+the adaptive prediction filter without iterations, which can save the
+computational resources. Starting with the prediction equation for a
+certain data point, Sacchi and Naghizadeh~\cite{Sacchi09} transformed
+the ill-posed problem of adaptive prediction filter into a local
+smoothing problem, and introduced a quadratic regularization term to
+stabilize the solution of the local prediction filter.  Fomel and
+Claerbout~\cite{Fomel16} proposed the concept of streaming prediction
+error filter (SPEF) to update the filter as each new data value
+arrives in the time-space domain. This method combines the prediction
+equation with locally similar constraints to solve the overdetermined
+linear system. Arising from different starting points, these two
+methods share the same least-squares solution and significantly reduce
+the computational cost by avoiding the iterative algorithm.  Liu and
+Li~\cite{Liuy18} further proposed a streaming orthogonal prediction
+filter (SOPF) in the $t$-$x$ domain, which applies signal-and-noise
+orthogonalization based on the streaming prediction theory and
+provides a fast solution for the adaptive prediction filter to
+suppress random noise. Guo~\textit{et al.}~\cite{Guo20} attempted to
+eliminate seismic random noise by using the $f$-$x$ SPF only with 1D
+spatial constraint.
+
+In this study, we derived the theory of the new $f$-$x$-$y$ streaming
+prediction filter based on the local smoothness constraints in high
+dimensions. The multi-dimensional constraints make the filter involve
+the property of local similarity not only along the spatial directions
+(space $x$ and space $y$), but also the frequency direction.  It is
+not a simple 3D extension with more spatial axis from 2D
+SPF~\cite{Guo20}, we took advantage of 3D data with space $y$
+constraint and suppressed oscillation with frequency constraint,
+meanwhile, a special filter-updating path was developed to help the
+SPF solve the random noise attenuation problem in higher
+dimensions. We compared the feasibility of the 3D $f$-$x$-$y$ SPF in
+attenuating random noise with the 2D $f$-$x$ SPF and the 3D
+$f$-$x$-$y$ RNA on two synthetic models. The field data example
+confirms that the 3D $f$-$x$-$y$ SPF with the matching processing path
+has a reasonable denoising ability and a low computational cost in
+practice.
+
+\section{Theory}
+
+\subsection{3D $f$-$x$-$y$ streaming prediction filtering}
+
+A 2D seismic section $s(t,x)$ containing linear events can be
+described as a plane wave function in the $t$-$x$ domain.  In the
+$f$-$x$ domain, the linear events in seismic section $\tilde{S}(f,x)$
+are decomposed into a series of sinusoids.  These sinusoids are
+superimposed and become harmonics at each frequency, which shows the
+prediction relationship of seismic traces in a frequency slice:
+\begin{equation}
+    \label{eq:plane}
+    \sum_{p=1}^{P}a_{m,p}\tilde{S}_{m,n-p} = \tilde{S}_{m,n},
+\end{equation}
+where $m \in [1,M]$ and $n \in [1,N]$ are the indices of the seismic
+sample along the $f$ axis and $x$ axis, respectively. $p \in [1,P]$ is
+the index of filter coefficients along the $x$ direction.
+$\tilde{S}_{m,n}$ denotes the data point in $\tilde{S}(f,x)$ and
+$a_{m,p}$ indicates the filter coefficient in the $f$-$x$ domain. When
+curve events or amplitude-varying wavelets are shown in the seismic
+data, filter coefficients change from one data point to the next,
+which help to manage the nonstationary case:
+\begin{equation}
+    \label{eq:curve}
+    \sum_{p=1}^{P}a_{m,n,p}\tilde{S}_{m,n-p}
+    = \mathbf{S^{T}}_{m,n} \mathbf{A}_{m,n}
+    = \tilde{S}_{m,n},
+\end{equation}
+where $\{ \mathbf{T} \}$ denotes the transpose operator,
+$\mathbf{S}_{m,n}=[\tilde{S}_{m,n-1}, \\
+\tilde{S}_{m,n-2}, \cdots, \tilde{S}_{m,n-p}]^{\mathbf{T}}$ denotes
+the vector including the data points near $\tilde{S}_{m,n}$.
+$\mathbf{A}_{m,n}=[a_{m,n,1}, a_{m,n,2}, \cdots,
+a_{m,n,p}]^{\mathbf{T}} $ is the vector of coefficients in a 2D
+adaptive prediction filter. Let $P=3$, Fig.~\ref{fig:fig1} illustrates
+how (\ref{eq:curve}) works.  Equation~(\ref{eq:curve}) denotes that
+the filter predicts data point along the spatial direction rather than
+the frequency direction. Therefore, an extension to the 3D $f$-$x$-$y$
+domain is straightforward:
+\begin{equation}
+    \label{eq:curve3d}
+    \begin{aligned}
+         & \sum_{p=-P}^{P}\sum_{q=-Q}^{Q}a_{m,n,l,p,q}\tilde{S}_{m,n-p,l-q} \\
+         & = \mathbf{S^{T}}_{m,n,l} \mathbf{A}_{m,n,l}
+        = \tilde{S}_{m,n,l} \quad (|p|+|q| \neq 0),
+    \end{aligned}
+\end{equation}
+where $l \in [1,L]$ is the index of the data sample along the $y$
+axis. $p \in [-P,P]$ and $q \in [-Q,Q]$ are the indices of filter
+coefficients in two spatial directions,
+$\mathbf{A}_{m,n,l}=[a_{m,n,l,-P,-Q}, \cdots, a_{m,n,l,p,q}, \cdots,
+a_{m,n,l,P,Q}]^{\mathbf{T}} $ is the vector of 3D filter
+coefficients. The adaptive prediction filter $\mathbf{A}_{m,n,l}$ is
+defined as a space-noncausal structure and the filter size in the
+spatial direction is $(2P+1)\times(2Q+1)-1$. The vector $
+\mathbf{S}_{m,n,l}= [\tilde{S}_{m,n+P,l+Q}, \cdots,
+\tilde{S}_{m,n-p,l-q}, \tilde{S}_{m,n-P,l-Q}]^{\mathbf{T}} $ contains
+the data points near $\tilde{S}_{m,n,l}$.  Let $p=\{-2,-1,0,1,2\}$ and
+$q=\{-2,-1,0,1,2\}$, Fig.~\ref{fig:fig3} demonstrates the distribution
+of the vectors $\mathbf{S}_{m,n,l}$ and $\mathbf{A}_{m,n,l}$. Assuming
+that the contained noise is white Gaussian noise, the filter can be
+obtained by solving the minimization problem:
+\begin{equation}
+    \label{eq:LS1}
+    \min_{\mathbf{A}_{m,n,l}} \left \| \mathbf{S^{T}}_{m,n,l}
+    \mathbf{A}_{m,n,l} - \tilde{S}_{m,n,l} \right \| _{2}^{2},
+\end{equation}
+equation~(\ref{eq:LS1}) describes an ill-posed problem that the number
+of the unknown filter coefficients is greater than that of the known
+equations. Without any regularization, the equation will lead to an
+unstable solution:
+\begin{equation}
+    \label{eq:solution1}
+    \mathbf{A}_{LS}=(\mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l})^{-1}
+    \mathbf{S^{*}}_{m,n,l} \tilde{S}_{m,n,l},
+\end{equation}
+where $\{ * \}$ denotes the conjugate operator.
+
+To solve the underdetermined problem (\ref{eq:LS1}), constraint
+conditions based on local similarity/smoothness are used to stabilize
+the solution of (\ref{eq:LS1}).  Assuming that the adaptive prediction
+filter at position $(m,n,l)$ is similar to another one at position
+$(m,n-1,l)$ in the $f$-$x$-$y$ domain, $ \lambda_{x}
+\mathbf{A}_{m,n,l} \approx \lambda_{x} \mathbf{A}_{m,n-1,l} $ can be
+treated as the constraint condition on the $x$ axis.  The
+autoregression equation can be expressed as follows:
+\begin{small}
+    \begin{equation}
+        \label{eq:matrixpointnorm}
+        \begin{aligned}
+            \begin{bmatrix}
+                \tilde{S}_{m,n+P,l+Q} & \cdots                & \tilde{S}_{m,n-p,l-q} &
+                \cdots                & \tilde{S}_{m,n-P,l-Q}                                                \\
+                \lambda_{x}           &                       &                       &        &             \\
+                                      & \ddots                &                       &        &             \\
+                                      &                       & \lambda_{x}           &        &             \\
+                                      &                       &                       & \ddots &             \\
+                                      &                       &                       &        & \lambda_{x}
+            \end{bmatrix}
+            \begin{bmatrix}
+                a_{m,n,l,-P,-Q} \\
+                \vdots          \\
+                a_{m,n,l,p,q}   \\
+                \vdots          \\
+                a_{m,n,l,P,Q}
+            \end{bmatrix}
+            \approx
+            \begin{bmatrix}
+                \tilde{S}_{m,n,l}             \\
+                \lambda_{x} a_{m,n-1,l,-P,-Q} \\
+                \vdots                        \\
+                \lambda_{x} a_{m,n-1,l,p,q}   \\
+                \vdots                        \\
+                \lambda_{x} a_{m,n-1,l,P,Q}
+            \end{bmatrix},
+        \end{aligned}
+    \end{equation}
+\end{small}
+and the simplified block matrix can be written as:
+\begin{equation}
+    \label{eq:matrixpointnormsimple}
+    \begin{bmatrix}
+        \mathbf{S^{T}}_{m,n,l} \\
+        \lambda_{x} \mathbf{I}
+    \end{bmatrix}
+    \mathbf{A}_{m,n,l}
+    \approx
+    \begin{bmatrix}
+        \tilde{S}_{m,n,l} \\
+        \lambda_{x} \mathbf{A}_{m,n-1,l}
+    \end{bmatrix}.
+\end{equation}
+Equation~(\ref{eq:matrixpointnormsimple}) is solvable since there are
+$(2P+1)*(2Q+1)$ equations with $(2P+1)*(2Q+1)-1$ unknown coefficients,
+which correspond to the following minimization problem:
+\begin{equation}
+    \label{eq:LS+x}
+    \min_{\mathbf{A}_{m,n,l}} \left \|
+    \mathbf{S^{T}}_{m,n,l} \mathbf{A}_{m,n,l}
+    - \tilde{S}_{m,n,l} \right \|_{2}^{2}
+    + \lambda_{x}^{2} \left \| \mathbf{A}_{m,n,l} - \mathbf{A}_{m,n-1,l}
+    \right \|_{2}^{2},
+\end{equation}
+where $\lambda_{x}$ is the constant weight for the regularization term
+along the $x$ axis. In the frequency $f$ direction, one can assume
+that the SPFs change smoothly and treat the irregular perturbations as
+the interference of noise. Meanwhile, the smoothness of the 3D SPFs
+also exists in different spatial directions and may change at
+different data point, therefore, we implemented local smoothness along
+$f$, $x$, and $y$ axis as constraints to calculate the $f$-$x$-$y$
+SPF. The block matrix form is:
+\begin{equation}
+    \label{eq:matrix2}
+    \begin{bmatrix}
+        \mathbf{S^{T}}_{m,n,l}        \\
+        \lambda_{f}(m,n,l) \mathbf{I} \\
+        \lambda_{x}(m,n,l) \mathbf{I} \\
+        \lambda_{y}(m,n,l) \mathbf{I}
+    \end{bmatrix}
+    \mathbf{A}_{m,n,l} =
+    \begin{bmatrix}
+        \tilde{S}_{m,n,l}                       \\
+        \lambda_{f}(m,n,l) \mathbf{A}_{m-1,n,l} \\
+        \lambda_{x}(m,n,l) \mathbf{A}_{m,n-1,l} \\
+        \lambda_{y}(m,n,l) \mathbf{A}_{m,n,l-1}
+    \end{bmatrix}
+\end{equation}
+and the corresponding least-squares problem takes the
+following form:
+\begin{equation}
+    \label{eq:LS2}
+    \begin{aligned}
+         & \min_{\mathbf{A}_{m,n,l}} \left \|
+        \mathbf{S^{T}}_{m,n,l} \mathbf{A}_{m,n,l}
+        - \tilde{S}_{m,n,l} \right \|_{2}^{2}                                          \\
+         & + \lambda_{f}^{2}(m,n,l) \left \| \mathbf{A}_{m,n,l} - \mathbf{A}_{m-1,n,l}
+        \right \|_{2}^{2}                                                              \\
+         & + \lambda_{x}^{2}(m,n,l) \left \| \mathbf{A}_{m,n,l} - \mathbf{A}_{m,n-1,l}
+        \right \|_{2}^{2}                                                              \\
+         & + \lambda_{y}^{2}(m,n,l) \left \| \mathbf{A}_{m,n,l} - \mathbf{A}_{m,n,l-1}
+        \right \|_{2}^{2},
+    \end{aligned}
+\end{equation}
+where $\lambda_{f}(m,n,l)$, $\lambda_{x}(m,n,l)$ and
+$\lambda_{y}(m,n,l)$ denotes the variable weights of regularization
+terms along the frequency $f$ axis, space $x$ axis, and space $y$
+axis, respectively. They measure the variable similarity or closeness
+between the filter $\mathbf{A}_{m,n,l}$ and the adjacent filters
+$\mathbf{A}_{m-1,n,l}$, $\mathbf{A}_{m,n-1,l}$, and
+$\mathbf{A}_{m,n,l-1}$.  Due to the prediction filter can characterize
+the energy spectrum of the input data \cite{Claerbout76}, the adaptive
+filter shares analogical smoothness property with the 3D data, so the
+variation of the weights may consist with the smooth version of data.
+For simplicity, we select these weights with constant value,
+$\lambda_{f}(m,n,l) = \lambda_{f}$, $\lambda_{x}(m,n,l) = \lambda_{x}$
+and $\lambda_{y}(m,n,l) = \lambda_{y}$, to demonstrate the constrained
+relationship.  The introduced regularization terms convert the
+ill-posed problem to the overdetermined inverse problem, and the
+least-squares solution of (\ref{eq:matrix2}) and (\ref{eq:LS2}) is:
+\begin{small}
+    \begin{equation}
+        \label{eq:solution2}
+        \begin{aligned}
+            \mathbf{A}_{m,n,l} & = [ (\lambda_{f}^{2} + \lambda_{x}^{2} + \lambda_{y}^{2})
+            \mathbf{I} + \mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l} ]^{-1}
+            ( \lambda_{f}^{2} \mathbf{A}_{m-1,n,l}                                         \\
+                               & + \lambda_{x}^{2} \mathbf{A}_{m,n-1,l}
+            + \lambda_{y}^{2} \mathbf{A}_{m,n,l-1}
+            + \tilde{S}_{m,n,l} \mathbf{S^{*}}_{m,n,l})                                    \\
+                               & = (\lambda^{2} \mathbf{I}
+            + \mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l} )^{-1}
+            (\lambda^{2}\mathbf{\hat{A}}_{m,n,l} + \tilde{S}_{m,n,l} \mathbf{S^{*}}_{m,n,l}).
+        \end{aligned}
+    \end{equation}
+\end{small}
+where
+\begin{small}
+    \begin{equation}
+        \label{eq:coef}
+        \begin{cases}
+            \lambda^{2} = \lambda_{f}^{2} + \lambda_{x}^{2} + \lambda_{y}^{2}, \\
+            \mathbf{\hat{A}}_{m,n,l} = ( \lambda_{f}^{2} \mathbf{A}_{m-1,n,l} +
+            \lambda_{x}^{2} \mathbf{A}_{m,n-1,l} +
+            \lambda_{y}^{2} \mathbf{A}_{m,n,l-1} ) / \lambda^{2}.
+        \end{cases}
+    \end{equation}
+\end{small}
+The Sherman-Morrison formula is an analytic method for solving the
+inverse matrix \cite{Hager89}:
+\begin{small}
+    \begin{equation}
+        \label{eq:inverse}
+        ( \lambda^{2}\mathbf{I} + \mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l} )^{-1}
+        = \frac{ 1 } { \lambda^{2}  }
+        ( \mathbf{I} - \frac{ \mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l} }
+        { \lambda^{2} + \mathbf{S^{T}}_{m,n,l} \mathbf{S^{*}}_{m,n,l} }).
+    \end{equation}
+\end{small}
+The derivation of the Sherman-Morrison formula in the complex space is
+described in Appendix~\ref{S-M-F}.  Elementary algebraic
+simplifications lead to the analytical solution:
+\begin{small}
+    \begin{equation}
+        \label{eq:filter}
+        \begin{aligned}
+            \mathbf{A}_{m,n,l}
+             & = ( \lambda^{2} \mathbf{I}
+            + \mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l} )^{-1}
+            ( \tilde{S}_{m,n,l} \mathbf{S^{*}}_{m,n,l}
+            + \lambda^{2} \mathbf{\hat{A}}_{m,n,l})                          \\
+             & = \frac{ 1 } { \lambda^{2} } ( \mathbf{I} -
+            \frac{ \mathbf{ S^{*}}_{m,n,l} \mathbf{S^{T} }_{m,n,l} }
+            { \lambda^{2} + \mathbf{S^{T}}_{m,n,l} \mathbf{S^{*}}_{m,n,l} })
+            ( \tilde{S}_{m,n,l} \mathbf{S^{*}}_{m,n,l}
+            + \lambda^{2} \mathbf{\hat{A}}_{m,n,l} )                         \\
+             & = \mathbf{\hat{A}}_{m,n,l} + \frac{ 1 } { \lambda^{2} }
+            \tilde{S}_{m,n,l} \mathbf{S^{*}}_{m,n,l} - \frac{ 1 } {\lambda^{2}}
+            \frac{ \mathbf{S^{*}}_{m,n,l} \mathbf{ S^{T}}_{m,n,l}
+                \tilde{S}_{m,n,l} \mathbf{S^{*}}_{m,n,l} }
+            { \lambda^{2} + \mathbf{ S^{T}}_{m,n,l} \mathbf{S^{*}}_{m,n,l} } \\
+             & - \frac{\mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l}
+                \mathbf{\hat{A}}_{m,n,l} }
+            { \lambda^{2} + \mathbf{S^{T}}_{m,n,l} \mathbf{S^{*}}_{m,n,l} }  \\
+             & = \mathbf{\hat{A}}_{m,n,l} + \frac{ 1 } { \lambda^{2} }
+            \frac{ \lambda^{2} \tilde{S}_{m,n,l} \mathbf{S^{*}}_{m,n,l} +
+                \tilde{S}_{m,n,l} \mathbf{ S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l}
+                \mathbf{S^{*}}_{m,n,l} } { \lambda^{2} + \mathbf{S^{T}}_{m,n,l}
+            \mathbf{S^{*}}_{m,n,l} }                                         \\
+             & - \frac{ 1 } { \lambda^{2} }
+            \frac{ \mathbf{S^{*}}_{m,n,l}  \mathbf{S^{T}}_{m,n,l} \tilde{S}_{m,n,l}
+                \mathbf{S^{*}}_{m,n,l} } { \lambda^{2} +
+                \mathbf{S^{T}}_{m,n,l} \mathbf{S^{*}}_{m,n,l} }
+            - \frac{ \mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l}
+                \mathbf{\hat{A}}_{m,n,l} } { \lambda^{2} + \mathbf{ S^{T}}_{m,n,l}
+            \mathbf{S^{*}}_{m,n,l} }                                         \\
+             & = \mathbf{\hat{A}}_{m,n,l} + \frac{ \tilde{S}_{m,n,l} -
+                \mathbf{S^{T}}_{m,n,l} \mathbf{\hat{A}}_{m,n,l}  }
+            { \lambda^{2} + \mathbf{ S^{T}}_{m,n,l}
+                \mathbf{S^{*}}_{m,n,l} } \mathbf{ S^{*}}_{m,n,l},
+        \end{aligned}
+    \end{equation}
+\end{small}
+Equation~(\ref{eq:filter}) is a recursion equation, which suggests
+that the filter $\mathbf{A}_{m,n,l}$ recursively updates in a certain
+order. The residual can be written as:
+\begin{equation}
+    \label{eq:residual}
+    r_{m,n,l}=  \lambda^{2} \frac{ \tilde{S}_{m,n,l} - \mathbf{S^{T}}_{m,n,l}
+        \mathbf{\hat{A}}_{m,n,l} } { \lambda^{2} + \mathbf{S^{T}}_{m,n,l}
+        \mathbf{S^{*}}_{m,n,l} }.
+\end{equation}
+Once obtaining the solution of the 3D $f$-$x$-$y$ SPF, one can compute
+the noise-free data $\tilde{X}_{m,n,l}$ with the following equation:
+\begin{equation}
+    \label{eq:noise-free}
+    \tilde{X}_{m,n,l} = \mathbf{S^{T}}_{m,n,l} \mathbf{A}_{m,n,l}.
+\end{equation}
+The configuration of parameters $\lambda_{f}$, $\lambda_{x}$, and
+$\lambda_{y}$ is the basis for the proposed method. When the three
+parameters are $0$, the corresponding regularization terms have no
+effect on restricting the inverse problem and the result of the
+$f$-$x$-$y$ SPF becomes (\ref{eq:solution1}). By choosing $\lambda_{y}
+= 0$ and removing the $y$ axis, equation~(\ref{eq:filter}) is reduced
+to the solution of the 2D $f$-$x$ SPF. On the contrary, when the three
+parameters tend to infinity, more weight is applied on regularization
+terms. A large denominator in (\ref{eq:filter}) indicates that the
+filter cannot receive any updates to maintain its adaptive and
+predictive properties. This denominator suggests that parameters
+$\lambda_{x}^{2}$ and $\lambda_{y}^{2}$ in (\ref{eq:coef}) should have
+the same order of magnitude as
+$\mathbf{S^{T}}_{m,n,l}\mathbf{S^{*}}_{m,n,l}$, and the value of
+$\lambda$ might be in the range of $(0, 10*\sqrt{ \max(
+  \mathbf{S^{T}}_{m,n,l}\mathbf{S^{*}}_{m,n,l}) })$, which can balance
+the noise suppression and signal protection.  Therefore, they can
+smoothly adjust the change of filters.  Meanwhile, data distribution
+in the frequency axis may change sharply, which is not as smooth as
+those in the spatial directions; thus, $\lambda_{f}$ should be smaller
+than $\lambda_{x}$ and $\lambda_{y}$.
+
+\begin{table}[!t]
+    \caption{
+        Cost comparison between $f$-$x$-$y$ RNA and $f$-$x$-$y$ SPF. }
+    \label{tbl:cost1}
+    \centering
+    \begin{threeparttable}
+        \begin{tabular}{|c|c|c|}
+            \hline
+                            & Storage                             & Cost \\
+            \hline
+            $f$-$x$-$y$ RNA & $ O(N_{a}N_{f}N_{x}N_{y}) $
+                            & $ O(N_{a}N_{f}N_{x}N_{y}N_{iter}) $        \\
+            \hline
+            $f$-$x$-$y$ SPF & $ O(N_{a}N_{x}N_{y}) $
+                            & $ O(N_{a}N_{f}N_{x}N_{y}) $                \\
+            \hline
+        \end{tabular}
+
+        \begin{tablenotes}[para, flushleft]
+            $N_a$ is the filter size, $N_f$ is the data size along frequency
+            axis, $N_x$ is the data size along $x$ axis, $N_y$ is the data
+            size along $y$ axis, and $N_{iter}$ is the number of iterations.
+        \end{tablenotes}
+    \end{threeparttable}
+\end{table}
+
+\inputdir{.}
+\multiplot{2}{fig1,fig2}{width=0.47\columnwidth} {Schematic
+  illustration of $f$-$x$ prediction filter (a) and filter processing
+  path (b).}
+
+\multiplot{2}{fig3,fig4}{width=0.47\columnwidth} {Schematic
+  illustration of $f$-$x$-$y$ prediction filter (a) and filter
+  processing path in each frequency slice (b).}
+
+\subsection{Data processing path in 3D case}
+
+The processing path for the 2D $f$-$x$ SPF is shown in
+Fig.~\ref{fig:fig2}, which initializes the filter at the beginning of
+each line and updates the filter until the end of the line along the
+spatial direction. We defined a new processing path for the 3D case;
+the 3D $f$-$x$-$y$ SPF will process data from the beginning of a line
+to the end, and then from the end of the next line to the beginning in
+the spatial directions (Fig.~\ref{fig:fig4}).  This snaky processing
+path avoids the weakness that the filter should be initialized at the
+beginning of each line, which guarantees the effectiveness of initial
+filters.
+
+For calculating the 3D $f$-$x$-$y$ SPF, the neighboring filters
+$\mathbf{A}_{m-1,n,l}$, $\mathbf{A}_{m,n-1,l}$, and
+$\mathbf{A}_{m,n,l-1}$ need to be stored, and these filters will be
+used when the stream reaches the adjacent point.  For easy program
+implementation, we designed the cache space to store the neighboring
+filters. The cache space for $\mathbf{A}_{m-1,n,l}$,
+$\mathbf{A}_{m,n,l-1}$, and $\mathbf{A}_{m,n-1,l}$ are
+$N_{a}N_{x}N_{y}$, $N_{a}N_{x}$, and $N_{a}$, respectively, where
+$N_a$ is the filter size, $N_x$ is the data size along the $x$ axis,
+and $N_y$ is the data size along the $y$ axis.  Compared with the 3D
+$f$-$x$-$y$ RNA~\cite{Liug13}, the proposed method calculates the
+filter coefficients without iterations, which reduces the requirement
+of computational resources (Table~\ref{tbl:cost1}).  Repeatedly
+processing the data with the SPF can further suppress the noise, but
+part of the signal will also be weakened. Computational cost increases
+with the number of repeated calculations, and a balance between
+computational cost and noise suppression effect is needed.
+
+The key steps of using the 3D $f$-$x$-$y$ SPF to attenuate
+the random noise are as follows: \\
+1. Initializing filter coefficients $ \mathbf{A}_{m-1,n,l}$,
+$ \mathbf{A}_{m,n-1,l}$, and $\mathbf{A}_{m,n,l-1}$ with zeros.\\
+2. Selecting reasonable parameters $\lambda_{f}$, $\lambda_{x}$,
+and $\lambda_{y}$ and computing $ \lambda^{2} = \lambda_{f}^{2} + \lambda_{x}^{2} + \lambda_{y}^{2} $.\\
+3. Calculating $\mathbf{S^{T}}_{m,n,l}\mathbf{S^{*}}_{m,n,l}$ and
+$\mathbf{S^{T}}_{m,n,l}\mathbf{\hat{A}}_{m,n,l}$ in (\ref{eq:filter}).\\
+4. Computing residual $r_{m,n,l}$ with (\ref{eq:residual}) and
+updating filter
+$\mathbf{A}_{m,n,l}$ with (\ref{eq:filter}).\\
+5. Estimating noise-free data $\tilde{X}_{m,n,l}$ with (\ref{eq:noise-free}).\\
+6. Looping steps 2-5 in snaky processing path until the entire process
+is completed.
+
+\section{Numerical examples}
+
+\subsection{3D synthetic qdome model}
+
+We start with the 3D qdome model~\cite{Claerbout08} containing curve
+events and faults (Fig.~\ref{fig:qdmod}) to evaluate the proposed
+method by handling the nonstationarity problem. The model size is 200
+(time samples) $\times$ 150 (X traces) $\times$ 100 (Y traces).
+Fig.~\ref{fig:qdnoise} displays the data with Gaussian noise added.
+We compared the 3D $f$-$x$-$y$ SPF with the 2D $f$-$x$ SPF and the 3D
+$f$-$x$-$y$ RNA~\cite{Liug13} to test their ability for random noise
+attenuation. The filter length of the $f$-$x$ SPF is 5-sample
+($x$). We also selected the scale parameters with 0.008
+($\lambda_{f}$) and 0.06 ($\lambda_{x}$). Fig.~\ref{fig:qdspf2} shows
+the denoised result obtained by using the $f$-$x$ SPF that eliminates
+most of the random noise. However, there is still an obvious signal in
+the noise section (Fig.~\ref{fig:qderrspf2}) because the 2D $f$-$x$
+SPF has a low accuracy owing to the local similarity of filter
+coefficients only along the $f$ and $x$ directions. A more effective
+approach is to apply global smoothness. The denoised result obtained
+by using the 3D $f$-$x$-$y$ RNA is shown in Fig.~\ref{fig:qdrna}.  The
+filter size of the $f$-$x$-$y$ RNA is 5-sample ($x$) $\times$ 5-sample
+($y$). The 3D $f$-$x$-$y$ RNA has a better result than the 2D $f$-$x$
+SPF, and it is visually difficult to detect the signal in the
+difference between the noisy data (Fig.~\ref{fig:qdnoise}) and the
+denoised result (Fig.~\ref{fig:qdrna}).  The global smoothness
+constraints along two spatial directions can help RNA to improve the
+result (Fig.~\ref{fig:qderrrna}), but it also increases the
+computational cost because it iteratively solves the regularized
+least-squares problem (Table~\ref{tbl:cost1}).  We designed a 3D
+$f$-$x$-$y$ SPF with 5-sample ($x$) $\times$ 5-sample ($y$)
+coefficients for each sample and the scale parameters 0.008
+($\lambda_{f}$), 0.06 ($\lambda_{x}$), and 0.06 ($\lambda_{y}$). The
+proposed method produces a reasonable result (Fig.~\ref{fig:qdspf3}),
+where the geological structure is improved. It is also difficult to
+distinguish the signal in the removed noise
+(Fig.~\ref{fig:qderrspf3}), which is an indication of successful
+signal and noise separation. The signal-to-noise ratio (SNR) and time
+consumption were used to analyze the performance of each method
+(Table~\ref{tbl:cost2}). The SNR is defined as:
+\begin{equation}
+    \label{eq:snr}
+    SNR=10\log_{10}\frac{||\mathbf{s}||_2^2}
+    {||\mathbf{s}-\hat{\mathbf{s}}||_2^2},
+\end{equation}
+where $\mathbf{s}$ is the noise-free signal and $\hat{\mathbf{s}}$ is
+the denoised signal. The computing platform uses Intel E5-2650 2.0GHz
+CPU and the displayed time consumption is the average of ten
+records. Although the denoised result obtained by using the $f$-$x$
+SPF shows a relatively high SNR, the amplitude of the curved events is
+partly damaged, which is shown in Fig.~\ref{fig:qderrspf2}.  The
+$f$-$x$-$y$ RNA preserves a more detailed structure than the $f$-$x$
+SPF at the cost of a lower SNR and longer computational time. In
+general, the $f$-$x$-$y$ SPF provides a higher SNR while maintaining
+the computational cost at a feasible level.
+
+\inputdir{qdome}
+\multiplot{2}{qdmod,qdnoise}{width=0.47\columnwidth} {3D synthetic
+  model (a) and noisy data (b).}
+
+\multiplot{6}{qdspf2,qderrspf2,qdrna,qderrrna,qdspf3,qderrspf3}
+{width=0.47\columnwidth} {Denoised result by the $f$-$x$ SPF (a),
+  noise removed by the $f$-$x$ SPF (b), denoised result by the
+  $f$-$x$-$y$ RNA (c), noise removed by the $f$-$x$-$y$ RNA (d),
+  denoised result by the $f$-$x$-$y$ SPF (e), and noise removed by the
+  $f$-$x$-$y$ SPF (f).}
+
+\subsection{3D synthetic CMP gather}
+
+A 3D synthetic CMP gather created by \cite{Liug13} shows hyperbolic
+events (Fig.~\ref{fig:cmpmod}). The data size is 126-sample (time)
+$\times$ 101-sample (X) $\times$ 101-sample (Y). The corresponding
+noisy data is shown in Fig.~\ref{fig:cmpnoise}.  The challenge in this
+case is to account for both strong random noise and nonstationary
+events. Fig.~\ref{fig:cmpspf2} shows the denoised result using the 2D
+$f$-$x$ SPF with 5-sample ($x$) filter size, which uses the scale
+parameters of 1.0 ($\lambda_{f}$) and 4.5 ($\lambda_{x}$).  Note that
+the $f$-$x$ SPF can attain relatively high SNR
+(Table~\ref{tbl:cost2}).  However, it cannot provide sufficient
+protection for curve events; the events at far offsets can be
+destroyed (Fig.~\ref{fig:cmpspf2}) and part of the signals are left
+(Fig.~\ref{fig:cmperrspf2}).  Figure~\ref{fig:cmpct} is the denoised
+result by using the 3D curvelet transform, we adopted the percentage
+threshold with 10\% to mute the random noise, and the 3D curvelet
+transform effectively suppresses the noise, but part of the signal
+energy leaks into the noise profile at $-0.5 \sim 0.5$km (X)
+(Figure~\ref{fig:cmperrct}).  We compared the proposed method with the
+3D $f$-$x$-$y$ RNA, and the filter size is 5-sample ($x$) $\times$
+5-sample ($y$). The denoised result (Fig.~\ref{fig:cmprna}) and the
+removed noise (Fig.~\ref{fig:cmperrrna}) illustrate that the
+$f$-$x$-$y$ RNA protects more signal by removing less noise.  The
+parameters of the 3D $f$-$x$-$y$ SPF are selected as 1.0
+($\lambda_{f}$), 4.5 ($\lambda_{x}$), and 4.5 ($\lambda_{y}$),
+respectively. The filter size of the 3D SPF is the same as that of the
+3D RNA. The proposed method recovers the curved events reasonable well
+(Fig.~\ref{fig:cmpspf3}), similar to the $f$-$x$-$y$ RNA.  However,
+the $f$-$x$-$y$ SPF saves more computational resources and reveals a
+higher SNR than the $f$-$x$-$y$ RNA (Table~\ref{tbl:cost2}).
+
+\inputdir{cmp}
+
+\multiplot{2}{cmpmod,cmpnoise}{width=0.47\columnwidth} {Synthetic 3D
+  CMP gather (a) and noisy data (b).}
+
+\multiplot{8}{cmpspf2,cmperrspf2,cmpct,cmperrct,cmprna,cmperrrna,cmpspf3,cmperrspf3}
+{width=0.39\columnwidth} {Denoised result by the $f$-$x$ SPF (a),
+  noise removed by the $f$-$x$ SPF (b), denoised result by the 3D
+  curvelet transform (c), noise removed by the 3D curvelet transform
+  (d), denoised result by the $f$-$x$-$y$ RNA (e), noise removed by
+  the $f$-$x$-$y$ RNA (f), denoised result by the $f$-$x$-$y$ SPF (g),
+  noise removed by the $f$-$x$-$y$ SPF (h).}
+
+\begin{table}[!t]
+    \caption{
+        Comparison of the SNR and time consumption
+        among different methods.}
+    \label{tbl:cost2}
+    \centering
+    \resizebox{\textwidth}{35mm}{
+        \begin{threeparttable}[b]
+            \begin{tabular}{ccccccc}
+                \toprule
+                \multirow{2}{*}{ \diagbox {Model (size)} {Method} }
+                                          & \multicolumn{2}{c}{$f$-$x$ SPF}
+                                          & \multicolumn{2}{c}{$f$-$x$-$y$ RNA}
+                                          & \multicolumn{2}{c}{$f$-$x$-$y$ SPF} \\
+                \cmidrule(r){2-3} \cmidrule(r){4-5} \cmidrule(r){6-7}
+                                          & SNR (dB)\tnote{1}
+                                          & Time (s)\tnote{2}
+                                          & SNR (dB)
+                                          & Time (s)
+                                          & SNR (dB)
+                                          & Time (s)                            \\
+                \midrule
+                qdome model (200*150*100) & $6.284$
+                                          & $5.89*10^{0}$
+                                          & $5.925$
+                                          & $8.23*10^{2}$
+                                          & $14.16$
+                                          & $2.36*10^{1}$                       \\
+                CMP gather (126*101*101)  & $2.422$
+                                          & $2.63*10^{0}$
+                                          & $1.324$
+                                          & $1.53*10^{2}$
+                                          & $2.544$
+                                          & $9.26*10^{0}$                       \\
+                field data (700*266*310)  & -
+                                          & $8.79*10^{1}$
+                                          & -
+                                          & $1.52*10^{3}$
+                                          & -
+                                          & $1.37*10^{2}$                       \\
+                \bottomrule
+            \end{tabular}
+            \begin{tablenotes}
+                \item[1] {signal-noise-ratio of denoised result.}
+                \item[2] {Time consumption is the average of ten records.}
+            \end{tablenotes}
+        \end{threeparttable}}
+\end{table}
+
+\subsection{3D field data}
+
+For the field data test, we used a 3D time migration data to evaluate
+the effectiveness of the SPF (Fig.~\ref{fig:realdata}). The data size
+is 700-sample (time) $\times$ 266-sample (X) $\times$ 310-sample
+(Y). Strong random noise from the surface conditions contaminates both
+the simple layers at the shallow locations and complex structure at
+the deeper positions.  We applied the 2D $f$-$x$ SPF with 5-sample
+($x$) to recover the events and selected 55 ($\lambda_{f}$) and 280
+($\lambda_{x}$) as the regularization terms for the improved $f$-$x$
+SPF with frequency constraint. Fig.~\ref{fig:realspf2} and
+\ref{fig:realerrspf2} show the denoised results and the removed noise
+at the same clip value, respectively. Both shallow plane events and
+deep dipping events show better lateral continuity, but the 2D SPF
+also removes a part of the events because it uses the local smoothness
+constraints without the $y$ direction. Meanwhile, information is
+removed near $x=0$ and $y=0$ because of the inaccurate initial filter
+coefficients.  We also compared the 2D SPF with the 2D $f$-$x$ EMD
+prediction filter~\cite{Chen14} to test it ability for random noise
+attenuation. The denoised result of $f$-$x$ EMD prediction filter is
+shown in Fig.~\ref{fig:realfxemd}. The 2D $f$-$x$ EMD prediction
+filter preserves signal better than the 2D SPF, but the difference
+(Fig.~\ref{fig:realerrfxemd}) still shows obvious signal and the
+method is difficult to be implemented in 3D case.  For comparison, we
+used the 3D $f$-$x$-$y$ RNA to attenuate random noise.  The
+$f$-$x$-$y$ RNA with 5-sample (X) $\times$ 5-sample (Y) filter size
+outputs a smoother result and the lateral continuity is improved
+(Fig.~\ref{fig:realrna}), where the reflection event in both shallow
+and deep parts becomes clearer than original field
+data. Fig.~\ref{fig:realerrrna} displays that only parts of dipping
+events are slightly lost.  The proposed $f$-$x$-$y$ SPF can produce
+more feasible results than the 2D version because the 3D SPF has extra
+nonstationarity along the $y$ axis (Fig.~\ref{fig:realspf3}), where
+the continuity of the events and the geological structure are
+enhanced. The scale parameters are selected as 90 ($\lambda_{f}$), 600
+($\lambda_{x}$), and 600 ($\lambda_{y}$) and the same 5-sample (X)
+$\times$ 5-sample (Y) filter size as the 3D $f$-$x$-$y$ RNA.  The
+difference (Fig.~\ref{fig:realerrspf3}) between the noisy data
+(Fig.~\ref{fig:realdata}) and the denoised result
+(Fig.~\ref{fig:realspf3}) shows more uniformly-distributed random
+noise than the 3D $f$-$x$-$y$ RNA, which demonstrates that the
+proposed filter is able to depict the variations in the nonstationary
+signals and provide an accurate estimation of complex wavefields even
+in the presence of strongly curved and conflicting events.
+Furthermore, the $f$-$x$-$y$ SPF takes relatively low computational
+time (Table~\ref{tbl:cost2}) that highlights its efficiency,
+especially in higher dimensions.
+
+\inputdir{real}
+\plot{realdata}{width=0.6\columnwidth} {Three-dimensional field
+  data.}
+
+\multiplot{2}{realspf2,realerrspf2}{width=0.47\columnwidth} { The
+  denoised result by using the 2D $f$-$x$ SPF (a) and the difference
+  between the noisy data (Fig.~\ref{fig:realdata}) and the denoised
+  result by using the 2D $f$-$x$ SPF (Fig.~\ref{fig:realspf2}) (b).}
+
+\multiplot{2}{realfxemd,realerrfxemd}{width=0.47\columnwidth} {The
+  denoised result by using the $f$-$x$ EMD prediction filter (a) and
+  the difference between the noisy data (Fig.~\ref{fig:realdata}) and
+  the denoised result by using the $f$-$x$ EMD prediction filter
+  (Fig.~\ref{fig:realfxemd}) (b).}
+
+\multiplot{2}{realrna,realerrrna}{width=0.47\columnwidth} {The
+  denoised result by using the 3D $f$-$x$-$y$ RNA (a) and the
+  difference between the noisy data (Fig.~\ref{fig:realdata}) and the
+  denoised result by using the 3D $f$-$x$-$y$ RNA
+  (Fig.~\ref{fig:realrna}) (b).}
+
+\multiplot{2}{realspf3,realerrspf3}{width=0.47\columnwidth} {The
+  denoised result by using the 3D $f$-$x$-$y$ SPF (a) and the
+  difference between the noisy data (Fig.~\ref{fig:realdata}) and the
+  denoised result by using the 3D $f$-$x$-$y$ SPF
+  (Fig.~\ref{fig:realspf3}) (b).}
+
+\section{Discussions}
+
+The frequency-space PFs shows different characteristics from the
+time-space PFs that depend on the sample rate along time direction.
+PFs in time-space domain cannot predict the seismic events from all
+directions (with all kinds of slopes) because the whole trace length
+is seldom chosen as the filter size along the time direction.  The
+frequency method can avoid this problem, and it may get an accuracy
+prediction from the complex seismic data. However, computation in
+frequency domain may result in artificial effect, so we designed the
+local smoothness constraint to reduce the effect.
+
+We highlighted the computational efficiency of the proposed
+$f$-$x$-$y$ SPF because of not only the noniterative property but also
+the memory saving ability. Assuming that a conventional 3D data volume
+500 (frequency) $\times$ 500 (space $x$) $\times$ 500 (space $y$) is
+about 1 gigabyte with complex number format, then the $f$-$x$-$y$ RNA
+with 5-sample (X) $\times$ 5-sample (Y) filter structure needs over 23
+gigabytes memory space to cache the filter coefficients for data
+calculation, and the data exchange time is much more than that of
+iterative calculation.  The proposed $f$-$x$-$y$ SPF needs only about
+50 megabytes to cache filter coefficients when calculating.
+
+\section{Conclusions}
+
+In this study, we introduced a fast approach to nonstationary
+prediction filter for random noise attenuation in the 3D $f$-$x$-$y$
+domain. The proposed method employs a local similarity to constrain
+the autoregression equation for nonstationary prediction filter in the
+frequency-space domain, which belongs to the streaming prediction
+theory. Constrained conditions in the 3D frequency-space dimensions
+guarantee the accurate estimation of adaptive prediction filters and
+reasonable prediction of complex structures. Instead of using an
+iterative strategy, the new analytical solution in the frequency
+domain for the least-squares problem allows the proposed method to
+reduce computational complexity significantly. The matching snaky
+processing path further improves the signal recovery ability of the
+three-dimensional SPF. Although the $f$-$x$-$y$ SPF shows similar
+accuracy to the $f$-$x$-$y$ RNA, the proposed method allows us to
+better balance the target event protection, random noise suppression,
+and computational efficiency.  Numerical examples using synthetic
+models and field data show that the $f$-$x$-$y$ SPF can effectively
+attenuate random noise and protect valid information in the
+nonstationary seismic data.  The proposed method is superior in terms
+of its low computational cost even when analyzing large-scale seismic
+data.
+
+\section{Acknowledgements}
+This work is supported by National Natural Science Foundation of China
+(grant nos. 41774127, 41974134 and 41522404) and National Key Research
+and Development Program of China (grant no. 2018YFC0603701).
+
+\appendix
+
+\section{Sherman-Morrison formula in the complex space}
+\label{S-M-F}
+To get the inverse of $ ( \lambda^{2} \mathbf{I} +
+\mathbf{S^{*}}_{m,n,l} \mathbf{S^{T}}_{m,n,l}) $, one can implement
+Sherman-Morrison formula to transform the inverse matrix as
+(\ref{eq:inverse}).  Whereas $ \mathbf{S^{*}}_{m,n,l} $ and $
+\mathbf{S^{T}}_{m,n,l} $ are complex vectors.  Here, we drop the
+subscript of vectors for a concise proof:
+\begin{displaymath}
+    \label{eq:prove of inverse}
+    \begin{aligned}
+         & (\lambda^{2} \mathbf{I} + \mathbf{S^{*}S^{T}}) \frac{ 1 } { \lambda^{2} }
+        ( \mathbf{I} - \frac{ \mathbf{S^{*}S^{T}}}
+        { \lambda^{2} + \mathbf{S^{T}S^{*}} })                                       \\
+         & = \mathbf{ I } - \frac{ \mathbf{S^{*}S^{T}} }
+        { \lambda^{2} + \mathbf{S^{T}S^{*}} } + \frac{ 1 } { \lambda^{2} }
+        \mathbf{S^{*}S^{T}} - \frac{ 1 } { \lambda^{2} }
+        \frac{ \mathbf{S^{*}S^{T}S^{*}S^{T}} } { \lambda^{2} + \mathbf{S^{T}S^{*}} } \\
+         & = \mathbf{ I } + \frac{ 1 } { \lambda^{2} }
+        \frac{ \lambda^{2} \mathbf{S^{*}S^{T}} + \mathbf{ S^{T}S^{*}}
+        \mathbf{S^{*}S^{T} } } { \lambda^{2} + \mathbf{S^{T}S^{*}} }
+        - \frac{ \mathbf{S^{*}S^{T}}} { \lambda^{2} + \mathbf{S^{T}S^{*}} }          \\
+         & - \frac{ 1 } { \lambda^{2} } \frac{ \mathbf{S^{*}S^{T}}
+        \mathbf{S^{*}S^{T}} } { \lambda^{2} + \mathbf{S^{T}S^{*}} }                  \\
+         & = \mathbf{ I } + \frac{ \mathbf{S^{*}S^{T}}}
+        { \lambda^{2} + \mathbf{S^{T}S^{*}} } + \frac{ 1 } { \lambda^{2} }
+        \frac{ \mathbf{S^{T}S^{*}} \mathbf{S^{*}S^{T} } }
+        { \lambda^{2} + \mathbf{S^{T}S^{*}} } - \frac{ \mathbf{S^{*}S^{T}}}
+        { \lambda^{2} + \mathbf{S^{T}S^{*}} }                                        \\
+         & - \frac{ 1 } { \lambda^{2} } \frac{ \mathbf{ S^{*}S^{T} }
+        \mathbf{ S^{*}S^{T} } } { \lambda^{2} + \mathbf{ S^{T}S^{*} }}               \\
+         & = \mathbf{ I },
+    \end{aligned}
+\end{displaymath}
+where $\mathbf{I}$ denotes the identity matrix, $\mathbf{S}$ is the
+complex column vector, $\mathbf{S^{T}}$ is the transpose of
+$\mathbf{S}$, $\mathbf{S^{*}}$ is the conjugation of $\mathbf{S}$.
+Therefore, $ \mathbf{S^{*}S^{T}} $ is a complex matrix, and $
+\mathbf{S^{T}S^{*}} $ is constant. Therefore, we prove that
+Sherman-Morrison formula can be applied in the complex space.
+
+\bibliographystyle{seg}
+\bibliography{paper}
+

@@ -65,7 +65,7 @@ void expl2_apply (float **x)
 /*< apply diffusion >*/
 {
     int i1, i2, ir, i;
-    float a, r, t;
+    float a=0.0f, r, t;
 
     for (ir=1; ir < nr; ir++) {
 	r = 2*sinf(SF_PI*ir/nr);

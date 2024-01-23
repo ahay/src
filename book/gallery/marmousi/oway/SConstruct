@@ -1,16 +1,11 @@
 from rsf.proj import *
-
-sys.path.append('..')
-import marmousi
+from rsf.gallery import marmousi
 
 marmousi.getvel('vel')
 Result('vel','grey min2=0 max2=9.2 min1=0 max1=3 scalebar=y color=j allpos=y title="Velocity Model" bias=1.5 barreverse=y')
 
 marmousi.get_zodata('exp')
 Result('exp','grey title="Exploding Reflector Data" ')
-#marmousi.getvel('vel')
-#Result('vel','grey scalebar=y color=j allpos=y title="Velocity Model" bias=1.5 barreverse=y')
-
 
 # From velocity to slowness
 Flow('slowness','vel','transp | transp plane=23 | math output=1/input')
@@ -89,8 +84,8 @@ Flow('img cig','stra rtra slow',
      itype=o
      ''',split=[4,500,[0,1]],reduce='add')
 
-Result('image','img2','grey title="PSPI wave equation image"',local=1)
+Result('image','img','grey title="PSPI wave equation image"',local=1)
 
-Result('agc','img2','agc rect1=600 rect2=400 | grey title="PSPI wave equation image"',local=1)
+Result('agc','img','agc rect1=600 rect2=400 | grey title="PSPI wave equation image"',local=1)
 
 End()

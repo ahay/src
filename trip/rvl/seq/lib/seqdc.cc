@@ -120,7 +120,7 @@ void SeqDC::eval(FunctionObject & f,
     throw e;
   
   }
-  catch (bad_cast) {
+  catch (bad_cast const&) {
     RVLException e;
     e<<"Error: SeqDC::eval(FO)\n";
     e<<"at least one input argument not SeqDC\n";
@@ -241,7 +241,7 @@ void SeqDC::eval(FunctionObjectConstEval & f,
     throw e;
   
   }
-  catch (bad_cast) {
+  catch (bad_cast const&) {
     RVLException e;
     e<<"Error: SeqDC::eval(FOR)\n";
     e<<"at least one input argument not SeqDC\n";

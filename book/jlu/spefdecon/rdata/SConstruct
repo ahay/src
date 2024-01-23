@@ -1,0 +1,128 @@
+from rsf.proj import *
+from math import *
+import math
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
+##  -------------------------- real data -----------------------------
+## real data
+Fetch('bin.H','yang')
+Flow('data','bin.H','dd form=native | smooth rect1=5 rect2=5')
+Result('data',
+       '''                  
+       put o1=2.5 |
+       grey label2="CDP" label1="Time" crowd2=0.8 crowd1=0.4
+       title="" labelfat=3 font=2 color=g clip=3500
+       ''')
+
+## data with padding
+Flow('pad_data','data','cat $SOURCE axis=1 o=-2 d=0.002')
+
+##  ----------------------- traditional PEF ------------------------
+Flow('tpef','data',
+     '''
+     pef minlag=0.002 maxlag=0.012 pnoise=0.01 mincorr=0 maxcorr=2.
+     ''')
+Result('tpef',
+       '''                  
+       put o1=2.5 |
+       grey label2="CDP" label1="Time" crowd2=0.8 crowd1=0.4 
+       title="" labelfat=3 font=2 color=g clip=340      
+       ''')
+
+##  ------------------------ adaptive PEF -------------------------
+Flow('shift2','data','oshift1 nf=2 ns=6 | transp plane=23')
+Flow('pef2 pre2','shift2 data',
+    '''
+    lpf match=${SOURCES[1]} pred=${TARGETS[1]} 
+    rect1=50 rect2=10 niter=1500 verb=n
+    ''')
+Flow('apef','pre2 data','add scale=-1,1 ${SOURCES[1]}')
+Result('apef',
+      '''     
+      put o1=2.5 |
+      grey label2="CDP" label1="Time" crowd2=0.8 crowd1=0.4 
+      title="" labelfat=3 font=2 color=g clip=230 
+      ''')
+
+##  --------- streaming PEF with varying prediction step --------------
+## local frequency
+Flow('zlf','data',
+     '''
+     iphase rect1=15 rect2=350 order=10 hertz=y 
+     complex=n niter=100 verb=n | window min1=0.
+     ''')
+
+## time-varying prediction step
+Flow('l0',None,'math n1=1000 n2=398 d1=0.002 o1=-2 d2=1 o2=0. output="1" ')
+Flow('zvlag0','zlf','math output="(0.032/(input*0.002))" ')
+Flow('zvlag','l0 zvlag0',
+     '''
+     cat axis=1 ${SOURCES[1:2]} o=-2 d=0.002 |
+     math output="input-1" | dd type=int
+     ''')
+
+## SPEF with time-varying prediction step
+Flow('vlag-spef','pad_data zvlag',
+     '''
+     spefvstep lag=${SOURCES[1]} 
+     lambda1=25000 lambda2=10000 na=6 verb=n |
+     window min1=0. | smooth rect1=3
+     ''')
+Result('vlag-spef',
+       '''                  
+       window min1=0 |put o1=2.5 |
+       grey label2="CDP" label1="Time" crowd2=0.8 crowd1=0.4 
+       wanttitle=n labelfat=3 font=2 color=g clip=500 
+       ''')
+
+##  ---------------------- frequency spectra -----------------------
+## field data
+Flow('zspec0','data',
+     '''
+     window min1=0.5 max1=1. | spectra all=y | scale axis=1
+     ''')
+Result('zspec0',
+       '''
+       graph title="" label2=Amp unit2= label1=Frequency unit1=Hz
+       font=2 labelfat=3 plotfat=4 plotcol=7 crowd1=0.6 crowd2=0.4
+       min1=0. max1=80 max2=1
+       ''')
+
+## tpef
+Flow('zspec1','tpef',
+     '''
+     window min1=0.5 max1=1. | spectra all=y | scale axis=1
+     ''')
+Result('zspec1',
+       '''
+       graph title="" label2=Amp unit2= label1=Frequency unit1=Hz
+       font=2 labelfat=3 plotfat=4 plotcol=7 crowd1=0.6 crowd2=0.4
+       min1=0. max1=80 max2=1
+       ''')
+
+## apef
+Flow('zspec2', 'apef',
+     '''
+     window min1=0.5 max1=1. | spectra all=y | scale axis=1
+     ''')
+Result('zspec2',
+       '''
+       graph title="" label2=Amp unit2= label1=Frequency unit1=Hz
+       font=2 labelfat=3 plotfat=4 plotcol=7 crowd1=0.6 crowd2=0.4
+       min1=0. max1=80 max2=1
+       ''')
+
+## spef
+Flow('zspec3', 'vlag-spef',
+     '''
+     window min1=0.5 max1=1. | spectra all=y | scale axis=1
+     ''')
+Result('zspec3',
+       '''
+       graph title="" label2=Amp unit2= label1=Frequency unit1=Hz
+       font=2 labelfat=3 plotfat=4 plotcol=7 crowd1=0.6 crowd2=0.4 
+       min1=0. max1=80 max2=1
+       ''')
+
+End()

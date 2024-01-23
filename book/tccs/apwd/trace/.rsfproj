@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfnoise', 'sfmath', 'sfpad', 'sfricker1', 'sfwindow', 'sfgraph', 'sfsmooth', 'sfscale', 'sfput', 'sfmul', 'sfiwarp', 'sfcat', 'sfdd', 'sfpwd1', 'sfdivn', 'sfdip', 'sftransp', 'sfasc2rsf', 'sfwarpscan', 'sfgrey', 'sfpick']
+data=[]
+size=     436000

@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(scn)) sf_error("Need float input");
     dim = sf_filedims (scn,n);
-    if (dim != 3) sf_error("Need three dimensions"); 
+    if (dim != 4) sf_error("Need four dimensions"); 
 
     n1 = n[0];
     n2 = n[1];

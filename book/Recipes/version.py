@@ -1,7 +1,7 @@
 import string, sys
 
 def old_version():
-    version = string.replace(sys.version,"+","")
-    version = string.split(string.split(version)[0], ".")
-    old = map(lambda x: int(x[0]), version) < [2, 2, 0]
+    version = sys.version.replace("+","")
+    version = version.split()[0].split(".")
+    old = [int(x[0]) for x in version] < [2, 2, 0]
     return old

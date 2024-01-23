@@ -58,7 +58,7 @@ int main (int argc, char* argv[])
     }
 
     out = sf_output ("out");
-    sprintf(key,"n%d",axis);
+    snprintf(key,3,"n%d",axis%10u);
     sf_putint(out,key,n[axis-1]*nin);
     sf_setformat(out,sf_histstring(in[0],"data_format"));
 
@@ -92,7 +92,7 @@ static void check_compat (size_t esize,
 	if (esize != sf_esize(in[i]))
 	    sf_error ("esize mismatch: need %d",esize);
 	for (id=0; id < dim; id++) {
-	    snprintf(key,3,"n%d",id+1);
+	    snprintf(key,3,"n%d",(id+1)%10u);
 	    if (!sf_histint(in[i],key,&ni) || ni != n[id])
 		sf_error("%s mismatch: need %d",key,n[id]);
 	}

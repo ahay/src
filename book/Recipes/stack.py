@@ -1,6 +1,6 @@
 from rsf.proj import *
 import string, sys
-import version
+import rsf.recipes.version as version
 
 def stack(name,
           v0,

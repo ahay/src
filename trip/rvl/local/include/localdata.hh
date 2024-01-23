@@ -113,7 +113,7 @@ namespace RVL {
 	  = dynamic_cast<LocalEvaluation<DataType> &>(f);
 	lf(*this,lx);
       }
-      catch (bad_cast) {
+      catch (bad_cast const&) {
 	RVLException e;
 	e<<"Error: LocalDataContainer::eval(FO,...)\n";
 	e<<"FO is not an LFO\n";

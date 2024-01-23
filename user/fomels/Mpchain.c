@@ -138,7 +138,9 @@ int main(int argc, char* argv[])
 		for (i=nr; i < n2; i++) {
 		    xn[i] += dx[i];
 		}
-	    }
+	    }	    
+
+
 	}
 
 	sf_cconjgrad_close();

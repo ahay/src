@@ -1,0 +1,6 @@
+#---------------------------
+# SConstruct for building papers
+from rsf.tex import *
+
+End()
+#---------------------------

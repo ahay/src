@@ -130,3 +130,57 @@ void opwd21 (bool der1, bool der2 /* derivative flags */,
     }
 
 }
+
+void opwd12 (bool der1, bool der2 /* derivative flags */, 
+	     const omni2 ap /* OPWD object */, 
+	     float* xx     /* input */, 
+ 	     float* yy     /* output */)
+/*< plane-wave destruction >*/
+{
+    int ix, iy, iw, is, i;
+
+    for (iy=0; iy < ap->ny; iy++) {
+	for (ix=0; ix < ap->nx; ix++) {
+	    i = ix + ap->nx * iy;
+	    ap->t1[iy][ix] = 0.0f;
+	    ap->t2[iy][ix] = 0.0f;
+	    yy[i] = 0.0f;
+	}
+    }
+  
+    for (iy = ap->nw; iy < ap->ny-ap->nw; iy++) {
+	for (ix=0; ix < ap->nx-1; ix++) {
+	    i = ix + ap->nx * iy;
+	    if (der2) {
+		aderfilter(ap->p2[i], ap->flt);
+	    } else {
+		passfilter(ap->p2[i], ap->flt);
+	    }
+	      
+	    for (iw = 0; iw <= 2*ap->nw; iw++) {
+		is = iw-ap->nw;
+		  
+		ap->t1[iy][ix] += xx[i-is*ap->nx] * ap->flt[iw];
+		ap->t2[iy][ix] += xx[i+is*ap->nx] * ap->flt[iw];
+	    }
+	}
+    }
+
+    for (iy=0; iy < ap->ny-1; iy++) {
+	for (ix = ap->nw; ix < ap->nx-ap->nw; ix++) {
+	    i = ix + ap->nx * iy;
+	    if (der1) {
+		aderfilter(ap->p1[i], ap->flt);
+	    } else {
+		passfilter(ap->p1[i], ap->flt);
+	    }
+	      
+	    for (iw = 0; iw <= 2*ap->nw; iw++) {
+		is = iw-ap->nw;
+		  
+		yy[i] += (ap->t2[iy][ix+is] -
+			  ap->t1[iy][ix-is]) * ap->flt[iw];
+	    }
+	}
+    }
+}

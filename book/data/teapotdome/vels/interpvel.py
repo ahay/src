@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 import sys, re, os
@@ -43,41 +44,41 @@ command_line_par=rsf.Par()
 # Survey parameters
 nxline=command_line_par.int("nxline")
 if nxline==None:
-    print "nxline is a required parameter in interpvel"
+    print("nxline is a required parameter in interpvel")
     sys.exit(2)
 
 ninline=command_line_par.int("ninline")
 if ninline==None:
-    print "ninline is a required parameter in interpvel"
+    print("ninline is a required parameter in interpvel")
     sys.exit(2)
 
 fxline=command_line_par.int("fxline")
 if fxline==None:
-    print "fxline is a required parameter in interpvel"
+    print("fxline is a required parameter in interpvel")
     sys.exit(2)
 
 finline=command_line_par.int("finline")
 if finline==None:
-    print "finline is a required parameter in interpvel"
+    print("finline is a required parameter in interpvel")
     sys.exit(2)
 
 # Time axis
 maxt=command_line_par.int("maxt")
 if maxt==None:
-    print "maxt is a required parameter in interpvel"
+    print("maxt is a required parameter in interpvel")
     sys.exit(2)
 
 dt=command_line_par.int("dt")
 if dt==None:
-    print "dt is a required parameter in interpvel"
+    print("dt is a required parameter in interpvel")
     sys.exit(2)
 
-print >>sys.stderr,"nxline=",nxline," fxline=",fxline
-print >>sys.stderr,"ninline=",ninline," finline=",finline
-print >>sys.stderr,"maxt=",maxt," fxline=",dt
+print("nxline=",nxline," fxline=",fxline,file=sys.stderr)
+print("ninline=",ninline," finline=",finline,file=sys.stderr)
+print("maxt=",maxt," fxline=",dt,file=sys.stderr)
 
 maskfile =command_line_par.string("mask")
-print >>sys.stderr,"maskfile=",maskfile
+print("maskfile=",maskfile,file=sys.stderr)
 # Densely sampled time axis
 tint = arange (0, maxt, dt, dtype = float32)
 nt = size (tint)
@@ -164,21 +165,21 @@ vvol = zeros ((nt, ninline, nxline), dtype = float32)
 # Gor along time slices and do triangulation
 for it in range (nt):
     if it<3 or it%50==0:
-        print >> sys.stderr, "Processing slice", it + 1, "of", nt
+        print("Processing slice", it + 1, "of", nt,file=sys.stderr)
     if it==2:
-        print >> sys.stderr,"now print status for every 50 slices"
+        print("now print status for every 50 slices",file=sys.stderr)
     vvol[it] = mask*interp_for_const_t (pnt, vint[it,:], gx, gy)
-print >> sys.stderr, "Completed all time slices"
+print("Completed all time slices",file=sys.stderr)
 
 # Finally, dump trace by trace to binary file
 binfile = 'vvol.dat' # Binary part
 bfid = open (binfile, 'w+')
-print vvol.shape
+print(vvol.shape)
 for il in range (ninline):
     if il<3 or il%50==0:
-        print >> sys.stderr, "Saving inline", il + 1, "of", ninline
+        print("Saving inline", il + 1, "of", ninline,file=sys.stderr)
     if il==2:
-        print >> sys.stderr,"now print status for every 50 lines"
+        print("now print status for every 50 lines",file=sys.stderr)
     for xl in range (nxline):
         vvol[:,il,xl].tofile (bfid)
 bfid.flush ()

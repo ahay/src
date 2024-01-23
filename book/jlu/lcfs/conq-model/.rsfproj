@@ -1,0 +1,3 @@
+uses=['sfmodtraceq', 'sfgraph', 'sfltft', 'sfmath', 'sfreal', 'sfwindow', 'sfscale', 'sfgrey', 'sftransp', 'sffindmax1', 'sfdd', 'sfsmooth', 'sfput', 'sflcf', 'sflcfseq', 'sfconvert0eq', 'sftheoreqiq', 'sfcat', 'sffft1', 'sfspray', 'sfinvqfilt', 'sfst', 'sflineslope']
+data=[]
+size=   32884528

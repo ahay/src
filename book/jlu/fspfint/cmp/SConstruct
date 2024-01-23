@@ -1,0 +1,220 @@
+# from inspect import isclass
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch('cmp2861-2876-4500ms-nmomute.sgy','yang',server)
+
+def cubeplot(clip="", extra=""):
+    return """
+    byte gainpanel=all %s |
+    grey3 flat=n frame1=500 frame2=200 frame3=8
+    point1=0.85 point2=0.82 screenratio=1.5 screenht=10
+    labelsz=6 wanttitle=n %s
+    """ % (clip, extra)
+
+# SEGY -> RSF
+Flow("cmp tcmps", "cmp2861-2876-4500ms-nmomute.sgy",
+     "segyread tfile=${TARGETS[1]}")
+
+Flow("binhead map", "tcmps tcmps",
+     "intbin head=${SOURCES[1]} xk=offset yk=cdp map=${TARGETS[1]}")
+
+# Cut off one offset gather and bin
+Flow("tbin", "tcmps", "window n2=1776 ")
+Flow("cdp", "tbin", "window n1=1 f1=5 | dd type=float")
+Flow("offset", "tbin", "window n1=1 f1=11 | dd type=float")
+Flow("newheader", "cdp offset",
+     "cat ${SOURCES[1]} axis=2 | transp memsize=500")
+
+# Binning to a large regular grid
+nx = 16
+x0 = 2861
+dx = 1
+ny = 400
+# ny1 = 1000
+y0 = 110
+dy = 10
+# dy1 = 4
+Flow("bin fold", "cmp newheader", 
+     """
+     window n2=1776 |
+     agc rect1=100 |
+     transp memsize=500 |
+     bin head=${SOURCES[1]} fold=${TARGETS[1]} xkey=0
+     ykey=1 norm=y interp=1
+     nx=%d x0=%g dx=%g
+     ny=%d y0=%g dy=%g |
+     transp plane=13 memsize=500
+     """ % (nx, x0, dx, ny, y0, dy))
+
+Flow("mask", "fold", "mask min=1 | transp ")
+Result("mask", 
+       """
+       dd type=float |
+       put label1="TraceX" label2="TraceY"
+       unit1= unit2= d1=1 o1=0 d2=1 o2=0 |
+       grey title= transp=y screenratio=1.5 screenht=9
+       labelsz=6
+       """)
+# dataset
+Flow("gap", "bin", 
+     """
+     put o2=0 o3=0 d2=1 d3=1 unit2= unit3=
+     label2="TraceX" label3="TraceY" |
+     window f1=500 n1=1000
+     """)
+Result("gapcmp", "gap", cubeplot(clip=2.24924))
+Flow("fkgap", "gap",
+     'fft1 | fft3 axis=2 | fft3 axis=3 | math output="abs(input)" | real')
+Result("fkgapcmp", "fkgap",
+       """
+       window n1=271 |
+       byte gainpanel=all |
+       grey3 frame1=80 frame2=400 frame3=16 flat=n 
+       point1=0.85 point2=0.82 screenratio=1.5 screenht=10 labelsz=6
+       title= label2=Kx label3=Ky unit2= unit3= color=i wanttitle=n
+       """)
+
+### POCS 3D
+Flow("pmask", "mask", "spray axis=1 n=1000 d=0.004 | dd type=float")
+Flow("pmask3", "pmask", "math output=1-input")
+# pniter = 100
+fniter = 200
+fforward = """fft1 | fft3 | fft3 axis=3"""
+fbackward = """fft3 axis=3 inv=y | fft3 inv=y | fft1 inv=y"""
+
+fdata = "gap"
+for iter in range(fniter):
+    fold = fdata
+    fdata = "fdata%d" % iter
+    # 1. Forward 3D Fourier
+    # 2. Thresholding
+    # 3. Inverse 3D Fourier
+    # 4. Multiply by space mask
+    # 5. Add data outside of hole
+    Flow(fdata, [fold, "pmask3", "gap"], fforward + """
+         | threshold pclip=%g |
+         """ % (1.0) + fbackward + """
+         | add mode=p ${SOURCES[1]} |
+         add ${SOURCES[2]}
+         """)
+
+Flow("pocscmp", "fdata199", "cp")
+Result("pocscmp", cubeplot(clip=2.24924))
+Flow("fkpocscmp", "pocscmp",
+     'fft1 | fft3 axis=2 | fft3 axis=3 |math output="abs(input)" | real')
+Result("fkpocscmp",
+       """
+       window n1=271 |
+       byte gainpanel=all |
+       grey3 frame1=80 frame2=400 frame3=16 flat=n 
+       point1=0.85 point2=0.82 screenratio=1.5 screenht=10 labelsz=6
+       title= label2=Kx label3=Ky unit2= unit3= color=i wanttitle=n
+       """)
+# zoom window
+Flow("pocszoom", "pocscmp", "window n1=300 n2=40 n3=1 f1=650 f2=280 f3=8")
+Result("pocszoom",
+       """
+       wiggle yreverse=y transp=y poly=y label2=TraceX
+       title="" wheretitle=b wherexlabel=t plotcol=7
+       screenratio=1.2 unit2= labelsz=6
+       """)
+
+### SPF3
+Flow("maskpad", "mask", " reverse which=2")
+Flow("maskspf", "maskpad mask", "cat ${SOURCES[1]} axis=2")
+Flow("datapad", "gap", "reverse which=4")
+Flow("gapdata", "datapad gap", "cat ${SOURCES[1]} axis=3")
+Flow("spfcat", "gapdata maskspf", 
+     """
+     fxyspfint3 mask=${SOURCES[1]}
+     lambdax=60 lambday=15 lambdaf=6
+     na1=40 na2=5 ftype=1 verb=y
+     """)
+Flow("spfcmp", "spfcat", "window n3=16 f3=16 | put d3=1 o3=0")
+Result("spfcmp", cubeplot(clip=2.24924))
+Flow("fkspfcmp", "spfcmp",
+     'fft1 | fft3 axis=2 | fft3 axis=3 | math output="abs(input)" | real')
+Result("fkspfcmp", 
+       """
+       window n1=271 |
+       byte gainpanel=all |
+       grey3 frame1=80 frame2=400 frame3=16 flat=n 
+       point1=0.85 point2=0.82 screenratio=1.5 screenht=10 labelsz=6
+       title= label2=Kx label3=Ky unit2= unit3= color=i wanttitle=n
+       """)
+# zoom window
+Flow("spfzoom", "spfcmp", "window n1=300 n2=40 n3=1 f1=650 f2=280 f3=8")
+Result("spfzoom", 
+       """
+       wiggle yreverse=y transp=y poly=y label2=TraceX
+       title="" wheretitle=b wherexlabel=t plotcol=7
+       screenratio=1.2 unit2= labelsz=6
+       """)
+
+### seislet pocs
+# define forward and backward transform strings
+sforward = """
+pad n2=512 | seislet adj=y inv=y dip=${SOURCES[3]} eps=0.1 type=b 
+"""
+sbackward = """
+seislet adj=n inv=n dip=${SOURCES[3]} eps=0.1 type=b | window n2=400 
+"""
+pniter = 100
+sniter = 100
+
+datas = []
+for islice in range(0, 16):
+    dmask = "dipmask%d" % islice
+    smask = "smask%d" % islice
+    wgap = "wgap%d" % islice
+    wdip = "wdip%d" % islice
+    Flow(dmask, "mask",
+         "window n2=1 f2=%g | spray n=1000 axis=1| pad n2=512" % islice)
+    Flow(smask, "pmask3", "window n3=1 f3=%g" % islice)
+    Flow(wgap, "gap", "window n3=1 f3=%g" % islice)
+    Flow(wdip, [wgap, dmask],
+         "pad n2=512 | dip rect1=100 rect2=40 mask=${SOURCES[1]}")
+    sdata = wgap
+    for itera in range(sniter):
+        sfold = sdata
+        sdata = "wgap%s-%s" % (islice, itera)
+        # 1. Forward seislet transform
+        # 2. Thresholding
+        # 3. Inverse seislet transform
+        # 4. Multiply by space mask
+        # 5. Add data outside of hole
+        Flow(sdata, [sfold, smask, wgap, wdip],
+            sforward + """
+             | threshold pclip=%g |
+            """ % (5.0 + ((99.0 - 5.0) * itera * itera / ((pniter - 1) *
+                                                          (pniter - 1))))
+            #  % (20.0)
+            + sbackward + """
+            | add mode=p ${SOURCES[1]} |
+            add ${SOURCES[2]}
+            """)
+        if itera == (sniter - 1):
+            datas.append(sdata)
+
+Flow("stpocscmp", datas, "cat ${SOURCES[1:%d]} axis=3" % len(datas))
+Result("stpocscmp", cubeplot(clip=2.24924))
+Flow("fkstpocscmp", "stpocscmp",
+     'fft1 | fft3 axis=2 | fft3 axis=3 |math output="abs(input)" | real')
+Result("fkstpocscmp",
+       """
+       window n1=271 |
+       byte gainpanel=all |
+       grey3 frame1=80 frame2=400 frame3=16 flat=n 
+       point1=0.85 point2=0.82 screenratio=1.5 screenht=10 labelsz=6
+       title= label2=Kx label3=Ky unit2= unit3= color=i wanttitle=n
+       """)
+Flow("stpocszoom", "stpocscmp", "window n1=300 n2=40 n3=1 f1=650 f2=280 f3=8")
+Result("stpocszoom",
+       """
+       wiggle yreverse=y transp=y poly=y label2=TraceX
+       title="" wheretitle=b wherexlabel=t plotcol=7
+       screenratio=1.2 unit2= labelsz=6
+       """)
+
+End()

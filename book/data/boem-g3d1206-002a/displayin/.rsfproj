@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfheaderattr', 'sftahread', 'sftahheadermath', 'sftahwrite', 'sfput', 'sfbyte', 'sfgrey3']
+data=['https://s3.amazonaws.com/open.source.geoscience/open_data/boem/g3d1206-002a/G3D1206-002release.pdf', 'https://s3.amazonaws.com/open.source.geoscience/open_data/boem/g3d1206-002a/G3D1206_002_L87_080.sgy']
+size=  674388960

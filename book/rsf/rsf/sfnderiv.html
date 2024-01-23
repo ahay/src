@@ -70,7 +70,7 @@
 <span class="comment">#</span>
 <span class="comment"># sfderiv tests</span>
 <span class="comment">#</span>
-<span class="name">orders</span><span class="op">=</span><span class="name">range</span><span class="op">(</span><span class="number">0</span><span class="op">,</span><span class="number">11</span><span class="op">,</span><span class="number">2</span><span class="op">)</span>
+<span class="name">orders</span><span class="op">=</span><span class="name">list</span><span class="op">(</span><span class="name">range</span><span class="op">(</span><span class="number">0</span><span class="op">,</span><span class="number">11</span><span class="op">,</span><span class="number">2</span><span class="op">)</span><span class="op">)</span>
 <span class="keyword">for</span> <span class="name">order</span> <span class="keyword">in</span> <span class="name">orders</span><span class="op">:</span>
   <span class="plot">Plot</span><span class="op">(</span><span class="string">'spectra-deriv-1-%02d'</span><span class="op">%</span><span class="name">order</span><span class="op">,</span><span class="string">'spike'</span><span class="op">,</span>
     <span class="string">'''
@@ -86,7 +86,7 @@
 <span class="comment">#</span>
 <span class="comment"># sfnderiv tests</span>
 <span class="comment">#</span>
-<span class="name">orders2</span><span class="op">=</span><span class="name">range</span><span class="op">(</span><span class="number">3</span><span class="op">,</span><span class="number">25</span><span class="op">,</span><span class="number">4</span><span class="op">)</span>
+<span class="name">orders2</span><span class="op">=</span><span class="name">list</span><span class="op">(</span><span class="name">range</span><span class="op">(</span><span class="number">3</span><span class="op">,</span><span class="number">25</span><span class="op">,</span><span class="number">4</span><span class="op">)</span><span class="op">)</span>
 <span class="keyword">for</span> <span class="name">order</span> <span class="keyword">in</span> <span class="name">orders2</span><span class="op">:</span>
   <span class="plot">Plot</span><span class="op">(</span><span class="string">'spectra-nderiv-1-%02d'</span><span class="op">%</span><span class="name">order</span><span class="op">,</span><span class="string">'spike'</span><span class="op">,</span>
     <span class="string">'''
@@ -105,10 +105,10 @@
                        <span class="op">+</span><span class="name">plotderiv2</span><span class="op">+</span><span class="string">' title=""'</span><span class="op">)</span>
 
 <span class="comment"># collect results</span>
-<span class="name">sp1</span>  <span class="op">=</span> <span class="name">map</span><span class="op">(</span><span class="keyword">lambda</span> <span class="name">x</span><span class="op">:</span> <span class="string">'spectra-deriv-1-%02d'</span><span class="op">%</span><span class="name">x</span><span class="op">,</span><span class="name">orders</span><span class="op">)</span>
-<span class="name">sp2</span>  <span class="op">=</span> <span class="name">map</span><span class="op">(</span><span class="keyword">lambda</span> <span class="name">x</span><span class="op">:</span> <span class="string">'spectra-deriv-2-%02d'</span><span class="op">%</span><span class="name">x</span><span class="op">,</span><span class="name">orders</span><span class="op">)</span>
-<span class="name">spn1</span> <span class="op">=</span> <span class="name">map</span><span class="op">(</span><span class="keyword">lambda</span> <span class="name">x</span><span class="op">:</span> <span class="string">'spectra-nderiv-1-%02d'</span><span class="op">%</span><span class="name">x</span><span class="op">,</span><span class="name">orders2</span><span class="op">)</span>
-<span class="name">spn2</span> <span class="op">=</span> <span class="name">map</span><span class="op">(</span><span class="keyword">lambda</span> <span class="name">x</span><span class="op">:</span> <span class="string">'spectra-nderiv-2-%02d'</span><span class="op">%</span><span class="name">x</span><span class="op">,</span><span class="name">orders2</span><span class="op">)</span>
+<span class="name">sp1</span>  <span class="op">=</span> <span class="op">[</span><span class="string">'spectra-deriv-1-%02d'</span><span class="op">%</span><span class="name">x</span> <span class="keyword">for</span> <span class="name">x</span> <span class="keyword">in</span> <span class="name">orders</span><span class="op">]</span>
+<span class="name">sp2</span>  <span class="op">=</span> <span class="op">[</span><span class="string">'spectra-deriv-2-%02d'</span><span class="op">%</span><span class="name">x</span> <span class="keyword">for</span> <span class="name">x</span> <span class="keyword">in</span> <span class="name">orders</span><span class="op">]</span>
+<span class="name">spn1</span> <span class="op">=</span> <span class="op">[</span><span class="string">'spectra-nderiv-1-%02d'</span><span class="op">%</span><span class="name">x</span> <span class="keyword">for</span> <span class="name">x</span> <span class="keyword">in</span> <span class="name">orders2</span><span class="op">]</span>
+<span class="name">spn2</span> <span class="op">=</span> <span class="op">[</span><span class="string">'spectra-nderiv-2-%02d'</span><span class="op">%</span><span class="name">x</span> <span class="keyword">for</span> <span class="name">x</span> <span class="keyword">in</span> <span class="name">orders2</span><span class="op">]</span>
 
 
 <span class="result">Result</span><span class="op">(</span><span class="string">'all-deriv-1'</span><span class="op">,</span><span class="name">sp1</span><span class="op">+</span><span class="op">[</span><span class="string">'ideal-1'</span><span class="op">]</span><span class="op">,</span><span class="string">'Overlay'</span><span class="op">)</span>

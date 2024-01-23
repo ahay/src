@@ -44,7 +44,7 @@ Grey('linear', '')
 # INITIALIZATION
 ########################################################################
 matlab = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'FX_EMD'
 matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
 
@@ -309,7 +309,7 @@ Flow('linear-rm', 'linear', 'rmtrace factor=2')
 # INITIALIZATION
 ########################################################################
 matlab = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'Spitz'
 matlabpath = os.environ.get('MATLABPATH', os.path.join(RSFROOT, 'lib'))
 

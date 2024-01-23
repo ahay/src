@@ -75,8 +75,6 @@ void dijkstra_close(void)
     free(cost);
     free(status[0]);
     free(status);
-    free(path[0]);
-    free(path);
 }
 
 static void fix_neighbor(int s1, int s2 /* location */, 

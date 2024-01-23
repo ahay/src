@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     dim = sf_filedims (fnoi,n);
     nd = 1;
     for (i=0; i < dim; i++) {
-	snprintf(key,6,"rect%d",i+1);
+	snprintf(key,6,"rect%d",(i+1)%10u);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
 	/*( rect#=(1,1,...) smoothing radius on #-th axis )*/ 
 	nd *= n[i];

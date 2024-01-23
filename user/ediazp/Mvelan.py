@@ -254,7 +254,7 @@ gather = np.zeros((no,n1),'f')
 
 
 for i3 in range(n3):
-  print >> sys.stderr, 'CMP analysis %02d of %02d'%(i3+1,n3)
+  print('CMP analysis %02d of %02d'%(i3+1,n3),file=sys.stderr)
 
   Fsemb.read(panel)
   Fcmp.read(gather)

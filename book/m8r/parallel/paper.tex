@@ -78,9 +78,10 @@ the number of available cores. To use a different number, you can set
 By default, \texttt{sfomp} splits the input over the last dimension,
 processes different parts of the data, and concatenates the outputs
 along the same dimension. To change this behavior, you can use
-\texttt{split=} and \texttt{join=} parameters. For example, to
+\texttt{split=} and \texttt{reduce=} parameters. For example, to
 transpose a 2-D dataset in parallel, we can split it over one
 dimension and join over the other dimension:
+%The previous commit had inaccurate message for git log. Last commit changed join with reduce since join is syntactically incorrect kwarg.
 \begin{verbatim}
 < original.rsf sfomp sftransp split=1 join=2 > transp.rsf
 \end{verbatim}
@@ -115,7 +116,7 @@ appear as follows in an \texttt{SConstruct} file:
 Flow('output','input','bandpass fhi=50',
      split=[2,'omp'])
 Flow('transp','original','transp',
-     split=[2,'omp'],join='cat axis=1')
+     split=[2,'omp'],reduce='cat axis=1')
 Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
      split=[3,'omp',[0,1]])
 \end{lstlisting}
@@ -154,13 +155,13 @@ specified by \texttt{MPIRUN=} configuration variable.
 Similarly to \texttt{sfomp}, \texttt{sfmpi} splits the input over the last dimension,
 processes different parts of the data, and concatenates the outputs
 along the same dimension. To change this behavior, you can use
-\texttt{split=} and \texttt{join=} parameters. For example, to
+\texttt{split=} and \texttt{reduce=} parameters. For example, to
 transpose a 2-D dataset in parallel, we can split it over one
 dimension and join over the other dimension:
 \begin{verbatim}
-mpirun -np 10 sfmpi sftransp --input=orig.rsf split=1 join=2 --output=transp.rsf
+mpirun -np 10 sfmpi sftransp --input=orig.rsf split=1 reduce=2 --output=transp.rsf
 \end{verbatim}
-If, instead of concatenating, the results should be added together, use \texttt{join=0}.
+If, instead of concatenating, the results should be added together, use \texttt{reduce=0}.
 
 While \texttt{sfomp} is restricted to shared memory, \texttt{sfmpi}
 can be used more flexibly on both shared-memory and distributed-memory
@@ -177,7 +178,7 @@ SCons processing looks similar to the OMP case but replacing \texttt{omp} with \
 Flow('output','input','bandpass fhi=50',
      split=[2,'mpi'])
 Flow('transp','original','transp',
-     split=[2,'mpi'],join='cat axis=1')
+     split=[2,'mpi'],reduce='cat axis=1')
 Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
      split=[3,'mpi',[0,1]])
 \end{lstlisting}
@@ -224,7 +225,7 @@ processing can be indicated with \texttt{split=} parameter.
 Flow('output','input','bandpass fhi=50',
      split=[2,1001])
 Flow('transp','original','transp',
-     split=[2,1001],join='cat axis=1')
+     split=[2,1001],reduce='cat axis=1')
 Flow('nmo','cmp velocity','nmo velocity=${SOURCES[1]}',
      split=[3,1001,[0,1]])
 \end{lstlisting}
@@ -260,8 +261,41 @@ to be picked up by the scheduling system. \texttt{sfbatch} is a script
 that simplifies working with such services in the Madagascar
 environment.
 
-There are two ways of using \texttt{sfbatch}...
+There are two ways of using \texttt{sfbatch}. The first one is using
+it in front of the command to be executed, for example
+\begin{verbatim}
+sfbatch scons target.rsf
+\end{verbatim}
+In this case, the \texttt{sfbatch} script is going to generate a
+script for running the parallel job, submit it to the queue, and wait
+for the job to finish before returning. The options to control the job
+script can be supplied either on the command line or in a text file
+containing key=value pairs. The file is in \verb#~/.batch# or 
+specified on the command line with \texttt{batchfile=}.
 
+The required options are
+\begin{verbatim}
+batch=   # pbs, sge, or slurm
+queue=   # type of the queue
+mail=    # email for the user
+acct=    # account name
+wall=    # wall time
+nodes=   # number of nodes
+ppn=     # processes per node
+np=      # number of tasks
+exe=     # command to run
+\end{verbatim}
+
+Let us look at an example...
+
+The second way to use \texttt{sfbatch} is through \texttt{BATCH=} option to SCons. When running
+\begin{verbatim}
+sfbatch BATCH=y
+\end{verbatim}
+a parallel job with a separate job script is submitted individually
+for each command required to generate SCons targets.
+
+Consider the example from above again...
 
 \section{Conclusions}
 

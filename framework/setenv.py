@@ -17,20 +17,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 from __future__ import print_function, division, absolute_import
-import os, sys, distutils.sysconfig
+import os, sys
+
 
 ################################################################################
 
 def get_local_site_pkgs(root=None, verb=False):
     'Get the directory that should be added to PYTHONPATH'
-
-    central_site_pkgs = distutils.sysconfig.get_python_lib()
+    if sys.version_info[:][0]==3:
+        import site
+        central_site_pkgs = site.USER_SITE
+        prefix = site.USER_BASE
+    else:
+        import distutils.sysconfig
+        central_site_pkgs = distutils.sysconfig.get_python_lib()
+        prefix = distutils.sysconfig.PREFIX
 
     # This is actually platform dependent (Mac vs. Linux), because Python is not
     # as cross-platform as it should be. When we need to install in a
     # canonical location on Mac, platform detection will be included
-    prefix = distutils.sysconfig.PREFIX
-
     if root == None:
         root = os.environ.get('RSFROOT', prefix)
 
@@ -77,7 +82,7 @@ def shell_script(target, source=None, env=None):
         'DATAPATH':(datapath,'binary data files part of RSF datasets'),
         'LD_LIBRARY_PATH':(ldlibpath,'shared object files'),
         'MANPATH':(manpath,'manual pages'),
-        'RSFSRC':(os.getcwd(),'Madagascar source directory'),
+        'RSFSRC':('"%s"' % os.getcwd(),'Madagascar source directory'),
         'PATH':('$RSFROOT/bin:$PATH','executables')
         }
 

@@ -1,6 +1,8 @@
 from rsf.proj import *
 import math
 
+SConscript('../segy/SConstruct')
+
 Flow(['line5320.rsf','line5320_hdr.rsf'],'../segy/DeconShots3.rsf',
     '''
       sftahsort input=$SOURCE sort="iline:5320,5320 xline offset" \

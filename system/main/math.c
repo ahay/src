@@ -63,11 +63,11 @@ static void check_compat (size_t       nin,
 
 int main (int argc, char* argv[])
 {
-    int nin, i, k, dim, nbuf;
+    int nin, i, i1, k, dim, nbuf;
     off_t j, nsiz, ii[SF_MAX_DIM], n[SF_MAX_DIM]; 
     size_t len, bufsiz;
     sf_file *in, out;
-    char *eq, *output, *key, *arg, xkey[8], *ctype, *label, *unit;
+    char *eq, *output, *key, *arg, xkey[7], *ctype, *label, *unit;
     float **fbuf, **fst, d[SF_MAX_DIM], o[SF_MAX_DIM];
     bool nostdin;
     sf_complex **cbuf, **cst;
@@ -132,9 +132,10 @@ int main (int argc, char* argv[])
 	
 	dim = sf_largefiledims(in[0],n);
 	for (i=0; i < dim; i++) {
-	    (void) snprintf(xkey,3,"d%d",i+1);
+	    i1 = (i+1)%10u;
+	    (void) snprintf(xkey,3,"d%d",i1);
 	    if (!sf_histfloat(in[0],xkey,d+i)) d[i] = 1.;
-	    (void) snprintf(xkey,3,"o%d",i+1);
+	    (void) snprintf(xkey,3,"o%d",i1);
 	    if (!sf_histfloat(in[0],xkey,o+i)) o[i] = 0.; 
 	}
     } else { /* get type and size from parameters */
@@ -149,23 +150,25 @@ int main (int argc, char* argv[])
 	
 	dim = 1;
 	for (i=0; i < SF_MAX_DIM; i++) {
-	    (void) snprintf(xkey,3,"n%d",i+1);
+	    i1 = (i+1)%10u;
+	    
+	    (void) snprintf(xkey,3,"n%d",i1);
 	    if (!sf_getlargeint(xkey,n+i)) break;
             /*( n# size of #-th axis )*/
 	    if (n[i] > 0) dim=i+1;
 	    sf_putint(out,xkey,n[i]);
 
-	    (void) snprintf(xkey,3,"d%d",i+1);
+	    (void) snprintf(xkey,3,"d%d",i1);
 	    if (!sf_getfloat(xkey,d+i)) d[i] = 1.;
             /*( d#=(1,1,...) sampling on #-th axis )*/
 	    sf_putfloat(out,xkey,d[i]);
 
-	    (void) snprintf(xkey,3,"o%d",i+1);
+	    (void) snprintf(xkey,3,"o%d",i1);
 	    if (!sf_getfloat(xkey,o+i)) o[i] = 0.;
             /*( o#=(0,0,...) origin on #-th axis )*/
 	    sf_putfloat(out,xkey,o[i]);
 
-	    (void) snprintf(xkey,7,"label%d",i+1);
+	    (void) snprintf(xkey,7,"label%d",i1);
 	    if (NULL != (label = sf_getstring(xkey))) {
                 /*( label# label on #-th axis )*/
 		sf_putstring(out,xkey,label);
@@ -176,7 +179,7 @@ int main (int argc, char* argv[])
 		sf_putstring(out,"label",label);
 		free(label);
 	    }
-	    (void) snprintf(xkey,6,"unit%d",i+1);
+	    (void) snprintf(xkey,6,"unit%d",i1);
 	    if (NULL != (unit = sf_getstring(xkey))) {
 		/*( unit# unit on #-th axis )*/ 
 		sf_putstring(out,xkey,unit);
@@ -191,7 +194,7 @@ int main (int argc, char* argv[])
     }
     
     for (nsiz=1, i=0; i < dim; i++) {
-	sprintf(xkey,"x%d",i+1);
+	snprintf(xkey,3,"x%d",(i+1)%10u);
 	
 	if (NULL != sf_histstring(out,xkey)) 
 	    sf_error("illegal use of %s parameter",xkey);

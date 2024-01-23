@@ -63,6 +63,13 @@ iRSF::size (int dim /* =0 */)
     return sf_leftsize(file_,dim);
 }
 
+// file dimensions
+int
+iRSF::filedims ( int *n )
+{
+    return sf_filedims(file_,n);
+}
+
 // file data type
 int 
 iRSF::type (void)
@@ -470,5 +477,23 @@ oRSF::put (const char* name, int size, const int*   value) const
 // {
 //     sf_putfloats(file_,name,value,size);
 // }
+
+// copy from iRSF to oRSF
+void cp( iRSF& in, oRSF& out )
+{
+    sf_cp( in.file_, out.file_ );
+}
+
+// shift grid after axis one dimension forward
+off_t shiftdim( iRSF& in, oRSF& out, int axis )
+{
+   return sf_shiftdim( in.file_, out.file_, axis );
+}
+
+// unshift grid after axis one dimension forward
+off_t unshiftdim( iRSF& in, oRSF& out, int axis )
+{
+    return sf_unshiftdim( in.file_, out.file_, axis );
+}
 
 // 	$Id: rsf.cc 969 2005-01-21 03:20:13Z fomels $	

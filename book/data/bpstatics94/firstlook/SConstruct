@@ -4,6 +4,7 @@ from rsf.proj import *
 #wget https://s3.amazonaws.com/open.source.geoscience/open_data/bpstatics94/7m_shots_0201_0329.segy.gz
 
 acroread='open'
+SConscript('../fetch/SConstruct')
 
 # fetch the text and jpg files
 
@@ -71,7 +72,7 @@ Flow('foldplot','../fetch/7m_shots_hdr.rsf',
         o2=2502 n2=20488 d2=1 label2=cdp    \
         o3=5400 n3=1     d3=1 label3=dt     
      ''')
-Result('foldplot','sfgrey title=foldplot')
+Plot('foldplot','sfgrey title=foldplot',view=1)
 Result('zoomfoldplot','foldplot','sfwindow min1=-500 max1=500 min2=3800 max2=4200 | sfgrey title=foldplot')
 
 Flow(['ntg.rsf','ntg.rsf'],

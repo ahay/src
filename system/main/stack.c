@@ -1,6 +1,6 @@
 /* Stack a dataset over one of the dimensions.
 
-This operation is adjoint to sfspray.
+   This operation is adjoint to sfspray.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -30,275 +30,281 @@ This operation is adjoint to sfspray.
 
 int main(int argc, char* argv[])
 {
-  int j, ni, ntmp;
+    int j, ni, ntmp;
   
-  int axis, ndims[SF_MAX_DIM],dim,lim;
-  sf_file in, out;
+    int axis, ndims[SF_MAX_DIM],dim,lim;
+    sf_file in, out;
 
-  char key[7], *prog;
-  bool norm, rms, min=false, max=false, prod=false, all=false;
+    char key[7], *prog;
+    bool norm, rms, min=false, max=false, prod=false, all=false;
 
-  float          tR;
-  float      * dinR;
-  float      * douR;
-  double     * stkR;
+    float          tR=0.0;
+    float      * dinR;
+    float      * douR;
+    double     * stkR;
 
-  sf_complex     tC;
-  sf_complex * dinC;
-  sf_complex * douC;
-  sf_double_complex * stkC;
+    sf_complex     tC=0.0;
+    sf_complex * dinC;
+    sf_complex * douC;
+    sf_double_complex * stkC;
 
-  float      * scale = NULL;
-  int        * fold  = NULL;
+    float      * scale = NULL;
+    int        * fold  = NULL;
 
-  bool isreal; /* true for float; false for complex */
+    bool isreal; /* true for float; false for complex */
 
-  off_t n;
-  off_t nBELOW, nAXIS, nABOVE;
-  off_t iBELOW, iAXIS, iABOVE;
+    off_t nBELOW, nAXIS, nABOVE;
+    off_t iBELOW, iAXIS, iABOVE;
 
-  sf_init (argc, argv);
-  in  = sf_input ( "in");
-  out = sf_output("out");
+    sf_init (argc, argv);
+    in  = sf_input ( "in");
+    out = sf_output("out");
 
-  /* ------------------------------------------------------------ */
-  if      ( sf_gettype(in) == SF_FLOAT )
-    isreal = true;
-  else if ( sf_gettype(in) == SF_COMPLEX )
-    isreal = false;
-  else
-    sf_error("Incorrect data type in input");
-
-  /* ------------------------------------------------------------ */
+    /* ------------------------------------------------------------ */
+    if      ( sf_gettype(in) == SF_FLOAT ) {
+	isreal = true;
+    } else if ( sf_gettype(in) == SF_COMPLEX ) {
+	isreal = false;
+    } else {
+	isreal = false;
+	sf_error("Incorrect data type in input");
+    }
+    /* ------------------------------------------------------------ */
   
-  dim = sf_filedims(in,ndims);
+    dim = sf_filedims(in,ndims);
 
-  if (!sf_getint("axis",&axis)) axis = 2;
-  /* which axis to stack. If axis=0, stack over all dimensions */
+    if (!sf_getint("axis",&axis)) axis = 2;
+    /* which axis to stack. If axis=0, stack over all dimensions */
 
-  if( axis == 0) {
-    axis = dim + 1;
-    all  = true;
-    lim  = axis;
-  } else {
-    lim  = axis - 1;
-  }
+    if( axis == 0) {
+	axis = dim + 1;
+	all  = true;
+	lim  = axis;
+    } else {
+	lim  = axis - 1;
+    }
 
-  /*
-  sf_warning("dim  = %d",dim);
-  sf_warning("axis = %d",axis);
-  sf_warning("lim  = %d",lim);
-  */
+    /*
+      sf_warning("dim  = %d",dim);
+      sf_warning("axis = %d",axis);
+      sf_warning("lim  = %d",lim);
+    */
 
-  nBELOW = 1;
-  for ( j = 0; j < lim; j++) {
-    sprintf(key,"n%d",j+1);
-    if (!sf_histint(in,key,&ni)) break;
-    nBELOW *= ni;
-  }
-
-  /* ------------------------------------------------------------ */
-
-  if(all) {
-    nAXIS  = nBELOW;
-    nABOVE = 1;
     nBELOW = 1;
-
-    for (j = 0; j < lim; j++) {
-      sprintf(key,"n%d",j+1);
-      sf_putint(out,key,1);
+    for ( j = 0; j < lim; j++) {
+	snprintf(key,3,"n%d",(j+1)%10u);
+	if (!sf_histint(in,key,&ni)) break;
+	nBELOW *= ni;
     }
 
-  } else {
+    /* ------------------------------------------------------------ */
 
-    sprintf(key,"n%d",axis);
-    if (!sf_histint(in,key,&ntmp)) sf_error("No %s= in input",key);
-    nAXIS = ntmp;
+    if(all) {
+	nAXIS  = nBELOW;
+	nABOVE = 1;
+	nBELOW = 1;
 
-    nABOVE = sf_unshiftdim(in,out,axis);
-  }
+	for (j = 0; j < lim; j++) {
+	    snprintf(key,3,"n%d",(j+1)%10u);
+	    sf_putint(out,key,1);
+	}
 
-  /*
-  sf_warning("-------------------");
-  sf_warning("nBELOW = %d",nBELOW ); // samples below the stack axis
-  sf_warning("nAXIS  = %d",nAXIS);   // samples of the axis to stack
-  sf_warning("nABOVE = %d",nABOVE);  // samples above the stack axis
-  sf_warning("-------------------");
-  */
+    } else {
 
-  /* ------------------------------------------------------------ */
+	snprintf(key,3,"n%d",axis%10u);
+	if (!sf_histint(in,key,&ntmp)) sf_error("No %s= in input",key);
+	nAXIS = ntmp;
 
-  if (nAXIS < 100) {
+	nABOVE = sf_unshiftdim(in,out,axis);
+    }
+
+    /*
+      sf_warning("-------------------");
+      sf_warning("nBELOW = %d",nBELOW ); // samples below the stack axis
+      sf_warning("nAXIS  = %d",nAXIS);   // samples of the axis to stack
+      sf_warning("nABOVE = %d",nABOVE);  // samples above the stack axis
+      sf_warning("-------------------");
+    */
+
+    /* ------------------------------------------------------------ */
+
+    if (nAXIS < 100) {
   	scale = sf_floatalloc(nAXIS);
-    if (!sf_getfloats("scale",scale,nAXIS)) { // scale values on stack axis
-      /* optionally scale before stacking */
-      free(scale);
-      scale = NULL;
+	if (!sf_getfloats("scale",scale,nAXIS)) { // scale values on stack axis
+	    /* optionally scale before stacking */
+	    free(scale);
+	    scale = NULL;
+	}
     }
-  }
 
-  /* ------------------------------------------------------------ */
-  prog = sf_getprog();
-  if        (NULL != strstr(prog,"max")) {
+    /* ------------------------------------------------------------ */
+    prog = sf_getprog();
+    if        (NULL != strstr(prog,"max")) {
   	max = true;
-  } else if (NULL != strstr(prog,"min")) {
+    } else if (NULL != strstr(prog,"min")) {
   	min = true;
-  } else if (NULL != strstr(prog,"prod")) {
+    } else if (NULL != strstr(prog,"prod")) {
   	prod = true;
-  } else {
+    } else {
 
   	if (       !sf_getbool("rms" ,&rms))  rms  = false;
-    /* If y, compute the root-mean-square instead of stack. */
-    if (rms || !sf_getbool("norm",&norm)) norm = true;
-    /* If y, normalize by fold. */
-    if (       !sf_getbool("min" ,&min))  min  = false;
-    /* If y, find minimum instead of stack. Ignores rms and norm. */
-    if (       !sf_getbool("max" ,&max))  max  = false;
-    /* If y, find maximum instead of stack. Ignores rms and norm. */
+	/* If y, compute the root-mean-square instead of stack. */
+	if (rms || !sf_getbool("norm",&norm)) norm = true;
+	/* If y, normalize by fold. */
+	if (       !sf_getbool("min" ,&min))  min  = false;
+	/* If y, find minimum instead of stack. Ignores rms and norm. */
+	if (       !sf_getbool("max" ,&max))  max  = false;
+	/* If y, find maximum instead of stack. Ignores rms and norm. */
   	if (       !sf_getbool("prod",&prod)) prod = false;
   	/* If y, find product instead of stack. Ignores rms and norm. */
 
   	if ((min && max) || (min && prod) || (max && prod))
-    sf_error("Cannot have min=y max=y prod=y");
+	    sf_error("Cannot have min=y max=y prod=y");
 
-  }
+    }
 
-  if (min || max || prod) { rms = false; norm = false; }
-  /* ------------------------------------------------------------ */
+    if (min || max || prod) { rms = false; norm = false; }
+    /* ------------------------------------------------------------ */
 
-  if(norm) fold = sf_intalloc(nBELOW);
+    if(norm) fold = sf_intalloc(nBELOW);
 
-  if(isreal) {
-    dinR  = sf_floatalloc(nBELOW);
-    douR  = sf_floatalloc(nBELOW);
-    stkR = (min || max) ? NULL :            (double*) sf_alloc(nBELOW,sizeof(double));
-  } else {
-    dinC  = sf_complexalloc(nBELOW);
-    douC  = sf_complexalloc(nBELOW);
-    stkC = (min || max) ? NULL : (sf_double_complex*) sf_alloc(nBELOW,sizeof(sf_double_complex));
-  }
-
-  /* ------------------------------------------------------------ */
-
-  for (iABOVE = 0; iABOVE < nABOVE; iABOVE++) {
-
-    if(min || max) { // prepare to search for min or max
-      if(isreal) {
-        if(min) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) douR[iBELOW] = +FLT_MAX;
-        if(max) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) douR[iBELOW] = -FLT_MAX;
-      } else {
-#ifdef SF_HAS_COMPLEX_H
-        if(min) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
-          douC[iBELOW] = +FLT_MAX+FLT_MAX*I;
-        }
-        if(max) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
-          douC[iBELOW] = -FLT_MAX-FLT_MAX*I;
-        }
-#else
-        if(min) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
-          douC[iBELOW].r = +FLT_MAX;
-          douC[iBELOW].i = +FLT_MAX;
-        }
-        if(max) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
-          douC[iBELOW].r = -FLT_MAX;
-          douC[iBELOW].i = -FLT_MAX;
-        }
-#endif
-      }
-
+    if(isreal) {
+	dinR = sf_floatalloc(nBELOW);
+	douR = sf_floatalloc(nBELOW);
+	dinC = NULL;
+	douC = NULL;
+	stkR = (min || max) ? NULL :            (double*) sf_alloc(nBELOW,sizeof(double));
+	stkC = NULL;
     } else {
-
-      if(isreal) {
-        for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) { // initialize prod w/ 1 or stack w/ 0
-          stkR[iBELOW] = prod ? 1.0 : 0.0;
-        }
-      } else {
-        for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) { // initialize prod w/ 1 or stack w/ 0
-	        stkC[iBELOW] = prod ? 1.0 : 0.0;
-        }
-      }
-
+	dinR = NULL;
+	douR = NULL;
+	dinC = sf_complexalloc(nBELOW);
+	douC = sf_complexalloc(nBELOW);
+	stkR = NULL;
+	stkC = (min || max) ? NULL : (sf_double_complex*) sf_alloc(nBELOW,sizeof(sf_double_complex));
     }
 
-    if(norm) memset (fold , 0 , nBELOW * sizeof(int));
+    /* ------------------------------------------------------------ */
 
-    for (iAXIS = 0; iAXIS < nAXIS; iAXIS++) {
-      if(isreal) sf_floatread  (dinR, nBELOW, in);
-      else       sf_complexread(dinC, nBELOW, in);
+    for (iABOVE = 0; iABOVE < nABOVE; iABOVE++) {
 
-      for( iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
+	if(min || max) { // prepare to search for min or max
+	    if(isreal) {
+		if(min) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) douR[iBELOW] = +FLT_MAX;
+		if(max) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) douR[iBELOW] = -FLT_MAX;
+	    } else {
+#ifdef SF_HAS_COMPLEX_H
+		if(min) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
+			douC[iBELOW] = +FLT_MAX+FLT_MAX*I;
+		    }
+		if(max) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
+			douC[iBELOW] = -FLT_MAX-FLT_MAX*I;
+		    }
+#else
+		if(min) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
+			douC[iBELOW].r = +FLT_MAX;
+			douC[iBELOW].i = +FLT_MAX;
+		    }
+		if(max) for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
+			douC[iBELOW].r = -FLT_MAX;
+			douC[iBELOW].i = -FLT_MAX;
+		    }
+#endif
+	    }
 
-        if(isreal) tR = dinR[iBELOW];
-        else       tC = dinC[iBELOW];
+	} else {
 
-        if (NULL != scale) {
-          if(isreal) tR *= scale[iAXIS];
-          else       tC *= scale[iAXIS];
-        }
+	    if(isreal) {
+		for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) { // initialize prod w/ 1 or stack w/ 0
+		    stkR[iBELOW] = prod ? 1.0 : 0.0;
+		}
+	    } else {
+		for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) { // initialize prod w/ 1 or stack w/ 0
+		    stkC[iBELOW] = prod ? 1.0 : 0.0;
+		}
+	    }
 
-        if (min || max) {
+	}
+
+	if(norm) memset (fold , 0 , nBELOW * sizeof(int));
+
+	for (iAXIS = 0; iAXIS < nAXIS; iAXIS++) {
+	    if(isreal) sf_floatread  (dinR, nBELOW, in);
+	    else       sf_complexread(dinC, nBELOW, in);
+
+	    for( iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
+
+		if(isreal) tR = dinR[iBELOW];
+		else       tC = dinC[iBELOW];
+
+		if (NULL != scale) {
+		    if(isreal) tR *= scale[iAXIS];
+		    else       tC *= scale[iAXIS];
+		}
+
+		if (min || max) {
           
-          if(isreal) {
-            if(min) douR[iBELOW] = tR < douR[iBELOW] ? tR : douR[iBELOW];
-            if(max) douR[iBELOW] = tR > douR[iBELOW] ? tR : douR[iBELOW];
-          } else {
-            if(min) douC[iBELOW] = cabsf(tC) < cabsf(douC[iBELOW]) ? tC : douC[iBELOW];
-            if(max) douC[iBELOW] = cabsf(tC) > cabsf(douC[iBELOW]) ? tC : douC[iBELOW];
-          }
+		    if(isreal) {
+			if(min) douR[iBELOW] = tR < douR[iBELOW] ? tR : douR[iBELOW];
+			if(max) douR[iBELOW] = tR > douR[iBELOW] ? tR : douR[iBELOW];
+		    } else {
+			if(min) douC[iBELOW] = cabsf(tC) < cabsf(douC[iBELOW]) ? tC : douC[iBELOW];
+			if(max) douC[iBELOW] = cabsf(tC) > cabsf(douC[iBELOW]) ? tC : douC[iBELOW];
+		    }
 
-        } else if (prod) {
+		} else if (prod) {
 
-          if(isreal) stkR[iBELOW] *= tR;
-          else       stkC[iBELOW] *= tC;
+		    if(isreal) stkR[iBELOW] *= tR;
+		    else       stkC[iBELOW] *= tC;
             
-	      } else {
+		} else {
 
-          if(isreal) stkR[iBELOW] += rms ? (double)       tR*tR : tR;
-          else       stkC[iBELOW] += rms ? (double) conj(tC)*tC : tC;
+		    if(isreal) stkR[iBELOW] += rms ? (double)       tR*tR : tR;
+		    else       stkC[iBELOW] += rms ? (double) conj(tC)*tC : tC;
             
-	      }
+		}
 
-        if(isreal) { if (norm && (0.0 !=      tR))  fold[iBELOW]++; }
-        else       { if (norm && (0.0 != cabs(tC))) fold[iBELOW]++; }
+		if(isreal) { if (norm && (0.0 !=      tR))  fold[iBELOW]++; }
+		else       { if (norm && (0.0 != cabs(tC))) fold[iBELOW]++; }
       
-      }
-    }
+	    }
+	}
 
-    if ( !min && !max ) {
+	if ( !min && !max ) {
 
-      for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
+	    for (iBELOW = 0; iBELOW < nBELOW; iBELOW++) {
 
-        if (norm) {
-	        if (fold[iBELOW] > 0) {
+		if (norm) {
+		    if (fold[iBELOW] > 0) {
 
-            if(isreal) stkR[iBELOW] /= fold[iBELOW];
-            else       stkC[iBELOW] /= fold[iBELOW];
+			if(isreal) stkR[iBELOW] /= fold[iBELOW];
+			else       stkC[iBELOW] /= fold[iBELOW];
 
-            if(isreal) { if (rms) stkR[iBELOW] =  sqrt(stkR[iBELOW]); }
-            else       { if (rms) stkC[iBELOW] = csqrt(stkC[iBELOW]); }
-	        }
-	      }
+			if(isreal) { if (rms) stkR[iBELOW] =  sqrt(stkR[iBELOW]); }
+			else       { if (rms) stkC[iBELOW] = csqrt(stkC[iBELOW]); }
+		    }
+		}
 
-        if(isreal) douR[iBELOW] = stkR[iBELOW];
-        else       douC[iBELOW] = stkC[iBELOW];
-      }
+		if(isreal) douR[iBELOW] = stkR[iBELOW];
+		else       douC[iBELOW] = stkC[iBELOW];
+	    }
 
-    }
+	}
 
-    if(isreal) sf_floatwrite  (douR, nBELOW, out);
-    else       sf_complexwrite(douC, nBELOW, out);
+	if(isreal) sf_floatwrite  (douR, nBELOW, out);
+	else       sf_complexwrite(douC, nBELOW, out);
     
-  }
+    }
 
-  if(isreal){
-    free(dinR);
-    free(douR);
-    free(stkR);
-  } else {
-    free(dinC);
-    free(douC);
-    free(stkC);
-  }
+    if(isreal){
+	free(dinR);
+	free(douR);
+	free(stkR);
+    } else {
+	free(dinC);
+	free(douC);
+	free(stkC);
+    }
 
-  exit (0);
+    exit (0);
 }

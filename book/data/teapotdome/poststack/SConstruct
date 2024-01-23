@@ -43,7 +43,7 @@ Flow('final.display',file+'mapped',
 	echo 'just junk'
 	""",stdout=0, stdin=0)
 
-Result('final',file+'mapped','grey')
+Plot('final',file+'mapped','grey',view=1)
 
 #comment out sfzoom that requires Tkinter not found on Karls Mac
 #Result('zoom',file+'mapped','zoom')

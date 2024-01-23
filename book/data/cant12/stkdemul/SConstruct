@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../stk/SConstruct')
+
 data='../stk/dmostk.rsf'
 
 Flow('fk',data,'pad n1=4048 |fft1')

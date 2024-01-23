@@ -1,4 +1,8 @@
-/* 2-D Prestack Kirchhoff depth migration. */
+/* 2-D Prestack Kirchhoff depth migration. 
+
+October 2022 program of the month:
+https://reproducibility.org/blog/2022/10/12/program-of-the-month-sfkirmigsr/
+*/
 /*
   Copyright (C) 2011 University of Texas at Austin
   

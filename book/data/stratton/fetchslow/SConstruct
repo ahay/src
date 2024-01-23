@@ -83,7 +83,7 @@ Flow(['image.rsf','image_hdr.rsf'],
 	  verbose=1
      ''',stdout=0, stdin=0)
        
-Result("image","window j3=1 | sfgrey title='stratton-3d'")
+Plot("image","window j3=1 | sfgrey title='stratton-3d'",view=1)
 #Result("zoomimage","image",
 #       "window min1=1 max1=2 j3=10 | sfgrey title='stratton-3d'")
 Result("image3df","image",
@@ -114,8 +114,7 @@ Result("imageilxl","imageil imagexl",'SideBySideAniso')
 
 Result("imageslice","image",
 	'''
-	sfwindow min1=2.0 max1=2.004 \
-	| sftransp plane=13 \
+	sfwindow min1=0.5 n1=1 \
 	| sfgrey gainpanel=a title='stratton 3d'
 	''')
 

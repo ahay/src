@@ -1,0 +1,405 @@
+\published{Geophysics, v. 86, S103-S111, (2021)}
+\title{Wave-equation time migration}
+\author{Sergey Fomel and Harpreet Kaur}
+
+\address{Bureau of Economic Geology, \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+sergey.fomel@beg.utexas.edu}
+
+\lefthead{Fomel \& Kaur}
+\righthead{Wave-equation time migration}
+%\relax\footnotetext{Parts of this paper were first presented in SEG 2013}
+
+\maketitle
+
+\begin{abstract}
+  Time migration, as opposed to depth migration,
+  suffers from two well-known shortcomings: (1) approximate equations
+  are used for computing Green's functions inside the imaging
+  operator; (2) in case of lateral velocity variations, \old{images
+  appear in a distorted coordinate frame}\new{the transformation between the image ray coordinates and the Cartesian coordinates is undefined in places where the image rays cross}. We show that the first
+  limitation can be removed entirely by formulating time migration
+  through wave propagation in image-ray coordinates. \new{The proposed approach constructs a time-migrated image without relying on any kind of traveltime approximation by formulating an appropriate geometrically accurate acoustic wave equation in the time-migration domain}. The advantage of
+  this approach is that the propagation velocity in image-ray
+  coordinates does not require expensive model building and can be
+  approximated by quantities that are estimated in conventional
+  time-domain processing. Synthetic and field data examples demonstrate the effectiveness of the proposed approach and show that the proposed imaging workflow \new{leads to a significant uplift in terms of image quality and}
+  can bridge the gap between time and depth migrations. The image obtained by the proposed algorithm is
+correctly focused and mapped to depth coordinates it is comparable to the image obtained by depth migration. 
+\end{abstract}
+
+\section{Introduction}
+
+Seismic imaging has the ultimate goal of creating an image of
+subsurface structures in depth
+\cite[]{GEO66-05-16221640,bednar2005brief,biondi,etgen}. However, it often falls
+short of this goal in practice because of the requirement of having an
+accurate velocity model \cite[]{landa,landa2}. That is possibly the
+main reason why time-domain imaging methods continue to play an important role in practical seismic
+data analysis.
+
+Time migration takes a different route from depth migration by
+reducing the problem of velocity estimation to a
+parameter-picking problem. Each image point in a time-migrated
+image is associated with its own velocity parameter, which can be
+determined either by scanning different velocities
+\cite[]{GEO66-06-16991713} or by wave extrapolation in the
+image-velocity space \cite[]{fomel2003time}. The computational
+advantage of time-domain imaging comes at the expense of two main
+flaws:
+\begin{enumerate}
+\item Time migration uses approximate Green's functions \new{\cite[]{zhang1998application}} that typically
+  rely on 1-D velocity models and hyperbolic or slightly
+  non-hyperbolic traveltime approximations.
+\item In the case of lateral velocity variations, \old{time migration
+  creates images in a distorted coordinate system, defined by
+  \emph{image rays}}\new{the transformation between the image-ray coordinates and Cartesian coordinates gets distorted in places where the image rays cross. In such areas, there is no longer a one-to-one mapping between image-ray coordinates and Cartesian coordinates, and the coordinate transformation will also have a zero determinant (at the caustics of the image-ray field)} \cite[]{hubral1977time}.
+\end{enumerate}
+
+Image rays are seismic rays orthogonal to the surface of
+observation. These rays remain straight in the absence of lateral
+velocity variations but bend when they meet lateral heterogeneities.
+\cite{ip,cameron2008time,jcp} extend the image-ray theory to establish an exact
+theoretical connection between depth- and time-migration velocities
+and an inversion algorithm for converting the latter to the former. In
+the absence of lateral velocities variations, the time-to-depth
+conversion is accomplished by Dix
+inversion \cite{GEO20-01-00680086}. As shown by \cite{ip} and
+\cite{tygel}, an additional correction is required when velocities
+vary laterally that is the correction related to the geometrical spreading
+of image rays. \cite{siwei,siwei2} develop a robust algorithm for
+time-to-depth conversion including a geometrical-spreading correction
+in the presence of lateral variations. \cite{sripanich2018fast} develop a fast version of the time-to-depth conversion algorithm in the case of weak lateral variations. 
+
+In this paper, we propose to apply wave-equation imaging to create
+accurate seismic images in image-ray coordinates but without relying
+on Green's function approximations and thus avoiding any inaccuracy
+issues associated with time migration \cite[]{fomel2013wave}. We use the method
+of \cite{sava2005riemannian} to define wave propagation in an alternative
+coordinate system and to connect it with the theory that relates
+time-migration velocities to velocity models in depth \cite[]{ip}. We
+show that, when the wave equation is transformed into the image-ray
+coordinate system, its coefficients are simply related to ideal
+time-migration velocities. Therefore, accurate one-way or two-way
+wave-equation imaging can be accomplished by using information that is
+readily obtainable from conventional time-domain processing. This
+observation leads to a new imaging workflow, which provides a seamless
+transition from wave-equation
+time migration in time domain to wave-equation
+time migration in depth domain along with velocity model building in depth domain for depth imaging. We test the proposed approach using simple synthetic and field data examples.
+
+\section{Wave-equation and image rays}
+The phase information contained in seismic waves is governed by the
+eikonal equation, which takes the form \cite[]{chapman}
+\begin{equation}
+\label{eq:eik}
+\nabla T \cdot \nabla T = \frac{1}{V^2(\mathbf{x})}\;,
+\end{equation}
+where $\mathbf{x}$ is a point in space, $T(\mathbf{x})$ is 
+traveltime from the source to $\mathbf{x}$, and $V(\mathbf{x})$ is the
+phase velocity. In an anisotropic medium, the phase velocity depends
+additionally on the direction of traveltime gradient $\nabla
+T$. For simplicity, we limit the following discussion to the isotropic
+case and two dimensions. Extensions to anisotropy and 3-D are possible
+but would complicate the discussion. In 2-D, $\mathbf{x}=\{x,z\}$, and 
+the isotropic eikonal equation~\ref{eq:eik} can be written as
+\begin{equation}
+\label{eq:eik2}
+\left(\frac{\partial T}{\partial x}\right)^2 + \left(\frac{\partial T}{\partial z}\right)^2 = \frac{1}{V^2(x,z)}\;.
+\end{equation}
+
+The simplest wave equation that corresponds to eikonal
+equation~\ref{eq:eik} is the acoustic wave equation
+\begin{equation}
+\label{eq:awe}
+\frac{\partial^2 W}{\partial x^2} + \frac{\partial^2 W}{\partial z^2} = \frac{1}{V^2(x,z)}\,\frac{\partial^2 W}{\partial t^2}\;,
+\end{equation}
+where $W(x,z,t)$ is a wavefield propagating with velocity
+$V$. Equation~\ref{eq:awe} provides the basis for a variety of
+wave-equation migration algorithms, from one-way wave extrapolation in
+depth to two-way reverse-time migration (RTM) \cite[]{biondi,etgen}. 
+
+Consider a family of image rays \cite[]{hubral1977time}, traced
+orthogonal to the surface. Image-ray coordinates $x_0$ and $t_0$ as
+functions of the Cartesian coordinates $x$ and $z$ satisfy the
+following system of partial differential equations \new{\cite[]{ip}}:
+\begin {eqnarray}
+  |\nabla x_0|^2&=&\left(\frac{\partial x_0}{\partial x}\right)^2+\left(\frac{\partial x_0}{\partial z}\right)^2
+  =\frac{1}{J^2(x,z)}\;, \label{eq:sf1} \\
+  \nabla x_0\cdot\nabla t_0&=&\frac{\partial x_0}{\partial x}\frac{\partial t_0}{\partial x}+
+\frac{\partial x_0}{\partial z}\frac{\partial t_0}{\partial z}=0\;, \label{eq:sf2} \\
+|\nabla t_0|^2&=&\left(\frac{\partial t_0}{\partial x}\right)^2+\left(\frac{\partial t_0}{\partial z}\right)^2
+=\frac{1}{V^2(x,z)}\;, \label{eq:sf3} 
+\end{eqnarray}
+with boundary conditions $x_0(x,0)=x$ and
+$t_0(x,0)=0$. Equation~\ref{eq:sf3} is the familiar eikonal
+equation~\ref{eq:eik2}. Equation~\ref{eq:sf2} expresses the
+orthogonality of rays and wavefronts in an isotropic
+medium. Equation~\ref{eq:sf1} defines the quantity $J(x,z)$ as the
+geometrical spreading of image rays.
+
+Applying a change of variables from $\{x,z\}$ to $\{x_0,t_0\}$ 
+transforms eikonal equation~\ref{eq:eik2} to the
+coordinate system of image rays and leads to an
+elliptically anisotropic eikonal equation which is
+\begin{equation}
+\label{eq:eik0}
+\left(\frac{\partial T}{\partial x_0}\right)^2\,\frac{1}{J^2} + \left(\frac{\partial T}{\partial t_0}\right)^2\,\frac{1}{V^2} = \frac{1}{V^2}\;.
+\end{equation}
+The corresponding wave equation is given by
+\begin{equation}
+\label{eq:awe0}
+\frac{\partial^2 W}{\partial x_0^2}\,V_d^2 + \frac{\partial^2 W}{\partial t_0^2} = \frac{\partial^2 W}{\partial t^2}\;,
+\end{equation}
+where $V_d=V/J$. Equation~\ref{eq:awe0} is a particular version of
+the more general Riemannian coordinate transformation analyzed
+by \cite{sava2005riemannian}. Some other versions of Riemannian coordinate transformations are analysed by \cite{shragge2008riemannian,shragge2008prestack}. Note that at the surface of observation
+$z=0$, the solution of equation~\ref{eq:awe0} coincides
+geometrically with the solution of the original Cartesian
+equation~\ref{eq:awe}.
+
+The significance of equation~\ref{eq:awe0} lies in the following
+fact established by~\cite{ip}. When time migration is performed using
+coordinates $x_0$ and $t_0$ and the conventional traveltime approximation based
+on the Taylor expansion of diffraction traveltime around the image
+ray, such as the classic hyperbolic approximation
+\begin{equation}
+\label{eq:hyper}
+t^2(x) \approx t_0^2+\frac{(x-x_0)^2}{V_0^2(x_0,t_0)}\;,
+\end{equation}
+the coefficient $V_d$ appearing in equation~\ref{eq:awe0} is simply
+related to time-migration velocity $V_0$ appearing in
+equation~\ref{eq:hyper}. More specifically,
+\begin{equation}
+\label{eq:vdix}
+V_d^2(x_0,t_0) = \frac{V^2}{J^2} = \frac{\partial \left[t_0\,V_0^2(x_0,t_0)\right]}{\partial t_0}\;.
+\end{equation}
+Following \cite{geo}, we call $V_d$ \emph{Dix velocity} because it
+corresponds to the classic Dix inversion applied to the time-migration
+velocity \cite[]{GEO20-01-00680086}. In the absence of lateral
+velocity variations (a $V(z)$ medium), image rays do not spread;
+therefore, $J=1$, $V_d=V$ and corresponds to true velocity in the
+medium, and $V_0$ corresponds to root-mean-square (RMS) velocity. In
+the presence of lateral velocity variations, the conversion between
+time-migration coordinates and true Cartesian coordinates is more
+complicated \cite[]{GEO60-04-11181127,geo,siwei2}. However, to
+extrapolate seismic wavefields in image-ray coordinates using
+equation~\ref{eq:awe0}, it is sufficient to use an estimate of the Dix
+velocity $V_d$, which is readily available from conventional
+time-domain processing and equation~\ref{eq:vdix}.
+
+\section{Workflow: Wave-equation time migration}
+
+We propose the following workflow for bridging the gap between
+time- and depth-domain imaging.
+
+\subsection{Step 1. Time migration velocity analysis}
+
+Automatic velocity analysis in the process of time migration
+can be accomplished either by scanning a set of different velocities
+\cite[]{GEO66-06-16991713} or by wave extrapolation in the
+image-velocity space \cite[]{fomel2003time}. It is also possible
+to estimate time-migration velocity after stack or from limited-offset
+data by separating and imaging seismic
+diffractions \cite[]{GEO49-11-18691880,diffr,burnett,dell2011common,coimbra2013migration,decker2017diffraction}. Alternatively,
+time-migration velocity can be estimated directly from prestack data
+as a data attribute controlled by local slopes of reflection
+events \cite[]{pmig,cooke}. \new{Other work on time-migration velocity analysis includes \cite{gelius2015migration,santos2015prestack,glockner2016kinematic}.}
+
+\subsection{Step 2. Dix conversion}
+
+Applying equation~\ref{eq:vdix} for converting RMS velocity $V_0(x_0,t_0)$ to Dix velocity $V_d(x_0,t_0)$ in practice requires special care because of
+possible noisy measurements. \new{Large variations in RMS velocities produce rapid variations in interval velocities which leads to unstable Dix inversion}. It helps to formulate Dix conversion as a linear estimation problem and use regularization for constraining
+its solution \cite[]{Clapp.sep.97.bob1,alejandro,pwc,shape}. \new{We use least-squares and shaping regularization for stable conversion of RMS velocities to interval velocities.}
+
+\subsection{Step 3. Wave-equation time migration}
+
+Any of the available imaging techniques, such as Kirchhoff migration,
+one-way wave-equation migration, or two-way reverse-time
+migration can be utilized to
+perform seismic imaging in image-ray coordinates using
+equation~\ref{eq:awe0}. Moreover, staying in this coordinate system
+allows migration velocity analysis and model building to be performed
+for estimating the Dix velocity $V_d(x_0,t_0)$ instead of the usual
+seismic velocity $V(x,z)$.
+
+\subsection{Step 4. Conversion from time to depth}
+
+Conversion from time to depth coordinates and from $V_d(x_0,t_0)$ to
+$V(x,z)$ is a nontrivial inverse problem. The problem involves not
+only a coordinate transformation \cite[]{hatton,larner} but also a
+correction for the geometrical spreading of image rays. As shown
+by \cite{jcp}, the problem can be reduced to solving an initial-value
+(Cauchy) problem for an elliptic PDE (partial differential equation),
+which is a classic example of a mathematically ill-posed problem.
+To arrive at this formulation, let us transform the system of
+equations~\ref{eq:sf1}-\ref{eq:sf3} into the image-ray coordinate
+system. The system of equations for inverse functions takes the form \cite[]{siwei2}
+
+\begin{eqnarray}
+\label{eq:igradx}
+\left(\frac{\partial x}{\partial x_0}\right)^2 +  \left(\frac{\partial z}{\partial x_0}\right)^2 & = & J^2\;, \\
+\label{eq:idotp}
+\frac{\partial x}{\partial x_0}\,\frac{\partial x}{\partial t_0} + \frac{\partial z}{\partial x_0}\,\frac{\partial z}{\partial t_0} & = & 0\;, \\
+\label{eq:igradt}
+\left(\frac{\partial x}{\partial t_0}\right)^2 +  \left(\frac{\partial z}{\partial t_0}\right)^2 & = & V^2\;,
+\end{eqnarray}
+with boundary conditions $x(x_0,0) = x_0$ and $z(x_0,0) = 0$. 
+
+From equation~\ref{eq:idotp}, it follows that
+\begin{equation}
+  \label{eq:xt}
+  \frac{\partial x}{\partial t_0} = - 
+  \frac
+  {\displaystyle \frac{\partial z}{\partial x_0}\,\frac{\partial z}{\partial t_0}}
+  {\displaystyle \frac{\partial x}{\partial x_0}}\;.
+\end{equation}
+Substituting this expression into equation~\ref{eq:igradt} and
+using equation~\ref{eq:igradx} leads to
+\begin{eqnarray}
+\label{eq:xt2}
+\frac{\partial x}{\partial t_0} & = &
+V_d(x_0,t_0)\,\frac{\partial z}{\partial x_0}\;, \\
+\label{eq:zt2}
+\frac{\partial z}{\partial t_0} & = & 
+\frac{V}{J}\,\frac{\partial x}{\partial x_0} =
+V_d(x_0,t_0)\,\frac{\partial x}{\partial x_0}\;, 
+\end{eqnarray}
+where both $\partial z/\partial t_0$ and $\partial x/\partial x_0$ are
+assumed to remain positive (image rays propagate down and do not
+cross). Finally, decoupling the system by using the equivalence of the
+second-order mixed derivatives produces the following system of two
+linear elliptic PDEs:
+\begin{eqnarray}
+\label{eq:xpde}
+\frac{\partial}{\partial x_0}\,
+\left(V_d\,\frac{\partial x}{\partial x_0}\right)
++ \frac{\partial}{\partial t_0}\,
+\left(\frac{1}{V_d}\,\frac{\partial x}{\partial t_0}\right) & = & 0\;, \\
+\label{eq:zpde}
+\frac{\partial}{\partial x_0}\,
+\left(V_d\,\frac{\partial z}{\partial x_0}\right)
++ \frac{\partial}{\partial t_0}\,
+\left(\frac{1}{V_d}\,\frac{\partial z}{\partial t_0}\right) & = & 0\;.
+\end{eqnarray}
+Additional initial conditions,
+\begin{eqnarray}
+\label{eq:xbound}
+\left. \frac{\partial x}{\partial t_0}\right|_{t_0=0} & = & 0 \;, \\
+\label{eq:zbound}
+\left. \frac{\partial z}{\partial t_0}\right|_{t_0=0} & = & V_d(x_0,0)\;. 
+\end{eqnarray}
+specify that the image rays propagate down normal to the surface. If
+it were possible to solve system~\ref{eq:xpde}-\ref{eq:zpde}
+directly using only initial conditions, the shape of image rays could
+be determined, and the true velocity could be estimated from
+equation~\ref{eq:igradt}. Unfortunately, this problem is
+mathematically ill-posed, which leads to numerical
+instability \cite[]{tikh}. It can be approached, however, through
+regularization techniques \cite[]{jcp}.
+
+\cite{siwei2} develop 
+ robust time-to-depth conversion, which uses
+ equations~\ref{eq:sf1}-\ref{eq:sf3} in the Cartesian coordinate
+ system and formulates time-to-depth conversion as a regularized
+ least-squares optimization problem. Using linearization with respect to velocity perturbations \cite{sripanich2018fast} reformulate equations~\ref{eq:xpde}-\ref{eq:zpde} for fast time-to-depth conversion appropriate for handling weak lateral variations. \new{Weak lateral variation assumption is important because in case of strong lateral variations, there is no longer a one-to-one mapping between image-ray coordinates and Cartesian coordinates, and the coordinate transformation will also have a zero determinant (at the caustics of the image-ray field). Using \cite{sripanich2018fast}, the squared Dix velocity converted to depth $w_d(x,z)$ is given as
+\begin{equation}
+\label{eq:dixestimate}
+w_d (x,z) \approx w_{dr}(x,z) + \left(\Delta x_0 (x,z) \times \frac{\partial w_d}{\partial  
+x_0}(x,z)\right) +  \left(\Delta t_0 (x,z) \times \frac{\partial w_d}{\partial t_0}(x,z) \right)~,
+\end{equation}
+}
+\new{where $w_{dr}(x,z)$ denotes the $w_d(x_0,t_0)$ converted to depth based on the laterally homogeneous background assumption, and the derivatives with respect to $x_0$ and $t_0$ are evaluated first in the original $(x_0,t_0)$ coordinates followed by a similar conversion.}
+
+\subsection{Step 5. Velocity model building}
+
+Finally, equipped with an estimate of the seismic velocity in
+Cartesian coordinates and a well-focused image, one could continue to
+refine the velocity model by using any of the conventional velocity
+estimation techniques \cite[]{robein,jones}.
+
+
+\section{Examples}
+\subsection{Linear-gradient model}
+We start with a toy example of a linear-gradient model similar to the one used by \cite{TLE21-12-12371241}. The velocity in Figure~\ref{fig:vel} changes with a constant gradient tilted at~$45^{\circ}$. \new{In this model, the exact velocity is given by
+\begin{equation}
+\label{eq:model2}
+v (x,z) = v_0 + g_z z + g_x x\;,
+\end{equation}
+where $v_0 = 1$ km/s, $g_z = 0.15$ 1/s, and $g_x=0.15$ 1/s. Four reflectors with varying shapes are embedded in the model. Reflection data in Figure~\ref{fig:zodata} are modeled using the Kirchhoff modeling. 
+The migration velocity squared $w_m$ and its Dix-inverted counterpart $w_d$ are given by the following expression \cite[]{siwei2}
+\begin{eqnarray}
+\label{eq:wmgrad}
+w_m (x_0,t_0) & = & \left(\frac{(v_0 + g_x x_0)^2}{t_0 \left( g \coth (g t_0) - g_z \right)} \right)^2~, \\
+\label{eq:wdgrad}
+w_d (x_0,t_0) & = & \left(\frac{(v_0 + g_x x_0) g}{g \cosh (g t_0) - g_z \sinh (g t_0)}\right)^2~.
+\end{eqnarray} }
+The time-migration velocity computed using the analytical expression from \cite{siwei2} is shown in Figure~\ref{fig:vmigwin}. \new{The Kirchhoff} time migration in Figure~\ref{fig:kpstmtime} fails to focus the image accurately because of strong lateral velocity variations.  Figure~\ref{fig:vdix} shows the Dix velocity that we further use to obtain the image by wave-equation time migration using reverse-time migration in image-ray coordinates \new{\cite[]{dell2014image}} as shown in Figure~\ref{fig:wetm1}. The image is correctly focused but distorted because of image-ray bending. Bending image rays in Figure~\ref{fig:acoord} correspond to the time-migration velocity shown in Figure~\ref{fig:vmigwin}. 
+\new{The analytical solutions to time-to-depth conversion are \cite[]{siwei2}
+\begin{eqnarray}
+\label{eq:x0grad}
+x_0 (x,z) & = & x + \frac{\sqrt{(v_0+g_x x)^2 + g_x^2 z^2} - (v_0 + g_x x)}{g_x}~, \\
+\label{eq:t0grad}
+t_0 (x,z) & = & \frac{1}{g} \mathrm{arccosh} \left[ \frac{g^2 \left( \sqrt{(v_0+g_x x)^2 + g_x^2 z^2} + g_z z \right) - v g_z^2}{v g_x^2} \right]~.
+\end{eqnarray}}
+Figure~\ref{fig:anamapd} shows time-migration images converted to Cartesian coordinates. The image by wave-equation time migration is now both well focused, correctly positioned in depth, and is comparable in quality to the depth migrated image in Figure~\ref{fig:zomig}. Both images are created using low-rank reverse-time migration \cite[]{lowrank}.
+\inputdir{synthetic4}
+\multiplot{2}{vel,zodata}{width=0.9\textwidth}{Simple synthetic model (a) Velocity model. (b) Zero-offset data.}
+\multiplot{2}{vmigwin,kpstmtime}{width=0.9\textwidth}{(a) Time migration velocity, and (b) Image obtained by Kirchhoff time migration.}
+\multiplot{2}{vdix,wetm1}{width=0.9\textwidth}{(a) Dix velocity, and (b) Image obtained by wave-equation time migration using RTM in image-ray coordinates. All events are correctly focused in image-ray coordinates but appear in a distorted coordinate frame.}
+\multiplot{3}{acoord,anamapd,zomig}{width=0.9\textwidth}{(a) Image rays (curves of constant $x_0$) and wavefronts (curves of constant $t_0$). (b) Image obtained using wave-equation time migration after conversion to Cartesian coordinates, and (c) Image obtained using depth migration using RTM in Cartesian coordinates. }
+
+
+\subsection{Nankai field data example}
+To test the algorithm with field data, we first start with the Nankai data set \cite[]{forel2005seismic}. We preprocessed the data set to correct for uneven bathymetry, ground roll attenuation and surface consistent amplitude correction. In order to obtain the migration velocity, we use \cite{fowler1984velocity} dip moveout. The resultant migration velocity in Figure~\ref{fig:vpickk} is used to perform \new{Kirchhoff} time migration in Figure~\ref{fig:kpstm2} of the stacked section in Figure~\ref{fig:slice}. Next, we convert the migration velocity to the Dix velocity in Figure~\ref{fig:veltestw} and subsequently use it for wave-equation time migration in Figure~\ref{fig:wetmnan}. Zoomed in sections of the conventional time migration and wave-equation time migration (Figure~\ref{fig:zoom,zoom2}) show that the image obtained by wave-equation time migration is correctly focused near the water column with faults and subduction zone migrated to their true subsurface locations whereas time migration fails to focus the image accurately because of the strong lateral velocity variations. The image obtained by wave-equation time migration is still in time coordinates. We transform it to depth coordinates using the fast time-to-depth conversion algorithm \cite[]{sripanich2018fast}. Figure~\ref{fig:refdix,alpha,beta} shows Dix-inverted migration velocity squared $w_{dr}(x,z)$ and its gradients evaluated in the time-domain coordinates that are used to compute the interval velocity by fast time to depth algorithm along with the image ray coordinate system as shown in Figure~\ref{fig:finalv} and ~\ref{fig:imageraysnan} respectively. Applying time-to-depth conversion to image obtained after Wave-equation time migration in Figure~\ref{fig:finalmapd} and comparing it with depth migrated image in Figure~\ref{fig:rtmsf} \new{(obtained using estimated interval velocity with time-to depth conversion from Dix velocity models)} we see that results are comparable and that the wave-equation time migration image is both correctly focused and correctly positioned in depth.
+\inputdir{nankaizone}
+%\plot{datanan}{width=0.9\textwidth}{Stacked section for Nankai data example (top),RMS velocity (middle) and dix velocity (bottom).}
+\multiplot{3}{slice,vpickk,kpstm2}{width=0.9\textwidth}{(a) Stacked section for Nankai field data. (b) Time-migration velocity, and (c) Image obtained by Kirchhoff time migration.}
+\multiplot{2}{veltestw,wetmnan}{width=0.9\textwidth}{(a) Dix velocity, and (b) Image obtained by wave-equation time migration using RTM in image-ray coordinates.}
+%\multiplot{2}{timewetmnan,zoom}{width=0.9\textwidth}{Time migration using RMS velocity (top) and Wave equation time migration using our proposed method (middle). Zoomed in portion (bottom) (a) Stacked section (b) Conventional time migration and (c) wave equation time migration shows that water layer is correctly focused  and faults are delineated more clearly and are migrated to their true subsurface position with our proposed method as compared to the conventional time migration .}
+\multiplot{2}{zoom,zoom2}{width=0.9\textwidth}{ Zoomed in portion (a) Stacked section (b) Conventional time migration and (c) wave-equation time migration shows that water layer is correctly focused and faults are delineated more clearly and are migrated to their true subsurface position with our proposed method as compared to the conventional time migration.}
+\multiplot{2}{refdix,alpha,beta}{width=0.9\textwidth}{The inputs for time to depth conversion of velocities for the Nankai field data example: Dix velocity squared $w_{dr}$ and its gradients.}
+%\plot{input-nankai}{width=0.9\textwidth}{The inputs for time to depth conversion of velocities for the Nankai field data example: Dix velocity squared $w_{dr}$ and its gradients.}
+\multiplot{2}{finalv,imageraysnan}{width=0.9\textwidth}{(a) The estimated interval $w(x,z)$ using fast time to depth conversion algorithm for the Nankai field data example. (b) Image rays (curves of constant $x_0$) and wavefronts (curves of constant $t_0$).}
+\multiplot{2}{finalmapd,rtmsf}{width=0.9\textwidth}{(a) Image obtained using wave-equation time migration after conversion to Cartesian coordinates. (b) Image obtained using depth migration using RTM in Cartesian coordinates.}
+
+\subsection{Gulf of Mexico field data example}
+For the final example, we use a Gulf of Mexico field data set \cite[]{claerbout1995basic}. In this data set, the maximum recording time is 4.0 s with the maximum offset of 3.48 km. The stacked section along with picked migration velocity and Dix velocity is shown in Figure~\ref{fig:dstack-gulf,vnmo-gulf,vinv-gulf}. We estimate the initial $w_{dr}(x,z)$ automatically using the method of velocity continuation \cite[]{fomel2003time} followed by 1D Dix inversion to depth which is similar to the workflow \new{for time-to-depth conversion} followed by \cite{siwei2}, and \cite{sripanich2018fast}. Using the Dix velocity, we perform wave-equation time migration as shown in (Figure~\ref{fig:wetm1f}) which shows improved delineation of faults as compared to the conventional \new{Kirchhoff} time migration as shown in (Figure~\ref{fig:kpstm}). To convert the migrated section after wave-equation time migration to depth domain, we use fast time to depth conversion algorithm, similarly to the previous example. The inputs to this model are shown in Figure~\ref{fig:refdixgom,alphagom,betagom}. The output of fast time-to-depth algorithm is the grid $t_0-x_0$ Figure~\ref{fig:imagerays}  which we use to map the wave-equation time migration results from time to depth coordinates (Figure~\ref{fig:finalmapdgom}) and the estimated interval velocity in Figure~\ref{fig:finalvgom} which we use for depth migration in Figure~\ref{fig:rtm}. We compare the final seismic image after time-to-depth conversion process using wave-equation time migration with reverse time migration. The results are comparable to Figure~\ref{fig:rtm}, verifying the effectiveness of the proposed approach.
+\inputdir{beivel}
+%\multiplot{data}{width=0.9\textwidth}{Stacked section for Gulf of Mexico field data example (top), RMS velocity (middle) and dix velocity (bottom)}
+\multiplot{3}{dstack-gulf,vnmo-gulf,vinv-gulf}{width=0.9\textwidth}{(a) Stacked section for Gulf of Mexico field data. (b) Time-migration velocity, and (c) Dix velocity.}
+%\plot{timewetm}{width=0.9\textwidth}{Time migration using RMS velocity (top) and Wave equation time migration using our proposed method (bottom). Faults marked as F1, F2, F3, F4 and F5 are clearly delineated with our proposed method as compared to the conventional time migration.}
+\multiplot{2}{kpstm,wetm1f}{width=0.9\textwidth}{(a) Image obtained using Kirchhoff time migration , and (b) Image obtained using wave-equation time migration using RTM in image-ray coordinates. Faults marked as F1, F2, F3, F4 and F5 are clearly delineated with the proposed method as compared to the conventional time migration.}
+%\plot{input-field}{width=0.9\textwidth}{The inputs for time to depth conversion of velocities for the GOM field data example: Dix velocity squared $w_{dr}$ and its gradients.}
+\multiplot{2}{refdixgom,alphagom,betagom}{width=0.9\textwidth}{The inputs for time to depth conversion of velocities for the Gulf of Mexico field data example: Dix velocity squared $w_{dr}$ and its gradients.}
+%\plot{finalvcompare}{width=0.9\textwidth}{The difference between the estimated velocity squared using the proposed method and the Dix-inverted velocity squared (top). The estimated interval $w(x,z)$ using fast time to depth conversion algorithm (bottom) for the GOM field data example}
+\multiplot{2}{imagerays,finalvgom}{width=0.9\textwidth}{(a) Image rays (curves of constant $x_0$) and wavefronts (curves of constant $t_0$). (b) The estimated interval $w(x,z)$ using fast time to depth conversion algorithm for the Nankai field data example.}
+\multiplot{2}{finalmapdgom,rtm}{width=0.9\textwidth}{(a) Image obtained using wave-equation time migration after conversion to Cartesian coordinates. (b) Image obtained using depth migration using RTM in Cartesian coordinates.}
+
+
+\section{Conclusions}
+
+The proposed seismic imaging workflow is applicable to areas with mild
+lateral velocity variations. \new{Mild variations are required to ensure that image rays do not cross, so that the mapping between image-ray coordinates and Cartesian coordinates remains one-to-one}. We have outlined a theoretical foundation for the central step of this
+workflow (wave-equation time migration) and demonstrated its
+application using synthetic and field data examples. Wave-equation time
+migration produces an image in time-migration (image-ray) coordinates
+but without using moveout approximations or any other limitations
+associated with traditional prestack-time-migration algorithms. \new{The proposed algorithm can be cost effective  because it circumvents the need for multiple migrations that are required to update the velocity model in depth for the conventional algorithms during the velocity model building process}. In complex
+velocity models, when the image-ray coordinate system breaks down
+because of crossing rays, the proposed workflow may not be directly
+applicable. However, it can be combined with redatuming (downward
+extrapolation) to allow the velocity model to be recursively estimated
+below the depth of the break-down point. \new{The proposed algorithm can also be extended to prestack domain which is a subject for future research.}
+
+%\section{Acknowledgments}
+
+%We thank the sponsors of Texas Consortium of Computational Seismology for financial support. The computations in this paper were done using Madagascar software package \cite[]{fomel2013madagascar}
+%\onecolumn
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,imray}
+

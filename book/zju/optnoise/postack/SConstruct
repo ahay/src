@@ -53,7 +53,7 @@ Plot('post-fdip','window n1=194 | dd form=native | grey labelsz=12 titlesz=12.5 
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun'
+matROOT = '../Matfun'
 matfun = 'FXEMD0'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

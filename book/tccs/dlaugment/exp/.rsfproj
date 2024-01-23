@@ -1,0 +1,3 @@
+uses=['sfwindow', 'sfput', 'sfgrey', 'sffft1', 'sffft3', 'sfmath', 'sfreal', 'sftransp', 'sfgraph', 'sfsegyread', 'sfintbin', 'sfdd', 'sfpatch', 'sfcat']
+data=['data/faults/faults.npz', 'data/faults/class2021_faults.sgy']
+size= 22267163540

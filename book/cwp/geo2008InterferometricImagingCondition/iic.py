@@ -31,8 +31,8 @@ def param():
 # ------------------------------------------------------------
 # target coordinates
 def target(nxwin,nzwin,qq,par):
-    if(not par.has_key('zt')): par['zt'] = par['oz']+0.85*par['nz']*par['dz']
-    if(not par.has_key('xt')): par['xt'] = par['ox']+0.50*par['nx']*par['dx']
+    if('zt' not in par): par['zt'] = par['oz']+0.85*par['nz']*par['dz']
+    if('xt' not in par): par['xt'] = par['ox']+0.50*par['nx']*par['dx']
     
     par['nqx'] = nxwin *     par['lo']/par['dx']
     par['oqx'] = par['xt'] - par['nqx']/2 * par['dx']
@@ -49,7 +49,7 @@ def target(nxwin,nzwin,qq,par):
     par['wxmin'] = par['oqx']
     par['wxmax'] = par['oqx'] + (par['nqx']-1)*par['dqx']
     par['wratio']=(par['wzmax']-par['wzmin'])/(par['wxmax']-par['wxmin'])
-    if(not par.has_key('wheight')): par['wheight']=par['height']
+    if('wheight' not in par): par['wheight']=par['height']
 
     # ------------------------------------------------------------
     fdmod.boxarray(qq,
@@ -322,7 +322,7 @@ def random(seed,gg,mask,ff,aa,ru,rv,par):
     
 # ------------------------------------------------------------
 def model(vo,vv,rm,gg,gm,par):
-    if(not par.has_key('vbias')): par['vbias']=0
+    if('vbias' not in par): par['vbias']=0
     
     Flow(gg+'-nu', gg,'math output="input*%g"' % gm)
 
@@ -388,7 +388,7 @@ def beam(vel,hwt,xsou,zsou,sou,par):
 # ------------------------------------------------------------
 # passive array modeling
 def pmodel(dat,wfl,wav,vel,den,sou,rec,ico,par):
-    if(not par.has_key('mintplot')): par['mintplot']=0
+    if('mintplot' not in par): par['mintplot']=0
 
     Result(wav,'window n1=1 n2=400 |' + fdmod.waveplot('',par))
     Result('p'+vel,[vel,ico,rec,sou],'Overlay')
@@ -403,7 +403,7 @@ def pmodel(dat,wfl,wav,vel,den,sou,rec,ico,par):
 
 # ------------------------------------------------------------
 def movie(wfl,vel,par):
-    if(not par.has_key('vbias')): par['vbias']=1.5
+    if('vbias' not in par): par['vbias']=1.5
 
     fdmod.wom(wfl+'m',wfl,vel,par['vbias'],par)
     Plot(   wfl+'m',fdmod.wgrey('pclip=99',par))
@@ -415,8 +415,8 @@ def movie(wfl,vel,par):
 # ------------------------------------------------------------
 # active array modeling
 def amodel(dat,wfl,wav,vel,den,ref,sou,rec,ico,par):
-    if(not par.has_key('wscale')): par['wscale']=5
-    if(not par.has_key('vbias')): par['vbias']=1500
+    if('wscale' not in par): par['wscale']=5
+    if('vbias' not in par): par['vbias']=1500
 
     Result(wav,'window n1=1 n2=400 |' + fdmod.waveplot('format1=%3.2f',par))
     Result('a'+vel,[vel,ico,rec,sou],'Overlay')
@@ -655,7 +655,7 @@ def wdfic(cii,
     par['jrec']=10
     par['nrec']=160
     
-    receivers = range(par['orec'],par['orec']+par['nrec']*par['jrec'],par['jrec'])
+    receivers = list(range(par['orec'],par['orec']+par['nrec']*par['jrec'],par['jrec']))
     # ------------------------------------------------------------
 
     for k in receivers:
@@ -667,7 +667,7 @@ def wdfic(cii,
         
         # velocity (overlay)
         Plot(vel+ktag,[vel,rec+ktag,ico],'Overlay')
-    allvxx = map(lambda x: vel+'-%04d' % x,receivers)
+    allvxx = [vel+'-%04d' % x for x in receivers]
     Plot('allvxx',allvxx,'Movie')
 
     # ------------------------------------------------------------ 
@@ -741,7 +741,7 @@ def wdfic(cii,
     # wavefield
     # z*x-xs-t
     Flow(uxx+'-all',
-         map(lambda x: uxx+'-%04d' % x,receivers),
+         [uxx+'-%04d' % x for x in receivers],
          'cat axis=2 space=n ${SOURCES[1:%d]}' % (par['nrec']))
 
     # WDF over x

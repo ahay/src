@@ -1,0 +1,3 @@
+uses=['sfdd', 'sftransp', 'sfscale', 'sfput', 'sfremap1', 'sfwindow', 'sfunif2', 'sfderiv', 'sfbandpass', 'sfhalfint', 'sfpreconstkirch', 'sfcmp2shot', 'sflpad', 'sfspike', 'sfapef', 'sfmiss43', 'sfbyte', 'sfgrey3', 'sfnoise', 'sfmath', 'sfmask', 'sfcut', 'sfheadercut', 'sfspray', 'sfreverse', 'sfcat', 'sftxyspfvsint3', 'sfadd', 'sffft1', 'sffft3', 'sfthreshold', 'sfcp', 'sftxyspfint3']
+data=['data/french/french.asc']
+size= 12360988980

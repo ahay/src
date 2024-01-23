@@ -5,7 +5,7 @@
 \begin{abstract}
   This homework has four parts. 
   \begin{enumerate}
-  \item Theoretical questions related to iterative inversion.
+  \item Theoretical questions related to linear estimation.
   \item Attenuation of surface-wave noise in 
         seismic data using match filtering.
   \item Irregular data interpolation contest.
@@ -40,71 +40,13 @@ mathematical derivations that you perform.
 
 \begin{enumerate}
 
-\item The following algorithm finds a solution to
-  the least-squares optimization problem $\min
-  \|\mathbf{F}\,\mathbf{m} - \mathbf{d}\|^2$, where $\mathbf{d}$ is
-  data, $\mathbf{m}$ is the model we want to estimate, and
-  $\mathbf{F}$ is a linear operator that connects them.
-
-\newpage
-
- \begin{algorithm}{Conjugate gradients}{\mathbf{F},\mathbf{d},N}
-  \mathbf{m \= 0} \\
-  \mathbf{r \= - d} \\
-  \begin{FOR}{n \= 1, 2, \ldots, N} \\
-    \mathbf{g} \= \mathbf{F}^T\,\mathbf{r} \\
-    \mathbf{G} \= \mathbf{F}\,\mathbf{g} \\
-    \rho \= \mathbf{g}^T\,\mathbf{g} \\
-    \begin{IF}{n = 1} 
-      \beta \= 0 
-      \ELSE 
-      \beta \= \rho/\hat{\rho} 
-    \end{IF} \\
-    \left[\begin{array}{l}
-        \mathbf{s} \\
-        \mathbf{S}
-      \end{array}\right] \= 
-    \left[\begin{array}{l}
-        \mathbf{g} \\
-        \mathbf{G}
-      \end{array}\right] + \beta\,
-    \left[\begin{array}{l}
-        \mathbf{s} \\
-        \mathbf{S}
-      \end{array}\right] \\
-    \alpha \= - \rho/(\mathbf{S}^T\,\mathbf{S}) \\
-    \left[\begin{array}{l}
-        \mathbf{m} \\
-        \mathbf{r}
-      \end{array}\right] \= 
-    \left[\begin{array}{l}
-        \mathbf{m} \\
-        \mathbf{r}
-      \end{array}\right] + \alpha\,
-    \left[\begin{array}{l}
-        \mathbf{s} \\
-        \mathbf{S}
-      \end{array}\right] \\
-    \hat{\rho} \= \rho
-  \end{FOR} \\        
-  \RETURN \mathbf{m}
-\end{algorithm}
-
-\begin{enumerate}
-\item  In applications, it is often advantageous to apply model
-    re-parameterization or \emph{preconditioning}. Suppose that,
-  instead of solving for $\mathbf{m}$ directly, you first solve for
-  $\mathbf{x}$ such that $\mathbf{m} = \mathbf{P}\,\mathbf{x}$. Show
-  how to incorporate the linear preconditioning operator $\mathbf{P}$
-  in the algorithm above.
-\item Prove that the output of the algorithm after $N$ iterations is
+\item \item The following equality for the posterior model covariance was given in lecture notes without a proof:
 \begin{equation}
-\label{eq:msol}
-\mathbf{m}_N = \sum\limits_{n=1}^{N} \frac{\mathbf{s}_n\,\mathbf{s}_n^T}{\mathbf{s}_n^T\,\mathbf{F}^T\,\mathbf{F}\,\mathbf{s}_n}\,\mathbf{F}^T\,\mathbf{d}\;,
+  \label{eq:cpost}
+\widehat{\mathbf{C}_m} = \left(\mathbf{F}^T\,\mathbf{C}_n^{-1}\,\mathbf{F} + \mathbf{C}_{m}^{-1}\right)^{-1}=
+\mathbf{C}_m-\mathbf{C}_m\,\mathbf{F}^T\,\left(\mathbf{F}\,\mathbf{C}_{m}\,\mathbf{F}^T + \mathbf{C}_n\right)^{-1}\,\mathbf{F}\,\mathbf{C}_m\;.
 \end{equation}
-where $\mathbf{s}_n$ is the model step $\mathbf{s}$ at $n$-th iteration.
-
-\end{enumerate}
+Prove it.
 
 \item If the model shaping operator $\mathbf{S}_m$ admits a
 symmetric splitting $\mathbf{S}_m=\mathbf{H}_m\,\mathbf{H}_m^T$ with square and invertible
@@ -125,7 +67,7 @@ $\mathbf{H}_m$, the model shaping equation can be rewritten in a symmetric form
 
 \end{enumerate}
 
-\newpage
+%\newpage
 
 \section{Match Filtering for Attenuation of Surface Seismic Waves}
 \inputdir{match}
@@ -359,7 +301,7 @@ program but you can use only the 100 original data points as input.
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single,title=invint/SConstruct]{invint/SConstruct}
 
-\newpage
+%\newpage
 
 \section{Your own data}
 
@@ -372,7 +314,7 @@ Your final task is to apply one of the data analysis techniques to your own data
 \item Attach the results.
 \end{enumerate}
 
-%\newpage
+\newpage
 
 \section{Completing the assignment}
 

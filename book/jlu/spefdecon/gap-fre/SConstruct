@@ -1,0 +1,38 @@
+from rsf.proj import *
+from math import *
+import math
+
+## model (Minimum-phase wavelets with different frequencies)
+Flow('spike', None, 'spike n1=1001 d1=0.001 o1=0 label1=Sample unit1=')
+
+waves = []
+for j in range(200):
+    wave = 'wave%d' % j
+
+    fre = 0.5+j*0.5
+
+    Flow(wave, 'spike',
+         '''
+         math output="2*%g*(%g)*x1" |
+         math output="exp(-input*input/25)*sin(input)"
+         '''
+         % (math.pi,fre) )
+    waves.append(wave)
+    
+Flow('in', waves, 'cat ${SOURCES[1:%d]} axis=2 d=0.5 o=0.5' % len(waves))
+Flow('max_pos','in','findmax1 verb=n|dd type=float')
+Flow('fre',None,'math n1=200 d1=0.5 o1=0.5 output="1"')
+Flow('nihe','fre',
+     '''
+     math output="0.232/x1"|math output="input/0.001"|dd type=int|
+     dd type=float
+     ''')
+Result('gapdif', 'max_pos nihe',
+       '''
+       cat axis=2 ${SOURCES[1:2]} |
+       graph title="" plotcol=5,6 dash=0,1 crowd1=0.6 crowd2=0.4
+       label1=Frequency label2=Max_point_interval plotfat=8 unit1=Hz
+       labelfat=3 font=2
+       ''')
+
+End()

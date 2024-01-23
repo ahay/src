@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 # typical basic preprocessing is:
 #   gain - appoy spreading correction
 # surface consistant scaling

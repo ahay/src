@@ -28,7 +28,8 @@ Result('init2','init',plotmodel(''))
 
 # Generate wavelet and data
 Flow('wavelet',None,'spike n1=4001 d1=0.001 o1=0. k1=150 mag=1e5 |ricker1 frequency=13')
-Result('wavelet','window n1=400 |graph title= screenratio=0.5')
+Result('wavelet2','wavelet','window n1=400 |graph title= screenratio=0.5')
+
 Result('spectra','wavelet','spectra |graph min1=0 max1=40 title= screenratio=0.5')
 Flow('data','marm wavelet',
 		'''
@@ -84,7 +85,7 @@ Result('traces','trace1 trace2','cat axis=2 ${SOURCES[1]} |graph title= label2="
 Flow('noise','data','noise rep=y range=0.045 var=0.00015 seed=2013 |bandpass flo=2 nplo=1 fhi=20')
 Result('nspectra','noise','spectra all=y |graph title= label2=Amplitude unit2= wherexlabel=top min1=0 max1=20 labelsz=9 labelfat=3 titlesz=9 titlefat=3 screenratio=0.25 plotfat=4')
 Flow('ndata','data noise','add ${SOURCES[1]}')
-Result('ndata','grey title=')
+Plot('ndata','grey wanttitle=n',view=1)
 
 Flow('ncdata','ndata','fft1')
 Flow('ndreal','ncdata','window min1=4 n1=8 j1=4 |real |pad n4=1 d4=0.016 o4=0.048|transp plane=14 |pad beg1=3 end1=184 |math output="-input"')

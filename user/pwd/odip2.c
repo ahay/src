@@ -25,9 +25,10 @@
 
 #include "odip2.h"
 #include "opwd2.h"
+#include "matrixdivn.h"
 
-static float *dat, *dp, *p0, *den;
-static int n, n1, n2, liter;
+static float *dat, *dp, *p0, **den;
+static int n, n1, n2;
 
 void odip2_init(int m1, int m2 /* dimensions */, 
 		int* rect      /* smoothing radius [2] */, 
@@ -41,17 +42,15 @@ void odip2_init(int m1, int m2 /* dimensions */,
     n2=m2;
     n = n1*n2;
 
-    dat = sf_floatalloc(n);
+    dat = sf_floatalloc(2*n);
     dp  = sf_floatalloc(2*n);
     p0  = sf_floatalloc(2*n);
-    den = sf_floatalloc(2*n);
+    den = sf_floatalloc2(n,4);
 
     nn[0]=n1;
     nn[1]=n2;
 
-    liter = niter;
-
-    sf_multidivn_init (2, 2, n, nn, rect, den, NULL, verb);
+    matrixdivn_init (2, n, nn, rect, den, niter, verb);
 }
 
 void odip2_close(void)
@@ -60,8 +59,9 @@ void odip2_close(void)
     free (dat);
     free (dp);
     free (p0);
+    free (*den);
     free (den);
-    sf_multidivn_close();
+    matrixdivn_close();
 }
 
 void odip2(int niter   /* number of nonlinear iterations */, 
@@ -70,53 +70,79 @@ void odip2(int niter   /* number of nonlinear iterations */,
 	   float* p    /* output dips */)
 /*< estimate local dip >*/
 {
-    int i, iter, k;
-    float usum, usum2, lam, mean;
+    int i, j, iter, k;
+    float usum, usum2, lam, mean, one;
     omni2 ap;
  
     ap = opwd2_init (nw,n1,n2,p,p+n);
+
+    for (i=0; i < n; i++) {
+	one = hypotf(p[i],p[i+n])+SF_EPS;
+	p[i] /= one;
+	p[i+n] /= one;
+    } 
     opwd21(false,false,ap,u,dat);
-
+    opwd12(false,false,ap,u,dat+n);
+    
+    usum = 0.0f;
+    for(i=0; i < 2*n; i++) {
+	usum += dat[i]*dat[i];
+    }
+	
     for (iter =0; iter < niter; iter++) {
-	opwd21(true,false,ap,u,den);
-	opwd21(false,true,ap,u,den+n);
+	opwd21(true,false,ap,u,den[0]);
+	opwd21(false,true,ap,u,den[1]);
+	opwd12(true,false,ap,u,den[2]);
+	opwd12(false,true,ap,u,den[3]);
 
-	usum = 0.0f;
-	for(i=0; i < n; i++) {
-	    usum += dat[i]*dat[i];
+	for (i=0; i < 2*n; i++) {
+	    p0[i] = p[i];
 	}
 
 	mean = 0.0f;
-	for (i=0; i < 2*n; i++) {
-	    p0[i] = p[i];
-	    mean += den[i]*den[i];
+	for (j=0; j < 4; j++) {
+	    for (i=0; i < n; i++) {
+		mean += den[j][i]*den[j][i];
+	    }
 	}
-	mean = sqrtf (mean/(2*n));
+	mean = sqrtf (mean/(4*n));
 	
 	for (i=0; i < n; i++) {
-	    den[i]   /= mean;
-	    den[n+i] /= mean;
 	    dat[i]   /= mean;
+	    dat[i+n] /= mean;
 	}
-
-	sf_multidivn (dat,dp,liter);
+	for (j=0; j < 4; j++) {
+	    for (i=0; i < n; i++) {
+		den[j][i] /= mean;
+	    }
+	}
+	
+	matrixdivn (dat,dp);
 
 	lam = 1.0f;
 	for (k=0; k < 8; k++) {
 	    for(i=0; i < 2*n; i++) {
 		p[i] = p0[i]+lam*dp[i];
 	    }
+	    for (i=0; i < n; i++) {
+		one = hypotf(p[i],p[i+n])+SF_EPS;
+		p[i] /= one;
+		p[i+n] /= one;
+	    } 
 
 	    opwd21(false,false,ap,u,dat);
+	    opwd12(false,false,ap,u,dat+n);
 
 	    usum2 = 0.0f;
-	    for(i=0; i < n; i++) {
+	    for(i=0; i < 2*n; i++) {
 		usum2 += dat[i]*dat[i];
 	    }
 
 	    if (usum2 < usum) break;
 	    lam *= 0.5f;
 	}
+
+	usum = usum2;
     } /* iter */
 
     opwd2_close(ap);

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import numpy
+import numpy as np
 import m8r
 
 # initialize
@@ -29,9 +29,9 @@ else:
     out.put('n1',n1)
     out.put('n2',n2)
     
-filt = numpy.zeros(nf,'f')
-data = numpy.zeros(n1,'f')
-noiz = numpy.zeros(n1,'f')
+filt = np.zeros(nf,'f')
+data = np.zeros(n1,'f')
+noiz = np.zeros(n1,'f')
 
 if not adj:
     inp.read(filt)

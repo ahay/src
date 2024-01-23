@@ -74,8 +74,7 @@ for k in ('wfl','wdf'):
 
     for i in range(0,par['nt']//par['jsnap'],1):
         fdmod.wframe(k+'-'+str(i),k,i,'pclip=99',par)
-	Result(k+'-'+str(i),[k+'-'+str(i),'ss'],'Overlay')
-
+        Result(k+'-'+str(i),[k+'-'+str(i),'ss'],'Overlay')
 
 # ------------------------------------------------------------
 def grey(title,allpos=1):

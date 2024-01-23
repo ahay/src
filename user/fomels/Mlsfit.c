@@ -21,7 +21,7 @@
 int main(int argc, char* argv[])
 {
     bool linear;
-    char key[7];
+    char key[3];
     int n[SF_MAX_DIM], dim, dim1, n1, n2, i, i2, i1, ic, id, nc;
     float *dat, **func, **wfunc, **mat, *rhs, *sol, *weight, eps;
     sf_file inp, fit, coef, out, wht;
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 	    n2 *= n[i];
     }
 
-    sprintf(key,"n%d",dim1+1);
+    snprintf(key,3,"n%d",(dim1+1)%10u);
     if (!sf_histint(fit,key,&nc)) sf_error("No %s= in fit",key);
 
     if (NULL != sf_getstring("coef")) {

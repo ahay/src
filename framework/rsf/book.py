@@ -395,7 +395,7 @@ def report_all(target=None,source=None,env=None):
              '\\printindex\n']))
     biblio = env.get('biblio')
     if biblio:
-        all.write('\\cleardoublepage\n\\addcontentsline{toc}{chapter}{Bibliography}\n\\bibliographystyle{seg}\n\\bibliography{%s}\n'
+        all.write('\\cleardoublepage\n\\phantomsection\n\\addcontentsline{toc}{chapter}{Bibliography}\n\\bibliographystyle{seg}\n\\bibliography{%s}\n'
                   % biblio)
     if os.path.isfile('vita.tex'):
         print("Found vita.tex")

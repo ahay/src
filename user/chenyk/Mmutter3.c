@@ -56,7 +56,8 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
       t_max=sqrtf((o3+i3*d3-x3)*(o3+i3*d3-x3)+(o2+i2*d2-x2)*(o2+i2*d2-x2))/v;
       i1_max=(t_max-o1)/d1+1;
-      if(i1_max<0) i1_max=0; if(i1_max>n1) i1_max=n1; 
+      if(i1_max<0) i1_max=0;
+      if(i1_max>n1) i1_max=n1; 
       if(NULL!=mask)	
 	 {
       	memset(dd,0,n1*sizeof(float));    

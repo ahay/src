@@ -1,0 +1,182 @@
+\title{Decon comparisons between Burg and conjugate-gradient methods}
+\author{Antoine Guitton and Jon Claerbout}
+\righthead{Decon: Burg vs.~CG }
+\lefthead{Guitton and Claerbout}
+\footer{SEP--148}
+\maketitle
+
+\begin{abstract}
+In testing on several nearby data sets, three shown here,
+the Burg method of deconvolution exhibited no issues of numerical round-off.
+In every case it did exhibit whiteness, an aspect of the theory normally considered desirable.
+Prediction-error code based on conjugate gradients
+(actually conjugate directions) showed some minor issues.
+Output comparisons of the two were never perceptibly different on paper documents such as this.
+When those same PDF documents are viewed on a screen,
+differences might be noticeable with ``blink'' screen presentation.
+Doing no more than the number of iterations theoretically predicted
+(equal to the number of filter coefficients)
+gave differences generally noticeable with blink presentation.
+Tripling the number of iterations made the differences
+much smaller, sometimes differing at a mere handful of pixels.
+Although discrepancies were minuscule on the filtered data,
+the differences are quite clear in a spectral comparison.
+Differences tend to occur at the very high and very low frequencies that are weak in the field data.
+\end{abstract}
+
+\section{INTRODUCTION}
+
+The classical stationary linear least-squares deconvolution problem may be solved in a variety of ways.
+While testing our new sparseness deconvolution method
+(non-causal, non-linear, hyperbolic penalty)
+we had occasion to use some classic methods for comparisons.
+In particular,
+we used the Burg decon code \citep{FGDP}
+and the conjugate direction (CD) code
+(\texttt{Pef} in \cite{GEE}).
+In the absence of precision issues, the CD code is theoretically equivalent to the conjugate gradient method.
+Unexpectedly,
+during our early studies some astonishing differences appeared.
+Were these differences due to coding bugs,
+improper comparisons,
+or precision issues not previously recognized by us?
+Perhaps all.
+These two methods do differ in some fundamental aspects,
+principally but not entirely related to end effects.
+Another difference is that the Burg method assures a minimum-phase filter
+but that is not true of the regression methods in GEE, namely
+\texttt{Pef}.
+
+\section{Precision and Accuracy}
+Focusing on precision we arrange our study so end effects are minimal
+and the stationarity assumption is not stressed.
+We are not attempting an exhibition of known theoretical differences,
+but we do intend to obtain for practical work,
+guidelines for dealing with poorly understood numerical-analysis issues.
+
+
+
+Reflection data is not stationary;
+and it comes exhibiting diverse aspects [reference Yilmaz and Cumro shot profiles].
+We chose simply to test with several of our current data sets of interest.
+Results with three of them are included here.
+To simulate stationarity, Kjartansson t-squared gain is applied.
+We also taper the ends of the trace to avoid any transients there.
+Additionally,
+we average spectra of hundreds to thousands of traces in each data set.
+This average spectrum is used to devise a single decon filter
+applied to every trace in the data set.
+
+We were not aware of precision issues with the Burg method,
+neither were we aware that
+it has been tested under modern environments
+where high order filters are easily computed.
+
+The conjugate-direction method in GEE has some issues likewise never investigated.
+Theoretically it converges in a number of steps equal the filter length,
+but this says nothing about precision.
+It is easy enough to do more iterations than required.
+Thus we have compared the theoretical number of iterations
+with triple that number.
+Accuracy greater still should be obtainable by an additional measure that we did not try.
+The algorithm proceeds by updating a residual.
+These updates might accumulate errors.
+Thus, the residual could be recomputed from time-to-time during iteration.
+The textbook program \texttt{Pef} in GEE is not doing that.
+We could have tested that additional grasp for precision, but we did not.
+
+More fundamentally,
+the Burg method builds in the stationarity assumption and minimum phase
+(by assuring a sequence of reflection coefficients is bounded between $\pm 1$).
+The \texttt{Pef} code
+(concerned with multidimensional data containing gaps) makes no such effort.
+It could predict a growing function which is obviously non-stationary.
+Does that mean the output of \texttt{Pef} could be non-white?
+Likely so, but we don't know if that is a practical issue.
+
+%\section{Relevance to evaluating non-causal decon}
+
+%It's not easy to prove (done in GEE)
+%that the output of classic decon tends to a white spectrum.
+%Is this always wanted?
+%We think not.
+%For example the idealized Ricker wavelet is $(1,-2,1)$ which is doubly zero at zero frequency.
+%Classical decon must there try to boost the data zero times infinity to get a constant output.
+%This quandary is resolved by sparsity decon which chooses an amount of low frequency
+%(and other spectral notches) to best enhance sparsity.
+%Thus,
+%sparsity is the goal,
+%not whiteness.
+%Sparsity is an automatic strategy to handle the very low frequencies
+%commonly seen in water free surface gravity waves.
+%Sparsity should tell us what to keep and what to suppress.
+%Still, except for the spectral zeros,
+%the whitening aspect of classical decon is an attractive feature.
+%
+%
+%After we have chosen between Burg decon and CD (or CG) decon,
+%let us call them ``whiteness decons''
+%we intend to compare them to our new sparseness decons.
+%In some sense,
+%this is a comparison between apples and oranges,
+%but that's OK.
+%Whiteness decon is an apple while sparseness decon is an orange.
+%Let us compare whiteness decon as we imagine it to be ordinarily used,
+%with sparseness decon as we intend to use it.
+
+\section{RESULTS}
+We began by using the usual Kjartansson $t^2$ gain correction.
+One power of $t$ is a geometrical divergence correction.
+The other power of $t$ is the expected loss of bandwidth
+propagating through a constant-$Q$ medium.
+Not wanting to study the end-effect differences between the two methods
+(as they are already well defined by theory)
+we taper both ends of each seismogram to zero.
+
+\par
+We compute the spectrum of each data set in the usual way.
+We average the energy spectrum of each trace,
+then take the logarithm of the average,
+and finally shift the logarithm as a function of frequency
+to be zero at 40Hz.
+
+\plot{DeconLogFourier-DATA2}{width=6in}{
+	The log spectrum of the
+	the Kjartansson data set
+	and decon outputs by the three different methods.
+	The wide ranging spectrum is that of the input data.
+	The two near constant spectra are the Burg 
+	and the ``triply iterated'' CG decon outputs.
+	By triply iterated we mean
+	$3\times$ the number of iterations theoretically required.
+	The ``not-so-near-constant'' curve arises from 
+	CD with the theoretically needed iterations,
+	namely, as many as the filter coefficients.
+	This curve seems to resist the theoretical requirement
+	to boost very low and very high frequencies
+	(which in practice might not be a bad idea!).
+	\ER}
+
+\plot{Decon-DATA2}{width=6in,height=8in}{
+	Left is a portion of the Kjartansson data set.
+	Right is its Burg decon.
+	Outputs of the CG Pef were on paper indistinguishable from Burg decon,
+	but slightly distinguishable when alternately blinking on a screen.
+	\ER}
+
+\plot{Decon-DATA6}{width=6in,height=8in}{
+	The Gulf of California data set.
+	Unwelcome near-zero frequencies appear from trace to trace.
+	These appeared with all decon methods.
+	Apparent precursors to the water bottom are PDF document artifacts.
+	\ER}
+
+\plot{Decon-DATA5}{width=6in,height=8in}{
+	Gulf of Mexico data set.
+	Suspicious low frequencies are strongest following the top of salt reflector at 2.3s
+	but visible throughout the data.
+	Seems likely someone filtered this data before it came to us.
+	\ER}
+
+\bibliographystyle{seg}
+\bibliography{SEP,antoine}

@@ -9,13 +9,13 @@ grey = 'grey wanttitle=n screenratio=1 bias=128 clip=105'
 Result('circle',grey)
 
 # Rotate program
-program = Program('rotate.c')
+# exe = Program('rotate.c')
 
-# COMMENT ABOVE AND UNCOMMENT BELOW IF YOU WANT TO USE PYTHON 
-# program = Command('rotate.exe','rotate.py','cp $SOURCE $TARGET')
-# AddPostAction(program,Chmod(program,0o755))
+# UNCOMMENT ABOVE AND COMMENT BELOW IF YOU WANT TO USE C 
+exe = Command('rotate.exe','rotate.py','cp $SOURCE $TARGET')
+AddPostAction(exe,Chmod(exe,0o755))
 
-rotate = str(program[0])
+rotate = str(exe[0])
 
 # Rotate by 90 degrees
 Flow('rotate',['circle',rotate],

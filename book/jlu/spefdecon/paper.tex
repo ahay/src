@@ -1,0 +1,630 @@
+\published{Journal of Geophysics and Engineering, 18, 825-833, (2021)}
+
+\title{Multichannel adaptive deconvolution based on streaming
+  prediction-error filter}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+{}
+             
+\address{
+College of Geo-exploration Science and Technology,\\
+Jilin University \\
+No.938 Xi minzhu street \\
+Changchun, China, 130026}
+
+\author{Qinghan Wang, Yang Liu, Cai Liu, and Zhisheng Zheng}
+
+\maketitle
+
+\begin{abstract}
+  Deconvolution mainly improves the resolution of seismic data by
+  compressing seismic wavelets, which is of great significance in
+  high-resolution processing of seismic data. Prediction-error
+  filtering/least-square inverse filtering is widely used in seismic
+  deconvolution and usually assumes that seismic data is
+  stationary. Affected by factors such as earth filtering, actual
+  seismic wavelets are time- and space-varying. Adaptive
+  prediction-error filters are designed to effectively characterize
+  the nonstationarity of seismic data by using iterative methods,
+  however, it leads to problems such as slow calculation speed and
+  high memory cost when dealing with large-scale data. We have
+  proposed an adaptive deconvolution method based on a streaming
+  prediction-error filter. Instead of using slow iterations,
+  mathematical underdetermined problems with the new local smoothness
+  constraints are analytically solved to predict time-varying seismic
+  wavelets. To avoid the discontinuity of deconvolution results along
+  the space axis, both time and space constraints are used to
+  implement multichannel adaptive deconvolution. Meanwhile, we define
+  the parameter of the time-varying prediction step that keeps the
+  relative amplitude relationship among different reflections. The new
+  deconvolution improves the resolution along the time direction while
+  reducing the computational costs by a streaming computation, which
+  is suitable for handling nonstationary large-scale data. Synthetic
+  model and filed data tests show that the proposed method can
+  effectively improve the resolution of nonstationary seismic data,
+  while maintaining the lateral continuity of seismic
+  events. Furthermore, the relative amplitude relationship of
+  different reflections is reasonably preserved.
+\end{abstract}
+
+\section{Introduction}
+Thin interbedded reservoirs and subtle reservoirs with complex
+lithology are becoming key areas of seismic exploration and
+development. Conventional seismic data is difficult to accurately
+characterize the thin reservoir, therefore, improvement of seismic
+resolution is a persistent problem in seismic exploration. Two major
+categories improving the vertical resolution of seismic data include
+deconvolution \cite[]{ver08,ver12, Margrave11, Li13} and inverse Q
+filtering \cite[]{Wang02, Wang06}, and those techniques can
+effectively broaden the frequency bandwidth and improve the accuracy
+of seismic data interpretation, especially in the identification of
+thin reservoir. The inverse Q filtering method compensates the
+attenuation of wave amplitude and fixes the phase distortion caused by
+the absorption of subsurface media; however, the correction depends on
+the accuracy of the quality factor Q.  Predictive deconvolution method
+improves the resolution of seismic data by compressing seismic
+wavelet, which depends on the assumptions of minimal phase wavelet and
+whitening reflection coefficients. Thus, predictive deconvolution is
+suitable for vibroseis seismic data \cite[]{Ristow75}.
+
+Prediction-error filtering (PEF) or least-square inverse filtering has
+been applied in seismic deconvolution for decades, and it has proved
+its effectiveness for resolution improvement and multiple
+elimination. The theory of predictive deconvolution was introduced by
+\cite{Robinson57, Robinson67}.  \cite{Peacock69} proved the
+effectiveness of predictive deconvolution for enhancing resolution and
+suppressing periodic multiples.  To take full advantage of the spatial
+characteristics of seismic data and suppress noise, several authors
+developed multichannel predictive deconvolution \cite[]{Claerbout76,
+  Porsani07, Li16}. The traditional deconvolution method is designed
+under the assumption of stationary data and becomes less effective
+because seismic data are nonstationary in nature.  \cite{Clarke68}
+proposed a nonstationary deconvolution in time domain based on optimal
+Wiener filtering. \cite{Wang69} gave the criteria for determining the
+optimal length of the filtering window on the assumption of a
+piecewise stationary. \cite{Griffiths77} proposed an adaptive
+predictive deconvolution method that adaptively updates the filter
+coefficients for each data point. \cite{Koehler85} proposed a
+generalized mathematical theory of time-varying deconvolution and used
+the conjugate gradient algorithm to calculate the filter coefficients.
+\cite{Prasad80} compared three adaptive deconvolution methods and
+demonstrated that all three methods perform better than traditional
+predictive deconvolution when dealing with nonstationary data.
+\cite{Liu11} obtained smoothly nonstationary PEF coefficients by
+solving a global regularized least-squared problem, however, iterative
+approach leads to slow computation speed and high memory cost.
+\cite{Fomel16} proposed the concept of streaming computation, which
+can adaptively update the filter coefficients without iteration, and
+the properties of nonstationary representation and low computational
+cost are useful for the single-channel deconvolution model and random
+noise attenuation of seismic data \cite[]{Liu18}. To improve the
+resolution effectively for nonstationary seismic data, in this paper,
+we design a multichannel adaptive deconvolution method based on the
+streaming prediction error filter in time-space domain. The time and
+space constraints added to the objective function can guarantee the
+continuity of deconvolution results in space direction, and the
+relationship between the prediction step and wavelet frequency
+reasonably improve the fidelity of the reflection coefficients in the
+deconvolution result.
+
+This paper is organized as follows. First, we introduce the streaming
+computation for adaptive PEF. Then, we propose the improved streaming
+PEF method that involves spatial constraints and time-varying
+prediction step.  Finally, the synthetic data and real data are used
+to demonstrate that the proposed method can be effective and efficient
+in vertical resolution improvement of nonstationary seismic data.
+
+\section{Theory}
+According to the theory of predictive deconvolution, time-varying filter
+coefficients are designed to predict nonstationary seismic data, which can
+be expressed as a nonstationary autoregressive equation,
+\begin{equation}
+  \label{eq:1}
+  r(t)=s(t)-\sum_{n=1}^N c_n(t)s(t-n+1-\alpha)=s(t)-\mathbf{S}^T\mathbf{C},
+\end{equation}
+where $\alpha$ is the prediction step, $s(t)$ and $r(t)$ are the original
+seismic data and prediction error, respectively,
+$\mathbf{S}^T=[s(t-\alpha),s(t-1-\alpha),\cdots,s(t-N+1-\alpha)]$ ,
+which represents the causal translation of $s(t)$, all prediction
+coefficients $\mathbf{C}=[c_1(t),c_2(t),\cdots,c_N(t)]$
+are estimated in a time variant manner, and $N$ denotes the length of
+the predictive filter. The filter coefficients are obtained by solving
+the least-squares problem:
+\begin{equation}
+  \label{eq:2}
+  \min_{\mathbf{C}}\parallel{s(t)-\mathbf{S}^T\mathbf{C}}\parallel_2^2,
+\end{equation}
+which is a classical underdetermined problem. The local smoothness
+constraints with streaming computation \cite[]{Fomel16}
+avoids the problem of high computational costs associated with iterative
+approaches. One can assume that the filter coefficients corresponding to
+two adjacent data stay close, and the autoregressive equation can be
+expressed by an overdetermined equation as
+
+\begin{equation}
+\begin{aligned}
+  \label{eq:3}
+  \begin{bmatrix}
+   s(t-\alpha) & s(t-1-\alpha) & \cdots & s(t-N+1-\alpha) \cr
+    \epsilon_t  & 0             & \cdots & 0 \cr
+    0           & \epsilon_t    & \cdots & 0 \cr
+    \vdots      & \vdots        & \ddots & \vdots \cr
+    0           & 0             & \cdots & \epsilon_t
+  \end{bmatrix}
+  \times
+  \begin{bmatrix}
+  c_1(t) \cr c_2(t) \cr  \vdots \cr c_N(t)
+  \end{bmatrix}
+  =
+ \begin{bmatrix}
+ s(t) \cr \epsilon_tc_1(t-1) \cr \epsilon_tc_2(t-1) \cr \vdots \cr
+ \epsilon_tc_N(t-1)
+ \end{bmatrix} 
+\end{aligned}.
+\end{equation}
+
+Equation~\ref{eq:3} can be written in terms of a shortened block-matrix
+notation
+
+\begin{equation}
+  \label{eq:4}
+ \begin{bmatrix}
+ \mathbf{S}^T \cr \epsilon_t\mathbf{I}
+  \end{bmatrix}
+  \mathbf{C}=
+ \begin{bmatrix}
+ s(t) \cr \epsilon_t\overline{\mathbf{C}}_t
+ \end{bmatrix},
+\end{equation}
+where $\overline{\mathbf{C}}_t=[c_1(t-1),c_2(t-1),\cdots,c_N(t-1)]$, which
+represents the previous filter coefficient on time axis, $\epsilon_t$ is
+the constant scale parameter controlling the variability of two adjacent
+filter coefficients in the time axis, and $\mathbf{I}$ is the identity
+matrix. Consider a multichannel seismic data, an extra spatial constraint
+can introduce to the smoothness of the time-varying filter coefficients
+along the space axis. The new prediction filter can be expressed in the
+form of a block matrix as
+
+\begin{equation}
+  \label{eq:5}  
+ \begin{bmatrix}
+ \mathbf{S}_m^T \cr \epsilon_t\mathbf{I} \cr \epsilon_x\mathbf{I}
+ \end{bmatrix}
+ \mathbf{C}=
+ \begin{bmatrix}
+ s_m(t) \cr \epsilon_t\overline{\mathbf{C}}_t \cr
+   \epsilon_x\overline{\mathbf{C}}_x
+  \end{bmatrix},
+\end{equation}
+where $s_m(t)$ and
+$\mathbf{S}_m^T=[s_m(t-\alpha),s_m(t-1-\alpha),\cdots,s_m(t-N+1-\alpha)]$
+represent the multichannel data with space index $m$ and the causal
+translation of the $m$th seismic trace, $\epsilon_x$ is the scalar
+regularization parameter in the space axis, and
+$\mathbf{C}=[c_1^m(t),c_2^m(t),\cdots,c_N^m(t)]$ is the time-varying filter
+coefficient with space-varying index $\emph{m}$. The previous filter
+$\overline{\mathbf{C}}_t=[c_1^m(t-1),c_2^m(t-1),\cdots,c_N^m(t-1)]$ on the 
+time axis and the previous filter on space axis
+$\overline{\mathbf{C}}_x=[c_1^{m-1}(t),c_2^{m-1}(t),\cdots,c_N^{m-1}(t)]$ are
+similar to the current filter
+$\mathbf{C}=[c_1^m(t),c_2^m(t),\cdots,c_N^m(t)]$.
+
+Assuming that adjacent filter coefficients are similar, the current filter
+coefficients at a certain point can be constrained by the adjacent filter
+coefficients in both time and space directions, and the regularization
+constraint terms are
+$\epsilon_t^2\parallel{\mathbf{C}-\overline{\mathbf{C}}_t}\parallel_2^2$ and
+$\epsilon_x^2\parallel{\mathbf{C}-\overline{\mathbf{C}}_x}\parallel_2^2$.
+$\epsilon_t$ and $\epsilon_x$ are weights for regularization constraint
+terms along time and space directions, respectively, which control the
+similarity of the adjacent filter coefficients. In this case, the
+underdetermined problem is transformed into an overdetermined problem.
+The filter coefficients are calculated by solving the regularized
+autoregression problem
+\begin{equation}
+  \label{eq:6}
+  \min_{\mathbf{C}}\parallel{s_m(t)-\mathbf{S}_m^T\mathbf{C}}\parallel_2^2+
+  \epsilon_t^2\parallel{\mathbf{C}-\overline{\mathbf{C}}_t}\parallel_2^2+
+  \epsilon_x^2\parallel{\mathbf{C}-\overline{\mathbf{C}}_x}\parallel_2^2,
+\end{equation}
+the least-squares solution of equation~\ref{eq:6} is
+\begin{equation}
+  \label{eq:7}
+  \mathbf{C}=(\mathbf{S}_m\mathbf{S}_m^T+\epsilon_t^2\mathbf{I}+ 
+  \epsilon_x^2\mathbf{I})^{-1}(s_m(t)\mathbf{S}_m+\epsilon_t^2
+  \overline{\mathbf{C}}_t+\epsilon_x^2\overline{\mathbf{C}}_x).
+\end{equation}
+
+The Sherman-Morrison formula in linear algebra \cite[]{Hager89} is able to
+directly transform the inverse matrix in equation~\ref{eq:7} without
+iterations:
+\begin{equation}
+  \label{eq:8}
+  (\mathbf{S}_m\mathbf{S}_m^T+\epsilon_t^2\mathbf{I}+\epsilon_x^2
+  \mathbf{I})^{-1}=\frac{1}{\epsilon_t^2+\epsilon_x^2}(\mathbf{I}-
+  \frac{\mathbf{S}_m\mathbf{S}_m^T}{\epsilon_t^2+\epsilon_x^2+
+  \mathbf{S}_m^T\mathbf{S}_m}),
+\end{equation}
+where $\mathbf{S}_m$ is a column vector and $\mathbf{S}_m^T$ is the
+transpose of $\mathbf{S}_m$. Substituting equation~\ref{eq:8} into
+~\ref{eq:7}, the streaming PEF coefficients can be calculated as
+\begin{equation}
+  \label{eq:9}
+  \mathbf{C}=\overline{\mathbf{C}}+(\frac{s_m(t)-\mathbf{S}_m^T\overline{
+  \mathbf{C}}}{\epsilon^2+\mathbf{S}_m^T\mathbf{S}_m})\mathbf{S}_m,
+\end{equation}
+where
+\begin{equation}
+  \label{eq:10}
+  \begin{cases}
+    \epsilon^2=\epsilon_t^2+\epsilon_x^2 \\
+    \overline{\mathbf{C}}=\frac{\epsilon_t^2\overline{\mathbf{C}}_t+
+      \epsilon_x^2\overline{\mathbf{C}}_x}{\epsilon^2}
+  \end{cases}.
+\end{equation}
+
+Equation~\ref{eq:9} shows that the adaptive coefficients get updated by
+adding a scaled version of the data, and the scale is proportional to the
+streaming prediction error. Updating the filter coefficients requires
+only elementary algebraic operation without iteration.
+
+According to the definition of prediction error (equation~\ref{eq:1}) and
+prediction coefficients (equation~\ref{eq:9}), the deconvolution result of
+streaming PEF can be expressed as
+\begin{equation}
+  \label{eq:11}
+  r_m(t)=s_m(t)-\mathbf{S}_m^T\mathbf{C}=\frac{\epsilon^2(s_m(t)-\mathbf
+  {S}_m^T\overline{\mathbf{C}})}{\epsilon^2+\mathbf{S}_m^T\mathbf{S}_m}.
+\end{equation}
+
+In this paper, we select the minimum-phase wavelet as the source wavelet
+to verify the effectiveness of the proposed deconvolution method. The
+minimum-phase wavelet can be expressed as
+\begin{equation}
+  \label{eq:12}
+  w(t)=e^{-(2\pi f_mt/25)^2}sin(2\pi f_mt),
+\end{equation}
+where $f_m$ is the dominant frequency of the wavelet.
+
+The minimum-phase wavelet (figure~\ref{fig:wave,refl,in,spef1}a) and the
+sequence of reflection coefficients (figure~\ref{fig:wave,refl,in,spef1}b)
+generate a simple 1D convolution model (figure~\ref{fig:wave,refl,in,spef1}c)
+, where the wavelet frequencies corresponding to every two reflection
+coefficients with opposite amplitude are selected to be 45 Hz, 35 Hz, 25 Hz,
+and 20 Hz, respectively. Figure~\ref{fig:wave,refl,in,spef1}d is the result
+by using the streaming PEF deconvolution ($N=10$, $\epsilon_t=0.2$, and
+$\alpha=1$). The streaming PEF deconvolution method effectively improve the
+time resolution, however, the relative amplitude relationship among
+different reflections has been changed, which occur more in predictive
+deconvolution methods. Notice that the amplitude distortion is related to
+the dominant frequency of the wavelet: the lower dominant frequency is,
+the worse amplitude fidelity is shown because the peak amplitude of
+minimum-phase wavelets is hard to happen in the first sample point.
+
+\inputdir{simple}
+\multiplot{4}{wave,refl,in,spef1}{width=0.47\columnwidth}{Analysis of
+              amplitude distortion for streaming PEFs. Minimum-phase
+              wavelet (a), the reflectivity (b), the nonstationary 
+              synthetic seismic trace (c), and the deconvolution result
+              by using streaming PEF with constant prediction step (d).}
+
+The red line in figure~\ref{fig:gapdif} represents the theoretical curve of
+sample number between the start point and peak-amplitude point of
+minimum-phase wavelets, which is the function of the dominant frequency.
+We select an empirical equation to fit the curve as follows:
+\begin{equation}
+  \label{eq:13}
+  gap=Round(\frac{b}{f\times\Delta t}),
+\end{equation}
+where $Round$ represents a rounding function, $gap$ is the sample number
+between the start point and the peak-amplitude point, $\Delta t$ is the
+time interval, and $b$ is a constant. One can determine parameter $b$ from
+any point in the curve, e.g., $b$ is selected to be 0.232 in
+figure~\ref{fig:gapdif}, where the dominant frequency is 1 Hz, the sample
+interval is 1 ms, and the $gap$ is 232. The blue dotted line calculated
+by equation~\ref{eq:12} reasonably fits the red theoretical curve.
+Therefore, we further design the streaming PEF deconvolution method with
+the time-varying prediction step to preserve the relative amplitude
+relationship of different reflection coefficients. The adaptive prediction
+step is selected to be the parameter $gap$, which makes the prediction error
+after deconvolution close to the maximum amplitude value of the original
+wavelet. The new streaming deconvolution residual is rewritten as follow:
+\begin{equation}
+  \label{eq:14}
+  r(t)=s(t)-\sum_{n=1}^N c_n(t)s(t-n+1-\alpha (t)),
+\end{equation}
+where $\alpha(t)$ is the time-varying prediction step, which is determined
+by a time-varying $gap$ value
+\begin{equation}
+  \label{eq:15}
+  \alpha(t)=gap(t)=Round(\frac{b}{f(t)\times\Delta t}),
+\end{equation}
+where $f(t)$ is the time-varying local frequency obtained by the shaping
+regularization \cite[]{Fomel07a}. The instantaneous frequency calculated
+instantaneously at each signal point sometimes appears noisy and contains
+physically unreasonable negative frequency, so \cite{Fomel07a} defined
+the local frequency by using the shaping regularization \cite[]{Fomel07b} to
+constrain the linear inversion problem. When calculating the local frequency,
+the continuity and smoothness of the local frequency can be controlled only
+by adjusting a smooth radius parameter, and the local frequency shows better
+physical meaning than the instantaneous frequency.
+
+\inputdir{gap-fre}
+\plot{gapdif}{width=0.5\columnwidth}{Parameter $gap$ curve of minimum phase
+      wavelet with different frequencies.}
+
+Figure~\ref{fig:lfe,vvlag,dif}a shows the local frequency calculated from
+the synthetic trace (figure~\ref{fig:wave,refl,in,spef1}c), and the 
+time-varying prediction steps (figure~\ref{fig:lfe,vvlag,dif}b) are obtained 
+according to equation~\ref{eq:14}, where the parameter $b$ is 0.232 and the 
+time interval is 1 ms. Figure~\ref{fig:lfe,vvlag,dif}c shows the result 
+processed by the streaming PEF deconvolution with the time-varying 
+predictionstep. Compared with original data (dotted line in
+figure~\ref{fig:lfe,vvlag,dif}c), the proposed method keeps the relative
+amplitude relationship in the deconvolution result
+(solid line in figure~\ref{fig:lfe,vvlag,dif}c) at the cost of a lower
+resolution improvement.
+
+\inputdir{simple}
+\multiplot{3}{lfe,vvlag,dif}{width=0.47\columnwidth}{The deconvolution
+              result by using the streaming PEF with time-varying
+              prediction steps. The local frequency (a), time-varying
+              prediction step (b), the deconvolution result with the
+              proposed method (solid line), which is compared with the
+              original trace (dotted line) (c).}
+              
+The proposed method mainly includes four parameters: the filter length
+($N$), time constraint factor ($\epsilon_t$), spatial constraint factor
+($\epsilon_x$) and constant $b$. According to the experiment, a reasonable
+deconvolution results can be obtained when $N\le10$. The constraint factors
+$\epsilon_t$ and $\epsilon_x$ are the key parameters for the proposed method.
+The denominator in equation~\ref{eq:9} suggests that $\epsilon_t^2$
+and $\epsilon_x^2$ should have the same order of the magnitude as
+$\mathbf{S}_m^T\mathbf{S}_m$. Too small a constraint factor would make the
+deconvolution results unstable, and too large a constraint factor would lead
+to the filter coefficients not being updated effectively. When the filter 
+coefficients are constrained only in the time direction, it is only necessary
+to set the spatial constraint factor to zero ($\epsilon_x=0$). In theory,
+the $b$ value is the ratio of the peak-amplitude time to the period
+of the wavelet. For minimum-phase wavelets, $b$ is typically less than 0.25.
+
+Like the traditional predictive deconvolution, the relative amplitude
+relationship of the results that are generated by streaming PEF
+deconvolution with constant prediction step is not consistent with the
+original data, so we introduce the time-varying prediction step and derive
+its empirical formula. After adding the time-varying prediction step, the
+amplitude of the deconvolution result of the synthetic model
+(figure~\ref{fig:lfe,vvlag,dif}) tends to be consistent with the true
+amplitude of the original data. However, the actual seismic data is complex
+due to the earth absorption attenuation and other factors, so the amplitude
+of deconvolution results is not true amplitude, but its relative amplitude
+relationship is closer to the original data.
+
+Since the proposed method can adaptively update the filter coefficients
+without iteration and characterize the nonstationary properties of the data,
+both the storage and computational cost of the filters are less than those of
+the adaptive predictive filtering methods based on the iterative algorithms.
+Table 1 compares the storage and computational cost of the different methods.
+
+The proposed filter is constrained in both the time and space directions
+while the filter is still one-dimensional, that is, the multichannel adaptive
+deconvolution technology is based on the streaming PEF with one-dimensional
+structure and two-dimensional constraints. To ensure the stability of the
+calculation, the first boundary trace only uses the time constraint
+condition to compute the streaming PEF coefficients, and the constraints in
+both space and time directions are added to the other trace. An extension
+of the proposed method to 3D is straightforward and provides a fast adaptive
+multichannel deconvolution implementation for high-dimensional seismic data. 
+
+\tabl{table}{Rough cost comparison among the different PEF estimation
+methods. $N_a$ is the the filter size, $N_t$ is the data length in the time
+direction, $N_x$ is the data length in the space direction, $N_{iter}$ is
+the number of iterations.}
+{
+\begin{center}
+ \begin{tabular}{|l|l|l|}
+  \hline
+   Method & Storage & Cost \\
+  \hline
+   Stationary PEF & $O(N_a)$ & $O(N_a^2N_t)$ \\
+  \hline
+   1D nonstationary PEF with iterative algorithm & $O(N_aN_t)$ &
+   $O(N_aN_tN_{iter})$ \\
+  \hline
+   1D streaming PEF & $O(N_a)$ & $O(N_aN_t)$ \\
+  \hline
+   2D streaming PEF & $O(N_aN_t)$ & $O(N_aN_tN_x)$ \\
+  \hline
+ \end{tabular}
+\end{center}
+}
+
+\section{Numerical examples}
+
+\subsection{1D attenuation model}
+We start with a 1D synthetic example with the quality factor $Q$
+attenuation according to the modified Kolsky model
+\cite[]{Wang04,Wang08}. In this model, the phase velocity is defined
+as
+\begin{equation}
+  \label{eq:16}
+  \frac{1}{v(\omega)}=\frac{1}{v_r}(1-\frac{1}{\pi Q_r}\ln{\left\vert
+  \frac{\omega}{\omega_h} \right\vert})\approx\frac{1}{v_r}
+  {\left\vert \frac{\omega}{\omega_h} \right\vert}^{-\gamma},
+\end{equation}
+where $\gamma=\frac{1}{\pi Q_r}$, $Q_r$ and $v_r$ are the quality factor and
+phase velocity at a reference frequency $\omega_r$ (the dominant frequency
+in genernal), $\omega_h$ is the tuning frequency. We generate a time-varying
+trace (figure~\ref{fig:refl,in}b), where the dominant frequency of the
+unattenuated minimum-phase wavelet is 40 Hz, the time interval is 1 ms, and
+the Q value is 30. Figure~\ref{fig:refl,in}a shows the actual reflectivity.
+For comparison, we use the traditional predictive deconvolution to squeeze
+all wavelets (figure~\ref{fig:tpef,wtpef,spef0,wspef0}a), the filter length
+$N$ is ten and the prewhitening factor is 0.0001. The traditional method
+produces a reasonable result at the high-frequency locations; however, the
+predictive deconvolution still loses part of the original amplitudes. We
+design the streaming PEF deconvolution with a constant prediction step
+($N=3$, $\epsilon_t=1.5$, and $\alpha=1$) to further handle the variability
+of wavelet (figure~\ref{fig:tpef,wtpef,spef0,wspef0}c). The streaming PEF
+residual visually shows a result similar to the traditional method, however,
+a close-up comparison between the traditional deconvolution
+(figure~\ref{fig:tpef,wtpef,spef0,wspef0}b) and the proposed deconvolution
+(figure~\ref{fig:tpef,wtpef,spef0,wspef0}d) shows an obvious resolution
+difference, which proves better nonstationary characteristics of the
+streaming PEF.
+
+Next, we improve the adaptive deconvolution result by involving the
+time-varying prediction step, and the result is shown in
+figure~\ref{fig:lfe,vlag0,nodif,zsdif}.
+Figures~\ref{fig:lfe,vlag0,nodif,zsdif}a and
+~\ref{fig:lfe,vlag0,nodif,zsdif}b show the decay of local frequency
+and the time-varying prediction step by using equation~\ref{eq:14}
+where $b=0.06$, respectively. Figure~\ref{fig:lfe,vlag0,nodif,zsdif}c
+shows that the proposed method keeps the relative amplitude
+relationship without auto gain correction (AGC) and the time
+resolution is reasonably enhanced.
+Figure~\ref{fig:lfe,vlag0,nodif,zsdif}d shows amplitude spectrum of
+the synthetic data before and after deconvolution, where the grey line
+is the original synthetic data and the black line is the deconvolution
+result. It can be seen from figure 6d that the amplitude spectrum
+broadens after the deconvolution.
+
+\inputdir{atten-model}
+\multiplot{2}{refl,in}{width=0.47\columnwidth}{A synthetic seismic
+              trace example. The reflectivity (a), synthetic trace with Q
+              attenuation (b).}
+\multiplot{4}{tpef,wtpef,spef0,wspef0}{width=0.47\columnwidth}{Deconvolution
+              results by using different methods. Traditional predictive
+              deconvolution (a), local display of (a) (b), streaming PEF
+              deconvolution (c), local display of figure (c) (d).}
+\multiplot{4}{lfe,vlag0,nodif,zsdif}{width=0.47\columnwidth}{Deconvolution
+              by using streaming PEF with time-varying prediction steps.
+              Local frequency (a), time-varying prediction step (b), the
+              deconvolution result with the proposed method (solid line),
+              which is compared with the original trace (dotted line) (c),
+              amplitude spectrum (The grey line is the original data,
+              and the black line is the deconvolution result) (d).}
+
+\subsection{2D wedge model}
+
+The second example is shown in
+figure~\ref{fig:wedge,wseis2,tpef,apef,spef0,spef1}a. We use a 2D
+benchmark wedge model to prove the necessity of the spatial constraint
+for the streaming PEF deconvolution. The velocity of the wedge in the
+model is 10 kft/s, and the velocity of the upper and lower media is 20
+kft/s, therefore, the wave impedance corresponding to the top and
+bottom interfaces of the wedge are reversed. The minimum-phase wavelet
+with the dominant frequency of 30 Hz is selected to create the
+synthetic data (figure~\ref{fig:wedge,wseis2,tpef,apef,spef0,spef1}b),
+where the wavelet of the top and bottom interfaces appears
+interference started from the 45th trace. The synthetic data are
+firstly processed using the traditional predictive deconvolution
+method (the filter length is 3) and the regularizednon-stationary
+autoregressive (RNA) method (the filter length is 3) based on the
+iterative algorithm \cite[]{Liu11}, and the deconvolution results are
+shown in figures~\ref{fig:wedge,wseis2,tpef,apef,spef0,spef1}c and
+~\ref{fig:wedge,wseis2,tpef,apef,spef0,spef1}d, respectively. Due to
+the model is stationary data, both methods can effectively improve the
+resolution and distinguish the top and bottom interfaces of the wedge
+model, but the traditional predictive deconvolution method is not
+suitable for processing nonstationary data (see
+figure~\ref{fig:tpef,wtpef,spef0,wspef0}) and iterative RNA
+deconvolution produces high computational cost. Then we design a
+streaming PEF with 3 (time) coefficients, the prediction step
+$\alpha=1$, and the time constraint factor $\epsilon_t=0.2$ for each
+sample to further verify the effectiveness of the spatial constraint.
+Figures~\ref{fig:wedge,wseis2,tpef,apef,spef0,spef1}e and
+~\ref{fig:wedge,wseis2,tpef,apef,spef0,spef1}f show the streaming PEF
+deconvolution results without spatial constraint ($\epsilon_x=0$) and
+with spatial constraint ($\epsilon_x=0.5$), respectively. Both
+single-channel and multichannel deconvolution improve the vertical
+resolution, however, the result without spatial constraint appears
+with unstable fluctuation and spatial discontinuity, especially at
+rectangle location in
+figure~\ref{fig:wedge,wseis2,tpef,apef,spef0,spef1}e. The spatial
+constraint can effectively reduce the fluctuation and enhance the
+structural continuity of deconvolution result. Meanwhile, the
+computation time of the traditional method, iterative method,
+single-channel, and multichannel streaming PEF deconvolution method is
+0.011 s, 0.220 s, 0.011 s, and 0.012 s, respectively.
+
+\inputdir{wedge}
+\multiplot{6}{wedge,wseis2,tpef,apef,spef0,spef1}{width=0.47\columnwidth}{
+              Wedge model. Wedge velocity model (a), synthetic data (b),
+              the result of traditional predictive deconvolution (c), the
+              result of iterative deconvolution (d), the result of adaptive
+              single-channel deconvolution without spatial constraint (e),
+              the result of adaptive multichannel deconvolution with
+              patial constraint (f).}
+
+\subsection{Field example}
+
+For the field data test, we use a 2D poststack section with time interval of
+2 ms. The input is shown in figure~\ref{fig:data,tpef,apef,vlag-spef}a. For
+comparison, we apply the traditional predictive deconvolution (the filter
+length is 6) and the iterative method (the filter length is 6) to enhance
+the time resolution, as shown in figures~\ref{fig:data,tpef,apef,vlag-spef}b
+and ~\ref{fig:data,tpef,apef,vlag-spef}c.
+Figure~\ref{fig:data,tpef,apef,vlag-spef}d shows a processing result using
+the proposed streaming PEF deconvolution method. The streaming PEF parameters
+are 6 ($N$), 0.032 ($b$), 25000 ($\epsilon_t$), and 10000 ($\epsilon_x$).
+The computation time of traditional, iterative method, and streaming
+PEF deconvolution methods are 0.024 s, 18.767 s, and 1.018 s, respectively,
+however, the traditional deconvolution method cannot enhance the time
+resolution at all time because of nonstationary of the field data. The
+proposed deconvolution and iterative methods can improve the vertical
+resolution at different times, so both methods are more suitable for
+processing nonstationary data. Moreover, compared with the traditional
+and iterative methods, the proposed method can better keep the
+continuity of events. Furthermore, we select a part of the data near to the
+reservoir layer from 3-3.5 s to calculate the average amplitude spectrum of
+the data before and after deconvolution, as shown in
+figure~\ref{fig:zspec0,zspec1,zspec2,zspec3}.
+Figure~\ref{fig:zspec0,zspec1,zspec2,zspec3} confirms that the average
+amplitude spectrum of the seismic section after being processed by the
+streaming PEF deconvolution is broader than that of the traditional
+deconvolution result and slightly narrower than that of the iterative
+deconvolution result in the effective frequency range. However, according to
+the computation time of the different deconvolution methods, the
+computational efficiency of the proposed method is significantly improved
+compared with the iterative method. It further verifies the effectiveness
+and high efficiency of the streaming PEF deconvolution method in processing
+nonstationary seismic data.
+
+\inputdir{rdata}
+\multiplot{4}{data,tpef,apef,vlag-spef}{width=0.47\columnwidth}{
+              Deconvolution results by using different methods.
+              Poststack field data (a), traditional predictive 
+              deconvolution (b), iterative deconvolution (c), streaming PEF
+              deconvolution (d).}
+\multiplot{4}{zspec0,zspec1,zspec2,zspec3}{width=0.47\columnwidth}{
+              Comparison of the average amplitude spectrum of the
+              deconvolution results and original field data. Original field
+              data (a), traditional predictive deconvolution (b), iterative
+              deconvolution (c), streaming PEF deconvolution (d).}
+
+\section{Conclusion}
+
+We have improved the theory of streaming PEF with temporal and spatial
+constraints and proposed a multichannel adaptive deconvolution based
+on streaming PEF in the time-space domain. Our approach uses a
+time-varying prediction step to guarantees the reasonable amplitude
+relationship of deconvolution results. The proposed method updates the
+filter coefficients simultaneously when each new data point arrives,
+which effectively represents the nonstationary characteristics of the
+seismic data. The efficient computational feature of streaming
+computation is useful for efficient adaptive deconvolution in
+high-dimensional data processing. Synthetic examples and field data
+test confirm that the proposed deconvolution method is successful in
+enhancing the temporal resolution of seismic data while preserving the
+relative amplitude relationship and structural continuity.
+
+\section{Acknowledgments}
+
+This work is supported by Nation Natural Science Foundation of China
+(grant nos. 41974134 and 41774127).
+
+\bibliographystyle{seg}
+\bibliography{paper}
+
+

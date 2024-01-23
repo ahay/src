@@ -90,7 +90,7 @@ Flow('scoef3','slet3',
 # INITIALIZATION
 ########################################################################
 matlab         = WhereIs('matlab')
-matROOT = '../matfun/'
+matROOT = '../Matfun/'
 matfun = 'Curve'
 matlabpath = os.environ.get('MATLABPATH',os.path.join(RSFROOT,'lib'))
 

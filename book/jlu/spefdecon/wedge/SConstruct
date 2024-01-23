@@ -1,0 +1,114 @@
+from rsf.proj import *
+from math import *
+import math
+
+##  --------------------- wedge model ----------------------------
+## wedge velocity model
+ff = 25 
+Flow('top',None,'math n1=300 d1=1 o1=0 output=%g' % (3.0 / ff))
+Flow('bot','top','math output="input*(2-x1/%d)" ' % 299)
+Flow('wedge','top bot',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     unif2 n1=%d o1=0 d1=0.001 v00=20,10,20
+     ''' % int(1 + (9.0 / (ff * 0.001))) )
+Result('wedge',
+       '''
+       window j2=5|put d2=1|grey color=i title=""
+       scalebar=y barlabel="Velocity (kft/s)" 
+       label1=Time unit1=s label2=Trace allpos=y
+       font=2 titlefat=4 labelfat=4 min1=0. min2=0.
+       ''')
+
+## reflectivity
+Flow('refl','wedge','ai2refl | window j2=5 | put d2=1')
+
+## minimum wavelet spectrum
+fm = 30
+Flow('spec',None,
+     '''
+     math n1=361 d1=0.001 o1=0. output="2*%g*%g*(x1-0.)" |
+     math output="exp(-input*input/25)*sin(input)" | fft1
+     ''' % (math.pi, fm) )
+
+## Convolution modeling
+Flow('spec2','spec','spray axis=2 n=60 d=1 o=0')
+Flow('wseis','refl spec2','fft1 | add mode=p ${SOURCES[1]}')
+Flow('wseis2','wseis','fft1 inv=y|put d1=0.001 d2=1')
+Result('wseis2',
+      '''
+      wiggle title="" label1=Time
+      unit1=s label2=Trace transp=y yreverse=y font=2 
+      wherexlabel=t grid2=n zplot=0.8 pad=y poly=y
+      plotcol=7 titlefat=4 labelfat=4 plotfat=4     
+      ''')
+
+Flow('pad_in','wseis2',
+     '''
+     cat $SOURCE axis=1 o=-0.361 d=0.001
+     ''')
+
+##  ------------------------- traditional PEF --------------------------
+Flow('tpef wfil','wseis2',
+     '''
+     pef wiener=${TARGETS[1]} minlag=0.001 maxlag=0.003 
+     pnoise=0.001 mincorr=0 maxcorr=0.36
+     ''')
+Result('tpef',
+      '''     
+      wiggle title="" label1=Time
+      unit1=s label2=Trace transp=y yreverse=y font=2 
+      wherexlabel=t grid2=n zplot=0.08 pad=y poly=y
+      plotcol=7 titlefat=4 labelfat=4 plotfat=4
+      ''')
+
+##  -------------------------- adaptive PEF ---------------------------
+Flow('shift2','wseis2','oshift1 nf=1 ns=3 | transp plane=23')
+Flow('pef2 pre2','shift2 wseis2',
+    '''
+    lpf match=${SOURCES[1]} pred=${TARGETS[1]} 
+    rect1=50 rect2=10 niter=1000 verb=n
+    ''')
+Flow('apef','pre2 wseis2','add scale=-1,1 ${SOURCES[1]}')
+Result('apef',
+      '''     
+      wiggle title="" label1=Time
+      unit1=s label2=Trace transp=y yreverse=y font=2 
+      wherexlabel=t grid2=n zplot=0.036 pad=y poly=y
+      plotcol=7 titlefat=4 labelfat=4 plotfat=4
+      ''')
+
+##  --------- streaming PEF with constant prediction step --------------
+## spef with time constraint
+Flow('infil','wfil','reverse which=1 |math output="-input"')
+
+Flow('spef0', 'wseis2 infil',
+     '''
+     spefcstep infil=${SOURCES[1]}
+     lambda1=0.2 lambda2=0. na=3 verb=n |
+     window min1=0.
+     ''')
+Result('spef0',
+      '''
+      wiggle title="" label1=Time
+      unit1=s label2=Trace transp=y yreverse=y font=2 
+      wherexlabel=t grid2=n zplot=0.045 pad=y poly=y
+      plotcol=7 titlefat=4 labelfat=4 plotfat=4
+      ''')
+
+## spef with time and spatial constraint
+Flow('spef1', 'wseis2 infil',
+     '''
+     spefcstep infil=${SOURCES[1]}
+     lambda1=0.2 lambda2=0.5 na=3 verb=n |
+     window min1=0.
+     ''')
+Result('spef1',
+      '''
+      wiggle title="" label1=Time
+      unit1=s label2=Trace transp=y yreverse=y font=2 
+      wherexlabel=t grid2=n zplot=0.045 pad=y poly=y
+      plotcol=7 titlefat=4 labelfat=4 plotfat=4
+      ''')
+
+End()

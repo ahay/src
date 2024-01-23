@@ -37,7 +37,7 @@ p = subprocess.Popen([cp],stdout=inpd,close_fds=True)
 p.wait()
 
 run = 'ibrun tacc_affinity %s input=%s output=%s %s' % (rtm,inpfile,outfile,' '.join(sys.argv[1:]))
-print run
+print(run)
 
 os.system(run)
 

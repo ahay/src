@@ -80,8 +80,8 @@ Result('hcdp','graph title="CDP" label1=x label2=y min1=362681.65 max1=378226.78
 Result('cdp','Fig/lcdp Fig/hcdp','Overlay')
 
 # Zoom
-Result('hcdpzoom','hcdp','graph title="CDP zoom" label1=x label2=y min1=372681.65 max1=374226.78 min2=3255286.50 max2=3255768.75 symbol=*')
-Result('lcdpzoom','lcdp','graph title="CDP zoom" label1=x label2=y min1=372681.65 max1=374226.78 min2=3255286.50 max2=3255768.75 symbol=* plotcol=567 plotfat=3')
+Plot('hcdpzoom','hcdp','graph title="CDP zoom" label1=x label2=y min1=372681.65 max1=374226.78 min2=3255286.50 max2=3255768.75 symbol=*')
+Plot('lcdpzoom','lcdp','graph title="CDP zoom" label1=x label2=y min1=372681.65 max1=374226.78 min2=3255286.50 max2=3255768.75 symbol=* plotcol=567 plotfat=3')
 Result('cdpzoom','Fig/hcdpzoom Fig/lcdpzoom','Overlay')
 
 
@@ -165,12 +165,12 @@ Result('hcdpr2','hcdp','graph title="Hires" label1=x label2=y min1=%d max1=%d mi
 Result('hcdpr','graph title="Hires" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min12, max12, min22, max22))
 Result('lcdpr','graph title="Legacy" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min12, max12, min22, max22))
 
-Result('hcdprzoom2','hcdpr','graph title="Hires" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=368000.00 max1=370000.00 min2=3253000.00 max2=3254000.00 symbol=*')
-Result('hcdprzoom','hcdpr','graph title="Hires" grid1=y grid2=y g1num=10 g2num=10 label1=x label2=y min1=369000.00 max1=369100.00 min2=3253000.00 max2=3253100.00 symbol=*')
-Result('lcdprzoom','lcdpr','graph title="Legacy" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=368000.00 max1=370000.00 min2=3253000.00 max2=3254000.00 symbol=*')
+Plot('hcdprzoom2','hcdpr','graph title="Hires" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=368000.00 max1=370000.00 min2=3253000.00 max2=3254000.00 symbol=*')
+Plot('hcdprzoom','hcdpr','graph title="Hires" grid1=y grid2=y g1num=10 g2num=10 label1=x label2=y min1=369000.00 max1=369100.00 min2=3253000.00 max2=3253100.00 symbol=*')
+Plot('lcdprzoom','lcdpr','graph title="Legacy" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=368000.00 max1=370000.00 min2=3253000.00 max2=3254000.00 symbol=*')
 
 Result('cdpr','Fig/lcdpr Fig/hcdpr','Overlay')
-Result('cdprzoom','Fig/hcdprzoom Fig/lcdprzoom','Overlay')
+Plot('cdprzoom','Fig/hcdprzoom Fig/lcdprzoom','Overlay')
 
 
 
@@ -211,7 +211,7 @@ Flow('lcdpyfmask','lcdpymask','dd type=float | scale dscale=0.01')
 Flow('lcdpmask','lcdpxfmask lcdpyfmask','cmplx ${SOURCES[1]}')
 
 # Maxed legacy
-#Result('lcdpmask','graph title="Legacy" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min12, max12, min22, max22))
+Plot('lcdpmask','graph title="Legacy" label1=x label2=y min1=%d max1=%d min2=%d max2=%d' %(min12, max12, min22, max22))
 
 # min and max values for zoomed version
 mmin1=367800.00
@@ -219,11 +219,11 @@ mmax1=mmin1+300
 mmin2=3253000
 mmax2=mmin2+300
 
-#Result('lcdpmaskzoom','lcdpmask','graph title="Legacy" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=%f max1=%f min2=%f max2=%f symbol=x' %(mmin1, mmax1, mmin2, mmax2))
-Result('hcdpmaskzoom','hcdpr','graph title="Hire" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=%f max1=%f min2=%f max2=%f symbol=*' %(mmin1, mmax1, mmin2, mmax2))
+Plot('lcdpmaskzoom','lcdpmask','graph title="Legacy" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=%f max1=%f min2=%f max2=%f symbol=x' %(mmin1, mmax1, mmin2, mmax2))
+Plot('hcdpmaskzoom','hcdpr','graph title="Hire" grid1=y grid2=y g1num=50 g2num=50 label1=x label2=y min1=%f max1=%f min2=%f max2=%f symbol=*' %(mmin1, mmax1, mmin2, mmax2))
 
 Result('cdprmask','Fig/lcdpmask Fig/hcdpr','Overlay')
-#Result('cdpwindowzoom','Fig/hcdpmaskzoom Fig/lcdpmaskzoom','Overlay')
+Plot('cdpwindowzoom','Fig/hcdpmaskzoom Fig/lcdpmaskzoom','Overlay')
 
 
 # Windowed legacy data

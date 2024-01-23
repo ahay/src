@@ -19,7 +19,7 @@ def dots(n=repeat):
     cat axis=2 ${SOURCES[1:%d]} |
     dots dots=0 yreverse=y label1=Time unit1=sample gaineach=n
     labels=%s
-    ''' % (n,string.join(map(str,range(1,n+1)),':'))
+    ''' % (n,':'.join([str(x) for x in range(1,n+1)])) 
 
 def sdots(n=repeat):
     return '''
@@ -27,7 +27,7 @@ def sdots(n=repeat):
     window f1=1 < one.rsf | reverse which=1 opt=n | cat axis=1 one.rsf |
     dots dots=0 yreverse=y label1=Frequency unit1=cycle gaineach=n
     labels=%s
-    ''' % (n,string.join(map(str,range(1,n+1)),':'))
+    ''' % (n,':'.join([str(x) for x in range(1,n+1)]))
 
 def graph(title):
     return '''

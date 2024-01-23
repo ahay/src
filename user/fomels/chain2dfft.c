@@ -75,7 +75,7 @@ void sfchain2d_close(void)
 }
 
 void sfchain2d_res(const float *t /* target */,
-		 float *r       /* residual */)
+		   float *r       /* residual */)
 /*< apply the chain operator >*/
 
 {
@@ -99,22 +99,23 @@ void sfchain2d_res(const float *t /* target */,
     /* forward FFT */
 
     fft2_allocate(ctmp2);
+    ifft2_allocate(ctmp2);
     fft2(tmp2[0],ctmp2);
 
     /* frequency weight */
     for (ik=0; ik < nk; ik++) {
-		ctmp2[ik] *= wf[ik];
-	}
+	ctmp2[ik] *= wf[ik];
+    }
     /* inverse FFT */
     ifft2(tmp2[0],ctmp2);
     /* Compute residual r */
     for(i=0; i<nt*nx; i++){
-		i1 = i%nt;
-		i2 = i/nt;
+	i1 = i%nt;
+	i2 = i/nt;
 
-		r[i]     = x1[i]-w[i]*s[i];
-		r[n+i]   = x2[i]-tmp2[i2][i1];
-		r[2*n+i] = t[i]-w[i]*x2[i];
+	r[i]     = x1[i]-w[i]*s[i];
+	r[n+i]   = x2[i]-tmp2[i2][i1];
+	r[2*n+i] = t[i]-w[i]*x2[i];
     }   
 }
 
@@ -124,7 +125,7 @@ void sfchain2d_apply(float *y)
 {
     int i, ik, i1, i2;
 
-   /* pad with zeros */
+    /* pad with zeros */
     for (i2=0; i2 < nx; i2++) {
 	for (i1=0; i1 < nt; i1++) {
 	    i = i1+i2*nt;
@@ -204,28 +205,28 @@ void sfchain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
 	    }
 	}
 
-    fft2_allocate(ctmp2);
+	fft2_allocate(ctmp2);
 	fft2(tmp2[0],ctmp2);
-    fft2_allocate(ctmp1);	
+	fft2_allocate(ctmp1);	
 	fft2(tmp1[0],ctmp1);
 
-    for(id = 0; id < nx; id++){
-        dc_id[id] = id*nw;
-        nyq_id[id] = (id+1)*nw - 1;
-    }
+	for(id = 0; id < nx; id++){
+	    dc_id[id] = id*nw;
+	    nyq_id[id] = (id+1)*nw - 1;
+	}
 
 	for (ik=0; ik < nk; ik++) {
-        scale = 2.0;
-        for(id=0; id<nx; id++)
-        { 
-            if(ik==dc_id[id] || ik == nyq_id[id]){
-                scale = 1.0;
-                break;
-            }
-        }
+	    scale = 2.0;
+	    for(id=0; id<nx; id++)
+	    { 
+		if(ik==dc_id[id] || ik == nyq_id[id]){
+		    scale = 1.0;
+		    break;
+		}
+	    }
 
 	    x[3*n+ik] += 
-			scale*crealf(ctmp1[ik]*conjf(ctmp2[ik])/(nt1*nx2));
+		scale*crealf(ctmp1[ik]*conjf(ctmp2[ik])/(nt1*nx2));
 
 	    ctmp1[ik] *= wf[ik];
 	}	
@@ -262,16 +263,16 @@ void sfchain2d_lop (bool adj, bool add, int nxx, int nyy, float* x, float* y)
 	    }
 	}
 
-    fft2_allocate(ctmp1);	
+	fft2_allocate(ctmp1);	
 	fft2(tmp1[0],ctmp1);	
 	for(ik=0; ik<nk;ik++){
-		ctmp1[ik] *=wf[ik];
+	    ctmp1[ik] *=wf[ik];
 	}
 	ifft2(tmp1[0],ctmp1);
-    fft2_allocate(ctmp2);
+	fft2_allocate(ctmp2);
 	fft2(tmp2[0],ctmp2);
 	for(ik=0; ik<nk;ik++){
-		ctmp2[ik] *=x[3*n+ik];
+	    ctmp2[ik] *=x[3*n+ik];
 	}
 	ifft2(tmp2[0],ctmp2);
 

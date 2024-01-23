@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
     }
 
     if (su) {
-	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;
+	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;		
 	/* y, SU has XDR support.  
            SU with xdr on (as downloaded), use endian=y suxdr=y
            SU with xdr off in the makefiles, use endian=n suxdr=n   
@@ -425,7 +425,8 @@ int main(int argc, char *argv[])
 	   2 is 4-byte integer
 	   3 is 2-byte integer
 	   5 is IEEE floating point
-           6 is native_float (same as RSF binary default)
+       6 is native_float (same as RSF binary default)
+	   7 is 1-byte integer
 	*/
     if(format==0){
       if(su){
@@ -453,6 +454,11 @@ int main(int argc, char *argv[])
       if (verbose) sf_warning("Assuming native_float format");
       suxdr=false;
       break;
+	// add 1 byte integer
+    case 7:
+      if (verbose) sf_warning("Assuming 1 byte integer format");
+      break;
+			
     default:
       sf_error("Nonstandard format: %d",format);
       break;
@@ -497,7 +503,8 @@ int main(int argc, char *argv[])
     }
 
     free (trace);
-    nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4); 
+    // nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4); 
+	nsegy = SF_HDRBYTES + ((7 == format)? ns*1: ((3 == format)? ns*2: ns*4)); 
     if (0==ntr) ntr = (pos - start)/nsegy;
 
     if (verbose) sf_warning("Expect %d traces",ntr);

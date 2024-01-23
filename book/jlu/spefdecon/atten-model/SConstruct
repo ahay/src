@@ -1,0 +1,165 @@
+from rsf.proj import *
+from math import *
+import math
+
+##  ---------------- 1D model ---------------------
+## reflectivity
+Flow('refl',None,
+     '''
+     spike d1=0.001 o1=0. n1=1001 nsp=31
+     mag=0.8,-1.1,1.2,0.5,-0.8,1,-0.8,-0.5,1.2,0.9,-1,1.2,0.6,-0.4,1,-0.8,-1,1.2,-0.6,0.8,-1,-1.1,0.9,0.6,-1.2,-1,-0.5,1.2,-1,0.8,1
+     k1=50,60,65,90,105,125,150,180,190,220,250,300,320,360,400,450,500,530,570,600,640,665,680,700,720,750,770,800,820,830,900
+     ''')
+Result('refl',
+       '''
+       graph yreverse=n title= font=2
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2 
+       min1=0. max2=1.2 min2=-1.2 o2num=-1.2 d2num=1.2 n2tic=3   
+       plotfat=4 labelfat=3 axisfat=3 plotcol=7
+       ''')
+
+## 1D nonstationary model (Q attenuation)
+at = [50,60,65,90,105,125,150,180,190,220,250,300,320,360,400,450,500,530,570,600,640,665,680,700,720,750,770,800,820,830,900]
+am = [0.8,-1.1,1.2,0.5,-0.8,1,-0.8,-0.5,1.2,0.9,-1,1.2,0.6,-0.4,1,-0.8,-1,1.2,-0.6,0.8,-1,-1.1,0.9,0.6,-1.2,-1,-0.5,1.2,-1,0.8,1]
+q = [30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30]
+
+atin = []
+for j in range(31):
+    asig = 'asig%d' %j
+
+    Flow(asig,None,
+         '''
+         modatten1 n1=1001 d1=0.001 o1=0. nc=1 fm=40
+         at=%d mag=%g q=%g
+         ''' % (at[j],am[j],q[j]) )
+    atin.append(asig)
+    l = atin.__len__()
+Flow('in',atin, 'cat axis=2 ${SOURCES[1:%d]} d=1|stack axis=2 norm=n' % l  )
+Result('in',
+       '''
+       window min1=0.|graph yreverse=n title=  font=2
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2
+       min1=0. n2tic=3 max2=0.9 min2=-0.9 o2num=-0.9 d2num=0.9 
+       plotfat=4 labelfat=3 axisfat=3 plotcol=7
+       ''')
+
+Flow('pad_in','in',
+     '''
+     cat $SOURCE axis=1 o=-1.001 d=0.001
+     ''')
+
+##  ------------------------- traditional PEF --------------------------
+Flow('tpef','in',
+     '''
+     pef minlag=0.001 maxlag=0.01 pnoise=0.0001
+     mincorr=0. maxcorr=1
+     ''')
+Result('tpef',
+       '''
+       graph yreverse=n title= font=2
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2 
+       min1=0. max2=0.07 min2=-0.07 o2num=-0.07 d2num=0.07 n2tic=3 
+       plotfat=4 labelfat=3 plotcol=7   
+       ''')
+Result('wtpef','tpef',
+       '''
+       window min1=0.3 | graph yreverse=n title= font=2
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2 
+       min1=0.3 max2=0.008 min2=-0.004 o2num=0. d2num=0.005 n2tic=2 
+       plotfat=4 labelfat=3 axisfat=3 plotcol=7 
+       ''')
+
+##  --------- streaming PEF with constant prediction step --------------
+Flow('ttpef wfil','in',
+     '''
+     pef wiener=${TARGETS[1]} minlag=0.001 maxlag=0.003 pnoise=0.0001
+     mincorr=0. maxcorr=1
+     ''')
+Flow('infil','wfil','reverse which=1 | math output="-input"')
+
+Flow('spef0','pad_in infil',
+     '''
+     spefcstep infil=${SOURCES[1]} lambda1=1.5 lambda2=0.
+     na=3 ngp=0 verb=y
+     ''')
+Result('spef0',
+       '''
+       window min1=0.|graph yreverse=n title= font=2
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2
+       min1=0. max2=0.06 min2=-0.06 o2num=-0.06 d2num=0.06 n2tic=3 
+       plotfat=4 labelfat=3 plotcol=7 
+       ''')
+Result('wspef0','spef0',
+       '''
+       window min1=0.3|graph yreverse=n title= font=2
+       label1="Time" unit1=s label2=Amp crowd1=0.8 crowd2=0.2 
+       min1=0.3 max2=0.008 min2=-0.004 o2num=0. d2num=0.005 n2tic=2
+       plotfat=4 labelfat=3 plotcol=7
+       ''')
+
+##  --------- streaming PEF with varying prediction step --------------
+## local frequency
+Flow('lfe','in','iphase rect1=65 order=200 hertz=y complex=n niter=100')
+Result('lfe',
+       '''
+       graph max2=42 min2=10 min1=0. title= label1=Time label2=Frequency
+       unit1=s unit2=Hz crowd1=0.8 crowd2=0.2 font=2
+       plotcol=7 plotfat=4 labelfat=3 axisfat=3
+       ''')
+
+## time-varying prediction step
+Flow('l0',None,'math n1=1001 d1=0.001 o1=-1.001 output="2."')
+Flow('vlag0','lfe','math output="0.06/(input*0.001)" ')
+Flow('vlag','l0 vlag0',
+     '''
+     cat axis=1 ${SOURCES[1:2]} o=-1.001 d=0.001|
+     math output="input-1"|dd type=int|window min1=0.
+     ''')
+Result('vlag0',
+       '''
+       dd type=int|dd type=float|graph crowd1=0.8 crowd2=0.2 
+       min1=0. min2=1 max2=6 n2tic=6 o2num=1 d2num=1 title=
+       label1="Time" label2="Prediction step" unit1=s
+       plotcol=7 plotfat=4 labelfat=3 axisfat=3 font=2 
+       ''')
+
+## spef with time-varying prediction step
+Flow('vlag_spef','in infil vlag',
+     '''
+     spefvstep infil=${SOURCES[1]} lag=${SOURCES[2]} 
+     lambda1=1.5 na=3 verb=y| window min1=0.
+     ''')
+Flow('noin','in','scale axis=1')
+Flow('novlag','vlag_spef','scale axis=1')
+Result('nodif', 'novlag noin',
+       '''
+       cat axis=2 ${SOURCES[1:2]} |
+       graph title="" plotcol=7,7,1 max2=1
+       dash=0,3 label2=Amp label1=Time unit1=s min1=0.
+       font=2 labelfat=2 titlefat=2 crowd1=0.8 crowd2=0.2
+       o2num=-1 d2num=1 n2tic=3 plotfat=4 labelfat=3
+       ''')
+
+## frequency spectrum
+Flow('spec0','in',
+     '''
+     window min1=0.3| fft1 | 
+     math output="abs(input)" |real | scale axis=1
+     ''')
+Flow('spec1','vlag_spef',
+     '''
+     window min1=0.3| fft1 | 
+     math output="abs(input)" |real | scale axis=1
+     ''')
+Result('zsdif', 'spec0 spec1',
+       '''
+       cat axis=2 ${SOURCES[1:2]} |
+       graph title="" plotcol=6,7 max1=120
+       dash=0,0,0,0 plotfat=4 label2=Amp label1=Frequency unit1=Hz
+       titlefat=2 crowd1=0.8 crowd2=0.25 min1=0. max2=1.
+       font=2 plotfat=4 labelfat=3 
+       ''')
+
+
+
+End()

@@ -66,7 +66,7 @@ Result('Vint3D',
      ''')
 
 
-Flow('Vint3Dz','Vint3D','time2depth dz=30 intime=y nz=1200 velocity=Vint3D.rsf')
+Flow('Vint3Dz','Vint3D','time2depth dz=30 intime=y nz=1200 velocity=$SOURCE')
 
 Result('Vint3Dz',
      '''
@@ -136,7 +136,7 @@ Plot('mig-z','mig_z',
        label1=Distance unit1=ft
        ''',view=1)
 
-Flow('mig_t','mig_z','depth2time dt=.002 nt=2049 velocity=Vint3Dz.rsf')
+Flow('mig_t','mig_z Vint3Dz','depth2time dt=.002 nt=2049 velocity=${SOURCES[1]}')
 
 Plot('mig_t','mig_t',
     '''

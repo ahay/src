@@ -5,6 +5,9 @@ from rsf.proj import *
 # stronger than stack, but at depth, where fold is larger they are almost the
 # same.  Could this be the mstretch mute in tahnmo?  How does sustack compare?
 
+SConscript('../tahnmostack/SConstruct')
+SConscript('../nmostack/SConstruct')
+
 Flow("tahstack141.rsf","../tahnmostack/mappedstack.rsf",
      "sfwindow  n1=1000 n2=1 f2=141")
 Flow("stack141.rsf","../nmostack/stack.rsf",

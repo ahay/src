@@ -243,7 +243,7 @@ int main (int argc, char* argv[])
 		len = strlen(string);
 		pltinname[infileno] = sf_charalloc(len+1);
 
-		strncpy( pltinname[infileno],string,len+1);
+		strncpy( pltinname[infileno],string,len);
 
 		infileno++;
 	    }
@@ -257,7 +257,7 @@ int main (int argc, char* argv[])
 	    else
 	    {
 		pltinname[infileno] = sf_charalloc(6);
-	    	strncpy (pltinname[infileno], "stdin", 5);
+	    	strncpy (pltinname[infileno], "stdin", 6);
 	    	pltinarray[infileno] = stdin;
 	    	infileno++;
 	    }
@@ -290,7 +290,7 @@ int main (int argc, char* argv[])
 	    len = strlen(cptr);
 	    pltinname[infileno] = sf_charalloc(len+1);
 	    
-	    strncpy (pltinname[infileno], cptr,len+1);
+	    strncpy (pltinname[infileno], cptr,len);
 	    pltinarray[infileno] = temp;
 	    infileno++;
 	}

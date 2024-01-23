@@ -1,0 +1,674 @@
+\published{Journal of Geophysics and Engineering, 19, 14-27, (2022)}
+
+\title{Nonstationary pattern-based signal-noise separation using adaptive prediction-error filter}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{JGE-2021-0127}
+
+\address{
+    \footnotemark[1] College of Geo-exploration Science and Technology,\\
+    Jilin University, Changchun, China}
+
+\author{Zhisheng Zheng\footnotemark[1], Yang Liu\footnotemark[1], Cai Liu\footnotemark[1]}
+
+\footer{JGE-2021-0127}
+\lefthead{Zheng et al.}
+\righthead{Pattern-based signal-noise separation}
+
+\maketitle
+
+
+\begin{abstract}
+    Complex field conditions always create different interferences during seismic data acquisition,
+    and there exist several types of noise in the recorded data, which affect the subsequent data
+    processing and interpretation. To separate an effective signal from the noisy data, we adopted
+    a pattern-based method with a two-step strategy, which involves two adaptive prediction-error
+    filters (APEFs) corresponding to a nonstationary data pattern and noise pattern. By introducing
+    shaping regularization, we first constructed a least-squares problem to estimate the filter
+    coefficients of the APEF. Then, we solved another constrained least-square problem corresponding
+    to the pattern-based signal-noise separation, and different pattern operators are adopted to
+    characterize random noise and ground-roll noise. In comparison with traditional denoising methods,
+    such as FXDECON, curvelet transform and local time-frequency (LTF) decomposition, we examined
+    the ability of the proposed method by removing seismic random noise and ground-roll noise in
+    several examples. Synthetic models and field data demonstrate the validity of the strategy
+    for separating nonstationary signal and noise with different patterns.
+
+\end{abstract}
+
+\section{Introduction}
+During seismic data acquisition, complex field conditions unavoidably lead to several
+interferences. For instance, wind motion and electronic noise from geophones cause random
+noise, propagation of seismic waves on land near the surface leads to ground-roll noise.
+Meanwhile, it is natural that geologic events and geophysical data exhibit nonstationarity,
+which is manifested in several intrinsic properties, e.g. spectra and statistical
+characteristics, and change with time and space. To reduce the influences of noise and
+improve the quality of useful signal for subsequent data processing and interpretation,
+the signal-noise separation is always an important procedure, especially in new
+acquisition techniques such as distributed acoustic sensing.
+
+Many effective methods have been proposed for eliminating seismic random noise besides
+mean and median filters tailored to images. According to the different properties of
+target signals, several transform methods can truncate the energy in the transform
+domain to suppress random noise, such as radon transform~\cite[]{Claerbout71,Trad02},
+curvelet transform~\cite[]{Kumar09} and seislet transform~\cite[]{Fomel10,Liu15}.
+Prediction filters are effective methods for random noise attenuation, which was first
+introduced by~\cite{Canales84}. The prediction process can be achieved in the time-space
+domain or the frequency-space domain~\cite[]{Wang99}. \cite{Liu18} proposed a fast-streaming
+prediction filter to attenuate random noise. Recently, the deep-learning method has
+also been found to cope with the denoising procedure; \cite{Yu19} developed a deep-learning
+method for random noise attenuation by using a convolutional neural network.
+
+Ground-roll noise is a strong coherent noise, which will interfere with land seismic
+surveys. Frequency-based filtering and F-K filtering are the classical methods to
+handle ground- roll noise problem. Wavelet transform~\cite[]{Miao98,Corso03}
+and curvelet transform~\cite[]{Naghizadeh18} are practical methods for ground-roll
+removal as well. Time-frequency analysis can separate different components by using
+a muting filter in the time-frequency domain, \cite{Liu13} applied this method to
+separate the ground-roll noise from the field data. Using a generator and discriminator,
+a generative adversarial network (GAN) can be trained to produce a noise-free result,
+\cite{Yuan20} developed GAN for ground-roll noise removal.
+
+A pattern-based method is often used for signal-noise separation. \cite{Spitz99}
+described a multiple subtraction technology by using a pattern recognition method.
+\cite{Bednar99} made a comparison of a pattern-based multiple suppression method
+and other approaches. \cite{Brown00} used a pattern-based method with nonstationary
+prediction-error filter (PEF) for ground-roll removal. \cite{Guitton06} further
+implemented such a pattern-based approach to separate multiples in a 3D dataset.
+
+In this paper, we revisit the fundamental theory behind the pattern-based signal-noise
+separation method~\cite[]{Claerbout10} and extend this with an adaptive prediction-error
+filter (APEF). The pattern-based method~\cite[]{Brown00,Claerbout00} estimates operators
+to characterize data patterns, and then solves the signal-noise separation problem.
+Similarly, we exploited the pattern-based method but calculated the APEF~\cite[]{Liu11}
+to represent the pattern of nonstationary data and the noise model. Different algorithms
+were adopted to deal with random noise and ground-roll noise, and we tested the
+nonstationary characteristics of the proposed method in synthetic models and field data
+examples. Results of random noise attenuation and ground-roll removal on these examples
+demonstrated that the pattern-based signal-noise separation with the nonstationary APEF
+is effective in separating noise from signal.
+
+\section{Theory}
+\subsection{Signal and noise separation problem}
+
+A simple assumption is that the dataset $\mathbf{d}$ can be considered as the
+summation of signal $\mathbf{s}$ and noise $\mathbf{n}$:
+\begin{equation}
+    \label{eq:signoi1}
+    \mathbf{s} + \mathbf{n} =  \mathbf{d} .
+\end{equation}
+Usually, signal $\mathbf{s}$ represents reflection events or geologic events,
+and noise $\mathbf{n}$ can be regarded as random noise or ground-roll noise.
+Let operators $\mathbf{S}$ and $\mathbf{N}$ denote the patterns of signal and
+noise, respectively. PEF is reasonable to be the pattern operator as it
+approximates the inverse energy spectrum of the corresponding component.
+\cite{Claerbout10} described the pattern operator as the absorbing operator,
+for instance, operator $\mathbf{N}$ may absorb noise $\mathbf{n}$
+($\mathbf{0} \approx \mathbf{Nn}$). And it can destroy the corresponding
+noise component from data $\mathbf{d}$ and leave signal $\mathbf{s}$:
+\begin{equation}
+    \label{eq:Nsn}
+    \begin{aligned}
+        \mathbf{0}
+         & = \mathbf{N} ( \mathbf{s} + \mathbf{n} - \mathbf{d} ) \\
+         & = \mathbf{N} ( \mathbf{s} + \mathbf{n}) - \mathbf{Nd} \\
+         & \approx \mathbf{Ns} - \mathbf{Nd}\; .
+    \end{aligned}
+\end{equation}
+Meanwhile, operator $\mathbf{S}$ absorbs or destroys signal component
+$\mathbf{s}$:
+\begin{equation}
+    \label{eq:S}
+    \mathbf{0} \approx \mathbf{Ss} \; ,
+\end{equation}
+which is used to restrict the shape of signal $\mathbf{s}$. By using above
+relationships, the pattern-based method raises a constrained least-squares
+problem, and solving such a problem can separate signal $\mathbf{s}$ and
+noise $\mathbf{n}$ from data volume $\mathbf{d}$.
+\begin{equation}
+    \label{eq:NsNd}
+    \min_{\mathbf{s}} \| \; \mathbf{Ns} - \mathbf{Nd} \; \|_{2}^{2}
+    + \epsilon^{2} \; \| \; \mathbf{Ss} \; \|_{2}^{2} \; ,
+\end{equation}
+where $ \epsilon > 0 $ is the scaling factor of regularization term, which
+balancing the energy between estimated signal $\mathbf{\bar{s}}$ and
+noise $\mathbf{\bar{n}}$.
+
+In practice, field data d and the noise model are often available, but the
+clean signal is not. We here considered the noise model to be a dataset
+containing the properties of noise $\mathbf{n}$, and the noise model can
+be obtained as a roughly separated noise section. Therefore, data pattern
+$\mathbf{D}$ and noise pattern $\mathbf{N}$ are easily estimated from the field data
+and noise model, while it cannot directly obtain signal pattern $\mathbf{S}$.
+Normally, one makes a compromise by replacing $\mathbf{S}$ with $\mathbf{D}$:
+with $\mathbf{D}$:
+\begin{equation}
+    \label{eq:NsNd1}
+    \min_{\mathbf{s}} \| \; \mathbf{Ns} - \mathbf{Nd} \; \|_{2}^{2}
+    + \epsilon^{2} \; \| \; \mathbf{Ds} \; \|_{2}^{2} \; ,
+\end{equation}
+where $\mathbf{D}$ may be unsuitable for constraining the shape of
+signal $\mathbf{s}$, and finally lead to undesirable separation result.
+Assuming that noise $\mathbf{n}$ and signal $\mathbf{s}$ are uncorrelated,
+\cite{Spitz99} proposed an approximation $\mathbf{S} = \mathbf{N}^{-1}\mathbf{D}$,
+which is based on the relationship between the pattern operator and the
+energy spectrum of the corresponding component, and the regularization term
+becomes $ \|\mathbf{N}^{-1}\mathbf{Ds}\|_{2}^{2} $. Furthermore, one can
+multiply equation~\ref{eq:NsNd1} by $\mathbf{N}$ to avoid the acquisition
+of $\mathbf{N}^{-1}$:
+\begin{equation}
+    \label{eq:NsNd2}
+    \min_{\mathbf{s}} \| \; \mathbf{N} (\mathbf{Ns} - \mathbf{Nd}) \; \|_{2}^{2}
+    + \epsilon^{2} \; \| \; \mathbf{N} (\mathbf{Ds} / \mathbf{N}) \; \|_{2}^{2} \; ,
+\end{equation}
+then the signal-noise separation problem turns into:
+\begin{equation}
+    \label{eq:NNsNNd}
+    \min_{\mathbf{s}} \| \; \mathbf{NNs} - \mathbf{NNd} \; \|_{2}^{2}
+    + \epsilon^{2} \; \| \; \mathbf{Ds} \; \|_{2}^{2} \; .
+\end{equation}
+
+Equation~\ref{eq:NNsNNd} avoids the requirement for pattern operator $\mathbf{S}$
+of the clean signal, and minimizing the equation leads to the expression of
+the estimated signal:
+\begin{equation}
+    \label{eq:sig}
+    \mathbf{\bar{s}} =
+    \left( \frac{\mathbf{N}^T \mathbf{N} \mathbf{N}^T \mathbf{N} }
+    {\mathbf{N}^T \mathbf{N} \mathbf{N}^T \mathbf{N}
+        + \epsilon^2 \mathbf{D}^T \mathbf{D}} \right) \mathbf{d} \;,
+\end{equation}
+and the formal solution of the estimated noise is:
+\begin{equation}
+    \label{eq:noi}
+    \mathbf{\bar{n}} =
+    \left( \frac{\epsilon^2 \mathbf{D}^T \mathbf{D}}
+    {\mathbf{N}^T \mathbf{N} \mathbf{N}^T \mathbf{N}
+        +\epsilon^2 \mathbf{D}^T \mathbf{D}} \right) \mathbf{d} \;.
+\end{equation}
+The conjugate gradient algorithm is implemented to calculate the numerical
+solution of equations~\ref{eq:sig} and~\ref{eq:noi} (Appendix section).
+We will discuss the estimation of the nonstationary pattern operators in
+the next section.
+
+
+\subsection{Estimation of nonstationary pattern operators}
+Seismic events appear to be stationary in a small time-space window,
+but their behaviors will change with time and space. The patching method
+assumes seismic events with constant slope within the time-space window,
+which is used to deal with nonstationarity, but it may fail when
+encountering steeply changing slope. We consider here APEF as the pattern
+operator for better characterizing the pattern of nonstationary seismic
+data. Similar to decreasing the patch size to a data sample, the APEF
+without patching windows can handle the spectrum variability of seismic
+data in the time-space domain.
+
+To estimate the nonstationary pattern of a 2D seismic section $d(t,x)$,
+prediction coefficients An of the APEF can be obtained as:
+\begin{equation}
+    \label{eq:pred2}
+    \bar{\mathbf{A}}_{n} (t,x) = \arg \min_{A_{n}} \| \; \mathbf{d}(t,x)
+    - \sum_{n=1}^{N} \mathbf{A}_{n}(t,x) \mathbf{d}_{n}(t,x) \; \|_2^2
+    + \lambda^{2} \; \sum_{n=1}^{N} \| \; \mathbf{R} [\mathbf{A}_{n}(t,x)] \; \|_2^2\;,
+\end{equation}
+where  $\mathbf{d}_{n}(t,x) = \mathbf{d}(t-i,x-j)$ represents the adjacent
+data around $\mathbf{d}(t,x)$. $i$ and $j$ are the index of time shift and
+spatial shift, respectively. $\lambda$ is the scaling parameter and
+$\mathbf{R[\bullet]}$ is the shaping regularization operator~\cite{Fomel09}.
+
+To obtain the whitening output, one needs to design APEF $\mathbf{D}$ of data
+with the causal filter structure. For example, a five-sample (time) $\times$
+three-sample (space) template is shown as:
+\begin{equation}
+    \begin{array}{ccc}
+        .          & A_{3}(t,x) & A_{8}(t,x)  \\
+        .          & A_{4}(t,x) & A_{9}(t,x)  \\
+        1          & A_{5}(t,x) & A_{10}(t,x) \\
+        A_{1}(t,x) & A_{6}(t,x) & A_{11}(t,x) \\
+        A_{2}(t,x) & A_{7}(t,x) & A_{12}(t,x)
+    \end{array} .
+    \label{eq:causalpef}
+\end{equation}
+The structure of filter coefficients influences the prediction result, and it
+could be limited by the range of local slope and the variability of seismic
+events along the space and time axes. For steeply dipping events, it suggests
+a large prediction window in the time direction. Obviously, the pattern of random
+noise is different from that of ground-roll noise, and we calculated noise
+pattern $\mathbf{N}$ according to the following approaches:
+
+(i) Random noise: it supposes that the energy of random noise is spatially
+uncorrelated, and its statistical property may slightly change with time.
+To characterize the model of random noise, noise pattern N can be set as the
+shape of a column. The following is an example of the noise pattern structure
+with 4 (time) $\times$ 1 (space) coefficients:
+\begin{equation}
+    \begin{array}{c}
+        1          \\
+        A_{1}(t,x) \\
+        A_{2}(t,x) \\
+        A_{3}(t,x)
+    \end{array} .
+    \label{eqn:noizpef1}
+\end{equation}
+
+We can generate a noise model containing the characteristics of noise $\mathbf{n}$,
+and calculate APEF $\mathbf{N}$ from the noise model. Also, one can directly
+estimate APEF $\mathbf{N}$ of random noise from dataset $\mathbf{d}$, especially
+when there exists strong random noise in the dataset. $\mathbf{N}$ with one-column
+shape can only capture the temporal spectrum of random noise, but ignores the
+signal predictability along the space direction in the dataset.
+
+(ii) Ground-roll noise: due to the difference of the dominant frequency, ground-roll
+noise and the effective signal can usually be separated in the frequency domain.
+Using a low-pass filter to the data can produce a noise model. Similarly, according
+to the difference of slowness, the primaries can be muted in the radon domain, and
+a ground-roll noise model can be obtained through the inverse radon transform. Here,
+we first use a reliable low-pass filter to generate the ground-roll noise model, then
+APEF $\mathbf{N}$ of the ground-roll noise is calculated according to the structure
+similar to that of data as equation~\ref{eq:causalpef}. Due to the slower speed of
+the ground-roll noise, it has steep events with larger local slope, and the filter
+size needs to be adjusted to a larger length in the time direction.
+
+Therefore, the proposed signal-noise separation method exploits a two-step strategy:
+(i) estimating data pattern $\mathbf{D}$ and noise pattern $\mathbf{N}$ by using
+the APEF, and (ii) separating signal and noise with the pattern-based method
+(equation~\ref{eq:NNsNNd}). The further examination of the proposed method will
+be shown in the data examples section.
+
+\section{Data examples}
+
+\subsection{Nonstationary signal and random noise separation}
+
+We started with a synthetic model (figure~\ref{fig:cm-data}) containing a curve
+event with varying slope. Figure~\ref{fig:cm-noiz} is the model data with the white
+Gaussian noise added. The F-K spectra (figure~\ref{fig:cm-fkdata,cm-fknoiz}) show
+that the strong random noise severely affects the curve model. For comparison,
+we first used FXDECON, a standard industry method, to separate the
+signal from the noisy data. We designed the FXDECON with four-sample
+(space) filter size and ten-sample (space) sliding window. Although
+the FXDECON method results in a highest SNR (Table~\ref{tbl:randomnoise}), it still fails
+to deal with strong random noise. The strong random noise has been
+suppressed in the estimated signal section (figure~\ref{fig:cm-fx}), but a large
+part of signal is also destroyed and leaves the estimated noise
+section (figure~\ref{fig:cm-fxnoiz}). Due to the strong energy of the random noise,
+the high SNR is caused by the suppression of both noise and signal.
+To demonstrate the effectiveness of the proposed nonstationary APEF,
+we separated the random noise using the pattern-based method
+(equation~\ref{eq:NNsNNd}) with the stationary PEF in the t-x domain.
+The filter size of data pattern (PEF) D is selected with 11 (time)
+$\times$ 4 (space), noise pattern (PEF) N is 5 (time) $\times$ 1
+(space) coefficients. Figure~\ref{fig:cm-pef} shows that the stationary approach
+fails in separating the random noise in the estimated signal section
+as the stationary PEF is hard to characterize the nonstationary data
+pattern. Meanwhile, some energy appears from the signal in the estimated
+noise section (figure~\ref{fig:cm-pefnoiz}). Figure~\ref{fig:cm-ct} shows the
+denoised result of the curvelet transform with percentage threshold;
+this method effectively suppresses the random noise in the range from
+about 30 to 100 Hz (figure~\ref{fig:cm-fkct}), but it generates
+striped noise interference that affects the quality of the synthetic model.
+For the proposed method, we configured the APEF with the same filter
+size as that of the stationary PEF. The smoothing radii in the time
+and space directions for data pattern (APEF) $\mathbf{D}$ is selected
+to be 30 and 15 samples, respectively. And the noise pattern (APEF)
+$\mathbf{N}$ has a 300-sample (time) $\times$ 1-sample (space) smoothing
+radius. Figure~\ref{fig:cm-apef} contains a part of the low-level noise,
+while the curve event has been recovered. The proposed method shows
+better signal protection ability, and obtains the denoised result
+at a high SNR level (Table~\ref{tbl:randomnoise}). Here the SNR is
+calculated by equation~\ref{eq:snr}:
+\begin{equation}
+    \label{eq:snr}
+    SNR = 10 \log_{10} (
+    \frac{\| \mathbf{s} \|_{2}^{2}}
+    {\| \mathbf{s} - \mathbf{\bar{s}} \|_{2}^{2}})
+\end{equation}
+where $\mathbf{s}$ denotes effective signal, $\mathbf{\bar{s}}$ denotes
+denoised result. In the F-K spectra (figure~\ref{fig:cm-fkfx,cm-fkpef,cm-fkct,cm-fkapef}),
+the energy of the curve event can be identified only in the denoised
+results using the curvelet transform and proposed method.
+
+\newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+\tabl{randomnoise}{Comparison of the SNR of the random noise attenuation results}
+{
+    \begin{center}
+        \begin{tabular}{p{60pt}p{60pt}p{60pt}p{60pt}p{60pt}p{60pt}}
+            \hline
+                & Synthetic model & FXDECON & Stationary PEF & Curvelet transform & \tabincell{c}{The \\proposed \\method} \\
+            \hline
+            SNR & -9.432          & -3.957  & -5.176         & -5.414             & -5.029            \\
+            \hline
+        \end{tabular}
+    \end{center}
+}
+
+\inputdir{curvemod}
+\multiplot{2}{cm-data,cm-noiz}
+{width=0.47\columnwidth}
+{(a) Clean data with curve event and (b) data with random noise.}
+
+\multiplot{2}{cm-fkdata,cm-fknoiz}
+{width=0.47\columnwidth}
+{(a) F-K spectra of clean data and (b) noisy data.}
+
+\multiplot{8}{cm-fx,cm-fxnoiz,cm-pef,cm-pefnoiz,cm-ct,cm-ctnoiz,cm-apef,cm-apefnoiz}
+{width=0.47\columnwidth}
+{   (a) Estimated signal and (b) random noise by the FXDECON.
+    (c) Estimated signal and (d) random noise by the pattern-based method with the stationary PEF.
+    (e) Estimated signal and (f) random noise by the curvelet transform.
+    (g) Estimated signal and (h) random noise by the proposed method.}
+
+\multiplot{4}{cm-fkfx,cm-fkpef,cm-fkct,cm-fkapef}
+{width=0.47\columnwidth}
+{   (a)F-K spectrum of the denoised result using the FXDECON.
+    (b) F-K spectrum of the denoised result using the pattern-based method with the stationary PEF.
+    (c) F-K spectrum of the denoised result using the curvelet transform.
+    (d) F-K spectrum of the denoised result using the proposed method.}
+
+Figure~\ref{fig:nmo-data,nmo-fkdata} shows a poststack section, where the random
+noise influences the continuity of the reflection events. The data includes dipping
+beds and a fault. The main challenge in this example is that the random
+noise displays the nonstationary energy distribution.
+Figure~\ref{fig:nmo-fx,nmo-fxnoiz} shows the separation results by using FXDECON,
+the filter size has eight sample (space) coefficients for each data sample and
+a 30-sample (space) sliding window for handling the variation of the
+signals. The FXDECON method fails in separating the nonstationary
+signal and random noise; weak energy random noise is still present in
+the signal section (figure~\ref{fig:nmo-fx}) and part of the
+signal leaks into the noise section (figure~\ref{fig:nmo-fxnoiz}).
+By using the pattern-based method with the stationary PEF, we got
+the denoised result in figure~\ref{fig:nmo-hpef,nmo-hpefnoiz}.
+The data pattern (PEF) $\mathbf{D}$ is selected with 11 (time) $\times$
+4 sample (space) coefficients, noise pattern (PEF) $\mathbf{D}$ has 9
+(time) $\times$ 1 sample (space) coefficients.
+In figure~\ref{fig:nmo-hpef,nmo-hpefnoiz}, the denoised result contains some high
+frequency noise, and part of the signal is removed. As shown in figure~\ref{fig:nmo-fkhpef},
+the energy of effective signal at about 18 Hz is partially filtered out.
+In the denoised result of curvelet transform with percentage threshold
+(figure~\ref{fig:nmo-ct,nmo-ctnoiz}), the random noise causes a stronger smearing of
+the events. Then we deal with the post- stack section by using the proposed method.
+The data APEF $\mathbf{D}$ has 9 (time) $\times$ 4 sample (space)
+coefficients for each sample and the smoothing radius is selected to
+be 60 (time) and 20 samples (space). The noise APEF $\mathbf{N}$ is
+designed as a 9 (time) $\times$ 1 sample (space) coefficients with a
+60 (time) $\times$ 1 sample (space) smoothing radius. The estimated
+signal section displays that the continuity of the reflection layers
+with better smoothness is enhanced, and the fault is well preserved
+(figure~\ref{fig:nmo-apef}). The energy of the events and fault hardly
+leak into the noise section (figure~\ref{fig:nmo-apefnoiz}).
+The F-K spectrum in figure~\ref{fig:nmo-fkapef} is cleaner and the effective signal
+energy is concentrated. It indicates that the proposed method has a
+better capability for noise suppression and signal protection than
+other methods.
+
+\inputdir{nmostack}
+\multiplot{2}{nmo-data,nmo-fkdata}
+{width=0.47\columnwidth}
+{(a) Poststack section with random noise and (b) the corresponding F-K spectrum.}
+
+\multiplot{2}{nmo-fx,nmo-fxnoiz}
+{width=0.47\columnwidth}
+{Random noise separation results of the poststack section using the FXDECON.
+    (a) Section of estimated signal and (b) section of separated random noise.}
+
+\multiplot{2}{nmo-hpef,nmo-hpefnoiz}
+{width=0.47\columnwidth}
+{Random noise separation results of the poststack section using the
+    pattern-based method with the stationary PEF.
+    (a) Section of estimated signal and (b) section of separated random noise.}
+
+\multiplot{2}{nmo-ct,nmo-ctnoiz}
+{width=0.47\columnwidth}
+{Random noise separation results of the poststack section using the curvelet transform.
+    (a) Section of estimated signal and (b) section of separated random noise.}
+
+\multiplot{2}{nmo-apef,nmo-apefnoiz}
+{width=0.47\columnwidth}
+{Random noise separation results of the poststack section using the proposed method.
+    (a) Section of estimated signal and (b) section of separated random noise.}
+
+\multiplot{4}{nmo-fkfx,nmo-fkhpef,nmo-fkct,nmo-fkapef}
+{width=0.47\columnwidth}
+{   (a)F-K spectrum of the denoised result using the FXDECON.
+    (b) F-K spectrum of the denoised result using the pattern-based method with the stationary PEF.
+    (c) F-K spectrum of the denoised result using the curvelet transform.
+    (d) F-K spectrum of the denoised result using the proposed method.}
+
+
+\subsection{Nonstationary signal and ground-roll noise separation}
+
+As a kind of coherent noise in land survey, ground-roll noise always
+displays high amplitude, low frequency and low velocity. We created a
+synthetic model to examine the validity of the proposed method
+(figure~\ref{fig:sp-synth}). The shot gather has low-frequency ground-roll
+noise and four hyperbolic reflection events, which overlap in the
+frequency domain (figure~\ref{fig:sp-compspt}). The linear ground-roll
+noise is generated by combining linear events with different dominant
+frequency, and its frequency range is limited from 0 to about 30 Hz.
+For comparison, the high-pass filter with a 25-Hz cutoff frequency
+produces the ground-roll noise separation result
+(figure~\ref{fig:sp-bp,sp-bpnoiz}).
+The nonstationary signal and ground-roll noise show the energy leakage
+in each other's sections because the frequency bandwidth of the
+ground-roll noise overlaps with that of the reflection events.
+Figure~\ref{fig:sp-ltft,sp-ltftnoiz} shows the noise separation result
+by using the local time-frequency (LTF) decomposition~\cite[]{Liu13}.
+In the time-frequency-space domain, we designed a muting filter to remove
+the ground-roll noise components, which leads to a higher SNR result
+(Table~\ref{tbl:ground-roll}). By using the proposed method, the ground-roll
+noise can be separated in to the following steps~\cite[]{Fomel02}:
+
+(i) Use a low-pass filter to roughly separate the ground-roll noise
+as an initial estimation.\\
+(ii) Make a mask from the initial noise model, and subsequent
+separation process is restricted in this time-space window.\\
+(iii) Calculate noise pattern $\mathbf{N}$ from the noise model using APEF.\\
+(iv) Calculate data pattern $\mathbf{D}$ from the origin data using APEF.\\
+(v) Further separate the signal and ground-roll noise based on
+equation~\ref{eq:NNsNNd}.
+
+The noise model is made by the low-pass filter with a 12-Hz cutoff
+frequency. We selected 12 (time) $\times$ 3 samples (space) filter
+coefficients for noise APEF $\mathbf{N}$ to predict the energy of
+the steep ground-roll noise, the smoothing radius is set to be 20
+(time) $\times$ 10 samples (space). Meanwhile, data APEF $\mathbf{D}$
+has 7 (time) $\times$ 4 samples (space) filter coefficients, the
+smoothing radius is 40 (time) $\times$ 30 samples (space).
+The separated signal by using the proposed method is well recovered
+(figure~\ref{fig:sp-apef}), and the SNR of the denoised results is
+comparable to that of LTF decomposition (Table~\ref{tbl:ground-roll}).
+The estimated noise section further verifies the successful signal-noise
+separation (figure~\ref{fig:sp-apefnoiz}). Although some noise at low
+frequency is still present (figure~\ref{fig:sp-fkapef}) and affects
+the SNR, the energy of the effective signal is much cleaner after
+using the proposed method.
+
+\tabl{ground-roll}{Comparison of the SNR of the ground-roll noise separation results}
+{
+    \begin{center}
+        \begin{tabular}{p{70pt}p{70pt}p{70pt}p{70pt}p{70pt}}
+            \hline
+                & Synthetic model & \tabincell{c}{High-pass                 \\filtering} & \tabincell{c}{LTF\\decomposition} & \tabincell{c}{The\\proposed\\method} \\
+            \hline
+            SNR & -13.3           & 6.514                   & 8.988 & 8.001 \\
+            \hline
+        \end{tabular}
+    \end{center}
+}
+
+\inputdir{simplegroll}
+\multiplot{2}{sp-synth,sp-compspt}
+{width=0.47\columnwidth}
+{(a) Synthetic shot gather containing ground-roll and (b) comparison of the spectrum.
+    Solid line is the synthetic model, dashed lines the ground-roll noise
+    (5 Hz dominant frequency) and reflection events (30 Hz dominant frequency).}
+
+\multiplot{2}{sp-bp,sp-bpnoiz}
+{width=0.47\columnwidth}
+{Noise separation results of the synthetic shot gather using the high-pass filtering.
+    (a) Section of estimated signal and (b) section of separated ground-roll noise.}
+
+\multiplot{2}{sp-ltft,sp-ltftnoiz}
+{width=0.47\columnwidth}
+{Noise separation results of the synthetic shot gather using the LTF decomposition.
+    (a) Section of estimated signal and (b) section of separated ground-roll noise.}
+
+\multiplot{2}{sp-apef,sp-apefnoiz}
+{width=0.47\columnwidth}
+{Noise separation results of the synthetic shot gather using the proposed method.
+    (a) Section of estimated signal and (b) section of separated ground-roll noise.}
+
+\multiplot{4}{sp-fksynth,sp-fkbp,sp-fkltft,sp-fkapef}
+{width=0.47\columnwidth}
+{(a) F-K spectrum of the synthetic model.
+    (b) F-K spectrum of the denoised result using the high-pass filtering.
+    (c) F-K spectrum of the denoised result using the LTF decomposition.
+    (d) F-K spectrum of the denoised result using the proposed method.}
+
+
+Figure~\ref{fig:dune-data,dune-spt} shows the profile and the corresponding
+spectrum of a 3D land shot gather from Saudi Arabia, where the ground-roll
+noise is three-dimensional and appears as a hyperbolic shape in this
+receiver line. Due to the difference of dominant frequency between the
+ground-roll noise and reflection events, it may suggest separating them
+based on different frequency. The frequency-based separation method leads
+to a worse result with a simple filter design, and the estimated
+signal by using the high-pass filter with 20-Hz cutoff frequency
+contains more low-level ground-roll noise (figure~\ref{fig:dune-bp}).
+The LTF decomposition method with a carefully selected muting filter
+gets better results than those from high-pass filtering, but it still
+leaves some ground-roll noise in the middle part of the estimated signal
+section (figure~\ref{fig:dune-ltft}). We used the initial noise model
+(figure~\ref{fig:dune-bpnoiz}) to characterize the ground-roll noise,
+noise APEF $\mathbf{N}$ is designed with 12 (time) $\times$ 3 samples
+(space) filter size and 20 (time) $\times$ 15 samples (space) smoothing
+radius. Data APEF $\mathbf{D}$ uses a smaller filter size with 5 (time)
+$\times$ 4 samples (space) coefficients and 30 (time) $\times$ 25 samples
+(space) smooth radius to capture signal energy. In the F-K spectrum
+(figure~\ref{fig:dune-aspec}), there are also some weaker energies below 20 Hz,
+but the ground-roll noise has been separated from the denoised results
+(figure~\ref{fig:dune-sign}). The proposed method achieved the separation
+goal that the underlying reflection events clearly appear in the estimated
+section, and the ground-roll noise is well suppressed.
+
+\inputdir{dune}
+\multiplot{2}{dune-data,dune-spt}
+{width=0.47\columnwidth}
+{(a) A receiver line of the 3D shot gather and (b) the corresponding spectrum.}
+
+\multiplot{2}{dune-bp,dune-bpnoiz}
+{width=0.47\columnwidth}
+{Noise separation results of the field data using the high-pass filtering.
+    (a) Section of estimated signal and (b) section of separated ground-roll noise.}
+
+\multiplot{2}{dune-ltft,dune-ltftnoiz}
+{width=0.47\columnwidth}
+{Noise separation results of the field data using the LTF decomposition.
+    (a) Section of estimated signal and (b) section of separated ground-roll noise.}
+
+\multiplot{2}{dune-sign,dune-noiz}
+{width=0.47\columnwidth}
+{Noise separation results of the field data using the proposed method.
+    (a) Section of estimated signal and (b) section of separated ground-roll noise.}
+
+\multiplot{4}{dune-dspec,dune-bspec,dune-lspec,dune-aspec}
+{width=0.47\columnwidth}
+{   (a) F-K spectrum of the shot gather.
+    (b) F-K spectrum of the denoised result using the high-pass filtering.
+    (c) F-K spectrum of the denoised result using the LTF decomposition.
+    (d) F-K spectrum of the denoised result using the proposed method.}
+
+\section{Discussion}
+We considered that the APEF can characterize the properties of data and
+treated the corresponding APEF as the pattern operator. Data pattern
+operator $\mathbf{D}$ and noise pattern operator $\mathbf{N}$ can be obtained
+by solving the corresponding APEF. Since APEF uses the shaping regularization
+constraint, there are two main parameters that affect the filter: one is the
+filter size, and the other is the smoothing radius~\cite[]{Liu11}.
+These two parameters are empirical, and they are related to the characteristics
+of the events, including spatial distribution, local slope, etc. We applied the
+pattern operators to the corresponding dataset and adjusted the parameters of
+the APEF by observing whether the corresponding data components were absorbed or not.
+For example, the noise component can be absorbed by using pattern operator
+$\mathbf{N}$ in the noise model ($ \mathbf{0} \approx \mathbf{Nn} $).
+
+
+\section{Conclusion}
+We introduced a new pattern-based approach for nonstationary signal-noise
+separation. Our method used the APEF as the pattern operator, which was suitable
+for characterizing the nonstationary properties of seismic data and noise
+in the time-space domain. After calculating the data pattern $\mathbf{D}$ and
+the noise pattern $\mathbf{N}$, we could separate the signal and noise by solving
+a constrained least-squares problem. We adopted different algorithms to deal
+with the random noise and ground-roll noise separation problem. Numerical examples
+showed that the proposed method provided a robust signal-noise separation,
+even in the presence of random noise with nonstationary energy distribution and
+strongly curved ground roll. Multiple suppression and diffraction separation were
+also other applications of this method.
+
+
+\section{Acknowledgement}
+Thanks to Sergey Fomel for the enlightening discussion. This work is supported
+by the National Natural Science Foundation of China (grant nos. 41974134, 41874125,
+and 41774127) and the National key Research and Development Program of China
+(grant no. 2018YFC0603701).
+
+\appendix
+\section{Conjugate gradient algorithm}
+
+The pattern-based method can be described as the constrained linear
+equation system:
+\begin{equation}
+    \begin{aligned}
+        \mathbf{0} & \approx \mathbf{NNs} - \mathbf{NNd}
+        \mathbf{0} & \approx \epsilon \mathbf{Ds}
+    \end{aligned}
+\end{equation}
+where $\mathbf{NN}$ denotes the chain operator, which applies operator
+$\mathbf{N}$ twice. The following conjugate gradient algorithm~\cite[]{Wang16}
+can be used to solve such problem.
+\begin{algorithm}{Conjugate gradients with regularization}
+    {\mathbf{NN}, \mathbf{S},\mathbf{d}, \mathbf{s},\epsilon}
+    \mathbf{s \= 0} \\
+    \mathbf{r \= - NNd} \\
+    \begin{FOR}{n \= 1, 2, \ldots, Niter} \\
+        \mathbf{g} \= \mathbf{NN}^T\,\mathbf{r} + \epsilon\,\mathbf{S}^{T}\,\mathbf{s}\\\
+        \mathbf{G} \= \mathbf{NN}\,\mathbf{g} + \epsilon\,\mathbf{S}\,\mathbf{g}\\
+        \rho \= \mathbf{g}^T\,\mathbf{g} \\
+        \begin{IF}{n = 1}
+            \beta \= 0
+            \ELSE
+            \beta \= \rho/\hat{\rho}
+        \end{IF} \\
+        \left[\begin{array}{l}
+                \mathbf{p} \\
+                \mathbf{P}
+            \end{array}\right] \=
+        \left[\begin{array}{l}
+                \mathbf{g} \\
+                \mathbf{G}
+            \end{array}\right] + \beta\,
+        \left[\begin{array}{l}
+                \mathbf{p} \\
+                \mathbf{P}
+            \end{array}\right] \\
+        \alpha \= - \rho/(\mathbf{P}^T\,\mathbf{P}) \\
+        \left[\begin{array}{l}
+                \mathbf{s} \\
+                \mathbf{r}
+            \end{array}\right] \=
+        \left[\begin{array}{l}
+                \mathbf{s} \\
+                \mathbf{r}
+            \end{array}\right] + \alpha\,
+        \left[\begin{array}{l}
+                \mathbf{p} \\
+                \mathbf{P}
+            \end{array}\right] \\
+        \hat{\rho} \= \rho
+    \end{FOR} \\
+    \RETURN \mathbf{s}
+\end{algorithm}
+
+
+\bibliographystyle{seg}
+\bibliography{SEG,paper}

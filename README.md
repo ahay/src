@@ -31,10 +31,9 @@ be verified, exchanged, and modified by users of the system.
 ## Design Principles
 
 * Madagascar is a modern package. Started in 2003 and publicly released in
-2006, it was developed entirely from scratch. Being a relatively new package,
-it follows modern software engineering practices such as module
-encapsulation and test-driven development. A rapid development of a project
-of this scope (more than 300 main programs and more than 3,000 tests) would
+2006, it was developed entirely from scratch following modern software engineering 
+practices such as moduleencapsulation and test-driven development. A rapid development
+of a projectof this scope (more than 300 main programs and more than 3,000 tests) would
 not be possible without standing on the shoulders of giants and learning
 from the 30 years of previous experience in open packages such as SEPlib and
 Seismic Unix. We have borrowed and reimplemented functionality and ideas

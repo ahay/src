@@ -2,7 +2,7 @@
 
 import sys
 import math
-import numpy
+import numpy as np
 import m8r
 
 # initialize
@@ -26,8 +26,8 @@ angle = angle*math.pi/180.
 cosa = math.cos(angle)
 sina = math.sin(angle)
 
-orig = numpy.zeros([n1,n2],'f')
-rotd = numpy.zeros([n1,n2],'f')
+orig = np.zeros([n1,n2],'f')
+rotd = np.zeros([n1,n2],'f')
 
 # read data
 inp.read(orig)
@@ -72,8 +72,8 @@ for i2 in range(n2):
                 rotd[i2,i1] = 0.
         elif interp[0] == 'c':
             # cubic convolution 
-		    # !!! ADD CODE !!! 
-		    break
+		    # !!! ADD CODE !!!
+            break
         else:
             sys.stderr.write('Unknown method "%s"' % interp)
             sys.exit(1)

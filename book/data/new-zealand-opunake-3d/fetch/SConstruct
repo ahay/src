@@ -72,21 +72,21 @@ Flow(['image.rsf','image_hdr.rsf'],['Opunake.rsf','Opunake_hdr.rsf'],
 	  verbose=1
      ''',stdout=0, stdin=0)
        
-Result("image","sfgrey title='3D-Opunake'")
+#Result("image","sfgrey title='3D-Opunake'")
 #Result("zoomimage","image",
 #       "window min1=1 max1=2 j3=10 | sfgrey title='3D-Opunake'")
-Result("image3df","image",
-       '''
-       byte 
-       | grey3 frame1=1350 frame2=152 frame3=114 title='3D-Opunake'
-       ''')
+#Result("image3df","image",
+#       '''
+#       byte 
+#       | grey3 frame1=1350 frame2=152 frame3=114 title='3D-Opunake'
+#       ''')
 
-Result("image3d","image",
-       '''
-       byte 
-       | grey3 frame1=1350 frame2=152 frame3=114 
-         title='3D-Opunake' flat=n
-       ''')
+#Result("image3d","image",
+#       '''
+#       byte 
+#       | grey3 frame1=1350 frame2=152 frame3=114 
+#         title='3D-Opunake' flat=n
+#       ''')
 
 Plot('image211','image',
      '''
@@ -99,13 +99,13 @@ Plot('imagex153','image',
      | sfput label2='xline' 
      | sfgrey title='Opunake 3d xline 153'
      ''')
-Result("imageilxl","image211 imagex153",'SideBySideAniso')
+#Result("imageilxl","image211 imagex153",'SideBySideAniso')
 
-Result("imageslice","image",
-	'''
-	sfwindow min1=.2 max1=.202  \
-	| sftransp plane=13 \
-	| sfgrey gainpanel=a
-	''')
+#Result("imageslice","image",
+#	'''
+#	sfwindow min1=.2 max1=.202  \
+#	| sftransp plane=13 \
+#	| sfgrey gainpanel=a
+#	''')
    
 End()

@@ -19,10 +19,13 @@ import os, stat, sys, types, copy, re, string, ftplib, socket, json
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
-if sys.version_info[0] >= 3:
-    import urllib.request as urllib_request
-else:
-    import urllib as urllib_request
+from urllib.request import urlopen
+from shutil import copyfileobj
+import ssl
+
+context = ssl.create_default_context()
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = list(map(int,SCons.__version__.split('.')[:3]))
@@ -69,9 +72,11 @@ def get_dataserver():
     country = get_geolocation()
     if country == "CN":
         #    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
-        return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+        # return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+        return os.environ.get('RSF_DATASERVER','https://fomel.com')
     else:
-        return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+        # return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
+        return os.environ.get('RSF_DATASERVER','https://fomel.com')
 
 dataserver = None
 libs = os.environ.get('LIBS',"")
@@ -204,7 +209,9 @@ def retrieve(target=None,source=None,env=None):
                 else:
                     localfile=file
                 try:
-                    urllib_request.urlretrieve(rdir,localfile)
+                    with urlopen(rdir, context=context) as in_stream, open(localfile, 'wb') as out_file:
+                        copyfileobj(in_stream, out_file)
+                        
                     if not os.stat(localfile)[6]:
                         print('Could not download file "%s" ' % localfile)
                         os.unlink(localfile)
@@ -572,7 +579,7 @@ class Project(Environment):
             if (not re.search(suffix + '$',file)) and ('.' not in file):
                 file = file + suffix
             targets.append(file)
-        if suffix == sfsuffix and re.search('/',targets[0]):
+        if suffix == sfsuffix and re.search('/',targets[0]) and 1 == stdout:
             subdir = os.path.dirname(os.path.join(self.path,targets[0]))
             rsf.path.mkdir(subdir)
             command = command + ' --out=%s' % os.path.join(self.path,'${TARGET}@')

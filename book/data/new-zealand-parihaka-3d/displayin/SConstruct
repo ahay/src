@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 # angle stacks
 for  file in ['full_angle','near_stack','mid_stack','far_stack']:
    Flow(['mapped_%s.rsf'%file,'mapped_%s_hdr.rsf'%file],

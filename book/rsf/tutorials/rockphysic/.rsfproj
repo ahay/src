@@ -1,0 +1,3 @@
+uses=['sfcsv2rsf', 'sfwindow', 'sfmask', 'sfheaderwindow', 'sfheadermath', 'sfadd', 'sfheadercut', 'sfdd', 'sfdisfil', 'sfgrey', 'sfbyte', 'sfcmplx', 'sfgraph', 'sfmul', 'sfspike', 'sfmath', 'sfput', 'sfcat', 'sfzoeppritz', 'sfspray', 'sfricker1']
+data=['https://raw.githubusercontent.com/seg/tutorials-2017/master/1706_Seismic_rock_physics/qsiwell5.csv']
+size=     906547

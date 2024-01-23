@@ -60,11 +60,11 @@ Plot('sspec0','signal0',
 Result('spec0','spec nspec0 sspec0','Overlay')
 
 # Matching filter program
-program = Program('match.c')
+# program = Program('match.c')
 
 # COMMENT ABOVE AND UNCOMMENT BELOW IF YOU WANT TO USE PYTHON 
-# program = Command('match.exe','match.py','cp $SOURCE $TARGET')
-# AddPostAction(program,Chmod(program,0o755))
+program = Command('match.exe','match.py','cp $SOURCE $TARGET')
+AddPostAction(program,Chmod(program,0o755))
 
 match = program[0]
 

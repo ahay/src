@@ -1,0 +1,356 @@
+import math
+from rsf.proj import *
+
+###
+# To finishing curvelet denoising part, need to install pylops and curvelops.
+# pylops : pip install pylops
+# curvelops : follow the instructions: https://github.com/PyLops/curvelops
+###
+
+# Plot font and screen ratio, width, height for uniform ppt figs.
+p1 = 0.7
+sr = 1.0
+sw = 7.0
+sh = 10.0
+xll = 2.0
+fat = 2
+
+# Synthetic CMP Parameters
+nx = 101
+delx = 0.0125 * 2
+ox = -1.25
+ny = nx
+dely = delx
+oy = ox
+nt = 1001
+dt = 0.004
+fw = 10.0
+
+# 4 Reflection Events
+# 111111111 Make a layer: z = z0 + x*dx + y*dy
+
+dx = 0.4
+dy = 0.1
+dt = 0.004
+z0 = 0.8
+# z0=0.75
+
+cg = 1 / math.sqrt(1 + dx * dx + dy * dy)
+ca = -dx * cg
+cb = -dy * cg
+d = z0 * cg
+
+mx = 0
+my = 0
+
+D = d - mx * ca - my * cb
+
+v0 = 2.5
+t0 = 2 * D / v0
+it0 = int(t0 / dt)
+it1 = it0
+# print it1
+Flow("spike1", None,
+     """
+     spike n1=%d k1=%d nsp=1 | ricker1 frequency=%g |
+     spray axis=2 n=%d o=%g d=%g |
+     spray axis=3 n=%d o=%g d=%g
+     """ % (nt, it1, fw, ny, oy, dely, nx, ox, delx))
+
+wx = 1 - ca * ca
+wy = 1 - cb * cb
+wxy = -ca * cb
+
+Flow("vel1.asc", None,
+     "echo %g %g %g n1=3 data_format=ascii_float in=$TARGET" % (wx, wy, wxy))
+Flow("vel1","vel1.asc",
+     """
+     dd form=native | scale dscale=%g | spray axis=1 n=%d
+     """ % (1 / (v0 * v0), nt),
+     local=1)
+Flow("cmp1", "spike1 vel1", "inmo3 velocity=${SOURCES[1]}", local=1)
+
+# 222222222222 Make another layer: z = z0 + x*dx + y*dy
+dx = 0.7
+dy = 0.41
+dt = 0.004
+z0 = 0.85
+
+cg = 1 / math.sqrt(1 + dx * dx + dy * dy)
+ca = -dx * cg
+cb = -dy * cg
+d = z0 * cg
+
+mx = 0
+my = 0
+
+D = d - mx * ca - my * cb
+
+v0 = 1.7
+t0 = 2 * D / v0
+it0 = int(t0 / dt)
+it2 = it0
+# print it2
+Flow("spike2", None, 
+     """
+     spike n1=%d k1=%d nsp=1 | ricker1 frequency=%g |
+     spray axis=2 n=%d o=%g d=%g |
+     spray axis=3 n=%d o=%g d=%g
+     """ % (nt, it2, fw, ny, oy, dely, nx, ox, delx))
+
+wx = 1 - ca * ca
+wy = 1 - cb * cb
+wxy = -ca * cb
+
+Flow("vel2.asc", None,
+     "echo %g %g %g n1=3 data_format=ascii_float in=$TARGET" % (wx, wy, wxy))
+Flow("vel2","vel2.asc",
+     '''
+     dd form=native | scale dscale=%g | 
+     spray axis=1 n=%d
+     ''' % (1 / (v0 * v0), nt), local=1)
+Flow("cmp2", "spike2 vel2", "inmo3 velocity=${SOURCES[1]}", local=1)
+
+# 3333333333333 Make yet another layer: z = z0 + x*dx + y*dy
+dx = 0.1
+dy = 0.9
+dt = 0.004
+z0 = 1.1
+
+cg = 1 / math.sqrt(1 + dx * dx + dy * dy)
+ca = -dx * cg
+cb = -dy * cg
+d = z0 * cg
+
+mx = 0
+my = 0
+
+D = d - mx * ca - my * cb
+
+v0 = 1.75
+t0 = 2 * D / v0
+it0 = int(t0 / dt)
+it3 = it0
+# print it3
+Flow("spike3", None,
+     """
+     spike n1=%d k1=%d nsp=1 | ricker1 frequency=%g |
+     spray axis=2 n=%d o=%g d=%g |
+     spray axis=3 n=%d o=%g d=%g
+     """ % (nt, it3, fw, ny, oy, dely, nx, ox, delx))
+
+wx = 1 - ca * ca
+wy = 1 - cb * cb
+wxy = -ca * cb
+
+Flow("vel3.asc", None,
+     "echo %g %g %g n1=3 data_format=ascii_float in=$TARGET" % (wx, wy, wxy))
+Flow("vel3","vel3.asc",
+     """
+     dd form=native | scale dscale=%g | spray axis=1 n=%d
+     """ % (1 / (v0 * v0), nt), local=1)
+Flow("cmp3", "spike3 vel3", "inmo3 velocity=${SOURCES[1]}", local=1)
+
+# 444444444444 Make a 4th layer: z = z0 + x*dx + y*dy
+dx = 0.2
+dy = 0.1
+dt = 0.004
+z0 = 1.3
+
+cg = 1 / math.sqrt(1 + dx * dx + dy * dy)
+ca = -dx * cg
+cb = -dy * cg
+d = z0 * cg
+
+mx = 0
+my = 0
+D = d - mx * ca - my * cb
+
+v0 = 2.0
+t0 = 2 * D / v0
+it0 = int(t0 / dt)
+it4 = it0
+# print it4
+Flow("spike4", None,
+     """
+     spike n1=%d k1=%d nsp=1 | ricker1 frequency=%g |
+     spray axis=2 n=%d o=%g d=%g |
+     spray axis=3 n=%d o=%g d=%g
+     """ % (nt, it4, fw, ny, oy, dely, nx, ox, delx))
+
+wx = 1 - ca * ca
+wy = 1 - cb * cb
+wxy = -ca * cb
+
+Flow("vel4.asc", None,
+     "echo %g %g %g n1=3 data_format=ascii_float in=$TARGET" % (wx, wy, wxy))
+Flow("vel4","vel4.asc",
+     """
+     dd form=native | scale dscale=%g | spray axis=1 n=%d
+     """ % (1 / (v0 * v0), nt), local=1)
+Flow("cmp4", "spike4 vel4", "inmo3 velocity=${SOURCES[1]}", local=1)
+
+# Add events to create CMP.
+Flow("cmp", "cmp1 cmp2 cmp3 cmp4",
+     """
+     math cmp2=${SOURCES[1]} cmp3=${SOURCES[2]} cmp4=${SOURCES[3]} 
+     output="input+cmp2+cmp3+cmp4" |
+     window max1=1.5 min1=0.5 j1=2 | put o1=0
+     """, local=1)
+Result("cmpmod", "cmp",
+       """
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("noise", "cmp", "noise seed=1 range=0.3 ")
+Result("cmpnoise", "noise", 
+       """
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("sig0", "cmp", 'math output="input*input" | stack axis=0')
+Flow("noi0", "cmp noise", 
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr0", "sig0 noi0",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)'")
+
+### f-x SPF
+Flow("spf2", "noise",
+     """
+     fxspfdenoise2 lambda1=4.5 lambda3=1
+     na1=4 na2=0 verb=y
+     """)
+Result("cmpspf2", "spf2",
+       """
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7  title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("errspf2", "noise spf2", "add ${SOURCES[1]} scale=1,-1 ")
+Result("cmperrspf2", "errspf2", 
+       """
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7  title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("noi1", "cmp spf2",
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr1", "sig0 noi1",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)'")
+
+### f-x-y SPF
+# padding data
+length_pad = 50
+Flow("noise_pad", "noise", 
+     """
+     window n3=%d | reverse which=4 | put o3=0 d3=0.025
+     """ % length_pad)
+Flow("noises", "noise_pad noise", "cat ${SOURCES[1:2]} axis=3")
+Flow("spf3", "noises", 
+     """
+     fxyspfdenoise3 lambda1=4.5 lambda2=4.5 lambda3=1 na1=2 na2=2 verb=y |
+     window f3=%d | put o3=-1.25
+     """ % length_pad)
+Result("cmpspf3", "spf3", 
+       """
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7 title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("errspf3", "noise spf3", "add ${SOURCES[1]} scale=1,-1 ")
+Result("cmperrspf3", "errspf3",
+       """
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7  title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("noi2", "cmp spf3", 
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr2", "sig0 noi2",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)'")
+
+### f-x-y-RNA
+Flow("fnoise", "noise", "fft1 | transp plane=13 | transp plane=12")
+Flow("shifts", "fnoise", "cshifts2 ns1=2 ns2=2 | transp plane=34")
+Flow("flt pre", "shifts fnoise",
+     """
+     clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=7 rect2=7 niter=30
+     """)
+Flow("rna", "pre", "transp plane=13 | transp plane=23 | fft1 inv=y")
+Result("cmprna", "rna",
+       """
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7  title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("errrna", "noise rna", "add ${SOURCES[1]} scale=1,-1 ")
+Result("cmperrrna", "errrna",
+       """
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7  title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("noi3", "cmp rna",
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr3", "sig0 noi3",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)'")
+
+#! Need to install python package: pylops, curvelops
+#! Follow "python curvelet_denoise.py" to generate "ct_denoise.rsf"
+
+import sys
+python = sys.executable
+
+Command('ct_denoise.rsf','curvelet_denoise3d.py',python + ' $SOURCE')
+
+### curvelet
+Result("cmpct", "ct_denoise", 
+       """
+       put d1=0.008 d2=0.025 d3=0.025 01=0 o2=-1.25 o3=-1.25 
+       label1="Time" unit1="s" |
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7  title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("ct_denoise_err", "noise ct_denoise", "add ${SOURCES[1]} scale=1,-1")
+Result("cmperrct", "ct_denoise_err", 
+       """
+       put d1=0.008 d2=0.025 d3=0.025 01=0 o2=-1.25 o3=-1.25
+       label1="Time" unit1="s" |
+       byte gainpanel=all clip=0.1 |
+       grey3 flat=n frame1=80 frame2=50 frame3=50
+       point1=0.6 point2=0.7  title=
+       label2="X" label3="Y" unit2="km" unit3="km"
+       """)
+Flow("noi4", "cmp ct_denoise",
+     """
+     math A=${SOURCES[0]} B=${SOURCES[1]} output="(A-B)*(A-B)" |
+     stack axis=0
+     """)
+Flow("snr4", "sig0 noi4",
+     "math A=${SOURCES[0]} B=${SOURCES[1]} output='10*log(A/B)/log(10)'")
+
+End()

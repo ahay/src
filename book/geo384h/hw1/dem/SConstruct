@@ -1,20 +1,21 @@
 from rsf.proj import *
 
 # Download data
-Fetch('austin-w.HH','bay')
+Fetch('bay.h','bay')
 
 # Convert to byte form
-Flow('byte','austin-w.HH',
+Flow('byte','bay.h',
      '''
      dd form=native |
+     window f2=500 n2=1500 |
      byte pclip=100 allpos=y
      ''')
 
 # Display
 Result('byte',
        '''
-       grey yreverse=n screenratio=1 
-       title="Digital Elevation Map" 
+       grey yreverse=n label1=South-North label2=West-East 
+       title="Digital Elevation Map" screenratio=0.8
        ''')
 
 # Histogram

@@ -67,7 +67,7 @@ Flow(['image.rsf','image_hdr.rsf'],
 	  verbose=1
      ''',stdout=0, stdin=0)
        
-Result("image","window j3=1 | sfgrey title='stratton-3d'")
+Plot("image","window j3=1 | sfgrey title='stratton-3d'",view=1)
 #Result("zoomimage","image",
 #       "window min1=1 max1=2 j3=10 | sfgrey title='stratton-3d'")
 Result("image3df","image",

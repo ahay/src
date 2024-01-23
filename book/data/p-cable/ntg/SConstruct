@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-# Sconscript('../segy/SConstruct')
+SConscript('../segy/SConstruct')
 
 Flow('ntg','../segy/DeconShots3.rsf',
     '''

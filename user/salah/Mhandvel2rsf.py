@@ -155,25 +155,25 @@ if __name__ == "__main__":
         line=line.strip()
         if re.match(r"^\*", line):
            continue 
-        if re.match(r"^\HANDVEL|^\VFUNC", line):
-           if 3 != len(line.split()):
-           	 sys.stderr.write("wrong input file format\n")
-           	 sys.stderr.write("%s\n"%(line))
-                 sys.exit(2)
-           # get inline and xline
-           i=line.split()[1]
-           x=line.split()[2]
-           if i in inline.keys():
-           	inline[i].append(x)
-           else:
-           	inline[i]=[x]
-	   if (i,x) in loc.keys():
-		 sys.stderr.write("duplicate location %s,%s\n"%(i,x))
-                 sys.exit(2)
-           else:
-		 loc[i,x]=[]
+        if re.match(r"^HANDVEL|^VFUNC", line):
+            if 3 != len(line.split()):
+                sys.stderr.write("wrong input file format\n")
+                sys.stderr.write("%s\n"%(line))
+                sys.exit(2)
+            # get inline and xline
+            i=line.split()[1]
+            x=line.split()[2]
+            if i in inline.keys():
+                inline[i].append(x)
+            else:
+                inline[i]=[x]
+            if (i,x) in loc.keys():
+                sys.stderr.write("duplicate location %s,%s\n"%(i,x))
+                sys.exit(2)
+            else:
+                loc[i,x]=[]
         else:
-           loc[i,x]= loc[i,x] + line.split()
+            loc[i,x]= loc[i,x] + line.split()
     
     #for y in inline.keys():
     	#for x,v in inline[y].items():
@@ -198,7 +198,7 @@ if __name__ == "__main__":
         p.start()
     #print len(jobs)
     for job in jobs:
-	job.join()
+        job.join()
     # concatinate traces in the second axis
     cmd='''
         %s axis=2 %s | %s  n3=%d o3=%f d3=%f n2=%d o2=%f d2=%f label1=time label2=xline label3=inline| %s plane=23
@@ -211,11 +211,7 @@ if __name__ == "__main__":
     # removing temp files of individual traces
     for tmp in vs:
         try:
-           subprocess.call(sfrm + ' ' + tmp,shell=True)
+            subprocess.call(sfrm + ' ' + tmp,shell=True)
         except:
-           pass
+            pass
     sys.exit(0)
-
-
-
-

@@ -1,5 +1,7 @@
 from rsf.proj import *
 
+SConscript('../fetch/SConstruct')
+
 #< ../fetch/G3D1206_002_L87_080_hdr.rsf sfheaderattr
 #91 headers, 311640 traces
 #******************************************************************************* 

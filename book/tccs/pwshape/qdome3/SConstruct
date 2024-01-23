@@ -1,0 +1,150 @@
+from rsf.proj import *
+
+n1=200
+n2=100
+n3=50
+pad=25
+
+Flow('qdome',None,'qdome n1=%g d1=0.008'%n1)
+Flow('qdomepad','qdome','pad beg1=%d beg2=%d beg3=%d end1=%d end2=%d end3=%d'%(pad,pad,pad,pad,pad,pad))
+
+Result('qdome',
+       '''
+       byte |
+       grey3 frame1=100 frame2=50 frame3=25 title=Qdome flat=n
+       labelfat=4 labelsz=9. titlefat=4 titlesz=12
+       ''')
+Flow('slope','qdome','fdip rect1=5 rect2=5 rect3=5')
+Flow('slopepad','qdomepad','fdip rect1=5 rect2=5 rect3=5')
+
+# Cut a hole
+Flow('oval','qdome',
+     '''
+     math output="((x1-0.8)/0.3)^2+((x2-0.4)/0.1)^2+((x3-0.4)/0.2)^2" |
+     mask min=1 | dd type=float
+     ''')
+Flow('hole','qdome oval','mul ${SOURCES[1]}')
+
+Result('hole',
+       '''
+       byte |
+       grey3 frame1=100 frame2=50 frame3=25 title="Qdome with Hole" flat=n
+       labelfat=4 labelsz=9. titlefat=4 titlesz=12
+       ''')
+
+Flow('hole-slope','hole oval','fdip rect1=5 rect2=5 rect3=5 mask=${SOURCES[1]}')
+
+
+
+maxit=10
+shinterp=[]
+pre='pws'
+for itr in range(1,maxit+1):
+    Flow(pre+'-hole-it%g'%itr,'hole oval hole-slope',
+        '''
+        shplanemis3 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g ns1=5 ns2=5 verb=y |
+        math mask=${SOURCES[1]} image=${SOURCES[0]} output="image*mask+input*(1-mask)" 
+        '''%itr)
+    Plot(pre+'-hole-it%g'%itr,'grey title="Hole filled with PWS"')
+    shinterp.append(pre+'-hole-it%g'%itr)
+Flow('hole-shape',pre+'-hole-it%g'%maxit,'sfcp')
+Result('hole-shape',
+       '''
+       byte |
+       grey3 frame1=100 frame2=50 frame3=25 title="Hole Filled with PWS" flat=n
+       labelfat=4 labelsz=9. titlefat=4 titlesz=12
+       ''')
+Flow('hole-shape-subtr','hole-shape qdome','add scale=-1,1 ${SOURCES[1]}')
+Result('hole-shape-subtr',
+       '''
+       byte |
+       grey3 frame1=100 frame2=50 frame3=25 title="Difference" flat=n
+       labelfat=4 labelsz=9. titlefat=4 titlesz=12
+       ''')
+Flow(pre+'movie',shinterp,'cat axis=4 ${SOURCES[1:%g]}'%maxit)
+Plot(pre+'movie','grey gainpanel=all title="Interpolation using PWS"')
+
+
+dmaxit=200
+pre='pwd'
+interp=[]
+#for itr in range(1,dmaxit+1):
+itr=200
+Flow(pre+'-hole-it%g'%itr,'hole oval hole-slope',
+    '''
+    planemis3 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g verb=y |
+    math mask=${SOURCES[1]} image=${SOURCES[0]} output="image*mask+input*(1-mask)" 
+    '''%itr)
+Plot(pre+'-hole-it%g'%itr,'grey title="Hole filled with PWD"')
+interp.append(pre+'-hole-it%g'%itr)
+
+Flow('hole-destr',pre+'-hole-it%g'%dmaxit,'sfcp')
+Result('hole-destr',
+       '''
+       byte |
+       grey3 frame1=100 frame2=50 frame3=25 title="Hole Filled with PWD"
+       labelfat=4 labelsz=9. titlefat=4 titlesz=12
+       ''')
+#Flow(pre+'movie',interp,'cat axis=3 ${SOURCES[1:%g]}'%dmaxit)
+#Plot(pre+'movie','grey gainpanel=all title="Interpolation using PWD"')
+
+cmaxit=1
+pre='pwc'
+cointerp=[]
+for itr in range(1,cmaxit+1):
+    Flow(pre+'-hole-it%g'%itr,'hole oval hole-slope',
+        '''
+        planemis3 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g verb=y prec=y|
+        math mask=${SOURCES[1]} image=${SOURCES[0]} output="image*mask+input*(1-mask)" 
+        '''%itr)
+    Plot(pre+'-hole-it%g'%itr,'grey title="Hole filled with PWC"')
+    cointerp.append(pre+'-hole-it%g'%itr)
+Flow('hole-cnstr',pre+'-hole-it%g'%cmaxit,'sfcp')
+Result('hole-cnstr',
+       '''
+       byte |
+       grey3 frame1=100 frame2=50 frame3=25 title="Hole Filled with PWC"
+       labelfat=4 labelsz=9. titlefat=4 titlesz=12
+       ''')
+#Flow(pre+'movie',cointerp,'cat axis=3 ${SOURCES[1:%g]}'%cmaxit)
+#Plot(pre+'movie','grey gainpanel=all title="Interpolation using PWC"')
+Result('PWS3D-qdome3',['Fig/qdome','Fig/hole','Fig/hole-shape'],'SideBySideAniso')
+
+
+
+# Impulse response of the shaping filter
+import random
+random.seed(2015)
+
+nr = 0
+def rnd(x):
+    global nr
+    r = str(random.randint(1,nr))
+    return r
+
+nsp = 20 # number of spikes
+
+nr = n1#+2*pad
+k1 = string.join(map(rnd,range(nsp)),',')
+nr = n2#+2*pad
+k2 = string.join(map(rnd,range(nsp)),',')
+nr = n3#+2*pad
+k3 = string.join(map(rnd,range(nsp)),',')
+Flow('imp-pws-3D-spike','qdome slope','''
+    spike nsp=%d k1=%s k2=%s k3=%s
+    '''%(nsp,k1,k2,k3))
+Flow('pws3out','imp-pws-3D-spike slope','''
+    pwsmooth3 ns2=5 ns3=5 dip=${SOURCES[1]} |
+    bandpass fhi=30
+    ''')
+
+Result('imp-pws-3D-spike','grey title="3-D Spike"')
+Result('pws3out','grey title="3-D Spike" pclip=100')
+Result('pws3out-3d','pws3out','''byte pclip=100 |
+    grey3 flat=n frame1=%g frame2=%g frame3=%g 
+    labelfat=4 labelsz=9. titlefat=4 titlesz=12
+    label1="Time" label2="West-East" label3="South-North"
+    title="3-D Impulse Response" pclip=100
+    '''%(0.65*n1,n2/2.5,38))
+
+End()

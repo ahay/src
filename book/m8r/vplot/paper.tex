@@ -43,7 +43,7 @@ shape to reproduce a figure (Figure~\ref{fig:croshyp}) from \cite[]{bei}:
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[firstline=106,lastline=128,frame=single,title=\$RSFSRC/plot/test/croshyp.c]{\RSF/plot/test/croshyp.c}
 
-The function calls are easy to decipher: \texttt{vp\_umove} sets the
+The function calls are self-descriptive: \texttt{vp\_umove} sets the
 starting point (in predefined ``user'' coordinates),
 \texttt{vp\_udraw} draws a line to the next point. Four lines form a
 diamond shape.
@@ -96,12 +96,68 @@ bash$ < test.vpl sfpldb | sed s/Time\ \(s\)/Distance\ \(km\)/ | sfplas > test2.v
 
 \subsection{sfvplotdiff and reproducibility testing}
 
+One of the key reasons for a continued use of Vplot in Madagascar is
+the need for reproducibility testing. To test reproducibility, one can
+repeat the computation, generate a new figure and compare it with the
+previously stored figure. The \texttt{sfvplotdiff} provides a smart
+comaprison, which either confirms that the two figures match (up to
+a certain threshold) or identifies the mismatch.
+
+Let us try a simple test by creating severak slightly different figures.
+\begin{verbatim}
+bash$ sfspike n1=5 k1=3 | sfgraph title=Hello > fig1.vpl
+bash$ sfspike n1=5 k1=3 | sfgraph title=Bonjour > fig2.vpl
+bash$ sfspike n1=5 k1=3 | sfnoise var=1e-8 | sfgraph title=Hello > fig3.vpl
+bash$ sfspike n1=5 k1=3 | sfnoise var=1e-6 | sfgraph title=Hello > fig4.vpl
+\end{verbatim}
+
+Comparison by \texttt{sfvplotdiff} correctly identifies that the
+difference between \texttt{fig1.vpl} and \texttt{fig2.vpl} is in the
+title text.
+\begin{verbatim}
+bash$ sfvplotdiff fig1.vpl fig2.vpl 
+sfvplotdiff: Text string mismatch
+	File fig1.vpl, line 91: Hello
+	File fig2.vpl, line 91: Bonjour
+\end{verbatim}
+
+Comparing \texttt{fig1.vpl} and \texttt{fig3.vpl},
+\texttt{sfvplotdiff} doesn't report any difference and returns without
+messages. The data changed, but the difference was insignificant and
+not noticeable in the plot.
+\begin{verbatim}
+bash$ sfvplotdiff fig1.vpl fig3.vpl
+\end{verbatim}
+On the other hand, comparing \texttt{fig1.vpl} and \texttt{fig4.vpl},
+\texttt{sfvplotdiff} reports noticeable differences in the plot:
+\begin{verbatim}
+sfvplotdiff fig1.vpl fig4.vpl
+sfvplotdiff: Coordinate mismatch: draw
+	File fig1.vpl, lines 69 and 70: draw from (1365,3515) to (1293,3515)
+	File fig4.vpl, lines 69 and 70: draw from (1365,3518) to (1293,3518)
+sfvplotdiff: State mismatch: move
+	File fig1.vpl, line 72 (G): move=(1238,3515) from line 71.
+	File fig4.vpl, line 72 (G): move=(1238,3518) from line 71.
+sfvplotdiff: Coordinate mismatch: draw
+	File fig1.vpl, lines 74 and 75: draw from (1365,4401) to (1293,4401)
+	File fig4.vpl, lines 74 and 75: draw from (1365,4404) to (1293,4404)
+[... more output ...]
+\end{verbatim}
+
+Comparisons by \texttt{sfvplotdiff} are incorporated in the automatic
+testings scripts used by Madagascar to test reproducibility and to
+maintain the functionality of the package through continuous integration.
+
 \section{Graphics programs}
+
+In this section, we will look at examples of some of the most popular
+graphics programs. These programs take a data file (in the RSF format)
+as input and produce a figure (in the Vplot format) as output.
 
 \subsection{sfdots}
 
 \subsection{sfgraph}
-
+c
 \subsection{sfgraph3}
 
 \subsection{sfwiggle}

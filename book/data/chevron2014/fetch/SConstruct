@@ -13,7 +13,7 @@ for gzip in gzips:
 
 Flow(files,
      gzips,
-     '/bin/cat $SOURCES | tar -xvz',stdin=0,stdout=-1)
+     'cd ../fetch && /bin/cat $SOURCES | tar -xvz',stdin=0,stdout=-1)
 Flow('SEG14.Pisoelastic.segy','SEG14.Pisoelastic.segy.gz',
      'gunzip --to-stdout')
 

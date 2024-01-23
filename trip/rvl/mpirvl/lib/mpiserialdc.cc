@@ -56,7 +56,7 @@ namespace RVL {
       // cerr<<"MPISerialDC: call synch on "<<f.getName()<<endl;
       s.synch();
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       RVLException e;
       e<<"Error: MPISerialDC::eval called on FOR object not of MPISynchRoot type\n";
       e<<"does not know how to synchronize "<<f.getName()<<" result across comm\n";
@@ -91,7 +91,7 @@ namespace RVL {
       MPISerialDCF const & c = dynamic_cast<MPISerialDCF const &>(dcf);
       return this->f.compare(c.f);
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       return false;
     }
     catch (RVLException & e) {
@@ -111,7 +111,7 @@ namespace RVL {
       if (ires) return true;
       return false;
     }
-    catch (bad_cast) {
+    catch (bad_cast const&) {
       return false;
     }
     catch (RVLException & e) {

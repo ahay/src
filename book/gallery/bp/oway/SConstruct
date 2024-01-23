@@ -1,0 +1,41 @@
+from rsf.proj import *
+
+from rsf.gallery import bp
+
+bp.getvel('bpvel')
+
+Result('bpvel',
+       '''
+       grey color=j gainpanel=a title=BPait\ Velocity\ Model
+       scalebar=y barreverse=y allpos=y 
+       screenratio=%g screenht=4 labelsz=5 titlesz=6
+       ''' % (12.0/32.0))
+
+bp.zodata('zodata')
+
+# From velocity to slowness
+Flow('bpslow','bpvel','window j2=4 f2=4 | transp | transp plane=23 | math output=1/input')
+
+# Fourier transform and transpose
+
+nf = 739  # number of frequencies
+
+Flow('fft','zodata',
+     'put o2=50 d2=50 | fft1 | window min1=5 max1=65 | transp plane=12 | transp plane=23')
+
+# Extended split-step migration
+Flow('bpmig','fft bpslow',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+     nrmax=200 dtmax=0.001 slo=${SOURCES[1]} |
+     window | transp
+     ''',split=[3,nf,[0]],reduce='add')
+
+Result('bpmig',
+       '''
+       grey title=Migration 
+       label1=Depth    unit1=m 
+       label2=Distance unit2=m
+       ''')
+
+End()

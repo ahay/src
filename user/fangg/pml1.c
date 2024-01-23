@@ -207,7 +207,7 @@ void pml1_close(void)
 {
     free(pmldx);
     free(decdx);
-    free(txxn1x);
+    free(txxn0x);
     free(txxn1x);
 }
 

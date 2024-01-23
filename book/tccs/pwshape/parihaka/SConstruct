@@ -1,0 +1,271 @@
+from rsf.proj import *
+
+### Define functions for convenience ###
+def recordmisfit(pre,case,itr,fill,invmask):
+        Flow(pre+'interpolatedinholes'+case+itr,[pre+fill+itr,invmask],
+            'add mode=p ${SOURCES[1]}')
+        Plot(pre+'interpolatedinholes'+case+itr,'grey title=Interpolated in Holes')
+        Flow(pre+'subtr'+case+itr,['answerinholes'+case,pre+'interpolatedinholes'+case+itr],'add scale=1,-1 ${SOURCES[1]}')
+        Plot(pre+'subtr'+case+itr,'''byte clip=820 |grey3 flat=n title="Difference"
+            flat=n frame1=%g frame2=%g frame3=%g
+            labelfat=4 labelsz=9. titlefat=4 titlesz=12
+            '''%(focus1,focus2,focus3))
+        Flow(pre+'datamis'+case+itr,['answerinholes'+case,pre+'interpolatedinholes'+case+itr],
+			'''
+			add scale=1,-1 ${SOURCES[1]} |
+			math output="(input)*(input)" |
+			stack axis=0 |
+			math output="sqrt(input)"
+			''')
+
+def SxSplot(obj,deci,case):
+    Plot(obj,'''byte clip=820 | grey3 title=Interpolated
+        flat=n frame1=%g frame2=%g frame3=%g
+        labelfat=4 labelsz=9. titlefat=4 titlesz=12
+        '''%(focus1,focus2,focus3))
+    Result(pre+'combo'+case,[filename,deci,obj],'SideBySideAniso')
+
+def ploterr(pre,case,string):
+    Flow(pre+'err'+case,[filename, pre+'fill'+case+string],'add scale=1,-1 ${SOURCES[1]}')
+    if pre=='sh':
+        Plot(pre+'err'+case,'grey title="Data Mismatch Using Shaping"')
+    else:
+        Plot(pre+'err'+case,'grey title="Data Mismatch"')
+
+def plotitermisfit(pre,mfn,case):
+    Flow(pre+'matrix'+case,mfn,'''
+		cat ${SOURCES[0:%g]}|
+        transp plane=13|
+		put n2=1 n3=1 d1=1 o1=1 d2=0 o2=0 d3=0 o3=0 
+		'''%(maxit-1))
+    if pre=='sh':
+        string='''-Shaping
+        label1="Iteration Number" 
+        label2="2-Norm of Data misfit"
+        '''
+    else:
+        string='''
+        label1="Iteration Number" 
+        label2="2-Norm of Data misfit"
+        '''
+    Plot(pre+'misfitvsiter'+case,pre+'matrix'+case,'graph title="Matrix"'+case+string)    
+
+
+### Get Parihaka Data ###
+n1=200 #out of 1168 possible
+f1=100
+n2=100 #out of 1126 possible
+f2=550
+n3=100
+
+nyquist=166.7 #Hz
+pad=25
+filename='pari'
+
+segy = 'Parihaka_PSTM_full_angle.sgy'
+
+Fetch(segy,dir='PARIHAKA-3D',
+      server='https://s3.amazonaws.com',
+      top='open.source.geoscience/open_data/newzealand/Taranaiki_Basin')
+
+Flow('parihaka tparihaka parihaka.asc parihaka.bin',
+     segy,
+     '''
+     segyread
+           tfile=${TARGETS[1]} 
+           hfile=${TARGETS[2]}  
+	   bfile=${TARGETS[3]} 
+     ''')
+
+Flow('cube','parihaka',
+     'intbin yk=iline xk=xline | put label3=Inline label2=Cross-line')
+
+n3left=2415-n3/2
+n3right=2415+n3/2-1
+Flow(filename,'cube','window min3=%g max3=%g n1=%g f1=%g n2=%g f2=%g'%(n3left,n3right,n1,f1,n2,f2))
+focus1=100
+focus2=n2/2
+focus3=n3/2+10
+Result(filename+'-3d',filename,
+       '''
+       byte clip=820 |
+       grey3 frame1=%g frame2=%g frame3=%g flat=n title="Parihaka Input Data"
+       labelfat=4 labelsz=9. titlefat=4 titlesz=12
+       '''%(focus1,focus2,focus3))
+### Find Slope, Make Mask, and Pad and Plot Data ###
+Flow('slope',filename,'fdip rect1=20 rect2=10 rect3=20')
+Flow('mask',filename,'''
+    math output=1 |
+    pad beg1=%g end1=%g beg2=%g end2=%g beg3=%g end3=%g
+    '''%(pad,pad,pad,pad,pad,pad))
+Flow('slope-pad',[filename,'mask'],'''
+    pad beg1=%g end1=%g beg2=%g end2=%g beg3=%g end3=%g |
+    fdip rect1=5 rect2=5 mask=${SOURCES[1]}
+    '''%(pad,pad,pad,pad,pad,pad))
+Plot(filename,'grey title=Input')
+Plot('slope','grey color=j scalebar=y title=Slope')
+Result('slope-3d','slope',
+       '''
+       byte clip=820 |
+       grey3 flat=n color=j bar=y frame1=%g frame2=%g frame3=%g title="Slope"
+       labelfat=4 labelsz=9. titlefat=4 titlesz=12
+       '''%(focus1,focus2,focus3))
+Result('reflectors',[filename,'slope'],'SideBySideAniso')
+##Flow('mask1',None,
+##     'spike n1=1 n2=%g nsp=7 k2=75,88,100,110,200,210,400 | spray n=%d axis=1 d=0.004 | window'%(n2,n1))
+Flow('mask1',None,'''
+    spike n1=%g n2=%g n3=%g nsp=8 
+    k2=11,75,88,100,90,20,21,40
+    '''%(n1,n2,n3))
+Flow('mask2',filename,'''
+    window n1=1 | noise rep=y type=n seed=1234 mean=0.5 |
+    mask min=0.9 | spray axis=1 n=%g | dd type=float
+    '''%n1)
+Plot('mask2','''byte clip=820 | grey3 allpos=y title="Decimated Data"
+    labelfat=4 labelsz=9. titlefat=4 titlesz=12
+    flat=n frame1=%g frame2=%g frame3=%g'''%(focus1,focus2,focus3))
+##Flow('mask4',None,
+##     'spike n1=%g n2=%g nsp=4 k2=5,25,40,70 k1=1,1,1,1 l1=103,190,44,187'%(n1,n2))
+#Plot('mask1','grey3 frame1=%g frame2=%g frame3=%g title="mask1"'%(focus1,focus2,focus3))
+##Plot('mask1b','mask1','window n2=200 | grey scalebar=y title=mask1')
+
+
+for case in ('2'): #case 1 being mask 1 and so on
+    mask = 'mask'+case
+    deci = 'deci'+case
+    fill = 'fill'+case
+    invmask='inv'+mask
+#    misfitname1=[]
+    shmisfitname1=[]
+#    comisfitname1=[]
+#    interp1=[]
+    shinterp1=[]
+#    cointerp1=[]
+    maxit=30
+    sufmaxit='-it%g'%(maxit)
+    cycle=False
+
+    Flow(mask+'-pad',mask,'''
+        pad beg1=%g end1=%g beg2=%g end2=%g beg3=%g end3=%g
+        '''%(pad,pad,pad,pad,pad,pad))
+    Flow(invmask,mask,'math output="1-(input)"')
+#    #Plot('invmask1','grey scalebar=y title="inverse mask"')
+    Flow('answerinholes'+case,[filename,invmask],'add mode=p ${SOURCES[1]}')
+#    Plot('answerinholes'+case,'grey title="True Answer"')
+    Flow(deci,[filename,mask],'add mode=p ${SOURCES[1]}')
+    Plot(deci,'''byte clip=820 | grey3 allpos=y title="Decimated Data" flat=n 
+        labelfat=4 labelsz=9. titlefat=4 titlesz=12
+        frame1=%g frame2=%g frame3=%g
+        '''%(focus1,focus2,focus3))
+
+    #Missing Data Interp using PWD
+#    pre=''
+#    if cycle:
+#        for i in range(1,maxit+1):
+#            itr='-it%g'%i
+#            Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+#                '''
+#                pad beg1=%g end1=%g beg2=%g end2=%g |
+#                planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g verb=y |
+#                window f1=%g n1=%g f2=%g n2=%g
+#                '''%(pad,pad,pad,pad,i,pad,n1,pad,n2))
+#            recordmisfit(pre,case,itr,fill,invmask)
+#            misfitname1.append(pre+'datamis'+case+itr)
+#            interp1.append(pre+'fill'+case+itr)
+#    else:
+#        itr='-it%g'%maxit
+#        Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+#            '''
+#            pad beg1=%g end1=%g beg2=%g end2=%g |
+#            planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g verb=y |
+#            window f1=%g n1=%g f2=%g n2=%g
+#            '''%(pad,pad,pad,pad,maxit,pad,n1,pad,n2))
+#        recordmisfit(pre,case,itr,fill,invmask)
+#        misfitname1.append(pre+'datamis'+case+itr)
+#        interp1.append(pre+'fill'+case+itr)
+#    SxSplot(pre+fill+sufmaxit,deci,case)
+
+    #Missing Data Interp using PWC
+#    pre='co'
+#    if cycle:
+#        for i in range(1,maxit+1):
+#            itr='-it%g'%i
+#            Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+#                '''
+#                pad beg1=%g end1=%g beg2=%g end2=%g |
+#                planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g verb=y prec=y |
+#                window f1=%g n1=%g f2=%g n2=%g
+#                '''%(pad,pad,pad,pad,i,pad,n1,pad,n2))
+#            recordmisfit(pre,case,itr,fill,invmask)
+#            comisfitname1.append(pre+'datamis'+case+itr)
+#            cointerp1.append(pre+'fill'+case+itr)
+#    else:
+#        itr='-it%g'%maxit
+#        Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+#            '''
+#            pad beg1=%g end1=%g beg2=%g end2=%g |
+#            planemis2 dip=${SOURCES[2]} mask=${SOURCES[1]} niter=%g verb=y prec=y |
+#            window f1=%g n1=%g f2=%g n2=%g
+#            '''%(pad,pad,pad,pad,maxit,pad,n1,pad,n2))
+#        recordmisfit(pre,case,itr,fill,invmask)
+#        comisfitname1.append(pre+'datamis'+case+itr)
+#        cointerp1.append(pre+'fill'+case+itr)
+#    SxSplot(pre+fill+sufmaxit,deci,case)
+
+    #Interpolation using Plane-wave Shaping (PWS) Regularization
+    pre='sh'
+    if cycle:
+        for i in range(1,maxit+1):
+            itr='-it%g'%i
+            Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+                '''
+                pad beg1=%g end1=%g beg2=%g end2=%g beg3=%g end3=%g|
+                shplanemis3 dip=${SOURCES[2]} mask=${SOURCES[1]} 
+                niter=%g ns=50 verb=y |
+                window f1=%g n1=%g f2=%g n2=%g f3=%g n3=%g
+                '''%(pad,pad,pad,pad,pad,pad,i,pad,n1,pad,n2,pad,n3))
+            recordmisfit(pre,case,itr,fill,invmask)
+            shmisfitname1.append(pre+'datamis'+case+itr)
+            shinterp1.append(pre+'fill'+case+itr)
+    else:
+        itr='-it%g'%maxit
+        Flow(pre+fill+itr,[deci,mask+'-pad','slope-pad'],
+            '''
+            pad beg1=%g end1=%g beg2=%g end2=%g beg3=%g end3=%g |
+            shplanemis3 dip=${SOURCES[2]} mask=${SOURCES[1]}
+            niter=%g ns1=10 ns2=10 verb=y |
+            window f1=%g n1=%g f2=%g n2=%g f3=%g n3=%g
+            '''%(pad,pad,pad,pad,pad,pad,maxit,pad,n1,pad,n2,pad,n3))
+        recordmisfit(pre,case,itr,fill,invmask)
+        shmisfitname1.append(pre+'datamis'+case+itr)
+        shinterp1.append(pre+'fill'+case+itr)
+    SxSplot(pre+fill+sufmaxit,deci,case)
+
+#    if cycle:
+#        cutnum=0
+#        for j in range(cutnum):
+#            shinterp1.pop(0)
+#        Flow('testmovie'+case,interp1,'cat axis=3 ${SOURCES[1:%g]}'%(maxit-cutnum))
+#        Plot('testmovie'+case,'grey title="Interpolation using PWD"')
+#        Flow('comovie'+case,cointerp1,'cat axis=3 ${SOURCES[1:%g]}'%(maxit-cutnum))
+#        Plot('comovie'+case,'grey gainpanel=all title="Interpolation using PWC"')
+#        Flow('shmovie'+case,shinterp1,'cat axis=3 ${SOURCES[1:%g]}'%(maxit-cutnum))
+#        Plot('shmovie'+case,'grey title="Interpolation using PWS"')
+
+#        plotitermisfit('sh',shmisfitname1,case)
+#        plotitermisfit('co',comisfitname1,case)
+#        plotitermisfit('',misfitname1,case)
+
+#    Flow('Matrix1Comparison','matrix1 shmatrix1 comatrix1','cat axis=2 ${SOURCES[1:3]}')
+#    Result('Matrix1Comparison','graph title="Misfit" min1=1 max1=%g dash=2,0,1 label1="Iteration" label2="|d-d\_i\^|\^2\_\_2"'%maxit)
+
+#    for prefix in ('','co','sh'):
+#        ploterr(prefix,case,sufmaxit)
+        
+#Result('Comparison',['fill1'+sufmaxit,'cofill1'+sufmaxit,'shfill1'+sufmaxit,'err1','coerr1','sherr1'],'SideBySideAniso')
+
+Result('p3-deci2','deci2','Overlay')
+Result('p3-shfill2','shfill2-it30','Overlay')
+Result('p3-sherr2','shsubtr2-it30','Overlay')
+
+End()

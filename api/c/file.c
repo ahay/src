@@ -288,6 +288,7 @@ sf_file sf_output (/*@null@*/ const char* tag)
     {
         free(file);
 	sf_error ("%s: pipe problem:",__FILE__);
+	return NULL;
     }
 
     if (stdout == file->stream) {

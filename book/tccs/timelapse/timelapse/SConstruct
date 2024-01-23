@@ -24,6 +24,9 @@ for par in ('depth','veloc1','veloc2'):
 
 Flow('time','depth veloc1','pad end1=1 | add scale=2,1 mode=d ${SOURCES[1]} | causint | window n1=%d' % nl)
 
+# Time differences
+Flow('dtime','time','pad beg1=1 | igrad | window n1=5')
+
 # Compute coordinates 
 for case in ('depth','dtime'):
     Flow(case+'1',case,

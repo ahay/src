@@ -5,10 +5,10 @@ import math
 def execute(rr,seed,par):
     lpar = par.copy()
 
-    if(not lpar.has_key('ff')): lpar['ff']=0
-    if(not lpar.has_key('ru')): lpar['ru']=5
-    if(not lpar.has_key('rv')): lpar['rv']=1
-    if(not lpar.has_key('aa')): lpar['aa']=1
+    if('ff' not in lpar): lpar['ff']=0
+    if('ru' not in lpar): lpar['ru']=5
+    if('rv' not in lpar): lpar['rv']=1
+    if('aa' not in lpar): lpar['aa']=1
     
     # directions 
     lpar['ux'] = math.cos(math.pi*par['ff']/180.)

@@ -30,12 +30,18 @@ findprog ()
 
 findprog python
 python=$prog
+if test "$python" = "no"; then
+    findprog python3
+    python=$prog
+fi
 echo "checking for Python ... $python"
 if test "$python" = "no"; then
     fatal_error "Please install Python before proceeding: http://www.python.org"
     exit 1
 fi
-python_v=`$python -V 2>&1 | awk '{print $2}'`
+python_v=$(python -V 2>&1 | awk '{print $2}')
+is_python3=`python -c 'import sys; print("%i" % (sys.hexversion<0x03000000))'`
+
 echo "checking Python version ... $python_v"
 
 # Detect RSFROOT. Priority: (1) --prefix= ; (2) env. variable; (3) sys.prefix
@@ -77,12 +83,25 @@ echo "checking for SCons ... $scons"
 if test "$scons" = "no"; then
     here=`pwd`
     cd scons
-    archive=`ls scons-*.tar.gz`
-    gunzip < $archive | tar xf - > /dev/null
-    dir=`ls -d [Ss][Cc]ons-* | grep '[^mz]$'`
-    cd $dir
-    $python setup.py install --prefix=$root > /dev/null
-    cd $here
+    # if python version >3
+    
+    if [ $is_python3 -eq 0 ]; then
+        archive=`ls [Ss][Cc]ons-4.*.tar.gz`
+        gunzip < $archive | tar xf - > /dev/null
+        dir=`ls -d [Ss][Cc]ons-4.* | grep '[^mz]$'`
+        cd $dir
+        export PYTHONUSERBASE="$root"
+        $python -m pip install . --user --no-warn-script-location > /dev/null
+    else 
+    # if python version <3
+        archive=`ls [Ss][Cc]ons-3.*.tar.gz`
+        gunzip < $archive | tar xf - > /dev/null
+        dir=`ls -d [Ss][Cc]ons-3.* | grep '[^mz]$'`
+        cd $dir
+        $python setup.py install --prefix="$root"  > /dev/null
+    fi
+
+    cd "$here"
     scons="$root/bin/scons"
     if test ! -x "$scons"; then
 	scons="failed"
@@ -121,12 +140,16 @@ eval $command2
 echo "------------------------"
 echo "Done with configuration."
 
+
+chmod +x framework/setenv.py
 M8R_PY_PATH=`RSFROOT=$root framework/setenv.py`
+# echo $M8R_PY_PATH
 if [ -n "$PYTHONPATH" ]; then
 PYTHONPATH=$M8R_PY_PATH:${PYTHONPATH}
 else
 PYTHONPATH=$M8R_PY_PATH
 fi
+
 
 echo "SCONS = RSFROOT=$root PYTHONPATH=$PYTHONPATH $scons" > Makefile
 cat Makefile.in >> Makefile
