@@ -1,0 +1,166 @@
+from rsf.proj import *
+from rsf.gallery import marmousi
+
+def grey(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Depth label2=Distance unit1=m unit2=m wanttitle=n %s
+    ''' %(custom)
+
+def igrey(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Time label2=Distance unit1=s unit2=m wanttitle=n %s
+    ''' %(custom)
+
+# prepared the data
+marmousi.getvel('vel0')
+Result('marmvel','vel0',grey('scalebar=y color=j allpos=y title="Marmousi Velocity Model" bias=1.5 barreverse=y'))
+
+Flow('vel','vel0','window j1=2 j2=3 f1=50 n1=200 f2=200 n2=200 | expand top=30 bottom=30 left=30 right=30 | smooth rect1=40 rect2=40 repeat=0 | math output=input*1000 | put d1=8 d2=12 o1=0 o2=0 unit1=m unit2=m')
+Result('vel','window f1=30 n1=200 f2=30 n2=200 | put o1=0 o2=0 |'+ grey('allpos=y bias=1570 scalebar=y barreverse=y minval=1570 maxval=4340 title="Velocity model" barlabel="V" barunit="m/s" color=j'))
+
+Flow('src',None,
+     '''
+     spike n1=260 n2=260 d1=0.008 d2=0.012 nsp=18 
+     k1=120,110,135,100,130,99,123,136,140,117,105,128,117,105,129,131,139,123 
+     k2=80,88,83,85,82,90,120,116,121,117,125,130,160,155,168,171,166,162
+     mag=5000 | smooth rect1=2 rect2=2 repeat=1
+     ''')
+
+Flow('sov','vel src','add mode=a ${SOURCES[1]}')
+Result('sov','window f1=30 n1=200 f2=30 n2=200 | put o1=0 o2=0 |'+ grey('allpos=y bias=1570 scalebar=y barreverse=y minval=1570 maxval=4340 title="Source location over velocity model" barlabel="V" barunit="m/s" color=j'))
+
+nt=3501
+dt=0.001
+
+Flow('data0 snaps data_v0','vel',
+     '''
+     psp snaps=${TARGETS[1]} dat_v=${TARGETS[2]} verb=y cmplx=n vref=1.5 ps=y nt=%d dt=%g snap=1 abc=y nbt=30 ct=0.01 src=0 n_srcs=18
+     spz=120,110,135,100,130,99,123,136,140,117,105,128,117,105,129,131,139,123
+     spx=80,88,83,85,82,90,120,116,121,117,125,130,160,155,168,171,166,162
+     f0=30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30,30
+     t0=0.1,0.21,0.32,0.43,0.55,0.68,0.9,1.0,1.13,1.21,1.32,1.45,1.7,1.82,1.92,2.03,2.11,2.24
+     A=1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+     '''%(nt,dt))
+
+Flow('data','data0','noise var=1e-1 type=y seed=12005')
+Flow('data_v','data_v0','noise var=1e-1 type=y seed=22015')
+
+Plot('snaps','window j3=10 | grey gainpanel=a wanttitle=n', view=1)
+Flow('snapsm','snaps','window j3=4')
+Flow('snapsov','vel snapsm','window f1=30 n1=200 f2=30 n2=200 | put o1=0 o2=0 |spray axis=3 n=876 | add ${SOURCES[1]} scale=1,9')
+Plot('snapsov','window j3=10 | grey gainpanel=a color=g title="Microseismic events" ', view=1)
+
+Result('data','put o2=0 |'+igrey('title="Surface array data"'))
+Result('data_v','put o2=0 |'+igrey('title="Downhole array data"'))
+Result('data0','put o2=0 |'+igrey('title="Surface array data"'))
+
+Plot('datall','data','put o2=0 |'+igrey('title="Surface array data" screenht=11'))
+Plot('trace','data','window n2=1 f2=100 | scale axis=1 | graph transp=y yreverse=y dash=0 plotcol=6 plotfat=3 label1=Time unit1=s label2="Amplitude" unit2= wanttitle=n labelfat=2 labelsz=6 screenwd=3 screenht=11 wherexlabel=top whereylabel=right')
+Result('datatrace','datall trace','SideBySideIso')
+
+Flow('imgb snapsb','vel data data_v',
+     '''
+     psp snaps=${TARGETS[1]} verb=y cmplx=n vref=1.5 ps=y snap=1 abc=y nbt=30 ct=0.01 mig=y dat=${SOURCES[1]} dat_v=${SOURCES[2]}
+     ''')
+
+Plot('snapsb','window j3=10 | grey gainpanel=a wanttitle=n', view=1)
+Result('imgb','grey wanttitle=n')
+
+nx = 200
+tmp = 10 
+nrcv = tmp
+rcvint = nx/nrcv
+len=5
+start=1
+
+snaps = []
+for m in range(nrcv):
+    mask = 'mask%d' % m
+    data = 'data' + mask
+    img = 'img%d' % m
+    snap = 'snaps%d' % m
+    snaps += [snap]
+    if (1):
+        nsp = 0
+        klist = ''
+        for i in range(len+1):
+            k1 = 1 + m*rcvint + i*rcvint/(len+1)
+            klist += '%d,' %k1
+            nsp += 1
+        Flow(mask,None,'spike n1=%d mag=1 k1=%s nsp=%d | sfdd type=int' %(nx,klist,nsp) )
+    else:
+        Flow(mask,None,'spike n1=%d mag=1 k1=%d l1=%d | sfdd type=int' %(nx,rcvint*m+start,rcvint*m+start+len) )
+    Flow(data,['data',mask],'headercut mask=${SOURCES[1]}')
+    Result(data,'wiggle transp=y wanttitle=n')
+    Flow([img,snap],['vel',data],
+         '''
+         psp snaps=${TARGETS[1]} verb=y cmplx=n vref=1.5 ps=y snap=1 abc=y nbt=30 ct=0.01 mig=y dat=${SOURCES[1]}
+         ''')
+    Plot(snap,'window j3=10 | grey gainpanel=a wanttitle=n', view=1)
+    Result(img,'grey wanttitle=n')
+
+Flow('ccr0',snaps,'add mode=m ${SOURCES[1:%d]}'% nrcv)
+Plot('ccr0','window j3=10 | grey gainpanel=a pclip=99.9', view=1)
+
+Flow('location0','ccr0','threshold pclip=5 | stack axis=3 | math output=input')
+Result('location0','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+
+Flow('stack',snaps,'add mode=a ${SOURCES[1:%d]}'%(nrcv))
+Flow('autoccr','stack','math output="input*input" | stack axis=3')
+Result('autoccr','put o1=0 o2=0 |'+ grey('allpos=y scalebar=n wanttitle=n color=I'))
+Plot('stack','window j3=10 | grey gainpanel=a wanttitle=n', view=1)
+
+Flow('wfnew','ccr0 stack','math output="abs(input)" | swnorm size=100 log=n perc=1 | smooth rect1=1 rect2=1 rect3=50 repeat=2| swnorm size=100 log=n perc=1 | math b=${SOURCES[1]} output="input*b" ')
+Result('wfnew','stack axis=3 | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
+Flow('data-new snaps-new','vel wfnew',
+     '''
+     pspp snaps=${TARGETS[1]} wave=${SOURCES[1]} verb=y cmplx=n vref=1500 ps=y nt=%d dt=%g snap=1 abc=y nbt=30 ct=0.01 src=0 n_srcs=1 spz=98,105,100,95,90,88 spx=60,70,90,110,130,140 f0=20,20,20,20,20,20 t0=.4,.7,1.0,.3,.9,0.8 A=1,1,1,1,1,1
+     '''%(nt,dt))
+Result('data-new',igrey('title="Surface array data (predicted)"'))
+
+Result('stage0-1','ccr0','window min3=0.0 max3=0.8 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('clip=7.20642e+06 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+Result('stage0-2','ccr0','window min3=0.0 max3=1.6 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('clip=7.20642e+06 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+Result('stage0-3','ccr0','window min3=0.0 max3=3.0 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+
+# vertical receiver setup
+nrcv = 4
+rcvint = nx/nrcv
+len=0
+start=30
+
+for m in range(tmp,tmp+nrcv):
+    mask = 'mask%d' % m
+    data = 'data' + mask
+    img = 'img%d' % m
+    snap = 'snaps%d' % m
+    snaps += [snap]
+    Flow(mask,None,'spike n1=%d mag=1 k1=%d l1=%d | sfdd type=int' %(nx,rcvint*(m-tmp)+start,rcvint*(m-tmp)+start+len) )
+    Flow(data,['data_v',mask],'headercut mask=${SOURCES[1]}')
+    Result(data,'wiggle transp=y wanttitle=n')
+    Flow([img,snap],['vel',data],
+         '''
+         psp snaps=${TARGETS[1]} verb=y cmplx=n vref=1.5 ps=y snap=1 abc=y nbt=30 ct=0.01 mig=y dat_v=${SOURCES[1]}
+         ''')
+    Plot(snap,'window j3=10 | grey gainpanel=a wanttitle=n', view=1)
+    Result(img,'grey wanttitle=n')
+
+Flow('ccr',snaps,'add mode=m ${SOURCES[1:%d]}'%(tmp+nrcv))
+Plot('ccr','window j3=10 | grey gainpanel=a pclip=99.5 allpos=y wanttitle=n', view=1)
+Flow('location','ccr','threshold pclip=5 | stack axis=3 | math output=input')
+Result('location','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Combined)" color=g'))
+
+Result('stage-1','ccr','window min3=0.0 max3=0.8 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('clip=2.60259e-09 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+Result('stage-2','ccr','window min3=0.0 max3=1.6 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('clip=2.60259e-09 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+Result('stage-3','ccr','window min3=0.0 max3=3.0 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+
+Flow('movie','ccr','transp plane=13 memsize=10000 | causint | window j1=40 | transp plane=13 memsize=10000 | put o1=0 o2=0 unit1=m unit2=m lable1=Depth label2=Distance')
+Plot('movie','grey gainpanel=a pclip=99.5 color=g title="Imaged microseismic events"', view=1)
+
+#Flow('vels','vel','window f1=30 n1=200 f2=30 n2=200 | spray axis=3 n=351')
+#Result('mov','movie vels','add ${SOURCES[1]} scale=0.3,1e-5 | put o1=0 o2=0 | grey gainpanel=a pclip=99.5 allpos=y label1=Depth label2=Distance unit1=m unit2=m title="Fracture Propagation" ')
+
+#Flow('test','ccr stack','math s=${SOURCES[1]} output="input*s"')
+#Flow('movie2','test','transp plane=13 memsize=10000 | causint | window j1=10 | transp plane=13 memsize=10000 ')
+#Result('movie2','grey gainpanel=a pclip=99.8 allpos=y label1=Depth label2=Distance unit1=m unit2=m title="Fracture Propagation" ')
+
+End()

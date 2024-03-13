@@ -148,10 +148,30 @@ Result('location0-clean','location0','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=
 Result('datatrace-noisy','datall-noise trace-noise','SideBySideIso')
 Result('location0-noisy','location0-noise','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
 
-Result('datatrace-hyb','../hyb/datall.vpl ../hyb/trace.vpl','SideBySideIso')
-Result('location0-hyb','../hyb/location0.rsf','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
+len=5
 
+snaps = []
+for m in range(nrcv):
+    mask = 'hmask%d' % m
+    data = 'hdata' + mask
+    img = 'himg%d' % m
+    snap = 'hsnaps%d' % m
+    snaps += [snap]
+    Flow(mask,None,'spike n1=140 mag=1 k1=%d l1=%d | sfdd type=int' %(rcvint*m+start,rcvint*m+start+len) )
+    Flow(data,['data-noise',mask],'headercut mask=${SOURCES[1]}')
+    Result(data,'wiggle transp=y wanttitle=n')
+    Flow([img,snap],['vel',data],
+         '''
+         psp snaps=${TARGETS[1]} verb=y cmplx=n vref=1500 ps=y snap=1 abc=y nbt=30 ct=0.01 mig=y dat=${SOURCES[1]}
+         ''')
+    Plot(snap,'window j3=10 | grey gainpanel=a wanttitle=n', view=1)
+    Result(img,'grey wanttitle=n')
 
+Flow('ccr0-hyb',snaps,'add mode=m ${SOURCES[1:%d]}'% nrcv)
+Plot('ccr0-hyb','window j3=10 | grey gainpanel=a pclip=99.9 wanttitle=n', view=1)
 
+Flow('location0-hyb','ccr0-hyb',' threshold pclip=5 | stack axis=3 | math output=input')
+
+Result('location0-hyb','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
 
 End()

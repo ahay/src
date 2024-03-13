@@ -16,6 +16,9 @@ To programs:
 
 In the reproducible documents collection:
 
+tccs/micro: Investigating the possibility of locating microseismic
+sources using distributed sensor networks (Sun, Zhu, Fomel, and Song)
+
 In documentation:
 
 In APIs:
