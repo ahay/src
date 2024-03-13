@@ -16,7 +16,8 @@ ccprogs = 'diffcxx'
 
 # broken: Mnpef5
 
-# mutter3
+# mutter3 aps3d npef5
+
 mpiprogs='''
 mpiafdfwi2d 
 '''#mpiafdfwi3d (not finished yet)
