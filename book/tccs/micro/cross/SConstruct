@@ -77,12 +77,12 @@ for m in range(nrcv):
          '''
          psp snaps=${TARGETS[1]} verb=y cmplx=n vref=1500 ps=y snap=1 abc=y nbt=30 ct=0.01 mig=y dat=${SOURCES[1]}
          ''')
-    Plot(snap,'window j3=10 | grey gainpanel=a',view=1)
+    Plot(snap,'window j3=10 | grey gainpanel=a wanttitle=n',view=1)
     Result(img,'grey wanttitle=n')
 
 #Flow('ccr0',snaps,'math a=${SOURCES[1]} b=${SOURCES[2]} c=${SOURCES[3]} e=${SOURCES[4]} f=${SOURCES[5]} g=${SOURCES[6]} output="input^2*a^2*b^2*c^2*e^2*f^2*g^2" ')
 Flow('ccr0',snaps,'add mode=m ${SOURCES[1:%d]}'% nrcv)
-Plot('ccr0','window j3=10 | grey gainpanel=a pclip=99.9', view=1)
+Plot('ccr0','window j3=10 | grey gainpanel=a pclip=99.9 wanttitle=n', view=1)
 
 Flow('stack',snaps,'add mode=a ${SOURCES[1:%d]}'%(nrcv))
 Flow('autoccr','stack','math output="input*input" ')
@@ -115,16 +115,43 @@ Flow('location1','rev0','stack axis=3')
 Result('location1','put o1=0 o2=0 |'+ grey('pclip=99 allpos=n scalebar=n title="Imaged source locations" color=g'))
 Plot('movie1','rev0','window j3=40 | reverse which=4 | grey gainpanel=a pclip=99.5 color=g title="Time-reversal"', view=1)
 
+Flow('data-noise','data0','noise var=0.02 type=y seed=1573')
+Plot('datall-noise','data-noise',igrey('title="Surface array data" screenht=11'))
+Plot('trace-noise','data-noise','window n2=1 f2=70 | scale axis=1 | graph transp=y yreverse=y dash=0 plotcol=6 plotfat=3 label1=Time unit1=s label2="Amplitude" unit2= wanttitle=n labelfat=2 labelsz=6 screenwd=3 screenht=11 wherexlabel=top whereylabel=right')
+
+snaps = []
+for m in range(nrcv):
+    mask = 'mask%d' % m
+    data = 'ndata' + mask
+    img = 'nimg%d' % m
+    snap = 'nsnaps%d' % m
+    snaps += [snap]
+    Flow(data,['data-noise',mask],'headercut mask=${SOURCES[1]}')
+    Result(data,'wiggle transp=y wanttitle=n')
+    Flow([img,snap],['vel',data],
+         '''
+         psp snaps=${TARGETS[1]} verb=y cmplx=n vref=1500 ps=y snap=1 abc=y nbt=30 ct=0.01 mig=y dat=${SOURCES[1]}
+         ''')
+    Plot(snap,'window j3=10 | grey gainpanel=a wanttitle=n', view=1)
+    Result(img,'grey wanttitle=n')
+
+Flow('ccr0-noise',snaps,'add mode=m ${SOURCES[1:%d]}'% nrcv)
+Plot('ccr0-noise','window j3=10 | grey gainpanel=a pclip=99.9 wanttitle=n', view=1)
+
+Flow('location0-noise','ccr0-noise',' threshold pclip=5 | stack axis=3 | math output=input')
+
 ################################################
 # moving stuffs around
 Result('datatrace-clean','datall trace','SideBySideIso')
 Result('location0-clean','location0','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
 
-Result('datatrace-noisy','../noise/datall.vpl ../noise/trace.vpl','SideBySideIso')
-Result('location0-noisy','../noise/location0.rsf','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
+Result('datatrace-noisy','datall-noise trace-noise','SideBySideIso')
+Result('location0-noisy','location0-noise','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
 
 Result('datatrace-hyb','../hyb/datall.vpl ../hyb/trace.vpl','SideBySideIso')
 Result('location0-hyb','../hyb/location0.rsf','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
+
+
 
 
 End()
