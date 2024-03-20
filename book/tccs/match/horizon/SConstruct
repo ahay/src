@@ -1,0 +1,173 @@
+
+from rsf.proj import *
+from rsf.recipes.helderiv import Helderiv
+
+def rectplot(name):
+        return '''
+        grey color=viridis mean=y title="%s" scalebar=y 
+        barlabel=Radius barunit=samples yreverse=n transp=n
+        '''%name
+
+# Download data
+horizon = 'Penobscot_HorB.txt'
+
+Fetch(horizon,'data',
+      server='https://raw.githubusercontent.com',
+      top='agile-geoscience/notebooks/master')
+
+# Convert from xyz triples to horizon
+Flow('xyz',horizon,
+     '''
+     echo n1=3 n2=254674 data_format=ascii_float in=$SOURCE |
+     dd form=native
+     ''')
+
+Flow('xy','xyz','window n1=2 | dd type=int')
+Flow('horizon','xyz xy',
+     '''
+     window f1=2 squeeze=n | 
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 |
+     window | put label=Time unit=ms label1=Inline label2=Crossline
+     ''')
+
+Result('horizon','grey color=j bias=750 scalebar=y title=Horizon yreverse=n transp=n')
+
+# Interpolate missing values
+Flow('filled','horizon','lapfill grad=y verb=y niter=500')
+Result('filled','grey color=magma bias=750 scalebar=y title="Original Horizon" yreverse=n transp=n')
+
+# Display with the cube helix colormap and the correct aspect ratio
+Plot('cubeh','filled',
+     '''
+     grey color=x bias=950 clip=133 scalebar=y title=Horizon 
+     yreverse=n transp=n screenwd=11.9 screenht=9.62
+     ''')
+
+Result('cubeh','Overlay')
+
+# Take a window
+Flow('window','horizon','window f1=200 n1=125 f2=200 n2=100')
+
+Result('window',
+       'grey color=x bias=950 clip=133 scalebar=y title=Horizon yreverse=n transp=n screenratio=0.8')
+
+Flow('wind.asc',None,
+     '''
+     echo 
+     200 200 
+     200 300
+     325 300
+     325 200
+     200 200
+     n1=2 n2=5 data_format=ascii_int in=$TARGET
+     ''')
+Plot('wind','wind.asc',
+     '''
+     dd type=complex form=native | window |
+     graph wanttitle=n wantaxis=n plotcol=7 plotfat=10 
+     min1=1 max1=595 min2=1 max2=463 scalebar=y screenwd=11.9 screenht=9.62
+     ''')
+
+Result('wind','cubeh wind','Overlay')
+
+# Add noise
+Flow('noisy','filled','noise type=n seed=2014 range=15')
+
+# Regular smoothing
+Flow('smoothed','noisy','smooth rect1=4 rect2=4')
+
+# Anisotropic diffusion
+Flow('diffused','noisy','impl2 rect1=10 rect2=10 tau=1')
+
+# Median filter
+Flow('median','noisy','despike2 wide1=8 wide2=8')
+
+# Bilateral filter
+Flow('bilateral','noisy','bilat2 a1=0.1 a3=0.001 r1=10 r2=10')
+
+# Fast explicit diffusion
+Flow('diffused2','noisy','expl2 rect=5 cycle=4')
+
+
+titles = ['Original','Noisy','smoothed','Diffused','Diffused','Median','Bilateral']
+k=0
+for case in Split('filled noisy smoothed diffused diffused2 median bilateral'):
+    Result(case,
+           '''
+           grey color=magma bias=950 clip=133 scalebar=y 
+           title="%s Horizon" yreverse=n transp=n
+           minval=800 maxval=1100
+           ''' % titles[k])
+    k+=1
+    if case != 'filled':
+        Result(case+'-slice',['filled',case],
+               '''
+               cat axis=3 ${SOURCES[1]} |
+               window n1=1 f1=300 n2=450 |
+               graph plotfat=7,1 wanttitle=n 
+               yreverse=y label2=Time unit2=ms
+               ''')
+
+
+##################################
+# non-stationary radius estimation
+niter = 5
+it=0
+D1 = 'noisy'
+D2 = 'diffused' 
+
+# first guess for the radius 
+Flow('new-rect00','noisy','math output="input*0+4" ')
+Result('new-rect00',rectplot("Smoothing Radius 0"))
+
+# smooth division parameters
+rec1=15
+rec2=15
+
+for i in range(1, niter+1): 
+  j = i-1
+  smoothed = 'smooth-%d'%(j) 
+  der = "der-%d"%(j) 
+  Flow(smoothed,[D1,'new-rect%d%i'%(j,it)],'nsmooth rect1=${SOURCES[1]}')
+  Result(smoothed,
+           '''
+           grey color=magma bias=950 clip=133 scalebar=y 
+           title="%s Horizon" yreverse=n transp=n
+           minval=800 maxval=1100
+           ''' % smoothed)
+  Flow(der,[D1,'new-rect%d%i'%(j,it)],'ndsmooth rect1=${SOURCES[1]} ider=1')
+  Result(der,
+           '''
+           grey color=j scalebar=y 
+           title="%s Horizon" yreverse=n transp=n
+           ''' % der)
+  Flow('new-rect%d%i'%(i,it),[D2,smoothed,der,'new-rect%d%i'%(j,it)],
+            '''
+            add ${SOURCES[1]} scale=1,-1 |
+            divn den=${SOURCES[2]} rect1=%g rect2=%g|
+            add ${SOURCES[3]} scale=1,1
+            '''%(rec1,rec2))
+  Result('new-rect%d%i'%(i,it),rectplot(""))
+
+  rec1=3
+  rec2=3
+
+# non-stationary smoothing 
+Flow('smooth-%d'%(i),[D1,'new-rect%d%i'%(i,it)],'nsmooth rect1=${SOURCES[1]} | smooth rect2=2')
+Result('smooth-%d'%(i),
+           '''
+           grey color=magma bias=950 clip=133 scalebar=y 
+           title="%s Horizon" yreverse=n transp=n
+           minval=800 maxval=1100
+           ''' % 'Smooth')
+
+# Non-stationary smoothing 1D slice 
+Result('smooth-%d'%(i)+'-slice',['filled','noisy','smooth-%d'%(i)],
+               '''
+               cat axis=3 ${SOURCES[1:3]} |
+               window n1=1 f1=300 n2=450 |
+               graph plotfat=7,1 wanttitle=n 
+               yreverse=y label2=Time unit2=ms
+               ''')
+
+End()
