@@ -89,10 +89,9 @@ void mmmult_lop (bool adj, bool add,
     free (*data); free (data);
 }
 
-void mmmult_close () 
+void mmmult_close (void) 
 /*< free filter memory >*/
 {
     free (filter);
 }
 
-/* 	$Id$	 */

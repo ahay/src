@@ -87,7 +87,7 @@ void lowrank_init2(int nzb, int nxb, int nkxz, int nkzz, int nkxx, int m, int nx
 
 }
 
-void lowrank_close2()
+void lowrank_close2(void)
 /*< free the work space for opo >*/
 {
 
