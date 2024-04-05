@@ -91,12 +91,10 @@ pckmed = np.median(pck)
 print(pckmed,file=sys.stderr)
 
 # data weight
-for i in range(nd):
-    wgh[i] *= np.cos( 2.0 * np.pi * abs((pck[i]-pckmed)/l1) )
-#wgh = 0.1 * np.power(wgh-np.min(wgh),wpo)
-
-wgh = np.power(wgh,wpo)
-wgh /= np.max(wgh)
+#for i in range(nd):
+#    wgh[i] *= np.cos( 2.0 * np.pi * abs((pck[i]-pckmed)/l1) )
+#wgh = np.power(wgh,wpo)
+#wgh /= np.max(wgh)
 wgh = wgh * 0 + 0.1
 
 # ------------------------------------------------------------
