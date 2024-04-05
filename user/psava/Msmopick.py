@@ -51,14 +51,18 @@ n1 = Fin.int  ("n1")
 o1 = Fin.float("o1")
 d1 = Fin.float("d1")
 
-nd = Fin.size(1);             # number of traces
+n2 = Fin.int  ("n2")
+o2 = Fin.float("o2")
+d2 = Fin.float("d2")
+
+nd = n2                       # number of samples
 nm = nd
 
 # ------------------------------------------------------------
 Fou = rsf.Output()            # output file
-Fou.put("n1",nd)
-Fou.put("o1",0.0)
-Fou.put('d1',1.0)
+Fou.put("n1",n2)
+Fou.put("o1",o2)
+Fou.put('d1',d2)
 
 Fou.put("n2",3)
 Fou.put("n3",1)
@@ -74,6 +78,8 @@ wgh = np.zeros(nd,'f') # weights
 # ------------------------------------------------------------
 l1 = 0.5 * n1*d1              # xcorr time window
 
+#l1 = 1.0
+
 for i in range(nd):
     Fin.read(din)
 
@@ -82,12 +88,15 @@ for i in range(nd):
 
 # pick bias
 pckmed = np.median(pck)
+print(pckmed,file=sys.stderr)
 
 # data weight
 for i in range(nd):
-    wgh[i] *= np.cos( 0.25*np.pi * abs((pck[i]-pckmed)/l1) )
+    wgh[i] *= np.cos( 2.0 * np.pi * abs((pck[i]-pckmed)/l1) )
+#wgh = 0.1 * np.power(wgh-np.min(wgh),wpo)
+
+wgh = np.power(wgh,wpo)
 wgh /= np.max(wgh)
-wgh = 1 * np.power(wgh-np.min(wgh),wpo)
 
 # ------------------------------------------------------------
 # setup inverse problem
