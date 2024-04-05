@@ -97,6 +97,7 @@ for i in range(nd):
 
 wgh = np.power(wgh,wpo)
 wgh /= np.max(wgh)
+wgh = wgh * 0 + 0.1
 
 # ------------------------------------------------------------
 # setup inverse problem
