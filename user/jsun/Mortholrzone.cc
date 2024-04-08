@@ -27,7 +27,7 @@ static std::valarray<float>  C11,C12,C13,C22,C23,C33,C44,C55,C66,q1,q2;
 static std::valarray<float> kx, ky, kz;
 static float dt;
 static int mode;
-static bool approx,reduce;
+static bool approx,reduced;
 static float slope=0.8530492393, intcp=0.145965755;
 
 int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
@@ -111,11 +111,11 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 		       if (c22*(c33-c44)==0 || c33*(c22-c44)==0 || c11*(c33-c55)==0 || c33*(c11-c55)==0 || c22*(c11-c66)==0 || c11*(c22-c66)==0 )
 			   sf_warning("Dividing zero when calculating qv&qh!");
 		       double qv1= (pow(c23+c44,2)+c44*(c33-c44))/(c22*(c33-c44));
-		       double qh1= reduce ? slope*qv1+intcp : (pow(c23+c44,2)+c44*(c22-c44))/(c33*(c22-c44));
+		       double qh1= reduced ? slope*qv1+intcp : (pow(c23+c44,2)+c44*(c22-c44))/(c33*(c22-c44));
 		       double qv2= (pow(c13+c55,2)+c55*(c33-c55))/(c11*(c33-c55));
-		       double qh2= reduce ? slope*qv2+intcp : (pow(c13+c55,2)+c55*(c11-c55))/(c33*(c11-c55));
+		       double qh2= reduced ? slope*qv2+intcp : (pow(c13+c55,2)+c55*(c11-c55))/(c33*(c11-c55));
 		       double qv3= (pow(c12+c66,2)+c66*(c11-c66))/(c22*(c11-c66));
-		       double qh3= reduce ? qv3 : (pow(c12+c66,2)+c66*(c22-c66))/(c11*(c22-c66));
+		       double qh3= reduced ? qv3 : (pow(c12+c66,2)+c66*(c22-c66))/(c11*(c22-c66));
 		       double q1 = (qv1*n3+qh1*n2)/(1.-n1);
 		       double q2 = (qv2*n3+qh2*n1)/(1.-n2);
 		       double q3 = (qv3*n1+qh3*n2)/(1.-n3);
@@ -176,10 +176,10 @@ int main(int argc, char** argv)
     bool tilt;
     par.get("tilt",tilt,false);
     par.get("approx",approx,false); // if true, use zone's approximation instead of exact phase velocity
-    par.get("reduce",reduce,false); // if true, use the expirical linear relationship between qv and qh
+    par.get("reduce",reduced,false); // if true, use the expirical linear relationship between qv and qh
 
     if (approx) sf_warning("Using zone's approximation!");
-    if (reduce) sf_warning("Using slope and intercept approximation!");    
+    if (reduced) sf_warning("Using slope and intercept approximation!");    
 
     iRSF c11, c12("c12"), c13("c13"), c22("c22"), c23("c23"), c33("c33"), c44("c44"), c55("c55"), c66("c66");
     
