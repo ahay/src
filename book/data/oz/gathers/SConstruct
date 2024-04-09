@@ -1,0 +1,22 @@
+from rsf.proj import *
+import os
+
+# Download a collection of shot gathers and convert them from SU to RSF
+# See https://seismicrocks.com/oz40.html for description
+
+tgz = 'ozdata._SU.tgz'
+
+Fetch(tgz, 'download',
+      server='https://nextcloud.seismic-unix.org',
+      top='s/wfbgjReLLjRjLwk')
+
+files = [f'ozdata.{i:>02}.su' for i in range(1, 41)]
+Flow(files,tgz,
+     'gunzip -c $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+for su in files:
+    rsf = os.path.splitext(su)[0]+'.rsf'
+    Flow([rsf,'t-'+rsf],su,'suread tfile=${TARGETS[1]} suxdr=y')
+    Result(rsf,f'grey title={rsf}')
+    
+End()
