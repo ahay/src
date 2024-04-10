@@ -277,8 +277,6 @@ integration over a plane.
 
 \section{Oriented waves in layered media}
 
-%\inputdir{Math}
-
 The connection between physical and oriented waves is particularly clear in
 the case when the slowness function changes with only one spatial coordinate.
 Let $\mathbf{x}=\{\mathbf{y},z\}$. If the slowness $n(\mathbf{x})$ is a
@@ -342,21 +340,15 @@ distributed from the physical space to the phase space. This distribution is
 additionally demonstrated in Figure~\ref{fig:ogaz} by creating a decomposition
 of the impulse response by partial stacking in the phase-space domain.
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\columnwidth]{Math/Fig/ostolt.pdf}
-\caption{Stolt's frequency-wavenumber hyperbola
-  is the envelop of frequency-wavenumber planes from oriented plane waves.}
-\label{fig:ostolt}
-\end{figure}
+\inputdir{Sage}
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.8\columnwidth]{Math/Fig/omig.pdf}
-\caption{Kinematic impulse response of the
+\sideplot{ostolt}{width=\textwidth}{Stolt's frequency-wavenumber hyperbola
+  is the envelop of frequency-wavenumber planes from oriented plane waves.}
+
+\inputdir{Pylab}
+
+\sideplot{omig}{width=\textwidth}{Kinematic impulse response of the
   constant-velocity zero-offset phase-space migration.}
-\label{fig:omig}
-\end{figure}
 
 %\sideplot{ostolt}{width=\columnwidth}{Stolt's frequency-wavenumber hyperbola
 %  is the envelop of frequency-wavenumber planes from oriented plane waves.}
@@ -429,7 +421,8 @@ that recorded seismic wavefields allow for a sparse representation in the
 phase-space domain. The sparseness is easily understood in the case of layered
 or constant-velocity media. In the general case, it should be possible to
 preserve sparseness in the downward wavefield continuation by decomposing the
-wavefield into spatially constrained oriented beams \cite[]{wg}. The oriented
+wavefield into spatially constrained oriented beams. % \cite[]{wg}.
+The oriented
 wave equation allows Gaussian beams \cite[]{GEO66-04-12401250} or other sparse
 phase-space data representations to be downward continued without
 computationally troublesome ray tracing. Exploring this opportunity remains an
