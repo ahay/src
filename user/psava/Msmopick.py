@@ -4,12 +4,23 @@ smooth picker on the first dimension
 '''
 import rsf.api as rsf
 import numpy as np
-from scipy.sparse        import spdiags
-from scipy.sparse.linalg import spsolve
-
-from scipy import signal
 import sys
 
+# ------------------------------------------------------------
+def myMean(a,n):
+    
+    N = np.size(a)   # number of samples
+    m = int((n-1)/2) # assume an odd window size
+    
+    b = np.zeros(N)
+    for i in range(N):
+        wLO = np.max([i-m,  0])  #  low index
+        wHI = np.min([i+m,N-1])  # high index
+        b[i] = np.mean( a[wLO:wHI] )
+    
+    return b
+
+# ------------------------------------------------------------
 def myMedian(a,n):
     
     N = np.size(a)   # number of samples
@@ -27,7 +38,8 @@ def myMedian(a,n):
 par = rsf.Par()
 
 verb = par.bool('verb',False) # verbosity flag
-nmed = par.int('nmed',1)     # median filter samples
+mean = par.bool('mean',False) # verbosity flag
+nmed = par.int('ns',1)        # number of filter samples
 
 # ------------------------------------------------------------
 Fin = rsf.Input()             # input file
@@ -63,7 +75,10 @@ for i in range(nd):
     wgh[i] = np.max(din)               # data weight
 
 #spk = signal.medfilt(pck,2751)
-spk = myMedian(pck,nmed)
+if mean:
+    spk = myMean(pck,nmed)
+else:
+    spk = myMedian(pck,nmed)
 
 # ------------------------------------------------------------
 # write picks and weights
