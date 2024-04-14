@@ -118,10 +118,11 @@ for i in range(nd):
 
 wgh /= np.max(wgh)
 pckmed = np.median(pck)
+#pckmed = np.median(pck[pck < 0.9*l1 ])
 #print(pckmed,file=sys.stderr)
 
 wgh = np.where(np.abs(pck) < 0.9*l1, wgh, 0.0)
-pck = np.where(np.abs(pck) < 0.9*l1, pck, pckmed)
+pck = np.where(np.abs(pck) < 0.9*l1, pck, 0.0)
 
 if   mode == 0: # use mean
     print("USE MEAN",mode,file=sys.stderr)
