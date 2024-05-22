@@ -1,0 +1,476 @@
+from rsf.proj import *
+
+#################################################
+############# Synthetic CMP #####################
+n2=128
+d2=0.025 
+o2=0.05
+
+# 1. make a trace
+Result('test', None, 'spike n1=2001 d1=0.001  | noise rep=y seed=2014 | math output="input^3" | cut max1=0.25 | graph title=Spike')
+
+Flow('trace',None,
+	'''
+	spike n1=2001 d1=0.001 | noise rep=y seed=2014 | 
+	math output="input^3" | cut max1=0.25 | 
+	ricker1 frequency=75
+	''')
+Result('trace','graph title=trace')
+Result('spectrum','trace','spectra | graph title=Spectrum')
+
+# 2. make NMO velocity
+
+Flow('vel','trace','math output="1.5+x1" ')
+
+# 3. Apply inverse NMO 
+
+Flow('cmp','trace vel',
+	'''
+	spray axis=2 n=128 d=0.025 o=0.05 | 
+	inmo velocity=${SOURCES[1]} half=n 
+	''')
+Result('cmp','grey title="CMP Gather" label2=Offset unit2=km ')
+Flow('lowcmp','cmp','bandpass fhi=50') 
+Plot('lowcmp','cmp','bandpass fhi=50 | grey title="CMP Gather" label2=Offset unit2=km') 
+Result('lowcmp','cmp','bandpass fhi=50 | grey title="CMP Gather" label2=Offset unit2=km') 
+Result('mlowcmp','cmp','bandpass fhi=50 | grey wanttitle=n wantaxis=n') 
+
+Flow('cmpstack', 'cmp vel', 'nmo velocity=${SOURCES[1]} half=n | mutter v0=4.5 half=n | stack')
+Flow('difftest','cmpstack trace','add scale=1,-1 ${SOURCES[1]}')
+Result('modtest','difftest cmpstack trace',
+		'''
+		cat axis=2 ${SOURCES[1:3]} | 
+		dots labels=difference:interpolated:original 
+		gaineach=n
+		''')
+# Subsampled gather
+
+Flow('cmp2','cmp','window j1=4')
+
+Plot('cmp2','grey title="CMP Gather" label2=Offset unit2=km ')
+Result('cmp2','grey title="CMP Gather" label2=Offset unit2=km  ')
+Result('lowcmp2','cmp2','bandpass fhi=50 | grey title="CMP Gather" label2=Offset unit2=km') 
+Result('mlowcmp2','cmp','bandpass fhi=200 | window j1=4 | bandpass fhi=50 | grey wanttitle=n wantaxis=n')
+
+# Apply regular NMO
+Flow('nmo','cmp vel',
+	'''
+	nmo velocity=${SOURCES[1]} str=0.3 half=n | 
+	mutter v0=4.5 half=n 
+	''')
+Result('nmo','grey title="Conventional NMO Corrected Gather" label2=Offset unit2=km')
+Result('lownmo','nmo','bandpass fhi=50 | grey title="Conventional NMO Corrected Gather" label2=Offset unit2=km') 
+
+Flow('vel2','vel','window j1=4')
+Flow('nmo2','cmp2 vel2',
+	'''
+	nmo velocity=${SOURCES[1]} str=0.2 half=n |
+	mutter v0=4.5 half=n 	
+	''')
+Result('nmo2','grey title="With Stretch" label2=Offset unit2=km screenratio=2')
+Flow('nmo3','cmp2 vel2',
+	'''
+	nmo velocity=${SOURCES[1]} str=0.7 half=n |
+	mutter v0=4.5 half=n 	
+	''')
+Result('nmo3','grey title="NMO" label2=Offset unit2=km screenratio=2')
+Plot('nmo2','grey title="Conventional NMO" label2=Offset unit2=km')
+Result('lownmo2','nmo2','bandpass fhi=50 | grey title="Conventional NMO Corrected Gather" label2=Offset unit2=km') 
+
+# Regular stack
+
+Flow('stack2','nmo2','stack')
+Result('stack2','graph title="Subsampled Stack" ')
+Result('lowstack2','stack2','bandpass fhi=50 | graph title="Conventional Stack"')
+
+# Interpolate to dense sampling
+
+Flow('istack2','stack2 trace','bandpass fhi=124 | spline pattern=${SOURCES[1]}')
+Flow('diff2','istack2 trace','add scale=1,-1 ${SOURCES[1]}')
+Result('mod2','diff2 istack2 trace',
+		'''
+		cat axis=2 ${SOURCES[1:3]} | 
+		dots labels=difference:interpolated:original 
+		gaineach=n
+		''')
+
+Result('ispec2','trace istack2',
+		'''
+		cat axis=2 ${SOURCES[1]} | 
+		spectra 		 | 
+		window max1=75 	 | 
+		graph title=Spectrum
+		''')
+
+#########################################################
+################### Shaping Method ######################
+
+# Define dip
+
+data1 = 'cmp'
+
+# t as a function of t0 and x
+
+maxvel = 3.5
+minvel = 1.9
+
+Flow('t','vel',
+     '''
+     remap1 n1=2001 d1=0.001 o1=0 | 
+     spray axis=2 n=128 d=0.025 o=0.05 label=Offset unit=km |
+     math output="sqrt(x1*x1+x2*x2*(1/(input*input)-%g))"
+     ''' % (1/(minvel*minvel)))
+
+Plot('t','window j1=100 | window f1=3 | transp | graph wanttitle=n wantaxis=n yreverse=y min2=0 max2=2 pad=n')
+
+Flow('t1','vel',
+     '''
+     spray axis=2 n=128 d=0.025 o=0.05 label=Offset unit=km |
+     math output="x1*x1+(x2*x2)/(1/(input*input))"
+     ''')
+
+
+# dip as a function of t0 and x
+
+dt=0.001
+dx=0.025
+
+# NMO with maximum velocity
+
+Flow('vmax','vel','math output=%g' % minvel)
+Flow('nmo02','cmp2 vmax','nmo velocity=${SOURCES[1]} half=n')
+
+Flow('nmo0',[data1,'vmax'],'nmo velocity=${SOURCES[1]} half=n')
+Flow('inmo0','nmo0','bandpass fhi=125 | window j1=2')
+Plot('nmo0','grey title="NMO with Constant Velocity" label2=Offset unit2=km')
+Result('nmo0','grey title="NMO Corrected" label2=Offset unit2=km')
+Flow('lownmo0',['lowcmp','vmax'],'nmo velocity=${SOURCES[1]} half=n')
+Result('nmo01','nmo0 t','Overlay')
+
+Flow('p0','vel t',
+     '''
+     remap1 n1=2001 d1=0.001 o1=0 | 
+     spray axis=2 n=128 d=0.025 o=0.05 label=Offset unit=km |
+     math t=${SOURCES[1]} output="%g*x2/(t+0.001)*(1/(input*input)-%g)"
+     ''' % ((dx/dt),1/(minvel*minvel)))
+
+Flow('p1','vel t1',
+     ''' 
+     spray axis=2 n=128 d=0.025 o=0.05 label=Offset unit=km |
+     math t=${SOURCES[1]} output="%g*x2/(t+0.001)*(1/(input*input))"
+     ''' % (dx/dt))
+
+# dip as a function of t
+Result('p0','grey unit1=s unit2=km  color=j title=Slope scalebar=y')
+Flow('vdip2','p0 t','iwarp warp=${SOURCES[1]} eps=1')
+
+Flow('taper','vdip2','math output=1 | mutter v0=2.6 half=n | smooth rect1=10 rect2=10')
+
+Flow('vdip1','vdip2 taper','mul ${SOURCES[1]}')
+Flow('otaper','vdip2','math output=-7 | mutter v0=2.4 half=n inner=y | mutter v0=3.5 half=n | smooth rect1=15 rect2=15')
+Flow('ovdip1','vdip1 otaper','add ${SOURCES[1]}')
+Result('taper','grey title=Taper')
+Plot('vdip1','grey unit1=s unit2=km  color=j title=Slope scalebar=y')
+Result('ovdip1','grey unit1=s unit2=km  color=j title=Slope scalebar=y')
+
+data2 = 'nmo0'
+idip = data2+'idip2'
+Flow(idip,[data2,'ovdip1'],'dip nj1=1 both=n eps=1 rect1=15 rect2=15 idip=${SOURCES[1]} order=4')
+
+Plot(idip,'grey unit1=s unit2=km  color=j title=Slope scalebar=y label2=Offset')
+Result(idip,'grey unit1=s unit2=km  color=j title=Slope scalebar=y label2=Offset')
+
+Result('nmodip','cmp2 nmo0','SideBySideAniso')
+
+# Seislet NMO
+def seislet(gather,dip,snmo):
+    nmos = []
+    for i2 in range(n2):
+    	traced = 'trace%d' % i2
+    	if i2 == 0:
+    		Flow(traced,gather,'cut f2=1')
+    	elif i2 == n2-1:
+    		Flow(traced,gather,'cut n2=%d' % i2)
+    	else:
+    		Flow(traced,gather,'cut n2=%d | cut f2=%d' % (i2,i2+1))
+    		
+    	nmo = 'nmod%d' % i2
+    	nmos.append(nmo)
+    	Flow(nmo,[traced,dip],'''
+    	seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y type=haar order=4 |
+    	window n2=1 ''')
+    	Flow(snmo,nmos,'''cat axis=2 ${SOURCES[1:%d]} ''' % len(nmos))
+    	
+# Seislet Stack
+def seislet_stack(gather,dip,stack):
+    Flow(stack,[gather,dip],
+         '''
+         seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y type=haar order=4 |
+         window n2=1        
+         ''')
+
+#seislet('nmo0',idip,'dnmo2')
+#Plot('dnmo2','grey title="Seislet NMO"')
+#Result('dnmo2','grey title="Seislet NMO"')
+#Result('test2',['dnmo2','t'],'Overlay')
+
+############################## Shaping PW stack #################################
+
+# Backward operator
+def backward(data,model,mode):
+    Flow(model,[data,idip,'vmax'],
+         '''
+         spline pattern=${SOURCES[1]} | 
+	 nmo velocity=${SOURCES[2]} half=n |
+	 pwstack dip=${SOURCES[1]} mode=%d order=4 eps=0.01
+	 ''' % mode)
+    
+niter=5
+	 
+# Shaping PWC stack
+def shaping(cmp2,mod,plots):
+    '''Put everything in a function'''
+
+    global niter
+    mod0 = mod+'0'
+
+    backward(cmp2,mod0,1) 
+
+    m0 = mod0
+    old = m0
+    plots = []
+    for i in range(1,niter+1):
+    	new = '%s%d' % (mod,i)
+    	specn = 'spect%s%d' % (mod,i)
+    	Flow(new, [idip, old, m0, 'vmax'],'''
+    	pwpaint seed=${SOURCES[1]} eps=0.01 order=4 |
+    	inmo velocity=${SOURCES[3]} half=n  |
+    	window j1=4			 |	
+    	spline pattern=${SOURCES[0]} 	 |
+    	nmo velocity=${SOURCES[3]} half=n   |
+    	pwstack dip=${SOURCES[0]} order=4 mode=1 eps=0.01 | 
+    	add ${SOURCES[1]} ${SOURCES[2]} scale=-1,1,1 | 
+    	bandpass flo=1 fhi=300 ''')
+    	old = new
+    	
+    	Flow(specn, ['trace', new], '''
+    	cat axis=2 ${SOURCES[1]} | 
+    	spectra | 
+    	window max1=250 ''')
+    	Plot(specn, 'graph min2=0 max2=9 title=Spectrum%d'%i)
+    	if plots != None:
+    		plots.append(specn)
+    	
+    Flow(mod,new,'cp')
+    
+#shaping('cmp2','shstacked',None)
+
+
+############################## GMRES #################################
+backward('cmp2','gmres0',2)
+Flow('gmres1',['cmp2',idip],'shpwstack flo=1 fhi=300 niter=1 half=n jump=4 velocity=%g dip=${SOURCES[1]} mode=2 order=4 eps=0.01 nmo=y' % minvel)
+Flow('gmres2',['cmp2',idip],'shpwstack flo=1 fhi=300 niter=2 half=n jump=4 velocity=%g dip=${SOURCES[1]} mode=2 order=4 eps=0.01 nmo=y' % minvel)
+Flow('gmres3',['cmp2',idip],'shpwstack flo=1 fhi=300 niter=3 half=n jump=4 velocity=%g dip=${SOURCES[1]} mode=2 order=4 eps=0.01 nmo=y' % minvel)
+
+Result('niter','trace istack2 gmres3 gmres0',
+		'''
+		cat axis=2 ${SOURCES[1:4]} |
+		window f1=300 n1=500 | 
+		dots labels=reference:conventional:niter3:niter0 
+		gaineach=n
+		''')
+
+Result('mod1','gmres3 gmres2 gmres1 gmres0',
+		'''
+		cat axis=2 ${SOURCES[1:4]} | window f1=500 n1=500 |
+		dots labels=niter3:niter2:niter1:niter0
+		gaineach=n
+		''')
+
+# Spectral comparisons
+Plot('istack2','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude title="Conventional vs. PWC Stack"')
+Plot('trace','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude title="Reference vs. PWC Stack"')
+Plot('gmres3','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude plotcol=5 dash=1 title="" wantaxis2=n wantaxis1=n')
+
+Result('spec5','istack2 gmres3','Overlay')
+
+Result('spec6','trace gmres3','Overlay')
+
+
+
+Result('compspec','trace gmres3',
+		'''
+		cat axis=2 ${SOURCES[1]} | spectra | 
+		window max1=250 | graph label2=Amplitude 
+		title="Reference Trace vs. Seislet Stack"
+		''')
+
+Result('mod3','istack2 gmres3 trace',
+		'''
+		cat axis=2 ${SOURCES[1:3]} | 
+		dots labels=Conventional:Shaping:Reference 
+		gaineach=n
+		''')
+
+
+# With low cut filter
+Flow('cmplow','cmp','bandpass flo=25 | window j1=4 ')
+Flow('stacklow','cmplow vel2 vel','nmo velocity=${SOURCES[1]} half=n | stack | spline pattern=${SOURCES[2]} | bandpass flo=25')
+Flow('gmreslow',['cmplow',idip],'shpwstack flo=0 fhi=300 niter=4 half=n jump=4 velocity=%g dip=${SOURCES[1]} mode=2 order=4 eps=0.01 nmo=y' % minvel)
+#shaping('cmplow','shstacklow', None)
+Plot('gmreslow','spectra | window max1=35 | graph max2=3 label2=Amplitude plotcol=4 dash=4 title="" wantaxis2=n wantaxis1=n')
+Plot('traced','trace','spectra | window max1=35 | graph max2=3 label2=Amplitude title="" wantaxis2=n wantaxis1=n')
+Plot('stacklow','spectra | window max1=35 | graph max2=3 label2=Amplitude plotcol=7 dash=5 title="Low Frequency Spectrum"')
+Result('speclow','gmreslow traced stacklow','Overlay')
+
+
+Flow('widip',idip,'window j2=5 | window n1=200 f1=1000 n2=2 f2=10')
+Flow('pwdstack','cmp','window j2=5 | window n1=200 f1=1000 n2=2 f2=10')
+Flow('accstack','pwdstack widip','shpwstack flo=1 fhi=300 niter=2 half=n jump=1 dip=${SOURCES[1]} mode=2 order=4 eps=0.01 nmo=n')
+Plot('pwdstack','wiggle title=Data transp=y yreverse=y pclip=100')
+Plot('accstack','wiggle title="Accumulated stack" transp=y yreverse=y pclip=100 min2=0.1 max2=2.5')
+Result('schem','pwdstack accstack','SideBySideAniso')
+
+### Seislet Shaping NMO
+pwstacks = []
+for trace in range(n2):
+    pwonetrace = 'pwcmp-trace%d' % trace
+    if 0==trace:
+        Flow(pwonetrace,'cmp2','cut f2=%d' % (trace+1))
+    elif (n2-1)==trace:
+        Flow(pwonetrace,'cmp2','cut n2=%d' % trace)
+    else:
+        Flow(pwonetrace,'cmp2','cut n2=%d | cut f2=%d' % (trace,trace+1))
+
+    pwstack = 'pwcmp-%d-stack' % trace
+    pwstacks.append(pwstack)
+
+    # go through the shaping procedure: onetrace -> stack 
+    #Flow(stack,[onetrace,idip],'shpwstack flo=1 fhi=300 niter=4 half=n jump=4 velocity=%g dip=${SOURCES[1]} mode=1 order=4 eps=0.01 nmo=y' % minvel)
+    shaping(pwonetrace,pwstack,None)
+    
+Flow('nsnmo',pwstacks,'cat axis=2 ${SOURCES[1:%d]}' % n2)
+Result('nsnmo',
+       '''
+       transp | bandpass fhi=2 | transp | 
+       mutter v0=3.5 half=n | mutter slope0=0.4 half=n | grey title="PWC NMO" label2=Offset unit2=km screenratio=2
+       ''')
+
+############################## Shaping NMO stack #################################
+
+def shbackward(data,model):
+    Flow(model,[data,'vel'],
+         '''
+         spline pattern=${SOURCES[1]} |
+         nmo velocity=${SOURCES[1]} half=n str=0.0 |
+         stack
+         ''')
+shbackward('cmp2','shmod0')
+
+Flow('shgmres','cmp2 vel','shstack flo=1 fhi=350 niter=5 half=n jump=4 velocity=${SOURCES[1]}')
+Flow('shgmreslow','cmplow vel','shstack flo=1 fhi=350 niter=5 half=n jump=4 velocity=${SOURCES[1]}')
+
+Flow('shgmres1','cmp2 vel','shstack flo=1 fhi=300 niter=1 half=n jump=4 velocity=${SOURCES[1]}')
+Flow('shgmres2','cmp2 vel','shstack flo=1 fhi=300 niter=2 half=n jump=4 velocity=${SOURCES[1]}')
+
+Result('shmod1','shgmres shgmres2 shgmres1 shmod0',
+		'''
+		cat axis=2 ${SOURCES[1:4]} | window f1=500 n1=500 |
+		dots labels=niter5:niter2:niter1:niter0
+		gaineach=n
+		''')
+
+Plot('shgmres','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude title="SNMO Stack vs. PWC Stack"')
+
+Result('shpwspec1','shgmres gmres3','Overlay')
+
+
+Result('mod4','istack2 shgmres gmres3 trace',
+		'''
+		cat axis=2 ${SOURCES[1:4]} | 
+		dots labels=Conventional:SNMO:PWC:Reference 
+		gaineach=n
+		''')
+
+Plot('trace2','trace','spectra | window max1=35 | graph max2=3 plotfat=3 label2=Amplitude title=""')
+
+Plot('stacklow2','stacklow','spectra | window max1=35 | graph max2=3 plotfat=3 label2=Amplitude plotcol=7 dash=5 title="Low Frequency Recovery"')
+
+Plot('gmreslow2','gmreslow','spectra | window max1=35 | graph max2=3 plotfat=3 label2=Amplitude plotcol=5 dash=1 title="" wantaxis2=n wantaxis1=n')
+
+Plot('shgmreslow2','shgmreslow','spectra | window max1=35 | graph max2=3 plotfat=3 label2=Amplitude plotcol=3 dash=1 title="" wantaxis2=n wantaxis1=n')
+
+Result('allspeclow','trace2 gmreslow2 shgmreslow2 stacklow2','Overlay')
+
+
+# With AVO
+Flow('cmpavo1','trace vel',
+	'''
+	spray axis=2 n=%d d=%g o=%g  | 
+	inmo velocity=${SOURCES[1]} half=n |
+	noise seed=2015 var=0.1   	   |
+	math output="input*(1-x2*%g)" 	   
+	''' % (n2,d2,o2,2.0/5.0))
+Flow('cmpavo','trace vel',
+	'''
+	spray axis=2 n=%d d=%g o=%g  | 
+	inmo velocity=${SOURCES[1]} half=n |
+	noise seed=2015 var=0.1   	   |
+	math output="input*(1-x2*%g)" 	   |
+	window j1=4
+	''' % (n2,d2,o2,2.0/5.0))
+Result('cmpavo','grey title="CMP Gather with AVO" label2=Offset unit2=km ')
+Flow('nmo0avo','cmpavo1 vmax','nmo velocity=${SOURCES[1]} half=n')
+Flow('dipavo','nmo0avo ovdip1','dip nj1=1 both=n eps=1 rect1=15 rect2=15 idip=${SOURCES[1]} order=4')
+Flow('stackavo','cmpavo vel2 vel','nmo velocity=${SOURCES[1]} half=n  | mutter v0=4.5 half=n | stack | spline pattern=${SOURCES[2]}')
+Flow('pwavo','cmpavo dipavo','shpwstack flo=11 fhi=300 niter=4 half=n jump=4 velocity=%g dip=${SOURCES[1]} mode=2 order=4 eps=0.01 nmo=y | cut n1=255' % minvel) 
+
+Plot('stackavo','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude title="Conventional vs. PWC Stack"')
+Plot('pwavo','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude plotcol=5 dash=1 title="" wantaxis2=n wantaxis1=n')
+
+Result('specavo2','stackavo pwavo','Overlay')
+
+Result('specavo1','trace pwavo','Overlay')
+
+Flow('shgmresavo','cmpavo vel','shstack niter=6 flo=5 fhi=300 half=n jump=4 velocity=${SOURCES[1]} | cut f1=1 n1=200')
+Plot('shgmresavo','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude plotfat=3 plotcol=5 dash=1 title="" wantaxis2=n wantaxis1=n')
+Plot('shgmresavo1','shgmresavo','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude title="SNMO Stack vs. PWC Stack"')
+
+Result('shpwspecavo','shgmresavo1 pwavo','Overlay')
+
+Plot('trace1','trace','spectra | window max1=250 | graph max2=8 plotfat=3 label2=Amplitude title="Reference vs. Shaping NMO Stack"')
+Result('shspecavo1','trace1 shgmresavo','Overlay')
+
+Result('mod5','stackavo shgmresavo pwavo trace',
+		'''
+		cat axis=2 ${SOURCES[1:4]} | 
+		dots labels=Conventional:SNMO:PWC:Reference 
+		gaineach=n
+		''')
+# Try to extract effective NMO
+stacks = []
+for trace in range(128):
+    onetrace = 'cmp-trace%d' % trace
+    if 0==trace:
+        Flow(onetrace,'cmp2','add mode=m scale=128 |cut f2=%d' % (trace+1))  
+    elif 127==trace:
+        Flow(onetrace,'cmp2','add mode=m scale=128 |cut n2=%d' % trace)
+    else:
+        Flow(onetrace,'cmp2','add mode=m scale=128 |cut n2=%d | cut f2=%d' % (trace,trace+1))
+    stack = 'cmp-%d-stack' % trace
+    stacks.append(stack)
+
+    # go through the shaping procedure: onetrace -> stack 
+    Flow(stack,[onetrace, 'vel'],'shstack flo=2 fhi=200 niter=10 half=n jump=4 velocity=${SOURCES[1]}')
+
+Flow('shnsnmo',stacks,'cat axis=2 ${SOURCES[1:128]}')
+Result('shnsnmo', 'nsnmo',
+       '''
+       transp | bandpass fhi=2 | transp | 
+       mutter v0=4.5 half=n | mutter slope0=0.4 half=n | 
+       grey title="Shaping NMO" label2='Offset' unit2='km' screenratio=2
+       ''')
+
+Flow('nsstack','nsnmo','stack')
+
+End()
