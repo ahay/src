@@ -12,9 +12,8 @@ clip = m8r.getfloat("clip")
 
 trace = Array{Float32}(undef, n1)
 
-for i2 in 1:n2
+for i2 = 1:n2
     m8r.floatread(trace, n1, inp)
     clamp!(trace, -clip, clip)
     m8r.floatwrite(trace, n1, out)
 end
-
