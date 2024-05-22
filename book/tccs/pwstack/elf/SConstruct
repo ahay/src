@@ -1,0 +1,428 @@
+from rsf.proj import *
+#import random, string, math
+#from rsf.recipes.beg import server as private
+from rsf.recipes.beg import server 
+
+#random.seed(2005)
+
+nr = 0
+
+def rnd(x):
+    global nr
+    r = str(random.randint(1,nr))
+    return r
+
+Fetch('elf0.H','elf',server)
+
+Flow('elf','elf0.H',
+     '''
+     dd form=native | cut n3=1 n2=1 n1=300 f3=663 f2=67 |
+     put unit1=s unit2=m unit3=m | bandpass fhi=60 | costaper nw3=50
+     ''')
+
+
+n1=800
+n2=128          # data dimensions
+o2=50
+d2=12.5         # lateral scale
+rect1=10
+rect2=10        # smoothing for dip estimation
+p0=0
+pmin=0          # initial and minimum dips
+clip=5          # clip percentile
+eps=0.1         # regularization
+nsp=200         # number of spikes
+ngath=800 	# gather number
+
+nd=1597
+dt=0.002
+
+# Data   
+Flow('gaths','elf','window n2=128')
+Flow('igaths','gaths','window j1=2')
+
+# One CMP gather
+Flow('gath','gaths','window n3=1 f3=%g' % ngath)
+Flow('igath','gath','window j1=2')
+
+# velocity scan for 4ms data
+
+Flow('vscand','gaths','vscan nv=120 dv=25 v0=1400 semblance=y',split=[3,1000])
+
+Flow('pick','vscand',
+     '''
+     mutter x0=2000 v0=1200 half=n |
+     scale axis=2 | pick rect1=70 rect2=70 | transp plane=23
+     ''')
+
+# NMO and stack
+
+Flow('nmo','gaths pick','nmo velocity=${SOURCES[1]}',split=[3,1000])
+Flow('stack1','nmo','stack')
+
+# Dense stack for one gather
+
+Flow('istack1','stack1','window f2=%g n2=1 | spline n1=%g d1=%g o1=0' % (ngath,nd,dt)) 
+
+# velocity scan for 8ms data
+Flow('vscan8','igaths','vscan nv=120 dv=25 v0=1400 semblance=y',split=[3,1000])
+
+Flow('picks8','vscan8',
+     '''
+     mutter x0=2000 v0=1200 half=n |
+     scale axis=2 | pick rect1=70 rect2=70 | transp plane=23
+     ''')
+
+#Result('pick0','pick',
+#       '''
+#       window max1=2.2 | scale dscale=0.001 | 
+#       put unit=km/s d2=0.0133333 label2=Midpoint unit2=km |
+#       grey color=j title="Stacking Velocity" scalebar=y barreverse=y
+#       allpos=y bias=1.8 clip=1.7
+#       ''')
+
+Flow('nmo8','igaths picks8','nmo velocity=${SOURCES[1]}',split=[3,1000])
+
+Result('nmo8',
+       '''
+       byte gainpanel=all |
+       grey3 title="Conventional NMO" frame1=400 frame2=50 frame3=500 point2=0.25
+       ''')
+
+Flow('istack8','nmo8','stack')
+Flow('istackn','istack8','window f2=%g n2=1 | spline n1=%g d1=%g o1=0' % (ngath,nd,dt)) 
+
+#####################################################################################
+############################## USE SHAPING ##########################################
+
+
+############################## Find dip of elf #################################
+# Define dip
+Flow('ipick','pick','spline n1=%g o1=0 d1=%g' % (nd,dt))
+
+# Predict dip from velocity
+#Flow('vdip','pick','remap1 n1=800 d1=0.004 o1=0 | v2d n=128 d=12.5 o=50 mute=y half=y v0=1880')
+#Result('vdip','grey unit1=s unit2=m  color=j title=Slope allpos=y scalebar=y')
+
+
+### Dip Method #1
+
+# t as a function of t0 and x
+maxvel = 3487 #3387
+minvel = 2500 #1859
+
+Flow('t','ipick',
+     '''
+     spray axis=2 n=128 d=12.5 o=50 label=Offset unit=m |
+     math output="sqrt(x1*x1+4*x2*x2*(1/(input*input)-%g))"
+     ''' % (1/(minvel*minvel)))
+
+Flow('td','t','window n4=1 f4=%g' % ngath)
+Plot('td','window j1=50 | window f1=1 | transp | graph wanttitle=n wantaxis=n yreverse=y min2=0 max2=3 pad=n')
+
+# dip as a function of t0 and x
+
+dt1=0.004
+dx=12.5
+
+# NMO with maximum velocity
+
+Flow('vmax','ipick','math output=%g' % minvel)
+
+Flow('nmo0',['gaths','vmax'],'nmo velocity=${SOURCES[1]} half=y | spline n1=%g d1=%g o1=0' % (nd,dt))
+
+#Flow('inmod0',['igaths','vmax'],'nmo velocity=${SOURCES[1]} half=y')
+#Flow('nmod0','gath vmax','nmo velocity=${SOURCES[1]} half=y | spline n1=%g d1=%g o1=0' % (nd,dt))
+
+Flow('nmod0','nmo0','window n3=1 f3=%g' % ngath)
+
+Plot('nmod0','grey title="NMO with max. velocity" ')
+Result('nmod0','nmod0 td','Overlay')
+
+Flow('p0','ipick t',
+     '''
+     spray axis=2 n=128 d=12.5 o=50 label=Offset unit=m |
+     math t=${SOURCES[1]} output="%g*4*x2/(t+0.001)*(1/(input*input)-%g)"
+     ''' % (dx/dt,1/(minvel*minvel)))
+
+# dip as a function of t
+
+Flow('vdip2','p0 t','iwarp warp=${SOURCES[1]} eps=1')
+Flow('taper','vdip2','math output=1 | mutter v0=1500 half=y | smooth rect1=10 rect2=10 rect3=20')
+Flow('vdip1','vdip2 taper','mul ${SOURCES[1]}')
+
+# One gather
+Flow('vdipd2','vdip2','window f4=%g n4=1' % ngath)
+Flow('taperd','vdipd2','math output=1 | mutter v0=1500 half=y | smooth rect1=10 rect2=10 rect3=20')
+Flow('vdipd1','vdipd2 taperd','mul ${SOURCES[1]}')
+
+Result('vdipd1','grey unit1=s unit2=m  color=j title=Slope scalebar=y')
+
+
+data4 = 'nmo0'  
+idip = data4+'idip2'
+
+# Test one dip
+#Flow(idip,[data4,'vdipd1'],'dip n4=0 rect1=10 rect2=5 rect3=20 idip=${SOURCES[1]} order=2')
+#Plot(idip,'grey unit1=s unit2=m  color=j title=Slope scalebar=y')
+#Result(idip,['nmod0',idip],'SideBySideAniso') 
+
+# All dips
+Flow(idip,[data4,'vdip1'],'dip n4=0 rect1=10 rect2=5 rect3=20 idip=${SOURCES[1]} order=2')
+
+Flow('ndip',idip,'window f3=%g n3=1' % ngath)
+Plot('ndip','grey unit1=s unit2=m  color=j title=Slope scalebar=y')
+Result('ndip','ndip nmod0','SideBySideAniso')
+
+# Seislet NMO
+def seislet(gather,dip,snmo):
+    nmos = []
+    for i2 in range(n2):
+    	traced = 'trace%d' % i2
+    	if i2 == 0:
+    		Flow(traced,gather,'cut f2=1')
+    	elif i2 == n2-1:
+    		Flow(traced,gather,'cut n2=%d' % i2)
+    	else:
+    		Flow(traced,gather,'cut n2=%d | cut f2=%d' % (i2,i2+1))
+    	
+    	nmo = 'nmodd%d' % i2
+    	nmos.append(nmo)
+    	Flow(nmo,[traced,dip],'''
+    	seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y 
+    	type=haar order=2 |
+    	window n2=1 ''')
+    	Flow(snmo,nmos,'''cat axis=2 ${SOURCES[1:%d]} ''' % len(nmos))
+    	
+# Seislet Stack
+def seislet_stack(gather,dip,stack):
+    Flow(stack,[gather,dip],
+         '''
+         seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y type=haar order=2 |
+         window n2=1        
+         ''')
+
+#################################################################################
+############################### old dip #########################################
+
+#Flow('pat2','gaths','patch w=800,128,150')
+#Flow('dips2','pat2','dip n4=0 rect1=10 rect2=10 rect3=10 p0=0 pmin=0',split=[6,11])
+#Flow('dip4ms','dips2','patch inv=y weight=y')
+#Flow('idip4ms','dip4ms','spline o1=0 n1=1600 d1=0.002')
+#Flow('ndip4ms','idip4ms','window n3=1 f3=%g' % ngath)
+
+#################################################################################
+########################### Conventional stack ##################################
+Fetch('elf-stk.rsf','masha')
+
+Flow('stack','elf-stk.rsf',
+     '''
+     dd form=native | put d2=0.0133333 
+     ''')
+Plot('stack',
+	'''
+	grey label2=Midpoint unit2=km label1=Time 
+	unit1=s title="Dense"
+	''')
+Plot('istack8',
+	 '''     
+     window j1=2 |  put d2=0.0133333 | grey label2=Midpoint unit2=km label1=Time unit1=s
+     title="Conventional Stack"
+     ''') 
+Result('istack8',
+	 '''     
+     window j1=2 |  put d2=0.0133333 | grey label2=Midpoint unit2=km label1=Time unit1=s
+     title="Conventional Stack"
+     ''') 
+#Flow('nstack','stack','window n2=1 f2=%g | spline o1=0 n1=%g d1=%g' % (ngath, nd,dt))
+
+
+#################################################################################
+###################### Apply SShaping to one CMP gather #########################
+
+# Backward operator
+def backward(data,model,dip):
+    Flow(model,[data,dip,'vmax'],
+         '''
+	 spline pattern=${SOURCES[1]} |
+	 nmo velocity=${SOURCES[2]} half=y |
+         seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y type=linear order=1 |
+	 window n2=1
+	 ''')  
+ #	 pwstack dip=${SOURCES[1]} mode=1 order=2 eps=0.1 
+niter=10
+
+# Shaping NMO stack
+def shaping(cmp2,mod,plots,dip):
+    '''Put everything in a function'''
+
+    global niter
+    mod0 = mod+'0'
+
+    backward(cmp2,mod0,dip) 
+
+    m0 = mod0
+    old = m0
+    plots = []
+    for i in range(1,niter+1):
+    	new = '%s%d' % (mod,i)
+    	specn = 'spect%s%d' % (mod,i)
+    	Flow(new, [dip, old, m0,'vmax'],''' 
+    	pwpaint seed=${SOURCES[1]} eps=0.01 order=1   |	
+    	inmo velocity=${SOURCES[3]} half=y  	  |     	     
+    	window j1=4			 	  |	
+    	spline pattern=${SOURCES[1]}	 	  |
+    	nmo velocity=${SOURCES[3]} half=y   	  |
+    	seislet dip=${SOURCES[0]} eps=0.1 adj=y inv=y type=linear order=1 |
+    	window n2=1 |
+    	add ${SOURCES[1]} ${SOURCES[2]} scale=-1,1,1 |
+    	bandpass fhi=100 flo=2 ''')
+    	old = new
+    	
+    	if plots != None:
+    		plots.append(specn)
+    
+    Flow(mod,new,'cp')
+         
+#shaping('igath','shstacked',None,'ndip')
+
+Flow('gmres','igath ndip ipick','shpwstack flo=3 fhi=80 niter=3 half=y velocity=%g jump=4 dip=${SOURCES[1]} mode=1 order=2 eps=0.01 nmo=y' % minvel) 
+#Flow('gmres1','igath ndip','shpwstack flo=2 fhi=85 niter=3 half=y velocity=%g jump=4 dip=${SOURCES[1]} mode=1 order=2 eps=0.01 nmo=y' % minvel) 
+Flow('ugmres','gmres ipick','spray axis=2 n=1 d=12.5 o=50 | nmo velocity=${SOURCES[1]} | window n2=1') 
+
+Result('compspec2','istack1 ugmres',
+		'''
+		cat axis=2 ${SOURCES[1]} | spectra | 
+		window max1=125 |  graph label2=Amplitude max2=11000 
+		title="PWC Stack vs Dense" max1=100
+		''')
+Result('compspec','istackn ugmres',
+		'''
+		cat axis=2 ${SOURCES[1]} | spectra | 
+		window max1=125 | graph label2=Amplitude max2=11000
+		title="PWC Stack vs Conventional" max1=100
+		''')
+
+
+###################### Apply to all CMPs #############################
+
+#shaping('igaths','shstackV1',None,idip)
+#Flow('ngmres',['igaths', idip],'shpwstack flo=2 fhi=85 niter=3 half=y velocity=%g jump=4 dip=${SOURCES[1]} mode=1 order=2 eps=0.01 nmo=y' % minvel) 
+Flow('ngmres2',['igaths', idip],'shpwstack flo=3 fhi=110 niter=3 half=y velocity=%g jump=4 dip=${SOURCES[1]} mode=2 order=2 eps=0.01 nmo=y' % minvel)
+Flow('ngmres3',['igaths', idip],'shpwstack flo=3 fhi=90 niter=3 half=y velocity=%g jump=4 dip=${SOURCES[1]} mode=1 order=2 eps=0.01 nmo=y' % minvel)
+
+Flow('ungmres2','ngmres2 ipick','spray axis=2 n=1 d=12.5 o=50 | nmo velocity=${SOURCES[1]} | window n2=1') # | window n2=1 f2=1') 
+Flow('ungmres3','ngmres3 ipick','spray axis=2 n=1 d=12.5 o=50 | nmo velocity=${SOURCES[1]} | window n2=1') # | window n2=1 f2=1') 
+
+Plot('ungmres2', 
+	'''
+	put d2=0.0133333 | smooth rect1=2 rect2=2 |
+        grey title="PWC Stack" 
+        unit1=s label2=Midpoint unit2=km 
+       ''')
+Result('ungmres2', 
+	'''
+	put d2=0.0133333 | smooth rect1=2 rect2=2 |
+        grey title="PWC Stack" 
+        unit1=s label2=Midpoint unit2=km 
+       ''')
+Result('ungmres3', 
+	'''
+	put d2=0.0133333 |
+        grey title="PWC Stack" 
+        unit1=s label2=Midpoint unit2=km 
+       ''')
+Plot('ngmres2', 
+	'''
+        grey title="PWC Stack 2" 
+        unit1=s label2=Midpoint unit2=km 
+       ''')
+
+Result('stacks','istack8 ungmres2','SideBySideAniso')
+
+## Window #1 
+Flow('wstack', 'istack8', 'put d2=0.0133333 | window n1=150 f1=50 n2=300 f2=600') 
+Plot('wstack', 'grey title="Conventional" unit1=s label2=Midpoint unit2=km')
+Result('wstack', 'grey title="Conventional" unit1=s label2=Midpoint unit2=km screenratio=2')
+Result('cwstack', 'wstack','grey title="Conventional" unit1=s label2=Midpoint unit2=km')
+
+Flow('wnstack', 'ungmres2', 'put d2=0.0133333 | window n1=600 f1=197 n2=300 f2=600')  
+Plot('wnstack', 'grey title="PWC Stack" unit1=s label2=Midpoint unit2=km')
+Result('wnstack', 'grey title="PWC Stack" unit1=s label2=Midpoint unit2=km screenratio=2')
+Result('wpwstack','wnstack', 'grey title="PWC Stack" unit1=s label2=Midpoint unit2=km')
+
+Result('wsstack','wstack wnstack','SideBySideAniso')
+
+## Window #2
+Flow('wstack1', 'istack8', 'put d2=0.0133333 | window n1=150 f1=25 n2=300 f2=300') 
+Plot('wstack1', 'grey title="Conventional" unit1=s label2=Midpoint unit2=km')
+Result('wstack1', 'grey title="Conventional" unit1=s label2=Midpoint unit2=km screenratio=2')
+Result('cwstack1', 'wstack1','grey title="Conventional" unit1=s label2=Midpoint unit2=km')
+
+Flow('wnstack1', 'ungmres2', 'put d2=0.0133333 | window n1=600 f1=97 n2=300 f2=300')  
+Plot('wnstack1', 'grey title="PWC Stack" unit1=s label2=Midpoint unit2=km')
+Result('wnstack1', 'grey title="PWC Stack" unit1=s label2=Midpoint unit2=km screenratio=2')
+Result('wpwstack1', 'wnstack1','grey title="PWC Stack" unit1=s label2=Midpoint unit2=km')
+
+Result('wsstack1','wstack1 wnstack1','SideBySideAniso')
+
+
+#################################################################################
+############################## Shaping NMO Stack ################################
+
+## one CMP gather 
+
+Flow('shgmres','igath ipick','shstack niter=5 flo=2 fhi=100 jump=4 velocity=${SOURCES[1]}')
+
+Flow('shgmres2','igath ipick','shstack niter=5 flo=2 fhi=124 jump=4 velocity=${SOURCES[1]}')
+
+Result('mod','istack1 shgmres ugmres istackn',
+		'''
+		cat axis=2 ${SOURCES[1:4]} | window f1=300 n1=500 | scale axis=1 | 
+		dots labels=Dense:"SNMO Stack":"PWC Stack":Conventional
+		gaineach=n 
+		''')
+Result('specn1','istack1 shgmres',
+                '''
+                cat axis=2 ${SOURCES[1]} | spectra | 
+                graph label2=Amplitude max1=100 max2=11000
+                title="Shaping NMO Stack vs Dense"
+                ''')
+Result('specn0','istackn shgmres',
+		'''
+		cat axis=2 ${SOURCES[1]} | spectra |  
+		graph label2=Amplitude max1=100 max2=11000
+		title="Shaping NMO Stack vs Conventional"
+		''')
+Result('spec8','shgmres2 shgmres', 
+		'''
+		cat axis=2 ${SOURCES[1]} | spectra | 
+		window max1=100 | scale axis=1 | graph label2=Amplitude
+		title="Shaping Operator Sensitivity"
+		''')
+Result('shpwspec','shgmres ugmres',
+		'''
+		cat axis=2 ${SOURCES[1]} | spectra |  
+		graph label2=Amplitude max1=100 max2=11000
+		title="SNMO Stack vs PWC Stack"
+		''')
+
+## All CMPs 
+
+Flow('shngmres','igaths ipick','shstack flo=2 fhi=100 niter=5 jump=4 velocity=${SOURCES[1]}')
+Result('shngmres', 
+	'''
+	put d2=0.0133333 |
+        grey title="Shaping NMO Stack" 
+        unit1=s label2=Midpoint unit2=km 
+       ''')
+
+Flow('shwnstack', 'shngmres', 'put d2=0.0133333 | window n1=600 f1=197 n2=300 f2=600')  
+Result('shwnstack', 'grey title="SNMO Stack" unit1=s label2=Midpoint unit2=km screenratio=2')
+Result('wshstack', 'shwnstack', 'grey title="SNMO Stack" unit1=s label2=Midpoint unit2=km')
+
+Flow('shwnstack1', 'shngmres', 'put d2=0.0133333 | window n1=600 f1=97 n2=300 f2=300')  
+Result('shwnstack1', 'grey title="SNMO Stack" unit1=s label2=Midpoint unit2=km screenratio=2')
+Result('wshstack1', 'shwnstack1','grey title="SNMO Stack" unit1=s label2=Midpoint unit2=km')
+
+End()
