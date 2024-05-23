@@ -1,6 +1,10 @@
 # Note that this script can accept some limited command-line arguments, run
 # `julia build_tarballs.jl --help` to see a usage message.
-using BinaryBuilder, Pkg
+using Pkg
+
+Pkg.activate(".")
+
+using BinaryBuilder
 
 name = "Madagascar"
 version = v"1.0.0"
@@ -26,7 +30,7 @@ make install
 # These are the platforms we will build for by default, unless further
 # platforms are passed in on the command line
 platforms = [
-    Platform("i686", "linux"; libc="glibc"),
+    # Platform("i686", "linux"; libc="glibc"),
     Platform("x86_64", "linux"; libc="glibc")
 ]
 
@@ -46,5 +50,11 @@ dependencies = [
     Dependency(PackageSpec(name="FFTW_jll", uuid="f5851436-0d7a-5f13-b9de-f02708fd171a"))
 ]
 
+println("""
+Beginning tarball creation
+Expect a long wait time with the following approximations per distribution:
+    (1) Base dependencies (gcc, gfortran, fftw, etc.): 30 minutes
+    (2) Madagascar make system: 30 minutes
+""")
 # Build the tarballs, and possibly a `build.jl` as well.
 build_tarballs(ARGS, name, version, sources, script, platforms, products, dependencies; julia_compat="1.6", preferred_gcc_version=v"10.2.0")
