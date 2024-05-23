@@ -1,0 +1,140 @@
+from rsf.proj import *
+
+## Define functions
+def grey(custom):
+    return '''grey labelsz=11 labelfat=3 titlesz=15 titlefat=3
+    scalebar=n
+    %s''' % (custom)
+def grey3(custom):
+    return '''byte gainpanel=all bar=bar.rsf |
+    grey3 labelsz=7 labelfat=3 titlesz=12 titlefat=3
+    point1=0.8 point2=0.8 frame1=700 frame2=60
+    scalebar=n flat=n label3="Reverse Shift" unit3=s
+    %s''' % (custom)
+
+## Generate synthetic microseismic data
+## - Setting up model parameters
+nt=2500
+dt=0.001 # 1000Hz sampling rate
+nx=140
+dx=0.015
+x0=0.0
+nz=140
+dz=0.015
+z0=0.0
+nab=30 # absorbing boundary size
+## - Construct layer media vel model
+Flow('top',None,'''spike mag=1.500
+    n1=60 d1=%g o1=%g n2=%d d2=%g o2=%g'''%(dz,-nab*dz,nx+2*nab,dx,-nab*dx))
+Flow('mid',None,'''spike mag=1.500
+    n1=70 d1=%g n2=%d d2=%g o2=%g'''%(dz,nx+2*nab,dx,-nab*dx))
+Flow('bot',None,'''spike mag=1.500
+    n1=70 d1=%g n2=%d d2=%g o2=%g'''%(dz,nx+2*nab,dx,-nab*dx))
+Flow('vel','top mid bot',
+    '''cat axis=1 ${SOURCES[1:3]} | smooth rect1=8 repeat=2 |
+    put unit1="km" unit2="km" label1="Depth" lable2="Distance"''')
+# Result('vel',
+#     grey('barreverse=y title="Velocity model"'))
+## - Create subsurface scatterer sources (totally 4)
+Flow('data0 snaps','vel',
+    '''psp snaps=${TARGETS[1]} verb=y cmplx=n
+    vref=1.500 ps=y nt=%d dt=%g snap=1 abc=y nbt=%d ct=0.01 src=0
+    n_srcs=4 spz=80,90,90,100 spx=80,90,110,120 f0=30,30,30,30
+    t0=0.5,0.6,0.8,0.9 A=1.5e6,2.0e6,2.5e6,3.0e6'''%(nt,dt,nab))
+Flow('src',None,
+    '''spike n1=%d n2=%d d1=%f d2=%f nsp=4
+    k1=80,90,90,100 k2=80,90,110,120 mag=5 |
+    smooth rect1=2 rect2=2 repeat=1'''%(nz+2*nab,nx+2*nab,dz,dx))
+# Flow('data','data0','''cp |
+#     put o2=0.0 n3=1 d3=0.1 o3=0.0''')
+Flow('data','data0','''noise var=0.05 type=y seed=1573 |
+    put o2=0.0 n3=1 d3=0.1 o3=0.0''')
+# Flow('data','data0','''shapeagc eps=0 rect1=40 rect2=10 |
+#     put o2=0.0 n3=1 d3=0.1 o3=0.0''')
+# Result('snaps','put o1=0.0 o2=0.0 | window j3=10 |'+
+#     grey('gainpanel=a color=g title="Microseismic propagation"'))
+Plot('data',
+    grey('title="Synthetic microseismic record"'))
+
+## Output model
+Flow('sov','vel src','add mode=a scale=1,1 ${SOURCES[1]}')
+Plot('sov',
+    'window f1=%d n1=%d f2=%d n2=%d | put o1=0 o2=0 |'%(nab,nz,nab,nx)+
+    grey('''allpos=y bias=1.5 barreverse=y minval=1.5 maxval=3
+        pclip=100 title="Source Over Velocity Model"
+        barlabel="V" barunit="m/s"'''))
+Result('data-simple','sov data','SideBySideIso')
+
+## Calculate delayed migration
+ndelay=80
+maxdelay=1.10
+mindelay=0.30
+shiftdata = []
+for idelay in range(0,ndelay):
+    delay = mindelay + idelay*(maxdelay-mindelay)/ndelay
+    shifted = 'shifted-%d'%idelay
+    Flow(shifted,'data','shift del1=-%g | cut f1=%d'%(delay,nt-delay/dt))
+    shiftdata.append(shifted)
+# Concatenate delayed data
+Flow('shift',shiftdata,'''cat axis=3 ${SOURCES[1:%d]} |
+    put n3=%d d3=%g o3=%g'''%
+    (ndelay,ndelay,(maxdelay-mindelay)/ndelay,mindelay))
+Result('shift',
+    grey3('frame3=40 wanttitle=n'))
+Flow('mig2','shift',
+    '''t2warp pad=%g | fft1 | fft3 axis=2 |
+    gpi3dzo v_0=3.0 v_a=2.85 v_b=3.15 beta=70.0 |
+    fft3 axis=2 inv=y | fft1 inv=y | t2warp inv=y
+    '''%nt,split=[3,'omp'])
+Result('mig2','window max1=1.4 |'+
+    grey3('''frame3=40 title="Shifted Kirchhoff migration movie"
+        label1="Vertical Time"'''))
+
+## Output focusing demo
+active = [0.5,0.6,0.7,0.8]
+activations = []
+for i in range(4):
+    time = active[i]
+    activation = 'activation-%d'%(i+1)
+    Plot(activation,'mig2','window n3=1 f3=%g |'%((time-mindelay)/0.01)+
+        'window max1=1.4 |'+
+        grey('label1="Vertical Time" title="Shift = %gs"'%time))
+    activations.append(activation)
+Result('act',activations,'TwoRows')
+
+## Output delay-time traces
+locx = [0.75,0.9,1.2,1.35]
+loct = [0.5,0.6,0.6,0.7]
+traces = []
+for i in range(4):
+    trace = 'trace-%d'%i
+    Flow(trace,'mig2','''window n1=1 n2=1 f1=%d f2=%d |
+        math output="-input+%g"'''%(loct[i]/dt,locx[i]/dx,-0.30*i))
+    # Plot(trace,'''graph max2=2.0 min2=-0.5
+    #     label1="Time Lag" wantaxis2=n wanttitle=n''')
+    traces.append(trace)
+Flow('traces',traces,'cat axis=2 ${SOURCES[1:4]}')
+Result('trc','traces',
+    '''wiggle label1="Time lag" yreverse=y
+    min2=0.4995 max2=0.5035 wantaxis2=n wanttitle=n''')
+
+## Build envelope movie
+Flow('env','mig2','envelope')
+# Result('env','window j3=5 |'+
+#     grey3('movie=3 title="Image envelope"'))
+
+## Stack over time-delay, diffraction stacking
+Flow('vel-no-abs','vel',
+    'window f1=%d n1=%d f2=%d n2=%d | put o1=0 o2=0'%(nab,nz,nab,nx))
+Flow('envstack','env vel-no-abs',
+    '''stack axis=3 prod=n | time2depth velocity=${SOURCES[1]}
+    nz=%d dz=%f twoway=n | put label1=Depth uni1=km |
+    smooth rect1=2 rect2=2'''%(nx,dx))
+Flow('envlap','envstack','laplac')
+# Flow('migstack','envstack envlap','add mode=m ${SOURCES[1]}')
+Flow('migstack','envlap','cp')
+Plot('migstack',grey('''pclip=99.5
+    title="Stacking Image" color=e'''))
+Result('migstack-simple','sov migstack','SideBySideIso')
+
+End()
