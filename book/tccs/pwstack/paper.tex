@@ -1,0 +1,248 @@
+\published{SEG Expanded Abstracts, 4069-4074, (2016)}
+
+\title{High-resolution recursive stacking using plane-wave construction}
+
+\author{Kelly Regimbal$^{*1}$ and Sergey Fomel$^{1}$
+\\
+$^1$The University of Texas at Austin}
+
+\maketitle
+
+\lefthead{Regimbal and Fomel}
+\righthead{PWC stacking}
+\footer{TCCS}
+
+\begin{abstract}
+We propose an approach to normal moveout (NMO) stacking, which eliminates the effects of ``NMO stretch" and 
+restores a wider frequency band by replacing conventional stacking with a regularized inversion to zero offset. 
+The resulting stack is a model that best fits the data using additional constraints imposed by 
+shaping regularization. We introduce a recursive stacking scheme
+using plane-wave construction in the backward operator of shaping regularization to achieve a higher resolution stack. 
+The advantage of using recursive stacking along local slopes in the application to NMO 
+and stack is that it avoids ``stretching effects" caused by NMO correction and is insensitive to 
+non-hyperbolic moveout in the data. Numerical tests 
+demonstrate the algorithm's ability to attain a higher frequency 
+stack with a denser temporal sampling interval compared to those of the conventional stack and to
+minimize stretching effects caused by NMO correction. We apply this method to a 2-D 
+field dataset from the North Sea and achieve 
+noticeable resolution improvements in the stacked section compared with that of conventional NMO and stack. 
+\end{abstract}
+
+\section{Introduction}
+In seismic data processing, common midpoint (CMP) stacking is one of the most fundamental processes
+that combines NMO-corrected traces across a CMP gather to produce a single trace with a 
+higher signal-to-noise ratio \cite[]{rashed}. 
+Many problems arise with the assumptions and principles that set the foundation for conventional CMP stacking. 
+Traditional stacking assumes that the NMO-corrected gather has perfectly aligned seismic reflections \cite[]{yilmaz}. 
+However, NMO correction is an approximation that assumes the travel-time as a function of offset follows a 
+hyperbolic trajectory in a CMP gather, which may fail in common geologic settings that involve 
+velocity variations or anisotropy. NMO correction also causes undesirable distortions of signals on a seismic trace 
+known as ``NMO stretch'', which lowers the frequency content of the corrected reflection event at far offsets \cite[]{claerbout3}.
+This violates the assumption of a uniform distribution of phase and frequency of 
+seismic reflections across the corrected gather. Common procedures to eliminate this stretching effect
+involve muting samples with severe distortions. This causes a decrease in fold and may destroy useful 
+far-offset information essential for amplitude variation with offset (AVO) analysis \cite[]{swan}. Inaccuracy in stretch
+muting with residual ``stretching'' effects may also produce a lower-amplitude and lower-resolution stack \cite[]{miller}.  
+
+Several algorithms were developed to improve CMP stacking and enhance resolution 
+of stacked sections by reducing stretching effects. 
+\cite{claerbout} described inverse NMO stack, which recasts 
+NMO correction and stacking as an inversion process in the constant velocity case. This approach 
+combines conventional NMO and stack into one step by solving a set of simultaneous equations using
+iterative least-squares optimization. \cite{sun} extended Claerbout's idea to the case of depth-variable 
+velocity. The inverse NMO stack operator applied depends on hyperbolic moveout relation and can 
+be employed to remove non-hyperbolic events and random noise. \cite{trickett} uses a variation of 
+Claerbout's inverse NMO stack in his stretch-free stacking method to avoid ``NMO stretch". 
+Trickett's results tend to be higher frequency but noisier 
+than a conventional stack. Multiple other algorithms have been proposed that aim to reduce 
+NMO stretching effects \cite[]{byun,hicks,hilterman,rupert,perroud,masoomzadeh,zhang,kazemi}.
+\cite{wisecup} introduced random sample interval imaging (RSI$^2$), which
+maps the CMP gather into the ``after NMO space'' using the exact moveout times and no 
+interpolation. The NMO-corrected values are collected in the stack, rather than 
+summed, where the input sample values are mapped to their correct time values in the stack. 
+\cite{shatilo} proposed a constant NMO correction strategy, which applies a constant NMO shift 
+within a finite time interval that is equal to the wavelet length of a trace. This approach eliminates wavelet 
+stretch and preserves higher frequencies than the conventional method, resulting in a higher resolution stack. However, 
+samples that exist in overlapping time windows are used twice during the correction, resulting in 
+an amplitude distortion. \cite{stark} discussed the idea of signal recovery beyond the conventional Nyquist 
+frequency using an approach similar to the RSI$^2$ algorithm. The method proposed is an output-driven process, 
+where the stack is defined as a merge trace and has a potentially higher sampling rate than the input 
+traces. Using this approach, the final stacked sections are not necessarily limited to the data-collected Nyquist frequencies. 
+More recently, \cite{ma} proposed a stacking technique based 
+on a sparse inversion algorithm that computes the stack directly from a CMP gather by solving an optimization 
+problem using principles of compressive sensing. This method eliminates the stretch effect of conventional 
+CMP stacking and improves resolution in the stacked section. \cite{silva} introduced a recursive stacking approach using local slopes to compute a stack without stretching effects. In our previous work \cite[]{regimbal}, we proposed a method that
+computed NMO and stack in an iterative fashion using shaping regularization to achieve a higher resolution 
+stack that avoids the effects of ``NMO stretch". 
+
+In this paper, we extend the method of shaping NMO stack \cite[]{regimbal} further by introducing recursive stacking
+using plane-wave construction (PWC) \cite[]{fomel7} in the backward operator of the shaping regularization scheme \cite[]{fomel}.
+PWC stacking is equivalent to computing the zero scale of the seislet transform \cite[]{fomel3}.
+Shaping regularization implies a mapping of the input 
+model to a space of acceptable models. The shaping operator is integrated in an iterative inversion 
+algorithm and provides explicit control on the estimation result. We start by reviewing shaping regularization 
+in the context of NMO and stack and define the operators used in recursive PWC stacking. 
+We test this approach on synthetic examples to demonstrate the algorithm's ability to minimize 
+stretching effects and improve resolution. We then apply this method to a 2-D field dataset from 
+the North Sea and achieve noticeable resolution improvements in the stacked section in comparison 
+with conventional NMO stack.
+
+\section{Method}
+In geophysical estimation problems, regularization is 
+used to solve ill-posed problems by providing additional constraints on the estimated model.
+Shaping regularization \cite[]{fomel,fomel2} implies a mapping of the input model $\mathbf{m}$ to the space of acceptable functions. The mapping is controlled by the shaping operator $\mathbf{S_m}$. In the linear case, the solution of the estimation problem using shaping regularization is defined as:
+\begin{equation}
+\label{eq:inv}
+\mathbf{\hat{m}=[I+S_m(BF-I)]^{-1}S_mBd},
+\end{equation}
+where $\mathbf{F}$ is the forward operator, $\mathbf{B}$ is the backward operator, and $\mathbf{d}$
+is the data. We implement the Generalized Minimum Residual (GMRES) algorithm \cite[]{saad} to perform the linear inversion 
+in equation~\ref{eq:inv}.
+
+Shaping regularization in the application to NMO stack utilizes signal from different offsets
+to reconstruct a high resolution stack. The model $\mathbf{m}$ is in this case a seismic trace at zero-offset and the 
+data $\mathbf{d}$ is a CMP gather. We define the linear operators used in the shaping regularization 
+scheme as:
+\begin{itemize}
+\item{$\mathbf{F}$ (forward operator) applies predictive painting \cite[]{fomel6} to spread information using a known dip field 
+	and then subsamples in time.}
+\item{$\mathbf{B}$ (backward operator) interpolates the data in time to a denser grid and stacks in a recursive fashion using local slopes.}
+\item{$\mathbf{S_m}$ (shaping operator) is a bandpass filter that controls frequency content.}
+\end{itemize}
+
+% Recursive stacking
+We implement PWC stacking in the backward operator of shaping regularization which follows
+local slopes of a CMP gather. The key idea of this stacking procedure is
+to start at the farthest offset trace of the gather and make a local slope prediction of the preceding trace using 
+PWC (Figure~\ref{fig:schem5}a). The partially corrected trace is then stacked with the uncorrected neighbor, 
+which is the input for the next local prediction (Figure~\ref{fig:schem5}b). The process is repeated in the 
+offset direction until the zero offset trace is reconstructed (Figure~\ref{fig:schem5}c). 
+This recursive stacking approach results in higher resolution stacks compared 
+to conventional NMO and stack. The procedure is equivalent to computing the zero scale of the seislet transform 
+\cite[]{fomel3}. Advantages of PWC stacking include eliminating 
+the effects of ``NMO stretch" as well as the problem of non-hyperbolic moveout. 
+The approximate inverse of PWC stacking is defined by predictive painting \cite[]{fomel6}. 
+This algorithm is comprised of two main steps, namely estimating 
+local slopes of seismic events using plane-wave destruction (PWD) \cite[]{fomel5} and spreading information from a seed 
+trace inside a volume. In this application, we use the updated model to spread information 
+across the CMP gather using the estimated dip field.
+
+\inputdir{.}
+
+\plot{schem5}{width=0.7\textwidth}{Schematic of the PWC stacking algorithm. (a) Stack far offset trace T$_2$ with neighboring trace T$_1$, 
+	(b) stack updated trace T'$_1$ with neighboring trace T$_0$, (c) final accumulated stack.} 
+
+In PWC stacking, each seismic trace is predicted from its neighbors that are shifted 
+along the event slopes. Slopes are estimated by PWD, which minimizes the prediction error to estimate optimal slopes.
+PWD can be sensitive to conflicting slopes at far offsets of a CMP gather when the dip is large and 
+cause PWC stacking to fail in characterizing an optimal stack.
+To account for this, we first apply a constant velocity NMO correction to the CMP gather, which results in 
+smoothly varying slopes without crossing events. 
+We then estimate the moveout $t(x)$ of the corrected seismic events at offset $x$ as follows:
+\begin{equation} 
+\label{eq:NMO2}
+t(x) = \sqrt{t_{0}^{2}+\frac{x^{2}}{v_{0}^{2}} + x^{2} \left(\frac{1}{v^{2}} - \frac{1}{v_{0}^{2}}\right)},
+\end{equation}
+where $t_0$ is the zero offset travel-time, $v$ is the NMO velocity estimated by a conventional method 
+and $v_0$ is a constant velocity.
+Adding the correction factor due to the constant velocity NMO correction from equation~\ref{eq:NMO2}, the 
+dip field becomes:
+\begin{equation} 
+\label{eq:dip2}
+p={\frac{x}{t}}\left(\frac{1}{v^{2}}-\frac{1}{v_{0}^{2}}\right).
+\end{equation}
+We use this estimated dip as the initial model for PWD. 
+This dip estimation scheme follows the velocity-dependent formulation of the seislet transform \cite[]{liu}
+and provides us with a better estimation of the dip field for CMP gathers with large dipping events and conflicting slopes at 
+far offsets. We implement this dip estimation method to compute the PWC stack in an iterative 
+fashion while using shaping regularization (equation~\ref{eq:inv}) to yield a high resolution stack.
+
+\section{Examples}
+In our first experiment, we generated a synthetic trace with a sampling interval of 1 ms and 
+used it as a reference trace. This trace was then inverse NMO corrected and subsampled to 4 ms 
+to produce a CMP gather (Figure~\ref{fig:cmp2}), which is the input data for PWC stack and conventional NMO and stack.
+The result of applying a constant velocity NMO correction is displayed in Figure~\ref{fig:nmo0} and is used to compute
+the dip field.
+
+\inputdir{synseis}
+\multiplot{2}{cmp2,nmo0}{width=0.45\textwidth}{(a) Synthetic CMP gather with 4-ms sampling interval and (b) constant velocity NMO-corrected gather to separate crossing events at far offsets.}
+%\plot{nmodip}{width=0.45\textwidth}{(a) Synthetic CMP gather with 4 ms sampling interval and (b) constant velocity NMO corrected gather to separate crossing events at far offsets.} 
+
+The convergence of the GMRES algorithm in this example required only 4 iterations to achieve a misfit tolerance 
+of $10^{-5}$. The estimated PWC stack is shown in Figure~\ref{fig:niter} as a function of iteration, where iteration 0 is the initial model
+and iteration 4 is the final estimation result using PWC stack. The conventional stack
+results in lower amplitude and lower frequency content, while the PWC stack achieves results similar to the reference trace (Figure~\ref{fig:niter}).
+We next compare the frequency content of the PWC stack with the conventional stack (Figure~\ref{fig:spec5}) and the 
+reference trace (Figure~\ref{fig:spec6}). The conventional stack fails to recover useful frequencies ranging 
+from 110 Hz to 175 Hz, whereas the PWC stack contains frequencies up to 175 Hz. Using inversion, we 
+accurately preserve the true amplitude scale and spectrum of the reference trace.
+One notable observation is the high frequency information recovered beyond
+the Nyquist frequency of the input data (125 Hz). \cite{ronen2} justifies the possibility of such recovery with the
+idea that a signal can be recovered with the combination of different aliased sequences. Since different offsets
+correspond to different propagation paths, we obtain different information from each offset. Therefore,
+the combination of all offsets allows us to reconstruct a higher frequency signal that is not limited
+by the Nyquist frequency of the input data. In this simple synthetic example, by implementing shaping 
+regularization, we accurately preserve information in the recovered zero-offset trace with a 1-ms sampling 
+interval by using input data with only a 4-ms sampling interval. 
+
+% Synthetic results
+
+\plot{niter}{width=0.7\textwidth}{Estimated PWC stack as function of iteration using shaping regularization 
+compared with conventional NMO stack and the reference trace.}
+
+Low frequencies play an important role in seismic inversion for velocity and impedance models \cite[]{kroode}.
+We next evaluate the algorithm's ability to recover low frequency information in the 
+estimated stack. We apply a low cut filter to the synthetic CMP gather to remove all of the useful low frequencies below 25 Hz.
+A spectral comparison of the resulting PWC stack to conventional NMO stack
+and the reference trace is shown in Figure~\ref{fig:speclow}. We zoom in to the low end of the frequency spectrum
+to see how well each method does in comparison to the reference trace. Conventional NMO stack fails
+to recover frequencies below 25 Hz, while PWC stack recovers more low frequency information that is consistent with the reference trace. 
+
+To demonstrate how PWC stack reduces the effects of ``NMO stretch'', we apply this method to 
+each trace of the CMP gather, setting other traces to zero. After repeating this process 
+for all traces in the gather, we concatenate the output PWC stacks to extract the effective NMO. 
+Figure~\ref{fig:nmo3} displays the conventional NMO-corrected gather with a stretch mute applied, 
+where far offset information is lost. Figures~\ref{fig:nmo2} and ~\ref{fig:nsnmo} compare  
+the NMO-corrected gather before stretch muting to the effective NMO-corrected gather using PWC stacking. 
+The results indicate that the stretching effects that are prominent at far offsets and early times in the NMO-corrected gather 
+without a stretch mute are effectively reduced by implementing PWC stack.
+
+\multiplot{3}{spec5,spec6,speclow}{width=0.3\textwidth}{ Spectral comparison of the PWC stack (dashed magenta) with (a) conventional NMO and stack (solid blue) and (b) the reference trace (solid blue) with a 1-ms sampling interval. (c) PWC stack (dashed magenta) recovers lower frequencies in comparison with the conventional stack (dot dash black) and is consistent with the reference trace (solid blue).} 
+
+We next apply this method to a 2-D field dataset from the North Sea and compare the results to conventional NMO stack. 
+This dataset has 1,000 CMP locations and 800 samples per trace with a sampling interval of 4 ms. 
+We use the 4-ms data as a reference for testing the accuracy of our method and subsample the data to 8 ms 
+to provide the input data for PWC stack and conventional NMO stack. The shaping operator used is a bandpass filter 
+ranging from 2 Hz to 100 Hz, which was designed based on the frequency content of the data. 
+The resulting stacked sections are displayed in Figure~\ref{fig:istack8,ungmres2}. 
+PWC stack recovers significantly higher frequencies compared to using conventional NMO stack. 
+Thin layers that are unclear in the conventional stacked section become clearly resolved 
+in the PWC stacked section. Overall, events become more continuous and coherent throughout the section 
+using PWC stack, and resolution is noticeably improved. 
+
+\section{Conclusions}
+Conventional NMO stack may result in lower resolution stacked sections due to distortions caused 
+by NMO correction and stretch muting. Treating the process of NMO and stack using regularized inversion 
+allows us to compute an optimal stack with higher frequency content. Low frequency content also plays
+an important role in seismic data processing and imaging. As demonstrated by our numerical examples, 
+PWC stack has the ability to recover both higher and lower frequencies compared to conventional NMO and stack.
+By implementing PWC stack, we gain resolution by utilizing signal from different offsets 
+and minimizing stretching effects.
+The final stacked section has improved bandwidth and higher resolution, which may aid in interpretation 
+and inversion of small-scale features such as thin layers and diffractions.   
+
+\section{Acknowledgments}
+We would like to thank the Texas Consortium for Computational
+Seismology (TCCS) members for helpful discussions
+and TCCS sponsors for their financial support.
+
+\multiplot{3}{nmo3,nmo2,nsnmo}{width=0.3\textwidth}{(a) Conventional NMO correction, (b) NMO correction without stretch muting and (c) effective NMO using PWC stack.}
+
+\inputdir{elf}
+
+\multiplot{2}{istack8,ungmres2}{width=0.8\textwidth}{NMO and stack using (a) conventional method and (b) shaping regularization using
+plane-wave construction.}
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{seg2016}

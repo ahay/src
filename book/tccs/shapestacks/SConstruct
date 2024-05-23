@@ -1,6 +1,6 @@
 from rsf.tex import *
 
-End(lclass='geophysics',use='hyperref,listings,moreverb',hires='cmp2 nsnmo sstack wsstack', color='ALL')
+End(lclass='geophysics',options='reproduce',use='hyperref,listings,moreverb',hires='cmp2 nsnmo sstack wsstack', color='ALL')
 
 #lclass='segabs'
 #Paper('paper',lclass='article',use='pdfpages')

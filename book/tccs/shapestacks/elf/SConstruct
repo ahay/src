@@ -91,7 +91,7 @@ Result('nmo8',
        ''')
 
 Flow('istack8','nmo8','stack')
-Flow('istackn','istack','window f2=%g n2=1 | spline n1=%g d1=%g o1=0' % (ngath,nd,dt)) 
+Flow('istackn','istack8','window f2=%g n2=1 | spline n1=%g d1=%g o1=0' % (ngath,nd,dt)) 
 
 #####################################################################################
 ############################## USE SHAPING ##########################################
@@ -179,26 +179,21 @@ Result('ndip','ndip nmod0','SideBySideAniso')
 def seislet(gather,dip,snmo):
     nmos = []
     for i2 in range(n2):
-	traced = 'trace%d' % i2
+    	traced = 'trace%d' % i2
     	if i2 == 0:
-            Flow(traced,gather,'cut f2=1')
-   	elif i2 == n2-1:
-            Flow(traced,gather,'cut n2=%d' % i2)
+    		Flow(traced,gather,'cut f2=1')
+    	elif i2 == n2-1:
+    		Flow(traced,gather,'cut n2=%d' % i2)
     	else:
-            Flow(traced,gather,'cut n2=%d | cut f2=%d' % (i2,i2+1))
-
-        nmo = 'nmodd%d' % i2
-        nmos.append(nmo)
-        Flow(nmo,[traced,dip],
-            '''
-            seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=haar order=2 |
-            window n2=1         
-            ''')
-    Flow(snmo,nmos,
-     	'''
-     	cat axis=2 ${SOURCES[1:%d]} 
-     	''' % len(nmos))
-
+    		Flow(traced,gather,'cut n2=%d | cut f2=%d' % (i2,i2+1))
+    	
+    	nmo = 'nmodd%d' % i2
+    	nmos.append(nmo)
+    	Flow(nmo,[traced,dip],'''
+    	seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=haar order=2 
+    	| window n2=1 ''')
+    	Flow(snmo,nmos,''' cat axis=2 ${SOURCES[1:%d]} ''' % len(nmos))
+    	
 # Seislet Stack
 def seislet_stack(gather,dip,stack):
     Flow(stack,[gather,dip],
@@ -270,27 +265,25 @@ def shaping(cmp2,mod,plots,dip):
     old = m0
     plots = []
     for i in range(1,niter+1):
-	new = '%s%d' % (mod,i)
-	specn = 'spect%s%d' % (mod,i)
-	Flow(new, [dip, old, m0,'vmax'],
-             ''' 
-	     pwpaint seed=${SOURCES[1]} eps=0.01 order=1   |	
-	     inmo velocity=${SOURCES[3]} half=y  	  |     	     
-   	     window j1=4			 	  |	
-	     spline pattern=${SOURCES[1]}	 	  |
-	     nmo velocity=${SOURCES[3]} half=y   	  |
-             seislet dip=${SOURCES[0]} eps=0.1 adj=y inv=y type=linear order=1 |
-	     window n2=1 |
-	     add ${SOURCES[1]} ${SOURCES[2]} scale=-1,1,1 |
-	     bandpass fhi=100 flo=2
-	     ''')
-	old = new
-
-        if plots != None:
-          plots.append(specn)
-
+    	new = '%s%d' % (mod,i)
+    	specn = 'spect%s%d' % (mod,i)
+    	Flow(new, [dip, old, m0,'vmax'],''' 
+    	pwpaint seed=${SOURCES[1]} eps=0.01 order=1   |	
+    	inmo velocity=${SOURCES[3]} half=y  	  |     	     
+    	window j1=4			 	  |	
+    	spline pattern=${SOURCES[1]}	 	  |
+    	nmo velocity=${SOURCES[3]} half=y   	  |
+    	seislet dip=${SOURCES[0]} eps=0.1 adj=y inv=y type=linear order=1 |
+    	window n2=1 |
+    	add ${SOURCES[1]} ${SOURCES[2]} scale=-1,1,1 |
+    	bandpass fhi=100 flo=2 ''')
+    	old = new
+    	
+    	if plots != None:
+    		plots.append(specn)
+    		
     Flow(mod,new,'cp')
-	     
+
 #shaping('igath','shstacked',None,'ndip')
 
 Flow('gmres','igath ndip ipick','shpwstack flo=3 fhi=80 niter=3 half=y velocity=%g jump=4 dip=${SOURCES[1]} mode=1 order=2 eps=0.01 nmo=y' % minvel) 
@@ -347,7 +340,7 @@ Plot('ngmres2',
         unit1=s label2=Midpoint unit2=km 
        ''')
 
-Result('stacks','istack8 ungmres2','SideBySideAniso')
+Result('stacks','istack8 ungmres3','SideBySideAniso')
 
 ## Window #1 
 Flow('wstack', 'istack8', 'put d2=0.0133333 | window n1=150 f1=50 n2=300 f2=600') 

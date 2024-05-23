@@ -112,7 +112,7 @@ Plot('movie','grey gainpanel=a pclip=99.5 color=g title="Cross-correlation" ', v
 # time reversal
 Flow('rev0',snaps,'add mode=a ${SOURCES[1:%d]}'% nrcv)
 Flow('location1','rev0','stack axis=3')
-Result('location1','put o1=0 o2=0 |'+ grey('pclip=99 allpos=n scalebar=n title="Imaged source locations" color=g'))
+Result('location1','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations" color=g'))
 Plot('movie1','rev0','window j3=40 | reverse which=4 | grey gainpanel=a pclip=99.5 color=g title="Time-reversal"', view=1)
 
 Flow('data-noise','data0','noise var=0.02 type=y seed=1573')

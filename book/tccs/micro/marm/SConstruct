@@ -118,8 +118,8 @@ Flow('data-new snaps-new','vel wfnew',
      '''%(nt,dt))
 Result('data-new',igrey('title="Surface array data (predicted)"'))
 
-Result('stage0-1','ccr0','window min3=0.0 max3=0.8 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('clip=7.20642e+06 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
-Result('stage0-2','ccr0','window min3=0.0 max3=1.6 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('clip=7.20642e+06 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+Result('stage0-1','ccr0','window min3=0.0 max3=0.8 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+Result('stage0-2','ccr0','window min3=0.0 max3=1.6 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
 Result('stage0-3','ccr0','window min3=0.0 max3=3.0 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
 
 # vertical receiver setup
@@ -149,8 +149,8 @@ Plot('ccr','window j3=10 | grey gainpanel=a pclip=99.5 allpos=y wanttitle=n', vi
 Flow('location','ccr','threshold pclip=5 | stack axis=3 | math output=input')
 Result('location','put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Combined)" color=g'))
 
-Result('stage-1','ccr','window min3=0.0 max3=0.8 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('clip=2.60259e-09 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
-Result('stage-2','ccr','window min3=0.0 max3=1.6 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('clip=2.60259e-09 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+Result('stage-1','ccr','window min3=0.0 max3=0.8 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
+Result('stage-2','ccr','window min3=0.0 max3=1.6 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
 Result('stage-3','ccr','window min3=0.0 max3=3.0 | threshold pclip=5 | stack axis=3 | math output=input | put o1=0 o2=0 |'+ grey('pclip=99.6 allpos=n scalebar=n title="Imaged source locations (Surface)" color=g'))
 
 Flow('movie','ccr','transp plane=13 memsize=10000 | causint | window j1=40 | transp plane=13 memsize=10000 | put o1=0 o2=0 unit1=m unit2=m lable1=Depth label2=Distance')

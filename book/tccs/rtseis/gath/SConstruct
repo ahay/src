@@ -1,0 +1,168 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+import random, math
+
+random.seed(2018)
+
+# Data size
+n2=128
+
+# Fetch data
+Fetch('elfgath.rsf','elf',private)
+
+# Display data
+Flow('gath','elfgath',
+     'dd form=native | put unit1=s unit2=m label2=Offset d2=25 o2=100')
+Result('gath','grey title=')
+
+# Prepare for predictive painting
+Flow('mask','gath','math output=1 | pad n1=1000')
+Flow('gath-pad','gath','pad n1=1000')
+
+Flow('dip','gath-pad mask',
+     'dip rect1=10 rect2=10 p0=0 pmin=0 mask=${SOURCES[1]} order=2')
+Flow('trace','dip','window n2=1 | math output=x1')
+Result('dip',
+       '''
+       window n1=800 |
+       grey  color=j title="Slope" 
+       ''')
+
+# RT with single reference trace
+Flow('rt','dip trace','pwpaint seed=${SOURCES[1]} eps=0.05 order=2')
+
+
+# RT-seislet transform
+Flow('seis', 'gath-pad rt',
+     'rtseislet rt=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y')
+Result('seis',
+       '''
+       put o2=0 d2=1 |
+       window n1=800 |
+       grey  title="RT-seislet Transform" label2=Scale unit2= 
+       ''')
+
+
+# Inverse RT-seislet transform
+Flow('seisinv', 'seis rt',
+     'rtseislet rt=${SOURCES[1]} eps=0.1 inv=y unit=y')
+Result('seisinv', 
+       '''
+       window n1=800 |
+       grey  title="Inverse seislet Transform" 
+       ''')
+
+# Inverse RT-seislet transform using 1% significant coefficients
+Flow('seisrec1','seis rt',
+     '''
+     threshold pclip=1 |
+     rtseislet rt=${SOURCES[1]}
+     eps=0.1 inv=y unit=y 
+     ''')
+Result('seisrec1',
+       '''
+       mutter v0=2600 |
+       window n1=800 |
+       grey  title="Inverse RT-seislet Transform (1%)" 
+       ''')
+
+
+# Denoise using different scales
+max=int(math.log(n2)/math.log(2))
+for m in range(max):
+    scale = int(math.pow(2,m))
+    seis  = 'seis%d' % scale
+    Flow(seis,'seis rt',
+         '''
+         cut f2=%d | 
+         rtseislet rt=${SOURCES[1]} eps=0.1 inv=y unit=y
+         ''' % scale)
+
+Result('seis16',
+       '''
+       mutter v0=2600 |
+       window n1=800 |
+       grey unit1=s unit2=m  title="Denoising result" 
+       ''')
+
+# Denoise
+seis = 'seis%d' % 16 
+rt   = 'rt'
+Result('seisdeno',[seis,rt],
+       '''
+       rtseislet rt=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y |
+       put o2=0 d2=1 |
+       window n1=800 |
+       grey unit1=s title="RT-seislet Transform" label2=Scale unit2=
+       ''')
+
+# Noise section
+Flow('diff',[seis,'gath'],
+     '''
+     mutter v0=2600 |
+     window n1=800 |
+     add scale=1,-1 ${SOURCES[1]} 
+     ''')
+Result('diff','grey unit1=s title="Noise" label2=Scale unit2=')
+
+# Interpolation
+# Resample by 2
+Flow('rand','seis',
+     '''
+     window n1=800 | 
+     noise rep=y var=20000 seed=2006 | 
+     mutter v0=2600 | pad n1=1000
+     ''')
+
+Flow('seisrand','seis rand','cat axis=2 ${SOURCES[1]} | put d2=12.5')
+
+Flow('rt2','rt',
+     'transp | remap1 d1=12.5 o1=100 n1=256 | transp')
+
+Flow('gath2','seisrand rt2',
+     'rtseislet rt=${SOURCES[1]} eps=0.1 inv=y unit=y')
+
+# Resample by 4
+Flow('rand2','seisrand',
+     '''
+     window n1=800 | 
+     noise rep=y var=20000 seed=2006 | 
+     mutter v0=2600 | pad n1=1000
+     ''')
+
+Flow('seisrand2','seisrand rand2','cat axis=2 ${SOURCES[1]} | put d2=6.25')
+Result('seisrand2',
+    '''
+    put o2=0 d2=1 | 
+    window n1=800 | 
+    grey unit1=s title="Seislet Transform" label2=Scale unit2=
+    ''')
+
+Flow('rt4','rt2',
+     'transp | remap1 d1=6.25 o1=100 n1=512 | transp')
+
+Flow('gath4','seisrand2 rt4',
+     'rtseislet rt=${SOURCES[1]} eps=0.01 inv=y unit=y')
+Result('gath4',
+       '''
+       mutter v0=2600 |
+       window n1=800 |
+       grey unit1=s unit2=m title="Interpolated shot gather"
+       ''')
+
+# FFT
+Flow('fft','gath','addtrace ratio=4 | fft1 | fft3')
+Result('fft',
+    '''
+    math output="abs(input)" | real | 
+    grey wanttitle=
+    ''')
+Flow('fft2','gath4','window n1=800 | fft1 | fft3')
+Result('fft2',
+    '''
+    math output="abs(input)" | real |
+    grey wanttitle=
+    ''')
+
+End()

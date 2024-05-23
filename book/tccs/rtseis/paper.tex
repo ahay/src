@@ -1,0 +1,626 @@
+\published{Geophysics, 2020, 85, no. 2, V223–V232}
+
+\title{Relative time seislet transform}
+
+\author{% Put authors and institues here
+    Zhicheng Geng$^1$, 
+    Xinming Wu$^1$,  
+    Sergey Fomel$^1$, and
+    Yangkang Chen$^2$
+\\
+$^1$Bureau of Economic Geology, John A. and Katherine G. Jackson School of Geosciences, The University of Texas at Austin, Austin, Texas, USA \\
+$^2$Zhejiang University, School of Earth Sciences, Hangzhou, Zhejiang, China}
+
+\maketitle
+
+\righthead{RT-seislet transform}
+\lefthead{Geng et al.}
+\footer{TCCS}
+
+%-----------------------------------------------------------------
+\begin{abstract}
+    The seislet transform utilizes the wavelet-lifting scheme and local slopes 
+    to analyze the seismic data. 
+    In its definition, the designing of prediction operators specifically for 
+    seismic images and data is an important issue. 
+    We propose a new formulation of the seislet transform based on the relative 
+    time (RT) attribute. 
+    This method uses RT volume to construct multiscale prediction operators. 
+    With the new prediction operators, the seislet transform gets accelerated 
+    since distant traces get predicted directly. 
+    We apply the proposed method to synthetic and real data to demonstrate that 
+    the new approach reduces computational cost and obtains excellent sparse
+    representation on test datasets. 
+\end{abstract}
+
+%-----------------------------------------------------------------
+\section{Introduction}
+    Sparse transforms aim to represent the most important information of an 
+    image with few coefficients in the transform domain while obtaining a good 
+    quality approximation of the original image. 
+    Over the past several decades, different types of wavelet-like transforms 
+    have been proposed and successfully applied in image compression and 
+    denoising~\cite[]{hennenfent2006seismic, li2013contourlet}, including 
+    curvelets~\cite[]{starck2002curvelet, ma2010curvelet}, 
+    contourlets~\cite[]{do2005contourlet}, shearlets~\cite[]{labate2005sparse}, 
+    directionlets~\cite[]{velisavljevic2006directionlets}, 
+    bandelets~\cite[]{le2005sparse}. 
+    The strong anisotropic selectivity of these wavelet-like transforms helps 
+    achieve excellent data compression and accurate reconstruction for seismic 
+    images.
+
+    \cite{fomel2010seislet} introduced the seislet transform, which is a digital 
+    wavelet-like transform designed specifically for seismic data. 
+    Based on the lifting scheme used in digital wavelet transform (DWT) 
+    construction~\cite[]{sweldens1995lifting}, the seislet transform follows 
+    dominant local slopes obtained by plane-wave destruction 
+    (PWD)~\cite[]{claerbout2000basic, fomel2002applications} to predict seismic 
+    events. 
+    Instead of using PWD, \cite{liu2010oc} used offset continuation (OC) to 
+    construct updating and prediction operators. 
+    The OC-seislet transform has better performance than the PWD-seislet 
+    transform in characterizing and compressing structurally complex prestack 
+    reflection data. 
+    To reduce sensitivity to strong noise interference, \cite{liu2015signal} 
+    proposed a velocity-dependent (VD) seislet transform. 
+    In this method, the normal moveout equation was introduced to serve as a 
+    connection between local slope and scanned velocities. 
+    \cite{chen2018emd} utilized empirical mode decomposition (EMD) to obtain 
+    smoothly non-stationary data, and then applied the 1D non-stationary seislet 
+    transform to the data. This new approach was called the EMD-seislet 
+    transform and has shown excellent performance in attenuating random noise. 
+    Recently, several studies show the superiority of the seislet transform
+    on sparse representation of seismic data over the Fourier transform, the 
+    wavelet transform and the curvelet transform \cite[]{fomel2010seislet, 
+    gan2015dealiased, chen2018emd}.
+
+    With the ability to compress and reconstruct seismic images, the 
+    seislet transform has been successfully applied in seismic data processing 
+    such as noise attenuation~\cite[]{chen2016dip, chen2016double}, 
+    deblending~\cite[]{chen2014iterative, gan2016simultaneous} and data 
+    interpolation~\cite[]{liu2013iterative, gan2016simultaneous}.
+    However, the original implementation of PWD-seislet transform requires
+    recursively computation when predicting distant traces, which increases its 
+    computation cost, especially when the dataset is very large.
+    Additionally, the smooth slopes from PWD in the original seislet transform 
+    can fail to correctly follow reflections across discontinuities including 
+    faults and unconformities. 
+    Therefore, geologically meaningful discontinuities may not be optimally 
+    compressed. 
+
+    The relative time (RT) volume, $\tau(x,y,t)$, has different meanings in
+    different domains. 
+    In seismic image domain, the RT is the same as the relative geologic 
+    time~\cite[]{stark2003unwrapping, stark2004relative} and each RT contour 
+    corresponds to a geologic horizon.
+    However, RT volumes of seismic gathers do not necessarily have geologic 
+    meaning, since in this case, constant RT contours align with seismic events.
+    There are several ways to generate an RT volume. 
+    One can always pick out as many horizons or events as possible to obtain it, 
+    which is simple but laborious. 
+    The RT volume can also be generated by unwrapping seismic instantaneous 
+    phase~\cite[]{stark2003unwrapping, wu2012generating}.
+    \cite{fomel2010predictive} used local slopes of seismic events estimated by 
+    PWD~\cite[]{fomel2002applications} to generate the RT volume, which has 
+    superior computational performance. 
+    The RT volume already has been successfully applied in missing well-log 
+    data prediction \cite[]{bader2018missing} and seismic horizons construction 
+    \cite[]{wu2015horizon}.
+    
+    In this paper, we propose a new implementation of the seislet transform, 
+    called RT-seislet transform, by using the RT obtained from the predictive 
+    painting~\cite[]{fomel2010predictive} to construct prediction operators for 
+    the seislet transform. 
+    In this way, prediction of one trace from distant traces is computed 
+    directly and accurately, which saves a lot of computation and has better 
+    performance with faults and unconformities.
+    By applying the new formulation of the seislet transform to synthetic and 
+    real data, we demonstrate that the proposed method is efficient and able to 
+    preserve discontinuities, while achieving excellent sparse representation of 
+    seismic data. 
+
+    This paper is organized as follows: we first review the seislet 
+    transform and the estimation of an RT volume. 
+    Then, we incorporate RT attribute to construct new formulation of prediction 
+    and update operators for the seislet transform.
+    Finally, we test the proposed RT-seislet transform on both synthetic and 
+    real datasets and compare its performance with the PWD-seislet transform.
+    
+%-----------------------------------------------------------------
+\section{Theory}
+\subsection{Reviews of the 2D seislet transform}
+    As proposed by \cite{fomel2010seislet}, the seislet transform can be 
+    constructed using the lifting scheme \cite[]{sweldens1995lifting}. 
+    The procedure of the lifting scheme is as follows:
+    \begin{enumerate}
+        \item Arrange the input data as a sequence of records. 
+            In the seislet transform, the input data are common shot gather or 
+            seismic image.
+        \item Divide the arranged records into even and odd components 
+            $\mathbf{e}$ and $\mathbf{o}$. For the 2D seislet transform, each 
+            trace is a component and the seismic data are split into two parts 
+            according to trace indices.
+        \item Find the residual $\mathbf{r}$ between the odd component and 
+            its prediction from the even component
+            \begin{equation}
+                \mathbf{r} = \mathbf{o} - \mathbf{P[e]},
+                \label{eq:a}
+            \end{equation}
+            where $\mathbf{P}$ is a \emph{prediction} operator.
+        \item Using the difference from the previous step to get a coarse 
+            approximation $\mathbf{c}$ of the data by updating the even 
+            component
+            \begin{equation}
+                \mathbf{c} = \mathbf{e} + \mathbf{U[r]},
+                \label{eq:b}
+            \end{equation}
+            where $\mathbf{U}$ is an \emph{update} operator.
+        \item The coarse approximation $\mathbf{c}$ obtained from last step 
+            becomes the new data, and previous steps are applied to the new data 
+            at the next scale level.
+    \end{enumerate}
+
+    The coarse approximation $\mathbf{c}$ from the final scale and residual
+    difference $\mathbf{r}$ from all scales form the result of the seislet 
+    transform.
+
+    The prediction and update operators are defined, for example, by modifying 
+    operators in the construction of CDF 5/3 biorthogonal 
+    wavelets~\cite[]{cohen1992biorthogonal} as follows:
+    \begin{equation}
+        \label{P}
+        \mathbf{P[e]}_k = \left(\mathbf{S}_k^{(+)}[\mathbf{e}_{k-1}]+
+        \mathbf{S}_k^{(-)}[\mathbf{e}_{k}] \right) / 2
+    \end{equation}
+    and
+    \begin{equation}
+        \label{U}
+        \mathbf{U[r]}_k = \left(\mathbf{S}_k^{(+)}[\mathbf{r}_{k-1}]+
+        \mathbf{S}_k^{(-)}[\mathbf{r}_{k}] \right) / 4,
+    \end{equation}
+    where $\mathbf{S}_k^{(+)}$ and $\mathbf{S}_k^{(-)}$ can accomplish the 
+    prediction of a trace from its left and right neighbors, respectively. 
+    The predictions need to be applied at different scales. 
+    For 2D seislet transform, different scales mean different distances 
+    between traces. 
+    More accurate higher-order formulations are possible. 
+    Following the inverse lifting scheme from coarse scale to fine scale, 
+    the inverse seislet transform can be constructed.
+
+\subsection{RT volume estimation}
+    In the proposed method, the predictive painting~\cite[]{fomel2010predictive}, 
+    based on the prediction operator arising from 
+    PWD~\cite[]{fomel2002applications}, is utilized to generate the RT volume. 
+    In the predictive painting, after local slopes are estimated, an RT volume 
+    is computed by spreading time values of reference traces along dominant 
+    event slopes throughout the whole seismic volume.
+
+    Using linear operator notation, PWD operation is defined as
+    \begin{equation}
+        \mathbf{d} = \mathbf{D}{}\mathbf{s},
+    \end{equation}
+    where $\mathbf{s} =[\mathbf{s}_1 \,\mathbf{s}_2 \,\cdots\, \mathbf{s}_N]^T$ 
+    is a collection of seismic traces and $\mathbf{d}$ denotes the residual from 
+    destruction. $\mathbf{D}$ is the destruction operator defined as 
+    \begin{equation}
+        \label{pred}
+        \mathbf{D}=
+        \begin{bmatrix}
+            \mathbf{I} & 0 & 0 & \cdots & 0 \\
+            -\mathbf{P}_{1,2} & \mathbf{I} & 0 & \cdots & 0 \\
+            0 & -\mathbf{P}_{2,3} & \mathbf{I} & \cdots & 0 \\
+            \vdots & \ddots & \ddots & \ddots & \vdots \\
+            0 & \cdots & 0 & -\mathbf{P}_{N-1,N} & \mathbf{I}
+        \end{bmatrix},
+    \end{equation}
+    where $\mathbf{I}$ denotes the identity matrix and $\mathbf{P}_{i,i+1}$ is 
+    an operator that predicts the $(i+1)$-th trace from the $i$-th trace 
+    according to the local slope of seismic event or seismic horizon.
+
+    By a simple recursion, a trace can be predicted utilizing a distant trace. 
+    For example, $\mathbf{P}_{r,k}$, predicting the $k$-th trace from the $r$-th 
+    trace, is defined as
+    \begin{equation}
+        \label{predict}
+        \mathbf{P}_{r,k}=\mathbf{P}_{k-1,k}\mathbf{P}_{k-2,k-1}\cdots
+        \mathbf{P}_{r+1,r+2}\mathbf{P}_{r,r+1}.
+    \end{equation}
+    Then, the prediction of trace $\mathbf{s}_r$, given a reference trace
+    $\mathbf{s}_r$ is accomplished by
+    \begin{equation}
+        \label{pp}
+        \mathbf{s}_k^{\text{pre}}=\mathbf{P}_{r,k}\mathbf{s}_r.
+    \end{equation}
+    After determining the prediction operators in equation~\ref{pred} by PWD, 
+    the predictive painting algorithm recursively spreads information from a 
+    reference trace to the whole seismic data volume by following local slopes
+    using equation \ref{pp}. 
+    If the information spread by the predictive painting are the time 
+    coordinates, an RT volume is easily computed.
+
+    Figure~\ref{fig:sigmoid} shows a synthetic image with several complex 
+    geologic structures. 
+    Local slopes corresponding to Figure~\ref{fig:sigmoid} are shown in 
+    Figure~\ref{fig:dip-pad}, which are estimated by PWD. 
+    Figure~\ref{fig:pick-1} is the RT volume calculated by the predictive 
+    painting using local slopes in Figure~\ref{fig:dip-pad}. 
+    The reference trace of this RT volume is in the center of the image, which 
+    is marked as a vertical line in Figure~\ref{fig:pick-1}. 
+    This single reference RT volume is used to flatten the input seismic 
+    image (Figure \ref{fig:sigmoid}) by unshifting each traces using the 
+    information it contains, since RT indicates how much a given trace is 
+    shifted with respect to the reference trace.
+    The flattened image is shown in Figure~\ref{fig:flat-1}.
+    Another RT volume with multiple references, shown in 
+    Figure~\ref{fig:pick-5}, is generated by selecting five reference traces and 
+    calculating the average of all estimated RT volumes.
+    Figure~\ref{fig:flat-5} shows the corresponding flattened image.
+    The comparison between two flattened seismic images (Figure~\ref{fig:flat-1} 
+    and \ref{fig:flat-5}) indicates that the RT volume with only one reference 
+    trace does not necessarily have information about all seismic events since 
+    there are discontinuities such as faults and unconformities, while the RT 
+    volume computed with more reference traces contains more information.
+
+    \inputdir{rt}
+    \plot{sigmoid}{width=0.8\columnwidth}{Synthetic seismic image from 
+    \cite{claerbout2000basic}.}
+    \plot{dip-pad}{width=0.8\columnwidth}{Local slopes estimated from 
+    Figure~\ref{fig:sigmoid}.}
+    \multiplot{2}{pick-1,pick-5}{width=0.6\columnwidth}{RT estimated by 
+    predictive painting from Figure~\ref{fig:sigmoid} using (a) a single 
+    reference trace and (b) multiple reference traces.}
+    \multiplot{2}{flat-1,flat-5}{width=0.6\columnwidth}{Flattened images using
+    RT volumes from (a) Figure \ref{fig:pick-1} and (b) Figure~\ref{fig:pick-5}.
+    }
+
+\subsection{RT formulation of prediction and update operators}
+    RT contains the relationship between traces. 
+    From RT volume, it is straightforward to obtain the shift of one trace with 
+    respect to the reference. 
+    Therefore, the trace prediction using RT volumes is formulated as follows:
+    \begin{equation}
+        \mathbf{s}_k^{\text{pre}}(t)=\mathbf{s}_r(\mathbf{\tau}_{k,r}(t))
+        \label{new_form}
+    \end{equation}
+    where $\mathbf{s}_k$ and $\mathbf{s}_r$ denote the $k$-th and the $r$-th 
+    trace, respectively. 
+    $\tau_{k,r}(t)$ is the RT value of the $k$-th trace with the $r$-th trace as 
+    the reference trace, indicating the shift of the $k$-th trace with
+    respect to the $r$-th trace. 
+    According to equation \ref{new_form}, the prediction of the $k$-th trace 
+    from the $r$-th trace is easily accomplished by simply applying forward 
+    interpolation to the $r$-th trace using corresponding RT values.
+    In the proposed method, we use equation \ref{new_form} to define operators 
+    $\mathbf{S}$ in equations \ref{P} and \ref{U} to construct corresponding 
+    prediction and update operators. 
+    In this way, a trace is predicted from a distant trace directly by the 
+    RT attribute instead of the recursive computation used in the PWD-seislet 
+    transform. 
+    Also, because an accurate RT volume stores information about all horizons 
+    and structural discontinuities including faults and unconformities, 
+    predictions of traces around discontinuities using equation 
+    \ref{new_form} are accurate. 
+    Therefore, a better delineation of faults and unconformities can be 
+    achieved.
+
+    In computing an RT volume, we need to first choose one or multiple reference 
+    traces. 
+    After computing the RT volume, the RT attribute between any two traces is 
+    easily obtained from one RT volume using:
+    \begin{equation}
+        \label{rt}
+        \mathbf{\tau}_{k,r}(t)=\mathbf{\tau}^{-1}_{r,l}(\mathbf{\tau}_{k,l}(t)),
+    \end{equation}
+    where $\mathbf{\tau}_{j,i}(t)$ represents the RT value of the $j$-th trace 
+    with the $i$-th trace as the reference trace, and 
+    $\mathbf{\tau}^{-1}_{r,l}(t)$ is the time 
+    warping~\cite[]{burnett2009moveout} of $\tau_{r,l}(t)$. 
+    According to equation \ref{rt}, given the shift information 
+    $\tau_{r,l}(t)$ and $\tau_{k,l}(t)$, the shift relationship between the 
+    $k$-th trace and the $r$-th trace can be obtained by applying an inverse 
+    interpolation to $\tau_{r,l}(t)$ using $\tau_{k,l}(t)$. 
+    Then, equation \ref{new_form} is applied to implement the prediction of the 
+    $k$-th trace from the $r$-th trace.
+    Therefore, only one RT volume is needed for the proposed implementation of 
+    the seislet transform. 
+
+    Figure~\ref{fig:pick-150,invint,pick-50,pick-50-true} shows an example of
+    implementing equation~\ref{rt} to compute an RT volume from another one with 
+    different reference traces. 
+    The RT volume in Figure~\ref{fig:pick-150} is obtained by the predictive 
+    painting with the 150th trace as the reference trace. 
+    This RT volume can be represented by $\mathbf{\tau}_{k,150}(t), 
+    k=1,2,\ldots,n$. 
+    Figure~\ref{fig:invint} is the time warping of this RT volume. 
+    We extract the 50th trace from Figure~\ref{fig:invint}, which is denoted by 
+    $\mathbf{\tau}^{-1}_{50,150}(t)$. 
+    Then, by implementing equation~\ref{rt}, i.e., inverse interpolating 
+    $\mathbf{\tau}^{-1}_{50,150}(t)$ using the whole RT volume 
+    ($\mathbf{\tau}_{k,150}(t), k=1,2,\ldots,n$), we can get a new 
+    RT volume, as shown in Figure~\ref{fig:pick-50} ($\mathbf{\tau}_{k,50}(t), 
+    k=1,2,\ldots,n$). Here, we use the 50th trace as the reference trace. 
+    To evaluate the effectiveness of equation \ref{rt}, RT volumes from 
+    Figure~\ref{fig:pick-50} and \ref{fig:pick-50-true} are used to flatten 
+    Figure~\ref{fig:sigmoid}. 
+    Flattened images are shown in Figure~\ref{fig:flat1,flat2}. 
+    Small differences between Figure~\ref{fig:flat1} and~\ref{fig:flat2} 
+    indicate that these two RT volumes (Figure~\ref{fig:pick-50} 
+    and~\ref{fig:pick-50-true}) contain similar information, which demonstrate 
+    that equation~\ref{rt} can be used to get the relationship between any two 
+    traces from one single RT volume.
+    
+    \multiplot{4}{pick-150,invint,pick-50,pick-50-true}{width=0.4\columnwidth}{
+    (a) The RT volume obtained by the predictive painting and the reference 
+    trace is the 150th trace. (b) Time warping of (a). (c) RT volume obtained by 
+    equation~\ref{rt}. (d) The RT volume obtained by the predictive painting and 
+    the reference trace is the 50th trace.}
+    \multiplot{3}{flat1,flat2}{width=0.7\columnwidth}{Flattened images using RT 
+    volumes from (a) Figure \ref{fig:pick-50} and (b) 
+    Figure~\ref{fig:pick-50-true}.}
+
+\subsection{Workflow}
+    The workflow of the proposed method is shown in Figure~\ref{fig:workflow}. 
+    As we can see, the proposed approach is convenient to implement since only 
+    one RT volume is needed before applying the new formulation of the seislet 
+    transform. 
+    In the proposed approach, we need first use PWD to compute the local slopes 
+    of the input seismic data such that the RT volume can be computed by the 
+    predictive painting from the estimated slopes, as discussed in the previous 
+    section. 
+    With the help of the generated RT volume, the RT-seislet transform is then 
+    applied to the input data to get coefficients in the RT-seislet transform 
+    domain. 
+    With the transformed data, signal processing tasks, including data 
+    reconstruction and noise attenuation, can be easily applied.
+
+    \inputdir{.}
+    \plot{workflow}{width=0.8\columnwidth}{Workflow of the proposed RT-seislet
+    transform.}
+
+%-----------------------------------------------------------------
+\section{Synthetic Data Example}
+    We use the same data example from Figure~\ref{fig:sigmoid} to demonstrate 
+    the performance of the proposed method in ef{}ficient data reconstruction. 
+    Figure~\ref{fig:rt} shows the RT calculated from the image using the 
+    predictive painting with multiple reference traces. 
+    We applied both the original PWD-seislet transform and the RT-seislet 
+    transform to this image. 
+    Then, we threshold coefficients and keep only the largest ones from both the 
+    transforms to reconstruct the same original data. 
+    By using the same percent (1\%) of large coefficients, the reconstruction 
+    from the new formulation (Figure~\ref{fig:rtseisrec1}) recovers more 
+    accurate amplitude values and better preserves structural discontinuities 
+    near faults and unconformities than the one from PWD-seislet transform 
+    (Figure~\ref{fig:pwdseisrec1}).
+    
+    \inputdir{sigmoid}
+    \plot{rt}{width=0.8\columnwidth}{RT volume estimated by the predictive 
+    painting using multiple reference traces.}
+    \multiplot{2}{pwdseisrec1,rtseisrec1}{width=0.6\columnwidth}{Synthetic 
+    seismic image reconstruction by thresholding coefficients and keeping only 
+    1\% of significant coefficients using (a) inverse PWD-seislet transform and 
+    (b) inverse RT-seislet transform.}
+    \plot{coef}{width=0.8\columnwidth}{Normalized coefficients from the 
+    PWD-seislet transform (red dashed line) and the RT-seislet transform (blue 
+    solid line) sorted from large to small on a decibel scale.}
+
+    The comparison between coefficients from the PWD-seislet transform and 
+    the RT-seislet transform is shown in Figure~\ref{fig:coef}. 
+    The minor difference of their decay rate indicates that the PWD-seislet 
+    transform and the proposed transform obtain the same sparsity for the input 
+    data.
+    Figure~\ref{fig:tim} shows the plot of CPU time against the number of 
+    traces. 
+    The proposed formulation of the seislet transform shows promising 
+    computation efficiency since the prediction of a trace using distant 
+    traces is accomplished directly instead of recursively as in the original 
+    PWD-seislet transform.
+
+    \inputdir{time}
+    \plot{tim}{width=0.80\columnwidth}{CPU time of the PWD-seislet transform 
+    (red dashed line) and the RT-seislet transform (blue solid line) versus the 
+    number of traces.}
+
+    For the purpose of testing the sensitivity of the RT-seislet transform to 
+    noise, we add random noise to the synthetic model and utilize 
+    signal-to-noise ratio (SNR) as measurement: 
+    \begin{equation}
+        \label{snr}
+        SNR=10\log_{10}\frac{\|\mathbf{s}_{true}\|^2_2}
+        {\|\mathbf{s}_{true}-\mathbf{s}\|^2_2}\,,
+    \end{equation}
+    where $\mathbf{s}_{true}$ is the original data, and $\mathbf{s}$ denotes
+    the reconstructed data (e.g., Figure~\ref{fig:rtseisrec1}) or noisy data.
+    We plot SNRs of reconstructed data using the inverse PWD-seislet transform 
+    and the inverse RT-seislet transform with respect to the noise variance in 
+    Figure~\ref{fig:snr}. 
+    Apparently, as the noise level increases, the performance of the RT-seislet 
+    gets worse, which shows that the proposed method is sensitive to noise. 
+    But, compared with the original PWD-seislet transform, the new method has 
+    superior performance that is less sensitive to noise.
+    Figure~\ref{fig:sigmoid-noise0,rtseisrec-noise0} shows one example of the
+    noisy data and the reconstructed data. The SNR of 
+    Figure~\ref{fig:rtseisrec-noise0} is 17.19 dB.
+
+    \inputdir{noise}
+    \plot{snr}{width=0.80\columnwidth}{SNR diagram of the PWD-seislet transform 
+    (red dashed line) and the RT-seislet transform (blue solid line) with 
+    respect to the noise level (variance value).}
+    \multiplot{2}{sigmoid-noise0,rtseisrec-noise0}{width=0.6\columnwidth}{(a)
+    Noisy data. (b) Reconstructed data using 10\% coefficients (SNR=17.19).}
+
+    Figure~\ref{fig:para,para-rtseisrec1,para-diff} presents another synthetic 
+    example. 
+    Figure~\ref{fig:para} and \ref{fig:para-rtseisrec1} shows the synthetic shot 
+    gather with three hyperbolic events and Figure~\ref{fig:para-rtseisrec1} is 
+    the data reconstruction by the RT-seislet transform using only 1\% of the 
+    most significant coefficients, respectively. 
+    We use the first, the middle and the last traces as the reference traces to 
+    compute the RT volume.
+    The residual between the synthetic shot gather and the reconstruction
+    result is shown in Figure~\ref{fig:para-diff}.
+    For this simple synthetic shot gather, the proposed method achieves an 
+    excellent data reconstruction result.
+
+    \inputdir{synth}
+    \multiplot{3}{para,para-rtseisrec1,para-diff}{width=0.45\columnwidth}{(a) 
+    Synthetic shot gather. (b) Data reconstruction by the inverse RT-seislet 
+    transform using only 1\% of the most significant coefficients. (c) 
+    Difference between (a) and (b).}
+    
+\section{2D Field Data Example}
+    To further test the proposed method, we use a common-midpoint gather from 
+    the North Sea dataset (Figure~\ref{fig:gath}). 
+    Figure~\ref{fig:seis} shows the data in the seislet transform domain. 
+    We observe that significant coefficients are apparent in only a narrow area 
+    on the left, which indicates the excellent compression ability of the 
+    proposed RT formulation of the seislet transform. 
+    The field data reconstruction using only 1\% of the most significant 
+    RT-seislet coefficients is shown in Figure~\ref{fig:seisrec1}. 
+    The reconstructed image retains the most important seismic events in the 
+    original seismic data.
+
+    If we mute the RT-seislet coefficients at fine scales while keeping the 
+    significant coefficients at coarse scales (Figure~\ref{fig:seisdeno}), the 
+    inverse RT-seislet transform enables effective denoising, removing 
+    incoherent noise from the gather. 
+    The result of denoising are shown in Figure~\ref{fig:seis16}. 
+    Figure~\ref{fig:diff} shows the removed noise section using the proposed 
+    implementation of the seislet transform.
+
+    The RT-seislet is also able to perform interpolation. 
+    We add two more scales with small random noise to Figure~\ref{fig:seis} and 
+    interpolate the RT volume by a factor of four. 
+    Then the interpolated shot gather is obtained and the number of traces is 
+    increased by four. 
+    The extended data in the seislet transform domain is shown in 
+    Figure~\ref{fig:seisrand2}. 
+    Figure~\ref{fig:gath4} is the interpolated shot gather. 
+    Figure \ref{fig:fft,fft2} shows the F-K spectrum of the zero-padded 
+    field data and the interpolated gather. 
+    The zero-padded shot gather is generated by manually padding zero traces 
+    between two traces.
+    In this example, the seislet transform domain is extended with random noise 
+    because there is unpredictable noise in the real case.
+
+
+    \inputdir{gath}
+    \plot{gath}{width=0.80\columnwidth}{Common-midpoint gather.}
+    \multiplot{2}{seis,seisrec1}{width=0.60\columnwidth}{(a) The field data in 
+    the RT-seislet transform domain and (b) reconstruction using only 1\% of 
+    significant coefficients by the inverse RT-seislet transform.}
+    \multiplot{4}{gath,seisdeno,seis16,diff}{width=0.45\columnwidth}{(a) 
+    Original gather. (b) Denoised result by muting RT-seislet coefficients at 
+    fine scales (a) and (c) the removed noise section using the RT-seislet 
+    transform.}
+    \multiplot{2}{seisrand2,gath4}{width=0.6\columnwidth}{(a) Extended seislet 
+    transform domain. (b) Interpolated shot gather by the inverse RT-seislet 
+    transform.}
+    \multiplot{2}{fft,fft2}{width=0.6\columnwidth}{F-K spectra of (a) 
+    zero-padded  and (b) the interpolated field data.}
+
+\section{3D Field Data Example}
+    We also test the proposed method on a 3D dataset. 
+    Figure~\ref{fig:cuber} is the Teapot Dome seismic dataset. 
+    After inline and crossline slopes (Figure~\ref{fig:dip1,dip2}) are 
+    estimated, the RT volume (Figure~\ref{fig:pick}) is easily obtained from the 
+    predictive painting with multiple reference traces. 
+    With the RT volume, the 3D seislet transform can be constructed by 
+    cascading the 2D seislet transform along inline and crossline directions. 
+    To be specific, we first apply the 2D RT-seislet transform along inline 
+    direction, and then another 2D transform along crossline is applied on the 
+    coefficients from the previous step to obtain the coefficients in the 3D 
+    transform domain.
+    The coefficients of the 2D seislet transform along inline direction and the 
+    3D seislet transform are shown in Figure~\ref{fig:rtseis-inline} 
+    and~\ref{fig:rtseis}.
+    In the seislet domain, most of the coefficients concentrate in the coarse 
+    scales, which shows the excellent compression ability of the RT-seislet 
+    transform. 
+    Figure~\ref{fig:teapot-rtseisrec5} is the data reconstruction result using 
+    only 5\% of the most significant coefficients. 
+    The difference between Figure \ref{fig:cuber} and the reconstructed data, 
+    contains mainly noise, is shown in Figure \ref{fig:teapot-diff}.
+    The proposed method has good performance for reconstruction and preserving 
+    the structures of the dataset.
+
+    \inputdir{teapot}
+    \multiplot{2}{cuber,pick}{width=0.6\columnwidth}{(a) Teapot dome dataset. 
+    (b) RT volume estimated by the predictive painting.}
+    \multiplot{2}{dip1,dip2}{width=0.6\columnwidth}{Inline (a) and Crossline (b)
+    Dip.}
+    \multiplot{4}{rtseis-inline,rtseis,teapot-rtseisrec5,teapot-diff}
+    {width=0.4\columnwidth}{(a) The coefficients in 2D seislet domain along 
+    inline only. (b) The coefficients in 3D seislet domain. (c) Data 
+    reconstruction using only 5\% of significant coefficients by the inverse 
+    RT-seislet transform. (d) Difference between (c) and the original seismic 
+    volume (Figure~\ref{fig:cuber}).}
+
+%-----------------------------------------------------------------
+\section{Discussion}
+    The proposed formulation of the seislet transform attempts to construct 
+    multiscale prediction operators, to enhance the performance of the 
+    seislet transform. 
+    The prediction operators in the original seislet transform are defined by 
+    PWD, so the prediction of distant traces needs recursive computation, which 
+    is very time-consuming when it comes to large size dataset. 
+    In the proposed RT-seislet transform, an RT volume is used to define a 
+    multiscale prediction operator. 
+    As shown in the previous sections, the relationship between any two traces 
+    can be obtained from the RT volume, which helps avoid the recursive 
+    computation for the prediction of distant traces. 
+    As a result, the RT-seislet transform is much more efficient than the 
+    original seislet transform.
+
+    Besides, in the implementation of the proposed method, the choice of 
+    reference traces plays an important role in the generation of the RT volume. 
+    More reference traces usually mean a better RT volume. 
+    The location of reference traces also needs to be considered carefully. 
+    In practice, evenly distributed reference traces are recommended.
+    Besides, complex geologic structures need to be treated differently.
+    For example, it is better to put reference traces at each side of faults. 
+    Another important issue is about the smoothing radius when estimating local 
+    slopes by PWD. 
+    For noise-free data, small smoothing radius is enough. 
+    The smoothing radius is three for the estimation of 
+    Figure~\ref{fig:dip-pad}. 
+    And with the increasing of the noise level, larger smoothing radius is 
+    needed. 
+
+    The proposed RT-seislet transform highly depends on the RT volume. 
+    In our method, local slopes by PWD, which are easily affected by noise, are 
+    utilized to generate the RT volume, so the new formulation is sensitive to 
+    the noise. 
+    However, this problem certainly can be solved by improving the PWD or using 
+    other methods, which are not sensitive to noise, to generate the RT volume.
+
+%-----------------------------------------------------------------
+\section{Conclusion}
+    We have proposed a new formulation of the seislet transform, a novel 
+    approach to sparse seismic data. 
+    In our approach, we use an RT volume to construct multiscale prediction and 
+    update operators for the seislet transform. 
+    This proposed approach is computationally more efficient and better 
+    preserves geologically meaningful discontinuities than the original 
+    formulation of the seislet transform in reconstructing the raw seismic data. 
+    It also has excellent performance in obtaining the sparse representation of
+    seismic data.
+    Synthetic and field data examples show that the proposed new formulation is 
+    efficient and effective in data reconstruction and noise attenuation.
+
+%-----------------------------------------------------------------
+\section{Acknowledgements}
+    The research is partially supported by Texas Consortium for Computation 
+    (TCCS), the “Thousand Youth Talents Plan”, and the Starting Funds from 
+    Zhejiang University. 
+    The computational examples reported in this paper are reproducible using 
+    the \emph{Madagascar} open-source software 
+    package~\cite[]{fomel2013madagascar}. 
+    
+\section{DATA AND MATERIALS AVAILABILITY}
+    Data associated with this research are available and can be obtained by 
+    contacting the corresponding author. 
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{rtseis}

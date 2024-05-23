@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+End(options='reproduce',use='amsmath,bm,hyperref,listings,moreverb,enumitem,color',
+    color='ALL')
+

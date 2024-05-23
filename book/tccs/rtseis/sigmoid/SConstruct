@@ -1,0 +1,161 @@
+from rsf.proj import *
+import os
+
+# Size of the model
+n1=200
+n2=256
+
+# Plot trace
+def ref(trace):
+    out = 'ref%d' % trace
+    Flow(out+'.asc',None,
+         '''
+         echo %d 0 %d 1 n1=4 in=$TARGET data_format=ascii_float
+         ''' % (trace,trace))
+    Plot(out,out+'.asc',
+         '''
+         dd form=native type=complex | 
+         graph min1=0 max1=256 min2=0 max2=1 wanttitle=n wantaxis=n
+         ''')
+    return out
+
+# Generate and display the model
+Flow('sigmoid',None,
+        '''
+        sigmoid n1=%d n2=%d d2=.008 |
+        smooth rect1=3 diff1=1 adj=1| smooth rect1=3 |
+        put label2=Distance
+        ''' % (n1,n2) )
+Result('sigmoid', 'grey title=')
+
+
+# Prepare for predictive painting (estimate dips)
+Flow('pad','sigmoid','math output=1 | pad beg1=50 end1=50')
+Flow('sigmoid-pad','sigmoid','pad beg1=50 end1=50 | bandpass fhi=60')
+
+Flow('dip-pad','sigmoid-pad pad',
+     '''
+     dip order=2 p0=0 verb=y niter=10 rect1=3 rect2=3
+     mask=${SOURCES[1]}
+     ''')
+Flow('seed','dip-pad','window n2=1 | math output=x1')
+Result('dip-pad',
+       '''
+       window n1=200 min1=0 |
+       grey color=j title="Slope"
+       ''')
+
+# RT with multiple reference traces
+picks=[]
+for i0 in (5,10,80,128,156,175,250,251,255):
+    pick = 'pick%d' % i0
+    picks.append(pick)
+    
+    # RT with single reference trace
+    Flow(pick,'dip-pad seed',
+         'pwpaint order=2 seed=${SOURCES[1]} i0=%d eps=1' % i0)
+
+np = len(picks)
+Flow('rt',picks,
+     'add ${SOURCES[1:%d]} | scale dscale=%g' % (np,1.0/np))
+Plot('rt-grey','rt',
+     '''
+     window n1=200 min1=0 |
+     grey color=j allpos=y
+     Xscalebar=y Xbarreverse=y
+     title="Relative Geological Time" clip=0.8
+     minval=0 maxval=0.8 scalebar=y barlabel=RT
+     ''')
+Plot('rt-contour','rt',
+     '''
+     window n1=200 min1=0 |
+     clip clip=0.8 |
+     contour c0=0 dc=0.04 nc=20
+     transp=y yreverse=y plotcol=7 plotfat=5
+     Xscalebar=y Xbarreverse=y barlabel=" " 
+     wanttitle=n wantaxis=n
+     minval=0 maxval=0.8 scalebar=y
+     ''')
+Result('rt', 'rt-grey rt-contour', 'Overlay')
+
+
+# RT-seislet transform
+Flow('rtseis', 'sigmoid-pad rt',
+     'rtseislet rt=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=b')
+Result('rtseis',
+       '''
+       put o2=0 d2=1 |
+       window n1=200 min1=0 |
+       grey  title="RT-seislet Transform" label2=Scale unit2= 
+       ''')
+
+# Inverse RT-seislet transform
+Flow('rtseisinv', 'rtseis rt',
+     'rtseislet rt=${SOURCES[1]} eps=0.1 inv=y unit=y type=b')
+Result('rtseisinv', 
+       '''
+       window n1=200 min1=0 |
+       grey  title="Inverse RT-seislet Transform" 
+       ''')
+
+# Inverse RT-seislet transform using 1% most significant coefficients
+Flow('rtseisrec1','rtseis rt',
+     '''
+     threshold pclip=1 |
+     rtseislet rt=${SOURCES[1]} eps=0.1 inv=y unit=y type=b 
+     ''')
+Result('rtseisrec1',
+       '''
+       window n1=200 min1=0 |
+       grey title="Inverse RT-seislet Transform (1%)" 
+       ''')
+
+Flow('rtseiscoef','rtseis',
+     '''
+     window n1=200 min1=0 | 
+     put n1=%d o1=1 d1=1 n2=1 unit1= unit2= | 
+     sort
+     ''' % (n1*n2))
+
+# Estimate dips for PWD-seislet transform
+Flow('dip','sigmoid','dip rect1=10 rect2=10 p0=0 pmin=-100')
+Result('dip','grey color=j title=Slope scalebar=y')
+
+# PWD-seislet transform
+Flow('pwdseis','sigmoid dip',
+     'seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=b')
+Result('pwdseis',
+       '''
+       put o2=0 d2=1 |
+       grey  title="PWD-seislet Transform" label2=Scale unit2=
+       ''')
+
+# Inverse PWD-seislet transform
+Flow('pwdseisinv','pwdseis dip',
+     'seislet dip=${SOURCES[1]} eps=0.1 inv=y unit=y type=b')
+Result('pwdseisinv','grey  title="Inverse PWD-seislet Transform" ')
+
+# Inverse PWD-seislet transform using 1% most significant coefficients
+Flow('pwdseisrec1','pwdseis dip',
+     '''
+     threshold pclip=1 |
+     seislet dip=${SOURCES[1]} eps=0.1 inv=y unit=y type=b
+     ''')
+Result('pwdseisrec1','grey  title="Inverse PWD-seislet Transform (1%)" ' )
+
+Flow('pwdseiscoef', 'pwdseis',
+     '''
+     put n1=%d o1=1 d1=1 n2=1 unit1= unit2= | 
+     sort
+     ''' % (n1*n2))
+
+Result('coef','rtseiscoef pwdseiscoef',
+        '''
+        cat axis=2 ${SOURCES[1]} |
+        window n1=%d |
+        scale axis=1 |
+        math output="10*log(input)/log(10)" |
+        graph dash=0,1 screenratio=1. labelsz=9 plotfat=5 
+        label1="Number of coefficients" label2="a\_n\^" unit2="dB" wanttitle=n 
+        ''' % (n1*n2/2))
+End()
