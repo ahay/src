@@ -4,8 +4,7 @@ from rsf.proj import *
 
 prog = {}
 
-# for lang in ('c','c++','f90','python','julia','chapel'):
-for lang in ('c++'):
+for lang in ('c','c++','f90','python','julia','chapel'):
     if lang != 'julia' or WhereIs('julia'):   
         SConscript('../../../../api/%s/test/SConstruct' % lang)
         prog[lang] = '../../../../api/%s/test/afdm.exe' % lang
