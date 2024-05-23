@@ -1,0 +1,127 @@
+from rsf.proj import *
+
+# Size of the model
+n1=200
+n2=256
+
+# Generate and display the model
+Flow('sigmoid',None,
+        '''
+        sigmoid n1=%d n2=%d d2=.008 |
+        smooth rect1=3 diff1=1 adj=1 | smooth rect1=3 |
+        put label2=Distance
+        ''' % (n1,n2) )
+Result('sigmoid', 'grey title=Input')
+
+
+# Sensitivity to noise
+noise_var = [0.05, 0.1, 0.2, 0.4, 0.8, 1]
+snr_rt = []
+snr_pwd = []
+snr_noise = []
+
+# Normalize the model
+Flow('sigmoid-norm','sigmoid','scale axis=12 | scale dscale=6')
+
+for i in range(len(noise_var)):
+    var = noise_var[i]
+    sigmoid     = 'sigmoid-noise%d' % i
+    pad         = 'pad-noise%d' % i
+    sigmoidpad  = 'sigmoidpad-noise%d' % i
+    dip         = 'dip-noise%d' % i
+    dippad      = 'dippad-noise%d' % i
+    seed        = 'seed-noise%d' % i
+    rt          = 'rt-noise%d' % i
+    rtseis      = 'rtseis-noise%d' % i
+    rtseisrec   = 'rtseisrec-noise%d' % i
+    pwdseis     = 'pwdseis-noise%d' % i
+    pwdseisrec  = 'pwdseisrec-noise%d' % i
+    diffrt      = 'diff-rt-noise%d' % i
+    snrrt       = 'snr-rt%d' % i
+    diffpwd     = 'diff-pwd-noise%d' % i
+    snrpwd      = 'snr-pwd%d' %  i
+    n           = 'noise%d' % i
+    snrnoise    = 'snr-noise%d' % i
+
+    snr_rt.append(snrrt)
+    snr_pwd.append(snrpwd)
+    snr_noise.append(snrnoise)
+
+    # Add noise
+    Flow(sigmoid,'sigmoid-norm','noise seed=2019 var=%g' % var)
+    Flow(n,[sigmoid,'sigmoid'],'add ${SOURCES[1]} scale=-1,1')
+    Flow(snrnoise,None,"math n1=1  output='%g' " % var)
+
+    # Prepare for RT-seislet transform
+    Flow(pad,sigmoid,'math output=1 | pad beg1=50 end1=50')
+    Flow(sigmoidpad,sigmoid,'pad beg1=50 end1=50 | bandpass fhi=60')
+    Flow(dippad,[sigmoidpad,pad],
+         '''
+         dip order=2 p0=0 verb=y niter=10 rect1=3 rect2=3
+         mask=${SOURCES[1]} 
+         ''')
+    Flow(seed,dippad,'window n2=1 | math output=x1')
+    Flow(dippad,[sigmoidpad,pad],
+         '''
+         dip order=2 p0=0 verb=y niter=10 rect1=10 rect2=10
+         mask=${SOURCES[1]}
+         ''')
+    # Compute RT
+    picks=[]
+    for i0 in (5,10,80,128,156,175,250,251,255):
+        pick = 'pick-noise%d-%d' % (i,i0)
+        picks.append(pick)
+    
+        # RT with single reference trace
+        Flow(pick,[dippad,seed],
+             'pwpaint order=2 seed=${SOURCES[1]} i0=%d eps=1' % i0)
+    np = len(picks)
+    Flow(rt,picks,
+         'add ${SOURCES[1:%d]} | scale dscale=%g' % (np,1.0/np))
+
+    # RT-seislet transform
+    Flow(rtseis,[sigmoidpad,rt],
+         'rtseislet rt=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=b')
+    Flow(rtseisrec,[rtseis,rt],
+         '''
+         threshold pclip=10 |
+         rtseislet rt=${SOURCES[1]} eps=0.1 inv=y unit=y type=b | 
+         window n1=200 min1=0
+         ''')
+    # Compute SNR
+    Flow(diffrt,[rtseisrec,'sigmoid-norm'],'add ${SOURCES[1]} scale=-1,1')
+    Flow(snrrt,[rtseisrec,diffrt],'snr2 noise=${SOURCES[1]}')
+
+    # Estimate dips for PWD-seislet tranform
+    Flow(dip,sigmoid,'dip rect1=10 rect2=10 p0=0 pmin=-100')
+
+    # PWD-seislet transform
+    Flow(pwdseis,[sigmoid,dip],
+         'seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y unit=y type=b')
+    Flow(pwdseisrec,[pwdseis,dip],
+         '''
+         threshold pclip=10 |
+         seislet dip=${SOURCES[1]} eps=0.1 inv=y unit=y type=b
+         ''')
+    # Compute SNR
+    Flow(diffpwd,[pwdseisrec,'sigmoid-norm'],'add ${SOURCES[1]} scale=-1,1')
+    Flow(snrpwd,[pwdseisrec,diffpwd],'snr2 noise=${SOURCES[1]}')
+
+Flow('snr-rt',snr_rt,'cat axis=1 ${SOURCES[1:%d]}' % len(snr_rt))
+Flow('snr-pwd',snr_pwd,'cat axis=1 ${SOURCES[1:%d]}' % len(snr_pwd))
+Flow('snr-noise',snr_noise,'cat axis=1 ${SOURCES[1:%d]}' % len(snr_noise))
+Flow('snr-rt-noise','snr-noise snr-rt','cmplx ${SOURCES[1]}')
+Flow('snr-pwd-noise','snr-noise snr-pwd','cmplx ${SOURCES[1]}')
+Flow('snr','snr-rt-noise snr-pwd-noise','cat axis=2 ${SOURCES[1]}')
+
+Result('snr',
+       '''
+       graph wanttitle=n dash=0,1 screenratio=1. labelsz=9 plotfat=9
+       label2="S/N" unit2=dB label1="Noise variances" unit1=
+       ''')
+
+# Example with noise
+Result('sigmoid-noise0','grey title="Data with noise"')
+Result('rtseisrec-noise0','grey title="Reconstructed data"')
+
+End()

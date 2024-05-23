@@ -1,0 +1,100 @@
+from rsf.proj import *
+from math import *
+
+wf = 2*pi
+nt = 501
+dt = 0.004
+ot = 0
+nx = 512
+dx = 0.01
+ox = 0
+nw = 200
+dw = 0.0005
+ow = 0
+
+# Generate synthetic data
+for eve in (2,3,4):
+    spike='spike%d' % eve
+    tpara='tpara%d'   % eve
+    para='para%d'     % eve
+    Flow(spike,None,
+        '''
+        spike n1=%d d1=%g o1=%g n2=%d d2=%g o2=%g nsp=1 k1=%d mag=1  p2=0|
+        ricker1 frequency=15 | put unit2=km label2=Distance
+        ''' % (nt,dt,ot,nx,dx,ox,eve*80-30))
+    Flow(tpara,spike,
+        '''
+        window n1=1 | math output="-sqrt(%g*%g+(x1-2.5)*(x1-2.5)/%g/%g)+%g"
+        ''' % (0.01*(eve*80-30),0.01*(eve*80-30),2,2,0.01*(eve*80-30)))
+    Flow(para,[spike, tpara],
+        'datstretch datum=${SOURCES[1]} ')
+Flow('para','para2 para3 para4','add ${SOURCES[1]} ${SOURCES[2]}')
+Result('para','para',
+       '''
+       grey label2=Distance unit2=km transp=y yreverse=y title="Signal" clip=0.14
+       ''')
+
+# Prepare for predictive painting (estimate dips)
+Flow('pad','para','math output=1 | pad beg1=50 end1=50')
+Flow('para-pad','para','pad beg1=50 end1=50')
+
+Flow('dip-pad','para-pad pad',
+     '''
+     dip order=2 p0=0 verb=y niter=10 rect1=10 rect2=10
+     mask=${SOURCES[1]}
+     ''')
+Flow('seed','dip-pad','window n2=1 | math output=x1')
+Result('dip-pad',
+       '''
+       window n1=501 min1=0 |
+       grey color=j title="Slope"
+       ''')
+Flow('trace','dip-pad','window n2=1 | math output=x1')
+
+# RT with multiple reference traces
+picks=[]
+for i0 in (0,255,511):
+    pick = 'pick%d' % i0
+    picks.append(pick)
+    
+    # RT with single reference trace
+    Flow(pick,'dip-pad trace',
+         'pwpaint order=2 seed=${SOURCES[1]} i0=%d eps=1' % i0)
+
+np = len(picks)
+Flow('rt',picks,
+     'add ${SOURCES[1:%d]} | scale dscale=%g' % (np,1.0/np))
+Result('rt','grey color=j')
+
+# Seislet transform
+Flow('rtseis', 'para-pad rt',
+     'rtseislet rt=${SOURCES[1]} eps=1 adj=y inv=y unit=y')
+Result('rtseis',
+       '''
+       grey label2=Distance unit2=km transp=y yreverse=y 
+       title="RT-seislet Transform"
+       ''')
+
+# Reconstruction
+Flow('para-rtseisrec1','rtseis rt',
+     '''
+     threshold pclip=1 |
+     rtseislet rt=${SOURCES[1]} eps=1 inv=y unit=y |
+     window n1=501 min1=0
+     ''')
+Result('para-rtseisrec1',
+       '''
+       grey label2=Distance unit2=km transp=y yreverse=y 
+       title="Inverse RT-seislet Transform (1%)" 
+       clip=0.14
+       ''')
+
+Flow('para-diff','para para-rtseisrec1','add ${SOURCES[1]} scale=1,-1')
+Result('para-diff',
+       '''
+       grey label2=Distance unit2=km transp=y yreverse=y 
+       title=Difference
+       clip=0.14
+       ''')
+
+End()
