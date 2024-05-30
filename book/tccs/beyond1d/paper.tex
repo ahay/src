@@ -228,12 +228,10 @@ We consider first a layered anisotropic model in Figure~\ref{fig:modcol} with pa
 
 \plot{modcol}{width=0.75\columnwidth}{A test subsurface model with a synclinal structure and a variable dipping interface. The solid black line indicates the location of the extracted CMP gather.}
 
-\begin{table}
-%\begin{minipage}{80mm}
-\caption{Anisotropic parameters for the model in Figure~\ref{fig:modcol}. The values for layer 2, 4, and 5 are taken from rock samples measurements by \cite{wang}, \cite{jw}, and \cite{vernik}, respectively. $Q_1$ and $Q_3$ are anelliptic parameters in the Muir-Dellinger scheme convenient for uses in group velocity approximations \cite[]{zoneortho}.}
-\label{tbl:modelaniso}
+\tabl{modelaniso}{Anisotropic parameters for the model in Figure~\ref{fig:modcol}. The values for layer 2, 4, and 5 are taken from rock samples measurements by \cite{wang}, \cite{jw}, and \cite{vernik}, respectively. $Q_1$ and $Q_3$ are anelliptic parameters in the Muir-Dellinger scheme convenient for uses in group velocity approximations \cite[]{zoneortho}.}{
     \centering
-	\resizebox{\columnwidth}{!}{
+	%\resizebox{\columnwidth}{!}
+	{
      \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
      	     \hline Anisotropic parameters & $ c_{11}$ & $ c_{33}$ & $ c_{13}$ & $ c_{55}$ & $ Q_{1}$ & $ Q_{3} $ & $ v_{P0} $ & $ v_{S0} $ & $ \epsilon$ & $ \delta $\\ 
      	     \hline Layer 1 & 9.0 & 9.0 & 3.0 & 3.0 & 1.0 & 1.0 & 3.0 & 1.732 & 0.0 & 0.0\\
@@ -245,7 +243,7 @@ We consider first a layered anisotropic model in Figure~\ref{fig:modcol} with pa
     \end{tabular}
     }
 %\end{minipage}
-\end{table}
+}
 
 Figure~\ref{fig:hypercompareaniso2,warpedcompareaniso2} shows the CMP gather at 4.3 $km$ that compares moveout approximations with NMO velocity computed based on the 1-D stratified medium assumption and from the proposed formula (equation~\ref{eq:d2t}). For the bottom two reflectors with the offset-to-depth ratio smaller than unity, we can observe a better performance from the latter with improved flatness of the corrected gather.
 
@@ -258,12 +256,10 @@ Next, we test the proposed framework in a layered isotropic model with a constan
 
 \multiplot{2}{hypercompare2,warpedcompare2}{height=0.35\textheight}{(a) An example CMP gather from the layered isotropic model at 4.3 $km$. Note the multiple reflection events above the second moveout curve that are caused by the syncline. The solid lines correspond to regular moveout predictions based on the assumption of 1-D stratified model, whereas the dashed lines correspond to those from the proposed framework that takes into account the effects from heterogeneity. (b) Flattened reflections from the bottom interface using the NMO velocity with 1-D assumption (top) and the proposed framework (bottom). We can clearly observed improved flatness from using the proposed framework.}
 
-\begin{table}
-%\begin{minipage}{80mm}
-\caption{Model parameters for the layered isotropic model. The reference velocity at 3 $km$ and horizontal velocity gradient.}
-\label{tbl:modeliso}
+\tabl{modeliso}{Model parameters for the layered isotropic model. The reference velocity at 3 $km$ and horizontal velocity gradient.}{
     \centering
-    \resizebox{0.5\columnwidth}{!}{
+    %\resizebox{0.5\columnwidth}{!}
+    {
      \begin{tabular}{|c|c|c|}
      	     \hline  & $ v$ $(km/s)$ & Gradient $(1/s)$ \\ 
      	     \hline Layer 1 & 2.50 & -0.06\\
@@ -275,7 +271,7 @@ Next, we test the proposed framework in a layered isotropic model with a constan
     \end{tabular}
     }
 %\end{minipage}
-\end{table}
+}
 
 \subsubsection{Hess VTI model}
 \inputdir{hess}
@@ -364,7 +360,7 @@ Future investigations are required to establish a Dix-type inversion approach th
 
 Another possible extension of this work is to apply the proposed theory in the context of velocity anomaly removal similar to \cite{blias2009}, \cite{takanashitsvankin11}, and \cite{takanashitsvankin12}. In light of our result on the need of a recursive relationship (equation~\ref{eq:recursion}) to collect lateral heterogeneity effects from both curved interfaces and variable medium parameters, it remains to be investigated how the contribution from any individual layer with embedded velocity anomaly can be removed in an accurate and efficient manner.
 
-The proposed method takes into account the effects from lateral heterogeneity by modifying the second-order traveltime derivative related to NMO velocity (reflection) or time-migration velocity (diffraction). Therefore, the limit on the validity of the hyperbolic traveltime assumption in both cases is still enforced. We further discuss the possibility of extending our framework to higher-order traveltime derivatives in Appendix B, where the conventional paraxial ray theory is no longer applicable. A 3D extension of the proposed formulas can be also done with the derivatives turning into matrices.
+The proposed method takes into account the effects from lateral heterogeneity by modifying the second-order traveltime derivative related to NMO velocity (reflection) or time-migration velocity (diffraction). Therefore, the limit on the validity of the hyperbolic traveltime assumption in both cases is still enforced. We further discuss the possibility of extending our framework to higher-order traveltime derivatives in Appendix D, where the conventional paraxial ray theory is no longer applicable. A 3D extension of the proposed formulas can be also done with the derivatives turning into matrices.
 
 Our method takes into account the first-order effects from lateral heterogeneity in largely flat subsurface, which ensures that the normal-incidence ray and the image ray stays close to the reference vertical direction. Consequently, our approach does not substitute the dip-moveout process (DMO) for handling effects from dipping reflectors, which becomes prominent as the dip increases. The Gardner continuation \cite[]{gardner} serves as an alternative means to rid the moveout velocity on its dip dependency by transforming the prestack data into a special domain.
 
@@ -379,14 +375,12 @@ We have proposed a general framework for evaluating the one-way traveltime deriv
 \section{Acknowledgments}
 We are grateful to the associate editor, H. Chauris, and the reviewers, I. Ravve and E. Iversen for constructive comments that help improve the paper. We thank E. Blias and I. Vasconcelos for helpful discussions. We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) and the Rock Seismic Research Project (ROSE) for financial support. The first author was additionally supported by the Statoil Fellows Program at the University of Texas at Austin.
 
-\onecolumn
-\bibliographystyle{seg}
-\bibliography{review}
-
 % APPENDIX %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \clearpage
 %\appendix
-\append{Review of reflection and diffraction traveltime approximations}
+%\append[appa]{Review of reflection and diffraction traveltime approximations}
+\section{APPENDIX A \\ Review of reflection and diffraction traveltime approximations}
+\label{sec:appa}
 %\setcounter{figure}{0}
 %\renewcommand{\thefigure}{A-\arabic{figure}}
 The basis of our construction in this paper is the one-way traveltime in general layered media and its derivatives. In this appendix, we review an important concept on how this one-way traveltime can be related to two-way reflection and diffraction traveltimes, which signifies the importance of the presented results. For simplicity, we only show the expressions in the 2-D case.
@@ -456,7 +450,10 @@ Equation~\ref{eq:dtime3} suggests that equation~\ref{eq:cheop} simply represents
 
 
 
-\append{Derivation of the recursive formula}
+%\append[appb]{Derivation of the recursive formula}
+\section{Appendix B \\ Derivation of the recursive formula}
+\label{sec:appb}
+
 In this appendix, we provide a detailed derivation of the studied recursive formula (equation~\ref{eq:recursion}) and discuss a possible extension to evaluate higher-order traveltime derivatives. We start from the case of two-layered media previously investigated by \cite{blias1981}, \cite{bliasgrit1984},  \cite{gritsenko}, and \cite{goldin} and proceed to the case of three-layered media to show how the recursion can be established for multi-layered media.
 
 \subsection{Two-layer case}
@@ -569,8 +566,9 @@ which leads to the recursive formula
 where $r_0 = 0$ due to $dx_0/dh = 0$. This newly developed equation is an exact extension of the two-layered case result (equation~\ref{eq:recur2l}) to the multi-layered case and is similar to equation~\ref{eq:recursion} in the main text.
 
 
-\append{A summation scheme to accumulate heterogeneity effects}
-
+%\append[appc]{A summation scheme to accumulate heterogeneity effects}
+\section{Appendix C \\ A summation scheme to accumulate heterogeneity effects}
+\label{sec:appc}
 As opposed to the exact recursion proposed in this study, a simpler summation scheme was previously used to accumulate the effects from heterogeneity. A review of this concept can be found in \cite{blias2006} and we briefly summarize the essentials here. One way to interpret this summation process is to examine one interface at a time and assume that apart from the considered interface, other intermediate layers between the source at larger depth and the receiver at the surface are laterally homogeneous (1-D). Under this assumption, one can evaluate the contribution from lateral heterogeneity for this particular interface and its two adjacent layers using the result from the two-layered case (equation~\ref{eq:2d2lsub}). To further describe this process, we first assume that all sublayers are homogeneous isotropic similarly to what was done by Blias and consider only one non-flat interface at $i$-th. Therefore, we have
 \begin{equation}
 \label{eq:bliassimp}
@@ -602,7 +600,9 @@ To further simplify equation~\ref{eq:bliasonecurve}, it can be linearized with r
 Based on the result shown in equation~\ref{eq:bliasonecurvelin}, the total contribution from lateral heterogeneity due to various non-flat interfaces can be expressed as a summation  on the term with $F''$ rather than being computed through a recursive evaluation as proposed in this study. Equation~\ref{eq:bliasonecurvelin} is similar to equation 5 in \cite{blias2009stacking}. For the effects from lateral velocity change ($W''$), a similar derivation procedure can be adopted. Finally, we emphasize that due to the steps taken in the derivation of equation~\ref{eq:bliasonecurvelin}, the terms involving $F'W'$ apparent in the general expressions in equation~\ref{eq:dthet} are missing. These terms are also absent from the final result shown in equation 1 of \cite{blias2009stacking}.
 
 
-\append{Possible extension to higher-order derivatives}
+%\append[appd]{Possible extension to higher-order derivatives}
+\section{Appendix D \\ Possible extension to higher-order derivatives}
+\label{sec:appd}
 In this section, we discuss a possibility of extending our framework to evaluate higher-order one-way traveltime derivatives up to the fourth order. As reviewed in Appendix A, the fourth-order term is particularly important because it can be related to the quartic moveout coefficients for an estimation of anisotropy from reflection traveltime. Let us consider the two-layered model shown in the left plot of Figure~\ref{fig:2layer} and differentiate the total traveltime (equaiton~\ref{eq:time2l}) with respect to $h$ up to the fourth order, which gives
 \begin{align}
 \frac{\partial t}{\partial h} & = \frac{\partial t_1}{\partial h} +  \frac{\partial t}{\partial x_1}  \frac{d x_1}{d h}   = \frac{\partial t_1}{\partial h}~, \\
@@ -654,7 +654,6 @@ where the heterogeneous terms are given by
 \begin{align}
 \text{H}_8 &  =  2W''_k\left(\frac{1}{F_k-F_{k+1}} + F''_{k} \right) - \frac{6W'_k F'_k}{(F_k-F_{k+1})^2} \\
 \nonumber
-\nonumber
 & - \frac{6 W_k F''_{k} }{(F_k-F_{k+1})^2} + \frac{12 W_k F'^2_{k} }{(F_k-F_{k+1})^3} ~,\\
 \nonumber
 \text{H}_9 &  =   -\frac{W''_k}{2} \left(\frac{1}{F_k-F_{k+1}} - F''_{k} \right) + \frac{3W'_k(F'_k+F'_{k+1})}{2(F_k-F_{k+1})^2}\\
@@ -674,3 +673,6 @@ where the heterogeneous terms are given by
 & + \frac{6 W_k F''_{k+1} }{(F_k-F_{k+1})^2} + \frac{12 W_k F'^2_{k+1} }{(F_k-F_{k+1})^3} ~.
 \end{align}
 
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{review}
