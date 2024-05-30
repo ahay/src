@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Check if we are on ubuntu
-lsb_release -a | grep "Ubuntu" || exit 1
+# lsb_release -a | grep "Ubuntu" || exit 1
 UBUNTU_VERSION=$(lsb_release -r | awk '{print $2}')
 
 # Get the git hash
-GIT_HASH=$(git rev-parse HEAD)
+GIT_URL="https://github.com/ahay/src.git"
+GIT_HASH=$(git ls-remote $GIT_URL HEAD | awk '{print $1}')
 
 cd ../..
 

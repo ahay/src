@@ -11,7 +11,7 @@ version = v"1.0.0"
 
 # Collection of sources required to complete build
 sources = [
-    GitSource("https://github.com/ahay/src.git", "4383bfde1224bf001bab0bda1f9a66b08c83c0f3")
+    GitSource("https://github.com/ahay/src.git", "635f797644c2208e445e488bf32bb39ab65f9627")
 ]
 
 # Bash recipe for building across all platforms
