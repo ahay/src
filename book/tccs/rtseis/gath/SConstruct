@@ -14,7 +14,8 @@ Fetch('elfgath.rsf','elf',private)
 # Display data
 Flow('gath','elfgath',
      'dd form=native | put unit1=s unit2=m label2=Offset d2=25 o2=100')
-Result('gath','grey title=')
+Result('gath0','gath','grey title=')
+Result('gath1','gath','grey title=')
 
 # Prepare for predictive painting
 Flow('mask','gath','math output=1 | pad n1=1000')

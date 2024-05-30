@@ -400,9 +400,6 @@ $^2$Zhejiang University, School of Earth Sciences, Hangzhou, Zhejiang, China}
     seismic image reconstruction by thresholding coefficients and keeping only 
     1\% of significant coefficients using (a) inverse PWD-seislet transform and 
     (b) inverse RT-seislet transform.}
-    \plot{coef}{width=0.8\columnwidth}{Normalized coefficients from the 
-    PWD-seislet transform (red dashed line) and the RT-seislet transform (blue 
-    solid line) sorted from large to small on a decibel scale.}
 
     The comparison between coefficients from the PWD-seislet transform and 
     the RT-seislet transform is shown in Figure~\ref{fig:coef}. 
@@ -415,6 +412,10 @@ $^2$Zhejiang University, School of Earth Sciences, Hangzhou, Zhejiang, China}
     computation efficiency since the prediction of a trace using distant 
     traces is accomplished directly instead of recursively as in the original 
     PWD-seislet transform.
+    
+    \plot{coef}{width=0.8\columnwidth}{Normalized coefficients from the 
+    PWD-seislet transform (red dashed line) and the RT-seislet transform (blue 
+    solid line) sorted from large to small on a decibel scale.}
 
     \inputdir{time}
     \plot{tim}{width=0.80\columnwidth}{CPU time of the PWD-seislet transform 
@@ -470,7 +471,7 @@ $^2$Zhejiang University, School of Earth Sciences, Hangzhou, Zhejiang, China}
     
 \section{2D Field Data Example}
     To further test the proposed method, we use a common-midpoint gather from 
-    the North Sea dataset (Figure~\ref{fig:gath}). 
+    the North Sea dataset (Figure~\ref{fig:gath0}). 
     Figure~\ref{fig:seis} shows the data in the seislet transform domain. 
     We observe that significant coefficients are apparent in only a narrow area 
     on the left, which indicates the excellent compression ability of the 
@@ -480,6 +481,12 @@ $^2$Zhejiang University, School of Earth Sciences, Hangzhou, Zhejiang, China}
     The reconstructed image retains the most important seismic events in the 
     original seismic data.
 
+\inputdir{gath}
+    \plot{gath0}{width=0.80\columnwidth}{Common-midpoint gather.}
+    \multiplot{2}{seis,seisrec1}{width=0.60\columnwidth}{(a) The field data in 
+    the RT-seislet transform domain and (b) reconstruction using only 1\% of 
+    significant coefficients by the inverse RT-seislet transform.}
+
     If we mute the RT-seislet coefficients at fine scales while keeping the 
     significant coefficients at coarse scales (Figure~\ref{fig:seisdeno}), the 
     inverse RT-seislet transform enables effective denoising, removing 
@@ -487,6 +494,11 @@ $^2$Zhejiang University, School of Earth Sciences, Hangzhou, Zhejiang, China}
     The result of denoising are shown in Figure~\ref{fig:seis16}. 
     Figure~\ref{fig:diff} shows the removed noise section using the proposed 
     implementation of the seislet transform.
+
+\multiplot{4}{gath1,seisdeno,seis16,diff}{width=0.45\columnwidth}{(a) 
+    Original gather. (b) Denoised result by muting RT-seislet coefficients at 
+    fine scales (a) and (c) the removed noise section using the RT-seislet 
+    transform.}
 
     The RT-seislet is also able to perform interpolation. 
     We add two more scales with small random noise to Figure~\ref{fig:seis} and 
@@ -503,16 +515,6 @@ $^2$Zhejiang University, School of Earth Sciences, Hangzhou, Zhejiang, China}
     In this example, the seislet transform domain is extended with random noise 
     because there is unpredictable noise in the real case.
 
-
-    \inputdir{gath}
-    \plot{gath}{width=0.80\columnwidth}{Common-midpoint gather.}
-    \multiplot{2}{seis,seisrec1}{width=0.60\columnwidth}{(a) The field data in 
-    the RT-seislet transform domain and (b) reconstruction using only 1\% of 
-    significant coefficients by the inverse RT-seislet transform.}
-    \multiplot{4}{gath,seisdeno,seis16,diff}{width=0.45\columnwidth}{(a) 
-    Original gather. (b) Denoised result by muting RT-seislet coefficients at 
-    fine scales (a) and (c) the removed noise section using the RT-seislet 
-    transform.}
     \multiplot{2}{seisrand2,gath4}{width=0.6\columnwidth}{(a) Extended seislet 
     transform domain. (b) Interpolated shot gather by the inverse RT-seislet 
     transform.}
