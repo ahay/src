@@ -20,7 +20,7 @@ Flow('vel','top mid bot','cat axis=1 ${SOURCES[1:3]} | smooth rect1=3 repeat=1 |
 Flow('src',None,'spike n1=200 n2=200 d1=15 d2=15 nsp=6 k1=98,105,100,95,90,88 k2=60,70,90,110,130,140 mag=5000 | smooth rect1=2 rect2=2 repeat=1')
 
 Flow('sov','vel src','add mode=a ${SOURCES[1]}')
-Result('sov','window f1=30 n1=140 f2=30 n2=140 | put o1=0 o2=0 |'+ grey('allpos=y bias=1500 scalebar=y barreverse=y minval=1500 maxval=3000 title="Source location over velocity model" barlabel="V" barunit="m/s" '))
+Result('sov1','sov','window f1=30 n1=140 f2=30 n2=140 | put o1=0 o2=0 |'+ grey('allpos=y bias=1500 scalebar=y barreverse=y minval=1500 maxval=3000 title="Source location over velocity model" barlabel="V" barunit="m/s" '))
 
 Result('vel','window f1=30 n1=140 f2=30 n2=140 | put o1=0 o2=0 |'+ grey('allpos=y bias=1500 scalebar=y barreverse=y minval=1500 maxval=3000 title="Velocity model" barlabel="V" barunit="m/s"'))
 

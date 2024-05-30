@@ -87,13 +87,13 @@ In the following examples we demonstrate the performance of the proposed method 
 %   \caption{(a) Microseismic source locations overlaid on a three-layer velocity model. (b) Noise-Free microseismic data from three-layer model. (c) Noisy microseismic data from three-layer model. The traces displayed on the right correspond to $X=1050\;m$.}
 %   \label{threelayer}
 %\end{figure*}
-\inputdir{cross}
-\multiplot{3}{sov,datatrace-clean,datatrace-noisy}{height=0.145\textheight}{(a) Microseismic source locations overlaid on a three-layer velocity model. (b) Noise-Free microseismic data from three-layer model. (c) Noisy microseismic data from three-layer model. The traces displayed in the right panel correspond to $X=1050\;m$.}
-\multiplot{3}{location0-clean,location0-noisy,location0-hyb}{height=0.145\textheight}{(a) Microseismic source locations imaged by the cross-correlation imaging condition using noise-free data. (b) Microseismic source locations imaged by the cross-correlation imaging condition using noisy data. (c) Microseismic source locations imaged by the hybrid imaging condition using noisy data.}
 
 \subsection{Three-layer model}
+\inputdir{cross}
 
-In the first example, we used a three-layer model with six assumed microseismic sources located within the middle layer (Figure~\ref{fig:sov}). The model is discretized on a $140 \times 140$ grid with $15\;m$ spacing in both vertical and horizontal directions. The model has sharp velocity contrasts, which generate multiple reflection events in both forward and backward propagation.
+In the first example, we used a three-layer model with six assumed microseismic sources located within the middle layer (Figure~\ref{fig:sov1}). The model is discretized on a $140 \times 140$ grid with $15\;m$ spacing in both vertical and horizontal directions. The model has sharp velocity contrasts, which generate multiple reflection events in both forward and backward propagation.
+
+\multiplot{3}{sov1,datatrace-clean,datatrace-noisy}{height=0.145\textheight}{(a) Microseismic source locations overlaid on a three-layer velocity model. (b) Noise-Free microseismic data from three-layer model. (c) Noisy microseismic data from three-layer model. The traces displayed in the right panel correspond to $X=1050\;m$.}
 
 We first use noise-free data (Figure~\ref{fig:datatrace-clean}) to test the sensitivity of the cross-correlation imaging condition to stratigraphic boundaries, which are common in unconventional reservoirs. We use data from only 10 surface stations starting from $X=75\;m$ and ending at $X=1965\;m$, with an interval of $210\;m$. After individually backward-propagating the receiver wavefields and applying the cross-correlation imaging condition (equation~\ref{eq:ic-mult}), we obtain a clean, high-resolution image which accurately locates all the correct hypocenters (Figure~\ref{fig:location0-clean}).
 
@@ -101,17 +101,20 @@ Next we introduce a strong random noise into the data (Figure~\ref{fig:location0
 
 To remove the artifacts caused by a low SNR, we employ the hybrid imaging condition (equation~\ref{eq:ic-hyb}) by including five receivers in one station. For example, the station at $X=75\;m$ now includes five receivers with an interval of $15\;m$. We still perform ten backward propagations, with each wavefield using data from five neighboring receivers. The image contains significantly less artifacts, with only one defocused point corresponding to the rightmost hypocenter (Figure~\ref{fig:location0-hyb}).
 
-\inputdir{marm}
-\plot{sov}{height=0.16\textheight}{Microseismic source locations overlaid on Marmousi velocity model. A total of three stages of microseismicity are assumed, each with six hypocenters. \label{fig:marmsov}}
-\plot{datatrace}{height=0.16\textheight}{Noisy microseismic data from Marmousi model. The trace in the right panel corresponds to $X=1.2\;km$.\label{fig:datamarm}}
-%\multiplot{2}{location0,location}{width=0.4\textwidth}{Imaged microseismic source locations using hybrid imaging condition of: (a) noisy data from surface array; (b) noisy data from both surface array and downhole sensors. \label{fig:marmloc}}
-\multiplot{6}{stage0-1,stage0-2,stage0-3,stage-1,stage-2,stage-3}{height=0.15\textheight}{Accumulated microseismicity calculated by the hybrid imaging condition using: (a)-(c) noisy data from surface array; (d)-(f) noisy data from both surface array and downhole sensors. Each column is produced after one stage of perforation. \label{fig:marmloc}}
+\multiplot{3}{location0-clean,location0-noisy,location0-hyb}{height=0.145\textheight}{(a) Microseismic source locations imaged by the cross-correlation imaging condition using noise-free data. (b) Microseismic source locations imaged by the cross-correlation imaging condition using noisy data. (c) Microseismic source locations imaged by the hybrid imaging condition using noisy data.}
 
 \subsection{Marmousi model}
+\inputdir{marm}
 
 For the second example, we create a somewhat more realistic scenario by using a portion of the Marmousi velocity model \cite[]{marmousi}. The model dimension is $200 \times 200$ with a spatial sampling rate of $8\;m$ along the vertical direction and $12\;m$ along the horizontal direction. The model features a series of nearly parallel stratigraphic layers. To mimic an imaginary hydraulic fracturing process, we design three periods of assumed microseismicity propagating from left to right with a total of eighteen hypocenters, which corresponds to three stages of perforations (Figure~\ref{fig:marmsov}). The data has a high level of random background noise (Figure~\ref{fig:datamarm}). We employ the hybrid imaging condition using ten stations starting from $X=0\;m$ with a spacing of $240\;m$. Each station is again comprised of five neighboring sensors with an interval of $12\;m$. The images computed from the surface array data accurately locates all the hypocenters, and evolve with time according to equation~\ref{eq:ic-int} (Figures~\ref{fig:stage0-1}, \ref{fig:stage0-2} and \ref{fig:stage0-3}).
 
+\plot{sov}{height=0.16\textheight}{Microseismic source locations overlaid on Marmousi velocity model. A total of three stages of microseismicity are assumed, each with six hypocenters. \label{fig:marmsov}}
+\plot{datatrace}{height=0.16\textheight}{Noisy microseismic data from Marmousi model. The trace in the right panel corresponds to $X=1.2\;km$.\label{fig:datamarm}}
+%\multiplot{2}{location0,location}{width=0.4\textwidth}{Imaged microseismic source locations using hybrid imaging condition of: (a) noisy data from surface array; (b) noisy data from both surface array and downhole sensors. \label{fig:marmloc}}
+
 So far we have been focusing on using data from surface arrays. Recently, there is a growing use of multiple monitoring configurations such as combining downhole arrays with surface sensors to provide better wavefield sampling \cite[]{maxwellbook}. If available, data from downhole arrays/sensors can actually help improve the spatial resolution of imaged source locations, particularly in the vertical direction. In the last test, we combine data from the original surface arrays with data from four extra downhole sensors located at $X=0\;km$ and $Z=[0.24\;km,\;0.64\;km,\;1.04\;km,\;1.44\;km]$ respectively. The corresponding images demonstrate significantly higher vertical resolution thanks to the better sampling of the wavefield (Figures~\ref{fig:stage-1}, \ref{fig:stage-2} and \ref{fig:stage-3}). Our experiment confirms that combining surface and vertical borehole arrays can improve image resolution.
+
+\multiplot{6}{stage0-1,stage0-2,stage0-3,stage-1,stage-2,stage-3}{height=0.15\textheight}{Accumulated microseismicity calculated by the hybrid imaging condition using: (a)-(c) noisy data from surface array; (d)-(f) noisy data from both surface array and downhole sensors. Each column is produced after one stage of perforation. \label{fig:marmloc}}
 
 \section{Discussion and Conclusions}
 
