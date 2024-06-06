@@ -1,0 +1,168 @@
+\published{SEG Expanded Abstracts, 1939-1944, (2017)}
+
+\title{Well log interpolation guided by geologic distance}
+
+\author{Yunzhi Shi, Xinming Wu, and Sergey Fomel, The University of Texas at Austin}
+
+\maketitle
+
+\lefthead{Shi et al.}
+\righthead{Interpolation guided by geologic distance}
+\footer{TCCS}
+
+%-----------------------------------------------------------------
+\begin{abstract}
+Seismic reflection images can be used to interpolate rock properties between well logs.
+However, geologic faults may introduce discontinuities that interfere with the interpolation.
+We propose a modification of an image guided well log interpolation method that incorporates geologic structures including faults and unconformities.
+We first use predictive painting to spread the lithological information along seismic images from well locations.
+Then we measure the geologic distance following seismic horizons, and modify the distance across faults during interpolation based on fault attribute measurements.
+After that, painting interpolation not only honors the seismic horizon structures, but also gets constrained at faults while still remaining effective within the range of conforming regions.
+Both synthetic and field data examples show a significant improvement in robustness of predictive painting interpolation in complex subsurface structure around fault location.
+\end{abstract}
+
+%-----------------------------------------------------------------
+\section{Introduction}
+Well-log properties can be extended to a volume using a 3D seismic image to obtain a global interpretation of the subsurface.
+Such integration of well log data and seismic images can be used to constrain the following seismic inversion.
+Beginning with tying well logs measured in depth to seismic data in two-way time \cite[]{wu}, the joint interpretation requires spatially interpolating and extrapolating the well logs using seismic data.
+Several authors have studied using post-stack seismic data together with other attributes to guide the interpolation \cite[]{taner,schultz,hampson}, while assuming that the interpolated rock property conforms to seismic horizons.
+
+However, picking seismic horizons can involve manual labor and subjectivity.
+\cite{hale2010} proposed the image-guided interpolation of borehole data without picking seismic horizons or faults using the blended neighbor interpolation method \cite[]{hale2009}.
+Rather than using only the seismic image structures, \cite{karimi} proposed an approach based on predictive painting \cite[]{pred} that utilizes both image structures and amplitudes to guide the interpolation of well logs.
+
+Although predictive painting can guide the interpolation along conforming horizons, it encounters difficulties in painting across faults or unconformities.
+Therefore, it is necessary to limit the interpolation painting only within the range of conforming image structures.
+
+In order to constrain well-log interpolation, seismic coherency attributes can be measured to enhance indistinguishable faults or other geological discontinuities \cite[]{chopra}.
+Many methods were proposed to detect faults and measure fault attributes, including computing normalized cross-correlation \cite[]{bahorich}, eigenvalues of the local covariance matrix \cite[]{gersztenkorn}, eigenvectors of the structure tensor \cite[]{randen,structure}, and predictive coherency \cite[]{predcoh}.
+\cite{sobel} proposed a modified Sobel filter that utilizes plane-wave destruction and plane-wave shaping.
+\cite{faultlike} recently used directional structure-tensor-based coherence to measure fault likelihood in seismic images.
+
+We propose to apply the fault discontinuity attribute as an additional constraint to assist seismic-guided well-log interpolation.
+Using this attribute, we modify the distance between seismic traces across the fault, so that the interpolation will not be affected by well logs obscured by the fault but only the well logs that conformally paint at such location.
+We define geologic distance as the distance measured along seismic horizons.
+Because geologic distance can better represent the coherence level along seismic horizons than horizontal geometric distance, it provides a more accurate weight for spreading and interpolating well log information.
+
+%-----------------------------------------------------------------
+\section{Method}
+\subsection{Predictive painting}
+\inputdir{interpfault-sigmoid}
+
+Predictive painting \cite[]{pred} spreads the time values along a reference trace into the seismic volume to output the relative geologic time (RGT) attribute.
+Based on plane-wave destruction method \cite[]{pwd}, the predictive painting operator $\mathbf{P}_{r,k}$ is a recursion of multiple operators that predict adjacent traces:
+\begin{equation}
+    \mathbf{P}_{r,k} = \mathbf{P}_{k-1,k}\mathbf{P}_{k-2,k-1}\ldots
+                       \mathbf{P}_{r+1,r+2}\mathbf{P}_{r,r+1}.
+\end{equation}
+Each adjacent prediction follows the local dip patterns $\mathbf{p}_k$ which are defined by plane-wave destruction.
+
+Figure~\ref{fig:paint1} shows an application of predictive painting on the Sigmoid synthetic model \cite[]{claerbout} from Figure~\ref{fig:sigmoid}.
+While we use the seismic reflection signals to simulate the subsurface model, one of the seismic traces is extracted as a ``well log'' measurement.
+With proper sampling and ideal predictive painting based on the seismic image, we can recover the original model, which in this case is the same as the image itself.
+
+\plot{sigmoid}{width=0.4\textwidth}{Sigmoid synthetic model, including unconformities and faults.}
+
+\plot{paint1}{width=0.4\textwidth}{Predictive painting across the seismic image from synthetic well. The well-log synthetic is generated by copying the seismic trace at selected location.}
+
+However, notice the fault highlighted by the box in Figure~\ref{fig:sigmoid}; predictive painting in Figure~\ref{fig:paint1} failed to capture the discontinuities along seismic horizons.
+
+\subsection{Modified radial basis function interpolation}
+In order to interpolate the rock properties predicted by several well logs, \cite{karimi} used a weighted summation of the painting predictions.
+The weights were calculated by radial basis function (RBF) $\phi(d) = \phi(\vert x_k-x_r\vert)$, whose value decays along the increasing distance \cite[]{rbf}.
+An inverse quadratic form of the RBF is:
+\begin{equation}
+    \phi(d) = \frac{1}{1 + \left(d/d_0\right)^2},\;\;\mathrm{where}\;d_0>0.
+\end{equation}
+
+Then the interpolation can be calculated as below:
+\begin{equation}
+    S(\mathbf{x}) = \frac{\sum_{r=1}^N
+        \phi(\vert x-x_r\vert)S_r(\mathbf{x})}
+        {\sum_{r=1}^N \phi(\vert x-x_r\vert)},
+\end{equation}
+where $S_r$ is the result of spreading well log at well location $x_r$ into the seismic data and $N$ represents the total number of used wells.
+
+We propose to extend the definition of $d$ from simply the horizontal distance $\vert x_k-x_r\vert$ to the geologic distance that is measured along the seismic horizon:
+\begin{equation}
+    \tilde d(\mathbf{x}_k,\mathbf{x}_r) =
+        \int_{\mathbf{x}_r}^{\mathbf{x}_k} \left(
+        \Delta l(\mathbf{x}) + \lambda f(\mathbf{x})
+        \right)\;\mathrm{d}\mathbf{h}(\mathbf{x}),
+\end{equation}
+in which $\mathbf{x}_r$, $\mathbf{x}_k$ are points along a seismic horizon $\mathbf{h}(\mathbf{x})$; $\Delta l(\mathbf{x})$ is the curve length of the horizon, it can be calculated by $\Delta l(\mathbf{x}) = \Delta x\sqrt{1+p^2}$ given local slope estimation $p$; $f(\mathbf{x})$ is fault attribute and $\lambda$ represents the distance penalty parameter, this term exaggerates the distance across fault.
+The geologic distance indicates the decay of information confidence from the reference trace.
+We perform this integration efficiently by accumulative predictive painting.
+
+
+%-----------------------------------------------------------------
+\section{Numerical examples}
+\subsection{Synthetic data test}
+First of all, we extracted 3 traces from the Sigmoid model at lateral locations 0.09km, 0.64km, and 1.19km.
+The predictive painting of the trace sampled at 0.64km is shown in Figure~\ref{fig:paint1}.
+Then we compute the interpolation weighted by RBF according to conventional geometric distance $d(x_k,x_r)$, the result is shown in Figure~\ref{fig:interpold}.
+
+\multiplot{2}{interpold,interp}{width=0.4\textwidth}{Interpolation results with (a) conventional RBF coefficients without considering faults, and (b) proposed modified RBF coefficients using geologic distance.}
+
+Next, we incorporate the proposed $\tilde d(\mathbf{x}_k,\mathbf{x}_r)$ in the interpolation for comparison.
+We measure the fault attribute using plane-wave Sobel filter proposed by \cite{sobel}.
+In result Figure~\ref{fig:interp}, the recovery at the fault location is significantly improved, because geologic distance weights prevent the well log information from incorrectly spreading across the fault.
+
+\subsection{Field data test}
+\inputdir{interpfault-teapot}
+We also test the workflow on a field data example collected at Teapot Dome.
+Figure~\ref{fig:teapot} shows the input seismic section.
+It is a 2D line extracted from the original 3D data volume which has been converted from time to depth.
+The seismic image will be used to guide the interpolation of 11 density well logs scattered along the section, they have been tied to the seismic volume using automatic seismic-well tying technique \cite[]{wu}.
+
+\plot{teapot}{width=0.4\textwidth}{2D seismic section from Teapot Dome data. The section is extracted from the original 3D data volume along a curve that passes through severa well locations.}
+
+In this example, we use the method proposed by \cite{faultlike} based on structure-tensor to measure the fault attribute.
+It is shown in Figure~\ref{fig:fault,dist0} along with the geologic distance $\tilde d$ with regard to a reference well at about 12km.
+The image shows that at locations obscured by fault, geologic distance is magnified so that the RBF weight is expected to be suppressed.
+
+\multiplot{2}{fault,dist0}{width=0.32\textwidth}{(a) fault likelihood attribute based on structure-tensor method; (b) the geologic distance $\tilde d$ computed according to the fault attribute.}
+
+Figure~\ref{fig:paint0,rbf0} shows the predictive painting from the same well log and its corresponding RBF interpolation weight.
+Although painting prediction is conforming and smooth, in regions obscured by faults the prediction might be incorrect; however, the interpolation weight at such area will suppress the incorrect painting.
+
+\multiplot{2}{paint0,rbf0}{width=0.32\textwidth}{(a) predictive painting from the well log located at about 12km laterally; (b) corresponding RBF weight, which will be used in interpolation later.}
+
+Figure~\ref{fig:dist3,paint3,dist5,paint5,dist7,paint7,dist8,paint8,dist2,paint2} shows the geologic distances and corresponding predictive paintings from several other well logs.
+
+\multiplot{10}{dist3,paint3,dist5,paint5,dist7,paint7,dist8,paint8,dist2,paint2}{width=0.30\textwidth}{(a,c,e,g,i) geologic distances $\tilde d$ and (b,d,f,h,j) the predictive paintings from corresponding well logs guided by the seismic image.}
+
+The final interpolation of eleven wells are shown in Figure~\ref{fig:interp-tpt}.
+
+\plot{interp-tpt}{width=0.4\textwidth}{Interpolation result using 11 well logs on Teapot Dome data.}
+
+
+%-----------------------------------------------------------------
+\section{Discussion}
+Besides faults, image guided well log interpolation can be also bounded by unconformities when no auxiliary information can be used to continue the interpolation.
+Proper attributes can help truncate and terminate the unreliable predictive painting at unconformity.
+\cite{wu2015} proposed a 3D unconformity attribute computed from seismic amplitude.
+Furthermore, further research should focus on how to determine the obscure behavior of faults on the 3D predictive painting extrapolation.
+
+On the other hand, if the offset of the fault is given, \cite{xue17} proposed an alternative approach to perform predictive painting across the fault.
+
+
+%-----------------------------------------------------------------
+\section{Conclusions}
+The proposed approach to well-log interpolation provides an effective and efficient method to build a subsurface model that integrates rock property measurements and seismic images while honoring faults and other discontinuities.
+We have introduced a new definition, geologic distance, to replace the horizontal distance in interpolation.
+The new representation incorporates more structural information such as seismic horizons and fault attributes.
+The key benefit of the proposed workflow is the significant improvement of interpolation around fault regions, which is demonstrated in numerical examples.
+The proposed interpolation can help build correct and robust initial models for further seismic inversion.
+
+
+%-----------------------------------------------------------------
+\section{Acknowledgments}
+We thank sponsors of the Texas Consortium for Computational Seismology (TCCS) for the financial support of this research.
+The computational examples reported in this paper are reproducible using the \textit{Madagascar} open-source software package \cite[]{reprod}.
+
+%-----------------------------------------------------------------
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{interpfault}
