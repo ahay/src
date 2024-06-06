@@ -1,0 +1,198 @@
+from rsf.proj import*
+sys.path.append('..')
+import marmousi
+
+def data(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Time unit1=s label2=Distance unit2=m %s
+    ''' %(custom)
+
+def image(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Depth unit1=m label2=Distance unit2=m %s
+    ''' %(custom)
+
+def movie(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Depth unit1=m label2=Distance unit2=m gainpanel=a %s
+    ''' %(custom)
+
+dt = 0.001
+nt = 3001
+nz = 120
+dz = 0.008
+nx = 334
+dx = 0.012
+
+marmousi.getvel('vel0')
+Result('marmvel','vel0',image('scalebar=y color=j allpos=y title="Marmousi Velocity Model" bias=1.5 barreverse=y'))
+
+Flow('vel-true','vel0','window max1=0.95 min2=5 max2=9 j1=2 j2=3 | math output="input*1.8-1.2"')
+
+Flow('vel','vel-true','expand top=10 bottom=0 left=0 right=0')
+Result('vel','window f1=14 | '+image('title="True Velocity Model" clip=2.277 bias=1.5 allpos=y color=j scalebar=y barreverse=y minval=1.5 maxval=5.1 screenht=8 screenwd=14'))
+
+Flow('top','vel','window n1=14')
+
+# Smoothing velocity
+Flow('vel-smooth','vel','window f1=14 | math output=1/input | smooth rect1=20 rect2=20 repeat=1 | math output=1/input | math output=input*1')
+Flow('vel-start','top vel-smooth','cat axis=1 ${SOURCES[1]}')
+Result('vel-start','window f1=14 | '+image('title="Starting Velocity Model" clip=2.277 bias=1.5 allpos=y color=j scalebar=y barreverse=y minval=1.5 maxval=5.1 screenht=8 screenwd=14'))
+
+# Create Q model
+Flow('q','vel','math output=10000')
+
+# Define passive source (x,y,t)
+#Flow('src','vel','spray axis=3 n=%d d=%f o=0 | spike k1=110,105,100,112,108 k2=85,100,165,215,240 k3=100,300,500,700,900 nsp=5 mag=1e6 | transp plane=13 memsize=5000 | ricker1 frequency=10 | transp plane=13 memsize=5000' %(nt,dt))
+#Flow('src','vel','spray axis=3 n=%d d=%f o=0 | spike k1=110,105,100,112,108,105 k2=85,100,165,215,240,260 k3=100,300,500,700,900,1100 nsp=6 mag=1e6 | transp plane=13 memsize=5000 | ricker1 frequency=10 | transp plane=13 memsize=5000' %(nt,dt))
+
+#Flow('src1','vel','spray axis=3 n=%d d=%f o=0 | spike k1=100,110,107,110,102,105 k2=100,110,165,205,220,260 k3=100,300,500,700,900,1100 nsp=6 mag=1e6 | transp plane=13 memsize=5000 | ricker1 frequency=10 | transp plane=13 memsize=5000' %(nt,dt))
+#Flow('src2','vel','spray axis=3 n=%d d=%f o=0 | spike k1=105,101,110,112,108,105 k2=95,120,170,200,230,255 k3=100,300,500,700,900,1100 nsp=6 mag=1e6 | transp plane=13 memsize=5000 | ricker1 frequency=10 | transp plane=13 memsize=5000' %(nt,dt))
+#Flow('src3','vel','spray axis=3 n=%d d=%f o=0 | spike k1=102,108,101,110,106,100 k2=90,110,145,180,200,240 k3=100,300,500,700,900,1100 nsp=6 mag=1e6 | transp plane=13 memsize=5000 | ricker1 frequency=10 | transp plane=13 memsize=5000' %(nt,dt))
+#Flow('src','src1 src2 src3','cat axis=4 ${SOURCES[1:3]}')
+
+Flow('src1','vel','spray axis=3 n=%d d=%f o=0 | spike k1=110,120,117,120,112,115 k2=100,110,165,205,220,260 k3=100,300,500,700,900,1100 nsp=6 mag=1e6 | transp plane=13 memsize=5000 | ricker1 frequency=10 | transp plane=13 memsize=5000' %(nt,dt))
+Flow('src2','vel','spray axis=3 n=%d d=%f o=0 | spike k1=115,111,120,122,118,115 k2=95,120,170,200,230,255 k3=100,300,500,700,900,1100 nsp=6 mag=1e6 | transp plane=13 memsize=5000 | ricker1 frequency=10 | transp plane=13 memsize=5000' %(nt,dt))
+Flow('src3','vel','spray axis=3 n=%d d=%f o=0 | spike k1=112,118,111,120,116,110 k2=90,110,145,180,200,240 k3=100,300,500,700,900,1100 nsp=6 mag=1e6 | transp plane=13 memsize=5000 | ricker1 frequency=10 | transp plane=13 memsize=5000' %(nt,dt))
+Flow('src','src1 src2 src3','cat axis=4 ${SOURCES[1:3]}')
+
+
+Flow('wavelet',None,'spike nsp=1 mag=1e6 n1=%d d1=%f o1=0 k1=100 | ricker1 frequency=10' % (nt,dt))
+
+Result('wavelet','window n1=600 |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+Result('spectra','wavelet','spectra |window n1=80 |graph title="Spectra" unit1=Hz label1=Frequency label2= unit2=')
+
+# Data
+Flow('data','vel q wavelet src',
+        '''
+	mpipfwi Fvel=$SOURCE Fq=${SOURCES[1]} Fwavelet=${SOURCES[2]} Fsrc=${SOURCES[3]} output=$TARGET
+        function=4 media=1 inv=n
+	verb=y nb=60 coef=0.005 acqui_type=1 ns=1 ds=0.2 s0=0. f0=10 waterz=-30 niter=30 conv_error=0.01
+	''', stdin=0,stdout=0,np=1)
+Result('data','data','transp plane=23 | put n1=9003 n2=1 | transp plane=23 | '+data('title="Observed data" clip=0.0653056'))
+
+# Predicted Data
+Flow('data1','vel-start q wavelet src',
+        '''
+	mpipfwi Fvel=$SOURCE Fq=${SOURCES[1]} Fwavelet=${SOURCES[2]} Fsrc=${SOURCES[3]} output=$TARGET
+        function=4 media=1 inv=n
+	verb=y nb=60 coef=0.005 acqui_type=1 ns=1 ds=0.2 s0=0. f0=10 waterz=-30 niter=30 conv_error=0.01
+	''', stdin=0,stdout=0,np=1)
+Result('data1','transp plane=23 | put n1=9003 n2=1 | transp plane=23 | '+data('title="Predicted data (starting)" clip=0.0653056'))
+Result('err1','data data1','add ${SOURCES[1]} scale=1,-1 | transp plane=23 | put n1=9003 n2=1 | transp plane=23 | '+data('title="Data Misfit" clip=0.0653056'))
+
+
+# Define file names
+wav = 'wavelet.rsf'
+q = 'q.rsf'
+dat = 'data_low.rsf'
+oldvel = 'vel.rsf'
+
+# Bandpass filter the data
+Flow(dat, 'data', 'bandpass flo=2')
+
+# Define output file names
+vel = 'vel-src.rsf'
+grd = 'grd-src.rsf'
+src = 'src-src.rsf'
+mwt = 'mwt-src.rsf'
+
+# Run Full Waveform Inversion (FWI)
+Flow([vel,grd,src,mwt],[oldvel,q,wav,dat],  '''
+    sfmpipfwi 
+    Fvel=${SOURCES[0]} Fq=${SOURCES[1]} Fwavelet=${SOURCES[2]} Fdat=${SOURCES[3]} 
+    output=${TARGETS[0]} Fgrad=${TARGETS[1]} Fsrc=${TARGETS[2]} Fmwt=${TARGETS[3]} 
+    function=4 media=1 inv=y onlysrc=y onlyvel=n 
+    onlygrad=n nitersrc=50 recttsrc=50 repeatsrc=4 ngrp=6 precsrc=y hard=0.6 
+    ctr=y sw=y size=50 perc=5 c1=1e-4 repeat=5 verb=y nb=60 coef=0.005 
+    acqui_type=1 ns=1 ds=0.2 s0=0. f0=10 waterz=14 waterzb=0 niter=1 
+    conv_error=0.01 grectx=10 ''')
+
+
+# Define iterations
+outer_niter = 1
+
+# Define file names
+wav2 = 'wavelet.rsf'
+q2 = 'q.rsf'
+dat2 = 'data_low.rsf'
+oldvel2 = 'vel-start.rsf'
+
+# Frequencies to iterate over
+frequencies = [10, 30]
+
+for freq in frequencies:
+    for iter in range(1, outer_niter + 1):
+        vel2 = 'vel1-%d-%d.rsf' % (freq,iter)
+        grd2 = 'grd1-%d-%d.rsf' % (freq,iter)
+        src2 = 'src-src.rsf'
+        mwt2 = 'mwt1-%d-%d.rsf' % (freq,iter)
+
+        Flow([vel2,grd2,mwt2],[oldvel2,q2,wav2,dat2,src2], '''
+            sfmpipfwi 
+            Fvel=${SOURCES[0]} Fq=${SOURCES[1]} Fwavelet=${SOURCES[2]} Fdat=${SOURCES[3]} 
+            output=${TARGETS[0]} Fgrad=${TARGETS[1]} Fsrc=${SOURCES[4]} Fmwt=${TARGETS[2]} 
+            function=4 media=1 inv=y onlysrc=n onlyvel=y onlygrad=n 
+            nitersrc=20 recttsrc=50 repeatsrc=4 ngrp=6 precsrc=y 
+            hard=0.6 ctr=y sw=y size=50 perc=5 c1=1e-4 repeat=5 verb=y 
+            nb=60 coef=0.005 acqui_type=1 ns=1 ds=0.2 s0=0. f0=10 
+            waterz=14 waterzb=0 niter=30 conv_error=0.01 
+            grectx=10 flo=0 fhi=%d ''' % freq)
+        
+        oldvel2 = vel2
+
+
+# Define iterations
+outer_niter = 2
+
+# Define file names
+wav3 = 'wavelet.rsf'
+q3 = 'q.rsf'
+dat3 = 'data_low.rsf'
+oldvel3 = 'vel-start.rsf'
+
+# Frequencies to iterate over
+frequencies = [10, 30]
+
+for freq in frequencies:
+    for iter in range(1, outer_niter + 1):
+        vel3 = 'vel2-%d-%d.rsf' % (freq,iter)
+        grd3 = 'grd2-%d-%d.rsf' % (freq,iter)
+        src3 = 'src2-%d-%d.rsf' % (freq,iter)
+        mwt3 = 'mwt2-%d-%d.rsf' % (freq,iter)
+
+        Flow([vel3,grd3,src3,mwt3],[oldvel3,q3,wav3,dat3], '''
+            sfmpipfwi 
+            Fvel=${SOURCES[0]} Fq=${SOURCES[1]} Fwavelet=${SOURCES[2]} Fdat=${SOURCES[3]} 
+            output=${TARGETS[0]} Fgrad=${TARGETS[1]} Fsrc=${TARGETS[2]} Fmwt=${TARGETS[3]} 
+            function=4 media=1 inv=y onlysrc=n onlyvel=n onlygrad=n 
+            nitersrc=50 recttsrc=50 repeatsrc=4 ngrp=6 precsrc=y 
+            hard=0.6 ctr=y sw=y size=50 perc=5 c1=1e-4 repeat=5 verb=y 
+            nb=60 coef=0.005 acqui_type=1 ns=1 ds=0.2 s0=0. f0=10 
+            waterz=14 waterzb=0 niter=15 conv_error=0.01 grectx=10 
+            flo=0 fhi=%d v1=1.5 v2=5.1 hidesrc=n''' % freq)
+        
+        oldvel3 = vel3
+
+
+# Data
+Flow('data-start','vel-start q wavelet src2-10-1',
+        '''
+	mpipfwi Fvel=$SOURCE Fq=${SOURCES[1]} Fwavelet=${SOURCES[2]} Fsrc=${SOURCES[3]} output=$TARGET
+        function=4 media=1 inv=n
+	verb=y nb=60 coef=0.005 acqui_type=1 ns=1 ds=0.2 s0=0. f0=10 waterz=-30 niter=30 conv_error=0.01
+	''', stdin=0,stdout=0,np=1)
+Result('err-start','data data-start','add ${SOURCES[1]} scale=1,-1 | transp plane=23 | put n1=9003 n2=1 | transp plane=23 | '+data('title="Data Misfit" clip=0.0653056'))
+
+Flow('data-inv','vel2-30-2 q wavelet src2-30-2',
+        '''
+	mpipfwi Fvel=$SOURCE Fq=${SOURCES[1]} Fwavelet=${SOURCES[2]} Fsrc=${SOURCES[3]} output=$TARGET
+        function=4 media=1 inv=n
+	verb=y nb=60 coef=0.005 acqui_type=1 ns=1 ds=0.2 s0=0. f0=10 waterz=-30 niter=30 conv_error=0.01
+	''', stdin=0,stdout=0,np=1)
+Result('err-inv','data data-inv','add ${SOURCES[1]} scale=1,-1 | transp plane=23 | put n1=9003 n2=1 | transp plane=23 | '+data('title="Data Misfit" clip=0.0653056'))
+
+Result('vel-inv-joint','vel2-30-2','window f1=14 | '+image('title="Inverted Velocity Model" clip=2.277 bias=1.5 allpos=y color=j scalebar=y barreverse=y minval=1.5 maxval=5.1 screenht=8 screenwd=14 barlabel=Velocity barunit=km/s'))
+Result('vel-inv-only','vel1-30-1','window f1=14 | '+image('title="Inverted Velocity Model" clip=2.277 bias=1.5 allpos=y color=j scalebar=y barreverse=y minval=1.5 maxval=5.1 screenht=8 screenwd=14 barlabel=Velocity barunit=km/s'))
+
+End()

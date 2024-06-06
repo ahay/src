@@ -1,0 +1,121 @@
+from rsf.proj import *
+
+def grey(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Depth label2=Distance unit1=m unit2=m wanttitle=n %s
+    ''' %(custom)
+
+def igrey(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Time label2=Distance unit1=s unit2=m wanttitle=n %s
+    ''' %(custom)
+
+Flow('top',None,'spike n1=60 n2=200 d1=15 d2=15 mag=1500')
+Flow('mid',None,'spike n1=70 n2=200 d1=15 d2=15 mag=2200')
+Flow('bot',None,'spike n1=70 n2=200 d1=15 d2=15 mag=3000')
+#Flow('vel','top mid bot','cat axis=1 ${SOURCES[1:3]} | smooth rect1=20 repeat=4')
+Flow('vel',None,'math n1=200 n2=200 d1=15 d2=15 output="1000+0.7*x1"')
+
+#Flow('vel',None,'spike n1=200 n2=200 d1=15 d2=15 | math output="x1*0.5+1500" ')
+
+Flow('src',None,'spike n1=200 n2=200 d1=15 d2=15 nsp=5 k1=100,100,100,100,100 k2=60,80,100,120,140 mag=1000,1500,2000,2500,3000 | smooth rect1=2 rect2=2 repeat=1')
+
+Flow('sov','vel src','add mode=a scale=1,3 ${SOURCES[1]}')
+Result('sov','window f1=30 n1=140 f2=30 n2=140 | put o1=0 o2=0 |'+ grey('allpos=y bias=1500 scalebar=y color=j barreverse=y minval=1500 maxval=3000 title="Source location over velocity model" barlabel="V" barunit="m/s"'))
+
+Result('vel','window f1=30 n1=140 f2=30 n2=140 | put o1=0 o2=0 |'+ grey('allpos=y bias=1500 scalebar=y barreverse=y minval=1500 maxval=3000 title="Velocity model" barlabel="V" barunit="m/s"'))
+
+nt=2801
+dt=0.001
+
+Flow('data0 snaps data_v0','vel',
+     '''
+     psp snaps=${TARGETS[1]} dat_v=${TARGETS[2]} verb=y cmplx=n vref=1500 ps=y nt=%d dt=%g snap=1 abc=y nbt=30 ct=0.01 src=0 n_srcs=5 spz=100,100,100,100,100 spx=60,80,100,120,140 f0=20,20,20,20,20 t0=.32,.64,1.0,1.32,1.64 A=1,1.5,2,2.5,3
+     '''%(nt,dt))
+
+#Flow('data','data0','noise var=0.02 type=y seed=1573')
+#Flow('data_v','data_v0','noise var=0.02 type=y seed=5438')
+Flow('data','data0','cp')
+Flow('data_v','data_v0','cp')
+
+Result('snaps','window j3=10 | grey gainpanel=a')
+Result('data',igrey('title="Surface array data"'))
+Result('data_v',igrey('title="Downhole array data"'))
+
+Plot('datall','data',igrey('title="Surface array data" screenht=11'))
+Plot('trace','data','window n2=1 f2=70 | scale axis=1 | graph transp=y yreverse=y dash=0 plotcol=6 plotfat=3 label1=Time unit1=s label2="Amplitude" unit2= wanttitle=n labelfat=2 labelsz=6 screenwd=3 screenht=11 wherexlabel=top whereylabel=right')
+Result('datatrace','datall trace','SideBySideIso')
+
+Flow('imgb snapsb','vel data data_v',
+     '''
+     psp snaps=${TARGETS[1]} verb=y cmplx=n vref=1500 ps=y snap=1 abc=y nbt=30 ct=0.01 mig=y dat=${SOURCES[1]} dat_v=${SOURCES[2]}
+     ''')
+
+Result('snapsb','window j3=10 | grey gainpanel=a')
+Result('imgb','grey')
+
+nrcv = 10
+rcvint = 140/nrcv
+len=0
+start=5
+
+snaps = []
+for m in range(nrcv):
+    mask = 'mask%d' % m
+    data = 'data' + mask
+    img = 'img%d' % m
+    snap = 'snaps%d' % m
+    snaps += [snap]
+    Flow(mask,None,'spike n1=140 mag=1 k1=%d l1=%d | sfdd type=int' %(rcvint*m+start,rcvint*m+start+len) )
+    Flow(data,['data',mask],'headercut mask=${SOURCES[1]}')
+    Result(data,'wiggle transp=y')
+    Flow([img,snap],['vel',data],
+         '''
+         psp snaps=${TARGETS[1]} verb=y cmplx=n vref=1500 ps=y snap=1 abc=y nbt=30 ct=0.01 mig=y dat=${SOURCES[1]}
+         ''')
+    Result(snap,'window j3=10 | grey gainpanel=a')
+    Result(img,'grey')
+
+Flow('rev',snaps,'add mode=a ${SOURCES[1:%d]}| math output="abs(input)" | smooth rect1=7 rect2=7 rect3=50 repeat=2| math output="input^%d" '% (nrcv,nrcv) )
+Flow('ccr0',snaps,'add mode=m ${SOURCES[1:%d]}| math output="input"'% (nrcv) )
+#Flow('ccr0',snaps,'add mode=m ${SOURCES[1:%d]}| math output="abs(input)*10000"'% (nrcv) )
+Flow('decon','ccr0 rev','math den=${SOURCES[1]} output="input/(den+0.1)"')
+#Flow('decon','ccr0 rev','divn den=${SOURCES[1]} niter=10 eps=1000000000 rect1=4 rect2=4 rect3=40')
+
+Flow('stack',snaps,'add mode=a ${SOURCES[1:%d]}' %nrcv)
+Flow('sym','stack','swvarimax term=65 f1=50 | swnorm | ccrsym size=40 pad=1')
+Result('sym','graph')
+
+# something about this scaling factor:
+# We want the signal to be >> 1 and noise close to 1. So the best one can do is to move the signal level to around 100 and hope that noise does
+# not get amplified too much.
+Flow('factor','ccr0','stack max=y axis=2 | stack may=y axis=1 | math output="input+0.001" | spray axis=1 n=140 | spray axis=2 n=140' )
+Flow('ccr1','ccr0 factor','add ${SOURCES[1]} mode=d')
+#Flow('ccr0',snaps,'add mode=m ${SOURCES[1:%d]}| math output="log(abs(input)*10000+1)"'% (nrcv) )
+#Flow('ccr0',snaps,'add mode=m ${SOURCES[1:%d]}| math output="(abs(input)*10^%d+1)^(1/%d)"'% (nrcv,nrcv,nrcv) )
+Result('ccr0','window j3=10 | grey gainpanel=e pclip=99.9')
+
+#Flow('location0','ccr0',' threshold pclip=5 | stack axis=3')
+Flow('location0','ccr0','stack axis=3')
+Flow('location00','ccr1','stack axis=3')
+Flow('location-decon','decon','stack axis=3')
+Plot('location-decon','put o1=0 o2=0 |'+ grey('pclip=99.5 allpos=y scalebar=n title="Imaged source locations" color=I screenwd=14 wherexlabel=bottom whereylabel=left'))
+Plot('slice-decon','location-decon','window f1=70 n1=1 | graph plotcol=6 plotfat=3 label1=Distance unit1=m label2="Amplitude" unit2= wanttitle=n labelfat=2 labelsz=6 screenwd=14 screenht=3 wherexlabel=top')
+
+Flow('location-new','ccr0','math output="abs(input)" | swnorm sw=y size=200 log=n perc=1e-6 var_thres=0 | stack axis=3 | swnorm')
+Plot('location-new','put o1=0 o2=0 |'+ grey('pclip=99.8 allpos=y scalebar=n title="Imaged source locations" color=I screenwd=14 wherexlabel=bottom whereylabel=left'))
+Plot('slice-new','location-new','window f1=70 n1=1 | graph plotcol=6 plotfat=3 label1=Distance unit1=m label2="Amplitude" unit2= wanttitle=n labelfat=2 labelsz=6 screenwd=14 screenht=3 wherexlabel=top')
+Result('location-decon','slice-decon location-decon','OverUnderIso')
+
+Plot('location0','put o1=0 o2=0 |'+ grey('pclip=99.5 allpos=y scalebar=n title="Imaged source locations" color=I screenwd=14 wherexlabel=bottom whereylabel=left'))
+Result('location00','put o1=0 o2=0 |'+ grey('pclip=99.5 allpos=y scalebar=n title="Imaged source locations" color=I'))
+#Result('location0l','location0','put o1=0 o2=0 | laplac |'+ grey('pclip=99.5 allpos=n scalebar=n title="Imaged source locations" color=I'))
+Plot('slice0','location0','window f1=70 n1=1 | graph plotcol=6 plotfat=3 label1=Distance unit1=m label2="Amplitude" unit2= wanttitle=n labelfat=2 labelsz=6 screenwd=14 screenht=3 wherexlabel=top')
+
+Result('location0','slice0 location0','OverUnderIso')
+Result('location-new','slice-new location-new','OverUnderIso')
+
+Flow('movie','ccr0','transp plane=13 memsize=10000 | causint | window j1=10 | transp plane=13 memsize=10000 ')
+Result('movie','grey gainpanel=a pclip=99.5 color=g')
+
+End()
