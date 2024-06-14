@@ -1,0 +1,122 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+import math
+
+segy = {'baseline':'2007_baseline_dvd.sgy',
+        'monitor': '2010_Match_dvd.sgy'}
+titles = ['Baseline','Monitor']
+i = 0
+for case in segy.keys():
+    Fetch(segy[case],'cranfield',server)
+    Flow([case,'t'+case,case+'.asc',case+'.bin'],
+         segy[case],
+         'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+    Flow(case+'3',case,
+         '''
+         intbin xk=iline yk=xline |
+         window min1=2 max1=2.5 n2=213 min3=129 max3=337 |
+         put label2=IL label3=XL
+         ''')
+    Flow(case+'spec',case+'3','spectra all=y')
+    Result(case+'3','byte gainpanel=all | grey3 flat=y title=%s frame1=120 frame2=107 frame3=105' % titles[i])
+    Result(case+'spec','graph')
+    i += 1
+
+nw = 51
+w0 = 10
+w1 = 60
+dw = (w1 - w0)/(nw - 1)
+Flow('bltft bbas','baseline3','ltft basis=${TARGETS[1]} rect=5 nw=%d dw=%f w0=%f' % (nw,dw,w0) )
+Flow('bsd','bltft bbas','math b=${SOURCES[1]} output="input*conj(b)" | real')
+Flow('mltft mbas','monitor3','ltft basis=${TARGETS[1]} rect=5 nw=%d dw=%f w0=%f' % (nw,dw,w0) )
+Flow('msd','mltft mbas','math b=${SOURCES[1]} output="input*conj(b)" | real')
+Result('bsd','transp plane=23 | transp plane=34 | put unit2= unit3= | byte gainpanel=all | grey4 frame1=120 frame2=107 frame3=105 title=Baseline')
+Result('msd','transp plane=23 | transp plane=34 | put unit2= unit3= | byte gainpanel=all | grey4 frame1=120 frame2=107 frame3=105 title=Monitor')
+Flow('bsd4','bsd','put n2=1 n3=51 n4=213 n5=209')
+Flow('msd4','msd','put n2=1 n3=51 n4=213 n5=209')
+Flow('data','bsd4 msd4','cat ${SOURCES[1]} axis=2')
+a = 'one'
+idip = 'zero'
+Flow(a,'bsd4','math output=1')
+Flow(idip,a,'scale dscale=0 | pad end2=1')
+dips = []
+scales = []
+for i in range(1,6):
+    scaled = 'scaled%d' % i
+    dip = 'dip%d' % i
+    Flow(scaled,['msd4',a,'bsd4'],'math a=${SOURCES[1]} output="input*a" | cat ${SOURCES[2]} axis=2 order=2,1')
+    Flow(dip,scaled,'dip n4=0 verb=y rect1=%d rect2=1 rect3=%d | smooth rect4=%d rect5=%d' % (50 - 7.5*(i-1),50 - 7.5*(i-1),50-7.5*(i-1),50-7.5*(i-1)) )
+    dips.append(dip)
+
+    r = 'r%d' % i
+    a = 'a%d' % i
+    Flow(r,['data',dip],'pwd1 dip=${SOURCES[1]} left=n')
+    Flow(a,['data',dip,r],'pwd1 dip=${SOURCES[1]} left=y | divn den=${SOURCES[2]} rect1=%d rect2=1 rect3=%d rect4=%d rect5=%d | window n2=1 squeeze=n' % (50-7.5*(i-1),50 - 7.5*(i-1),50 - 7.5*(i-1),50 - 7.5*(i-1)) )
+    scales.append(a)
+
+Flow('dips',dips,'cat ${SOURCES[1:%d]} axis=6 | window n2=1 | scale dscale=.002 | put d2=1 o2=3 label2=IL unit2= d3=1 o3=129 label3=XL unit3= ' % i )
+Flow('dip','dips','window f2=%d f5=%d | put d2=1 o2=3 label2=IL unit2= d3=1 o3=129 label3=XL unit3= ' % (nw-1,i-1) )
+Flow('as',scales,'cat ${SOURCES[1:%d]} axis=6 | window n2=1' % i )
+Flow('idip','dips','window f2=%d f4=104 n4=1 f5=%d' % (nw-1,i-1) )
+Flow('xdip','dips','window f2=%d f3=106 n3=1 f5=%d' % (nw-1,i-1) )
+Flow('fdip','dips','window f3=106 n3=1 f4=104 n4=1 f5=%d' % (i-1) )
+Flow('ilb','baseline3','boxsmooth rect2=3 | window j2=7 f3=104 n3=1')
+Flow('xlb','baseline3','boxsmooth rect3=3 | window f2=106 n2=1 j3=7')
+Flow('fb','bsd','boxsmooth rect2=1 | window j2=2 f3=106 n3=1 f4=104 n4=1')
+Flow('ilm','monitor3','boxsmooth rect2=3 | window j2=7 f3=104 n3=1')
+Flow('xlm','monitor3','boxsmooth rect3=3 | window f2=106 n2=1 j3=7')
+Flow('fm','msd','boxsmooth rect2=1 | window j2=2 f3=106 n3=1 f4=104 n4=1')
+Flow('ilint','ilb ilm','interleave ${SOURCES[1]} axis=2')
+Flow('xlint','xlb xlm','interleave ${SOURCES[1]} axis=2')
+Flow('fint','fb fm','interleave ${SOURCES[1]} axis=2')
+Flow('ilmt','ilm ilb idip','warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+Flow('xlmt','xlm xlb xdip','warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+Flow('fmt','fm fb fdip','warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+Flow('ilintt','ilb ilmt','interleave ${SOURCES[1]} axis=2')
+Flow('xlintt','xlb xlmt','interleave ${SOURCES[1]} axis=2')
+Flow('fintt','fb fmt','interleave ${SOURCES[1]} axis=2')
+Plot('ilint','wiggle pad=n transp=y yreverse=y wantaxis=n wanttitle=n scalebar=y')
+Plot('xlint','wiggle pad=n transp=y yreverse=y wantaxis=n wanttitle=n scalebar=y')
+Plot('fint','wiggle pad=n transp=y yreverse=y wantaxis=n wanttitle=n scalebar=y')
+Plot('ilintt','wiggle pad=n transp=y yreverse=y wantaxis=n wanttitle=n scalebar=y')
+Plot('xlintt','wiggle pad=n transp=y yreverse=y wantaxis=n wanttitle=n scalebar=y')
+Plot('fintt','wiggle pad=n transp=y yreverse=y wantaxis=n wanttitle=n scalebar=y')
+Plot('idip','put d2=1 o2=3 label2=IL unit2=  | grey color=seismic scalebar=y title=Timeshift')
+Plot('xdip','put d2=1 o2=129 label2=XL unit2=  | grey color=seismic scalebar=y title=Timeshift')
+Plot('fdip','put d2=%f o2=%f label2=Frequency unit2=Hz | grey color=seismic scalebar=y title=Timeshift' % (dw,w0) )
+Result('fint','grey title=Interleaved')
+Result('ilint','grey title=Interleaved')
+Result('xlint','grey title=Interleaved')
+Result('fintt','grey title=Interleaved')
+Result('ilintt','grey title=Interleaved')
+Result('xlintt','grey title=Interleaved')
+Result('idip','idip ilint','Overlay')
+Result('xdip','xdip xlint','Overlay')
+Result('fdip','fdip fint','Overlay')
+Result('idipt','idip ilintt','Overlay')
+Result('xdipt','xdip xlintt','Overlay')
+Result('fdipt','fdip fintt','Overlay')
+Result('dip','byte bar=bar.rsf gainpanel=all | grey3 color=seismic scalebar=y frame1=120 frame2=107 frame3=105 title=Timeshifts')
+Result('dips','window f5=%d | transp plane=23 | transp plane=34 | put d2=1 o2=3 label2=IL unit2= d3=1 o3=129 label3=XL unit3= | byte bar=bar.rsf gainpanel=all | grey4 color=seismic scalebar=y minval=-.006 maxval=.006 frame1=120 frame2=107 frame3=105 title=Timeshifts')
+
+Flow('res1','monitor3 baseline3','add ${SOURCES[1]} scale=1,-1')
+Result('res1','window f1=119 n1=1 | grey')
+Flow('num1','res1','stack axis=1 rms=y')
+Flow('den1','monitor3 baseline3','cat ${SOURCES[1]} axis=4 | stack axis=1 rms=y | stack axis=3 norm=n')
+Flow('nrms1','num1 den1','''divn den=${SOURCES[1]} rect1=10 rect2=10 | math output="1-input" | clip clip=0.999999 value=0 | math output="1-input" | put unit1=''')
+Result('nrms1','grey color=seismic bias=.5 scalebar=y barlabel=NRMS minval=.1 maxval=1 title="Before Registration"')
+
+Flow('mshift','monitor3 baseline3 dip','warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+Result('mshift','byte gainpanel=all | grey3 flat=y title=Shifted frame1=120 frame2=107 frame3=105')
+
+Flow('res2','mshift baseline3','add ${SOURCES[1]} scale=1,-1')
+Result('res2','window f1=119 n1=1 | grey')
+Flow('num2','res2','stack axis=1 rms=y')
+Flow('den2','mshift baseline3','cat ${SOURCES[1]} axis=4 | stack axis=1 rms=y | stack axis=3 norm=n')
+Flow('nrms2','num2 den2','divn den=${SOURCES[1]} rect1=10 rect2=10 | math output="1-input" | clip clip=.999999 value=0 | math output="1-input" | put unit1=')
+Result('nrms2','grey color=seismic bias=.5 scalebar=y barlabel=NRMS minval=.1 maxval=1 title="After Registration"')
+
+Flow('strain','dip','smoothder')
+Result('strain','byte gainpanel=all | grey3 color=seismic frame1=120 frame2=107 frame3=105 title=Timeshifts')
+
+End()

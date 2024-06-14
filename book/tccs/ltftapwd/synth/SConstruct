@@ -1,0 +1,106 @@
+from rsf.proj import *
+
+Flow('vp1','vp1.bin','bin2rsf n1=5938 n2=1 d1=.1524 o1=1740.1')
+Flow('den1','den1.bin','bin2rsf n1=5938 n2=1 d1=.1524 o1=1740.1')
+Flow('sw1','sw1.bin','bin2rsf n1=5938 n2=1 d1=.1524 o1=1740.1')
+Flow('vp2','vp1','despike wide=66 | math output="1/input" | smooth rect1=66 | math output="1/input" | cat $SOURCE axis=2 order=2,1')
+Flow('den2','den1','despike wide=66 | smooth rect1=66 | cat $SOURCE axis=2 order=2,1')
+Plot('vp2','window max1=2301.8 | put label1=Depth unit1=m label2="m/s" | graph pad=n transp=y yreverse=y title=Vp min2=1000 max2=5000')
+Plot('den2','window max1=2301.8 | put label2="kg/m3" | graph pad=n transp=y yreverse=y title=Density min2=1000 max2=3000')
+Plot('sw1','window max1=2301.8 | graph pad=n transp=y yreverse=y title=Sw min2=.2 max2=1.1')
+Result('logs1','vp2 den2 sw1','SideBySideAniso')
+
+Flow('vp3','vp2.bin','bin2rsf n1=5938 n2=1 d1=.1524 o1=1740.1')
+Flow('den3','den2.bin','bin2rsf n1=5938 n2=1 d1=.1524 o1=1740.1')
+Flow('vp4','vp3','despike wide=66 | math output="1/input" | smooth rect1=66 | math output="1/input" | cat $SOURCE axis=2 order=2,1')
+Flow('den4','den3','despike wide=66 | smooth rect1=66 | cat $SOURCE axis=2 order=2,1')
+Flow('sw2','vp3','math output=1')
+Plot('vp4','window max1=2301.8 | put label1=Depth unit1=m label2="m/s" | graph pad=n transp=y yreverse=y title=Vp min2=1000 max2=5000')
+Plot('den4','window max1=2301.8 | put label2="kg/m3" | graph pad=n transp=y yreverse=y title=Density min2=1000 max2=3000')
+Plot('sw2','window max1=2301.8 | graph pad=n transp=y yreverse=y title=Sw min2=.2 max2=1.1')
+Result('logs2','vp4 den4 sw2','SideBySideAniso')
+
+Flow('b','base.bin','bin2rsf n1=181 n2=1 d1=.004 o1=1.5256')
+Flow('m','mon.bin','bin2rsf n1=181 n2=1 d1=.004 o1=1.5256')
+Flow('dt','dt.bin','bin2rsf n1=181 n2=1 d1=.004 o1=1.5256')
+Flow('strain','dt','smoothder')
+Result('strain','graph')
+Flow('mt','m b dt','warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+Flow('traces0','b m mt','cat ${SOURCES[1:3]} axis=2')
+Plot('traces0','window max1=2 | graph pad=n transp=y yreverse=y dash=0,0,1 title=Traces')
+Plot('dt','window max1=2 | graph pad=n transp=y yreverse=y min2=-.02 max2=.01 title="Timeshift"')
+Result('traces0','traces0 dt','SideBySideAniso')
+
+##############
+#### LSIM ####
+##############
+ng = 51
+g0 = -.03
+g1 = .03
+dg = (g1 - g0)/(ng - 1)
+Flow('scan','m b','warpscan other=${SOURCES[1]} sign=y shift=y ng=%d g0=%f dg=%f rect1=5 rect2=5' % (ng,g0,dg) )
+Flow('pick','scan','pick vel0=0 an=1000000000 rect1=2')
+Plot('scan','window max1=2 | grey color=j allpos=y title=LSIM')
+Plot('pick','window max1=2 | graph pad=n transp=y yreverse=y wantaxis=n wanttitle=n min2=%f max2=%f' % (g0,g1) )
+Result('scan','scan pick','Overlay')
+
+Flow('m1','m b pick','warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+Flow('traces1','mt m1 m b','cat ${SOURCES[1:4]} axis=2')
+Flow('dt1','dt pick','cat ${SOURCES[1]} axis=2')
+Plot('traces1','window max1=2 | put label1=Time unit1=s | graph pad=n transp=y yreverse=y dash=1,0,0,0 title="Traces"')
+Plot('dt1','window max1=2 | put label2=s | graph pad=n transp=y yreverse=y min2=-.03 max2=.03 title="Timeshift"')
+Result('traces1','traces1 dt1','SideBySideAniso')
+
+##############
+#### LTFT ####
+##############
+nw = 101
+w0 = 10
+w1 = 40
+dw = (w1 - w0)/(nw-1)
+Flow('bltft bbas','b','ltft basis=${TARGETS[1]} rect=5 nw=%d dw=%f w0=%f' % (nw,dw,w0) )
+Flow('bsd','bltft bbas','math b=${SOURCES[1]} output="input*conj(b)" | real')
+Flow('mltft mbas','m','ltft basis=${TARGETS[1]} rect=5 nw=%d dw=%f w0=%f' % (nw,dw,w0) )
+Flow('msd','mltft mbas','math b=${SOURCES[1]} output="input*conj(b)" | real')
+Flow('int','bsd msd','interleave ${SOURCES[1]} axis=2 | put d2=%f' % (dw/2) )
+Result('bsd','window max1=2 j2=3 | scale axis=1 | grey title=Base')
+Result('msd','window max1=2 j2=3 | scale axis=1 | grey title=Monitor')
+Plot('int','window max1=2 j2=3 | wiggle pad=n transp=y yreverse=y wantaxis=n wanttitle=n scalebar=y')#grey title=Interleaved')
+Result('int','window max1=2 j2=3 | scale axis=1 | grey title=Interleaved')
+
+a = 'one'
+idip = 'zero'
+Flow('tracessd','bsd msd','cat ${SOURCES[1]} axis=3')
+Flow(a,'bsd','math output=1')
+Flow(idip,'bsd','scale dscale=0 | pad end2=1')
+dips = []
+scales = []
+for i in range(1,6):
+    scaled = 'scaled2%d' % i
+    dip = 'dip%d' % i
+    Flow(scaled,['msd',a,'bsd'],'math a=${SOURCES[1]} output="input*a" | cat ${SOURCES[2]} axis=3 order=2,1')
+    Flow(dip,[scaled,idip],'dip idip=${SOURCES[1]} order=5 qmax=0 n4=1 rect1=%d rect2=%d' % (40-7.75*(i-1),20-3.75*(i-1)) )
+    idip = dip
+    dips.append(dip)
+
+    r = 'r%d' % i
+    a = 'a%d' % i
+    Flow(r,['tracessd',dip],'pwd1 dip=${SOURCES[1]} left=n')
+    Flow(a,['tracessd',dip,r],'pwd1 dip=${SOURCES[1]} left=y | divn den=${SOURCES[2]} rect1=%d rect2=%d | window n3=1 squeeze=n' % (40-7.75*(i-1),40-7.75*(i-1)) )
+    scales.append(a)
+
+Flow('dips',dips,'cat ${SOURCES[1:%d]} axis=4 | window n3=1 f4=%d | math output=".004*input"' % (i,i-1) )
+Flow('as',scales,'cat ${SOURCES[1:%d]} axis=3 | window' % i )
+Plot('dips','window max1=2 | grey color=seismic polarity=n scalebar=y title=Timeshift')
+Result('dips','dips int','Overlay')
+Result('as','grey color=seismic bias=1 scalebar=y')
+
+Flow('dip','dips','window f2=%d f3=%d' % (nw-1, i-1) )
+Flow('m2','m b dip','warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} nliter=0')
+Flow('traces2','mt m2 m b','cat ${SOURCES[1:4]} axis=2')
+Flow('dt2','dt dip','cat ${SOURCES[1]} axis=2')
+Plot('traces2','window max1=2 | put label1=Time unit1=s | graph pad=n transp=y yreverse=y dash=1,0,0,0 title="Traces"')
+Plot('dt2','window max1=2 | put label2=s | graph pad=n transp=y yreverse=y min2=-.03 max2=.03 title="Timeshift"')
+Result('traces2','traces2 dt2','SideBySideAniso')
+
+End()
