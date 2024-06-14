@@ -1,0 +1,375 @@
+from rsf.proj import*
+
+# export OMP_NUM_THREADS=1
+
+def plotvel():
+	return'''
+	window min2=0 max2=5000 | grey title= color=j allpos=y scalebar=y barreverse=y bias=2900 screenratio=1 barlabel=Velocity barunit=m/s minval=2700 maxval=4600 unit1=m unit2=m
+	'''
+
+# true velocity
+Flow('lay1.asc',None,
+     '''
+     echo
+     0 950 1000 1050
+     2000 800 3000 1200
+     4000 900 5000 800
+     n1=2 n2=6 in=$TARGET
+     data_format=ascii_float
+     ''')
+Flow('lay2.asc',None,
+     '''
+     echo
+     0 2150 1000 1950
+     1500 1850 2000 1750
+     3000 1750 3500 1850
+     4000 1950 5000 2150
+     n1=2 n2=8 in=$TARGET
+     data_format=ascii_float
+     ''')
+dim='n1=501 d1=10 o1=0'
+Flow('lay1','lay1.asc','dd form=native |spline %s' %dim)
+
+Flow('lay1a', 'lay1', 'math output="input-100" | clip2 lower=625')
+Flow('lay1b', 'lay1', 'math output="input-200" | clip2 lower=625')
+Flow('lay1c', 'lay1', 'math output="input-300" | clip2 lower=625')
+Flow('lay1d', 'lay1', 'math output="input-400" | clip2 lower=625')
+Flow('lay1e', 'lay1', 'math output="input-500" | clip2 lower=625')
+Flow('lay1f', 'lay1', 'math output="input+100" | clip2 lower=625')
+
+Flow('lay2','lay2.asc','dd form=native |spline %s' %dim)
+Flow('lay2a', 'lay2', 'math output="input-150"')
+Flow('lay2b', 'lay2', 'math output="input-300"')
+Flow('lay2c', 'lay2', 'math output="input-450"')
+Flow('lay2d', 'lay2', 'math output="input-600"')
+Flow('lay2e', 'lay2', 'math output="input-750"')
+Flow('lay2f', 'lay2', 'math output="input+150"')
+
+Flow('lay3',None,'math %s output="2100+x1*0.1"' %dim)
+Flow('lay3a',None,'math %s output="1950+x1*0.1"' %dim)
+Flow('lay3b',None,'math %s output="1800+x1*0.1"' %dim)
+Flow('lay3c',None,'math %s output="1680+x1*0.1"' %dim)
+
+Flow('lay3d',None,'math %s output="2250+x1*0.1" | clip2 upper=2850' %dim)
+Flow('lay3e',None,'math %s output="2400+x1*0.1" | clip2 upper=2850' %dim)
+Flow('lay3f',None,'math %s output="2550+x1*0.1" | clip2 upper=2850' %dim)
+Flow('lay3g',None,'math %s output="2700+x1*0.1" | clip2 upper=2850' %dim)
+
+Flow('lay4',None,'math %s output=2850' %dim)
+Flow('lay4a',None,'math %s output=3000' %dim)
+
+Flow('lay5',None,'math %s output=400' %dim)
+Flow('lay6',None,'math %s output=475' %dim)
+Flow('lay7',None,'math %s output=550' %dim)
+Flow('lay8',None,'math %s output=625' %dim)
+
+Flow('lay14',None,'math %s output=1000' %dim)
+Flow('lay15',None,'math %s output=1100' %dim)
+Flow('lay16',None,'math %s output=1200' %dim)
+Flow('lay17',None,'math %s output=1300' %dim)
+
+Flow('lays','lay5 lay6 lay7 lay8 lay1e lay1d lay1c lay1b lay1a lay1 lay1f lay14 lay15 lay16 lay17 lay2e lay2d lay2c lay2b lay2a lay2 lay2f lay3c lay3b lay3a lay3 lay3d lay3e lay3f lay3g lay4 lay4a','cat axis=2 ${SOURCES[1:32]}')
+
+Flow('vel','lays',
+     '''
+     unif2 n1=341 d1=10 o1=0 v00=2800,3100,3200,3050,2900,3150,3000,3100,3200,3050,3150,3300,3100,3250,3000,3200,3300,3400,3550,3400,3600,3700,3500,3600,3800,4000,3750,3900,4100,4300,4200,4350,4500 |
+     put label1=Depth unit1=m label2=Distance unit2=m
+     label=Velocity | pad2 left=100 right=100
+     ''')
+Result('vel',plotvel())
+
+Flow('watermask', 'vel', 'mask min=2750 max=2850 | dd type=float')
+Flow('watermasktr', 'watermask', 'window f2=5 n2=1')
+
+# several well logs
+logs=[]
+refs=[]
+for i in range(5):
+	x=i*1000 + 1000
+	log='log%d' %(i+1)
+	DT='DT%d' %(i+1)
+	Flow(log,'vel','window n2=1 min2=%g | put label2=Velocity unit2=m/s' %x)
+	Flow(DT, log, 'math output="1/input"')
+	Plot(log,'graph yreverse=y transp=y screenratio=2 wherexlabel=top wanttitle=n labelsz=7')
+	logs.append(log)
+
+	ref='ref%d' %(i+1)
+	Flow(ref,log,'ai2refl |depth2time dt=0.001 nt=2201 t0=0 velocity=$SOURCE |put label1=Time unit1=s |ricker1 frequency=15')
+	Plot(ref,'graph yreverse=y transp=y screenratio=2 wherexlabel=top label2=Amplitude unit2= wanttitle=n labelsz=7')
+	refs.append(ref)
+Result('logs',logs,'SideBySideAniso')
+Result('refs',refs,'SideBySideAniso')
+
+# starting velocity
+Flow('vel2','vel watermask','math a1=${SOURCES[1]} output="(0.94)*(x1/3000*1700+2800)*(1-a1) + a1*2800"')
+
+# generate assumed observed data 
+Flow('wavelet',None,'spike n1=2301 d1=0.001 o1=0. k1=150 mag=1e5 |ricker1 frequency=15')
+Flow('wavelet2',None,'spike n1=2301 d1=0.001 o1=0. k1=150 mag=1e5 |ricker1 frequency=15 |deriv |halfint')
+Result('wavelet','window n1=1000 |graph title= screenratio=0.5')
+Result('spectra','wavelet','spectra |graph min1=0 max1=50 title= screenratio=0.5')
+Flow('data','vel wavelet2',
+		'''
+		mpisfwi Fvel=$SOURCE Fwavelet=${SOURCES[1]} output=$TARGET function=1 verb=n
+		nb=80 coef=0.003 acqui_type=3 nr=301 dr=10 r0=-1500 rz=3 ns=60 ds=100 s0=-400 sz=3 frectx=1 frectz=1
+		''',np=15)
+Flow('data1','data','mutter half=n t0=0.24 x0=0 v0=3100 |deriv |deriv |deriv')
+Result('shot30','data1','window n3=1 f3=30 |grey title= pclip=98 labelsz=9 labelfat=3 titlesz=9 titlefat=3 screenratio=0.5')
+
+# RTM 1 with starting velocity
+Flow('wavelet3',None,'spike n1=2301 d1=0.001 o1=0. k1=150 mag=1e5 |trapez frequency=0.,6,40,50 |deriv |halfint')
+Result('wavelet3','window n1=400 |graph title= screenratio=0.5')
+Result('spectra3','wavelet3','spectra |graph min1=0 max1=50 title= screenratio=0.5')
+
+# extract trace from migration1 at each well location
+traces=[]
+for i in range(5):
+	x=i*1000 + 1000
+	d = str(i+1)
+	
+	Flow('tdr'+d, 'log'+d, 'math output="1/input" | causint | math output="(%g)*input" | put label2=Time unit2=s' % (2*10) )
+	Flow('maxtdr'+d, 'tdr'+d, 'stack max=y axis=1 | math output="input/(%g) + 1.0"' %(0.001))
+	Flow('maxtdr'+d+'.par','maxtdr'+d,'disfil number=n format="n1=%g"')
+	Flow('rt'+d,['log'+d, 'tdr'+d, 'maxtdr'+d+'.par'],'ai2refl | iwarp warp=${SOURCES[1]} o1=0 d1=%g par=${SOURCES[2]} | put label1=Time unit1=s label2= unit2=' % (0.001))
+	Flow('synth'+d, 'rt'+d, 'ricker1 frequency=15')
+	
+	Flow('synthEn'+d, 'synth'+d, 'energy wind=200 | clip clip=0.2 | scale')
+	Flow('rbf'+d,'vel','math output="1/(sqrt(1 + (0.005*(abs(%g - x2)))^2) )" | window min2=0 max2=5000' %(x))
+	
+	# Plotting
+	Flow('synthp'+d, 'synth'+d, 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+	Plot('synthp'+d,'''
+	wiggle min1=0 max1=2.3 min2=-0.0008 max2=0.0026 poly=y yreverse=y title="" transp=y yreverse=y
+	label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=5 pclip=98 wantaxis2=n screenratio=2.5 screenht=11
+	''')
+
+Flow('rbfs', 'rbf1 rbf2 rbf3 rbf4 rbf5', 'add ${SOURCES[0:4]}')
+
+Flow('vel-3','vel','window n2=1 min2=%g | put label2=Velocity unit2=m/s' %3000)
+Plot('vel-3','graph yreverse=y transp=y screenratio=2 wherexlabel=top wanttitle=n labelsz=7 min2=2700 max2=4600 plotcol=7 plotfat=3')
+
+# parameters
+its  = 6     # number of iterations
+mod  = 5     # number of velocity models
+perc = 0.04  # percent variations on initial model to test
+r1h  = 70    # well tie inital verticle smoothing - semblance
+r1l  = 40    # well tie final verticle smoothing  - semblance
+r2h  = 7     # well tie inital verticle smoothing - picking
+r2l  = 4     # well tie final verticle smoothing  - picking
+
+for j in range(its):
+    jj = str(j + 2)
+
+    for k in range(mod):
+    	kk = str(k)
+    	
+    	mdl = jj + '-' + kk
+    	
+    	if (its > 1):
+    		percu = perc - (perc - 0.02)*j/(its - 1)
+    	else:
+    		percu = perc
+    	
+    	Flow('vel'+mdl,['vel'+jj],'math output="(%g)*input"' %( 1.0*((1 + ((mod-1)/2)*percu) - percu*k) ))
+    	
+    	Flow('vel'+mdl+'-3','vel'+mdl,'window n2=1 min2=%g | put label2=Velocity unit2=m/s' %3000)
+    	Plot('vel'+mdl+'-3','graph yreverse=y transp=y screenratio=2 wherexlabel=top wanttitle=n labelsz=7 min2=2700 max2=4600 plotcol=3 plotfat=3')
+    	
+    	# migrate data with inital velocity model
+    	Flow('rtm'+mdl,['vel'+mdl, 'wavelet3', 'data1'],'''
+    	mpisfwi Fvel=$SOURCE Fwavelet=${SOURCES[1]} Fdat=${SOURCES[2]} output=$TARGET function=3 verb=n
+    	nb=80 coef=0.003 acqui_type=3 nr=301 dr=10 r0=-1500 rz=3 ns=60 ds=100 s0=-400 sz=3 frectx=1 frectz=1
+    	''',np=15)
+    	Flow('rtm'+mdl+kk,'rtm'+mdl,'bandpass flo=6 |pow pow1=1 | cut max1=150')
+    	Result('rtm'+mdl+kk,'grey title= screenratio=0.6')
+    	
+    	# convert rtm image from depth to time
+    	Flow('rtmtime'+mdl,['rtm'+mdl+kk,'vel'],'depth2time dt=0.001 nt=2401 t0=0 velocity=${SOURCES[1]} | put label1=Time unit1=s | window min2=0 max2=5000')
+    	Result('rtmtime'+mdl,'grey title= screenratio=0.6')
+    	
+    	# generate a synthetic seismogram at locations
+    	for i in range(5):
+    	    ii = str(i+1)
+    	    tag = mdl + '-' + ii
+    	    x=i*1000+1000
+    	    
+    	    Flow('trace'+tag,'rtmtime'+mdl,'window n2=1 min2=%g' %x)
+    	    Plot('trace'+tag,'graph yreverse=y transp=y screenratio=1.5 wherexlabel=top label2=Amplitude unit2= wanttitle=n labelsz=7')
+    	    
+    	    Flow('traceEn'+tag, 'trace'+tag, 'energy wind=200 | clip clip=0.2 | scale')
+    	    
+    	    ## Local Similarity Match
+    	    g0=-.2 # starting change
+    	    g1=.2  # last change
+    	    ng=601   # number of changes to scans
+    	    dg = (g1-g0)/(ng-1)
+    	    niter = 100 # maximum number of iterations
+    	    if (its > 1):
+    	    	r1 = r1h - (r1h-r1l)*j/(its-1)
+    	    	r2 = r2h - (r2h-r2l)*j/(its-1)
+    	    else:
+    	    	r1 = r1h
+    	    	r2 = r2h
+    	    
+    	    # Scan shifts computing local similarity
+    	    Flow('scan'+tag, ['synth'+ii, 'trace'+tag, 'traceEn'+tag, 'synthEn'+ii],'''
+    	    warpscanw other=${SOURCES[1]} niter=%d sign=y
+    	    ng=%d g0=%g dg=%g rect1=%g rect2=%g shift=y accuracy=3 ren=1 renergy=${SOURCES[2]} den=1 denergy=${SOURCES[3]} | mutter half=n t0=0.27 x0=0 v0=500000
+    	    ''' % (niter,ng,g0,dg,r1,r2))
+    	    
+    	    Flow('spick'+tag,'scan'+tag,'pick vel0=%g rect1=%g norm=y' % (0,r1))
+    	    
+    	    Plot('scan'+tag,'grey allpos=y color=j title="Shift Scan - Initial" label2="Relative Shift" label1="Sample on Reference Trace"')
+    	    Plot('spick'+tag,'graph pad=n min2=%g max2=%g plotcol=0 plotfat=5 transp=y yreverse=y wantaxis=n wanttitle=n' % (g0,g1))
+    	    
+    	    Result('scan'+tag,['scan'+tag, 'spick'+tag],'Overlay')
+    	    
+    	    Flow('pick'+tag, 'spick'+tag, 'transp')
+    	    Flow('weight'+tag, ['scan'+tag, 'pick'+tag], 'transp | inttest1 coord=${SOURCES[1]} same=n interp=lag nw=2 | window | scale axis=1 | smooth rect1=5 | clip2 lower=0.01')
+    	    
+    	    Flow('synthw'+tag,['synth'+ii,'trace'+tag, 'spick'+tag],'''
+    	    warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+    	    verb=1 nliter=0 
+    	    ''')    
+    	    
+    	    Flow('synthwp'+tag, 'synthw'+tag, 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+    	    Plot('synthwp'+tag,'''
+    	    wiggle min1=0 max1=2.3 min2=-0.0017 max2=0.0017 poly=y yreverse=y title="" transp=y yreverse=y
+    	    label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=3 pclip=98 wantaxis2=n screenratio=2.5 screenht=11
+    	    ''')
+    	    Flow('tracep'+tag, 'trace'+tag, 'spray axis=2 n=5 o=-0.0004 d=0.00015')
+    	    Plot('tracep'+tag,'''
+    	    wiggle min1=0 max1=2.3 min2=-0.0026 max2=0.0008 poly=y yreverse=y title="" transp=y yreverse=y
+    	    label1=Time unit1=s labelsz=4 titlesz=5 grid=n plotcol=7 pclip=98 wantaxis2=n screenratio=2.5 screenht=11
+    	    ''')
+    	    Result('synthp'+tag,['synthp'+ii,'synthwp'+tag,'tracep'+tag],'Overlay')    
+    	    
+    	    Flow('drift'+tag,['spick'+tag, 'tdr'+ii],'''
+    	    iwarp warp=${SOURCES[1]} inv=n d1=10 | put label1=Depth unit1=m
+    	    ''')
+    	    
+    	    Flow('weightz'+tag,['weight'+tag, 'tdr'+ii],'''
+    	    iwarp warp=${SOURCES[1]} inv=n d1=10 | put label1=Depth unit1=m
+    	    ''')
+    	    
+    	    Flow('tdr'+tag, ['drift'+tag,'tdr'+ii], 'math a1=${SOURCES[1]} output="a1-input"')    
+    	    
+    	    Flow(['tdr'+tag+'a', 'DT'+tag], ['DT'+ii, 'tdr'+tag], 'tdr stretch=1 ms=0 dels=%g tdrNew=${SOURCES[1]} sonicFo=${TARGETS[1]}' %(10))
+    	    Flow('log'+tag, 'DT'+tag, 'math output="1/input"') #Updated velocity log    
+    	    
+    	    Flow('log'+tag+'-m','vel'+mdl,'window n2=1 min2=%g | put label2=Velocity unit2=m/s' %x)
+    	    Plot('log'+tag+'-m','graph yreverse=y transp=y screenratio=2 wherexlabel=top wanttitle=n labelsz=7 min2=2700 max2=4600 plotcol=3 plotfat=3') #initial migration velocity
+    	    
+    	    Flow('log'+tag+'-m2', ['log'+ii, 'log'+tag, 'log'+tag+'-m'],'''
+    	    math a1=${SOURCES[1]} a2=${SOURCES[2]} output="a2*a1/input"
+    	    ''')
+    	    Plot('log'+tag+'-m2','graph yreverse=y transp=y screenratio=2 wherexlabel=top wanttitle=n labelsz=7 min2=2700 max2=4600 plotcol=5 plotfat=2') #updated migration velocity
+    	    
+    	    Plot('log'+tag, 'log'+ii,'graph yreverse=y transp=y screenratio=2 wherexlabel=top wanttitle=n labelsz=7 min2=2700 max2=4600 plotcol=7 plotfat=3') #final velocity goal
+    	    
+    	    Result('itr'+tag, ['log'+tag, 'log'+tag+'-m', 'log'+tag+'-m2'], 'Overlay')
+    
+    Flow('dip'+jj+'-2','rtm'+jj+'-22','''
+    window min2=0 max2=5000 | threshold pclip=50 | fdip rect1=%g rect2=%g niter=10
+    ''' %( 12-(j*4/its), 12-(j*4/its) ))
+    
+    """	 
+    Flow('pwd'+jj+'-22',['rtm'+jj+'-22','dip'+jj+'-2'],'window min2=0 max2=5000 | pwd2 dip=${SOURCES[1]}  | scale axis=2')
+    Flow('pws'+jj+'-22',['rtm'+jj+'-22','dip'+jj+'-2'],'window min2=0 max2=5000 | pwsmooth dip=${SOURCES[1]} ns=2 eps=0.001 | scale axis=2')
+
+    Flow('sobel1'+jj+'-22',['pwd'+jj+'-22', 'pws'+jj+'-22'],
+         '''
+         math pwd=${SOURCES[0]} pws=${SOURCES[1]}
+         output="(pwd*pwd+pws*pws)"
+         ''')
+
+    Flow('dip1'+jj+'-2','dip'+jj+'-2','transp plane=12')
+    Flow('sobel2'+jj+'-22',['pwd'+jj+'-22', 'dip1'+jj+'-2'],
+         '''
+         transp plane=12 |
+         pwsmooth dip=${SOURCES[1]} ns=2 eps=0.001 |
+         transp plane=12
+         ''')
+
+    Flow('sobel'+jj+'-22',['sobel1'+jj+'-22','sobel2'+jj+'-22'],
+         '''
+         math s1=${SOURCES[0]} s2=${SOURCES[1]}
+         output="s1*s1+s2*s2"
+         ''')
+
+    Flow('dip2'+jj+'-22','sobel'+jj+'-22','odip rect1=9 rect2=9 | transp')
+
+    Flow('smootha'+jj+'-22',['sobel'+jj+'-22', 'dip2'+jj+'-22'],
+         '''
+	 transp |
+    	 pwsmooth dip=${SOURCES[1]} ns=2 eps=0.001 | transp | smooth rect1=3 rect2=9 | scale axis=2
+	 ''')
+
+    Flow('smooth'+jj+'-22','smootha'+jj+'-22',
+         '''
+	 mask min=0.03 max=1 | dd type=float | math a1=${SOURCES[0]} output="input*a1" |
+    	 smooth rect1=1 rect2=9 | scale axis=2
+	 ''')
+
+    Result('smooth'+jj+'-22',
+           '''
+    	   grey allpos=y label2="Distance" title="Smoothed Sobel" scalebar=y
+	   ''')
+    """
+
+    for i in range(5):
+        ii = str(i+1)
+        x = i*1000+1000
+        tag = ii + '-m2'
+        mdl = jj + '-' + ii
+        
+        Flow('avg'+jj+'c-'+ii, ['log'+jj+'-0-'+tag, 'log'+jj+'-1-'+tag, 'log'+jj+'-2-'+tag, 'log'+jj+'-3-'+tag, 'log'+jj+'-4-'+tag, 'weightz'+jj+'-0-'+ii, 'weightz'+jj+'-1-'+ii, 'weightz'+jj+'-2-'+ii, 'weightz'+jj+'-3-'+ii, 'weightz'+jj+'-4-'+ii],'''
+        math a1=${SOURCES[1]} a2=${SOURCES[2]} a3=${SOURCES[3]} a4=${SOURCES[4]} a5=${SOURCES[5]} a6=${SOURCES[6]} a7=${SOURCES[7]} a8=${SOURCES[8]} a9=${SOURCES[9]} output="(input*a5 + a1*a6 + a2*a7 + a3*a8 + a4*a9)/(a5 + a6 + a7+ a8+ a9 +0.0001)" | 
+        window min1=400 max1=3000 | pad2 top=40 bottom=40
+        ''')
+        #Flow('avg2'+mdl,'avg'+jj+'c-'+ii, 'mask min=-1 max=2000 | dd type=float | math output="3000*input" | math a1=${SOURCES[0]} output="input + a1*(1 - input/3000)"')
+        Flow('avg2'+mdl,['avg'+jj+'c-'+ii, 'watermasktr'], 'math a1=${SOURCES[1]} output="input*(1-a1) + a1*2800"')
+        Flow('avg'+mdl,'avg2'+mdl, 'mask min=4499 max=10000 | dd type=float | math output="4500*input" | math a1=${SOURCES[0]} output="input + a1*(1 - input/4500)"')
+        Plot('avg'+mdl,'graph yreverse=y transp=y screenratio=2 wherexlabel=top wanttitle=n labelsz=7 min2=2700 max2=4600 plotcol=2 plotfat=5 dash=3')
+        Result('wellvel'+mdl, ['log'+jj+'-0-'+tag, 'log'+jj+'-1-'+tag, 'log'+jj+'-2-'+tag, 'log'+jj+'-3-'+tag, 'log'+jj+'-4-'+tag, 'log'+jj+'-0-'+ii, 'avg'+mdl], 'Overlay')
+        
+        Flow('velr'+mdl, ['dip'+jj+'-2', 'avg'+mdl, 'rbf'+ii],'''
+        pwpaint order=3 seed=${SOURCES[1]} i0=%g eps=0.1 | math a1=${SOURCES[2]} output="input*a1"
+        ''' %(x/10))
+        
+    Flow('vel'+str(j+3), ['velr'+jj+'-1', 'velr'+jj+'-2', 'velr'+jj+'-3', 'velr'+jj+'-4', 'velr'+jj+'-5', 'rbfs', 'watermask'],'''
+    add ${SOURCES[0:4]} | math a1=${SOURCES[5]} output="input/a1" | pad2 left=100 right=100 | math a1=${SOURCES[6]} output="input*(1-a1) + a1*2800"
+    ''')
+    #Flow('vel'+str(j+3), ['velr'+jj+'-1', 'velr'+jj+'-2', 'velr'+jj+'-3', 'velr'+jj+'-4', 'velr'+jj+'-5', 'rbfs'+jj], 'add ${SOURCES[0:4]} | math a1=${SOURCES[5]} output="input/a1" | pad2 left=100 right=100')
+    Result('vels'+jj, ['vel-3', 'vel'+jj+'-0-3', 'vel'+jj+'-1-3', 'vel'+jj+'-2-3', 'vel'+jj+'-3-3', 'vel'+jj+'-4-3'], 'Overlay')
+
+# final image
+Flow('rtm'+str(its+2),['vel'+str(its+2), 'wavelet3', 'data1'],
+     '''
+     mpisfwi Fvel=$SOURCE Fwavelet=${SOURCES[1]} Fdat=${SOURCES[2]} output=$TARGET function=3 verb=n
+     nb=80 coef=0.003 acqui_type=3 nr=301 dr=10 r0=-1500 rz=3 ns=60 ds=100 s0=-400 sz=3 frectx=1 frectz=1
+     ''',np=15)
+Flow('rtm'+str(its+2)+'f','rtm'+str(its+2),'bandpass flo=6 |pow pow1=1 | cut max1=150 | window min2=0 max2=5000')
+Result('rtm'+str(its+2),'rtm'+str(its+2)+'f','grey title= screenratio=1 grid=y gridcol=5 gridfat=2 unit1=m unit2=m')
+
+Result('vel'+str(its+2),plotvel())
+
+
+# real image
+Flow('rtm',['vel', 'wavelet3', 'data1'],
+     '''
+     mpisfwi Fvel=$SOURCE Fwavelet=${SOURCES[1]} Fdat=${SOURCES[2]} output=$TARGET function=3 verb=n
+     nb=80 coef=0.003 acqui_type=3 nr=301 dr=10 r0=-1500 rz=3 ns=60 ds=100 s0=-400 sz=3 frectx=1 frectz=1
+     ''',np=15)
+Flow('rtmf','rtm','bandpass flo=6 |pow pow1=1 | cut max1=150 | window min2=0 max2=5000')
+Result('rtm','rtmf','grey title= screenratio=1 grid=y gridcol=5 gridfat=2 unit1=m unit2=m')
+
+# Other images for abstract
+Result('vel2-2',plotvel())
+Result('vel3',plotvel())
+
+Result('rtm2-2','bandpass flo=6 |pow pow1=1 | cut max1=150 | window min2=0 max2=5000 | grey title= screenratio=1 grid=y gridcol=5 gridfat=2 unit1=m unit2=m')
+Result('rtm3-2','bandpass flo=6 |pow pow1=1 | cut max1=150 | window min2=0 max2=5000 | grey title= screenratio=1 grid=y gridcol=5 gridfat=2 unit1=m unit2=m')
+
+
+End()
