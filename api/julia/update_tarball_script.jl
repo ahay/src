@@ -39,10 +39,10 @@ function main(output_file::String; lib_unsupported::AbstractArray{String}=[], bi
         `git ls-remote https://github.com/ahay/src.git`,
         `grep "madagascar-[0-9][0-9]*[.].*"`,
         `tail -n 1`,
-        `awk '{print $1}'`
     )
 
-    latest_remote_hash = strip(read(command, String))
+    latest_remote_hash, latest_version = split(read(command, String))
+    latest_version = replace(latest_version, "refs/heads/madagascar-" => "")
 
     curr_dir = dirname(@__FILE__)
     base_file_contents = read("$curr_dir/tarball_base.jl", String)
@@ -50,6 +50,7 @@ function main(output_file::String; lib_unsupported::AbstractArray{String}=[], bi
 
     final_file_contents = replace(
         base_file_contents,
+        "\"!?VERSION!?\"" => "\"$latest_version\"",
         "\"!?MADAGASCAR_HASH!?\"" => "\"$latest_remote_hash\"",
         "\"!?DEPENDENT_EXECUTABLES!?\"" => final_build_string)
 

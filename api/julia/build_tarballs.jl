@@ -7,7 +7,7 @@ Pkg.activate(".")
 using BinaryBuilder
 
 name = "Madagascar"
-version = v"1.0.0"
+version = v"4.1"
 
 # Collection of sources required to complete build
 sources = [
