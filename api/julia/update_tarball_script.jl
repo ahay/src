@@ -35,8 +35,14 @@ function main(output_file::String; lib_unsupported::AbstractArray{String}=[], bi
     final_build_string = "[\n    $lib_code,\n    $bin_code\n]"
 
     url = "https://github.com/ahay/src.git"
-    latest_remote_hash = read(`git ls-remote $url HEAD`, String)
-    latest_remote_hash = split(latest_remote_hash)[1]
+    command = pipeline(
+        `git ls-remote https://github.com/ahay/src.git`,
+        `grep "madagascar-[0-9][0-9]*[.].*"`,
+        `tail -n 1`,
+        `awk '{print $1}'`
+    )
+
+    latest_remote_hash = strip(read(command, String))
 
     curr_dir = dirname(@__FILE__)
     base_file_contents = read("$curr_dir/tarball_base.jl", String)

@@ -6,8 +6,10 @@ UBUNTU_VERSION=$(lsb_release -r | awk '{print $2}')
 
 # Get the git hash
 GIT_URL="https://github.com/ahay/src.git"
-GIT_HASH=$(git ls-remote $GIT_URL HEAD | awk '{print $1}')
+GIT_HASH=$(git ls-remote https://github.com/ahay/src.git | grep "madagascar-[0-9][0-9]*[.].*" | tail -n 1 | awk '{print $1}')
 
+
+# script runs from src/api/julia, so cd ../.. = cd src
 cd ../..
 
 PREFIX=$(pwd)/__PRECOMPILED_BUILD_UBUNTU_${UBUNTU_VERSION}__${GIT_HASH}__
@@ -30,3 +32,6 @@ make -j$NUM_CPUS
 
 # Install
 make install
+
+cd api/julia
+julia update_tarball_script.jl
