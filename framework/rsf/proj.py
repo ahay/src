@@ -52,6 +52,20 @@ sfsuffix = '.rsf'
 # suffix for vplot files
 vpsuffix = '.vpl'
 
+# Convert Chinese to two-byte-Unicode string
+def ch2uni(str1):
+    str2=""
+    for i in str1:
+        if not i == "\n":
+            i = i.encode("unicode_escape")
+            i = str(i)
+            i = i[5:-1]
+            i1 = i[:2]
+            i2 = i[2:]
+            str2 += "\\v%d \\v%d "%(int(i1,16),int(i2,16))
+        else: str2+="\\n "
+    return(str2)
+
 def get_geolocation(address=""):
     """Get geolocation from http://ip-api.com."""
     if address == "":

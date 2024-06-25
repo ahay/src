@@ -17,7 +17,7 @@
  *
  * - Joe Dellinger
  */
-#define NUM_FONTS	19
+#define NUM_FONTS	20
 
 /*
  * Modifications:
@@ -50,6 +50,7 @@
 #include <math.include>
 #include <hiragana.include>
 #include <katakana.include>
+#include <kaiti.include>
 
 
 #define	BOTTOM	0
@@ -132,4 +133,5 @@ GLYPH font[NUMGENFONT] = {
 
 {0, "katakana", NOT_LOADED},
 
+{0, "kaiti", NOT_LOADED},
 };
