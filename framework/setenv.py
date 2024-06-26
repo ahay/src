@@ -58,9 +58,20 @@ def shell_script(target, source=None, env=None):
     # in RSFSRC/SConstruct
 
     import configure
-    import imp
-    config = imp.load_source('config', 'config.py')
 
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('config', 'config.py')
+        config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config)
+    elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
+        import importlib.machinery
+        loader = importlib.machinery.SourceFileLoader('config', 'config.py')
+        config = loader.load_module()
+    elif sys.version_info[0] == 2:
+        import imp
+        config = imp.load_source('config', 'config.py')
+ 
     shell = env['shell']
     rsfroot = config.RSFROOT
 
