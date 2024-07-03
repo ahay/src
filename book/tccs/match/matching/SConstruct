@@ -1,0 +1,176 @@
+from rsf.proj import *
+from findradius1 import findradius1
+from rsf.recipes.beg import server
+
+#############################################################
+# Load Data and First Look
+#############################################################
+# Fetch Data from local directory 
+#Fetch(['i455_legacy3d_pstm_4ms.sgy','i455_sc2dpoststkmig_1ms.sgy'],
+#	'data',top='',server='local')
+
+# Fetch Data 
+data = {'legacy':'i455_legacy3d_pstm_4ms.sgy',
+        'hires':'i455_sc2dpoststkmig_1ms.sgy'}
+for key in data.keys():
+    Fetch(data[key],'apache',server)
+
+# Convert from SEGY format to Madgascar RSF format
+Flow(['legacy','tlegacy','legacy.asc','legacy.bin'],
+	'i455_legacy3d_pstm_4ms.sgy',
+    '''
+    segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} |
+    put label2=Cross-line o2=6638 d2=1 
+    ''')
+Flow(['hires','thires','hires.asc','hires.bin'],
+	'i455_sc2dpoststkmig_1ms.sgy',
+    '''
+    segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} |
+    put label2=Cross-line o2=6638 d2=1 
+    ''')
+
+# Display Data 
+Result('hires','grey color=seismic title="Hires Image" ')
+Result('legacy','grey color=seismic title="Legacy Image" ')
+
+#############################################################
+# Subsampling
+#############################################################
+# Initial
+#  Hires: dt=1ms , ns=4001
+#  Legacy: dt=4ms , ns=1001
+
+# Sample both at dt=2ms, ns=2001  
+Flow('hires2','hires','bandpass fhi=250 | window j1=2') # Subsampling
+Flow('legacy2','legacy','spline n1=2001 d1=0.002 o1=0') # interpolation
+
+# interpolate legacy: dt=1ms , ns=4001
+Flow('legacy4','legacy','spline n1=4001 d1=0.001 o1=0')
+Result('legacy4','grey color=seismic title="Legacy Image" ')
+
+#############################################################
+# Spectra 
+#############################################################
+Flow('legacy2-spec','legacy2','spectra all=y')
+Flow('hires2-spec','hires2','spectra all=y')
+Flow('legacy-spec','legacy','spectra all=y')
+
+# display spectra
+Result('spectra','hires2-spec legacy2-spec',
+       'cat axis=2 ${SOURCES[1]} | graph title=Spectra')
+
+# display normalized spectra
+Result('nspectra','hires2-spec legacy2-spec',
+       '''
+       cat axis=2 ${SOURCES[1]} | scale axis=1 | window max1=130 | 
+       graph title="Normalized Spectra" label2="Amplitude"
+       ''')
+
+#############################################################
+# BANDPASS FILTERING
+#############################################################
+# Filter frequencies (Filter low at 18 and high at 38)
+lof = 18        # other value: 21
+hif = 38        # other value: 35
+
+Flow('hires-filt', 'hires2', 'bandpass fhi='+str(hif)+' flo='+str(lof))
+Flow('legacy-filt', 'legacy2', 'bandpass fhi='+str(hif)+' flo='+str(lof))
+Result('hires-filt', 'grey color=seismic title="Inline hires filtered"')
+Result('legacy-filt', 'grey color=seismic title="Inline legacy filtered"')
+
+# Spectra 
+Flow('legacy-filt-spec', 'legacy-filt', 'spectra all=y')
+Flow('hires-filt-spec', 'hires-filt', 'spectra all=y')
+
+# Display spectra 
+Result('filtspectra','hires-filt-spec legacy-filt-spec',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       graph title="Filtered Spectra"
+       ''')
+# Display normalized spectra
+Result('filtnspectra','hires-filt-spec legacy-filt-spec',
+       '''
+       cat axis=2 ${SOURCES[1]} | scale axis=1 |
+       graph title="Filtered Normalized Spectra"
+       ''')
+
+
+#################################################################
+# NON-STATIONARY SMOOTHING APPLIED TO HIRES - theoretical radius 
+#################################################################
+# measure local frequency
+for key in ['legacy','hires']:
+    freq = key+'-locfreq'
+    Flow(freq,key,'iphase order=10 rect1=%d rect2=80 hertz=y complex=y | put label=Frequency unit=Hz' % (80,80)[key=='hires'])
+    Result(freq,'grey mean=y color=j scalebar=y title="%s Local Frequency" ' % key.capitalize()) #clip=35 bias=35
+
+# Absolute Difference in local frequencies
+Flow('freqdif','legacy-locfreq hires-locfreq','remap1 n1=4001 d1=0.001 o1=0 | add scale=-1,1 ${SOURCES[1]} | math output="abs(input)"')
+Result('freqdif','grey color=j minval=0 maxval=50 bias=25 scalebar=y title="initial difference in local frequency" ')
+
+# non-stationary radius calculated theoretically 
+from math import pi
+scale=6.75
+Flow('rect','legacy-locfreq hires-locfreq',
+     '''
+     remap1 n1=4001 d1=0.001 o1=0 | 
+     math f1=${SOURCES[1]} output="sqrt(%g*(1/(input*input)-1/(f1*f1)))/%g" 
+     ''' % (scale,2*pi*0.001))
+Result('rect','grey color=viridis mean=y title="Smoothing Radius" scalebar=y barlabel=Radius barunit=samples')
+
+# smooth hires with non-starionary radius 
+Flow('hires-smooth','hires rect','nsmooth1 rect=${SOURCES[1]} | window j1=4')
+Flow('hires-smooth-2','hires rect','nsmooth1 rect=${SOURCES[1]}')
+Result('hires-smooth', 'grey color=seismic title="Hires Smooth"')
+
+# get spectra
+Flow('hires-smooth-spec','hires-smooth','spectra all=y')
+Result('hires-smooth-spec','hires-smooth-spec legacy-spec',
+  '''
+  cat axis=2 ${SOURCES[1]} | 
+  scale axis=1 | window max1=120 | 
+  graph title="Normalized Spectra after Smoothing" label2="Amplitude"
+  ''')
+
+# local frequency of smoothed hires 
+Flow('hires-smooth-locfreq','hires-smooth','iphase order=10 rect1=40 rect2=80 hertz=y complex=y | put label=Frequency unit=Hz')
+Result('hires-smooth-locfreq','grey mean=y color=j scalebar=y title="Hires Local Frequency Smoothed" ')
+
+# Difference in local frequencies
+Flow('freqdif-filt','legacy-locfreq hires-smooth-locfreq','add scale=-1,1 ${SOURCES[1]} | math output="abs(input)"')
+Result('freqdif-filt','grey color=j minval=0 maxval=50 bias=25 scalebar=y title="Difference after Smoothing" ')
+
+#############################################################
+# non-stationary radius estimation 
+#############################################################
+D1 = 'hires'
+D2 = 'legacy4'
+
+niter = 5 
+recmin = 60
+rec1 = recmin*(2**(niter-3))
+rec2 = recmin*(2**(niter-3))
+
+findradius1(D1, D2,                  # original data (high) and filtered data (low)
+        niter=niter,                 # number of corrections
+        rec1=rec1, rec2=rec2,        # smooth division parameters 
+        recmin=recmin,               # smooth division minimum radius (for decreasing radius)
+        recmax=1000,                 # smooth division radius 1st iteration (choose large value to estimate the stationary radius)
+        rec1f=80, rec2f=80,          # smooth local frequency parameters
+        maxvalf=50,                  # maximum value for plotting local frequency difference
+        biasf=25,                    # bias for plotting local frequency difference
+        theor=True,                  # use smoothed version of theoretical smoothing radius as starting model 
+        rectheor=700,                # smoothing radius for theoretical radius 
+        scale=scale,                 # scale for theoretical smoothing radius
+        d1=0.001,                    # interval spacing in 1st dimension (time)
+        initial=25,                  # initial value for constant smoothing radius 
+        titlehigh="High-Resolution", # original data (high) title
+        titlelow="Legacy",           # filtered data (low) title 
+        localfreq=False,             # estimate based on local frequency attribute 
+        it=0)                        # correction number 
+
+
+
+
+End()

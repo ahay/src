@@ -1,0 +1,185 @@
+from rsf.proj import *
+from radius2 import radius2
+
+
+def Grey(name,data,other): 
+    '''
+    Function for plotting seismic image. 
+    '''
+    Result(name,data,
+           '''grey transp=y yreverse=y clip=0.38
+           label2=Trace unit2="" label1=Time unit1="s" 
+           title="" wherexlabel=b wheretitle=t poly=y color=g
+           wheretitle=b wanttitle=n wherexlabel=b screenratio=1.2 %s '''%other)
+
+def Greyz(name,data,other): 
+    '''
+    Function for plotting zoomed in seismic image. 
+    '''
+    Result(name,data,
+           '''grey transp=y yreverse=y clip=0.38 
+           label2=Trace unit2="" label1=Time unit1="s" 
+           title="" wherexlabel=b wheretitle=t poly=y color=g
+           wheretitle=b wanttitle=n wherexlabel=b screenratio=0.8 %s '''%other)
+
+def Greys(name,data,other): 
+    '''
+    Function for plotting local similarity. 
+    '''
+    Result(name,data,
+           '''grey transp=y yreverse=y scalebar=y
+           label2=Trace unit2="" label1=Time unit1="s" 
+           title="" wherexlabel=b wheretitle=t poly=y color=j
+           wheretitle=b wanttitle=n wherexlabel=b screenratio=1.2 %s '''%other)
+
+# Raw field data 
+Flow('f2','image2d','cp')
+Grey('f2','f2','')
+
+# f-x predictive deconvolution  
+Flow('f2-fx','f2','fxdecon n2w=128 lenf=4 | transp plane=12 | mean nfw=3 | transp plane=12')
+Flow('f2-fx-n','f2-fx f2','add scale=-1,1 ${SOURCES[1]}')
+Grey('f2-fx','f2-fx','')
+Grey('f2-fx-n','f2-fx-n','')
+
+# stationary orthogonalization 
+Flow('f2-ortho-n f2-ortho','f2-fx-n f2-fx','ortho rect1=50 rect2=50 eps=0.0 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Grey('f2-ortho','f2-ortho','')
+Grey('f2-ortho-n','f2-ortho-n','')
+
+# Non-stationary Radius Estimation 
+Flow('f2-high','f2','cp')
+Flow('f2-low','f2','bandpass fhi=20')
+Grey('f2-high','f2-high','')
+Grey('f2-low','f2-low','')
+
+radius2('f2-high','f2-low', 
+                niter=5, 
+                c=[0.7,0.4,0.2,0.1,0.05], #works fine
+                bias=-20, clip=30, 
+                rect1=30, rect2=20, 
+                theor=False, initial=1, 
+                minval=-20, maxval=20, 
+                titlehigh='High', titlelow='Low',
+                it=0 )
+                
+# non-stationary orthogonalization using line-search radius 
+Flow('f2-orthon-n f2-orthon','f2-fx-n f2-fx rect50 rect50','orthon niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]} rect1=${SOURCES[2]} rect2=${SOURCES[3]} eps=0.00')
+Grey('f2-orthon','f2-orthon','')
+Grey('f2-orthon-n','f2-orthon-n','')
+
+# non-stationary orthogonalization using gauss-newton radius 
+Flow('new_f2-orthon-n new_f2-orthon','f2-fx-n f2-fx new_rect50 new_rect50','orthon niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]} rect1=${SOURCES[2]} rect2=${SOURCES[3]} eps=0.00')
+Grey('new-f2-orthon','new_f2-orthon','')
+Grey('new-f2-orthon-n','new_f2-orthon-n','')
+
+# local similarity between signal and estimated noise 
+Flow('f2-s','f2-fx-n f2-fx','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('f2-s-ortho','f2-ortho-n f2-ortho','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('f2-s-orthon','f2-orthon-n f2-orthon','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+Flow('new_f2-s-orthon','new_f2-orthon-n new_f2-orthon','similarity other=${SOURCES[1]} niter=20 rect1=5 rect2=5')
+
+# plots of local similarity 
+bias_s=-0.15
+Greys('f2-s','f2-s','minval=0 maxval=1 clip=1 bias=%g '%bias_s)
+Greys('f2-s-ortho','f2-s-ortho','minval=0 maxval=1 clip=1 bias=%g '%bias_s)
+Greys('f2-s-orthon','f2-s-orthon','minval=0 maxval=1 clip=1 bias=%g '%bias_s)
+Greys('new-f2-s-orthon','new_f2-s-orthon','minval=0 maxval=1 clip=1 bias=%g '%bias_s)
+
+
+# Creating framebox for zoomed in results  
+x=55
+y=0
+w=100
+w1=0.5
+
+Flow('frame1.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
+    " ".join(map(str,(x,y,x+w,y,x+w,y+w1,x,y+w1,x,y))))
+Plot('frame1','frame1.asc',
+    '''
+    dd type=complex form=native |
+    graph min1=0 max1=254 min2=0 max2=2.048 pad=n plotfat=15 plotcol=2 
+    wantaxis=n wanttitle=n yreverse=y scalebar=n screenratio=1.2
+        ''')
+
+# plot of raw data with framebox 
+Result('f2-1','Fig/f2.vpl frame1','Overlay')
+
+# plot of signal results with framebox 
+Result('f2-fx-1','Fig/f2-fx.vpl frame1','Overlay')
+Result('f2-ortho-1','Fig/f2-ortho.vpl frame1','Overlay')
+Result('f2-orthon-1','Fig/f2-orthon.vpl frame1','Overlay')  
+Result('new-f2-orthon-1','Fig/new-f2-orthon.vpl frame1','Overlay')  
+
+# plots of noise results with framebox 
+Result('f2-fx-1-n','Fig/f2-fx-n.vpl frame1','Overlay')
+Result('f2-ortho-1-n','Fig/f2-ortho-n.vpl frame1','Overlay')
+Result('f2-orthon-1-n','Fig/f2-orthon-n.vpl frame1','Overlay')  
+Result('new-f2-orthon-1-n','Fig/new-f2-orthon-n.vpl frame1','Overlay')  
+
+# zoomed in raw data 
+Flow('f2-z1','f2','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Greyz('f2-z1','f2-z1','')
+
+# zoomed in results for signals 
+Flow('f2-fx-z1','f2-fx','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Flow('f2-ortho-z1','f2-ortho','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Flow('f2-orthon-z1','f2-orthon','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Flow('new_f2-orthon-z1','new_f2-orthon','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Greyz('f2-fx-z1','f2-fx-z1','')
+Greyz('f2-ortho-z1','f2-ortho-z1','')
+Greyz('f2-orthon-z1','f2-orthon-z1','')
+Greyz('new-f2-orthon-z1','new_f2-orthon-z1','')
+
+# zoomed in results for noise  
+Flow('f2-fx-z1-n','f2-fx-n','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Flow('f2-ortho-z1-n','f2-ortho-n','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Flow('f2-orthon-z1-n','f2-orthon-n','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Flow('new_f2-orthon-z1-n','new_f2-orthon-n','window min1=%g max1=%g min2=%g max2=%g'%(y,y+w1,x,x+w))
+Greyz('f2-fx-z1-n','f2-fx-z1-n','')
+Greyz('f2-ortho-z1-n','f2-ortho-z1-n','')
+Greyz('f2-orthon-z1-n','f2-orthon-z1-n','')
+Greyz('new-f2-orthon-z1-n','new_f2-orthon-z1-n','')
+
+# creating labels 
+Plot('label1',None,
+    '''
+    box x0=8.1 y0=7.1 label="" xt=0.5 yt=0.5 length=0.5 
+    ''')
+Plot('label2',None,
+    '''
+    box x0=9.8 y0=7.15 label="" xt=0.5 yt=0.5 length=0.5 
+    ''')
+Plot('label3',None,
+    '''
+    box x0=8.5 y0=1.65 label="" xt=0.5 yt=0.5 length=0.5 
+    ''')
+Plot('label4',None,
+    '''
+    box x0=8.5 y0=8.0 label="" xt=0.5 yt=0.5 length=0.5 
+    ''')
+Plot('label5',None,
+    '''
+    box x0=5.9 y0=6.15 label="" xt=0.5 yt=0.5 length=0.5 
+    ''')
+Plot('label6',None,
+    '''
+    box x0=3.9 y0=4.35 label="" xt=0.5 yt=0.5 length=0.5 
+    ''')
+
+labels = 'label1 label2 label3 label4 label5 label6'
+
+# plots of zoomed in signals with labels 
+Result('f2-fx-z1-0','Fig/f2-fx-z1 %s'%labels,'Overlay')
+Result('f2-ortho-z1-0','Fig/f2-ortho-z1 %s'%labels,'Overlay')
+Result('f2-orthon-z1-0','Fig/f2-orthon-z1 %s'%labels,'Overlay')
+Result('new-f2-orthon-z1-0','Fig/new-f2-orthon-z1 %s'%labels,'Overlay')
+
+# plots of zoomed in noise results with labels 
+Result('f2-fx-z1-n-0','Fig/f2-fx-z1-n %s'%labels,'Overlay')
+Result('f2-ortho-z1-n-0','Fig/f2-ortho-z1-n %s'%labels,'Overlay')
+Result('f2-orthon-z1-n-0','Fig/f2-orthon-z1-n %s'%labels,'Overlay')
+Result('new-f2-orthon-z1-n-0','Fig/new-f2-orthon-z1-n %s'%labels,'Overlay')
+
+
+End()
