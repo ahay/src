@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfintbin', 'sfput', 'sfgrey', 'sflapfill', 'sfgraph', 'sfnoise', 'sfsmooth', 'sfimpl2', 'sfdespike2', 'sfbilat2', 'sfexpl2', 'sfcat', 'sfmath', 'sfnsmooth', 'sfndsmooth', 'sfadd', 'sfdivn']
-data=['https://raw.githubusercontent.com/agile-geoscience/notebooks/master/data/Penobscot_HorB.txt']
-size=   32691980
