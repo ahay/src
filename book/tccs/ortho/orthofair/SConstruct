@@ -28,20 +28,19 @@ def plot (other):
 for file in [
          '2-SOURCE-simulated_receiver_gather_SEGY','1-SOURCE-simulated_receiver_gather_SEGY']:
 	 if file == '2-SOURCE-simulated_receiver_gather_SEGY':
-		file1='fairblended'
+	 	file1='fairblended'
 	 elif file == '1-SOURCE-simulated_receiver_gather_SEGY':
-		file1='fairunblended'
+	 	file1='fairunblended'
 
 	 Fetch(file+'.sgy','fairfield',server)
-    	 Flow([file1,'t'+file1,file1+'.asc',file1+'.bin'],
-                file+'.sgy',
-                '''
-                segyread
-                tfile=${TARGETS[1]}
-                hfile=${TARGETS[2]}
-                bfile=${TARGETS[3]}
-                ''')
-    	 #Result(file1,file1,'grey clip=%g'%(clip))
+	 Flow([file1,'t'+file1,file1+'.asc',file1+'.bin'],file+'.sgy',
+	 '''
+	 segyread
+	 tfile=${TARGETS[1]}
+	 hfile=${TARGETS[2]}
+	 bfile=${TARGETS[3]}
+	 ''')
+	 #Result(file1,file1,'grey clip=%g'%(clip))
 
 Flow('fairblended1','fairblended','window n2=201 | put o2=0 ')
 Flow('fairblended22','fairblended','window f2=201 | put o2=0 ') # This is what we want to use.
@@ -157,7 +156,7 @@ w2=4.7
 
 ## frame2
 Flow('frame2.asc',None,'echo %s n1=10 data_format=ascii_float in=$TARGET'% \
-	string.join(map(str,(x2,y2,x2+w,y2,x2+w,y2+w2,x2,y2+w2,x2,y2))))
+	" ".join(map(str,(x2,y2,x2+w,y2,x2+w,y2+w2,x2,y2+w2,x2,y2))))
 Plot('frame2','frame2.asc',
 	'''
 	dd type=complex form=native |
