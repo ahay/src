@@ -14,7 +14,7 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, sys, string, re, tempfile
+import os, sys, string, re, tempfile, subprocess
 import rsf.prog
 
 top = rsf.prog.RSFROOT
@@ -38,9 +38,14 @@ def convert(vplot,eps,
     # Get bounding box info from vplot file
     getbb = vppen + ' big=y stat=l %s < %s | head -1 | cut -d : -f 2' % (opts,vplot)
 
-    out = os.popen(getbb)
-    head = out.read().split()
-    out.close()
+    process = subprocess.Popen(getbb, stdout=subprocess.PIPE, shell=True)
+    output, error = process.communicate()
+
+#    out = os.popen(getbb)
+#    head = out.read().split()
+
+    head = output.split()
+    process.stdout.close()
 
     # Use parameters for bounding box if supplied.
     # Otherwise use bounding box from vplot file.
