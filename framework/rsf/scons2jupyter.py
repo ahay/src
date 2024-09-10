@@ -35,7 +35,7 @@ def ipynb(figs,notebook):
 
 def parse(sconstruct):
     'parse SConstruct, extract code for each figure'
-    result = re.compile('Result\s*\(\s*[\'\"](?P<fig>[^\'\"]+)')
+    result = re.compile(r'Result\s*\(\s*[\'\"](?P<fig>[^\'\"]+)')
     figs = []
     block = ''
     brackets = 0
@@ -54,9 +54,9 @@ def parse(sconstruct):
                 block += line
             continue
         
-        if re.search('from rsf.proj import \*\s*',line):
+        if re.search(r'from rsf.proj import \*\s*',line):
             continue
-        if re.search('End()\s*',line):
+        if re.search(r'End()\s*',line):
             continue
         
         res = result.search(line)
