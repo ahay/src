@@ -1,6 +1,6 @@
 from rsf.proj import*
 import sys
-sys.path.append('../../temp/recipes')
+sys.path.append('../')
 import deblend2
 
 ## parameters definition
