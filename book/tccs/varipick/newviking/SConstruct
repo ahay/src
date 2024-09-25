@@ -93,7 +93,7 @@ Flow('cmps','paracdp',
 
 Result(name+'-cmps','cmps',
    '''
-   window min3=%g max3=%g max1=%g|
+   window min3=%g max3=%g max1=%g j3=2 |
    byte gainpanel=e | 
    grey3 title="Viking Graben CMP Gathers" 
    frame1=0 unit2= label2=Trace frame2=%i frame3=%i
