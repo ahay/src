@@ -87,10 +87,10 @@ def get_dataserver():
     if country == "CN":
         #    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
         # return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
-        return os.environ.get('RSF_DATASERVER','https://fomel.com')
+        return os.environ.get('RSF_DATASERVER','https://ahay.org')
     else:
         # return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
-        return os.environ.get('RSF_DATASERVER','https://fomel.com')
+        return os.environ.get('RSF_DATASERVER','https://ahay.org')
 
 dataserver = None
 libs = os.environ.get('LIBS',"")
