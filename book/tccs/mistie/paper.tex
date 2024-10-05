@@ -1,0 +1,122 @@
+\published{SEG Expanded Abstracts, 5218-5222, (2018)}
+
+\title{Using well-seismic mistie to update the velocity model}
+
+\author{Sean Bader, Sergey Fomel, and Zhiguang Xue, The University of Texas at Austin}
+
+\maketitle
+
+\lefthead{Bader et al.}
+\righthead{Update velocity using well-seismic mistie}
+\footer{TCCS}
+
+\begin{abstract}
+We propose a method to aid in velocity model building based on misties between modeled synthetic seismograms from well log data and the seismic image. The method is based on the fact that when the migration velocity is inconsistent with the true migration velocity, there is a mistie between a modeled synthetic seismogram from well log data and the seismic image. The proposed approach uses local similarity to estimate the mistie at every sample along the synthetic seismogram and uses the result to update the migration velocity at the well location. The updated velocity information is interpolated along seismic structure using predictive painting to generate a new geologically consistent velocity model. We iteratively update the migration velocity model using only the seismic-well tie mistie. The results of our experiments with a simple layered model and an isotropic synthetic model indicate that the proposed workflow provides an effective method for integrating well log data in conventional velocity model building workflows.
+\end{abstract}
+
+\section{Introduction}
+Well logs can be used to interpret geologic features at much higher resolution than that of the seismic data. Consequentially, well logs are often used to calibrate seismic images which have lower resolution but much higher spatial coverage to understand the distribution of subsurface rock properties \cite[]{whitesimm2003}. This calibration is referred to as a seismic-well tie, where reflectors from a well log modeled synthetic seismicogram are aligned with common reflectors in the seismic data. Any mis-ties between the modeled synthetic seismograms and seismic data are used to update the well's time to depth relationship (TDR) and are often related to inaccuracies in the seismic migration velocities \cite[]{white1998stretch}.
+
+In an attempt to reduce the mis-tie between well log information, which is taken as ground truth, and the seismic image, well log measurements are often injected into migration velocity model building to provide constraints in an otherwise non-unique problem \cite[]{bakulin2010localized}. \cite{morice2004well} show that combining well log, borehole and surface seismic data can provide an understanding of seismic velocities, anisotropy, attenuation and interbed multiples which can aid in building a velocity model consistent between all datasets. \cite{egozi2006comprehensive} show that mis-tie surfaces generated from multiple picks in multiple wells can be used to iteratively update a TTI velocity field thus driving the cumulative average mistie of all wells towards zero. Using well marker-related workflows in velocity model building removes or reduces nonuniquness and may allow for simultaneous estimation of velocity and anisotropy parameters which can be used to constrain tomography problems that focus on flattening the residual moveout of seismic events \cite[]{woodward2008decade,bakulin2010localized}.
+
+Although well marker-related workflows help integrate well log interpretations with seismic velocity model building; these methods are limited to updates related to discrete pre-selected well markers. Several methods have been proposed to automatically perform the seismic-well tie and provide a continuous mis-tie function along the entire length of the modeled synthetic seismogram. Some authors \cite[]{munozhale2012,wu2016simultaneous} use dynamic time warping (DTW) \cite[]{berndt1994using,hale2013} to automatically align real and synthetic seismograms. \cite{herrerab} show that local similarity (LSIM) \cite[]{fomel2007local} can be an alternative approach to successfully compute a seismic-well tie and compares the results with DTW. \cite{bader2018interp} use LSIM to semi-automatically tie several wells to a 3D seismic dataset and provide a technique for cross validation to ensure consistency and accuracy of seismic-well ties. In each case, the mis-tie function is converted to an update applied to the velocity log.
+
+In workflows where updates are not based on the tomographic principle, the velocity model update is dependent on the quality of the interpolation algorithm and horizon picks \cite[]{gupta2013well}. Several methods have been proposed to interpolate information along local seismic structures. \cite{hale2010image} uses image guided blended neighbor interpolation \cite[]{hale2009image} for seismic guided well log interpolation. \cite{karimi2017creating} apply predictive painting \cite[]{fomel2010predictive} to interpolate log data along seismic structures to generate accurate starting models for post stack inversion.
+
+To understand and remove the inconsistencies between the migration velocity, well logs, migrated seismic image and modeled synthetic seismogram, we propose a method that uses LSIM to measure the mis-tie from the seismic-well tie and uses the result to update the migration velocity at the well log positions. A complete, updated, velocity model is then interpolated along seismic structures using predictive painting. We test our method on several synthetic datasets. The results indicate that the proposed workflow provides an effective method for incorporating well log data in velocity model building workflows.
+
+
+\section{Theory}
+
+Seismic-well ties involve matching waveforms from a modeled synthetic seismogram with a nearby seismic trace \cite[]{whitesimm2003}. When comparing two datasets, our purpose is to estimate the warping function, $S_k$, required to align the synthetic seismogram, $h_k$, with the seismic trace, $r_k$,
+
+\begin{equation} \label{eq:ref}
+r_k(t) \approx h_k(S_k(t)).
+\end{equation}
+
+We can represent the warping function with time shifts, $g_k(t)$, as follows:
+\begin{equation}\label{eq:shifts}
+S_k(t) = t + g_k(t),
+\end{equation}
+where the $t$ denotes the original independent axis and $g_k(t)$ is the shifts required to match the datasets as defined in Equation \ref{eq:ref}. The LSIM method begins with the observation that the correlation coefficient only provides one number to describe the datasets in a defined window; however, we are interested in understanding the local changes in the datasets' similarity. Therefore, the LSIM method computes local similarity, which is a continuous function of time. The square of the correlation coefficient can be split into a product of two factors and posed as a regularized inversion where regularization operator is defined using shaping regularization and designed to enforce smoothness \cite[]{fomel2007local,fomel2007shaping}. From the similarity scan, we automatically pick the series of shifts along the entire length of the reference dataset that optimally aligns the two datasets \cite[]{fomel2009time,bader2017semiautomatic}.
+
+The relationship between the shifts estimated using LSIM and an updated velocity log assuming a TDR can be defined as:
+\begin{equation} \label{eq:tdr}
+T_0(z) = 2 \int_{z_{min}}^{z} \frac{d\xi}{v_0(\xi)},
+\end{equation}
+where $T_0$ is the initial TDR, $z_{min}$ is the minimum depth at which sonic information is available, $v_0(\xi)$ is the initial, upscaled, P-wave velocity from sonic and $d\xi$ is the depth increment.
+From Equation \ref{eq:shifts}, assuming an initial TDR, $T_0$, we arrive at
+\begin{equation} \label{eq:break}
+S_{k,1}(T_0) = T_0 + g_{k,1}(T_0)
+\end{equation}
+after one iteration of LSIM. We estimate a updated TDR by interpolating our shifts from time to depth
+\begin{equation} \label{eq:newtdr}
+T_1(z) = T_0(z) + g_{k,1}(T_0(z))
+\end{equation}
+Using Equation \ref{eq:tdr}, we relate the initial and updated velocity log to the initial and updated TDR,
+\begin{equation} \label{eq:v1z}
+\frac{dT_1(z)}{dz}(\frac{dT_0(z)}{dz})^{-1} = \frac{v_0(z)}{v_1(z)}
+\end{equation}
+\cite{munoz2015automatic}, \cite{herrerab}, and \cite{bader2018interp} use Equation \ref{eq:v1z} to estimate an updated velocity log. Alternatively, if we assume that the migration velocity model is consistent with velocities from logs, we update the migration velocity at the well location based on the proportion of the updated well log velocity to the initial well log velocity:
+\begin{equation} \label{eq:vmig}
+v_{mig,1} = \frac{v_1(z)}{v_0(z)}v_{mig,0}.
+\end{equation}
+We use predictive painting \cite[]{fomel2010predictive} to spread the updated migration velocity, $v_{mig,1}$, from the wells throughout the seismic volume. We weight the interpolation based on the distance between the reference well and any location in the seismic dataset using radial basis functions \cite[]{karimi2017creating}.
+
+Using Equations~\ref{eq:tdr}--\ref{eq:vmig}, the migration velocity is iteratively updated using well tie updates. The seismic trace from the RTM depth image is stretched to time using the well log velocity profile and compared with the modeled synthetic seismogram from well logs. Figure~\ref{fig:capture} illustrates the workflow we use and is colored based on the data type used in each step.
+
+\inputdir{.}
+\plot{capture}{width=0.37\textwidth}{Workflow used in seismic-well tie velocity model updates. Blue indicates seismic data is used in the step. Yellow indicates well log data is used in the step. Black arrows indicate how the product of one step is used in a different step.}
+
+\section{Numerical Examples}
+We test the proposed approach on a simple layered and a more complex isotropic synthetic model. The simple layered model and isotropic synthetic model assume isotropic layers intersect vertical wells; reverse time migration (RTM) is performed to get a depth migration image.
+
+\subsection{Horizontally Layered Isotropic Example}
+\inputdir{smpl}
+
+We model data using the true velocity model shown in Figure~\ref{fig:vels}, and the migration velocity is shown in Figure~\ref{fig:vel2}. Because each layer is perfectly horizontal, we anticipate that the incorrect migration velocity will cause a discrepancy between the seismic image layer interfaces and the true interfaces from the velocity model.
+
+\multiplot{2}{vels,vel2}{width=0.21\textwidth}{(a) True velocity model. (b) Initial migration velocity model. The velocity profile selected for the well tie update is located at 1000m.}
+
+A seismic trace is extracted from the seismic image at location 1000m and compared against a modeled synthetic seismogram using a velocity `well log' from the true velocity mode at 1000m. The seismic-well tie is automatically carried out using LSIM and a mis-tie function is estimated using the LSIM scan in Figure~\ref{fig:scan2}. The mis-tie is used to tie the synthetic to the seismic trace in Figure~\ref{fig:synthp2} indicating the mis-tie function properly related synthetic and seismic traces.
+
+\plot{scan2}{width=0.3\textwidth}{Similarity scan using the seismic trace at 1000m, stretched to time using the well log velocity, as the reference trace compared against the synthetic seismogram modeled from the velocity profile extracted at 1000m in Figure~\ref{fig:vel2}.}
+
+\plot{synthp2}{width=0.2\textwidth}{Initial synthetic seismogram (red). Synthetic seismogram stretched using the shifts estimated from LSIM scan in Figure~\ref{fig:scan2} (green). Seismic trace extracted from RTM image stretched to time (black).}
+
+When working with the `final' seismic image, the mis-tie can be converted to a velocity log update as shown in Figure~\ref{fig:velupdate2}. Alternatively, we use Equation~\ref{eq:vmig} to update the migration velocity as shown in Figure~\ref{fig:itr2}. After ten iterations of well tie updates, we observe that the migration velocity is consistent with the well log velocity in Figure~\ref{fig:itrfi}. Note that the updated migration velocity section above 400m and below 1200 is inconsistent with the real velocity as well ties are only possible in between the first and last impedance contrast in the well log data.
+
+\multiplot{3}{velupdate2,itr2,itrfi}{width=0.14\textwidth}{Well log velocity profile (black). (a) Common workflow of applying the mistie from the synthetic-well tie in Figure~\ref{fig:synthp2} to update velocity log (blue). (b) Proposed approach of using the mistie from the synthetic-well tie in Figure~\ref{fig:synthp2} to update initial migration velocity (green) at the well location after one iteration (red). (c) Migration velocity profile at the well location after 10 iterations of well tie updates (red)}
+
+The simple layered model provides the understanding that in isotropic velocity models, the primary reason behind the mis-tie between well log modeled synthetics and seismic data is in the accuracy of the seismic migration velocities. Assuming that the entire mis-tie is related to incorrect vertical positioning of the reflector, the migration velocity model can be effectively updated using Equation~\ref{eq:vmig}.
+
+\subsection{Dipping Isotropic Example}
+\inputdir{iso}
+
+In the simple layered model, we assumed that the entire mis-tie is related to the vertical positioning of the reflector. However, as pointed out by \cite{bakulin2010localized}, solving the mis-tie equations along the axis of the well may result in biased estimates of velocities in the presence of dipping layers. To account for biased estimates of migration velocity updates due to dipping layers, we propose to migrate the data several times per iteration using perturbed velocity models. We use four percent increments to perturb the model. We then perform the seismic-well tie using each of the resulting seismic images and convert the mis-tie to a migration velocity update. We estimate the migration velocity update as the semblance weighted average of the velocity updates from each mis-tie.
+
+We model data using the true velocity model shown in Figure~\ref{fig:vel}, and the initial migration velocities are shown Figure~\ref{fig:vels2}. We use a velocity profile from five `wells' located at 1000m, 2000m, 3000m, 4000m, and 5000m. With each iteration, we assume the velocity of the layer between 0m and 400m is known.
+
+\multiplot{2}{vel,vel2-2}{width=0.21\textwidth}{(a) True velocity model. (b) One of the initial migration velocity model perturbations for the first iteration. The wells selected for well tie updates are located at 1000m, 2000m, 3000m, 4000m, and 5000m.}
+
+The seismic traces at locations 1000m, 2000m, 3000m, 4000m, and 5000m from each seismic image are stretched to time using the true well log velocity and the mis-ties is estimated using local similarity. Using Equation ~\ref{eq:vmig}, we update the migration velocity at each well location. The results of migration velocity updates at well location 3000m for the five initial migration velocity models shown in Figure~\ref{fig:vels2} are shown in Figure~\ref{fig:wellvel2-3}. We spread the information along seismic structures using predictive painting weighted by radial basis functions to generate a new geologically consistent migration velocity model.
+
+\multiplot{3}{vels2,wellvel2-3,wellvel7-3}{width=0.14\textwidth}{True velocity model at well location 3000m (black). (a) Starting migration velocity models with a linearly increasing velocity gradient (green). (b) Migration velocity updates from well tie updates based on the mistie between the synthetic seismogram modeled from the well log profile and the seismic image migrated from the five perturbed velocity models (red). Semblance weighted average of the five migration velocity updates (cyan), this result is used for interpolation of the next migration velocity model. (c) Results after six iterations of well tie updates.}
+
+We iteratively update the migration velocity model by generating five perturbed migration velocity models at each iteration and estimating the semblance weighted average of the velocity updates from each mis-tie. Each iteration, we reduce the perturbation of the migration velocity models and the smoothing in local similarity. Results after six iterations of well tie updates at well location 3000m are shown in Figure~\ref{fig:wellvel7-3}. We observe that the semblance weighted average of the velocity updates at this location fits well with the real well log velocity. The migration velocity model after six iterations is shown in Figure~\ref{fig:vel8} and is reasonably consistent with the real velocity model in Figure~\ref{fig:vel}.
+
+\multiplot{2}{vel3,vel8}{width=0.21\textwidth}{(a) Migration velocity model after one iteration and (b) six iterations of well tie updates and weighted interpolation of the updated velocity profile from the wells using predictive painting.}
+
+Figure~\ref{fig:rtm8} is the final depth migrated seismic image using the velocity model in Figure~\ref{fig:vel8}. This result is compared against Figure~\ref{fig:rtm}, the depth migrated seismic image using the real velocity model. Differences in the velocity models result is small differences in reflector positioning.
+
+\multiplot{4}{rtm2-2,rtm3-2,rtm8,rtm}{width=0.19\textwidth}{(a) Initial RTM image using the migration velocity perturbation shown in Figure~\ref{fig:vel2-2}. (b) RTM image using the migration velocity perturbation shown in Figure~\ref{fig:vel3}. (c) Final RTM image using the migration velocity shown in Figure~\ref{fig:vel8} after six iterations. (d) RTM image using the true migration velocity in Figure~\ref{fig:vel}.}
+
+\section{Conclusions}
+We present an approach to aid in velocity model building using misties between modeled synthetic seismograms from well log data and the seismic image. The proposed approach provides a unique method for integrating well log data in conventional velocity model building workflows. The proposed workflow is not a substitute for conventional velocity analysis, but it may help to reduce nonuniquness in areas of complex stratigraphy or anisotropy. In our approach, local similarity is used to estimate the mistie at every sample along the synthetic seismogram and uses the result to update the migration velocity at the well location. Because inaccuracies in the migration velocity are directly related to the mis-tie and observed in seismic-well ties, this information can be used to update the migration velocity at the well location and be spread throughout the model using predictive painting. Iteratively updating the migration velocity using the proposed workflow results in a high-resolution migration model that is consistent with well log data.
+
+\section{Acknowledgments}
+We thank sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support. The computations in this paper were done using the Madagascar software package \cite[]{fomel2013repeat}.
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{paper}

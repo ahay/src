@@ -1,0 +1,988 @@
+# Time-warping with randomly sampled inputs for inversion
+#########################################################
+
+from rsf.proj import *
+import math
+
+## Plot font and screen ratio, width, height for uniform ppt figs.
+p1=0.7
+p2=0.7
+sr=1.0
+sw=7.0
+sh=10.0
+swc=8.0
+llw=5.0
+srw=1.0
+
+
+## Number of time slices to do inversion on (= number of events)
+numtime=3
+
+
+#####
+##Synthetic CMP Parameters
+nx=101
+delx=0.02*2
+ox=-2.
+ny=nx
+dely=delx
+oy=ox
+nt=751
+dt=0.004
+fw=10.0
+####
+
+###############################################################################################################
+####   Prepare Geometry Header Files
+
+## Absolute offset
+Flow('offset','spikes','window n1=1 | math output="sqrt(x1*x1+x2*x2)" ',local=1)
+#Result('offset','grey title=Offset allpos=y color=j scalebar=y',local=1)
+
+## Azimuth
+Flow('azimuth','spikes','window n1=1 | math output="%g*(x2&x1)" ' % (180/math.pi),local=1)
+#Result('azimuth','grey title=Azimuth color=j scalebar=y',local=1)
+
+## Header File
+Flow('head','offset azimuth',
+     'cat axis=3 ${SOURCES[1]} | transp plane=23 | transp plane=12 | put n3=1 n2=10201',local=1)
+
+####################################################################################################################
+## Single cmp with W(t)
+
+####### Parameter values#####################################################
+####### Generalized moveout approximation ###################################
+## Wx
+Wx0=0.4
+WxE=0.55
+dWx=(WxE-Wx0)/500.0
+Flow('begWx',None,'spike n1=126 | scale dscale=%g' % Wx0)
+Flow('midWx',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (Wx0,dWx))
+Flow('endWx',None,'spike n1=125 | scale dscale=%g' % WxE)
+Flow('Wxoft','begWx midWx endWx','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## Wy
+Wy0=0.55
+WyE=0.4
+dWy=(WyE-Wy0)/500.0
+Flow('begWy',None,'spike n1=126 | scale dscale=%g' % Wy0)
+Flow('midWy',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (Wy0,dWy))
+Flow('endWy',None,'spike n1=125 | scale dscale=%g' % WyE)
+Flow('Wyoft','begWy midWy endWy','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## alpha
+alpha0=0.0
+alphaE=90.0
+dalpha=(alphaE-alpha0)/500.0
+Flow('begalpha',None,'spike n1=126 | scale dscale=%g' % alpha0)
+Flow('midalpha',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (alpha0,dalpha))
+Flow('endalpha',None,'spike n1=125 | scale dscale=%g' % alphaE)
+Flow('alphaoft','begalpha midalpha endalpha','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+Plot('alphaoft','graph plotcol=1')
+
+## Wxy
+Wxy0=-Wx0/8;
+Flow('Wxyoft_temp','Wxoft Wyoft alphaoft','math wx=${SOURCES[0]} wy=${SOURCES[1]} alpha=${SOURCES[2]} output="(wx-wy)*tan(2.0*(alpha*%g))/2.0"' % (math.pi/180.0))
+Flow('Wxyoft_top','Wxyoft_temp','window n1=376')
+Flow('Wxyoft_mid','Wxyoft_temp','window n1=1 f1=375')
+Flow('Wxyoft_bot','Wxyoft_temp','window f1=377')
+Flow('Wxyoft','Wxyoft_top Wxyoft_mid Wxyoft_bot','''cat ${SOURCES[1]} ${SOURCES[2]} axis=1 | math output="input+%f" ''' % Wxy0)
+
+
+## A1
+A10=-0.02
+A1E=-0.05
+#A1E=A10
+#A10=0
+#A1E=0
+dA1=(A1E-A10)/500.0
+Flow('begA1',None,'spike n1=126 | scale dscale=%g' % A10)
+Flow('midA1',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (A10,dA1))
+Flow('endA1',None,'spike n1=125 | scale dscale=%g' % A1E)
+Flow('A1oft','begA1 midA1 endA1','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## A2
+A20=0.002
+A2E=0.0045
+#A2E=A20
+#A20=0
+#A2E=0
+dA2=(A2E-A20)/500.0
+Flow('begA2',None,'spike n1=126 | scale dscale=%g' % A20)
+Flow('midA2',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (A20,dA2))
+Flow('endA2',None,'spike n1=125 | scale dscale=%g' % A2E)
+Flow('A2oft','begA2 midA2 endA2','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## A3
+A30=-0.03
+A3E=-0.05
+#A3E=A30
+#A30=0
+#A3E=0
+dA3=(A3E-A30)/500.0
+Flow('begA3',None,'spike n1=126 | scale dscale=%g' % A30)
+Flow('midA3',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (A30,dA3))
+Flow('endA3',None,'spike n1=125 | scale dscale=%g' % A3E)
+Flow('A3oft','begA3 midA3 endA3','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## A4
+A40=0.0015
+A4E=0.0035
+#A4E=A40
+#A40=0
+#A4E=0
+dA4=(A4E-A40)/500.0
+Flow('begA4',None,'spike n1=126 | scale dscale=%g' % A40)
+Flow('midA4',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (A40,dA4))
+Flow('endA4',None,'spike n1=125 | scale dscale=%g' % A4E)
+Flow('A4oft','begA4 midA4 endA4','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## A5
+A50=-0.01
+A5E=-0.03
+#A5E=A50
+#A50=0
+#A5E=0
+dA5=(A5E-A50)/500.0
+Flow('begA5',None,'spike n1=126 | scale dscale=%g' % A50)
+Flow('midA5',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (A50,dA5))
+Flow('endA5',None,'spike n1=125 | scale dscale=%g' % A5E)
+Flow('A5oft','begA5 midA5 endA5','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## B1
+B10=0.25
+B1E=0.4
+#B1E=B10
+#B10=0
+#B1E=0
+dB1=(B1E-B10)/500.0
+Flow('begB1',None,'spike n1=126 | scale dscale=%g' % B10)
+Flow('midB1',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (B10,dB1))
+Flow('endB1',None,'spike n1=125 | scale dscale=%g' % B1E)
+Flow('B1oft','begB1 midB1 endB1','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## B2
+B20=0.1
+B2E=0.2
+#B2E=B20
+#B20=0
+#B2E=0
+dB2=(B2E-B20)/500.0
+Flow('begB2',None,'spike n1=126 | scale dscale=%g' % B20)
+Flow('midB2',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (B20,dB2))
+Flow('endB2',None,'spike n1=125 | scale dscale=%g' % B2E)
+Flow('B2oft','begB2 midB2 endB2','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## B3
+B30=0.1
+B3E=0.25
+#B3E=B30
+#B30=0
+#B3E=0
+dB3=(B3E-B30)/500.0
+Flow('begB3',None,'spike n1=126 | scale dscale=%g' % B30)
+Flow('midB3',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (B30,dB3))
+Flow('endB3',None,'spike n1=125 | scale dscale=%g' % B3E)
+Flow('B3oft','begB3 midB3 endB3','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## C1
+C10=-0.015
+C1E=-0.04
+#C1E=C10
+#C10=0
+#C1E=0
+dC1=(C1E-C10)/500.0
+Flow('begC1',None,'spike n1=126 | scale dscale=%g' % C10)
+Flow('midC1',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (C10,dC1))
+Flow('endC1',None,'spike n1=125 | scale dscale=%g' % C1E)
+Flow('C1oft','begC1 midC1 endC1','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## C2
+C20=-0.01
+C2E=-0.045
+#C2E=C20
+#C20=0
+#C2E=0
+dC2=(C2E-C20)/500.0
+Flow('begC2',None,'spike n1=126 | scale dscale=%g' % C20)
+Flow('midC2',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (C20,dC2))
+Flow('endC2',None,'spike n1=125 | scale dscale=%g' % C2E)
+Flow('C2oft','begC2 midC2 endC2','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## C3
+C30=-0.045
+C3E=-0.07
+#C3E=C30
+#C30=0
+#C3E=0
+dC3=(C3E-C30)/500.0
+Flow('begC3',None,'spike n1=126 | scale dscale=%g' % C30)
+Flow('midC3',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (C30,dC3))
+Flow('endC3',None,'spike n1=125 | scale dscale=%g' % C3E)
+Flow('C3oft','begC3 midC3 endC3','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## C4
+C40=-0.01
+C4E=-0.035
+#C4E=C40
+#C40=0
+#C4E=0
+dC4=(C4E-C40)/500.0
+Flow('begC4',None,'spike n1=126 | scale dscale=%g' % C40)
+Flow('midC4',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (C40,dC4))
+Flow('endC4',None,'spike n1=125 | scale dscale=%g' % C4E)
+Flow('C4oft','begC4 midC4 endC4','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+## C5
+C50=-0.03
+C5E=-0.015
+#C5E=C50
+#C50=0
+#C5E=0
+dC5=(C5E-C50)/500.0
+Flow('begC5',None,'spike n1=126 | scale dscale=%g' % C50)
+Flow('midC5',None,'spike n1=500 mag=%g d1=%g | math output="input+x1"' % (C50,dC5))
+Flow('endC5',None,'spike n1=125 | scale dscale=%g' % C5E)
+Flow('C5oft','begC5 midC5 endC5','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+
+## Plot synthetic parameters ################################# 
+for case in ('A1','A3','A5'):
+    Plot(case+'oft',
+     '''
+     graph transp=y yreverse=y min2=-0.07 max2=0 min1=0 max1=3 plotfat=6 plotcol=3
+     wanttitle=n wantaxis=n grid1=n grid2=n screenratio=%g xll=%g
+     ''' % (srw,llw))
+for case in ('A2','A4'):
+    Plot(case+'oft',
+     '''
+     graph transp=y yreverse=y min2=-0.001 max2=0.006 min1=0 max1=3 plotfat=6 plotcol=3
+     wanttitle=n wantaxis=n grid1=n grid2=n screenratio=%g xll=%g
+     ''' % (srw,llw))
+for case in ('C1','C2','C4','C5'):
+    Plot(case+'oft',
+     '''
+     graph transp=y yreverse=y min2=-0.05 max2=0.0 min1=0 max1=3 plotfat=6 plotcol=3
+     wanttitle=n wantaxis=n grid1=n grid2=n screenratio=%g xll=%g
+     ''' % (srw,llw))
+Plot('C3oft',
+    '''
+    graph transp=y yreverse=y min2=-0.075 max2=-0.025 min1=0 max1=3 plotfat=6 plotcol=3
+    wanttitle=n wantaxis=n grid1=n grid2=n screenratio=%g xll=%g
+    ''' % (srw,llw))
+     
+for case in ('B2','B3'):
+    Plot(case+'oft',
+     '''
+     graph transp=y yreverse=y min2=0. max2=0.4 min1=0 max1=3 plotfat=6 plotcol=3
+     wanttitle=n wantaxis=n grid1=n grid2=n screenratio=%g xll=%g
+     ''' % (srw,llw))
+Plot('B1oft',
+    '''
+    graph transp=y yreverse=y min2=0.2 max2=0.6 min1=0 max1=3 plotfat=6 plotcol=3
+    wanttitle=n wantaxis=n grid1=n grid2=n screenratio=%g xll=%g
+    ''' % (srw,llw))
+
+for case in ('Wx','Wy'):
+    Plot(case+'oft',
+     '''
+     graph transp=y yreverse=y min2=0.3 max2=0.6 min1=0 max1=3 plotfat=6 plotcol=3
+     wanttitle=n wantaxis=n grid1=n grid2=n screenratio=%g xll=%g
+     ''' % (srw,llw))
+Plot('Wxyoft',
+    '''
+    graph transp=y yreverse=y min2=-0.15 max2=0 min1=0 max1=3 plotfat=6 plotcol=3
+    wanttitle=n wantaxis=n grid1=n grid2=n screenratio=%g xll=%g
+    ''' % (srw,llw))
+
+## Values of parameters in time
+Flow('Woft','Wxoft Wxyoft Wyoft A1oft A2oft A3oft A4oft A5oft B1oft B2oft B3oft C1oft C2oft C3oft C4oft C5oft','cat ${SOURCES[1:16]} axis=2')
+
+## Create spikes and inverse nmo 3D CMP gathers ########################################################
+it1=251
+it2=376
+it3=501
+
+
+Flow('spikes',None,
+     '''
+     spike n1=%d nsp=3 k1=%d,%d,%d | ricker1 frequency=%g |
+     spray axis=2 n=%d o=%g d=%g |
+     spray axis=3 n=%d o=%g d=%g 
+     ''' % (nt,it1,it2,it3,fw,nx,ox,delx,ny,oy,dely))
+
+Flow('cmp','spikes Woft','inmo3gma velocity=${SOURCES[1]} | put label2="x" label3="y" ')
+Result('cmpcube','cmp',
+     '''
+     byte gainpanel=all |
+     grey3 point1=%g point2=%g title="d(t,x,y)" label2="x (km)" label3="y (km)" flat=n 
+     frame1=%d frame2=50 frame3=50 screenratio=%g screenwd=%g screenht=%g
+     labelfat=4 titlefat=4
+     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+
+###############################################################################################################
+
+
+################################################################################################################
+##### Measure Local Slopes of CMP
+
+### Break CMP into patches for parellel computation
+patches=2
+patch3=patches*patches*patches
+    
+Flow('pat','cmp',
+     '''
+     patch p=%d,%d,%d verb=y w=600,60,60 
+     ''' % (patches,patches,patches))
+
+## Sort the 3-D patches to 1-D list along 4-th axis
+Flow('pat1','pat',
+     '''
+     put n4=%d n5=1 n6=1 
+     ''' % patch3 )
+
+## Measure smoothed slope field.  Used for PNMO.
+tsmooth=10
+xsmooth=10
+ysmooth=10
+
+##  Smooth x-slope
+Flow('patdipxsmooth','pat1',
+     '''
+     window squeeze=n |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=1
+       ''' % (tsmooth,xsmooth,xsmooth),split=[4,patch3],reduce='cat axis=4')
+##  Smooth y-slope
+Flow('patdipysmooth','pat1',
+     '''
+     window squeeze=y |
+     dip rect1=%d rect2=%d rect3=%d order=3 n4=0
+     ''' % (tsmooth,ysmooth,ysmooth),split=[4,patch3],reduce='cat axis=4')
+
+##  Rearrange patch lists back to proper dimensions
+Flow('dipxtempsmooth','patdipxsmooth',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches),local=1)
+Flow('dipytempsmooth','patdipysmooth',
+     '''
+     put n4=%d n5=%d n6=%d
+     ''' % (patches,patches,patches),local=1)
+
+##  Merge patches back into single volume.
+Flow('pxsmooth','dipxtempsmooth','patch inv=y weight=y dim=3 n0=%d,%d,%d' % (nt,ny,nx),local=1)
+Flow('pysmooth','dipytempsmooth','patch inv=y weight=y dim=3 n0=%d,%d,%d' % (nt,ny,nx),local=1)
+
+Plot('cmp3d','cmp',
+     '''
+     byte gainpanel=all |
+     grey3 point1=%g point2=%g wanttitle=n wantaxis=n plotfat=3
+     frame1=%d frame2=50 frame3=50 screenratio=%g screenwd=%g screenht=%g
+     flat=y title="CMP" label2="x (km)" label3="y (km)" 
+     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+
+## Inline(px) and corssline(py) slopes
+#Result('pxsmooth3d','pxsmooth',
+#     '''byte gainpanel=all |
+#     grey3 point1=%g title="Inline Slope (px)" frame1=%d frame2=50 #frame3=50 label2="x (km)" label3="y (km)"
+#     screenratio=%g screenwd=%g screenht=%g color=j
+#     ''' % (p1,it3,sr,sw,sh),local=1)
+
+#Result('pysmooth3d','pysmooth',
+#     '''byte gainpanel=all |
+#     grey3 point1=%g title="Crossline Slope (py)" frame1=%d frame2=50 #frame3=50 label2="x (km)" label3="y (km)"
+#     screenratio=%g screenwd=%g screenht=%g color=j 
+#     ''' % (p1,it3,sr,sw,sh),local=1)
+
+
+##### Cube Displays
+Flow('timecube','cmp','math output="x1"')
+#Flow('timecube','cmp','math output="x1*x1"')
+Result('timecube',
+     '''
+     byte allpos=y |
+     grey3 point1=%g point2=%g title="t(t,x,y)" frame1=%d frame2=50 frame3=50 label2="x (km)" label3="y (km)"
+     screenratio=%g screenwd=%g screenht=%g color=j flat=n
+     labelfat=4 titlefat=4
+     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+
+# Inmo of traveltime cube -> t0
+Flow('t0oft','timecube Woft','inmo3gma velocity=${SOURCES[1]}')
+#Result('t0oftcube','t0oft',
+#     '''
+#     byte allpos=y |
+#     grey3 point1=%g point2=%g title="t\_0\^(t,x,y)" frame1=%d frame2=50 #frame3=50 label2="x (km)" label3="y (km)"
+#     screenratio=%g screenwd=%g screenht=%g color=j flat=n
+#     labelfat=4 titlefat=4
+#     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+#Result('pxsmoothcube','pxsmooth',
+#     '''byte gainpanel=all |
+#     grey3 point1=%g point2=%g title="p\_x\^(t,x,y)" frame1=%d frame2=50 #frame3=50 label2="x (km)" label3="y (km)"
+#     screenratio=%g screenwd=%g screenht=%g color=j flat=n 
+#     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+#Result('pysmoothcube','pysmooth',
+#     '''byte gainpanel=all |
+#     grey3 point1=%g point2=%g title="p\_y\^(t,x,y)" frame1=%d frame2=50 #frame3=50 label2="x (km)" label3="y (km)"
+#     screenratio=%g screenwd=%g screenht=%g color=j flat=n 
+#     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+
+## Result('incubes','cmpcube timecube','SideBySideAniso')
+## Result('slopecubes','pxsmoothcube pysmoothcube','SideBySideAniso')
+################################################################################################################
+#### Predictive flattening
+
+# Trace similarity (optional)
+
+Flow('shift1','cmp','window f2=1')
+Flow('shift2','cmp','window f3=1')
+
+Flow('last1','cmp','window f2=-1 squeeze=n')
+Flow('last2','cmp','window f3=-1 squeeze=n')
+
+Flow('ref1','shift1 last1','cat axis=2 ${SOURCES[1]}')
+Flow('ref2','shift2 last2','cat axis=3 ${SOURCES[1]}')
+
+Flow('ref1s','ref1','add mode=p $SOURCE | stack axis=1 norm=n')
+Flow('ref2s','ref2','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('corr1','ref1 cmp','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+Flow('corr2','ref2 cmp','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+
+Flow('num','cmp','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('cos1','corr1 num ref1s',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('cos2','corr2 num ref2s',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('cos','cos1 cos2',
+     '''
+     cat axis=3 ${SOURCES[1]} |
+     smooth rect1=3 rect2=3 
+     ''')
+     
+# To generate paint ordering for pwpaint (no other meaning) 
+Flow('cost','cos',
+     '''
+     mul $SOURCE | stack axis=3 norm=n |
+     put o1=0 d1=1 o2=0 d2=1 o3=0 d3=1
+     ''')
+Flow('costtime','cost',
+     'eikonal vel=n zshot=51 yshot=51')
+#Result('costtime',
+#       '''
+#       grey color=j scalebar=y allpos=y
+#       title="Minimum Time" transp=n yreverse=n
+#       ''')
+
+# Time shifts via predictive painting
+
+
+Flow('pxysmooth','pysmooth pxsmooth','cat axis=4 ${SOURCES[1]}')
+
+Flow('pick3','pxysmooth costtime',
+     '''
+     pwpaint2 cost=${SOURCES[1]} ref2=50 ref3=50 verb=y |
+     clip2 lower=0 upper=4
+     ''')
+
+Flow('t0.asc',None,'echo %g %g %g n1=3 data_format=ascii_float in=$TARGET' % (it1,it2,it3))
+Flow('t0','t0.asc','dd form=native | math output="(input-1)*0.004" ')
+
+Plot('cmp',
+     '''
+     byte gainpanel=all |
+     grey3 point1=%g title="CMP" label2="x (km)" label3="y (km)"
+     frame1=%d frame2=50 frame3=50 screenratio=%g screenwd=%g screenht=%g
+     ''' % (p1,it3,sr,sw,sh),local=1)
+
+Plot('pick3','pick3 t0',
+     '''
+     contour3 point1=%g point2=%g wanttitle=n wantaxis=n plotfat=3
+     frame1=%d frame2=50 frame3=50 screenratio=%g screenwd=%g screenht=%g
+     cfile=${SOURCES[1]} flat=y 
+     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+#Result('pick3','cmp3d pick3','Overlay')
+
+# Flattening via time warping both data and time cubes # T0(T) -> T(T0) ############################################################
+
+Flow('flat3','cmp pick3','iwarp warp=${SOURCES[1]} eps=1')
+Flow('warpedtime','timecube pick3','iwarp warp=${SOURCES[1]} eps=1')
+Flow('t0oft0','t0oft pick3','iwarp warp=${SOURCES[1]} eps=1')
+
+
+#Result('flat3',
+#     '''
+#     byte gainpanel=all |
+#     grey3 point1=%g title="CMP" label2="x (km)" label3="y (km)"
+#     frame1=%d frame2=50 frame3=50 screenratio=%g screenwd=%g screenht=%g
+#     ''' % (p1,it3,sr,sw,sh),local=1)
+
+Result('flat3cube','flat3',
+     '''
+     byte gainpanel=all|
+     grey3 point1=%g point2=%g title="d(t\_0\^,x,y)" label2="x (km)" label3="y (km)" flat=n
+     frame1=%d frame2=50 frame3=50 screenratio=%g screenwd=%g screenht=%g
+     labelfat=4 titlefat=4
+     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+
+Result('warpedtimecube','warpedtime',
+     '''
+     byte allpos=y |
+     grey3 point1=%g point2=%g title="t(t\_0\^,x,y)" label2="x (km)" label3="y (km)" flat=n
+     frame1=%d frame2=50 frame3=50 screenratio=%g screenwd=%g screenht=%g color=j
+     labelfat=4 titlefat=4
+     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+
+#Result('t0oft0cube','t0oft0',
+#     '''
+#     byte allpos=y |
+#     grey3 point1=%g point2=%g title="t\_0\^(t\_0\^,x,y)" frame1=%d #frame2=50 frame3=50 label2="x (km)" label3="y (km)"
+#     screenratio=%g screenwd=%g screenht=%g color=j flat=n
+#     labelfat=4 titlefat=4
+#     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+##Result('outcubes','flat3cube warpedtimecube','SideBySideAniso')
+
+# Warp pick layer
+#Flow('time','pick3','math output=x1 | iwarp warp=$SOURCE eps=1')
+
+#Flow('moveout','time','math output="input*input-x1*x1" | put d4="0"')
+#Flow('moveout','timecube warpedtime','math t0=${SOURCES[0]} t=${SOURCES[1]} output="t-t0" | put d4="0" ')
+
+# t^2(t0,x,y) - t0^2(t0,x,y) ###########################################################
+Flow('moveout','timecube warpedtime','math time=${SOURCES[0]} warpt=${SOURCES[1]} output="warpt^2-time^2" | put d4="0" |clip2 lower=0')
+
+#Result('moveout',
+#     '''
+#     byte allpos=y|
+#     grey3 point1=%g point2=%g title="t\^2\_-t\_0\^\^2\_" label2="x (km)" #label3="y (km)" color=j
+#     frame1=%d frame2=50 frame3=50 screenratio=%g screenwd=%g screenht=%g #flat=n
+#     ''' % (p1,p2,it3,sr,swc,sh),local=1)
+
+
+###########################################################################################################################################
+###########################################   Effective W Inversion by warping
+
+# Extract only the timewarp data at the event (using local max to distinguish)
+Flow('count','cmp',
+    '''
+    window n2=1 f2=50 n3=1 f3=50| envelope | 
+    max1 | real | window n1=%d | put d1=1 o1=0 | sort ascmode=y
+    ''' %(numtime))
+
+# Interpolate in the timewarp volume
+Flow('timecubepicked',['timecube','count'], 'put d4=0| inttest1 coord=${SOURCES[1]} interp=lag nw=2') 
+Flow('warpedtimepicked',['warpedtime','count'], 'inttest1 coord=${SOURCES[1]} interp=lag nw=2') 
+
+# Window transpose t,x,y -> x,y,t
+Flow('timewarpsq','warpedtimepicked',' math output="input^2"| transp plane=13 | transp plane=12')
+ 
+# Find t0^2
+Flow('t0sqcube','timecubepicked',' math output="input^2" | transp plane=13 | transp plane=12 ')
+
+
+# Range of parameters coefficients
+def arr2str(array,sep=' '):
+    return sep.join(map(str,array))
+
+# sW1=0.3
+# lW1=0.6
+# 
+# sW2=-0.2
+# lW2=0.1
+# 
+# sW3=0.3
+# lW3=0.6
+# 
+# sA1=-0.075
+# lA1=0
+# 
+# sA2=0.0
+# lA2=0.0075
+# 
+# sA3=-0.075
+# lA3=0.0
+# 
+# sA4=0.0
+# lA4=0.0075
+# 
+# sA5=-0.075
+# lA5=0
+# 
+# sB1=0.0
+# lB1=0.5
+# 
+# sB2=0.0
+# lB2=0.3
+# 
+# sB3=0.0
+# lB3=0.5
+# 
+# sC1=-0.05
+# lC1=0
+# 
+# sC2=-0.05
+# lC2=0
+# 
+# sC3=-0.1
+# lC3=0
+# 
+# sC4=-0.05
+# lC4=0
+# 
+# sC5=-0.05
+# lC5=0
+ 
+sW1=Wx0
+lW1=WxE
+
+sW2=-0.15
+lW2=0.0
+
+sW3=WyE
+lW3=Wy0
+
+sA1=A1E
+lA1=A10
+
+sA2=A20
+lA2=A2E
+
+sA3=A3E
+lA3=A30
+
+sA4=A40
+lA4=A4E
+
+sA5=A5E
+lA5=A50
+
+sB1=B10
+lB1=B1E
+
+sB2=B20
+lB2=B2E
+
+sB3=B30
+lB3=B3E
+
+sC1=C1E
+lC1=C10
+
+sC2=C2E
+lC2=C20
+
+sC3=C3E
+lC3=C30
+
+sC4=C4E
+lC4=C40
+
+sC5=C50
+lC5=C5E
+ 
+rangepar = (sW1,lW1,sW2,lW2,sW3,lW3,sA1,lA1,sA2,lA2,sA3,lA3,sA4,lA4,sA5,lA5,sB1,lB1,sB2,lB2,sB3,lB3,sC1,lC1,sC2,lC2,sC3,lC3,sC4,lC4,sC5,lC5)
+Flow('range.asc',None,
+     '''
+	 echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (arr2str(rangepar),32) )
+Flow('rangecoeff','range.asc','dd form=native')
+
+
+# MCMC workflow ###################################################################
+ntime=numtime
+Flow('timewarpsqcut','timewarpsq','window n3=%d f3=0' %ntime)
+Flow('t0sqcubecut','t0sqcube','window n3=%d f3=0' %ntime)
+
+Flow('hist',['timewarpsqcut','t0sqcubecut','rangecoeff'],
+	''' 
+	nmo3mcmc seed=78758 nmodel=10000 sigma=1.0 saveiter=100
+	t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]}  prior=n
+	''')
+
+# Plot over different depth
+name=['w1','w2','w3','A1','A2','A3','A4','A5','B1','B2','B3','C1','C2','C3','C4','C5']
+nhist=(100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100)
+ohist=(sW1,sW2,sW3,sA1,sA2,sA3,sA4,sA5,sB1,sB2,sB3,sC1,sC2,sC3,sC4,sC5)
+# ohist = [x*1.05 if x < 0 else x*0.95 for x in ohist]
+ehist=(lW1,lW2,lW3,lA1,lA2,lA3,lA4,lA5,lB1,lB2,lB3,lC1,lC2,lC3,lC4,lC5)
+# ehist = [x*0.95 if x < 0 else x*1.05 for x in ehist]
+dhist=((ehist[0]-ohist[0])/nhist[0],(ehist[1]-ohist[1])/nhist[1],(ehist[2]-ohist[2])/nhist[2],(ehist[3]-ohist[3])/nhist[3],(ehist[4]-ohist[4])/nhist[4],(ehist[5]-ohist[5])/nhist[5],(ehist[6]-ohist[6])/nhist[6],(ehist[7]-ohist[7])/nhist[7],(ehist[8]-ohist[8])/nhist[8],(ehist[9]-ohist[9])/nhist[9],(ehist[10]-ohist[10])/nhist[10],(ehist[11]-ohist[11])/nhist[11],(ehist[12]-ohist[12])/nhist[12],(ehist[13]-ohist[13])/nhist[13],(ehist[14]-ohist[14])/nhist[14],(ehist[15]-ohist[15])/nhist[15])
+
+w1list=[]
+w2list=[]
+w3list=[]
+A1list=[]
+A2list=[]
+A3list=[]
+A4list=[]
+A5list=[]
+B1list=[]
+B2list=[]
+B3list=[]
+C1list=[]
+C2list=[]
+C3list=[]
+C4list=[]
+C5list=[]
+
+
+for i in range(ntime):
+	istr=str(i)
+	timecoor = 'timecoor'+istr
+	Flow(timecoor,'count','window n1=1 f1=%d | spray axis=1 n=10' %i)
+	for j in range(16):
+		Flow(name[j]+'hist-'+istr,'hist',
+			'''
+			window n1=1 f1=%d n3=1 f3=%d |
+			histogram n1=%d d1=%f o1=%f | dd type=float
+			'''%(j,i,nhist[j],dhist[j],ohist[j]))
+		#Result(name[j]+'hist-'+istr,
+	#		''' 
+	#		dots connect=2 dots=0 clip=0 label1=%s unit1= labelsz=8
+	#		''' %name[j])
+		# Finding 10 highest peaks
+		Flow(name[j]+'peaks-'+istr,[name[j]+'hist-'+istr,timecoor],
+			'''
+			max1 | window n1=10 | sfreal
+			''')
+		Flow(name[j]+'peakscoor-'+istr,[timecoor,name[j]+'peaks-'+istr],
+			'''
+			sfcmplx ${SOURCES[1]}
+			''')
+	# Cat the peak coor
+	w1list.append('w1peakscoor-'+istr)
+	w2list.append('w2peakscoor-'+istr)
+	w3list.append('w3peakscoor-'+istr)
+	A1list.append('A1peakscoor-'+istr)
+	A2list.append('A2peakscoor-'+istr)
+	A3list.append('A3peakscoor-'+istr)
+	A4list.append('A4peakscoor-'+istr)
+	A5list.append('A5peakscoor-'+istr)
+	B1list.append('B1peakscoor-'+istr)
+	B2list.append('B2peakscoor-'+istr)
+	B3list.append('B3peakscoor-'+istr)
+	C1list.append('C1peakscoor-'+istr)
+	C2list.append('C2peakscoor-'+istr)
+	C3list.append('C3peakscoor-'+istr)
+	C4list.append('C4peakscoor-'+istr)
+	C5list.append('C5peakscoor-'+istr)
+	
+# Plotting for comparison ###########################################################
+
+sr=srw
+ll=llw
+
+Flow('Wxflat',w1list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('Wxyflat',w2list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('Wyflat',w3list,'cat axis=2 ${SOURCES[1:3]}')
+
+Flow('A1flat',A1list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('A2flat',A2list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('A3flat',A3list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('A4flat',A4list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('A5flat',A5list,'cat axis=2 ${SOURCES[1:3]}')
+
+Flow('B1flat',B1list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('B2flat',B2list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('B3flat',B3list,'cat axis=2 ${SOURCES[1:3]}')
+
+Flow('C1flat',C1list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('C2flat',C2list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('C3flat',C3list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('C4flat',C4list,'cat axis=2 ${SOURCES[1:3]}')
+Flow('C5flat',C5list,'cat axis=2 ${SOURCES[1:3]}')
+
+# Choose from the ten peaks
+wpeak=1
+Plot('Wxflat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=0.3 max2=0.6 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="W\_x" screenratio=%g xll=%g plotcol=7
+     labelsz=18 titlesz=18
+     ''' % (wpeak,dt,sr,ll))
+Plot('Wxyflat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.15 max2=0 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="W\_xy" screenratio=%g  xll=%g plotcol=7
+     labelsz=18 titlesz=18
+     ''' % (wpeak,dt,sr,ll))
+Plot('Wyflat',
+     '''
+     window n1=%d |put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=0.3 max2=0.6 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="W\_y" screenratio=%g xll=%g plotcol=7
+     labelsz=18 titlesz=18
+     ''' % (wpeak,dt,sr,ll))
+
+Apeak=3
+Plot('A1flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.07 max2=0 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="A\_1" screenratio=%g  xll=%g plotcol=7
+     labelsz=30 titlesz=30
+     ''' % (Apeak,dt,sr,ll))
+Plot('A2flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.001 max2=0.006 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="A\_2" screenratio=%g  xll=%g plotcol=7 wantaxis1=n
+     labelsz=30 titlesz=30
+     ''' % (Apeak,dt,sr,ll))
+Plot('A3flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.07 max2=0 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="A\_3" screenratio=%g  xll=%g plotcol=7 wantaxis1=n
+     labelsz=30 titlesz=30
+     ''' % (Apeak,dt,sr,ll))
+Plot('A4flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.001 max2=0.006 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="A\_4" screenratio=%g  xll=%g plotcol=7 wantaxis1=n
+     labelsz=30 titlesz=30
+     ''' % (Apeak,dt,sr,ll))
+Plot('A5flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.07 max2=0 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="A\_5" screenratio=%g  xll=%g plotcol=7 wantaxis1=n
+     labelsz=30 titlesz=30
+     ''' % (Apeak,dt,sr,ll))
+
+
+Bpeak=3
+Plot('B1flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=0.2 max2=0.6 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="B\_1" screenratio=%g  xll=%g plotcol=7
+     labelsz=18 titlesz=18
+     ''' % (Bpeak,dt,sr,ll))
+Plot('B2flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=0. max2=0.4 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="B\_2" screenratio=%g  xll=%g plotcol=7
+     labelsz=18 titlesz=18
+     ''' % (Bpeak,dt,sr,ll))
+Plot('B3flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=0. max2=0.4 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="B\_3" screenratio=%g  xll=%g plotcol=7
+     labelsz=18 titlesz=18
+     ''' % (Bpeak,dt,sr,ll))
+     
+Cpeak=3
+Plot('C1flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.05 max2=0.0 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="C\_1" screenratio=%g  xll=%g plotcol=7
+     labelsz=30 titlesz=30
+     ''' % (Cpeak,dt,sr,ll))
+Plot('C2flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.05 max2=0.0 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="C\_2" screenratio=%g  xll=%g plotcol=7 wantaxis1=n
+     labelsz=30 titlesz=30
+     ''' % (Cpeak,dt,sr,ll))
+Plot('C3flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.075 max2=-0.025 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="C\_3" screenratio=%g  xll=%g plotcol=7 wantaxis1=n
+     labelsz=30 titlesz=30
+     ''' % (Cpeak,dt,sr,ll))
+Plot('C4flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.05 max2=0.0 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="C\_4" screenratio=%g  xll=%g plotcol=7 wantaxis1=n
+     labelsz=30 titlesz=30
+     ''' % (Cpeak,dt,sr,ll))
+Plot('C5flat',
+     '''
+     window n1=%d | put label1="t\_0" unit1=s d1=%g label2="Amplitude" unit2= |
+     graph transp=y yreverse=y min2=-0.05 max2=0.0 min1=0 max1=3 symbol=o symbolsz=25
+     grid1=n grid2=n title="C\_5" screenratio=%g  xll=%g plotcol=7 wantaxis1=n
+     labelsz=30 titlesz=30
+     ''' % (Cpeak,dt,sr,ll))
+
+
+# Plot reference lines
+refpar = (1.5,-1.0,1.5,1.0)
+# refpar = (-1.0,1.5,1.0,1.5)
+Flow('ref.asc',None,
+     '''
+	 echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (arr2str(refpar),4.0) )
+Flow('ref','ref.asc','dd type=complex form=native')
+Plot('ref1','ref',
+     '''
+	 graph transp=y yreverse=y min2=-1 max2=1 min1=0 max1=3
+     grid1=n grid2=n wanttitle=n wantaxis=n screenratio=%g xll=%g plotcol=5 dash=1 plotfat=3
+     ''' % (sr,ll))
+
+# 
+Plot('Wxcompare','Wxoft Wxflat ref1','Overlay') 
+Plot('Wycompare','Wyoft Wyflat ref1','Overlay')
+Plot('Wxycompare','Wxyoft Wxyflat ref1','Overlay')
+#Result('Wcompare','Wxcompare Wxycompare Wycompare','SideBySideAniso')
+# 
+Plot('a1compare','A1oft A1flat ref1','Overlay')
+Plot('a2compare','A2oft A2flat ref1','Overlay')
+Plot('a3compare','A3oft A3flat ref1','Overlay')
+Plot('a4compare','A4oft A4flat ref1','Overlay')
+Plot('a5compare','A5oft A5flat ref1','Overlay')
+#Result('Acompare','a1compare a2compare a3compare a4compare a5compare','SideBySideAniso')
+
+Plot('b1compare','B1oft B1flat ref1','Overlay')
+Plot('b2compare','B2oft B2flat ref1','Overlay')
+Plot('b3compare','B3oft B3flat ref1','Overlay')
+#Result('Bcompare','b1compare b2compare b3compare','SideBySideAniso')
+
+Plot('c1compare','C1oft C1flat ref1','Overlay')
+Plot('c2compare','C2oft C2flat ref1','Overlay')
+Plot('c3compare','C3oft C3flat ref1','Overlay')
+Plot('c4compare','C4oft C4flat ref1','Overlay')
+Plot('c5compare','C5oft C5flat ref1','Overlay')
+#Result('Ccompare','c1compare c2compare c3compare c4compare c5compare','SideBySideAniso')
+
+# MCMC with smaller range for B and C to restrict the choice for topmost event ########################################
+# see if this help define A
+
+#rangeparsmall = (sW1,lW1,sW2,lW2,sW3,lW3,sA1,lA1,sA2,lA2,sA3,lA3,sA4,lA4,sA5,lA5,0.25,0.3,0.1,0.15,0.1,0.15,-0.025,-0.02,-0.02,-0.015,-0.055,-0.05,-0.02,-0.015,-0.03,-0.025)
+rangeparsmall = (0.4,0.45,-0.1,-0.05,0.5,0.55,-0.035,-0.02,0.002,0.003,-0.04,-0.03,0.0015,0.0025,-0.02,-0.01,0.25,0.3,0.1,0.15,0.1,0.15,-0.025,-0.02,-0.02,-0.015,-0.055,-0.05,-0.02,-0.015,-0.03,-0.025)
+
+Flow('rangesmall.asc',None,
+     '''
+	 echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (arr2str(rangeparsmall),32) )
+Flow('rangecoeffsmall','rangesmall.asc','dd form=native')
+
+
+Flow('timewarpsqcutone','timewarpsqcut','window n3=1 f3=0' )
+Flow('t0sqcubecutone','t0sqcubecut','window n3=1 f3=0' )
+Flow('histsmallrange',['timewarpsqcutone','t0sqcubecutone','rangecoeffsmall'],
+	''' 
+	nmo3mcmc seed=78758 nmodel=10000 sigma=1.0 saveiter=100
+	t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]}  prior=n
+	''')
+
+End()

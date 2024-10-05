@@ -19,10 +19,13 @@ import os, stat, sys, types, copy, re, string, ftplib, socket, json
 import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
-if sys.version_info[0] >= 3:
-    import urllib.request as urllib_request
-else:
-    import urllib as urllib_request
+from urllib.request import urlopen
+from shutil import copyfileobj
+import ssl
+
+context = ssl.create_default_context()
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
 
 # The following adds all SCons SConscript API to the globals of this module.
 version = list(map(int,SCons.__version__.split('.')[:3]))
@@ -49,6 +52,20 @@ sfsuffix = '.rsf'
 # suffix for vplot files
 vpsuffix = '.vpl'
 
+# Convert Chinese to two-byte-Unicode string
+def ch2uni(str1):
+    str2=""
+    for i in str1:
+        if not i == "\n":
+            i = i.encode("unicode_escape")
+            i = str(i)
+            i = i[5:-1]
+            i1 = i[:2]
+            i2 = i[2:]
+            str2 += "\\v%d \\v%d "%(int(i1,16),int(i2,16))
+        else: str2+="\\n "
+    return(str2)
+
 def get_geolocation(address=""):
     """Get geolocation from http://ip-api.com."""
     if address == "":
@@ -70,10 +87,10 @@ def get_dataserver():
     if country == "CN":
         #    dataserver = os.environ.get('RSF_DATASERVER','http://49.235.136.252')
         # return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
-        return os.environ.get('RSF_DATASERVER','https://fomel.com')
+        return os.environ.get('RSF_DATASERVER','https://ahay.org')
     else:
         # return os.environ.get('RSF_DATASERVER','https://reproducibility.org')
-        return os.environ.get('RSF_DATASERVER','https://fomel.com')
+        return os.environ.get('RSF_DATASERVER','https://ahay.org')
 
 dataserver = None
 libs = os.environ.get('LIBS',"")
@@ -206,7 +223,9 @@ def retrieve(target=None,source=None,env=None):
                 else:
                     localfile=file
                 try:
-                    urllib_request.urlretrieve(rdir,localfile)
+                    with urlopen(rdir, context=context) as in_stream, open(localfile, 'wb') as out_file:
+                        copyfileobj(in_stream, out_file)
+                        
                     if not os.stat(localfile)[6]:
                         print('Could not download file "%s" ' % localfile)
                         os.unlink(localfile)

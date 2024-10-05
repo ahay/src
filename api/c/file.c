@@ -165,7 +165,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
 	    memcpy(filename,tag,len);
 	}
 		
-	file->stream = fopen(filename,"r+");
+	file->stream = fopen(filename,"r");
 	if (NULL == file->stream) {
 	    sf_input_error(file,"Cannot read input (header) file",filename);
 	    return NULL;
@@ -212,7 +212,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
     memcpy(file->dataname,filename,len);
 	
     if (0 != strcmp(filename,"stdin")) {
-	file->stream = freopen(filename,"r+b",file->stream);
+	file->stream = freopen(filename,"rb",file->stream);
 	if (NULL == file->stream) {
 	    sf_input_error(file,"Cannot read data file",filename);
 	    return NULL;
@@ -654,7 +654,7 @@ static bool readpathfile (const char* filename, char* datapath)
     FILE *fp;
     char host[PATH_MAX], *thishost, path[PATH_MAX];
 	
-    fp = fopen(filename,"r+");
+    fp = fopen(filename,"r");
     if (NULL == fp) return false;
 	
     if (0 >= fscanf(fp,"datapath=%s",datapath))
@@ -1805,7 +1805,7 @@ void sf_unpipe (sf_file file, off_t size)
     */
 	
     (void) fclose(file->stream);
-    file->stream = freopen(dataname,"r+b",tmp);
+    file->stream = freopen(dataname,"rb",tmp);
 	
     if (NULL == file->stream)
 	sf_error ("%s: Trouble reading data file %s:",__FILE__,dataname);

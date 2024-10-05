@@ -1,0 +1,142 @@
+\published{SEG Expanded Abstracts, 1405-1410, (2016)}
+
+\title{Full waveform inversion of passive seismic data for sources and velocities}
+
+\author{Junzhe Sun$^{*1}$, Zhiguang Xue$^1$, Sergey Fomel$^{1}$, Tieyuan Zhu$^{1,2}$ and Nori Nakata$^{3,4}$
+\\
+$^1$The University of Texas at Austin; $^2$Pennsylvania State University; $^3$Stanford University; $^4$The University of Oklahoma}
+
+\maketitle
+
+\lefthead{Sun et al.}
+\righthead{Passive seismic inversion}
+\footer{TCCS}
+
+\begin{abstract}
+From the seismic imaging point of view, the difficulty in locating passive seismic sources lies in their unknown start times. In other words, the source model has an additional dimension of time, which leads to an extended model space. Without proper preconditioning, the computational cost of directly inverting for the source functions can be intractable. Using the recently proposed cross-correlation time-reversal imaging condition, we formulate the imaging task as an inverse problem, and use a sparse weighting function calculated from the cross-correlation of back-propagated events to constrain the model space. We demonstrate that the proposed approach can effectively reduce the number of model parameters, leading to a rapid convergence rate using preconditioned conjugate-gradient iterations. The least-squares imaging of passive seismic sources can be further incorporated into full waveform inversion for Earth properties using the variable projection method. Synthetic examples verify the proposed method.
+\end{abstract}
+
+\section{Introduction}
+Imaging of passive seismic sources provides crucial geomechanical information about the subsurface. In oil and gas exploration, passive sources are useful for monitoring the propagation of fractures when high-pressure fluids are injected into formations, such as hydraulic fracturing \cite[]{montgomery10,maxwellbook}. 
+%Traditional passive seismic imaging method involves arrival-time inversion with traveltime picking adopted from earthquake seismology \cite[]{gibowicz13}. However, traveltime picking can be challenging for certain types of passive seismic data sets, such as microseismic data \cite[]{duncan10}. Therefore, methods that does not rely on traveltime picking are attractive. A plethora of methods for passive seismic imaging are inspired by active seismic imaging algorithms. \cite{rentsch2006fast} and \cite{rentsch2010migration} develop a method similar to Gaussian-beam migration that is not sensitive to picking precision. \cite{kaoshan04} introduced a source-scanning algorithm similar to Kirchhoff migration. 
+Using the wave equation, \cite{gajewski05} and \cite{fink2006time} image passive seismic sources by reverse-time migration \cite[]{mcmechan82}, which is also known as time-reversal imaging (TRI). \cite{atm10} and \cite{witten11} generalize TRI using P- and S-waves. \cite{atm10} also propose to use an auto-correlation time-reversal imaging (ATRI) condition to produce an image of source locations. \cite{zhu2014time} improves the quality of TRI by compensating for attenuation. In order to improve the resolution of TRI, \cite{meabs15a} and \cite{nakata16} propose a cross-correlation time-reversal imaging (CTRI) condition by performing a zero-lag cross-correlation among all the indenpendently back-propagated receiver wavefields. CTRI is capable of achieving high-resolution images of passive sources. There are two major issues associated with CTRI as well as ATRI. First, the correlation destroys phase information, and leads to exponential growth of relative amplitude of seismic sources. Second, since multiplication is not a linear operation, it does not have an adjoint operator to go back to the data domain so that full waveform inversion (FWI) can be applied for estimating Earth properties.
+
+FWI is a technique commonly used in reflection seismology for obtaining high-resolution Earth properties \cite[]{plessix09,virieux09,warner13}. FWI has also been applied to passive seismic data at the global scale \cite[]{tromp05,kim11,zhu15} or for exploration purposes \cite[]{kamei14,behura15}. In both settings, an unknown source function makes the inversion task more difficult. In reflection seismology the source location and excitation time is usually known while one needs to estimate the source signature. \cite{aravkin12} and \cite{rickett13} have shown that the least-squares inversion for source functions can be incorporated into the nonlinear inversion framework using the method of variable projection \cite[]{golub73}. For passive seismic data, however, the inversion for source functions is more challenging since the locations and start times of the seismic sources are generally unknown. In fact, the source function spans a four-dimensional space including the three spatial axes and one time axis. Without proper preconditioning, the computational cost of least-squares inversion for the passive source functions alone can be intractable, not to mention joint inversion for both the source function and Earth properties.
+
+In this paper, we formulate a joint inversion framework for both passive seismic sources and seismic velocities. We first review existing passive imaging conditions using wave equation. We then propose a local normalization operator which effectively normalizes all the local maxima that correspond to potential seismic sources. Next, we use the normalized volume as a masking operator to project the time-reversed wavefield into the space of admissible models. This amounts to a simple diagonal weighting of seismic sources, which can be used in iterative inversion of the true seismic sources by the preconditioned conjugate gradient (PCG) method. Since the four-dimensional model space is constrained to a sparse subset using the masking operator, the convergence rate can be vastly improved. Finally, under the framework of variable projection \cite[]{golub73,rickett13}, seismic sources and velocity can be jointly inverted using separation of variables. We use several synthetic examples to demonstrate the improved efficiency using the proposed approach.
+
+\section{Review of imaging condition}
+In passive seismic imaging, if the start time is known, the time-reversal imaging (TRI) condition states that a true seismic source will correspond to the focus of all back-propagated events at start time. If we treat each receiver wavefield individually, we can formulate this imaging condition as 
+\begin{equation}
+\label{eq:ic-sum}
+I(\mathbf{x},t) = \sum\limits_{i=0}^{N-1} R_i(\mathbf{x},t) \; .
+\end{equation}
+
+However, the time information is usually unavailable, e.g. for microseismic events that happen during hydraulic fracturing. To deal with this situation, most existing algorithms need to perform scanning and picking over a group of potential start times \cite[]{fink2006time,maxwellbook}. An alternative cross-correla\-tion time-reversal imaging (CTRI) condition states that a true seismic source can be indicated by the coincidence of all the wavefields in both space and time. This condition can be expressed as \cite[]{meabs15a,nakata16}
+\begin{equation}
+\label{eq:ic-mult}
+I(\mathbf{x},t) = \prod\limits_{i=0}^{N-1} R_i(\mathbf{x},t) \; .
+\end{equation}
+
+The key difference between equations~\ref{eq:ic-sum} and \ref{eq:ic-mult} is two-fold. One difference lies in image resolution. Summing over all the receiver wavefields will result in an image that contains non-zeros across the wave propatation paths, while multiplication will lead to non-zeros corresponding only to the focuses. The other difference lies in computational cost. The summation indicated in equation~\ref{eq:ic-sum} is implicit, and in practice that entire data volume can be back-propagated at once. However, the multiplication in equation~\ref{eq:ic-mult} has to be carried out explicitly, leading to an $N$ times increase in computational cost. In order to leverage the efficiency of TRI, but to retain the high-resolution of CTRI, a hybrid cross-correlation time-reversal imaging (HCTRI) condition was proposed by \cite{meabs15a}:
+\begin{equation}
+\label{eq:ic-hyb}
+I(\mathbf{x},t) = \prod\limits_{j=0}^{N/n-1} \sum\limits_{k=0}^{n-1} R_{j \times n+k}(\mathbf{x},t) \; ,
+\end{equation}
+where $n$ is the local summation window length. In practice, we find that, with a dense array coverage, three to four groups of separately propagated receiver wavefield suffice to attenuate the artifacts of TRI and improve the imaging resolution. The HCTRI is also connected with the auto-correlation time-reversal imaging (ATRI) \cite[]{atm10}: instead of correlating the entire wavefield with itself as done in ATRI, HCTRI effectively correlate different parts of the wavefield to reduce low-frequency artifacts.
+
+\section{Theory}
+
+\subsection{Local normalization}
+
+Both (H)CTRI and ATRI suffer from a common drawback: the multiplication of wavefields destroys phase information and leads to an exponential growth of relative amplitudes. To deal with the issue of unbalanced amplitudes, we design a local normalization operator with a sliding-window 
+\begin{equation}
+    \label{eq:swnorm}
+    M(\mathbf{x},t) =  \frac{I(\mathbf{x},t)}{\max\left[I(\mathbf{x},t-\tau/2:t+\tau/2)\right]} \;,
+\end{equation}
+where $\tau$ is the window size. This operator normalizes a time-slice of the wavefield by the maximum value in a local window centered around the time $t$. More sophisticated windows can be designed by the same principle, for example, by making the local window variable in space.
+
+\subsection{Sparse weighting function}
+
+The output of equation~\ref{eq:swnorm} is immediately useful for determining passive source locations. However, the phase information is still unavailable and, additionally, the local normalization compromises amplitude. In order to obtain the original phase and amplitude information available in the time-reversal wavefield (equation~\ref{eq:ic-sum}), we propose to convert $M(\mathbf{x},t)$ into a diagonal weighting function that projects the time-reversal wavefield into the space of admissible models. By selecting a thresholding value $\lambda \in [0,1]$, we calculate the weighting function using the Tukey (tapered cosine) window:
+\begin{align}
+    \label{eq:wt-tukey}
+    & W(\mathbf{x},t) = T_{\lambda}(M(\mathbf{x},t)) \;, \\
+    & T_{\lambda}(x) =
+    \begin{cases}
+        \frac{1}{2} \left[ 1+\cos\left(\pi \left( \frac{x}{\lambda} -1 \right) \right) \right], &x<\lambda \\
+        1, &x > \lambda
+    \end{cases} \;.
+\end{align}
+$W(\mathbf{x},t)$ is essentially a projection operator that contains ones at all possible source locations and zeros otherwise. The Tukey window is intended for a smooth transition from zero to one, and can be replaced by other types of window functions. The time-reversal wavefield weighted by $W(\mathbf{x},t)$ carries both the amplitude and phase information, but only at locations and times corresponding to possible sources.
+
+\subsection{Least-squares time-reversal imaging}
+Since backward wave propagation is not the exact inverse of forward wave propagation, the weighted time-reversal wavefield does not contain the correct phase and amplitude information of the true source. To solve this issue, we reformulate the problem of passive source imaging from the perspective of full waveform inversion (FWI) using the adjoint state method \cite[]{plessix06,virieux09}. In acoustic media, we can define the objection function as the data misfit measured by the $L_2$ norm:
+\begin{equation}
+    \label{eq:obj}
+    J = \frac{1}{2}|| \mathbf{S}u(\mathbf{x},t) - d(\mathbf{x},t) ||_2^2 \;,
+\end{equation}
+where $u(\mathbf{x})$ is the wavefield, $d(\mathbf{x},t)$ is the observed seismic data and $\mathbf{S}$ is the matrix that defines aquisition geometry. The corresponding state and adjoint state equations can be expressed as
+\begin{align}
+    \label{eq:state}
+    &(\frac{1}{c^2(\mathbf{x})}\,\frac{\partial^2}{\partial t^2} - \nabla^2) u(\mathbf{x},t) = f_s(\mathbf{x},t)\;, \\
+    \label{eq:adjstate}
+    &(\frac{1}{c^2(\mathbf{x})}\,\frac{\partial^2}{\partial t^2} - \nabla^2) \lambda(\mathbf{x},t) = \mathbf{S}^{\intercal}(\mathbf{S}u(\mathbf{x},t) - d(\mathbf{x},t))\;.
+\end{align}
+where $\lambda(\mathbf{x})$ is the adjoint wavefield, $c(\mathbf{x})$ is the velocity and $f_s(\mathbf{x},t)$ is the source function . The gradients for source and velocity are respectively:
+\begin{align}
+    \label{eq:gradf}
+    & g_{f_s}(\mathbf{x},t) = \lambda(\mathbf{x},t) \;, \\ 
+    \label{eq:gradc}
+    & g_c(\mathbf{x}) = \frac{2}{c^3(\mathbf{x})} \int_0^T \lambda(\mathbf{x},t) \frac{\partial^2u(\mathbf{x},t)}{\partial t^2} dt \;.
+\end{align}
+Note that the gradient with respect to the seismic source is exactly the adjoint wavefield, i.e., the time-reversal wavefield modeled by the adjoint state equation. This explains why the conventional time-reversal imaging methods are appropriate for locating seismic sources. However, the difference between the true seismic source and a time-reversal wavefield is quite significant. First, the true seismic source $f_s(\mathbf{x},t)$ is sparse, while a time-reversal wavefield is not. Second, even at locations and times that correspond to true seismic sources, the time-reversal wavefield does not provide accurate amplitude and phase information.
+
+To address this issue, we note that the wavefield is linearly dependent on the source term \cite[]{rickett13}. Rewriting equation~\ref{eq:state} as a linear operator:
+\begin{equation}
+    \label{eq:forward}
+    \mathbf{d} = \mathbf{A} \mathbf{f}_s \;,
+\end{equation}
+where linear operator $A$ represents the combination of acoustic wave equation and acquisition geometry matrix $\mathbf{S}$. Given a starting velocity model, one can obtain accurate information about the source by solving the least-squares problem
+\begin{equation}
+    \label{eq:lsq}
+    \min|| \mathbf{d}-\mathbf{A}\mathbf{f}_s ||_2^2
+\end{equation}
+using the pseudo-inverse
+\begin{equation}
+    \label{eq:lstri}
+    \hat{\mathbf{f}}_s = \mathbf{A}^{\dagger} \mathbf{d} = (\mathbf{A}^{\intercal}\mathbf{A})^{-1}\mathbf{A}^{\intercal} \mathbf{d} \;.
+\end{equation}
+In the rest part of the paper, we will refer to the method defined by equation~\ref{eq:lstri} as least-squares time-reversal imaging (LSTRI). Although LSTRI is a linear inversion, we recognize that the model space is actually four-dimen\-sional, and includes the three spatial axes and one time axis. Without proper preconditioning, the computational cost of such an inversion can be impractical. We propose to use the weighting function derived in equation~\ref{eq:wt-tukey} as a diagonal model weighting matrix to precondition the conjugate gradient (CG) iterations. Since $W(\mathbf{x},t)$ effectively restricts CG to only update the locations that correspond to possible source locations, the eigenvalues of the matrix being inverted become better clustered and CG is able to achieve a faster convergence rate \cite[]{shewchuk94}.
+
+The starting velocity model used to invert for the passive sources might be inaccurate. Most often, they are derived from well logs or travel-time tomography. FWI is capable of providing more detailed velocity structures. After initial source inversion, the inverted source can be used in FWI to update the velocity. Furthermore, one can jointly update the source and velcoty under the framework of the variable projection method \cite[]{golub73,aravkin12,rickett13}. In practice, we perform sufficient linear iterations to obtain accurate source functions and only a few nonlinear iterations to update the velocity model in an alternating fashion.
+
+\section{Numerical examples}
+
+In our first example, we test the effectiveness of the local normalization operator in balancing the amplitudes of passive sources of different magnitudes. We use a vertical gradient velocity model with five sources at the same depth but with increasing magnitudes. Using HCTRI with ten groups of receivers, only three events with the highest magnitudes are identifiable from the stacked image (Figure~\ref{fig:location0}). After local normalization, the amplitude of all source images get normalized to one, which makes them fully identifiable after stacking (Figure~\ref{fig:location-new}).
+
+\inputdir{localnorm}
+\multiplot{2}{location0,location-new}{width=0.45\textwidth}{(a) Source location calculated by HCTRI using ten groups of receivers. The amplitude is highly unbalanced due to the multiplication process. (b) Local normalized HCTRI image. The amplitude of all the sources are successfully normalized to one. The top panels demonstrates a trace cutting horizontally through the imaged hypocenters.}
+
+Next, we test the improved convergence rate of the preconditioned LSTRI using CG iterations. In a smoothly varying synthetic velocity model, three sources of varying magnitudes were excited at delayed times (Figure~\ref{fig:sov}). The recorded data contain three events of varying amplitudes and arrival times (Figure~\ref{fig:lstri}). The data misfit of LSTRI after $10$ iterations shows significant residual energy compared with LSTRI with the proposed preconditioning after $10$ iterations. The normalized source signature extracted from the true source location demonstrates that the preconditioned LSTRI provides the best estimation of the true source signature, compared with TRI and LSTRI. The convergence rate measured by normalized data misfit shows that the proposed preconditioning dramatically speeds up the convergence rate (Figure~\ref{fig:conv}).
+\inputdir{pfwi}
+\multiplot{4}{sov,data,res-inv1,res-inv2}{width=0.45\textwidth}{(a)A vertical gradient velocity with three passive sources of variable magnitudes. (b) Synthetic passive data recorded by a surface array. Three events have been recorded. (c) Data misfit produced by LSTRI after $10$ iterations. (d) Data misfit produced by preconditioned LSTRI after $10$ iterations. Plotting clip are kept the same for all three cases. \label{fig:lstri}}
+\multiplot{4}{src-traces,src-tr-traces,inv1-traces,inv2-traces}{width=0.45\textwidth}{Normalized source signature of (a) true passive source; (b) passive source estimated by TRI; (c) passive source estimated by LSTRI after $10$ iterations; (d) passive source estimated by preconditioned LSTRI after $10$ iterations. \label{fig:signature}}
+\plot{conv}{width=0.45\textwidth}{The convergence rate of LSTRI and preconditioned LSTRI. The dashed line denotes regular LSTRI, and the solid line denotes preconditioned LSTRI.}
+
+Finally, we combine the preconditioned LSTRI with acoustic FWI using the variable projection method and apply it to a synthetic example. Three stages of passive seismic events were recorded, each containing six events. The starting velocity model (Figure~\ref{fig:vel-start}) is a smoothed version of the real one (Figure~\ref{fig:vel}). A total of $60$ nonlinear iterations were performed for two FWI experiments. The first experiment is conventional FWI using an inverted source based on the true velocity model (Figure~\ref{fig:vel-inv-only}). The second experiment uses the variable projection method to jointly invert for both passive sources and the velocity model (Figure~\ref{fig:vel-inv-joint}). Both experiments produce reasonable velocity updates, especially at high wavenumbers. The footprints of passive sources are visible in both inverted models. FWI with a known source was able to recover more detailed features in the velocity model compared with FWI with unknown sources using variable projection and the same number of iteraitons. It is reasonable to expect the joint inversion process to suffer from a slower convergence rate compared with that of the simpler task of inverting for velocity alone.
+
+\inputdir{marmpas}
+\multiplot{4}{vel,vel-start,vel-inv-only,vel-inv-joint}{width=0.45\textwidth}{(a) True velocity model; (b) starting velocity model; (c) inverted model using the known source after $60$ iterations; (d) inverted model using the variable projection method after $60$ iterations. \label{fig:vels}}
+
+\section{Discussion and Conclusion}
+We have proposed a framework for joint inversion for both passive seismic sources and velocities using diagonal preconditioning. The linear inversion of passive source functions is based on an iterative least-squares inversion using PCG. It is then incorporated into the FWI for velocity model using the method of variable projection. The framework can be efficiently parallelized on distributed computer clusters by separating passive seismic data into different stages and simultaneously inverting for the corresponding source functions. Synthetic examples demonstrate that the preconditioned LSTRI can dramatrically improve the convergence rate, and the inverted source functions can be further incorporated in FWI for velocity model updates.
+
+\section{Acknowledgments}
+We thank the sponsors of the Texas Consortium for Computation Seismology for financial support. The first author was additionally supported by the Statoil Fellows Program at the University of Texas at Austin. The fourth author was supported by the Jackson School Distinguished Postdoctoral Fellowship at the University of Texas at Austin.  We thank Texas Advanced Computing Center for providing computational resources used in this study.
+
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{micro}
+

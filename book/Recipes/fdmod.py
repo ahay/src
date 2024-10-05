@@ -1682,8 +1682,8 @@ def ewefd3d(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
 def gauss1t(gaus,tcen,tsig,par):
     Flow(gaus,None,
          '''
-         math output="exp( -(x1-%g)^2/(2*%g) )"
-         ''' % (tcen,tsig*tsig) +
+         math output="exp( -0.5*((x1-%g)/(%g))^2 )"
+         ''' % (tcen,tsig) +
          '''
          n1=%(nt)d d1=%(dt)g o1=%(ot)g |
          scale axis=123
@@ -1692,8 +1692,8 @@ def gauss1t(gaus,tcen,tsig,par):
 def gauss1x(gaus,xcen,xsig,par):
     Flow(gaus,None,
          '''
-         math output="exp( -(x1-%g)^2/(2*%g) )"
-         ''' % (xcen,xsig*xsig) +
+         math output="exp( -0.5*((x1-%g)/(%g))^2 )"
+         ''' % (xcen,xsig) +
          '''
          n1=%(nx)d d1=%(dx)g o1=%(ox)g |
          scale axis=123
@@ -1701,8 +1701,8 @@ def gauss1x(gaus,xcen,xsig,par):
 def gauss1z(gaus,zcen,zsig,par):
     Flow(gaus,None,
          '''
-         math output="exp( -(x1-%g)^2/(2*%g) )"
-         ''' % (zcen,zsig*zsig) +
+         math output="exp( -0.5*((x1-%g)/(%g))^2 )"
+         ''' % (zcen,zsig) +
          '''
          n1=%(nz)d d1=%(dz)g o1=%(oz)g |
          scale axis=123
@@ -1711,8 +1711,8 @@ def gauss1z(gaus,zcen,zsig,par):
 def gauss2d(gaus,xcen,zcen,xsig,zsig,par):
     Flow(gaus,None,
          '''
-         math output="exp( -(x1-(%g))^2/(2*%g) -(x2-(%g))^2/(2*%g) )"
-         ''' % (zcen,zsig*zsig,xcen,xsig*xsig) +
+         math output="exp( -0.5*((x1-(%g))/(%g))^2 - 0.5*((x2-(%g))/(%g))^2 )"
+         ''' % (zcen,zsig,xcen,xsig) +
          '''
          n1=%(nz)d d1=%(dz)g o1=%(oz)g
          n2=%(nx)d d2=%(dx)g o2=%(ox)g |
@@ -1722,8 +1722,8 @@ def gauss2d(gaus,xcen,zcen,xsig,zsig,par):
 def gauss3d(gaus,xcen,ycen,zcen,xsig,ysig,zsig,par):
     Flow(gaus,None,
          '''
-         math output="exp( -(x1-(%g))^2/(2*%g) -(x2-(%g))^2/(2*%g) -(x3-(%g))^2/(2*%g) )"
-         ''' % (zcen,zsig*zsig,xcen,xsig*xsig,ycen,ysig*ysig) +
+         math output="exp( -0.5*((x1-(%g))/(%g))^2 - 0.5*((x2-(%g))/(%g))^2 -0.5*((x3-(%g))/(%g))^2 )"
+         ''' % (zcen,zsig,xcen,xsig,ycen,ysig) +
          '''
          n1=%(nz)d d1=%(dz)g o1=%(oz)g
          n2=%(nx)d d2=%(dx)g o2=%(ox)g

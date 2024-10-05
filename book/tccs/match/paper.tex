@@ -1,0 +1,284 @@
+\published{IMAGE Expanded Abstracts, 2847-2851, (2022)}
+
+\title{Least-squares non-stationary triangle smoothing}
+
+\author{Reem Alomar$^{1}$ and Sergey Fomel$^{1}$
+\\
+$^1$The University of Texas at Austin}
+
+\lefthead{Alomar and Fomel}
+\righthead{Non-stationary triangle smoothing}
+\footer{TCCS}
+
+\maketitle
+
+\begin{abstract}
+  We propose a fast and accurate method to estimate the radius of non-stationary triangle smoothing for matching two seismic datasets. The smoothing radius is estimated by non-linear least-squares inversion using an iterative Gauss-Newton approach. We derive and implement the derivative of the smoothing operator to compute the gradient for inversion. The proposed method is useful for implementing non-stationary triangle smoothing as a low-cost edge-preserving filter. The efficiency of the proposed method is also confirmed in several field data examples of seismic data matching applications in non-stationary local signal and noise orthogonalization, non-stationary local slope estimation, and matching low-resolution and high resolution seismic images from the same exploration area.
+\end{abstract}
+
+\section{Introduction}
+Triangle smoothing is a widely used and efficient filtering operation that finds numerous applications in regularizing seismic inverse problems and computing local attributes (\citealp{fomel2007a,fomel2007b}). Non-stationary triangle smoothing uses a variable smoothing radius (i.e. variable strength of smoothing) along the dimensions of the input dataset. \cite{greerfomel2018} developed an iterative method to estimate the smoothing radius for non-stationary smoothing for matching two seismic datasets. The method is based on the local frequency attribute and has been applied successfully for approximating the inverse Hessian operator in least-squares migration \cite[]{greer2018}. 
+
+\cite{chenfomelorthon2021} proposed a non-stationary local signal-and-noise orthogonalization method as an alternative to the local signal-and-noise orthogonalization method \cite[]{chenfomel2015}. In this approach, the stationary smoothing constraint used to obtain the local orthogonalization weights becomes non-stationary. For highly non-stationary data, the smoothing radius is small where the signal is dominant and it is large where the noise is dominant; thus, the radius adapts to achieve the optimal stability and accuracy. 
+\cite{wang2021} proposed a non-stationary local slope estimation method that balances both the stability and the resolution of slope perturbations by controlling the strength of triangle smoothing in the shaping regularization framework within the plane-wave destruction algorithm \cite[]{fomel2002}.
+\cite{chen2021} introduced a multi-dimensional non-stationary triangle smoothing operator in local time-frequency transformation \cite[]{liufomel2013}. This transformation was proven to be effective in addressing the non-stationary nature of the input seismic data and thus useful in several practical applications of time-frequency analysis. 
+
+Non-stationary smoothing applications improve resolution and accuracy, but they require an additional computational cost due to the necessary radius estimation step.
+In a field data example performed by \cite{chenfomelorthon2021}, the radius estimation step in non-stationary local signal-and-noise orthogonalization increased computational time by a factor of 15. 
+While the method of \cite{greerfomel2018} is robust and effective, it does not provide an optimally fast convergence. We propose an alternative method based on Gauss-Newton iteration to estimate the triangle smoothing radius for matching seismic datasets.We derive and implement the derivative of the triangle smoothing operator to guide better guesses for the radius in regularized iterative least-squares inversion. 
+
+\section{Triangle Smoothing}
+A box filter can be defined in the Z-transform notation as follows \cite[]{claerbout1992}:
+\begin{equation}
+B(Z) = \frac{1}{N} (1 + Z + Z^2 +\cdots+Z^{N-1}) = \frac{1-Z^N}{N(1-Z)},
+\end{equation}
+\begin{equation}
+Z = e^{i\omega\Delta t},
+\end{equation}
+where $N$ is the number of samples included in a moving average under a rectangle window, $\omega$ is the frequency in radians, and $\Delta t$ is the interval spacing in time. Division by $(1-Z)$ is the operation of causal integration and corresponds to the following recursion in time:
+\begin{equation}
+y_t = y_{t-1}+x_{t-1}.
+\label{eq:causint}
+\end{equation}
+The adjoint of this operation is anti-causal integration, or division by $(1-Z^{-1})$, and is represented by the backward recursion in time:
+\begin{equation}
+y_{t-1} = y_{t}+x_{t}.
+\label{eq:anticausint}
+\end{equation}
+A triangle filter is defined as the cross-correlation of two box filters \cite[]{claerbout1992}
+\begin{equation}
+T(Z) = B(Z)B(Z^{-1}) = \frac{(2-Z^N-Z^{-N})}{N^2(1-Z)(1-Z^{-1})}.
+\label{eq:triangle}
+\end{equation}
+$N$ becomes the triangle smoothing radius, or half the number of points included in a moving average under a triangle window. The numerator in \ref{eq:triangle} is represented by the following filtering operation:
+\begin{equation}
+y_{t} = 2x_t-x_{t-N}-x_{t+N}.
+\label{eq:numtri}
+\end{equation}
+Triangle smoothing is efficient because it requires at most five additions and one multiplication for each time sample regardless of the size of the triangle smoothing radius. 
+To summarize, triangle smoothing is implemented in time by the following four steps in any order: (1) three-point filtering following equation \ref{eq:numtri}, (2) causal integration following equation \ref{eq:causint}, (3) anti-causal integration following equation \ref{eq:anticausint}, and (4) division by $N^2$. 
+By expanding $Z$ and redefining the triangle smoothing radius as $R$, we can redefine a triangle filter as a function of smoothing radius and frequency
+\begin{equation}
+T(R,w) = \frac{1}{R^{2}}\left[\frac{2-2\cos(Rw\Delta t)}{2-2\cos(w\Delta t)}\right] = \frac{1}{R^{2}}\left[\frac{\sin^2(\frac{Rw\Delta t}{2})}{\sin^2(\frac{w\Delta t}{2})}\right]
+\label{eq:triangle2}
+\end{equation}
+In practice, smoothing with a non-integer radius is implemented using interpolation between two triangles with the nearest integer radii \cite[]{nnint}.
+
+\section{Triangle Smoothing Derivative}
+We introduce a new operator, the triangle smoothing derivative, which is obtained by taking the derivative of equation \ref{eq:triangle2} with respect to the radius $R$:
+\begin{equation}
+\frac{\partial T}{\partial R}(R,\omega) = i\omega \left[\frac{-i \Delta t \sin(\frac{R\omega \Delta t}{2})}{2R^2\sin^2(\frac{\omega \Delta t}{2})}\right] - \frac{2}{R}T(R,\omega).
+\label{eq:dtdr}
+\end{equation}
+To obtain the time domain implementation of the triangle smoothing derivative, we break down equation \ref{eq:dtdr} into three parts to obtain the following three step implementation:
+\begin{enumerate}
+    \item A digital filter analogous to triangle smoothing corresponding to $\left[\frac{-i \Delta t \sin(\frac{R\omega \Delta t}{2})}{2R^2\sin^2(\frac{\omega \Delta t}{2})}\right]$ in equation \ref{eq:dtdr}
+    \begin{equation}
+    F(Z)=\frac{Z^N-Z^{-N}}{N^2(1-Z)(1-Z^{-1})},
+    \end{equation}
+    implemented in time exactly like triangle smoothing with the slight modification of replacing step (1), the recursion following equation \ref{eq:numtri}, with the following recursion: 
+    \begin{equation}
+        y_{t} = x_{t-N}-x_{t+N}.
+    \end{equation}
+    \item Approximating the derivative of the result of step 1 by taking the second-order central difference. This step corresponds to multiplication by $i\omega$ in equation \ref{eq:dtdr}.
+    \item Subtracting from the result of step 2 the result of smoothing normalized by $\frac{2}{R}$. This step corresponds to the term $-\frac{2}{R}T(R,\omega)$ in equation \ref{eq:dtdr}.
+\end{enumerate}
+To approximate the triangle smoothing derivative function for a non-integer smoothing radius, we use the following interpolation:
+\begin{equation}
+\frac{\partial T}{\partial R}_{non-integer}(R,w) = [(N+1)-R]\frac{\partial T}{\partial R}(N,w) + [(R-N)]\frac{\partial T}{\partial R}(N+1,w).
+\label{eq:dtdrnonint}
+\end{equation}
+The weighting coefficients are justified by matching the second-order Taylor expansion of equations \ref{eq:dtdr} and \ref{eq:dtdrnonint} around the zero frequency:
+\begin{equation}
+\frac{\partial T}{\partial R}(R,w=0)=\frac{\partial T}{\partial R}_{non-integer}(R,w=0) \approx \frac{-1}{6}Rw^2.
+\end{equation}
+Both triangle smoothing and the triangle smoothing derivative have a straightforward non-stationary implementation in the time domain that is a direct extension of the stationary implementation because all equations depend directly on the radius.
+
+\section{Estimating the Smoothing Radius}
+To estimate the triangle smoothing radius for matching two seismic datasets, we utilize the Gauss-Newton approach to solving non-linear least-squares problems \cite[]{lawson1995}. We define a triangle smoothing operator with radius $\mathbf{R}$ applied to data $\mathbf{d}$ as $\mathbf{S}_R[\mathbf{d}]$ and a triangle smoothing derivative operator as $\mathbf{S}_R'[\mathbf{d}]$. 
+Given the original data $\mathbf{d}_{input}$ and the smoothed data $\mathbf{d}_{output}$, we define the Taylor expansion
+\begin{equation}
+\mathbf{S}_R[\mathbf{d}_{input}] \approx \mathbf{S}_{R_0}[\mathbf{d}_{input}] + \mathbf{S}_{R_0}'[\mathbf{d}_{input}](\mathbf{R}-\mathbf{R}_0),
+\label{eq:taylortri}
+\end{equation}
+where $\mathbf{R}_0$ is the first guess for the radius and $\mathbf{R}$ is the best estimate for the radius. Noting that $\mathbf{S}_R[\mathbf{d}_{input}] \approx \mathbf{d}_{output}$, we rearrange equation \ref{eq:taylortri} to solve for $R$:
+\begin{equation}
+\mathbf{R} \approx \mathbf{R}_0 + \left(\mathbf{S}_{R_0}'[\mathbf{d}_{input}]\right)^{-1}\left(\mathbf{d}_{output} - \mathbf{d}_{input}\right)\;.
+\label{eq:rad}
+\end{equation}
+We can repeat this approach and solve for the radius iteratively, where the radius at the $i_{th}$ iteration is given by
+\begin{equation}
+\mathbf{R}_{i+1} = \mathbf{R}_i + \left(\mathbf{S}_{R_i}'[\mathbf{d}_{input}]\right)^{-1}\left(\mathbf{d}_{output} - \mathbf{S}_{R_i}[\mathbf{d}_{input}]\right)\;.
+\label{eq:radest}
+\end{equation}
+The proposed method in theory converges with a rate approaching quadratic, although convergence is not guaranteed if the initial guess is far from the true value \cite[]{lawson1995}. The method is directly extended to solve for a non-stationary triangle smoothing radius given that both triangle smoothing and its derivative are non-stationary. Note that for stability of the solution, we must take care in performing the division in equation \ref{eq:radest}. We implement smooth division which treats division as inversion and regularizes the inversion in equation~\ref{eq:radest} using shaping regularization \cite[]{fomel2007b}. 
+The shaping regularization is controlled by its own smoothness radius and reduces the radius estimation to stationary least-squares estimate when the smoothing radius for shaping is set to be very large.
+
+\section{Smoothing Filters and Edge Preservation}
+\inputdir{horizon}
+Smoothing is a filtering operation that aims to remove high-frequency noise from an input dataset. In general, there are two classes of smoothing filters: linear and non-linear \cite[]{hall2014}. Linear filters such as stationary box and triangle filters smooth all input pixels in the same way, making them efficient. The general drawback of using linear smoothing filters is that they fail to preserve strong edges in the input dataset. Edge-preservation is essential in geophysical applications since edges contain important information such as faults, and channel boundaries \cite[]{bahorichfarmer1995}. Non-linear filters, on the other hand, can preserve or enhance strong edges, but they are costly relative to linear filters. Non-linear filters do not treat all input pixels in the same way; instead, they typically smooth an input pixel based on some statistical attribute of the pixels surrounding it. Examples of non-linear smoothing filters include a median filter, a bilateral filter, and an anisotropic diffusion filter (\citealp{tukey1970,manduchiandtomasi1998,peronamalik1990}). We note that non-stationary triangle smoothing, a linear operator, can achieve both the low cost of linear filters and the edge-preserving ability of non-linear filters. The recursive implementation of non-stationary triangle smoothing costs exactly the same as stationary triangle smoothing. Furthermore, the non-stationary radius values can be tailored to the properties of the input dataset, for example, to adapt the strength of smoothing to the edges present.
+
+We compare the performance of non-stationary triangle smoothing against a select set of non-linear smoothing filters for a time horizon with added uniform noise of mean zero and range equal to 15 ms shown in Figure~\ref{fig:noisy}. For reference, the original horizon without added noise is displayed in Figure~\ref{fig:filled}. We display the results of applying an $8\times8$ median filter and an anisotropic diffusion filter to the noisy horizon in Figures \ref{fig:median} and \ref{fig:diffused} respectively. The result of applying a non-stationary triangle smoothing filter defined by the non-stationary radius values is displayed in Figure~\ref{fig:smooth-5}. 
+The non-stationary smoothing is applied in the horizontal direction only. To account for the smoothing required in the vertical direction, we apply vertical triangle smoothing using a small stationary radius equal to 2. The non-stationary radius is estimated using 5 iterations of the proposed method substituting the noisy horizon as $\mathbf{d}_{input}$ and the anisotropic diffusion-filtered horizon as $\mathbf{d}_{output}$. The initial guess for the radius is a constant value equal to 4. The two strongest edges in the time horizon at inlines 1300 and 1400 correspond to small smoothing radius values, indicating that the estimated radius is adaptive to the edges present. The times required to compute the median-filtered horizon, the anisotropic diffusion-filtered horizon, and the non-stationary triangle-filtered horizon are 2.10 s, 1.62 s, and 0.02 s respectively. The iterative non-stationary radius estimation step takes 0.34 s. These comparisons are based on a MacBook Pro laptop with a 3.2 GHz M1 8-core processor. We plot time slices at crossline 1400 for the original time horizon, the noisy horizon, and the three filtered horizons in Figure~\ref{fig:slice-test}. The horizon slices indicate that anisotropic diffusion does a better job at preserving edges in the original horizon compared to median filtering. The non-stationary triangle filter was designed to mimic the anisotropic diffusion filter, and we observe that the non-stationary triangle-filtered horizon slice does indeed mimic the characteristics of the anisotropic diffusion-filtered horizon slice.Thus, when taking efficiency into account, non-stationary smoothing can be the most practical edge-preserving filter especially for large multidimensional datasets. 
+
+
+\multiplot{4}{filled,noisy,median,diffused}{width=0.45\textwidth}{Time horizon example. (a) Original time horizon. (b) Horizon with added uniform noise of mean zero and range equal to 15 ms. (c) Noisy horizon smoothed with an $8\times8$ median filter. (d) Noisy horizon smoothed with an anisotropic diffusion filter.}
+
+\multiplot{2}{new-rect50,smooth-5}{width=0.45\textwidth}{Time horizon example. (a) Non-stationary triangle smoothing radius. (f) Noisy horizon smoothed in the horizontal direction with a triangle filter defined by non-stationary radius values in (a), and in the vertical direction with a stationary radius equal to 2.}
+
+\inputdir{./}
+\plot{slice-test}{width=\textwidth}{Time horizon example. Time slices at crossline 1400 offset from each other by integer multiples of 200 ms for original time horizon (blue), noisy horizon (orange), median-filtered horizon (green), anisotropic diffusion-filtered horizon (red), and non-stationary triangle-filtered horizon (purple). Edges in the original time horizon indicated by dashed grey lines.}
+
+\section{Applications}
+We apply the proposed method to estimate the non-stationary triangle smoothing radius within the workflow of the following seismic data matching applications: non-stationary local signal-and-noise orthogonalization, non-stationary local slope estimation, and matching and merging high-resolution and low-resolution seismic images acquired over the same area. 
+
+\subsection{Non-stationary local signal and noise orthogonalization}
+\inputdir{orthon}
+Given an initial estimate of the signal $\mathbf{s}$ and noise $\mathbf{n}$, the locally orthogonalized signal $\mathbf{\hat{s}}$ and locally orthogonalized noise $\mathbf{\hat{n}}$ can be expressed as
+\begin{equation}
+\mathbf{\hat{s}} = \mathbf{s} + \mathbf{w}\circ\mathbf{s}
+\label{eq:orthosignal}
+\end{equation}
+\begin{equation}
+\mathbf{\hat{n}} = \mathbf{n} - \mathbf{w}\circ\mathbf{n}
+\label{eq:orthonoise}
+\end{equation}
+where $\mathbf{w}$ is the local orthogonalization weight \cite[]{chenfomel2015} and $\circ$ is the element-wise product. 
+The local orthogonalization weight can be solved for via the following regularized least-squares problem \cite[]{chenfomelorthon2021}:
+\begin{equation}
+\arg \min_{\mathbf{w}} \parallel  \mathbf{S}\mathbf{w} - \mathbf{n} \parallel_2^2 + \mathbf{R}(\mathbf{w}),
+\label{eq:weight}
+\end{equation}
+where $\mathbf{S}$ is the diagonal matrix of $\mathbf{{s}}$  and $\mathbf{R(w)}$ is the regularization term. 
+Based on the shaping regularization method \cite[]{fomel2007b}, the non-stationary local orthogonalization weight can be obtained as 
+\begin{equation}
+\mathbf{w} = [\lambda^2 \mathbf{I} + \mathbf{T} (\mathbf{S}^T\mathbf{S} -\lambda^2 \mathbf{I})]^{-1}\mathbf{T}\mathbf{S}^T\mathbf{n},
+\label{eq:weightsol}
+\end{equation}
+where $\mathbf{T}$ is a non-stationary triangle smoothing operator, $\mathbf{I}$ is an identity matrix, and $\lambda=\parallel\mathbf{s}\parallel^2_2$. 
+To obtain $\mathbf{T}$, \cite{chenfomelorthon2021} propose using the iterative radius estimation approach of \cite{greerfomel2018}. 
+The approach of \cite{greerfomel2018} is based on an optimization problem solved by a line-search method that aims to minimize the difference in local frequency between the low-pass filtered seismic data and the seismic data smoothed via a non-stationary triangle smoothing operator. 
+We will perform this application on a 2D field dataset shown in Figure~\ref{fig:f2-1} with the aim of separating coherent seismic signals from random noise. We will compare the results of non-stationary local signal-and-noise orthogonalization using the line-search method of \cite{greerfomel2018} and the proposed Gauss-Newton method to obtain the non-stationary triangle smoothing constraint. The initial estimates of signal and noise displayed in Figures \ref{fig:f2-fx-1} and \ref{fig:f2-fx-1-n} respectively are obtained using the traditional f-x predictive filtering method \cite[]{canales1984}. The non-stationary smoothing radii obtained using 5 iterations of the line-search method and 5 iterations of the proposed method are displayed in Figures \ref{fig:rect50} and \ref{fig:new_rect50} respectively. For the proposed method, we directly substitute the raw field data as $\mathbf{d}_{input}$ and the 20 Hz low-pass filtered data as $\mathbf{d}_{output}$ in equation \ref{eq:radest} without accounting for local frequency. In this example, bypassing the local frequency calculation step makes the proposed Gauss-Newton method faster than the line-search method by a factor of 72.
+
+\multiplot{2}{f2-1,f2-z1}{width=0.45\textwidth}{Field data example 1. (a) Raw Field Data. (b) Magnified section.}
+
+\multiplot{2}{rect50,new_rect50}{width=0.45\textwidth}{
+    Field data example 1. Estimated non-stationary smoothing radius using 5 iterations of 
+    (a) the line-search approach proposed by \cite{chenfomelorthon2021} and 
+    (b) the proposed Gauss-Newton approach.
+}
+
+The locally orthogonalized signal and noise using the line-search radius are shown in Figures \ref{fig:f2-orthon-1} and \ref{fig:f2-orthon-1-n} respectively, and the locally orthogonalized signal and noise using the Gauss-Newton radius are shown in Figures \ref{fig:new-f2-orthon-1} and \ref{fig:new-f2-orthon-1-n} respectively. 
+The local similarity is a metric that can be used to evaluate signal and noise separation \cite[]{chenfomel2015}.
+The local similarity between the signal and noise using the f-x method, non-stationary orthogonalization using the line-search radius, and non-stationary orthogonalization using the Gauss-Newton radius is displayed in Figures \ref{fig:f2-s}, \ref{fig:f2-s-orthon}, and \ref{fig:new-f2-s-orthon} respectively. 
+The proposed method does the best job of separating coherent signals from random noise since its corresponding local similarity values are the smallest. 
+The zoomed in results of signal and noise separation for the three methods are displayed in Figure \ref{fig:f2-fx-z1-0,f2-orthon-z1-0,new-f2-orthon-z1-0,f2-fx-z1-n,f2-orthon-z1-n,new-f2-orthon-z1-n}.
+In the zoomed in signals, we point to the areas where the signal is stronger for non-stationary orthogonalization using the proposed Gauss-Newton method compared to the two other approaches. 
+In the zoomed in noise results, these same areas correspond to locations of higher signal leakage for the two other methods compared to the proposed method. 
+Thus, from a visual standpoint, the proposed method recovers the strongest signals and also achieves the least signal leakage in the removed noise. 
+
+\multiplot{6}{f2-fx-1,f2-orthon-1,new-f2-orthon-1,f2-fx-1-n,f2-orthon-1-n,new-f2-orthon-1-n}{width=0.3\textwidth}{
+    Field data example 1. De-noised data using the (a) f-x method, (b) non-stationary orthogonalization using line-search radius proposed by \cite{chenfomelorthon2021} for regularization, and (c) non-stationary orthogonalization using proposed Gauss-Newton radius for regularization. (d-f) Removed noise corresponding to (a-c), respectively.
+}
+
+\multiplot{3}{f2-s,f2-s-orthon,new-f2-s-orthon}{width=0.3\textwidth}{Field data example 1. Local similarity of de-noised data and removed noise for (a) f-x method, (b) non-stationary orthogonalization using the line-search radius proposed by \cite{chenfomelorthon2021}, and (c) non-stationary orthogonalization using the proposed Gauss-Newton radius.}
+
+\multiplot{6}{f2-fx-z1-0,f2-orthon-z1-0,new-f2-orthon-z1-0,f2-fx-z1-n,f2-orthon-z1-n,new-f2-orthon-z1-n}{width=0.3\textwidth}{Field data example 1. (a-f) Magnified sections corresponding to framed boxes in Figure~\ref{fig:f2-fx-1,f2-orthon-1,new-f2-orthon-1,f2-fx-1-n,f2-orthon-1-n,new-f2-orthon-1-n} (a-f) respectively. }
+
+
+\subsection{Non-stationary local slope estimation}
+\inputdir{dipn}
+Local slope estimation for seismic data is an application of the plane-wave destruction (PWD) algorithm \cite[]{fomel2002}. 
+The PWD algorithm is based on the local plane-wave differential equation
+\begin{equation}
+\sigma\frac{\partial d}{\partial t}+\frac{\partial d}{\partial x}=0,
+\label{eq:pwd}
+\end{equation}
+where $d$ is the wavefield, $t$ and $x$ are time and space, and $\sigma$ is the local slope. The general solution of equation \ref{eq:pwd} in the frequency domain is expressed as 
+\begin{equation}
+\hat{d}(x)=\hat{d}(0)e^{iw\sigma}
+\label{eq:pwdfsol}
+\end{equation}
+This solution indicates a two-term prediction-error filter in the F-X domain
+\begin{equation}
+b_0\hat{d}(x)+b_1\hat{d}(x-1)=0
+\label{eq:pwdfsolpef}
+\end{equation}
+where $b_0=1$ and $b_1=-e^{iw\sigma}$. 
+The PWD prediction error filter can be transformed into the Z-transform notation as 
+\begin{equation}
+A(Z_t,Z_x)D(Z_t,Z_x)=0
+\label{eq:pwdz}
+\end{equation}
+where 
+\begin{equation}
+A(Z_t,Z_x)=(1-Z_x\frac{L(Z_t)}{L(1/Z_t)})
+\label{eq:pwdz}
+\end{equation}
+$L(Z_t)/L(1/Z_t)$ is an all-pass filter that allows equation \ref{eq:pwd} to be transformed into the following non-linear inverse problem
+\begin{equation}
+\mathbf{H}(\sigma)\mathbf{d}=0
+\label{eq:slopegn}
+\end{equation}
+where $\mathbf{H}(\sigma)$ is a convolutional operator that is non-linear with respect to $\sigma$. This non-linear problem can be solved for via the following least-squares method
+\begin{equation}
+\mathbf{H}(\sigma_n)\mathbf{d}=\mathbf{J}\Delta\sigma_n
+\label{eq:slopegn}
+\end{equation}
+where $\mathbf{J}$ is the Jacobian matrix with respect to $\sigma$ and can be expressed as $\mathbf{J}=\mathbf{H}'(\sigma_n)\mathbf{d}$ where $\mathbf{H}'$ is the derivative form of the PWD filter. A smooth and stable slope update can be obtained using the shaping regularization method
+\begin{equation}
+\Delta\sigma_{n}^{m}=\mathbf{S}[\Delta\sigma_{n}^{m-1}+\mathbf{J}^T(\mathbf{H}(\sigma_{n})\mathbf{d}-\mathbf{J}\Delta\sigma_{n}^{m-1})]
+\label{eq:slopeshap}
+\end{equation}
+where $\Delta\sigma_n^m$ is the slope update at the $m$th iteration and $\mathbf{S}$ is a shaping operator. The solution according to the shaping regularization method is 
+\begin{equation}
+\Delta\hat{\sigma}_{n}=\mathbf{T}[\lambda^2\mathbf{I}+\mathbf{T}^T(\mathbf{J}^T\mathbf{J}-\lambda^2\mathbf{I})\mathbf{T}]^{-1}\mathbf{T}^T\mathbf{J}^T\mathbf{H}(\sigma_n)\mathbf{d}
+\label{eq:slopeshap}
+\end{equation}
+where $\mathbf{T}$ is a non-stationary triangle smoothing operator. 
+\cite{wang2021} propose designing a non-stationary smoothing constraint with the concept of signal reliability. The smoothing radius is meant to be small in areas where the signal dominates, and large in areas where the noise dominates. \cite{wang2021} propose using the iterative radius estimation method of \cite{greerfomel2018}, matching the local frequency of the low-pass filtered seismic data, and the seismic data smoothed via a non-stationary triangle smoothing operator. \cite{wang2021} also introduce an additional re-scaling step to constrain the estimated radius between some chosen minimum and maximum values. 
+
+We propose an alternative faster approach of obtaining the non-stationary smoothing constraint that estimates local slopes similar in accuracy to the slopes estimated using the approach of \cite{wang2021}. The proposed approach is summarized in the following three-steps: (1) estimating a noisy local slope using a small stationary radius, (2) applying a non-linear edge-preserving filter to the result of step 1 (e.g. fast explicit diffusion \cite[]{grewenig2010}), and (3) using the proposed Gauss-Newton method of estimating the non-stationary radius substituting the result of step 1 as $\mathbf{d}_{input}$ and the result of step 2 as $\mathbf{d}_{output}$ in equation \ref{eq:radest}. We justify this approach by noting that the result of step 1 contains detailed local slopes that are contaminated by high-frequency noise. The non-linear smoothing filter removes the high frequency noise while preserving strong edges. We note that the areas where the non-linear smoothing filter acts strongly are the areas of low signal reliability, while the areas where the filter acts weakly are the areas of high signal reliability. Thus, the non-stationary triangle filter defined by the estimated radius values is adaptive to signal reliability in the input dataset. 
+
+The proposed approach is evaluated on a 2-D field dataset displayed in Figure \ref{fig:g-high}. The estimated dip using a small stationary radius equal to 10 is displayed in Figure \ref{fig:g-dip-test}, and the result of applying a fast explicit diffusion filter to the estimated stationary dip is displayed in Figure \ref{fig:g-dip-test-smooth}. The non-stationary triangle smoothing radius obtained using 5 iterations of the proposed method matching the dip estimaeted using a small stationary radius and it's fast explicit diffusion filtered version is displayed in Figure \ref{fig:rect-dip1-new2}, and its corresponding estimated non-stationary dip is displayed in Figure \ref{fig:g-dip4}. For comparative analysis, the non-stationary radius obtained using the approach of \cite{wang2021} and its corresponding estimated non-stationary dip is displayed in Figures \ref{fig:g-rectdip1} and \ref{fig:g-dip3} respectively. 
+
+\multiplot{3}{g-high,g-rectdip1,g-dip3}{width=0.45\textwidth}{Field data example 2. (a) Raw field data. (b) Estimated triangle smoothing radius using 5 iterations of the line-search approach proposed by \cite{wang2021}. (c) Estimated dip using non-stationary smoothing radius in (b).}
+
+\multiplot{4}{g-dip-test,g-dip-test-smooth,rect-dip1-new2,g-dip4}{width=0.45\textwidth}{Field data example 2. (a) Estimated Dip using a small stationary radius equal to 12. (b) Estimated Dip using a small stationary radius equal to 12 smoothed by a bilateral filter. (c) Estimated triangle smoothing radius using 5 iterations of the proposed Gauss-Newton method matching (a) and (b). (d) Estimated Dip using non-stationary smoothing radius in (c).}
+
+The estimated non-stationary slopes using the proposed approach and the approach of \cite{wang2021} are similar from a visual standpoint. The main difference between the two approaches is in efficiency and robustness. In the iterative radius estimation approach of \cite{wang2021}, the local-frequency calculation step costs 6 s per iteration, adding up to a total cost of 30 s for 5 iteration. For the Gauss-Newton method, the cost per iteration is less than 0.1 s. The main cost associated with the proposed method is the initial computation of the estimated dip with a small stationary radius, and applying a non-linear smoothing filter to it, costing 6 s and 19 s respectively. 
+Further, the proposed approach is more robust since we do not require any further analysis associated with re-scaling the estimated radius between a chosen minimum and maximum value. 
+
+
+\subsection{Matching and merging low-resolution and high-resolution seismic images}
+\inputdir{matching}
+In this application, we have two seismic datasets acquired over the same area containing non-stationary spatial and temporal differences in spectral content. 
+The high-resolution data displayed in Figure \ref{fig:hires} has a larger frequency bandwidth and a higher dominant frequency, producing a high-resolution image of the shallow subsurface. The legacy data displayed in Figure \ref{fig:legacy} contains important low-frequency content resulting in better depth coverage. The workflow for matching and merging the two datasets developed by \cite{greerfomel2018} is summarized in the following three steps: (1) amplitude and frequency balancing by non-stationary triangle smoothing, (2) estimating and removing variable time shifts, and (3) blending the two images by least-squares inversion. Here we will perform step (1) only, showing the effectiveness of the proposed radius estimation method in balancing the spectral content between two datasets. 
+
+\multiplot{2}{hires,legacy}{width=0.65\textwidth}{Field data example 3. (a) High-resolution image. (b) Low-resolution legacy image.}
+
+We match the two datasets using the proposed radius estimation method substituting the high-resolution data as $\mathbf{d}_{input}$, and the low-resolution data as $\mathbf{d}_{output}$ in equation \ref{eq:radest}. 
+The starting model for the radius is chosen carefully to preserve stability. The initial guess for the radius displayed in Figure \ref{fig:rect00} is a smooth version of the theoretical radius proposed by \cite{greerfomel2018}. The radius estimated after 5 iterations is displayed in Figure \ref{fig:rectn50}. 
+The spectral content of the two datasets before and after non-stationary smoothing is displayed in Figure \ref{fig:nspectra,hires-smooth50-spec}, and the differences in local frequency between the two datasets before and after non-stationary smoothing is displayed in Figure \ref{fig:freqdif,locfreqdif50}. 
+The results indicate that the frequency content between the two datasets is better balanced after smoothing with the newly estimated radius.
+
+\multiplot{2}{rect00,rectn50}{width=0.65\textwidth}{Field data example 3. (a) The initial guess for the smoothing radius, a smoothed version of the theoretical radius proposed by \cite{greerfomel2018}. (b) Estimated smoothing radius using 5 iterations of the proposed Gauss-Newton method matching the high-resolution data and the 18 Hz high-pass filtered low-resolution data.}
+
+\multiplot{2}{nspectra,hires-smooth50-spec}{width=0.65\textwidth}{Field data example 3. Normalized spectra of low-resolution legacy data (red) and high-resolution data (blue) (a) before and (b) after 18 Hz high-pass filtering of low-resolution legacy data and non-stationary smoothing of high-resolution data.}
+
+\multiplot{2}{freqdif,locfreqdif50}{width=0.65\textwidth}{Field data example 3. (a) Initial difference in local frequency between low-resolution legacy data and high-resolution data. (b) Difference in local frequency between 18 Hz high-pass filtered low-resolution legacy data and non-stationary triangle-smoothed high-resolution data.}
+
+\section{Conclusions}
+We have introduced a fast and accurate method to estimate the non-stationary triangle smoothing radius for matching seismic datasets using the Gauss-Newton approach. The proposed method was used to show that non-stationary triangle smoothing can be tailored to the properties of the input seismic dataset such that the smoothing is low-cost and edge-preserving. This method was also shown to be effective in field data applications of non-stationary local signal-and-noise orthogonalization, non-stationary local dip estimation, and balancing the spectral content between two seismic datasets acquired over the same area. Compared to the previous first-order line-search method, it is no surprise that the proposed second-order method converges faster and to a more accurate result. 
+An additional factor that made the proposed method faster than the previous method is bypassing the local frequency calculation step. Although matching local frequencies is one way to obtain a reasonable estimate for the smoothing radius, we have shown that it was not necessary. Nonetheless, some potential seismic data matching applications may benefit from matching local frequencies; thus, it is worth expanding the proposed method to match local attributes between seismic datasets. The proposed method can find additional applications in other geophysical data analysis tasks and inverse problems that call for non-stationary regularization. 
+
+
+\section{Acknowledgments}
+We thank Yangkang Chen and Sarah Greer for inspiring discussions and sponsors of the Texas Consortium for Computational Seismology (TCCS) for their financial support.
+
+
+\onecolumn
+\bibliographystyle{seg} 
+\bibliography{ref}
+
+

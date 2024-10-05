@@ -138,7 +138,7 @@ for n2 in range(104):
          ''' % (105-n2,105+n2+1))
     Plot(paint,'grey allpos=y color=G wanttitle=n clip=0.03')
     paints.append(paint)
-paints.append('spaint')
+#paints.append('spaint')
 Plot('paints',paints,'Movie')
 
 # Add coherence
@@ -186,6 +186,27 @@ for i0 in (0,49,99,149,199):
 np = len(picks)
 Flow('spicks',picks,
      'add ${SOURCES[1:%d]} | scale dscale=%g' % (np,1.0/np))
+
+Plot('spicks0','spicks',
+     '''
+     window n1=200 min1=0 |
+     grey color=j allpos=y
+     Xscalebar=y Xbarreverse=y
+     title="Relative Age" clip=0.8
+     minval=0 maxval=0.8
+     ''')
+Plot('spicks1','spicks',
+     '''
+     window n1=200 min1=0 |
+     clip clip=0.8 |
+     contour c0=0 dc=0.04 nc=20
+     transp=y yreverse=y plotcol=7 plotfat=5
+     Xscalebar=y Xbarreverse=y barlabel=" " 
+     wanttitle=n wantaxis=n
+     minval=0 maxval=0.8
+     ''')
+Result('spicks','spicks0 spicks1','Overlay')
+
 
 Flow('flat','sigmoid-pad spicks','iwarp warp=${SOURCES[1]} eps=1 n1=200 o1=0')
 Plot('flat','grey title="Multiple references" ')

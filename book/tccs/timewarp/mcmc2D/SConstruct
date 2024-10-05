@@ -1,0 +1,502 @@
+# Time-warping with randomly sampled inputs for inversion
+# We do 2D by cutting from 3D to expedite revision process
+#########################################################
+
+from rsf.proj import *
+import math
+
+## Plot font and screen ratio, width, height for uniform ppt figs.
+p1=0.7
+p2=0.7
+sr=1.0
+sw=7.0
+sh=10.0
+swc=8.0
+llw=5.0
+srw=1.0
+
+
+## Number of time slices to do inversion on (= number of events)
+numtime=1
+
+
+#####
+##Synthetic CMP Parameters
+nx=151
+delx=0.02*2
+ox=-3
+ny=nx
+dely=delx
+oy=ox
+nt=501
+dt=0.004
+fw=10.0
+####
+
+###############################################################################################################
+####   Prepare Geometry Header Files
+
+## Absolute offset
+Flow('offset','spikes','window n1=1 | math output="sqrt(x1*x1+x2*x2)" ',local=1)
+#Result('offset','grey title=Offset allpos=y color=j scalebar=y',local=1)
+
+## Azimuth
+Flow('azimuth','spikes','window n1=1 | math output="%g*(x2&x1)" ' % (180/math.pi),local=1)
+#Result('azimuth','grey title=Azimuth color=j scalebar=y',local=1)
+
+## Header File
+Flow('head','offset azimuth',
+     'cat axis=3 ${SOURCES[1]} | transp plane=23 | transp plane=12 | put n3=1 n2=10201',local=1)
+
+####################################################################################################################
+## Single cmp with W(t)
+
+####### Parameter values#####################################################
+####### Generalized moveout approximation ###################################
+# Dry Green Shale
+# {c11 -> 15.06379696`, c33 -> 10.837264`, c13 -> 1.638114075744646`, c55 -> 3.125824`}
+# {v -> 2.463501288062909`, vs -> 1.7679988687779187`, vp -> 3.292005467796188`, \[Eta] -> 0.741077659341173`}
+# {W -> 0.164776, A -> -0.0804846, B -> 0.751616, C -> 0.00440688}
+
+## Wx
+Wx0=0.164776
+WxE=0.164776
+dWx=(WxE-Wx0)/500.0
+Flow('begWx',None,'spike n1=126 | scale dscale=%g' % Wx0)
+Flow('midWx',None,'spike n1=250 mag=%g d1=%g | math output="input+x1"' % (Wx0,dWx))
+Flow('endWx',None,'spike n1=125 | scale dscale=%g' % WxE)
+Flow('Wxoft','begWx midWx endWx','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+## Wy
+Flow('Wyoft','Wxoft','math output="input" ')
+## Wxy
+Flow('Wxyoft','Wxoft','math output="0" ')
+
+## A
+Flow('A1oft','Wxoft','math output="-0.0804846" ')
+Flow('A2oft','Wxoft','math output="0" ')
+Flow('A3oft','Wxoft','math output="-0.01" ') # dummy
+Flow('A4oft','Wxoft','math output="0" ')
+Flow('A5oft','Wxoft','math output="-0.0804846" ')
+
+## B
+Flow('B1oft','Wxoft','math output="0.751616" ')
+Flow('B2oft','Wxoft','math output="0" ')
+Flow('B3oft','Wxoft','math output="0.751616" ')
+
+## C
+Flow('C1oft','Wxoft','math output="0.00440688" ')
+Flow('C2oft','Wxoft','math output="0" ')
+Flow('C3oft','Wxoft','math output="0.001" ') # dummy
+Flow('C4oft','Wxoft','math output="0" ')
+Flow('C5oft','Wxoft','math output="0.00440688" ')
+
+## Values of parameters in time
+Flow('Woft','Wxoft Wxyoft Wyoft A1oft A2oft A3oft A4oft A5oft B1oft B2oft B3oft C1oft C2oft C3oft C4oft C5oft','cat ${SOURCES[1:16]} axis=2')
+
+## Create spikes and inverse nmo 3D CMP gathers ########################################################
+it1=251
+itplot=300
+
+
+Flow('spikes',None,
+     '''
+     spike n1=%d nsp=1 k1=%d | ricker1 frequency=%g |
+     spray axis=2 n=%d o=%g d=%g |
+     spray axis=3 n=%d o=%g d=%g 
+     ''' % (nt,it1,fw,nx,ox,delx,ny,oy,dely))
+
+Flow('cmp','spikes Woft','inmo3gma velocity=${SOURCES[1]} | put label2="x" label3="y" ')
+Flow('cmp2d','cmp','window n3=1 min3=0')
+#Result('cmpcube','cmp',
+#     '''
+#     byte gainpanel=all |
+#     grey3 point1=%g point2=%g title="d(t,x,y)" label2="x (km)" label3="y #(km)" flat=n 
+#     frame1=%d frame2=75 frame3=75 screenratio=%g screenwd=%g screenht=%g
+#     labelfat=4 titlefat=4
+#     ''' % (p1,p2,itplot,sr,swc,sh),local=1)
+     
+
+
+###############################################################################################################
+
+
+################################################################################################################
+##### Measure Local Slopes of CMP
+
+## Measure smoothed slope field.  Used for PNMO.
+tsmooth=10
+xsmooth=10
+
+##  Smooth x-slope
+Flow('pxsmooth','cmp2d',
+     '''
+     window squeeze=n |
+     dip2 rect1=%d rect2=%d order=3
+       ''' % (tsmooth,xsmooth))
+       
+Plot('cmp2d',
+     '''
+     grey title="d(t,x)" label2="x (km)" 
+     screenratio=%g screenwd=%g screenht=%g
+     labelfat=4 titlefat=4
+     ''' % (sr,swc,sh),local=1)
+
+## Inline(px) slopes
+#Result('pxsmooth2d','pxsmooth',
+#     '''
+#     grey title="Slope (px)" label2="x (km)" color=j
+#     screenratio=%g screenwd=%g screenht=%g
+#     labelfat=4 titlefat=4
+#     ''' % (sr,swc,sh),local=1)
+Flow('timecube','cmp2d','math output="x1"')
+
+################################################################################################################
+#### Predictive flattening
+
+# Time shifts via predictive painting
+Flow('pick','pxsmooth',
+     '''
+     pwpaint i0=75 verb=y |
+     clip2 lower=0 upper=4
+     ''')
+
+Flow('t0.asc',None,'echo %g n1=1 data_format=ascii_float in=$TARGET' % (it1))
+Flow('t0','t0.asc','dd form=native | math output="(input-1)*0.004" ')
+Plot('pick','pick t0',
+     '''
+     contour wanttitle=n wantaxis=n plotfat=5
+     screenratio=%g screenwd=%g screenht=%g
+     cfile=${SOURCES[1]} flat=y 
+     ''' % (sr,swc,sh),local=1)
+Result('pick2d','cmp2d pick','Overlay')
+
+
+# Flattening via time warping both data and time cubes # T0(T) -> T(T0) ############################################################
+
+Flow('flat','cmp2d pick','iwarp warp=${SOURCES[1]} eps=1')
+Flow('warpedtime','timecube pick','iwarp warp=${SOURCES[1]} eps=1')
+Flow('pickedtime','pick','iwarp warp=$SOURCE eps=1')
+
+#Result('flat2d','flat',
+#     '''
+#     grey title="d(t\_0\^,x)" label2="x (km)"
+#     screenratio=%g screenwd=%g screenht=%g
+#     ''' % (sr,sw,sh),local=1)
+#Result('warpedtime2d','warpedtime',
+#     '''
+#     grey title="t(t\_0\^,x,y)" label2="x (km)"
+#     screenratio=%g screenwd=%g screenht=%g color=j
+#     ''' % (sr,sw,sh),local=1)
+
+# t^2(t0,x,y) - t0^2(t0,x,y) ###########################################################
+Flow('moveout','timecube warpedtime','math time=${SOURCES[0]} warpt=${SOURCES[1]} output="warpt^2-time^2" | put d4="0" |clip2 lower=0')
+#Result('moveout2d','moveout',
+#     '''
+#     window n3=1 min3=0|
+#     grey title="t\^2\_-t\_0\^\^2\_" label2="x (km)"
+#     screenratio=%g screenwd=%g screenht=%g color=j
+#     ''' % (sr,sw,sh),local=1)
+
+###########################################################################################################################################
+###########################################   Effective W Inversion by warping
+
+# Extract only the timewarp data at the event (using local max to distinguish)
+Flow('count','cmp2d',
+    '''
+    window n2=1 f2=75 | envelope | 
+    max1 | real | window n1=%d | put d1=1 o1=0 | sort ascmode=y
+    ''' %(numtime))
+
+# Compute the SD from flattened event 
+Flow('est','flat',
+    '''
+    envelope | smooth rect1=5| max1 | real | window n1=%d | sort ascmode=y | put n1=%d n2=%d
+    ''' %(numtime,nx,numtime))
+
+# Compute the SD from pick traveltime accuracy (sd very small)
+# Flow('countn.par','count','math output="input/0.004" | disfil number=n format="f1=%g"')
+# Flow('est','pickedtime countn.par','window n1=1 par=${SOURCES[1]}')
+
+Flow('wantedtime','count','spray axis=2 n=%d | sort ascmode=y | put n1=%d n2=%d' %(nx,nx,numtime))
+Flow('sd','est wantedtime',
+	'''
+	math in1=${SOURCES[0]} in2=${SOURCES[1]} output="(in2-in1)^2/%d" |
+	stack axis=1 norm=n | stack axis=1 norm=n | math output="sqrt(input)" | math output="1"
+	''' %(nx*ny-1))
+
+# Compute limitx
+Flow('limitx','count','math output="1.25" ') #offset/depth ratio ~ 1
+Flow('maxx','count','math output="3" ') 
+
+# Interpolate in the timewarp volume
+Flow('timecubepicked',['timecube','count'], 'put d4=0| inttest1 coord=${SOURCES[1]} interp=lag nw=2') 
+Flow('warpedtimepicked',['warpedtime','count'], 'inttest1 coord=${SOURCES[1]} interp=lag nw=2') 
+
+# Window transpose t,x,y -> x,y,t
+Flow('timewarpsq','warpedtimepicked',' math output="input^2"| transp plane=13 | transp plane=12')
+# Find t0^2
+Flow('t0sqcube','timecubepicked',' math output="input^2" | transp plane=13 | transp plane=12 ')
+
+
+# Range of parameters coefficients
+def arr2str(array,sep=' '):
+    return sep.join(map(str,array))
+
+sW1=0.1;lW1=0.3;
+sA1=-0.1;lA1=0.0;
+sB1=0.5;lB1=1.0
+sC1=0.0;lC1=0.006;
+rangepar = (sW1,lW1,sA1,lA1,sB1,lB1,sC1,lC1)
+
+Flow('range.asc',None,
+     '''
+	 echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (arr2str(rangepar),8) )
+Flow('rangecoeff','range.asc','dd form=native')
+
+# MCMC workflow ###################################################################
+ntime=numtime
+nmodel=20000
+Flow('timewarpsqcut','timewarpsq','window n2=%d f3=0' %ntime)
+Flow('t0sqcubecut','t0sqcube','window n2=%d f3=0' %ntime)
+Flow('offsetx','cmp2d','math output=x2 | window n1=%d' %ntime)
+Flow('rms','timewarpsqcut','stack axis=1 rms=y')
+rms = 1.37393 # RMS of timewarpsqcut from sfattr
+
+list = ['0.1','0.5','1','2','5','10','25','50']
+for i in range(8):
+	inum=float(list[i])
+	istr=str(i)
+	# First run for W
+	Flow('histshort'+istr,['timewarpsqcut','t0sqcubecut','rangecoeff','limitx','offsetx','rms'],
+		''' 
+		nmomcmc seed=62007 nmodel=%d saveiter=100 prior=n sdperc=%f datrms=${SOURCES[5]}
+		t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+		''' %(nmodel,inum))
+
+	# Manually get mu and sigma for W from histshort
+	Flow('mu'+istr,'histshort'+istr,'window n1=1 | stack axis=1')
+	Flow('muext'+istr,'mu'+istr,'spray axis=1 n=%d' %nmodel)
+	Flow('sigma'+istr,'histshort'+istr+' muext'+istr,
+		'''
+		window n1=1 | math mean=${SOURCES[1]} output="(input-mean)^2/%d" | 
+		stack axis=1 norm=n | math output="sqrt(input)"
+		''' %(nmodel-1))
+	Flow('rangecoeffcut'+istr,'rangecoeff','window n1=6 f1=2')
+	Flow('rangecoeffnew'+istr,'mu'+istr+' sigma'+istr+' rangecoeffcut'+istr,'cat axis=1 ${SOURCES[1]} ${SOURCES[2]} ')
+
+	# Second run for A B C
+	Flow('hist'+istr,['timewarpsqcut','t0sqcubecut','rangecoeffnew'+istr,'maxx','offsetx','rms'],
+		''' 
+		nmomcmc seed=62007 nmodel=%d saveiter=100 prior=n sdperc=%f wgauss=y datrms=${SOURCES[5]}
+		t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+		''' %(nmodel,inum))
+
+	# Second run for A B C with enforce eta (only the range of A is used)
+	Flow('histeta'+istr,['timewarpsqcut','t0sqcubecut','rangecoeffnew'+istr,'maxx','offsetx','rms'],
+		''' 
+		nmomcmc seed=62007 nmodel=%d saveiter=100 prior=n sdperc=%f wgauss=y eta=y datrms=${SOURCES[5]}
+		t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+		''' %(nmodel,inum))
+
+
+# Transdimensional workflow testing with artificially added noise ###################
+# Test passed Hooray !!!
+#####################################################################################
+ssign=0.001; lsign=60;
+trangeparnoise = (sW1,lW1,sA1,lA1,sB1,lB1,sC1,lC1,ssign,lsign)
+Flow('trangenoise.asc',None,
+     '''
+	 echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (arr2str(trangeparnoise),10) )
+Flow('trangenoisecoeff','trangenoise.asc','dd form=native')
+
+prog = Program('Mnmomcmctrans.c')
+sc = str(prog[0])
+
+list = ['0.1','0.5','1','2','5','10','25','50']
+for i in range(8):
+	inum=float(list[i])
+	istr=str(i)
+	Flow('timewarpsqcutnoise'+istr,'timewarpsqcut',
+		'''
+		noise var=%g seed=2009 
+		''' %((inum/100*rms)*(inum/100*rms)))
+
+	# First run for W
+	Flow('thistshortnoise'+istr,['timewarpsqcutnoise'+istr,'t0sqcubecut','trangenoisecoeff','limitx','offsetx','rms',sc],
+		''' 
+		./${SOURCES[6]} seed=1990 nmodel=%d saveiter=500 prior=n datrms=${SOURCES[5]}
+		t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+		''' %(nmodel))
+	#Result('thistnoiseW'+istr,'thistshortnoise'+istr,
+	#		'''
+	#	window n1=1 | histogram n1=101 o1=0.1 d1=0.002 |
+	#		dd type=float | graph
+	#	''')
+	#Result('thistnoisesig'+istr,'thistshortnoise'+istr,
+	#	'''
+	#	window n1=1 f1=-1 | histogram n1=101 o1=0 d1=0.1 |
+	#	dd type=float | graph
+	#	''')		
+
+
+# Transdimensional workflow ###################################################################
+ssig=0.01; lsig=5;
+trangepar = (sW1,lW1,sA1,lA1,sB1,lB1,sC1,lC1,ssig,lsig)
+Flow('trange.asc',None,
+     '''
+	 echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (arr2str(trangepar),10) )
+Flow('trangecoeff','trange.asc','dd form=native')
+
+# First run for W
+Flow('thistshort',['timewarpsqcut','t0sqcubecut','trangecoeff','limitx','offsetx','rms',sc],
+	''' 
+	./${SOURCES[6]} seed=62007 nmodel=%d saveiter=100 prior=n datrms=${SOURCES[5]}
+	t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+	''' %(nmodel))
+# Manually get mu and sigma for W from histshort
+Flow('tmu','thistshort','window n1=1 | stack axis=1')
+Flow('tmuext','tmu','spray axis=1 n=%d' %nmodel)
+Flow('tsigma','thistshort tmuext',
+	'''
+	window n1=1 | math mean=${SOURCES[1]} output="(input-mean)^2/%d" | 
+	stack axis=1 norm=n | math output="sqrt(input)"
+	''' %(nmodel-1))
+Flow('trangecoeffcut','trangecoeff tmu tsigma','window n1=8 f1=2')
+Flow('trangecoeffnew','tmu tsigma trangecoeffcut','cat axis=1 ${SOURCES[1]} ${SOURCES[2]} ')
+
+#Second run for A B C
+Flow('thist',['timewarpsqcut','t0sqcubecut','trangecoeffnew','maxx','offsetx','rms',sc],
+	''' 
+	./${SOURCES[6]} seed=120 nmodel=%d saveiter=500 prior=n wgauss=y datrms=${SOURCES[5]}
+	t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+	''' %(nmodel))
+
+#Second run for A B C with different seed
+Flow('thist2',['timewarpsqcut','t0sqcubecut','trangecoeffnew','maxx','offsetx','rms',sc],
+	''' 
+	./${SOURCES[6]} seed=12000 nmodel=%d saveiter=500 prior=n wgauss=y datrms=${SOURCES[5]}
+	t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+	''' %(nmodel))
+
+#Third run for A B C with enforce eta (only the range of A is used)
+Flow('thisteta',['timewarpsqcut','t0sqcubecut','trangecoeffnew','maxx','offsetx','rms',sc],
+	''' 
+	./${SOURCES[6]} seed=120 nmodel=%d saveiter=500 prior=n wgauss=y datrms=${SOURCES[5]} eta=y
+	t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+	''' %(nmodel))
+
+
+
+
+
+#Result('thistW','thist',
+#	'''
+#	window n1=1 | histogram n1=101 o1=0.1 d1=0.002 |
+#	dd type=float | graph
+#	''')
+#Result('thistA','thist',
+#	'''
+#	window n1=1 f1=1| histogram n1=101 o1=-0.1 d1=0.001 |
+#	dd type=float | graph
+#	''')	
+#Result('thistB','thist',
+#	'''
+#	window n1=1 f1=2| histogram n1=101 o1=0.5 d1=0.005 |
+#	dd type=float | graph
+#	''')
+#Result('thistC','thist',
+#	'''
+#	window n1=1 f1=3| histogram  n1=101 o1=0.0 d1=0.0001 |
+#	dd type=float | graph
+#	''')	
+#Result('thistsig','thist',
+#	'''
+#	window n1=1 f1=-1 | histogram n1=101 o1=-5 d1=0.1 |
+#	dd type=float | graph
+#	''')	
+
+# 	#Second run for A B C with enforce eta (only the range of A is used)
+# 	Flow('thisteta',['timewarpsqcut','t0sqcubecut','trangecoeff','maxx','offsetx',sc],
+# 		''' 
+# 		./${SOURCES[5]} seed=62007 nmodel=%d saveiter=100 prior=n wgauss=n eta=y
+# 		t0sq=${SOURCES[1]} rangecoef=${SOURCES[2]} limitx=${SOURCES[3]} offsetx=${SOURCES[4]}
+# 		''' %nmodel)
+
+
+
+
+# Flow('tW','thist','window n1=1 f1=0')
+# Flow('tA','thist','window n1=1 f1=1')
+# Flow('tB','thist','window n1=1 f1=2')
+# Flow('tC','thist','window n1=1 f1=3')
+# 
+# Flow('tWeta','thisteta','window n1=1 f1=0')
+# Flow('tAeta','thisteta','window n1=1 f1=1')
+# Flow('tBeta','thisteta','window n1=1 f1=2')
+# Flow('tCeta','thisteta','window n1=1 f1=3')
+
+
+# <histshort.rsf sfwindow n1=1 | sfhistogram n1=101 o1=0.1 d1=0.002 | sfdd type=float | sfgraph | sfpen &
+# <hist.rsf sfwindow n1=1 | sfhistogram n1=101 o1=0.1 d1=0.002 | sfdd type=float | sfgraph | sfpen &
+# <histeta.rsf sfwindow n1=1 | sfhistogram n1=101 o1=0.1 d1=0.002 | sfdd type=float | sfgraph | sfpen &
+
+# <histshort.rsf sfwindow n1=1 f1=1| sfhistogram n1=101 o1=-0.1 d1=0.001 | sfdd type=float | sfgraph | sfpen &
+# <hist.rsf sfwindow n1=1 f1=1| sfhistogram n1=101 o1=-0.1 d1=0.001 | sfdd type=float | sfgraph | sfpen &
+# <histeta.rsf sfwindow n1=1 f1=1| sfhistogram n1=101 o1=-0.1 d1=0.001 | sfdd type=float | sfgraph | sfpen &
+# 
+# <histshort.rsf sfwindow n1=1 f1=2 | sfhistogram n1=101 o1=0.5 d1=0.005 | sfdd type=float | sfgraph | sfpen &
+# <hist.rsf sfwindow n1=1 f1=2 | sfhistogram n1=101 o1=0.5 d1=0.005 | sfdd type=float | sfgraph | sfpen &
+# <histeta.rsf sfwindow n1=1 f1=2 | sfhistogram n1=101 o1=0.5 d1=0.005 | sfdd type=float | sfgraph | sfpen &
+# 
+# <histshort.rsf sfwindow n1=1 f1=3 | sfhistogram n1=101 o1=0.0 d1=0.0001 | sfdd type=float | sfgraph | sfpen &
+# <hist.rsf sfwindow n1=1 f1=3 | sfhistogram n1=101 o1=0.0 d1=0.0001 | sfdd type=float | sfgraph | sfpen &
+# <histeta.rsf sfwindow n1=1 f1=3 | sfhistogram n1=101 o1=0.0 d1=0.0001 | sfdd type=float | sfgraph | sfpen &
+
+
+
+# <thistshort.rsf sfwindow n1=1 | sfhistogram n1=101 o1=0.1 d1=0.002 | sfdd type=float | sfgraph | sfpen &
+# <thist.rsf sfwindow n1=1 | sfhistogram n1=101 o1=0.1 d1=0.002 | sfdd type=float | sfgraph | sfpen &
+# <thisteta.rsf sfwindow n1=1 | sfhistogram n1=101 o1=0.1 d1=0.002 | sfdd type=float | sfgraph | sfpen &
+
+# <thistshort.rsf sfwindow n1=1 f1=1| sfhistogram n1=101 o1=-0.1 d1=0.001 | sfdd type=float | sfgraph | sfpen &
+# <thist.rsf sfwindow n1=1 f1=1| sfhistogram n1=101 o1=-0.1 d1=0.001 | sfdd type=float | sfgraph | sfpen &
+# <thisteta.rsf sfwindow n1=1 f1=1| sfhistogram n1=101 o1=-0.1 d1=0.001 | sfdd type=float | sfgraph | sfpen &
+# 
+# <thistshort.rsf sfwindow n1=1 f1=2 | sfhistogram n1=101 o1=0.5 d1=0.005 | sfdd type=float | sfgraph | sfpen &
+# <thist.rsf sfwindow n1=1 f1=2 | sfhistogram n1=101 o1=0.5 d1=0.005 | sfdd type=float | sfgraph | sfpen &
+# <thisteta.rsf sfwindow n1=1 f1=2 | sfhistogram n1=101 o1=0.5 d1=0.005 | sfdd type=float | sfgraph | sfpen &
+# 
+# <thistshort.rsf sfwindow n1=1 f1=3 | sfhistogram n1=101 o1=0.0 d1=0.0001 | sfdd type=float | sfgraph | sfpen &
+# <thist.rsf sfwindow n1=1 f1=3 | sfhistogram n1=101 o1=0.0 d1=0.0001 | sfdd type=float | sfgraph | sfpen &
+# <thisteta.rsf sfwindow n1=1 f1=3 | sfhistogram n1=101 o1=0.0 d1=0.0001 | sfdd type=float | sfgraph | sfpen &
+
+# <thistshort.rsf sfwindow n1=1 f1=4 | sfhistogram n1=101 o1=0.0 d1=0.05 | sfdd type=float | sfgraph | sfpen &
+# <thist.rsf sfwindow n1=1 f1=4 | sfhistogram n1=101 o1=0.0 d1=0.05 | sfdd type=float | sfgraph | sfpen &
+# <thisteta.rsf sfwindow n1=1 f1=4 | sfhistogram n1=101 o1=0.0 d1=0.05 | sfdd type=float | sfgraph | sfpen &
+
+
+
+# <thist.rsf sfwindow n1=1 f1=4 | sfhist2 inp2=tW.rsf n1=101 o1=0.0 d1=0.05 n2=101 o2=0.1 d2=0.002 | sfdd type=float | sfgrey color=j scalebar=y | sfpen &
+# <thist.rsf sfwindow n1=1 f1=4 | sfhist2 inp2=tA.rsf n1=101 o1=0.0 d1=0.05 n2=101 o2=-0.1 d2=0.001 | sfdd type=float | sfgrey color=j scalebar=y | sfpen &
+# <thist.rsf sfwindow n1=1 f1=4 | sfhist2 inp2=tB.rsf n1=101 o1=0.0 d1=0.05 n2=101 o2=0.5 d2=0.005 | sfdd type=float | sfgrey color=j scalebar=y | sfpen &
+# <thist.rsf sfwindow n1=1 f1=4 | sfhist2 inp2=tC.rsf n1=101 o1=0.0 d1=0.05 n2=101 o2=0.0 d2=0.0001 | sfdd type=float | sfgrey color=j scalebar=y | sfpen &
+
+
+# <thisteta.rsf sfwindow n1=1 f1=4 | sfhist2 inp2=tWeta.rsf n1=101 o1=0.0 d1=0.05 n2=101 o2=0.1 d2=0.002 | sfdd type=float | sfgrey color=j scalebar=y | sfpen &
+# <thisteta.rsf sfwindow n1=1 f1=4 | sfhist2 inp2=tAeta.rsf n1=101 o1=0.0 d1=0.05 n2=101 o2=-0.1 d2=0.001 | sfdd type=float | sfgrey color=j scalebar=y | sfpen &
+# <thisteta.rsf sfwindow n1=1 f1=4 | sfhist2 inp2=tBeta.rsf n1=101 o1=0.0 d1=0.05 n2=101 o2=0.5 d2=0.005 | sfdd type=float | sfgrey color=j scalebar=y | sfpen &
+# <thisteta.rsf sfwindow n1=1 f1=4 | sfhist2 inp2=tCeta.rsf n1=101 o1=0.0 d1=0.05 n2=101 o2=0.0 d2=0.0001 | sfdd type=float | sfgrey color=j scalebar=y | sfpen &
+
+
+
+
+End()

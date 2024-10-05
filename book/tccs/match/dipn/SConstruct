@@ -1,0 +1,289 @@
+from rsf.proj import *
+import os
+from radius2 import radius2
+from find_radius import find_radius
+
+#########################################################################
+# data is here https://github.com/chenyk1990/cykd4/blob/master/gc/gc2.bin
+#########################################################################
+
+from math import *
+def Grey(data,other): 
+    #Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t scalebar=n  clip=2  %s  '%other)
+    Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t scalebar=n %s'%other)
+
+def Greyr(data,data1,other): 
+    Result(data,data1,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t scalebar=n mean=y scalebar=y barlabel=Radius barunit=samples  %s  '%other)
+
+def Greydemo(datao,datai,other): 
+    Plot(datao,datai,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=t wheretitle=b scalebar=n  clip=2  %s  '%other)
+
+def Greynoise(data,other): 
+    Result(data,'grey label2=Trace unit2="" label1=Time unit1="s" title="" wherexlabel=b wheretitle=t scalebar=n color=j  minval=-0.4 maxval=0.4 clip=0.2 %s  '%other)
+
+Flow('g','gc2.bin','dd form=native | put d2=1')
+Flow('mask','g','envelope | causint | math output="input*input" | mask min=40 | dd type=float')
+
+# Plot input data  
+Grey('g','')
+
+# Patch
+Flow('patch','g','patch w=256,1001 p=20,1')
+Flow('patch0','patch','patch inv=y weight=y dim=2')
+
+nx=1001
+nshifts = []
+for s in range(1,5):
+
+    nshift = 'nshifg-%d' % s
+    Flow(nshift,'patch','window f2=%d | pad end2=%d' % (s,s))
+    nshifts.append(nshift)
+
+    nshift = 'nshift+%d' % s
+    Flow(nshift,'patch','window n2=%d | pad beg2=%d ' % (nx-s,s)) 
+    nshifts.append(nshift)
+
+
+Flow('nshifts',nshifts,'cat ${SOURCES[1:%d]} axis=4 | put o2=0 ' % len(nshifts))
+
+wflts = []
+wpres = []
+for nwt in range(0,20):
+    wdata  = 'wdata%d'  % nwt
+    wshift = 'wshift%d' % nwt
+    wflt   = 'wfl%d'    % nwt
+    wpre   = 'wpre%d'    % nwt
+    Flow(wdata,'patch','window n3=1 f3=%d | fft1 ' % nwt) 
+    Flow(wshift,'nshifts','window n3=1 f3=%d | window | fft1' % nwt)   
+    Flow([wflt, wpre],[wshift, wdata],
+         'clpf match=${SOURCES[1]} pred=${TARGETS[1]} rect2=20 rect1=3 niter=10 verb=n')
+    wpres.append(wpre)
+
+Flow('pre',wpres,'cat ${SOURCES[1:%d]} axis=4 | fft1 inv=y  ' % len(wpres))
+Flow('g-rna','pre','transp plane=34 memsize=1000 | patch inv=y weight=y dim=2 --out=stdout')
+Flow('g-rna-n','g g-rna','add scale=1,-1 ${SOURCES[1]} --out=stdout')
+Grey('g-rna',' ')
+Grey('g-rna-n',' ')
+
+# stationary signal and noise orthogonalization 
+Flow('g-ortho-n g-ortho','g-rna-n g-rna','ortho niter=100 rect1=3 rect2=3 sig=${SOURCES[1]} sig2=${TARGETS[1]}')
+Grey('g-ortho',' ')
+Grey('g-ortho-n',' ')
+
+# original data and 25 Hz low-pass filtered data
+Flow('g-high','g','cp')
+Flow('g-low','g','bandpass fhi=25')
+Grey('g-high','title=""')
+Grey('g-low','title="data, 25 Hz low-pass filtered"')
+
+# Non-stationary radius estimation 
+radius2('g-high','g-low', 
+                niter=5, 
+                c=[0.7,0.4,0.2,0.1,0.05], #works fine
+                bias=-20, clip=30, 
+                rect1=30, rect2=20, 
+                theor=False, initial=1, 
+                minval=-20, maxval=20, 
+                titlehigh='High', titlelow='Low',
+                it=0 )
+
+# Line-Search radius         
+Flow('rect1','rect50','math output="input+0.1"')
+Flow('rect2','rect50','math output="input+0.1"')
+
+# Gauss-Newton radius 
+Greyr('g-rect50-new','new_rect50','color=viridis scalebar=y')
+Flow('rect1_new','new_rect50','math output="input+0.1"')
+Flow('rect2_new','new_rect50','math output="input+0.1"')
+
+# non-stationary orthogonalization using line-search radius 
+Flow('g-orthon-n g-orthon','g-rna-n g-rna rect1 rect2','orthon niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]} rect1=${SOURCES[2]} rect2=${SOURCES[3]} eps=0.00')
+Grey('g-orthon',' title="signal, line-search" ')
+Grey('g-orthon-n',' title="noise, line-search"')
+
+# non-stationary orthogonalization using gauss-newton radius 
+Flow('g-orthon-n-new g-orthon-new','g-rna-n g-rna rect1_new rect2_new','orthon niter=100 sig=${SOURCES[1]} sig2=${TARGETS[1]} rect1=${SOURCES[2]} rect2=${SOURCES[3]} eps=0.00')
+Grey('g-orthon-new',' title="signal, gauss-newton" ')
+Grey('g-orthon-n-new','title="noise, gauss-newton"')
+
+# local similarity between signal and removed noise 
+Flow('g-rna-s','g-rna g-rna-n','similarity other=${SOURCES[1]} niter=40 rect1=5 rect2=5')
+Flow('g-ortho-s','g-ortho g-ortho-n','similarity other=${SOURCES[1]} niter=40 rect1=5 rect2=5')
+Flow('g-orthon-s','g-orthon g-orthon-n','similarity other=${SOURCES[1]} niter=40 rect1=5 rect2=5')
+
+# Stationary Dip Estimation using small and large radius 
+Flow('g-dip1','g','dip rect1=8 rect2=8 order=2 ')
+Flow('g-dip2','g','dip rect1=100 rect2=100 order=2 ')
+Grey('g-dip1','color=j clip=2 scalebar=y title="local slope, stationary R=8" ')
+Grey('g-dip2','color=j clip=2 scalebar=y title="local slope, stationary R=100" ')
+
+# re-scale non-stationary radii 
+Flow('rectdip1','rect1','math output="(input)*4"')
+Flow('rectdip2','rect2','math output="(input)*4"')
+Flow('rectdip1_new','rect1_new','math output="(input)*4"')
+Flow('rectdip2_new','rect2_new','math output="(input)*4"')
+
+# plot re-scaled non-stationary radii 
+Greyr('g-rectdip1','rectdip1','color=viridis scalebar=y')
+Greyr('g-rectdip2','rectdip2','color=viridis scalebar=y')
+Greyr('g-rectdip1-new','rectdip1_new','color=viridis scalebar=y')
+Greyr('g-rectdip2-new','rectdip2_new','color=viridis scalebar=y')
+
+# non-stationary dip estimation using line-search radius 
+Flow('g-dip3','g rectdip1 rectdip2','dipn rect1=${SOURCES[1]} rect2=${SOURCES[2]} order=2 verb=y')
+Grey('g-dip3','color=vik maxval=8 minval=-5 bias=0 scalebar=y title="Non-stationary Dip"')
+
+# non-stationary dip estimation using gauss-newton radius 
+Flow('g-dip3-new','g rectdip1_new rectdip2_new','dipn rect1=${SOURCES[1]} rect2=${SOURCES[2]} order=2 verb=y')
+Grey('g-dip3-new','color=j clip=2 scalebar=y title="non-stationary radius, gauss-newton"')
+
+# Structural Smoothing 
+Flow('g-sm1','g g-dip1','pwsmooth dip=${SOURCES[1]} eps=0.1 ns=5 order=2')
+Flow('g-sm2','g g-dip2','pwsmooth dip=${SOURCES[1]} eps=0.1 ns=5 order=2')
+Flow('g-sm3','g g-dip3','pwsmooth dip=${SOURCES[1]} eps=0.1 ns=5 order=2')
+Flow('g-sm3-new','g g-dip3-new','pwsmooth dip=${SOURCES[1]} eps=0.1 ns=5 order=2')
+Grey('g-sm1','clip=0.8 title="Structurally smoothed, R=8"')
+Grey('g-sm2','clip=0.8 title="Structurally smoothed, R=100"')
+Grey('g-sm3','clip=0.8 title="Structurally smoothed, R=line-search"')
+Grey('g-sm3-new','clip=0.8 title="NEW Structurally smoothed, R=gauss-newton"')
+
+# Structural Smoothing - Removed Noise 
+Flow('g-sm1-n','g g-sm1','add scale=1,-1 ${SOURCES[1]} ')
+Flow('g-sm2-n','g g-sm2','add scale=1,-1 ${SOURCES[1]} ')
+Flow('g-sm3-n','g g-sm3','add scale=1,-1 ${SOURCES[1]} ')
+Flow('g-sm3-n-new','g g-sm3-new','add scale=1,-1 ${SOURCES[1]} ')
+Grey('g-sm1-n','clip=0.8 title="noise, R=8"')
+Grey('g-sm2-n','clip=0.8 title="noise, R=100"')
+Grey('g-sm3-n','clip=0.8 title="Noise, line-search" ')
+Grey('g-sm3-n-new','clip=0.8 title="NEW Noise, gauss-newton" ')
+
+# local similarity between structurally smoothed data and removed noise 
+Flow('g-sm1-sim','g-sm1 g-sm1-n','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Flow('g-sm2-sim','g-sm2 g-sm2-n','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Flow('g-sm3-sim','g-sm3 g-sm3-n','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Flow('g-sm3-sim-new','g-sm3-new g-sm3-n-new','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+
+# local similarity plots 
+Result('g-sm1-sim','grey     mean=n color=j bias=0.15 scalebar=y minval=0 maxval=1 title="local similarity - R=8"')
+Result('g-sm2-sim','grey     mean=n color=j bias=0.15 scalebar=y minval=0 maxval=1 title="local similarity - R=50"')
+Result('g-sm3-sim','grey     mean=n color=j bias=0.15 scalebar=y minval=0 maxval=1 title="local similarity - line-search"')
+Result('g-sm3-sim-new','grey mean=n color=j bias=0.15 scalebar=y minval=0 maxval=1 title="local similarity - gauss-newton"')
+
+
+
+###############################################################
+# alternative workflow to obtain non-stationary radius 
+
+# 1. Estimate dips using small stationary radius to get noisy result
+rad1 = 10 #15 #12 
+Flow('g-dip-test','g','dip rect1=%g rect2=%g order=2 '%(rad1,rad1))
+
+# 2. Smooth estimated dip using non-linear filter 
+#Flow('g-dip-test-smooth','g-dip-test','bilat2  r1=22 r2=22') # bilateral filter
+Flow('g-dip-test-smooth','g-dip-test','expl2 rect=20 cycle=4') # fast explicit diffusion
+
+# non-stationary radius estimation 
+D1 = 'g-dip-test'
+D2 = 'g-dip-test-smooth'
+
+find_radius(D1,D2, 
+                niter=5, 
+                c=[0.7,0.4,0.2,0.1,0.05], #works fine
+                bias=-20, clip=30, 
+                rect1=30, rect2=20, 
+                theor=False, initial=1, 
+                minval=-20, maxval=20, 
+                titlehigh='High', titlelow='Low',
+                it=1 )
+
+
+# estimated radius re-scaled and plotted 
+Flow('rect_dip1_new2','new_rect51','math output="input*2"')
+Flow('rect_dip2_new2','new_rect51','math output="input*2"')
+Greyr('rect-dip1-new2','rect_dip1_new2','color=viridis scalebar=y')
+
+# non-stationary dip estimation 
+Flow('g-dip4','g rect_dip1_new2 rect_dip2_new2','dipn rect1=${SOURCES[1]} rect2=${SOURCES[2]} order=2 verb=y')
+
+# plots 
+Grey('g-dip4','           color=vik maxval=8 minval=-5 bias=0 scalebar=y title="Non-stationary Dip"')
+Grey('g-dip-test','       color=vik maxval=8 minval=-5 bias=0 scalebar=y title="Stationary Dip R=%g"'%rad1)
+Grey('g-dip-test-smooth','color=vik maxval=8 minval=-5 bias=0 scalebar=y title="Stationary Dip R=%g smooth"'%rad1)
+
+
+Plot('g-wiggle','g-high','window j2=5 | wiggle poly=y yreverse=y transp=y label2=Trace unit2="" label1=Time unit1="s" title=""  wantaxis=n wanttitle=n scalebar=n ')
+Flow('g-dip4-w','g-dip4','cp ')
+Grey('g-dip4-w','color=seismic maxval=8 minval=-5 bias=0 title="Non-stationary Dip"')
+
+# Plane Wave Destruction 
+Flow('pwd1','g-high g-dip1','pwd dip=${SOURCES[1]} order=10')
+Flow('pwd2','g-high g-dip2','pwd dip=${SOURCES[1]} order=10')
+Flow('pwd3','g-high g-dip3','pwd dip=${SOURCES[1]} order=10')
+Flow('pwd4','g-high g-dip4','pwd dip=${SOURCES[1]} order=10')
+Flow('low_pwd4','g-high g-dip-test','pwd dip=${SOURCES[1]} order=10')
+Grey('pwd1','title="pwd1" color=seismic scalebar=y')
+Grey('pwd2','title="pwd2" color=seismic scalebar=y')
+Grey('pwd3','title="pwd3" color=seismic scalebar=y')
+Grey('pwd4','title="pwd4" color=seismic scalebar=y ')
+Grey('low_pwd4','title="low_pwd4" color=seismic scalebar=y ')
+
+# histogram of pwd 
+o1 = -5
+d1 = 0.2 # 0.2/3 # 0.2  
+n1 = 51 # 51*3  # 51 
+Flow('pwd1-hist','pwd1','histogram n1=%d o1=%g d1=%g'%(n1,o1,d1))
+Flow('pwd2-hist','pwd2','histogram n1=%d o1=%g d1=%g'%(n1,o1,d1))
+Flow('pwd3-hist','pwd3','histogram n1=%d o1=%g d1=%g'%(n1,o1,d1))
+Flow('pwd4-hist','pwd4','histogram n1=%d o1=%g d1=%g'%(n1,o1,d1))
+Plot('pwd1-hist','dd type=float | scale axis=1 | bargraph title="Normalized Distribution" label1=Value''')
+Plot('pwd2-hist','dd type=float | scale axis=1 | bargraph title="Normalized Distribution" label1=Value''')
+Plot('pwd3-hist','dd type=float | scale axis=1 | bargraph title="Normalized Distribution" label1=Value''')
+Plot('pwd4-hist','dd type=float | scale axis=1 | bargraph title="Normalized Distribution" label1=Value''')
+
+# estimate signal by removing noise estimated by pwd 
+Flow('signal1','g-high pwd1','add ${SOURCES[1]} scale=1,-1')
+Flow('signal2','g-high pwd2','add ${SOURCES[1]} scale=1,-1')
+Flow('signal3','g-high pwd3','add ${SOURCES[1]} scale=1,-1')
+Flow('signal4','g-high pwd4','add ${SOURCES[1]} scale=1,-1')
+Flow('low_signal4','g-high low_pwd4','add ${SOURCES[1]} scale=1,-1')
+Grey('signal1','title="signal 1"')
+Grey('signal2','title="signal 2"')
+Grey('signal3','title="signal 3"')
+Grey('signal4','title="signal 4"')
+Grey('low_signal4','title="low signal 4"')
+
+# local similarity between signal and noise 
+Flow('signal1-s','signal1 pwd1','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Flow('signal2-s','signal2 pwd2','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Flow('signal3-s','signal3 pwd3','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Flow('signal4-s','signal4 pwd4','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Flow('low_signal4-s','low_signal4 low_pwd4','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+# bias=0.85 color=hot
+Plot('signal1-s','grey mean=n bias=0.6 polarity=n color=j scalebar=y minval=0 maxval=1 title="local similarity 1"')
+Plot('signal2-s','grey mean=n bias=0.6 polarity=n color=j scalebar=y minval=0 maxval=1 title="local similarity 2"')
+Plot('signal3-s','grey mean=n bias=0.6 polarity=n color=j scalebar=y minval=0 maxval=1 title="local similarity 3"')
+Plot('signal4-s','grey mean=n bias=0.6 polarity=n color=j scalebar=y minval=0 maxval=1 title="local similarity 4"')
+Plot('low_signal4-s','grey mean=n bias=0.6 polarity=n color=j scalebar=y minval=0 maxval=1 title="local similarity 4 low"')
+
+############################################################
+# structural smoothing with estimated dip
+Flow('g-sm4','g g-dip4','pwsmooth dip=${SOURCES[1]} eps=0.1 ns=5 order=2')
+Grey('g-sm4','clip=0.8 title="Structurally smoothed, New Method"')
+Flow('low_g-sm4','g g-dip-test','pwsmooth dip=${SOURCES[1]} eps=0.1 ns=5 order=2')
+Grey('low_g-sm4','clip=0.8 title="low Structurally smoothed"')
+
+# removed noise 
+Flow('g-sm4-n','g g-sm4','add scale=1,-1 ${SOURCES[1]} ')
+Grey('g-sm4-n','clip=0.8 title="Noise, Gauss-Newton" ')
+Flow('low_g-sm4-n','g low_g-sm4','add scale=1,-1 ${SOURCES[1]} ')
+Grey('low_g-sm4-n','clip=0.8 title="Noise, Gauss-Newton" ')
+
+# local similarity between structurally smoothed data and removed noise 
+Flow('g-sm4-sim','g-sm4 g-sm4-n','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Flow('low_g-sm4-sim','low_g-sm4 low_g-sm4-n','similarity other=${SOURCES[1]} niter=40 rect1=20 rect2=20')
+Result('g-sm4-sim',    'grey mean=n bias=0.15 color=j scalebar=y minval=0 maxval=1 title=""')
+Result('low_g-sm4-sim','grey mean=n bias=0.15 color=j scalebar=y minval=0 maxval=1 title=""')
+
+
+
+End()

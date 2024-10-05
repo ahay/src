@@ -1,0 +1,26 @@
+from rsf.proj import *
+import os
+
+# Download a collection of shot gathers from Oz Yilmaz
+# and convert them from SEGY to RSF
+# Courtesy of David Forel 
+# See https://seismicrocks.com/oz40.html 
+
+tgz = 'oz.forty.sgy.tgz'
+
+Fetch(tgz, 'seismicunix',
+      server='https://seismicrocks.com',
+      top='')
+
+files = [f'oz.{i:>02}.sgy' for i in range(1, 41)]
+Flow(files,tgz,
+     'gunzip -c $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
+for sgy in files:
+    name =  os.path.splitext(sgy)[0]
+    rsf = name+'.rsf'
+    Flow([rsf,'t-'+rsf,name+'.asc',name+'.bin'],sgy,
+         'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+    Result(rsf,f'grey title={name}')
+    
+End()

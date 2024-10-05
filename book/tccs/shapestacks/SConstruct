@@ -1,0 +1,8 @@
+from rsf.tex import *
+
+End(lclass='geophysics',options='reproduce',use='hyperref,listings',hires='cmp2 nsnmo sstack wsstack', color='ALL')
+
+#lclass='segabs'
+#Paper('paper',lclass='article',use='pdfpages')
+
+#End(use='hyperref,listings,moreverb', color='ALL')

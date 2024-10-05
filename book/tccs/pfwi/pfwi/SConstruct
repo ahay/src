@@ -1,0 +1,155 @@
+from rsf.proj import*
+sys.path.append('..')
+import marmousi
+
+def data(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Time unit1=s label2=Distance unit2=m %s
+    ''' %(custom)
+
+def image(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Depth unit1=m label2=Distance unit2=m %s
+    ''' %(custom)
+
+def movie(custom):
+    return '''
+    grey labelsz=10 labelfat=2 titlesz=12 titlefat=2 label1=Depth unit1=m label2=Distance unit2=m gainpanel=a %s
+    ''' %(custom)
+
+def line(custom):
+    return '''
+    graph labelsz=10 labelfat=2 titlesz=12 titlefat=2 plotfat=4 %s
+    ''' %(custom)
+
+def trace(custom):
+    return '''
+    wiggle labelsz=10 labelfat=2 titlesz=12 titlefat=2 plotfat=4 %s
+    ''' %(custom)
+
+spg=30 # absorbing sponge width
+dt = 0.001
+nt = 1501
+nz = 200
+dz = 10
+nx = 300
+dx = 10
+
+Flow('vel',None,'math n1=%d n2=%d d1=%d d2=%d output="2000+0.7*x1" | put unit1=m unit2=m' %(nz,nx,dz,dx))
+Result('vel',image('title=Velocity color=j bias=1.7 scalebar=y barreverse=y bias=2000 allpos=y'))
+
+Flow('ss','vel','spike k1=60,50,55 k2=100,150,200 mag=1.5,2,2.5 nsp=3 | smooth rect1=2 rect2=3 repeat=2')
+Flow('sov','vel ss','math s=${SOURCES[1]} output="input+s*10000"')
+Result('sov','window n1=100 |'+image('title="Velocity and Source Locations" scalebar=y minval=2000 maxval=3400 barreverse=y bias=2000 allpos=y color=I'))
+
+# Define passive source (x,y,t)
+# Wavelet
+Flow('wavelet',None,
+        '''
+        spike nsp=1 mag=1e6 n1=%d d1=%f o1=0 k1=100 |
+        ricker1 frequency=20
+        '''%(nt,dt))
+Result('wavelet','window n1=600 |graph title="Wavelet" unit1=s label1=Time label2= unit2=')
+Result('spectra','wavelet','spectra |window n1=80 |graph title="Spectra" unit1=Hz label1=Frequency label2= unit2=')
+
+Flow('src','vel','spray axis=3 n=%d d=%f o=0 | spike k1=60,50,55 k2=100,150,200 k3=100,250,400 mag=1.5,2,2.5 nsp=3 | smooth rect1=2 rect2=2 repeat=2 | transp plane=13 memsize=5000 | ricker1 frequency=20 | transp plane=13 memsize=5000' %(nt,dt))
+Flow('rr','vel','spike k1=60,50,55 k2=100,150,200 mag=1.5,2,2.5 nsp=3 | smooth rect1=2 rect2=2 repeat=1')
+Flow('src1','wavelet rr','cubesrc ref=${SOURCES[1]}')
+
+# Forward modeling to get passive data
+Flow('data','src vel',
+     '''
+     lstri2d adj=n velocity=${SOURCES[1]}
+     depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+     ''' %(1,nt,dt,spg) )
+
+Result('data',data('title="Observed data" clip=0.269403'))
+
+# Time-reversal (TR) imaging of passive sources
+Flow('src-tr','data vel',
+     '''
+     lstri2d adj=y velocity=${SOURCES[1]}
+     depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+     ''' %(1,nt,dt,spg) )
+Result('src-tr','window j3=10 | '+movie('title="TR mapping of source"'))
+Flow('data-src-tr','src-tr vel',
+     '''
+     lstri2d adj=n velocity=${SOURCES[1]}
+     depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+     ''' %(1,nt,dt,spg) )
+Result('data-src-tr',data('title="Predicted data by TRI"'))
+Flow('res-src-tr','data data-src-tr','add ${SOURCES[1]} scale=1,-1')
+Result('res-src-tr',data('title="Data misfit of TRI" clip=0.269403'))
+
+# Least-squares Time-reversal Imaging
+"""
+# Conjugate gradient iterations of un-preconditioned TR
+Flow('inv','data vel src-tr',
+        '''
+        conjgrad lstri2d
+        velocity=${SOURCES[1]}
+        depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+        mod=${SOURCES[2]} niter=10
+        ''' %(1,nt,dt,spg) )
+Result('inv','window j3=10 | '+movie('title="LSTRI mapping of source"'))
+Flow('data-inv','inv vel',
+     '''
+     lstri2d adj=n velocity=${SOURCES[1]}
+     depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+     ''' %(1,nt,dt,spg) )
+Result('data-inv',data('title="Predicted data by LSTRI"'))
+"""
+
+# Time-reversal (TR) imaging of passive sources
+Flow('inv1','data vel',
+     '''
+     lstri2d inv=y velocity=${SOURCES[1]}
+     depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+     niter=10 verb=y
+     ''' %(1,nt,dt,spg) )
+Result('inv1','window j3=10 | '+movie('title="LSTRI mapping of source"'))
+Flow('data-inv1','inv1 vel',
+     '''
+     lstri2d adj=n velocity=${SOURCES[1]}
+     depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+     ''' %(1,nt,dt,spg) )
+Result('data-inv1',data('title="Predicted data by LSTRI" clip=0.269403'))
+Flow('res-inv1','data data-inv1','add ${SOURCES[1]} scale=1,-1')
+Result('res-inv1',data('title="Data misfit of LSTRI" clip=0.269403'))
+
+# Weighted Time-reversal (TR) imaging of passive sources
+Flow('inv2 weight','data vel',
+     '''
+     lstri2d inv=y prec=y velocity=${SOURCES[1]}
+     depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+     niter=10 verb=y
+     weight=${TARGETS[1]}
+     ctr=y
+     sw=y size=50
+     perc=1 hard=0.6 ngrp=4 rectt=50 repeat=4
+     ''' %(1,nt,dt,spg) )
+Result('inv2','window j3=10 | '+movie('title="LSTRi mapping of source"'))
+Flow('data-inv2','inv2 vel',
+     '''
+     lstri2d adj=n velocity=${SOURCES[1]}
+     depth=%d nt=%d dt=%g nb=%d abc=y cb=0.01
+     ''' %(1,nt,dt,spg) )
+Result('data-inv2',data('title="Predicted data by LSTRI" clip=0.269403'))
+Flow('res-inv2','data data-inv2','add ${SOURCES[1]} scale=1,-1')
+Result('res-inv2',data('title="Data misfit of preconditioned LSTRI" clip=0.269403'))
+
+Flow('conv','convergence-new.asc','echo in=$SOURCE n1=10 n2=2 data_format=ascii_float | dd form=native | put d1=1 d2=1 o1=1 o2=1')
+Result('conv',line('title="Rate of convergence" label2="Normalized Data Misfit" label1="Number of Iterations" max2=1 min2=0 screenht=6 screenratio=0.5 dash=3,0'))
+
+for m in ['src','inv1','inv2','src-tr']:
+    Flow(m+'-trace-1',m,'window f1=59 f2=99 n1=1 n2=1')
+    Flow(m+'-trace-2',m,'window f1=49 f2=149 n1=1 n2=1')
+    Flow(m+'-trace-3',m,'window f1=54 f2=199 n1=1 n2=1')
+    Flow(m+'-traces',[m+'-trace-1',m+'-trace-2',m+'-trace-3'],'cat axis=2 ${SOURCES[1:3]}')
+
+Result('src-traces','window max1=0.5 | '+trace('transp=y pclip=100 yreverse=y title="True source" label1=Time unit1=s label2= unit2= wantaxis2=n'))
+Result('src-tr-traces','window max1=0.5 | '+trace('transp=y pclip=100 yreverse=y title="TRI" label1=Time unit1=s label2= unit2= wantaxis2=n'))
+Result('inv1-traces','window max1=0.5 | '+trace('transp=y pclip=100 yreverse=y title="LSTRI" label1=Time unit1=s label2= unit2= wantaxis2=n'))
+Result('inv2-traces','window max1=0.5 | '+trace('transp=y pclip=100 yreverse=y title="Preconditioned LSTRI" label1=Time unit1=s label2= unit2= wantaxis2=n'))
+
+End()

@@ -1,0 +1,407 @@
+\published{Geophysics, 2020, 85, no. 1, U1–U20}
+
+\title{Probabilistic moveout analysis by time warping}
+
+\author{Yanadet Sripanich$^1$, Sergey Fomel$^2$, Jeannot Trampert$^3$, William Burnett$^4$, and Thomas Hess$^2$ \\
+$^1$Formerly Utrecht University; presently PTT Exploration and Production Public Company Limited  \\
+$^2$The University of Texas at Austin \\
+$^3$Utrecht University \\
+$^4$ExxonMobil Upstream Research Company
+}
+
+\maketitle
+
+\righthead{Moveout analysis by time warping}
+\lefthead{Sripanich et al.}
+\footer{TCCS}
+
+\begin{abstract}
+Parameter estimation from reflection moveout analysis represents one of the most fundamental problems in subsurface model building. We propose an efficient moveout inversion method that is based on the process of automatic flattening of common-midpoint (CMP) gathers using local slopes. We show that as a byproduct of this flattening process, we can also estimate reflection traveltimes corresponding to the flattened CMP gathers. This traveltime information allows us to construct a highly overdetermined system and subsequently invert for moveout parameters including normal-moveout (NMO) velocities and quartic coefficients related to anisotropy. We utilize the 3D generalized moveout approximation (GMA) that can accurately capture the effects of complex anisotropy on reflection traveltimes as the basis for our moveout inversion. Due to the cheap forward traveltime computations by GMA, we employ a Monte Carlo inversion scheme for an improved handling of the non-linearity between reflection traveltimes and moveout parameters. This choice also allows us to set up a probabilistic inversion workflow within a Bayesian framework, where we can obtain the posterior probability distributions that contain valuable statistical information on estimated parameters such as uncertainty and correlations. We use synthetic and real-data examples including the data from the SEAM Phase II unconventional reservoir model to demonstrate the performance of our proposed method and discuss insights into the problem of moveout inversion gained from analyzing the posterior probability distributions. Our results suggest that the solutions to the problem of traveltime-only moveout inversion from 2D CMP gathers are relatively well-constrained by the data. However, parameter estimation from 3D CMP gathers associated with more moveout parameters and complex anisotropic models are generally non-unique and that there are trade-offs among inverted parameters, especially the quartic coefficients.
+\end{abstract}
+
+
+\section{Introduction}
+Moveout analysis is arguably one of the most important steps in seismic processing, which leads to an expeditious construction of subsurface models. The classical work of \cite{taner} represents the foundation for modern moveout analysis, where the reflection traveltimes of pure P waves are approximated by a Taylor expansion around zero offset. The degree of matching between the data and the computed traveltime can be judged based upon the semblance criterion \cite[]{neidell}. Velocities that correspond to a higher degree of matching (semblance) are picked, and an accurate subsurface model can be inferred. In a 2D isotropic subsurface, only one parameter --- the normal-moveout (NMO) velocity --- needs to be estimated but more parameters are required when 3D data and effects from anisotropy are under consideration \cite[]{alkatsvankin,nmoellipse,yilmaz,tsvankinbook,thomsenbook,masmoudiscan,ohscattering}. Aiming to improve the process, many researchers have proposed strategies such as refining the semblance criterion for higher resolution semblance peaks \cite[]{kirlin,kirlinbook,abbad,fomelab,luohale,similaritysemblance,wilsongross}, taking into account amplitude variations with offset (AVO) \cite[]{sarkar2001,sarkar2002,yantsvankin}, and implementing inversions by maximizing semblance-based objective function to avoid too many costly parameter scans \cite[]{grechkatsvankinlathet,vascon}. However, it can generally be said that the higher the number of parameters to scan, the lower the computational efficiency of semblance-based techniques.
+
+\cite{fomelslope} proposes an alternative approach to this problem and formulated an automatic NMO correction of CMP gathers based on local slopes, which can directly and automatically be estimated from the gathers themselves \cite[]{fomelpwd}. This concept evolves from the original velocity-independent imaging strategies of \cite{otto} and early results of \cite{wolf}, which rely on the connection between the slopes of reflection traveltime surfaces and the time-domain processing parameters. As a result, the process of subsurface model building simply amounts to mapping from the automatically measured slopes to the corresponding NMO velocity. 
+In the simple case of 2D hyperbolic reflection traveltimes, the NMO velocity $v_{nmo}$ can be found from the slope $p$ as follows \cite[]{fomelslope}:
+\begin{equation}
+\label{eq:slopehyper}
+    \frac{1}{v^2_{nmo} (t_0,x)} = \bar{W}(t_0,x) = p(t_0,x)\frac{t}{x}~,  
+\end{equation}
+where $t$ is the hyperbolic reflection traveltime, $t_0$ denotes the zero-offset traveltime, $x$ is offset, and $p = dt/dx$. The slowness squared $\bar{W}(t_0,x)$ is obtained as an attribute volume in terms of $t_0$ and $x$. In conventional time processing workflow \cite[]{yilmaz}, a profile of slowness squared $W(t_0)$ at each CMP location as opposed to a volume of $\bar{W}(t_0,x)$ is generally preferred, which leads to a research question on how one can best obtain $W(t_0)$ from $\bar{W}(t_0,x)$. Moreover, reflection traveltime approximations are often nonhyperbolic with more independent parameters needed to honor the effects from anisotropy and heterogeneity. \cite{mapping} present several relationships between local slopes/curvatures ($d^2t/dx^2$) and moveout parameters for different nonhyperbolic traveltime approximations. Nonetheless, the problem of using local slopes to achieve both moveout correction (event flattening) and parameter estimation (velocity analysis) automatically in this regime remains a challenging task. 
+
+
+
+Alternatively, \cite{will} and \cite{willthesis} propose to accomplish both processes by a combination of non-physical flattening and moveout inversion. The former is achieved by using predictive painting \cite[]{fomelpredict}, which automatically traces the CMP events according to the local structural information from slopes without relying on any prior assumption regarding their shape. This is notably different from directly mapping local slopes to moveout parameter as in equation~\ref{eq:slopehyper}. The traced events are subsequently \textit{warped} (numerical nonstationary shifts) until they are flat and a seismic image can be obtained from stacking these flattened gathers. The term `non-physical' is used here to emphasize the difference between the conventional physical flattening based on an assumption of some particular shape of traveltime surfaces (e.g., hyperbolic in equation~\ref{eq:slopehyper} or any other nonhyperbolic forms extracted from the physics of wave propagation) and the warping approach, which flattens the gathers numerically. In view of subsurface model building, the byproduct of this process, the nonstationary shifts, can be stored and applied to a time attribute volume --- thereby the name \textit{time-warping} --- which yields reflection traveltimes of the corresponding flattened CMP events. We can then invert for the best-fit parameters of any preferred moveout approximation from this knowledge on reflection traveltimes of all CMP events and obtain properties of the subsurface.
+
+
+Many moveout approximations suitable for various settings exist in the literature and choosing which one to use depends largely on the data coverage, the types of subsurface media, the desired traveltime accuracy, and the computational efficiency --- more parameters to scan is often more computationally inefficient. Conventionally, moveout approximations have the well-known hyperbolic expression, which is exact for homogeneous isotropic or elliptically anisotropic media, but is only approximately applicable to small-offset data in other cases. For long-offset data, the moveout become nonhyperbolic and require more parameters to capture the effects from possible anisotropy \cite[]{hake,castle,tsvankinthomsen1994,alkatsvankin,alortho,ursin,blias2009,aleixo,alkascan,golikov,farra,fpj}. \cite{fomelstovas} propose the 2D highly accurate generalized moveout approximation (GMA), which requires five independent parameters. This approximation is named `generalized' due to the fact that its functional form can reduce to several other known moveout approximations with different choices of parameters, and therefore provides a systematic view on the effects of various parameter choices on the approximation accuracy. Its 3D extension (3D GMA) is proposed by \cite{zonegma} and requires a total of seventeen parameters to accurately describe reflection traveltimes in 3D layered anisotropic media.
+
+In this study, we first show that using the time-warping workflow, we can construct a highly overdetermined inverse problem for moveout parameters. We improve upon the work of \cite{will} and \cite{willthesis} that rely on second-order moveout approximations (NMO ellipse), and utilize in our approach instead the more accurate 3D GMA appropriate for 3D layered anisotropic models. Furthermore, we acknowledge the cheap forward traveltime computations with 3D GMA and propose to employ a global inversion scheme within a transdimensional (hierarchical Bayesian) framework \cite[]{malinverno,sambridgetrans1,sambridgetrans2}, instead of the previous linearized least-squares inversion by \cite{willthesis}. This allows us to obtain valuable statistical posterior probability distributions of all estimated moveout parameters and data uncertainty as opposed to only one `best-fit' solution according to the least-squares minimization criterion. We provide synthetic and real-data examples including one from the SEAM Phase II unconventional reservoir model to demonstrate the performance and discuss important implications from using the proposed traveltime-only inversion approach for subsurface model building.
+
+
+\section{Theory}
+
+\subsection{Moveout inversion by time warping}
+ 
+In general, we can formulate the problem of moveout inversion in the context of time-warping as follows \cite[]{will}:
+\begin{equation}
+\label{eq:general}
+    t^2-t^2_0 = F(\mathbf{m},\mathbf{x})~,
+\end{equation}
+where $t^2-t^2_0$ denotes the measured traveltime squared shifts from non-physical flattening, $F$ is a linear or non-linear operator describing the geometry of the reflection traveltime surface, i.e, the moveout approximation of choice, $\mathbf{m}$ denotes the vector of pertaining moveout parameters associated with that choice of $F$, and  $\mathbf{x}$ denotes the vector of offsets ($x$ and $y$). Here, $t$ denotes the recorded reflection traveltime and $t_0$ is its value at zero offset. For each event at $t_0$ in a CMP gather of $N$ traces, we have $N$ equations with only several unknowns ($\mathbf{m}$) depending on the choice of $F$. Therefore, this generally leads to a highly overdetermined system for estimating the associated moveout parameters $\mathbf{m}$. For example, in the case of 2D hyperbolic reflection traveltime, we have $F(\mathbf{m},\mathbf{x}) = x^2\;W(t_0)$ leading to
+\begin{equation}
+    t^2-t^2_0 = x^2\;W(t_0)~.
+\end{equation}
+Therefore, this highly overdetermined system can be solved using, for instance, a least-squares inversion \cite[]{will,willthesis}. The number of parameters in $\mathbf{m}$ varies depending on the choice of $F$ and the kind of considered data (2D or 3D). Nevertherless, in general, the number of traces in a CMP gather far exceeds the number of unknown parameters and the resulting system is almost always overdetermined. We note that in practice, the automatic traveltime picks from recorded data may include complications from various causes such as noise and errors from slope estimation, which may lead to a system of equations that is mathematically inconsistent --- no set of values for $\mathbf{m}$ satisfies the system exactly. In this study, we propose to use the Bayesian inversion framework to find the posterior distributions of possible solutions instead of seeking only one solution associated with least-squares misfit minimization criterion.
+
+\subsubsection{Time-warping workflow}
+\inputdir{mcmc}
+Steps to implement the entire time-warping workflow can be summarized (Figures~\ref{fig:cmpcube,timecube} and \ref{fig:flat3cube,warpedtimecube}) as follows \cite[]{will}:
+\begin{enumerate}
+    \item The inputs of the workflow include a CMP gather $d(t,x,y)$ and a time attribute volume as shown in Figures~\ref{fig:cmpcube} and \ref{fig:timecube}. The latter is generated simply by having a similarly-sized volume as the CMP gather with each element storing the corresponding value of traveltime along the axis. After warping, this volume will store the reflection traveltimes from different CMP events.
+    
+    \item Apply slope estimation on the CMP gather (Figure~\ref{fig:cmpcube}) using tools such as plane-wave destruction filter \cite[]{fomelpwd}. The resulting slopes indicate the local structures and are used to automatically trace the CMP events in the predictive painting method \cite[]{fomelpredict}.
+    
+    \item The picked events are then numerically warped until flattened by inverse interpolation. The warping process can be viewed as applying a nonstationary shifting filter. An application of this filter to $d(t,x,y)$ produces $d(t_0,x,y)$ in Figure~\ref{fig:flat3cube}. Applying the same filter to the time attribute volume in Figure~\ref{fig:timecube}, we obtain $t(t_0,x,y)$ in Figure~\ref{fig:warpedtimecube}. Here, we restrict our application of warping to only the parts with CMP events between time 1 and 2 $s$.
+    
+    \item In the considered time range (1--2 $s$), we can compute the traveltime shift volume by the element-wise subtraction of $t^2(t_0,x,y)-t_0^2$. 
+    
+    \item The resulting traveltime shifts will be used in the left-hand side of equation~\ref{eq:general} for the moveout parameter inversion.
+\end{enumerate}
+
+\multiplot{3}{cmpcube,timecube}{width=0.45\textwidth}{Original volumes of (a) CMP data $d(t,x,y)$ and (b) time attribute \old{$t(t,x,y)$}.}
+\multiplot{3}{flat3cube,warpedtimecube}{width=0.45\textwidth}{Warped volumes of (a) flattened CMP $d(t_0,x,y)$ and (b) time $t(t_0,x,y)$. We only apply warping to the time range of 1--2 $s$ because CMP events are present only in this $t_0$ range.}
+
+The above five steps are carried out in the same way, regardless of the choice of moveout approximation. These steps could also be applied to migrated common-image-point gathers, or many other gather or domain types. In this study, we focus on its application to the problem of moveout inversion, which is dependent upon the choice of moveout approximation $F$ and the inversion method. Different moveout approximations represent different shapes of reflection traveltime surfaces and involve a different number of moveout parameters to be fitted. An appropriate inversion method must also be chosen in accordance with the choice of moveout approximation. Whereas \cite{will} solved for the three parameters of NMO ellipse moveout model using least-squares inversion, here we use a Monte Carlo inversion to infer the many parameters of the more comprehensive 3D GMA model. 
+
+% In the following sections, we discuss our choice of 3D GMA for $F$ and a global Monte Carlo inversion to infer the moveout parameters.
+
+\subsection{3D generalized nonhyperboloidal moveout approximation}
+Using similar notations as before, we express the reflection traveltime of each CMP event in terms of offset $x$ and $y$ in a given acquisition coordinate frame as $t(x,y)$. The 3D generalized nonhyperboloidal moveout approximation (3D GMA) can be expressed as \cite[]{zonegma}:
+\begin{equation}
+\label{eq:3dGMA}
+t^2(x,y) \approx t^2_0 + W(x,y) + \frac{A(x,y)}{t^2_0+B(x,y)+\sqrt{t^4_0+2t^2_0B(x,y)+C(x,y)}} ~,
+\end{equation} 
+where
+\begin{eqnarray}
+\nonumber
+W(x,y) & = & W_1x^2+ W_2xy+ W_3y^2~,\\
+\nonumber
+A(x,y) & = & A_1x^4+A_2x^3y+A_3x^2y^2+A_4xy^3+A_5y^4~,\\
+\nonumber
+B(x,y) & = & B_1x^2+B_2xy+B_3y^2~,\\
+C(x,y) & = & C_1x^4+C_2x^3y+C_3x^2y^2+C_4xy^3+C_5y^4~,
+\end{eqnarray}
+and $t_0$ again denotes the reflection traveltime at zero offset. The total number of independent parameters in equation~\ref{eq:3dGMA} is seventeen including $t_0$, $W_i$, $A_i$, $B_i$, and $C_i$. In the case of $x=0$ or $y=0$, equation~\ref{eq:3dGMA} reduces to the generalized nonhyperbolic moveout approximation of \cite{fomelstovas}. \cite{zonegma} shows that the 3D GMA (equation~\ref{eq:3dGMA}) can predict reflection traveltimes in 3D homogeneous or complex horizontally layered anisotropic models with a nearly exact level of accuracy for all practical purposes.
+
+In equation~\ref{eq:3dGMA}, the parameters $t_0$, $W_i$, and $A_i$ are defined with respect to the zero-offset ray, whereas $B_i$ and $C_i$ are obtained from finite-offset rays \cite[]{zonegma}. With these definitions, the parameters $t_0$, $W_i$, and $A_i$ are related to previously known time-processing parameters: $W_i$ simply denote the reciprocals of NMO velocities and govern the so-called NMO ellipse \cite[]{nmoellipse}. $A_i$ represent the quartic coefficients that govern the nonhyperbolicity of reflection traveltimes. A common approach to simplify and relate the quartic coefficients ($A_i$) to anisotropic parameters of the subsurface medium is done using the pseudoacoustic approximation, where $A_i$ can then be expressed in terms of $\eta_i$ \cite[]{alkatsvankin,alkaortho,stovasortho,zoneinterval,zonegma}. With regard to this study, we keep the $A_i$ notation to maintain the generality of the proposed moveout inversion approach.
+
+On the other hand, the $B_i$ and $C_i$ are designed to be dynamic and can vary with respect to different choices of finite-offset rays, which lead to better flexibility and accuracy of traveltime fitting. As a result, they cannot be directly related to medium parameters and one may expect that there are many possibilities of $B_i$ and $C_i$ that can lead to equally good approximation accuracy. Therefore, we expect that the non-uniqueness of $B_i$ and $C_i$ can lead also to the non-uniqueness in the final inverted models.
+
+\subsection{Monte Carlo inversion}
+
+Equipped with the general concepts on time-warping and the choice of 3D GMA described in the previous sections, we propose to solve this moveout inversion problem with a global Monte Carlo inversion method. This choice is encouraged by the non-uniqueness of the solution of this inverse problem that only relies on traveltime (kinematic) data and the fact that the 3D GMA depends non-linearly on associated moveout parameters. By employing a global optimization scheme within a Bayesian framework, we can map out the non-uniqueness of possible solutions and present them as posterior probability distributions, while also honoring the non-linearity of the problem. Here, we largely follow the notations of \cite{mosetaran} and \cite{tarantolabook}, where we express the posterior probability density function $\sigma(\mathbf{m})$ as
+\begin{equation}
+\label{eq:bayes}
+    \sigma(\mathbf{m}) = k\rho(\mathbf{m}) L(\mathbf{m})~.
+\end{equation}
+$\rho(\mathbf{m})$ denotes the prior probability density function of model parameters $\mathbf{m}$ and $L(\mathbf{m})$ represents the likelihood function (with an appropriate normalization constant $k$) that measures the degree of fit between predicted data and observed data. Assuming a prior $\rho(\mathbf{m})$ that we can draw samples from, the goal is to design a selection process based on $L(\mathbf{m})$ that will result in samples whose density directly represents $\sigma(\mathbf{m})$. 
+
+\cite{mosetaran} showed that given samples of $\rho(\mathbf{m})$ and a choice of $L(\mathbf{m})$, the selection process can be done by means of the Metropolis-Hastings algorithm. In this study, we define $L(\mathbf{m})$ as:
+\new{
+\begin{equation}
+\label{eq:likelihood}
+    L(\mathbf{m}) = \frac{1}{(2 \pi S )^{N/2}}\exp{\left(-\frac{1}{2 S^2} \sum^{N}_{n=1} (F^{\text{obs}}_n - F_n(\mathbf{m}))^2 \right)}~,
+\end{equation}
+}
+where for each $t_0$, the misfit between the observed $F^{\text{obs}}_n$ and modeled $F_n(\mathbf{m})$ for all $N$ traces in the considered CMP gather is evaluated and summed according to equation~\ref{eq:likelihood}. Here, $S$ represents a `hyperparameter' related to data uncertainty, which we choose to express as
+\begin{equation}
+    \label{eq:noise}
+    S = \frac{S_{\%}}{100} \sqrt{\frac{\sum^{N}_{n=1} (F^{\text{obs}}_n)^2}{N}}~,
+\end{equation}
+with $S_{\%}$ denoting the magnitude of uncertainty expressed in percent with respect to the root mean square (RMS) of the data $F^{\text{obs}}_n$. Because $t_0$ is constant for each CMP event, $S$ can also be considered as a relative uncertainty in the estimated reflection traveltime squared (equation~\ref{eq:general}).
+
+We emphasize that data uncertainty is generally not easily quantified in practice due to the workflow of estimating $F$. To account for this complication, we propose to utilize the transdimensional (hierarchical Bayesian) inversion framework \cite[]{malinverno,sambridgetrans1,sambridgetrans2}, which permits us to treat $S_{\%}$ as yet another parameter to be estimated during the inversion. In this way, we obviate the need to estimate the data uncertainty explicitly, while correctly honoring its effects in our inversion. Our implementation of the Monte Carlo inversion with Metropolis-Hastings rule can, therefore, be summarized as follows:
+
+\begin{enumerate}
+    \item Assume that we start at a point in the model space $j$ with a guess set of $\mathbf{m}_j$ drawn from the prior distributions of each model parameter. In the case of the 3D GMA, $\mathbf{m}$ consists of $W_i$, $A_i$, $B_i$, $C_i$, and $S_{\%}$. For uniform prior distributions, a random number generator can be used for drawing samples; whereas, for Gaussian prior distributions, a combination of a random number generator and the Box-Muller transform can be used.
+    
+    \item Evaluate the current likelihood function $L_j = L(\mathbf{m}_j)$ according to equation~\ref{eq:likelihood} with a choice of cutoff offset that depends on the example at hand.
+    
+    \item Attempt to move to another point $i$ with a new guess of $\mathbf{m}_i$ drawn from the same distribution. This attempt is evaluated according to the following Metropolis-Hastings rule. 
+    \begin{itemize}
+        \item If $L_i/L_j \ge 1$, then accept the move to $i$.
+        \item If $L_i/L_j < 1$, then make a random decision of staying at $j$ or accepting the move to $i$ with a probability of $L_i/L_j$.
+    \end{itemize}
+    
+    \item Record the values of $\mathbf{m}$ after the selection.
+    
+    \item Repeat steps 2--4 as many times as needed.
+    
+\end{enumerate}
+
+In our workflow, we propose to perform moveout parameter estimation with two inversion runs:
+\begin{enumerate}
+\item The first run is aimed at estimating $W_i$ using only small-offset data. At this stage, we assume that the prior distribution is uniform within the chosen bounds (min and max values) for each model parameter in $\mathbf{m}$ and specify a small cutoff offset (e.g., where the offset-to-depth ratio is assumed to be unity). 
+\item Subsequently, the resulting distributions of $W_i$ from the first run are assumed to be Gaussian and will be used as new prior distributions for $W_i$ in the second inversion run with all available (small- and large-offsets) data to estimate $A_i$, $B_i$, and $C_i$. Better prior distributions of $W_i$ from the first run are expected to help with the estimation of $A_i$, $B_i$, and $C_i$. The prior distributions for other pertaining parameters are again assumed to be uniform within some chosen bounds (min and max values).
+\end{enumerate}
+
+After the two runs, the final recorded $\mathbf{m}$ can be visualized as histograms that represent 1D marginal posterior probability distributions of the estimated moveout parameters $\mathbf{m}$. The corresponding posterior probability density function $\sigma(\mathbf{m})$ can subsequently be obtained with appropriate normalization of the histograms. In order to quantify the `gain of information' from the moveout inversion process, we use the Kullback-Leibler divergence $D_{KL} \in [0,\infty)$ given by,
+\begin{equation}
+    D_{KL} = \int \sigma(\mathbf{m})\ln{\left( \frac{\sigma(\mathbf{m})}{\rho(\mathbf{m})}\right)} d\mathbf{m}~,
+\end{equation}
+which estimates the relative difference between the prior $\rho(\mathbf{m})$ and the posterior $\sigma(\mathbf{m})$. A high $D_{KL}$ value indicates that the posterior distribution is very different from the prior, and therefore, has gained new information on the moveout parameters through the inversion process using the provided data (i.e, moveout traveltime shifts $F^{\text{obs}}_n$ in our problem). On the other hand, $D_{KL}=0$ indicates that the two distributions are identical and no gain has been achieved upon seeing the data. In all of our examples, we report $D_{KL}$ with respect to the input uniform prior distributions to the first inversion run.
+
+Even though $D_{KL}$ is generally unbounded, it is possible to compute a benchmark value for some simple case. For example, if we consider Gaussian prior and posterior distributions, the Kullback-Leibler divergence ($D_{KL}$) can be expressed as
+\begin{equation}
+    D_{KL} = \ln{\left(\sqrt{\frac{v_\rho}{v_\sigma}}~\right)} + \frac{v_\sigma +(\mu_\sigma-\mu_\rho)^2}{2 v_\rho} -\frac{1}{2}~,
+\end{equation}
+where the $v_i$ and $\mu_i$ are the variance and mean of the distributions, respectively. It follows that if no information is gained during the inversion process and $\sigma(v_\sigma,\mu_\sigma) = \rho(v_\rho,\mu_\rho)$, then $D_{KL}=0$. If the standard deviation of the posterior reduces to half that of the prior with the same mean, the Kullback-Leibler divergence is equal to
+\begin{equation}
+    D_{KL} = \ln{(2)} + \frac{1}{8} -\frac{1}{2} = 0.318 ~.
+\end{equation}
+
+
+\section{Examples}
+
+\subsection{2D synthetic model with inverse moveout}
+\inputdir{mcmc2D}
+
+We first consider a simple 2D example where the input CMP gather is generated from the inverse moveout process based on the 2D version \cite[]{fomelstovas} of equation~\ref{eq:3dGMA} (2D GMA) given by
+\begin{equation}
+\label{eq:2dGMA}
+t^2(x,y) \approx t^2_0 + W x^2 + \frac{A x^4}{t^2_0+Bx^2+\sqrt{t^4_0+2Bt^2_0x^2+Cx^4}} ~.
+\end{equation}
+This case can be associated with a horizontal reflector beneath a homogeneous layer of transversely isotropic medium with vertical symmetry axis (VTI). Relying on the pseudoacoustic approximation and the choice of zero-offset and horizontal rays to fit moveout parameters, \cite{fomelstovas} show that for a homogeneous VTI medium, it is possible to specify $A$, $B$, and $C$ in terms of $\eta$ \cite[]{alkatsvankin} --- a commonly used parameter to characterize the nonhyperbolicity of moveout traveltimes. This process leads to
+\begin{equation}
+\label{eq:2dGMAeta}
+A = -4 W^2 \eta ~,~ B= \frac{W(1+8\eta + 8 \eta^2)}{1+2\eta}~,~\text{and}~C=\frac{W^2}{(1+2\eta)^2}~,
+\end{equation}
+where
+\begin{equation}
+  \eta = \frac{\epsilon-\delta}{1+2 \delta}~.
+\end{equation}
+$\epsilon$ and $\delta$ are Thomsen's parameters that characterize the property of the overlying VTI medium.
+
+In this example, we consider a CMP event generated by the inverse moveout process (Figure~\ref{fig:pick2d}) based on the 2D GMA (equation~\ref{eq:2dGMA}) with $A$, $B$, and $C$ specified as in equation~\ref{eq:2dGMAeta}. We use the VTI parameters of Dry Green River shale \cite[]{thomsen} given by $V_p =3.292$ km/s, $V_s = 1.768$ km/s, $\epsilon=0.195$, and $\delta=-0.22$. These numbers can be translated to $V_{nmo} = V_p \sqrt{1+2\delta} = 1/\sqrt{W} = 2.46$ km/s and $\eta=0.741$, which by equation~\ref{eq:2dGMAeta}, correspond to $W=0.165$, $A=-0.0805$, $B=0.7516$, and $C=0.00441$.
+
+\plot{pick2d}{width=0.6\textwidth}{The CMP gather 2D Dry Green River shale VTI model overlain by an automatically picked event (blue) for non-physical flattening.} 
+
+Using this configuration, we first test our algorithm and its capability to estimate both wanted model parameters and the hyperparameter $S_{\%}$ that governs the data uncertainty. We consider the setup for the first inversion run in our workflow, where we restrict our data range to small offsets. The benefit of this test is two-fold:
+\begin{enumerate}
+    \item Given that our algorithm functions correctly, we should be able to recover both $W$ and $S_{\%}$, while seeing how the posterior distributions of $W$ changes with varying data uncertainty $S_{\%}$.
+    \item If the estimated maximum likelihood points (peaks of histograms) are not centered around the true values, the results then suggest some trade-offs among inverted parameters intrinsic to our traveltime-only moveout inversion setup.
+\end{enumerate}
+In this test, we assume that the picked moveout curve for non-physical flattening is approximately error-free and add artificial Gaussian noise with a variance equal to $S^2$ (equation~\ref{eq:noise}) with $S_{\%}$=0.1, 0.5, 2, 5, and 25 to the input $F^{\text{obs}}_n$ for the inversion process. We record model parameters at every 100 iterations to increase the independence between recorded models and stop the iterations when the number of recorded model reaches 20,000. We specify the minimum and maximum values for the uniform prior distributions as shown in Table~\ref{tbl:mcmc2Drange} except for the range of $S_{\%}$, which is set to 0--60 in this case. Here, we use the relationships between GMA parameters ($A$, $B$, and $C$) and $\eta$ (equation~\ref{eq:2dGMAeta}) to help guide our selection of the min and max values and we also specify relatively large ranges to reflect the reality of this situation in practice. The resulting posterior distributions for $W$ and $S_{\%}$ from this experiment with the cutoff offset specified at 1.25 km are shown in Figure~\ref{fig:thistnoise2D-S01,thistnoise2D-S05,thistnoise2D-S2,thistnoise2D-S5,thistnoise2D-S25}. We can observe that our algorithm performs well and manages to correctly estimate posterior distributions for both $W$ and $S_{\%}$ centered around the true values. Moreover, at lower $S_{\%}$ (small data uncertainty/noise), the estimated posterior distribution of $W$ has smaller variance and has its peak closer to the true value. On the other hand, the estimated posterior distribution of $W$ becomes wider (higher variance) with increasing $S_{\%}$ as would be anticipated. Looking closer at Figure~\ref{fig:thistnoise2D-S01,thistnoise2D-S05,thistnoise2D-S2,thistnoise2D-S5,thistnoise2D-S25}, we also see that at higher levels of $S_{\%}$, the peak of the posterior distribution of $W$ shifts towards lower value suggesting a trade-off between inverted parameters despite the use of only small-offset data. This observation is supported by the 2D marginal posterior distributions of $W$ and the other three parameters: $A$, $B$, and $C$ as shown in Figure~\ref{fig:thistmarginal2D} for the case of $S_{\%}$=2. We can observe a clear correlation between the $W-A$ pair. A decrease in estimated $W$ correlates with an increase in estimated $A$ suggesting a trade-off between the two parameters in our inversion setup. Correlations among the other pairs of $W-B$ and $W-C$ are not observed in this experiment.
+
+\tabl{mcmc2Drange}{Minimum and maximum values of moveout parameters that define the uniform prior distributions for our Monte Carlo inversion for Dry Green River shale example.}
+{
+\centering
+    %\resizebox{0.5\textwidth}{!}
+    {
+     \begin{tabular}{|c|c|c|c|c|c|}
+     	     \hline  Parameters &  $W$ & $A$ & $B$ & $C$ & $S_{\%}$  \\ 
+     	     \hline Min & 0.1 & -0.1 & 0.5 & 0.0 & 0.0 \\
+     	     \hline Max & 0.3 & 0.0 & 1.0 & 0.006 & 10  \\
+     	     \hline
+    \end{tabular}
+    }
+}
+
+\inputdir{.}
+\multiplot{5}{thistnoise2D-S01,thistnoise2D-S05,thistnoise2D-S2,thistnoise2D-S5,thistnoise2D-S25}{width=0.45\textwidth}{A comparison of estimated posterior probability distributions for $W$ and $S_{\%}$ of the Dry Green River shale example with cutoff offset at 1.25 km for different levels of added Gaussian noise with $S_{\%}$ = (a) 0.1, (b) 0.5, (c) 2, (d) 5, and (e) 25. The solid vertical lines denote the true values.}
+
+\plot{thistmarginal2D}{width=\textwidth}{2D marginal posterior distributions of $W$ and $A$, $B$, and $C$. Prominent correlations between the $W-A$ pair can be observed suggesting trade-offs in estimating the two parameters.}
+
+After successful testing, we use the same example and implement the proposed two-run inversion without any additional noise to the input data. In this case, we record the model at every 500 iterations and stop when the total number of recorded model reaches 20,000. Similar min and max values for the uniform prior distributions in Table~\ref{tbl:mcmc2Drange} are used in this experiment. The resulting posterior distributions of all estimated parameters are shown in Figure~\ref{fig:thist2D}. We can observe that the posterior distributions of $W$ and $A$ have their peaks close to the true values with high $D_{KL}$ suggesting that information on both parameters has been gained from the inversion and they appear to be recoverable relatively high fidelity. On the other hand, the distributions for $B$ and $C$ are more diffuse with no clear peak and lower $D_{KL}$. We emphasize that the results on $B$ and $C$ agree with the properties of the GMA, where both parameters are designed to be non-unique for dynamic traveltime fitting with high accuracy. Finally, the posterior distribution for $S_{\%}$ has only one peak close to zero verifying our assumption that the picked traveltime curve in this example is approximately noise-free.
+
+\plot{thist2D}{width=\textwidth}{Estimated posterior probability distributions in the form of histograms from the proposed two-run inversion for the Dry Green River shale example. The solid vertical lines denote the true values. The maximum likelihood points are located close to the true values suggesting that moveout parameters from 2D gathers are well recoverable from the proposed approach.}
+
+\subsection{2D Mobil Viking Graben data set}
+\inputdir{viking}
+
+Next, we consider an example with real 2D dataset from the Viking Graben (Figure~\ref{fig:cmpsvk}) from \cite{viking}. In this example, we utilize the flexibility of the proposed time-warping workflow that can be implemented at any selected locations related to different reflectors to help assessing velocity estimated from conventional semblance-based technique. We can achieve this selection by choosing an appropriate $t_0$ (a slice of the $t(t_0,x,y)$ cube) that corresponds to the desired reflector and implement a Monte Carlo inversion only at such location. 
+
+\plot{cmpsvk}{width=\textwidth}{The Mobil Viking Graben dataset.}
+
+Figure~\ref{fig:pickvk} shows the CMP gather number 1000 of the Viking Graben data overlain by two picked moveout curves associated with prominent reflectors to be considered in our inversion. Due to the availability of only small-offset data, we are obliged to restrict our inversion to $W$ and $S_{\%}$. Their ranges for the input uniform prior distribution are 0.08--0.5 for $W$ and 0--10 for $S_{\%}$. The cutoff offsets used for the two events are at 1.8 (blue) and 2.2 km (red) approximately corresponding to trace number 27 and 35, respectively. A comparison of the semblance-based velocity and those from the proposed workflow is shown in Figure~\ref{fig:vscanvk} with the solid black line denoting semblance-based velocity picks and white `+' signs denoting the maximum likelihood points from the proposed inversion workflow. The estimated posterior distributions of both events are shown in Figure~\ref{fig:thistviking-1,thistviking-2}. We can see that in this example the results from both approaches generally agree well with each other despite relying on different theoretical bases (signal coherency vs. traveltime-only inversion) to estimate $W$. This result gives further assurance to the estimated parameters. Nevertheless, we note that using the proposed workflow, we obtain posterior distributions that contain additional statistical information for more assessment and quality control of both the estimated moveout parameters (only $W$ in this case) and the input data uncertainty ($S_{\%}$).
+
+\plot{pickvk}{width=0.6\textwidth}{CMP number 1000 from the Mobil Viking Graben dataset overlaid by picked moveout curve used in the time-warping workflow. The cutoff offsets at 1.8 (for blue) and 2.2 (for red) km are approximately at trace number 27 and 35.}
+
+\plot{vscanvk}{width=0.6\textwidth}{Semblance scan and automatically picked velocity (black line) associated with CMP number 1000 from the Mobil Viking Graben dataset. The white `+' signs are the peaks of estimated posterior distribution of $W$ from the proposed inversion workflow.}
+
+\inputdir{.}
+\multiplot{2}{thistviking-1,thistviking-2}{width=\textwidth}{Estimated posterior probability distributions in the form of histograms for the (a) blue and (b) red events (Figure~\ref{fig:pickvk}) associated with CMP number 1000 from the Mobil Viking Graben dataset. The solid lines denote picked values from semblance-based analysis.}
+
+
+\subsection{3D synthetic model with inverse moveout}
+\inputdir{mcmc}
+Turning to a 3D case, we consider an example where the input CMP gather is generated from the inverse moveout process similar to the previous 2D case but now with the 3D GMA in equation~\ref{eq:3dGMA}. All pertaining parameters $W_i$, $A_i$, $B_i$, and $C_i$ are non-zero and can represent the case of an orthorhombic subsurface with azimuthally rotated principal axes with respect to the local Cartesian coordinates. The inputs of the time-warping workflow for this experiment have previously been used in our explanation on the method and are shown in Figure~\ref{fig:cmpcube,timecube}. We purposefully specify three CMP events at $t_0=1$, 1.5, and 2 $s$, which correspond to the maximum offset-to-depth ratios of approximately 2.326, 1.789, and 1.5 in the $x$ direction and of 2.474, 1.876, and 1.5625 in the $y$ direction reflecting our choice of $W_1$ and $W_3$, respectively. According to the general rule of thumb of offset-to-depth ratio $>$ 1 for nonhyperbolic moveout analysis \cite[]{alkava,tsvankinbook,thomsenbook}, we anticipate that our inverted posterior probability distributions for $A_i$ from the topmost event should demonstrate the best performance. We also add Gaussian noise with $S_{\%}$ = 2.5 (top event), 2.75 (middle event), and 3.0 (bottom event) to the input traveltime data from automatically picked moveout curves. Because we are dealing with a more challenging 3D gather, we anticipate that the automatically picked moveout curve will no longer be error-free and therefore, the final estimates of $S_{\%}$ would reflect total data uncertainty from both the artificially added noise and the automatic picking process.
+
+In this example, we specify the minimum and maximum values for the prior distributions as shown in Table~\ref{tbl:mcmcrange}. Here, we use the computational experiments with 3D GMA from \cite{zonegma}, as well as equation~\ref{eq:2dGMAeta}, to provide a rough estimate for the magnitude of each parameter and guide our choices of their min and max values, while keeping a relatively large range. The model parameters are recorded every 500 iterations until reaching a total of 20,000 models. The cutoff offsets for the first inversion in our workflow are at 1, 1.25, and 2 km for the top, middle, and bottom events, respectively. The estimated posterior probability distributions of the three events from our proposed workflow are shown in the form of histograms in Figures~\ref{fig:Whist0,Whist1,Whist2} -- \ref{fig:Shist0,Shist1,Shist2}. It is apparent from  Figure~\ref{fig:Whist0,Whist1,Whist2} that the $W_i$ are estimated well with relatively high $D_{KL}$ values.
+
+\tabl{mcmcrange}{Minimum and maximum values of moveout parameters that define the uniform prior distributions for our Monte Carlo inversion for 3D inverse moveout example.}
+{
+\centering
+    \resizebox{\textwidth}{!}
+    {
+     \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+     	     \hline  Parameters &  $W_1$ & $W_2$ & $W_3$ & $A_1$ & $A_2$ & $A_3$ & $A_4$ & $A_5$ & $B_1$ & $B_2$ & $B_3$ & $C_1$ & $C_2$ & $C_3$ & $C_4$ & $C_5$ & $S_{\%}$\\ 
+     	     \hline Min & 0.1 & -0.15 & 0.12 & -0.09 & -0.045 & -0.05 & -0.035 & -0.09 & 0.25 & 0.01 & 0.25 & 0.0015 & 0.001 & 0.0045 & 0.001 & 0.0015 & 0.0\\
+     	     \hline Max & 0.3 & 0. & 0.32 & -0.001 & -0.02 & -0.03 & -0.015 & -0.001 & 0.8 & 0.1 & 0.75 & 0.005 & 0.0045 & 0.007 & 0.0035 & 0.0045 & 5\\
+     	     \hline
+    \end{tabular}
+    }
+}
+
+\inputdir{.}
+\multiplot{3}{Whist0,Whist1,Whist2}{width=\textwidth}{A comparison of estimated posterior probability distributions for $W_i$ in the form of histograms for events at (a) 1 $s$, (b) 1.5 $s$, and (c) 2 $s$ of the 3D inverse moveout model. The solid vertical lines denote the true values.}
+
+ We proceed with the second inversion run with all available data and the resulting $W_i$ from the first run. The inverted $A_i$ from this experiment require more detailed analyses. First, we emphasize that the posterior distributions of $A_i$ appear more diffuse and multi-modal (Figure \ref{fig:Ahist0,Ahist1,Ahist2}). This observation suggests that there are many equivalently good values of $A_i$ that can lead to an accurate prediction of the moveout traveltime, which indicates the inherent non-uniqueness of moveout inversion problem based on traveltime data alone. Moreover, it is not obvious that having a larger offset-to-depth ratio (Figure~\ref{fig:Ahist0} associated with the topmost event) helps to mitigate this non-uniqueness of possible solutions.
+
+\multiplot{3}{Ahist0,Ahist1,Ahist2}{width=\textwidth}{A comparison of estimated posterior probability distributions for $A_i$ in the form of histograms for events at (a) 1 $s$, (b) 1.5 $s$, and (c) 2 $s$ of the 3D inverse moveout model. Note that they are more diffuse than the inverted $W_i$ in Figure~\ref{fig:Whist0,Whist1,Whist2}.  The solid vertical lines denote the true values.}
+
+A closer look at Figures~\ref{fig:Whist0}, reveals that the peak of the posterior distribution of $W_1$ are slightly higher than the true value, whereas that of $W_3$ is slightly lower. This becomes less obvious in Figures~\ref{fig:Whist1} and \ref{fig:Whist2}, which correspond to smaller offset-to-depth ratios. One explanation of this behavior can be given by considering Figures~\ref{fig:Whist0} and \ref{fig:Ahist0} together. In Figures~\ref{fig:Ahist0}, the maximum likelihood values of the posterior $A_i$ also slightly deviate from the true values. Therefore, similar to the previous to 2D case, there appears to be a trade-off between inverted $W_i$ and $A_i$ on top of the non-uniqueness of possible solutions, which seems to be noticeable with data from larger offset-to-depth ratio. This observation is supported by the 2D marginal posterior distributions of $W_i$ and $A_i$ shown in Figure~\ref{fig:thistmarginalW-A}, where we can observe clear correlations between the $W_1-A_1$ pair and the $W_3-A_5$ pair. A decrease in estimated $W_1$ ($W_3$) correlates with an increase in estimated $A_1$ ($A_5$). A lesser degree of correlations can also be seen from $W_2-A_2$ and $W_2-A_4$ pairs, where a decrease in $W_2$ correlated with an increase in $A_2$ and $A_4$. Correlations among other pairs of $W_i$ and $A_i$ are not observed from this experiment. Note that we display the 2D marginal posterior distributions from the bottom event at 2 $s$ in Figure~\ref{fig:thistmarginalW-A}. This is done to facilitate the visualization of possible correlations because the associated posterior distributions are more diffuse. However, our observation remains valid and applicable to other events because this trade-off behavior is a consequence of our inversion configuration with the 3D GMA.
+
+\plot{thistmarginalW-A}{width=\textwidth}{2D marginal posterior distributions of $W_i$ and $A_i$ from the 3D inverse moveout example for the event at 2 $s$ that suggest correlations and trade-offs among inverted parameters. The rows denote $W_i$ and the columns denote $A_i$. Prominent correlations between the $W_1-A_1$ pair and $W_3-A_5$ pair can be observed.}
+
+Analogous to the estimated $A_i$, the resulting distributions of $B_i$ (Figure~\ref{fig:Bhist0,Bhist1,Bhist2}) and $C_i$ (Figure~\ref{fig:Chist0,Chist1,Chist2}) are also fairly diffuse and multi-modal. Therefore, similar conclusions can be drawn regarding the non-uniqueness of possible solutions. However, similar to the 2D case, we emphasize that both parameters, whose values depend on the choice of finite-offset rays, are designed to be dynamic in the 3D GMA and this behavior is to be expected. Figure~\ref{fig:Shist0,Shist1,Shist2} shows the resulting posterior distributions of $S_{\%}$ for the three events. We can observe that the peak estimates of $S_{\%}$ are slightly higher than the level of added Gaussian noise agreeing with our expectation that the automatically picked moveout curve for this 3D gather contains a small degree of uncertainty, which can be captured and quantified in our workflow.
+
+\multiplot{3}{Bhist0,Bhist1,Bhist2}{width=\textwidth}{A comparison of estimated posterior probability distributions for $B_i$ in the form of histograms for events at (a) 1 $s$, (b) 1.5 $s$, and (c) 2 $s$ of the 3D inverse moveout model. Note that they are moderately diffuse and sometimes multi-modal similar to Figure~\ref{fig:Ahist0,Ahist1,Ahist2}. The solid vertical lines denote the true values.}
+
+\multiplot{3}{Chist0,Chist1,Chist2}{width=\textwidth}{A comparison of estimated posterior probability distributions for $C_i$ in the form of histograms for events at (a) 1 $s$, (b) 1.5 $s$, and (c) 2 $s$ of the 3D inverse moveout model. Note that they are moderately diffuse and sometimes multi-modal similar to Figure~\ref{fig:Ahist0,Ahist1,Ahist2}. The solid vertical lines denote the true values.}
+
+\multiplot{3}{Shist0,Shist1,Shist2}{width=0.31\textwidth}{A comparison of estimated posterior probability distributions for $S_{\%}$ in the form of histograms for events at (a) 1 $s$, (b) 1.5 $s$, and (c) 2 $s$ of the 3D inverse moveout model reflecting the total uncertainty from both the automatically picked 3D moveout curve and the artificially added Gaussian noise. The peaks in the distributions are slightly higher than the levels of added Gaussian noise for the three events at $S_{\%}$ = 2.5, 2.75, and 3 suggesting the small degree of uncertainty from the automatic picking process in a more challenging case of 3D gather. }
+
+We emphasize that the above analysis is permissible due to the use of a Bayesian framework for the inversion that gives posterior probability distribution as a result. Together with our analysis from the previous 2D inverse moveout example, our results suggest a limitation of using moveout traveltime inversion to estimate quartic coefficients, which becomes more difficult in 3D with a higher number of wanted parameters associated with a more complex subsurface model (e.g., orthorhombic media).
+
+
+\subsection{SEAM Phase II unconventional reservoir model}
+\inputdir{seam2mcmc}
+For a more complex example, we consider a CMP gather from the 3D SEAM II unconventional reservoir model shown in Figure~\ref{fig:vpseam3d} \cite[]{seam2}. This model has a largely flat structure suitable for moveout analysis and includes unaligned orthorhombic sublayers that require 3D multi-azimuth processing. We choose one CMP gather located at $x=4.735$ km and $y=2.881$ km, eliminate multiples, and bin to 39 $\times$ 39 offset samples from -3.8 km to 3.8 km in both $x$ and $y$ directions. We note that the maximum depth of this model is 3.75 km, therefore the offset-to-depth ratio of intermediate layers are moderately larger than unity.
+
+\plot{vpseam3d}{width=0.8\textwidth}{Vertical P-wave velocity of SEAM II 
+unconventional reservoir model.}
+
+Figure~\ref{fig:pickongather0} shows the considered CMP gather overlain by automatically traced events for non-physical flattening. We specifically focus on two events at $t_0$=1.315 s and 1.815 s. The parameter ranges for prior distributions are given in Table~\ref{tbl:seammcmcrange}, where we use the same notion as in the previous 3D inverse moveout case to choose the min and max values. We also assume that $B_i$ and $C_i$ are largely unknown and specify relative large ranges for their values. The model parameters are recorded every 500 iterations until reaching a total of 10,000 models. The cutoff offsets for the first inversion are at 0.89 km and 1.5 km for the two events, respectively. In this example, we choose to use 1D average values of moveout parameters to benchmark our results. These values are computed by taking the true model parameters at the considered CMP location and use them to compute effective moveout parameters appropriate for a stack of horizontally layered unaligned orthorhombic media \cite[]{zoneinterval,korenravvetriclinic}. They are exact in the case of truly 1D media but represent good approximate values of moveout parameters in this case of mildly laterally heterogeneous SEAM II model. We note also that in this example, the contribution from the quartic terms ($A_i$) as shown in their 1D average values are relatively small in comparison with that from the second-order terms ($W_i$). Therefore, this condition is expected to further hamper the parameter estimation process in addition to the inherent non-uniqueness of possible solutions.
+
+\plot{pickongather0}{width=0.8\textwidth}{The CMP gather of SEAM II model at $x$=4.375 km and $y$=2.881 km overlain by automatically picked events for non-physical flattening.}
+
+\tabl{seammcmcrange}{Minimum and maximum values of moveout parameters that define the uniform prior distributions for our Monte Carlo inversion for SEAM II example.}
+{
+\centering
+    \resizebox{\textwidth}{!}
+    {
+     \begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+     	     \hline  Parameters &  $W_1$ & $W_2$ & $W_3$ & $A_1$ & $A_2$ & $A_3$ & $A_4$ & $A_5$ & $B_1$ & $B_2$ & $B_3$ & $C_1$ & $C_2$ & $C_3$ & $C_4$ & $C_5$ & $S_{\%}$ \\ 
+     	     \hline Min & 0.05 & -0.05 & 0.05 & -0.01 & 0.0 & -0.005 & 0.0 & -0.01 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0\\
+     	     \hline Max & 0.15 & 0.05 & 0.15 & 0.0 & 0.001 & -0.001 & 0.001 & 0.0 & 0.5 & 0.1 & 0.5 & 0.005 & 0.005 & 0.005 &0.005 & 0.005  & 5.0\\
+     	     \hline
+    \end{tabular}
+    }
+}
+
+Example posterior histograms for events at $t_0=1.315$ $s$ and 1.815 $s$ are shown in Figures~\ref{fig:Whist0seam,Whist1seam}--\ref{fig:Shist0seam,Shist1seam}. It follows from the results that in this example of SEAM II, the proposed approach can capture $W_1$ and $W_3$ with clearly defined maximum likelihood values close to the 1D average values and a high value of $D_{KL}$. However, results on $W_{2}$ parameter that define the orientation of the NMO ellipse suggest that its value is centered around zero different from the 1D average value. The estimated posterior distributions of $A_i$ related to subsurface anisotropy exhibits the same characteristics as before --- diffuse and multi-modal, although several maximum likelihood values and the 1D average values fall within the same ballpark. Agreeing with our previous analysis on 3D synthetic example, these results suggest that it is possible to estimate the quartic moveout coefficients from a 3D gather associated with complex anisotropic media, although there is a limitation on the inherent non-uniqueness of solutions due to more diffuse and and multi-modal posterior distributions in comparison with $W_i$, which are generally well-constrained. 
+
+\inputdir{.}
+\multiplot{2}{Whist0seam,Whist1seam}{width=\textwidth}{A comparison of estimated posterior probability distributions for $W_i$ in the form of histograms for events at (a) 1.315 $s$ and (b) 1.815 $s$ of the SEAM II model. The solid vertical lines denote the 1D average values.}
+
+\multiplot{2}{Ahist0seam,Ahist1seam}{width=\textwidth}{A comparison of estimated posterior probability distributions for $A_i$ in the form of histograms for events at (a) 1.315 $s$ and (b) 1.815 of the SEAM II model. They are not as well-constrained as the inverted $W_1$ and $W_3$, which indicate large uncertainties. The solid vertical lines denote the 1D average values.}
+
+\multiplot{2}{Shist0seam,Shist1seam}{width=0.45\textwidth}{A comparison of estimated posterior probability distributions for $S_{\%}$ in the form of histograms for events at (a) 1.315 $s$ and (b) 1.815 of the SEAM II model.}
+
+
+\subsection{Spiral-sorted (snail) gather}
+
+Instead of looking at 3D CMP gathers, \cite{willthesis} shows that the time-warping workflow can accommodate gathers with other choices of sorting scheme, which may provide greater flexibility. This is due to the fact that in the time-warping workflow, one utilizes non-physical flattening that is not restricted to any particular event shape. The algorithm merely functions based on aligning events between neighboring traces and will be able to produce meaningful results as long as the automatic picker (predictive painting) can follow the events from trace to trace. 
+
+The first and most intuitive candidate is offset-sorted gather, where traces corresponding to the same CMP position is not binned but instead sorted and shown in 2D with increasing absolute offset. This leads directly to a practical advantage of requiring only 2D slope estimation as opposed to a 3D version. Additionally, neighboring CMP gathers can be offset-sorted and juxtaposed along the third axis for simultaneous processing with 3D slope estimator and additional regularization across CMP positions. Nonetheless, in this offset-sorting scheme, neighboring traces may be from completely random azimuths (Figure~\ref{fig:spiral}), which leads to a nonoptimal setup for capturing azimuthal variations of moveout curves.
+
+\inputdir{.}
+\plot{spiral}{width=\textwidth}{Map-view setups for offset-sorted gather (left) and spiral-sorted gather (right). Different numbers indicate different traces that have to be sorted from the smallest to the largest. Azimuthal information in the former is arranged inconsistently because the absolute offsets are equal for all four traces and the order in which these four traces will be arranged is random. However, in the latter, the azimuthal information can be traced smoothly from small to large radial offsets, which enhances continuity and stability for the slope estimation process.}
+
+Alternatively, \cite{willthesis} proposes that the choice of spiral sorting is particularly attractive because it holds a similar advantage of enabling the use of 2D slope estimator, yet captures azimuthal information. An illustration of a map-view spiral-sorted gather in comparison with offset-sorted gather is shown in Figure~\ref{fig:spiral}. We can see that spiral sorting the gather will allow the events to vary smoothly in both offset and azimuth, while maintaining a minimum physical proximity between neighboring traces.
+
+\inputdir{seam2mcmcspiral}
+
+Using the same CMP gather of SEAM II data from the previous example, we spiral sort the gather instead of binning, which enables us to look at the total 3200 traces available at this particular CMP position. Subsequent 2D slope estimation, as opposed to 3D, is carried out and the automatically traced events are shown overlaying the spiral-sorted gather in Figure~\ref{fig:pickongather}. We use the same prior distributions as in the previous case (Table~\ref{tbl:seammcmcrange}) and the same general setup by recording the model every 500 samples with a total of 10,000 models. Similar histograms of estimated posterior distributions for the same two events are shown in Figures~\ref{fig:Whist0seamspi,Whist1seamspi}-- \ref{fig:Shist0seamspi,Shist1seamspi}. In this particular example of SEAM II data, apart from saving computational cost by allowing 2D slope estimation, spiral sorting the gather appears to slightly improve estimated posterior probability distributions in comparison with those from the previous section (Figures~\ref{fig:Whist0seam,Whist1seam} and \ref{fig:Ahist0seam,Ahist1seam}) --- some of the maximum likelihood $A_i$ are closer to the 1D average values. Similar general observations and conclusions regarding the non-uniqueness of possible solutions can still be drawn.
+
+\plot{pickongather}{width=0.8\textwidth}{The spiral-sorted CMP gather of SEAM II model at $x$=4.375 km and $y$=2.881 km overlain by automatically picked events for non-physical flattening.}
+
+\inputdir{.}
+\multiplot{2}{Whist0seamspi,Whist1seamspi}{width=\textwidth}{A comparison of estimated posterior probability distributions for $W_i$ in the form of histograms for events at (a) 1.315 $s$ and (b) 1.815 $s$ of the SEAM II model from the inversion with spiral-sorted gather. The solid vertical lines denote the 1D average values.}
+
+\multiplot{2}{Ahist0seamspi,Ahist1seamspi}{width=\textwidth}{A comparison of estimated posterior probability distributions for $A_i$ in the form of histograms for events at (a) 1.315 $s$ and (b) 1.815 of the SEAM II model from the inversion with spiral-sorted gather. They are not as well-constrained as the inverted $W_1$ and $W_3$, which indicate large uncertainties. The solid vertical lines denote the 1D average values. However, some of the maximum likelihood $A_i$ are closer to the 1D average values than the results from regularly sorted gather (Figure~\ref{fig:Ahist0seam,Ahist1seam}). }
+
+\multiplot{2}{Shist0seamspi,Shist1seamspi}{width=0.45\textwidth}{A comparison of estimated posterior probability distributions for $S_{\%}$ in the form of histograms for events at (a) 1.315 $s$ and (b) 1.815 of the SEAM II model from the inversion with spiral-sorted gather.}
+
+
+\section{Discussion}
+
+We first emphasize that one of the main advantages of time-domain processing is efficiency. Despite its well-known limitations in complex geologic environments (e.g., subsalt), it remains an attractive choice in some other important areas such as unconventional reservoirs, where the geology is largely layered (e.g, SEAM II model in Figure~\ref{fig:vpseam3d}) and an expensive treatment of depth-imaging may not be necessary \cite[]{fomelrecenttime}. Our time-warping approach presented here further improves the current automatic time-domain processing workflow by proposing the use of highly accurate 3D traveltime approximations (equation~\ref{eq:3dGMA}) and adding a probabilistic component for a better analysis of the inversion results. We show that these additions can easily be implemented, while maintaining the original goal of efficiency and automation. We note, however, that the degree of efficiency of our time-warping approach primarily depends on the number of sampled models, which must be tailored to any specific problem on a case-by-case basis.
+
+In addition, even though we propose a workflow with two inversion runs to help obtain better prior distributions for $W_i$ by taking advantage of one of the characteristics of our problem (i.e., $W_i$ can be estimated with only small-offset data), our resulting posterior probability distributions of $A_i$ are still estimated relative to the choice of uniform priori probability distributions. Therefore, it remains possible to improve the proposed approach if a better knowledge on the prior distributions $\rho(\mathbf{m})$ is available. For example, one may choose to use, instead of a uniform prior, a Gaussian distribution over some known mean value and standard deviation. Such information may be obtained on the basis of a previous velocity model in the region or any nearby well measurement. A better characterization of the prior probability distributions will surely enhance the efficiency of Monte Carlo sampling for solutions to the moveout inversion problem.
+
+
+We note that in practice, it is sensible to consider a large range for uniform prior distributions of different parameters. However, this may not be the best choice in view of computational efficiency. We emphasize that this decision has to be made on a case-by-case basis and one may choose to follow our method by utilizing information such as relationships between GMA parameters and $\eta$ in equation~\ref{eq:2dGMAeta}, as well as, results from forward computational experiments with 3D GMA in various media \cite[]{zonegma} to help coming up with a rough numeric range for each parameter.
+
+Moreover, one could be tempted to use a different inversion sequence (e.g., estimate $W_i$, $A_i$, and $S_{\%}$ before $B_i$ and $C_i$) with more runs to better constrain the results or to use a different parameterization as that in equation~\ref{eq:3dGMA} to reduce the trade-offs between parameters. However, we would like to emphasize that $A_i$, $B_i$ and $C_i$ are inherently connected. This follows from the fact that to maintain the accuracy of moveout traveltime approximations, the quartic ($x^4$) term needs to have both the numerator (related to $A_i$) and the denominator (related to $B_i$ and $C_i$). Without a proper denominator, the series would lead to inferior accuracy (higher error) at large offsets \cite[]{tsvankinbook,zonegma}. Therefore, it is unclear how we can separately invert for $A_i$, $B_i$ and $C_i$ in different runs without introducing any potential bias to the results. One way to approximately handle this complexity is to assume a relationship among $A_i$, $B_i$, and $C_i$ such as that in equation~\ref{eq:2dGMAeta}, which effectively reduces the number of inverted parameters at the expense of the moveout approximation accuracy. The result from this experiment with our 2D inverse moveout example (Figure~\ref{fig:pick2d}) is shown in Figure~\ref{fig:thist2D-eta}, where we can observe that the maximum likelihood points of estimated $W$ and $\eta$ lie close to the true values. Nonetheless, the 3D counterpart of equation~\ref{eq:2dGMAeta} is not yet established for complex 3D layered orthorhombic media with azimuthally rotated principal axes such as the SEAM II model.
+
+%\inputdir{mcmc2D}
+\inputdir{.}
+\plot{thist2D-eta}{width=\textwidth}{Estimated posterior probability distributions in the form of histograms from the proposed two-run inversion for the Dry Green River shale example with the $\eta$ constraint in equation~\ref{eq:2dGMAeta}. The maximum likelihood points are located close to the true values suggesting that moveout parameters from 2D gathers are well recoverable from the proposed approach.}
+
+In our inversion workflow, we propose to use the Metropolis-Hastings algorithm for its simplicity. There are more advanced guided random walk methods that can lead to better performance and several of them are reviewed by \cite{sambridgemose}. Other choices of likelihood functions $L(\mathbf{m})$ are also possible \cite[]{mosetaran,tarantolabook}. Nonetheless, it is expected that our observations on the characteristics of the resulting posterior probability distributions (i.e, multi-modal and diffuse) should remain valid. 
+
+With regard to the resulting posterior probability distributions, it is clear that there is non-uniqueness in the moveout inversion based on traveltime fitting and trade-offs between inverted parameters. \cite{nonphyperfeasibility} show that the inverted nonhyperbolic moveout parameter--- $\eta$ in their case--- is highly sensitive to the errors in reflection traveltimes and the spreadlength of available data. This observation agrees with our posterior probability distributions that can be both multi-modal and diffuse, which suggest that there are many equivalently good sets of possible moveout parameters that satisfy the same level of accuracy in predicting reflection traveltimes. Moreover, the $B_i$ and $C_i$ in 3D GMA also remain undetermined and contribute to the non-uniqueness in the inverted models. Therefore, several factors contribute to the non-uniqueness of possible solutions and choosing which specific choice of representative model parameters to commit to is not straightforward. The results obtained from our approach could be used as starting models for more sophisticated tomographic or full-waveform inversion techniques for more accuracy and better convergence. 
+
+%Because the posterior probability distributions are expected to be multi-modal, there is also a question of what parameters one should use to characterize these distributions. Simple ones such as mean values and standard deviations are appropriate for Gaussian distributions but may not be the best option in this case. We refrain from suggesting any specific parameters but emphasize that the posterior probability distributions represent the entire solutions to our moveout inversion problem.
+% JT thinks these parameters are not determined (essentially flat)
+
+In the time-warping workflow, it is important to reiterate that we do not map local slopes to moveout parameters directly as that requires a prior assumption of the traveltime approximation form \cite[]{mapping}. Rather, we rely on measured slope fields and predictive painting to automatically trace CMP events and capture the moveout curves regardless of their shape. Consequently, conditioning of local slopes field is critical to the quality of the input traveltime data for the inversion. In light of this topic, it is possible to further improve the time-warping method by addressing potential problems that may arise from interfering dips \cite[]{schleicherdip} and predictive painting across discontinuties \cite[]{paintfault}. Nonetheless, given that the information on reflection traveltimes can be obtained, our proposed Bayesian inversion will produce posterior distributions of estimated parameters that reflect the level of data uncertainty.
+
+
+% This information can then be used to fit to any moveout approximation of choice. Here, we experiment with the 3D GMA and both simple and complex models to see whether it is feasible to obtain parameter estimation from CMP gather from only traveltime fitting.
+
+We stress that there are many possible choices of moveout approximations that can be used. Each of them can achieve a different level of approximation accuracy and involves a different set of moveout parameters. The 3D GMA is chosen here primarily due to its convenient applicability to complex 3D anisotropic models (e.g, layered orthorhombic with unaligned vertical symmetry planes in SEAM II) and its high accuracy in traveltime prediction, which technically allows us to accurately invert for moveout parameters and relate them to subsurface properties. This comes at a price of working with a large number of moveout parameters (seventeen). Other less accurate moveout approximations with fewer parameters can be used but a poorer performance in traveltime prediction may lead also to more uncertainty in the inverted moveout parameters. Nevertheless, an analysis has to be conducted on a case-by-case basis to draw meaningful conclusions regarding the trade-offs between the accuracy of traveltime approximation and the number of resolvable moveout parameters. Therefore, in general, it appears to be practicable to perform moveout inversion in a hierarchical manner starting from 3D GMA, which is applicable to a complex 3D model before reducing the number of inverted parameters based on resolvability of parameters (e.g., with an analysis on the posterior probability distributions and $D_{KL}$) or different assumptions such as a simpler anisotropic model of subsurface medium.
+
+The estimated moveout parameters ($W_i$ and $A_i$) are well-known to also be affected by lateral heterogeneity  \cite[]{lynnclaerbout,grechkatsvankinlathet,blias2009,zonebeyond1d}. Only when the subsurface is laterally homogeneous (1D) can the moveout parameters directly be related to medium parameters. In our approach, we do not specify their expressions explicitly in terms of medium parameters and treat them as `effective' moveout parameters that are estimated based on the 3D GMA. Interval parameter estimation can subsequently be accomplished by layer-stripping given that the medium is assumed to be 1D \cite[]{zoneinterval,korenravvetriclinic}.
+% anisotropy at far offset -combined with lateral heterogenety -> very challenging
+
+% the coordinates $x$ and $y$ are almost aligned with the principal axes of the reflection traveltime surface as apparent from the small magnitude of $W_2$ in comparison with $W_1$ and $W_3$. Therefore, one may choose to assume that the subsurface layered orthorhombic has \textit{aligned} vertical symmetry planes, which is equivalent to setting $W_2=A_2=A_4=B_2=C_2=C_4=0$ and effectively reducing the number of parameters down to eleven. Similar resulting histograms from this experiment are shown in FIGURE. This assumption does not appear to be helping us to resolve the quartic coefficient in this case.
+
+Most importantly, regardless of which moveout approximation one uses, the time-warping workflow, nonetheless, remains the same. The final estimated models are expressed in the time ($t_0$) domain, which can be related to the depth model via time-to-depth conversion \cite[]{ct2d,lt2d,t2dweak}.
+
+Finally, we note that alternative traveltime approximations such as various forms of common-reflection-surface (CRS) approximations exist, which consider traveltime variations in both offset and midpoint directions \cite[e.g.,][]{crs}. In general, CRS methods aim to achieve better stacked images and objective functions for global CRS parameter estimation are normally considered based on coherency measurements such as semblance \cite[e.g.,][]{crsdifferential,crssa,crsvti}. An alternative estimation of CRS parameters can also be done by mapping directly from local slopes and curvatures \cite[]{crsslope,crsnorway}. In view of the proposed approach, inversion-based CRS parameter estimation methods can potentially benefit from a Bayesian formulation, which will lead to statistical posterior distributions of estimated parameters. Nonetheless, in this study, we restrict ourselves to the CMP domain and the corresponding problem of parameter estimation from reflection moveout only in the offset direction. We focus on investigating the problem of 3D anisotropic model building at the earliest stage of processing from reflection moveouts. As demonstrated in our examples, the proposed framework is relatively flexible and can be used to bring additional statistical information on inverted parameters at any selected locations (reflectors). We anticipate that this method could represent an auxiliary tool that can help assess the quality of inverted moveout parameters from other automatic estimation methods.
+
+
+\section{Conclusion}
+
+We propose a general workflow for moveout processing and inversion by means of time-warping. The method achieves event flattening and moveout parameter estimation in an automatic and efficient manner with minimal user inputs. We show that our method doesn't rely on multi-parameter scans but instead on data-driven slope measurements. Automatic event flattening can be achieved with the measured slopes and produces the information on moveout traveltimes for all corrected CMP events. Such information can then be used in a moveout inversion process for estimating effective parameters associated with any preferred choice of moveout approximation. Due to the cheap traveltime modeling with moveout approximation, we choose to solve this inverse problem using a global Monte Carlo optimization method. Using both synthetic and real-data examples, we demonstrate that the resulting moveout parameters estimated using our approach are represented by posterior probability distributions that contain valuable statistical information. Unlike the results from other estimation methods such as semblance-based picking and least-squares inversion, the posterior probability distributions are unbiased towards any particular solution but represent the entire space of possible solutions and their associated probability of occurrence. This information can be used in conjunction with results from other estimation methods for better assessment and quality control of estimated parameters associated with any selected reflectors. Our results also suggest that the solutions to the problem of moveout inversion from traveltime fitting for 2D CMP gathers are generally well-constrained with only a few parameters to estimate despite a trade-off between the second-order $W$ and quartic moveout coefficient $A$. On the other hand, for 3D CMP gathers associated with complex anisotropic subsurface, the solutions appear non-unique and that there are trade-offs among inverted parameters, especially the quartic coefficients ($A_i$). Only $W_i$ parameters that govern the NMO ellipse seem to be generally well-constrained by the traveltime data. Further limitations on the data such as noise and sparse measurements can hamper the inversion and lead to even inferior results as shown by more diffuse estimated posterior distributions at a high level of data uncertainty.  Therefore, one has to be mindful to draw conclusions on representative model parameters to be used in subsequent stages of processing and imaging, especially for 3D anisotropic models.
+
+\section{Acknowledgments}
+
+We would like to thank the editors, three anonymous reviewers, and T. Alkhalifah for constructive comments. We would like to also thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support. This work is also supported by the European Research Council (ERC) under the European Union's Seventh Framework Programme (FP/2007-2013) grant agreement number 320639 (iGEO). We are grateful to the Exploration Development Geophysics Education and Research (EDGER) and BP America for their permission to use SEAM Phase II unconventional model in this study. The authors also acknowledge and thank Paradigm University Grant Program of Emerson E\&P Software for the use of Paradigm Echos\textsuperscript{TM} for SEAM data processing in this project. The first author was additionally supported by the Statoil Fellows Program at the University of Texas at Austin. 
+
+\section{Data and materials availability}
+
+Data associated with this research are available and can be obtained by contacting the corresponding author except the SEAM II data.
+
+% Following a similar argument of \cite{mosetaran}, we can discretize equation~\ref{eq:bayes} and express the posterior probability at $m_i$ as
+% \begin{equation}
+% \label{eq:bayesdis}
+%     \sigma_i = \frac{\rho_i L_i}{\sum_j \rho_j L_j}~,
+% \end{equation}
+% where $L_i = L(m_i)$. $\sigma_i$ and $\rho_i$ denote posterior and prior probabilities at $m_i$ given by
+% \begin{align}
+% \nonumber
+%     \sigma_i &= \sigma(m_i) \delta m_1 \delta m_2 \dots~, \\
+%     \rho_i &=\rho(m_i) \delta m_1 \delta m_2 \dots~, 
+% \end{align}
+% with $\prod_i \delta m_i$ denoting a sufficiently small surrounding region that the probability densities under consideration are constant inside it.
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{timewarp}

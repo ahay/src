@@ -1,0 +1,224 @@
+from rsf.proj import *
+from math import *
+from rsf.gallery import hessvti
+
+
+# Import Hess model ######################################################################
+hessvti.get_model('crho vp vx eta delta epsilon')
+
+Plot('vpcol','vp',
+	'''	
+	window j1=3 j2=3| 
+	grey scalebar=y color=j bias=1.5 allpos=y barreverse=y title="V\_p\^"
+	screenratio=0.5 screenht=9 min1=0 max1=9 min2=0 max2=22 labelfat=4 labelsz=8
+	titlefat=6 titlesz=10
+	''')
+Result('vx','grey scalebar=y color=j bias=1.5 allpos=y barreverse=y title="V\_x\^" screenratio=0.5 screenht=9 min1=0 max1=9 min2=0 max2=22')
+Result('crho','grey scalebar=y color=j bias=1.5 allpos=y barreverse=y title="Rho" screenratio=0.5 screenht=9')
+
+Plot('deltacol','delta',
+	'''
+	window j1=3 j2=3| 
+	grey scalebar=y color=j allpos=y barreverse=y title="\F10 d\F3 " 
+	screenratio=0.5 screenht=9 min1=0 max1=9 min2=0 max2=22 labelfat=4 labelsz=8
+	titlefat=6 titlesz=10
+	''')
+Result('epsilon','grey scalebar=y color=j allpos=y barreverse=y title="\F10 e\F3 " screenratio=0.5 screenht=9 min1=0 max1=9 min2=0 max2=22')
+Result('eta','grey scalebar=y color=j allpos=y barreverse=y title="\F10 h\F3 " screenratio=0.5 screenht=9 min1=0 max1=9 min2=0 max2=22')
+
+hessvti.get_shots('shots')
+
+Result('shots','byte | grey3 flat=n frame1=500 frame2=300 frame3=300 title=Shots')
+
+hessvti.get_zodata('zodata')
+
+Result('zodata','grey title="Zero Offset" ')
+
+Flow('lineshot','vp','window n2=1 max1=4 | math output=x1')
+Flow('lineshotc','lineshot','math output="11.17" | cat axis=2 $SOURCE | transp | dd type=complex | window ')
+Plot('lineshotc','graph wanttitle=n wantaxis=n plotfat=6 plotcol=0 screenratio=0.5 screenht=9 yreverse=y min2=0 max2=9 min1=0 max1=22 scalebar=y')
+Result('vpline','vpcol lineshotc','Overlay')
+Result('deltaline','deltacol lineshotc','Overlay')
+
+
+# Sort to CMP ############################################################################
+#  Number of Shots: 720 
+#  Shot spacing: 100 ft 
+#  Receiver spacing: 40 ft -> 0.012192 km
+#  Minimum offset: 0 ft
+#  Maximum offset: 26200 ft
+#  trace length: 7.992 s
+#  sampling rate: 6ms
+ 
+Flow('cmps','shots','shot2cmp half=n') 
+
+# CMP at 14.5 km
+Flow('onecmp','cmps','window n3=1 min3=14.5')
+Plot('onecmp',
+	'''
+	grey title="CMP at 14.5 km" max1=7.5 label2=Offset unit2=km screenratio=0.75
+	axisfat=3 titlefat=3 titlesz=18 labelfat=3 labelsz=14
+    wherexlabel=top
+	''')
+
+# Find layer index
+Flow('onevp','vp','window n2=1 min2=14.5')
+Flow('onedel','delta','window n2=1 min2=14.5')
+Flow('diffonevp','onevp','deriv | envelope | smooth rect1=5')
+
+layer = (0.6126,0.9296,1.332,2.161,3.088,4.4196,5.977,6.7605,8.028) # at 14.5 km
+vp0 = (1.524,1.651,1.943,2.122,2.492,2.742,2.918,3.179,3.407) # From onevp
+delta = (0.0,0.0,0.051,0.105,0.03,0.0,0.105,0.105,0.051) # From onedel
+
+vnmo = (vp0[0]*sqrt(1+2*delta[0]), vp0[1]*sqrt(1+2*delta[1]), vp0[2]*sqrt(1+2*delta[2]), \
+		vp0[3]*sqrt(1+2*delta[3]), vp0[4]*sqrt(1+2*delta[4]), vp0[5]*sqrt(1+2*delta[5]), \
+		vp0[6]*sqrt(1+2*delta[6]), vp0[7]*sqrt(1+2*delta[7]), vp0[8]*sqrt(1+2*delta[8]))
+
+nlayer = 5 # consider upto n-th layer
+
+Flow('vp0.asc',None,
+     '''
+	echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (' '.join(map(str,vp0)),nlayer))
+Flow('vp0','vp0.asc','dd form=native')
+
+Flow('vnmo.asc',None,
+     '''
+	echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (' '.join(map(str,vnmo)),nlayer))
+Flow('vnmo','vnmo.asc','dd form=native')
+
+Flow('velocityver','vp0','spray d=0.006096 n=3617 | transp')
+Flow('velocitynmo','vnmo','spray d=0.006096 n=3617 | transp')
+
+
+# Picked reflectors close to the CMP location (Other places are incorrect)
+elayer = (0.6157,0.9388,1.341,2.146,3.121,4.554,5.767,6.791,8.071) # at 15 km
+Flow('elayer.asc',None,
+     '''
+	echo %s
+     n1=%d o1=0 d1=1
+     data_format=ascii_float in=$TARGET     
+     ''' % (' '.join(map(str,elayer)),nlayer ))
+Flow('elayer','elayer.asc','dd form=native ')
+
+Flow('vpsemb','vp','window min2=10 max2=15 | deriv | smooth rect1=10 rect2=5')
+
+listpick=[]
+
+for i in range(0,nlayer):
+	istr = str(i)
+	if i == 0:
+		Flow('sembcut-'+istr,'vpsemb','window max1=%g' %((layer[i]+layer[i+1])/2) )
+	elif i == 8:
+		Flow('sembcut-'+istr,'vpsemb','window min1=%g' %((layer[i-1]+layer[i])/2) )
+	else:
+		Flow('sembcut-'+istr,'vpsemb','window min1=%g max1=%g' %( (layer[i-1]+layer[i])/2 ,(layer[i]+layer[i+1])/2) )
+	Flow('pick-'+istr,'sembcut-'+istr,'transp | pick vel0=%g norm=y ' %(elayer[i]) )
+	listpick.append('pick-'+istr)
+
+Flow('pickall',listpick,'cat axis=2 ${SOURCES[1:%d]}'%nlayer)
+
+Plot('vpsemb','grey wanttitle=n wantaxis=n min1=0 max1=8 min2=10 max2=15 screenratio=0.5 screenht=9')
+Plot('pickall','graph yreverse=y wanttitle=n min2=0 max2=8 min1=10 max1=15 screenratio=0.5 screenht=9 plotfat=5')
+Result('refcut','vpsemb pickall','Overlay')
+
+# Expand to the extend of the model
+Flow('pickalle','pickall','expand top=1640 bottom=1155 left=0 right=0 | put o1=0')
+
+Plot('vp','grey wanttitle=n wantaxis=n min1=0 max1=9 min2=0 max2=22 screenratio=0.5 screenht=9')
+Plot('pickalle','graph yreverse=y wanttitle=n min2=0 max2=9 min1=0 max1=22 screenratio=0.5 screenht=9 plotfat=5')
+Result('refext','vp pickalle','Overlay')
+
+
+Flow('ref','pickalle','pad beg2=1 | put o2=0')
+Flow('refs','pickalle','window | put o2=0 d2=1')
+Flow('dips','refs','deriv scale=y')
+Flow('curvs','dips','deriv scale=y ')
+
+# NMO velocity for the model ##########################################################################################
+# Compute depth
+Flow('depth','ref refs','window n2=%d | math s=${SOURCES[1]} output="s-input" | put o2=0' %nlayer)
+Flow('t0','depth velocityver','math v=${SOURCES[1]} output="input/v"')
+Flow('v2t0','t0 velocitynmo','math  v=${SOURCES[1]} output="input*v^2" ')
+
+Flow('t0sum','t0','transp | causint | transp')
+Flow('t0sumext','t0sum','spray axis=3 n=132 d=0.06096 o=0') # spray offset
+Flow('vnmosq','v2t0 t0sum','transp | causint | transp | math t0=${SOURCES[1]} output="input/t0" ')
+Flow('vnmosqext','vnmosq','spray axis=3 n=132 d=0.06096 o=0')
+Flow('hypertime','vnmosqext t0sumext','math t0=${SOURCES[1]} output="sqrt(4*t0^2 + x3^2/input)"')
+
+Flow('offset',None,'spike n1=132 d1=0.06096 o1=0 | math output=x1')
+
+# Taking into account heterogeneities ##################################################################################
+
+Flow('slow','velocityver',' math output="1/input" ')
+Flow('vnmosqbylayer','velocitynmo',' math output="input^2" ')
+
+# Have to make sure the curvature is computed nicely otherwise doesn't work
+Flow('vnmosqhet','refs vnmosqbylayer slow t0sum dips curvs', 
+	'''
+	fermatrecursion vnmosq=${SOURCES[1]} slow=${SOURCES[2]} t0sum=${SOURCES[3]}
+	dipcurv=y dip=${SOURCES[4]} curv=${SOURCES[5]}
+	''')
+Flow('vnmosqhetext','vnmosqhet','spray axis=3 n=132 d=0.06096 o=0')
+Flow('hyperhettime','vnmosqhetext t0sumext','math t0=${SOURCES[1]} output="sqrt(4*t0^2 + x3^2/input)"')
+
+
+# Plotting comparison ###################################################################################################
+s1=1700
+s2=1722 # 10.5 km
+s3=1832 # 11.17 km
+
+for j in [s1,s2,s3]:
+	if j == s1:
+		sh = 1
+	elif j == s2:
+		sh = 2
+	elif j == s3:
+		sh = 3
+	shot = str(sh)
+	cmp = str(11.17)
+	for i in range(nlayer):
+		num = str(i+1)
+		Flow('shotcmp'+shot,'cmps',' window n3=1 f3=%d f1=13 | put o1=0 '%j ) # Window delay from wavelet
+		Plot('shotcmp'+shot,
+		        '''
+		        grey transp=y yreverse=y
+		        title="CMP at %s km" min1=0 max1=4 max2=4.8 label2=Offset unit2=km screenratio=1.15
+		        axisfat=3 titlefat=3 titlesz=8 labelfat=3 labelsz=6
+		        wherexlabel=top
+		        ''' % cmp )
+		Plot('hyperto'+num+'-'+shot,'hypertime offset',
+			'''
+			window n1=1 f1=%d n2=1 f2=%d | cat axis=2 ${SOURCES[1]} order=2,1 | transp | dd type=complex | window |
+			graph yreverse=y plotcol=%d plotfat=4 min2=0 max2=4 min1=0 max1=4.8 screenratio=1.15
+			axisfat=3 wanttitle=n wantaxis=n
+			''' % (j,i,i+1) )
+		Plot('hyperhetto'+num+'-'+shot,'hyperhettime offset',
+			'''
+			window n1=1 f1=%d n2=1 f2=%d | cat axis=2 ${SOURCES[1]} order=2,1 | transp | dd type=complex | window |
+			graph yreverse=y plotcol=%d plotfat=4 min2=0 max2=4 min1=0 max1=4.8 screenratio=1.15 dash=1
+			axisfat=3 wanttitle=n wantaxis=n
+			''' % (j,i,i+1) )
+
+Plot('box',None,'box font=2 x0=4.8 y0=8.6 label="Hess VTI" xt=0.000000 yt=0.000000')
+# Plot('hypercompare1',	''' shotcmp1 hyperto1-1 hyperto2-1 hyperto3-1 hyperto4-1 hyperto5-1 
+# 							hyperhetto1-1 hyperhetto2-1 hyperhetto3-1 hyperhetto4-1 hyperhetto5-1
+# 						''','Overlay')
+Result('hypercomparehess2',	''' shotcmp2 hyperto1-2 hyperto2-2 hyperto3-2
+							hyperhetto1-2 hyperhetto2-2 hyperhetto3-2 
+							box
+						''','Overlay')
+Result('hypercomparehess3',	''' shotcmp3 hyperto1-3 hyperto2-3 hyperto3-3 hyperto4-3 
+							hyperhetto1-3 hyperhetto2-3 hyperhetto3-3 hyperhetto4-3 
+							box
+						''','Overlay')
+
+#Result('hypercompare','hypercompare1 hypercompare2 hypercompare3','SideBySideAniso')
+
+End()

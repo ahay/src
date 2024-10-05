@@ -78,7 +78,7 @@ Outputs the number of dimensions dim and a dimension array n[dim] >*/
     return dim;
 }
 
-int sf_memsize()
+int sf_memsize(void)
 /*< Returns memory size by:
   1. checking RSFMEMSIZE environmental variable
   2. using hard-coded "def" constant

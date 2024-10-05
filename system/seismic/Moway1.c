@@ -89,27 +89,29 @@ int main(int argc, char* argv[])
     sf_floatwrite (slice0[0][0],nx*np,out);
 
     sx = sp = st = 0.;
+    /* loop through depth */
     for (iz=0; iz < nz-1; iz++) {
 	sf_warning("depth %d of %d;",iz+1,nz);
 
+	/* get velocity and velocity gradient */
 	sf_floatread(vv,nx,vel);
 	sf_floatread(vg,nx,vgrad);
 
 	for (it=0; it < nt; it++) {
-	    t = t0+it*dt;
+	    t = t0+it*dt; /* time */
 
 	    for (ip=0; ip < np; ip++) {
-		p = p0+ip*dp;
+		p = p0+ip*dp; /* slope */
  	
 		for (ix=0; ix < nx; ix++) {
-		    x = x0+ix*dx;
+		    x = x0+ix*dx; /* location */
 
 		    v = 0.5*vv[ix];
-		    g = 0.5*vg[ix];		    
+		    g = 0.5*vg[ix];     
 		    
 		    sq = 1./sqrt(1.-v*v*p*p);
 
-		    if (lagrange) {
+		    if (lagrange) { /* trace rays back to the suface */
 			sx -= sq*p*v;
 			sp += sq*g/(v*v);
 			st -= sq/v;
@@ -119,6 +121,7 @@ int main(int argc, char* argv[])
 			st = -sq/v;
 		    }
 
+		    /* coordinate transformation */
 		    tstr[it][ip][ix] = t+st*dz;
 		    pstr[it][ip][ix] = p+sp*dz;
 		    xstr[it][ip][ix] = x+sx*dz;
@@ -126,6 +129,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
+	/* mapping data */
 	warp3(slice0,xstr,pstr,tstr,slice);
 	sf_floatwrite (slice[0][0],nx*np,out); /* it=0 */
     }

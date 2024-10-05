@@ -1,0 +1,163 @@
+\published{SEG Expanded Abstracts, 5839-5844, (2017)}
+
+\title{Estimation of timeshifts in time-lapse seismic images using spectral decomposition}
+
+\author{Mason Phillips$^{*1}$ and Sergey Fomel$^{1}$
+\\
+$^1$The University of Texas at Austin}
+
+\maketitle
+
+\lefthead{Phillips and Fomel}
+\righthead{Timeshifts using spectral decomposition}
+\footer{TCCS}
+
+\begin{abstract}
+Time-lapse timeshifts are difficult to measure from seismic data in the presense of low frequencies or thin beds causing tuning effects.
+We propose to decompose time-lapse seismic images into discrete frequency components using the local time-frequency transform before estimating timeshifts.
+Use of high frequency components mitigate problems associated with sidelobe interference.
+We use amplitude-adjusted plane-wave destruction (APWD) filters to invert for both timeshifts and amplitude changes between the time-lapse seismic images at each frequency.
+Plane-wave destruction can efficiently measure small shifts between seismic traces, making this algorithm particularly effective.
+The effectiveness of the proposed workflow is confirmed using a 1D synthetic example and a field data example from the Cranfield CO$_2$ sequestration project.
+\end{abstract}
+
+\section{Introduction}
+Accurate prediction of time-lapse timeshifts is important for monitoring fluid migration and reservoir compaction \cite[]{hatchell}.
+Tradtional time-lapse seismic image registration algorithms perform well in the absense of amplitude changes between baseline and monitor images. 
+This assumption generally fails at the reservoir level where fluid injection and/or production induce changes in the elastic and sonic properties of the interval. 
+These changing amplitudes can produce spurious timeshift anomalies \cite[]{macbeth}. 
+This effect is most pronounced near the tuning thickness due to interference between reflection events associated with thin beds. 
+Similarly, low frequencies can produce arbitrarily large timeshifts.  
+In this paper, we propose to estimate timeshifts in the presense of these problematic amplitude changes by decomposing time-lapse images into discrete frequencies components and simulataneously inverting for regularized timeshifts and amplitude ratios between baseline and monitor seismic images.
+
+Simple cross-correlation based algorithms are among the most commonly used methods for estimating 4D timeshifts.
+\cite{rickett} propose cross-equalization, which includes spatial and temporal registration to compensate for different acquisition geometries and amplitude balancing to scale the data to the same amplitude.
+\cite{fomel09} estimate 4D timeshifts by picking a regularized warping path which maximizes the local similarity attribute \cite[]{local}.
+\cite{karimi16} use the local similarity attribute to estimate 4D timeshifts after flattening the time-lapse seismic images using the stratigraphic coordinates transformation \cite[]{karimi15}.
+Dynamic time warping \cite[]{sakoe} was originally proposed for speech recognition and has been applied to estimating 4D timeshifts and many other data registration problems in geophysics \cite[]{dtw}. 
+\cite{williamson} explain timeshifts and amplitude changes by integrating classical warping and impedence inversion in the limit of small offset and dip and low frequency. 
+This method is particularly attractive, as it iteratively compensates for amplitude changes associated with velocity variations induced by fluid injection or production. 
+\cite{hoeber} incorporate complex trace analysis \cite[]{taner} to match local phase and amplitudes between time-lapse seismic images. 
+\cite{lie} extracts both timeshifts and 4D signal using a constrained inversion scheme. 
+\cite{zhang16} borrow the optical flow technique \cite[]{horn} to predict multidimensional timeshifts at multiple scales
+In our previous work, we invert for timeshifts and amplitude changes using amplitude-adjusted plane-wave destruction (APWD) filters \cite[]{phillips}. 
+This technique iteratively refines timeshift estimates by predicting amplitude changes from the seismic data. 
+
+In this paper, we decompose the seismic images into discrete frequency components using the local time-frequency transform (LTFT) \cite[]{liu} and simultaneously estimate timeshifts and amplitude weights due to changes in the reservoir conditions during production at each frequency using amplitude-adjusted plane-wave destruction (APWD) filters \cite[]{phillips}.
+Spectral decomposition partially alleviates the ``spurious timeshift" problem associated with tuning, as described by \cite{macbeth}.
+We evaluate the effectiveness of this workflow using a synthetic dataset and field seismic data the Cranfield CO$_2$ sequestration experiment.
+
+\section{Theory}
+Automatic timeshift estimation algorithms maximize the similarity between baseline and monitor seismic traces \cite[]{xcor,fomel09}. 
+Alternatively, one can minimize the residual between baseline and shifted monitor seismic traces \cite[]{dtw,phillips}. 
+This condition can be represented in the $Z$-transform notation as
+
+\begin{equation}
+D(a,p)=1-aZ_4W(p) \ ,
+\end{equation}
+
+where $W$ is a warping filter, $Z_4$ is a phase shift between time-lapse seismic images, $a$ is an amplitude weight, and $p$ is the 4D timeshift. 
+This assumption fails when layers are below seismic resolution and significant interference between reflection sidelobes exists.
+We partially alleviate the problem of interference by decomposing seismic images into discrete frequency components using the local time-frequency transform \cite[]{liu}.
+
+The local-time-frequency transform is based on the idea of non-stationary regression.
+A digital signal $f(t)$ can be represented as Fourier series
+
+\begin{equation}
+f(t)=\sum_{n=-\infty}^{\infty}b_n(t)\psi_n(t)
+\end{equation}
+
+where the Fourier coefficients ${b}_n$ are allowed to vary temporally and $\psi_n$ is a vector consisting of complex exponentials at each corresponding Fourier frequency.
+The Fourier coefficients $b_n$ are estimated by regularized least-squares inversion \cite[]{fomel08}.
+
+We then use amplitude-adjusted plane-wave destruction filters \cite[]{phillips} to estimate timeshifts at each frequency.
+In the linear operator notation, equation (1) is modified to
+
+\begin{equation}
+\mathbf{D}(\mathbf{a},\mathbf{p})\mathbf{d}=\mathbf{B}_l(\mathbf{p})\mathbf{d}-\mbox{diag}(\mathbf{a})\mathbf{B}_r(\mathbf{p})\mathbf{d}
+\end{equation}
+
+where $\mathbf{B}_l$ and $\mathbf{B}_r$ are the left- and right-hand side of the plane-wave destruction filter \cite[]{fomel02}, as described by \cite{phillips}, and $\mathbf{d}$ is the local time-frequency transform of the time-lapse seismic data.
+Our objective is to minimize the plane-wave residual between the time-lapse seismic images at each frequency ($\mathbf{D}(\mathbf{a},\mathbf{p})\mathbf{d}\approx\mathbf{0}$).
+
+The dependence of $\mathbf{D}$ on $\mathbf{a}$ is linear; however, $\mathbf{p}$ enters in a non-linear way \cite[]{fomel02}.
+We separate this problem into linear and non-linear parts using the variable projection technique \cite[]{golub,kaufman}.
+The algorithm is described below \cite[]{phillips}:
+
+\begin{enumerate}
+\item Set $\mathbf{p}_0 = \mathbf{0}$ and $\mathbf{a}_0 = \mathbf{1}$.
+\item Hold the scale $\mathbf{a}$ constant and compute the shift $\mathbf{p}_n$ using accelerated plane-wave destruction \cite[]{chen}.
+\item Shift the monitor image using $\mathbf{p}_n$
+\item Hold the shift $\mathbf{p}_n$ constant and compute the amplitude ratio $\mathbf{a}_n$ by the smooth division of the left and right side of the plane-wave destruction filter $\mathbf{D}$ in equation(3):
+\begin{equation}
+\mathbf{a}_n = \left<\frac{\mathbf{B}_l(\mathbf{p}_n)\mathbf{d}}{\mathbf{B}_r(\mathbf{p}_n)\mathbf{d}}\right>
+\end{equation}
+\item Scale the monitor image using $\mathbf{a}_n$
+\item Iterate until convergence (return to step 2).
+\end{enumerate}
+ 
+If timeshifts are large ($\max |\mathbf{p}_n|\geq$ 10 samples), rather than setting $\mathbf{p}_0 = \mathbf{0}$, it may be necessary to instead provide a low frequency estimate of the timeshift calculated using another algorithm, such as local similarity \cite[]{fomel09}.
+So long as this ``small timeshift" condition is satisfied, this algorithm provides an improved estimate of true 4D timeshifts from spectrally decomposed time-lapse seismic images.
+
+\section{Example I}
+\inputdir{synth}
+For our first data example, we upscale synthetic well log data (Figure~\ref{fig:logs1}) to seismic resolution \cite[]{backus}, transform it from depth to time domain, and compute synthetic seismograms.
+A hydrocarbon-bearing reservoir is easily identified from the well logs at approximately 1900-2025 m.
+We simulate an injection-assisted production experiment by substituting hydrocarbons with water \cite[]{gassmann} (Figure~\ref{fig:logs2}).
+Finally, a monitor seismic trace is computed from the updated well logs.
+
+\multiplot{2}{logs1,logs2}{width=\columnwidth}{Velocity (left), density (middle), and water saturation (right) logs (a) before and (b) after fluid substitution. Velocity and density logs (blue) are upscaled to seismic resolution (red) before computing synthetic seismograms.}
+
+Timeshifts between these traces are initially estimated using the local similarity attribute \cite[]{fomel09}.
+This algorithm effectively predicts a low frequency approximation of the true timeshift with most significant deviations at the top the the reservoir interval (Figure~\ref{fig:traces2}).
+In order to estimate a higher frequency solution, traces are decomposed into discrete frequency components using the local-time-frequency transform \cite[]{liu} to partially eliminate the problematic spurious timeshifts associated with tuning effects at the reservoir.
+Timeshifts are computed using amplitude-adjusted plane-wave destruction filtes at each frequency (Figure~\ref{fig:dips}).
+The previously observed anomalous timeshift estimates are less prominent at high frequencies (Figure~\ref{fig:traces2}).
+
+\plot{dips}{width=\columnwidth}{Timeshifts estimated at each frequency. Timeshifts appear to be strongly dependent on frequency.}
+
+\plot{traces2}{width=\columnwidth}{(a) Synthetic baseline (blue), monitor (green), monitor with exact timeshift (purple), and monitor with estimated timeshift (red). (b) Timeshifts estimated using the local similarity attribute (blue) and the proposed LTFT + APWD workflow(red) compared to the exact timeshift (purple).}
+
+\section{Example II}
+\inputdir{cran}
+
+Our second test is field data example from the Cranfield CO$_2$ sequestration experiment \cite[]{zhang13}.
+This dataset consists of baseline and monitor seismic images.
+
+We follow the same workflow as described in the previous example.
+The time-lapse seismic images are decomposed into discrete frequency componenets using the local time frequency transform \cite[]{liu} and timeshifts are estimated using amplitude-adjusted plane-wave destruction filters \cite[]{phillips}.
+To test the effectiveness of this algorithm, we interleave slices of the baseline and monitor images on top of the corresponding timeshift estimate map (Figure~\ref{fig:fdip,idip,xdip}).
+The apparent ``zig-zag" patterns between the traces indicate the images are not optimally aligned for time-lapse analysis.
+These patterns coincide with large timeshift estimates.
+Upon shifting the monitor image, the reflections are optimally aligned.
+
+\multiplot{3}{fdip,idip,xdip}{width=0.45\columnwidth}{Timeshift estimates as a function of (a) frequency, (b) inline, and (c) crossline. Overlying traces are interleaved baseline and monitor images. Areas with large timeshift (bright color) correspnd to misalignment between baseline and monitor images.}
+
+The normalized root-mean-square (NRMS) attribute is computed before and after shifting the monitor image (Figure~\ref{fig:nrms1,nrms2}).
+Lower NRMS values indicate coherent signal in the time-lapse residual corresponding to misalignment between the time-lapse seismic images has been eliminated.
+
+\multiplot{2}{nrms1,nrms2}{width=0.45\columnwidth}{NRMS maps (a) before and (b) after registration. Low NRMS values indicate that the application of estimated timeshifts effectively destroys most coherent signal in the time-lapse residual.}
+
+\section{Discussion}
+In the absense of significant geomechanically induced strain in the overburden, a production or injection project will induce changes in rock properties exclusively in the reservoir interval.
+For this reason, it may be useful to constrain timestrains to be ``blocky" using total variation regularization \cite[]{rudin,steidl}.
+Furthermore, amplitude changes between time-lapse seismic images are induced by changes in velocity and density.
+Changes in velocity can be directly estimated from timeshifts, but density variations are more difficult to estimate.
+Incorporating the physics of full waveform modeling \cite[]{virieux} may further constrain the inversion of timeshifts and amplitude weights. 
+
+\section{Conclusions}
+Many existing time-lapse seismic image registration algorithms are designed to measure timeshifts in the absense of amplitude changes between images.
+These algorithms may produce spurious timeshifts associated with amplitude changes at the reservoir level.
+Amplitude changes are not only connected to changes in rock properties due to fluid production and/or injection, but may also be caused by tuning effects associated with low frequencies and/or thin beds.
+We propose to evalulate the frequency depedence of 4D timeshift estimation using the local time-frequency transform.
+Timeshifts in the presense of amplitude changes are estimated using amplitude-adjusted plane-wave destruction filters at each frequency.
+The impact of sidelobe interference is minimized at high frequencies.
+This algorithm partially alleviates the spurious timeshift problem and provides a more reliable estimate of 4D timeshifts.
+
+\section{Acknowledgments}
+We thank the sponsors of the Texas Consortium for Computational Seismology (TCCS) for financial support and the National Energy Technology Laboratory, the Southeast Regional Carbon Sequestration Partnership, and Denbury Resources for providing the field data example.
+This paper is reproducible using the Madagascar open-source software package \cite[]{fomel13}.
+
+\onecolumn
+\bibliographystyle{seg}
+\bibliography{paper}

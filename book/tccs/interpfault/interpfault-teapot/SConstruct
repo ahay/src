@@ -1,0 +1,129 @@
+from rsf.proj import *
+import math
+
+## ###### Draw the Box ######
+## min1,max1=0.3,0.7
+## min2,max2=0.85,1.1
+## Flow('box.asc',None,'''echo %s n1=2 n2=5 data_format=ascii_float
+##     in=$TARGET'''%' '.join(map(str,(min1,min2,max1,min2,
+##                                     max1,max2,min1,max2,
+##                                     min1,min2))))
+## Plot('box','box.asc','''dd form=native type=complex |
+##     window | graph transp=y yreverse=y min1=0 max1=1.2 min2=0 max2=1.28
+##     wanttitle=n plotfat=5 plotcol=1 wantaxis=n''')
+
+#################################
+###### Import seismic data ######
+#################################
+Flow('teapot','seis','window max1=1.8')
+Result('teapot','''window max1=1.8 |
+    grey title="Teapot Dome"''')
+
+###### Dip Estimation ######
+Flow('dip','teapot','dip2 rect1=10 rect2=10 order=4')
+Result('syndip','dip','''window max1=1.8 |
+    grey color=j label2="Distance" title="Dip Estimation" scalebar=y''')
+
+Flow('fault','flt','window max1=1.8')
+Result('fault','''window max1=1.8 |
+    grey allpos=y pclip=99.9 label2="Distance" title="Fault Attribute"
+    scalebar=y barlabel="Fault Likelihood"''')
+
+
+##########################################
+###### Well Log Predictive Painting ######
+##########################################
+amp=40
+wellLoc = [ 52,203,353, 15, 77,105,133,181,247,246,264,263,285]
+wellMin = [  0, 59,  0,  0,  0,  0,  0, 68, 99,225,103,217,  0]
+wellMax = [313,305,222,111,197,193,120,169,225,290,217,263,113]
+wellLen = [313,246,222,111,197,193,120,101,126, 65,114, 46,113]
+# wellLoc = [ 52,203,353,133,247]
+# wellMin = [  0, 59,  0,  0, 99]
+# wellMax = [313,305,222,120,225]
+# wellLen = [313,246,222,120,126]
+r0=4
+
+logPlotCollect=[]
+log2PlotCollect=[]
+rbfCollect=[]
+weightedCollect=[]
+
+for well in range(13):
+    log = 'log%d'%well
+    Flow(log,'den','window n2=1 f2=%d'%wellLoc[well])
+
+    seed = 'seed%d'%well
+    Flow(seed,log,'mask max=1.0 | dd type=float | math output="input*50"')
+
+    Plot(log,'''window f1=%d n1=%d |
+        scale axis=1 | math output="(input-0.90)*%g+%g" |
+        graph transp=y yreverse=y min2=0 max2=357 min1=0.6 max1=1.8
+        wherexlabel=top wheretitle=bottom wanttitle=n wantaxis=n
+        scalebar=y bartype=v plotcol=7
+        plotfat=3'''%(wellMin[well],wellLen[well],amp,wellLoc[well]))
+    logPlotCollect.append(log)
+
+    log2 = 'logyellow%d'%well
+    Plot(log2,log,'''window f1=%d n1=%d |
+        scale axis=1 | math output="(input-0.90)*%g+%g" |
+        graph transp=y yreverse=y min2=0 max2=357 min1=0.6 max1=1.8
+        wherexlabel=top wheretitle=bottom wanttitle=n wantaxis=n
+        scalebar=n bartype=v plotcol=1
+        plotfat=3'''%(wellMin[well],wellLen[well],amp,wellLoc[well]))
+
+    seis = 'seis%d'%well
+    Result(seis,['teapot',log2],'Overlay')
+
+    log2PlotCollect.append(log2)
+
+    paint = 'paint%d'%well
+    Flow(paint,['dip',log],'''pwpaint order=3 seed=${SOURCES[1]} eps=0.1
+        i0=%d'''%wellLoc[well])
+    Plot(paint,'''window max1=1.8 |
+        grey title="Predictive Painting from Log %d"
+        color=j scalebar=y bartype=v bias=2.3 clip=0.5
+        minval=1.5 maxval=3.0 barlabel="Density (g/cc)"'''%(well+1))
+    Result(paint,[paint,log],'Overlay')
+
+    # thr=1.0
+    # mask = 'mask%d'%well
+    # Flow(mask,paint,'mask min=%g | dd type=float'%thr)
+
+    dist = 'dist%d'%well
+    Flow(dist,['dip',seed,'fault'],'''distpaint order=3 eps=0.1 i0=%d
+        seed=${SOURCES[1]} flt=${SOURCES[2]} faultscale=50 |
+        clip2 upper=500'''%wellLoc[well])
+    Plot(dist,'''window max1=1.8 |
+        grey color=j title="Distance Painting from Log %d"
+        scalebar=y bartype=v barlabel="Geologic Distance"
+        minval=0 maxval=6 bias=2 clip=3'''%(well+1))
+    Result(dist,[dist,log],'Overlay')
+
+    rbf = 'rbf%d'%well
+    Flow(rbf,dist,'math output="1./(1.+(input/%g)*(input/%g))"'%(r0,r0))
+    Plot(rbf,'''window max1=1.8 |
+        grey color=j title="RBF (Center is Log %d)"
+        scalebar=y bartype=v barlabel="RBF Interp Weight"
+        bias=0.8 clip=0.4'''%(well+1))
+
+    Result(rbf,[rbf,log],'Overlay')
+
+    rbfCollect.append(rbf)
+
+    weighted = 'weighted%d'%well
+    Flow(weighted,[paint,rbf],'add mode=m ${SOURCES[1:2]}')
+    weightedCollect.append(weighted)
+
+Flow('rbfsum',rbfCollect,'add ${SOURCES[1:13]}')
+Flow('weightedsum',weightedCollect,'add ${SOURCES[1:13]}')
+Flow('interp','weightedsum rbfsum','add mode=d ${SOURCES[1:2]}')
+Plot('interp','''window max1=1.8 |
+    grey title="Geologic Distance Guided Interpolation" color=j
+    scalebar=y bartype=v minval=1.5 maxval=3.0 barlabel="Density (g/cc)"
+    bias=2.37 clip=0.35 titlesz=9 labelsz=7''')
+Result('interp-tpt','interp '+' '.join(logPlotCollect),'Overlay')
+
+Result('seisall','teapot '+' '.join(log2PlotCollect),'Overlay')
+
+End()

@@ -1,7 +1,7 @@
 from rsf.proj import*
 from rsf.recipes.beg import server
 import sys
-sys.path.append('../../temp/recipes')
+sys.path.append('../')
 import deblend2
 
 clip=0.0005 	   	#display percentage
@@ -49,22 +49,17 @@ for file in [
              ]:
 	 Fetch(file+'.segy','fairfield',server)
 	 if file == 'Z700_SimSou_754-UNBLENDED-':
-		file1='unblended754'
+	 	file1='unblended754'
 	 elif file=='Z700_SimSou_763-UNBLENDED-':
-		file1='unblended763'
-	 #elif file=='Z700_SimSou_754-BLENDED-Close-Synch-1000dither':
-	 #	file1='blended754'
-	 #elif file=='Z700_SimSou_763-BLENDED-Close-Synch-1000dither':
-	 #	file1='blended763'
-    	 Flow([file1,'t'+file1,file1+'.asc',file1+'.bin'],
-                file+'.segy',
-                '''
-                segyread
-                tfile=${TARGETS[1]}
-                hfile=${TARGETS[2]}
-                bfile=${TARGETS[3]} | scale axis=12
-                ''')
-    	 Grey(file1,' title=%s clip=%g'%('',clip))
+	 	file1='unblended763'
+	 	
+	 Flow([file1,'t'+file1,file1+'.asc',file1+'.bin'],file+'.segy','''
+	 segyread
+	 tfile=${TARGETS[1]}
+	 hfile=${TARGETS[2]}
+	 bfile=${TARGETS[3]} | scale axis=12
+	 ''')
+	 Grey(file1,' title=%s clip=%g'%('',clip))
 
 
 ## extract shottime#.rsf from data header file tfile#

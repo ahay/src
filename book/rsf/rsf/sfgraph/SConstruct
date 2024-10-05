@@ -36,4 +36,14 @@ Result('xyz','x y z',
        title="Colored Symbols" scalebar=y
        ''')
 
+str1 = "你好马达加斯加"
+Result("chfont",None,
+       '''
+       spike n1=1000 k1=300 | 
+       bandpass fhi=2 phase=y |
+       wiggle titlesz=5 wheretitle=b wherexlabel=t
+       title=" \F19 %s" crowd2=0.5 label1="\F19 %s \F1"
+       label2="\F19 %s \F1 " max2=1. min2=-.5 labelsz=5
+       '''%(ch2uni(str1),ch2uni("时间"),ch2uni("振幅")),stdin=0)
+
 End()
