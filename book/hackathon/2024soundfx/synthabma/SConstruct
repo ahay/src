@@ -12,11 +12,11 @@ for dat in ('curve','linear','random','marm'):
          ''',stdin=0)
 
 Flow('linear2','linear','window min1=0.5 max1=2.7 | bandpass fhi=60')
-Plot('linear','linear2',
-     '''
-     grey yreverse=y transp=y poly=y label2=Position 
-     title=Input
-     ''')
+# Plot('linear','linear2',
+#      '''
+#      grey yreverse=y transp=y poly=y label2=Position 
+#      title=Input
+#      ''')
 Plot('jlinear','linear2',
      '''
      window n2=11 f2=23 n1=150 min1=1.35 |
@@ -70,16 +70,68 @@ Plot('jlacov','lacov',
 Result('linear-comp','linear lacov','SideBySideAniso')
 
 # Stationary F-X PEFs
-Flow('lfx','lpad',
+# Flow('lfx','lpad',
+#      '''
+#      spitz norm=n verb=y
+#      ''')
+# Plot('lfx',
+#      '''
+#      grey yreverse=y transp=y poly=y label2=Position
+#      title="Adaptive PEF"
+#      ''')
+
+# Result('linear-fxcomp','linear lfx','SideBySideAniso')
+
+Plot('linear','linear2',
      '''
-     spitz norm=n verb=y
-     ''')
-Plot('lfx',
-     '''
-     grey yreverse=y transp=y poly=y label2=Position
-     title="Adaptive PEF"
+     window n2=11 f2=23 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title=Input wheretitle=b pclip=100 labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2
      ''')
 
-Result('linear-fxcomp','linear lfx','SideBySideAniso')
+Flow('linearInt','linear2','spitz')
+
+Plot('linearInt',
+    '''
+     window n2=22 f2=46 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title=Input wheretitle=b pclip=99 labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2
+    ''')
+
+Flow('linear-linInt','linear2',
+     '''
+     transp |
+     spline n1=119 d1=0.5 o1=0 |
+     transp
+     ''')
+
+Plot('linear-linInt',
+     '''
+     window n2=22 f2=46 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title=Input wheretitle=b pclip=99 labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2
+     ''')
+
+Result('linear','linear linearInt','SideBySideAniso')
+
+Flow('linearIntFK','linearInt','spectra2')
+Flow('linearFK','linear2','spectra2')
+Flow('linear-linIntFK','linear-linInt','spectra2')
+
+Plot('linearFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Before parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+Plot('linearIntFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=After parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+Plot('linear-linIntFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Linear-Interpolated parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+
+Result('FK', 'linearFK linearIntFK','SideBySideAniso')
+
+Result('linInt','linear-linInt linear-linIntFK','SideBySideAniso')
+
+Result('int','Fig/linear.vpl Fig/FK.vpl Fig/linInt.vpl','OverUnderAniso')
 
 End()
