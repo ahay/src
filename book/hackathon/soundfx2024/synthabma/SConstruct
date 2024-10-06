@@ -85,53 +85,105 @@ Result('linear-comp','linear lacov','SideBySideAniso')
 Plot('linear','linear2',
      '''
      window n2=11 f2=23 n1=150 min1=1.35 |
-     put d1=1 o1=675 label1=Sample unit1= |
-     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
-     title=Input wheretitle=b pclip=100 labelsz=5. titlesz=7
-     labelfat=2 font=2 titlefat=2 screenratio=1.2
+     put d1=1 o1=675 label1="Sample #" unit1= |
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=Input wheretitle=t pclip=100
      ''')
 
 Flow('linearInt','linear2','spitz')
 
 Plot('linearInt',
     '''
+     put d2=1 |
      window n2=22 f2=46 n1=150 min1=1.35 |
-     put d1=1 o1=675 label1=Sample unit1= |
-     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
-     title=Input wheretitle=b pclip=99 labelsz=5. titlesz=7
-     labelfat=2 font=2 titlefat=2 screenratio=1.2
+     put d1=1 o1=675 label1="Sample #" unit1= |
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=Spitz wheretitle=t pclip=99
     ''')
 
 Flow('linear-linInt','linear2',
      '''
      transp |
-     spline n1=119 d1=0.5 o1=0 |
+     sinc n1=119 d1=0.5 o1=0 |
      transp
      ''')
 
 Plot('linear-linInt',
      '''
+     put d2=1 |
      window n2=22 f2=46 n1=150 min1=1.35 |
-     put d1=1 o1=675 label1=Sample unit1= |
-     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
-     title=Input wheretitle=b pclip=99 labelsz=5. titlesz=7
-     labelfat=2 font=2 titlefat=2 screenratio=1.2
+     put d1=1 o1=675 label1="Sample #" unit1= |
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title="Sinc" wheretitle=t pclip=99 unit2=
      ''')
 
-Result('linear','linear linearInt','SideBySideAniso')
+Result('linear','linear linear-linInt linearInt','SideBySideIso')
 
 Flow('linearIntFK','linearInt','spectra2')
 Flow('linearFK','linear2','spectra2')
 Flow('linear-linIntFK','linear-linInt','spectra2')
 
-Plot('linearFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Before parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
-Plot('linearIntFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=After parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
-Plot('linear-linIntFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Linear-Interpolated parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+Plot('linearFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Input parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+Plot('linearIntFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Spitz parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+Plot('linear-linIntFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Sinc parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
 
-Result('FK', 'linearFK linearIntFK','SideBySideAniso')
+Result('FK', 'linearFK linear-linIntFK linearIntFK','SideBySideIso')
 
 Result('linInt','linear-linInt linear-linIntFK','SideBySideAniso')
 
-Result('int','Fig/linear.vpl Fig/FK.vpl Fig/linInt.vpl','OverUnderAniso')
+# Result('int','Fig/linear.vpl Fig/FK.vpl','SideBySideAniso')
+
+#####################
+
+Flow('marm2','marm','window | bandpass fhi=30')
+Plot('marm2',
+     '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=Input wheretitle=t pclip=100
+     ''')
+
+Flow('marm-linInt','marm2',
+     '''
+     transp |
+     sinc n1=79 d1=0.5 o1=0 |
+     transp
+     ''')
+Plot('marm-linInt',
+     '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title="Sinc" wheretitle=t pclip=99 unit2=
+     ''')
+
+Flow('marmInt','marm2','spitz')
+Plot('marmInt',
+    '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=FX wheretitle=t pclip=99
+    ''')
+
+Flow('marmInt2','marm2','spitzns k2=7 w2=10')
+Plot('marmInt2',
+    '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=FX wheretitle=t pclip=99
+    ''')
+
+Flow('mpad mmask','marm2','lpad jump=2 mask=${TARGETS[1]}')
+Flow('mdmask','mpad','math output=1.')
+Flow('mapef','mpad mdmask',
+     '''
+     apef a=7,5 jump=2 rect1=40 rect2=30 niter=400 verb=y
+     maskin=${SOURCES[1]}
+     ''')
+Flow('macov','mpad mapef mmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} niter=400 verb=y')
+
+Plot('macov',
+    '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=TX wheretitle=t pclip=99
+    ''')
+
+Result('marm','marm2 marmInt2 macov','SideBySideIso')
 
 End()
