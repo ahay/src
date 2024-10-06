@@ -6,6 +6,14 @@ Project directory for SoundFX team
 
 The primary objective of our project is to reproduce the influential geophysics paper "Trace Interpolation using the F-X Domain" by Simon Spitz (1991). Trace interpolation is a crucial step in enhancing the migration of seismic data. Traditional interpolation methods, such as spline or sinc functions, often struggle to prevent spatial aliasing during the interpolation process. Spitz proposed a novel approach utilizing the **Frequency-Time (F-X)** domain, allowing for the interpolation of regularly sampled data without requiring prior knowledge of event dips. This method involves estimating an interpolation operator through a spatial prediction filter derived from the recorded traces.
 
+Our project not only aims to reproduce the methodologies outlined in these papers but also provides a comprehensive resource for researchers and practitioners interested in seismic data interpolation techniques. We believe integrating our project to **Madagascar software package** will allow other researchers to utilize and build upon these results.
+
+###  Key milestones
+
+- [x] **Synthetic Data Reproduction**: All synthetic results from Spitz's 1991 paper are meticulously recreated, allowing for validation and exploration of the F-X interpolation method.
+- [X] **Application on real data and comparison with alternate methods**: Reproduced examples from Abma and Kabir's 2005 paper which provide insights into the performance of  interpolation methods and comparison on real data examples, bridging the gap between theory and field application.
+- [X] **Application of machine learming**: The trained fully-connected Artificial Neural Netwrok (ANN) is able to reconstruct the missing traces in our real data examples.
+
 ### Project structure
 
 During this hackathon, our team successfully reproduced all synthetic results presented in Spitz's original paper. These results can be found in the directory:
@@ -20,14 +28,4 @@ Additionally, we have reproduced examples from the paper "Comparisons of Interpo
 In addition to traditional interpolation methods, our team has explored the implementation of a straight-forward machine learning technique to interpolate the trace. We utilize fully-connected network to predict the missing seismic traces by training them on a decimated version of the real data.
 
 * Machine Learning      :  ```SFX_ML.ipynb```
-
-###  Key milestones
-
-* **Synthetic Data Reproduction**: All synthetic results from Spitz's 1991 paper are meticulously recreated, allowing for validation and exploration of the F-X interpolation method.
-* **Application on real data and comparison with alternate methods**: Reproduced examples from Abma and Kabir's 2005 paper which provide insights into the performance of  interpolation methods and comparison on real data examples, bridging the gap between theory and field application.
-* **Application of machine leanring**: The trained fully-connected Artificial Neural Netwrok (ANN) is able to reconstruct the missing traces in our real data examples.
-
-### Summary
-
-Our project not only aims to reproduce the methodologies outlined in these papers but also provides a comprehensive resource for researchers and practitioners interested in seismic data interpolation techniques. We believe integrating our project to **Madagascar software package** will allow other researchers to utilize and build upon these results.
 
