@@ -76,22 +76,23 @@ Result('FK', 'synthFK-grey synthIntFK-grey','SideBySideAniso')
 def generateSynthetic2(source=None, target=None, env=None):
     nx = 48
     dt = .001
-    nt = int(2.5 // dt) + 1
+    nt = int(2.5 // dt) + 2
     traces = np.zeros((nx, nt))
     t0 = .1
-    timeIndex = (np.sqrt((t0//dt)**2 + np.power(np.arange(nx), 2) / .01)).astype(int)
+    timeIndex = (((t0//dt) + np.power(np.arange(nx), 2) / (2*.003//dt))).astype(int)
     for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex += int(.5//dt)
+    for ix in range(nx-12):
         traces[ix, timeIndex[ix]] = 1
         
     timeIndex += int(.5//dt)
     for ix in range(nx):
         traces[ix, timeIndex[ix]] = 1
         
-    timeIndex += int(.5//dt)
-    for ix in range(nx):
-        traces[ix, timeIndex[ix]] = 1
-        
-    timeIndex += int(.5//dt)
+    t0 = 1.62
+    timeIndex = (((t0//dt) + np.power(np.arange(nx), 2) / (2*.0035//dt))).astype(int)
     for ix in range(nx):
         traces[ix, timeIndex[ix]] = 1
         
@@ -100,12 +101,12 @@ def generateSynthetic2(source=None, target=None, env=None):
         traces[ix, timeIndex[ix]] = 1
 
     t0 = 2
-    timeIndex = (np.sqrt((t0//dt)**2 + np.power(np.arange(nx), 2) / .001)).astype(int)
+    timeIndex = (((t0//dt) + np.power(np.arange(nx), 2) / (2*.0025//dt))).astype(int)
     for ix in range(nx):
         traces[ix, timeIndex[ix]] = 1
         
     t0 = 2.3
-    timeIndex = (np.sqrt((t0//dt)**2 - np.power(np.arange(nx), 2) / .001)).astype(int)
+    timeIndex = (((t0//dt) - np.power(np.arange(nx), 2) / (2*.0021//dt))).astype(int)
     for ix in range(nx):
         traces[ix, timeIndex[ix]] = 1
         
@@ -133,9 +134,9 @@ def generateSynthetic2(source=None, target=None, env=None):
     for ix in range(nx):
         traces[ix, timeIndex[ix]] = 1
         
-    timeIndex -= int(.3//dt)
-    for ix in range(20):
-        traces[ix, timeIndex[ix]] = 1
+    # timeIndex -= int(.3//dt)
+    # for ix in range(20):
+    #     traces[ix, timeIndex[ix]] = 1
     
     # plt.imshow(traces, aspect='auto', cmap="gray")
     # plt.show()
@@ -148,20 +149,24 @@ def generateSynthetic2(source=None, target=None, env=None):
     out.put('o1', 0)
     out.put('o2', 0)
     out.write(traces)
+    out.close()
+    return 0
 
 Command('synthetic2.rsf', None, action=Action(generateSynthetic2))
 
-Flow('synth2', 'synthetic2.rsf', 'ricker1 freq=.1 | mutter v0=100 x0=5')
+Flow('synth2', 'synthetic2.rsf', 'ricker1 freq=.1 | mutter v0=100 x0=5 | noise seed=2024 var=1e-6')
 
-Result('synth2', 'wiggle transp=y yreverse=y screenwd=5 screenht=10 wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
+Result('synth2', 'wiggle transp=y yreverse=y wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
 
 Flow('synthInt2','synth2','spitz')
 
-Result('synthInt2', 'wiggle transp=y yreverse=y screenwd=5 screenht=10 wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
+Result('synthInt2', 'wiggle transp=y yreverse=y wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
 
-Flow('synthInt2ns','synth2','spitzns')
+Result('synthetic2','Fig/synth2.vpl Fig/synthInt2.vpl','SideBySideAniso')
 
-Result('synthInt2ns', 'wiggle transp=y yreverse=y screenwd=5 screenht=10 wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
+# Flow('synthInt2ns','synth2','spitzns')
+
+# Result('synthInt2ns', 'wiggle transp=y yreverse=y screenwd=5 screenht=10 wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
 
 
 End()
