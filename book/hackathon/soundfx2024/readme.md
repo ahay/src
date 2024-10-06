@@ -17,10 +17,17 @@ Additionally, we have reproduced examples from the paper "Comparisons of Interpo
 * Synthetic data results : ```./synthabma/```
 * Real data results      : ```./real/```
 
-In addition to traditional interpolation methods, our team has explored the implementation of a simple machine learning technique to interpolate the trace. We have utilized fully-connected network to predict the missing seismic traces by training them on a decimated version of the real data.
+In addition to traditional interpolation methods, our team has explored the implementation of a straight-forward machine learning technique to interpolate the trace. We utilize fully-connected network to predict the missing seismic traces by training them on a decimated version of the real data.
+
+* Machine Learning      :  ```SFX_ML.ipynb```
 
 ###  Key milestones
 
 * **Synthetic Data Reproduction**: All synthetic results from Spitz's 1991 paper are meticulously recreated, allowing for validation and exploration of the F-X interpolation method.
 * **Application on real data and comparison with alternate methods**: Reproduced examples from Abma and Kabir's 2005 paper which provide insights into the performance of  interpolation methods and comparison on real data examples, bridging the gap between theory and field application.
-* 
+* **Application of machine leanring**: The trained fully-connected Artificial Neural Netwrok (ANN) is able to reconstruct the missing traces in our real data examples.
+
+### Summary
+
+Our project not only aims to reproduce the methodologies outlined in these papers but also provides a comprehensive resource for researchers and practitioners interested in seismic data interpolation techniques. We believe integrating our project to **Madagascar software package** will allow other researchers to utilize and build upon these results.
+
