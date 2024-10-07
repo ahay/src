@@ -1888,35 +1888,36 @@ pkg['omp'] = {'fedora':'libgomp'}
 
 def omp(context):
     context.Message("checking for OpenMP ... ")
-    LIBS  = path_get(context,'LIBS')
-    CC    = context.env.get('CC','gcc')
-    flags = context.env.get('CFLAGS','')
-    ccflags =  context.env.get('CXXFLAGS','')
-    lflags = context.env.get('LINKFLAGS','')
-    pgcc =  (CC.rfind('pgcc') >= 0)
-    gcc = (CC.rfind('gcc') >= 0)
-    icc = (CC.rfind('icc') >= 0)
-    clang = (CC.rfind('clang') >= 0)
+    LIBS    = path_get(context,'LIBS')
+    CC      = context.env.get('CC','gcc')
+    flags   = context.env.get('CFLAGS','')
+    ccflags = context.env.get('CXXFLAGS','')
+    lflags  = context.env.get('LINKFLAGS','')
+    pgcc    = (CC.rfind('pgcc')  >= 0)
+    gcc     = (CC.rfind('gcc')   >= 0)
+    icc     = (CC.rfind('icc')   >= 0)
+    clang   = (CC.rfind('clang') >= 0)
     if pgcc:
-        CFLAGS = flags + ' -mp'
-        CXXFLAGS = ccflags + ' -mp'
-        LINKFLAGS = lflags + ' -mp'
+        CFLAGS    = flags   + ' -mp'
+        CXXFLAGS  = ccflags + ' -mp'
+        LINKFLAGS = lflags  + ' -mp'
     elif gcc:
         LIBS.append('gomp')
-        CFLAGS = flags + ' -fopenmp'
-        CXXFLAGS = ccflags  + ' -fopenmp'
-        LINKFLAGS = lflags + ' -fopenmp'
+        CFLAGS    = flags   + ' -fopenmp'
+        CXXFLAGS  = ccflags + ' -fopenmp'
+        LINKFLAGS = lflags  + ' -fopenmp'
     elif clang:
-        CFLAGS = flags + ' -fopenmp'
-        CXXFLAGS = ccflags  + ' -fopenmp'
-        LINKFLAGS = lflags + ' -fopenmp'
+        LIBS.append('omp')
+        CFLAGS    = flags   + ' -fopenmp'
+        CXXFLAGS  = ccflags + ' -fopenmp'
+        LINKFLAGS = lflags #+ ' -fopenmp'
     elif icc:
-        CFLAGS = flags + ' -qopenmp -D_OPENMP'
-        CXXFLAGS = ccflags + ' -qopenmp -D_OPENMP'
-        LINKFLAGS = lflags + ' -qopenmp'
+        CFLAGS    = flags   + ' -qopenmp -D_OPENMP'
+        CXXFLAGS  = ccflags + ' -qopenmp -D_OPENMP'
+        LINKFLAGS = lflags  + ' -qopenmp'
     else:
-        CFLAGS = flags
-        CXXFLAGS = ccflags
+        CFLAGS    = flags
+        CXXFLAGS  = ccflags
         LINKFLAGS = lflags
 
     text = '''
@@ -1931,9 +1932,9 @@ def omp(context):
     }
     '''
 
-    context.env['LIBS'] = LIBS
-    context.env['CFLAGS'] = CFLAGS
-    context.env['CXXFLAGS'] = CXXFLAGS
+    context.env['LIBS']      = LIBS
+    context.env['CFLAGS']    = CFLAGS
+    context.env['CXXFLAGS']  = CXXFLAGS
     context.env['LINKFLAGS'] = LINKFLAGS
     res = context.TryLink(text,'.c')
     if res:
