@@ -1911,9 +1911,9 @@ def omp(context):
         LINKFLAGS = lflags  + ' -fopenmp'
     elif clang:
         LIBS.append('omp')
-        CFLAGS    = flags   + ' -fopenmp'
-        CXXFLAGS  = ccflags + ' -fopenmp'
-        LINKFLAGS = lflags  + ' -fopenmp'
+        CFLAGS    = flags  #+ ' -fopenmp'
+        CXXFLAGS  = ccflags#+ ' -fopenmp'
+        LINKFLAGS = lflags #+ ' -fopenmp'
     elif icc:
         CFLAGS    = flags   + ' -qopenmp -D_OPENMP'
         CXXFLAGS  = ccflags + ' -qopenmp -D_OPENMP'
