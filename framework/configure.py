@@ -1888,15 +1888,18 @@ pkg['omp'] = {'fedora':'libgomp'}
 
 def omp(context):
     context.Message("checking for OpenMP ... ")
+
     LIBS    = path_get(context,'LIBS')
     CC      = context.env.get('CC','gcc')
     flags   = context.env.get('CFLAGS','')
     ccflags = context.env.get('CXXFLAGS','')
     lflags  = context.env.get('LINKFLAGS','')
+
     pgcc    = (CC.rfind('pgcc')  >= 0)
     gcc     = (CC.rfind('gcc')   >= 0)
     icc     = (CC.rfind('icc')   >= 0)
     clang   = (CC.rfind('clang') >= 0)
+
     if pgcc:
         CFLAGS    = flags   + ' -mp'
         CXXFLAGS  = ccflags + ' -mp'
@@ -1910,7 +1913,7 @@ def omp(context):
         LIBS.append('omp')
         CFLAGS    = flags   + ' -fopenmp'
         CXXFLAGS  = ccflags + ' -fopenmp'
-        LINKFLAGS = lflags #+ ' -fopenmp'
+        LINKFLAGS = lflags  + ' -fopenmp'
     elif icc:
         CFLAGS    = flags   + ' -qopenmp -D_OPENMP'
         CXXFLAGS  = ccflags + ' -qopenmp -D_OPENMP'
