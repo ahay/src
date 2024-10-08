@@ -1,0 +1,84 @@
+\title{Fundamentals of Signal Processing}
+
+\maketitle
+
+\begin{abstract}
+This chapter reproduces some of the synthetic data examples presented in {\"O}z Yilmaz' Seismic Data Analysis, Chapter 1: Fundamentals of Signal Processing.
+\end{abstract}
+
+\section{The 1-D Fourier Transform}
+\inputdir{sinusoids}
+
+We reproduced the example used by Yilmaz to illustrate how a sinusoidal time function can be described just in terms of its frequency, peak amplitude, and phase. The original figures showed the recorded motion of hypothetical springs when a weight is attached to them. Figure~\ref{fig:frame1} and Figure~\ref{fig:frame3} show the motion for the same spring-weight setup, recorded with a delay of 20 ms for the latter. Figure~\ref{fig:frame2} shows a stiffer spring, which results in a shorter period and a smaller peak amplitude.
+
+The peak amplitudes, periods and lags of the three sinusoidal functions are:
+\begin{itemize}
+    \item Figure~\ref{fig:frame1}: Amplitude - 0.8 u, Period - 0.080 s, Lag -  0 ms
+    \item Figure~\ref{fig:frame2}: Amplitude - 0.4 u, Period - 0.040 s, Lag -  0 ms
+    \item Figure~\ref{fig:frame3}: Amplitude - 0.8 u, Period - 0.080 s, Lag - 20 ms
+\end{itemize}
+
+\multiplot{3}{frame1,frame2,frame3}{width=0.3\textwidth}{Sinusoids from FIG 1.1-1, and their amplitude and phase spectra.}
+
+\pagebreak
+
+\subsection{Frequency Aliasing}
+\inputdir{aliasing}
+
+We reproduced the figures that Yilmaz used to exemplify aliasing: the consequence of sampling below the Nyquist rate.
+
+Figures~\ref{fig:frame1},~\ref{fig:frame2}, and ~\ref{fig:frame3} show sinusoidal functions with different frequencies:
+\begin{itemize}
+    \item Figure~\ref{fig:frame1}:  25  Hz
+    \item Figure~\ref{fig:frame2}:  75  Hz
+    \item Figure~\ref{fig:frame3}: 150  Hz
+\end{itemize}
+
+Figure~\ref{fig:frame4} shows the composition of two sinusoids with frequencies:
+\begin{itemize}
+    \item 12.5 Hz
+    \item 75   Hz
+\end{itemize}
+
+All the functions above are sampled at three different rates:
+\begin{itemize}
+    \item 2 ms
+    \item 4 ms
+    \item 8 ms
+\end{itemize}
+
+\plot{frame1}{width=\textwidth}{25-Hz sinusoid sampled at 2, 4, and 8 ms. As shown on FIG 1.1-7.}
+\plot{frame2}{width=\textwidth}{75-Hz sinusoid sampled at 2, 4, and 8 ms. As shown on FIG 1.1-8.}
+\plot{frame3}{width=\textwidth}{150-Hz sinusoid sampled at 2, 4, and 8 ms. As shown on FIG 1.1-9}
+\plot{frame4}{width=\textwidth}{Sum of a 12.5-Hz and 75-Hz sinusoids sampled at 2, 4, and 8 ms. As shown on FIG 1.1-10}
+
+\pagebreak
+
+\subsection{Phase Considerations}
+\inputdir{phase}
+
+The figures of this subsection show the effects of phase shifts on a time signal.
+
+Figures ~\ref{fig:wavelet-0ms-frame}, ~\ref{fig:wavelet-200ms-frame}, ~\ref{fig:wavelet-90deg-shift-frame}, and ~\ref{fig:wavelet-200ms-90deg-shift-frame} show the summation of sinusoids with frequencies ranging from 1 to 32 Hz to form a wavelet.
+
+Figures ~\ref{fig:figure-1-1-13}, ~\ref{fig:figure-1-1-15}, and ~\ref{fig:figure-1-1-18} show the effects of applying constant and linear phase shifts on zero-phase wavelets.
+
+\plot{wavelet-0ms-frame}{width=\textwidth}{Summation of a discrete number of sinusoids (1-32 Hz) with no phase-lag. As shown on FIG 1.1-11.}
+\plot{wavelet-200ms-frame}{width=\textwidth}{Summation of a discrete number of sinusoids (1-32 Hz) with a constant -0.2 s time-lag. As shown on FIG 1.1-12.}
+\plot{wavelet-90deg-shift-frame}{width=\textwidth}{Summation of a discrete number of sinusoids (1-32 Hz) with a constant 90 degree phase-shift. As shown on FIG 1.1-14.}
+\plot{wavelet-200ms-90deg-shift-frame}{width=\textwidth}{Summation of a discrete number of sinusoids (1-32 Hz) with a constant -0.2 s time-lag and a constant 90 degree phase-shift. As shown on FIG 1.1-17.}
+
+\plot{figure-1-1-13}{width=\textwidth}{Linear phase shifts applied to shift a wavelet in time. As shown on FIG 1.1-13.}
+\plot{figure-1-1-15}{width=\textwidth}{Constant phase shifts applied to a wavelet change its shape. As shown on FIG 1.1-15.}
+\plot{figure-1-1-18}{width=\textwidth}{Effects of applyign both constant and linear phase shifts to a wavelet. As shown on FIG 1.1-18.}
+
+\pagebreak
+
+\subsection{Frequency Filtering}
+\inputdir{freqfiltering}
+
+In Yilmaz' book, this subsection discusses some fundamental ideas about filtering in the frequency domain. However, the synthetic examples presented only illustrate how to produce synthetic wavelets from a summation of a finite set of zero-phase sinusoids, as shown in Figure~\ref{fig:frame-1-1-21}. The key idea that, the wavelets become more compact in time as we increase their frequency bandwith (i.e. the number of sinusoids in the summation).
+
+\plot{frame-1-1-21}{width=\textwidth}{Synthetic wavelet resulting from the summation of different number of zero-phase sinusoids with identical peak amplitudes. In all subfigures, the upper most trace is the resulting wavelet. As shown on FIG 1.1-21.}
+
+Fig 1.1-21 to 1.1-27
