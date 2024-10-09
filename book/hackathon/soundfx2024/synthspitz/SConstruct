@@ -3,6 +3,8 @@ import numpy as np
 import m8r
 import matplotlib.pyplot as plt
 
+# function to generate the synthetic traces (Fig 1a in Spitz., 1991)
+# the function create the gather as numpy array and writes into an RSF file
 
 def generateSynthetic(source=None, target=None, env=None):
     nx = 27
@@ -48,13 +50,20 @@ def generateSynthetic(source=None, target=None, env=None):
 
 Command('synthetic1.rsf', None, action=Action(generateSynthetic))
 
+# Above function creates gather with spikes only, need to convolve with a source wavelet
+# Convolving with a ricker wavelet
+
 Flow('synthetic', 'synthetic1.rsf', 'ricker1 freq=.1 | noise seed=2024 var=1e-6')
 
 Plot('synthetic', 'synthetic', 'wiggle transp=y yreverse=y title=Before poly=y zplot=.25 parallel2=y d1num=0.5 label1=Time label2=Trace unit1=s unit2= wheretitle=t wherexlabel=b')
 
+# F-K spectrum of the gather
+
 Flow('synthFK','synthetic','spectra2')
 
 Result('synthFK','synthFK','window max1=125 | wiggle transp=y yreverse=n xreverse=y screenwd=5 screenht=10 wanttitle=n poly=y plcip=100 parallel2=y d1num=0.5')
+
+# trace interpolation using the FX domain (Fig 1b in Spitz., 1991)
 
 Flow('synthInt','synthetic','spitz verb=y')
 
@@ -72,6 +81,7 @@ Plot('synthIntFK-grey','synthIntFK','window max1=125 | grey transp=y yreverse=n 
 
 Result('FK', 'synthFK-grey synthIntFK-grey','SideBySideAniso')
 
+# function to generate the gather with curved events (Fig 3a in Spitz., 1991)
 
 def generateSynthetic2(source=None, target=None, env=None):
     nx = 48
