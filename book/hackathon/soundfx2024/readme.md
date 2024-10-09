@@ -2,6 +2,8 @@
 
 # Project directory for the SoundFX team
 
+![](SoundFX-Logo.jpg)
+
 ## Overview
 
 The primary objective of our project is to reproduce computations from the influential geophysics paper "Trace Interpolation Using the F-X Domain" by Simon Spitz (1991). Trace interpolation is a crucial step in enhancing the processing of seismic data. Traditional interpolation methods, such as spline or sinc functions, often struggle to prevent spatial aliasing during the interpolation process. Spitz proposed a novel approach utilizing the **Frequency-Time (F-X)** domain, allowing for interpolating regularly sampled data without requiring estimation or prior knowledge of event dips. This method estimates an interpolation operator using a spatial prediction filter derived from the recorded traces.
