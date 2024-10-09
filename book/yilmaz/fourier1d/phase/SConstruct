@@ -1,0 +1,324 @@
+from rsf.proj import *
+
+"""
+This SCons script aims to reproduce Fig 1.1-11 to Fig 1.1-18, presented in Öz Yilmaz' Seismic Data Analysis, Vol 1.
+
+Figures 1.1-11,12,14, and 17 show the summation of sinusoids with frequencies ranging from 1 to 32 Hz to form a wavelet.
+
+Figures 1.1-13,15, and 18 show the effects of applying constant and linear phase shifts on zero-phase wavelets.
+"""
+
+# FUNCTIONS TO COMPUTE WAVELETS AS SINUSOID SUMATIONS ###################################
+"""
+The formulation of both linear and constant phase shifts is more elegant in the Fourier
+domain. However, I am including these functions to illustrate what is happening in the
+time domain. Reproducing Figs 1.1-11,12,14, and 17 with these functions also reduces
+the number of Fourier transforms used.
+"""
+# Wavelets from constant lag sinusoid sumations
+def constant_lag_wavelet(lag):
+        # Sinusoid parameters
+        dt = 0.004 # sampling rate
+        sinusoids = []
+        for i in range(32):
+                isinusoid = 'sinusoid-%ghz-%gms'%(i+1,lag*1000)
+                # Produce sinusoid with frequency of 'i' Hz
+                Flow(isinusoid,None,
+                     '''
+                     math n1=%g d1=%f o1=-0.5
+                     output="cos((x1+%f)*%f*2*(2*asin(1)))" |
+                     put label1="Time" unit1="s"
+                     '''%(1/dt+1,dt,lag,i+1)) # pi is defined as 2*asin(1)
+                sinusoids.append(isinusoid)
+#                Result(isinusoid,'graph title="" screenratio=2'%(i+1)) # uncomment to visualize individual sinusoids
+
+        wavelet = 'wavelet-%gms'%(lag*1000)
+        Flow(wavelet,sinusoids,
+             '''
+             add ${SOURCES[1:32]} | math output=input/32
+             ''')
+        Plot(wavelet,'graph title="" screenratio=1 min2=-1 max2=1')
+        Result(wavelet,'graph title="" screenratio=2 min2=-1 max2=1')
+
+        waveletFrame = wavelet+'-frame'
+        Flow(waveletFrame,[*sinusoids,wavelet],
+             '''
+             cat axis=2 d=1 o=1 ${SOURCES[1:33]} | math output="input+x2"
+             ''')
+        Plot(waveletFrame,'graph title=""')
+        Result(waveletFrame,'graph title=""')
+
+# Wavelets from constant phase shifted sinusoid sumations
+def constant_phase_shift_wavelet(shift):
+        # Sinusoid parameters
+        dt = 0.004 # sampling rate
+        ratio = 360/shift # get ratio between full cycle and shift
+        lags = [1/((i+1)*ratio) for i in range(32)] # get lag in seconds <- (1/(cycles per second*fraction of full cycle))
+        sinusoids = []
+        for i in range(32):
+                isinusoid = 'sinusoid-%ghz-%gdeg-shift'%(i+1,shift)
+                # Produce sinusoid with frequency of 'i' Hz
+                Flow(isinusoid,None,
+                     '''
+                     math n1=%g d1=%f o1=-0.5
+                     output="cos((x1+%f)*%f*2*(2*asin(1)))" |
+                     put label1="Time" unit1="s"
+                     '''%(1/dt+1,dt,lags[i],i+1)) # pi is defined as 2*asin(1)
+                sinusoids.append(isinusoid)
+#                Result(isinusoid,'graph title="" screenratio=2'%(i+1)) # uncomment to visualize individual sinusoids
+
+        wavelet = 'wavelet-%gdeg-shift'%(shift)
+        Flow(wavelet,sinusoids,
+             '''
+             add ${SOURCES[1:32]} | math output=input/32
+             ''')
+        Plot(wavelet,'graph title="" screenratio=1 min2=-1 max2=1')
+        Result(wavelet,'graph title="" screenratio=2 min2=-1 max2=1')
+
+        waveletFrame = wavelet+'-frame'
+        Flow(waveletFrame,[*sinusoids,wavelet],
+             '''
+             cat axis=2 d=1 o=1 ${SOURCES[1:33]} | math output="input+x2"
+             ''')
+        Plot(waveletFrame,'graph title=""')
+        Result(waveletFrame,'graph title=""')
+
+# Wavelets from constant phase shifted sinusoid sumations
+def mixed_phase_shift_wavelet(shift,lag):
+        # Sinusoid parameters
+        dt = 0.004 # sampling rate
+        ratio = 360/shift # get ratio between full cycle and shift
+        lags = [1/((i+1)*ratio)+lag for i in range(32)] # get lag in seconds <- (1/(cycles per second*fraction of full cycle))
+        sinusoids = []
+        for i in range(32):
+                isinusoid = 'sinusoid-%ghz-%gms-%gdeg-shift'%(i+1,lag*1000,shift)
+                # Produce sinusoid with frequency of 'i' Hz
+                Flow(isinusoid,None,
+                     '''
+                     math n1=%g d1=%f o1=-0.5
+                     output="cos((x1+%f)*%f*2*(2*asin(1)))" |
+                     put label1="Time" unit1="s"
+                     '''%(1/dt+1,dt,lags[i],i+1)) # pi is defined as 2*asin(1)
+                sinusoids.append(isinusoid)
+#                Result(isinusoid,'graph title="" screenratio=2'%(i+1)) # uncomment to visualize individual sinusoids
+
+        wavelet = 'wavelet-%gms-%gdeg-shift'%(lag*1000,shift)
+        Flow(wavelet,sinusoids,
+             '''
+             add ${SOURCES[1:32]} | math output=input/32
+             ''')
+        Plot(wavelet,'graph title="" screenratio=1 min2=-1 max2=1')
+        Result(wavelet,'graph title="" screenratio=2 min2=-1 max2=1')
+
+        waveletFrame = wavelet+'-frame'
+        Flow(waveletFrame,[*sinusoids,wavelet],
+             '''
+             cat axis=2 d=1 o=1 ${SOURCES[1:33]} | math output="input+x2"
+             ''')
+        Plot(waveletFrame,'graph title=""')
+        Result(waveletFrame,'graph title=""')
+#########################################################################################
+
+# FUNCTIONS TO APPLY PHASE SHIFTS ON THE FOURIER DOMAIN #################################
+"""
+The functions below apply phase shifts on the Fourier domain.
+Results can be improved.
+"""
+def get_fspectra():
+        ## Fourier transform
+        Flow('fourier','wavelet-0ms','fft1')
+
+        ## Amplitude spectra
+        Flow('fampspectra','fourier',
+             '''
+             math output="2*abs(input)/%g" | real | put label1="Frequency" unit1="Hz"
+             '''%100) # normalized by 2/N
+        Plot('fampspectra',
+             'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=125 min2=0 max2=1')
+        Result('fampspectra',
+               'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=125 min2=0 max2=1')
+
+        ## Phase spectra
+        """
+        This one is trickier. On paper, phi=arg(F(w)). However, arg(z) is not well defined 
+        for |z|=0.
+        Hence, we first compute arg(F), and then we mute the values for which |z|=0.
+        """
+        Flow('argf','fourier',
+             '''
+             math output="arg(input)*90/asin(1)" | real | put label1="Frequency" unit1="Hz"
+             ''') # multiplied by (90/arcsin(1)) to convert phi from radians to degrees
+        Flow('fmask','fampspectra',
+             '''
+             mask min=%f | dd type=float
+             '''%(1/2)) # mask with non-zero values
+        Flow('fphispectra','argf fmask',
+             '''
+             math mask=${SOURCES[1]} output="input*mask"
+             ''')
+        Plot('fphispectra',
+             'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-180 max2=180 d2num=90')
+        Result('fphispectra',
+               'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-180 max2=180 d2num=90')
+
+        Plot('fspectra','fampspectra fphispectra','SideBySideAniso')
+        Result('fspectra','fampspectra fphispectra','SideBySideAniso')
+
+def get_fphispectraFrames():
+        # 2 pi frame
+        Plot('fphispectra-2pi','fphispectra',
+             'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-360 max2=360 d2num=90')
+        Plot('frame-2pi',['fphispectra-2pi','wavelet-0ms'],'OverUnderAniso')
+        Result('frame-2pi',['fphispectra-2pi','wavelet-0ms'],'OverUnderAniso')
+        # 10 pi frame
+        Plot('fphispectra-10pi','fphispectra',
+             'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-1800 max2=1800 d2num=90')
+        Plot('frame-10pi',['fphispectra-10pi','wavelet-0ms'],'OverUnderAniso')
+        Result('frame-10pi',['fphispectra-10pi','wavelet-0ms'],'OverUnderAniso')
+        # 20 pi frame
+        Plot('fphispectra-20pi','fphispectra',
+             'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-3600 max2=3600 d2num=90')
+        Plot('frame-20pi',['fphispectra-20pi','wavelet-0ms'],'OverUnderAniso')
+        Result('frame-20pi',['fphispectra-20pi','wavelet-0ms'],'OverUnderAniso')
+
+# Linear phase shift
+def linear_phase_shift(slope):
+        m = 125/360
+        Flow('fphispectra-%gslope-shift'%(slope*m),'fphispectra',
+             '''
+             math output="input+(%f*x1)"
+             '''%slope)
+        Plot('fphispectra-%gslope-shift'%(slope*m),
+             'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-3600 max2=3600 d2num=1800')
+        Result('fphispectra-%gslope-shift'%(slope*m),
+               'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-3600 max2=3600 d2num=1800')
+
+        Flow('fourier-%gslope-shift-r'%(slope*m),'fampspectra fphispectra-%gslope-shift'%(slope*m),
+             '''
+             math a=${SOURCES[0]} phi=${SOURCES[1]} output="a*cos(phi*asin(1)/90)"
+             n1=129 d1=0.976562 o1=0
+             ''')
+
+        Flow('fourier-%gslope-shift-i'%(slope*m),'fampspectra fphispectra-%gslope-shift'%(slope*m),
+             '''
+             math a=${SOURCES[0]} phi=${SOURCES[1]} output="a*sin(phi*asin(1)/90)"
+             n1=129 d1=0.976562 o1=0
+             ''')
+
+        Flow('fourier-%gslope-shift'%(slope*m),'fourier-%gslope-shift-r fourier-%gslope-shift-i'%(slope*m,slope*m),
+             '''
+             cmplx $SOURCES
+             ''')
+
+        Flow('wavelet-%gslope-shift-fshifted'%(slope*m),'fourier-%gslope-shift'%(slope*m),'fft1 inv=y | math output="input*129"')
+        Plot('wavelet-%gslope-shift-fshifted'%(slope*m),'graph title="" screenratio=1 min2=-1 max2=1')
+        Result('wavelet-%gslope-shift-fshifted'%(slope*m),'graph title="" screenratio=2 min2=-1 max2=1')
+
+        Plot('frame-%gslope-shift'%(slope*m),['fphispectra-%gslope-shift'%(slope*m),'wavelet-%gslope-shift-fshifted'%(slope*m)],'OverUnderAniso')
+        Result('frame-%gslope-shift'%(slope*m),['fphispectra-%gslope-shift'%(slope*m),'wavelet-%gslope-shift-fshifted'%(slope*m)],'OverUnderAniso')
+
+# Constant phase shift
+def constant_phase_shift(shift):
+        Flow('fphispectra-%gdeg-shift'%shift,'fphispectra',
+             '''
+             math output="input+(%f)"
+             '''%shift)
+        Plot('fphispectra-%gdeg-shift'%shift,
+             'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-360 max2=360 d2num=90')
+        Result('fphispectra-%gdeg-shift'%shift,
+               'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-360 max2=360 d2num=90')
+
+        Flow('fourier-%gdeg-shift-r'%shift,'fampspectra fphispectra-%gdeg-shift'%shift,
+             '''
+             math a=${SOURCES[0]} phi=${SOURCES[1]} output="a*cos(phi*asin(1)/90)"
+             n1=129 d1=0.976562 o1=0
+             ''')
+
+        Flow('fourier-%gdeg-shift-i'%shift,'fampspectra fphispectra-%gdeg-shift'%shift,
+             '''
+             math a=${SOURCES[0]} phi=${SOURCES[1]} output="a*sin(phi*asin(1)/90)"
+             n1=129 d1=0.976562 o1=0
+             ''')
+
+        Flow('fourier-%gdeg-shift'%shift,'fourier-%gdeg-shift-r fourier-%gdeg-shift-i'%(shift,shift),
+             '''
+             cmplx $SOURCES
+             ''')
+
+        Flow('wavelet-%gdeg-shift-fshifted'%shift,'fourier-%gdeg-shift'%shift,'fft1 inv=y | math output="input*129"')
+        Plot('wavelet-%gdeg-shift-fshifted'%shift,'graph title="" screenratio=1 min2=-1 max2=1')
+        Result('wavelet-%gdeg-shift-fshifted'%shift,'graph title="" screenratio=2 min2=-1 max2=1')
+
+        Plot('frame-%gdeg-shift'%shift,['fphispectra-%gdeg-shift'%shift,'wavelet-%gdeg-shift-fshifted'%shift],'OverUnderAniso')
+        Result('frame-%gdeg-shift'%shift,['fphispectra-%gdeg-shift'%shift,'wavelet-%gdeg-shift-fshifted'%shift],'OverUnderAniso')
+
+# Mixed phase shift
+def mixed_phase_shift(shift,slope):
+        m = 125/360
+        Flow('fphispectra-%gslope-%gdeg-shift'%(slope*m,shift),'fphispectra',
+             '''
+             math output="input+(%f*x1)+(%f)"
+             '''%(slope,shift))
+        Plot('fphispectra-%gslope-%gdeg-shift'%(slope*m,shift),
+             'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-1800 max2=1800 d2num=1800')
+        Result('fphispectra-%gslope-%gdeg-shift'%(slope*m,shift),
+               'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-1800 max2=1800 d2num=1800')
+
+        Flow('fourier-%gslope-%gdeg-shift-r'%(slope*m,shift),'fampspectra fphispectra-%gslope-%gdeg-shift'%(slope*m,shift),
+             '''
+             math a=${SOURCES[0]} phi=${SOURCES[1]} output="a*cos(phi*asin(1)/90)"
+             n1=129 d1=0.976562 o1=0
+             ''')
+
+        Flow('fourier-%gslope-%gdeg-shift-i'%(slope*m,shift),'fampspectra fphispectra-%gslope-%gdeg-shift'%(slope*m,shift),
+             '''
+             math a=${SOURCES[0]} phi=${SOURCES[1]} output="a*sin(phi*asin(1)/90)"
+             n1=129 d1=0.976562 o1=0
+             ''')
+
+        Flow('fourier-%gslope-%gdeg-shift'%(slope*m,shift),'fourier-%gslope-%gdeg-shift-r fourier-%gslope-%gdeg-shift-i'%(slope*m,shift,slope*m,shift),
+             '''
+             cmplx $SOURCES
+             ''')
+
+        Flow('wavelet-%gslope-%gdeg-shift-fshifted'%(slope*m,shift),'fourier-%gslope-%gdeg-shift'%(slope*m,shift),'fft1 inv=y | math output="input*129"')
+        Plot('wavelet-%gslope-%gdeg-shift-fshifted'%(slope*m,shift),'graph title="" screenratio=1 min2=-1 max2=1')
+        Result('wavelet-%gslope-%gdeg-shift-fshifted'%(slope*m,shift),'graph title="" screenratio=2 min2=-1 max2=1')
+
+        Plot('frame-%gslope-%gdeg-shift'%(slope*m,shift),['fphispectra-%gslope-%gdeg-shift'%(slope*m,shift),'wavelet-%gslope-%gdeg-shift-fshifted'%(slope*m,shift)],'OverUnderAniso')
+        Result('frame-%gslope-%gdeg-shift'%(slope*m,shift),['fphispectra-%gslope-%gdeg-shift'%(slope*m,shift),'wavelet-%gslope-%gdeg-shift-fshifted'%(slope*m,shift)],'OverUnderAniso')
+
+#########################################################################################
+
+# Wavelets from sinusoid sumations
+constant_lag_wavelet(0) 		# Fig 1.1-11; 'wavelet-0ms-frame'
+constant_lag_wavelet(0.2) 		# Fig 1.1-12; 'wavelet-200ms-frame'
+constant_phase_shift_wavelet(90) 	# Fig 1.1-14; 'wavelet-90deg-shift-frame'
+mixed_phase_shift_wavelet(90,0.2)	# Fig 1.1-17; 'wavelet-200ms-90deg-shift-frame'
+
+# Recovering Amplitude & Phase spectra through FFT
+get_fspectra()
+
+# Phase shifts applied on the Fourier domain
+## Fig 1.1-13
+linear_phase_shift(1*360/125) 		# Fig 1.1-13b; 'frame-1slope-shift'
+linear_phase_shift(2*360/125) 		# Fig 1.1-13c; 'frame-2slope-shift'
+linear_phase_shift(4*360/125) 		# Fig 1.1-13d; 'frame-4slope-shift'
+linear_phase_shift(8*360/125) 		# Fig 1.1-13e; 'frame-8slope-shift'
+## Fig 1.1-15
+constant_phase_shift(90)		# Fig 1.1-15b; 'frame-90deg-shift'
+constant_phase_shift(180)		# Fig 1.1-15c; 'frame-180deg-shift'
+constant_phase_shift(270)		# Fig 1.1-15d; 'frame-270deg-shift'
+constant_phase_shift(360)		# Fig 1.1-15e; 'frame-360deg-shift'
+## Fig 1.1-18
+mixed_phase_shift(90,4*360/125)		# Fig 1.1-18b; 'frame-4slope-90deg-shift'
+mixed_phase_shift(-90,-4*360/125)	# Fig 1.1-18c; 'frame--4slope--90deg-shift'
+
+# Final figures of phase shifts applied on the Fourier domain
+## Produce copies of 'fphispectra' with different "zoom"
+get_fphispectraFrames()
+Result('figure-1-1-13',['frame-20pi','frame-1slope-shift','frame-2slope-shift','frame-4slope-shift','frame-8slope-shift'],'SideBySideAniso')
+Result('figure-1-1-15',['frame-2pi','frame-90deg-shift','frame-180deg-shift','frame-270deg-shift','frame-360deg-shift'],'SideBySideAniso')
+Result('figure-1-1-18',['frame-20pi','frame-4slope-90deg-shift','frame--4slope--90deg-shift'],'SideBySideAniso')
+
+End()

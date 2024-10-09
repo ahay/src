@@ -1,0 +1,107 @@
+from rsf.proj import *
+
+"""
+This SCons script aims to reproduce Fig 1.1-7 to Fig 1.1-10, presented in Öz Yilmaz' Seismic Data Analysis, Vol 1.
+
+The first three frames show sinusoidal functions with different frequencies:
+    * 1: Frequency -  25  Hz
+    * 2: Frequency -  75  Hz
+    * 3: Frequency - 150  Hz
+
+The fourth frame shows the composition of two sinusoids with frequencies:
+    * 1: Frequency - 12.5 Hz
+    * 2: Frequency - 75   Hz
+
+All the functions above are sampled at three different rates:
+    * 1: Sampling rate - 2 ms
+    * 2: Sampling rate - 4 ms
+    * 3: Sampling rate - 8 ms
+
+The original figures exemplified aliasing: the consequence of sampling below the Nyquist rate.
+
+*For some reason, the original figures appear to be "smoother" than they should.
+"""
+
+# Sinusoid parameters
+frequency = [25,75,150] 			# frequencies in Hz
+samplingrate = [0.002,0.004,0.008] 		# sampling rates in seconds
+
+for i in range(3):
+    for j in range(3):
+        jrate = samplingrate[j]
+        # Produce sinusoid
+        Flow('sinusoid%g-%gms'%(i+1,jrate*1000),None,
+             '''
+             math n1=%g d1=%f o1=0
+             output="sin(x1*%f*2*(2*asin(1)))" |
+             put label1="Time" unit1="s"
+             '''%(1/jrate+1,jrate,frequency[i])) # pi is defined as 2*asin(1)
+        Plot('sinusoid%g-%gms'%(i+1,jrate*1000),
+             'graph title="Sinusoid %g, sampling rate = %g ms" screenratio=0.75 min1=0 max1=1 min2=-1 max2=1'%(i+1,jrate*1000))
+        Result('sinusoid%g-%gms'%(i+1,jrate*1000),
+               'graph title="Sinusoid %g, sampling rate = %g ms" screenratio=0.5 min1=0 max1=1 min2=-1 max2=1'%(i+1,jrate*1000))
+
+        # Recovering Amplitude spectra through FFT
+        ## Fourier transform
+        fftwindow = int(0.4/jrate) # we window N full cycles
+        Flow('fourier%g-%gms'%(i+1,jrate*1000),'sinusoid%g-%gms'%(i+1,jrate*1000),'window n1=%g | fft1'%fftwindow)
+
+        ## Amplitude spectra
+        Flow('fampspectra%g-%gms'%(i+1,jrate*1000),'fourier%g-%gms'%(i+1,jrate*1000),
+            '''
+            math output="2*abs(input)/%g" | real | put label1="Frequency" unit1="Hz"
+            '''%fftwindow) # normalized by 2/N
+        Plot('fampspectra%g-%gms'%(i+1,jrate*1000),
+             'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=250 min2=0 max2=1')
+        Result('fampspectra%g-%gms'%(i+1,jrate*1000),
+               'graph title="Amplitude Spectrum %g" screenratio=1 min1=0 max1=250 min2=0 max2=1'%(i+1))
+
+        ## Plot side by side
+        Plot('subplot%g-%gms'%(i+1,jrate*1000),'sinusoid%g-%gms fampspectra%g-%gms'%(i+1,jrate*1000,i+1,jrate*1000),
+             'SideBySideAniso')
+        Result('subplot%g-%gms'%(i+1,jrate*1000),'sinusoid%g-%gms fampspectra%g-%gms'%(i+1,jrate*1000,i+1,jrate*1000),
+               'SideBySideAniso')
+
+    Plot('frame%g'%(i+1),['subplot%g-%gms'%(i+1,samplingrate[j]*1000) for j in range(3)],'OverUnderAniso')
+    Result('frame%g'%(i+1),['subplot%g-%gms'%(i+1,samplingrate[j]*1000) for j in range(3)],'OverUnderAniso')
+
+# Composite signal
+for j in range(3):
+    jrate = samplingrate[j]
+    # Produce sinusoid
+    Flow('sinusoid4-%gms'%(jrate*1000),None,
+         '''
+         math n1=%g d1=%f o1=0
+         output="sin(x1*12.5*2*(2*asin(1)))+sin(x1*75*2*(2*asin(1)))" |
+         put label1="Time" unit1="s"
+         '''%(1/jrate+1,jrate)) # pi is defined as 2*asin(1)
+    Plot('sinusoid4-%gms'%(jrate*1000),
+         'graph title="Sinusoid %g, sampling rate = %g ms" screenratio=0.75 min1=0 max1=1 min2=-1 max2=1'%(i+1,jrate*1000))
+    Result('sinusoid4-%gms'%(jrate*1000),
+           'graph title="Sinusoid %g, sampling rate = %g ms" screenratio=0.5 min1=0 max1=1 min2=-1 max2=1'%(i+1,jrate*1000))
+
+    # Recovering Amplitude spectrum through FFT
+    ## Fourier transform
+    fftwindow = int(0.4/jrate) # we window N full cycles
+    Flow('fourier4-%gms'%(jrate*1000),'sinusoid4-%gms'%(jrate*1000),'window n1=%g | fft1'%fftwindow)
+
+    ## Amplitude spectrum
+    Flow('fampspectra4-%gms'%(jrate*1000),'fourier4-%gms'%(jrate*1000),
+         '''
+         math output="2*abs(input)/%g" | real | put label1="Frequency" unit1="Hz"
+         '''%fftwindow) # normalized by 2/N
+    Plot('fampspectra4-%gms'%(jrate*1000),
+         'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=250 min2=0 max2=1')
+    Result('fampspectra4-%gms'%(jrate*1000),
+           'graph title="Amplitude Spectrum %g" screenratio=1 min1=0 max1=250 min2=0 max2=1'%(i+1))
+
+    ## Plot side by side
+    Plot('subplot4-%gms'%(jrate*1000),'sinusoid4-%gms fampspectra4-%gms'%(jrate*1000,jrate*1000),
+         'SideBySideAniso')
+    Result('subplot4-%gms'%(jrate*1000),'sinusoid4-%gms fampspectra4-%gms'%(jrate*1000,jrate*1000),
+           'SideBySideAniso')
+
+Plot('frame4',['subplot4-%gms'%(samplingrate[j]*1000) for j in range(3)],'OverUnderAniso')
+Result('frame4',['subplot4-%gms'%(samplingrate[j]*1000) for j in range(3)],'OverUnderAniso')
+
+End()
