@@ -156,7 +156,7 @@ void zomig_close(void)
 
 /*------------------------------------------------------------*/
 
-void zomig_aloc()
+void zomig_aloc(void)
 /*< allocate migration storage >*/
 {
     qq = sf_floatalloc2(amx.n,amy.n);
@@ -165,7 +165,7 @@ void zomig_aloc()
     }
 }
 
-void zomig_free()
+void zomig_free(void)
 /*< free migration storage >*/
 {
     free( *qq); free( qq);
