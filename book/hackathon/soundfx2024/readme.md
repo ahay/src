@@ -1,8 +1,8 @@
-![](../2024-Geoscience-Hackathon-Logo.jpg)
+<img src="https://github.com/sfomel/JSG-Open-Source-Hackathon-2024/blob/main/logo.png" style="background-color:white;">
 
 # Project directory for the SoundFX team
 
-![](SoundFX-Logo.jpg)
+<img src="SoundFX-logo.png" style="background-color:white;">
 
 ## Overview
 
