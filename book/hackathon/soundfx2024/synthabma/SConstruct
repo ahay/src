@@ -3,6 +3,8 @@ from rsf.recipes.beg import server as private
 
 ###########################################################################
 
+# fetch data used in Abma and Kabir, 2015
+
 for dat in ('curve','linear','random','marm'):
     input = 'input.%s.segy' % dat
     Fetch(input,'ray',private)
@@ -12,11 +14,7 @@ for dat in ('curve','linear','random','marm'):
          ''',stdin=0)
 
 Flow('linear2','linear','window min1=0.5 max1=2.7 | bandpass fhi=60')
-# Plot('linear','linear2',
-#      '''
-#      grey yreverse=y transp=y poly=y label2=Position 
-#      title=Input
-#      ''')
+
 Plot('jlinear','linear2',
      '''
      window n2=11 f2=23 n1=150 min1=1.35 |
@@ -69,18 +67,6 @@ Plot('jlacov','lacov',
 
 Result('linear-comp','linear lacov','SideBySideAniso')
 
-# Stationary F-X PEFs
-# Flow('lfx','lpad',
-#      '''
-#      spitz norm=n verb=y
-#      ''')
-# Plot('lfx',
-#      '''
-#      grey yreverse=y transp=y poly=y label2=Position
-#      title="Adaptive PEF"
-#      ''')
-
-# Result('linear-fxcomp','linear lfx','SideBySideAniso')
 
 Plot('linear','linear2',
      '''
@@ -90,6 +76,7 @@ Plot('linear','linear2',
      title=Input wheretitle=t pclip=100
      ''')
 
+# spitz interoplation
 Flow('linearInt','linear2','spitz')
 
 Plot('linearInt',
@@ -101,6 +88,7 @@ Plot('linearInt',
      title=Spitz wheretitle=t pclip=99
     ''')
 
+# sinc interpolation
 Flow('linear-linInt','linear2',
      '''
      transp |
@@ -131,9 +119,7 @@ Result('FK', 'linearFK linear-linIntFK linearIntFK','SideBySideIso')
 
 Result('linInt','linear-linInt linear-linIntFK','SideBySideAniso')
 
-# Result('int','Fig/linear.vpl Fig/FK.vpl','SideBySideAniso')
-
-#####################
+# test on subset of marmousi model reflectivity
 
 Flow('marm2','marm','window | bandpass fhi=30')
 Plot('marm2',
@@ -142,6 +128,7 @@ Plot('marm2',
      title=Input wheretitle=t pclip=100
      ''')
 
+# sinc
 Flow('marm-linInt','marm2',
      '''
      transp |
@@ -154,6 +141,7 @@ Plot('marm-linInt',
      title="Sinc" wheretitle=t pclip=99 unit2=
      ''')
 
+# spitz
 Flow('marmInt','marm2','spitz')
 Plot('marmInt',
     '''
@@ -167,7 +155,7 @@ Plot('marmInt2',
      wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
      title=FX wheretitle=t pclip=99
     ''')
-
+# non-stationary T-X PEF
 Flow('mpad mmask','marm2','lpad jump=2 mask=${TARGETS[1]}')
 Flow('mdmask','mpad','math output=1.')
 Flow('mapef','mpad mdmask',
