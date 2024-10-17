@@ -808,7 +808,7 @@ class Output(_File):
                 raise TypeError('Unsupported file type %s' % self.type)
                 
 dataserver = os.environ.get('RSF_DATASERVER',
-                            'http://www.reproducibility.org')
+                            'https://ahay.org')
 
 def Fetch(directory,filename,server=dataserver,top='data'):
     'retrieve a file from remote server'

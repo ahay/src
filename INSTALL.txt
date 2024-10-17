@@ -14,9 +14,9 @@ Prerequisites
    platforms. Madagascar supports both Python 2.7 and Python 3.
 
 For more information see:
-http://ahay.org/wiki/Main_Page
-http://ahay.org/wiki/Installation
-http://ahay.org/wiki/Advanced_Installation
+https://ahay.org/wiki/Main_Page
+https://ahay.org/wiki/Installation
+https://ahay.org/wiki/Advanced_Installation
 
 Software construction
 =====================

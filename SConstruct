@@ -313,7 +313,7 @@ To start using madagascar, source env.sh or env.csh from:
     %s/
 Local documentation center at:
     %s/
-Documentation wiki at http://www.ahay.org
+Documentation wiki at https://ahay.org
 ---------------------------------------------------------
 ''' % (etcdir, docdir))
 
