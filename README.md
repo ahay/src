@@ -55,8 +55,3 @@ See the INSTALL.txt document for build instructions.
 While written from scratch, Madagascar borrows ideas from the design of SEPlib, a publicly available software package maintained by Bob Clapp at the Stanford Exploration Project (SEP). Generations of SEP students and researchers contributed to SEPlib. The most significant contributions came from Rob Clayton, Jon Claerbout, Dave Hale, Stew Levin, Rick Ottolini, Joe Dellinger, Steve Cole, Dave Nichols, Martin Karrenbach, Biondo Biondi, and Bob Clapp.
 
 Madagascar was started in 2003 under the name RSF (Regularly Sampled Format) by Sergey Fomel. Since then, many other people have contributed to it. See the AUTHORS.txt file for an incomplete list.
-
- Influence of texture on porosity and permeability of unconsolidated sand (Beard and Weyl, 1973), Quantitative textural analysis (Taylor et al., 2022)
-
-Seismic trace interpolation in the FX domain (Spitz, 1991), Comparisons of interpolation methods (Abma and Kabir, 2005)
-
