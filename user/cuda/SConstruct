@@ -11,8 +11,8 @@ except: # local version
     SConscript('../../api/c/SConstruct')
 
 progs = '''
-gpuktmig
 '''
+# gpuktmig <- compilation problems with CUDA 12
 
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
