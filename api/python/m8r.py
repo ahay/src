@@ -358,7 +358,7 @@ class File(object):
                                (Filter('attr'),attr,self)).read()
             except:
                 raise RuntimeError('trouble running sfattr')
-            m = re.search('=\s*(\S+)',val)
+            m = re.search(r'=\s*(\S+)',val)
             if m:
                 val = float(m.group(1))
             else:
