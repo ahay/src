@@ -91,7 +91,7 @@ if test "$scons" = "no"; then
         dir=`ls -d [Ss][Cc]ons-4.* | grep '[^mz]$'`
         cd $dir
         export PYTHONUSERBASE="$root"
-        $python -m pip install . --user --no-warn-script-location > /dev/null
+        $python -m pip install . --user --no-warn-script-location --break-system-packages > /dev/null
     else 
     # if python version <3
         archive=`ls [Ss][Cc]ons-3.*.tar.gz`
