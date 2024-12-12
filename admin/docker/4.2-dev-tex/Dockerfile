@@ -1,13 +1,14 @@
-# pull ubuntu 18.04 from Docker repo
-FROM ubuntu:18.04
+# pull ubuntu 24.04 from Docker repo
+FROM ubuntu:24.04
 
-MAINTAINER "Zhicheng Geng <zhichenggeng@utexas.com>"
+MAINTAINER "Sergey Fomel <sergey.fomel@gmail.com>"
 
 # install packages for madagascar
 RUN apt-get update && apt-get install -y \
         git \
-        python2.7 \
-        python-pip \
+        python3-full \
+        python-is-python3 \
+        python3-pip \
         openssh-client \
         tar \
         gzip \
@@ -20,9 +21,11 @@ RUN apt-get update && apt-get install -y \
         libblas-dev \
         liblapack-dev \
         swig \
+        python-dev-is-python3 \
+        python3-numpy \
         libxaw7-dev \
         freeglut3-dev \
-        libnetpbm10-dev \
+        libnetpbm11-dev \
         libtiff5-dev \
         libgd-dev \
         libplplot-dev \
@@ -65,7 +68,7 @@ RUN apt-get update && apt-get install -y \
 RUN git clone https://github.com/SEGTeX/texmf $HOME/texmf \
  && texhash
 
-RUN echo 'export RSFROOT="$HOME/RSFROOT"'                   >> $HOME/.bashrc \
+RUN echo 'export RSFROOT="/root/RSFROOT"'                   >> $HOME/.bashrc \
  && echo 'source $RSFROOT/share/madagascar/etc/env.sh'      >> $HOME/.bashrc
 
 WORKDIR /root
