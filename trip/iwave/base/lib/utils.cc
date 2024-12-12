@@ -37,7 +37,7 @@ static MPI_Comm m_rcm = 0;
 
 void* usermalloc_(size_t size)
 {
-#ifdef defined(sun) || defined(__ARM_ARCH)
+#if defined(sun) || defined(__ARM_ARCH)
     return malloc(size);
 #else
     return _mm_malloc(size, 16);
@@ -47,7 +47,7 @@ void* usermalloc_(size_t size)
 
 void userfree_(void *ptr)
 {
-#ifdef defined(sun) || defined(__ARM_ARCH)
+#if defined(sun) || defined(__ARM_ARCH)
     free(ptr); 
 #else
     _mm_free(ptr);
