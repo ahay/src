@@ -7,6 +7,7 @@ Igor Terentyev.
 #include "utils.h"
 
 #ifndef sun
+#if !defined(sun) && !defined(__ARM_ARCH)
 #include <mm_malloc.h>
 #endif
 
