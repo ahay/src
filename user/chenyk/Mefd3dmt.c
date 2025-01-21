@@ -423,11 +423,11 @@ int main(int argc, char* argv[])
         if (!sf_histfloat(Fvp,"d3",&dy)) sf_error("No d3= in input");/* veloctiy model: dy */
     	if (!sf_getint("nb",&nb)) nb=30; /* thickness of ABC layer */
     	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
-		if (jsnap>nt) sf_error("make sure jsnap<=nt");
     	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
     	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
    	if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
     	if (!sf_getint("jsnap",&jsnap)) jsnap=1;	/* interval for snapshots  */
+		if (jsnap>nt) sf_error("make sure jsnap<=nt");
       if(!sf_getfloat("ct",&ct)) ct=0.01;/*for absorbing boundary*/
 
 	if(ifwfd)
