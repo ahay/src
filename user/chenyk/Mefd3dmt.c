@@ -647,24 +647,25 @@ int main(int argc, char* argv[])
 		uvz[sy+nb-1][sx+nb  ][sz+nb+1]-=Mzy*h3/dy/4*wlt[it];*/	
 						
 		/*add moment tensor source on stress*/
-		txx[sy+nb  ][sx+nb  ][sz+nb] +=h3*Mxx*wlt[it];
-		tyy[sy+nb  ][sx+nb  ][sz+nb] +=h3*Myy*wlt[it];
-		tzz[sy+nb  ][sx+nb  ][sz+nb] +=h3*Mzz*wlt[it];
+		/*positive and negative +- changed on 01/21/2025*/
+		txx[sy+nb  ][sx+nb  ][sz+nb] -=h3*Mxx*wlt[it];
+		tyy[sy+nb  ][sx+nb  ][sz+nb] -=h3*Myy*wlt[it];
+		tzz[sy+nb  ][sx+nb  ][sz+nb] -=h3*Mzz*wlt[it];
 		
-		txy[sy+nb  ][sx+nb  ][sz+nb] +=0.25*h3*Mxy*wlt[it];
-		txy[sy+nb  ][sx+nb-1][sz+nb] +=0.25*h3*Mxy*wlt[it]; 
-		txy[sy+nb-1][sx+nb  ][sz+nb] +=0.25*h3*Mxy*wlt[it];
-		txy[sy+nb-1][sx+nb-1][sz+nb] +=0.25*h3*Mxy*wlt[it];
+		txy[sy+nb  ][sx+nb  ][sz+nb] -=0.25*h3*Mxy*wlt[it];
+		txy[sy+nb  ][sx+nb-1][sz+nb] -=0.25*h3*Mxy*wlt[it]; 
+		txy[sy+nb-1][sx+nb  ][sz+nb] -=0.25*h3*Mxy*wlt[it];
+		txy[sy+nb-1][sx+nb-1][sz+nb] -=0.25*h3*Mxy*wlt[it];
 		
-		tyz[sy+nb  ][sx+nb  ][sz+nb ] +=0.25*h3*Myz*wlt[it];
-		tyz[sy+nb  ][sx+nb  ][sz+nb-1]+=0.25*h3*Myz*wlt[it]; 
-		tyz[sy+nb-1][sx+nb  ][sz+nb ] +=0.25*h3*Myz*wlt[it];
-		tyz[sy+nb-1][sx+nb  ][sz+nb-1]+=0.25*h3*Myz*wlt[it];
+		tyz[sy+nb  ][sx+nb  ][sz+nb ] -=0.25*h3*Myz*wlt[it];
+		tyz[sy+nb  ][sx+nb  ][sz+nb-1]-=0.25*h3*Myz*wlt[it]; 
+		tyz[sy+nb-1][sx+nb  ][sz+nb ] -=0.25*h3*Myz*wlt[it];
+		tyz[sy+nb-1][sx+nb  ][sz+nb-1]-=0.25*h3*Myz*wlt[it];
 		
-		txz[sy+nb  ][sx+nb  ][sz+nb] +=0.25*h3*Mxz*wlt[it];
-		txz[sy+nb  ][sx+nb-1][sz+nb] +=0.25*h3*Mxz*wlt[it]; 
-		txz[sy+nb  ][sx+nb  ][sz+nb-1] +=0.25*h3*Mxz*wlt[it];
-		txz[sy+nb  ][sx+nb-1][sz+nb-1] +=0.25*h3*Mxz*wlt[it];
+		txz[sy+nb  ][sx+nb  ][sz+nb] -=0.25*h3*Mxz*wlt[it];
+		txz[sy+nb  ][sx+nb-1][sz+nb] -=0.25*h3*Mxz*wlt[it]; 
+		txz[sy+nb  ][sx+nb  ][sz+nb-1] -=0.25*h3*Mxz*wlt[it];
+		txz[sy+nb  ][sx+nb-1][sz+nb-1] -=0.25*h3*Mxz*wlt[it];
 		
 		forward_uvy_uvx_uvz(uvx, uvy, uvz, txx, tyy, tzz, txz, txy, tyz, rho);
 		forward_txx_tyy_tzz_txz_txy_tyz(uvx, uvy, uvz, txx, tyy, tzz, txz, txy, tyz, vp, vs);
