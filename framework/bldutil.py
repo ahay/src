@@ -72,7 +72,7 @@ def __merge(target=None,source=None,env=None):
 
 def __included(node,env,path):
     file = os.path.basename(str(node))
-    file = re.sub('\.[^\.]+$','',file)
+    file = re.sub(r'\.[^\.]+$','',file)
     contents = node.get_contents()
     includes = __include.findall(contents)
     if file in includes:
