@@ -1,0 +1,183 @@
+from rsf.proj import *
+
+"""
+This SCons script aims to reproduce Fig 1.1-21 to Fig 1.1-?, presented in Öz Yilmaz' Seismic Data Analysis, Vol 1.
+"""
+
+# Get wavelet from summation of sinusoids
+def wavelet(n):
+        wavelet = 'wavelet-%gHz'%(n)
+        Flow(wavelet,sinusoids[:n],
+             '''
+             add ${SOURCES[1:%g]} | math output=input/%g
+             '''%(n,n))
+        Plot(wavelet,'graph title="" screenratio=1 min2=-1 max2=1')
+        Result(wavelet,'graph title="" screenratio=2 min2=-1 max2=1')
+
+        waveletFrame = wavelet+'-frame'
+        Flow(waveletFrame,[*sinusoids[:n],wavelet],
+             '''
+             cat axis=2 d=1 o=1 ${SOURCES[1:%g]} | math output="input+x2"
+             '''%(n+1))
+        Plot(waveletFrame,'graph')
+        Result(waveletFrame,'graph')
+
+# Get boxcar amplitude spectra
+def get_boxcar(freq1,freq2):
+        wavelet = 'wavelet-boxcar-%gHz-%gHz'%(freq1,freq2)
+        fampspectra = 'fampspectra-boxcar-%gHz-%gHz'%(freq1,freq2)
+        fourier = 'fourier-boxcar-%gHz-%gHz'%(freq1,freq2)
+        fampspectra2 = 'fampspectra-'+wavelet
+        fampspectra3 = 'overlay-'+fampspectra2
+        frame = 'famp-n-'+wavelet
+        ## A) Define a boxcar amplitude spectrum...
+        Flow(fampspectra,None,
+             '''
+             math n1=257 d1=0.976562 o1=0 output="1" |
+             put label1="Frequency" unit1="Hz" |
+             cut max1=%g | cut min1=%g
+             '''%(freq1,freq2))
+        Plot(fampspectra,
+             'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=120 min2=0 max2=1.2')
+        Result(fampspectra,
+               'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=120 min2=0 max2=1.2')
+        ## ...and a zero-phase spectrum
+        Flow(fourier+'-r',fampspectra,
+             '''
+             math output="input"
+             n1=257 d1=0.976562 o1=0
+             ''')
+        Flow(fourier+'-i',fampspectra,
+             '''
+             math output="0"
+             n1=257 d1=0.976562 o1=0
+             ''')
+        Flow(fourier,[fourier+'-r',fourier+'-i'],
+             '''
+             cmplx $SOURCES
+             ''')
+        ## B) Apply inverse FFT and obtain a filter operator
+        Flow(wavelet,fourier,'fft1 inv=y | math output="input*257/%g" | put o1=-0.5 | rotate rot1=250'%(freq2-freq1)) # rotate shifts the wavelet to be centered at 0
+        Plot(wavelet,'graph title="" screenratio=1 min1=-0.2 max1=0.2 min2=-1 max2=1')
+        Result(wavelet,'graph title="" screenratio=2 min2=-1 max2=1')
+        ## C) Truncate the operator, and D) Apply forward FFT and compute th amplitude spectrum of the truncated operator
+        Flow(fampspectra2,wavelet,
+             '''
+             window min1=-0.2 max1=0.2 | fft1 |
+             math output="2*abs(input)/%g" | real | put label1="Frequency" unit1="Hz"
+             '''%(512/(freq2-freq1))) # normalized by 2/N
+        Plot(fampspectra2,
+             'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=120 min2=0 max2=1.2')
+        Result(fampspectra2,
+               'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=120 min2=0 max2=1.2')
+        ## Overlay amplitude spectra
+        Plot(fampspectra3,[fampspectra, fampspectra2],'Overlay')
+        Result(fampspectra3,[fampspectra, fampspectra2],'Overlay')
+        ## Plot wavelets and amplitude spectra
+        Plot(frame,[wavelet, fampspectra3],'OverUnderAniso')
+        Result(frame,[wavelet, fampspectra3],'OverUnderAniso')
+
+# Apply boxcar filter
+def get_trapezoidal(freq1,freq2,freq3,freq4):
+        # Multiply wavelet amplitude spectra by
+        pass
+
+# Get wavelet's Fourier spectra
+def get_fspectra(freq):
+        ## File names
+        wavelet = 'wavelet-%gHz'%(freq)
+        fourier = 'fourier-'+wavelet
+        argf = 'argf-'+wavelet
+        fmask = 'fmask-'+wavelet
+        fampspectra = 'fampspectra-'+wavelet
+        fphispectra = 'fphispectra-'+wavelet
+        fspectra = 'fspectra-'+wavelet
+        frame = 'famp-n-'+wavelet
+        ## Fourier transform
+        Flow('fourier-'+wavelet,wavelet,'fft1')
+
+        ## Amplitude spectra
+        Flow(fampspectra,fourier,
+             '''
+             math output="2*abs(input)/%g" | real | put label1="Frequency" unit1="Hz"
+             '''%(512/freq)) # normalized by 2/N
+        Plot(fampspectra,
+             'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=120 min2=0 max2=1.2')
+        Result(fampspectra,
+               'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=120 min2=0 max2=1.2')
+
+        ## Phase spectra
+        """
+        This one is trickier. On paper, phi=arg(F(w)). However, arg(z) is not well defined 
+        for |z|=0.
+        Hence, we first compute arg(F), and then we mute the values for which |z|=0.
+        """
+        Flow(argf,fourier,
+             '''
+             math output="arg(input)*90/asin(1)" | real | put label1="Frequency" unit1="Hz"
+             ''') # multiplied by (90/arcsin(1)) to convert phi from radians to degrees
+        Flow(fmask,fampspectra,
+             '''
+             mask min=%f | dd type=float
+             '''%(1/2)) # mask with non-zero values
+        Flow(fphispectra,[argf, fmask],
+             '''
+             math mask=${SOURCES[1]} output="input*mask"
+             ''')
+        Plot(fphispectra,
+             'graph title="Phase Spectrum" screenratio=1 min1=0 max1=120 min2=-180 max2=180 d2num=90')
+        Result(fphispectra,
+               'graph title="Phase Spectrum" screenratio=1 min1=0 max1=120 min2=-180 max2=180 d2num=90')
+
+        ## Plot Fourier spectra
+        Plot(fspectra,[fampspectra, fphispectra],'SideBySideAniso')
+        Result(fspectra,[fampspectra, fphispectra],'SideBySideAniso')
+
+        ## Plot wavelets and amplitude spectra
+        Plot(frame,[wavelet, fampspectra],'OverUnderAniso')
+        Result(frame,[wavelet, fampspectra],'OverUnderAniso')
+
+# Compute sinusoids up to Nyquist frequency (i.e. 125 Hz)
+nfreq = 125
+dt = 0.002 # sampling rate; should be 0.004, but we will double the sampling rate for the next example
+sinusoids = []
+for i in range(nfreq):
+        isinusoid = 'sinusoid-%ghz'%(i+1)
+        # Produce sinusoid with frequency of 'i' Hz
+        Flow(isinusoid,None,
+             '''
+             math n1=%g d1=%f o1=-0.5
+             output="cos(x1*%f*2*(2*asin(1)))" |
+             put label1="Time" unit1="s"
+             '''%(1/dt+1,dt,i+1)) # pi is defined as 2*asin(1)
+        sinusoids.append(isinusoid)
+#                Result(isinusoid,'graph title="" screenratio=2'%(i+1)) # uncomment to visualize individual sinusoids
+
+# Fig 1.1-21
+wavelet(2)	# 'wavelet-2Hz-frame'
+wavelet(4)	# 'wavelet-4Hz-frame'
+wavelet(8)	# 'wavelet-8Hz-frame'
+wavelet(16)	# 'wavelet-16Hz-frame'
+wavelet(32)	# 'wavelet-32Hz-frame'
+Result('frame-1-1-21',['wavelet-2Hz-frame','wavelet-4Hz-frame','wavelet-8Hz-frame','wavelet-16Hz-frame','wavelet-32Hz-frame'],'SideBySideAniso')
+# Fig 1.1-22
+wavelet(125)	# 'wavelet-125Hz-frame'
+Result('frame-1-1-22b',['wavelet-2Hz-frame','wavelet-4Hz-frame','wavelet-8Hz-frame','wavelet-16Hz-frame','wavelet-32Hz-frame','wavelet-125Hz-frame'],'SideBySideAniso') # own interpretation; not in the original
+
+# Fig 1.1-23
+wavelet(30)	# 'wavelet-30Hz-frame'
+get_fspectra(30)# 'famp-n-wavelet-30Hz'
+wavelet(40)	# 'wavelet-40Hz-frame'
+get_fspectra(40)# 'famp-n-wavelet-40Hz'
+wavelet(50)	# 'wavelet-50Hz-frame'
+get_fspectra(50)# 'famp-n-wavelet-50Hz'
+wavelet(60)	# 'wavelet-60Hz-frame'
+get_fspectra(60)# 'famp-n-wavelet-60Hz'
+wavelet(70)	# 'wavelet-70Hz-frame'
+get_fspectra(70)# 'famp-n-wavelet-70Hz'
+Result('frame-1-1-23',['famp-n-wavelet-30Hz','famp-n-wavelet-40Hz','famp-n-wavelet-50Hz','famp-n-wavelet-60Hz','famp-n-wavelet-70Hz'],'SideBySideAniso')
+
+# Boxcars
+get_boxcar(1,30)
+
+End()

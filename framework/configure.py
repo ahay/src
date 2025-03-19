@@ -376,6 +376,13 @@ def cc(context):
             if os.path.isdir('/sw/lib'):
                 context.env['LIBPATH'] = path_get(context,'LIBPATH',
                                                   '/sw/lib')
+        if os.path.isdir('/opt/homebrew'):  # paths for Homebrew
+            if os.path.isdir('/opt/homebrew/include'):
+                context.env['CPPPATH'] = path_get(context, 'CPPPATH',
+                                                  '/opt/homebrew/include')
+            if os.path.isdir('/opt/homebrew/lib'):
+                context.env['LIBPATH'] = path_get(context, 'LIBPATH',
+                                                  '/opt/homebrew/lib')
         if os.path.isdir('/usr/local/Homebrew'):  # paths for Homebrew
             if os.path.isdir('/usr/local/include'):
                 context.env['CPPPATH'] = path_get(context, 'CPPPATH',
@@ -693,7 +700,7 @@ pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
                  'fedora':'netpbm-devel',
                  'centos':'netpbm-devel',
                  'suse'  :'libnetpbm-devel',
-                 'ubuntu':'libnetpbm10-dev'}
+                 'ubuntu':'libnetpbm11-dev'}
 
 def ppm(context):
     context.Message("checking for ppm ... ")
@@ -899,6 +906,7 @@ def ffmpeg(context):
     else:
         for top in ('/usr/include','/usr/local/include',
                     '/usr/include/x86_64-linux-gnu/',
+                    '/usr/include/aarch64-linux-gnu/',
                     '/sw/include','/opt/local/include',
                     '/usr/include/ffmpeg'):
             ffmpegpath = os.path.join(top,'ffmpeg')
@@ -1888,35 +1896,39 @@ pkg['omp'] = {'fedora':'libgomp'}
 
 def omp(context):
     context.Message("checking for OpenMP ... ")
-    LIBS  = path_get(context,'LIBS')
-    CC    = context.env.get('CC','gcc')
-    flags = context.env.get('CFLAGS','')
-    ccflags =  context.env.get('CXXFLAGS','')
-    lflags = context.env.get('LINKFLAGS','')
-    pgcc =  (CC.rfind('pgcc') >= 0)
-    gcc = (CC.rfind('gcc') >= 0)
-    icc = (CC.rfind('icc') >= 0)
-    clang = (CC.rfind('clang') >= 0)
+
+    LIBS    = path_get(context,'LIBS')
+    CC      = context.env.get('CC','gcc')
+    flags   = context.env.get('CFLAGS','')
+    ccflags = context.env.get('CXXFLAGS','')
+    lflags  = context.env.get('LINKFLAGS','')
+
+    pgcc    = (CC.rfind('pgcc')  >= 0)
+    gcc     = (CC.rfind('gcc')   >= 0)
+    icc     = (CC.rfind('icc')   >= 0)
+    clang   = (CC.rfind('clang') >= 0)
+
     if pgcc:
-        CFLAGS = flags + ' -mp'
-        CXXFLAGS = ccflags + ' -mp'
-        LINKFLAGS = lflags + ' -mp'
+        CFLAGS    = flags   + ' -mp'
+        CXXFLAGS  = ccflags + ' -mp'
+        LINKFLAGS = lflags  + ' -mp'
     elif gcc:
         LIBS.append('gomp')
-        CFLAGS = flags + ' -fopenmp'
-        CXXFLAGS = ccflags  + ' -fopenmp'
-        LINKFLAGS = lflags + ' -fopenmp'
+        CFLAGS    = flags   + ' -fopenmp'
+        CXXFLAGS  = ccflags + ' -fopenmp'
+        LINKFLAGS = lflags  + ' -fopenmp'
     elif clang:
-        CFLAGS = flags + ' -fopenmp'
-        CXXFLAGS = ccflags  + ' -fopenmp'
-        LINKFLAGS = lflags + ' -fopenmp'
+        LIBS.append('omp')
+        CFLAGS    = flags  #+ ' -fopenmp'
+        CXXFLAGS  = ccflags#+ ' -fopenmp'
+        LINKFLAGS = lflags #+ ' -fopenmp'
     elif icc:
-        CFLAGS = flags + ' -qopenmp -D_OPENMP'
-        CXXFLAGS = ccflags + ' -qopenmp -D_OPENMP'
-        LINKFLAGS = lflags + ' -qopenmp'
+        CFLAGS    = flags   + ' -qopenmp -D_OPENMP'
+        CXXFLAGS  = ccflags + ' -qopenmp -D_OPENMP'
+        LINKFLAGS = lflags  + ' -qopenmp'
     else:
-        CFLAGS = flags
-        CXXFLAGS = ccflags
+        CFLAGS    = flags
+        CXXFLAGS  = ccflags
         LINKFLAGS = lflags
 
     text = '''
@@ -1931,9 +1943,9 @@ def omp(context):
     }
     '''
 
-    context.env['LIBS'] = LIBS
-    context.env['CFLAGS'] = CFLAGS
-    context.env['CXXFLAGS'] = CXXFLAGS
+    context.env['LIBS']      = LIBS
+    context.env['CFLAGS']    = CFLAGS
+    context.env['CXXFLAGS']  = CXXFLAGS
     context.env['LINKFLAGS'] = LINKFLAGS
     res = context.TryLink(text,'.c')
     if res:
@@ -2194,9 +2206,9 @@ def f77(context):
     oldlink = context.env.get('LINK')
     context.env['LINK'] = F77
     res = context.TryLink(text,'.f')
-    context.env['LINK'] = oldlink
     context.Result(res)
     if not res:
+        context.env['LINK'] = oldlink
         del context.env['F77']
         sys.exit(unix_failure)
     F77base = os.path.basename(F77)

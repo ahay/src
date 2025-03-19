@@ -358,7 +358,7 @@ class File(object):
                                (Filter('attr'),attr,self)).read()
             except:
                 raise RuntimeError('trouble running sfattr')
-            m = re.search('=\s*(\S+)',val)
+            m = re.search(r'=\s*(\S+)',val)
             if m:
                 val = float(m.group(1))
             else:
@@ -808,7 +808,7 @@ class Output(_File):
                 raise TypeError('Unsupported file type %s' % self.type)
                 
 dataserver = os.environ.get('RSF_DATASERVER',
-                            'http://www.reproducibility.org')
+                            'https://ahay.org')
 
 def Fetch(directory,filename,server=dataserver,top='data'):
     'retrieve a file from remote server'

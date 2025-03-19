@@ -1,0 +1,177 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+###########################################################################
+
+# fetch data used in Abma and Kabir, 2015
+
+for dat in ('curve','linear','random','marm'):
+    input = 'input.%s.segy' % dat
+    Fetch(input,'ray',private)
+    Flow([dat,'./A'+dat,'./B'+dat],input,
+         '''
+         segyread tape=$SOURCE read=d hfile=${TARGETS[1]} bfile=${TARGETS[2]}
+         ''',stdin=0)
+
+Flow('linear2','linear','window min1=0.5 max1=2.7 | bandpass fhi=60')
+
+Plot('jlinear','linear2',
+     '''
+     window n2=11 f2=23 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title=Input wheretitle=b clip=0.0451806 labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2
+     ''')
+
+# nonstationary PWD
+Flow('lindip','linear2','twodip2 order=3 nj1=4 nj2=4 eps=10 gauss=n')
+Flow('lindip2','lindip',
+     'transp | spline n1=240 o1=0 d1=0.25 | transp')
+
+Flow('lin4 linones4','linear2','lpad jump=4 mask=${TARGETS[1]}')
+Flow('lindeal','lin4 lindip2 linones4',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} order=3 verb=y')
+Plot('lindeal','grey yreverse=y transp=y poly=y title=Interpolated')
+
+Result('linear-deal','linear lindeal','SideBySideAniso')
+
+# Stationary T-X PEFs
+Flow('lpef llag','linear2','lpef lag=${TARGETS[1]} a=10,4 jump=4')
+Flow('lscov','lpad lmask lpef',
+     'miss padin=4 filt=${SOURCES[2]} mask=${SOURCES[1]} prec=n')
+Plot('lscov',
+     'grey yreverse=y transp=y poly=y title="Stationary PEF"')
+
+Result('linear-scomp','linear lscov','SideBySideAniso')
+
+# Nonstationary T-X PEFs
+Flow('lpad lmask','linear2','lpad jump=2 mask=${TARGETS[1]}')
+Flow('lapef','lpad','apef a=15,4 jump=2 rect1=20 rect2=5 niter=200 verb=y')
+Flow('lacov','lpad lapef lmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Plot('lacov',
+     '''
+     grey yreverse=y transp=y poly=y label2=Position
+     title="Adaptive PEF"
+     ''')
+
+Plot('jlacov','lacov',
+     '''
+     window n2=22 f2=46 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1=Sample unit1= |
+     wiggle yreverse=y transp=y poly=y label2=Position wherexlabel=t
+     title="Adaptive PEF" wheretitle=b clip=0.0225903 labelsz=5. titlesz=7
+     labelfat=2 font=2 titlefat=2 screenratio=1.2
+     ''')
+
+Result('linear-comp','linear lacov','SideBySideAniso')
+
+
+Plot('linear','linear2',
+     '''
+     window n2=11 f2=23 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1="Sample #" unit1= |
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=Input wheretitle=t pclip=100
+     ''')
+
+# spitz interoplation
+Flow('linearInt','linear2','spitz')
+
+Plot('linearInt',
+    '''
+     put d2=1 |
+     window n2=22 f2=46 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1="Sample #" unit1= |
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=Spitz wheretitle=t pclip=99
+    ''')
+
+# sinc interpolation
+Flow('linear-linInt','linear2',
+     '''
+     transp |
+     sinc n1=119 d1=0.5 o1=0 |
+     transp
+     ''')
+
+Plot('linear-linInt',
+     '''
+     put d2=1 |
+     window n2=22 f2=46 n1=150 min1=1.35 |
+     put d1=1 o1=675 label1="Sample #" unit1= |
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title="Sinc" wheretitle=t pclip=99 unit2=
+     ''')
+
+Result('linear','linear linear-linInt linearInt','SideBySideIso')
+
+Flow('linearIntFK','linearInt','spectra2')
+Flow('linearFK','linear2','spectra2')
+Flow('linear-linIntFK','linear-linInt','spectra2')
+
+Plot('linearFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Input parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+Plot('linearIntFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Spitz parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+Plot('linear-linIntFK','window max1=125 | grey transp=y yreverse=n xreverse=n title=Sinc parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+
+Result('FK', 'linearFK linear-linIntFK linearIntFK','SideBySideIso')
+
+Result('linInt','linear-linInt linear-linIntFK','SideBySideAniso')
+
+# test on subset of marmousi model reflectivity
+
+Flow('marm2','marm','window | bandpass fhi=30')
+Plot('marm2',
+     '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=Input wheretitle=t pclip=100
+     ''')
+
+# sinc
+Flow('marm-linInt','marm2',
+     '''
+     transp |
+     sinc n1=79 d1=0.5 o1=0 |
+     transp
+     ''')
+Plot('marm-linInt',
+     '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title="Sinc" wheretitle=t pclip=99 unit2=
+     ''')
+
+# spitz
+Flow('marmInt','marm2','spitz')
+Plot('marmInt',
+    '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=FX wheretitle=t pclip=99
+    ''')
+
+Flow('marmInt2','marm2','spitzns k2=7 w2=10')
+Plot('marmInt2',
+    '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=FX wheretitle=t pclip=99
+    ''')
+# non-stationary T-X PEF
+Flow('mpad mmask','marm2','lpad jump=2 mask=${TARGETS[1]}')
+Flow('mdmask','mpad','math output=1.')
+Flow('mapef','mpad mdmask',
+     '''
+     apef a=7,5 jump=2 rect1=40 rect2=30 niter=400 verb=y
+     maskin=${SOURCES[1]}
+     ''')
+Flow('macov','mpad mapef mmask',
+     'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} niter=400 verb=y')
+
+Plot('macov',
+    '''
+     wiggle yreverse=y transp=y poly=y label2="Trace #" wherexlabel=b
+     title=TX wheretitle=t pclip=99
+    ''')
+
+Result('marm','marm2 marmInt2 macov','SideBySideIso')
+
+End()

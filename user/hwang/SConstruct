@@ -7,7 +7,7 @@ try:
 except:
     # SConscript('../../api/c/SConstruct')
     SConscript('../lexing/SConstruct')
-    # SConscript('../../su/lib/SConstruct')
+    SConscript('../../su/lib/SConstruct')
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')
     bindir = libdir = pkgdir = None
@@ -24,7 +24,7 @@ else:
 
 cprogs = '''permwave2d'''
 ccprogs = '''permlr2ddti'''
-cuprogs = '''awefd3dgpu'''
+cuprogs = '' # '''awefd3dgpu''' <- problem compiling with CUDA 12
 cmpiprogs = '''mpitransp'''
 
 #--------------------------------------------------------------------------
@@ -77,10 +77,11 @@ nvcc = env.get('NVCC')
 
 env_cu.Replace(CXX=nvcc,CXXFLAGS=cuflags,LINKFLAGS=culinkflags,LIBS=culibs)
 #------
-cutargets = bldutil.HuiSconsTargets(cufiles=cuprogs)
-if nvcc:
-    cutargets.has_nvcc = True
-cutargets.build_cu(env_cu, glob_build, srcroot, bindir, libdir, pkgdir)
+if cuprogs:
+    cutargets = bldutil.HuiSconsTargets(cufiles=cuprogs)
+    if nvcc:
+        cutargets.has_nvcc = True
+    cutargets.build_cu(env_cu, glob_build, srcroot, bindir, libdir, pkgdir)
 
 # ------------------------ COMPILE C MPI PROGRAMS ---------------------------
 cmpiflags = env.get('CFLAGS')

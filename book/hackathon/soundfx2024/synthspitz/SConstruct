@@ -1,0 +1,182 @@
+from rsf.proj import *
+import numpy as np
+import m8r
+import matplotlib.pyplot as plt
+
+# function to generate the synthetic traces (Fig 1a in Spitz., 1991)
+# the function create the gather as numpy array and writes into an RSF file
+
+def generateSynthetic(source=None, target=None, env=None):
+    nx = 27
+    dt = .001
+    nt = int(2 // dt) + 1
+    traces = np.zeros((nx, nt))
+    timeIndex = np.arange(381, 1006, 24, dtype=int)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex = np.arange(526, 735, 8, dtype=int) #np.linspace(.525//dt + 1, .73//dt + 1, 27, dtype=int)
+    # print(timeIndex[25])
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex = np.flip(np.arange(801, 1634, 32, dtype=int))
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        traces[ix, timeIndex[ix]-int(.025//dt)] = 1
+        traces[ix, timeIndex[ix]-int(.05//dt)] = 1
+    
+    # plt.imshow(traces, aspect='auto', cmap="gray")
+    # plt.show()
+    
+    np.random.seed(2024)
+    indx1 = np.random.randint(100, nt-100, size=45)
+    indx2 = np.random.randint(0, nx-1, size=45)
+    
+    for i in range(45):
+        traces[indx2[i], indx1[i]] = 1
+    
+    
+    out = m8r.Output(str(target[0]))
+    out.put('n1', nt)
+    out.put('n2', nx)
+    out.put('d1', dt)
+    out.put('d2', 1)
+    out.put('o1', 0)
+    out.put('o2', 0)
+    out.write(traces)
+    out.close()
+    return 0
+
+Command('synthetic1.rsf', None, action=Action(generateSynthetic))
+
+# Above function creates gather with spikes only, need to convolve with a source wavelet
+# Convolving with a ricker wavelet
+
+Flow('synthetic', 'synthetic1.rsf', 'ricker1 freq=.1 | noise seed=2024 var=1e-6')
+
+Plot('synthetic', 'synthetic', 'wiggle transp=y yreverse=y title=Before poly=y zplot=.25 parallel2=y d1num=0.5 label1=Time label2=Trace unit1=s unit2= wheretitle=t wherexlabel=b')
+
+# F-K spectrum of the gather
+
+Flow('synthFK','synthetic','spectra2')
+
+Result('synthFK','synthFK','window max1=125 | wiggle transp=y yreverse=n xreverse=y screenwd=5 screenht=10 wanttitle=n poly=y plcip=100 parallel2=y d1num=0.5')
+
+# trace interpolation using the FX domain (Fig 1b in Spitz., 1991)
+
+Flow('synthInt','synthetic','spitz verb=y')
+
+Plot('synthInt', 'wiggle transp=y yreverse=y title=After poly=y zplot=.25 parallel2=y d1num=0.5 label1=Time label2=Trace unit1=s unit2= wheretitle=t wherexlabel=b')
+
+Result('synth','synthetic synthInt','SideBySideAniso')
+
+Flow('synthIntFK','synthInt','spectra2')
+
+Result('synthIntFK','window max1=125 | wiggle transp=y yreverse=n xreverse=y screenwd=5 screenht=10 wanttitle=n poly=y plcip=100 parallel2=y d1num=0.5')
+
+Plot('synthFK-grey','synthFK','window max1=125 | grey transp=y yreverse=n xreverse=y title=Before parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+
+Plot('synthIntFK-grey','synthIntFK','window max1=125 | grey transp=y yreverse=n xreverse=y title=After parallel2=y d1num=0.5 label1=Frequency label2="Wave number" unit1=Hz unit2=cycles wheretitle=t wherexlabel=b allpos=y')
+
+Result('FK', 'synthFK-grey synthIntFK-grey','SideBySideAniso')
+
+# function to generate the gather with curved events (Fig 3a in Spitz., 1991)
+
+def generateSynthetic2(source=None, target=None, env=None):
+    nx = 48
+    dt = .001
+    nt = int(2.5 // dt) + 2
+    traces = np.zeros((nx, nt))
+    t0 = .1
+    timeIndex = (((t0//dt) + np.power(np.arange(nx), 2) / (2*.003//dt))).astype(int)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex += int(.5//dt)
+    for ix in range(nx-12):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex += int(.5//dt)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    t0 = 1.62
+    timeIndex = (((t0//dt) + np.power(np.arange(nx), 2) / (2*.0035//dt))).astype(int)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex += int(.5//dt)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+
+    t0 = 2
+    timeIndex = (((t0//dt) + np.power(np.arange(nx), 2) / (2*.0025//dt))).astype(int)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    t0 = 2.3
+    timeIndex = (((t0//dt) - np.power(np.arange(nx), 2) / (2*.0021//dt))).astype(int)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex -= int(.3//dt)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex -= int(.3//dt)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex -= int(.3//dt)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex -= int(.3//dt)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex -= int(.3//dt)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    timeIndex -= int(.3//dt)
+    for ix in range(nx):
+        traces[ix, timeIndex[ix]] = 1
+        
+    # timeIndex -= int(.3//dt)
+    # for ix in range(20):
+    #     traces[ix, timeIndex[ix]] = 1
+    
+    # plt.imshow(traces, aspect='auto', cmap="gray")
+    # plt.show()
+    
+    out = m8r.Output(str(target[0]))
+    out.put('n1', nt)
+    out.put('n2', nx)
+    out.put('d1', dt)
+    out.put('d2', 1)
+    out.put('o1', 0)
+    out.put('o2', 0)
+    out.write(traces)
+    out.close()
+    return 0
+
+Command('synthetic2.rsf', None, action=Action(generateSynthetic2))
+
+Flow('synth2', 'synthetic2.rsf', 'ricker1 freq=.1 | mutter v0=100 x0=5 | noise seed=2024 var=1e-6')
+
+Result('synth2', 'wiggle transp=y yreverse=y wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
+
+Flow('synthInt2','synth2','spitz')
+
+Result('synthInt2', 'wiggle transp=y yreverse=y wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
+
+Result('synthetic2','Fig/synth2.vpl Fig/synthInt2.vpl','SideBySideAniso')
+
+# Flow('synthInt2ns','synth2','spitzns')
+
+# Result('synthInt2ns', 'wiggle transp=y yreverse=y screenwd=5 screenht=10 wanttitle=n poly=y zplot=.25 parallel2=y d1num=0.5')
+
+
+End()

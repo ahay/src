@@ -1,0 +1,16 @@
+from rsf.book import *
+from rsf.tex import Paper
+
+chapters=Split(
+'''
+fourier1d
+''')
+
+Book(chapters,
+     author='TCCS Apocrypha',
+     title="Reproducing Oz Yilmaz' Seismic Data Analysis")
+
+Paper('intro')
+
+End(options='book',
+   use='graphicx,color,amsmath,amssymb,amsbsy,hyperref,listings,framed,tabularx')

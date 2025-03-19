@@ -47,7 +47,10 @@ if env.get('SWIG') and env.get('NUMPY'):
         import numpy
         numpy_loc = os.path.split(numpy.__file__)[0]
         pythinc.append(os.path.join(numpy_loc,'numarray','numpy'))
-        pythinc.append(os.path.join(numpy_loc,'core','include'))
+        if int(numpy.__version__.split(".")[0]) >=2:
+            pythinc.append(os.path.join(numpy_loc,'_core','include'))
+        else:
+            pythinc.append(os.path.join(numpy_loc,'core','include'))
     except:
         print("\n\n\tPlease install numpy\n\n")
         Exit(1)

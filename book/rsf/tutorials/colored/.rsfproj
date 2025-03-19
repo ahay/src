@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfgrey', 'sflas2rsf', 'sfheadermath', 'sfcmplx', 'sfgraph', 'sftransp', 'sflinear', 'sfinttest1', 'sfcat', 'sfspline', 'sfput', 'sfspectra', 'sfmath', 'sflinefit', 'sflsfit', 'sfmatmult', 'sfstack']
+data=['https://raw.githubusercontent.com/seg/tutorials-2017/master/1710_Colored_inversion/data/Ai_inline362_horizons.dat', 'https://raw.githubusercontent.com/seg/tutorials-2017/master/1710_Colored_inversion/data/All_wells_RawData/Lasfiles/F02-1_logs.las', 'https://raw.githubusercontent.com/seg/tutorials-2017/master/1710_Colored_inversion/data/All_wells_RawData/DT_model/F02-1_TD.txt', 'https://raw.githubusercontent.com/seg/tutorials-2017/master/1710_Colored_inversion/data/export_inline362.ascii']
+size=    2396444

@@ -1,0 +1,77 @@
+from rsf.proj import *
+
+"""
+This SCons script aims to reproduce the subfigures of Fig 1.1-1, presented in Öz Yilmaz' Seismic Data Analysis, Vol 1.
+
+We produce three sinusoidal functions with different peak amplitudes, periods and lags:
+    * 1: Amplitude - 0.8 u, Period - 0.080 s, Lag -  0 ms
+    * 2: Amplitude - 0.4 u, Period - 0.040 s, Lag -  0 ms
+    * 3: Amplitude - 0.8 u, Period - 0.080 s, Lag - 20 ms
+
+The original figure showed the recorded motion of hypothetical springs when a weight is attached to them. Sinusoids 1 and 3 represent the same spring-weight setup, but recorded with a delay of 20 ms. Sinusoid 2 represent a stiffer spring, which results in a shorter period and a smaller peak amplitude.
+
+This hypothetical experiment was used by Yilmaz to exemplify how a sinusoidal time function can be described just in terms of its frequency, peak amplitude, and phase.
+"""
+
+# Sinusoid parameters
+amplitude = [0.8,0.4,0.8] 	# peak amplitudes of the sinusoids
+frequency = [12.5,25,12.5] 	# frequencies in Hz
+lag = [0,0,0.020] 		# lags in seconds
+
+for i in range(3):
+    # Produce sinusoid
+    Flow('sinusoid%g'%(i+1),None,
+         '''
+         math n1=1001 d1=0.001 o1=0
+         output="%f*cos((x1-%f)*%f*2*(2*asin(1)))" |
+         put label1="Time" unit1="s"
+         '''%(amplitude[i],lag[i],frequency[i])) # pi is defined as 2*asin(1)
+    Plot('sinusoid%g'%(i+1),
+         'graph title="Sinusoid %g" screenratio=0.75 min1=0 max1=1 min2=-1 max2=1'%(i+1))
+    Result('sinusoid%g'%(i+1),
+           'graph title="Sinusoid %g" screenratio=0.5 min1=0 max1=1 min2=-1 max2=1'%(i+1))
+
+    # Recovering Amplitude & Phase spectra through FFT
+    ## Fourier transform
+    fftwindow = 800 # we window 10 full cycles
+    Flow('fourier%g'%(i+1),'sinusoid%g'%(i+1),'window n1=%g | fft1'%fftwindow)
+
+    ## Amplitude spectra
+    Flow('fampspectra%g'%(i+1),'fourier%g'%(i+1),
+        '''
+        math output="2*abs(input)/%g" | real | put label1="Frequency" unit1="Hz"
+        '''%fftwindow) # normalized by 2/N
+    Plot('fampspectra%g'%(i+1),
+         'graph title="Amplitude Spectrum" screenratio=1 min1=0 max1=125 min2=0 max2=1')
+    Result('fampspectra%g'%(i+1),
+           'graph title="Amplitude Spectrum %g" screenratio=1 min1=0 max1=125 min2=0 max2=1'%(i+1))
+
+    ## Phase spectra
+    """
+    This one is trickier. On paper, phi=arg(F(w)). However, arg(z) is not well defined 
+    for |z|=0.
+    Hence, we first compute arg(F), and then we mute the values for which |z|=0.
+    """
+    Flow('argf%g'%(i+1),'fourier%g'%(i+1),
+        '''
+        math output="arg(input)*90/asin(1)" | real | put label1="Frequency" unit1="Hz"
+        ''') # multiplied by (90/arcsin(1)) to convert phi from radians to degrees
+    Flow('fmask%g'%(i+1),'fampspectra%g'%(i+1),
+        '''
+        mask min=%f | dd type=float
+        '''%(amplitude[i]/2)) # mask with non-zero values
+    Flow('fphispectra%g'%(i+1),'argf%g fmask%g'%(i+1,i+1),
+        '''
+        math mask=${SOURCES[1]} output="input*mask"
+        ''')
+    Plot('fphispectra%g'%(i+1),
+         'graph title="Phase Spectrum" screenratio=1 min1=0 max1=125 min2=-180 max2=180 d2num=90')
+    Result('fphispectra%g'%(i+1),
+           'graph title="Phase Spectrum %g" screenratio=1 min1=0 max1=125 min2=-180 max2=180 d2num=90'%(i+1))
+
+    Plot('fspectra%g'%(i+1),'fampspectra%g fphispectra%g'%(i+1,i+1),'SideBySideAniso')
+    Result('fspectra%g'%(i+1),'fampspectra%g fphispectra%g'%(i+1,i+1),'SideBySideAniso')
+
+    Result('frame%g'%(i+1),'sinusoid%g fspectra%g'%(i+1,i+1),'TwoRows')
+
+End()

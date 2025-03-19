@@ -72,7 +72,7 @@ def __merge(target=None,source=None,env=None):
 
 def __included(node,env,path):
     file = os.path.basename(str(node))
-    file = re.sub('\.[^\.]+$','',file)
+    file = re.sub(r'\.[^\.]+$','',file)
     contents = node.get_contents()
     includes = __include.findall(contents)
     if file in includes:
@@ -103,7 +103,7 @@ def __header(target=None,source=None,env=None):
     out.write('#ifndef _' + define + '\n')
     out.write('#define _' + define + '\n\n')
     toheader = re.compile(r'\n((?:\n[^\n]+)+)\n'
-                          '\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
+                          r'\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
     kandr = re.compile(r'\s*\{?\s*$') # K&R style function defs end with {
     for extract in toheader.findall(text):
         if extract[1] == '^':

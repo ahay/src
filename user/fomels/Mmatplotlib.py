@@ -73,6 +73,8 @@ data = numpy.zeros([n1,n2],'f')
 inp.read(data)
 inp.close()
 
+#data = inp.read((n2, n1)).T
+
 x1 = numpy.transpose(numpy.tile(numpy.arange(o1, o1+n1*d1, d1,dtype='f'),(n2,1)))
 x2 = numpy.tile(numpy.arange(o2, o2+n2*d2, d2,dtype='f'),(n1,1))
 

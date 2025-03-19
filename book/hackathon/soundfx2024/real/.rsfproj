@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sfgrey', 'sfwindow', 'sfcostaper', 'sflpad', 'sflpef', 'sfmiss', 'sfapef', 'sfmiss4', 'sfspitz', 'sfadd']
+data=['data/masha/elf-stk2.rsf']
+size=   38875928

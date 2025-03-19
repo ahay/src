@@ -1,0 +1,68 @@
+from rsf.proj import *
+
+# Fetch & plot dataset
+Fetch('elf-stk2.rsf','masha')
+Flow('elf','elf-stk2','dd form=native | put unit1=s')
+Result('elf','grey')
+
+# Decimate
+Flow('decimated','elf','window j2=2 f2=300 | put d2=53.3333')
+Result('decimated','grey')
+
+#Result('original_n_decimated',['elf','decimated'],'SideBySideAniso')
+
+# Zoom-in
+Flow('original_w','elf','window max1=1.5 n2=300 f2=300 | costaper nw1=40')
+Flow('decimated_w','decimated','window max1=1.5 n2=150  | costaper nw1=40')
+Result('original_w','grey title="Original data"')
+Result('decimated_w','grey title="Decimated data"')
+
+#Result('original_n_decimated_w',['elf_w','decimated_w'],'SideBySideAniso')
+
+# T-X interpolation
+Flow(['pad_w','mask_w'],'decimated_w','lpad jump=2 mask=${TARGETS[1]}')
+Flow(['pef_w','lag_w'],'decimated_w','lpef lag=${TARGETS[1]} a=15,5 jump=2')
+Flow('interpolated_w',['pad_w','mask_w','pef_w'],
+     'miss padin=2 filt=${SOURCES[2]} mask=${SOURCES[1]} prec=n')
+Result('interpolated_w','grey')
+
+Flow('pef_aw','pad_w','apef a=15,4 jump=2 rect1=20 rect2=5 niter=200 verb=y')
+Flow('interpolated_aw',['pad_w','pef_aw','mask_w'],'miss4 filt=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+Result('interpolated_aw','grey')
+
+# F-X interpolation
+# Flow('spitz_w','decimated_w','spitzns norm=n verb=y k2=10 w2=50 order=3')
+Flow('spitz_w','decimated_w','spitz norm=n verb=y')
+
+def plot(data, title):
+    return Plot(data,'grey title="%s" clip=507859' % title)
+
+# Error plots
+Flow('error_fx','original_w spitz_w','window n2=299|  add scale=-1,1 ${SOURCES[1]}')
+Flow('error_pef','original_w interpolated_w',' add scale=-1,1 ${SOURCES[1]}')
+Flow('error_apef','original_w interpolated_aw',' add scale=-1,1 ${SOURCES[1]}')
+
+plot("original_w",'Original')
+plot("decimated_w",'Decimated')
+plot("interpolated_w",'T-X interpolation (Stationary)')
+plot("interpolated_aw",'T-X interpolation (Nonstationary)')
+plot("spitz_w",'F-X interpolation')
+
+plot("error_fx",'F-X interpolation error')
+plot("error_pef",'T-X interpolation error (Stationary)')
+plot("error_apef",'T-X interpolation error (Nonstationary)')
+
+Result('interpolated',['decimated_w', 'interpolated_w','interpolated_aw','spitz_w'],'TwoRows')
+
+Result('interpolated2',['original_w', 'interpolated_w','interpolated_aw','spitz_w'],'TwoRows')
+
+Result('errors','error_pef error_apef error_fx','SideBySideAniso')
+
+Result('spitz','spitz_w error_fx','SideBySideIso')
+Result('tx','interpolated_w error_pef','SideBySideIso')
+Result('txns','interpolated_aw error_apef','SideBySideIso')
+
+Plot('interpolated',['decimated_w', 'interpolated_w','interpolated_aw','spitz_w'],'Movie',view=1)
+## Interpolation error
+
+End()
