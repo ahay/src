@@ -1,6 +1,6 @@
 /* Generate 2D shifts for regularized regression. */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2025 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("s2",&s2)) sf_error("Need s2=");
     /* shifts in samples */
     
-    ns = s1*s2;
+    ns = (2*s1+1)*(s2+1);
     sf_putint(shift,"n3", ns);
     sf_shiftdim(in, shift, 3);
 
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(inp[0],n1*n2,in);
-	shifts2(s1, s2, n1, n2, inp, shift);
+	shifts2(s1, s2, n1, n2, inp, out);
 	sf_floatwrite(out[0][0],n1*n2*ns,shift);
     }
 
