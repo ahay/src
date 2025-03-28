@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("s1",&s1)) sf_error("Need s1=");
     /* shifts in samples */
     
-    ns = 2*s1+1;
+    ns = s1+1;
     sf_putint(shift,"n2", ns);
     sf_shiftdim(in, shift, 2);
 
