@@ -56,7 +56,7 @@ void shifts1(int s1, int n1, float *inp, float **sft)
 	for (j1=-s1; j1 <= s1; j1++) {
 	    k1 = i1+j1;
 	    if (k1 >=0 && k1 < n1) {
-		sft[j1+s1][i1] += inp[k1];
+		sft[j1+s1][i1] = inp[k1];
 	    }
 	}
     }
