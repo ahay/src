@@ -50,23 +50,14 @@ void shifts2(int s1, int s2, int n1, int n2, float **inp, float ***sft)
 void shifts1(int s1, int n1, float *inp, float **sft)
 /*< generate shifts in 1D >*/
 {
-    int i1, j1, i, k1, l1;
-    float a;
+    int i1, j1, k1;
     
     for (i1=0; i1 < n1; i1++) {
-	i=0;
-	for (j1=0; j1 <= s1; j1++) {
-	    a = 0.0f;
+	for (j1=-s1; j1 <= s1; j1++) {
 	    k1 = i1+j1;
 	    if (k1 >=0 && k1 < n1) {
-		a += inp[k1];
+		sft[j1+s1][i1] += inp[k1];
 	    }
-	    l1 = i1-j1;
-	    if (l1 >=0 && l1 < n1) {
-		a += inp[l1];
-	    }
-	    sft[i][i1] = a;
-	    i++;
 	}
     }
 }
