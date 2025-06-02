@@ -18,7 +18,6 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-autofocusing
 marchenko
 awefd2d_fo
 '''
