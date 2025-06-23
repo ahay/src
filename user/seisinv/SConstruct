@@ -19,12 +19,7 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-tkirmig 
-tkirinv
-csp2d
 kirchinvs
-lsm_dsr2d
-lsdmo
 '''
 
 # icsp2d
