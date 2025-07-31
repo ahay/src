@@ -691,7 +691,7 @@ void img2x_close(sf_fslice imag,
 }
 
 /*------------------------------------------------------------*/
-void img2_close()
+void img2_close(void)
 /*< deallocate >*/
 {
     free(**qs); free(*qs); free(qs);
