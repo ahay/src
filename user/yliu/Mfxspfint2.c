@@ -23,7 +23,7 @@ void loop_control(kiss_fft_cpx *inp, kiss_fft_cpx *ext_data,
                   kiss_fft_cpx *conj_ext_data);
 
 /* filter memory allocate and initialize */
-void filter_init();
+void filter_init(void);
 
 /* filter sweeping */
 void filter_sweep(int FILTER_CASE);
@@ -310,7 +310,7 @@ kiss_fft_cpx filter_estimete(kiss_fft_cpx data, kiss_fft_cpx *stream,
 }
 
 /* filter memory allocate and initialize */
-void filter_init()
+void filter_init(void)
 {
     /* memory allocation */
     ftmp1 = (kiss_fft_cpx *)sf_complexalloc(na);

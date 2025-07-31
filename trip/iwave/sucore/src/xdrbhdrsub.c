@@ -473,5 +473,5 @@ int xdrbhdrsub(XDR *segy_xdr, bhed *binhdr)
  return(status);
 }
 #else
-void xdrbhdrsub(){return;}
+void xdrbhdrsub(void){return;}
 #endif

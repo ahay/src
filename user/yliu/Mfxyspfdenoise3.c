@@ -26,7 +26,7 @@ void forw_fft(float *dd, kiss_fft_cpx *ff, int fnt, int fnw);
 void back_fft(kiss_fft_cpx *ff, float *dd, int bnt, int bnw);
 void pick_cef(kiss_fft_cpx *inp, kiss_fft_cpx *out, int pn1, int pn2, int pi1,
               int pi2, int pi3);
-void init_flt();
+void init_flt(void);
 void sweep_flt(int flt_case);
 void loop_control(kiss_fft_cpx *data, kiss_fft_cpx *data_tmp,
                   kiss_fft_cpx *data_ctp);
@@ -330,7 +330,7 @@ void boundary(kiss_fft_cpx *data, kiss_fft_cpx *data_tmp,
 }
 
 /* initialize filter */
-void init_flt()
+void init_flt(void)
 {
     ftmp1 = (kiss_fft_cpx *)sf_complexalloc(naa12);
     ftmp2 = (kiss_fft_cpx *)sf_complexalloc(naa12 * n2);

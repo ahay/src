@@ -27,7 +27,7 @@ float gspef_estimate_constraint2(float data, float *tmp, int i1);
 
 void gspef_pick(float *inp, float *tmp, int i2, int i1);
 
-void init_flt();
+void init_flt(void);
 
 void sweep_flt(int flt_case);
 
@@ -235,7 +235,7 @@ void gspef_pick(float *inp, float *tmp, int i2, int i1)
 }
 
 /* initialize filter */
-void init_flt()
+void init_flt(void)
 {
     ftmp1  = sf_floatalloc(na);
     ftmp2  = sf_floatalloc(n1*na);
