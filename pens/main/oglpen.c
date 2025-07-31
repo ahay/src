@@ -379,7 +379,7 @@ void oglerase (int command)
     glDisable (GL_CLIP_PLANE3);
 }
 
-void oglstartanimation ()
+void oglstartanimation (void)
 {
 /*< start animation >*/
     animate = true;

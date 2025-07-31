@@ -212,7 +212,6 @@ extern vp_plotstyle default_style;
 extern int      default_txfont, default_txprec, default_txovly;
 extern bool     default_overlay;
 extern int      color_set[MAX_COL + 1][_NUM_PRIM];
-extern int      greycorr ();
 extern int      num_col_8;
 extern int      xret, yret;
 extern char     interact[];
@@ -226,8 +225,8 @@ int             ras_allgrey = YES;
 
 #include <stdlib.h>
 
-long int        ftell ();
-extern void     wlimit ();
+/*long int        ftell ();
+  extern void     wlimit (); */
 
 int             need_devcolor = NO;
 

@@ -76,9 +76,9 @@ extern int in_repaint;        /* Are we in the repaint proc ? */
 extern int num_files;
 
 /* Button functions */
-extern void create_buttons();
-extern void activate_buttons();
-extern void inactivate_buttons();
+/*extern void create_buttons(); */
+extern void activate_buttons(void);
+extern void inactivate_buttons(void); 
 extern int epause;   /* user sepcified pause in seconds */
 extern float fpause; /* pause between frames in seconds */
 
