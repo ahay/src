@@ -82,7 +82,7 @@ if env.get('SWIG') and env.get('NUMPY'):
                                         LDMODULEPREFIX='_c_',
                                         LDMODULESUFFIX=ldmsuffix,
                                         FRAMEWORKSFLAGS='-flat_namespace '
-                                        '-undefined suppress')
+                                        '-undefined dynamic_lookup')
 
         pfiles = [python,wrap[1],module+'.py']
         env.Install('../../lib',pfiles)

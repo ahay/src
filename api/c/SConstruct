@@ -48,6 +48,9 @@ if fftw:
 rpc = env.get('HAVE_RPC')
 if rpc:
     env.Prepend(CPPDEFINES=['SF_HAS_RPC'])
+
+if env['PLATFORM'] == 'darwin':
+    env.Prepend(CPPDEFINES=['ACCELERATE_NEW_LAPACK'])
     
 sobjs = []
 
