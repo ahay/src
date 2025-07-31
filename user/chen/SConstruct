@@ -3,11 +3,11 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-addevent coherence comp ldip lphfreq mflt odip pwdfreq resample signal wavmod
+addevent coherence pca comp ldip lphfreq mflt odip pwdfreq resample signal wavmod
 '''
 
 pyprogs='''
-asc2rsf shuffle
+asc2rsf shuffle fpca 
 '''
 
 pymods='''

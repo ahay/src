@@ -493,7 +493,7 @@ class rsfprog(object):
             month = day.strftime('%B %Y').upper()
             contents += '"%s" ' % month
         contents += 'Madagascar "Madagascar Manuals"\n'
-        desc = '.SH NAME\n%s \- %s\n' % (name,self.desc)
+        desc = r'.SH NAME\n%s \- %s\n' % (name,self.desc)
         contents = contents + desc
         if self.snps:
             contents = contents + '.SH SYNOPSIS\n.B %s\n' % self.snps
@@ -802,93 +802,93 @@ chars = {}
 comment['python'] = re.compile(r'[^\'\"]*([\'\"]+)(?P<comment>[^\'\"].+?)\1',
                                re.DOTALL)
 param['python'] = re.compile(r'par\.(?P<type>bool|int|float|string)'
-                             '\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
-                             '(?:\,\s*(?P<default>[^\)]+))?\)'
-                             '(?:\s*\#\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                             '(?P<desc>[^#\n]+\S))?')
+                             r'\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
+                             r'(?:\,\s*(?P<default>[^\)]+))?\)'
+                             r'(?:\s*\#\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                             r'(?P<desc>[^#\n]+\S))?')
 synopsis['python'] = re.compile(r'\s*\#\s*Takes\s*\:\s*'
-                                '((?:[^\n]|\n\#[^\n])+)((?:.|\n)*)$')
+                                r'((?:[^\n]|\n\#[^\n])+)((?:.|\n)*)$')
 inpout['python'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
-                                'rsf\.(?P<io>Input|Output)'
-                                '\s*\(\s*(?:[\"\'](?P<tag>\w+)[\"\'])?')
+                              r'rsf\.(?P<io>Input|Output)'
+                              r'\s*\(\s*(?:[\"\'](?P<tag>\w+)[\"\'])?')
 version['python'] = re.compile(r'\#\s*\$Id\:\s*(.+\S)\s*\$/')
 chars['python'] = r'# '
 
 comment['c++'] = re.compile(r'\/\/(?P<comment>[^\n]+)\n')
 inpout['c++'] = re.compile(r'(?P<io>iRSF|oRSF)\s*(?P<name>\w+)'
-                           '\s*(?:\(\s*\"?(?P<tag>\w+)\"?\s*\))?')
+                           r'\s*(?:\(\s*\"?(?P<tag>\w+)\"?\s*\))?')
 param['c++'] = re.compile(r'par.get\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
-                          '(?:\,\s*(?P<var>[^\)\,]+))'
-                          '(?:\,\s*(?P<default>[^\)]+))?\)'
-                          '(?:\s*\;\s*\/\/\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                          '(?P<desc>[^\n]+\S))?')
+                          r'(?:\,\s*(?P<var>[^\)\,]+))'
+                          r'(?:\,\s*(?P<default>[^\)]+))?\)'
+                          r'(?:\s*\;\s*\/\/\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                          r'(?P<desc>[^\n]+\S))?')
 version['c++'] = re.compile(r'\/\/\s*\$Id\:\s*(.+\S)\s*\$/')
 chars['c++'] = r'/ '
 
 comment['f90'] = re.compile(r'\!(?P<comment>[^\n]+(?:\n\![^\n]+)+)\n')
 param['f90'] = re.compile(r'from_par\s*\(\s*\"(?P<name>\w+)\"\s*\,'
-                          '\s*(?P<var>[\w\_]+)\s*'
-                          '(?:\,\s*(?P<default>[^\)]+))?\)'
-                          '(?:\s*\!\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                          '(?P<desc>[^!\n]+\S))?')
+                          r'\s*(?P<var>[\w\_]+)\s*'
+                          r'(?:\,\s*(?P<default>[^\)]+))?\)'
+                          r'(?:\s*\!\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                          r'(?P<desc>[^!\n]+\S))?')
 synopsis['f90'] = re.compile(r'\s*\!\s*Takes\s*\:\s*'
-                             '((?:[^\n]|\n\![^\n])+)((?:.|\n)*)$')
+                             r'((?:[^\n]|\n\![^\n])+)((?:.|\n)*)$')
 inpout['f90'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
-                    'rsf_(?P<io>input|output)'
-                    '\s*\(\s*(?:\"(?P<tag>\w+)\")?')
+                    r'rsf_(?P<io>input|output)'
+                    r'\s*\(\s*(?:\"(?P<tag>\w+)\")?')
 version['f90'] = re.compile(r'\!\s*\$Id\:\s*(.+\S)\s*\$/')
 chars['f90'] = r'! '
 
 comment['c'] = re.compile(r'\/\*(?P<comment>(?:[^*]+|\*[^/])+)\*\/')
 param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
-                        '(?P<type>bool|largeint|int|float|double)'
-                        '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
-                        '\s*\&(?P<var>[\w\_\[\]\.\+\-\>]+)\s*[\)]\s*[\)]?\s*'
-                        '(?:[\{]|' # either \{ or
-                        '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|'
-                        'sf_[^\;]+)?' # or sf_error
-                        '[\;])\s*' # ending with ;
-                        '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                        '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
+                        r'(?P<type>bool|largeint|int|float|double)'
+                        r'\s*\(\s*\"(?P<name>\w+)\"\s*\,'
+                        r'\s*\&(?P<var>[\w\_\[\]\.\+\-\>]+)\s*[\)]\s*[\)]?\s*'
+                        r'(?:[\{]|' # either \{ or
+                        r'(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|'
+                        r'sf_[^\;]+)?' # or sf_error
+                        r'[\;])\s*' # ending with ;
+                        r'(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                        r'(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
 params['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
-                         '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
-                         '\s*(?P<var>[\w\_\[\]\.]+)\s*\,'
-                         '\s*(?P<size>[\w\_\-\+]+)\s*\)\s*'
-                         '[^\;\{]*[\;\{]\s*' # ending with ; or {
-                         '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                         '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
+                         r'\s*\(\s*\"(?P<name>\w+)\"\s*\,'
+                         r'\s*(?P<var>[\w\_\[\]\.]+)\s*\,'
+                         r'\s*(?P<size>[\w\_\-\+]+)\s*\)\s*'
+                         r'[^\;\{]*[\;\{]\s*' # ending with ; or {
+                         r'(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                         r'(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
 param2['c'] = re.compile(r'sf_get(?P<type>bool|largeint|int|float|string)\s*'
-                    '\((?:[^/]|/[^\*])+\/\*\(\s*(?P<name>[\w\#]+)'
-                    '(?:=(?P<default>\S+))?'
-                    '\s*(?P<desc>[^\)]+)\)\*\/')
+                    r'\((?:[^/]|/[^\*])+\/\*\(\s*(?P<name>[\w\#]+)'
+                    r'(?:=(?P<default>\S+))?'
+                    r'\s*(?P<desc>[^\)]+)\)\*\/')
 params2['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
-                     '\s*\([^\,]+\,[^\,]+\,'
-                     '\s*(?P<size>[\w\_]+)\s*\)[^/]+'
-                     '\/\*\(\s*(?P<name>[\w\#]+)'
-                     '(?:=(?P<default>\S+))?'
-                     '\s*(?P<desc>(?:[^\)]|\)[^\*])+)\)\*\/')
+                     r'\s*\([^\,]+\,[^\,]+\,'
+                     r'\s*(?P<size>[\w\_]+)\s*\)[^/]+'
+                     r'\/\*\(\s*(?P<name>[\w\#]+)'
+                     r'(?:=(?P<default>\S+))?'
+                     r'\s*(?P<desc>(?:[^\)]|\)[^\*])+)\)\*\/')
 stringpar['c'] = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"'
-                       '[^\;\{]*[\;\{]\s*(?:\/\*'
-                       '\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
+                       r'[^\;\{]*[\;\{]\s*(?:\/\*'
+                       r'\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
 synopsis['c'] = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
                       '((?:.|\n)*)$')
 inpout['c'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
-                    'sf_(?P<io>input|output)'
-                    '\s*\(\s*\"(?P<tag>\w+)\"')
+                    r'sf_(?P<io>input|output)'
+                    r'\s*\(\s*\"(?P<tag>\w+)\"')
 version['c'] = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
 chars['c'] = ' '
 
 comment['chpl'] = re.compile(r'\/\/(?P<comment>[^\n]+)\n')
 inpout['chpl'] = re.compile(r'\s*var\s+(?P<name>\w+)\s*\:\s*'
-                             '(?:RSF\.)?sf_file\s*=\s*'
-                             '(?:RSF\.)?sf_(?P<io>input|output)'
-                             '\s*\(\s*\"?(?P<tag>\w+)\"?\s*\)')
+                            r'(?:RSF\.)?sf_file\s*=\s*'
+                            r'(?:RSF\.)?sf_(?P<io>input|output)'
+                            r'\s*\(\s*\"?(?P<tag>\w+)\"?\s*\)')
 param['chpl'] = re.compile(r'\s*config\s+(?:const|var)\s+(?P<name>\w+)'
-                            '\s*\:\s*(?P<type>bool|int|uint|real|imag|'
-                            'complex|string)'
-                            '(?:\([0-9]+\))?\s*\=\s*\"?'
-                            '(?P<default>[^\;\"]+)\"?\s*\;'
-                            '\s*\/\/(?P<desc>[^\n]+)')
+                           r'\s*\:\s*(?P<type>bool|int|uint|real|imag|'
+                           r'complex|string)'
+                           r'(?:\([0-9]+\))?\s*\=\s*\"?'
+                           r'(?P<default>[^\;\"]+)\"?\s*\;'
+                           r'\s*\/\/(?P<desc>[^\n]+)')
 version['chpl'] = re.compile(r'\/\/\s*\$Id\:\s*(.+\S)\s*\$/')
 
 
@@ -903,12 +903,12 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
         source = file
     name = rsfprefix + name
     if lang[:2] == 'py':
-        name = re.sub('\.py$','',name)
+        name = re.sub(r'\.py$','',name)
     elif lang[0] =='f':
-        name = re.sub('\.f\d*$','',name)
+        name = re.sub(r'\.f\d*$','',name)
     else:
-        name = re.sub('\.c(c|u|hpl)?$','',name)
-    cname = re.sub('\-','',name)
+        name = re.sub(r'\.c(c|u|hpl)?$','',name)
+    cname = re.sub(r'\-','',name)
     src = open(file,"r")   # open source
     text = ''.join(src.readlines())
     src.close()
@@ -920,7 +920,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     else:
         desc = None
     prog = rsfprog(name,source,desc)
-    source = re.sub('^[^\/]*\/','',source)
+    source = re.sub(r'^[^\/]*\/','',source)
     out.write("%s = rsf.doc.rsfprog('%s','%s','''%s''')\n" %
               (cname,name,source,desc))
     files = inpout[lang].findall(text)
