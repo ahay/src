@@ -63,37 +63,37 @@ namespace RVL {
     }
     RVLException & operator<< ( int i ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "%d", i );
+      snprintf( buf, BUFLEN, "%d", i );
       msg += buf;
       return *this;
     }
     RVLException & operator<< ( unsigned int i ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "%u", i );
+      snprintf( buf, BUFLEN, "%u", i );
       msg += buf;
       return *this;
     }
     RVLException & operator<< ( long i ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "%ld", i );
+      snprintf( buf, BUFLEN, "%ld", i );
       msg += buf;
       return *this;
     }
     RVLException & operator<< ( unsigned long i ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "%lu", i );
+      snprintf( buf, BUFLEN, "%lu", i );
       msg += buf;
       return *this;
     }
     RVLException & operator<< ( short i ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "%d", i );
+      snprintf( buf, BUFLEN, "%d", i );
       msg += buf;
       return *this;
     }
     RVLException & operator<< ( unsigned short i ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "%d", i );
+      snprintf( buf, BUFLEN, "%d", i );
       msg += buf;
       return *this;
     }
@@ -107,20 +107,20 @@ namespace RVL {
     */
     RVLException & operator<< ( double d ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "%g", d );
+      snprintf( buf, BUFLEN, "%g", d );
       msg += buf;
       return *this;
     }
     RVLException & operator<< ( float d ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "%g", d );
+      snprintf( buf, BUFLEN, "%g", d );
       msg += buf;
       return *this;
     }
     template<class T>
     RVLException & operator<< ( complex<T> d ) {
       char buf[ BUFLEN ];
-      sprintf( buf, "(%g,%g)", d.real(),d.imag() );
+      snprintf( buf, BUFLEN, "(%g,%g)", d.real(),d.imag() );
       msg += buf;
       return *this;
     }
