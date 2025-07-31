@@ -39,7 +39,7 @@ static float *t, *alpha;
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(long index);
-long neighbors_default();
+long neighbors_default(void);
 long neighbours(float* time, long i);
 int update(float value, float* time, long i, int f, float al);
 float qsolve(float* time, long i, int *f, float *al);
@@ -176,7 +176,7 @@ void dsreiko_mirror(float *time /*time*/)
     }
 }
 
-void dsreiko_close()
+void dsreiko_close(void)
 /*< finalize >*/
 {
     free(x);
@@ -287,7 +287,7 @@ void pqueue_update(long index)
     offsets[tIndex] = newOffset;
 }
 
-long neighbors_default()
+long neighbors_default(void)
 /* initialize source */
 {
     long i, j, k, nxy;

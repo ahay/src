@@ -209,7 +209,7 @@ fdm3d fdutil3d_init(bool verb_,
 }
 
 /*------------------------------------------------------------*/
-int omp_init()
+int omp_init(void)
 /*< init OMP parameters >*/
 {
 #ifdef _OPENMP

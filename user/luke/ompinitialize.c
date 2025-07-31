@@ -13,7 +13,8 @@ typedef float(*funcl)(float);
 
 #endif
 
-void printthreads(){
+void printthreads(void)
+{
   
   #ifdef _OPENMP
   #pragma omp critical
