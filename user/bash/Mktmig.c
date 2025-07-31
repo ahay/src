@@ -24,7 +24,7 @@
 
 int main (int argc, char* argv[]) {
     /* Counters */
-    int i = 0, j = 0, k = 0, l, n, m;
+    int i = 0, k = 0, l, n, m;
 
     /* Input data parameters */
     int nt, nx, ny = 1, nix = 1, nin = 1, osize, ntr, btr, dbtr;
@@ -313,7 +313,6 @@ int main (int argc, char* argv[]) {
             }
         }
 
-        j++;
         i += k;
     } /* End of loop over input traces */
 

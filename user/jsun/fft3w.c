@@ -281,7 +281,7 @@ void ifft3(float *out      /* [n1*n2*n3] */,
     }
 }
 
-void fft3_finalize()
+void fft3_finalize(void)
 /*< clean up fftw >*/
 {
 #ifdef SF_HAS_FFTW

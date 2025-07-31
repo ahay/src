@@ -61,7 +61,7 @@ void gazdag_init (float eps1  /* regularization */,
     pshift_init(depth,rule);
 }
 
-void gazdag_close ()
+void gazdag_close (void)
 /*< Free allocated storage >*/
 {    
     free (pp);  

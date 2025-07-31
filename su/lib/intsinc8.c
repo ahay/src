@@ -1,6 +1,6 @@
 /* 8-point sinc interpolation */
 /*
-  Copyright © 2007, Colorado School of Mines,
+  Copyright (c) 2007, Colorado School of Mines,
   All rights reserved.
   
   
