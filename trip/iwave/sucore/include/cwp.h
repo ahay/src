@@ -425,7 +425,7 @@ void strchop(char *s, char *t);
 #endif
 
 /* exit function */
-int CWP_Exit();
+int CWP_Exit(void);
 
 #ifdef __cminusminus /* if C++, end external linkage specification */
 

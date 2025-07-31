@@ -253,9 +253,9 @@ float golden_bracket(float ax, float bx, float cx,
 float brent_bracket(float ax, float bx, float cx,
                 float (*f)(float), float tol, float *xmin);
 
-void linmin(float p[],float xi[],int n,float *fret, float (*func)());
+void linmin(float p[],float xi[],int n,float *fret, float (*func)(void));
 void powell_minimization(float p[], float **xi, int n,
-                float ftol,int *iter,float *fret,float (*func)());
+                float ftol,int *iter,float *fret,float (*func)(void));
 
 /***** lincoeff -- linearized reflection coefficients */
 /* type definitions */

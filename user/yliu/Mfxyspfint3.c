@@ -30,7 +30,7 @@ void forw_fft(float *dd, kiss_fft_cpx *ff, int fnt, int fnw);
 void back_fft(kiss_fft_cpx *ff, float *dd, int bnt, int bnw);
 
 /* filter memory allocate and initialize */
-void filter_init();
+void filter_init(void);
 
 /* filter sweeping */
 void filter_sweep(int flt_case);
@@ -436,7 +436,7 @@ kiss_fft_cpx filter_estimete(kiss_fft_cpx data, kiss_fft_cpx *stream,
 }
 
 /* initialize filter */
-void filter_init()
+void filter_init(void)
 {
     ftmp1 = (kiss_fft_cpx *)sf_complexalloc(naa12);
     ftmp2 = (kiss_fft_cpx *)sf_complexalloc(naa12 * n2);

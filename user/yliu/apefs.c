@@ -162,7 +162,7 @@ void npefs_oper (bool adj, bool add,
     free (*data); free (data);
 }
 
-void apefs_close () 
+void apefs_close (void) 
 /*< free filter memory >*/
 {
     free (sfilt);

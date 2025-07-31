@@ -27,7 +27,7 @@ int main(void)
     bool wantframe=false;
     float xll=1.705,yll=1.37,xur=11.945,yur=8.87,theta3=20.;
     float sn[3],cs[3],vv[3]={1.5,2.0,2.5},dz[3]={1.0,2.0,1.5};
-    float zbottom, h, t, x, z, x1,z1, xtxt, ztxt;
+    float zbottom, h, x, z, x1,z1, xtxt, ztxt;
     float xmin, zmin, xmax, zmax, xscale, zscale;
     int i, plotcol=6,plotfat=1;
 
@@ -42,12 +42,12 @@ int main(void)
     sn[2]=sinf(theta3);
 
     h=0.; 
-    t=0.;
+    /* t=0.; */
     for (i=2; i >= 0; i--) {
 	if (i != 2)  sn[i] = sn[i+1]*vv[i]/vv[i+1]; /* snell's law */
 	cs[i] = sqrtf(1. - sn[i]*sn[i]);
 	h += dz[i]*sn[i]/cs[i];
-	t += 2*dz[i]/(cs[i]*vv[i]);
+	/*	t += 2*dz[i]/(cs[i]*vv[i]); */
     }
 
     xmin = -h - 0.1*zbottom; if (xmin > -2.) xmin=-2.;

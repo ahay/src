@@ -57,7 +57,7 @@ void fdip_init(int m1,int m2,int m3,int *rect, int niter, bool verb)
     else sf_divn_init (2, n, nn, rect, niter, verb);
 }
 
-void fdip_close()
+void fdip_close(void)
 /*< release work space >*/
 {
     free(u1);
