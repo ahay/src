@@ -578,7 +578,7 @@ void ifft(void *out /* [n1*n2*n3] */,
 
 }
 
-void fft_finalize()
+void fft_finalize(void)
     /*< clean up fft >*/
 {
     /* make sure everything is back to its pristine state */

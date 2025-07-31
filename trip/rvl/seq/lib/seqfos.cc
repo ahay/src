@@ -84,7 +84,7 @@ void PolyMult::operator()(SeqDC & y, SeqDC const & x) {
   //  cerr<<"multiply by factor\n";
   //  fac.write(cerr);
 
-  int deg = 0;
+  // int deg = 0;
 //  std::list<double>::iterator iy = y.get().begin();  
 //  std::list<double>::const_iterator ix = x.get().begin();
   std::list<double>::const_iterator ifac = fac.get().begin();
@@ -96,7 +96,7 @@ void PolyMult::operator()(SeqDC & y, SeqDC const & x) {
 
     //    cerr<<"shift workspace to represent multiplication by x^"<<deg<<"\n";
     work.get().push_front(0.0);
-    deg++;
+    // deg++;
     ifac++;
   }
 }
@@ -120,7 +120,7 @@ void PolyMultAdj::operator()(SeqDC & y, SeqDC const & x) {
   //  cerr<<"multiply by factor\n";
   //  fac.write(cerr);
 
-  int deg = 0;
+  // int deg = 0;
 //  std::list<double>::iterator iy = y.get().begin();  
 //  std::list<double>::const_iterator ix = x.get().begin();
   std::list<double>::const_iterator ifac = fac.get().begin();
@@ -134,7 +134,7 @@ void PolyMultAdj::operator()(SeqDC & y, SeqDC const & x) {
     //    cerr<<"shift workspace to represent division by x^"<<deg<<"\n";
     work.get().pop_front();
     //    cerr<<"loop end\n";
-    deg++;
+    // deg++;
     ifac++;
   }
   //  cerr<<"exit PolyMultAdj\n";

@@ -166,7 +166,7 @@ void dinterp_hermite(float* p /* interpolated result */,
     }
 }
 
-void tinterp_close()
+void tinterp_close(void)
 /*< close >*/
 {
     return;

@@ -66,19 +66,19 @@ extern void pushNarray(char *x, unsigned int nbChars) ;
 extern void popNarray(char *x, unsigned int nbChars) ;
 extern void lookNarray(char *x, unsigned int nbChars) ;
 
-extern void resetadlookstack_() ;
+extern void resetadlookstack_(void) ;
 
 extern void printbigbytes(long int nbblocks, long int blocksz, long int nbunits) ;
 
-extern void printctraffic_() ;
+extern void printctraffic_(void) ;
 
-extern void printtopplace_() ;
+extern void printtopplace_(void) ;
 
-extern void printstackmax_() ;
+extern void printstackmax_(void) ;
 
-extern void printlookingplace_() ;
+extern void printlookingplace_(void) ;
 
-extern void showrecentcstack_() ;
+extern void showrecentcstack_(void) ;
 
 extern void getbigcsizes_(int *nbblocks, int *remainder, int *nbblockslook, int *lookremainder) ;
 

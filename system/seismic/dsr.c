@@ -65,7 +65,7 @@ void dsr_init (float eps1 /* regularization */,
     pshift_init(depth,rule);
 } 
 
-void dsr_close ()
+void dsr_close (void)
 /*< free workspace >*/
 {    
     free (pp);  

@@ -159,7 +159,7 @@ void lookNarray(char *x, unsigned int nbChars) {
   }
 }
 
-void resetadlookstack_() {
+void resetadlookstack_(void) {
   lookStack=NULL ;
 }
 
@@ -554,7 +554,7 @@ void printbigbytes(long int nbblocks, long int blocksz, long int nbunits) {
   printf("%i",res0) ;
 }
 
-void printctraffic_() {
+void printctraffic_(void) {
   printf(" C Traffic: ") ;
   printbigbytes(mmctrafficM, 1000000, mmctraffic) ;
   printf(" bytes\n") ;
@@ -566,7 +566,7 @@ void printftrafficinc_(long int *mmfM, int *mmfsz, int *mmf) {
   printf(" bytes\n") ;
 }
 
-void printtopplace_() {
+void printtopplace_(void) {
     DoubleChainedBlock *stack = curStack ;
     int nbBlocks = (stack?-1:0) ;
     int remainder = 0;
@@ -594,7 +594,7 @@ void printtopplacenum_(int *n) {
     printf(" bytes\n") ;
 }
 
-void printstackmax_() {
+void printstackmax_(void) {
     DoubleChainedBlock *stack = curStack ;
     int nbBlocks = (stack?-2:0) ;
     /*    int remainder = 0; */
@@ -614,7 +614,7 @@ void printstackmax_() {
     printf(" bytes\n") ;
 }
 
-void printlookingplace_() {
+void printlookingplace_(void) {
     if (lookStack == NULL)
 	printtopplace_() ;
     else {
@@ -631,7 +631,7 @@ void printlookingplace_() {
     }
 }
 
-void showrecentcstack_() {
+void showrecentcstack_(void) {
   if (curStack && curStackTop) {
     int totalNumChars = 30 ;
     DoubleChainedBlock *stack = curStack ;

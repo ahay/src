@@ -102,7 +102,7 @@ void wkbjti (float xs                /* x source location*/,
 	da = dr/rmax;
 	na = 1+SF_NINT((ea-fa)/da);
 	da = (ea-fa)/(na-1);
-	if (fa==-SF_PI && ea==SF_PI)
+	if (fa<=-SF_PI && ea>=SF_PI)
 		na = na-1;
 	/* allocate space */
 	a1111p = sf_floatalloc2(na,nr);

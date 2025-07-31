@@ -289,5 +289,5 @@ int xdrhdrsub(XDR *segy_xdr, segy *trace)
  return(status);
 }
 #else
-void xdrhdrsub(){return;}
+void xdrhdrsub(void){return;}
 #endif

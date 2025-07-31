@@ -115,7 +115,7 @@ void opwd_freq(sf_complex dip, int nk, sf_complex**out, bool iir)
 
 
 
-void opwd_close()
+void opwd_close(void)
 /*< release memory >*/
 {
 	free(b1);

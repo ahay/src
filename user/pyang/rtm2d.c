@@ -134,7 +134,7 @@ void rtm2d_init(float dz_, float dx_, float dt_, int n0_, int nz_,
     }
 }
 
-void rtm2d_close()
+void rtm2d_close(void)
 /*< free allocated variables >*/
 {
     free(*u0); free(u0);

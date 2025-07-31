@@ -59,7 +59,7 @@ void odip_init(char* interp, int mf1, int mf2, float rad,
     }else 	use_divn=false;
 }
 
-void odip_close()
+void odip_close(void)
 /*< release memory >*/
 {
     free(u1[0]);

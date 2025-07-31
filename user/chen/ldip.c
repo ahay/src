@@ -52,7 +52,7 @@ void ldip_init(char *interp, int mf1, int mf2,
 	}else use_divn=false;
 }
 
-void ldip_close()
+void ldip_close(void)
 /*< release memory >*/
 {
 	free(u1[0]);

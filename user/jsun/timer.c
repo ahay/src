@@ -22,7 +22,7 @@
 
 double gtod_secbase = 0.0E0;
 
-double gtod_timer()
+double gtod_timer(void)
 /*< get time >*/
 {
    struct timeval tv;
