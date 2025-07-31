@@ -39,7 +39,7 @@ void lsrtm2d_init(int nm_, int nd_, float tol_, bool verb_)
     gm=(float*)malloc(nd*sizeof(float));
 }
 
-void lsrtm2d_close()
+void lsrtm2d_close(void)
 /*< free the allocated variables >*/
 {
     free(rr);
