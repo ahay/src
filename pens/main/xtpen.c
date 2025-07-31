@@ -1078,7 +1078,7 @@ static int didFRAM1 = NO,  didRUN = NO, didSTOP=NO , didCHANGE = NO;
 static int next_on=NO ,prev_on=NO ,quit_on=NO ,restart_on=NO ;
 static int run_on=NO , stop_on=NO, size_on=NO; 
 
-static void  dummy_proc () { return; }
+static void  dummy_proc (void) { return; }
 
 void actionDummy(Widget w, XEvent ev, String *p, Cardinal *np)
 /*< dummy >*/
@@ -1207,7 +1207,8 @@ static void set_delay_label(float delay)
 /* procs to set pause between frames, these are not currently set as
  * button callbacks but they may be used in a translation table 
  */
-static void slower_proc(){ 
+static void slower_proc(void)
+{ 
     if( fpause==0. ) fpause =.25; 
     else fpause = fpause*2.; 
     if( fpause >=10. ) fpause =9.99;
@@ -1415,7 +1416,7 @@ void create_panel(Widget parent,bool want_buttons,bool want_labels)
     return;
 }
  
-void activate_buttons()
+void activate_buttons(void)
 {
     if( wantButtons ){
 	/* turn on the buttons, if required */
@@ -1431,7 +1432,7 @@ void activate_buttons()
     return;
 }
 
-void inactivate_buttons()
+void inactivate_buttons(void)
 {    
     /* turn all the buttons off */
 

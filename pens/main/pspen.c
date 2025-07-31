@@ -1329,7 +1329,6 @@ void opendev (int argc, char* argv[])
     int             i;
     char            units;
     float           unitscale=1.;
-    extern int      isafile ();
     struct stat     statbuf;
     int             creatafile;
     bool             yesget;

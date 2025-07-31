@@ -245,6 +245,38 @@ unsigned long  map[256] = { U0, U0, U0, U0, U0, U0, U0, U0,
 			    U0, U0, U0, U0, U0, U0, U0, U0,
 			    U0, U0, U0, U0, U0, U0, U0, U0 };
 
+/* routine to find display server; check getpar */
+Display  *OpenDisplay (void)
+{
+    char            name[50], *host;
+    Display		*display;
+    
+    display = NULL;
+    
+    /* check getpar first */
+    host = sf_getstring("server"); /* X server */
+    if (NULL != host)
+    {
+	display = XOpenDisplay (host);
+	if (display != NULL)
+	    sf_warning ("X-server=%s", DisplayString(display));
+	else			/* add :0 to getpar name */
+	{
+	    sprintf (name, "%s:0", host);
+	    display = XOpenDisplay (name);
+	    if (display != NULL)
+		fprintf (stderr, "X-server=%s\n", DisplayString(display));
+	}
+	return (display);
+    }
+
+    display = XOpenDisplay(NULL);
+    if (display != NULL)
+	sf_warning ("X-server=%s", DisplayString(display));
+    return(display);
+}
+
+
 void xattributes (int command, int v, int v1, int v2, int v3)
 /*< attributes >*/
 {
@@ -436,7 +468,6 @@ void opendev (int argc, char* argv[])
 {
     int             win_x, win_y, i;
     char            title[50], *ap, *option;
-    Display        *OpenDisplay ();
     XEvent		event;
 
     dev.erase = xerase;
@@ -569,36 +600,6 @@ void opendev (int argc, char* argv[])
     }
 }
 
-/* routine to find display server; check getpar */
-Display  *OpenDisplay ()
-{
-    char            name[50], *host;
-    Display		*display;
-    
-    display = NULL;
-    
-    /* check getpar first */
-    host = sf_getstring("server"); /* X server */
-    if (NULL != host)
-    {
-	display = XOpenDisplay (host);
-	if (display != NULL)
-	    sf_warning ("X-server=%s", DisplayString(display));
-	else			/* add :0 to getpar name */
-	{
-	    sprintf (name, "%s:0", host);
-	    display = XOpenDisplay (name);
-	    if (display != NULL)
-		fprintf (stderr, "X-server=%s\n", DisplayString(display));
-	}
-	return (display);
-    }
-
-    display = XOpenDisplay(NULL);
-    if (display != NULL)
-	sf_warning ("X-server=%s", DisplayString(display));
-    return(display);
-}
 
 void xplot (int x, int y, int draw)
 /*< plot >*/
