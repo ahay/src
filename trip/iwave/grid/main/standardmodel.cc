@@ -601,7 +601,7 @@ int main(int argc, char **argv) {
   /* DS */
   if (model == 10){
     for(i = 0; i< 4 ; i++){
-      sprintf(numlname,"m%d_numl",i+1);
+      snprintf(numlname,10,"m%d_numl",i+1);
       /* set up layer numbers for velocity, density, bulkmod and buoyancy */
       if (ps_ffint(*par,numlname,numl+i)) numl[i] = 1;
        
@@ -614,7 +614,7 @@ int main(int argc, char **argv) {
        
       for (j =0; j< numl[i]; j++){
 	if (j < numl[i]-1){
-	  sprintf(x1rsname,"m%d_rf%d",i+1,j+1);
+	  snprintf(x1rsname,10,"m%d_rf%d",i+1,j+1);
 	  if(ps_fffloat(*par,x1rsname,x1rs[i]+j)) 
 	    { x1rs[i][j] = e1; 
 	      fprintf(stdout, "WARNING: x1rs[%d][%d] is set to the default value %f!\n",i,j,e1);
@@ -623,7 +623,7 @@ int main(int argc, char **argv) {
 	    fprintf(stdout,"%s=%e\n",x1rsname,*(x1rs[i]+j));
 
 	}
-	sprintf(valname,"m%d_val%d",i+1,j+1);
+	snprintf(valname,10,"m%d_val%d",i+1,j+1);
 	if(ps_fffloat(*par,valname,values[i]+j)) 
 	  { values[i][j] = Vdefault[i]; 
 	    fprintf(stdout, "WARNING: values[%d][%d] is set to the default value %f!\n",i,j,Vdefault[i]);
