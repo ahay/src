@@ -23,7 +23,7 @@ void addftraffic(int n) {
   }
 }
 
-void printtraffic() {
+void printtraffic(void) {
   printctraffic_() ;
   printf(" F Traffic: ") ;
   printbigbytes(mmftrafficM, 1000000, mmftraffic) ;
@@ -496,7 +496,7 @@ void poppointer8(char **x) {
  * the global C stack followed by the auxiliary stacks.
  * Also shows the "looking" stack position if relevant,
  * and -999 if not relevant. */
-void printallbuffers() {
+void printallbuffers(void) {
   int cblocks,csize,lookcblocks,lookcsize,lookbufsize ;
   getbigcsizes_(&cblocks,&csize,&lookcblocks,&lookcsize) ;
   printf("MAIN C stack size :%8iB +%5i bytes (looking:%8iB +%5i)\n",
@@ -513,7 +513,7 @@ void printallbuffers() {
   printf(" plus POINTERs8:%4i bytes (looking:%4i)\n", adp8ibuf*8, lookbufsize) ;
 }
 
-void printbuffertop() {
+void printbuffertop(void) {
   int size = 0 ;
   size += adi4ibuf*4 ;
   size += adr4ibuf*4 ;
@@ -524,7 +524,7 @@ void printbuffertop() {
          size, (int)(size/1024.0)) ;
 }
 
-void showallstacks() {
+void showallstacks(void) {
   int i ;
   printf("BIT STACK      : %x == %i\n",adbitbuf,adbitbuf) ; 
   printf("INTEGER*4 BUFFER[%i]:",adi4ibuf) ;
