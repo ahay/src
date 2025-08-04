@@ -155,7 +155,7 @@ void sft2_init(float o1, float d1,
 }
 
 /*------------------------------------------------------------*/
-void sft2_close()
+void sft2_close(void)
 /*< close shift >*/
 {
     free(shf1);

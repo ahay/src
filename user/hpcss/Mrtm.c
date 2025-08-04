@@ -63,7 +63,6 @@ int main(int argc, char ** argv) {
     int ix, iz, it;        /* counters */
     int isrc;              /* source counter */
     int isx;               /* source location, in units of dx */
-    int imf;               /* movie frame counter */
     int nxz;               /* number of spatial grid points */
     int nz;                /* local storage for number of depth points */
     int ioff;              /* array offset */
@@ -169,7 +168,7 @@ int main(int argc, char ** argv) {
 	/* receiver wavefield initialization */
 	fzeros(rp0,nxz);
 	fzeros(rp1,nxz);
-	imf = 0;
+	/* imf = 0; */
   
 	/* compute receiver wavefield backward in time and image by
 	   crosscorrelation at zero time, space lag */
@@ -247,7 +246,7 @@ int main(int argc, char ** argv) {
 	    /* write receiver movie snap to file if necessary */
 	    if (NULL != ri.rmfile) {
 		sf_floatwrite(rp1,nxz,ri.rmfile);
-		imf++;
+		/* imf++; */
 	    }
         
 	    /* next t */

@@ -664,12 +664,12 @@ int main(int argc, char* argv[])
             memset(datapznumber,0,10);
             memset(datasznumber,0,10);
 
-            sprintf(dataznumber,"dataz%d",it/1);
-            sprintf(dataxnumber,"datax%d",it/1);
-            sprintf(datapxnumber,"datapx%d",it/1);
-            sprintf(datasxnumber,"datasx%d",it/1);
-            sprintf(datapznumber,"datapz%d",it/1);
-            sprintf(datasznumber,"datasz%d",it/1);
+            snprintf(dataznumber,10,"dataz%d",it/1);
+            snprintf(dataxnumber,10,"datax%d",it/1);
+            snprintf(datapxnumber,10,"datapx%d",it/1);
+            snprintf(datasxnumber,10,"datasx%d",it/1);
+            snprintf(datapznumber,10,"datapz%d",it/1);
+            snprintf(datasznumber,10,"datasz%d",it/1);
 
             fp1 = fopen(dataxnumber,"wb");
             fp2 = fopen(dataznumber,"wb");
