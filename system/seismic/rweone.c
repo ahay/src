@@ -559,7 +559,7 @@ void rweone_thr(
     }
 }
 
-void rweone_tap_init()
+void rweone_tap_init(void)
 /*< initialize taper >*/
 {
     int itap,jtap;
@@ -632,7 +632,7 @@ void rweone_fft(
 }
 
 
-void rweone_mrs_init()
+void rweone_mrs_init(void)
 /*< init MRS >*/
 {
     int ig;

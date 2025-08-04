@@ -495,7 +495,7 @@ REAL *e;
 /*                                                                           */
 /*****************************************************************************/
 
-double doublerand()
+double doublerand(void)
 {
   double result;
   double expo;
@@ -521,7 +521,7 @@ double doublerand()
 /*                                                                           */
 /*****************************************************************************/
 
-double narrowdoublerand()
+double narrowdoublerand(void)
 {
   double result;
   double expo;
@@ -546,7 +546,7 @@ double narrowdoublerand()
 /*                                                                           */
 /*****************************************************************************/
 
-double uniformdoublerand()
+double uniformdoublerand(void)
 {
   double result;
   long a, b;
@@ -564,7 +564,7 @@ double uniformdoublerand()
 /*                                                                           */
 /*****************************************************************************/
 
-float floatrand()
+float floatrand(void)
 {
   float result;
   float expo;
@@ -589,7 +589,7 @@ float floatrand()
 /*                                                                           */
 /*****************************************************************************/
 
-float narrowfloatrand()
+float narrowfloatrand(void)
 {
   float result;
   float expo;
@@ -613,7 +613,7 @@ float narrowfloatrand()
 /*                                                                           */
 /*****************************************************************************/
 
-float uniformfloatrand()
+float uniformfloatrand(void)
 {
   float result;
   long a;
@@ -643,7 +643,7 @@ float uniformfloatrand()
 /*****************************************************************************/
 
 
-void exactinit()
+void exactinit(void)
 {
   REAL half;
   REAL check, lastcheck;
