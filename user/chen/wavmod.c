@@ -124,7 +124,7 @@ void wavmod_shot(sf_file dat, sf_file wfl, int ns, int *ps, float **ws)
 	sf_floatwrite(data[0], ntj*ng, dat);
 }
 
-void wavmod_close()
+void wavmod_close(void)
 /*< release memory >*/
 {
 	free(data[0]);

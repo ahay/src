@@ -106,7 +106,7 @@ void ctoeplitz_solve (const sf_complex *r /* top row of the matrix */,
     }
 }
 
-void ctoeplitz_close()
+void ctoeplitz_close(void)
 /*< free allocated storage >*/
 {
     free (a);

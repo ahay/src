@@ -86,7 +86,7 @@ void MCHF_lop(bool adj, bool add, int nx, int ndata, sf_complex* xx, sf_complex*
 }
 
 
-void MCHF_close()
+void MCHF_close(void)
 /*<free allocated space>*/
 {
 	free(dat1);
