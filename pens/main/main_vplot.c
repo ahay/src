@@ -243,7 +243,7 @@ int main (int argc, char* argv[])
 		len = strlen(string);
 		pltinname[infileno] = sf_charalloc(len+1);
 
-		strncpy( pltinname[infileno],string,len);
+		memcpy( pltinname[infileno],string,len);
 
 		infileno++;
 	    }
