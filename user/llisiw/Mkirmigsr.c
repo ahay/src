@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
     if (adj) {
 	memset (out[0], 0, nzx*ng*sizeof(float));
     } else {
-	sf_floatread(out[0],nzx,mig);
+	sf_floatread(out[0],nzx*ng, mig);
     }
 
     /* fork to get number of threads*/

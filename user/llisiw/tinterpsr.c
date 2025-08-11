@@ -182,7 +182,7 @@ void dinterp_hermite(bool source /* source or receiver */,
     }
 }
 
-void tinterp_close()
+void tinterp_close(void)
 /*< close >*/
 {
     return;
