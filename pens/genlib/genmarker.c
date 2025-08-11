@@ -51,7 +51,7 @@ void genmarker (int npts, int type, int size, int *pvec)
     int             savetxfont, savetxprec, savetxovly, savefat;
     struct s_txalign  savealign;
     extern float    fatmult_orig;
-    char            txbuf[12];
+    char            txbuf[20];
     char           *txbuffer = txbuf;
 
     savealign.hor = txalign.hor;
@@ -84,7 +84,7 @@ void genmarker (int npts, int type, int size, int *pvec)
     else
 	if (type >= 127)		/* special non-ASCII character */
 	{
-	    sprintf (txbuffer, "\\v%d ", (int) type);
+	    snprintf (txbuffer, 20, "\\v%d ", (unsigned int) type);
 	    text_marker (txbuffer, size, npts, pvec);
 	}
 	else			/* 0 through 5 are pre-defined; 6 through 20
