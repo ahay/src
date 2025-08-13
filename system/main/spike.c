@@ -24,7 +24,8 @@ Spike positioning is given in samples and starts with 1.
 
 int main(int argc, char* argv[])
 { 
-    int i, j, is, ip, dim, n[SF_MAX_DIM], ii[SF_MAX_DIM];
+    unsigned int i;
+    int j, is, ip, dim, n[SF_MAX_DIM], ii[SF_MAX_DIM];
     int nsp, **k=NULL, **l=NULL, n1, n2, i1, i2, kk, ll;
     char key[7];
     const char *label, *unit;
