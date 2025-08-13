@@ -53,7 +53,7 @@ static void sizes(sf_file file, int axis, int ndim,
 }
 
 char** sf_split(sf_file inp          /* input file */, 
-		int axis             /* split axis */,
+		unsigned int axis    /* split axis */,
 		int nodes            /* number of CPUs */,
 		int *tasks           /* number of tasks */,
 		int ndim, off_t *n   /* [ndim] file dimensions */, 
@@ -116,14 +116,14 @@ char** sf_split(sf_file inp          /* input file */,
 
 		len = eq-arg;
 		splitout[outargc] = sf_charalloc(len+1);
-		strncpy(splitout[outargc],arg,len);
+		memcpy(splitout[outargc],arg,len);
 		splitout[outargc][len]='\0';
 
 		outargc++;
 
 		len = strlen(arg)-2;
 		if (k+len > SF_CMDLEN-2) sf_error("command line is too long");
-		strncpy(splitcommand+k,arg+2,len);
+		memcpy(splitcommand+k,arg+2,len);
 		splitcommand[k+len]=' ';
 		k += len+1;
 	    } else if ('_'==arg[0]) {
@@ -135,18 +135,18 @@ char** sf_split(sf_file inp          /* input file */,
 
 		len = eq-arg;
 		splitinp[inpargc] = sf_charalloc(len+1);
-		strncpy(splitinp[inpargc],arg,len);
+		memcpy(splitinp[inpargc],arg,len);
 		splitinp[inpargc][len]='\0';
 
 		inpargc++;
 
 		len = strlen(arg)-1;
 		if (k+len > SF_CMDLEN-2) sf_error("command line is too long");
-		strncpy(splitcommand+k,arg+1,len);
+		memcpy(splitcommand+k,arg+1,len);
 		splitcommand[k+len]=' ';
 		k += len+1;
 	    } else {
-		strncpy(command+j,arg,len);
+		memcpy(command+j,arg,len);
 		command[j+len]=' ';
 		j += len+1;
 	    }
@@ -254,7 +254,7 @@ char** sf_split(sf_file inp          /* input file */,
 	    sf_fileclose(in);
 
 	    snprintf(cmdline,jobs*SF_CMDLEN,"%s %s=%s",splitcmd,splitinp[i]+1,splitname);
-	    strncpy(splitcmd,cmdline,SF_CMDLEN);
+	    memcpy(splitcmd,cmdline,SF_CMDLEN);
 	}	
 
 	snprintf(cmdline,jobs*SF_CMDLEN,"%s %s < %s > %s",command,splitcmd,iname,oname);
@@ -265,7 +265,7 @@ char** sf_split(sf_file inp          /* input file */,
 
 void sf_out(sf_file out        /* output file */,
 	    int jobs           /* number of jobs */,
-	    int axis           /* join axis */,
+	    unsigned int axis  /* join axis */,
 	    const char *iname  /* name of the input file */)
 /*< prepare output >*/
 {
@@ -326,12 +326,13 @@ static void cleanup(int jobs)
     free(ins);
 }
 
-void sf_join(sf_file out /* output file */,
-	     int axis    /* axis to join */,
-	     int jobs    /* number of jobs */)
+void sf_join(sf_file out       /* output file */,
+	     unsigned int axis /* axis to join */,
+	     int jobs          /* number of jobs */)
 /*< join outputs >*/
 {
-    int i, job, dim, esize, *naxis, ni;    
+    unsigned int i;
+    int job, dim, esize, *naxis, ni;    
     off_t i2, left, nbuf, n[SF_MAX_DIM], n1, n2;
     char key[12], buf[BUFSIZ];
     sf_file in;
