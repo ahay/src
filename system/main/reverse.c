@@ -31,10 +31,11 @@ static void mirror (size_t       n1,
 int main(int argc, char* argv[])
 {
     sf_file in, out;
-    char *buf, *buf2, *opt, copt, key[3];
+    char *buf, *buf2, *opt, copt, key[12];
     /* Want them to be arbitrary, neither float nor complex */
     /* Just pretend they are character pointers so we multiply offsets ourselves.*/
-    int i, dim, dim1, dim2, esize, which;
+    int dim, dim1, dim2, esize, which;
+    unsigned int i;
     int mem; /* for avoiding int to off_t typecast warning */
     off_t n[SF_MAX_DIM], pos=0, pos3=0, memsize, size, *k1 = NULL, *k2 = NULL;
     size_t n1, n2, n3, i1, i2, i3;
@@ -89,10 +90,10 @@ int main(int argc, char* argv[])
 	if (!f[i]) continue;
 	dim2=i;
 	if ('i' != copt) {     /* update the o's and d's .*/
-	    snprintf(key,3,"d%d",i+1);
+	    snprintf(key,12,"d%d",i+1);
 	    if (!sf_histfloat(in,key,&d)) d=1.;
 	    if ('y'==copt) sf_putfloat(out,key,-d);
-	    snprintf(key,3,"o%d",i+1); 
+	    snprintf(key,12,"o%d",i+1); 
 	    if (!sf_histfloat(in,key,&o)) o=0.;
 	    o += (n[i] - 1) * d;
 	    if ('n'==copt) o=-o;
