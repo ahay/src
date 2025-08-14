@@ -1282,7 +1282,7 @@ void actionGoto(Widget w, XEvent *ev, String *p, Cardinal *np)
 void set_mode_label(const char *newlab)
 { 
     Arg arg[1];
-    char text[32];
+    char text[33];
 
     if( wantLabels ){
 	strncpy( text, newlab, 32 );

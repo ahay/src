@@ -66,6 +66,7 @@ static AVCodecContext *codec_ctx = NULL;
 static AVFrame *mpeg_frame = NULL;
 #if LIBAVCODEC_VERSION_MAJOR >= 54
 static AVPacket mpeg_pkt;
+static AVPacket *mpeg_pnt = NULL;
 static int mpeg_gout;
 #else
 static int frame_out_size;
@@ -529,14 +530,18 @@ static void ffmpeg_write (void) {
     frame_out_size = avcodec_encode_video (codec_ctx, frame_outbuf,
                                            frame_outbuf_size, mpeg_frame);
     fwrite (frame_outbuf, 1, frame_out_size, pltout);
-#else
+#else 
+#if LIBAVCODEC_VERSION_MAJOR < 58
     av_init_packet (&mpeg_pkt);
     mpeg_pkt.data = NULL;
     mpeg_pkt.size = 0;
-#if LIBAVCODEC_VERSION_MAJOR < 58
     if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, mpeg_frame, &mpeg_gout) < 0)
         ERR (FATAL, name, "MPEG encoding error\n");
 #else
+    mpeg_pnt = av_packet_alloc();
+    mpeg_pkt = *mpeg_pnt;
+    mpeg_pkt.data = NULL;
+    mpeg_pkt.size = 0;
     if (avcodec_send_frame(codec_ctx, mpeg_frame) < 0)
 	ERR (FATAL, name, "MPEG send frame error\n");
     mpeg_gout = avcodec_receive_packet(codec_ctx, &mpeg_pkt);
