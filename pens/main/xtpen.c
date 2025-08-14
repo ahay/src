@@ -1285,7 +1285,7 @@ void set_mode_label(const char *newlab)
     char text[32];
 
     if( wantLabels ){
-	strncpy( text, newlab, 32 );
+	memcpy( text, newlab, 32 );
 	XtSetArg( arg[0], XtNlabel, text );
 	XtSetValues( mode_button , arg, ONE );
     }
