@@ -1282,10 +1282,10 @@ void actionGoto(Widget w, XEvent *ev, String *p, Cardinal *np)
 void set_mode_label(const char *newlab)
 { 
     Arg arg[1];
-    char text[32];
+    char text[33];
 
     if( wantLabels ){
-	memcpy( text, newlab, 32 );
+	strncpy( text, newlab, 32 );
 	XtSetArg( arg[0], XtNlabel, text );
 	XtSetValues( mode_button , arg, ONE );
     }
