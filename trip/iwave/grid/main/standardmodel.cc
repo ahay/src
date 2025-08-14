@@ -500,10 +500,10 @@ int main(int argc, char **argv) {
   float * x1rs[4] = {NULL,NULL,NULL,NULL};   /* pointers to reflector depth arrays */
   float * values[4] = {NULL,NULL,NULL,NULL}; /* pointers to layered value arrays in model 10*/
   
-  int i,j;
+  int i, j;
   char numlname[10];
-  char valname[10];
-  char x1rsname[10];
+  char valname[20];
+  char x1rsname[20];
 
   char * cwdpath;
   char * pathptr;
@@ -614,7 +614,7 @@ int main(int argc, char **argv) {
        
       for (j =0; j< numl[i]; j++){
 	if (j < numl[i]-1){
-	  snprintf(x1rsname,10,"m%d_rf%d",i+1,j+1);
+	  snprintf(x1rsname,20,"m%d_rf%d",i+1,j+1);
 	  if(ps_fffloat(*par,x1rsname,x1rs[i]+j)) 
 	    { x1rs[i][j] = e1; 
 	      fprintf(stdout, "WARNING: x1rs[%d][%d] is set to the default value %f!\n",i,j,e1);
@@ -623,7 +623,7 @@ int main(int argc, char **argv) {
 	    fprintf(stdout,"%s=%e\n",x1rsname,*(x1rs[i]+j));
 
 	}
-	snprintf(valname,10,"m%d_val%d",i+1,j+1);
+	snprintf(valname,20,"m%d_val%d",i+1,j+1);
 	if(ps_fffloat(*par,valname,values[i]+j)) 
 	  { values[i][j] = Vdefault[i]; 
 	    fprintf(stdout, "WARNING: values[%d][%d] is set to the default value %f!\n",i,j,Vdefault[i]);
