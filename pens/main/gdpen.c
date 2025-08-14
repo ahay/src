@@ -61,7 +61,7 @@ static int color_table[NCOLOR], gdcolor, bgcolor, delay, nx, ny;
 static const char *image_type;
 
 #ifdef FFMPEG
-static AVCodec *codec = NULL;
+static const AVCodec *codec = NULL;
 static AVCodecContext *codec_ctx = NULL;
 static AVFrame *mpeg_frame = NULL;
 #if LIBAVCODEC_VERSION_MAJOR >= 54

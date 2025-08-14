@@ -536,7 +536,7 @@ int main(int argc, char **argv) {
   float * x1rs[4] = {NULL,NULL,NULL,NULL};   /* pointers to reflector depth arrays */
   float * values[4] = {NULL,NULL,NULL,NULL}; /* pointers to layered value arrays in model 10*/
   
-  int i,j;
+  unsigned int i,j;
   char numlname[10];
   char valname[10];
   char x1rsname[10];
