@@ -66,7 +66,7 @@ static AVCodecContext *codec_ctx = NULL;
 static AVFrame *mpeg_frame = NULL;
 #if LIBAVCODEC_VERSION_MAJOR >= 54
 static AVPacket mpeg_pkt;
-static *AVPacket mpeg_pnt = NULL;
+static AVPacket *mpeg_pnt = NULL;
 static int mpeg_gout;
 #else
 static int frame_out_size;
