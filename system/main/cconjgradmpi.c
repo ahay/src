@@ -33,10 +33,10 @@ In this version, the linear operator program uses --input and --output instead o
 #include <rsf.h>
 
 #define DLOOP(a) for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {	\
-	if (dsiz < dbuf) dbuf=dsiz; {a} }
+	if (dsiz < dbuf) { dbuf=dsiz; } {a} }
 
 #define MLOOP(a) for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {	\
-	if (msiz < mbuf) mbuf=msiz; {a} }
+	if (msiz < mbuf) { mbuf=msiz; } {a} }
 
 #define DREAD(a) if (dbuf != fread(buf,sizeof(float),dbuf,a))	\
 	sf_error("write error")
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 	len = strlen(arg);
 	if (cmdlen+len > SF_CMDLEN-2) sf_error("command line is too long");
 
-	strncpy(cmdline+cmdlen,arg,len);
+	memcpy(cmdline+cmdlen,arg,len);
 	cmdline[cmdlen+len]=' ';
 	cmdlen += len+1;
     }
