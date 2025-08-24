@@ -290,7 +290,7 @@ int main (int argc, char* argv[])
 	    len = strlen(cptr);
 	    pltinname[infileno] = sf_charalloc(len+1);
 	    
-	    strncpy (pltinname[infileno], cptr,len);
+	    memcpy (pltinname[infileno], cptr,len);
 	    pltinarray[infileno] = temp;
 	    infileno++;
 	}
