@@ -391,7 +391,7 @@ int rd_a_fsprint(RDOM *dom, const char *path)
         
     for ( a = 0; a < dom->narr; ++a )
     {
-        if ( sprintf(path2, "%s%d", path, a) < 0 ) return E_OTHER;
+      if ( snprintf(path2, 70, "%s%d", path, a) < 0 ) return E_OTHER;
             
         err = ra_fprint(dom->_s + a, path2);
         if ( err ) return err;

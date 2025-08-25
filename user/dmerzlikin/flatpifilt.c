@@ -64,7 +64,7 @@ void flatpifilt_init(int n1, int n2     /* data size */,
 
     // I propose to estimate beta 
     // based on four velocity points
-    if (passthr == 999999999.999) {
+    if (passthr >= 999999999.999) {
 	passthr = 1.0/0.001;
 	}
 

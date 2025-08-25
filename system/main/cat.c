@@ -44,7 +44,7 @@ static int sort_order(const void *a, const void *b)
 }
 
 static void check_compat (int esize, int nin, int nopen, sf_file *ins, 
-			  const char **filename, int axis, 
+			  const char **filename, unsigned int axis, 
 			  int dim, const off_t *n, /*@out@*/ int *naxis);
 
 int main (int argc, char* argv[])
@@ -172,18 +172,18 @@ int main (int argc, char* argv[])
 	ni += nspace*(nin-1);
     } 
 
-    (void) snprintf(key,3,"n%d",axis);
+    (void) snprintf(key,12,"n%d",axis);
     sf_putint(out,key,(int) ni);
     
     if (sf_getfloat("o",&f)) {
 	/* axis origin */
-	(void) snprintf(key,3,"o%d",axis);
+	(void) snprintf(key,12,"o%d",axis);
 	sf_putfloat(out,key,f);
     }
 
     if (sf_getfloat("d",&f)) {
 	/* axis sampling */
-	(void) snprintf(key,3,"d%d",axis);	
+	(void) snprintf(key,12,"d%d",axis);	
 	sf_putfloat(out,key,f);
     }
 
@@ -232,7 +232,7 @@ int main (int argc, char* argv[])
 }
 
 static void check_compat (int esize, int nin, int nopen, sf_file *ins, 
-			  const char **filename, int axis, int dim, 
+			  const char **filename, unsigned int axis, int dim, 
 			  const off_t *n, /*@out@*/ int *naxis) 
 /* check if the file dimensions are compatible */
 {
@@ -249,11 +249,11 @@ static void check_compat (int esize, int nin, int nopen, sf_file *ins,
 	if (!sf_histint(in,"esize",&ni) || ni != esize)
 	    sf_error ("esize mismatch: need %d",esize);
 	for (id=1; id <= dim; id++) {
-	    (void) snprintf(key,3,"n%d",id%10u);
+	    (void) snprintf(key,12,"n%d",id%10u);
 	    if (!sf_histint(in,key,&ni) || (id != axis && ni != n[id-1]))
 		sf_error("%s mismatch: need %d",key,(int) n[id-1]);
 	    if (id == axis) naxis[i] = ni;
-	    (void) snprintf(key,3,"d%d",id%10u);
+	    (void) snprintf(key,12,"d%d",id%10u);
 	    if (sf_histfloat(ins[0],key,&d)) {
 		if (!sf_histfloat(in,key,&di) || 
 		    (id != axis && fabsf(di-d) > tol*fabsf(d)))
@@ -261,14 +261,14 @@ static void check_compat (int esize, int nin, int nopen, sf_file *ins,
 	    } else {
 		d = 1.;
 	    }
-	    (void) snprintf(key,3,"o%d",id%10u);
+	    (void) snprintf(key,12,"o%d",id%10u);
 	    if (sf_histfloat(ins[0],key,&o) && 
 		(!sf_histfloat(in,key,&oi) || 
 		 (id != axis && fabsf(oi-o) > tol*fabsf(d))))
 		sf_warning("%s mismatch: need %g",key,o);
 	}
 	if (axis > dim) {
-	    (void) snprintf(key,3,"n%d",axis);
+	    (void) snprintf(key,12,"n%d",axis);
 	    if (!sf_histint(in,key,naxis+i)) naxis[i]=1;
 	}
 	

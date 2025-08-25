@@ -390,7 +390,7 @@ void prtm2d_init(bool verb_, bool csdgather_, bool fromBoundary_, float dz_, flo
     sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 }
 
-void prtm2d_close()
+void prtm2d_close(void)
 /*< free allocated variables >*/
 {
     free(bndr);
@@ -507,7 +507,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
     }	 
 }
 
-void prtm2d_adjtest()
+void prtm2d_adjtest(void)
 /*< prtm2d adjoint test >*/	  
 {
     unsigned int i;

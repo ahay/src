@@ -260,7 +260,7 @@ void icfft3(sf_complex *out /* [n1*n2*n3] */,
     }
 }
 
-void cfft3_finalize()
+void cfft3_finalize(void)
 /*< clean up fftw >*/
 {
 #ifdef SF_HAS_FFTW

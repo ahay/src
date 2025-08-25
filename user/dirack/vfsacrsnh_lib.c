@@ -38,7 +38,7 @@
 /*< Signal function >*/
 /*^*/
 
-float getRandomNumberBetween0and1(){
+float getRandomNumberBetween0and1(void){
 /*< Function to get a random number between 0 and 1 >*/
 
 	return (float)(rand()%1000)/1000;

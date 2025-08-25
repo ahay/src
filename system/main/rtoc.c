@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     cformat = sf_charalloc(strlen(rformat)+1
                            -strlen("float")
                            +strlen("complex"));
-    strncpy(cformat,rformat,strlen(rformat));
+    memcpy(cformat,rformat,strlen(rformat));
     strcpy(strstr(cformat,"float"),"complex");
     sf_setformat(cmplx,cformat);
 

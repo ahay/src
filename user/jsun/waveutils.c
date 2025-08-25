@@ -540,7 +540,7 @@ int rcvill2(float **sill, sf_complex **rcd, geopar geop)
     /* pointers */
     sf_complex **lt, **rt;
 
-    int it,iz,im,ik,ix,i,j,wfit;     /* index variables */
+    int it,iz,im,ik,ix,i,j;     /* index variables */
     int nk, nz2, nx2, nzx2;
     sf_complex c;
     sf_complex *cwave, *cwavem;
@@ -591,7 +591,7 @@ int rcvill2(float **sill, sf_complex **rcd, geopar geop)
 
     /* step backward in time (PSPI) */
     /*Main loop*/
-    wfit = (int)(nt-1)/snpint;
+    /* wfit = (int)(nt-1)/snpint; */
     for (it = nt-1; it>=0; it--) {
       if  (verb) sf_warning("Backward receiver it=%d/%d;", it, nt-1);
 #ifdef _OPENMP
@@ -617,7 +617,7 @@ int rcvill2(float **sill, sf_complex **rcd, geopar geop)
 	    sill[ix][iz] += pow(hypotf(crealf(curr[j]),cimagf(curr[j])),2);
 	  }
 	}
-	wfit--;
+	/* wfit--; */
       }
 
       /*matrix multiplication*/

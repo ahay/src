@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 	commands = sf_split(inp,axis,nodes,&jobs,ndim,n,argc,argv);  
 
 	for (job=0; job < jobs; job++) {
-	    strncpy(cmdline,commands[job],SF_CMDLEN);
+	    memcpy(cmdline,commands[job],SF_CMDLEN);
 	    MPI_Send(cmdline, SF_CMDLEN, MPI_CHAR, job+1, 0, MPI_COMM_WORLD);
 	}
 

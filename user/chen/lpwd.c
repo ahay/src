@@ -132,7 +132,7 @@ void lpwd_freq(float dip, int nk, sf_complex**out, bool iir)
 }
 
 
-void lpwd_close()
+void lpwd_close(void)
 /*< release memory >*/
 {
     free(b1);

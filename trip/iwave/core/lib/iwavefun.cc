@@ -83,17 +83,17 @@ int initoutstream(FILE ** stream, int rk, int sz) {
     if ((aaa > 1) && ( bbb != '/')) 
 	strcat(filename,"/");
     if      ( sz < 10 )
-	sprintf(tmp,"cout%01d.txt",rk);
+      snprintf(tmp,20,"cout%01d.txt",rk);
     else if ( sz < 100 )
-	sprintf(tmp,"cout%02d.txt",rk);
+      snprintf(tmp,20,"cout%02d.txt",rk);
     else if ( sz < 1000 )
-	sprintf(tmp,"cout%03d.txt",rk);
+      snprintf(tmp,20,"cout%03d.txt",rk);
     else if ( sz < 10000 )
-	sprintf(tmp,"cout%04d.txt",rk);
+      snprintf(tmp,20,"cout%04d.txt",rk);
     else if ( sz < 100000 )
-	sprintf(tmp,"cout%05d.txt",rk);
+      snprintf(tmp,20,"cout%05d.txt",rk);
     else
-	sprintf(tmp,"cout%d.txt",rk);
+      snprintf(tmp,20,"cout%d.txt",rk);
 
     strcat(filename,tmp);
 

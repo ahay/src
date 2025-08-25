@@ -32,7 +32,6 @@
 /*****************************************************************************************/
 int main(int argc, char* argv[])
 {
-	int   i;
         float *data;
         cjbsegy  *tr;
         char *fn;
@@ -89,7 +88,7 @@ int main(int argc, char* argv[])
         data = sf_floatalloc(nz);
 
         rewind(Fi);
-        for(i=0;;i++)
+        while(true)
         {
 	    if (1 != fread(tr,sizeof(cjbsegy),1,Fi))
 		sf_error("fread error:");

@@ -289,7 +289,8 @@ static void check_compat (size_t       nin,
 			  float*       o, 
 			  sf_datatype  type) 
 {
-    int ni, id;
+    int ni;
+    unsigned int id;
     size_t i;
     float di, oi;
     char key[3];

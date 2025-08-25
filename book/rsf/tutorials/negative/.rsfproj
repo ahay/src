@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfgraph', 'sfrtoc', 'sffft3', 'sfwindow', 'sfreal', 'sfcat', 'sfmatplotlib']
+data=[]
+size=      11996

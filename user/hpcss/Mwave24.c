@@ -60,14 +60,11 @@ int main(int argc, char ** argv) {
     float * tmp;     /* used to swap p1 and p0 */
     
     int ix, it;      /* counters */
-    int isrc;        /* source counter */
-    int imf;         /* movie frame counter */
     int isx;         /* source location, in units of dx */
     int nxz;         /* number of spatial grid points */
     /* int nz;          local number of gridpoints */
     int ntr;         /* number of traces */
     int nsam;        /* number of trace samples */
-    int nsrc;        /* number of shots */
     float rz,rx,s;   /* precomputed coefficients */
     float vmax,vmin; /* max, min velocity values */
     /* float two;       two */
@@ -80,7 +77,7 @@ int main(int argc, char ** argv) {
     getinputs(true,&wi);
     
     /* compute number of shots */
-    nsrc = (wi.isxend-wi.isxbeg)/(wi.iskip); nsrc++;
+    /* nsrc = (wi.isxend-wi.isxbeg)/(wi.iskip); nsrc++; */
     
     /* compute number of spatial grid points */
     /* 2,4 FEATURE: nz->nz+2, nx->nx+2 */
@@ -134,7 +131,7 @@ int main(int argc, char ** argv) {
 /*    nz=wi.nz; */
     
     /* shot loop */
-    isrc=0;
+    /* isrc=0; */
     isx=wi.isxbeg;
     while (isx <= wi.isxend) {
 	
@@ -144,7 +141,7 @@ int main(int argc, char ** argv) {
 	fzeros(tr,nsam);
 	
 	/* initialize movie frame counter */
-	imf=0;
+	/* imf=0; */
 	
 	/* time loop */
 	for (it=0;it<wi.nt;it++) {
@@ -174,7 +171,7 @@ int main(int argc, char ** argv) {
                 /* 2,4 FEATURE: write interior of each interior column */
 		for (ix=1;ix<wi.nx+1;ix++) 
 		    sf_floatwrite(p1+ix*(wi.nz+2)+1,wi.nz,wi.mfile);
-		imf++;
+		/* imf++; */
 	    }
 	    
 	    /* next t */
@@ -185,7 +182,7 @@ int main(int argc, char ** argv) {
 	    sf_floatwrite(tr,nsam,wi.tfile);
 	
 	isx += wi.iskip;
-	isrc++;
+	/* isrc++; */
     } 
 
 

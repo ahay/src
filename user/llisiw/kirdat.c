@@ -45,7 +45,7 @@ void filt_init(float dt0 /* time sampling */,
     filt = sf_floatalloc2(nsam,mts);
 }
 
-void filt_close()
+void filt_close(void)
 /*< close >*/
 {
     int its;

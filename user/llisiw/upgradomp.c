@@ -57,7 +57,7 @@ void upgrad_init(int mdim        /* number of dimensions */,
     }
 }
 
-upgrad upgrad_alloc()
+upgrad upgrad_alloc(void)
 /*< allocate memory for stencil >*/
 {
     upgrad upg;

@@ -88,7 +88,7 @@ void sf_init(int argc,char *argv[])
     tprog = strrchr(argv[0],'/');
     tprog = (NULL == tprog)? argv[0]:tprog+1;
     prog_len = strlen(tprog)+1;
-    strncpy(prog,tprog,prog_len);
+    memcpy(prog,tprog,prog_len);
     
     /* no pars and input from terminal */
     if (1==argc && !sf_stdin()) {
@@ -109,7 +109,7 @@ void sf_init(int argc,char *argv[])
 	if (NULL == pass) {
 	    user[0] = '\0';
 	} else {
-	    strncpy(user,pass->pw_name,USERNAME_MAX);
+	    memcpy(user,pass->pw_name,USERNAME_MAX);
 	}
     }
 

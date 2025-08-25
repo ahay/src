@@ -41,10 +41,11 @@ int main(int argc, char* argv[])
 {
     int dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     int it, niter, nm, n1, n2, n3, i3, i2, i1, i, gate, i0;
-    float **scan, **weight, *pick, *ampl, *pick2, o2, d2, an, asum, a, ct, vel0;
+    float **scan, **weight, *pick, *ampl, *pick2, **time;
+    float o2, d2, an, asum, a, ct, vel0;
     bool smooth, norm, back;
     char key[6], *label;
-    sf_file scn, pik;
+    sf_file scn, pik, tim;
 
     sf_init(argc,argv);
     scn = sf_input("in");
@@ -101,10 +102,16 @@ int main(int argc, char* argv[])
     if (!sf_getbool("back",&back)) back=false;
     /* if run backward */
 
+    if (NULL != sf_getstring("time")) {
+      tim = sf_output("time");
+    } else {
+      tim = NULL;
+    }
+
     scan = sf_floatalloc2(n1,n2);
     weight = sf_floatalloc2(n2,n1);
 
-    (void) dynprog_init(n1,n2,gate,an,false);
+    time = dynprog_init(n1,n2,gate,an, tim != NULL);
 
     if (smooth) {
 	    pick = sf_floatalloc(nm);
@@ -118,8 +125,8 @@ int main(int argc, char* argv[])
     }
 
     for (i3=0; i3 < n3; i3++) {
-	    sf_warning("cmp %d of %d;",i3+1,n3);
-	    sf_floatread(scan[0],n1*n2,scn);
+      sf_warning("cmp %d of %d;",i3+1,n3);
+      sf_floatread(scan[0],n1*n2,scn);
 
         // Normalize between 0.0 and 1.0
         if (norm) normalize(n1,n2,scan);
@@ -160,6 +167,8 @@ int main(int argc, char* argv[])
 	        }
 	        sf_floatwrite(pick2,n1,pik);
 	    }
+
+	    if (tim != NULL) sf_floatwrite(*time,n1*n2,tim);
     }
     sf_warning(".");
 
@@ -184,6 +193,8 @@ int main(int argc, char* argv[])
 
 	    sf_floatwrite(pick2,nm,pik);
     }
+
+
 
     exit(0);
 }

@@ -68,7 +68,7 @@ bool tau; /* true : tau
 sf_file Fvmap; float *vmap; /*     [nx][nz] */
 sf_file Fsigm; float *sigm; /*     [nx][nz] */
 
-void init()
+void init(void)
 {
     int i,b[4];
     float c[4],czl,czh,cxl,cxh,z_,x_,tmpf,eps;
@@ -256,7 +256,7 @@ void init()
     if (tau) {sf_fileclose(Fvmap); sf_fileclose(Fsigm);}
 }
 
-void update()
+void update(void)
 {
     int i,j,k,it,iit,ic,ir,ix,iz,Ncz,Nrz,Ncx,Nrx,n[2],l[2],h[2],N[2];
     float dt2,o[2],d[2],*vnmo2,*vver2,*heta2,*cpx,*cpz,*cqx,*cqz,*pa,*po,*pb,*qa,*qo,*qb,*wa,*wo,*wb,*ua,*uo,*ub,*tmp,*RZ,*RX;
@@ -480,7 +480,7 @@ void update()
     int2_free(I2);
 }
 
-void update_tau()
+void update_tau(void)
 {
     int i,j,k,it,iit,ic,ir,ix,iz,Ncz,Nrz,Ncx,Nrx,n[2],l[2],h[2],N[2];
     float dt2,o[2],d[2],*vnmo2,*vver2,*heta2,*vmap2,*sigm2,*cpx,*cpz,*cqx,*cqz,*pa,*po,*pb,*qa,*qo,*qb,*wa,*wo,*wb,*ua,*uo,*ub,*tmp,*RZ,*RX,*RS;

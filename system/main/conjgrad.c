@@ -30,10 +30,10 @@
 #include <rsf.h>
 
 #define DLOOP(a) for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {	\
-	if (dsiz < dbuf) dbuf=dsiz; {a} }
+	if (dsiz < dbuf) { dbuf=dsiz; } {a} }
 
 #define MLOOP(a) for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {	\
-	if (msiz < mbuf) mbuf=msiz; {a} }
+	if (msiz < mbuf) { mbuf=msiz; } {a} }
 
 #define DREAD(a) if (dbuf != fread(buf,sizeof(float),dbuf,a))	\
 	sf_error("write error")

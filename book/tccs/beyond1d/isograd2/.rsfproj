@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfspline', 'sfcat', 'sfmath', 'sfgraph', 'sfput', 'sfisaac2', 'sfunif2', 'sftransp', 'sfgrey', 'sfderiv', 'sfkirmod_newton', 'sfcausint', 'sfspray', 'sfspike', 'sffermatrecursion', 'sfbox', 'sfdatstretch', 'sfscale']
+data=[]
+size=   27053444

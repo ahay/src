@@ -37,7 +37,7 @@ void radon_init (int nx_in                            /* number of offsets */,
     czero = sf_cmplx(0.,0.);
 }
 
-void radon_close () 
+void radon_close (void) 
 /*< free allocated storage >*/
 {
     free (c0);

@@ -1846,7 +1846,7 @@ dft3d dft3d_init(int pad1,
 }
 
 /*------------------------------------------------------------*/
-void dft3d_finalize()
+void dft3d_finalize(void)
 /*< finalize 3d fft >*/
 {
     fft_finalize();
@@ -2112,7 +2112,7 @@ void ksp3d_apply2(float *wavedxx,
 }
 
 /*------------------------------------------------------------*/
-void ksp3d_finalize()
+void ksp3d_finalize(void)
 /*< free static memory allocated for ksp >*/
 {
     free(wavek);
@@ -2240,7 +2240,7 @@ void vksp3d_apply(float *wavea,
 }
 
 /*------------------------------------------------------------*/
-void vksp3d_finalize()
+void vksp3d_finalize(void)
 /*< free static memory allocated for fft and ksp >*/
 {
     free(waveka);
@@ -2605,7 +2605,7 @@ void clr3d_apply_dbg(sf_complex **uo,
 }
 
 /*------------------------------------------------------------*/
-void clr3d_finalize()
+void clr3d_finalize(void)
 /*< free static memory allocated for clr >*/
 {
     free(cwave);
