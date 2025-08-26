@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(use='hyperref,listings',color='model dmig2 vel')

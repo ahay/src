@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfmutter', 'sfnmostretch', 'sftransp', 'sfdmo', 'sfwindow', 'sfvscan', 'sfgrey', 'sfstack', 'sfnmo', 'sfkirchnew', 'sfagc', 'sfshapeagc']
-data=['data/midpts/midpts.hh', 'data/midpts/beifit.HH']
-size=  120253000

@@ -1,6 +1,0 @@
-from rsf.proj import *
-
-# temporary placeholder plot
-Result ('spike',None,'spike n1=5 | graph')
-
-End()

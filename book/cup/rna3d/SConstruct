@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(use='listings,color,amsmath',color='data flt flt-np')
