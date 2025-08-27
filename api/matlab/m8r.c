@@ -33,7 +33,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 		 int nrhs, const mxArray *prhs[])
 {
     int cmdlen, status, argc=2, i, esize, ddim, dims[SF_MAX_DIM], strlen;
-    mwSize ndim;
+    mwSize ndim, mdims[SF_MAX_DIM];
     const mwSize *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
     char *cmd=NULL, *argv[] = {"matlab","-"}, *strtag=NULL;
@@ -210,8 +210,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
     type = sf_gettype (inp);
     ndim = sf_filedims(inp,dims);
     esize = sf_esize(inp);
+    for (mwSize i=0; i<ndim; i++) {
+	mdims[i]=(mwSize)dims[i];
+    }
     
-    plhs[0] = mxCreateNumericArray(ndim,dims,mxDOUBLE_CLASS,
+    plhs[0] = mxCreateNumericArray(ndim,mdims,mxDOUBLE_CLASS,
 				   type==SF_COMPLEX?mxCOMPLEX:mxREAL);
     dr = mxGetPr(plhs[0]);
     if (type==SF_COMPLEX) di = mxGetPi(plhs[0]);
