@@ -28,13 +28,13 @@ static sf_triangle *tr;
 
 
 void ltfdiv_init(int ndat        /* input trace length */, 
-		         int nbase       /* base length [nbase=2*nw]*/,
+		 int nbase       /* base length [nbase=2*nw]*/,
                  int *rects      /* nonstationary smoothing radius [nw] */,
                  float *eps0     /* nonstationary localization scalar [nw] */,
                  float lam0     /* regularization */,
                  float tol0     /* tolerance of ratio correction */,
                  bool iscenter   /* bidirectional flag */,
-		         bool issmooth   /* smooth flag (anti-leackage) */)
+		 bool issmooth   /* smooth flag (anti-leackage) */)
 /*< initialize >*/
 {
     int i2;

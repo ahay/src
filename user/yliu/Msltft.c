@@ -61,13 +61,16 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
-    /* if y, do inverse transform */
+
     if (!sf_getbool("smooth",&ismooth)) ismooth = false;
-    /* verbosity flag */
+    /* if y, use smoothing operator */
+    
     if (!sf_getbool("abs",&isabs)) isabs = false;
+    /* if y, output time-frequency amplitude spectrum */
 
     if (!sf_getbool("center",&icenter)) icenter = true;
-    /* verbosity flag */
+    /* if y, calculate center-localized spectrum */
+    
     if (!sf_getfloat("lambda",&lam)) lam=1.0f;
     /* regularization trade-off parameter */
     lam *=lam;
@@ -147,7 +150,6 @@ int main(int argc, char* argv[])
     } else {
 	rat = NULL;
     }
-    
     
     /* Sine and cosine bases */
     for (i1=0; i1<n1; i1++) {
