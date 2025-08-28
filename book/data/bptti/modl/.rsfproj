@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfgrey', 'sfscale']
-data=['LOCAL']
-size=  362966336
