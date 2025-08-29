@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sftahsort', 'sftahwrite', 'sfwindow', 'sfput', 'sfgrey', 'sfwiggle', 'sftahremoveclick', 'sfadd']
-data=['PRIVATE']
-size=   72728000
