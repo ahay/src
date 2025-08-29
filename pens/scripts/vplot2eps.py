@@ -36,27 +36,31 @@ def convert(vplot,eps,
     opts = os.environ.get('PSTEXPENOPTS',options)
 
     # Get bounding box info from vplot file
-    getbb = vppen + ' big=y stat=l %s < %s | head -1 | cut -d : -f 2' % (opts,vplot)
+    getbb = vppen + ' big=y stat=l %s < %s' % (opts,vplot)
 
     process = subprocess.Popen(getbb, stdout=subprocess.PIPE, shell=True)
     output, error = process.communicate()
 
-#    out = os.popen(getbb)
-#    head = out.read().split()
-
-    head = output.split()
+    # Use re to match bounding box from vplot file.
+    head = output.decode('utf-8', errors='ignore')
     process.stdout.close()
+
+    # An example of head:
+    # /var/tmp/vppenumq3hE[: h=   8.72 w=  10.92 ;  x=(   1.82 ,  12.74 ) y=(   0.83 ,   9.55 ) 
+    #         Total 1 plot frame.
+    pattern = r"x=\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)\s*y=\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)"
+    hmatch = re.search(pattern, head).groups()
 
     # Use parameters for bounding box if supplied.
     # Otherwise use bounding box from vplot file.
-    if xbmin==None: xbbm = head[6]
+    if xbmin==None: xbbm = hmatch[0]
     else:           xbbm = xbmin
-    if xbmax==None: xbbp = head[8]
+    if xbmax==None: xbbp = hmatch[1]
     else:           xbbp = xbmax
 
-    if ybmin==None: ybbm = head[11]
+    if ybmin==None: ybbm = hmatch[2]
     else:           ybbm = ybmin
-    if ybmax==None: ybbp = head[13]
+    if ybmax==None: ybbp = hmatch[3]
     else:           ybbp = ybmax
 
     # Compute bounding box
