@@ -5,8 +5,8 @@ from rsf.proj import *
 ####################
 tgz = '2D_Land_data_2ms.tgz'
 Fetch(tgz,
-      server='http://www.freeusp.org',
-      top='RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
+      server='https://stuartschmitt.com',
+      top='FreeUSP/RaceCarWebsite/TechTransfer/Tutorials/Processing_2D',
       dir='Data')
 files = ['Line_001.'+x for x in Split('TXT SPS RPS XPS sgy')]
 Flow(files,tgz,
