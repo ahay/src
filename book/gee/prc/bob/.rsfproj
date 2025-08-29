@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfgrey', 'sfvscan', 'sfpick', 'sfwindow', 'sfgraph', 'sfslice', 'sfdix', 'sfcat']
-data=['data/cmp/cmp.h']
-size=     484000

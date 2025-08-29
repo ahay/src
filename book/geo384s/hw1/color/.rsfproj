@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfgrey', 'sfcsv2rsf', 'sftransp', 'sfremap1', 'sfscale', 'sfstack', 'sfgraph']
-data=['http://certmapper.cr.usgs.gov/nersl/NPRA/SEISMIC/1981/31_81/PROCESSED/31_81_PR.SGY']
-size=    3209464

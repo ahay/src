@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfgrey', 'sffft1', 'sffft3', 'sfwindow', 'sfmath', 'sfreal', 'sfadd', 'sfradon', 'sfcut', 'sfmul']
-data=['data/alaska/shot.HH']
-size=   27111840

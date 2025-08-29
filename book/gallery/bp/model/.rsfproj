@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfcat', 'sfdd', 'sfheadermath', 'sfmask', 'sfput', 'sfgrey', 'sfintbin', 'sfbyte', 'sfgrey3', 'sfheaderwindow', 'sfcut']
-data=['data/bpait/bpaitvel.hh', 'pub/datasets/2D/2004_BP_Vel_Benchmark/shots0001_0200.segy.gz', 'pub/datasets/2D/2004_BP_Vel_Benchmark/shots0201_0400.segy.gz', 'pub/datasets/2D/2004_BP_Vel_Benchmark/shots0401_0600.segy.gz', 'pub/datasets/2D/2004_BP_Vel_Benchmark/shots0601_0800.segy.gz', 'pub/datasets/2D/2004_BP_Vel_Benchmark/shots0801_1000.segy.gz', 'pub/datasets/2D/2004_BP_Vel_Benchmark/shots1001_1200.segy.gz', 'pub/datasets/2D/2004_BP_Vel_Benchmark/shots1201_1348.segy.gz']
-size= 42278185012

@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfcat', 'sfwindow', 'sfdd', 'sfmath', 'sfintbin', 'sfput', 'sfpow', 'sfbyte', 'sfgrey3', 'sfcut', 'sfgrey', 'sfscale']
-data=['pub/datasets/2D/Statics_1994/7m_shots_0201_0329.segy.gz', 'pub/datasets/2D/Statics_1994/7m_shots_0331_0599.segy.gz', 'pub/datasets/2D/Statics_1994/7m_shots_0601_0869.segy.gz', 'pub/datasets/2D/Statics_1994/7m_shots_0871_1139.segy.gz', 'pub/datasets/2D/Statics_1994/7m_shots_1141_1409.segy.gz', 'pub/datasets/2D/Statics_1994/7m_shots_1411_1679.segy.gz', 'pub/datasets/2D/Statics_1994/7m_shots_1681_1949.segy.gz', 'pub/datasets/2D/Statics_1994/7o_5m_final_vtap.segy.gz']
-size= 38446687844

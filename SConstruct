@@ -132,7 +132,7 @@ for dir in [os.path.join('framework',x) for x in Split('rsf doc ptools')]:
     SConscript(dirs=build,name='SConscript',exports=frame_exports)
     Default(build)
 
-for dir in [os.path.join('book',x) for x in Split('Recipes gallery')]:
+for dir in [os.path.join('book',x) for x in Split('Recipes')]:
     build = os.path.join('build',dir)
     if configure.version[0] > 1:
         VariantDir(build,dir)
