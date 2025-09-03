@@ -1,3 +1,0 @@
-from rsf.tex import*
-
-End(lclass='geophysics',use='listings,amsmath',color='ALL')

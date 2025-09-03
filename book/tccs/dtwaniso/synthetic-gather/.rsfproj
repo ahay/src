@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfsmooth', 'sfwindow', 'sfcat', 'sfcostaper', 'sfpad', 'sfput', 'sfnorm', 'sfspray', 'sfmutter', 'sfmath', 'sfinmo', 'sfclip2', 'sfnmo', 'sftransp', 'sfslice', 'sfdtw-flatten', 'sfcut', 'sfadd', 'sfstack', 'sfdivn', 'sfpick', 'sfgraph', 'sfgrey']
-data=[]
-size= 1026209344

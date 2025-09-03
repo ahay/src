@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfbandpass', 'sfgrey', 'sftwodip2', 'sfdip', 'sftransp', 'sfspline', 'sflpad', 'sfplanemis2', 'sfcat', 'sflpef', 'sfmiss', 'sfmath', 'sfapef', 'sfmiss4', 'sfstack', 'sfput', 'sfwiggle', 'sfpwdsigk', 'sfseisigk']
-data=['PRIVATE', 'PRIVATE', 'PRIVATE', 'PRIVATE']
-size=   29013472

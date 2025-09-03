@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftransp', 'sfscale', 'sfremap1', 'sfunif3', 'sfwindow', 'sfput', 'sfcat', 'sfmath', 'sfbyte', 'sfgrey3', 'sfspike', 'sfricker1', 'sfimagsrc', 'sfrtoc', 'sfewelr3', 'sfewelr3d', 'sfreal', 'sfewdlr3', 'sfewdlr3d', 'sfadd', 'sfcdivn']
-data=['data/french/french.asc']
-size= 7235665428

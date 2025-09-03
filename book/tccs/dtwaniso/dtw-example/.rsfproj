@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfwindow', 'sfscale', 'sfmath', 'sfdtw-apply', 'sfpad', 'sfricker1', 'sfnoise', 'sfbandpass', 'sfgraph', 'sfdtw', 'sfput', 'sfgrey']
-data=[]
-size=     278676
