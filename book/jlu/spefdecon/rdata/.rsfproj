@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfsmooth', 'sfput', 'sfgrey', 'sfcat', 'sfpef', 'sfoshift1', 'sftransp', 'sflpf', 'sfadd', 'sfiphase', 'sfwindow', 'sfmath', 'sfspefvstep', 'sfspectra', 'sfscale', 'sfgraph']
-data=['data/yang/bin.H']
-size=   38210064

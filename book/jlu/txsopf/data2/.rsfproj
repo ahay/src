@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfgrey', 'sftxspf', 'sfmath', 'sftxsorth', 'sffxdecon', 'sffft1', 'sfwindow', 'sfpad', 'sfcat', 'sfclpf']
-data=['https://software.seg.org/2018/0006/SOPF.tar.gz']
-size=   36460960

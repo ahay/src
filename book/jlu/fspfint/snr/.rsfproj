@@ -1,3 +1,0 @@
-uses=['sfqdome', 'sfsmooth', 'sfreverse', 'sfput', 'sfwindow', 'sfnoise', 'sfmask', 'sftransp', 'sfheadercut', 'sfadd', 'sfsnr3', 'sffxyspfint3', 'sfmath', 'sfcat', 'sfgraph', 'sfbyte', 'sfgrey3']
-data=[]
-size= 6574921456
