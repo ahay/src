@@ -1,3 +1,0 @@
-uses=['sfwindow', 'sfmath', 'sfgraph', 'sfdd', 'sfscale', 'sfput', 'sfspectra', 'sfrtoc', 'sfcltft', 'sfcdivn', 'sfimag', 'sfzerocross', 'sfreal', 'sfstack', 'sfdivn', 'sfclip2', 'sfadd', 'sfstackn', 'sfmutter', 'sfagc', 'sfwiggle']
-data=['data/wz/wz.06.H']
-size=  378393600

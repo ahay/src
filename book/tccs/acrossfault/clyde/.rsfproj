@@ -1,3 +1,0 @@
-uses=['sfgrey', 'sfclip2', 'sfdip', 'sfpwpaint', 'sfcontour', 'sfunfault', 'sfsmooth', 'sfwindow', 'sfwarpscan', 'sfpick', 'sfgraph', 'sfpad', 'sfcat', 'sfmask', 'sfdd', 'sfmath', 'sfiwarp2', 'sfiwarp']
-data=[]
-size=   30033600

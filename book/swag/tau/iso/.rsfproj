@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sftransp', 'sfremap1', 'sfscale', 'sfclip2', 'sfspike', 'sfricker1', 'sfgrey', 'sfwindow', 'sfgraph', 'sfsmooth', 'sfmath', 'sfintegral1', 'sfderiv', 'sfpseudodepth', 'sfcontour', 'sfadd', 'sfdd', 'sfrm', 'sfheadermath', 'sfcat', 'sfintbin', 'sfpad', 'sfcmplx', 'sfmpirtmiso']
-data=['data/sigsbee/sigsbee2a_migration_velocity.sgy', 'data/sigsbee/sigsbee2a_nfs.sgy']
-size= 14852321012
