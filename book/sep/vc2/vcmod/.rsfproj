@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfsmooth', 'sfgrey', 'sfkirchnew', 'sfpad', 'sfcosft', 'sfstolt', 'sfwindow', 'sfgazdag', 'sfvelcon', 'sfspectra', 'sfscale', 'sfcat', 'sfdots']
-data=[]
-size=    1923232

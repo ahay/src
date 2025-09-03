@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfmul', 'sfstack', 'sfmath', 'sfspray', 'sfdiv', 'sfgrey', 'sfstripes', 'sfcat', 'sftransp', 'sfintbin', 'sfwindow', 'sfsrseidel', 'sfgraph', 'sfiwarp']
-data=['data/viking/trend.HH']
-size=    9325492

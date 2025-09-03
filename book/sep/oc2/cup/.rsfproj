@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfunif2', 'sfderiv', 'sfbandpass', 'sftransp', 'sfgrey', 'sfscale', 'sfkirmod', 'sfput', 'sfshot2cmp', 'sfwindow', 'sfhalfint', 'sfpreconstkirch', 'sfnmostretch', 'sfshotholes', 'sfheadercut', 'sflogstretch', 'sffft1', 'sfofilp', 'sfreal', 'sfpad', 'sfcmp2shot', 'sfadd', 'sfinfill', 'sfshotprop']
-data=[]
-size=  144148504
