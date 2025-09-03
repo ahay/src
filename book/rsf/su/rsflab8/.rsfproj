@@ -1,3 +1,0 @@
-uses=['sfsuread', 'sfput', 'sfspike', 'sfwindow', 'sfmath', 'sfpad', 'sfeikonal', 'sfgrey', 'sftransp', 'sfderiv', 'sfscale', 'sfkirmig0', 'sfdip', 'sfdealias', 'sferf', 'sfwiggle', 'sfcosft', 'sfstolt']
-data=['data/cwp/simple.su']
-size=   27411672

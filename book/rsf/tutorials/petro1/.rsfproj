@@ -1,3 +1,0 @@
-uses=['sfcsv2rsf', 'sfwindow', 'sfmask', 'sfheaderwindow', 'sfheadermath', 'sfmul', 'sfadd', 'sfhistogram', 'sfdd', 'sfgraph', 'sfcmplx', 'sfdisfil', 'sfgrey', 'sfbyte']
-data=['https://raw.githubusercontent.com/seg/tutorials/master/1504_Seismic_petrophysics_1/qsiwell2.csv']
-size=     628292

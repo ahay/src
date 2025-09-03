@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfcat', 'sfput', 'sfgraph', 'sfai2refl', 'sfricker1', 'sfwindow', 'sfspray', 'sfgrey', 'sfconjgrad']
-data=[]
-size=      18360

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfgrey', 'sfwindow', 'sfmath', 'sfdd', 'sfsegyheader', 'sfsegywrite', 'sfsegyread']
-data=[]
-size=     273200

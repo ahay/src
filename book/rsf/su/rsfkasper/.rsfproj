@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfgrey', 'sftpow', 'sfspectra', 'sferf']
-data=['data/wz/wz.25.H']
-size=    2328776
