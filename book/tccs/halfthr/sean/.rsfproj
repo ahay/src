@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfscale', 'sfnoise', 'sfmutter', 'sfgrey', 'sfthreshold1', 'sfmask', 'sfspray', 'sfmath', 'sfadd', 'sfsnr2', 'sfmul', 'sfrtoc', 'sffft3', 'sfreal', 'sfhalfthr', 'sfcat', 'sfgraph', 'sfcabs']
-data=['data/bp/sean.HH']
-size=  128881956

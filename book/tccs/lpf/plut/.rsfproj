@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfcut', 'sfwindow', 'sfpad', 'sfgrey', 'sfcat', 'sflpf', 'sfadd', 'sfstack']
-data=['data/pluto/pluto1.5_ref.sgy', 'data/pluto/pluto1.5_mod.sgy']
-size=  243161952

@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfwindow', 'sfgrey', 'sfspike', 'sfricker1', 'sfgraph', 'sftransp', 'sfffd2_ps', 'sfffd2dehf', 'sfbandpass']
-data=['data/bpait/bpaitvel.hh']
-size= 75744597516

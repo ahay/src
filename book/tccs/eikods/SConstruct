@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(color='model atds diff ierror sfddiff gfddiff modl vel slice curve')
