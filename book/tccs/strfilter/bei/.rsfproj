@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfput', 'sfgrey', 'sfdip', 'sfpwspray', 'sftransp', 'sfbyte', 'sfgrey3', 'sfspray', 'sfsimilarity', 'sfthreshold', 'sfwindow', 'sfmath', 'sfadd', 'sfstack', 'sflum']
-data=['data/midpts/bei-agc.rsf']
-size=   72711960

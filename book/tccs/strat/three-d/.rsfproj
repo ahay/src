@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfbyte', 'sfgrey3', 'sfpad', 'sfpatch', 'sfmath', 'sfdip', 'sfcat', 'sfadd', 'sfstack', 'sfsmooth', 'sfmul', 'sfput', 'sfeikonal', 'sfpwpaint2', 'sfenvelope', 'sfmax1', 'sfreal', 'sfcontour3', 'sfspike', 'sflineiko', 'sfbackdire', 'sfiwarp3']
-data=['PRIVATE']
-size=  635389172

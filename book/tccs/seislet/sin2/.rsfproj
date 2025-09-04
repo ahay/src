@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfdd', 'sfnoise', 'sfimag', 'sfdots', 'sfspike', 'sfcpef', 'sfroots', 'sfgraph', 'sffreqlet', 'sfreal', 'sfwindow', 'sffft3', 'sfcat', 'sfscale', 'sfsort', 'sfput', 'sfbox', 'sfthreshold']
-data=[]
-size=      18856

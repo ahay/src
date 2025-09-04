@@ -1,3 +1,0 @@
-uses=['sfsigmoid', 'sfsmooth', 'sfgrey', 'sfnoise', 'sfsaltpepper', 'sfbandpass', 'sfdip', 'sfpwspray', 'sfput', 'sftransp', 'sfbyte', 'sfgrey3', 'sfspray', 'sfsimilarity', 'sfthreshold', 'sfwindow', 'sfmath', 'sfadd', 'sfstack', 'sflum', 'sfmf']
-data=[]
-size=   18727920

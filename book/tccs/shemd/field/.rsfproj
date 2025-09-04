@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfscale', 'sfput', 'sfadd', 'sfgrey', 'sfcp', 'sfdd', 'sfgraph', 'sfbox']
-data=['PRIVATE']
-size=   15593728

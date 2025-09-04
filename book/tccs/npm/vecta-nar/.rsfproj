@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfwindow', 'sfscale', 'sfgrey', 'sfshift1', 'sfenvelope', 'sfcmplx', 'sftransp', 'sfclpf', 'sfadd', 'sfmath', 'sfcat', 'sfroots', 'sfreal', 'sfcausint', 'sfrtoc', 'sfput', 'sfbox', 'sfbyte', 'sfgrey3', 'sfsmooth']
-data=[]
-size= 1574765892

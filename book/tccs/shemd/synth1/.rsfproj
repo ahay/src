@@ -1,3 +1,0 @@
-uses=['sfadd', 'sfput', 'sfwindow', 'sfwiggle', 'sfcp', 'sfdd', 'sfgraph', 'sfcat', 'sfreverse', 'sfdots', 'sfsnr2']
-data=[]
-size=     921840

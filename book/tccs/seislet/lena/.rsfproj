@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfgrey', 'sftransp', 'sfdwt', 'sfcut', 'sfput', 'sffft1', 'sffft3', 'sfdipfilter', 'sfbandpass', 'sfspike', 'sfmath', 'sfmask', 'sfspectra', 'sfspectra2', 'sfdip', 'sfpwd', 'sfseislet', 'sfthreshold']
-data=['data/imgs/lena.img']
-size=   26477568

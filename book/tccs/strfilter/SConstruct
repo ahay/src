@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(color='ndip1 weight01 weightcube1 rdip rweight sgr-dip1 sgr-dip2')

@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfwindow', 'sfput', 'sfbin1', 'sfdots', 'sfinvbin1', 'sfcat', 'sfshapebin1', 'sfspectra', 'sfmonof', 'sfscale', 'sfgraph']
-data=[]
-size=      21540

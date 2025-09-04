@@ -1,3 +1,0 @@
-uses=['sfput', 'sfgrey', 'sftransp', 'sfgraph']
-data=[]
-size=     201600

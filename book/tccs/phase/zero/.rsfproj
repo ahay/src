@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfricker1', 'sfnoise', 'sfenvelope', 'sfcat', 'sfput', 'sfwindow', 'sfwiggle', 'sffocus', 'sfstack', 'sfsimilarity', 'sfmath', 'sfscale', 'sfgraph', 'sfmul', 'sfdiv', 'sfgrey']
-data=[]
-size=    1454592
