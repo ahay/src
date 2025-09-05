@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfTestelastic2d', 'sfgrey']
-data=[]
-size=     800000

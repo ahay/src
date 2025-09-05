@@ -1,3 +1,0 @@
-uses=['sfcp', 'sfgrey', 'sfbandpass', 'sfdip', 'sfpwspray', 'sfput', 'sftransp', 'sfbyte', 'sfgrey3', 'sfmf', 'sfmutter', 'sfsvmf', 'sfwindow', 'sfsimilarity', 'sfscale', 'sfadd', 'sfbox']
-data=[]
-size=   66208160

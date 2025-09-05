@@ -1,3 +1,0 @@
-from rsf.tex import *
-
-End(use='amsmath,amsfonts,amssymb,hyperref',color='marmousi sigsbee')

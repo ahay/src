@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfgrey', 'sfpad', 'sfwindow', 'sfnoise', 'sfmask', 'sfspray', 'sfmul', 'sfdip', 'sfistseislet']
-data=['data/pwd/pyang.rsf']
-size=    7004160

@@ -1,3 +1,0 @@
-uses=['sfspike', 'sfricker1', 'sfput', 'sfwindow', 'sfmath', 'sfdatstretch', 'sfadd', 'sfgrey', 'sfnoise', 'sfmask', 'sfcut', 'sfdd', 'sfheadercut', 'sffpocs2d', 'sfmwni2d', 'sfsnr2']
-data=[]
-size=   14068080

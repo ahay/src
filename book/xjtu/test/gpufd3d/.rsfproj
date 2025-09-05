@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfbyte', 'sfgrey3', 'sfgpufd3d']
-data=[]
-size=  216000000
