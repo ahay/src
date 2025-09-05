@@ -1,5 +1,0 @@
-from rsf.tex import *
-
-End(color='ALL',use='amsmath,amsfonts,algorithm,algpseudocode,algorithmicx')
-
-

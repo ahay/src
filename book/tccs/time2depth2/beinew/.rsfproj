@@ -1,3 +1,0 @@
-uses=['sfdd', 'sftransp', 'sfput', 'sfhalfint', 'sfpreconstkirch', 'sfwindow', 'sfpad', 'sfcosft', 'sffourvc', 'sfmath', 'sfclip2', 'sfmul', 'sfdivn', 'sffourvc2', 'sfscale', 'sfpick', 'sfgrey', 'sfslice', 'sfagc', 'sfreverse', 'sfcat', 'sfdix', 'sftime2depth', 'sftdconvert', 'sfcontour', 'sfadd', 'sfgraph', 'sfinttest2', 'sfcmp2shot', 'sfspray', 'sfspline', 'sfeikods', 'sfkirmigsr', 'sfstack']
-data=['data/midpts/beinew.HH']
-size= 17038659160

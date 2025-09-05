@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfscale', 'sfput', 'sfmath', 'sfcat', 'sfdd', 'sfheadermath', 'sfmask', 'sfwindow', 'sfgrey', 'sfresamp', 'sftti2devectorlrsvd_double', 'sftti2devectorlrsvdkspace_double', 'sftti2de', 'sftti2delrdec']
-data=['ftp://software.seg.org/pub/datasets/2D/Hess_VTI/timodel_vp.segy.gz', 'ftp://software.seg.org/pub/datasets/2D/Hess_VTI/timodel_delta.segy.gz', 'ftp://software.seg.org/pub/datasets/2D/Hess_VTI/timodel_epsilon.segy.gz', 'ftp://software.seg.org/pub/datasets/2D/Hess_VTI/timodel_crho.segy.gz', 'ftp://software.seg.org/pub/datasets/2D/Hess_VTI/timodel_shot_data_II_shot001-320.segy.gz', 'ftp://software.seg.org/pub/datasets/2D/Hess_VTI/timodel_shot_data_II_shot321-720.segy.gz']
-size=  158754972
