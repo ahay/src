@@ -1,3 +1,0 @@
-uses=['sfvam', 'sfgrey', 'sfwave', 'sfmath', 'sfadd', 'sfrtm', 'sfwave24']
-data=[]
-size=  409935480
