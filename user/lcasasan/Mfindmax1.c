@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
     n3 = sf_leftsize(in,2);	
 
 	for (i3=0;i3<n3;i3++) { /*gahters loop */
-	    sf_warning("Gather %d/%d",i3+1,n3);
+	    sf_warning("Gather %d/%d;",i3+1,n3);
 		for (i2=0;i2<n2;i2++) {
 
 			sf_floatread(column,n1,in);
@@ -109,6 +109,7 @@ int main (int argc, char* argv[])
 	}
 		sf_intwrite(index,n2,out);	
 	} /* END gahters loop */
+	sf_warning(".");
     exit (0);
 }
 
