@@ -1,0 +1,26 @@
+from rsf.proj import *
+
+
+Flow('greytest.exe','greytest.py',
+     '''
+      echo "#! /usr/bin/env python3" > ${TARGETS[0]} &&
+      cat ${SOURCES[0]} >> ${TARGETS[0]} &&
+      chmod +x ${TARGETS[0]}
+     ''', stdin=0, stdout=-1, rsfflow=0)
+
+
+Flow('wigtest.exe','wigtest.py',
+     '''
+      echo "#! /usr/bin/env python3" > ${TARGETS[0]} &&
+      cat ${SOURCES[0]} >> ${TARGETS[0]} &&
+      chmod +x ${TARGETS[0]}
+     ''', stdin=0, stdout=-1, rsfflow=0)
+
+Flow('grey3test.exe','grey3test.py',
+     '''
+      echo "#! /usr/bin/env python3" > ${TARGETS[0]} &&
+      cat ${SOURCES[0]} >> ${TARGETS[0]} &&
+      chmod +x ${TARGETS[0]}
+     ''', stdin=0, stdout=-1, rsfflow=0)
+
+End()

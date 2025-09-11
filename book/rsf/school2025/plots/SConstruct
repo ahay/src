@@ -1,0 +1,148 @@
+from rsf.proj import *
+
+# Make dependencies
+SConscript('../src/SConstruct')
+
+# Single graph
+Flow('sin', None,
+     '''
+     math n1=41 o1=-4 d1=0.2 output='0.5*x1-sin(x1)'
+     ''')
+
+Result('sin1','sin',
+       '''
+       graph title="0.5x-sin(x)" min1=-4 max1=4 
+       ''')
+Result('sin2','sin',
+       '''
+       graph title="0.5x-sin(x)" min1=-4 max1=4 
+       symbol=o symbolsz=12 grid=y
+       ''')
+
+# Sigmoid model
+Flow('model',None,
+     '''
+     sigmoid n1=200 n2=200 d1=.004 d2=.008 |
+     smooth rect1=3 diff1=1 | smooth rect1=3 |
+     put label2=Distance title='"Sigmoid Model"' 
+     ''')
+
+# Time-frequency spectrum
+Flow('ltft','model',
+     '''
+     ltft niter=10 rect=5 |
+     cabs
+     ''')
+
+# Plot using madagascar
+Result('model',
+       '''
+       grey title="Sigmoid Model"
+       ''')
+Result('modelw','model',
+       '''
+       wiggle transp=y yreverse=y poly=y
+       title="Sigmoid Model"
+       ''')
+Result('ltft','ltft',
+       '''
+       byte bar=bar.rsf allpos=y clip=2e-4 |
+       grey3 title="Time-Frequency Spectra" color=j 
+       frame1=100 frame2=25 frame3=100 flat=n
+       bar=bar.rsf scalebar=y
+       ''')
+
+# Figure combinations
+Plot('subfig1','model','grey')
+Plot('subfig2','model','wiggle transp=y yreverse=y poly=y')
+
+Result('combined','subfig1 subfig2','TwoRows')
+
+# Plot using sfmatplotlib
+
+Result('model1','model',
+       '''
+       transp |
+       sfmatplotlib imshow cmap=gray origin=upper format=pdf
+       title="Sigmoid Model" xlabel="Distance (sample)" ylabel="Time (sample)"
+       ''', suffix='.pdf')
+
+# Plot using python script 
+## grey-scale
+mypyscript = '../src/greytest.exe'
+# Or 
+# mypyscript = '../src/greytest.py'
+# and use `python ../src/greytest.py`
+
+Result('mygrey',['model', mypyscript], # Make your script dependent
+       '''
+       ${SOURCES[1]}
+       ''', suffix='.pdf')
+
+## wiggle provided by ChatGPT
+gptscript = '../src/wigtest.exe'
+Result('gptwig',['model', gptscript],
+       '''
+       ${SOURCES[1]}
+       ''', suffix='.pdf')
+
+## grey3 by python
+grey3script = '../src/grey3test.exe'
+Result('pygrey3',['ltft', grey3script],
+       '''
+       ${SOURCES[1]} frame1=100 frame2=25 frame3=100
+       point1=0.8 point2=0.4 clip=2e-4 flat=n scalebar=y
+       title="Time-Frequency Spectra" allpos=y color=jet
+       ''', suffix='.pdf')
+
+# Plot using matlab/octave script (grey-scale)
+matlab = WhereIs('matlab')
+octave = WhereIs('octave')
+matscript = '../src/matgrey1.m'
+funcname = 'matgrey1'
+
+if matlab:
+    Result('matgrey',['model', matscript],
+           '''
+           %s -batch "addpath('../src/'); %s('${SOURCES[0]}', '${TARGETS[0]}', 'Sigmoid Model')"
+           '''%(matlab, funcname), suffix='.pdf', stdin=0, stdout=-1)
+    
+if octave:
+    Result('octgrey',['model', matscript],
+           '''
+           %s --eval "addpath('../src/'); %s('${SOURCES[0]}', '${TARGETS[0]}', 'Sigmoid Model'); exit;"
+           '''%(octave, funcname), suffix='.pdf', stdin=0, stdout=-1)
+    
+# Try GMT
+gmt = WhereIs('gmt')
+if gmt:
+    gmtscript1 = '../src/gmt-1.sh'
+    gmtscript2 = '../src/gmt-2.sh'
+    Result('gmt1', gmtscript1,'bash ${SOURCES[0]} ${TARGETS[0]}', suffix='.pdf', stdin=0, stdout=-1)
+    Result('gmt2', gmtscript2,'bash ${SOURCES[0]} ${TARGETS[0]}', suffix='.pdf', stdin=0, stdout=-1)
+    
+    # GMT Wiggle
+    
+    ## Need T-X Grid
+    Flow('model1','model','dd form=ascii line=1 --out=${TARGETS[0]}', stdout=0)
+    Flow('tgrid','model','math output="x1" | dd form=ascii line=1 --out=${TARGETS[0]}', stdout=0)
+    Flow('xgrid','model','math output="x2" | dd form=ascii line=1 --out=${TARGETS[0]}', stdout=0)
+    Flow('gmtmodel','tgrid xgrid model1', ' paste ${SOURCES[0:3]} ')
+    Result('gmt3', ['gmtmodel'],
+           '''
+           gmt wiggle -R0/0.8/0/1.6 -JX5i/5i -BWSne+t"Sigmoid Model" -B -Z0.1i  -Gred+p -Gblue+n -Wdefault -gy0.001 -By+l"Distance (km)" -Bx+l"Time (s)" -pdf Fig/gmt3  
+           ''', suffix='.pdf',  stdout=-1, rsfflow=0)
+
+# Try fetch
+Fetch('Txx.HH','septour') 
+Result('txx','Txx.HH','wiggle')
+Flow('windowed','Txx.HH','window n2=10 min1=0.4 max1=0.8')
+plotpar = \
+    ''' 
+    transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n
+    '''
+for plot in ('wiggle','contour','grey'): 
+    Result(plot,'windowed',plot + plotpar) 
+    
+    
+End()
