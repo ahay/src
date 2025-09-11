@@ -1,0 +1,196 @@
+from rsf.proj import *
+
+scriptdir = '../scripts/'
+sys.path.append(scriptdir)
+from rsfpy import Rsfarray
+import matplotlib.pyplot as plt
+import matplotlib
+import matplotlib.colors as colors
+import numpy as np
+matplotlib.use('Agg')
+proggrey=scriptdir+'Mpygrey.py'
+
+# ----------------------------  Grey3  --------------------------------------
+def grey3(target, source, env):
+     rdata = Rsfarray(source[0].get_path())
+     rdata.sfput(env.get('sfput', ''))
+     rdata.window(env.get('window', ''))
+     figsize = env.get('figsize', (5,6))
+     plt.rcParams["font.size"]=18
+     plt.rcParams["font.weight"]=900
+     plt.rcParams["axes.labelweight"]=900
+     plt.rcParams["axes.titleweight"]=900
+     plt.rcParams["axes.labelsize"]=20
+     plt.rcParams["mathtext.fontset"]="stix"
+     plt.figure(figsize=figsize, facecolor="none")
+     if rdata.dtype in [np.complex64, np.complex128]:
+          rdata = np.abs(rdata)
+          rdata = ((rdata - np.min(rdata))/(np.max(rdata)-np.min(rdata)) ) 
+          rdata = rdata.squeeze()
+          rdata = rdata.transpose([0,2,1])
+          rdata.sfput("o1=0 label3=$F$")
+          rdata.grey3(cmap="jet",
+                      allpos=True,
+          flat=False, pclip=99.,
+          frame1=250,frame2=48,frame3=52,
+          point1=0.85,point2=0.8,
+          n3tic=3, wantbar=False,
+          figsize=figsize, ax=plt.gca())
+     else:
+          rdata = rdata.squeeze()
+          rdata = rdata.transpose([0,2,1])
+          rdata.sfput("o1=0 label3=$F$")
+          rdata.grey3(cmap="jet", 
+          vmin=0, vmax=1,
+          flat=False, pclip=99, 
+          frame1=250,frame2=48,frame3=52,
+          point1=0.85,point2=0.8,
+          n3tic=3, wantbar=False,
+          figsize=figsize, ax=plt.gca())
+     plt.gcf().savefig(target[0].get_path(),
+               bbox_inches="tight",
+               dpi=300)
+     # 
+     plt.close()
+
+
+grey3builder = SCons.Builder.Builder(
+    action=grey3,
+    suffix='.pdf',
+    src_suffix='.rsf'
+)
+
+project.Append(BUILDERS = {'Grey3': grey3builder})
+
+def Grey3(target, source, suffix='.pdf', **kw):
+     if suffix == '.pdf':
+               viewer = WhereIs('acroread') or WhereIs('kpdf') \
+               or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') \
+               or WhereIs('open')
+     elif suffix == '.eps':
+               viewer = WhereIs('evince') or WhereIs('gv') or WhereIs('open')
+     plot= project.Grey3('Fig/' + target, source, **kw)
+     view=project.Command(target + '.view',plot,viewer + " $SOURCES")
+     project.view.append(view)
+
+     locked = os.path.join(project.figdir,target+suffix)
+     target2 = os.path.join(project.resdir,target+suffix)
+     project.InstallAs(locked,target2)
+     project.Alias(target + '.lock',locked)
+     project.lock.append(locked)
+# ---------------------------------------------------------------------------
+
+# Download data 
+Fetch('wz.25.H','wz')
+
+# Convert and window
+Flow('data','wz.25.H',
+     '''
+     dd form=native | window min2=-2 max2=2 | 
+     put label1=Time label2=Offset unit1=s unit2=km
+     ''')
+Flow('field','data','pow pow1=2 | cut n2=2 f2=20')
+
+Result('field','field %s'%proggrey,
+       '''
+       ${SOURCES[1]} screenwidth=5.5 screenheight=6
+       allpos=n dpi=300 fontsz=18 title= scalebar=y
+       fontfat=900 labelsz=20 wherexlabel=top clip=10113000
+       ntic1=4 ntic2=4
+       ''', suffix='.pdf')
+
+Flow("sltft", "field",
+     '''
+     sltft eps=0.99 lambda=1 nw=400 dw=0.25 
+     center=y smooth=y rect1=25 tol=5 verb=y
+     ''')
+
+Flow("ltft", "field",'ltft nw=400 dw=0.25 rect=10 verb=n niter=50')
+
+
+Grey3("sltft","sltft")
+Grey3("cmask","cmask Fig/sltft.pdf".split()) # For parallel safety (matplotlib)
+
+Flow("cmask","sltft",
+     '''
+     real | math output="1" |
+     transp plane=23 memsize=1000 |
+     mutter v0=1.25 t0=-0.25 |
+     transp plane=23 memsize=1000 |
+     cut min2=22 |
+     cut min2=18 min1=1.2
+     ''')
+
+Flow("cmask1","ltft",
+     '''
+     real | math output="1" |
+     transp plane=23 memsize=1000 |
+     mutter v0=1.25 t0=-0.25 |
+     transp plane=23 memsize=1000 |
+     cut min2=22 |
+     cut min2=18 min1=1.2
+     ''')
+
+Flow("isltft","cmask sltft field",
+     '''
+     math output="0" |
+     cmplx ${SOURCES[0]} |
+     math sltft=${SOURCES[1]} output="-I*sltft*input" |
+     sltft inv=y |
+     add ${SOURCES[2]} scale=-1,1 
+     ''')
+
+Flow("iltft","cmask1 ltft field",
+     '''
+     math output="0" |
+     cmplx ${SOURCES[0]} |
+     math ltft=${SOURCES[1]} output="-I*ltft*input" |
+     ltft inv=y |
+     add ${SOURCES[2]} scale=-1,1 
+     ''')
+
+Flow("isltft_err", "iltft field", " add scale=-1,1 ${SOURCES[1]}")
+Flow("iltft_err", "iltft field", " add scale=-1,1 ${SOURCES[1]}")
+
+Flow("bp","field",
+     '''
+     bandpass fhi=20 | 
+     mutter v0=1.25 t0=-0.25 |
+     add scale=-1,1 ${SOURCES[0]}
+     ''')
+Flow("bp_err", "bp field", " add scale=-1,1 ${SOURCES[1]}")
+
+greydata=["isltft","isltft_err","iltft","iltft_err","bp","bp_err"]
+
+for iplot in greydata:
+     rects='''
+         rect1=0.3,0.8,-0.5,0.1 rect1style=--
+         rect2=1.0,1.7,-0.2,0.5
+         rectwidth=2
+         '''
+     if '_err' in iplot: rects=''
+     Result(iplot, [iplot, proggrey],
+            '''
+            ${SOURCES[1]} verb=y screenwidth=5.5 screenheight=6 title=
+            dpi=300 fontsz=18 fontfat=900 labelsz=20 wherexlabel=top
+            scalebar=y clip=10113000 ntic1=4 ntic2=4 %s wig=n
+            ''' %rects, suffix='.pdf')
+     if '_err' not in iplot:
+          Result(iplot+'_wig1', [iplot, proggrey],
+               '''
+               window min1=0.3 max1=0.9 min2=-0.5 max2=0.1 |
+               ${SOURCES[1]} verb=y screenwidth=5.5 screenheight=6 title=
+               dpi=300 fontsz=18 fontfat=900 labelsz=20 wherexlabel=top
+               scalebar=y ntic1=4 ntic2=3 wig=y min2=-0.55 max2=0.15 
+               format2=%.1f  clip=10113000
+               ''', suffix='.pdf')
+          Result(iplot+'_wig2', [iplot, proggrey],
+               '''
+               window min1=1.0 max1=1.7 min2=-0.2 max2=0.5 |
+               ${SOURCES[1]} verb=y screenwidth=5.5 screenheight=6 title=
+               dpi=300 fontsz=18 fontfat=900 labelsz=20 wherexlabel=top
+               scalebar=y clip=10113000 ntic1=4 ntic2=4 wig=y 
+               min2=-0.25 max2=0.55 format2=%.1f zplot=1.5
+               ''', suffix='.pdf')
+
+End() 

@@ -1,0 +1,6 @@
+from rsf.tex import *
+
+usepack = '''
+amsmath graphicx multirow threeparttable booktabs threeparttable makecell empheq ulem color hyperref
+'''.split()
+End(use=usepack)

@@ -1,0 +1,199 @@
+from rsf.proj import *
+
+scriptdir = '../scripts/'
+sys.path.append(scriptdir)
+from rsfpy import Rsfarray
+import matplotlib.pyplot as plt
+import matplotlib
+import matplotlib.colors as colors
+import numpy as np
+matplotlib.use('Agg')
+proggrey=scriptdir+'Mpygrey.py'
+
+# ----------------------------  Grey3  --------------------------------------
+def grey3(target, source, env):
+     try:
+          rdata = Rsfarray(source[0].get_path())
+          rdata.sfput(env.get('sfput', ''))
+          rdata.window(env.get('window', ''))
+          figsize = env.get('figsize', (5,6))
+          plt.rcParams["font.size"]=18
+          plt.rcParams["font.weight"]=900
+          plt.rcParams["axes.labelweight"]=900
+          plt.rcParams["axes.titleweight"]=900
+          plt.rcParams["axes.labelsize"]=20
+          plt.rcParams["mathtext.fontset"]="stix"
+          plt.figure(figsize=figsize, facecolor="none")
+          if rdata.dtype in [np.complex64, np.complex128]:
+               rdata = np.abs(rdata)
+               rdata = ((rdata - np.min(rdata))/(np.max(rdata)-np.min(rdata))) 
+               rdata = rdata.squeeze()
+               rdata = rdata.transpose([0,2,1])
+               rdata.sfput("o1=0 label3=$F$ label2=Offset unit2=km d2=0.05 o2=-2.375")
+               rdata.grey3(cmap="jet",
+                         allpos=True,
+               flat=False, pclip=98.,
+               frame1=250,frame2=48,frame3=60,
+               point1=0.85,point2=0.8, 
+               n3tic=3, wantbar=False,
+               figsize=figsize, ax=plt.gca())
+          else:
+               rdata = rdata.squeeze()
+               rdata = rdata.transpose([0,2,1])
+               rdata.sfput("o1=0 label3=$F$")
+               rdata.grey3(cmap="jet", 
+               vmin=0, vmax=1,
+               flat=False, pclip=99, 
+               frame1=250,frame2=48,frame3=60,
+               point1=0.85,point2=0.8,
+               n3tic=3, wantbar=False,
+               figsize=figsize, ax=plt.gca())
+          plt.gcf().savefig(target[0].get_path(),
+                    bbox_inches="tight",
+                    dpi=300)
+          # 
+          plt.close()
+     except Exception as e:
+          if e.__class__.__name__ != 'Done':
+            raise
+
+
+grey3builder = SCons.Builder.Builder(
+    action=grey3,
+    suffix='.pdf',
+    src_suffix='.rsf'
+)
+
+project.Append(BUILDERS = {'Grey3': grey3builder})
+
+def Grey3(target, source, suffix='.pdf', **kw):
+     if suffix == '.pdf':
+               viewer = WhereIs('acroread') or WhereIs('kpdf') \
+               or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') \
+               or WhereIs('open')
+     elif suffix == '.eps':
+               viewer = WhereIs('evince') or WhereIs('gv') or WhereIs('open')
+     plot= project.Grey3('Fig/' + target, source, **kw)
+     view=project.Command(target + '.view',plot,viewer + " $SOURCES")
+     project.view.append(view)
+
+     locked = os.path.join(project.figdir,target+suffix)
+     target2 = os.path.join(project.resdir,target+suffix)
+     project.InstallAs(locked,target2)
+     project.Alias(target + '.lock',locked)
+     project.lock.append(locked)
+# ---------------------------------------------------------------------------
+
+Fetch("dune3D.H","mideast")
+Flow("dat","dune3D.H",
+     '''
+     dd form=native | window n3=1 f3=2 n1=500 f1=100 |
+     scale dscale=100. | put unit2=m label2=Trace
+     ''')
+
+Flow("noiz","dat",
+     '''
+     bandpass fhi=20. |
+     mutter half=n v0=1500 t0=0.8 hyper=y tp=0.05 |
+     window f1=90 | pad beg1=90
+     ''')
+Flow("mask", "noiz",
+     "math output='input*input' | smooth rect1=5 rect2=5 | mask min=0.01")
+Flow("mask2", "mask", "dd type=float")
+
+# LTFT
+Flow("ltft","dat",'ltft nw=400 dw=0.2 niter=50')
+# SLTFT
+Flow("sltft","dat",
+     '''
+     sltft eps=0.975 lambda=1 nw=400 dw=0.2 
+     center=y smooth=y rect1=25 tol=5 verb=y
+     ''')
+
+Flow("lmask", "sltft",
+     '''
+     real | transp plane=23 memsize=1000 |
+     math output=1. |
+     mutter t0=0.2 v0=2000.0 | cut min3=24 |
+     math output="1-input"
+     ''')
+
+Flow("thr1", "sltft",
+     '''
+     real | transp plane=23 memsize=1000 |
+     math output='1.' |
+     mutter t0=0.2 v0=2000.0 | cut min3=24
+     ''')
+Flow("thr2", "sltft",
+     '''
+     imag | transp plane=23 memsize=1000 |
+     math output='0.' |
+     mutter t0=0.2 v0=2000.0 | cut min3=24
+     ''')
+Flow("cmask", "thr1 thr2",
+     '''
+     cmplx ${SOURCES[1:2]} | 
+     transp plane=23 memsize=1000 
+     ''')
+
+########################################
+# For calculating time consumption only
+Flow("thr11", "ltft",
+     '''
+     real | transp plane=23 memsize=1000 |
+     math output='1.' |
+     mutter t0=0.2 v0=2000.0 | cut min3=24
+     ''')
+Flow("thr21", "ltft",
+     '''
+     imag | transp plane=23 memsize=1000 |
+     math output='0.' |
+     mutter t0=0.2 v0=2000.0 | cut min3=24
+     ''')
+Flow("cmask1", "thr11 thr21",
+     '''
+     cmplx ${SOURCES[1:2]} | 
+     transp plane=23 memsize=1000 
+     ''')
+# For calculating time consumption only
+########################################
+
+Flow("ltftnoiz", "ltft cmask1 mask2",
+     "mul ${SOURCES[1]} | ltft inv=y verb=n | mul mode=p ${SOURCES[2]}")
+Flow("sltftnoiz", "sltft cmask mask2",
+     "mul ${SOURCES[1]} | sltft inv=y verb=n | mul mode=p ${SOURCES[2]}")
+
+Flow("ltftsign", "ltftnoiz dat", "add ${SOURCES[1]} scale=-1,1")
+Flow("sltftsign", "sltftnoiz dat", "add ${SOURCES[1]} scale=-1,1")
+
+
+### Bandpass filter
+Flow("bshot", "dat", "bandpass flo=24")
+Flow("bpnoiz", "dat bshot mask2",
+     """
+     add scale=1,-1 ${SOURCES[1]} |
+     add mode=p ${SOURCES[2]}
+     """)
+Flow("bpsign", "dat bpnoiz", "add scale=1,-1 ${SOURCES[1]}")
+
+Grey3('sltft','sltft')
+Grey3('cmask','cmask Fig/sltft.pdf'.split()) # To make sure parallel safety
+
+greydata=["dat","ltftsign","sltftsign","sltftnoiz","ltftnoiz","bpsign","bpnoiz"]
+
+for iplot in greydata:
+     if 'sign' in iplot:
+          rects='''
+          rect1=1.2,1.5,-0.5,0.25 rect1style=-
+          rect1width=2
+          '''
+     else: rects = ''
+     Result(iplot, [iplot, proggrey],
+            '''
+            put d2=0.05 o2=-2.375 unit2=km label2=Offset |
+            ${SOURCES[1]} verb=y screenwidth=5.5 screenheight=6 title=
+            dpi=300 fontsz=18 fontfat=900 labelsz=20 wherexlabel=top
+            scalebar=y clip=1 ntic1=4 ntic2=3 %s  
+            ''' %rects, suffix='.pdf')
+     
+End()

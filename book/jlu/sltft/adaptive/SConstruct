@@ -1,0 +1,201 @@
+from rsf.proj import *
+from math import pi as PI
+scriptdir = '../scripts/'
+sys.path.append(scriptdir)
+from rsfpy import Rsfarray
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+
+# ----------------------------  Graph  --------------------------------------
+def garph(target, source, env):
+     rdata = Rsfarray(source[0].get_path())
+     rdata1 = Rsfarray(source[1].get_path())
+     rdata.sfput(env.get('sfput', ''))
+     rdata.window(env.get('window', ''))
+     rdata1.sfput(env.get('sfput', ''))
+     rdata1.window(env.get('window', ''))
+     figsize = env.get('figsize', (8,5))
+     plt.rcParams["font.size"]=18
+     plt.rcParams["font.weight"]=900
+     plt.rcParams["axes.labelweight"]=900
+     plt.rcParams["axes.titleweight"]=900
+     plt.rcParams["axes.labelsize"]=20
+     plt.rcParams["mathtext.fontset"]="stix"
+     plt.figure(figsize=figsize, facecolor="none")
+     plt.plot(rdata.axis1, rdata, color="k",linestyle="-",label="signal 1")
+     plt.plot(rdata1.axis1, rdata1, color="k",linestyle="--",label="signal 2")
+     # ax.legend()
+     plt.xlim(env.get('xlim', (rdata.axis1[0], rdata.axis1[-1])))
+     plt.ylim(env.get('ylim', (min(rdata.min(), rdata1.min()), max(rdata.max(), rdata1.max()))))
+     
+     plt.xlabel(rdata.label_unit(0))
+     plt.ylabel(rdata.label_unit(1))
+
+     plt.annotate('', xy=(740, 0.9975), xytext=(740, 0.98),
+               arrowprops=dict(facecolor='k', shrink=0.05,edgecolor="w"))
+
+     plt.annotate('', xy=(740, 0.9225), xytext=(740, 0.94),
+               arrowprops=dict(facecolor='k', shrink=0.05,edgecolor="w"))
+     plt.text(720, 0.99, "Higher frequency resolution", horizontalalignment="right")
+     plt.text(720, 0.925, "Higher time resolution", horizontalalignment="right")
+     plt.gcf().savefig(target[0].get_path(), bbox_inches='tight', dpi=300, format=env.get('format', 'pdf'), transparent=True)
+
+     plt.close()
+
+
+graphbuilder = SCons.Builder.Builder(
+    action=garph,
+    suffix='.pdf',
+    src_suffix='.rsf'
+)
+
+project.Append(BUILDERS = {'Graph': graphbuilder})
+
+def Graph(target, source, suffix='.pdf', **kw):
+     if suffix == '.pdf':
+               viewer = WhereIs('acroread') or WhereIs('kpdf') \
+               or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') \
+               or WhereIs('open')
+     elif suffix == '.eps':
+               viewer = WhereIs('evince') or WhereIs('gv') or WhereIs('open')
+     plot= project.Graph('Fig/' + target, source, **kw)
+     view=project.Command(target + '.view',plot,viewer + " $SOURCES")
+     project.view.append(view)
+     locked = os.path.join(project.figdir,target+suffix)
+     target2 = os.path.join(project.resdir,target+suffix)
+     project.InstallAs(locked,target2)
+     project.Alias(target + '.lock',locked)
+     project.lock.append(locked)
+
+
+scriptdir = '../scripts/'
+proggrey=scriptdir+'Mpygrey.py'
+
+Flow('sig1',None,
+     '''
+     math n1=1000 d1=0.0005 o1=0.25 unit1=s label1=Time
+     output="cos(%g*2.5/(0.78-x1)-%g*x1*3)"|
+     costaper nw1=50|
+     pad beg1=500 end1=500
+     '''%(PI,PI))
+
+Flow('sig2',None,
+     '''
+     math n1=1200 d1=0.0005 o1=0.1 unit1=s label1=Time
+     output="cos(%g*7.5/(0.77-x1)+%g*x1*20)"|
+     costaper nw1=50|
+     pad beg1=200 end1=600
+     '''%(PI,PI))
+
+Flow('chirps1','sig1 sig2','add ${SOURCES[1]} scale=1,1 ')
+
+Flow('sig3',None,
+     '''
+     math n1=1000 d1=0.0005 o1=0.25 unit1=s label1=Time
+     output="cos(%g*x1*1400-%g*2.5/(0.78-x1))"|
+     costaper nw1=50|
+     pad beg1=500 end1=500
+     '''%(PI,PI))
+
+Flow('sig4',None,
+     '''
+     math n1=1200 d1=0.0005 o1=0.1 unit1=s label1=Time
+     output="cos(%g*x1*1380-%g*7.5/(0.77-x1))"|
+     costaper nw1=50|
+     pad beg1=200 end1=600
+     '''%(PI,PI))
+Flow('chirps2','sig3 sig4','add ${SOURCES[1]} scale=1,1 ')
+
+Flow('t1','t2',
+     '''
+     math n1=1000 d1=0.0005 o1=0.25 unit1=s label1=Time
+     output="1.25/(0.78-x1)/(0.78-x1)-1.5" |
+     pad beg1=500 end1=500 |
+     cat axis=2 ${SOURCES[0]}
+     ''',stdin=0)
+Flow('t2',None,
+     '''
+     math n1=1200 d1=0.0005 o1=0.1 unit1=s label1=Time
+     output="3.75/(0.77-x1)/(0.77-x1)+10" |
+     pad beg1=200 end1=600
+     ''') 
+
+Flow('t3','t4',
+     '''
+     math n1=1000 d1=0.0005 o1=0.25 unit1=s label1=Time
+     output="700-1.25/(0.78-x1)/(0.78-x1)" |
+     pad beg1=500 end1=500 |
+     cat axis=2 ${SOURCES[0]}
+     ''',stdin=0)
+
+Flow('t4',None,
+     '''
+     math n1=1200 d1=0.0005 o1=0.1 unit1=s label1=Time
+     output="690-3.75/(0.77-x1)/(0.77-x1)" |
+     pad beg1=200 end1=600
+     ''') 
+
+Flow('epss',None,
+     '''
+     math n1=1001 d1=0.04 o1=-2 
+     output="1-0.08/(1+exp(-x1))" |
+     put d1=1 o1=1
+     ''')   
+Flow('epss1',None,
+     '''
+     math n1=400 d1=0.025 o1=-8.
+     output="0.94+0.06/(1+exp(-x1))" |
+     put d1=1 d1=2
+     ''')
+
+Graph('epss',['epss', 'epss1'],
+      sfput='label1="Frequency" unit1=Hz label2="Localization scalar" unit2=',
+      xlim=[-5, 805], ylim=[0.915, 1.001],
+      figsize=(8,4)
+      )
+
+Flow("rects","epss","math output='log(0.001)/log(input)/4' | dd type=int")
+Flow("rects1","epss1","math output='log(0.001)/log(input)/4' | dd type=int")
+
+
+Flow("sltft","chirps1 epss rects",
+     '''
+     sltft eps=0.992 nw=1001 dw=1 epss=${SOURCES[1]} 
+     smooth=y rect1=25 center=y tol=0 rects=${SOURCES[2]}
+     ''')
+
+Flow("sltft1","chirps2 epss1 rects1",
+     '''
+     sltft eps=0.992 nw=400 dw=2. epss=${SOURCES[1]} 
+     smooth=y rect1=25 center=y tol=0 rects=${SOURCES[2]}
+     ''')
+
+Flow("stft","chirps1",
+     '''
+     stft2 verb=y wind=y nfft=800 ntw=250
+     ''')
+Flow("stft1","chirps2",
+     '''
+     stft2 verb=y wind=y nfft=1000 ntw=300
+     ''')
+
+Flow("st","chirps1",'st verb=y scale=0.5')
+Flow("st1","chirps2",'st verb=y scale=10')
+
+Flow("t1marker","t1",'window d1=0.004')
+Flow("t2marker","t3",'window d1=0.004')
+
+plots = ["st","st1","stft","stft1","sltft","sltft1"]
+
+for iplot in plots:
+     Result(iplot, [iplot, proggrey],
+            '''
+            cabs | normalize type=m axis=2 |
+            ${SOURCES[1]} transp=n verb=y screenwidth=8. screenheight=5
+            color=jet allpos=n dpi=300 fontsz=18 scalebar=y max1=800
+            fontfat=900 labelsz=20 yreverse=n wherexlabel=top 
+            minval=0 maxval=1.0 clip=1.0 barlabel='"Norm. Amplitude"'
+            ''', suffix='.pdf')
+
+End()
