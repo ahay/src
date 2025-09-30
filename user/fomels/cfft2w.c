@@ -202,7 +202,7 @@ void icfft2(sf_complex *out /* [n1*n2] */,
     }
 }
 
-void cfft2_finalize()
+void cfft2_finalize(void)
 /*< clean up fftw >*/
 {
 /* make sure everything is back to its pristine state */
