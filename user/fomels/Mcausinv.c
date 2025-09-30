@@ -30,12 +30,13 @@ int main(int argc, char* argv[])
   in = sf_input("in");
   out = sf_output("out");
 
-  mov = sf_output("mov");
-
   if (!sf_histint(in, "n1", &n1)) sf_error("No n1= in input");
   if (!sf_getint("niter", &niter)) niter=1;
   if (!sf_getfloat("eps", &eps)) eps=0.0;
   if (!sf_getbool("verb", &verb)) verb=false;
+
+  mov = sf_output("mov");
+  sf_putint(mov, "n2", niter);
 
   x = sf_floatalloc(n1);
   y = sf_floatalloc(n1);

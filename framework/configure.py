@@ -1084,7 +1084,7 @@ def opengl(context):
 
     if plat['OS'] == 'darwin':
         ogl = []
-        oglflags = ' -framework AGL -framework OpenGL -framework GLUT'
+        oglflags = ' -framework OpenGL -framework GLUT'
         context.env['LINKFLAGS'] = LINKFLAGS + oglflags
     elif plat['OS'] == 'cygwin' and os.path.isfile('/usr/lib/libglut32.dll.a'):
         ogl = context.env.get('OPENGL',['GL32','GLU32','glut32'])
