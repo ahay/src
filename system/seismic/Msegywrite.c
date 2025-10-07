@@ -38,11 +38,10 @@ int main(int argc, char *argv[])
     char *headname=NULL, *filename=NULL, *trace=NULL, count[4], *prog=NULL;
     const char *myheader[] = {"      This dataset was created",
 			      "     with the Madagascar package",
-			      "     http://www.ahay.org/"};
+			      "     https://www.ahay.org/"};
     sf_file in=NULL, hdr=NULL;
     size_t nsegy;
-    unsigned int i;
-    int format=1, ns, nk, itr, ntr, *itrace=NULL;
+    int format=1, i, ns, nk, itr, ntr, *itrace=NULL;
     FILE *head=NULL, *file=NULL;
     float *ftrace=NULL, dt, t0;
 
@@ -77,7 +76,7 @@ int main(int argc, char *argv[])
     } else {
 	suxdr = true;
     }
-
+    
     if (NULL == (filename = sf_getstring("tape"))) {
 	/* output data */
 	file = stdout;
@@ -97,11 +96,8 @@ int main(int argc, char *argv[])
 	} else {
 	    for (i=0; i < SF_EBCBYTES/80; i++) {
 		snprintf(count,4,"C%-2d",i+1);
-		/* Fix: Use 80 not 82. ahead[3200] has 40 records of 80 bytes each (i=0..39).
-		   Format string produces exactly 80 chars: "C40" (3) + 76 spaces + "\n" (1) = 80.
-		   Using 82 would overflow into next record, e.g. at i=39 writing past ahead[3199] */
-		snprintf(ahead+i*80,80,"%s %-76s\n",count,
-			 (i < 3)? myheader[i]:"");
+		snprintf(ahead+i*80,80,"%s %-75s\n",count,
+		   (i < 3)? myheader[i]:"");
 	    }
 	    if (verbose) sf_warning("ASCII header created on the fly");
 	}
