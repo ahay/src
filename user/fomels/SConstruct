@@ -4,25 +4,25 @@ import bldutil
 
 progs = '''
 abalance analytical angle angle2 approx arrival bdix beamform1 bil1
-bilat2 blur boxcascade cbeamform1 ccausint cchebyshevp cfftexpa-dev
-cfftwave1 cdivn cflow chain2dfft chebvc chebyshev chebyshevp clpf
-cltft cltftfft constperm constpermh constpermh1 cosftwave1 cpef cr
-ctf2dprec deblur diphase distance divn dix donut dpeiko eikonal
-eikonalvti eno2 erf exgr fedchain fedchain1 fedchain2 fedchain21 fft2
-fftexp0 fftexp1 fftexp3 fftexpa fftexp0a fftone ffttest fftwave1
-fftwave2 fftwave3 findmin2 focus fpow freqest gaussmooth gbeamform
-imray interf interp2 interpt iphase kdsort kdtree kron label legacy
-lfftexp0 llpf localskew locov lpf lrmig0 lsfit max2 median mffit mig3
-miss3 morph nconv nnint nnshape nnshapet nsmooth nsmooth1 ocparcel
-octentwt ofilp ofsemb ortho patch pchain pchain1 phaserot pick pick2
-pick3 plane poly polyfit psmig2 regr rdiv rect1 reshape riesz rsin sc
-seislet1 semblance semblancew shape shapeagc shapefill shearer shift1
-sh1 sh2 similarity similarity2 simenv slschain2d smoothderw smoothreg
-smspray stfchain stfchain2 stcontrib stltft stpf stphase stream
-streamiss sttimefreq taupfit tfchain tf2dprec thin timecont timefreq
-tomo tree trace2 tricascade tristack tristack2 twofreq2 upgrad var2
-velcon velinv vipmig0 vofzperm warp1 warpadd warpscan zero zmarch
-ztrace
+bilat2 blur boxcascade cbeamform1 causinv ccausint cchebyshevp
+cfftexpa-dev cfftwave1 cdivn cflow chain2dfft chebvc chebyshev
+chebyshevp clpf cltft cltftfft constperm constpermh constpermh1
+cosftwave1 cpef cr ctf2dprec deblur diphase distance divn dix donut
+dpeiko eikonal eikonalvti eno2 erf exgr fedchain fedchain1 fedchain2
+fedchain21 fft2 fftexp0 fftexp1 fftexp3 fftexpa fftexp0a fftone
+ffttest fftwave1 fftwave2 fftwave3 findmin2 focus fpow freqest
+gaussmooth gbeamform imray interf interp2 interpt iphase kdsort kdtree
+kron label legacy lfftexp0 llpf localskew locov lpf lrmig0 lsfit max2
+median mffit mig3 miss3 morph nconv nnint nnshape nnshapet nsmooth
+nsmooth1 ocparcel octentwt ofilp ofsemb ortho patch pchain pchain1
+phaserot pick pick2 pick3 plane poly polyfit psmig2 regr rdiv rect1
+reshape riesz rsin sc seislet1 semblance semblancew shape shapeagc
+shapefill shearer shift1 sh1 sh2 similarity similarity2 simenv
+slschain2d smoothderw smoothreg smspray stfchain stfchain2 stcontrib
+stltft stpf stphase stream streamiss sttimefreq taupfit tfchain
+tf2dprec thin timecont timefreq tomo tree trace2 tricascade tristack
+tristack2 twofreq2 upgrad var2 velcon velinv vipmig0 vofzperm warp1
+warpadd warpscan zero zmarch ztrace
 '''
 
 ccprogs = 'anisolr2 isolr2 isolr3 lrvc0 permlr1 permlr2 permlr3'
