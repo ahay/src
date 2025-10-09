@@ -112,8 +112,9 @@ def test(target=None,source=None,env=None):
     figdir = env.get('figdir')
     bindir = env.get('bindir')
 
-    locked = re.sub('.*\/([^\/]+)\/([^\/]+)\/([^\/]+)\/Fig\/',
-                    figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
+    # Fixed: Use raw strings for regex to avoid Python 3.12 SyntaxWarning: invalid escape sequence '\/'
+    locked = re.sub(r'.*\/([^\/]+)\/([^\/]+)\/([^\/]+)\/Fig\/',
+                    figdir+r'/\1/\2/\3/',os.path.abspath(src))
     print("Comparing %s and %s" % (locked,src))
     if os.path.isfile(locked):
         if locked.endswith(vpsuffix):
@@ -310,8 +311,9 @@ class Project(Environment):
         rsf.path.sconsign(self)
 
         self.resdir = resdir
-        self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
-                             self.figs+'/\\1',cwd)
+        # Fixed: Use raw strings for regex to avoid Python 3.12 SyntaxWarning: invalid escape sequence '\/'
+        self.figdir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
+                             self.figs+r'/\1',cwd)
         self.progsuffix = self['PROGSUFFIX']
 
         # Keep certain environmental variables in the environment
@@ -540,13 +542,15 @@ class Project(Environment):
                     if reduce == 'add':
                         splitpar += ' join=0'
                     else:
-                        join = re.search('cat\s+axis=(\d)',reduce)
+                        # Fixed: Use raw string for regex to avoid Python 3.12 SyntaxWarning: invalid escape sequence '\s'
+                        join = re.search(r'cat\s+axis=(\d)',reduce)
                         if join:
                             splitpar += ' join=%s' % join.group(1)
                     flow = '|'.join([' '.join([split[1],splitpar,x]) for x in flow.split('|')])
                     for k in split[2]:
                         # par=${SOURCES[k]} -> _par=${SOURCES[k]}
-                        flow = re.sub(r'(\S+=\${SOURCES\[%d\]})' % k,'_\\1',flow)
+                        # Fixed: Use raw string for replacement to avoid Python 3.12 escape sequence issues
+                        flow = re.sub(r'(\S+=\${SOURCES\[%d\]})' % k,r'_\1',flow)
             elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
@@ -585,7 +589,8 @@ class Project(Environment):
 
         # May need to do it remotely
         if remote:
-            command = re.sub('"','\\"',command)
+            # Fixed: Use raw string for replacement to avoid Python 3.12 escape sequence issues
+            command = re.sub('"',r'\"',command)
             command = ' '.join(['$( ssh',node,'$) \"cd ',self.cwd,';',command,'\"'])
 
         targets = []
