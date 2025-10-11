@@ -17,6 +17,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+# Python 3.12 Compatibility: Fixed regex SyntaxWarning by using raw strings (r'') for regex patterns
 # Modified from the original C-shell version by Joe Dellinger
 
 import sys, os, time, string, re, shutil
@@ -39,7 +40,8 @@ def convert(infile,outfile,args=''):
     stat = lines[0].split()
 
     # find the number of frames
-    retot = re.compile('Total\s+(\d+)')
+    # Fixed: Use raw string for regex to avoid Python 3.12 SyntaxWarning: invalid escape sequence '\s'
+    retot = re.compile(r'Total\s+(\d+)')
     match = retot.search(lines[-1])
     if match:
         frames = int(match.group(1))
