@@ -2,7 +2,7 @@
 import os, sys
 
 try:
-    from Tkinter import *
+    from tkinter import *
 except:
     sys.stderr.write('Please install Tkinter!\n\n')
     sys.exit(1)

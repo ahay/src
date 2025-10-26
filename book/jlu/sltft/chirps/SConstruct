@@ -1,0 +1,113 @@
+from rsf.proj import *
+from math import pi as PI
+
+scriptdir = '../scripts/'
+sys.path.append(scriptdir)
+from rsfpy import Rsfarray
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+
+proggrey=scriptdir+'Mpygrey.py'
+
+# ----------------------  Graph  -----------------------------
+def garph(target, source, env):
+     rdata = Rsfarray(source[0].get_path())
+     rdata.sfput(env.get('sfput', ''))
+     rdata.window(env.get('window', ''))
+     figsize = env.get('figsize', (8,5))
+     plt.rcParams["font.size"]=18
+     plt.rcParams["font.weight"]=900
+     plt.rcParams["axes.labelweight"]=900
+     plt.rcParams["axes.titleweight"]=900
+     plt.rcParams["axes.labelsize"]=20
+     plt.rcParams["mathtext.fontset"]="stix"
+     plt.figure(figsize=figsize, facecolor="none")
+     plt.plot(rdata.axis1, rdata, color="black")
+     plt.xlabel(rdata.label_unit(0))
+     plt.ylabel(rdata.label_unit(1))
+     plt.xlim(rdata.axis1[0], rdata.axis1[-1])
+     plt.gca().xaxis.tick_top()
+     plt.gca().xaxis.set_label_position("top")
+     plt.savefig(target[0].get_path(), bbox_inches='tight', dpi=300, format=env.get('format', 'pdf'), transparent=True)
+     plt.close()
+
+
+graphbuilder = SCons.Builder.Builder(
+    action=garph,
+    suffix='.pdf',
+    src_suffix='.rsf'
+)
+
+project.Append(BUILDERS = {'Graph': graphbuilder})
+
+def Graph(target, source, suffix='.pdf', **kw):
+     if suffix == '.pdf':
+               viewer = WhereIs('acroread') or WhereIs('kpdf') \
+               or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') \
+               or WhereIs('open')
+     elif suffix == '.eps':
+               viewer = WhereIs('evince') or WhereIs('gv') or WhereIs('open')
+     plot= project.Graph('Fig/' + target, source, **kw)
+     view=project.Command(target + '.view',plot,viewer + " $SOURCES")
+     project.view.append(view)
+     locked = os.path.join(project.figdir,target+suffix)
+     target2 = os.path.join(project.resdir,target+suffix)
+     project.InstallAs(locked,target2)
+     project.Alias(target + '.lock',locked)
+     project.lock.append(locked)
+# ------------------------------------------------------------------
+
+## ---------------  Chirps signal  ---------------------------------
+
+nt=512
+Flow('cchirps',None,
+     '''
+     spike n1=%d d1=1 o1=0|
+     math output="cos(%g*(10+x1/7)*x1/%d)+cos(%g*(%d/2.8-x1/6.0)*x1/%d)" |
+     pad end1=11
+     ''' % (nt,2*PI,nt,2*PI,nt,nt))
+
+
+Graph('cchirps','cchirps',
+      sfput='label1="Time" unit1=s label2="Amplitude" unit2=', window="n1=500",
+      figsize = (8,5))
+
+
+Flow('ltft','cchirps ',
+     '''
+     ltft verb=y rect=10 dw=0.001 nw=500 
+     ''')
+
+Flow("lams","ltft",
+     '''
+     cabs | normalize type=m axis=2 |
+     math output="10*exp(6*(1-input))" |
+     smooth rect1=10 rect2=20 
+     ''')
+
+Flow('sltft','cchirps',
+     '''
+     sltft dw=0.001 eps=1.00 nw=500 verb=y abs=y center=n
+     ''')
+Flow('sltft1','cchirps',
+     '''
+     sltft lambda=0.5 dw=0.001 eps=0.96 nw=500 verb=y abs=y
+     center=y smooth=y rect1=25 tol=0
+     ''')
+
+Result('sltft','sltft %s'%proggrey,
+       '''
+       ${SOURCES[1]} transp=n verb=y screenwidth=8. screenheight=5
+       color=jet allpos=n max1=0.4 max2=500 dpi=300 fontsz=18 
+       fontfat=900 labelsz=20 yreverse=n wherexlabel=top
+       ''', suffix='.pdf')
+Result('sltft1','sltft1 %s'%proggrey,
+       '''
+       ${SOURCES[1]} transp=n verb=y screenwidth=8. screenheight=5
+       color=jet allpos=n max1=0.4 max2=500 dpi=300 fontsz=18 
+       fontfat=900 labelsz=20 yreverse=n wherexlabel=top 
+       ''', suffix='.pdf')
+
+
+End()

@@ -38,11 +38,10 @@ int main(int argc, char *argv[])
     char *headname=NULL, *filename=NULL, *trace=NULL, count[4], *prog=NULL;
     const char *myheader[] = {"      This dataset was created",
 			      "     with the Madagascar package",
-			      "     http://www.ahay.org/"};
+			      "     https://www.ahay.org/"};
     sf_file in=NULL, hdr=NULL;
     size_t nsegy;
-    unsigned int i;
-    int format=1, ns, nk, itr, ntr, *itrace=NULL;
+    int format=1, i, ns, nk, itr, ntr, *itrace=NULL;
     FILE *head=NULL, *file=NULL;
     float *ftrace=NULL, dt, t0;
 
@@ -77,7 +76,7 @@ int main(int argc, char *argv[])
     } else {
 	suxdr = true;
     }
-
+    
     if (NULL == (filename = sf_getstring("tape"))) {
 	/* output data */
 	file = stdout;
@@ -97,8 +96,8 @@ int main(int argc, char *argv[])
 	} else {
 	    for (i=0; i < SF_EBCBYTES/80; i++) {
 		snprintf(count,4,"C%-2d",i+1);
-		snprintf(ahead+i*80,82,"%s %-76s\n",count,
-			 (i < 3)? myheader[i]:"");
+		snprintf(ahead+i*80,80,"%s %-75s\n",count,
+		   (i < 3)? myheader[i]:"");
 	    }
 	    if (verbose) sf_warning("ASCII header created on the fly");
 	}

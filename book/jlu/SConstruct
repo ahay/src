@@ -3,7 +3,7 @@ from rsf.book import *
 Papers(copyr='Jilin University',
        group='CLEG',
        papers=Split('''
-       txyapf riesz vdseislet gvdseisint txsopf apefsnsep fxyspfdenoi fspfint txyspfint lcfs spefdecon
+       txyapf riesz vdseislet gvdseisint txsopf apefsnsep fxyspfdenoi fspfint txyspfint lcfs sltft spefdecon
        '''),
        authors = {'txyapf':'Yang Liu, Ning Liu, and Cai Liu',
                   'riesz':'Cai Liu, Changle Chen, Dian Wang, Yang Liu, Shiyu Wang, and Liang Zhang',
@@ -15,6 +15,7 @@ Papers(copyr='Jilin University',
                   'fspfint': 'Zhisheng Zheng, Yang Liu, and Cai Liu',
                   'txyspfint': 'Yang Liu, Geng Wu, and Zhisheng Zheng',
                   'lcfs': 'Qinghan Wang, Yang Liu, Cai Liu, and Zhisheng Zheng',
+                  'sltft': 'Jiawei Chen, Yang Liu, You Tian, and Peihong Xie',
                   'spefdecon': 'Qinghan Wang, Yang Liu, Cai Liu, and Zhisheng Zheng'}
    )
 

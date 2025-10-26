@@ -15,12 +15,12 @@ matchoper mean mf mig2 miss4 miss43 mkcmp mlm modatten1 modtraceq mtm
 mtres mlwm multiple mvo mvo1 ndecon nmradon nmult nonloc nshape oclet
 oshift1 pick31 pseudoprim pwcsemb pwd2 pwsfault pwsfault3 pwsmooth3
 radonoper recoverfulleq reversval rtft saltpepper sclet seisavf
-seisbreg2 seishrink seismis2 seispocs seisreg2 seisxwell sharpsimi snr
-spefcstep spefvstep sphase st stft sv2d svd svddenoise swell testapef
-testcasoper testmatch theoreqiq threshold2 threshold3 tslread tvmf
-txrna txrna2 txrna3 txspf txspfint2 txspfvsint2 txsorth txyspfint3
-txyspfvsint3 v2d variogram variogram2 vconvert virtualdata wavemis2
-winscan wmf zcwt
+seisbreg2 seishrink seismis2 seispocs seisreg2 seisxwell sharpsimi
+sltft snr spefcstep spefvstep sphase st stft stft2 sv2d svd svddenoise
+swell testapef testcasoper testmatch theoreqiq threshold2 threshold3
+tslread tvmf txrna txrna2 txrna3 txspf txspfint2 txspfvsint2 txsorth
+txyspfint3 txyspfvsint3 v2d variogram variogram2 vconvert virtualdata
+wavemis2 winscan wmf zcwt
 '''
 
 try:  # distributed version

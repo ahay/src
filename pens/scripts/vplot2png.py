@@ -14,6 +14,8 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+# Python 3.12 Compatibility: Fixed regex SyntaxWarning by using raw strings (r'') for regex patterns
 import tempfile, os, sys, re
 import rsf.vplot2eps
 
@@ -52,7 +54,8 @@ if __name__ == "__main__":
         vpl = sys.argv.pop()
     else:
         vpl = png
-        png = re.sub('\.[^\.]+$','.png',vpl)
+        # Fixed: Use raw string for regex to avoid Python 3.12 SyntaxWarning: invalid escape sequence '\.'
+        png = re.sub(r'\.[^\.]+$','.png',vpl)
 
 
     if sys.argv:

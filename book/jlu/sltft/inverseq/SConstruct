@@ -1,0 +1,151 @@
+from rsf.proj import *
+from math import *
+
+# Run-time estimated by echo "$(scons --debug=time)">time.log
+
+scriptdir = '../scripts/'
+sys.path.append(scriptdir)
+from rsfpy import Rsfarray
+import matplotlib.pyplot as plt
+import matplotlib
+import matplotlib.colors as colors
+import numpy as np
+matplotlib.use('Agg')
+proggrey=scriptdir+'Mpygrey.py'
+
+
+# ----------------------------  Grey3  --------------------------------------
+def grey3(target, source, env):
+    rdata = Rsfarray(source[0].get_path())
+    rdata.sfput(env.get('sfput', ''))
+    rdata.window(env.get('window', ''))
+    figsize = env.get('figsize', (8,5))
+    plt.rcParams["font.size"]=18
+    plt.rcParams["font.weight"]=900
+    plt.rcParams["axes.labelweight"]=900
+    plt.rcParams["axes.titleweight"]=900
+    plt.rcParams["axes.labelsize"]=20
+    plt.rcParams["mathtext.fontset"]="stix"
+    plt.figure(figsize=figsize, facecolor="none")
+
+    rdata = rdata.flow('''\
+                sfput o3=1 unit3= |\
+                sfwindow min1=1 max1=4.5 max2=100 |\
+                sfscale axis=2|\
+                sfsmooth rect1=2 rect2=12 ''')
+    rdata.grey3(cmap="jet", 
+    vmin=0, vmax=1,
+    flat=False, pclip=100, 
+    frame1=250,frame3=176,frame2=45,
+    point1=0.85,point2=0.5,
+    n3tic=3, wantbar=False,
+    figsize=figsize, ax=plt.gca())
+    plt.gcf().savefig(target[0].get_path(),
+            bbox_inches="tight",
+            dpi=300)
+    # 
+    plt.close()
+
+grey3builder = SCons.Builder.Builder(
+    action=grey3,
+    suffix='.pdf',
+    src_suffix='.rsf'
+)
+
+project.Append(BUILDERS = {'Grey3': grey3builder})
+
+def Grey3(target, source, suffix='.pdf', **kw):
+     if suffix == '.pdf':
+               viewer = WhereIs('acroread') or WhereIs('kpdf') \
+               or WhereIs('evince') or WhereIs('xpdf') or WhereIs('gv') \
+               or WhereIs('open')
+     elif suffix == '.eps':
+               viewer = WhereIs('evince') or WhereIs('gv') or WhereIs('open')
+     plot= project.Grey3('Fig/' + target, source, **kw)
+     view=project.Command(target + '.view',plot,viewer + " $SOURCES")
+     project.view.append(view)
+
+     locked = os.path.join(project.figdir,target+suffix)
+     target2 = os.path.join(project.resdir,target+suffix)
+     project.InstallAs(locked,target2)
+     project.Alias(target + '.lock',locked)
+     project.lock.append(locked)
+# ---------------------------------------------------------------------------
+# Field data test
+dw=0.5
+
+Fetch('sodata.HH','yang')
+
+Flow('powdata','sodata.HH','dd form=native')
+Result('powdata', 'powdata %s'%proggrey,
+       '''
+       window max1=4.5 |
+       put unit1=s unit2= label1=Time label2=Trace |
+       ${SOURCES[1]} verb=y screenwidth=6.6 screenheight=5 title=
+       dpi=300 fontsz=18 fontfat=900 labelsz=20 wherexlabel=top
+       scalebar=n  ntic1=4 ntic2=5  clip=8000
+       ''', suffix='.pdf')
+
+# time-frequency spectrum
+
+Flow('sltft','powdata',
+     '''
+     sltft verb=y eps=0.985 nw=250 dw=0.5 center=y smooth=y rect1=15 
+     ''')
+
+Flow('st','powdata','st')
+
+Flow('ltft','powdata','ltft nw=250 dw=0.5')
+Flow("sltft0","sltft","cabs")
+
+Grey3('sltft0', 'sltft0')
+
+from invq import invq
+
+eqvqs = []
+intqs = []
+results = []
+specs = []
+
+for case in ["st","ltft","sltft"]:
+    pf, lcf, eqvq, intq, result, spec = invq("powdata",case,case,
+              dw = dw)
+
+greydata=["st_eqvq","ltft_eqvq","sltft_eqvq","stresult",
+          "ltftresult","sltftresult"]
+for iplot in greydata:
+    if 'eqvq' in iplot:
+        Result(iplot, [iplot, proggrey],
+               '''
+                window max1=4.5 |
+                clip clip=200 value=200|
+                smooth rect1=2 rect2=5 |
+                put unit1=s unit2= label1=Time label2=Trace |
+                ${SOURCES[1]} verb=y screenwidth=8 screenheight=5 title=
+                dpi=300 fontsz=18 fontfat=900 labelsz=20 wherexlabel=top
+                scalebar=y  ntic1=4 ntic2=4 color=jet clip=200 allpos=y
+               ''', suffix='.pdf')
+    elif 'result' in iplot:
+        Result(iplot, [iplot, proggrey],
+               '''
+                window max1=4.5 |
+                put unit1=s unit2= label1=Time label2=Trace |
+                ${SOURCES[1]} verb=y screenwidth=6.6 screenheight=5 title=
+                dpi=300 fontsz=18 fontfat=900 labelsz=20 wherexlabel=top
+                scalebar=n ntic1=4 ntic2=5 color=gray clip=20000 
+                rect1=3.5,4.4,20,200 rect2=2.1,2.85,70,120
+                rectwidth=2 rectstyle=-- min1=1
+               ''', suffix='.pdf')
+
+Result('ltft_cf', 'ltft_cf %s'%proggrey,
+       '''
+       window max1=4.5 |
+       smooth rect1=2 rect2=5 |
+       put unit1=s unit2= label1=Time label2=Trace |
+       ${SOURCES[1]} verb=y screenwidth=8 screenheight=5 title=
+       dpi=300 fontsz=18 fontfat=900 labelsz=20 wherexlabel=top
+       scalebar=y  ntic1=4 ntic2=5 color=jet clip=10 bias=30
+       barlabel='"Frequency (Hz)"'
+       ''', suffix='.pdf')
+
+End()

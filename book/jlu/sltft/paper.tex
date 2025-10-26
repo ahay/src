@@ -1,0 +1,871 @@
+
+
+\published{IEEE Transactions on Geoscience and Remote Sensin, 63, 1-9, Art no. 5902809, (2025)}
+
+\title{Fast Streaming Local Time-frequency Transform for Nonstationary Seismic Data Processing}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\ms{TGRS-2024-05672}
+
+\address{
+\footnotemark[1] College of Geo-exploration Science and Technology,\\
+Jilin University, Changchun, China }
+
+\author{Jiawei Chen\footnotemark[1], Yang Liu\footnotemark[1], You Tian\footnotemark[1], and Peihong Xie\footnotemark[1]}
+
+\footer{TGRS-2024-05672}
+\lefthead{Chen et al.}
+\righthead{SLTFT}
+
+\maketitle
+
+\begin{abstract}
+	Time-frequency analysis serves as a useful approach to solve
+	different complex problems in seismic data processing.  From a
+	practical standpoint, the majority of time-frequency transform
+	techniques frequently grapple with the trade-off between time
+	and frequency localization adaptability, flexibility in
+	sampling time and frequency, and the pursuit of computational
+	efficiency.  To address this, we tailor the streaming
+	computation to implement a fast time-frequency transform,
+	namely the streaming local time-frequency transform (SLTFT),
+	which can significantly decrease the computational cost of
+	adaptive time-frequency analysis. We add a localization scalar
+	to the proceeding streaming algorithm to circumvent the need
+	for taper functions, which provides rapid forward and inverse
+	transforms and applicability in various scenarios.  We
+	demonstrate the adaptive time-frequency characteristics of the
+	proposed method, which offers a nonstationary time-frequency
+	representation with variable time-frequency
+	localization. Numerical tests indicate that the proposed SLTFT
+	is a more balanced method compared to previous time-frequency
+	adaptive transforms. It proves suitable for a range of
+	practical applications in nonstationary seismic data
+	processing, including ground-roll attenuation, inverse-Q
+	filtering, and multicomponent data registration.
+\end{abstract}
+
+\section{Introduction}
+
+Spectral estimation and corresponding time-frequency analysis for
+nonstationary signals is a cornerstone in geophysical data
+analysis \cite[]{Tary2014}, and has been widely applied in various
+geophysical data processing
+tasks \cite[]{Tan2022,Yao2022,Bai2022,Mohammadigheymasi2022,chen2021}. The
+short-time Fourier transform (STFT) is a fundamental technique for
+time-frequency analysis \cite[]{Allen77,liu2016stft,lu2013stft}. This
+method involves applying a series of short tapers to the input signal
+and subsequently performing a Fourier transform on each tapered
+segment. The spectrum provides localized time-frequency distributions
+for each data point and displays a detailed view of the frequency
+characteristics over time. The continuous wavelet transform
+(CWT) \cite[]{Chakraborty95} is another widely used alternative for
+time-frequency analysis. CWT replaces the length-fixed taper in STFT
+with mother wavelets that can be shifted in time and stretched by a
+scale, thus yielding a variable and concentrated time-frequency map of
+the input time series. The
+S-transform \cite[]{Stockwell96,liu2019st,Wu2023} combines the
+properties of both STFT and CWT, and can be viewed as a middle ground
+between these two methods. It employs a time-shifted and squeezed
+Gaussian taper, which is analogous to the mother wavelet used by CWT,
+while keeps a uniform frequency sampling and retains the original
+signal phase \cite{stockwell2007}. Recently developed methods, such as
+matching pursuit (MP) \cite{mallat1993}, basis pursuit
+(BP) \cite[]{chen2001}, Wigner-Vile
+distribution \cite[]{Boashash1987}, empirical mode decomposition
+(EMD) \cite[]{huang1998emd,flandrin2004emd,Zhang2020}, the
+synchrosqueezing transform \cite[]{daubechies2011}, sparse
+time-frequency transform \cite[]{gholami2012sparse,yang2021sparse} and
+the deep learning (DL)-based
+method \cite[]{liu2023NN,Qian2022,Yang2022} have been designed to
+mitigate issues such as spectral smearing and leakage. These methods
+aim to achieve superior time-frequency localization, which enhances
+the precision and clarity of signal analysis. Although these methods
+can be powerful tools for spectra estimation, their fixed frequency
+sampling and stationary time-frequency localization limits their
+applications in nonstationary seismic data processing. Additionally,
+they often suffers in high computational costs, which make them less
+suitable for complex tasks such as massive seismic data processing.
+
+Local attributes method employs regularized nonstationary regression
+to decompose input data into a number of nonstationary
+components \cite[]{Fomel07a}, and is proved an effective tool to
+measure nonstationary seismic data characteristics and has been
+successfully applied to seismic data stacking \cite[]{Liu11b}, noise
+attenuation \cite[]{Zheng2022,Liu11b}, image
+registration \cite[]{Fomel09b} and phase
+detection \cite[]{Fomel10}. \cite{Liu11} applied shaping regularized
+nonstationary regression for computing nonstationary local frequency
+attributes. They used the Gaussian smoothing operator to control the
+time-frequency localization and avoids the window strategy used in
+those conventional methods. \cite{Liu13} expanded the local frequency
+attributes \cite[]{Liu11} by designing an invertible nonstationary
+time-frequency decomposition, which is effective in practical
+processing tasks. \cite{chen2021} further developed the nonstationary
+local time-frequency transform method by applying smoothness
+constraints in all physical dimensions, which ensures a higher
+resolution and antinoise ability of the LTF decomposition
+method. Although the local attributes and LTF analysis methods prove
+to be effective in seismic data analysis and
+processing \cite[]{Liu11,Liu13,chen2021}, their high computational
+cost brought by iterative inversion framework limits their practical
+applications. To improve calculation efficiency, \cite{Geng24}
+employed the streaming algorithm \cite[]{Fomel16} to estimate local
+seismic attributes. Instead of using the shaping
+regularization, \cite{Geng24} incorporated streaming computation with
+local attributes to obtain time-frequency map. However, the direct
+application of the streaming algorithm leads to a global frequency map
+rather than a local one, so \cite{Geng24} implemented a window
+strategy to ensure localization.
+
+
+The streaming method, first proposed by Fomel and
+Claerbout \cite[]{Fomel16,Fomel24}, is an efficient non-iterative
+approach to compute nonstationary prediction-error filters
+(PEFs). \cite{Geng24} proposed an efficient streaming seismic
+attributes method by employing the streaming method to solve the
+nonstationary regression problem in local frequency
+attributes \cite[]{Liu11}. In this paper, we expand the streaming
+seismic attributes method \cite[]{Geng24} by improving the streaming
+calculation and designing an invertible streaming local time-frequency
+transform (SLTFT). We tailor the streaming computation by adding a
+localization scalar to control the localization of the time-frequency
+spectrum, which avoids the window strategy and provides an adaptively
+localized time-frequency map. The proposed SLTFT is computational
+efficient with its forward and inverse transform requiring only
+elementary algebraic operations and no iterations. The benchmark
+signal example indicate that the proposed SLTFT can provide more
+flexible time-frequency resolution than the classical S-transform and
+STFT. Field data tests including ground-roll attenuation, inverse-Q
+filtering and multicomponent data registration indicate that the
+proposed SLTFT provides an effective tool for analyzing and processing
+nonstationary seismic data.
+
+\section{Theory}
+\subsection{Streaming Local Time-frequency Transform}
+The discrete Fourier transform is a vital tool for signal analysis and
+processing. Given a casual discrete signal $s[n]$ with a fixed length
+of $N$, its Fourier series can be derived by the inner product of the
+signal with a family of sines and cosines
+\begin{equation}
+	\label{eq:dft}
+	C[k] = \frac{1}{N}\left< s[n],\psi_k[n] \right> = \frac{1}{N}\sum_{n=0}^{N-1} s[n]e^{-\text{j}2\pi k\Delta f (n/N)},
+\end{equation}
+\noindent where $\Delta f$ is the frequency interval, $k$ and $n$ are the
+discrete frequency index and time index, respectively. $C[k]$ are the
+Fourier coefficients, $\psi_k[n] = \exp\left[-\text{j}2\pi k\Delta f
+(n/N)\right]$ are the complex-value bases, and $[\cdot]$ stands for
+the index of a discrete sequence. The signal can be expressed by the
+inverse form of equation \ref{eq:dft}, which is written as
+\begin{equation}
+	\label{eq:idft} s[n] = \left< C[k] ,\psi^*_k[n] \right>
+	= \sum_{k=0}^{N-1} C[k]e^{\text{j}2\pi k\Delta f (n/N)},
+\end{equation}
+where $\psi^*_k[n]$ is the complex conjugate of $\psi_k[n]$.  We can
+rewrite the equation \ref{eq:idft} in a prediction-error regression
+form as\\
+\begin{equation}
+	\label{eq:pef}
+    e[n] = s[n] - \sum_{k=0}^{N-1} C[k] \psi^*_k[n],
+\end{equation}
+\noindent where $e[n]$ is the prediction error. Then we can apply the
+nonstationary regression \cite[]{Fomel09} to the Fourier series
+regression in equation \ref{eq:pef}, which allows the coefficients
+$C[k]$ to vary over time coordinate $n$. The error turns
+into \cite[]{Fomel09}
+\begin{equation}
+	\label{eq:npef} e[n] = s[n] - \sum_{k=0}^{N-1}
+    C[k,n] \psi^*_k[n].
+\end{equation}
+The nonstationary coefficients $C[k,n]$ can be obtained by solving the
+least-squares minimization problem\cite[]{Liu13}:
+
+\begin{equation}
+	\label{eq:lsdft}
+	\min_{C}\,\left\Vert s[n]-\sum_{k=0}^{N-1} C[k,n] \psi_k^{*}[n]\right\Vert_2^2.
+\end{equation}
+
+The nonstationary regression makes the minimization of
+equation \ref{eq:lsdft} become ill-posed, and a reasonable solution is
+to include additional constraints. Classical regularization methods,
+such as Tikhonov regularization \cite[]{Tikhonov63} and shaping
+regularization \cite[]{Fomel07b,Liu13,chen2021}, can be used to solve
+the ill-posed problem. The streaming computation is an efficient
+algorithm which enables a fast way to solve the nonstationary
+regression \cite[]{Fomel16,Geng24,Fomel24}. It employs a streaming
+regularization, where the new coefficients are assumed to be close to
+the previous ones
+\begin{equation}
+    \label{eq:approx}
+    C[k,n] \approx C[k,n-1].
+\end{equation}
+In matrix notation, these conditions can be combined into an
+overdetermined linear system \cite[]{Fomel16,Fomel24}:
+
+\begin{equation}
+		\begin{aligned}
+			\label{eq:streaming}
+            \left[
+			\begin{array}{c}
+				s[n]\\
+				\lambda C[0,n-1]\\\lambda C[1,n-1]\\
+				\cdots \\
+				\lambda C[k,n-1]\\
+			\end{array}
+			\right] 
+			\approx&\left[
+			\begin{array}{cccc}
+				\psi^{*}_0[n]  & \psi^{*}_1[n] & \cdots & \psi^{*}_k[n]\\
+				\lambda & 0 & \cdots & 0\\
+				0 & \lambda & \cdots & 0\\
+				\vdots   & \vdots  & \ddots  & \vdots \\
+				0 & 0 & \cdots & \lambda\\
+			\end{array}
+			\right]\\
+			&\times \left[
+			C[0,n], C[1,n], \cdots, C[k,n]
+			\right]^T,
+		\end{aligned}
+	\end{equation}
+where $\lambda$ is the parameter that controls the deviation of
+$C[k,n]$ from $C[k,n-1]$. To simplify the notation, one can rewrite
+equation \ref{eq:streaming} in a shortened block-matrix form as
+
+\begin{eqnarray}
+	\label{eq:block}
+	\left[
+	\begin{array}{c}
+		\mathbf{\Psi}[n]\\
+		\lambda {\mathbf{I}}
+	\end{array}
+	\right]
+	\mathbf{C}[n]
+	\approx
+	\left[
+	\begin{array}{c}
+		s[n]\\
+		\lambda \mathbf{C}[n-1]
+	\end{array}
+	\right],
+\end{eqnarray}
+\noindent where $\mathbf{I}$ is an identity matrix and
+\begin{equation}
+	\begin{aligned}
+		\label{eq:def}
+		\mathbf{\Psi}[n]&=
+		\left[
+		\begin{array}{cccc}
+			\psi^{*}_0[n], & \psi^{*}_1[n], & \cdots, & \psi^{*}_k[n]
+		\end{array}
+		\right], \\
+		\mathbf{C}[n]&=
+		\left[
+		\begin{array}{cccc}
+			C[0,n],&C[1,n],& \cdots, & C[k,n]
+		\end{array}
+		\right]^T.
+	\end{aligned}
+\end{equation}
+
+However, the streaming regularization in equation \ref{eq:approx}
+offers an equal approximation for all previous time samples, which
+means $C[k,0]$ influences $C[k,n]$ as much as $C[k,n-1]$ does. This
+leads to a global frequency spectrum (similar to the discrete Fourier
+transform) rather than a local one. Hence, \cite{Geng24} uses the
+taper strategy and performs streaming computations repeatedly to
+obtain the local frequency attributes. Although streaming algorithm
+can speed up the progress, it has a limited efficiency due to a large
+amount of repetitive calculations caused by the window functions. In
+this study, we introduced a localization scalar $\varepsilon$ to limit
+the smoothing radius and avoid the repeated computations brought by
+taper functions. The modified inverse problem is expressed as follows
+\begin{eqnarray}
+	\label{eq:block1}
+	\left[
+	\begin{array}{c}
+		\mathbf{\Psi}[n]\\
+		\lambda {\mathbf{I}}
+	\end{array}
+	\right]
+	\mathbf{C}[n]
+	\approx
+	\left[
+	\begin{array}{c}
+		s[n]\\
+		\lambda\varepsilon^2\mathbf{C}[n-1]
+	\end{array}
+	\right].
+\end{eqnarray}
+
+The localization scalarin $\varepsilon$ is defined in
+$\left(0,1\right]$ and provides a decaying and localized smoothing
+constraint that
+\begin{equation}
+    \label{eq:approx1}
+    \mathbf{C}[n] \approx \varepsilon^2\mathbf{C}[n-1]\approx \varepsilon^4\mathbf{C}[n-2].
+\end{equation}
+The influence of the previous coefficients on the current coefficients
+decreases exponentially with the distance between them, which yields a
+localized frequency spectrum while avoiding the taper strategy. We use
+the least-squares algorithm to solve equation \ref{eq:block1}. The
+minimization problem is
+\begin{equation}
+	\label{eq:ls1}
+	\min_{\mathbf{C}}\,\left\Vert s[n]-\mathbf{\Psi}[n] \mathbf{C}[n] \right\Vert_2^2+ 
+	\lambda^2 \left\Vert \mathbf{C}[n]-\varepsilon^2\mathbf{C}[n-1]\right\Vert_2^2\;,
+\end{equation}
+\noindent and the least-squares solution of equation \ref{eq:ls1}
+is \cite[]{Fomel16,Fomel24}
+\begin{equation}
+	\begin{aligned}
+		\label{eq:solution0}
+		\mathbf{C}[n]= &\left(\mathbf{\Psi}^T[n]\mathbf{\Psi}[n]+\lambda^2{\mathbf{I}}\right)^{-1} \\
+		& \times \left(s[n]\mathbf{\Psi}^T[n]+\lambda^2\varepsilon^2\mathbf{C}[n-1] \right).
+	\end{aligned}
+\end{equation}
+\noindent The Sherman-Morrison formula \cite[]{sherman1950} is used to
+directly calculate the inverse matrix as follows
+\begin{equation}
+	\label{eq:SM}
+	\left(\mathbf{\Psi}^T[n]\mathbf{\Psi}[n]+\lambda^2{\mathbf{I}}\right)^{-1}=
+	\frac{1}{\lambda^2}\left({\mathbf{I}}-\frac{\mathbf{\Psi}^T[n]\mathbf{\Psi}[n]}{{\lambda^2+\mathbf{\Psi}}[n]\mathbf{\Psi}^T[n]} \right) .
+\end{equation}
+\noindent After substituting equation \ref{eq:SM} into equation
+\ref{eq:solution0}, the coefficients $\mathbf{C}[n]$ can be obtained by
+\begin{equation}
+	\label{eq:solution1}
+	\begin{aligned}
+		\mathbf{C}[n] &=\frac{1}{\lambda^2}
+		\left(
+		{\mathbf{I}}-
+		\frac{\mathbf{\Psi}^T[n]\mathbf{\Psi}[n]}
+		{{\lambda^2+ \mathbf{\Psi}}[n]\mathbf{\Psi}^T[n]} 
+		\right)
+		\\&\hspace{0.26\hsize}\times\left(
+		s[n]\mathbf{\Psi}^T[n]+\lambda^2\varepsilon^2\mathbf{C}[n-1] 
+		\right) \\
+		&=\varepsilon^2 \mathbf{C}[n-1] + 
+		\frac{s[n]-\varepsilon^2\mathbf{\Psi}[n]\mathbf{C}[n-1]}
+		{\lambda^2+\mathbf{\Psi}[n]\mathbf{\Psi}^T[n]}
+		\mathbf{\Psi}^T[n].
+	\end{aligned}
+\end{equation}
+
+Equation \ref{eq:solution1} shows that the coefficients
+$\mathbf{C}[n]$ at $n$ is calculated by the data point $s[n]$ and the
+previous coefficients $\mathbf{C}[n-1]$, but the frequency information
+of the data points after $n$ is not included.
+
+This could lead to a small time-shift in the time-frequency domain. To
+avoid the time-shift effect, we obtain the center-localized spectrum
+by implementing the streaming computation forward and backward along
+the time direction and adding the results
+together. Fig.\ref{fig:streamingLTFTa,streamingLTFTb} illustrates the
+main processes of the proposed SLTFT and the streaming local
+attribute \cite[]{Geng24}. The proposed method avoids repeatedly
+windowing the data, and can obtain the result streamingly all at
+once. Analogous to LTF decomposition \cite[]{Liu13}, the absolute
+value of $|\mathbf{C}[n]|$ represents the localized time-frequency
+distribution of $s[n]$, and equation \ref{eq:solution1} can be simply
+inverted to reconstruct the original data $s[n]$ from the coefficients
+$\mathbf{C}[n]$ \cite[]{Fomel16,Fomel24}:
+\begin{equation}
+	\label{eq:invert}
+	\begin{aligned}
+		s[n] =& \left( \frac{\lambda^2}{\mathbf{\Psi}[n]\mathbf{\Psi}^T[n]}+1\right)\mathbf{\Psi}[n]\mathbf{C}[n]\\
+		&-\frac{\lambda^2\varepsilon^2}{\mathbf{\Psi}[n]\mathbf{\Psi}^T[n]}\mathbf{\Psi}[n]\mathbf{C}[n-1].
+	\end{aligned}
+\end{equation}
+
+The inversion using equation \ref{eq:invert} is suffer from the
+trade-off between accuracy and
+efficiency \cite[]{Fomel16,Fomel24}. Another way to reconstruct the
+original data is to directly apply the
+equation \ref{eq:idft}. Additionally, we use an amplitude recovery
+factor $\alpha$ defined by
+\begin{equation}
+	\label{eq:amp}
+	\alpha = \frac{s[n]}{\mathbf{\Psi}[n]\mathbf{C}[n]},
+\end{equation}
+to ensure the amplitude unchanged. Then the amplitude-preserving
+coefficients $\hat{\mathbf{C}}[n]$ can be obtained by
+\begin{equation}
+	\label{eq:acoeffs}
+	\hat{\mathbf{C}}[n] = \alpha\mathbf{C}[n]=\frac{s[n]}{\mathbf{\Psi}[n]\mathbf{C}[n]}\mathbf{C}[n],
+\end{equation}
+and the original signal $s[n]$ can be precisely reconstructed by
+\begin{equation}
+	\label{eq:idft1}
+	s[n] = \mathbf{\Psi}[n]\hat{\mathbf{C}}[n].
+\end{equation}
+
+We utilize a benchmark chirp signal (see Fig.\ref{fig:cchirps,sltft,sltft1}a)
+to further illustrate the role of the localization
+scalar. Fig.\ref{fig:cchirps,sltft,sltft1}b presents the time-frequency map
+derived from the streaming local attribute \cite[]{Geng24}, which
+fails in providing a localized time-frequency map if the taper
+function is removed to reduce the computational costs. However, the
+proposed SLTFT without window functions can provide a reasonable
+result (see Fig.\ref{fig:cchirps,sltft,sltft1}c).
+
+Compared to the streaming local attribute with the taper function, the
+proposed SLTFT by updating the coefficients according to
+equation \ref{eq:solution1} requires only elementary algebraic
+operations, which effectively reduces computational cost without
+iteration. According to equation \ref{eq:def}, $\mathbf{C}[n]$ is a
+$k\times 1$ vector and the size of $\mathbf{\Psi}[n]$ is $1\times k$
+for any $n$, thus the computational complexities of
+$\varepsilon^2\mathbf{\Psi}[n]\mathbf{C}[n-1]\mathbf{\Psi}^T[n]$ and
+$s[n]\mathbf{\Psi}^T[n]$ are both $O(k)$. Meanwhile,
+\begin{equation}
+	\label{eq:constant}
+	\begin{aligned}
+		\mathbf{\Psi}[n]\mathbf{\Psi}^T[n] &=
+		\left[\begin{array}{c}
+			\psi^{*}_0[n], \\ \psi^{*}_1[n], \\\cdots, \\ \psi^{*}_k[n]
+		\end{array}\right]^T
+		\left[\begin{array}{c}
+			{\psi_0[n]}, \\ {\psi_1[n]}, \\ \cdots, \\ {\psi_k[n]}
+		\end{array}\right] \\
+		&=\sum_{i=0}^{k}{e^{\text{j}2\pi i (n/N)}e^{-\text{j}2\pi i (n/N)}}=k, 
+	\end{aligned}
+\end{equation}
+\noindent which is a constant for every $n$ and is computed only once.
+According to equations \ref{eq:solution1} and \ref{eq:acoeffs}, the
+computational complexity of the proposed SLTFT method is $O(N\cdot
+k)$. Table \ref{tb:comparison} compares the complexities of different
+approaches, which shows the proposed method has the lowest requirement
+for computational resources. Fig.\ref{fig:time} further shows the CPU
+time of the different methods. We select the fixed frequency sample of
+500 and the fixed window length of 100 (for those who need a taper
+function). The number of iteration is set to 50 in the LTF
+decomposition. All these records are obtained by taking the average of
+5 measurements. Fig.\ref{fig:time} is visually in line with the
+theoretical complexity shown in table \ref{tb:comparison}. It is clear
+that the proposed method offers a fast transform almost equivalent to
+the STFT and is much more efficient than the LTF decomposition and the
+streaming local attributes method. Moreover, it combines the
+advantages of flexible frequency sampling and the adaptability of time
+and frequency localization, which are not achievable with the
+STFT. This enables fast local time-frequency analysis and processing,
+especially for large-scale seismic data, e.g., passive seismic
+data \cite[]{Geng24}.
+
+\inputdir{.}
+\multiplot{2}{streamingLTFTa,streamingLTFTb}{width=0.85\hsize}{Schematic illustration of (a) the proposed SLTFT and (b) the streaming local attributes method.}
+
+\begin{table}
+	\centering
+	\caption{Comparison of Theoretical Computational Costs among Different Methods.
+	}
+	\label{tb:comparison}
+    \resizebox{\textwidth}{!}{
+	\begin{threeparttable}
+		\begin{tabular}[htbp]{cccccc}
+			\toprule
+			\multirow{2}*{Algorithm}
+			& \multicolumn{3}{c}{
+				\multirow{2}*{Parameters}}
+			& \multirow{2}*{\makecell{Theoretical\\complexity}}
+			& \multirow{2}*{Invertible} \\ \\
+			\cline{1-6}
+			\multirow{3}*{STFT} 
+			& \multicolumn{3}{c}{\multirow{6}{*}{
+					\makecell{Data size of $N$,\\window length $m$,\\frequency samples $k$}}} 
+			& \multirow{3}*{$O(N\cdot m\cdot \log k)$} &
+			\multirow{3}*{Yes} 
+			\\ \\ \\
+			\cline{1-1}\cline{5-6}
+			\multirow{3}*{\makecell{streaming\\local\\attributes}}
+			& \multicolumn{3}{c}{\multirow{3}*{}}
+			& \multirow{3}*{$O(N\cdot m\cdot k)$} &
+			\multirow{3}*{No} 
+			\\ \\ \\
+			\cline{1-6}
+			\multirow{3}*{\makecell{the LTF\\decomposition}}
+			& \multicolumn{3}{c}{\multirow{3}*{
+					\makecell{Data size of $N$,\\ iteration numbers $l$,\\frequency samples $k$}}} 
+			& \multirow{3}*{$O(N\cdot l\cdot k)$} &
+			\multirow{3}*{Yes} 
+			\\ \\ \\
+			\cline{1-6}
+			\multirow{3}*{\makecell{SLTFT}}
+			& \multicolumn{3}{c}{\multirow{3}*{
+					\makecell{Data size of $N$,\\frequency samples $k$}}} 
+			& \multirow{3}*{$O(N\cdot k)$} &
+			\multirow{3}*{Yes} 
+			\\ \\ \\
+			\bottomrule
+		\end{tabular}
+
+	\end{threeparttable}
+    }
+\end{table}
+
+
+\inputdir{chirps}
+\multiplot{3}{cchirps,sltft,sltft1}{width=0.45\hsize}{Schematic illustration
+of (a) the synthetic chirp signal and its time-frequency map obtained
+by (b) the streaming local attributes without window and (c) the
+proposed SLTFT.}
+
+\inputdir{.}
+\plot{time}{width=0.6\hsize}{The CPU time comparison among the time-frequency
+analysis methods. Orange line: STFT; blue dash line: SLTFT; red dot
+line: streaming attributes; green dash-dot line: LTF
+decomposition. The convergence speed affects the CPU time of the LTF
+decomposition, resulting in a non-smooth curve.}
+
+
+\subsection{Adaptive Time-frequency Localization of SLTFT} 
+\inputdir{adaptive}
+
+The key different between S-transform and STFT is that S-transform
+employs a frequency-varying Gaussian taper, which provides
+$t\textrm{-}f$ spectrum with variable $t\textrm{-}f$
+localization. Considering that the localization scalar $\varepsilon$
+controls the $t\textrm{-}f$ localization of SLTFT, we design the new
+localization scalar varying over frequency
+\begin{equation}
+	\varepsilon = \varepsilon(f),
+\end{equation}
+\noindent where $f$ is the frequency. Increment of the localization scalar
+enhances the time localization of the spectrum, albeit at the cost of
+the reduced frequency localization, and vice versa. This inverse
+relationship allows us to adjust the balance between time and
+frequency localization according to specific requirements.
+
+We use two synthetic nonstationary models to to illustrate the
+time-frequency characterization of the proposed method. The first
+model (refered to as signal 1) comprises two hyperbolic signals
+$s_1(t)$, $s_2(t)$ and Gaussian noise, where
+\begin{empheq}[left={\empheqlbrace}]{align}
+	s_1(t) &= \cos\left[{
+		2\pi\left( {10t+\frac{3.75}{0.77-t}} \right)
+	}\right], \label{eq:s1}\\
+	s_2(t) &= \cos\left[{
+		2\pi\left( {-1.5t+\frac{1.25}{0.78-t}} \right)
+	}\right]. \label{eq:s2}
+\end{empheq}
+
+The signal 1 with a time interval of 0.5 ms contains 2000 samples
+between each sample. We windowed the periodic signals by a
+length-fixed cosine taper. The first signal $s_1(t)$ has a time
+duration ranging from 0.1 to 0.7 seconds, while the second signal
+$s_2(t)$ spans from 0.25 to 0.75 seconds. The S-transform provides a
+variable $t\text{-}f$ localization (see Fig.\ref{fig:st}) that allows
+the spectrum to exhibit enhanced frequency resolution at lower
+frequencies and superior time localization at higher
+frequencies. Fig.\ref{fig:stft} shows the spectrum calculated from the
+STFT with fixed window length. It is noted that the spectrum exhibits
+improved frequency localization at lower frequencies. However, this
+enhancement comes at the expense of reduced time localization around
+higher frequencies. Therefore, we can apply the frequency-varying
+localization scalers (see Fig.\ref{fig:epss}) to the SLTFT, and the
+result (see Fig.\ref{fig:st,st1,stft,stft1,sltft,sltft1,epss}e)
+provides a reasonable time-frequency spectrum similar to that of the
+S-transform.
+
+We selected two different hyperbolic signals $s_3(t)$, $s_4(t)$ in
+replace those in the second model (refered to as signal 2) to further
+test the SLTFT, where
+\begin{empheq}[left={\empheqlbrace}]{align}
+	s_3(t) &= \cos\left[{
+		2\pi\left( {690t-\frac{3.75}{0.77-t}} \right)
+	}\right], \label{eq:s3}\\
+	s_4(t) &= \cos\left[{
+		2\pi\left( {700t-\frac{1.25}{0.78-t}} \right)
+	}\right]. \label{eq:s4}
+\end{empheq}
+In this case, the S-transform encounters difficulties in producing an
+accurate spectrum shown in Fig.\ref{fig:st1}, which displays
+significant aliasing since its high time resolution leads to
+diminished frequency localization at higher frequencies. This
+observation shows that the variable time-frequency localization
+inherent in the S-transform introduces a trade-off between the
+representation of low and high frequency components. For comparison,
+the STFT with constant window length is hard to achieve a balance
+between time and frequency localization. As illustrated in
+Fig.\ref{fig:stft1}, the spectrum obtained by the SLTFT with
+constant localization scaler exhibits better frequency localization
+(around higher frequencies), but comes at the expense of diminished
+time localization (at lower frequencies). Fig.\ref{fig:epss}
+shows the frequency-varying localization scalers applied in this case,
+which has a trend opposite to that of signal 1. The flexible
+frequency-varying parameters lead to a resonable spectrum obtained by
+the proposed SLTFT (see Fig.\ref{fig:sltft1}).
+
+\multiplot{7}{st,st1,stft,stft1,sltft,sltft1,epss}{width=0.45\hsize}{The
+time-frequency map of synthetic signal 1 obtained by (a) S-transform,
+(c) STFT with fixed window length and (e) SLTFT with frequency-varying
+localization scalers. The time-frequency map of synthetic signal 2
+obtained by (b) S-transform, (d) STFT with fixed window length and (f)
+SLTFT with frequency-varying localization scalers. (g) The
+frequency-varying localization scalers of SLTFT used in
+Fig.\ref{fig:st,st1,stft,stft1,sltft,sltft1,epss}e (solid line) and
+Fig.\ref{fig:sltft1} (dash line).}
+
+The above examples show the adaptive and flexible frequency sampling
+of SLTFT in signal analysis, which provides an adjustable
+time-frequency representation. Next, we use several field datasets to
+show its performance in seismic data processing tasks.
+
+\section{Applications}
+\subsection{Fast Ground-roll Attenuation in Time-frequency Domain}
+\inputdir{wz}
+Ground roll or surface wave is a common type of interference wave in
+land seismic surveys, which is distinguished by high amplitudes and
+low frequencies. Time-frequency algorithms are effective for
+ground-roll attenuation \cite[]{elboth2010}.
+
+We first use an open-source OZ-25 dataset, which is a typical dataset
+suitable for testing the ground-roll noise attenuation performance and
+has been widely used in the geophysics
+community \cite[]{yilmaz1987,yarham2006,chen2015,Tao20}. Fig.\ref{fig:field}
+shows the raw dataset in common-shot domain with 81 traces and 2000
+samples per trace. The temporal and spatial sampling intervals are
+0.002 s and 0.05 km, respectively.  We use the proposed SLTFT to
+generate the $t\text{-}f\text{-}x$ spectrum coefficients (see
+Fig.\ref{fig:field,sltft,cmask}b). The noise energy is primarily concentrated
+within a triangular zone surrounding the near offset in low frequency
+band. We borrow a similar strategy from \cite{Liu13} and design a
+filter mask to attenuate the noise energy cluster localized in both
+frequency and space (see Fig.\ref{fig:field,sltft,cmask}c). Then we use the
+inverse SLTFT to bring back the separated signal (see
+Fig.\ref{fig:isltft}). The denoised dataset shows that the strong
+interference noise is well-attenuated and the reflection signals are
+preserved. We use bandpass filtering (see Fig.\ref{fig:bp}) and LTF
+decomposition (see Fig.\ref{fig:iltft}) to compare the denoising
+performance.
+Fig.\ref{fig:bp_wig1,iltft_wig1,isltft_wig1,bp_wig2,iltft_wig2,isltft_wig2}
+shows zoomed-in sections from the separated signals in
+Fig.\ref{fig:bp,bp_err,iltft,iltft_err,isltft,isltft_err}.
+Fig.\ref{fig:bp_wig1}
+and \ref{fig:bp_wig2} show that the bandpass filtering fails to
+attenuate the overlapped noise. Compared to the denoised results of
+LTF decomposition in Fig.\ref{fig:iltft_wig1}
+and \ref{fig:iltft_wig2}, the proposed SLTFT method brought more
+satisfactory results (see Fig.\ref{fig:isltft_wig1}
+and \ref{fig:isltft_wig2}) with the strong interference noise is
+well-attenuated.
+
+\multiplot{3}{field,sltft,cmask}{width=0.45\hsize}{(a) Raw OZ-25 dataset,
+(b) the $t\textrm{-}f\textrm{-}x$ spectrum obtained by the SLTFT
+($\varepsilon=0.99$) and (c) the filter mask in
+$t\textrm{-}f\textrm{-}x$ domain.}
+	
+\multiplot{6}{bp,bp_err,iltft,iltft_err,isltft,isltft_err}{width=0.3\hsize}{Estimated
+signals and separated noise using (a) and (b) high-pass filter with
+$f_{\text{hi}}$=20 Hz, (c) and (d) LTF decomposition, (e) and (f) the
+proposed SLTFT.}
+
+\multiplot{6}{bp_wig1,iltft_wig1,isltft_wig1,bp_wig2,iltft_wig2,isltft_wig2}{width=0.3\hsize}{Magnified sections of the denoised profile in
+Fig.\ref{fig:bp,bp_err,iltft,iltft_err,isltft,isltft_err}. (a), (b)
+and (c) correspond to the sections outlined by dashed rectangles in
+Figs. \ref{fig:bp}, \ref{fig:iltft}, and \ref{fig:isltft},
+respectively.  (d), (e) and (f) correspond to the sections outlined by
+dashed rectangles in Figs. \ref{fig:bp}, \ref{fig:iltft},
+and \ref{fig:isltft}, respectively.}
+
+\inputdir{dune}
+
+Next, we use another widely-used field dataset, the Saudi Arabia Dune
+dataset, to further test the performance of the proposed method. The
+field dataset contains strong ground-roll noise with hyperbolic
+moveout (see Fig.\ref{fig:dat,sltft,cmask}a) and is popular as a benchmark
+dataset for ground-roll noise
+attenuation \cite[]{Fomel02,Zheng2022,kaur2020,Yang2024}. We use a
+mask filter in the $t\textrm{-}f\textrm{-}x$ domain (see
+Fig.\ref{fig:dat,sltft,cmask}c) to suppress the ground-roll noise. The
+estimated signal by using the high-pass filter with 20-Hz cutoff
+frequency contains more low-level ground-roll noise (see
+Fig.\ref{fig:bpsign}). The denoised dataset obtained by the
+proposed SLTFT (see Fig.\ref{fig:dat,sltft,cmask}b) shows that the proposed
+method achieved the separation goal that the underlying reflection
+events clearly appear in the estimated section, and the ground-roll
+noise is well suppressed.
+
+Although the LTF decomposition can also produce a reasonable result
+(see Fig.\ref{fig:iltft} and \ref{fig:ltftsign}), its
+computational cost is way too much. The proposed method demonstrates a
+significant reduction in time cost, for example, the computational
+time by the SLTFT is 7.77 s for the OZ-25 dataset and 1.90 s for the
+Dune dataset when compared with 62.37 s and 16.69 s needed from the
+LTF decomposition.
+
+\multiplot{3}{dat,sltft,cmask}{width=0.45\hsize}{(a) Raw Saudi Arabia
+Dune dataset, (b) the $t\textrm{-}f\textrm{-}x$ spectrum obtained by
+the SLTFT ($\varepsilon=0.99$) and the filter mask in
+$t\textrm{-}f\textrm{-}x$ domain.}
+
+\multiplot{6}{bpsign,bpnoiz,ltftsign,ltftnoiz,sltftsign,sltftnoiz}{width=0.3\hsize}{Estimated signals and separated noise using (a) and (b) high-pass
+filter with $f_{\text{hi}}$=24 Hz, (c) and (d) LTF decomposition, (e)
+and (f) the proposed SLTFT.}
+
+\subsection{Fast Inverse-Q Filtering in Time-frequency Domain}
+\inputdir{inverseq}
+
+Local Time-frequency map can also used for time-varying Q-factor
+estimation and inverse-Q filtering. \cite{wang2020} developed the
+local centroid frequency shift (LCFS) method for time-varying
+Q-estimation in time-frequency domain. The SLTFT method can provide
+accurate time-frequency spectrum for Q-factor estimation with high
+efficiency. We selected a 2D poststack seismic profile to perform
+numerical test (see Fig.\ref{fig:powdata}). The seismic
+section has a time length of 4.5 s with a time sampling of 4 ms and
+contains 247 traces in total. We calculated the
+$t\textrm{-}f\textrm{-}x$ spectrum of the seismic section (see
+Fig.\ref{fig:sltft0}) by using the SLTFT
+($\varepsilon=0.985$). The spectrum shows that the frequency range is
+getting narrow as the seismic wave propagates. The local centroid
+frequency (LCF) can be calculated by using the
+$t\textrm{-}f\textrm{-}x$ map \cite[]{Liu13,wang2020}, as is shown in
+Fig.\ref{fig:ltft_cf}.  We used the LCFS method in
+time-frequency domain to estimate the time-varying equivalent
+Q-factors for each
+trace. Fig.\ref{fig:st_eqvq}-\ref{fig:sltft_eqvq}
+show the calculated Q-factors by using the S transform, the LTF
+decomposition and the SLTFT, respectively. The Q-factors obtained by
+the LTF decomposition and the SLTFT are reasonably distributed
+according to the LCF information (see Fig.\ref{fig:ltft_cf}),
+while the S-transform fails in providing an unbiased Q-factor map. The
+estimated Q-factors are used to perform inverse-Q filtering, and
+Fig.\ref{fig:stresult} - \ref{fig:sltftresult} show
+the enhanced seismic sections corresponded to
+Fig.\ref{fig:st_eqvq}-\ref{fig:sltft_eqvq},
+respectively. Because of its biased estimation of Q-factors, the
+S-transform exhibits limitations in effectively enhancing the
+resolution of deep reflection signals (around 3 $\sim$ 4 s) (see
+Fig.\ref{fig:stresult}) when compared to the results of the
+LTF decomposition and the SLTFT (see Fig.\ref{fig:ltftresult}
+and \ref{fig:sltftresult}), where the attenuation of the
+reflections is compensated well, and the original structural
+characteristics are reasonably preserved. Meanwhile, the proposed
+method effectively reduces more computational costs (see
+Table. \ref{tb:comparison1}) than the LTF decomposition. Additionally,
+it achieves storage cost reduction through flexible frequency
+down-sampling. Specifically, in the SLTFT, we utilize half the
+frequency samples compared to the S-transform, while maintaining a
+superior enhancing profile.
+
+\multiplot{3}{powdata,sltft0,ltft_cf}{width=0.45\hsize}{(a) 2D poststack
+seismic section, (b) the corresponding $t\textrm{-}f\textrm{-}x$ cube
+and (c) local centroid frequency.}
+
+\multiplot{3}{st_eqvq,ltft_eqvq,sltft_eqvq}{width=0.45\hsize}{The estimated
+equivalent Q-factors by using (a) S-transform, (b) LTF decomposition
+and (c) SLTFT ($\varepsilon=0.985$).}
+
+\multiplot{3}{stresult,ltftresult,sltftresult}{width=0.45\hsize}{Enhanced
+seismic sections by using (a) S-transform, (b) LTF decomposition and
+(c) SLTFT ($\varepsilon=0.985$).}
+
+\subsection{Fast Multicomponent Data Registration}
+\inputdir{vecta}
+
+Multicomponent seismic data registration is an important step before
+quantitative seismic data interpretation and joint amplitude versus
+offset (AVO) analysis \cite[]{lu2015,gao2018}. The time-frequency
+transform is suitable for nonstationary registration of multicomponent
+images in frequency domain \cite[]{Liu13,chen2021}. The main idea is
+to match the spectra of compressional (PP) and shear (SS) reflections
+to that of Ricker wavelets, making the balanced PP and SS images share
+a similar spectral content. Then one can squeeze the SS image and make
+PP and SS images display in the same coordinate
+system. Fig.\ref{fig:pp} and \ref{fig:ss} shows the PP and
+SS images from a nine-component land survey, respectively. The
+interleaved image (where the PP and SS traces are interleaved one by
+one) of the raw PP and PS data shows the obviously discontinuous
+reflectors (see Fig.\ref{fig:before}). We use the LTF
+decomposition as a reference comparison with the proposed SLTFT
+method. Fig.\ref{fig:after} and \ref{fig:after1} shows the
+interleaved images after the registration by using the LTF
+decompostion and the SLTFT ($\varepsilon=0.98$), respectively. Both
+the LTF decomposition and the SLTFT method create the results with
+spatially coherent registration and high resolution, especially at the
+locations of the rectangle boxes. In terms of computational cost, the
+proposed method provides a more efficient time-frequency
+representation (see Table. \ref{tb:comparison1}), which makes it more
+suitable in high-dimensional field data processing tasks.
+
+\multiplot{2}{pp,ss}{width=0.45\hsize}{(a) PP and (b) SS images from a
+multicomponent land survey.}
+
+\multiplot{2}{before,after}{width=0.45\hsize}{The interleaved image of
+(a) raw data, after registration by using (b) LTF decomposition.}
+
+\inputdir{vecta1}
+\plot{after1}{width=0.45\hsize}{The interleaved image after registration
+by using SLTFT.}
+
+\begin{table*}
+	\centering
+	\caption{Comparison of Time Consumptions.$^1$}
+	\label{tb:comparison1}
+    \resizebox{\textwidth}{!}{
+	\begin{threeparttable}
+		\begin{tabular}[htbp]{lcccc}
+			\toprule
+			\multirow{3}*{\makecell{Data size}} & \multicolumn{2}{c}{Ground-roll attenuation}& Inverse-Q filtering& Data registration\\
+			& OZ-25 field data & Saudi Arabia Dune field data & Poststack data & Poststack data$^2$\\
+			& 2000 $\times$ 81 & 500 $\times$ 96 & 1126 $\times$ 247 & 1024 $\times$ 471\\
+			Frequency samples	& 400 & 400 & 250 & 500\\
+			\midrule
+			LTF decomposition  & 6.237 $\times$ 10$^1$ s & 1.669 $\times$ 10$^1$ s & 5.112 $\times$ 10$^1$ s & 1.792 $\times$ 10$^3$ s \\
+			SLTFT & 7.772 $\times$ 10$^0$ s & 1.903 $\times$ 10$^0$ s & 2.051 $\times$ 10$^0$ s & 0.936 $\times$ 10$^3$ s \\
+			\bottomrule
+		\end{tabular}
+		\begin{tablenotes}
+			\item[1] {All these records are obtained by taking the average of 5 measurements. The computational platform equips with 2.1 GHz i7-12700 CPU and 32 GB of RAM.}
+			\item[2] {Includes Ricker wavelet inversion and other time costs.}
+		\end{tablenotes}
+	\end{threeparttable}
+    }
+\end{table*}
+
+
+\section{Discussion}
+We have seen how the proposed SLTFT is applied in ground-roll
+attenuation, inverse-Q filtering, and multicomponent data
+registration. As metioned before, the localization scalar
+$\varepsilon$ is a key parameter in the SLTFT. It controls the balance
+between time and frequency resolution. Overall, it is similar to the
+window length in STFT. A small $\varepsilon$ value means a rapid
+decaying smoothing radius, which leads to higher time resolution and
+lower frequency resolution. In contrast, a large $\varepsilon$ value
+means a slow decaying smoothing radius, which leads to higher
+frequency resolution and lower time resolution. The $\varepsilon$
+value should be set according to the specific requirements of the
+seismic data processing task. For example, in the ground-roll
+attenuation and inverse-Q filtering tasks, a larger $\varepsilon$
+value can be used to achieve better frequency resolution. The
+frequency varying scalar can also be set using the same principle,
+according to the desired frequency-varying resolution.
+
+
+\section{Conclusion} 
+
+We have proposed an efficient approach to compute and apply adaptive
+time-frequency transform. The proposed SLTFT method allows us to
+better control the balance among time-frequency localizations, inverse
+transform, accuracy and computation cost. The revised streaming
+algorithm by adding an extra control parameter guarantee the adaptive
+time-frequency localization. Instead of the iterative strategy, the
+analytical solution for the nonstationary Fourier series estimation
+has the low computational complexity even when dealing with
+large-scale seismic data. Meanwhile, the custom frequency points in
+the least-squares problem makes the proposed method more flexible. The
+SLTFT provides a convenient time-frequency analysis domain with the
+adjustable resolution fitting for different kinds of nonstationary
+signals. Traditional seismic data processing tasks such as ground-roll
+attenuation, inverse-Q filtering, and multicomponent data registration
+become well defined in the SLTFT domain and allow for efficient and
+effective algorithms. Other possible applications of the proposed
+algorithm in seismic data analysis and processing may include seismic
+attenuation analysis, low frequency shadow detection, channel
+detection and so on.
+
+
+\bibliographystyle{SEG}
+\bibliography{paper}

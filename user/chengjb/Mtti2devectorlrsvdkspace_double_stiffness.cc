@@ -670,19 +670,19 @@ int main(int argc, char* argv[])
             char dataxnumber[20],dataznumber[20];
             char datasxnumber[20],datapznumber[20];
             char datapxnumber[20],datasznumber[20];
-            memset(dataxnumber,0,10);
-            memset(dataznumber,0,10);
-            memset(datapxnumber,0,10);
-            memset(datasxnumber,0,10);
-            memset(datapznumber,0,10);
-            memset(datasznumber,0,10);
+            memset(dataxnumber,0,20);
+            memset(dataznumber,0,20);
+            memset(datapxnumber,0,20);
+            memset(datasxnumber,0,20);
+            memset(datapznumber,0,20);
+            memset(datasznumber,0,20);
 
-            snprintf(dataznumber,10,"dataz%d",it/1);
-            snprintf(dataxnumber,10,"datax%d",it/1);
-            snprintf(datapxnumber,10,"datapx%d",it/1);
-            snprintf(datasxnumber,10,"datasx%d",it/1);
-            snprintf(datapznumber,10,"datapz%d",it/1);
-            snprintf(datasznumber,10,"datasz%d",it/1);
+            snprintf(dataznumber,20,"dataz%d",it/1);
+            snprintf(dataxnumber,20,"datax%d",it/1);
+            snprintf(datapxnumber,20,"datapx%d",it/1);
+            snprintf(datasxnumber,20,"datasx%d",it/1);
+            snprintf(datapznumber,20,"datapz%d",it/1);
+            snprintf(datasznumber,20,"datasz%d",it/1);
 
             fp1 = fopen(dataxnumber,"wb");
             fp2 = fopen(dataznumber,"wb");

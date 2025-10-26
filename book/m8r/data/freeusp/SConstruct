@@ -301,7 +301,7 @@ Result('ltft198',
        math output="abs(input)" | real |
        byte allpos=y gainpanel=100 pclip=99 |
        grey3 color=j  frame1=120 frame2=7 frame3=71 label1=Time flat=y 
-       unit1=s label3=Offset label2="\F5 f \F-1" unit3=km
+       unit1=s label3=Offset label2="\\F5 f \\F-1" unit3=km
        screenht=10 screenratio=0.7 parallel2=n format2=%3.1f
        point1=0.8 point2=0.3 wanttitle=n labelfat=4 font=2 titlefat=4
        ''')
@@ -317,7 +317,7 @@ Result('thr198',
        math output="abs(input)" | real |
        byte allpos=y gainpanel=100 pclip=99 |
        grey3 color=j  frame1=120 frame2=7 frame3=71 label1=Time flat=y 
-       unit1=s label3=Offset label2="\F5 f \F-1" unit3=km
+       unit1=s label3=Offset label2="\\F5 f \\F-1" unit3=km
        screenht=10 screenratio=0.7 parallel2=n format2=%3.1f
        point1=0.8 point2=0.3 wanttitle=n labelfat=4 font=2 titlefat=4
        ''')
@@ -359,7 +359,7 @@ Flow('cmps','signals',
      ''')
 Result('cmps',
        '''
-       byte gainpanel=each | window j3=2 |
+       byte clip=0.0175 | window j3=2 |
        grey3 frame1=500 frame2=36 frame3=321 flat=n
        title="CMP gathers" point1=0.7 label2=Offset label3=Midpoint
        ''')
@@ -423,6 +423,109 @@ Result('pstm',
        '''
        grey title="Prestack kirchhoff time migration"
        labelfat=4 font=2 titlefat=4
+       ''')
+
+Flow('pstm2','tcmps vel',
+     '''
+     psmig2 vel=${SOURCES[1]} apt=5 antialias=1
+     ''',split=[3,71,[0]])
+
+Flow('image','pstm2','stack axis=3')
+
+Result('pstm2','image',
+       '''
+       grey title="Prestack Kirchhoff Time Migration"
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+Flow('lspstm','tcmps vel pstm',
+     '''
+     conjgrad mig2 vel=${SOURCES[1]} apt=5 antialias=1
+     nh=71 dh=0.05 h0=-1.75 normalize=n
+     mod=${SOURCES[2]} niter=10 verb=n
+     ''')
+
+Flow('lspstm2','tcmps vel',
+     '''
+     conjgrad psmig2 vel=${SOURCES[1]} apt=5 antialias=1
+     mod=${SOURCES[0]} niter=10 verb=n
+     ''')
+
+Result('lspstm2',
+       '''
+       stack axis=3 |
+       grey title="Least-Squares Prestack Time Migration"
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+Flow('forw','lspstm2 vel',
+     '''
+     psmig2 adj=n vel=${SOURCES[1]} apt=5 antialias=1 
+     ''',split=[3,71,[0]])
+
+Flow('err','forw cmps',
+     '''
+     transp memsize=1000 plane=23 |
+     add scale=-1,1 ${SOURCES[1]} 
+     ''')
+
+Result('err',
+       '''
+       byte clip=0.0175 | window j3=2 |
+       grey3 frame1=500 frame2=36 frame3=321 flat=n
+       title="LS Misfit" point1=0.7 label2=Offset label3=Midpoint
+       ''')
+
+Flow('dip','image','fdip rect1=50 rect2=50')
+
+Result('dip','grey color=j scalebar=y title=Dip')
+
+Flow('dip3','dip','spray axis=3 n=71')
+
+Flow('smooth','lspstm2 dip3','pwsmooth dip=${SOURCES[1]} ns=11',split=[3,71])
+
+Result('smooth',
+       '''
+       stack axis=3 |
+       grey title="Least-Squares Prestack Time Migration"
+       labelfat=4 font=2 titlefat=4
+       ''')
+
+Flow('ref','smooth vel',
+     '''
+     psmig2 adj=n vel=${SOURCES[1]} apt=5 antialias=1 
+     ''',split=[3,71,[0]])
+
+Flow('dif','tcmps ref','add scale=1,-1')
+
+Flow('rcmp','ref','transp memsize=1000 plane=23')
+Flow('dcmp','dif','transp memsize=1000 plane=23')
+
+Result('ref','rcmp',
+       '''
+       byte gainpanel=each | window j3=2 |
+       grey3 frame1=500 frame2=36 frame3=321 flat=n
+       title=Reflections point1=0.7 label2=Offset label3=Midpoint
+       ''')
+
+Result('dif','dcmp',
+       '''
+       byte gainpanel=each | window j3=2 |
+       grey3 frame1=500 frame2=36 frame3=321 flat=n
+       title="Diffractions + Speckle" point1=0.7 label2=Offset label3=Midpoint
+       ''')
+
+Flow('rst','rcmp vel','nmo velocity=${SOURCES[1]} half=y | stack')
+Flow('dst','dcmp vel','nmo velocity=${SOURCES[1]} half=y | stack')
+
+Result('rst',
+       '''
+       grey title="Reflection Stack" labelfat=4 font=2 titlefat=4
+       ''')
+
+Result('dst',
+       '''
+       grey title="Diffraction Stack" labelfat=4 font=2 titlefat=4
        ''')
 
 End()
