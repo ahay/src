@@ -47,16 +47,20 @@ int main (int argc, char* argv[])
     sf_floatread(conv[0][0],n12*nw,cnv);
 
     for (i2=0; i2 < n2-1; i2++) {
-	resd[i2][0] = 0.0f;
-	for (i1=1; i1 < n1-1; i1++) {
+      for (i1=0; i1 < nw; i1++) {
+	resd[i2][i1] = 0.0f;
+      }
+	for (i1=nw; i1 < n1-nw; i1++) {
 	    dif = data[i2+1][i1] - data[i2][i1];
-	    resd[i2][i1] = -dif;
+	    resd[i2][i1] = dif;
 	    for (iw=1; iw <= order; iw++) {
-		resd[i2][i1] += conv[i2][2*iw-2][i1]*(dif - data[i2+1][i1+iw] + data[i2][i1-iw]);
-		resd[i2][i1] += conv[i2][2*iw-1][i1]*(dif - data[i2+1][i1-iw] + data[i2][i1+iw]);
+		resd[i2][i1] -= conv[i2][2*iw-2][i1]*(dif - data[i2+1][i1+iw] + data[i2][i1-iw]);
+		resd[i2][i1] -= conv[i2][2*iw-1][i1]*(dif - data[i2+1][i1-iw] + data[i2][i1+iw]);
 	    }
 	}
-	resd[i2][n1-1] = 0.0f;
+	for (i1=n1-nw; i1 < n1; i1++) {
+	  resd[i2][i1] = 0.0f;
+	}
     }
     for (i1=0; i1 < n1; i1++) {
 	resd[n2-1][i1] = 0.0f;

@@ -1,6 +1,6 @@
-/* Conection painting. */
+/* Convection painting. */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2025 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@
 int main (int argc, char* argv[])
 {
   int order, n1, n2, n12, i1, i2, i0, nw;
-  char *label, *unit;
     float **u, ***conv, *trace;
     float o1, d1, o2, d2, eps, *time;
     sf_file cnv, out, seed;
@@ -43,16 +42,9 @@ int main (int argc, char* argv[])
     n12 = n1*n2;
     
     if (!sf_histint(cnv,"n2",&nw)) sf_error("Need n2= in input");
-
-    sf_putint(out,"n2",n2);
-    sf_putfloat(out,"d2",d2);
-    sf_putfloat(out,"o2",o2);
-    if (NULL != (label= sf_histstring(cnv,"label3"))) sf_putstring(out,"label2",label);
-    if (NULL != (unit= sf_histstring(cnv,"unit3"))) sf_putstring(out,"unit2",unit);
-    
-    sf_putint(out,"n3",1);
-    
     order = nw/2;
+
+    sf_unshiftdim(cnv,out,2);
 
     if (NULL != sf_getstring("seed")) {
 	seed = sf_input("seed");
@@ -98,6 +90,7 @@ int main (int argc, char* argv[])
 	u[i2][i1] = trace[i1];
       }
     }
+    
     for (i1=0; i1 < n1; i1++) {
       trace[i1] = u[i0][i1];
     }
@@ -107,6 +100,7 @@ int main (int argc, char* argv[])
 	u[i2][i1] = trace[i1];
       }
     }
+    
     sf_floatwrite(u[0],n1*n2,out);
   
     exit(0);
