@@ -36,12 +36,12 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) sf_error("Need n2= in input");
     n12 = n1*n2;
     
-    if (!sf_histint(cnv,"n3",&nw)) sf_error("Need n3= in cnv");
+    if (!sf_histint(cnv,"n2",&nw)) sf_error("Need n2= in cnv");
     order = nw/2;
   
     data = sf_floatalloc2(n1,n2);
     resd = sf_floatalloc2(n1,n2);
-    conv = sf_floatalloc3(n1,n2,nw);
+    conv = sf_floatalloc3(n1,nw,n2);
 
     sf_floatread(data[0],n12,in);
     sf_floatread(conv[0][0],n12*nw,cnv);
@@ -51,9 +51,9 @@ int main (int argc, char* argv[])
 	for (i1=1; i1 < n1-1; i1++) {
 	    dif = data[i2+1][i1] - data[i2][i1];
 	    resd[i2][i1] = -dif;
-	    for (iw=0; iw < order; iw++) {
-		resd[i2][i1] += conv[2*iw  ][i2][i1]*(dif - data[i2+1][i1+iw] + data[i2][i1-iw]);
-		resd[i2][i1] += conv[2*iw+1][i2][i1]*(dif - data[i2+1][i1-iw] + data[i2][i1+iw]);
+	    for (iw=1; iw <= order; iw++) {
+		resd[i2][i1] += conv[i2][2*iw-2][i1]*(dif - data[i2+1][i1+iw] + data[i2][i1-iw]);
+		resd[i2][i1] += conv[i2][2*iw-1][i1]*(dif - data[i2+1][i1-iw] + data[i2][i1+iw]);
 	    }
 	}
 	resd[i2][n1-1] = 0.0f;

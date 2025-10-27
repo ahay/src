@@ -25,11 +25,13 @@ int main (int argc, char* argv[])
     bool verb;
     int niter, order, n1, n2, n12, i1, i2, iw, nw, rect[2], m[2];
     float **data, **rhs, ***conv, ***lhs, dif, mean;
-    sf_file in, flt;
+    sf_file in, flt, rh, lh;
 
     sf_init(argc, argv);
     in = sf_input("in");
     flt = sf_output("out");
+    lh = sf_output("lhs");
+    rh = sf_output("rhs");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&n1)) sf_error("Need n1= in input");
@@ -38,20 +40,21 @@ int main (int argc, char* argv[])
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
     nw = 2*order;
-    
-    sf_putint(flt, "n3", nw);
+
+    sf_shiftdim(in, flt, 2);
+    sf_putint(flt, "n2", nw);
+    sf_putint(lh, "n3", nw);
 
     if (!sf_getint("rect1",&rect[0])) rect[0]=1;
     if (!sf_getint("rect2",&rect[1])) rect[1]=1;
     /* smoothing */
 
-    if (!sf_getint("niter",&niter)) niter=100;
+    if (!sf_getint("niter",&niter)) niter=100*order;
     /* number of iterations */
 
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
 
-  
     data = sf_floatalloc2(n1,n2);
     rhs = sf_floatalloc2(n1,n2);
   
@@ -75,9 +78,9 @@ int main (int argc, char* argv[])
 	for (i1=1; i1 < n1-1; i1++) {
 	    dif = data[i2+1][i1] - data[i2][i1];
 	    rhs[i2][i1] = dif;
-	    for (iw=0; iw < order; iw++) {
-		lhs[2*iw  ][i2][i1] = dif - data[i2+1][i1+iw] + data[i2][i1-iw];
-		lhs[2*iw+1][i2][i1] = dif - data[i2+1][i1-iw] + data[i2][i1+iw];
+	    for (iw=1; iw <= order; iw++) {
+		lhs[2*iw-2][i2][i1] = dif - data[i2+1][i1+iw] + data[i2][i1-iw];
+		lhs[2*iw-1][i2][i1] = dif - data[i2+1][i1-iw] + data[i2][i1+iw];
 	    }
 	    for (iw=0; iw < nw; iw++) {
 		mean += lhs[iw][i2][i1]*lhs[iw][i2][i1];
@@ -88,6 +91,10 @@ int main (int argc, char* argv[])
 	    lhs[iw][i2][n1-1] = 0.0f;
 	}
     }
+
+    sf_floatwrite(lhs[0][0],n12*nw,lh);
+    sf_floatwrite(rhs[0],n12,rh);
+    
     for (i1=0; i1 < n1; i1++) {
 	rhs[n2-1][i1] = 0.0f;
 	for (iw=0; iw < nw; iw++) {
@@ -105,7 +112,12 @@ int main (int argc, char* argv[])
     }
 
     sf_multidivn (*rhs,**conv,niter);
-    sf_floatwrite(**conv,n12*nw,flt);
+
+    for (i2=0; i2 < n2; i2++) {
+	for (iw=0; iw < nw; iw++) {
+	    sf_floatwrite(conv[iw][i2],n1,flt);
+	}
+    }
   
     exit(0);
 }

@@ -75,8 +75,8 @@ void cnv_define (bool adj     /* adjoint flag */,
     for (i=0; i < n; i++) {
       w->b[nw] = 1.0f;
       for (iw=1; iw <= nw; iw++) {
-	w->b[nw-iw] = cc[2*iw-1][i];
 	w->b[nw+iw] = cc[2*iw-2][i];
+	w->b[nw-iw] = cc[2*iw-1][i];
 	w->b[nw] -= w->b[nw-iw] + w->b[nw+iw];
       }
 	
