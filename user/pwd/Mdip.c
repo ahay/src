@@ -25,7 +25,6 @@ http://ahay.org/blog/2012/06/02/program-of-the-month-sfdip/
 #include <rsf.h>
 
 #include "dip3.h"
-#include "mask6.h"
 
 int main (int argc, char *argv[])
 {
@@ -152,7 +151,7 @@ int main (int argc, char *argv[])
     for (ir=0; ir < nr; ir++) {
     	if (NULL != mask) {
 	    sf_floatread(u,n123,mask);
-	    mask32 (both, order, nj1, nj2, n[0], n[1], n[2], u, mm);
+	    sf_mask32 (both, order, nj1, nj2, n[0], n[1], n[2], u, mm);
 	}
 
 	/* read data */

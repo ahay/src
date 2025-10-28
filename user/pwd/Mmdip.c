@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "dip3.h"
-#include "mask6.h"
 
 int main (int argc, char *argv[])
 {
@@ -121,7 +120,7 @@ int main (int argc, char *argv[])
 
     	if (NULL != mask) {
 	    sf_floatread(u,n123,mask);
-	    mask32 (false, order, nj1, nj2, n1, n2, 1, u, mm);
+	    sf_mask32 (false, order, nj1, nj2, n1, n2, 1, u, mm);
 	}
 
 	/* read data */

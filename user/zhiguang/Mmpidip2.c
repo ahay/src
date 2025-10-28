@@ -148,7 +148,7 @@ int main (int argc, char *argv[])
         mask = sf_input("mask");
         if(cpuid==0) sf_floatread(u, n123, mask);
         MPI_Bcast(u, n123, MPI_FLOAT, 0, comm);
-        mask32 (false, order, nj1, nj2, n[0], n[1], n[2], u, mm);
+        sf_mask32 (false, order, nj1, nj2, n[0], n[1], n[2], u, mm);
     }else{
         mm = (bool**) sf_alloc(2,sizeof(bool*));
         mm[0] = mm[1] = NULL;
