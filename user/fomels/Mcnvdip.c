@@ -1,4 +1,4 @@
-/* Convection painting. */
+/* Dip estimation from convection */
 /*
   Copyright (C) 2025 University of Texas at Austin
   
@@ -23,81 +23,42 @@
 
 int main (int argc, char* argv[])
 {
-  int order, n1, n2, n12, i1, i2, i0, nw;
-    float **u, ***conv, *trace;
-    float o1, d1, eps, *time;
-    sf_file cnv, out, seed;
+    int order, n1, n2, i1, i2, nw;
+    float **conv, *trace, eps;
+    sf_file cnv, dip;
 
     sf_init(argc, argv);
     cnv = sf_input("in");
-    out = sf_output("out");
+    dip = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(cnv)) sf_error("Need float input");
     if (!sf_histint(cnv,"n1",&n1)) sf_error("Need n1= in input");
     if (!sf_histint(cnv,"n2",&nw)) sf_error("Need n2= in input");    
     if (!sf_histint(cnv,"n3",&n2)) sf_error("Need n3= in input");
-    
-    n12 = n1*n2;
+
     order = nw/2;
 
-    sf_unshiftdim(cnv,out,2);
-
-    if (NULL != sf_getstring("seed")) {
-	seed = sf_input("seed");
-	time = NULL;
-    } else {
-	seed = NULL;
-	time = sf_floatalloc(n1);
-	if (!sf_histfloat(cnv,"o1",&o1)) o1=0.; 
-	if (!sf_histfloat(cnv,"d1",&d1)) d1=1.; 
-	for (i1=0; i1 < n1; i1++) {
-	    time[i1] = o1+i1*d1;
-	}
-    }
+    sf_unshiftdim(cnv,dip,2);
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
-
-    if (!sf_getint("i0",&i0)) i0=0;
-    /* reference trace */
     
     predict_init (n1, n2, eps*eps, order, 1, false);
 
-    u = sf_floatalloc2(n1,n2);
-    conv = sf_floatalloc3(n1,nw,n2);
+    conv = sf_floatalloc2(n1,nw);
     trace = sf_floatalloc(n1);
-
-    sf_floatread(conv[0][0],n12*nw,cnv);
-
-    if (NULL != seed) {
-      sf_floatread(trace,n1,seed);
-    } else {
-      for (i1=0; i1 < n1; i1++) {
-	trace[i1] = time[i1];
-      }
+ 
+    for (i2=0; i2 < n2; i2++) {	
+	for (i1=0; i1 < n1; i1++) {
+	    trace[i1] = i1;
+	}
+	sf_floatread(conv[0],n1*nw,cnv);
+	predict_step(false,true,trace,conv);
+	for (i1=0; i1 < n1; i1++) {
+	    trace[i1] = i1 - trace[i1];
+	}
+	sf_floatwrite(trace,n1,dip);
     }
-
-    for (i1=0; i1 < n1; i1++) {
-      u[i0][i1] = trace[i1];
-    }
-    for (i2=i0-1; i2 >= 0; i2--) {
-      predict_step(false,false,trace,conv[i2]);
-      for (i1=0; i1 < n1; i1++) {
-	u[i2][i1] = trace[i1];
-      }
-    }
-    
-    for (i1=0; i1 < n1; i1++) {
-      trace[i1] = u[i0][i1];
-    }
-    for (i2=i0+1; i2 < n2; i2++) {
-      predict_step(false,true,trace,conv[i2-1]);
-      for (i1=0; i1 < n1; i1++) {
-	u[i2][i1] = trace[i1];
-      }
-    }
-    
-    sf_floatwrite(u[0],n1*n2,out);
   
     exit(0);
 }
