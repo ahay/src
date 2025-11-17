@@ -9,5 +9,10 @@ Flow('test.attr','clip.py',
 binary = Command('afdm.exe','afdm.py','cp $SOURCE $TARGET')
 AddPostAction(binary,Chmod(binary,0o755))
 
+Flow('test.mxarray','test_mxarray.py',
+     '''
+     ./$SOURCE
+     ''',stdin=0)
+
 End() 
 
