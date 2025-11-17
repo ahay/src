@@ -38,7 +38,9 @@ if root:
         pass
 
 modules.remove('las')
-modules.remove('mxarray')
+
+if modules.count('mxarray') != 0:
+    modules.remove('mxarray')
 
 if env.get('SWIG') and env.get('NUMPY'):
     #    try:
