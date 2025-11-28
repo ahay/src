@@ -29,6 +29,10 @@ https://github.com/chenyk1990/tutorials/blob/main/demo/aps3d/SConstruct
 
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 /** Part I: Ricker wavelet ********/
 float Ricker(float t, float f0, float t0, float A) 
 /*< ricker wavelet:
