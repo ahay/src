@@ -9,9 +9,6 @@ import sys
 import time
 import re
 
-# Import mxarray to apply the monkey patch
-import mxarray as mx
-
 class TestMXArray(unittest.TestCase):
 
     def setUp(self):
@@ -21,7 +18,7 @@ class TestMXArray(unittest.TestCase):
         self.files_to_clean = [self.rsf_path, self.nc_path]
 
     def tearDown(self):
-        """Runs after every test. Robustly cleans up RSF headers AND binaries."""
+        """Runs after every test. Clean up RSF headers AND binaries."""
         
         if os.path.exists(self.rsf_path):
             try:
@@ -91,6 +88,91 @@ class TestMXArray(unittest.TestCase):
         self.assertEqual(ds.sizes, arr2.sizes)
         np.testing.assert_array_equal(ds.coords["t"].values, arr2.coords["t"].values)
         np.testing.assert_array_equal(ds.data.values, arr2.values)
+        
+    def test_float_io(self):
+        """Test reading/writing standard Float data."""
+        # Create float32 data
+        data = np.random.randn(10, 5).astype(np.float32)
+        arr = xr.DataArray(
+            data, 
+            dims=("t", "x"),
+            coords={"t": np.arange(10), "x": np.arange(5)}
+        )
+
+        # Write
+        mx.xarray_to_rsf(arr, self.rsf_path)
+        
+        # Verify Header (m8r should see it as float)
+        inp = m8r.Input(self.rsf_path)
+        # RSF often reports this as "native_float" or similar
+        self.assertIn("float", inp.string("data_format"))
+        inp.close()
+
+        # Read Back
+        da_read = mx.rsf_to_xarray(self.rsf_path)
+        
+        # Assertions
+        self.assertEqual(da_read.dtype, np.float32)
+        np.testing.assert_allclose(da_read.values, arr.values)
+
+    def test_int_io(self):
+        """Test reading/writing Integer data."""
+        # Create int32 data
+        data = np.random.randint(-100, 100, size=(10, 5)).astype(np.int32)
+        arr = xr.DataArray(
+            data, 
+            dims=("t", "x"),
+            coords={"t": np.arange(10), "x": np.arange(5)}
+        )
+
+        # Write
+        mx.xarray_to_rsf(arr, self.rsf_path)
+        
+        # Verify Header
+        inp = m8r.Input(self.rsf_path)
+        # RSF should report this as "native_int"
+        self.assertIn("int", inp.string("data_format"))
+        inp.close()
+
+        # Read Back
+        da_read = mx.rsf_to_xarray(self.rsf_path)
+        
+        # Assertions
+        self.assertEqual(da_read.dtype, np.int32)
+        np.testing.assert_array_equal(da_read.values, arr.values)
+
+    def test_complex_io(self):
+        """Test reading/writing Complex data."""
+        # Create complex data
+        nt, nx = 10, 5
+        real_part = np.random.randn(nt, nx).astype(np.float32)
+        imag_part = np.random.randn(nt, nx).astype(np.float32)
+        data = (real_part + 1j * imag_part).astype(np.complex64)
+        
+        arr = xr.DataArray(
+            data, 
+            dims=("t", "x"),
+            coords={"t": np.arange(nt), "x": np.arange(nx)}
+        )
+
+        # Write
+        mx.xarray_to_rsf(arr, self.rsf_path)
+        
+        # Verify Header
+        inp = m8r.Input(self.rsf_path)
+        # RSF should report this as "native_complex"
+        self.assertIn("complex", inp.string("data_format"))
+        inp.close()
+
+        # Read Back
+        da_read = mx.rsf_to_xarray(self.rsf_path)
+        
+        # Assertions
+        self.assertTrue(np.iscomplexobj(da_read))
+        self.assertEqual(da_read.dtype, np.complex64)
+        
+        # Check values (real and imag parts)
+        np.testing.assert_allclose(da_read.values, arr.values)  
 
     def test_dask_chunks(self):
         """Test Dask chunking functionality."""
@@ -125,7 +207,7 @@ class TestMXArray(unittest.TestCase):
 
         # Test various chunk configurations
         check_chunks((2, 3, 5, 1))
-        # check_chunks((1, 1, 1, 1)) # Uncomment if you want to test slow IO
+        # check_chunks((1, 1, 1, 1)) # Uncomment if you want to test no chunking
         check_chunks("auto")
 
     def test_sfwindow_xarray(self):
@@ -221,6 +303,30 @@ class TestMXArray(unittest.TestCase):
         
         expected_pipe = arr[:, ::2][:, :10]
         np.testing.assert_allclose(res_pipe, expected_pipe)
+        
+    def test_auxiliary_file(self):
+        """Test passing an xarray as a keyword argument (e.g. velocity=Vp)."""
+        # Create a dummy Velocity model (Vp)
+        vp_arr = xr.DataArray(
+            np.ones((10, 10), dtype=np.float32) * 2.0, 
+            dims=("z", "x"),
+            coords={"z": np.arange(10), "x": np.arange(10)}
+        )
+        
+        # Create Data to process
+        data_arr = xr.DataArray(
+            np.zeros((10, 10), dtype=np.float32), 
+            dims=("z", "x"),
+            coords={"z": np.arange(10), "x": np.arange(10)}
+        )
+
+        # Run a command that takes an aux file. 
+        math_op = m8r.Filter('sfmath')(output="input+vel", vel=vp_arr)
+        
+        res = math_op.apply(data_arr)
+        
+        # Result should be 0 + 2.0 = 2.0
+        self.assertEqual(res.mean(), 2.0)
 
 if __name__ == "__main__":
     unittest.main(verbosity=1)
