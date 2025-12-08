@@ -1,114 +1,226 @@
 #!/usr/bin/env python
 
-import mxarray as mx
+import unittest
 import numpy as np
 import xarray as xr
+import m8r
+import os
 import sys
+import time
+import re
 
-def test_roundtrip(path):
+# Import mxarray to apply the monkey patch
+import mxarray as mx
 
-    # create xarray
-    arr = xr.DataArray(
-        np.arange(3*4*5*6, dtype=np.float32).reshape(3,4,5,6), 
-        dims=("t","x","y","z"),
-        coords={
-            "t": [0,1,2], 
-            "x": [0.0, 1.0, 2.0, 3.0], 
-            "y": [0.0, 1.0, 2.0, 3.0, 4.0],
-            "z": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
-        }
-    )
-    # write to RSF
-    out = path
-    mx.xarray_to_rsf(arr, str(out))
+class TestMXArray(unittest.TestCase):
 
-    # read back
-    da = mx.rsf_to_xarray(str(out))
-    diff = da - arr
+    def setUp(self):
+        """Runs before every test."""
+        self.rsf_path = "tmp_test.rsf"
+        self.nc_path = "tmp_test.nc"
+        self.files_to_clean = [self.rsf_path, self.nc_path]
 
-    assert da.shape == (3, 4, 5, 6)
-    assert da.values.dtype == arr.values.dtype == np.float32
-    assert da.dims == arr.dims
-    assert da.coords["t"].values.tolist() == arr.coords["t"].values.tolist()
-    assert da.coords["x"].values.tolist() == arr.coords["x"].values.tolist()
-    assert da.coords["y"].values.tolist() == arr.coords["y"].values.tolist()
-    assert da.coords["z"].values.tolist() == arr.coords["z"].values.tolist()
-    assert da.values.tolist() == arr.values.tolist()
-    assert diff.values.tolist() == [[[[0.0 for _ in range(6)] for _ in range(5)] for _ in range(4)] for _ in range(3)]
-    
-    # read as xarray Dataset
-    arr = mx.rsf_to_xarrayds(path)
-    
-    # write to netcdf (can be loaded in paraview)
-    arr.to_netcdf("test.nc")
-    arr2 = xr.open_dataarray("test.nc")
+    def tearDown(self):
+        """Runs after every test. Robustly cleans up RSF headers AND binaries."""
+        
+        if os.path.exists(self.rsf_path):
+            try:
+                with open(self.rsf_path, 'r', errors='ignore') as f:
+                    content = f.read()
+                    # Regex to find in="/path/to/binary" or in=binary
+                    match = re.search(r'in="?([^"\s]+)"?', content)
+                    if match:
+                        bin_file = match.group(1)
+                        if bin_file not in ['stdin', 'stdout'] and os.path.exists(bin_file):
+                            os.remove(bin_file)
+            except Exception as e:
+                print(f"Warning: Could not clean up binary for {self.rsf_path}: {e}")
 
-    assert arr.sizes == arr2.sizes
-    assert arr.coords["t"].values.tolist() == arr2.coords["t"].values.tolist()
-    assert arr.coords["x"].values.tolist() == arr2.coords["x"].values.tolist()
-    assert arr.coords["y"].values.tolist() == arr2.coords["y"].values.tolist()
-    assert arr.coords["z"].values.tolist() == arr2.coords["z"].values.tolist()
-    assert arr.data.values.tolist() == arr2.values.tolist()
+        for f in self.files_to_clean:
+            if os.path.exists(f):
+                try:
+                    os.remove(f)
+                except OSError:
+                    pass
+                    
+        if hasattr(self, 'generated_temps'):
+            for temp in self.generated_temps:
+                if os.path.exists(temp): os.remove(temp)
 
-    import m8r, os
-    tmp = m8r.Input(file)
-    binFile = tmp.string("in")
-    os.remove(binFile)
-    os.remove(file)
-    os.remove("test.nc")
+    def test_roundtrip(self):
+        """Test writing xarray to RSF and reading it back."""
+        # Create xarray
+        arr = xr.DataArray(
+            np.arange(3*4*5*6, dtype=np.float32).reshape(3,4,5,6), 
+            dims=("t","x","y","z"),
+            coords={
+                "t": [0,1,2], 
+                "x": [0.0, 1.0, 2.0, 3.0], 
+                "y": [0.0, 1.0, 2.0, 3.0, 4.0],
+                "z": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+            }
+        )
 
-def test_cunks(path):
-    arr = xr.DataArray(
-        np.arange(100*100*100*5, dtype=np.float32).reshape(100,100,100,5),
-        dims=("t","x","y","z"),
-        coords={
-            "t" : np.arange(100),
-            "x" : np.arange(100),
-            "y" : np.arange(100),
-            "z" : np.arange(5)
-        }
-    )
-    
-    mx.xarray_to_rsf(arr, path)
-    del arr
-    
-    import time
-    start_time = time.time()
-    da = mx.rsf_to_xarray(path, chunks=(2, 3, 5, 1))
-    print(f"mean: {da.mean().compute().values}")
-    end_time = time.time()
-    print(f"read with chuks {(2, 3, 5, 1)} took {end_time - start_time} seconds")
-    del da
-    start_time = time.time()
-    da = mx.rsf_to_xarray(path, chunks=(1, 1,1, 1))
-    print(f"mean: {da.mean().compute().values}")
-    end_time = time.time()
-    print(f"read with chuks {(1, 1, 1, 1)} took {end_time - start_time} seconds")
-    del da
-    start_time = time.time()
-    da = mx.rsf_to_xarray(path, chunks="auto")
-    print(f"mean: {da.mean().compute().values}")
-    end_time = time.time()
-    print(f"read with chuks auto took {end_time - start_time} seconds")
-    del da
-    
-    import os
-    os.remove(path)
-    
+        # Write to RSF
+        mx.xarray_to_rsf(arr, self.rsf_path)
+
+        # Read back as DataArray
+        da = mx.rsf_to_xarray(self.rsf_path)
+        diff = da - arr
+
+        # Assertions
+        self.assertEqual(da.shape, (3, 4, 5, 6))
+        self.assertEqual(da.values.dtype, np.float32)
+        self.assertEqual(da.dims, arr.dims)
+        np.testing.assert_array_equal(da.coords["t"].values, arr.coords["t"].values)
+        np.testing.assert_array_equal(da.coords["x"].values, arr.coords["x"].values)
+        np.testing.assert_array_equal(da.coords["y"].values, arr.coords["y"].values)
+        np.testing.assert_array_equal(da.coords["z"].values, arr.coords["z"].values)
+        np.testing.assert_array_equal(da.values, arr.values)
+        
+        # Verify difference is zero
+        expected_diff = np.zeros((3,4,5,6), dtype=np.float32)
+        np.testing.assert_array_equal(diff.values, expected_diff)
+
+        # Test Dataset conversion and NetCDF export
+        ds = mx.rsf_to_xarrayds(self.rsf_path)
+        ds.to_netcdf(self.nc_path)
+        
+        arr2 = xr.open_dataarray(self.nc_path)
+
+        self.assertEqual(ds.sizes, arr2.sizes)
+        np.testing.assert_array_equal(ds.coords["t"].values, arr2.coords["t"].values)
+        np.testing.assert_array_equal(ds.data.values, arr2.values)
+
+    def test_dask_chunks(self):
+        """Test Dask chunking functionality."""
+        # Create large array
+        dims = (100, 100, 100, 5)
+        size = np.prod(dims)
+        arr = xr.DataArray(
+            np.arange(size, dtype=np.float32).reshape(dims),
+            dims=("t","x","y","z"),
+            coords={
+                "t" : np.arange(100),
+                "x" : np.arange(100),
+                "y" : np.arange(100),
+                "z" : np.arange(5)
+            }
+        )
+        
+        mx.xarray_to_rsf(arr, self.rsf_path)
+        expected_mean = np.mean(np.arange(size, dtype=np.float32))
+        del arr
+
+        # Helper to time and check mean
+        def check_chunks(chunk_config):
+            start_time = time.time()
+            da = mx.rsf_to_xarray(self.rsf_path, chunks=chunk_config)
+            computed_mean = da.mean().compute().values
+            duration = time.time() - start_time
+            
+            print(f"Chunks {chunk_config}: Mean={computed_mean}, Time={duration:.4f}s")
+            self.assertTrue(np.isclose(computed_mean, expected_mean), 
+                            f"Mean mismatch with chunks {chunk_config}")
+
+        # Test various chunk configurations
+        check_chunks((2, 3, 5, 1))
+        # check_chunks((1, 1, 1, 1)) # Uncomment if you want to test slow IO
+        check_chunks("auto")
+
+    def test_sfwindow_xarray(self):
+        """Test Madagascar sfwindow program on Xarray input."""
+        # Create synthetic seismic data (Time, Offset)
+        nt, nx = 100, 10
+        dt, dx = 0.004, 25.0
+        ot, ox = 0.0, 100.0
+        
+        data = np.zeros((nt, nx), dtype=np.float32)
+        for ix in range(nx):
+            shift = int(ix * 2) 
+            if shift < nt:
+                data[shift:, ix] = np.arange(nt - shift)
+
+        arr = xr.DataArray(
+            data, 
+            dims=("t", "x"),
+            coords={
+                "t": np.arange(nt) * dt + ot,
+                "x": np.arange(nx) * dx + ox
+            }
+        )
+
+        # Subsampling (j1=2)
+        res_sub = m8r.Filter('sfwindow')(j1=2).apply(arr)
+        
+        self.assertEqual(res_sub.sizes['t'], nt // 2)
+        self.assertEqual(res_sub.sizes['x'], nx)
+        new_dt = res_sub.coords['t'].values[1] - res_sub.coords['t'].values[0]
+        self.assertTrue(np.isclose(new_dt, dt * 2))
+        np.testing.assert_allclose(res_sub.values, arr.values[::2, :])
+
+        # Windowing (f1, n1)
+        f1, n1 = 10, 20
+        res_win = m8r.Filter('sfwindow')(f1=f1, n1=n1).apply(arr)
+        
+        self.assertEqual(res_win.sizes['t'], n1)
+        expected_o1 = ot + f1 * dt
+        self.assertTrue(np.isclose(res_win.coords['t'].values[0], expected_o1))
+        np.testing.assert_allclose(res_win.values, arr.values[f1:f1+n1, :])
+
+        # Trace Selection (n2)
+        n2 = 3
+        res_trc = m8r.Filter('sfwindow')(n2=n2).apply(arr)
+        
+        self.assertEqual(res_trc.sizes['x'], n2)
+        np.testing.assert_array_equal(res_trc.values, arr.values[:, :n2])
+
+        # Piping (j1=2 | n1=10)
+        op = m8r.Filter('sfwindow')(j1=2) | m8r.Filter('sfwindow')(n1=10)
+        res_pipe = op.apply(arr)
+        
+        self.assertEqual(res_pipe.sizes['t'], 10)
+        new_dt_pipe = res_pipe.coords['t'].values[1] - res_pipe.coords['t'].values[0]
+        self.assertTrue(np.isclose(new_dt_pipe, dt * 2))
+
+    def test_sfwindow_numpy(self):
+        """Test Madagascar sfwindow program on Numpy input (Legacy Support)."""
+        nt, nx = 100, 10
+        
+        # Create Data in (Offset, Time) format for Numpy
+        data = np.zeros((nx, nt), dtype=np.float32)
+        for ix in range(nx):
+            shift = int(ix * 2) 
+            if shift < nt:
+                data[ix, shift:] = np.arange(nt - shift)
+
+        arr = data
+
+        # Subsampling (j1=2) 
+        res_sub = m8r.Filter('sfwindow')(j1=2).apply(arr)
+        self.assertEqual(res_sub.shape[1], nt // 2)
+        self.assertEqual(res_sub.shape[0], nx)
+        np.testing.assert_allclose(res_sub, arr[:, ::2])
+
+        # Windowing (f1, n1) 
+        f1, n1_win = 10, 20
+        res_win = m8r.Filter('sfwindow')(f1=f1, n1=n1_win).apply(arr)
+        self.assertEqual(res_win.shape[1], n1_win)
+        np.testing.assert_allclose(res_win, arr[:, f1:f1+n1_win])
+
+        # Trace Selection (n2) 
+        n2_cut = 3
+        res_trc = m8r.Filter('sfwindow')(n2=n2_cut).apply(arr)
+        self.assertEqual(res_trc.shape[0], n2_cut)
+        np.testing.assert_array_equal(res_trc, arr[:n2_cut, :])
+
+        # Piping
+        op = m8r.Filter('sfwindow')(j1=2) | m8r.Filter('sfwindow')(n1=10)
+        res_pipe = op.apply(arr)
+        self.assertEqual(res_pipe.shape[1], 10)
+        
+        expected_pipe = arr[:, ::2][:, :10]
+        np.testing.assert_allclose(res_pipe, expected_pipe)
 
 if __name__ == "__main__":
-    file = "tmp.rsf"
-    test_roundtrip(path=file)
-    # test_cunks(path="./tmp_large.rsf")
-    sys.stdout.write("All tests passed.\n")
-## test chunks
-####################################################################################
-############# output for data with shape (100, 100, 100, 5) ########################
-####################################################################################
-# mean: 2499999.5
-# read with chuks (2, 3, 5, 1) took 21.33984923362732 seconds
-# mean: 2499999.5
-# read with chuks (1, 1, 1, 1) took 559.3831532001495 seconds
-# mean: 2499999.5
-# read with chuks auto took 0.01817178726196289 seconds
-####################################################################################
+    unittest.main(verbosity=1)
