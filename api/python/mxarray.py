@@ -57,10 +57,23 @@ def rsf_to_xarray(path, chunks = "auto"):
         
     # data = np.asarray(f)
     binFile = f.string("in")
-    dtype_str = f.string("type")
+
+    rsf_type = getattr(f, 'type', None)
+    if not rsf_type:
+        fmt = f.string("data_format")
+        if fmt and "complex" in fmt: rsf_type = 'complex'
+        elif fmt and "int" in fmt: rsf_type = 'int'
+        else: rsf_type = 'float'
     
-    dtype_map = {'float': np.float32, 'int': np.int32, 'complex': np.complex64}
-    dtype = dtype_map.get(dtype_str, np.float32)
+    dtype_map = {
+        'float':   np.float32,
+        'int':     np.int32,
+        'complex': np.complex64,
+        'uchar':   np.uint8,
+        'char':    np.int8
+    }
+    dtype = dtype_map.get(rsf_type, np.float32)
+    # -------------------------------
     
     mm = np.memmap(
         binFile,
@@ -76,7 +89,6 @@ def rsf_to_xarray(path, chunks = "auto"):
         
 
     # covert c order to python order
-    # data = data.reshape(shape_py)
     data = data.transpose(*reversed(range(data.ndim)))
 
     ds = xr.DataArray(
@@ -95,11 +107,29 @@ def xarray_to_rsf(ds, outpath):
     if not isinstance(ds, xr.DataArray):
         raise ValueError("Input must be an xarray DataArray.")
     
+    if np.issubdtype(ds.dtype, np.complexfloating):
+        rsf_type = 'complex'
+        out_dtype = np.complex64
+        fmt_str = "native_complex"
+    elif np.issubdtype(ds.dtype, np.integer):
+        rsf_type = 'int'
+        out_dtype = np.int32
+        fmt_str = "native_int"
+    else:
+        rsf_type = 'float' 
+        out_dtype = np.float32
+        fmt_str = "native_float"
+    # -------------------------------
+
     data = ds.values
     data = data.transpose(*reversed(range(data.ndim)))
     
     dims = ds.dims
     out = m8r.Output(outpath)
+
+    # Set Type
+    out.settype(rsf_type)
+    out.put("data_format", fmt_str)
     
     for i, dim in enumerate(dims, start=1):
             
@@ -117,7 +147,7 @@ def xarray_to_rsf(ds, outpath):
         out.put(f"d{i}", d)
         out.put(f"label{i}", str(dim))
         
-    out.write(data.astype(np.float32))
+    out.write(data.astype(out_dtype))
     out.close()
     
 def rsf_to_xarrayds(path, chunks = "auto"):
