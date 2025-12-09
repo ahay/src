@@ -39,7 +39,7 @@ RUN apt-get update && apt-get install -y \
  && rm -rf /var/lib/apt/lists/*
 
 # install python packages
-RUN pip install numpy scipy
+RUN pip install --break-system-packages numpy scipy
 
 # get code from github
 RUN git clone https://github.com/ahay/src.git $HOME/RSFSRC
