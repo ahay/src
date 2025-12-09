@@ -19,6 +19,7 @@
 import os
 import m8r
 import numpy as np
+import subprocess
 
 try:
     import xarray as xr
@@ -40,7 +41,7 @@ def rsf_to_xarray(path, chunks = "auto"):
     ndim = len(shape)
     
     dims = []
-    # units = []
+    units = []
     coords = {}
     for axis in range(1, ndim+1):
         n = f.int(f"n{axis}")
@@ -49,14 +50,18 @@ def rsf_to_xarray(path, chunks = "auto"):
         label = f.string(f"label{axis}")
         if label == None:
             label = f"dim{axis}"
-        # unit = f.string(f"unit{axis}")
+        unit = f.string(f"unit{axis}")
+        if unit == None:
+            unit = "??"
         
         coords[label] = np.arange(n) * d + o
         dims.append(label)
-        # units.append(unit)
+        units.append(unit)
         
     # data = np.asarray(f)
     binFile = f.string("in")
+    label = f.string("label")
+    unit0 = f.string("unit")
 
     rsf_type = getattr(f, 'type', None)
     if not rsf_type:
@@ -94,8 +99,15 @@ def rsf_to_xarray(path, chunks = "auto"):
     ds = xr.DataArray(
         data, 
         dims=dims, 
-        coords=coords
+        coords=coords,
     )
+    if label:
+        ds.attrs['long_name'] = label
+    if unit0:
+        ds.attrs['units'] = unit0
+        
+    for dim, unit in zip(dims, units):
+        ds.coords[dim].attrs['units'] = unit
     
     return ds
 
@@ -126,10 +138,17 @@ def xarray_to_rsf(ds, outpath):
     
     dims = ds.dims
     out = m8r.Output(outpath)
+    label = ds.attrs.get('long_name', None)
+    unit0 = ds.attrs.get('units', None)
 
     # Set Type
     out.settype(rsf_type)
     out.put("data_format", fmt_str)
+    
+    if label:
+        out.put("label", label)
+    if unit0:
+        out.put("unit", unit0)
     
     for i, dim in enumerate(dims, start=1):
             
@@ -146,7 +165,8 @@ def xarray_to_rsf(ds, outpath):
         out.put(f"o{i}", o)
         out.put(f"d{i}", d)
         out.put(f"label{i}", str(dim))
-        
+        out.put(f"unit{i}", str(ds.coords[dim].attrs.get('units', '??')))
+
     out.write(data.astype(out_dtype))
     out.close()
     
@@ -244,8 +264,10 @@ def _patched_apply(self, *srcs):
         
         full_cmd = " ".join(cmd_parts)
         
-        if os.system(full_cmd) != 0:
-            raise RuntimeError(f"Command failed: {full_cmd}")
+        result = subprocess.run(full_cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True)
+        
+        if result.returncode != 0:
+            raise RuntimeError(f"{full_cmd}\n{result.stderr}")
 
         if self.plot: 
             return m8r.Vplot(out_file, temp=True)

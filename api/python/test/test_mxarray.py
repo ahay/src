@@ -9,6 +9,8 @@ import sys
 import time
 import re
 
+import mxarray as mx
+
 class TestMXArray(unittest.TestCase):
 
     def setUp(self):
