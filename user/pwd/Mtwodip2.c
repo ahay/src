@@ -8,7 +8,6 @@ Takes: < data.rsf > dip.rsf
 #include <rsf.h>
 
 #include "twodip2.h"
-#include "mask6.h"
 
 int main (int argc, char *argv[])
 {
@@ -119,7 +118,7 @@ int main (int argc, char *argv[])
 	/* initialize mask */
 	if (NULL != mask) {
 	    sf_floatread(u,n12,mask);
-	    mask6 (nw, nj1, nj2, n1, n2, u, m);
+	    sf_mask6 (nw, nj1, nj2, n1, n2, u, m);
 	}
 
 	/* read data */

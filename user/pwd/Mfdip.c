@@ -22,7 +22,6 @@
 #include <rsf.h>
 
 #include "fdip.h"
-#include "mask6.h"
 
 int main(int argc,char**argv)
 {
@@ -93,7 +92,7 @@ int main(int argc,char**argv)
 	if(verb)	sf_warning(" %d/%d;", ir, nr);
 	if (NULL != mask) {
 	    sf_floatread(u,n123,mask);
-	    mask32 (false, 1, 1, 1, n[0], n[1], n[2], u, m);
+	    sf_mask32 (false, 1, 1, 1, n[0], n[1], n[2], u, m);
 	}
 	sf_floatread(u,n123,in);
 	fdip( u, p, m, n4);

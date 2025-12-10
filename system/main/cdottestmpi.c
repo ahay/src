@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	len = strlen(arg);
 	if (cmdlen+len > SF_CMDLEN-2) sf_error("command line is too long");
 
-	strncpy(cmdline+cmdlen,arg,len);
+	memcpy(cmdline+cmdlen,arg,len);
 	cmdline[cmdlen+len]=' ';
 	cmdlen += len+1;
     }

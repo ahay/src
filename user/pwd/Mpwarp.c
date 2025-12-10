@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "dip3.h"
-#include "mask6.h"
 
 int main (int argc, char *argv[])
 {

@@ -16,18 +16,17 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <rsf.h>
-/*^*/
+#include "_bool.h"
+#include "alloc.h"
 
 #include "mask6.h"
 
-void mask32 (bool both              /* left and right predictions */,
-	     int nw                 /* filter size */, 
-	     int nj1, int nj2       /* dealiasing stretch */, 
-	     int nx, int ny, int nz /* data size */, 
-	     float *yy              /* data [nz*ny*nx] */, 
-	     bool **m               /* dip mask [both? 4:2][nz*ny*nx] */) 
+void sf_mask32 (bool both              /* left and right predictions */,
+		int nw                 /* filter size */, 
+		int nj1, int nj2       /* dealiasing stretch */, 
+		int nx, int ny, int nz /* data size */, 
+		float *yy              /* data [nz*ny*nx] */, 
+		bool **m               /* dip mask [both? 4:2][nz*ny*nx] */) 
 /*< two-dip masks in 3-D >*/
 {
     int ix, iy, iz, iw, is, i, n;
@@ -107,11 +106,11 @@ void mask32 (bool both              /* left and right predictions */,
     free(xx); 
 }
 
-void mask3 (int nw         /* filter size */, 
-	    int nj         /* dealiasing stretch */, 
-	    int nx, int ny /* data size */, 
-	    float **yy     /* data */, 
-	    bool **mm      /* mask */) 
+void sf_mask3 (int nw         /* filter size */, 
+	       int nj         /* dealiasing stretch */, 
+	       int nx, int ny /* data size */, 
+	       float **yy     /* data */, 
+	       bool **mm      /* mask */) 
 /*< one-dip mask in 2-D >*/
 {
     int ix, iy, iw, is;
@@ -139,11 +138,11 @@ void mask3 (int nw         /* filter size */,
     free(xx);
 }
 
-void mask6 (int nw           /* filter size */, 
-	    int nj1, int nj2 /* dealiasing stretch */, 
-	    int nx, int ny   /* data size */, 
-	    float *yy       /* data [ny][nx] */, 
-	    bool *mm        /* mask [ny][nx] */) 
+void sf_mask6 (int nw           /* filter size */, 
+	       int nj1, int nj2 /* dealiasing stretch */, 
+	       int nx, int ny   /* data size */, 
+	       float *yy       /* data [ny][nx] */, 
+	       bool *mm        /* mask [ny][nx] */) 
 /*< two-dip mask in 2-D >*/
 {
     int ix, iy, iw, is, n, i;

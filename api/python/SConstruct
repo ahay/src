@@ -2,7 +2,12 @@ import sys, os, string, re
 sys.path.append('../../framework')
 import bldutil
 
-modules = Split('m8r vplot las')
+modules = Split('m8r vplot las mxarray')
+
+try:
+    import xarray as xr
+except ImportError:
+    modules.remove('mxarray')
 
 try: # distribution version
     Import('env root libdir incdir pkgdir bindir')
@@ -33,6 +38,9 @@ if root:
         pass
 
 modules.remove('las')
+
+if modules.count('mxarray') != 0:
+    modules.remove('mxarray')
 
 if env.get('SWIG') and env.get('NUMPY'):
     #    try:

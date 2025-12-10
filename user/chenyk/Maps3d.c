@@ -29,6 +29,10 @@ https://github.com/chenyk1990/tutorials/blob/main/demo/aps3d/SConstruct
 
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 /** Part I: Ricker wavelet ********/
 float Ricker(float t, float f0, float t0, float A) 
 /*< ricker wavelet:
@@ -570,7 +574,7 @@ int psm(float **wvfld, float ***dat, float **dat_v, float *img, float *vel, psmp
     
     int nx1, ny1, nz1; /*domain of interest*/
     int it,iz,ik,ix,iy,i,j;     /* index variables */
-    int nk,nzxy,nz2,nx2,ny2,nzxy2,nkz,nkx,nth;
+    int nk,nzxy,nz2,nx2,ny2,nzxy2,nkz,nth;
     int it1, it2, its;
     float dkx,dky,dkz,kx0,ky0,kz0,vref2,kx,ky,kz,k,t;
     float c, old;
@@ -653,7 +657,7 @@ int psm(float **wvfld, float ***dat, float **dat_v, float *img, float *vel, psmp
     dkx = 1./(nx2*dx); kx0 = -0.5/dx;
     dky = 1./(ny2*dy); ky0 = -0.5/dy;
     nkz = (cmplx)? nz2:(nz2/2+1);
-    nkx = (cmplx)? nx2:(nx2/2+1);
+    /* nkx = (cmplx)? nx2:(nx2/2+1); */
     
     if(nk!=ny2*nx2*nkz) sf_error("wavenumber dimension mismatch!");
     sf_warning("dkz=%f,dkx=%f,dky=%f,kz0=%f,kx0=%f,ky0=%f",dkz,dkx,dky,kz0,kx0,ky0);

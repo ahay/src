@@ -1,3 +1,4 @@
+
 /* Adaptive gridding. */
 /*
   Copyright (C) 2004 University of Texas at Austin
