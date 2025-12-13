@@ -1,4 +1,7 @@
-/* Phase velocity vs frequency panels for surface waves */
+/* Phase velocity vs frequency panels for surface waves 
+   Phase shift stacking method (Park et al. 1998)
+*/
+
 /*
   Copyright (C) 2025 University of Texas at Austin
 
@@ -34,7 +37,7 @@ int main(int argc, char* argv[])
 
     sf_init (argc, argv);
 
-    in  = sf_input ("in");
+    in  = sf_input("in");
     out = sf_output("out");
 
     if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input (SF_COMPLEX)");
@@ -49,9 +52,9 @@ int main(int argc, char* argv[])
     n3 = sf_leftsize(in,2);
 
     
-    if (!sf_getfloat("c0",&oc)) oc = 500.0f;    /* starting phase velocity */
+    if (!sf_getfloat("c0",&oc)) oc = 200.0f;    /* starting phase velocity */
     if (!sf_getfloat("dc",&dc)) dc = 10.0f;     /* phase velocity increment */
-    if (!sf_getint("nc",&nc)) nc = 100;         /* number of phase-velocity samples */
+    if (!sf_getint("nc",&nc)) nc = 101;         /* number of phase-velocity samples */
 
     /* allocate buffers */
     buf   = sf_floatalloc(2 * nf * nx);   
@@ -68,6 +71,11 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d2", dc);
     sf_putint(out,"n2", nc);
     sf_settype(out, SF_FLOAT);
+    sf_putstring(out,"label2","Phase velocity");
+    sf_putstring(out,"label1","Frequency");
+    sf_putstring(out,"unit2","m/s");
+    sf_putstring(out,"unit1","Hz");
+
 
     /* coords */
     for (ix = 0; ix < nx; ix++) x[ix] = ox + ix * dx;
