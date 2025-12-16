@@ -18,14 +18,13 @@
 */
 
 #include <rsf.h>
-#include <stdio.h>
-#include <unistd.h>
 
 int main(int argc, char *argv[])
 {
     bool inv, sym, opt, wind, verb;
-    int n1, nt, nw, i, i1, i2, n2, j, ntw, overlap, m, step, nfft;
-    float dw, ow, *p, *inp, d1, o1, wt, shift, k, sum;
+    int n1, nt, nw, i, i1, i2, n2, j, k, 
+        ntw, overlap, m, step, nfft, nfft0, np;
+    float dw, ow, *p, *inp, *hann, d1, o1, fscale, bscale, shift, *norm;
     kiss_fft_cpx *pp, ce;
     sf_complex *outp;
     sf_file in = NULL, out = NULL;
@@ -37,9 +36,9 @@ int main(int argc, char *argv[])
     
     if (!sf_getbool("inv", &inv)) inv = false;
     /* if y, perform inverse transform */
-    if (!sf_getbool("wind", &wind))	wind = false;
+    if (!sf_getbool("wind", &wind))	wind = true;
     /* if y, add Hanning window*/
-    if (!sf_getint("ntw", &ntw)) ntw = 7;
+    if (!sf_getint("ntw", &ntw)) ntw = 31;
     /* time-window length */
     if (!sf_getint("overlap", &overlap))
 	overlap = ntw - 1;
@@ -61,13 +60,38 @@ int main(int argc, char *argv[])
     m = ntw / 2;
     
     if (inv) {
-	if (SF_COMPLEX != sf_gettype(in))
-	    sf_error("Need complex input");
-	sf_settype(out, SF_FLOAT);
+        /* Read some key parameters from header */
+        if (!sf_getint("nfft", &nfft) &&
+            !sf_histint(in, "stft2_nfft", &nfft)) nfft = 0;
+        if (!sf_getint("ntw", &ntw) &&
+            !sf_histint(in, "stft2_ntw", &ntw)) ntw = 31;
+        if (!sf_getint("overlap", &overlap) &&
+            !sf_histint(in, "stft2_overlap", &overlap))
+            overlap = ntw - 1;
+        if (overlap >= ntw) overlap = ntw - 1;
+        if (!sf_getbool("wind", &wind) &&
+            !sf_histbool(in, "stft2_wind", &wind)) wind = true;
+        if(!sf_getbool("sym",&sym) &&
+        !sf_histbool(in, "stft2_sym", &sym)) sym = false;
+        if(!sf_getbool("opt",&opt) &&
+        !sf_histbool(in, "stft2_opt", &opt)) opt = true;
+
+        if (ntw < 1) sf_error("Need positive integer input");
+        m = ntw / 2;
+
+        if (SF_COMPLEX != sf_gettype(in))
+            sf_error("Need complex input");
+        sf_settype(out, SF_FLOAT);
     } else {
-	if (SF_FLOAT != sf_gettype(in))
-	    sf_error("Need float input");
-	sf_settype(out, SF_COMPLEX);
+        if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+        sf_settype(out, SF_COMPLEX);
+        /* Write down key parameters to header */
+        sf_putint(out, "stft2_nfft", nfft);
+        sf_putint(out, "stft2_ntw", ntw);
+        sf_putint(out, "stft2_overlap", overlap);
+        sf_putstring(out, "stft2_wind", wind?"y":"n");
+        sf_putstring(out, "stft2_sym", sym?"y":"n");
+        sf_putstring(out, "stft2_opt", opt?"y":"n");
     }
     
     if (!inv) {
@@ -87,19 +111,14 @@ int main(int argc, char *argv[])
 	if (nt * step < n1)
 	    nt += 1;
 	/* determine wavenumber sampling (for real to complex FFT) */
+    nfft0 = nfft;
 	if (0 == nfft)
 	    nfft = opt ? 2 * kiss_fft_next_fast_size((ntw + 1) / 2) : ntw;
 	else
 	    nfft = opt ? 2 * kiss_fft_next_fast_size((nfft + 1) / 2) : nfft;
 	nw = nfft / 2 + 1;
 	dw = 1. / (nfft * d1);
-	
-	if (verb) {
-	    sf_warning("-----------------------------------------------.");
-	    sf_warning("| Window Length | FFT Length | Overlap Length |.");
-	    sf_warning("|%14d |%11d |%15d |.", ntw, nfft, overlap);
-	    sf_warning("-----------------------------------------------.");
-	}
+
 	
 	sf_shiftdim(in, out, 1);
 	sf_putint(out, "n1", nt);
@@ -127,6 +146,7 @@ int main(int argc, char *argv[])
 	step = ntw - overlap;
 	n1 = n1 * step;
 	nt = (n1) / step;
+    nfft0 = nfft;
 	if (0 == nfft)
 	    nfft = opt ? 2 * kiss_fft_next_fast_size((ntw + 1) / 2) : ntw;
 	else
@@ -137,38 +157,53 @@ int main(int argc, char *argv[])
 	sf_putint(out, "n1", n1);
 	sf_putfloat(out, "d1", d1);
     }
-    
-    p = sf_floatalloc(nfft > ntw ? nfft : ntw);
+    np = nfft > ntw ? nfft : ntw;
+    p = sf_floatalloc(np);
     pp = (kiss_fft_cpx *)sf_complexalloc(nfft);
     cfg = kiss_fftr_alloc(nfft, inv ? 1 : 0, 0, 0);
-    wt = sym ? 1. / sqrtf((float)ntw) : 1.0 / ntw;
+    fscale = sym ? 1. / sqrtf((float)nfft) : 1.0f; /* Forward scaling */
+    bscale = sym ? 1. / sqrtf((float)nfft) : 1.0 / nfft; /* Inverse scaling */
+    hann = sf_floatalloc(ntw);
+    norm = sf_floatalloc(n1);
     
     inp = sf_floatalloc(n1);
     outp = sf_complexalloc(nw * nt);
-    
+
+    /* Initialize window */
+    for (j = 0; j < ntw; j++) {
+        if (wind) hann[j] = 0.5 * (1. - cosf(2 * SF_PI * j / (ntw - 1)));
+        else hann[j] = 1.0f;
+    }
+
+    if (verb) {
+    sf_warning("--------------------------------------------------");
+    sf_warning(" STFT %s Parameters: ", inv ? "(Inverse)" : "(Forward)");
+    sf_warning("   ntw (Window length)      = %d", ntw);
+    sf_warning("   overlap (Overlap length) = %d", overlap);
+    sf_warning("   nfft length              = %d", nfft0);
+    sf_warning("   Actual nfft length       = %d", nfft);
+    sf_warning("   opt (use optimize size)  = %s", opt ? "yes" : "no");
+    sf_warning("   sym (symmetric scaling)  = %s", sym ? "yes" : "no");
+    sf_warning("   wind (Hanning window)    = %s", wind ? "yes" : "no");
+    sf_warning("--------------------------------------------------");
+    }
+
     for (i2 = 0; i2 < n2; i2++) { // loop over traces
 	sf_warning("slice %d of %d;", i2 + 1, n2);
-	if (!inv) {
+	if (!inv) { /* Forward transform */
 	    sf_floatread(inp, n1, in);
-	    for (i = 0; i < nt; i += 1)	{ // loop over subseries
+	    for (i = 0; i < nt; i += 1)	{ // loop over time
+        memset(p, 0, np * sizeof(float));
+
 		for (j = 0; j < ntw; j++) {
-		    if (i * step + j - m < 0 || i * step + j - m >= n1) {
-			p[j] = 0.;
-		    } else {
-			/* Hanning window: w(n) = 0.5*(1-cos(n/N)) */
-			if (wind)
-			    p[j] = inp[i * step + j - m] * 0.5 * (1. - cosf(2 * SF_PI * j / (ntw - 1))) * wt;
-			else
-			    p[j] = inp[i * step + j - m] * wt;
-		    }
+            k = i * step + j - m ;
+		    if (k < 0 || k >= n1)  continue;
+            p[j] = inp[k] * hann[j] * fscale;
 		}
-		if (ntw < nfft)
-		    for (i1 = ntw; i1 < nfft; i1++)
-			p[i1] = 0.;
 		
-		kiss_fftr(cfg, p, pp);
+		kiss_fftr(cfg, p, pp); /* Real FFT */
 		
-		if (0. != o1) {
+		if (0. != o1) { /* Shift phase */
 		    for (j = 0; j < nfft; j++) {
 			shift = -2.0 * SF_PI * j * dw * o1;
 			ce.r = cosf(shift);
@@ -180,24 +215,23 @@ int main(int argc, char *argv[])
 		for (j = 0; j < nw; j++) {
 		    outp[j * nt + i] = sf_cmplx(pp[j].r, pp[j].i);
 		}
-	    }
+        
+	    } // loop over time
 	    sf_complexwrite(outp, nt * nw, out);
-	} else {
+
+	} else { /* Inverse transform */
 	    sf_complexread(outp, nt * nw, in);
-	    
-	    for (i = 0; i < n1; i++) {
-		inp[i] = 0.;
-	    }
-	    
-	    for (i = 0; i < nt; i++) {
+        memset(norm, 0, n1 * sizeof(float));
+        memset(inp, 0, n1 * sizeof(float));
+
+	    for (i = 0; i < nt; i++) { /* loop over time */
+        memset(pp, 0, nfft * sizeof(kiss_fft_cpx));
+        memset(p, 0, np * sizeof(float));
 		for (i1 = 0; i1 < nw; i1++) {
 		    pp[i1].r = crealf(outp[i1 * nt + i]);
 		    pp[i1].i = cimagf(outp[i1 * nt + i]);
 		}
-		for (i1 = nw; i1 < nfft; i1++) {
-		    pp[i1].r = crealf(0.);
-		    pp[i1].i = cimagf(0.);
-		}
+
 		if (0. != o1) {
 		    for (i1 = 0; i1 < nw; i1++)	{
 			shift = +2.0 * SF_PI * i1 * dw * o1;
@@ -210,49 +244,22 @@ int main(int argc, char *argv[])
 		kiss_fftri(cfg, pp, p);
 		
 		for (i1 = 0; i1 < ntw; i1++) {
-		    p[i1] *= wt;
-		    if (wind) {
-			p[i1] /= (0.5 - 0.5 * cosf(2 * SF_PI * i1 / (ntw - 1)));
-		    }
-		    if (i * step + i1 - m >= 0 && i * step + i1 - m < n1) {
-			inp[i * step + i1 - m] += p[i1];
-		    }
+            j = i*step + i1 - m;
+            if(j < 0 || j >= n1) continue;
+            inp[j] += p[i1]*bscale*hann[i1];
+            norm[j] += hann[i1]*hann[i1];
 		}
-	    }
+
+	    } /* loop over time */
 	    
-	    if (wind) {
-		sum = 0.;
-		for (i1 = 0; i1 < ntw; i1++) {
-		    k = 0.;
-		    k = (0.5 - 0.5 * cosf(2 * SF_PI * i1 / (ntw - 1)));
-		    sum += k * k;
-		}
-		for (i = 0; i < n1; i++) {
-		    inp[i] = inp[i] / sum;
-		}
-	    } else {
-		for (i = 0; i < m; i++)	{
-		    inp[i] = inp[i] / ((i + m + 1) * 1.);
-		}
-		for (i = m; i < n1 - m; i++) {
-		    inp[i] = inp[i] / (ntw * 1.);
-		}
-		for (i = n1 - m; i < n1; i++) {
-		    inp[i] = inp[i] / ((n1 - i + m) * 1.);
-		}
-	    }
+        for (i = 0; i < n1; i++) {
+            if(norm[i] > 0.f) inp[i] /= norm[i];
+        }
 	    
 	    sf_floatwrite(inp, n1, out);
 	}
-    }
+    } /* loop over traces */
     sf_warning(".");
-    
-    free(pp);
-    free(p);
-    free(cfg);
-    free(inp);
-    free(outp);
-    
     exit(0);
 }
 
