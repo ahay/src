@@ -10,7 +10,7 @@ libprop = ''
 
 ccprogs = ''
 
-mpi_progs = 'mpimatmul2'
+mpi_progs = 'mpimatmul'
 
 
 mpicxx_progs = ''
