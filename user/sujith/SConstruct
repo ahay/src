@@ -2,14 +2,15 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'dcpanel'
+progs = 'dcpanel unique'
+# progs += ' psmig3 conjgradmpi2 lsc'
 
 
 libprop = ''
 
 ccprogs = ''
 
-mpi_progs = 'mpimatmul'
+mpi_progs = 'mpimatmul2'
 
 
 mpicxx_progs = ''
