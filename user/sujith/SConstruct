@@ -2,7 +2,7 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'dcpanel unique'
+progs = 'dcpanel unique nmopicks'
 # progs += ' psmig3 conjgradmpi2 lsc'
 
 
