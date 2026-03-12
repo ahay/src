@@ -43,6 +43,27 @@ opts = configure.options('config.py')
 opts.Add('RSFROOT','RSF installation root',root)
 opts.Update(env)
 
+# Apply command-line CPPPATH/LIBPATH/LINKFLAGS to environment
+from SCons.Script import ARGUMENTS
+for var in ('CPPPATH', 'LIBPATH'):
+    val = ARGUMENTS.get(var)
+    if val:
+        env[var] = val.split(',')
+val = ARGUMENTS.get('LINKFLAGS')
+if val:
+    env['LINKFLAGS'] = val
+for var in ('MPICC', 'MPICXX'):
+    val = ARGUMENTS.get(var)
+    if val:
+        env[var] = val
+
+# Pass OpenMPI compiler wrappers through to child processes
+import os as _os
+for evar in ('OMPI_CC', 'OMPI_CXX'):
+    val = _os.environ.get(evar)
+    if val:
+        env['ENV'][evar] = val
+
 if not os.path.isfile('config.py'):
     conf = Configure(env,custom_tests={'CheckAll':configure.check_all})
     conf.CheckAll()
