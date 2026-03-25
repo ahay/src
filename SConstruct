@@ -43,6 +43,13 @@ opts = configure.options('config.py')
 opts.Add('RSFROOT','RSF installation root',root)
 opts.Update(env)
 
+# Load SWIG tool if configured (needed for .i file builder)
+if env.get('SWIG'):
+    try:
+        env.Tool('swig')
+    except:
+        pass
+
 if not os.path.isfile('config.py'):
     conf = Configure(env,custom_tests={'CheckAll':configure.check_all})
     conf.CheckAll()

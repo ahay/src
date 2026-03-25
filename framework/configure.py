@@ -853,7 +853,8 @@ def plplot(context):
         context.env['CPPPATH'] = oldpath + [plplotpath]
     else:
         for top in ('/usr/include','/usr/local/include',
-                    '/sw/include','/opt/local/include'):
+                    '/sw/include','/opt/local/include',
+                    '/opt/homebrew/include'):
             plplotpath = os.path.join(top,'plplot')
             if os.path.isfile(os.path.join(plplotpath,'plplot.h')):
                 context.env['CPPPATH'] = oldpath + [plplotpath]
@@ -908,6 +909,8 @@ def ffmpeg(context):
                     '/usr/include/x86_64-linux-gnu/',
                     '/usr/include/aarch64-linux-gnu/',
                     '/sw/include','/opt/local/include',
+                    '/opt/homebrew/include',
+                    '/opt/homebrew/opt/ffmpeg/include',
                     '/usr/include/ffmpeg'):
             ffmpegpath = os.path.join(top,'ffmpeg')
             if os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
@@ -974,7 +977,8 @@ def cairo(context):
     if cairopath and os.path.isfile(os.path.join(cairopath,'cairo.h')):
         context.env['CPPPATH'] = oldpath + [cairopath]
     else:
-        for top in ('/usr/include','/usr/local/include','/sw/include'):
+        for top in ('/usr/include','/usr/local/include','/sw/include',
+                    '/opt/homebrew/include'):
             cairopath = os.path.join(top,'cairo')
             if os.path.isfile(os.path.join(cairopath,'cairo.h')):
                 context.env['CPPPATH'] = oldpath + [cairopath]
@@ -1236,7 +1240,7 @@ def lapack(context):
     double A[]={0.0,1.0,2.0,3.0};
     double B[]={0.0,1.0};
     int IPIV[2], INFO;
-    dgesv_(&N, &NRHS, A, &LDA, &IPIV, B, &LDB, &INFO);
+    dgesv_(&N, &NRHS, A, &LDA, IPIV, B, &LDB, &INFO);
     return 0;
     }\n'''
     res = context.TryLink(text,'.c')
@@ -1753,8 +1757,16 @@ def sparse(context):
     context.Message("checking for SuiteSparse ... ")
 
     oldpath = path_get(context,'CPPPATH')
-    sparsepath = ['/usr/include/suitesparse']
-    context.env['CPPPATH'] = oldpath+sparsepath
+    # Try multiple possible SuiteSparse include paths
+    for sparsepath in ['/usr/include/suitesparse',
+                       '/opt/homebrew/include/suitesparse',
+                       '/opt/homebrew/opt/suite-sparse/include/suitesparse',
+                       '/usr/local/include/suitesparse']:
+        if os.path.isfile(os.path.join(sparsepath,'umfpack.h')):
+            break
+    else:
+        sparsepath = ['/usr/include/suitesparse']
+    context.env['CPPPATH'] = oldpath+[sparsepath] if isinstance(sparsepath,str) else oldpath+sparsepath
 
     oldlibs = path_get(context,'LIBS')
 #    sparselibs = ['umfpack','suitesparseconfig',
@@ -2406,7 +2418,16 @@ def swig(context):
         'that cannot be built with -static-intel',
         'yellow_on_red')
     context.Message("checking for SWIG ... ")
-    if 'swig' in context.env.get('TOOLS'):
+    swigx = WhereIs('swig')
+    if swigx:
+        context.Result(str(swigx))
+        context.env['SWIG'] = swigx
+        # Load the swig tool to register .i file builder
+        try:
+            context.env.Tool('swig')
+        except:
+            pass
+    elif 'swig' in context.env.get('TOOLS'):
         swigx = WhereIs('swig')
         context.Result(str(swigx))
         context.env['SWIG'] = swigx
