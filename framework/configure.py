@@ -1240,7 +1240,7 @@ def lapack(context):
     double A[]={0.0,1.0,2.0,3.0};
     double B[]={0.0,1.0};
     int IPIV[2], INFO;
-    dgesv_(&N, &NRHS, A, &LDA, &IPIV, B, &LDB, &INFO);
+    dgesv_(&N, &NRHS, A, &LDA, IPIV, B, &LDB, &INFO);
     return 0;
     }\n'''
     res = context.TryLink(text,'.c')
