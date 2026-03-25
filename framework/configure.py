@@ -908,6 +908,8 @@ def ffmpeg(context):
                     '/usr/include/x86_64-linux-gnu/',
                     '/usr/include/aarch64-linux-gnu/',
                     '/sw/include','/opt/local/include',
+                    '/opt/homebrew/include',
+                    '/opt/homebrew/opt/ffmpeg/include',
                     '/usr/include/ffmpeg'):
             ffmpegpath = os.path.join(top,'ffmpeg')
             if os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
