@@ -2422,11 +2422,11 @@ def swig(context):
     if swigx:
         context.Result(str(swigx))
         context.env['SWIG'] = swigx
-        # Add 'swig' to TOOLS so scons registers the .i file builder
-        tools = list(context.env.get('TOOLS', []))
-        if 'swig' not in tools:
-            tools.append('swig')
-            context.env.Replace(TOOLS=tools)
+        # Load the swig tool to register .i file builder
+        try:
+            context.env.Tool('swig')
+        except:
+            pass
     elif 'swig' in context.env.get('TOOLS'):
         swigx = WhereIs('swig')
         context.Result(str(swigx))
