@@ -853,7 +853,8 @@ def plplot(context):
         context.env['CPPPATH'] = oldpath + [plplotpath]
     else:
         for top in ('/usr/include','/usr/local/include',
-                    '/sw/include','/opt/local/include'):
+                    '/sw/include','/opt/local/include',
+                    '/opt/homebrew/include'):
             plplotpath = os.path.join(top,'plplot')
             if os.path.isfile(os.path.join(plplotpath,'plplot.h')):
                 context.env['CPPPATH'] = oldpath + [plplotpath]
@@ -976,7 +977,8 @@ def cairo(context):
     if cairopath and os.path.isfile(os.path.join(cairopath,'cairo.h')):
         context.env['CPPPATH'] = oldpath + [cairopath]
     else:
-        for top in ('/usr/include','/usr/local/include','/sw/include'):
+        for top in ('/usr/include','/usr/local/include','/sw/include',
+                    '/opt/homebrew/include'):
             cairopath = os.path.join(top,'cairo')
             if os.path.isfile(os.path.join(cairopath,'cairo.h')):
                 context.env['CPPPATH'] = oldpath + [cairopath]
@@ -1755,8 +1757,16 @@ def sparse(context):
     context.Message("checking for SuiteSparse ... ")
 
     oldpath = path_get(context,'CPPPATH')
-    sparsepath = ['/usr/include/suitesparse']
-    context.env['CPPPATH'] = oldpath+sparsepath
+    # Try multiple possible SuiteSparse include paths
+    for sparsepath in ['/usr/include/suitesparse',
+                       '/opt/homebrew/include/suitesparse',
+                       '/opt/homebrew/opt/suite-sparse/include/suitesparse',
+                       '/usr/local/include/suitesparse']:
+        if os.path.isfile(os.path.join(sparsepath,'umfpack.h')):
+            break
+    else:
+        sparsepath = ['/usr/include/suitesparse']
+    context.env['CPPPATH'] = oldpath+[sparsepath] if isinstance(sparsepath,str) else oldpath+sparsepath
 
     oldlibs = path_get(context,'LIBS')
 #    sparselibs = ['umfpack','suitesparseconfig',
@@ -2408,7 +2418,11 @@ def swig(context):
         'that cannot be built with -static-intel',
         'yellow_on_red')
     context.Message("checking for SWIG ... ")
-    if 'swig' in context.env.get('TOOLS'):
+    swigx = WhereIs('swig')
+    if swigx:
+        context.Result(str(swigx))
+        context.env['SWIG'] = swigx
+    elif 'swig' in context.env.get('TOOLS'):
         swigx = WhereIs('swig')
         context.Result(str(swigx))
         context.env['SWIG'] = swigx
