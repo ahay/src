@@ -390,6 +390,13 @@ def cc(context):
             if os.path.isdir('/usr/local/lib'):
                 context.env['LIBPATH'] = path_get(context, 'LIBPATH',
                                                   '/usr/local/lib')
+    elif plat['OS'] == 'linux':  # Linux Homebrew
+        if os.path.isdir('/home/linuxbrew/.linuxbrew/include'):
+            context.env['CPPPATH'] = path_get(context, 'CPPPATH',
+                                              '/home/linuxbrew/.linuxbrew/include')
+        if os.path.isdir('/home/linuxbrew/.linuxbrew/lib'):
+            context.env['LIBPATH'] = path_get(context, 'LIBPATH',
+                                              '/home/linuxbrew/.linuxbrew/lib')
     # Solaris
     elif plat['OS'] == 'sunos':
         context.env['CFLAGS'] = context.env.get('CFLAGS','').replace(
@@ -543,7 +550,8 @@ xinc = [
     '/usr/local/x11r5/include',
     '/usr/lpp/Xamples/include',
     '/usr/openwin/include',
-    '/usr/openwin/share/include'
+    '/usr/openwin/share/include',
+    '/home/linuxbrew/.linuxbrew/include'
     ]
 
 xlib = [
@@ -578,7 +586,8 @@ xlib = [
     '/usr/lpp/Xamples/lib',
     '/lib/usr/lib/X11',
     '/usr/openwin/lib',
-    '/usr/openwin/share/lib'
+    '/usr/openwin/share/lib',
+    '/home/linuxbrew/.linuxbrew/lib'
     ]
 
 pkg['xaw']={'rhel':'libXaw-devel',
@@ -714,7 +723,11 @@ def ppm(context):
     if os.path.isfile(os.path.join(ppmpath,'ppm.h')):
         context.env['CPPPATH'] = oldpath + [ppmpath]
     else:
-        ppmpath = None
+        ppmpath = '/home/linuxbrew/.linuxbrew/include/netpbm'
+        if os.path.isfile(os.path.join(ppmpath,'ppm.h')):
+            context.env['CPPPATH'] = oldpath + [ppmpath]
+        else:
+            ppmpath = None
 
     LIBS = path_get(context,'LIBS')
 
@@ -854,7 +867,8 @@ def plplot(context):
     else:
         for top in ('/usr/include','/usr/local/include',
                     '/sw/include','/opt/local/include',
-                    '/opt/homebrew/include'):
+                    '/opt/homebrew/include',
+                    '/home/linuxbrew/.linuxbrew/include'):
             plplotpath = os.path.join(top,'plplot')
             if os.path.isfile(os.path.join(plplotpath,'plplot.h')):
                 context.env['CPPPATH'] = oldpath + [plplotpath]
@@ -911,6 +925,8 @@ def ffmpeg(context):
                     '/sw/include','/opt/local/include',
                     '/opt/homebrew/include',
                     '/opt/homebrew/opt/ffmpeg/include',
+                    '/home/linuxbrew/.linuxbrew/include',
+                    '/home/linuxbrew/.linuxbrew/opt/ffmpeg/include',
                     '/usr/include/ffmpeg'):
             ffmpegpath = os.path.join(top,'ffmpeg')
             if os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
@@ -978,7 +994,8 @@ def cairo(context):
         context.env['CPPPATH'] = oldpath + [cairopath]
     else:
         for top in ('/usr/include','/usr/local/include','/sw/include',
-                    '/opt/homebrew/include'):
+                    '/opt/homebrew/include',
+                    '/home/linuxbrew/.linuxbrew/include'):
             cairopath = os.path.join(top,'cairo')
             if os.path.isfile(os.path.join(cairopath,'cairo.h')):
                 context.env['CPPPATH'] = oldpath + [cairopath]
@@ -1761,6 +1778,8 @@ def sparse(context):
     for sparsepath in ['/usr/include/suitesparse',
                        '/opt/homebrew/include/suitesparse',
                        '/opt/homebrew/opt/suite-sparse/include/suitesparse',
+                       '/home/linuxbrew/.linuxbrew/include/suitesparse',
+                       '/home/linuxbrew/.linuxbrew/opt/suite-sparse/include/suitesparse',
                        '/usr/local/include/suitesparse']:
         if os.path.isfile(os.path.join(sparsepath,'umfpack.h')):
             break
