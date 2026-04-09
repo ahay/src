@@ -4,7 +4,7 @@ import bldutil
 
 progs = '''
 abalance analytical angle angle2 approx arrival bdix beamform1 bil1
-bilat2 blur boxcascade cbeamform1 causinv ccausint cchebyshevp
+bilat2 blur boxcascade carpet causinv cbeamform1 ccausint cchebyshevp
 cfftexpa-dev cfftwave1 cdivn cflow chain2dfft chebvc chebyshev
 chebyshevp clpf cltft cltftfft cnvd cnvdip cnvpaint constperm
 constpermh constpermh1 convection cosftwave1 cpef cr ctf2dprec deblur
