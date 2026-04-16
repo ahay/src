@@ -25,8 +25,8 @@ int main (int argc, char* argv[])
   bool adj;
   int ntr, nr, ie, ne, two, it, nt, i, j;
   int **pairs;
-  float **traces, *shift;
-  sf_file shifts, edges, rgts;
+  float **traces, *shift, *der;
+  sf_file shifts, edges, rgts, ders;
 
   sf_init(argc, argv);
 
@@ -53,6 +53,17 @@ int main (int argc, char* argv[])
   }
 
   edges = sf_input("edges");
+
+  der = sf_floatalloc(nt);
+  if (NULL != sf_getstring("ders")) {
+    ders = sf_input("ders");
+    sf_warning("Using derivatives");
+  } else {
+    ders = NULL;
+    for (it=0; it < nt; it++) {
+      der[it] = 0.0f;
+    }
+  }
 
   if (SF_INT != sf_gettype(edges)) sf_error("Need integer data in edges");
   if (!sf_histint(edges,"n1",&two) || two != 2) sf_error("Need n1=2 in edges");
@@ -81,15 +92,17 @@ int main (int argc, char* argv[])
     i = pairs[ie][0];
     j = pairs[ie][1];
 
+    if (NULL != ders) sf_floatread(der,nt,ders);
+    
     if (adj) {
       sf_floatread(shift,nt,shifts);
       for (it=0; it < nt; it++) {
 	traces[j][it] += shift[it];
-	traces[i][it] -= shift[it];
+	traces[i][it] -= (1+der[it])*shift[it];
       }
     } else {
       for (it=0; it < nt; it++) {
-	shift[it] = traces[j][it] - traces[i][it];
+	shift[it] = traces[j][it] - (1+der[it])*traces[i][it];
       }
       sf_floatwrite(shift,nt,shifts);
     }
