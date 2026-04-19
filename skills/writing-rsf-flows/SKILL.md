@@ -7,6 +7,8 @@ description: Use when writing or modifying an SConstruct file that drives a Mada
 
 Use this skill whenever you are authoring or editing an `SConstruct` file that drives a Madagascar geophysical data-processing pipeline. This covers creating new processing workflows, adding stages to existing flows, configuring plots or results, fetching remote datasets, and integrating non-Madagascar steps via `Command`/`Action`. Any SConstruct that starts with `from rsf.proj import *` is using this DSL.
 
+For a worked end-to-end example of a specific geophysical workflow (NMO, migration, well-tie, etc.), start with the `finding-workflow-examples` skill.
+
 ## The DSL surface
 
 `framework/rsf/proj.py` exposes six top-level functions that wrap a singleton `Project` object (a subclass of SCons `Environment`). These are the only functions you should call directly in a user-facing SConstruct.
