@@ -77,4 +77,4 @@ See `skills/` in this repo. Each path below resolves to a `SKILL.md` that the Cl
 - Plot labels use escape codes: `\_` subscript, `\^` superscript, `\s<n>` size. Forgetting these in SConstruct strings leaves literal backslashes in output.
 - The `sf` prefix is implicit inside a `Flow()` string — write `bandpass`, not `sfbandpass`.
 - `$DATAPATH` must be writable and end in `/`.
-- Complex data types (`sf_complex`) require `data_format=complex` in the header.
+- Complex data types (`sf_complex`) require `data_format=native_complex` (or `ascii_complex` / `xdr_complex`) in the header — the shorthand `complex` alone is not a valid value.
