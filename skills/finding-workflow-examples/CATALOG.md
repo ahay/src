@@ -11,7 +11,7 @@ Paths are relative to the repo root (`/Users/jgoai/m8r/src/`). Open the file its
 - **Tuning wedge** — `book/rsf/tutorials/wedge/SConstruct` — variable-thickness wedge model for resolution analysis.
 - **Ricker wavelet analysis** — `book/rsf/tutorials/wavelet/SConstruct` — build and characterize a Ricker wavelet, frequency content.
 - **Finite-difference acoustic modeling (BP 2004)** — `book/rsf/school/modeling/SConstruct` — 2D acoustic wave propagation on the BP 2004 velocity model using awefd2d.
-- **Simple layered / impulse model** — `book/rsf/school/marm/SConstruct` — eikonal traveltime and anisotropic moveout on the Marmousi velocity model.
+- **Simple layered model + ray tracing** — `book/rsf/school/ray/SConstruct` — build a simple 2D layered velocity model and trace rays through it using rays2.
 
 ### NMO & velocity analysis
 
@@ -21,7 +21,7 @@ Paths are relative to the repo root (`/Users/jgoai/m8r/src/`). Open the file its
 ### Migration
 
 - **Marmousi migration (one-way wave-equation)** — `book/gallery/marmousi/oway/SConstruct` — extended split-step (zomig3) migration on the Marmousi exploding-reflector dataset.
-- **Sigsbee migration (school)** — `book/rsf/school/sigsbee/SConstruct` — acoustic finite-difference modeling on the Sigsbee 2A model.
+- **Sigsbee migration (one-way wave-equation)** — `book/gallery/sigsbee/oway/SConstruct` — split-step (zomig3) one-way wave-equation migration on the Sigsbee zero-offset dataset.
 - **Reverse-time migration helper** — `book/Recipes/rtm.py` — RTM building blocks called from SConstructs.
 - **One-way wave-equation migration helper** — `book/Recipes/wemig.py` — oneway WE migration.
 - **Zero-offset migration helper** — `book/Recipes/zomig.py` — zero-offset migration.
