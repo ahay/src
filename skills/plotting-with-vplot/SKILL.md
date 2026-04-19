@@ -104,7 +104,7 @@ These parameters come from `sfstdplot` (run `sfdoc stdplot`) and are accepted by
 | `wherexlabel=` | `bottom` | Horizontal axis label position: `top` or `bottom`. |
 | `screenratio=` | device default | Figure height/width ratio. `0.75`=landscape, `1.5`=portrait. |
 | `plotfat=` | `0` | Line/curve thickness. `3`=bold, `6`=heavy. |
-| `plotcol=` | `6` (yellow) | Curve color: 0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white. |
+| `plotcol=` | `6` (yellow) | Curve color: 0=black, 1=blue, 2=red, 3=magenta, 4=green, 5=cyan, 6=yellow, 7=white. |
 | `pclip=` | 99 (grey), 98 (wiggle), 100 (others) | Percentile clip. |
 | `grid1=` / `grid2=` | `n` | Draw grid lines on axis 1 or 2. |
 | `dash=` | `0` | Line dash: 0=solid, 1=fine dash, 2=dot, 3=dash, 4=large dash. |
@@ -182,7 +182,7 @@ Draws each trace as an oscillating waveform. Positive excursions can be filled (
 | `pclip=` | `98` | Percentile used when `clip=0`. |
 | `poly=` | `n` | If `y`, fill positive excursions with solid polygons (standard seismic display). |
 | `polyneg=` | `n` | If `y`, also fill negative excursions (fills both sides). |
-| `zplot=` | `0.75` | Horizontal spacing between traces as a fraction of the total plot width divided by n2. Values > 1 make traces overlap. |
+| `zplot=` | `0.75` | Scales the half-width allocated per trace relative to the d2 interval (`zplot *= d2` internally). Default `0.75` leaves small gaps between traces; values `> 1` cause traces to overlap. |
 | `transp=` | `n` | Transpose axes. Default `n` means axis 1 is vertical (time), axis 2 is horizontal (trace). |
 | `yreverse=` | `n` | Reverse vertical axis. Set `y` to make time increase downward. |
 | `xreverse=` | `n` | Reverse horizontal axis. |
@@ -217,6 +217,8 @@ Draws iso-value lines on a 2D scalar field. Defaults: `transp=y allpos=y`.
 | `max2=` | `o2+(n2-1)*d2` | Maximum on axis 2. |
 | `scalebar=` | `n` | If `y`, draw a scalebar. |
 | `barlabel=` | (none) | Label for the scalebar. |
+
+**Gotcha:** Unlike other vplot programs, `sfcontour`'s scalebar also requires `barlabel=...` to activate. `scalebar=y` without a non-empty `barlabel=` silently produces no colorbar. (Source: `plot/main/contour.c` lines 97-99, which checks both `scalebar` and `barlabel` before enabling the bar.)
 
 **Contour overlay on grey:** A common pattern is to overlay contours on a raster image:
 ```python
@@ -347,7 +349,22 @@ title="v\\_\\s75 NMO\\s100 \\^ Profile"
 
 ## Composition
 
-Madagascar's `rsf.proj` defines four composition modes for combining `.vpl` files. These are invoked as the flow string in `Result` or `Plot` when the source is a list of names.
+Madagascar's `rsf.proj` defines eight composition modes for combining `.vpl` files. These are invoked as the flow string in `Result` or `Plot` when the source is a list of names.
+
+### All eight modes at a glance
+
+| Mode | vppen arguments | Effect |
+|------|----------------|--------|
+| `Overlay` | `erase=o vpstyle=n` | Stack all panels in registration (Z-order); last source on top. |
+| `SideBySideAniso` | `yscale=N vpstyle=n gridnum=N,1` | N panels left-to-right, each keeping its own aspect ratio. |
+| `OverUnderAniso` | `xscale=N vpstyle=n gridnum=1,N` | N panels top-to-bottom, each keeping its own aspect ratio. |
+| `SideBySideIso` | `size=r vpstyle=n gridnum=N,1` | N panels left-to-right with matched (isotropic) aspect ratios. |
+| `OverUnderIso` | `size=r vpstyle=n gridnum=1,N` | N panels top-to-bottom with matched aspect ratios. |
+| `TwoRows` | `size=r vpstyle=n gridnum=ceil(N/2),2` | N panels arranged in two rows, isotropic scaling. |
+| `TwoColumns` | `size=r vpstyle=n gridnum=2,ceil(N/2)` | N panels arranged in two columns, isotropic scaling. |
+| `Movie` | `vpstyle=n` | Flipbook animation; `sfpen` cycles through frames on display. |
+
+(Source: `framework/rsf/proj.py` lines 255-264.)
 
 ### Overlay
 
@@ -373,12 +390,44 @@ Result('comparison', 'img1 img2 img3', 'SideBySideAniso')
 Result('out', 'img1 img2', 'SideBySideAniso', vppen='txscale=1.5')
 ```
 
+### OverUnderAniso
+
+Places N plots stacked vertically, each keeping its own aspect ratio. Use when the panels have different data types or shapes that should not be forced to a common scale.
+
+```python
+Result('stacked', 'top bottom', 'OverUnderAniso')
+```
+
 ### SideBySideIso
 
 Places N plots side by side with matched aspect ratios — good when panels show the same data type.
 
 ```python
 Result('panels', 'imgA imgB', 'SideBySideIso')
+```
+
+### OverUnderIso
+
+Places N plots stacked vertically with matched aspect ratios. Use when you want a column of comparable panels (e.g., the same section at different stages of processing).
+
+```python
+Result('column', 'before after', 'OverUnderIso')
+```
+
+### TwoRows
+
+Arranges N panels into two rows with isotropic scaling (`gridnum=ceil(N/2), 2`). Convenient for even numbers of panels that should read left-to-right across two rows.
+
+```python
+Result('grid', 'p1 p2 p3 p4', 'TwoRows')
+```
+
+### TwoColumns
+
+Arranges N panels into two columns with isotropic scaling (`gridnum=2, ceil(N/2)`). Stacks pairs of panels in two vertical columns.
+
+```python
+Result('twocol', 'p1 p2 p3 p4', 'TwoColumns')
 ```
 
 ### Movie
