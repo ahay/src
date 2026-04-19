@@ -72,3 +72,40 @@ The following four entries are importable Python helpers (not standalone SConstr
 - **Colormaps (including scientific palettes)** — `book/rsf/tutorials/colormaps/SConstruct` — demonstrates spectral, linearlfb, and viridis palettes using grey on random data.
 - **Colored sections** — `book/rsf/tutorials/colored/SConstruct` — fetches an acoustic-impedance section and well log; displays with inferno colormap via grey.
 - **Lineament tracking on images** — `book/rsf/tutorials/lineaments/SConstruct` — computes directional derivatives of a Bouguer gravity map to extract structural lineaments.
+
+## Datasets
+
+Two styles of dataset recipe live in `book/`:
+
+- **Gallery Python helpers** (`book/gallery/<name>/<name>.py`) expose functions like `getvel('vel_target')`, `get_shots('shots_target')`, `get_zodata(...)` that internally call `Fetch()` and `Flow()`. Use them by adding the gallery directory to `sys.path` and `import <name>` in your SConstruct.
+- **`book/data/<name>/` directories** contain fetch-and-prep SConstructs for real or published datasets. Read the SConstruct for the `Fetch()` server and the convert-to-RSF chain.
+
+### Gallery helpers
+
+- **Marmousi** — `book/gallery/marmousi/marmousi.py` — `getvel`, `get_zodata`, `get_shots`, `get_ffd_shots`; velocity, zero-offset exploding-reflector data, and prestack shot records.
+- **Sigsbee 2A** — `book/gallery/sigsbee/sigsbee.py` — `getvel(vel, veltype)` (migvel or strvel), `getzo`, `gethrzo`, `getshots`; canonical deep-water salt-body benchmark.
+- **BP 2004 velocity benchmark** — `book/gallery/bp/bp.py` — `getvel`, `getden`, `getshots`, `zodata`; velocity and density grids plus prestack shot records for the BP 2004 tomography benchmark.
+- **BP TTI 2007** — `book/gallery/bptti/bptti.py` — `getmod(par)` (par in epsilon/delta/vp/theta), `getshots`; anisotropic (TTI) parameter grids and prestack shots for the BP 2007 anisotropy benchmark.
+- **Pluto 1.5** — `book/gallery/pluto/model/SConstruct` — no Python helper; fetch-and-convert SConstruct for the Pluto 1.5 velocity model (depth-interval velocity SEGY from the pluto server).
+- **SEG/EAGE Overthrust** — `book/gallery/overthrust/overthrust.py` — `getvel`; 3D thrust-belt P-wave velocity cube fetched from the SEG/EAGE open-data S3 bucket.
+- **Teapot Dome 3D** — `book/gallery/teapot/teapot.py` — `get_vrms1`, `get_vint1`; RMS and interval velocity functions for the Teapot Dome 3D survey geometry benchmark.
+- **French dome model** — `book/gallery/french/french.py` — `get_refl`, `get_zodata2d`, `get_zodata`; synthetic French dome reflectivity surface and corresponding zero-offset and prestack data.
+- **Hess VTI** — `book/gallery/hessvti/hessvti.py` — builds vp, delta, epsilon, crho RSF files at module import time (no callable functions); VTI parameter grids from the Hess open-data anisotropy benchmark.
+- **SEG/EAGE Salt** — `book/gallery/segsalt/segsalt.py` — `getvel2D`, `getvel3D`; 2D and 3D velocity fields for the SEG/EAGE salt model fetched from the open-data S3 bucket.
+- **Two-half-space model** — `book/gallery/twohalf/twohalf.py` — `getvel`, `getshots`; simple two-half-space synthetic velocity model and prestack shot records.
+- **v(z) layered model** — `book/gallery/vofz/vofz.py` — `get_velocity`, `zero_offset`, `shots`, `cmps`, `get_impulse`, `impulse_response`; v(z) gradient layered velocity with layered synthetic data generation and migration helpers.
+- **Constant-velocity model** — `book/gallery/constant/constant.py` — `get_zodata`, `get_cmps`, `get_impulse`; constant-velocity synthetic dataset used for impulse-response and migration tests.
+- **Gradient-velocity model** — `book/gallery/gradient/gradient.py` — `get_velocity`, `zero_offset`, `shots`, `cmps`, `get_impulse`, `impulse_response`; linear-gradient velocity model with synthetic data and migration helpers, analogous to vofz.
+- **1994 Amoco model** — `book/gallery/model94/model94.py` — `get_vel`, `get_shots`, `get_shot_headers`; the 1994 BP/Amoco velocity model and prestack shot records from the bpmodel94 open-data archive.
+- **1994 statics challenge** — `book/gallery/statics94/SConstruct` — no Python helper; gallery-level SConstruct for the 1994 BP statics benchmark (see also `book/data/bpstatics94/` for the fetch-and-prep recipes).
+
+### data/ fetch-and-prep recipes
+
+- **Marmousi 2 (elastic)** — `book/data/marmousi2/` — elastic version of Marmousi with density and Vs; includes `fdMod`, `vx`, `vz`, and `div` subdirectories for elastic finite-difference modeling.
+- **SEAM Phase 1 2D** — `book/data/seam-phase1-2d/` — synthetic SEAM Phase 1 2D classic slice; includes fetch, filter, forward modeling, and vscan subdirectories.
+- **New Zealand Kahu 3D** — `book/data/new-zealand-kahu-3d/` — representative of New Zealand 3D surveys; siblings `new-zealand-kerry3d`, `new-zealand-opunake-3d`, `new-zealand-parihaka-3d`, `new-zealand-tui3d`, `new-zealand-waihapa-3d`, `new-zealand-waipuku-3d`, `new-zealand-waka-3d` follow the same pattern.
+- **Chevron 2013 benchmark** — `book/data/chevron2013/` — Chevron 2013 FWI benchmark dataset with fetch and firstlook subdirectories.
+- **Chevron 2014 benchmark** — `book/data/chevron2014/` — Chevron 2014 benchmark with fetch, fwi, geom, and survey-volume subdirectories.
+- **FreeUSP 2D Land data** — `book/data/freeusp/` — used by `book/rsf/school2020/seismic/SConstruct`; fetch and land subdirectories for the FreeUSP land seismic dataset.
+- **Alaska OBS data** — `book/data/alaska/` — ocean-bottom seismometer data from Alaska; contains SConstruct and gathers subdirectory.
+- **Oz land data** — `book/data/oz/` — Australian land seismic lines (line31-81, line41-81 variants) with SU-to-RSF conversion and NMO processing examples.
