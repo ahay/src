@@ -159,6 +159,11 @@ This places two spikes on axis 1 at samples 300 and 700 with magnitudes 1.0
 and 0.5 respectively.  The `[nsp]` annotation in the sfdoc synopsis means the
 parameter repeats once per spike.
 
+**Note:** `sfspike` reads `nsp` BEFORE `k#`/`mag`, so you MUST set `nsp=N`
+explicitly when passing N-element lists; it is not inferred from list length.
+With the default `nsp=1`, only the first element of each list is used and only
+one spike is placed.
+
 ### File-valued parameters
 
 Some programs accept secondary files by name.  From `sfdoc sfheaderwindow`:
@@ -245,7 +250,7 @@ The table below covers the programs used most often, grouped by purpose.  Run
 |-----------|-------------|
 | `sffft1`  | FFT along axis 1 (time → frequency).  Key params: `inv=n` (forward), `sym=n`, `opt=y` (auto-pad to efficient length). |
 | `sffft3`  | FFT along any extra axis (default `axis=2`).  Input and output are complex.  Key params: `axis`, `pad=2` (padding factor), `sym=n`. |
-| `sfmath`  | Post-transform arithmetic (e.g., take magnitude: `output='abs(input)'`). |
+| `sfcabs`  | Convert complex RSF to float RSF by computing the complex magnitude.  Use after `sffft1`/`sffft3` before float-consuming programs such as `sfgrey`.  Use `sfreal` for the real part only. |
 
 ### Inspect
 
@@ -260,7 +265,7 @@ The table below covers the programs used most often, grouped by purpose.  Run
 
 | Program    | What it does |
 |------------|-------------|
-| `sfgrey`   | Raster (wiggle-trace) plot.  Writes a vplot byte stream. |
+| `sfgrey`   | Raster (density / image) plot.  Writes a vplot byte stream. |
 | `sfgraph`  | Line/graph plot.  Writes a vplot byte stream. |
 | `sfwiggle` | Wiggle-trace plot with filled lobes.  Writes a vplot byte stream. |
 
@@ -276,16 +281,18 @@ The simplest end-to-end workflow: generate a synthetic impulse, apply a
 filter, and plot the result.
 
 ```bash
-sfspike n1=500 d1=0.004 o1=0 label1=Time unit1=s \
+sfspike n1=500 d1=0.004 o1=0 label1=Time unit1=s k1=250 \
   | sfbandpass fhi=60 phase=n \
   | sfwiggle title="Bandpass demo" | xtpen
 ```
 
 Stage-by-stage:
-1. `sfspike n1=500 d1=0.004 …` — creates a single 500-sample trace (axis 2
-   defaults to 1 trace) with a spike at sample 1 (the default, `k1=0` means
-   no spike is placed — omit `k1` to get the spike at position 1).  The axis
-   metadata (`d1`, `label1`, `unit1`) flows downstream.
+1. `sfspike n1=500 d1=0.004 … k1=250` — creates a single 500-sample trace
+   (axis 2 defaults to 1 trace) with a spike at sample 250.  Spike positioning
+   is 1-based.  Omitting `k1` (or setting `k1=0`) fills the **entire** trace
+   with a constant of magnitude `mag` — not what you usually want for an
+   impulse test.  The axis metadata (`d1`, `label1`, `unit1`) flows
+   downstream.
 2. `sfbandpass fhi=60 phase=n` — zero-phase low-pass at 60 Hz.  `sfbandpass`
    reads `d1` from the header to convert Hz to normalized frequency; you do
    not need to repeat it.
@@ -302,7 +309,7 @@ sfspike n1=512 n2=64 d1=0.004 d2=25 k1=256 \
   | sfnoise var=0.01 \
   | sffft1 \
   | sffft3 axis=2 \
-  | sfmath output='abs(input)' \
+  | sfcabs \
   | sfgrey title="FK spectrum" | xtpen
 ```
 
@@ -310,13 +317,16 @@ Stage-by-stage:
 1. `sfspike` — 512 × 64 array with a spike at time sample 256 on all traces.
 2. `sfnoise var=0.01` — add Gaussian noise (variance 0.01) so the FK spectrum
    is not just a line.
-3. `sffft1` — FFT along axis 1 (time).  Output is complex, shape changes to
-   `(n1/2+1) × 64`.
+3. `sffft1` — FFT along axis 1 (time).  Output is **complex**, shape changes
+   to `(n1/2+1) × 64`.
 4. `sffft3 axis=2` — FFT along axis 2 (offset/space).  Both axes are now in
-   the frequency/wavenumber domain.  Input must be complex (satisfied after
-   `sffft1`).
-5. `sfmath output='abs(input)'` — magnitude of the complex spectrum.
-   `sfmath` supports `abs` on complex data.
+   the frequency/wavenumber domain.  Output remains **complex**.
+5. `sfcabs` — converts complex RSF to float RSF by computing the complex
+   magnitude (|re + i·im|).  This is the required step before any
+   float-consuming program like `sfgrey`.  Use `sfreal` instead if you only
+   want the real part.  Do **not** use `sfmath output='abs(input)'` here:
+   on complex input `sfmath abs` returns complex output, which causes
+   `sfgrey` to error with "Need float input".
 6. `sfgrey` — raster plot of the amplitude spectrum.
 
 ### Pattern 3: Transpose-filter-transpose
@@ -450,9 +460,11 @@ bash references/example-pipeline.sh
 ### Stage-by-stage walkthrough
 
 **Stage 1 — Synthesize:**
-`sfspike n1=1000 n2=20 k1=300,700 mag=1,0.5` creates a `1000 × 20` dataset
-with two spikes at samples 300 and 700 (magnitudes 1.0 and 0.5).  Two values
-in `k1` imply `nsp=2`.  Defaults `d1=0.004`, `d2=0.1` come from `sfdoc sfspike`.
+`sfspike n1=1000 n2=20 nsp=2 k1=300,700 mag=1,0.5` creates a `1000 × 20`
+dataset with **two** spikes at samples 300 and 700 (magnitudes 1.0 and 0.5).
+`nsp=2` must be set explicitly — `sfspike` reads `nsp` before `k1`/`mag` and
+does not infer it from list length; without it only the first spike would be
+placed.  Defaults `d1=0.004`, `d2=0.1` come from `sfdoc sfspike`.
 
 **Stage 2 — Bandpass:**
 `sfbandpass fhi=4 phase=y` applies a 6-pole minimum-phase low-pass at 4 Hz.
