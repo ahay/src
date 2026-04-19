@@ -15,7 +15,7 @@ Madagascar ships with `book/` — a corpus of ~1,747 runnable SConstructs coveri
 2. **Open the real SConstruct.** The catalog's one-line description is a pointer, not content. The authoritative source is the file itself. Read it top-to-bottom before adapting anything.
 3. **Grep fallback when no catalog entry fits.** Useful patterns:
    - By `sf*` program: `grep -rln "sfnmo\b" /Users/jgoai/m8r/src/book/`
-   - By imported dataset helper: `grep -rln "^import sigsbee" /Users/jgoai/m8r/src/book/`
+   - By imported dataset helper: `grep -rln "import sigsbee" /Users/jgoai/m8r/src/book/`
    - By directory-name keyword: `find /Users/jgoai/m8r/src/book -type d -iname "*kirchhoff*"`
    - By `Fetch()` target: `grep -rln "Fetch.*marmvel" /Users/jgoai/m8r/src/book/`
 
@@ -23,7 +23,7 @@ Madagascar ships with `book/` — a corpus of ~1,747 runnable SConstructs coveri
 
 Most `book/` SConstructs encode two kinds of knowledge: **structural** (which `sf*` programs chain together, in what order, with what axis conventions) and **parametric** (specific `n1`, `d1`, `nt`, labels, dataset paths). Adapt parametric content; preserve structural content.
 
-1. **Strip any paper-rendering shell.** If the top of the SConstruct is `from rsf.tex import *` and the bottom is `End(color='vel')` or similar, that file is a LaTeX paper wrapper, not a processing flow. The real flow lives in a sibling directory (check the subdirectories of the same folder). Swap in `from rsf.proj import *` for a regular processing SConstruct.
+1. **Strip any paper-rendering shell.** If the top of the SConstruct is `from rsf.tex import *` and the bottom is `End(color='...')` or similar, that file is a LaTeX paper wrapper, not a processing flow. The real flow lives in a subdirectory of the same folder — check the child directories. Swap in `from rsf.proj import *` for a regular processing SConstruct.
 2. **Copy the relevant `Flow()` / `Plot()` / `Result()` / `Fetch()` calls.** Keep them in the same order. The author tuned this order.
 3. **Replace parameters.** `n1`, `d1`, `o1`, `nt`, `dt`, velocities, dataset paths, and labels are case-specific. Replace them with the user's values. Do not guess — ask the user if a parameter is not specified.
 4. **Resolve `book/Recipes/` imports.** Some SConstructs do `from rsf.recipes.helderiv import Helderiv` or import local helpers like `import awe, wplot`. If the recipe is short, inline the Flow calls it produces. If long, vendor the helper file into the user's project directory.
