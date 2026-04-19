@@ -16,6 +16,8 @@ The patterns here apply equally at the shell prompt, inside SConstruct `Flow`
 calls, and inside short Python driver scripts — the programs themselves are
 identical in all three contexts.
 
+For a worked end-to-end pipeline that chains these programs to solve a named geophysical problem, see the `finding-workflow-examples` skill.
+
 ## The pipeline model
 
 Every `sf*` program is a Unix filter.  It reads an RSF dataset from **stdin**
