@@ -90,7 +90,7 @@ Two styles of dataset recipe live in `book/`:
 - **SEG/EAGE Overthrust** — `book/gallery/overthrust/overthrust.py` — `getvel`; 3D thrust-belt P-wave velocity cube fetched from the SEG/EAGE open-data S3 bucket.
 - **Teapot Dome 3D** — `book/gallery/teapot/teapot.py` — `get_vrms1`, `get_vint1`; RMS and interval velocity functions for the Teapot Dome 3D survey geometry benchmark.
 - **French dome model** — `book/gallery/french/french.py` — `get_refl`, `get_zodata2d`, `get_zodata`; synthetic French dome reflectivity surface and corresponding zero-offset and prestack data.
-- **Hess VTI** — `book/gallery/hessvti/hessvti.py` — builds vp, delta, epsilon, crho RSF files at module import time (no callable functions); VTI parameter grids from the Hess open-data anisotropy benchmark.
+- **Hess VTI** — `book/gallery/hessvti/hessvti.py` — `get_model`, `get_shots`, `get_zodata`; builds vp, delta, epsilon, crho grids at import time; VTI anisotropy benchmark.
 - **SEG/EAGE Salt** — `book/gallery/segsalt/segsalt.py` — `getvel2D`, `getvel3D`; 2D and 3D velocity fields for the SEG/EAGE salt model fetched from the open-data S3 bucket.
 - **Two-half-space model** — `book/gallery/twohalf/twohalf.py` — `getvel`, `getshots`; simple two-half-space synthetic velocity model and prestack shot records.
 - **v(z) layered model** — `book/gallery/vofz/vofz.py` — `get_velocity`, `zero_offset`, `shots`, `cmps`, `get_impulse`, `impulse_response`; v(z) gradient layered velocity with layered synthetic data generation and migration helpers.
