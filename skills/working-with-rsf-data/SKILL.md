@@ -8,7 +8,7 @@ description: Use when inspecting, modifying, or debugging an RSF file, its heade
 Use this skill for any task that touches RSF files directly:
 
 - Inspecting what an RSF file contains (shape, type, axis metadata, value statistics).
-- Modifying header fields (labels, units, axis parameters) without rewriting the binary.
+- Modifying header fields (labels, units, axis parameters).
 - Diagnosing "file not found", "wrong dimensions", or "garbled data" problems.
 - Understanding why a pipeline produces unexpected results after copying or moving files.
 - Cleaning up RSF files without orphaning their binaries.
@@ -117,7 +117,7 @@ data_format="native_uchar"  esize=1   # unsigned byte (type=byte in sfin output)
 
 **`sfattr`** — summarizes the numeric content of an RSF file. Read from stdin: `sfattr < file.rsf`. Reports rms, mean, 2-norm, variance, standard deviation, max (with index), min (with index), nonzero sample count, and total sample count. Use `want=max` or `want=rms` to print a single statistic. Useful for sanity-checking that a pipeline produced reasonable values. Does not work on complex files without prior conversion.
 
-**`sfput`** — edits header fields without touching the binary. Takes input on stdin and writes a new header on stdout: `< in.rsf sfput key1=val1 key2=val2 > out.rsf`. The new header points to the same binary as the input (no data copy). This makes it cheap to relabel axes, fix sampling intervals, or add missing metadata. Any key that appears in an RSF header can be set with `sfput`. To remove a key, set it to the empty string. `sfput` is also used to change `n1`, `d1`, `o1`, etc. when you know the correct values but the header is wrong.
+**`sfput`** — updates header fields and writes a new output file (header + binary copy). Takes input on stdin and writes output on stdout: `< in.rsf sfput key1=val1 key2=val2 > out.rsf`. The output file gets its own independent binary. Use this to relabel axes, fix sampling intervals, or correct missing metadata. Any key that appears in an RSF header can be set with `sfput`. To remove a key, set it to the empty string. Note: because `sfput` copies the binary, it has disk and time cost proportional to file size.
 
 **`sfrm`** — removes RSF files together with their binaries. Use it instead of Unix `rm`. Syntax mirrors `rm`: `sfrm file1.rsf file2.rsf`. Flags `-v` (verbose), `-f` (force, ignore missing), `-i` (interactive) are supported. Under the hood, `sfrm` reads the `in=` field from each header, deletes the binary at that path, then deletes the header. If the binary is already missing, `sfrm` still deletes the header. See also `sfmv` and `sfcp` for moving and copying RSF files correctly.
 
@@ -141,18 +141,18 @@ Always use `sfrm` to delete RSF files. If you have already used `rm` and need to
 export DATAPATH=/home/user/rsf-data/
 ```
 
-## Header manipulation without rewriting data
+## Header manipulation
 
-`sfput` creates a new header file that points to the same binary as the input. No data is copied. This is the correct way to fix metadata errors:
+`sfput` writes a new header AND a new binary copy — it is NOT zero-cost for large files. The convenience is the compact syntax for updating header fields (labels, units, axis deltas). For metadata-only tweaks on multi-GB files, plan for the disk and time cost.
 
 ```bash
 # Fix wrong sampling interval and add axis labels
 < wrong.rsf sfput d1=0.002 label1="Depth" unit1="km" > corrected.rsf
 ```
 
-`corrected.rsf` and `wrong.rsf` now share the same binary at `$DATAPATH`. If you delete `wrong.rsf` with `sfrm`, it will delete the shared binary, leaving `corrected.rsf` pointing to a missing file. When using `sfput` to create a corrected copy, either keep the original or copy the binary explicitly with `sfcp`.
+`corrected.rsf` has its own independent binary; deleting `wrong.rsf` with `sfrm` does not affect it.
 
-**`sfheadermath`** handles per-trace SEGY-style trace header fields (not to be confused with the RSF file header). SEGY files have a binary header and per-trace headers stored in a separate `*.hdr` RSF file alongside the data `*.rsf`. `sfheadermath` reads those trace headers and computes new values from existing keys:
+**`sfheadermath`** handles per-trace SEGY-style trace header fields. This is about per-trace header fields in segregated SEGY-style datasets, not about the `*.rsf` file's top-level metadata (which `sfput` manages). Not to be confused with the RSF file header. SEGY files have a binary header and per-trace headers stored in a separate `*.hdr` RSF file alongside the data `*.rsf`. `sfheadermath` reads those trace headers and computes new values from existing keys:
 
 ```bash
 # Compute offset from shot and receiver x-coordinates
@@ -167,22 +167,22 @@ Use `sfheadermath` when you need to derive or correct SEGY trace header quantiti
 
 Symptom: a program reports it cannot open or read the binary file.
 
-1. Find the expected binary path: `grep "in=" file.rsf` or `sfin info=y file.rsf`.
+1. Find the expected binary path: `grep "in=" file.rsf` or `sfin info=n file.rsf`.
 2. Check whether the file exists at that path: `ls -lh /var/tmp/file.rsf@`.
-3. If `$DATAPATH` was changed after the file was created, the binary may be at the old path while the header still records the old location. Use `sfput` to update `in=` to the new path: `< file.rsf sfput "in=/new/path/file.rsf@" > file_fixed.rsf`.
+3. If the file was created on a different machine or in an environment where `$DATAPATH` pointed to a now-inaccessible location, the `in=` path in the header will be unreachable. Use `sfput` to write a new file with `in=` pointing to the current, valid location — or copy the binary to the expected path: `< file.rsf sfput "in=/new/path/file.rsf@" > file_fixed.rsf`.
 4. If the binary is truly gone (deleted with `rm` or temp-dir purge), the data is unrecoverable from the header alone.
 
 **Scenario B: wrong axis labels or parameters**
 
 Symptom: `sfin` shows incorrect `label1`, `unit1`, `d1`, or `o1`.
 
-Use `sfput` to correct without rewriting the binary:
+Use `sfput` to fix the labels. Because `sfput` writes an independent binary copy, `file_fixed.rsf` is safe to use on its own:
 
 ```bash
 < file.rsf sfput label1="Time" unit1="s" d1=0.004 o1=0 > file_fixed.rsf
 ```
 
-Verify with `sfin file_fixed.rsf`. Then use `sfrm file.rsf` carefully only if `file_fixed.rsf` has its own binary (i.e., you used `sfcp` rather than `sfput`), or keep both headers around and only delete the binary once.
+Verify with `sfin file_fixed.rsf`. Once confirmed correct, remove the original with `sfrm file.rsf` — this will not affect `file_fixed.rsf` since each has its own binary.
 
 **Scenario C: segregated SEGY headers**
 
@@ -208,7 +208,7 @@ The script progresses through seven stages:
 
 5. **sfput** — `< data.rsf sfput label2="Trace" unit2="" > labeled.rsf` writes a new header pointing to a new binary with updated metadata. `sfin labeled.rsf` confirms the change.
 
-6. **Locate the binary** — `grep "in=" data.rsf` prints the `in=` line, showing the absolute path under `$DATAPATH`. This is what would be orphaned by `rm data.rsf`.
+6. **Locate the binary** — `grep "^	in=" data.rsf` prints the `in=` line, showing the absolute path under `$DATAPATH`. This is what would be orphaned by `rm data.rsf`.
 
 7. **sfrm** — `sfrm data.rsf labeled.rsf` removes both headers and both binaries. The final `ls` confirms no `*.rsf` files remain, demonstrating clean teardown.
 

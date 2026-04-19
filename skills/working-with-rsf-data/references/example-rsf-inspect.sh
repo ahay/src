@@ -21,7 +21,7 @@ echo "=== 5. modify header metadata (add units and labels) ==="
 sfin labeled.rsf
 
 echo "=== 6. where is the binary? ==="
-grep "in=" data.rsf
+grep "^	in=" data.rsf
 # Binary lives under $DATAPATH. If you did 'rm *.rsf' you'd orphan it.
 
 echo "=== 7. clean up the RIGHT way ==="
