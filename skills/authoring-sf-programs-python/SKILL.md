@@ -83,8 +83,8 @@ sys.exit(0)
 
 The plan template showed `m8r.Output("out", fin)`. This is wrong in two ways:
 
-1. The import should be `rsf.api as rsf` (not `import m8r`). The installed module lives at `rsf/api.py`.
-2. `rsf.Output(tag='out', data_format=None)` accepts only a tag and an optional format string — there is no second positional argument for a source file. Shape inheritance is automatic: when writing begins, the internal `_RSF._fileflush()` copies header parameters from the first opened input.
+1. Prefer `import rsf.api as rsf` over `import m8r`. Both work (the installed `m8r.py` is bit-identical to `rsf/api.py`), but the self-doc scraper's I/O-recognition regex (`inpout['python']` in `framework/rsf/doc.py`) is anchored to `rsf.Input` / `rsf.Output` calls. Using `import m8r` would lose the auto-generated `< in.rsf > out.rsf` synopsis in `sfdoc` output. Note that `api/python/test/clip.py` and `api/python/test/afdm.py` both use `import m8r` — they still work, but their sfdoc entries are less informative.
+2. `rsf.Output(tag='out', data_format=None)` accepts only a tag and an optional format string — there is no second positional argument for a source file. Shape inheritance is automatic: when writing begins, the internal `_RSF.fileflush()` copies header parameters from the first opened input.
 
 ---
 
@@ -351,16 +351,21 @@ except:
     env = bldutil.Debug()
     root = None
 
-bldutil.py_install_mains(env, pyprogs, bindir)
+if root: # no compilation, just rename
+    pymains = Split(pyprogs)
+    exe = env.get('PROGSUFFIX','')
+    for prog in pymains:
+        binary = os.path.join(bindir,'sf'+prog+exe)
+        env.InstallAs(binary,'M'+prog+'.py')
+        env.AddPostAction(binary,Chmod(str(binary),0o755))
 ```
 
 ### What the build does
 
-When you run `scons` in the top-level source tree, the build system processes `user/<youruser>/SConstruct`. For each name in `pyprogs`, `bldutil.install_py_mains()` (in `framework/bldutil.py`) does:
+When you run `scons` in the top-level source tree, the build system processes `user/<youruser>/SConstruct`. For each name in `pyprogs`, the inline install loop does:
 
-1. Copies `M<name>.py` directly to `$RSFROOT/bin/sf<name>` (no compilation).
-2. Sets the file executable (`chmod 0o755`).
-3. Runs `env.Doc()` to scrape the self-doc comment and register it in the program database.
+1. Copies `M<name>.py` directly to `$RSFROOT/bin/sf<name>` (no compilation) via `env.InstallAs`.
+2. Sets the file executable (`chmod 0o755`) via `env.AddPostAction`.
 
 There is **no shell wrapper** generated for Python programs. The Python file itself becomes the installed binary, called directly by the system Python interpreter via the shebang line (`#!/usr/bin/env python3`). This is different from C programs (which are compiled ELF binaries) but identical in usage from the user's perspective.
 
@@ -390,6 +395,8 @@ python3 Mmyscale.py factor=2.0 < in.rsf > out.rsf
 - **`user/sbader/Menergy.py`** — real user program. Triple-quoted docstring for self-doc; uses `rsf.api as rsf`; reads a 1D dataset and computes a rolling energy estimate. Shows that `rsf.Output()` can be opened after `rsf.Input()` is already open (the output inherits the input's format automatically).
 
 - **`user/sbader/Mreplace.py`** — another simple 1D user program. Good minimal reference for the `rsf.api` import pattern.
+
+- **`user/godwinj/Mpysvd.py`** — real user program that wraps SciPy SVD. Demonstrates the recommended try/except guard around the `rsf.api` import: if the Python API or NumPy/SciPy are absent the program prints a clear error rather than a raw `ImportError`. Use this pattern whenever your program has optional heavyweight dependencies.
 
 ---
 
