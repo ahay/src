@@ -11,17 +11,20 @@ Paths are relative to the repo root (`/Users/jgoai/m8r/src/`). Open the file its
 - **Tuning wedge** — `book/rsf/tutorials/wedge/SConstruct` — variable-thickness wedge model for resolution analysis.
 - **Ricker wavelet analysis** — `book/rsf/tutorials/wavelet/SConstruct` — build and characterize a Ricker wavelet, frequency content.
 - **Finite-difference acoustic modeling (BP 2004)** — `book/rsf/school/modeling/SConstruct` — 2D acoustic wave propagation on the BP 2004 velocity model using awefd2d.
-- **Simple layered model + ray tracing** — `book/rsf/school/ray/SConstruct` — build a simple 2D layered velocity model and trace rays through it using rays2.
+- **Analytic velocity model + ray tracing** — `book/rsf/school/ray/SConstruct` — gradient velocity model with a Gaussian anomaly; demonstrates rays2 ray-tracing on a 2D field.
 
 ### NMO & velocity analysis
 
 - **NMO starter** — `book/rsf/tutorials/nmo/SConstruct` — apply NMO to a synthetic CMP using sfnmo, step-by-step.
-- **Velocity scan + semblance + stack** — `book/rsf/tutorial2017/field/SConstruct` — vscan, semblance picking, NMO correction, and hyperbolic Radon demultiple on a Viking Graben CMP.
+- **Velocity scan + semblance + NMO** — `book/rsf/tutorial2017/field/SConstruct` — vscan, semblance picking, NMO correction, and hyperbolic Radon demultiple on a Viking Graben CMP.
 
 ### Migration
 
 - **Marmousi migration (one-way wave-equation)** — `book/gallery/marmousi/oway/SConstruct` — extended split-step (zomig3) migration on the Marmousi exploding-reflector dataset.
 - **Sigsbee migration (one-way wave-equation)** — `book/gallery/sigsbee/oway/SConstruct` — split-step (zomig3) one-way wave-equation migration on the Sigsbee zero-offset dataset.
+
+The following four entries are importable Python helpers (not standalone SConstructs) — see SKILL.md adaptation step 4 for how to use them.
+
 - **Reverse-time migration helper** — `book/Recipes/rtm.py` — RTM building blocks called from SConstructs.
 - **One-way wave-equation migration helper** — `book/Recipes/wemig.py` — oneway WE migration.
 - **Zero-offset migration helper** — `book/Recipes/zomig.py` — zero-offset migration.
@@ -29,25 +32,23 @@ Paths are relative to the repo root (`/Users/jgoai/m8r/src/`). Open the file its
 
 ### Denoising & filtering
 
-- **Bandpass filtering (inline)** — `book/rsf/school2020/seismic/SConstruct` — sfbandpass applied as part of a 2D land-data processing flow.
 - **F-x deconvolution** — `book/zju/optnoise/postack/SConstruct` — post-stack noise attenuation using fxdecon together with dip-guided EMD.
 - **Dip filtering** — `book/rsf/su/rsfdipfilt/SConstruct` — noise attenuation by F-K dip filter.
 
 ### Transforms
 
 - **Hyperbolic Radon transform** — `book/rsf/tutorial2017/radon/SConstruct` — forward/adjoint hyperbolic Radon.
-- **2D FFT / F-K (inline)** — `book/rsf/tutorials/timefreq/SConstruct` — fft1, spectra, and F-K filtering demonstrated on sinusoid test signals.
-- **Hilbert transform / envelope / instantaneous attributes** — `book/rsf/tutorials/hilbert/SConstruct`.
+- **Hilbert transform / envelope / instantaneous attributes** — `book/rsf/tutorials/hilbert/SConstruct` — uses envelope with hilb=y to compute Hilbert transform, envelope, and instantaneous phase on a seismic trace.
 - **Time-frequency analysis** — `book/rsf/tutorials/timefreq/SConstruct` — S-transform (st), STFT, and local time-frequency decomposition (timefreq program).
 
 ### Interpolation
 
-- **PEF-based interpolation** — `book/rsf/tutorials/interp/SConstruct`.
-- **Spitz interpolation** — `book/rsf/tutorials/spitz/SConstruct`.
+- **PEF-based interpolation** — `book/rsf/tutorials/interp/SConstruct` — compares linear (remap1), sinc-lag (inttest1), and spline 1D interpolation methods.
+- **Spitz interpolation** — `book/rsf/tutorials/spitz/SConstruct` — uses hpef and signoi to separate signal and noise via helix PEF estimation.
 
 ### Well-tie / log calibration
 
-- **Well-to-seismic tie** — `book/rsf/tutorials/well-tie/SConstruct`.
+- **Well-to-seismic tie** — `book/rsf/tutorials/well-tie/SConstruct` — reads LAS file via las2rsf, despiked DT/RHOB logs, and computes a synthetic seismogram.
 
 ### Geometry & survey setup
 
@@ -56,18 +57,18 @@ Paths are relative to the repo root (`/Users/jgoai/m8r/src/`). Open the file its
 
 ### Rock physics & petrophysics
 
-- **Rock physics relations** — `book/rsf/tutorials/rockphysic/SConstruct`.
-- **Log conditioning (v1)** — `book/rsf/tutorials/petro1/SConstruct`.
-- **Log conditioning (v2)** — `book/rsf/tutorials/petro2/SConstruct`.
+- **Rock physics relations** — `book/rsf/tutorials/rockphysic/SConstruct` — classifies sand/shale facies from well CSV and plots IP/VP/VS cross-plots.
+- **Log conditioning (v1)** — `book/rsf/tutorials/petro1/SConstruct` — classifies brine-sand/oil-sand/shale from VSH/SW/PHI/IP well logs and plots histograms.
+- **Log conditioning (v2)** — `book/rsf/tutorials/petro2/SConstruct` — extends petro1 with Gassmann fluid substitution (brine-to-oil) on VP/VS/RHO logs.
 
 ### Facies, attributes, ML
 
-- **Facies classification** — `book/rsf/tutorials/facies/SConstruct`.
-- **Seismic attributes** — `book/rsf/tutorials/attr/SConstruct`.
-- **Neural network on seismic** — `book/rsf/tutorials/nn/SConstruct`.
+- **Facies classification** — `book/rsf/tutorials/facies/SConstruct` — loads wireline facies-label CSV (csv2rsf); minimal entry point for facies ML workflows.
+- **Seismic attributes** — `book/rsf/tutorials/attr/SConstruct` — computes RMS, absolute-mean, and envelope-mean amplitude attributes using envelope and sfattr.
+- **Neural network on seismic** — `book/rsf/tutorials/nn/SConstruct` — plots sigmoid/tanh/ReLU activation functions and applies a neural network to well-log data (las2rsf).
 
 ### Plotting idioms
 
-- **Colormaps (including scientific palettes)** — `book/rsf/tutorials/colormaps/SConstruct`.
-- **Colored sections** — `book/rsf/tutorials/colored/SConstruct`.
-- **Lineament tracking on images** — `book/rsf/tutorials/lineaments/SConstruct`.
+- **Colormaps (including scientific palettes)** — `book/rsf/tutorials/colormaps/SConstruct` — demonstrates spectral, linearlfb, and viridis palettes using grey on random data.
+- **Colored sections** — `book/rsf/tutorials/colored/SConstruct` — fetches an acoustic-impedance section and well log; displays with inferno colormap via grey.
+- **Lineament tracking on images** — `book/rsf/tutorials/lineaments/SConstruct` — computes directional derivatives of a Bouguer gravity map to extract structural lineaments.
