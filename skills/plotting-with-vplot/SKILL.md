@@ -104,7 +104,7 @@ These parameters come from `sfstdplot` (run `sfdoc stdplot`) and are accepted by
 | `wherexlabel=` | `bottom` | Horizontal axis label position: `top` or `bottom`. |
 | `screenratio=` | device default | Figure height/width ratio. `0.75`=landscape, `1.5`=portrait. |
 | `plotfat=` | `0` | Line/curve thickness. `3`=bold, `6`=heavy. |
-| `plotcol=` | `6` (yellow) | Curve color: 0=black, 1=blue, 2=red, 3=magenta, 4=green, 5=cyan, 6=yellow, 7=white. |
+| `plotcol=` | `6` (yellow) | Curve color: 0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white. |
 | `pclip=` | 99 (grey), 98 (wiggle), 100 (others) | Percentile clip. |
 | `grid1=` / `grid2=` | `n` | Draw grid lines on axis 1 or 2. |
 | `dash=` | `0` | Line dash: 0=solid, 1=fine dash, 2=dot, 3=dash, 4=large dash. |
@@ -253,10 +253,10 @@ The `color=` parameter in `sfgrey` (default `i`) and `sfgraph` (default `j`) sel
 | `I` | Reverse grayscale | White to black. |
 | `j` | Jet | Blue → cyan → green → yellow → red. Good for amplitude/velocity maps. |
 | `J` | Reverse jet | Red → yellow → green → cyan → blue. |
-| `g` | Black-white-red | Black (negative) → white (zero) → red (positive). Diverging, asymmetric. |
-| `G` | Reverse black-white-red | Red → white → black. |
-| `e` | Blue-white-red | Blue (negative) → white (zero) → red (positive). Classic diverging colormap. |
-| `E` | Reverse blue-white-red | Red → white → blue. |
+| `g` | Red-white-black | Red (negative) → white (zero) → black (positive). Diverging, asymmetric. |
+| `G` | Reverse red-white-black | Black (negative) → white (zero) → red (positive). |
+| `e` | Red-white-blue | Red (negative) → white (zero) → blue (positive). Classic diverging colormap. |
+| `E` | Reverse red-white-blue | Blue (negative) → white (zero) → red (positive). |
 | `h` | Hot | Black → red → orange → yellow → white. Emphasizes amplitude. |
 | `H` | Reverse hot | White → yellow → red → black. |
 | `p` | Pink | Softer version of hot (squished root of hot+grey). |
