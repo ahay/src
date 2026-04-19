@@ -5,7 +5,7 @@ description: Use when authoring a new Madagascar sf* main program in C (the refe
 
 ## When to use
 
-Load this skill whenever you are writing a new `sf<name>` main program in C. C is the **reference implementation** for Madagascar: the Fortran 77, Fortran 90, C++, CUDA, and Python APIs all wrap or mirror the C API. Every claim in this skill is grounded in `api/c/rsf.h` (the amalgamated public header at `build/api/c/rsf.h`) and the test programs under `api/c/`.
+Load this skill whenever you are writing a new `sf<name>` main program in C. C is the **reference implementation** for Madagascar: the Fortran 77, Fortran 90, C++, Python, Julia, Java, Matlab, Octave, and Chapel APIs all wrap or mirror the C API. Every claim in this skill is grounded in `api/c/rsf.h` (the amalgamated public header at `build/api/c/rsf.h`) and the test programs under `api/c/`. (CUDA programs exist in user directories but Madagascar has no dedicated `api/cuda/` binding; they use the C API for RSF I/O and CUDA for compute.)
 
 This skill is C-specific. For language-agnostic conventions (file naming, self-doc format, parameter style, build integration) see the companion:
 
@@ -72,6 +72,11 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 Theory in Appendix B of:
 S. Fomel, 2009,
 Velocity analysis using AB semblance: Geophysical Prospecting, v. 57, 311-321.
+Reproducible version in RSFSRC/book/tccs/avo
+http://ahay.org/RSF/book/tccs/avo/paper_html/
+
+August 2012 program of the month:
+http://ahay.org/blog/2012/08/01/program-of-the-month-sfpick/
 */
 
 /*
@@ -459,7 +464,7 @@ sfspike n1=100 n2=5 | sf<name> | sfin
 
 ### Regression test
 
-For programs with non-trivial logic, write a `Testsf<name>.c` alongside `M<name>.c`. The pattern from `user/fomels/SConstruct`:
+For programs with non-trivial logic, write a `Test<name>.c` alongside `M<name>.c`. The pattern from `user/fomels/SConstruct`:
 
 ```python
 for prog in Split('myalgorithm'):
