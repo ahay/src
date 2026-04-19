@@ -59,6 +59,7 @@ See `skills/` in this repo. Each path below resolves to a `SKILL.md` that the Cl
 | `skills/working-with-rsf-data/` | Inspecting, modifying, or debugging RSF headers and binaries. |
 | `skills/plotting-with-vplot/` | Producing or debugging a vplot visualization. |
 | `skills/authoring-sf-programs/` | Shared conventions for authoring a new `sf*` program (language-agnostic). |
+| `skills/finding-workflow-examples/` | Finding and adapting an end-to-end workflow from the book/ corpus. |
 | `skills/authoring-sf-programs-c/` | Authoring in C (reference implementation). |
 | `skills/authoring-sf-programs-python/` | Authoring in Python. |
 | `skills/authoring-sf-programs-cpp/` | Authoring in C++. |
