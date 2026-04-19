@@ -59,15 +59,17 @@ def Fetch(self, files, dir, private=None, server=dataserver, top='data', usedata
 Flow('filtered_spike', None, 'spike n1=1000 k1=300 | bandpass fhi=2 phase=y')
 ```
 
-**Ampersand-separated commands.** The `&&` operator chains two independent shell commands in sequence (rarely needed inside a Flow; prefer separate Flow calls).
+**Ampersand-separated commands.** `&&` inside a Flow command string separates two sequential pipeline groups. Each group is assembled independently (with `sf` prefixes added, inputs/outputs wired) but they run in the same shell action in sequence, sharing the target output. Use it when you need two related commands that both contribute to producing the target — but if they're independent, prefer two separate `Flow` calls.
 
-**Multi-target flows.** Pass a Python list as `target` to produce several output files from a single command:
+**Multi-target flows.** Pass a Python list as `target` to produce several output files from a single command. Use bare names (without `.rsf`) — the DSL appends the suffix automatically:
 
 ```python
-Flow(['cmpt.rsf', 'offset.rsf'], 'input', 'some_program ...')
+Flow(['cmpt', 'offset'], 'input', 'some_program ...')
 # or equivalently, a space-separated string:
 Flow('out1 out2', 'input', 'program ...')
 ```
+
+Note: names that already contain a `.` (e.g. `'cmpt.rsf'`) also work — the DSL skips suffix-adding when a `.` is already present — but bare names are the idiomatic form.
 
 **Zero-input flows (`source=None`).** Pass `None` (not an empty string) when a command generates data with no RSF input:
 
@@ -129,7 +131,7 @@ Fetch(file, dir, private=0, **kw)
 # Fetch(self, files, dir, private=None, server=dataserver, top='data', usedatapath=True)
 ```
 
-`Fetch` downloads one or more files from a remote server into the current directory. Key keyword arguments:
+`Fetch` downloads one or more files from a remote server. With the default `usedatapath=True`, the file is stored under `$DATAPATH` and a symlink is placed in the current directory (matching RSF's header-and-binary split). Key keyword arguments:
 
 - `server` — URL of the server (default: `https://ahay.org` via `get_dataserver()`).
 - `top` — top-level path component on the server (default: `'data'`).
@@ -252,7 +254,7 @@ When writing data-processing flows (not book structure), always use `from rsf.pr
    Every SConstruct that uses `rsf.proj` must call `End()` at the bottom. Without it, the `view`, `print`, `lock`, and `test` SCons aliases are never registered, and the `.rsfproj` manifest is never written.
 
 2. **Writing `sfbandpass` instead of `bandpass` inside a Flow string.**
-   The `sf` prefix is added automatically by the DSL (`prefix=sfprefix` default). Writing `sfbandpass` causes the build system to look for `sfsfbandpass`, which does not exist.
+   The `sf` prefix is added automatically by the DSL — `Project.Flow` accepts a `prefix=sfprefix` parameter and prepends it to each command token. Writing `sfbandpass` explicitly is redundant and harder to read. It also reduces portability: if `sfprefix` were ever reconfigured (the knob exists, even if it's not the default), explicitly-prefixed commands would need to be updated everywhere. In practice `sfbandpass` still works because `add_prefix` in `framework/rsf/flow.py` checks whether the prefix is already present before adding it — so existing code using `sfbandpass` is not broken, just non-idiomatic. Stick with the bare form (`bandpass`) inside Flow strings.
 
 3. **Using shell redirection instead of Flow pipelines.**
    Do not write `'spike n1=100 > out.rsf'`. Use `Flow('out', None, 'spike n1=100')`. Shell redirection bypasses the DSL's path resolution, binary-file tracking, and cleanup logic.
