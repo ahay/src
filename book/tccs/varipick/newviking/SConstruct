@@ -151,15 +151,16 @@ Flow('transp','cosft','transp',split=[3,'omp'])
 Flow('map','transp',
      '''
      math output="x1/sqrt(1+0.25*x3*x3*x1*x1/(x2*x2))" | 
-     cut n2=1
+     cut n2=1 
      ''')
 
 Result('map',
        '''
+       window j2=2 j3=2 | 
        byte gainpanel=all allpos=y bar=bar.rsf | 
        grey3 title="Fowler Map" label1=Velocity 
        unit1=km/s label3=Wavenumber barlabel=Velocity barunit=km/s
-       frame1=50 frame2=500 frame3=1000 color=x scalebar=y 
+       frame1=50 frame2=250 frame3=500 color=x scalebar=y 
        ''')
 
 Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp',
