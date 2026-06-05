@@ -26,4 +26,4 @@ grep "^	in=" data.rsf
 
 echo "=== 7. clean up the RIGHT way ==="
 sfrm data.rsf labeled.rsf
-ls *.rsf 2>/dev/null && echo "leaked headers" || echo "clean"
+ls ./*.rsf 2>/dev/null && echo "leaked headers" || echo "clean"
