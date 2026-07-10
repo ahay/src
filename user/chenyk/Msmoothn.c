@@ -25,7 +25,8 @@ Example: chenyk/ortho_non/nsmooth
 
 int main (int argc, char* argv[]) 
 {
-    int *sft[SF_MAX_DIM];
+    bool sft_float[SF_MAX_DIM] = {false}; int *sft_read=NULL;
+    float *sft[SF_MAX_DIM];
     int box[SF_MAX_DIM], n[SF_MAX_DIM];
     int dim, dim1, i, n1, n2, i1, i2, b, nrep;
     float *data, *smoo, *rct[SF_MAX_DIM];
@@ -56,7 +57,10 @@ int main (int argc, char* argv[])
 	    if (NULL != sf_getstring(key)) {
 		/*( shift# shifting of the smoothing stencil in #-th dimension /auxiliary input file/ )*/
 		shift[i] = sf_input(key);
-		if (SF_INT != sf_gettype(shift[i])) sf_error("Need int %s",key);
+		if (SF_INT != sf_gettype(shift[i])) {
+		    sft_float[i] = true;
+		    if (SF_FLOAT != sf_gettype(shift[i])) sf_error("Need int or float %s",key);
+		}
 	    } else {
 		shift[i] = NULL;
 	    }
@@ -82,13 +86,19 @@ int main (int argc, char* argv[])
 	box[i] = 1;
 	if (NULL != rect[i]) {
 	    rct[i] = sf_floatalloc (n1);
-	    sft[i] = sf_intalloc (n1);
+	    sft[i] = sf_floatalloc (n1);
 
 	    sf_floatread(rct[i],n1,rect[i]);
 	    sf_fileclose(rect[i]);
 
 	    if (NULL != shift[i]) {
-		sf_intread(sft[i],n1,shift[i]);
+		if (sft_float[i]) {
+		    sf_floatread(sft[i],n1,shift[i]);
+		} else {
+		    if (NULL == sft_read) sft_read = sf_intalloc(n1);
+		    sf_intread(sft_read,n1,shift[i]);
+		    for (i1=0; i1 < n1; i1++) sft[i][i1] = (float)sft_read[i1];
+		}
 		sf_fileclose(shift[i]);
 	    } else {
 		for (i1=0; i1 < n1; i1++) {
@@ -120,5 +130,3 @@ int main (int argc, char* argv[])
 
     exit (0);
 }
-
-
