@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv, verb;
+    bool inv, verb, sft_float[SF_MAX_DIM] = {false};
     int i1, n1, iw, nt, nw, i2, n2, rect0, rectf, niter, n12, n1w;
     int m[SF_MAX_DIM], *rect;
     float t, d1, w, w0, dw, mean=0.0f, alpha;
@@ -122,7 +122,8 @@ int main(int argc, char* argv[])
     
 	/*box means maximum (edge) padding for triangle smoothing, box[i]=max(rect[i])*/
 	sf_file rects[SF_MAX_DIM], shift[SF_MAX_DIM]; 
-    int   *sft[SF_MAX_DIM];	/* storing non-stationary shifting size */
+    int *sft_read=NULL;
+    float *sft[SF_MAX_DIM];	/* storing non-stationary shifting size */
     float *rct[SF_MAX_DIM]; /* storing non-stationary smoothing radii */
 
 
@@ -148,7 +149,10 @@ int main(int argc, char* argv[])
 	    if (NULL != sf_getstring(key)) {
 		/*( shift# shifting of the smoothing stencil in #-th dimension /auxiliary input file/ )*/
 		shift[i] = sf_input(key);
-		if (SF_INT != sf_gettype(shift[i])) sf_error("Need int %s",key);
+		if (SF_INT != sf_gettype(shift[i])) {
+		    sft_float[i] = true;
+		    if (SF_FLOAT != sf_gettype(shift[i])) sf_error("Need int or float %s",key);
+		}
 	    } else {
 		shift[i] = NULL;
 	    }
@@ -191,13 +195,19 @@ int main(int argc, char* argv[])
 	  }
 		box[ii] = 1;
 	  	rct[ii] = sf_floatalloc (n21*nw*2);
-	    sft[ii] = sf_intalloc (n21*nw*2);
+	    sft[ii] = sf_floatalloc (n21*nw*2);
 
 	    sf_floatread(rct[ii],n21*nw*2,rects[i]);
 	    sf_fileclose(rects[i]);
 
 	    if (NULL != shift[i]) {
-		sf_intread(sft[ii],n21*nw*2,shift[i]);
+		if (sft_float[i]) {
+		    sf_floatread(sft[ii],n21*nw*2,shift[i]);
+		} else {
+		    if (NULL == sft_read) sft_read = sf_intalloc(n21*nw*2);
+		    sf_intread(sft_read,n21*nw*2,shift[i]);
+		    for (i1=0; i1 < n21*nw*2; i1++) sft[ii][i1] = (float)sft_read[i1];
+		}
 		sf_fileclose(shift[i]);
 	    } else {
 		for (i1=0; i1 < n21*nw*2; i1++) {

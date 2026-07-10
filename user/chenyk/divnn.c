@@ -28,7 +28,7 @@ void divnn_init(int ndim   /* number of dimensions */,
 		  int *nbox /* triangle radius [ndim] */, 
 		  int *ndat  /* data dimensions [ndim] */, 
 		  float **rct /* triangle lengths [ndim][nd] */,
-          int **sft /* triangle shifts [ndim][nd] */,
+          float **sft /* triangle shifts [ndim][nd] */,
 		  int niter1 /* number of iterations */,
 		  bool verb  /* verbosity */) 
 /*< initialize >*/

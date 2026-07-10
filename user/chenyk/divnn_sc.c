@@ -194,7 +194,7 @@ void divnn_sc_init2(int nw       /* number of components */, \
 		     int *ndat    /* data dimensions [ndim] */, 
 		     int *nbox    /* smoothing radius [nw] */,
 		  	 float **rct /* triangle lengths [ndim][nd] */,
-          	 int **sft /* triangle shifts [ndim][nd] */,
+          	 float **sft /* triangle shifts [ndim][nd] */,
 		     float* den   /* denominator [nw*nd] */,
 		     bool verb    /* verbosity flag */)
 /*< initialize >*/

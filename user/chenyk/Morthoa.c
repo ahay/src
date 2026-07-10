@@ -23,8 +23,9 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, ifsm, ifnm, ifns;
-    int *sft[SF_MAX_DIM];	/* storing non-stationary shifting size */
+    bool verb, ifsm, ifnm, ifns, sft_float[SF_MAX_DIM] = {false};
+    int *sft_read=NULL;
+    float *sft[SF_MAX_DIM];	/* storing non-stationary shifting size */
     int i, id, dim, n[SF_MAX_DIM], dim1, nd, i1, i2, i3, n1, n2,n3, b, nrad;
     float *noi, *sig, *rat, *rat1, *noi2, *sig2, remove, alpha, beta, gamma;
     char key[8];
@@ -69,7 +70,10 @@ int main(int argc, char* argv[])
 	    if (NULL != sf_getstring(key)) {
 		/*( shift# shifting of the smoothing stencil in #-th dimension /auxiliary input file/ )*/
 		shift[i] = sf_input(key);
-		if (SF_INT != sf_gettype(shift[i])) sf_error("Need int %s",key);
+		if (SF_INT != sf_gettype(shift[i])) {
+		    sft_float[i] = true;
+		    if (SF_FLOAT != sf_gettype(shift[i])) sf_error("Need int or float %s",key);
+		}
 	    } else {
 		shift[i] = NULL;
 	    }
@@ -105,13 +109,19 @@ int main(int argc, char* argv[])
 	box[i] = 1;
 	if (NULL != rect[i]) {
 	    rct[i] = sf_floatalloc (n1);
-	    sft[i] = sf_intalloc (n1);
+	    sft[i] = sf_floatalloc (n1);
 
 	    sf_floatread(rct[i],n1,rect[i]);
 	    sf_fileclose(rect[i]);
 
 	    if (NULL != shift[i]) {
-		sf_intread(sft[i],n1,shift[i]);
+		if (sft_float[i]) {
+		    sf_floatread(sft[i],n1,shift[i]);
+		} else {
+		    if (NULL == sft_read) sft_read = sf_intalloc(n1);
+		    sf_intread(sft_read,n1,shift[i]);
+		    for (i1=0; i1 < n1; i1++) sft[i][i1] = (float)sft_read[i1];
+		}
 		sf_fileclose(shift[i]);
 	    } else {
 		for (i1=0; i1 < n1; i1++) {
