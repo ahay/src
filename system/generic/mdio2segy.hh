@@ -27,9 +27,21 @@ struct MdioAxis {
     bool        sample;     /* true for the fastest axis -> RSF n1           */
 };
 
+/* Name of a variable's element type, as TensorStore spells it ("float32",
+   "int16", "bool", ...).  Returns "" when the variable cannot be opened.
+   Prefer this over probing with variables.get<T>(): it reports the dtype a
+   store actually holds, so callers can say which dtype they rejected. */
+std::string mdio_variable_dtype(mdio::Dataset& ds, const std::string& name);
+
 /* Resolve the principal (sample-bearing) data variable.  When "given" is
-   non-empty it is returned verbatim; otherwise the first floating-point,
-   non-coordinate variable is chosen.  Returns "" when none is found. */
+   non-empty it is returned verbatim; otherwise the sample-typed (numeric,
+   non-structured, non-mask) variable of largest rank is chosen.  Returns ""
+   when none is found.
+
+   Selection deliberately does not filter on float32.  A non-float32 data
+   variable is still resolved here so the caller's dtype gate can name it;
+   filtering it out instead surfaces as a misleading "could not find a data
+   variable". */
 std::string mdio_data_variable(mdio::Dataset& ds, const char* given);
 
 /* Resolve the per-trace headers variable.  When "given" is non-empty it is
@@ -58,6 +70,44 @@ std::vector<MdioAxis> mdio_axes(mdio::Dataset& ds, const std::string& datavar);
    Returns false when the variable is absent or unreadable. */
 bool mdio_read_field(mdio::Dataset& ds, const std::string& name,
                      std::vector<double>& out);
+
+/* Resolved float32 Variable handle for Phase-5 panel-loop reuse. */
+typedef mdio::Variable<mdio::dtypes::float32_t> MdioFloat32Var;
+
+/* Resolve a float32 data variable once.  Returns false when absent / not
+   float32.  Callers should hoist this above the panel loop. */
+bool mdio_get_float32_var(mdio::Dataset& ds, const std::string& datavar,
+                          MdioFloat32Var& out);
+
+/* Read a float32 block from an already-resolved Variable into out[0..count).
+   When slices is non-empty, Variable::slice is applied (absolute domain
+   coordinates).  Copies at most count samples (zero-fills any shortfall). */
+bool mdio_read_float_block(
+    MdioFloat32Var& var,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    float* out, long count);
+
+/* Dataset convenience: resolve datavar then read (prefer the Variable
+   overload inside panel loops). */
+bool mdio_read_float_block(
+    mdio::Dataset& ds, const std::string& datavar,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    float* out, long count);
+
+/* Write a float32 block through an already-resolved Variable.
+   When slices is non-empty, the write is restricted via Variable::slice
+   (absolute domain coordinates). */
+bool mdio_write_float_block(
+    MdioFloat32Var& var,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    const float* buf, long count);
+
+/* Dataset convenience: resolve datavar then write (prefer the Variable
+   overload inside panel loops). */
+bool mdio_write_float_block(
+    mdio::Dataset& ds, const std::string& datavar,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    const float* buf, long count);
 
 /* Origin/sampling of one dimension, derived from its coordinate variable.
    Returns false when no usable coordinate variable exists. */
