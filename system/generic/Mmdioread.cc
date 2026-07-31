@@ -1,30 +1,12 @@
-/* Convert an MDIO dataset to RSF.
+/* MDIO -> RSF via mdio-cpp. read=d (default) writes amplitudes; read=h/b adds
+   SEG-Y tfile. Optional hfile/bfile from dataset metadata. Local or gs:///s3://.
 
-Reads the MDIO (Zarr) format through the mdio-cpp library and writes amplitudes
-to an RSF stream (read=d, the default).  Pass read=b or read=h to also (or
-only) write a per-trace SEG-Y tfile compatible with sfsegyread/sfsegywrite.
-Optionally write the SEG-Y EBCDIC text header (hfile) and 400-byte binary
-header (bfile) when they are present in the dataset metadata.
+   Window with sfwindow params (n#, f#, j#, ...). Axis 1 = samples; trace grid
+   follows RSF order. Unit-stride slices lazily; j#>1 decimates after read.
 
-The input may be a local path, or a gs:// or s3:// URL (when mdio-cpp was built
-with the corresponding cloud drivers).
-
-The data can be windowed on read with the same parameters as sfwindow
-(n#, f#, j#, min#, max#).  Axis 1 is the fast (sample) axis; the remaining
-axes index the trace grid, in the order RSF stores them (n2 is the fastest
-trace dimension).  Because mdio-cpp slices with unit stride, a contiguous
-bounding box is read lazily and any j#>1 decimation is applied afterwards.
-
-Trace headers are read either from one MDIO variable per SEG-Y key, or from a
-single structured "headers" variable.  The faithful sfmdiowrite path reopens
-the parent for structured headers / trace_mask, so a local tfile is not
-required for lossless round-trips.
-
-With unit-stride reads (j#=1), amplitudes are streamed in bounded blocks rather
-than buffered as a full volume.  Each block spans whole Zarr chunks, so a chunk
-is decompressed once instead of once per index of every coarser-chunked axis.
-See blockmb= and panel= to tune the block sizing.
-*/
+   Headers from per-key vars or structured "headers". Lossless round-trip needs
+   no tfile — sfmdiowrite reopens the parent. j#=1 streams chunk-aligned blocks
+   (see blockmb=). */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,18 +17,15 @@ See blockmb= and panel= to tune the block sizing.
 #include "mdio2segy.hh"
 #include "mdio_pipe.hh"
 
-/* Per-axis read window in MDIO order (slowest axis first, sample axis last),
-   resolved from the sfwindow-style n#/f#/j#/min#/max#/d# parameters. */
+/* Read window per axis (MDIO order), from sfwindow n#/f#/j#/... params. */
 struct ReadWindow {
-    std::vector<long> f;     /* first index on the parent axis           */
-    std::vector<long> n;     /* output count along the axis              */
-    std::vector<long> j;     /* decimation stride                        */
-    std::vector<long> span;  /* parent indices spanned: (n-1)*j + 1      */
+    std::vector<long> f;     /* parent start index                        */
+    std::vector<long> n;     /* output count                              */
+    std::vector<long> j;     /* stride                                    */
+    std::vector<long> span;  /* parent span: (n-1)*j + 1                  */
 };
 
-/* Resolve one axis of the read window, following window.c conventions, and
-   advance axes[a] to the windowed origin/sampling for the output header.
-   RSF axis i (1-based, fast first) is MDIO axis a = rank-i. */
+/* One axis of read window (window.c rules); RSF axis i -> MDIO rank-i. */
 static void resolve_axis_window(int i, int a, MdioAxis& ax, ReadWindow& win)
 {
     const long n = ax.size;
@@ -104,7 +83,7 @@ static void resolve_axis_window(int i, int a, MdioAxis& ax, ReadWindow& win)
     win.j[(size_t) a]    = j;
     win.span[(size_t) a] = (mm - 1) * j + 1;
 
-    ax.o = onew;   /* carry windowed geometry to the output */
+    ax.o = onew;   /* windowed geometry for output */
     ax.d = dnew;
 }
 
@@ -121,8 +100,7 @@ static ReadWindow resolve_window(std::vector<MdioAxis>& axes)
     return win;
 }
 
-/* The contiguous bounding box the window spans on the parent, which is what
-   mdio-cpp can slice (it takes unit stride only; j# is applied afterwards). */
+/* Parent bounding box for mdio-cpp slice (unit stride; j# applied later). */
 static std::vector<mdio::RangeDescriptor<mdio::Index> >
 window_bounding_box(const std::vector<MdioAxis>& axes, const ReadWindow& win)
 {
@@ -138,8 +116,7 @@ window_bounding_box(const std::vector<MdioAxis>& axes, const ReadWindow& win)
     return slices;
 }
 
-/* Open the amplitude output and write its windowed axis geometry.  RSF axis i
-   corresponds to MDIO axis rank-i. */
+/* Open amplitude out with windowed geometry; RSF axis i = MDIO rank-i. */
 static sf_file open_amplitude_output(const std::vector<MdioAxis>& axes,
                                      const ReadWindow& win)
 {
@@ -148,7 +125,7 @@ static sf_file open_amplitude_output(const std::vector<MdioAxis>& axes,
     sf_settype(out, SF_FLOAT);
     for (int i = 1; i <= rank; i++) {
         const size_t a = (size_t) (rank - i);
-        char key[24];   /* widest is "label" + an int, plus NUL */
+        char key[24];   /* "label" + int + NUL */
         snprintf(key, sizeof(key), "n%d", i);
         sf_putint(out, key, (int) win.n[a]);
         snprintf(key, sizeof(key), "d%d", i);
@@ -177,15 +154,13 @@ static sf_file open_header_output(long ntr, sf_file out)
     segy2hist(hdr, SF_NKEYS);
 
     char* tname = sf_getstring("tfile");
-    /* output trace header file */
+    /* trace header output file */
     if (NULL != out)
         sf_putstring(out, "head", (NULL != tname) ? tname : "tfile");
     return hdr;
 }
 
-/* Stamp pipe context before flush so middle sf* filters propagate it via
-   sf_fileflush(out, infiles[0]).  Also stamp the exact per-axis selection so
-   the writer need not reverse-engineer it from floats. */
+/* Stamp mdio_* + selection before flush (propagates via sf_fileflush). */
 static void stamp_pipe_context(sf_file out, const char* path,
                                const std::string& fingerprint,
                                const std::string& datavar,
@@ -213,12 +188,11 @@ static void stamp_pipe_context(sf_file out, const char* path,
     sf_fileflush(out, NULL);
 }
 
-/* Dump the SEG-Y text (hfile) and binary (bfile) headers when asked for and
-   present in the dataset metadata. */
+/* Write optional hfile/bfile from dataset metadata. */
 static void write_segy_side_files(mdio::Dataset& ds, bool verb)
 {
     char* hname = sf_getstring("hfile");
-    /* output SEG-Y EBCDIC text header file */
+    /* SEG-Y EBCDIC text header output */
     if (NULL != hname) {
         char ahead[SF_EBCBYTES];
         if (mdio_get_text_header(ds, ahead)) {
@@ -233,7 +207,7 @@ static void write_segy_side_files(mdio::Dataset& ds, bool verb)
     }
 
     char* bname = sf_getstring("bfile");
-    /* output SEG-Y binary header file */
+    /* SEG-Y binary header output */
     if (NULL != bname) {
         char bhead[SF_BNYBYTES];
         if (mdio_get_binary_header(ds, bhead)) {
@@ -248,8 +222,7 @@ static void write_segy_side_files(mdio::Dataset& ds, bool verb)
     }
 }
 
-/* Bounded streaming read (unit stride): chunk-aligned blocks over the windowed
-   index space, each one contiguous run of the RSF stream. */
+/* Chunk-aligned streaming read over window (contiguous RSF blocks). */
 static void stream_amplitude(mdio::Dataset& ds, const std::string& datavar,
                              const char* path,
                              const std::vector<MdioAxis>& axes,
@@ -258,22 +231,16 @@ static void stream_amplitude(mdio::Dataset& ds, const std::string& datavar,
 {
     const int rank = (int) axes.size();
 
-    int panel_cap;
-    if (!sf_getint("panel", &panel_cap)) panel_cap = 64;
-    /* max traces per streamed block along the fastest spatial axis; fallback
-       sizing only, used when no whole-chunk block fits blockmb= */
-
     int blockmb;
     if (!sf_getint("blockmb", &blockmb)) blockmb = 128;
-    /* streaming block budget in MiB; blocks span whole Zarr chunks, so a
-       larger budget buys more concurrent decompression */
+    /* block budget (MiB); whole-chunk blocks amortize decompression */
     static_assert(MDIO_PIPE_BLOCK_MB == 128,
                   "sfdoc needs a literal default; keep it equal to the macro");
 
     MdioBlockLoop loop;
     std::string note;
     mdio_pipe_resolve_block_loop(std::string(path), datavar, win.n,
-                                 panel_cap, blockmb, loop, note);
+                                 blockmb, loop, note);
     if (verb && !note.empty()) sf_warning("%s", note.c_str());
 
     MdioFloat32Var amp_var;
@@ -329,8 +296,7 @@ static void stream_amplitude(mdio::Dataset& ds, const std::string& datavar,
     }
 }
 
-/* j#>1: read the bounding box eagerly and decimate in memory.  Rare, and only
-   reachable for the non-same-geometry contracts. */
+/* j#>1: read bbox, decimate in memory (non-same-geometry only). */
 static void write_amplitude_decimated(mdio::Dataset& sliced,
                                       const std::string& datavar,
                                       const ReadWindow& win, long total,
@@ -354,15 +320,14 @@ static void write_amplitude_decimated(mdio::Dataset& sliced,
     free(obuf);
 }
 
-/* Write the tfile: one SF_NKEYS-long int record per trace, decimated onto the
-   windowed trace grid (all MDIO axes except the sample axis). */
+/* tfile: SF_NKEYS ints per trace on windowed trace grid. */
 static void write_trace_headers(
     mdio::Dataset& sliced, const char* path,
     const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
     const std::string& headersVar, const ReadWindow& win, long ntr,
     sf_file hdr)
 {
-    const int tr = (int) win.n.size() - 1;   /* trace-grid axes */
+    const int tr = (int) win.n.size() - 1;   /* trace axes */
 
     std::vector<std::vector<int> > keyvals(SF_NKEYS);
     for (int k = 0; k < SF_NKEYS; k++) {
@@ -405,18 +370,16 @@ int main(int argc, char* argv[])
     /* Verbosity flag */
 
     char* path = sf_getstring("mdio");
-    /* input MDIO dataset (path or gs://, s3:// URL) */
+    /* input MDIO path or gs:///s3:// URL */
     if (NULL == path) sf_error("Need mdio=");
 
     char* dataname = sf_getstring("data");
-    /* name of the MDIO data variable (default: auto-detect) */
+    /* data variable name (auto-detect default) */
     char* hdrsname = sf_getstring("headers");
-    /* name of the MDIO trace-headers variable (default: auto-detect) */
+    /* headers variable name (auto-detect default) */
 
     const char* read = sf_getstring("read");
-    /* what to read: d - data (default), h - header, b - both.
-       Default is data-only: the faithful writer reopens the parent for
-       structured headers / trace_mask, so a local tfile is not required. */
+    /* read: d=data (default), h=header, b=both */
     if (NULL == read) read = "d";
 
     /* ---- open dataset (lazy) ---- */
@@ -431,9 +394,7 @@ int main(int argc, char* argv[])
 
     if (verb) sf_warning("data variable: %s", datavar.c_str());
 
-    /* float32-only fidelity path.  The RSF hop between the two mains is
-       SF_FLOAT, so a wider dtype cannot survive the pipe bit-exact; fail here
-       rather than publish a child that quietly misses Axis B. */
+    /* float32 only — wider dtypes lose precision on SF_FLOAT hop */
     std::string dtype = mdio_variable_dtype(ds, datavar);
     if (dtype != MDIO_PIPE_DTYPE_FLOAT32)
         sf_error("Data variable \"%s\" has dtype \"%s\"; the lossless pipe "
@@ -442,8 +403,7 @@ int main(int argc, char* argv[])
                  datavar.c_str(),
                  dtype.empty() ? "unknown" : dtype.c_str());
 
-    /* Fingerprint the unwindowed parent (source of truth for the writer).
-       The dtype is the observed one, so it genuinely binds into the digest. */
+    /* fingerprint unwindowed parent (writer verifies this) */
     std::string fingerprint = mdio_pipe_fingerprint(ds, datavar, dtype);
     if (verb) sf_warning("mdio fingerprint: %s", fingerprint.c_str());
 

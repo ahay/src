@@ -1,5 +1,4 @@
-/* Helpers translating between the MDIO (mdio-cpp) data model and the
-   Madagascar SEG-Y / RSF representation.  See mdio2segy.hh. */
+/* MDIO <-> SEG-Y/RSF helpers. See mdio2segy.hh. */
 
 #include <algorithm>
 #include <cstring>
@@ -9,9 +8,7 @@
 
 #include "mdio2segy.hh"
 
-/* ------------------------------------------------------------------ */
-/* SEG-Y key name -> candidate MDIO field/variable names              */
-/* ------------------------------------------------------------------ */
+/* SEG-Y key -> MDIO field aliases */
 static std::vector<std::string> header_aliases(const std::string& key)
 {
     std::vector<std::string> a;
@@ -32,9 +29,7 @@ static std::vector<std::string> header_aliases(const std::string& key)
     return a;
 }
 
-/* ------------------------------------------------------------------ */
-/* Read a whole variable into doubles, trying common MDIO data types. */
-/* ------------------------------------------------------------------ */
+/* Read variable as doubles (try common dtypes) */
 bool mdio_read_field(mdio::Dataset& ds, const std::string& name,
                      std::vector<double>& out)
 {
@@ -92,50 +87,48 @@ bool mdio_get_float32_var(mdio::Dataset& ds, const std::string& datavar,
     return true;
 }
 
+/* MdioFloat32Var or slice() Variable<> */
+template <typename Var>
+static bool read_into(Var& var, float* out, long count)
+{
+    auto fut = var.Read();
+    if (!fut.status().ok()) return false;
+    auto vd = fut.value();
+    auto off = vd.get_flattened_offset();
+    const float* p = static_cast<const float*>(vd.get_data_accessor().data());
+    const long n = (long) vd.num_samples();
+    const long ncopy = (n < count) ? n : count;
+    for (long i = 0; i < ncopy; i++) out[i] = p[off + i];
+    for (long i = ncopy; i < count; i++) out[i] = 0.0f;
+    return true;
+}
+
+template <typename Var>
+static bool write_from(Var& var, const float* buf, long count)
+{
+    auto vdr = mdio::from_variable<mdio::dtypes::float32_t>(var);
+    if (!vdr.status().ok()) return false;
+    auto vd = vdr.value();
+    auto off = vd.get_flattened_offset();
+    float* p = static_cast<float*>(vd.get_data_accessor().data());
+    const long n = (long) vd.num_samples();
+    const long ncopy = (n < count) ? n : count;
+    for (long i = 0; i < ncopy; i++) p[off + i] = buf[i];
+    return var.Write(vd).status().ok();
+}
+
 bool mdio_read_float_block(
     MdioFloat32Var& var,
     const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
     float* out, long count)
 {
     if (!out || count < 0) return false;
+    if (slices.empty()) return read_into(var, out, count);
 
-    if (!slices.empty()) {
-        auto sr = var.slice(slices);
-        if (!sr.status().ok()) return false;
-        auto fut = sr.value().Read();
-        if (!fut.status().ok()) return false;
-        auto vd = fut.value();
-        long n = (long) vd.num_samples();
-        auto off = vd.get_flattened_offset();
-        const float* p =
-            static_cast<const float*>(vd.get_data_accessor().data());
-        long ncopy = (n < count) ? n : count;
-        for (long i = 0; i < ncopy; i++) out[i] = p[off + i];
-        for (long i = ncopy; i < count; i++) out[i] = 0.0f;
-        return true;
-    }
-
-    auto fut = var.Read();
-    if (!fut.status().ok()) return false;
-    auto vd = fut.value();
-    long n = (long) vd.num_samples();
-    auto off = vd.get_flattened_offset();
-    const float* p =
-        static_cast<const float*>(vd.get_data_accessor().data());
-    long ncopy = (n < count) ? n : count;
-    for (long i = 0; i < ncopy; i++) out[i] = p[off + i];
-    for (long i = ncopy; i < count; i++) out[i] = 0.0f;
-    return true;
-}
-
-bool mdio_read_float_block(
-    mdio::Dataset& ds, const std::string& datavar,
-    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
-    float* out, long count)
-{
-    MdioFloat32Var var;
-    if (!mdio_get_float32_var(ds, datavar, var)) return false;
-    return mdio_read_float_block(var, slices, out, count);
+    auto sr = var.slice(slices);
+    if (!sr.status().ok()) return false;
+    auto svar = sr.value();
+    return read_into(svar, out, count);
 }
 
 bool mdio_write_float_block(
@@ -144,50 +137,16 @@ bool mdio_write_float_block(
     const float* buf, long count)
 {
     if (!buf || count < 0) return false;
+    if (slices.empty()) return write_from(var, buf, count);
 
-    /* Restrict to the panel region when slices are provided.  Absolute
-       domain coordinates (origin + local) — Variable::slice clamps. */
-    if (!slices.empty()) {
-        auto sr = var.slice(slices);
-        if (!sr.status().ok()) return false;
-        /* slice returns Variable<>; from_variable rebinds float32 for Write.
-           The sliced view shares the underlying kvstore region. */
-        auto svar = sr.value();
-        auto vdr = mdio::from_variable<mdio::dtypes::float32_t>(svar);
-        if (!vdr.status().ok()) return false;
-        auto vd = vdr.value();
-        long n = (long) vd.num_samples();
-        auto off = vd.get_flattened_offset();
-        float* p = static_cast<float*>(vd.get_data_accessor().data());
-        long ncopy = (n < count) ? n : count;
-        for (long i = 0; i < ncopy; i++) p[off + i] = buf[i];
-        return svar.Write(vd).status().ok();
-    }
-
-    auto vdr = mdio::from_variable<mdio::dtypes::float32_t>(var);
-    if (!vdr.status().ok()) return false;
-    auto vd = vdr.value();
-    long n = (long) vd.num_samples();
-    auto off = vd.get_flattened_offset();
-    float* p = static_cast<float*>(vd.get_data_accessor().data());
-    long ncopy = (n < count) ? n : count;
-    for (long i = 0; i < ncopy; i++) p[off + i] = buf[i];
-    return var.Write(vd).status().ok();
+    /* slice uses absolute coords; view shares kvstore region */
+    auto sr = var.slice(slices);
+    if (!sr.status().ok()) return false;
+    auto svar = sr.value();
+    return write_from(svar, buf, count);
 }
 
-bool mdio_write_float_block(
-    mdio::Dataset& ds, const std::string& datavar,
-    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
-    const float* buf, long count)
-{
-    MdioFloat32Var var;
-    if (!mdio_get_float32_var(ds, datavar, var)) return false;
-    return mdio_write_float_block(var, slices, buf, count);
-}
-
-/* ------------------------------------------------------------------ */
-/* Variable resolution                                                */
-/* ------------------------------------------------------------------ */
+/* Variable resolution */
 static bool has_empty_label(mdio::Dataset& ds, const std::string& name)
 {
     auto vr = ds.variables.at(name);
@@ -200,11 +159,7 @@ static bool has_empty_label(mdio::Dataset& ds, const std::string& name)
     return false;
 }
 
-/* True for a 1-D dimension coordinate (rank 1 whose single dimension label
-   equals the variable name, e.g. "inline" over dim "inline").  Such variables
-   hold axis values, not per-trace headers, so trace-header lookup must skip
-   them: in MDIO v1 the per-trace geometry lives in the structured "headers"
-   variable, while the same-named dimension coordinate only spans the axis. */
+/* 1-D coord var (name == dim label); not per-trace headers */
 static bool is_dim_coordinate(mdio::Dataset& ds, const std::string& name)
 {
     auto vr = ds.variables.at(name);
@@ -215,9 +170,7 @@ static bool is_dim_coordinate(mdio::Dataset& ds, const std::string& name)
     return std::string(labels[0]) == name;
 }
 
-/* True for a dtype that could carry amplitudes.  Excludes "bool" (trace_mask)
-   and the byte/string kinds that back structured headers, so relaxing the
-   float32 filter below does not let those become candidates. */
+/* Sample dtype candidate; excludes bool/byte/string kinds */
 static bool is_sample_dtype(const std::string& dt)
 {
     static const char* kSample[] = {
@@ -243,7 +196,7 @@ std::string mdio_data_variable(mdio::Dataset& ds, const char* given)
 
     auto names = ds.variables.get_iterable_accessor();
 
-    /* Prefer conventional data-variable names. */
+    /* prefer seismic/amplitude/data names */
     const char* preferred[] = {"seismic", "amplitude", "data", NULL};
     for (int k = 0; preferred[k]; k++) {
         std::string p = preferred[k];
@@ -252,8 +205,7 @@ std::string mdio_data_variable(mdio::Dataset& ds, const char* given)
             return p;
     }
 
-    /* Otherwise pick the sample-typed, non-structured variable of largest
-       rank. */
+    /* else largest-rank sample-typed non-structured var */
     std::string best;
     int bestrank = 1;
     for (size_t i = 0; i < names.size(); i++) {
@@ -276,7 +228,7 @@ std::string mdio_headers_variable(mdio::Dataset& ds, const char* given)
     for (int k = 0; common[k]; k++)
         if (ds.variables.contains_key(common[k])) return std::string(common[k]);
 
-    /* Any structured variable carries an unlabeled byte dimension. */
+    /* structured var has unlabeled byte dimension */
     auto names = ds.variables.get_iterable_accessor();
     for (size_t i = 0; i < names.size(); i++)
         if (has_empty_label(ds, names[i])) return names[i];
@@ -299,14 +251,12 @@ bool mdio_read_header_key(mdio::Dataset& ds, const std::string& path,
                           const std::string& headersVar, const char* key,
                           std::vector<double>& out)
 {
-    /* Layout 1: one variable per SEG-Y field. */
+    /* layout 1: one var per SEG-Y field */
     
     std::string f = header_field_name(ds, key);
     if (!f.empty()) return mdio_read_field(ds, f, out);
 
-    /* Layout 2: structured headers variable, extract field with SelectField.
-       SelectField mutates the dataset it is called on, so we operate on a
-       freshly re-opened (and re-sliced) dataset per field. */
+    /* layout 2: structured headers + SelectField (reopen per field) */
     if (headersVar.empty()) return false;
 
     std::vector<std::string> cands = header_aliases(key);
@@ -330,9 +280,7 @@ bool mdio_read_header_key(mdio::Dataset& ds, const std::string& path,
     return false;
 }
 
-/* ------------------------------------------------------------------ */
-/* Axis geometry                                                      */
-/* ------------------------------------------------------------------ */
+/* Axis geometry */
 std::vector<MdioAxis> mdio_axes(mdio::Dataset& ds, const std::string& datavar)
 {
     std::vector<MdioAxis> axes;
@@ -358,14 +306,7 @@ std::vector<MdioAxis> mdio_axes(mdio::Dataset& ds, const std::string& datavar)
     return axes;
 }
 
-/* ------------------------------------------------------------------ */
-/* Text / binary SEG-Y headers in the segy_file_header variable        */
-/* ------------------------------------------------------------------ */
-/* MDIO v1 stores the SEG-Y file headers as attributes of a scalar
-   "segy_file_header" variable.  mdio-cpp surfaces a variable's user attributes
-   through Variable::getMetadata() under metadata/attributes (the same place we
-   write them in mdio_put_*); we also tolerate the bare .zattrs layout the
-   Python mdio package uses (textHeader/binaryHeader at the top level). */
+/* SEG-Y file headers in segy_file_header attrs (mdio-cpp or Python layout) */
 static const char* SEGY_FILE_HEADER_VAR = "segy_file_header";
 
 static bool segy_file_header_meta(mdio::Dataset& ds, nlohmann::json& out)
@@ -379,14 +320,14 @@ static bool segy_file_header_meta(mdio::Dataset& ds, nlohmann::json& out)
 static const nlohmann::json* find_node(const nlohmann::json& meta,
                                         const char* name)
 {
-    /* mdio-cpp shape: { "metadata": { "attributes": { <name>: ... } } } */
+    /* mdio-cpp: metadata.attributes.name */
     if (meta.contains("metadata") && meta["metadata"].is_object()) {
         const nlohmann::json& m = meta["metadata"];
         if (m.contains("attributes") && m["attributes"].contains(name))
             return &m["attributes"][name];
         if (m.contains(name)) return &m[name];
     }
-    /* bare .zattrs shape (Python mdio): { "attributes": {...} } or top level. */
+    /* Python mdio: attributes or top-level */
     if (meta.contains("attributes") && meta["attributes"].contains(name))
         return &meta["attributes"][name];
     if (meta.contains(name)) return &meta[name];
@@ -402,8 +343,7 @@ bool mdio_get_text_header(mdio::Dataset& ds, char ahead[SF_EBCBYTES])
 
     memset(ahead, ' ', SF_EBCBYTES);
     if (node->is_string()) {
-        /* A single string; the Python mdio package joins the 40 cards with
-           newlines, so drop those to recover the flat 3200-byte text. */
+        /* string: strip newlines from joined 40 cards */
         std::string raw = node->get<std::string>();
         std::string s;
         s.reserve(raw.size());
@@ -411,7 +351,7 @@ bool mdio_get_text_header(mdio::Dataset& ds, char ahead[SF_EBCBYTES])
             if (raw[i] != '\n' && raw[i] != '\r') s.push_back(raw[i]);
         memcpy(ahead, s.data(), std::min((size_t) SF_EBCBYTES, s.size()));
     } else if (node->is_array()) {
-        /* A list of (usually 40) 80-character cards. */
+        /* array of 80-char cards */
         int off = 0;
         for (size_t i = 0; i < node->size() && off < SF_EBCBYTES; i++) {
             std::string s = (*node)[i].get<std::string>();
@@ -446,9 +386,7 @@ bool mdio_get_binary_header(mdio::Dataset& ds, char bhead[SF_BNYBYTES])
     return true;
 }
 
-/* Return a mutable reference to the attributes object of the segy_file_header
-   variable in a new-dataset schema, creating the variable (a 1-element scalar
-   int32 over its own dimension) on first use. */
+/* segy_file_header attrs in schema (create scalar var on first use) */
 static nlohmann::json& segy_file_header_attributes(nlohmann::json& schema)
 {
     if (!schema.contains("variables") || !schema["variables"].is_array())
@@ -488,9 +426,7 @@ void mdio_put_binary_header(nlohmann::json& schema,
     attrs["binaryHeader"] = arr;
 }
 
-/* ------------------------------------------------------------------ */
-/* Schema construction for new datasets                               */
-/* ------------------------------------------------------------------ */
+/* Schema construction for reduced=y path */
 static std::string iso_now(void)
 {
     char buf[32];
@@ -513,7 +449,7 @@ nlohmann::json mdio_build_schema(const std::string& name,
 
     nlohmann::json vars = nlohmann::json::array();
 
-    /* Dimension coordinate variables (uniform: o + i*d). */
+    /* uniform coord vars o+i*d */
     for (size_t i = 0; i < axes.size(); i++) {
         nlohmann::json v;
         v["name"]     = axes[i].label;
@@ -522,31 +458,26 @@ nlohmann::json mdio_build_schema(const std::string& name,
         dim["name"] = axes[i].label;
         dim["size"] = axes[i].size;
         v["dimensions"] = nlohmann::json::array({dim});
-        /* NB: the MDIO v1 schema models unitsV1 as a structured quantity object
-           (e.g. {"time":"s"}, {"length":"m"}); a bare RSF unit string fails
-           validation, and the SEG-Y round trip does not depend on axis units, so
-           we omit unitsV1 here rather than risk an invalid schema. */
+        /* omit unitsV1 — RSF unit strings fail MDIO v1 validation */
         vars.push_back(v);
     }
 
-    /* Trace-grid dimension labels (all axes but the sample axis). */
+    /* non-sample axis labels */
     std::vector<std::string> tracelabels;
-    std::vector<size_t>      traceaxis;   /* source axis index of each label */
+    std::vector<size_t>      traceaxis;   /* parent axis index per label */
     for (size_t i = 0; i < axes.size(); i++)
         if (!axes[i].sample) {
             tracelabels.push_back(axes[i].label);
             traceaxis.push_back(i);
         }
 
-    /* Per-trace-axis chunk sizes for the header variables: leave the fast trace
-       axis (the last trace label, = RSF axis 2) as a single full-length chunk and
-       chunk the slower trace axes with the resolved data-variable chunk sizes. */
+    /* header chunks: full on fast trace axis, data chunks on slow axes */
     std::vector<long> tracechunk(tracelabels.size());
     for (size_t k = 0; k < tracelabels.size(); k++) {
         size_t a = traceaxis[k];
         long size = axes[a].size;
         long c;
-        if (k + 1 == tracelabels.size())          /* fast trace axis -> full */
+        if (k + 1 == tracelabels.size())          /* fast trace axis: full chunk */
             c = size;
         else
             c = (a < chunk.size() && chunk[a] > 0 && chunk[a] <= size)
@@ -580,8 +511,7 @@ nlohmann::json mdio_build_schema(const std::string& name,
         for (size_t i = 0; i < tracelabels.size(); i++)
             dims.push_back(tracelabels[i]);
         v["dimensions"] = dims;
-        /* Chunk only when there is a slow trace axis to chunk; a lone (fast)
-           trace dimension is left unchunked, matching the 2D default. */
+        /* chunk slow trace axes only (2D default) */
         if (tracelabels.size() >= 2) {
             nlohmann::json cs = nlohmann::json::array();
             for (size_t i = 0; i < tracechunk.size(); i++) cs.push_back(tracechunk[i]);
