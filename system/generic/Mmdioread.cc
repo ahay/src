@@ -1,12 +1,23 @@
-/* MDIO -> RSF via mdio-cpp. read=d (default) writes amplitudes; read=h/b adds
-   SEG-Y tfile. Optional hfile/bfile from dataset metadata. Local or gs:///s3://.
+/* Convert an MDIO dataset to RSF.
 
-   Window with sfwindow params (n#, f#, j#, ...). Axis 1 = samples; trace grid
-   follows RSF order. Unit-stride slices lazily; j#>1 decimates after read.
+Reads the MDIO (Zarr) format through the mdio-cpp library and writes the
+amplitudes to an RSF file, the per-trace SEG-Y headers to a separate tfile
+(compatible with sfsegyread/sfsegywrite), and optionally the SEG-Y EBCDIC text
+header (hfile) and 400-byte binary header (bfile) when they are present in the
+dataset metadata.
 
-   Headers from per-key vars or structured "headers". Lossless round-trip needs
-   no tfile — sfmdiowrite reopens the parent. j#=1 streams chunk-aligned blocks
-   (see blockmb=). */
+The input may be a local path, or a gs:// or s3:// URL (when mdio-cpp was built
+with the corresponding cloud drivers).
+
+The data can be windowed on read with the same parameters as sfwindow
+(n#, f#, j#, min#, max#).  Axis 1 is the fast (sample) axis; the remaining
+axes index the trace grid, in the order RSF stores them (n2 is the fastest
+trace dimension).  Because mdio-cpp slices with unit stride, a contiguous
+bounding box is read lazily and any j#>1 decimation is applied afterwards.
+
+Trace headers are read either from one MDIO variable per SEG-Y key, or from a
+single structured "headers" variable.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,10 +30,10 @@
 
 /* Read window per axis (MDIO order), from sfwindow n#/f#/j#/... params. */
 struct ReadWindow {
-    std::vector<long> f;     /* parent start index                        */
-    std::vector<long> n;     /* output count                              */
-    std::vector<long> j;     /* stride                                    */
-    std::vector<long> span;  /* parent span: (n-1)*j + 1                  */
+    std::vector<long> f;     /* first index on the parent axis           */
+    std::vector<long> n;     /* output count along the axis              */
+    std::vector<long> j;     /* decimation stride                        */
+    std::vector<long> span;  /* parent indices spanned: (n-1)*j + 1      */
 };
 
 /* One axis of read window (window.c rules); RSF axis i -> MDIO rank-i. */
@@ -83,7 +94,7 @@ static void resolve_axis_window(int i, int a, MdioAxis& ax, ReadWindow& win)
     win.j[(size_t) a]    = j;
     win.span[(size_t) a] = (mm - 1) * j + 1;
 
-    ax.o = onew;   /* windowed geometry for output */
+    ax.o = onew;   /* carry windowed geometry to the output */
     ax.d = dnew;
 }
 
@@ -125,7 +136,7 @@ static sf_file open_amplitude_output(const std::vector<MdioAxis>& axes,
     sf_settype(out, SF_FLOAT);
     for (int i = 1; i <= rank; i++) {
         const size_t a = (size_t) (rank - i);
-        char key[24];   /* "label" + int + NUL */
+        char key[24];   /* widest is "label" + an int, plus NUL */
         snprintf(key, sizeof(key), "n%d", i);
         sf_putint(out, key, (int) win.n[a]);
         snprintf(key, sizeof(key), "d%d", i);
@@ -154,7 +165,7 @@ static sf_file open_header_output(long ntr, sf_file out)
     segy2hist(hdr, SF_NKEYS);
 
     char* tname = sf_getstring("tfile");
-    /* trace header output file */
+    /* output trace header file */
     if (NULL != out)
         sf_putstring(out, "head", (NULL != tname) ? tname : "tfile");
     return hdr;
@@ -192,7 +203,7 @@ static void stamp_pipe_context(sf_file out, const char* path,
 static void write_segy_side_files(mdio::Dataset& ds, bool verb)
 {
     char* hname = sf_getstring("hfile");
-    /* SEG-Y EBCDIC text header output */
+    /* output SEG-Y EBCDIC text header file */
     if (NULL != hname) {
         char ahead[SF_EBCBYTES];
         if (mdio_get_text_header(ds, ahead)) {
@@ -207,7 +218,7 @@ static void write_segy_side_files(mdio::Dataset& ds, bool verb)
     }
 
     char* bname = sf_getstring("bfile");
-    /* SEG-Y binary header output */
+    /* output SEG-Y binary header file */
     if (NULL != bname) {
         char bhead[SF_BNYBYTES];
         if (mdio_get_binary_header(ds, bhead)) {
@@ -231,6 +242,11 @@ static void stream_amplitude(mdio::Dataset& ds, const std::string& datavar,
 {
     const int rank = (int) axes.size();
 
+    int panel_cap;
+    if (!sf_getint("panel", &panel_cap)) panel_cap = 64;
+    /* max traces per streamed block along the fastest spatial axis; fallback
+       sizing only, used when no whole-chunk block fits blockmb= */
+
     int blockmb;
     if (!sf_getint("blockmb", &blockmb)) blockmb = 128;
     /* block budget (MiB); whole-chunk blocks amortize decompression */
@@ -240,7 +256,7 @@ static void stream_amplitude(mdio::Dataset& ds, const std::string& datavar,
     MdioBlockLoop loop;
     std::string note;
     mdio_pipe_resolve_block_loop(std::string(path), datavar, win.n,
-                                 blockmb, loop, note);
+                                 panel_cap, blockmb, loop, note);
     if (verb && !note.empty()) sf_warning("%s", note.c_str());
 
     MdioFloat32Var amp_var;
@@ -327,7 +343,7 @@ static void write_trace_headers(
     const std::string& headersVar, const ReadWindow& win, long ntr,
     sf_file hdr)
 {
-    const int tr = (int) win.n.size() - 1;   /* trace axes */
+    const int tr = (int) win.n.size() - 1;   /* trace-grid axes */
 
     std::vector<std::vector<int> > keyvals(SF_NKEYS);
     for (int k = 0; k < SF_NKEYS; k++) {
@@ -370,16 +386,16 @@ int main(int argc, char* argv[])
     /* Verbosity flag */
 
     char* path = sf_getstring("mdio");
-    /* input MDIO path or gs:///s3:// URL */
+    /* input MDIO dataset (path or gs://, s3:// URL) */
     if (NULL == path) sf_error("Need mdio=");
 
     char* dataname = sf_getstring("data");
-    /* data variable name (auto-detect default) */
+    /* name of the MDIO data variable (default: auto-detect) */
     char* hdrsname = sf_getstring("headers");
-    /* headers variable name (auto-detect default) */
+    /* name of the MDIO trace-headers variable (default: auto-detect) */
 
     const char* read = sf_getstring("read");
-    /* read: d=data (default), h=header, b=both */
+    /* ---- outputs ---- */
     if (NULL == read) read = "d";
 
     /* ---- open dataset (lazy) ---- */

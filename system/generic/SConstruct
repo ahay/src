@@ -92,13 +92,16 @@ for prog in Split('gaussshape2'):
 ######################################################################
 # MDIO (mdio-cpp) C++ PROGRAMS
 ######################################################################
-# MDIO (mdio-cpp) programs — built when MDIO=y at configure time.
+# Read/write the TGS MDIO (Zarr) format through a prebuilt mdio-cpp
+# (https://github.com/TGSAI/mdio-cpp).  Built only when mdio-cpp was detected
+# at configure time (MDIO=y), otherwise a placeholder is installed.
 mdio_mains = Split('mdioread mdiowrite')
 
 if env.get('MDIO'):
     menv = env.Clone()
 
-    # C++17 + MAX_NUM_SLICES for mdio-cpp.
+    # mdio-cpp needs C++17 plus -DMAX_NUM_SLICES (required by mdio/impl.h).
+    # MDIO_CXXFLAGS carries both when set explicitly; otherwise supply defaults.
     mdio_cxxflags = menv.get('MDIO_CXXFLAGS','')
     extra_flags = mdio_cxxflags
     if '-std=' not in menv.get('CXXFLAGS','') and '-std=' not in extra_flags:
@@ -115,12 +118,16 @@ if env.get('MDIO'):
     if not isinstance(mdio_libpath, list): mdio_libpath = mdio_libpath.split(',')
     if not isinstance(mdio_libs,    list): mdio_libs    = mdio_libs.split(',')
 
-    # SEG-Y key table from rsfsegy.
+    # rsfsegy provides the SEG-Y key table and ebc2asc/asc2ebc helpers.
     menv.Prepend(LIBS=[dynlib+'rsfsegy', dynlib+'su'])
     menv.Append(CPPPATH=mdio_cpppath,
                 LIBPATH=mdio_libpath,
                 LIBS=mdio_libs)
-    # tensorstore/abseil static libs: append to LINKCOM after objects.
+    # tensorstore/abseil have circular static-archive dependencies; the install's
+    # mdio.env wraps them in -Wl,--start-group ... -Wl,--end-group via
+    # MDIO_LINKFLAGS.  These archives must appear AFTER the program objects on the
+    # link line, so append them to the end of LINKCOM (LINKFLAGS would place them
+    # before $SOURCES and leave the objects' mdio symbols unresolved).
     if mdio_linkflags:
         menv['LINKCOM'] = '%s %s' % (menv['LINKCOM'], mdio_linkflags)
 
@@ -134,6 +141,10 @@ if env.get('MDIO'):
         main = menv.Program(prog, [obj, helper, pipe])
         if root:
             menv.Install(bindir,main[0])
+
+    # Roundtrip smoke test (run manually when MDIO=y and a parent exists):
+    #   ./test_mdio_pipe.sh /path/to/parent.mdio /tmp/child.mdio
+    # Optional cloud: MDIO_TEST_S3=s3://bucket/prefix ./test_mdio_pipe.sh ...
 elif root:
     for prog in mdio_mains:
         main = env.RSF_Place('sf'+prog,None,var='MDIO',package='mdio-cpp')

@@ -1,11 +1,17 @@
-/* RSF -> MDIO via mdio-cpp. Default: faithful finalizer — verify mdio_* context,
-   reopen parent, detect geometry, clone/reshape, stream-overwrite data (dead
-   fill), restamp stats/headers/provenance, publish. Sample windows and
-   sfremap1 resample supported (sfremap1 is grid remap, not anti-alias).
+/* Convert an RSF dataset to MDIO.
 
-   reduced=y: lossy reduced schema; without pipe context, seeds MDIO from RSF.
-   Output local or gs:///s3:// (cloud publish: copy temp prefix, delete temp).
-   Chunk-aligned block writes (blockmb=). Prefer processing= as a .json path. */
+Writes an RSF amplitude file (and, optionally, its SEG-Y trace headers tfile,
+EBCDIC text header hfile, and 400-byte binary header bfile) to the MDIO
+(Zarr) format through the mdio-cpp library.
+
+The output may be a local path, or a gs:// or s3:// URL (when mdio-cpp was built
+with the corresponding cloud drivers).
+
+A header-copy option (headers= / like= pointing at another MDIO dataset)
+copies the text header, binary header, and/or per-trace headers from that
+dataset instead of taking them from tfile/hfile/bfile.  The hdrcopy= selector
+(text, binary, trace, or all) controls what is copied.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,7 +68,7 @@ static bool write_float_buf(mdio::Dataset& ds, const std::string& name,
     return var.Write(vd).status().ok();
 }
 
-/* RSF dims -> total, ns (fast), ntr. */
+    /* RSF sample count must match selection-implied child */
 static void rsf_stream_dims(sf_file in, long& ns, long& ntr, long& total,
                             int& dim)
 {
@@ -132,7 +138,7 @@ static DatasetParams get_dataset_params(void)
     /* header copy source (reduced=y) */
 
     p.like = sf_getstring("like");
-    /* headers= alias; last context= fallback */
+    /* alias for headers=, and last fallback for context= */
 
     return p;
 }
@@ -216,6 +222,10 @@ static mdio::Dataset open_verified_parent(const MdioPipeContext& ctx, bool verb)
     return parent;
 }
 
+/* Prefer the stream's actual n#/o#/d# geometry.  The mdio_sel stamp is only
+   supporting context: use it when it agrees with the stream, otherwise the
+   stream wins (a middle filter such as sfremap1 may legitimately have changed
+   the grid).  Fails closed when the stream is not a valid selection. */
 static bool selections_agree(const MdioSelection& a, const MdioSelection& b)
 {
     if (a.axes.size() != b.axes.size()) return false;
@@ -238,7 +248,6 @@ static bool selections_agree(const MdioSelection& a, const MdioSelection& b)
     return true;
 }
 
-/* Selection from stream n#/o#/d#; mdio_sel is corroboration only. */
 static MdioSelection resolve_selection(sf_file in, const MdioPipeContext& ctx,
                                        const std::vector<MdioAxis>& parent_axes,
                                        bool verb)
@@ -286,7 +295,7 @@ static void build_child_store(const MdioPipeContext& ctx,
 {
     std::string err;
     if (sel.same_geometry) {
-        /* skip amplitude chunks — stream overwrites all samples */
+    /* stamped data variable beats CLI default */
         if (!mdio_clone_store_skip_var(ctx.source, tmp_path, datavar, err))
             sf_error("Parent clone failed: %s", err.c_str());
     } else {
@@ -319,6 +328,11 @@ static std::string stream_amplitude_to_child(
 {
     const int rank = (int) axes.size();
 
+    int panel_cap;
+    if (!sf_getint("panel", &panel_cap)) panel_cap = 64;
+    /* max traces per streamed block along the fastest spatial axis; fallback
+       sizing only, used when no whole-chunk block fits blockmb= */
+
     int blockmb;
     if (!sf_getint("blockmb", &blockmb)) blockmb = 128;
     /* block budget (MiB); whole-chunk blocks enable concurrent compression */
@@ -327,13 +341,13 @@ static std::string stream_amplitude_to_child(
 
     MdioBlockLoop loop;
     std::string note;
-    mdio_pipe_resolve_block_loop(store_uri, datavar, sizes, blockmb,
-                                 loop, note);
+    mdio_pipe_resolve_block_loop(store_uri, datavar, sizes,
+                                 panel_cap, blockmb, loop, note);
     if (verb && !note.empty()) sf_warning("%s", note.c_str());
 
     std::vector<char> live = child_trace_mask(child, ntr);
 
-    /* one Variable for entire block loop */
+    /* stamped data variable beats CLI default */
     MdioFloat32Var amp_var;
     if (!mdio_get_float32_var(child, datavar, amp_var))
         sf_error("Cannot open float32 variable \"%s\" on child",
@@ -406,7 +420,7 @@ static nlohmann::json* resolve_processing(const MdioSelection& sel,
                                           nlohmann::json& proc)
 {
     char* registered = sf_getstring("processing");
-    /* provenance JSON/file -> attributes.processing */
+    /* stamped data variable beats CLI default */
     if (NULL != registered) free(registered);
 
     /* sf_getstring mangles inline JSON; raw value + sfdoc registration */
@@ -464,7 +478,7 @@ static void finalize_child(mdio::Dataset& child, const std::string& tmp_path,
         if (verb) sf_warning("sample-geometry headers stamped");
     }
 
-    /* repair zarr.json after CommitMetadata so Python MDIO can open child */
+    /* stamped data variable beats CLI default */
     if (!sel.same_geometry &&
         !mdio_pipe_repair_zarr_metadata(tmp_path, ctx.source, err,
                                         /*cap_chunks=*/true))
@@ -524,15 +538,13 @@ static void write_faithful_child(sf_file in, const char* out_path,
     if (verb) sf_warning("Faithful child published at \"%s\"", out_path);
 }
 
-/* Legacy reduced-schema path (reduced=y). */
-
-/* hdrcopy= subset from headers=/like=. */
+/* Which headers hdrcopy= asks to take from the headers=/like= source. */
 struct HeaderCopy { bool text, binary, trace; };
 
 static HeaderCopy get_header_copy(void)
 {
     const char* hdrcopy = sf_getstring("hdrcopy");
-    /* hdrcopy: text, binary, trace, or all */
+    /* what to copy from headers=/like=: text, binary, trace, or all */
     if (NULL == hdrcopy) hdrcopy = "all";
 
     const std::string hc = hdrcopy;
@@ -544,7 +556,7 @@ static HeaderCopy get_header_copy(void)
     return c;
 }
 
-/* MDIO axes from RSF header (slowest first; reverse of RSF order). */
+/* MDIO axes (slowest-first, sample axis last) = reverse of RSF axes. */
 static std::vector<MdioAxis> rsf_axes_from_stream(sf_file in, int dim,
                                                   const off_t* n)
 {
@@ -573,13 +585,14 @@ static std::vector<MdioAxis> rsf_axes_from_stream(sf_file in, int dim,
     return axes;
 }
 
-/* tfile columns with any nonzero value. */
+/* Per-key trace-header columns from tfile=, keeping only keys that carry a
+   nonzero value somewhere. */
 static void read_tfile_columns(long ntr,
                                std::vector<std::string>& keynames,
                                std::vector<std::vector<int> >& columns)
 {
     char* tname = sf_getstring("tfile");
-    /* trace header input (sfsegyread/sfsegyheader) */
+    /* input trace header file (from sfsegyread or sfsegyheader) */
     if (NULL == tname) {
         segy_init(SF_NKEYS, NULL);
         return;
@@ -640,7 +653,7 @@ static void copy_header_columns(mdio::Dataset& srcds, const char* srcpath,
     }
 }
 
-/* delrt from sample origin (like sfsegywrite). */
+/* Force delrt to reflect the sample-axis origin (mirrors sfsegywrite). */
 static void force_delrt(double o1, long ntr,
                         std::vector<std::string>& keynames,
                         std::vector<std::vector<int> >& columns)
@@ -660,13 +673,19 @@ static void force_delrt(double o1, long ntr,
     }
 }
 
-/* Data-variable chunk sizes; axes[] MDIO order, RSF ri -> MDIO dim-ri. */
+/* Per-axis chunk sizes for the data variable.  axes[] is MDIO order, so RSF
+   axis ri maps to MDIO axis dim-ri. */
 static std::vector<long> resolve_chunks(const std::vector<MdioAxis>& axes)
 {
     const int dim = (int) axes.size();
 
     char* chunkstr = sf_getstring("chunk");
-    /* chunk: int, auto/full/trace, or chunk1=... overrides (RSF axis order) */
+    /* chunk size or named strategy for the data variable: an integer applied to
+       every axis (0 or >= axis size means a single full-length chunk), or one of
+       auto (default, min(size,128) per axis), full (whole array in one chunk), or
+       trace (chunk only the sample axis, full-length trace axes).  Per-axis
+       overrides chunk1=,chunk2=,... (RSF axis order; axis 1 = samples) take
+       precedence. */
     const std::string strat = (NULL != chunkstr) ? chunkstr : "auto";
 
     const bool named = (strat == "auto" || strat == "full" || strat == "trace");
@@ -698,7 +717,8 @@ static std::vector<long> resolve_chunks(const std::vector<MdioAxis>& axes)
     return chunk;
 }
 
-/* SEG-Y text/binary into schema; prefer headers= over hfile=/bfile=. */
+/* Text and binary SEG-Y headers into the schema metadata, preferring the
+   header-copy source over hfile=/bfile=. */
 static void put_segy_headers(nlohmann::json& schema, mdio::Dataset* srcds,
                              const HeaderCopy& cp)
 {
@@ -707,7 +727,7 @@ static void put_segy_headers(nlohmann::json& schema, mdio::Dataset* srcds,
                       mdio_get_text_header(*srcds, ahead));
     if (!have_text) {
         char* hname = sf_getstring("hfile");
-        /* SEG-Y EBCDIC text header input */
+        /* input SEG-Y EBCDIC text header file */
         if (NULL != hname) {
             FILE* fp = fopen(hname, "r");
             if (NULL != fp) {
@@ -725,7 +745,7 @@ static void put_segy_headers(nlohmann::json& schema, mdio::Dataset* srcds,
                      mdio_get_binary_header(*srcds, bhead));
     if (!have_bin) {
         char* bname = sf_getstring("bfile");
-        /* SEG-Y binary header input */
+        /* input SEG-Y binary header file */
         if (NULL != bname) {
             FILE* fp = fopen(bname, "rb");
             if (NULL != fp) {
@@ -755,7 +775,7 @@ static void write_dim_coords(mdio::Dataset& ds,
         float* p = static_cast<float*>(vd.get_data_accessor().data());
         for (long i = 0; i < nc; i++)
             p[off + i] = (float)(axes[a].o + i * axes[a].d);
-        /* await Write or coordinate may stay NaN-filled */
+    /* stamped data variable beats CLI default */
         if (!var.Write(vd).status().ok())
             sf_warning("Could not write coordinate \"%s\"",
                        axes[a].label.c_str());
@@ -767,10 +787,10 @@ static void write_reduced_child(sf_file in, const char* out_path,
                                 const std::string& datavar,
                                 const DatasetParams& dsp, bool verb)
 {
-    sf_warning("*********************************************************");
-    sf_warning("* reduced=y - NOT a lossless write.  The child keeps    *");
-    sf_warning("* neither the parent's schema nor its metadata.         *");
-    sf_warning("*********************************************************");
+    sf_warning("************************************************************");
+    sf_warning("* reduced=y — NOT a lossless write.                       *");
+    sf_warning("* Child will NOT pass mdio_conv Axis A/B fidelity checks. *");
+    sf_warning("************************************************************");
 
     const char* srcpath = dsp.header_source();
     const HeaderCopy cp = get_header_copy();
@@ -783,7 +803,7 @@ static void write_reduced_child(sf_file in, const char* out_path,
     const long ntr = total / ns;
 
     std::vector<MdioAxis> axes = rsf_axes_from_stream(in, dim, n);
-    const double o1 = axes[(size_t) (dim - 1)].o;  /* sample o -> delrt */
+    const double o1 = axes[(size_t) (dim - 1)].o;  /* sample origin -> delrt */
 
     std::vector<std::string> keynames;
     std::vector<std::vector<int> > columns;
@@ -849,11 +869,11 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     char* path = sf_getstring("mdio");
-    /* output MDIO path or gs:///s3:// URL */
+    /* output MDIO dataset (path or gs://, s3:// URL) */
     if (NULL == path) sf_error("Need mdio=");
 
     char* dataname = sf_getstring("data");
-    /* data variable (default "seismic") */
+    /* name of the MDIO data variable (default "seismic") */
     std::string datavar = (NULL != dataname) ? dataname : "seismic";
 
     DatasetParams dsp = get_dataset_params();
@@ -861,7 +881,7 @@ int main(int argc, char* argv[])
     /* lossy reduced path; default is faithful finalizer */
     bool reduced;
     if (!sf_getbool("reduced", &reduced)) reduced = false;
-    /* confirm reduced=y (not Axis A/B faithful) */
+    /* ---- pipe context: require or recover, then verify ---- */
 
     /* ---- pipe context: require or recover, then verify ---- */
     MdioPipeContext ctx;
@@ -870,7 +890,7 @@ int main(int argc, char* argv[])
     if (!ctx.present) {
         const char* source = dsp.recovery_source();
         if (NULL == source) {
-            /* no parent context: reduced=y seeds MDIO from RSF alone */
+    /* stamped data variable beats CLI default */
             if (reduced) {
                 write_reduced_child(in, path, datavar, dsp, verb);
                 exit(0);
