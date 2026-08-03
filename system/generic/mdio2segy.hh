@@ -30,6 +30,13 @@ struct MdioAxis {
 /* Variable element dtype as TensorStore name, or "". */
 std::string mdio_variable_dtype(mdio::Dataset& ds, const std::string& name);
 
+/* Zarr scalar dtype byte width (0 when the SEG-Y bridge has no fixed width,
+   e.g. float16/bfloat16/complex).  Single source of truth for both mains. */
+size_t mdio_dtype_width(const std::string& dt);
+
+/* True for a sample-bearing numeric dtype (excludes bool/byte/string kinds). */
+bool mdio_is_sample_dtype(const std::string& dt);
+
 /* Resolve the principal (sample-bearing) data variable.  When "given" is
    non-empty it is returned verbatim; otherwise the first floating-point,
    non-coordinate variable is chosen.  Returns "" when none is found. */

@@ -147,9 +147,17 @@ static DatasetParams get_dataset_params(void)
 static void recover_pipe_context(const char* source, const char* dataname,
                                  MdioPipeContext& ctx, bool verb)
 {
-    auto sf = mdio::Dataset::Open(std::string(source), mdio::constants::kOpen);
+    std::string open_path, mat_err;
+    if (!mdio_pipe_materialize_local(std::string(source), open_path, mat_err))
+        sf_error("Cannot materialize context source \"%s\": %s", source,
+                 mat_err.c_str());
+    MdioStagedOpen stage;
+    if (open_path != std::string(source)) stage.reset(open_path);
+
+    auto sf = mdio::Dataset::Open(open_path, mdio::constants::kOpen);
     if (!sf.status().ok())
-        sf_error("Cannot open context recovery source \"%s\"", source);
+        sf_error("Cannot open context recovery source \"%s\": %s", source,
+                 sf.status().ToString().c_str());
     mdio::Dataset rds = sf.value();
 
     std::string rvar = mdio_data_variable(rds, dataname);
@@ -193,12 +201,19 @@ static void validate_pipe_context(MdioPipeContext& ctx)
 }
 
 /* Reopen parent; verify dtype + fingerprint. */
-static mdio::Dataset open_verified_parent(const MdioPipeContext& ctx, bool verb)
+static mdio::Dataset open_verified_parent(const MdioPipeContext& ctx, bool verb,
+                                          MdioStagedOpen& stage)
 {
-    auto pf = mdio::Dataset::Open(ctx.source, mdio::constants::kOpen);
+    std::string open_path, mat_err;
+    if (!mdio_pipe_materialize_local(ctx.source, open_path, mat_err))
+        sf_error("Cannot materialize parent MDIO \"%s\": %s",
+                 ctx.source.c_str(), mat_err.c_str());
+    if (open_path != ctx.source) stage.reset(open_path);
+
+    auto pf = mdio::Dataset::Open(open_path, mdio::constants::kOpen);
     if (!pf.status().ok())
-        sf_error("Cannot open parent MDIO \"%s\" for fingerprint check",
-                 ctx.source.c_str());
+        sf_error("Cannot open parent MDIO \"%s\" for fingerprint check: %s",
+                 ctx.source.c_str(), pf.status().ToString().c_str());
     mdio::Dataset parent = pf.value();
 
     /* bind mdio_data_dtype to parent's actual dtype */
@@ -490,6 +505,30 @@ static void finalize_child(mdio::Dataset& child, const std::string& tmp_path,
         sf_error("provenance patch failed: %s", err.c_str());
 }
 
+/* Where to stage the child before publishing to out_path.
+
+   For a remote out (s3://, gs://, ...) we stage on local scratch, then upload
+   once at publish. Appending ".tmp.<pid>" to a remote URI would (a) leave a
+   literal "s3:/" directory in $CWD if any step fell back to the filesystem,
+   and (b) force publish to re-upload every key (build writes the remote tmp,
+   publish copies remote tmp -> remote final), doubling object-store traffic.
+   Staging locally streams amplitude to disk once and uploads it once.
+
+   For a local out we keep a sibling ".tmp.<pid>" so staging shares the same
+   filesystem as the final path (a cheap same-device publish). */
+static std::string faithful_tmp_path(const char* out_path)
+{
+    const std::string out(out_path);
+    const std::string pid = std::to_string((long) getpid());
+    if (mdio_pipe_is_remote_uri(out)) {
+        const char* base = getenv("TMPDIR");
+        std::string dir = (NULL != base && '\0' != *base) ? base : "/tmp";
+        if (!dir.empty() && '/' == dir.back()) dir.pop_back();
+        return dir + "/sfmdiowrite." + pid + ".mdio";
+    }
+    return out + ".tmp." + pid;
+}
+
 /* Faithful finalizer: clone/reshape, stream, restamp, publish; TmpStoreGuard
    on failure. */
 static void write_faithful_child(sf_file in, const char* out_path,
@@ -499,8 +538,7 @@ static void write_faithful_child(sf_file in, const char* out_path,
                                  const std::vector<MdioAxis>& parent_axes,
                                  const MdioSelection& sel, bool verb)
 {
-    const std::string tmp_path =
-        std::string(out_path) + ".tmp." + std::to_string((long) getpid());
+    const std::string tmp_path = faithful_tmp_path(out_path);
 
     build_child_store(ctx, sel, datavar, tmp_path, parent);
     TmpStoreGuard tmp_guard(tmp_path);
@@ -810,14 +848,24 @@ static void write_reduced_child(sf_file in, const char* out_path,
     read_tfile_columns(ntr, keynames, columns);
 
     mdio::Dataset* srcds = NULL;
+    MdioStagedOpen hdr_stage;
+    std::string hdr_open;
     if (NULL != srcpath) {
-        auto sf = mdio::Dataset::Open(std::string(srcpath),
-                                      mdio::constants::kOpen);
+        std::string mat_err;
+        if (!mdio_pipe_materialize_local(std::string(srcpath), hdr_open,
+                                         mat_err))
+            sf_error("Cannot materialize headers source \"%s\": %s", srcpath,
+                     mat_err.c_str());
+        if (hdr_open != std::string(srcpath)) hdr_stage.reset(hdr_open);
+
+        auto sf = mdio::Dataset::Open(hdr_open, mdio::constants::kOpen);
         if (!sf.status().ok())
-            sf_error("Cannot open headers source \"%s\"", srcpath);
+            sf_error("Cannot open headers source \"%s\": %s", srcpath,
+                     sf.status().ToString().c_str());
         srcds = new mdio::Dataset(sf.value());
         if (cp.trace)
-            copy_header_columns(*srcds, srcpath, ntr, keynames, columns);
+            copy_header_columns(*srcds, hdr_open.c_str(), ntr, keynames,
+                                columns);
     }
 
     force_delrt(o1, ntr, keynames, columns);
@@ -911,7 +959,8 @@ int main(int argc, char* argv[])
         sf_warning("data=%s overrides mdio_data_variable=%s",
                    datavar.c_str(), ctx.data_variable.c_str());
 
-    mdio::Dataset parent = open_verified_parent(ctx, verb);
+    MdioStagedOpen parent_stage;
+    mdio::Dataset parent = open_verified_parent(ctx, verb, parent_stage);
     std::vector<MdioAxis> parent_axes = mdio_axes(parent, ctx.data_variable);
     MdioSelection sel = resolve_selection(in, ctx, parent_axes, verb);
 

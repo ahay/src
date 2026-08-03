@@ -88,8 +88,39 @@ bool mdio_pipe_context_from_parent(mdio::Dataset& ds,
                                    const std::string& datavar,
                                    MdioPipeContext& ctx);
 
+/* True when uri names an object store (has a "scheme://" other than file://).
+   Store I/O is unified through kvstore regardless; this only lets a caller
+   pick where to stage a temporary build (local scratch vs. the remote store). */
+bool mdio_pipe_is_remote_uri(const std::string& uri);
+
 /* Remove local tree or remote prefix; missing ok. */
 void mdio_pipe_remove_path(const std::string& path);
+
+/* Resolve uri to a path Dataset::Open can use. Local uris are returned as-is.
+   Remote uris are cloned to local scratch via kvstore (which already carries
+   the bucket). Callers must keep stamping / cloning from the original uri;
+   remove *local with mdio_pipe_remove_path when *local differs from uri and
+   the Dataset is done. Works around mdio-cpp Zarr-V3 cloud opens that drop
+   the bucket from per-variable specs. */
+bool mdio_pipe_materialize_local(const std::string& uri,
+                                 std::string& local,
+                                 std::string& err);
+
+/* RAII cleanup for a path returned by mdio_pipe_materialize_local. No-op
+   when path is empty (local open, nothing staged). */
+struct MdioStagedOpen {
+    std::string path;
+    MdioStagedOpen() = default;
+    explicit MdioStagedOpen(std::string p) : path(std::move(p)) {}
+    ~MdioStagedOpen() { if (!path.empty()) mdio_pipe_remove_path(path); }
+    void reset(std::string p) {
+        if (!path.empty()) mdio_pipe_remove_path(path);
+        path = std::move(p);
+    }
+    void release() { path.clear(); }
+    MdioStagedOpen(const MdioStagedOpen&) = delete;
+    MdioStagedOpen& operator=(const MdioStagedOpen&) = delete;
+};
 
 /* Publish tmp -> final (rename local; copy+delete remote). */
 bool mdio_pipe_publish(const std::string& tmp_path,
@@ -203,10 +234,13 @@ struct MdioBlockLoop {
     bool aligned;       /* false: straddles chunks (slow)                */
 };
 
-/* Plan block loop for sizes vs chunk grid; note explains fallback. */
+/* Plan block loop for sizes vs chunk grid; note explains fallback.
+   panel_cap (panel=) caps traces per block on the fastest spatial axis in the
+   non-chunk-aligned fallback path; ignored when < 1 or a whole-chunk block fits. */
 void mdio_pipe_resolve_block_loop(const std::string& store_uri,
                                   const std::string& datavar,
                                   const std::vector<long>& sizes,
+                                  int panel_cap,
                                   int blockmb,
                                   MdioBlockLoop& loop,
                                   std::string& note);

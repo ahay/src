@@ -214,16 +214,39 @@ static bool is_dim_coordinate(mdio::Dataset& ds, const std::string& name)
     return std::string(labels[0]) == name;
 }
 
-/* Sample dtype candidate; excludes bool/byte/string kinds */
-static bool is_sample_dtype(const std::string& dt)
+/* Canonical Zarr scalar dtype table: byte width (0 = no fixed width for the
+   SEG-Y bridge) and whether it is a sample-bearing numeric kind.  Shared by
+   mdio2segy.cc and mdio_pipe.cc via mdio_dtype_width / mdio_is_sample_dtype. */
+struct MdioDtypeInfo { const char* name; size_t width; bool sample; };
+static const MdioDtypeInfo kMdioDtypes[] = {
+    {"bool",       1, false},
+    {"int8",       1, true},
+    {"uint8",      1, true},
+    {"int16",      2, true},
+    {"uint16",     2, true},
+    {"int32",      4, true},
+    {"uint32",     4, true},
+    {"int64",      8, true},
+    {"uint64",     8, true},
+    {"float16",    0, true},
+    {"bfloat16",   0, true},
+    {"float32",    4, true},
+    {"float64",    8, true},
+    {"complex64",  0, true},
+    {"complex128", 0, true},
+};
+
+size_t mdio_dtype_width(const std::string& dt)
 {
-    static const char* kSample[] = {
-        "int8", "int16", "int32", "int64",
-        "uint8", "uint16", "uint32", "uint64",
-        "float16", "bfloat16", "float32", "float64",
-        "complex64", "complex128", NULL};
-    for (int i = 0; kSample[i]; i++)
-        if (dt == kSample[i]) return true;
+    for (const MdioDtypeInfo& e : kMdioDtypes)
+        if (dt == e.name) return e.width;
+    return 0;
+}
+
+bool mdio_is_sample_dtype(const std::string& dt)
+{
+    for (const MdioDtypeInfo& e : kMdioDtypes)
+        if (dt == e.name) return e.sample;
     return false;
 }
 
@@ -245,7 +268,7 @@ std::string mdio_data_variable(mdio::Dataset& ds, const char* given)
     for (int k = 0; preferred[k]; k++) {
         std::string p = preferred[k];
         if (ds.variables.contains_key(p) && !has_empty_label(ds, p) &&
-            is_sample_dtype(mdio_variable_dtype(ds, p)))
+            mdio_is_sample_dtype(mdio_variable_dtype(ds, p)))
             return p;
     }
 
@@ -258,7 +281,7 @@ std::string mdio_data_variable(mdio::Dataset& ds, const char* given)
         if (!vr.status().ok()) continue;
         int rank = (int) vr.value().dimensions().rank();
         if (rank < 2 || has_empty_label(ds, n)) continue;
-        if (!is_sample_dtype(mdio_variable_dtype(ds, n))) continue;
+        if (!mdio_is_sample_dtype(mdio_variable_dtype(ds, n))) continue;
         if (rank > bestrank) { best = n; bestrank = rank; }
     }
     return best;

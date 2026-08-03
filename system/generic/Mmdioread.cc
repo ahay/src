@@ -398,9 +398,21 @@ int main(int argc, char* argv[])
     /* ---- outputs ---- */
     if (NULL == read) read = "d";
 
-    /* ---- open dataset (lazy) ---- */
-    auto dsFut = mdio::Dataset::Open(std::string(path), mdio::constants::kOpen);
-    if (!dsFut.status().ok()) sf_error("Cannot open MDIO \"%s\"", path);
+    /* ---- open dataset (lazy) ----
+       Remote stores are materialized locally first: Dataset::Open on s3://
+       Zarr-V3 drops the bucket from per-variable specs. Stamp still uses the
+       original uri so the writer can find the real parent. */
+    std::string open_path, mat_err;
+    if (!mdio_pipe_materialize_local(std::string(path), open_path, mat_err))
+        sf_error("Cannot materialize MDIO \"%s\": %s", path, mat_err.c_str());
+    MdioStagedOpen stage_guard;
+    if (open_path != std::string(path))
+        stage_guard.reset(open_path);
+
+    auto dsFut = mdio::Dataset::Open(open_path, mdio::constants::kOpen);
+    if (!dsFut.status().ok())
+        sf_error("Cannot open MDIO \"%s\": %s", path,
+                 dsFut.status().ToString().c_str());
     mdio::Dataset ds = dsFut.value();
 
     std::string datavar = mdio_data_variable(ds, dataname);
@@ -465,13 +477,15 @@ int main(int argc, char* argv[])
             if (win.j[(size_t) a] != 1) { unit_stride = false; break; }
 
         if (unit_stride)
-            stream_amplitude(ds, datavar, path, axes, win, ntr, out, verb);
+            stream_amplitude(ds, datavar, open_path.c_str(), axes, win, ntr,
+                             out, verb);
         else
             write_amplitude_decimated(sliced, datavar, win, total, out);
     }
 
     if (NULL != hdr)
-        write_trace_headers(sliced, path, slices, headersVar, win, ntr, hdr);
+        write_trace_headers(sliced, open_path.c_str(), slices, headersVar, win,
+                            ntr, hdr);
 
     exit(0);
 }

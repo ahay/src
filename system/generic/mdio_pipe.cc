@@ -5,19 +5,20 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <filesystem>
-#include <fstream>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unistd.h>
 #include <vector>
 
 #include "absl/strings/cord.h"
 #include "mdio_pipe.hh"
 #include "tensorstore/array.h"
+#include "tensorstore/kvstore/key_range.h"
 #include "tensorstore/kvstore/kvstore.h"
 #include "tensorstore/kvstore/operations.h"
 #include "tensorstore/tensorstore.h"
@@ -136,21 +137,10 @@ bool mdio_pipe_context_from_parent(mdio::Dataset& ds,
     return true;
 }
 
-namespace fs = std::filesystem;
-
 /* Stats zero tolerance (mdio_compat STATS_ZERO_ATOL). */
 #define MDIO_PIPE_STATS_ZERO_ATOL 1e-8
 
-static bool mdio_pipe_is_remote_uri(const std::string& uri)
-{
-    return uri.rfind("s3://", 0) == 0 ||
-           uri.rfind("gs://", 0) == 0 ||
-           uri.rfind("gcs://", 0) == 0 ||
-           uri.rfind("http://", 0) == 0 ||
-           uri.rfind("https://", 0) == 0;
-}
-
-/* Open root kvstore for MDIO URI. */
+/* Open root kvstore for MDIO URI (local path or s3:// / gs://). */
 static bool open_root_kvstore(const std::string& uri,
                               tensorstore::KvStore& out,
                               std::string& err)
@@ -165,6 +155,15 @@ static bool open_root_kvstore(const std::string& uri,
     return true;
 }
 
+/* Join kvstore key segments (no leading slash). */
+static std::string join_key(const std::string& a, const std::string& b)
+{
+    if (a.empty()) return b;
+    if (b.empty()) return a;
+    if (a.back() == '/') return a + b;
+    return a + "/" + b;
+}
+
 /* Delete all keys under dataset URI. */
 static bool kvstore_delete_all(const std::string& uri, std::string& err)
 {
@@ -177,6 +176,83 @@ static bool kvstore_delete_all(const std::string& uri, std::string& err)
         return false;
     }
     return true;
+}
+
+/* Delete keys with the given prefix (e.g. "amplitude/c/"). */
+static bool kv_delete_prefix(tensorstore::KvStore& kvs,
+                             const std::string& prefix,
+                             std::string& err)
+{
+    auto del = tensorstore::kvstore::DeleteRange(
+                   kvs, tensorstore::KeyRange::Prefix(prefix))
+                   .result();
+    if (!del.ok()) {
+        err = "kvstore DeleteRange(\"" + prefix +
+              "\") failed: " + del.status().ToString();
+        return false;
+    }
+    return true;
+}
+
+/* Read JSON from a kvstore key. found=false when the key is missing. */
+static bool kv_read_json(tensorstore::KvStore& kvs, const std::string& key,
+                         nlohmann::json& out, bool& found, std::string& err)
+{
+    found = false;
+    auto rd = tensorstore::kvstore::Read(kvs, key).result();
+    if (!rd.ok()) {
+        err = "kvstore read \"" + key + "\": " + rd.status().ToString();
+        return false;
+    }
+    if (!rd->has_value()) return true;
+    try {
+        out = nlohmann::json::parse(std::string(rd->value));
+    } catch (const std::exception& e) {
+        err = "parse \"" + key + "\": " + e.what();
+        return false;
+    }
+    found = true;
+    return true;
+}
+
+/* Write JSON to a kvstore key (pretty-printed). */
+static bool kv_write_json(tensorstore::KvStore& kvs, const std::string& key,
+                          const nlohmann::json& meta, std::string& err)
+{
+    try {
+        std::string text = meta.dump(4) + "\n";
+        auto wr =
+            tensorstore::kvstore::Write(kvs, key, absl::Cord(text)).result();
+        if (!wr.ok()) {
+            err = "kvstore write \"" + key + "\": " + wr.status().ToString();
+            return false;
+        }
+    } catch (const std::exception& e) {
+        err = "serialize \"" + key + "\": " + e.what();
+        return false;
+    }
+    return true;
+}
+
+/* Variable zarr.json or .zarray metadata. */
+static bool kv_read_var_meta(tensorstore::KvStore& kvs, const std::string& var,
+                             nlohmann::json& out, std::string& err)
+{
+    bool found = false;
+    for (const char* leaf : {"zarr.json", ".zarray"}) {
+        if (!kv_read_json(kvs, join_key(var, leaf), out, found, err))
+            return false;
+        if (found) return true;
+    }
+    err = "no zarr.json / .zarray for \"" + var + "\"";
+    return false;
+}
+
+/* Write variable metadata as zarr.json (v3 layout used by the pipe). */
+static bool kv_write_var_meta(tensorstore::KvStore& kvs, const std::string& var,
+                              const nlohmann::json& meta, std::string& err)
+{
+    return kv_write_json(kvs, join_key(var, "zarr.json"), meta, err);
 }
 
 static bool is_zarr_var_metadata_name(const std::string& name)
@@ -233,69 +309,17 @@ static bool kvstore_copy_all(const tensorstore::KvStore& src,
     return true;
 }
 
-/* Local tree copy; at root skip skip_var chunk payloads, keep metadata. */
-static bool copy_tree_skip_var(const fs::path& src, const fs::path& dst,
-                               const std::string& skip_var, bool at_root,
-                               std::string& err)
+bool mdio_pipe_is_remote_uri(const std::string& uri)
 {
-    std::error_code ec;
-    fs::create_directories(dst, ec);
-    if (ec) {
-        err = "mkdir \"" + dst.string() + "\": " + ec.message();
-        return false;
-    }
-    for (auto& ent : fs::directory_iterator(src, ec)) {
-        if (ec) {
-            err = "list \"" + src.string() + "\": " + ec.message();
-            return false;
-        }
-        const std::string name = ent.path().filename().string();
-        const fs::path dest = dst / name;
-        if (ent.is_directory(ec)) {
-            if (at_root && !skip_var.empty() && name == skip_var) {
-                fs::create_directories(dest, ec);
-                if (ec) {
-                    err = "mkdir \"" + dest.string() + "\": " + ec.message();
-                    return false;
-                }
-                std::error_code ec2;
-                for (auto& f : fs::directory_iterator(ent.path(), ec2)) {
-                    if (ec2 || !f.is_regular_file(ec2)) continue;
-                    const std::string fn = f.path().filename().string();
-                    if (!is_zarr_var_metadata_name(fn)) continue;
-                    fs::copy_file(f.path(), dest / fn,
-                                  fs::copy_options::overwrite_existing, ec2);
-                    if (ec2) {
-                        err = "copy \"" + f.path().string() +
-                              "\": " + ec2.message();
-                        return false;
-                    }
-                }
-            } else if (!copy_tree_skip_var(ent.path(), dest, skip_var,
-                                           /*at_root=*/false, err)) {
-                return false;
-            }
-        } else if (ent.is_regular_file(ec)) {
-            fs::copy_file(ent.path(), dest,
-                          fs::copy_options::overwrite_existing, ec);
-            if (ec) {
-                err = "copy \"" + ent.path().string() + "\": " + ec.message();
-                return false;
-            }
-        }
-    }
-    return true;
+    const std::string::size_type p = uri.find("://");
+    if (p == std::string::npos) return false;       /* bare local path */
+    return uri.compare(0, 7, "file://") != 0;        /* file:// is local */
 }
 
 void mdio_pipe_remove_path(const std::string& path)
 {
-    if (mdio_pipe_is_remote_uri(path)) {
-        std::string err;
-        kvstore_delete_all(path, err); /* best-effort */
-        return;
-    }
-    std::error_code ec;
-    fs::remove_all(path, ec);
+    std::string err;
+    kvstore_delete_all(path, err); /* best-effort */
 }
 
 bool mdio_clone_store_skip_var(const std::string& parent_uri,
@@ -303,46 +327,7 @@ bool mdio_clone_store_skip_var(const std::string& parent_uri,
                                const std::string& skip_var,
                                std::string& err)
 {
-    /* local -> local selective copy */
-    if (!mdio_pipe_is_remote_uri(parent_uri) &&
-        !mdio_pipe_is_remote_uri(child_path)) {
-        std::error_code ec;
-        fs::path src(parent_uri);
-        fs::path dst(child_path);
-        if (!fs::exists(src, ec) || !fs::is_directory(src, ec)) {
-            err = "parent MDIO path does not exist or is not a directory: " +
-                  parent_uri;
-            return false;
-        }
-
-        mdio_pipe_remove_path(child_path);
-        fs::create_directories(dst.parent_path(), ec);
-        if (skip_var.empty()) {
-            fs::copy(src, dst,
-                     fs::copy_options::recursive |
-                         fs::copy_options::overwrite_existing,
-                     ec);
-            if (ec) {
-                err = "clone failed: " + ec.message();
-                mdio_pipe_remove_path(child_path);
-                return false;
-            }
-            return true;
-        }
-        if (!copy_tree_skip_var(src, dst, skip_var, /*at_root=*/true, err)) {
-            mdio_pipe_remove_path(child_path);
-            return false;
-        }
-        return true;
-    }
-
-    /* cloud/mixed: kvstore list/read/write clone */
     mdio_pipe_remove_path(child_path);
-
-    if (!mdio_pipe_is_remote_uri(child_path)) {
-        std::error_code ec;
-        fs::create_directories(fs::path(child_path).parent_path(), ec);
-    }
 
     tensorstore::KvStore src, dst;
     if (!open_root_kvstore(parent_uri, src, err)) return false;
@@ -362,34 +347,41 @@ static bool mdio_clone_store(const std::string& parent_uri,
                                      /*skip_var=*/std::string(), err);
 }
 
+bool mdio_pipe_materialize_local(const std::string& uri,
+                                 std::string& local,
+                                 std::string& err)
+{
+    local.clear();
+    if (!mdio_pipe_is_remote_uri(uri)) {
+        local = uri;
+        return true;
+    }
+
+    /* kvstore open already splits s3://bucket/... correctly; Dataset::Open
+       on the remote URI does not (Zarr-V3 per-variable specs drop bucket).
+       Stage a full local clone so Dataset::Open sees a file store. */
+    const char* base = getenv("TMPDIR");
+    std::string dir = (NULL != base && '\0' != *base) ? base : "/tmp";
+    if (!dir.empty() && '/' == dir.back()) dir.pop_back();
+
+    static unsigned seq = 0;
+    local = dir + "/sfmdio_open." + std::to_string((long) getpid()) + "." +
+            std::to_string(++seq) + ".mdio";
+
+    if (!mdio_clone_store(uri, local, err)) {
+        mdio_pipe_remove_path(local);
+        local.clear();
+        return false;
+    }
+    return true;
+}
+
 bool mdio_pipe_publish(const std::string& tmp_path,
                        const std::string& final_path,
                        std::string& err)
 {
-    /* local rename; cross-device -> copy+remove */
-    if (!mdio_pipe_is_remote_uri(tmp_path) &&
-        !mdio_pipe_is_remote_uri(final_path)) {
-        std::error_code ec;
-        mdio_pipe_remove_path(final_path);
-        fs::create_directories(fs::path(final_path).parent_path(), ec);
-        fs::rename(tmp_path, final_path, ec);
-        if (ec) {
-            /* cross-device rename fallback */
-            ec.clear();
-            fs::copy(tmp_path, final_path,
-                     fs::copy_options::recursive |
-                         fs::copy_options::overwrite_existing,
-                     ec);
-            if (ec) {
-                err = "publish rename/copy failed: " + ec.message();
-                return false;
-            }
-            mdio_pipe_remove_path(tmp_path);
-        }
-        return true;
-    }
-
-    /* cloud: copy tmp->final, delete tmp (no atomic dir rename) */
+    /* Copy tmp->final then delete tmp. Object stores have no atomic dir
+       rename; local uses the same path for uniformity. */
     mdio_pipe_remove_path(final_path);
     tensorstore::KvStore src, dst;
     if (!open_root_kvstore(tmp_path, src, err)) return false;
@@ -762,6 +754,111 @@ bool mdio_pipe_selection_from_window(const std::vector<MdioAxis>& parent_axes,
     return true;
 }
 
+/* Grid-comparison tolerance shared by every detected axis. */
+static const double MDIO_SEL_RTOL = 1e-4;
+static bool mdio_grid_close(double x, double y)
+{
+    return std::fabs(x - y) <= MDIO_SEL_RTOL * (1.0 + std::fabs(y)) ||
+           std::fabs(x - y) <= 1e-6;
+}
+
+/* RSF effective rank: parent rank minus trailing size-1 axes RSF may drop. */
+static int mdio_effective_rank(const std::vector<MdioAxis>& parent_axes)
+{
+    const int prank = (int) parent_axes.size();
+    int expect_dim = 1;
+    for (int ri = 1; ri <= prank && ri <= SF_MAX_DIM; ri++) {
+        int a = prank - ri;
+        if (parent_axes[(size_t) a].size > 1) expect_dim = ri;
+    }
+    return expect_dim;
+}
+
+/* Classify one RSF axis against its parent axis (preserved / integer subset /
+   decimated / resampled sample axis). Fills ax; false + err when unsupported. */
+static bool mdio_detect_one_axis(sf_file in,
+                                 const std::vector<MdioAxis>& parent_axes,
+                                 const off_t* n, int a,
+                                 MdioAxisSel& ax, std::string& err)
+{
+    const int prank = (int) parent_axes.size();
+    const int ri = prank - a;
+    const MdioAxis& pax = parent_axes[(size_t) a];
+
+    /* size-1 / RSF-trimmed -> preserved */
+    if (pax.size <= 1) {
+        set_integer_axis_sel(pax, 0, 1, pax.size < 1 ? 1 : pax.size, ax);
+        return true;
+    }
+    if (pax.d == 0.0) {
+        err = "parent axis " + pax.label + " has d=0";
+        return false;
+    }
+
+    const long rsf_n = (ri <= SF_MAX_DIM) ? (long) n[ri - 1] : 1;
+    char key[8];
+    float fo = 0.f, fd = 1.f;
+    snprintf(key, sizeof(key), "o%d", ri);
+    const double rsf_o = sf_histfloat(in, key, &fo) ? (double) fo : pax.o;
+    snprintf(key, sizeof(key), "d%d", ri);
+    const double rsf_d = sf_histfloat(in, key, &fd) ? (double) fd : pax.d;
+
+    const std::string grid =
+        " (child o=" + std::to_string(rsf_o) +
+        " d=" + std::to_string(rsf_d) + " n=" + std::to_string(rsf_n) +
+        "; parent o=" + std::to_string(pax.o) +
+        " d=" + std::to_string(pax.d) +
+        " n=" + std::to_string(pax.size) + ")";
+
+    const double start_f = (rsf_o - pax.o) / pax.d;
+    const double step_f  = rsf_d / pax.d;
+    long start = (long) std::llround(start_f);
+    long step  = (long) std::llround(step_f);
+    if (step < 1) step = 1;
+
+    if (mdio_grid_close(start_f, (double) start) &&
+        mdio_grid_close(step_f, (double) step) &&
+        mdio_grid_close(pax.o + start * pax.d, rsf_o) &&
+        mdio_grid_close(pax.d * step, rsf_d)) {
+        if (start < 0 || rsf_n < 1 ||
+            start + (rsf_n - 1) * step > pax.size - 1) {
+            err = "axis " + pax.label + " selects outside the parent" + grid;
+            return false;
+        }
+        set_integer_axis_sel(pax, start, step, rsf_n, ax);
+        return true;
+    }
+
+    /* off-grid: sample axis only may resample in-range (sfremap1) */
+    if (a != prank - 1) {
+        err = "axis " + pax.label + " is not an exact integer selection "
+              "of the parent" + grid;
+        return false;
+    }
+    if (!(rsf_d > 0.0) || rsf_n < 1) {
+        err = "resampled sample axis \"" + pax.label +
+              "\" needs d > 0 and n >= 1" + grid;
+        return false;
+    }
+    const double parent_last = pax.o + (double) (pax.size - 1) * pax.d;
+    const double child_last  = rsf_o + (double) (rsf_n - 1) * rsf_d;
+    const double atol =
+        1e-6 + MDIO_SEL_RTOL * (1.0 + std::fabs(parent_last) + std::fabs(pax.o));
+    if (rsf_o < pax.o - atol || child_last > parent_last + atol) {
+        err = "resampled sample axis \"" + pax.label +
+              "\" extrapolates past the parent range" + grid;
+        return false;
+    }
+    ax.label = pax.label;
+    ax.start = 0;
+    ax.step  = 0;
+    ax.count = rsf_n;
+    ax.kind  = MDIO_SEL_RESAMPLED;
+    ax.o = rsf_o;
+    ax.d = rsf_d;
+    return true;
+}
+
 bool mdio_pipe_detect_selection(sf_file in,
                                 const std::vector<MdioAxis>& parent_axes,
                                 MdioSelection& sel,
@@ -775,12 +872,7 @@ bool mdio_pipe_detect_selection(sf_file in,
         return false;
     }
 
-    /* RSF may drop trailing size-1 axes; treat omitted size-1 as preserved */
-    int expect_dim = 1;
-    for (int ri = 1; ri <= prank && ri <= SF_MAX_DIM; ri++) {
-        int a = prank - ri;
-        if (parent_axes[(size_t) a].size > 1) expect_dim = ri;
-    }
+    const int expect_dim = mdio_effective_rank(parent_axes);
     if (rsf_dim != expect_dim) {
         err = "RSF effective rank " + std::to_string(rsf_dim) +
               " != parent effective rank " + std::to_string(expect_dim) +
@@ -788,92 +880,12 @@ bool mdio_pipe_detect_selection(sf_file in,
         return false;
     }
 
-    const double rtol = 1e-4;
-    auto close_enough = [rtol](double x, double y) {
-        return std::fabs(x - y) <= rtol * (1.0 + std::fabs(y)) ||
-               std::fabs(x - y) <= 1e-6;
-    };
-
     sel = MdioSelection();
     sel.axes.resize((size_t) prank);
-
-    for (int a = 0; a < prank; a++) {
-        const int ri = prank - a;
-        const MdioAxis& pax = parent_axes[(size_t) a];
-        MdioAxisSel& ax = sel.axes[(size_t) a];
-
-        /* size-1 / RSF-trimmed -> preserved */
-        if (pax.size <= 1) {
-            set_integer_axis_sel(pax, 0, 1, pax.size < 1 ? 1 : pax.size, ax);
-            continue;
-        }
-        if (pax.d == 0.0) {
-            err = "parent axis " + pax.label + " has d=0";
+    for (int a = 0; a < prank; a++)
+        if (!mdio_detect_one_axis(in, parent_axes, n, a,
+                                  sel.axes[(size_t) a], err))
             return false;
-        }
-
-        const long rsf_n = (ri <= SF_MAX_DIM) ? (long) n[ri - 1] : 1;
-        char key[8];
-        float fo = 0.f, fd = 1.f;
-        snprintf(key, sizeof(key), "o%d", ri);
-        const double rsf_o = sf_histfloat(in, key, &fo) ? (double) fo : pax.o;
-        snprintf(key, sizeof(key), "d%d", ri);
-        const double rsf_d = sf_histfloat(in, key, &fd) ? (double) fd : pax.d;
-
-        const std::string grid =
-            " (child o=" + std::to_string(rsf_o) +
-            " d=" + std::to_string(rsf_d) + " n=" + std::to_string(rsf_n) +
-            "; parent o=" + std::to_string(pax.o) +
-            " d=" + std::to_string(pax.d) +
-            " n=" + std::to_string(pax.size) + ")";
-
-        const double start_f = (rsf_o - pax.o) / pax.d;
-        const double step_f  = rsf_d / pax.d;
-        long start = (long) std::llround(start_f);
-        long step  = (long) std::llround(step_f);
-        if (step < 1) step = 1;
-
-        if (close_enough(start_f, (double) start) &&
-            close_enough(step_f, (double) step) &&
-            close_enough(pax.o + start * pax.d, rsf_o) &&
-            close_enough(pax.d * step, rsf_d)) {
-            if (start < 0 || rsf_n < 1 ||
-                start + (rsf_n - 1) * step > pax.size - 1) {
-                err = "axis " + pax.label + " selects outside the parent" + grid;
-                return false;
-            }
-            set_integer_axis_sel(pax, start, step, rsf_n, ax);
-            continue;
-        }
-
-        /* off-grid: sample axis only may resample in-range (sfremap1) */
-        if (a != prank - 1) {
-            err = "axis " + pax.label + " is not an exact integer selection "
-                  "of the parent" + grid;
-            return false;
-        }
-        if (!(rsf_d > 0.0) || rsf_n < 1) {
-            err = "resampled sample axis \"" + pax.label +
-                  "\" needs d > 0 and n >= 1" + grid;
-            return false;
-        }
-        const double parent_last = pax.o + (double) (pax.size - 1) * pax.d;
-        const double child_last  = rsf_o + (double) (rsf_n - 1) * rsf_d;
-        const double atol =
-            1e-6 + rtol * (1.0 + std::fabs(parent_last) + std::fabs(pax.o));
-        if (rsf_o < pax.o - atol || child_last > parent_last + atol) {
-            err = "resampled sample axis \"" + pax.label +
-                  "\" extrapolates past the parent range" + grid;
-            return false;
-        }
-        ax.label = pax.label;
-        ax.start = 0;
-        ax.step  = 0;
-        ax.count = rsf_n;
-        ax.kind  = MDIO_SEL_RESAMPLED;
-        ax.o = rsf_o;
-        ax.d = rsf_d;
-    }
 
     mdio_pipe_selection_finalize(sel);
     return true;
@@ -887,57 +899,33 @@ std::vector<long> mdio_pipe_child_sizes(const MdioSelection& sel)
     return out;
 }
 
-/* Chunk shape from variable zarr.json / .zarray. */
+/* Chunk shape via mdio-cpp; Variable::get_chunk_shape() resolves the Zarr v2
+   ("chunks") vs v3 ("chunk_grid") layout for us. */
 static bool mdio_pipe_chunk_shape(const std::string& store_uri,
                                   const std::string& datavar,
                                   std::vector<long>& chunk,
                                   std::string& err)
 {
     chunk.clear();
-    tensorstore::KvStore kvs;
-    if (!open_root_kvstore(store_uri, kvs, err)) return false;
-
-    nlohmann::json meta;
-    bool got = false;
-    for (const char* leaf : {"/zarr.json", "/.zarray"}) {
-        auto rd = tensorstore::kvstore::Read(kvs, datavar + leaf).result();
-        if (!rd.ok() || !rd->has_value()) continue;
-        try {
-            meta = nlohmann::json::parse(std::string(rd->value));
-        } catch (const std::exception& e) {
-            err = datavar + leaf + ": " + e.what();
-            return false;
-        }
-        got = true;
-        break;
+    auto dsr = mdio::Dataset::Open(store_uri, mdio::constants::kOpen);
+    if (!dsr.status().ok()) {
+        err = "cannot open \"" + store_uri + "\": " + dsr.status().ToString();
+        return false;
     }
-    if (!got) {
-        err = "no zarr.json / .zarray for \"" + datavar + "\" under " +
-              store_uri;
+    mdio::Dataset ds = dsr.value();
+
+    auto vr = ds.variables.at(datavar);
+    if (!vr.status().ok()) {
+        err = "no variable \"" + datavar + "\" under " + store_uri;
         return false;
     }
 
-    const nlohmann::json* arr = NULL;
-    if (meta.contains("chunk_grid") && meta["chunk_grid"].is_object() &&
-        meta["chunk_grid"].contains("configuration") &&
-        meta["chunk_grid"]["configuration"].is_object() &&
-        meta["chunk_grid"]["configuration"].contains("chunk_shape") &&
-        meta["chunk_grid"]["configuration"]["chunk_shape"].is_array())
-        arr = &meta["chunk_grid"]["configuration"]["chunk_shape"];
-    else if (meta.contains("chunks") && meta["chunks"].is_array())
-        arr = &meta["chunks"]; /* Zarr v2 */
-    if (!arr) {
-        err = datavar + ": no chunk_shape / chunks in metadata";
+    auto csr = vr.value().get_chunk_shape();
+    if (!csr.status().ok()) {
+        err = datavar + ": " + csr.status().ToString();
         return false;
     }
-    for (const auto& v : *arr) {
-        if (!v.is_number_integer() && !v.is_number_unsigned()) {
-            err = datavar + ": non-integer chunk extent";
-            chunk.clear();
-            return false;
-        }
-        chunk.push_back(v.get<long>());
-    }
+    for (auto c : csr.value()) chunk.push_back((long) c);
     return true;
 }
 
@@ -997,6 +985,7 @@ void mdio_pipe_decode_index(long lin, int ndim, const long* shape, long* idx)
 void mdio_pipe_resolve_block_loop(const std::string& store_uri,
                                   const std::string& datavar,
                                   const std::vector<long>& sizes,
+                                  int panel_cap,
                                   int blockmb,
                                   MdioBlockLoop& loop,
                                   std::string& note)
@@ -1022,6 +1011,9 @@ void mdio_pipe_resolve_block_loop(const std::string& store_uri,
         loop.pivot       = rank - 2;
         loop.pivot_block = std::max(1L, std::min(budget / ns,
                                                  sizes[(size_t) (rank - 2)]));
+        /* panel= caps traces per fallback block along the fastest spatial axis */
+        if (panel_cap >= 1 && loop.pivot_block > (long) panel_cap)
+            loop.pivot_block = (long) panel_cap;
         note += (note.empty() ? "" : "; ");
         note += "no whole-chunk block fits " + std::to_string(blockmb) +
                 " MiB; blocking " + std::to_string(loop.pivot_block) +
@@ -1044,38 +1036,6 @@ void mdio_pipe_resolve_block_loop(const std::string& store_uri,
     for (int a = loop.pivot + 1; a < rank; a++)
         loop.tail_floats *= sizes[(size_t) a];
     loop.block_floats = loop.pivot_block * loop.tail_floats;
-}
-
-/* Read JSON file; false if missing/unparsable. */
-static bool read_json_file(const fs::path& p, nlohmann::json& out)
-{
-    if (!fs::exists(p)) return false;
-    try {
-        std::ifstream in(p);
-        out = nlohmann::json::parse(in);
-    } catch (const std::exception&) {
-        return false;
-    }
-    return true;
-}
-
-/* Write JSON file. */
-static bool write_json_file(const fs::path& p, const nlohmann::json& meta)
-{
-    std::ofstream out(p, std::ios::trunc);
-    if (!out.good()) return false;
-    out << meta.dump(4) << "\n";
-    return out.good();
-}
-
-/* Zarr scalar dtype byte width; 0 if unknown. */
-static size_t dtype_width(const std::string& t)
-{
-    if (t == "int8"  || t == "uint8"  || t == "bool")    return 1;
-    if (t == "int16" || t == "uint16")                   return 2;
-    if (t == "int32" || t == "uint32" || t == "float32") return 4;
-    if (t == "int64" || t == "uint64" || t == "float64") return 8;
-    return 0;
 }
 
 /* data_type as string or object.name. */
@@ -1104,25 +1064,27 @@ static const MdioAxisSel* changed_axis_for(const MdioSelection& sel,
     return NULL;
 }
 
-/* Trim variable zarr.json shape/chunks to selection. */
-static bool reshape_var_metadata(const fs::path& child_root,
-                                 const fs::path& parent_root,
+/* Trim variable zarr.json shape/chunks to selection (kvstore path). */
+static bool reshape_var_metadata(tensorstore::KvStore& child_kvs,
+                                 tensorstore::KvStore* parent_kvs,
                                  const std::string& name,
                                  const MdioSelection& sel,
                                  std::string& err)
 {
-    fs::path zj = child_root / name / "zarr.json";
     nlohmann::json meta;
-    if (!read_json_file(zj, meta)) {
-        err = "missing or unreadable zarr.json for \"" + name + "\"";
+    if (!kv_read_var_meta(child_kvs, name, meta, err)) {
+        err = "missing or unreadable zarr.json for \"" + name + "\": " + err;
         return false;
     }
 
     /* restore parent dtype/codecs before shape edit */
     nlohmann::json parent_meta;
-    const nlohmann::json* pmeta =
-        read_json_file(parent_root / name / "zarr.json", parent_meta) ?
-        &parent_meta : NULL;
+    const nlohmann::json* pmeta = NULL;
+    if (parent_kvs) {
+        std::string perr;
+        if (kv_read_var_meta(*parent_kvs, name, parent_meta, perr))
+            pmeta = &parent_meta;
+    }
     normalize_structured_dtype(meta, pmeta);
     if (pmeta) {
         if (pmeta->contains("codecs")) meta["codecs"] = (*pmeta)["codecs"];
@@ -1189,15 +1151,10 @@ static bool reshape_var_metadata(const fs::path& child_root,
         meta["chunk_grid"]["configuration"]["chunk_shape"] = cs;
     }
 
-    if (!write_json_file(zj, meta)) {
-        err = "cannot write " + zj.string();
-        return false;
-    }
+    if (!kv_write_var_meta(child_kvs, name, meta, err)) return false;
 
     /* remove stale chunks before resized Write */
-    std::error_code rc;
-    fs::remove_all(child_root / name / "c", rc);
-    return true;
+    return kv_delete_prefix(child_kvs, join_key(name, "c") + "/", err);
 }
 
 /* Variable touches any changed selection axis? */
@@ -1268,14 +1225,22 @@ static bool write_synthesized_sample_coord(const std::string& child_path,
             all_integral = false;
     }
 
-    const fs::path zj = fs::path(child_path) / label / "zarr.json";
+    tensorstore::KvStore child_kvs, parent_kvs;
+    if (!open_root_kvstore(child_path, child_kvs, err)) return false;
+
     nlohmann::json meta, pmeta;
-    if (!read_json_file(zj, meta)) {
-        err = "missing or unreadable sample coord metadata at " + zj.string();
+    if (!kv_read_var_meta(child_kvs, label, meta, err)) {
+        err = "missing or unreadable sample coord metadata for \"" + label +
+              "\": " + err;
         return false;
     }
-    read_json_file(fs::path(parent_uri) / label / "zarr.json", pmeta);
-    const std::string parent_dtype = json_dtype_name(pmeta);
+    bool have_parent = false;
+    std::string perr;
+    if (open_root_kvstore(parent_uri, parent_kvs, perr) &&
+        kv_read_var_meta(parent_kvs, label, pmeta, perr))
+        have_parent = true;
+    const std::string parent_dtype =
+        have_parent ? json_dtype_name(pmeta) : std::string();
     const bool keep_int = all_integral &&
         (parent_dtype.rfind("int", 0) == 0 || parent_dtype.rfind("uint", 0) == 0);
     const std::string out_dtype = keep_int ? parent_dtype : "float64";
@@ -1283,12 +1248,9 @@ static bool write_synthesized_sample_coord(const std::string& child_path,
     /* set on-disk dtype before Open for Write */
     if (json_dtype_name(meta) != out_dtype) {
         meta["data_type"] = out_dtype;
-        if (!write_json_file(zj, meta)) {
-            err = "cannot rewrite sample coord dtype at " + zj.string();
+        if (!kv_write_var_meta(child_kvs, label, meta, err)) return false;
+        if (!kv_delete_prefix(child_kvs, join_key(label, "c") + "/", err))
             return false;
-        }
-        std::error_code ec;
-        fs::remove_all(fs::path(child_path) / label / "c", ec);
     }
 
     auto cf = mdio::Dataset::Open(child_path, mdio::constants::kOpen);
@@ -1316,25 +1278,37 @@ static bool rematerialize_child_variables(mdio::Dataset& parent,
                                           const std::string& datavar,
                                           std::string& err)
 {
-    fs::path child_root(child_path);
-    fs::path parent_root(parent_uri);
-    if (parent_uri.find("://") != std::string::npos) {
-        err = "reshaped child build requires a local parent path";
+    tensorstore::KvStore child_kvs, parent_kvs;
+    if (!open_root_kvstore(child_path, child_kvs, err)) return false;
+    tensorstore::KvStore* parent_kvs_ptr = NULL;
+    std::string perr;
+    if (open_root_kvstore(parent_uri, parent_kvs, perr))
+        parent_kvs_ptr = &parent_kvs;
+
+    /* Enumerate vars via Dataset (works for local and remote). */
+    auto cf0 = mdio::Dataset::Open(child_path, mdio::constants::kOpen);
+    if (!cf0.status().ok()) {
+        err = "open child for reshape: " + cf0.status().ToString();
         return false;
     }
+    mdio::Dataset child0 = cf0.value();
 
-    /* pass 1: reshape metadata + wipe chunks (incl. amplitude) */
+    /* pass 1: reshape metadata + wipe chunks (incl. amplitude / headers) */
+    std::vector<std::string> reshape_names = child0.variables.get_keys();
+    for (const std::string& hk : child0.header_variables.get_keys())
+        reshape_names.push_back(hk);
+
     std::vector<std::string> to_copy;
-    std::error_code ec;
-    for (auto& ent : fs::directory_iterator(child_root, ec)) {
-        if (ec || !ent.is_directory()) continue;
-        std::string name = ent.path().filename().string();
+    for (const std::string& name : reshape_names) {
         nlohmann::json meta;
-        if (!read_json_file(ent.path() / "zarr.json", meta)) continue;
+        std::string merr;
+        if (!kv_read_var_meta(child_kvs, name, meta, merr)) continue;
         if (!var_needs_reshape(meta, sel)) continue;
-        if (!reshape_var_metadata(child_root, parent_root, name, sel, err))
+        if (!reshape_var_metadata(child_kvs, parent_kvs_ptr, name, sel, err))
             return false;
-        if (name != datavar) to_copy.push_back(name);
+        /* payload rematerialize is for regular variables only */
+        if (name != datavar && child0.variables.contains_key(name))
+            to_copy.push_back(name);
     }
 
     /* reopen child; Copy sliced parent data */
@@ -1486,7 +1460,7 @@ static void normalize_structured_dtype(nlohmann::json& meta,
         size_t nbytes = 0;
         for (auto& f : fields) {
             if (!f.is_array() || f.size() < 2) continue;
-            size_t w = dtype_width(f[1].get<std::string>());
+            size_t w = mdio_dtype_width(f[1].get<std::string>());
             nbytes += w ? w : 4;
         }
         std::string enc;
@@ -1503,38 +1477,43 @@ bool mdio_pipe_repair_zarr_metadata(const std::string& child_path,
                                     std::string& err,
                                     bool cap_chunks)
 {
-    fs::path child_root(child_path);
-    fs::path parent_root;
-    bool have_parent = false;
-    if (!parent_uri.empty() && parent_uri.find("://") == std::string::npos) {
-        parent_root = fs::path(parent_uri);
-        have_parent = fs::is_directory(parent_root);
+    tensorstore::KvStore child_kvs;
+    if (!open_root_kvstore(child_path, child_kvs, err)) return false;
+
+    tensorstore::KvStore parent_kvs;
+    tensorstore::KvStore* parent_kvs_ptr = NULL;
+    if (!parent_uri.empty()) {
+        std::string perr;
+        if (open_root_kvstore(parent_uri, parent_kvs, perr))
+            parent_kvs_ptr = &parent_kvs;
     }
 
-    std::error_code ec;
-    if (!fs::is_directory(child_root, ec)) {
-        err = "repair: not a directory: " + child_path;
+    auto cf = mdio::Dataset::Open(child_path, mdio::constants::kOpen);
+    if (!cf.status().ok()) {
+        err = "repair: cannot open \"" + child_path +
+              "\": " + cf.status().ToString();
         return false;
     }
+    mdio::Dataset child = cf.value();
 
-    for (auto& ent : fs::directory_iterator(child_root, ec)) {
-        if (ec) break;
-        if (!ent.is_directory()) continue;
-        fs::path zj = ent.path() / "zarr.json";
-        if (!fs::exists(zj)) continue;
+    std::vector<std::string> names = child.variables.get_keys();
+    for (const std::string& hk : child.header_variables.get_keys())
+        names.push_back(hk);
 
+    for (const std::string& name : names) {
         nlohmann::json meta;
-        if (!read_json_file(zj, meta)) {
-            err = "repair: cannot read " + zj.string();
+        if (!kv_read_var_meta(child_kvs, name, meta, err)) {
+            err = "repair: cannot read metadata for \"" + name + "\": " + err;
             return false;
         }
 
         nlohmann::json parent_meta;
         const nlohmann::json* pmeta = NULL;
-        if (have_parent &&
-            read_json_file(parent_root / ent.path().filename() / "zarr.json",
-                           parent_meta))
-            pmeta = &parent_meta;
+        if (parent_kvs_ptr) {
+            std::string perr;
+            if (kv_read_var_meta(*parent_kvs_ptr, name, parent_meta, perr))
+                pmeta = &parent_meta;
+        }
 
         normalize_structured_dtype(meta, pmeta);
         /* cap chunks only after all Writes complete */
@@ -1548,8 +1527,8 @@ bool mdio_pipe_repair_zarr_metadata(const std::string& child_path,
                 {"separator", "/"}};
         }
 
-        if (!write_json_file(zj, meta)) {
-            err = "repair: cannot write " + zj.string();
+        if (!kv_write_var_meta(child_kvs, name, meta, err)) {
+            err = "repair: cannot write metadata for \"" + name + "\": " + err;
             return false;
         }
     }
@@ -1615,7 +1594,7 @@ static bool structured_field_offsets(const nlohmann::json& meta,
             typ  = f.value("data_type", "");
         } else continue;
 
-        const size_t w = dtype_width(typ);
+        const size_t w = mdio_dtype_width(typ);
         if (0 == w) {
             err = "headers: unsupported field type \"" + typ + "\" for \"" +
                   name + "\" (would misplace every later field)";
@@ -1635,15 +1614,13 @@ static bool stamp_headers_sample_geometry(const std::string& child_path,
                                           const std::vector<char>& live,
                                           std::string& err)
 {
-    const fs::path child_hdr = fs::path(child_path) / "headers";
-    const fs::path zj = child_hdr / "zarr.json";
-    if (!fs::exists(zj)) return true;  /* no headers */
+    tensorstore::KvStore child_kvs;
+    if (!open_root_kvstore(child_path, child_kvs, err)) return false;
 
     nlohmann::json meta;
-    if (!read_json_file(zj, meta)) {
-        err = "cannot read headers metadata at " + zj.string();
-        return false;
-    }
+    std::string merr;
+    if (!kv_read_var_meta(child_kvs, "headers", meta, merr))
+        return true; /* no headers */
 
     std::unordered_map<std::string, size_t> foff;
     size_t itemsize = 0;
@@ -1656,7 +1633,7 @@ static bool stamp_headers_sample_geometry(const std::string& child_path,
         auto it = foff.find(name);
         if (it == foff.end()) {
             err = std::string("headers missing required field \"") + name +
-                  "\" for sample-geometry stamp at " + child_hdr.string();
+                  "\" for sample-geometry stamp at " + child_path;
             return false;
         }
         size_t next = itemsize;
@@ -1665,7 +1642,7 @@ static bool stamp_headers_sample_geometry(const std::string& child_path,
         if (next - it->second != 2) {
             err = std::string("sample-geometry stamp expects int16 \"") + name +
                   "\"; found " + std::to_string(next - it->second) +
-                  " bytes at " + child_hdr.string();
+                  " bytes at " + child_path;
             return false;
         }
     }
@@ -1696,7 +1673,7 @@ static bool stamp_headers_sample_geometry(const std::string& child_path,
     const int rank = (int) store.rank();
     if (rank < 2) {
         err = "headers byte-view rank " + std::to_string(rank) +
-              " < 2 at " + child_hdr.string();
+              " < 2 at " + child_path;
         return false;
     }
     auto shape = store.domain().shape();
@@ -1704,13 +1681,13 @@ static bool stamp_headers_sample_geometry(const std::string& child_path,
     if (byte_dim != (long) itemsize) {
         err = "headers trailing byte dim " + std::to_string(byte_dim) +
               " != structured itemsize " + std::to_string(itemsize) +
-              " at " + child_hdr.string();
+              " at " + child_path;
         return false;
     }
     long ntr = 1;
     for (int i = 0; i < rank - 1; i++) ntr *= (long) shape[i];
     if (ntr < 1) {
-        err = "headers byte-view has no traces at " + child_hdr.string();
+        err = "headers byte-view has no traces at " + child_path;
         return false;
     }
 
@@ -1766,13 +1743,13 @@ static bool stamp_binary_header_ns_dt(const std::string& child_path,
                                       const SampleGeometryStamp& geom,
                                       std::string& err)
 {
-    fs::path zj = fs::path(child_path) / "segy_file_header" / "zarr.json";
+    tensorstore::KvStore child_kvs;
+    if (!open_root_kvstore(child_path, child_kvs, err)) return false;
+
     nlohmann::json meta;
-    if (!fs::exists(zj)) return true;
-    if (!read_json_file(zj, meta)) {
-        err = "cannot read " + zj.string();
-        return false;
-    }
+    std::string merr;
+    if (!kv_read_var_meta(child_kvs, "segy_file_header", meta, merr))
+        return true; /* optional */
 
     if (!meta.contains("attributes") || !meta["attributes"].is_object())
         return true;
@@ -1782,11 +1759,7 @@ static bool stamp_binary_header_ns_dt(const std::string& child_path,
     attrs["binaryHeader"]["samples_per_trace"] = (int) geom.ns;
     attrs["binaryHeader"]["sample_interval"]   = geom.dt_us;
 
-    if (!write_json_file(zj, meta)) {
-        err = "cannot write " + zj.string();
-        return false;
-    }
-    return true;
+    return kv_write_var_meta(child_kvs, "segy_file_header", meta, err);
 }
 
 bool mdio_pipe_stamp_sample_geometry(mdio::Dataset& child,
