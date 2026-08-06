@@ -27,6 +27,16 @@ struct MdioAxis {
     bool        sample;     /* true for the fastest axis -> RSF n1           */
 };
 
+/* Variable element dtype as TensorStore name, or "". */
+std::string mdio_variable_dtype(mdio::Dataset& ds, const std::string& name);
+
+/* Zarr scalar dtype byte width (0 when the SEG-Y bridge has no fixed width,
+   e.g. float16/bfloat16/complex).  Single source of truth for both mains. */
+size_t mdio_dtype_width(const std::string& dt);
+
+/* True for a sample-bearing numeric dtype (excludes bool/byte/string kinds). */
+bool mdio_is_sample_dtype(const std::string& dt);
+
 /* Resolve the principal (sample-bearing) data variable.  When "given" is
    non-empty it is returned verbatim; otherwise the first floating-point,
    non-coordinate variable is chosen.  Returns "" when none is found. */
@@ -58,6 +68,40 @@ std::vector<MdioAxis> mdio_axes(mdio::Dataset& ds, const std::string& datavar);
    Returns false when the variable is absent or unreadable. */
 bool mdio_read_field(mdio::Dataset& ds, const std::string& name,
                      std::vector<double>& out);
+
+/* Resolved float32 Variable handle for Phase-5 panel-loop reuse. */
+typedef mdio::Variable<mdio::dtypes::float32_t> MdioFloat32Var;
+
+/* Resolve float32 data var once (above streaming loop). */
+bool mdio_get_float32_var(mdio::Dataset& ds, const std::string& datavar,
+                          MdioFloat32Var& out);
+
+/* Read/write float32 block; optional slice (absolute coords). */
+bool mdio_read_float_block(
+    MdioFloat32Var& var,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    float* out, long count);
+
+/* Read/write float32 block; optional slice (absolute coords). */
+bool mdio_read_float_block(
+    mdio::Dataset& ds, const std::string& datavar,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    float* out, long count);
+
+/* Write a float32 block through an already-resolved Variable.
+   When slices is non-empty, the write is restricted via Variable::slice
+   (absolute domain coordinates). */
+bool mdio_write_float_block(
+    MdioFloat32Var& var,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    const float* buf, long count);
+
+/* Dataset convenience: resolve datavar then write (prefer the Variable
+   overload inside panel loops). */
+bool mdio_write_float_block(
+    mdio::Dataset& ds, const std::string& datavar,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    const float* buf, long count);
 
 /* Origin/sampling of one dimension, derived from its coordinate variable.
    Returns false when no usable coordinate variable exists. */

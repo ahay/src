@@ -60,9 +60,12 @@ bool mdio_read_field(mdio::Dataset& ds, const std::string& name,
 
     MDIO_TRY_READ(mdio::dtypes::int32_t);
     MDIO_TRY_READ(mdio::dtypes::int16_t);
+    MDIO_TRY_READ(mdio::dtypes::int8_t);
     MDIO_TRY_READ(mdio::dtypes::int64_t);
     MDIO_TRY_READ(mdio::dtypes::uint32_t);
     MDIO_TRY_READ(mdio::dtypes::uint16_t);
+    MDIO_TRY_READ(mdio::dtypes::uint8_t);
+    MDIO_TRY_READ(mdio::dtypes::bool_t);
     MDIO_TRY_READ(mdio::dtypes::float32_t);
     MDIO_TRY_READ(mdio::dtypes::float64_t);
 
@@ -78,6 +81,107 @@ bool mdio_coord(mdio::Dataset& ds, const std::string& label,
     *o = v[0];
     *d = (v.size() > 1) ? (v[1] - v[0]) : 1.0;
     return true;
+}
+
+bool mdio_get_float32_var(mdio::Dataset& ds, const std::string& datavar,
+                          MdioFloat32Var& out)
+{
+    auto vr = ds.variables.get<mdio::dtypes::float32_t>(datavar);
+    if (!vr.status().ok()) return false;
+    out = vr.value();
+    return true;
+}
+
+bool mdio_read_float_block(
+    MdioFloat32Var& var,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    float* out, long count)
+{
+    if (!out || count < 0) return false;
+
+    if (!slices.empty()) {
+        auto sr = var.slice(slices);
+        if (!sr.status().ok()) return false;
+        auto fut = sr.value().Read();
+        if (!fut.status().ok()) return false;
+        auto vd = fut.value();
+        long n = (long) vd.num_samples();
+        auto off = vd.get_flattened_offset();
+        const float* p =
+            static_cast<const float*>(vd.get_data_accessor().data());
+        long ncopy = (n < count) ? n : count;
+        for (long i = 0; i < ncopy; i++) out[i] = p[off + i];
+        for (long i = ncopy; i < count; i++) out[i] = 0.0f;
+        return true;
+    }
+
+    auto fut = var.Read();
+    if (!fut.status().ok()) return false;
+    auto vd = fut.value();
+    long n = (long) vd.num_samples();
+    auto off = vd.get_flattened_offset();
+    const float* p =
+        static_cast<const float*>(vd.get_data_accessor().data());
+    long ncopy = (n < count) ? n : count;
+    for (long i = 0; i < ncopy; i++) out[i] = p[off + i];
+    for (long i = ncopy; i < count; i++) out[i] = 0.0f;
+    return true;
+}
+
+bool mdio_read_float_block(
+    mdio::Dataset& ds, const std::string& datavar,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    float* out, long count)
+{
+    MdioFloat32Var var;
+    if (!mdio_get_float32_var(ds, datavar, var)) return false;
+    return mdio_read_float_block(var, slices, out, count);
+}
+
+bool mdio_write_float_block(
+    MdioFloat32Var& var,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    const float* buf, long count)
+{
+    if (!buf || count < 0) return false;
+
+        /* chunk slow trace axes only (2D default) */
+    if (!slices.empty()) {
+        auto sr = var.slice(slices);
+        if (!sr.status().ok()) return false;
+        /* slice returns Variable<>; from_variable rebinds float32 for Write.
+           The sliced view shares the underlying kvstore region. */
+        auto svar = sr.value();
+        auto vdr = mdio::from_variable<mdio::dtypes::float32_t>(svar);
+        if (!vdr.status().ok()) return false;
+        auto vd = vdr.value();
+        long n = (long) vd.num_samples();
+        auto off = vd.get_flattened_offset();
+        float* p = static_cast<float*>(vd.get_data_accessor().data());
+        long ncopy = (n < count) ? n : count;
+        for (long i = 0; i < ncopy; i++) p[off + i] = buf[i];
+        return svar.Write(vd).status().ok();
+    }
+
+    auto vdr = mdio::from_variable<mdio::dtypes::float32_t>(var);
+    if (!vdr.status().ok()) return false;
+    auto vd = vdr.value();
+    long n = (long) vd.num_samples();
+    auto off = vd.get_flattened_offset();
+    float* p = static_cast<float*>(vd.get_data_accessor().data());
+    long ncopy = (n < count) ? n : count;
+    for (long i = 0; i < ncopy; i++) p[off + i] = buf[i];
+    return var.Write(vd).status().ok();
+}
+
+bool mdio_write_float_block(
+    mdio::Dataset& ds, const std::string& datavar,
+    const std::vector<mdio::RangeDescriptor<mdio::Index> >& slices,
+    const float* buf, long count)
+{
+    MdioFloat32Var var;
+    if (!mdio_get_float32_var(ds, datavar, var)) return false;
+    return mdio_write_float_block(var, slices, buf, count);
 }
 
 /* ------------------------------------------------------------------ */
@@ -110,6 +214,49 @@ static bool is_dim_coordinate(mdio::Dataset& ds, const std::string& name)
     return std::string(labels[0]) == name;
 }
 
+/* Canonical Zarr scalar dtype table: byte width (0 = no fixed width for the
+   SEG-Y bridge) and whether it is a sample-bearing numeric kind.  Shared by
+   mdio2segy.cc and mdio_pipe.cc via mdio_dtype_width / mdio_is_sample_dtype. */
+struct MdioDtypeInfo { const char* name; size_t width; bool sample; };
+static const MdioDtypeInfo kMdioDtypes[] = {
+    {"bool",       1, false},
+    {"int8",       1, true},
+    {"uint8",      1, true},
+    {"int16",      2, true},
+    {"uint16",     2, true},
+    {"int32",      4, true},
+    {"uint32",     4, true},
+    {"int64",      8, true},
+    {"uint64",     8, true},
+    {"float16",    0, true},
+    {"bfloat16",   0, true},
+    {"float32",    4, true},
+    {"float64",    8, true},
+    {"complex64",  0, true},
+    {"complex128", 0, true},
+};
+
+size_t mdio_dtype_width(const std::string& dt)
+{
+    for (const MdioDtypeInfo& e : kMdioDtypes)
+        if (dt == e.name) return e.width;
+    return 0;
+}
+
+bool mdio_is_sample_dtype(const std::string& dt)
+{
+    for (const MdioDtypeInfo& e : kMdioDtypes)
+        if (dt == e.name) return e.sample;
+    return false;
+}
+
+std::string mdio_variable_dtype(mdio::Dataset& ds, const std::string& name)
+{
+    auto vr = ds.variables.at(name);
+    if (!vr.status().ok()) return "";
+    return std::string(vr.value().dtype().name());
+}
+
 std::string mdio_data_variable(mdio::Dataset& ds, const char* given)
 {
     if (given && *given) return std::string(given);
@@ -121,11 +268,11 @@ std::string mdio_data_variable(mdio::Dataset& ds, const char* given)
     for (int k = 0; preferred[k]; k++) {
         std::string p = preferred[k];
         if (ds.variables.contains_key(p) && !has_empty_label(ds, p) &&
-            ds.variables.get<mdio::dtypes::float32_t>(p).status().ok())
+            mdio_is_sample_dtype(mdio_variable_dtype(ds, p)))
             return p;
     }
 
-    /* Otherwise pick the float, non-structured variable of largest rank. */
+    /* One int32 trace-header variable per SEG-Y key. */
     std::string best;
     int bestrank = 1;
     for (size_t i = 0; i < names.size(); i++) {
@@ -134,7 +281,7 @@ std::string mdio_data_variable(mdio::Dataset& ds, const char* given)
         if (!vr.status().ok()) continue;
         int rank = (int) vr.value().dimensions().rank();
         if (rank < 2 || has_empty_label(ds, n)) continue;
-        if (!ds.variables.get<mdio::dtypes::float32_t>(n).status().ok()) continue;
+        if (!mdio_is_sample_dtype(mdio_variable_dtype(ds, n))) continue;
         if (rank > bestrank) { best = n; bestrank = rank; }
     }
     return best;
