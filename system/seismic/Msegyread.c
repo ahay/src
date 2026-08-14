@@ -4,6 +4,15 @@ Data headers and trace headers are separated from the data.
 
 "suread" is equivalent to "segyread su=y"
 
+f2=0 and n2=0 (defaults) read all traces, as before. Setting f2
+(0-based, requires seekable input, i.e. not a pipe) and/or n2 reads
+only traces [f2,f2+n2) from the file, e.g. to split a large SEGY/SU
+file into chunks and process them separately. Reassembling such
+chunks with sfcat (axis=2) reproduces the file that a single
+unchunked segyread call would have produced, bit-for-bit. mask=
+entries are indexed by absolute trace number, so mask still applies
+correctly when f2 is not 0.
+
 
 SEGY key names:
 
@@ -295,8 +304,8 @@ int main(int argc, char *argv[])
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
     char *filename, *trace, *prog, key[7], *name;
     sf_file out, hdr, msk=NULL;
-    int format, ns, itr, ntr, n2, itrace[SF_MAXKEYS], *mask, nkeys=SF_NKEYS, ik, nsbyte;
-    off_t pos, start, nsegy=0;
+    int format, ns, itr, ntr, n2, itrace[SF_MAXKEYS], *mask, nkeys=SF_NKEYS, ik, nsbyte, nmask;
+    off_t pos, start, nsegy=0, first, ntr_file, seekpos;
     FILE *head, *file;
     float *ftrace, dt=0.0, t0;
     extern int fseeko(FILE *stream, off_t offset, int whence);
@@ -344,16 +353,18 @@ int main(int argc, char *argv[])
 
     if (-1 == ftello(file)) sf_error("Cannot read from a pipe");
 
-    if (!sf_getint("n2",&ntr)) ntr=0;
-    /* number of traces to read (if 0, read all traces) */
+    if (!sf_getlargeint("f2",&first)) first=0;
+    /* first trace to read (0-based). Requires seekable input */
+    if (first < 0) sf_error("Negative f2=%lld",(long long) first);
 
-    if (0==ntr) {
-	fseeko(file,0,SEEK_END);
-	pos = ftello(file); /* pos is the filesize in bytes */
-	fseeko(file,0,SEEK_SET);
-    } else {
-	pos = 0;
-    }
+    if (!sf_getint("n2",&ntr)) ntr=0;
+    /* number of traces to read (if 0, read all traces from f2) */
+
+    /* filesize is needed for the f2/n2 range check below, not only
+       to derive ntr, so get it unconditionally */
+    fseeko(file,0,SEEK_END);
+    pos = ftello(file); /* pos is the filesize in bytes */
+    fseeko(file,0,SEEK_SET);
 
     /* figure out the number of trace keys */
     for (ik=0; nkeys < SF_MAXKEYS; ik++, nkeys++) {
@@ -503,18 +514,51 @@ int main(int argc, char *argv[])
     }
 
     free (trace);
-    // nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4); 
-	nsegy = SF_HDRBYTES + ((7 == format)? ns*1: ((3 == format)? ns*2: ns*4)); 
-    if (0==ntr) ntr = (pos - start)/nsegy;
+    // nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);
+	nsegy = SF_HDRBYTES + ((7 == format)? ns*1: ((3 == format)? ns*2: ns*4));
 
-    if (verbose) sf_warning("Expect %d traces",ntr);
+    /* the trace grid must tile the file exactly, otherwise byte-range
+       addressing (f2=) is meaningless */
+    if (0 != (pos - start) % nsegy)
+	sf_error("(filesize-%lld)=%lld is not divisible by nsegy=%lld: "
+		 "trace length is not constant",
+		 (long long) start, (long long) (pos-start), (long long) nsegy);
+
+    ntr_file = (pos - start)/nsegy;
+
+    if (first >= ntr_file)
+	sf_error("f2=%lld is beyond the last trace (%lld traces in file)",
+		 (long long) first, (long long) ntr_file);
+
+    if (0==ntr) {
+	ntr = ntr_file - first; /* read to end of file */
+    } else if (first + ntr > ntr_file) {
+	sf_error("f2=%lld n2=%d exceeds %lld traces in file",
+		 (long long) first, ntr, (long long) ntr_file);
+    }
+
+    /* position at the first requested trace. Replaces the implicit
+       rewind-to-start that the f2=0 case did above. */
+    seekpos = start + first*nsegy;
+    if (0 != fseeko(file,seekpos,SEEK_SET))
+	sf_error("Cannot seek to trace %lld at byte %lld",
+		 (long long) first, (long long) seekpos);
+
+    if (verbose) sf_warning("Expect %d traces starting at %lld",ntr,(long long) first);
 
     if (NULL != sf_getstring("mask")) {
 	/* optional header mask for reading only selected traces */
 	msk = sf_input("mask");
 	if (SF_INT != sf_gettype(msk)) sf_error("Need integer mask");
 
+	/* the mask is indexed by absolute trace number: skip f2 entries */
+	if (!sf_histint(msk,"n1",&nmask)) nmask=0;
+	if (0 != nmask && first+ntr > nmask)
+	    sf_error("mask has %d entries, need %lld",
+		     nmask,(long long) (first+ntr));
+
 	mask = sf_intalloc(ntr);
+	if (first > 0) sf_seek(msk,first*sizeof(int),SEEK_SET);
 	sf_intread(mask,ntr,msk);
 	sf_fileclose(msk);
 
@@ -575,7 +619,7 @@ int main(int argc, char *argv[])
 		    fseeko(file,SF_HDRBYTES,SEEK_CUR);
 		    continue;
 		} else if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file)) {
-			sf_error ("Error reading trace header %d",itr+1);
+			sf_error ("Error reading trace header %lld",(long long) (first+itr+1));
 		}
 		fseeko(file,nsegy,SEEK_CUR);
 
@@ -594,7 +638,7 @@ int main(int argc, char *argv[])
 		    fseeko(file,nsegy,SEEK_CUR);
 		    continue;
 		} else if (nsegy != fread(trace, 1, nsegy, file)) {
-			sf_error ("Error reading trace data %d",itr+1);
+			sf_error ("Error reading trace data %lld",(long long) (first+itr+1));
 		}
 
 		if (suxdr) {
@@ -614,7 +658,7 @@ int main(int argc, char *argv[])
 		    fseeko(file,nsegy,SEEK_CUR);
 		    continue;
 		} else if (nsegy != fread(trace, 1, nsegy, file)) {
-		    sf_error ("Error reading trace header %d",itr+1);
+		    sf_error ("Error reading trace header %lld",(long long) (first+itr+1));
 		}
 
 		segy2head(trace, itrace, nkeys);
