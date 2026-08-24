@@ -149,7 +149,7 @@ void warpscann_init(int m1     /* input trace length */,
 		   int *m     /* data dimensions [dim] */, 
 		   int *box   /* triangle radius [ndim], maximum smoothing radius */, 
 		   float **rct /* triangle lengths [ndim][nd] */,
-		   int **sft  /* triangle shifts [ndim][nd] */,
+		   float **sft  /* triangle shifts [ndim][nd] */,
 		   int niter  /* number of iterations */,
 		   bool shift1 /* shift instead of strech */,
 		   bool verb  /* verbosity */)

@@ -218,6 +218,7 @@ int main (int argc, char *argv[])
 	    		mcp3d1d1dint(sftw[0],sft[0],0,0,0,s1,s2,s3,n1win,n2win,n3win,n1pad,n2pad,n3pad);
 	    		mcp3d1d1dint(sftw[1],sft[1],0,0,0,s1,s2,s3,n1win,n2win,n3win,n1pad,n2pad,n3pad);
 	    		mcp3d1d1dint(sftw[2],sft[2],0,0,0,s1,s2,s3,n1win,n2win,n3win,n1pad,n2pad,n3pad);
+
     			fxynpre3(dtmp[0],n2win*n3win,n2win,n3win,n1win,d1,o11,niter,nsx,nsy,box,rctw,sftw,sym,opt,verb);	 
 	    		}
 	    		else
