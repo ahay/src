@@ -775,7 +775,7 @@ void dip3_init(int m1, int m2, int m3 /* dimensions */,
 void dip3n_init(int m1, int m2, int m3 /* dimensions */, 
 		   int *nbox 			  /* triangle radius [ndim] */, 
 		   float **rct 			  /* triangle lengths [ndim][nd] */,
-           int **sft 			  /* triangle shifts [ndim][nd] */,	       
+           float **sft 			  /* triangle shifts [ndim][nd] */,	       
 	       int niter              /* number of iterations */,
 	       float eps1             /* regularization */,      
 	       bool verb              /* verbosity flag */)

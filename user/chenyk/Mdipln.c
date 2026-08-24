@@ -31,7 +31,7 @@ int main(int argc, char*argv[])
 	char *interp;
 
 	/*added for non-stationary regularization*/
-    int   *sft[SF_MAX_DIM];	/* storing non-stationary shifting size */
+    float *sft[SF_MAX_DIM];	/* storing non-stationary shifting size */
     float *rct[SF_MAX_DIM]; /* storing non-stationary smoothing radii */	
 	int i, j, b, n123, dim;
 	float eps;
@@ -100,7 +100,7 @@ int main(int argc, char*argv[])
 	    if (NULL != sf_getstring(key)) {
 		/*( shift# shifting of the smoothing stencil in #-th dimension /auxiliary input file/ )*/
 		shift[i] = sf_input(key);
-		if (SF_INT != sf_gettype(shift[i])) sf_error("Need int %s",key);
+		if (SF_FLOAT != sf_gettype(shift[i])) sf_error("Need float %s",key);
 	    } else {
 		shift[i] = NULL;
 	    }
@@ -115,14 +115,14 @@ int main(int argc, char*argv[])
 	box[i] = 1;
 	if (NULL != rect[i]) {
 	    rct[i] = sf_floatalloc (n123);
-	    sft[i] = sf_intalloc (n123);
+	    sft[i] = sf_floatalloc (n123);
 		/* non-stationary dip smoothness on 1st/2nd/3rd axis */
 
 	    sf_floatread(rct[i],n123,rect[i]);
 	    sf_fileclose(rect[i]);
 
 	    if (NULL != shift[i]) {
-		sf_intread(sft[i],n123,shift[i]);
+		sf_floatread(sft[i],n123,shift[i]);
 		sf_fileclose(shift[i]);
 	    } else {
 		for (j=0; j < n123; j++) {

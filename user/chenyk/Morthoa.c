@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool verb, ifsm, ifnm, ifns;
-    int *sft[SF_MAX_DIM];	/* storing non-stationary shifting size */
+    float *sft[SF_MAX_DIM];	/* storing non-stationary shifting size */
     int i, id, dim, n[SF_MAX_DIM], dim1, nd, i1, i2, i3, n1, n2,n3, b, nrad;
     float *noi, *sig, *rat, *rat1, *noi2, *sig2, remove, alpha, beta, gamma;
     char key[8];
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 	    if (NULL != sf_getstring(key)) {
 		/*( shift# shifting of the smoothing stencil in #-th dimension /auxiliary input file/ )*/
 		shift[i] = sf_input(key);
-		if (SF_INT != sf_gettype(shift[i])) sf_error("Need int %s",key);
+		if (SF_FLOAT != sf_gettype(shift[i])) sf_error("Need float %s",key);
 	    } else {
 		shift[i] = NULL;
 	    }
@@ -105,13 +105,13 @@ int main(int argc, char* argv[])
 	box[i] = 1;
 	if (NULL != rect[i]) {
 	    rct[i] = sf_floatalloc (n1);
-	    sft[i] = sf_intalloc (n1);
+	    sft[i] = sf_floatalloc (n1);
 
 	    sf_floatread(rct[i],n1,rect[i]);
 	    sf_fileclose(rect[i]);
 
 	    if (NULL != shift[i]) {
-		sf_intread(sft[i],n1,shift[i]);
+		sf_floatread(sft[i],n1,shift[i]);
 		sf_fileclose(shift[i]);
 	    } else {
 		for (i1=0; i1 < n1; i1++) {
@@ -303,9 +303,9 @@ int main(int argc, char* argv[])
 			dtmp[iiw3][iiw2][iiw1]=dtmp[iiw3][iiw2][iiw1]/mmax_r/mmax_s*mmax_n;
 			}
 			
-    		win_weight3d(dtmp,iw1,iw2,iw3,nw1,nw2,nw3,n1win,n2win,n3win,ov1,ov2,ov3);
-    		mcp_ad1d3d(dout,dtmp,s1,s2,s3,0,0,0,n1pad,n2pad,n3pad,n1win,n2win,n3win);
-			}
+	    win_weight3d(dtmp,iw1,iw2,iw3,nw1,nw2,nw3,n1win,n2win,n3win,ov1,ov2,ov3);
+	    mcp_ad1d3d(dout,dtmp,s1,s2,s3,0,0,0,n1pad,n2pad,n3pad,n1win,n2win,n3win);
+	}
     	
     		
     for(i3=0;i3<n3;i3++)
