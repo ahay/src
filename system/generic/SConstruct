@@ -132,13 +132,19 @@ if env.get('MDIO'):
         menv['LINKCOM'] = '%s %s' % (menv['LINKCOM'], mdio_linkflags)
 
     helper = menv.StaticObject('mdio2segy.cc')
+    pipe   = menv.StaticObject('mdio_pipe.cc')
+    menv.Depends(pipe, ['mdio_pipe.hh', 'mdio2segy.hh'])
 
     for prog in mdio_mains:
         obj = menv.StaticObject('M'+prog+'.cc')
-        menv.Depends(obj,'mdio2segy.hh')
-        main = menv.Program(prog,[obj,helper])
+        menv.Depends(obj, ['mdio2segy.hh', 'mdio_pipe.hh'])
+        main = menv.Program(prog, [obj, helper, pipe])
         if root:
             menv.Install(bindir,main[0])
+
+    # Roundtrip smoke test (run manually when MDIO=y and a parent exists):
+    #   ./test_mdio_pipe.sh /path/to/parent.mdio /tmp/child.mdio
+    # Optional cloud: MDIO_TEST_S3=s3://bucket/prefix ./test_mdio_pipe.sh ...
 elif root:
     for prog in mdio_mains:
         main = env.RSF_Place('sf'+prog,None,var='MDIO',package='mdio-cpp')

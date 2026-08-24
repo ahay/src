@@ -1,0 +1,47 @@
+from rsf.proj import *
+
+# Demonstrates the lossless MDIO pipe: sfmdioread | <filter> | sfmdiowrite.
+#
+# The sfmdioread / sfmdiowrite converters require Madagascar to be configured
+# with MDIO=y (they link mdio-cpp).  Where they are absent (for example a CI
+# build without mdio-cpp) the example is skipped rather than failing.
+
+if WhereIs('sfmdioread') and WhereIs('sfmdiowrite'):
+
+    # A small synthetic amplitude volume with fully annotated axes.
+    Flow('synth', None,
+         '''
+         spike n1=200 n2=40 n3=8 d1=0.004 o1=0 d2=25 o2=0 d3=25 o3=0
+               k1=60,140 nsp=2 label1=Time unit1=s
+               label2=Crossline unit2=m label3=Inline unit3=m |
+         ricker1 frequency=20
+         ''')
+
+    # One pipe, three stages (example.mdio / filtered.mdio are Zarr directory
+    # stores kept as build scratch):
+    #   1. originate a parent MDIO from the RSF (reduced create path - the only
+    #      way to seed a store from Madagascar alone),
+    #   2. faithful same-geometry bandpass round-trip: the reader stamps parent
+    #      context, the writer clones the parent and overwrites only amplitude,
+    #   3. read the filtered child back to RSF for display.
+    Flow('filtered', 'synth',
+         '''
+         mdiowrite mdio=example.mdio data=amplitude reduced=y &&
+         mdioread mdio=example.mdio data=amplitude read=d |
+         bandpass flo=5 fhi=45 |
+         mdiowrite mdio=filtered.mdio data=amplitude &&
+         mdioread mdio=filtered.mdio data=amplitude read=d
+         ''')
+
+    def grey(title):
+        return '''
+        window n3=1 |
+        grey title="%s" label1=Time unit1=s label2=Crossline unit2=m
+        ''' % title
+
+    Plot('synth', grey('Input'))
+    Plot('filtered', grey('Bandpass 5-45 Hz through the MDIO pipe'))
+
+    Result('mdio', 'synth filtered', 'SideBySideAniso')
+
+End()
