@@ -26,8 +26,8 @@ http://www.ahay.org/blog/2013/03/10/program-of-the-month-sfpow/
 
 int main(int argc, char *argv[])
 {
-    int n[SF_MAX_DIM], ii[SF_MAX_DIM], j, nd, id, ix, nx, nbuf;
-    off_t i, nsiz;
+    int j, nd, id, ix, nx, nbuf;
+    off_t n[SF_MAX_DIM], ii[SF_MAX_DIM], i, nsiz;
     float d, o, p, *gain[SF_MAX_DIM], *buf=NULL;
     char key[6], *prog=NULL;
     sf_file in=NULL, out=NULL;
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    nd = sf_filedims (in, n);
+    nd = sf_largefiledims (in, n);
     nsiz = 1;
 
     nbuf = BUFSIZ/sizeof(float);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	sf_floatread(buf,nbuf,in);
 
 	for (j=0; j < nbuf; j++, i++) {
-	    sf_line2cart(nd,n,i,ii);
+	    sf_large_line2cart(nd,n,i,ii);
 	    for (id=0; id < nd; id++) {
 		if (NULL != gain[id]) buf[j] *= gain[id][ii[id]]; 
 	    }

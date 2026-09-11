@@ -229,12 +229,12 @@ Flow(costs,[upd,semblst[len(semblst)-1]],
       lambda=%g  epsilon=%g
       '''%(thislmbda,epsilon))
 # make a convergence movie #119
-Result(upd,
-   '''
-   window j3=2|
-   grey color=j barlabel="Horizon Time" barunit=s allpos=y bias=%g scalebar=y 
-   minval=%g maxval=%g gainpanel=85 label2=Inline unit1= unit2= title="Horizon Convergence"
-   '''%(1.83+shift,1.83+shift,1.95+shift))
+Plot(upd,
+     '''
+     window j3=2|
+     grey color=j barlabel="Horizon Time" barunit=s allpos=y bias=%g scalebar=y 
+     minval=%g maxval=%g gainpanel=85 label2=Inline unit1= unit2= title="Horizon Convergence"
+     '''%(1.83+shift,1.83+shift,1.95+shift), view=1)
 Result(vpicked,
    '''
    grey color=j barlabel="Horizon Time" barunit=s allpos=y bias=%g scalebar=y 

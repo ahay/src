@@ -26,12 +26,11 @@ def retiredplane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
 
     for i in range(len(layers)):
         inp = mod+'inp%d.rsf' % (i+1)
-        Flow('./'+inp,None,
-             'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
-             (string.join(map(lambda x: string.join(map(str,x)),layers[i]),
-                          ' '),
-              len(layers[i])))
-        
+        Flow('./'+inp, None,
+        'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
+        (' '.join(' '.join(str(num) for num in sublist) for sublist in layers[i]),
+        len(layers[i])))
+
     Flow(mod+'lay1',mod+'inp1','dd form=native | spline %s fp=%s' % (dim1,drvs))
     Flow(mod+'lay2',mod+'inp2','dd form=native | spline %s fp=%s' % (dim1,drvs))
 
@@ -122,10 +121,9 @@ def dipline(mod,s1,s2,e1,e2,vi,vt,n1,o1,d1,n2,o2,d2):
     for i in range(len(layers)):
         inp = mod+'inp%d.rsf' % (i+1)
         Flow('./'+inp,None,
-             'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
-             (string.join(map(lambda x: string.join(map(str,x)),layers[i]),
-                          ' '),
-              len(layers[i])))
+        'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
+        (' '.join(map(lambda x: ' '.join(map(str,x)),layers[i])),
+        len(layers[i])))
         
     Flow(mod+'lay1',mod+'inp1','dd form=native | spline %s fp=%s' % (dim1,drvs))
     Flow(mod+'lay2',mod+'inp2','dd form=native | spline %s fp=%s' % (dim1,drvs))

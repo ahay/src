@@ -70,7 +70,7 @@ Flow(['sxrxvolume.rsf','sxrxvolume_hdr.rsf'],
 	  verbose=1
      ''',stdout=0, stdin=0)
        
-Result('sxrxvolume',"byte |grey3 frame1=500 frame2=500 frame3=500 title='shot/rec volume'")
+Result('sxrxvolume',"window j2=2 j3=2 | byte | grey3 frame1=500 frame2=250 frame3=250 title='shot/rec volume'")
 
 Flow('sxrxsub',
      'sxrxvolume',

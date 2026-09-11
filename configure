@@ -128,7 +128,7 @@ arglist=""
 for i in "$@"
 do
     if test $first -ne $prefixparnum; then
-        arglist=""$arglist" \"\$"$first"\""
+        arglist="$arglist \"$i\""
     fi
     first=`expr $first + 1` 
 done

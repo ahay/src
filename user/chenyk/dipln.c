@@ -48,12 +48,12 @@ static int nn[3];
 
 /*for non-stationary regularization*/
 void odipn_init(char* interp, int mf1, int mf2, float rad,
-	       int m1, int m2, int *nbox, float **rct, int **sft , int niter, float dip0, float eps1, bool vb)
+	       int m1, int m2, int *nbox, float **rct, float **sft , int niter, float dip0, float eps1, bool vb)
 /*< initialize >*/
 {
 /* int *nbox: triangle radius [ndim] */
 /* float **rct: triangle lengths [ndim][nd] */
-/* int **sft: triangle shifts [ndim][nd] */	 
+/* float **sft: triangle shifts [ndim][nd] */	 
 
     int n;
     nf1 = mf1;

@@ -601,8 +601,8 @@ class Project(Environment):
         if suffix == sfsuffix and re.search('/',targets[0]) and 1 == stdout:
             subdir = os.path.dirname(os.path.join(self.path,targets[0]))
             rsf.path.mkdir(subdir)
-            command = command + ' --out=%s' % os.path.join(self.path,'${TARGET}@')
-
+            if not re.search('--out=',command):
+                command = command + ' --out=%s' % os.path.join(self.path,'${TARGET}@')
         if workdir:
             command = re.sub(r'\$(SOURCE|TARGET)',r'${\1.abspath}',command)
             command = re.sub(r'\$\{(SOURCES|TARGETS)(\[[^\]]+\])\}',r'${\1\2.abspath}',command)

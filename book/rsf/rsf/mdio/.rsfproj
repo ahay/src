@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfricker1', 'sfmdiowrite', 'sfmdioread', 'sfbandpass', 'sfwindow', 'sfgrey']
+data=[]
+size=     512000

@@ -12,3 +12,6 @@ Makefile
 *.ltx
 *.vpl
 *.~
+
+# Generated MDIO (Zarr) directory stores, e.g. from the book/rsf/rsf/mdio example
+*.mdio/

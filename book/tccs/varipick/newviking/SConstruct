@@ -151,15 +151,16 @@ Flow('transp','cosft','transp',split=[3,'omp'])
 Flow('map','transp',
      '''
      math output="x1/sqrt(1+0.25*x3*x3*x1*x1/(x2*x2))" | 
-     cut n2=1
+     cut n2=1 
      ''')
 
 Result('map',
        '''
+       window j2=2 j3=2 | 
        byte gainpanel=all allpos=y bar=bar.rsf | 
        grey3 title="Fowler Map" label1=Velocity 
        unit1=km/s label3=Wavenumber barlabel=Velocity barunit=km/s
-       frame1=50 frame2=500 frame3=1000 color=x scalebar=y 
+       frame1=50 frame2=250 frame3=500 color=x scalebar=y 
        ''')
 
 Flow('fowler','transp map','iwarp warp=${SOURCES[1]} | transp',
@@ -397,13 +398,13 @@ Flow('semblance-cont-r',semblst,'cat axis=4 ${SOURCES[1:%i]} | window max1=%g j3
 Flow('semblance-cont-f','semblance-cont semblance-cont-r','cat axis=4 ${SOURCES[1]} | clip2 lower=0 |scale axis=3')
 Flow('semblance-cont-f-bar','semblance-cont-f','byte allpos=y gainpanel=e minval=0')
 
-Result('semblance-cont-f','semblance-cont-f semblance-cont-f-bar', 
-   '''
-   byte  allpos=y gainpanel=e minval=0|
-   grey4 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} 
-   frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power"
-   point1=.9 point2=0.5 color=j flat=n framelabel1=n minval=0
-   '''%(2*nv/3-9,frame3/10))   
+Plot('semblance-cont-f','semblance-cont-f semblance-cont-f-bar', 
+     '''
+     byte  allpos=y gainpanel=e minval=0|
+     grey4 title="DMO Picking Envelope" scalebar=y bar=${SOURCES[1]} 
+     frame1=0 unit2=km/s label2=Velocity frame2=%i frame3=%i barlabel="Stack Power"
+     point1=.9 point2=0.5 color=j flat=n framelabel1=n minval=0
+     '''%(2*nv/3-9,frame3/10))   
 
 Flow('envelope-f-bar',semblst[-1],'window max1=%g | bar gainpanel=e allpos=y'%max1tp )
 Result(name+'-envelope-f',[semblst[-1],'envelope-f-bar'],
