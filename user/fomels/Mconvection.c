@@ -20,11 +20,36 @@
 
 #include <rsf.h>
 
+static double* cnv_init(int nw /* filter order */)
+/*< initialize >*/
+{
+  int j, k, n;
+  double bk, *b;
+
+    n = nw*2;
+    b = (double*) sf_alloc(nw,sizeof(double));
+
+    for (k=0; k < nw; k++) {
+	bk = 1.0;
+	for (j=0; j < n; j++) {
+	    if (j < n-k) {
+	      bk *= (k+j+1.0)/(2*(2*j+1)*(j+1))*(n-j);
+	    } else {
+	      bk *= 1.0/(2*(2*j+1))*(j+1);
+	    }
+	}
+	b[k] = bk;
+    }
+    return b;
+}
+
+
 int main (int argc, char* argv[])
 {
     bool verb, **mm;
     int niter, order, n1, n2, n12, i1, i2, iw, nw, rect[2], m[2];
     float **data, **rhs, ***conv, ***lhs, dif, mean;
+    double *c0;
     sf_file in, flt, mask;
 
     sf_init(argc, argv);
@@ -90,13 +115,20 @@ int main (int argc, char* argv[])
 	}
 	for (i1=order; i1 < n1-order; i1++) {
 	    dif = data[i2+1][i1] - data[i2][i1];
-	    rhs[i2][i1] = dif;
-	    for (iw=1; iw <= order; iw++) {
+	    if (NULL != mask && mm[0][i1+n1*i2]) {
+		rhs[i2][i1] = 0.0f;
+		for (iw=0; iw < nw; iw++) {
+		    lhs[iw][i2][i1] = 0.0f;
+		}
+	    }  else {
+	      rhs[i2][i1] = dif;
+	      for (iw=1; iw <= order; iw++) {
 		lhs[2*iw-2][i2][i1] = dif - data[i2+1][i1+iw] + data[i2][i1-iw];
 		lhs[2*iw-1][i2][i1] = dif - data[i2+1][i1-iw] + data[i2][i1+iw];
+	      }
 	    }
 	    for (iw=0; iw < nw; iw++) {
-		mean += lhs[iw][i2][i1]*lhs[iw][i2][i1];
+	      mean += lhs[iw][i2][i1]*lhs[iw][i2][i1];
 	    }
 	}
 	for (i1=n1-order; i1 < n1; i1++) {
@@ -117,28 +149,39 @@ int main (int argc, char* argv[])
     mean = sqrtf (mean/(n12*2));
     for (i2=0; i2 < n2-1; i2++) {
 	for (i1=order; i1 < n1-order; i1++) {
-	    if (NULL != mask && mm[0][i1+n1*i2]) {
-		rhs[i2][i1] = 0.0f;
-		for (iw=0; iw < nw; iw++) {
-		    lhs[iw][i2][i1] = 0.0f;
-		}
-	    } else {
-		rhs[i2][i1] /= mean;
-		for (iw=0; iw < nw; iw++) {
-		    lhs[iw][i2][i1] /= mean;
-		}
-	    }
+	  rhs[i2][i1] /= mean;
+	  for (iw=0; iw < nw; iw++) {
+	    lhs[iw][i2][i1] /= mean;
+	  }
 	}
+    }
+
+    /* initial filter for zero slope */
+    c0 = cnv_init(order);
+    for (i2=0; i2 < n2-1; i2++) {
+      for (i1=order; i1 < n1-order; i1++) {
+	for (iw=1; iw <= order; iw++) {
+	  rhs[i2][i1] -= lhs[2*iw-2][i2][i1]*c0[order-iw];
+	  rhs[i2][i1] -= lhs[2*iw-1][i2][i1]*c0[order-iw];
+	}
+      }
     }
 
     sf_multidivn (*rhs,**conv,niter);
 
     /* transpose */
     for (i2=0; i2 < n2; i2++) {
-	for (iw=0; iw < nw; iw++) {
-	    sf_floatwrite(conv[iw][i2],n1,flt);
+      for (iw=1; iw <= order; iw++) {
+	for (i1=0; i1 < n1; i1++) {
+	  conv[2*iw-2][i2][i1] += c0[order-iw];
+	  conv[2*iw-1][i2][i1] += c0[order-iw];
 	}
+      }
+      for (iw=0; iw < nw; iw++) {
+	sf_floatwrite(conv[iw][i2],n1,flt);
+      }
     }
+    free(c0);
   
     exit(0);
 }
