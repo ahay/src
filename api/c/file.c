@@ -988,16 +988,24 @@ void sf_putint (sf_file file, const char* key, int par)
 void sf_putints (sf_file file, const char* key, const int* par, size_t n)
 /*< put an int array of size n parameter to a file >*/
 {
-    int i;
+    int i, len;
     char val[1024], *v;
+    size_t left;
 	
     if (NULL == file->dataname) 
 	sf_warning("%s: putints to a closed file",__FILE__);
     v = val;
+    left = sizeof(val);
     for (i=0; i < (int) n-1; i++) {
-	v += snprintf(v,1024,"%d,",par[i]);
+	len = snprintf(v,left,"%d,",par[i]);
+	if (len < 0 || (size_t) len >= left)
+	    sf_error("%s: putints: too many values for %s",__FILE__,key);
+	v += len;
+	left -= len;
     }
-    snprintf(v,1024,"%d",par[n-1]);
+    len = snprintf(v,left,"%d",par[n-1]);
+    if (len < 0 || (size_t) len >= left)
+	sf_error("%s: putints: too many values for %s",__FILE__,key);
 	
     sf_simtab_enter (file->pars,key,val);
 }
@@ -1027,16 +1035,24 @@ void sf_putfloat (sf_file file, const char* key,float par)
 void sf_putfloats (sf_file file, const char* key, const float* par, size_t n)
 /*< put a float array of size n parameter to a file >*/
 {
-    int i;
+    int i, len;
     char val[1024], *v;
+    size_t left;
 	
     if (NULL == file->dataname) 
 	sf_warning("%s: putfloats to a closed file",__FILE__);
     v = val;
+    left = sizeof(val);
     for (i=0; i < (int) n-1; i++) {
-	v += snprintf(v,1024,"%g,",par[i]);
+	len = snprintf(v,left,"%g,",par[i]);
+	if (len < 0 || (size_t) len >= left)
+	    sf_error("%s: putfloats: too many values for %s",__FILE__,key);
+	v += len;
+	left -= len;
     }
-    snprintf(v,1024,"%g",par[n-1]);
+    len = snprintf(v,left,"%g",par[n-1]);
+    if (len < 0 || (size_t) len >= left)
+	sf_error("%s: putfloats: too many values for %s",__FILE__,key);
 	
     sf_simtab_enter (file->pars,key,val);
 }
