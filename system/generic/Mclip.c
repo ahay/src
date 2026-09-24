@@ -34,7 +34,8 @@ http://ahay.org/blog/2011/09/03/program-of-the-month-sfclip/
 int main(int argc, char* argv[])
 {
     bool nan;
-    int i, n, nbuf;
+    int i, nbuf;
+    off_t n;
     float clip, value, *trace;
     sf_file in=NULL, out=NULL; /* Input and output files */
 
