@@ -146,7 +146,16 @@ int main(int argc, char *argv[])
     N2w = n2/n2w;
 
     /* Computute FFT optimization number */
-    nfft = 2*kiss_fft_next_fast_size((n1wf+1)/2);
+    {   int n1wmax = n1wf;               /* first window - the only one stock considered */
+        if (N1w<=1) {
+            if (n1>n1wmax) n1wmax = n1;              /* single window spans the trace   */
+        } else {
+            int n1wl = n1 - n1ws*(N1w-1) + n1taper/2;    /* last window                 */
+            if (N1w>2 && n1wi>n1wmax) n1wmax = n1wi;     /* interior windows            */
+            if (n1wl   >n1wmax) n1wmax = n1wl;
+        }
+        nfft = 2*kiss_fft_next_fast_size((n1wmax+1)/2);
+    }
 
     forw = kiss_fftr_alloc(nfft,0,NULL,NULL);
     invs = kiss_fftr_alloc(nfft,1,NULL,NULL);
@@ -178,12 +187,11 @@ int main(int argc, char *argv[])
     ipvt 	= sf_intalloc(4*n2w);
     info	= sf_floatalloc(4*n2w);
 
+    for (i3=0;i3<n3;i3++)
+    {
     /* zero output file */
     memset((void *) traceout[0], 0, n2*n1*sizeof(float));
 
-
-    for (i3=0;i3<n3;i3++)
-    {
     /* load traces into the zero-offset array and close tmpfile */
     sf_floatread(tracein[0],n1*n2,in);	
 	
