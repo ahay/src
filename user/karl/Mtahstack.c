@@ -329,7 +329,7 @@ int main(int argc, char* argv[])
 
     /* did any of the header keys in indx_of_keys change? */
     pkeychanged=false;
-    if(itrace>0){
+    if(!eof_get_tah){
       for(ikey=0; ikey<numkeys; ikey++){
 	if(typehead == SF_INT){
 	  if(((int*)fheader  )[indx_of_keys[ikey]]!=
