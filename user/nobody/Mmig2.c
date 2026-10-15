@@ -20,9 +20,10 @@
 
 int main(int argc, char* argv[])
 {
+    bool adj;
     int nt, nx, ix, n1, it, iz, itp, itm, ntr, itr, i;
     char *antialias;
-    float hdr[2], *trace, tt, **out;
+    float hdr[2], *trace, tt, **img;
     float h_in, x_in, hx, ftm, ftp, imp;
     float x, z, t, dx, ox, rx, ft;
     float h, sq, ti, tx, ot, dt, tm, tp, vel;
@@ -33,6 +34,9 @@ int main(int argc, char* argv[])
     head = sf_input("hdr");
     mig = sf_output("out");
 
+    if (!sf_getbool("adj",&adj)) adj=true;
+    /* adjoint flag */
+    
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     ntr = sf_leftsize(in,1);
 
@@ -54,10 +58,10 @@ int main(int argc, char* argv[])
     vel *= vel;
 
     trace = sf_floatalloc(nt);
-    out = sf_floatalloc2(n1,nx);
+    img = sf_floatalloc2(n1,nx);
 
     for (i=0; i < n1*nx; i++) {
-	out[0][i] = 0.;
+	img[0][i] = 0.;
     }
 
     for (itr=0; itr < ntr; itr++) {
@@ -122,20 +126,34 @@ int main(int argc, char* argv[])
 		    
 		    imp = dt/(dt+tp-tm);
 		    imp *= imp;
-		    
-		    out[ix][iz] += imp*(
-			2.*(1.-ft)*trace[it] + 2.*ft*trace[it+1] -
-			(1.-ftm)*trace[itm] - ftm*trace[itm+1]    - 
-			(1.-ftp)*trace[itp] - ftp*trace[itp+1]);
+
+		    if (adj) {
+			img[ix][iz] += imp*(
+			    2.*(1.-ft)*trace[it] + 2.*ft*trace[it+1] -
+			    (1.-ftm)*trace[itm] - ftm*trace[itm+1]    - 
+			    (1.-ftp)*trace[itp] - ftp*trace[itp+1]);
+		    } else {
+			trace[it]    += imp*2.*(1.-ft)*img[ix][iz];
+			trace[it+1]  += imp*2.*ft*img[ix][iz];
+			trace[itm]   -= imp*(1.-ftm)*img[ix][iz];
+			trace[itm+1] -= imp*ftm*img[ix][iz];
+			trace[itp]   -= imp*(1.-ftp)*img[ix][iz];
+			trace[itp+1] -= imp*ftp*img[ix][iz];
+		    }
 		} else {
-		    out[ix][iz] +=
-			(1.-ft)*trace[it] + ft*trace[it+1];
+		    if (adj) {
+			img[ix][iz] +=
+			    (1.-ft)*trace[it] + ft*trace[it+1];
+		    } else {
+			trace[it] += (1.-ft)*img[ix][iz];
+			trace[it+1] += ft*img[ix][iz];
+		    }
 		}
 	    } /* iz */
 	} /* ix */
     } /* itr */
 
-    sf_floatwrite(out[0],n1*nx,mig);        
+    if (adj) sf_floatwrite(img[0],n1*nx,mig);        
 
     exit(0);
 }
