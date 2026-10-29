@@ -24,10 +24,11 @@
 int main(int argc, char* argv[])
 {
   bool verb, drift, ***mm;
-  int it, nt, two, ie, ne, pair[2], esize, k0, k1, niter, liter, rect[3], order, nj1;
+  int it, nt, n1, ie, ne, pair[2], esize, k0, k1, niter, liter, rect[3], order, nj1;
   off_t pos, mpos;
-  float **traces, **mtraces, **dip, p0, eps, pmin, pmax, t0, dt;
-  sf_file inp, shift, edge, msk;
+  float **traces, **mtraces, **dip, **one, **two, **rat1, **rat2, p0, eps, pmin, pmax, t0, dt;
+  sf_map4 pick;
+  sf_file inp, shift, edge, msk, weight;
 
   esize = sizeof(float);
 
@@ -37,7 +38,7 @@ int main(int argc, char* argv[])
   shift = sf_output("out");
 
   if (SF_INT != sf_gettype(edge)) sf_error("Need int edge");
-  if (!sf_histint(edge,"n1",&two) || two != 2) sf_error("No n1=2 in edge");
+  if (!sf_histint(edge,"n1",&n1) || n1 != 2) sf_error("No n1=2 in edge");
   if (!sf_histint(edge,"n2",&ne)) sf_error("No n2= in edge");
 
   if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
@@ -99,6 +100,28 @@ int main(int argc, char* argv[])
   /* initialize dip estimation */
   dip3_init(nt, 2, 1, rect, liter, eps, false);
 
+  if (NULL != sf_getstring("weight")) {
+    weight = sf_output("weight");
+    sf_putint(weight,"n1",nt);
+    sf_putint(weight,"n2",ne);
+    sf_settype(weight, SF_FLOAT);
+
+    pick = sf_stretch4_init(nt, 0.0, 1.0, nt, eps);
+   
+    rat1 = sf_floatalloc2(nt, 2);
+    rat2 = sf_floatalloc2(nt, 2);
+    one = sf_floatalloc2(nt, 2);
+    two = sf_floatalloc2(nt, 2);
+    for (it=0; it < nt; it++) {
+      one[1][it] = 0.0f;
+      two[1][it] = 0.0f;
+    }
+  } else {
+    weight = NULL;
+    pick = NULL;
+    rat1 = rat2 = one = two = NULL;
+  }
+
   k0 = k1 = -1;
   pos = sf_tell(inp);
   if (NULL != msk) mpos = sf_tell(msk);
@@ -147,6 +170,22 @@ int main(int argc, char* argv[])
 	
     /* write t-x dip */
     sf_floatwrite(dip[0],nt,shift);
+
+    if (NULL != weight) {
+      /* interpolate */
+      for (it=0; it < nt; it++) {
+	dip[0][it] += it;
+	one[0][it] = traces[0][it];
+      }
+      sf_stretch4_define(pick, dip[0], false);
+      sf_stretch4_invert(false, pick, two[0], traces[1]);
+      
+      /* compute similarity */
+      sf_divne(one[0],two[0],rat1[0],eps);
+      sf_divne(two[0],one[0],rat2[0],eps);
+      sf_divn_combine (rat1[0],rat2[0],rat1[0]);
+      sf_floatwrite(rat1[0],nt,weight);
+    }
   }
   if (verb) sf_warning(".");
   

@@ -12,6 +12,15 @@ Flow('test.attr','clip.jl',
             os.environ.get('LD_LIBRARY_PATH',libpath),
             WhereIs('julia')),stdin=0)
 
+Flow('test2.attr','clip2.jl',
+     '''
+     spike n1=1000 n2=100 n3=10 nsp=1 k1=500 |  
+     JULIA_LOAD_PATH=%s LD_LIBRARY_PATH=%s %s 
+     ./$SOURCE clip=0.5 | attr
+     ''' % (os.environ.get('JULIA_LOAD_PATH',libpath),
+            os.environ.get('LD_LIBRARY_PATH',libpath),
+            WhereIs('julia')),stdin=0)
+
 binary = Command('afdm.exe','afdm.jl','cp $SOURCE $TARGET')
 AddPostAction(binary,Chmod(binary,0o755))
 

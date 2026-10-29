@@ -22,17 +22,15 @@
 
 int main (int argc, char* argv[])
 {
-  bool adj, weight;
+  bool adj;
   int ntr, nr, ie, ne, two, it, nt, i, j, n1, **pairs;
-  float eps, w, **traces, *shift, *sft, *picked;
+  float eps, **traces, *shift, *sft, *wht, *picked;
   sf_map4 pick;
-  sf_file shifts, edges, rgts, sfts;
+  sf_file shifts, edges, rgts, sfts, whts;
 
   sf_init(argc, argv);
 
   if (!sf_getbool("adj",&adj)) adj=false;
-  /* adjoint flag */
-  if (!sf_getbool("weight",&weight)) weight=false;
   /* adjoint flag */
 
   shifts = sf_input("shift");
@@ -40,6 +38,14 @@ int main (int argc, char* argv[])
   if (!sf_histint(shifts,"n1",&nt)) sf_error("Need n1= in shift");
   if (!sf_histint(shifts,"n2",&nr)) sf_error("Need n2= in shift");
 
+  if (NULL != sf_getstring("weight")) {
+    whts = sf_input("weight");
+    wht = sf_floatalloc(nt);
+  } else {
+    whts = NULL;
+    wht = NULL;
+  }
+    
   if (adj) {
     sfts = sf_input("in");
     rgts = sf_output("out");
@@ -93,22 +99,33 @@ int main (int argc, char* argv[])
       shift[it] += it;
     }
     sf_stretch4_define(pick, shift, false);
+
+    if (NULL != wht) sf_floatread(wht,nt,whts);
     
     i = pairs[ie][0];
     j = pairs[ie][1];
-    w = weight? 1.0f/SF_ABS(i-j): 1.0f;
     
     if (adj) {
       sf_floatread(sft,nt,sfts);
+      if (NULL != wht) {
+	for (it=0; it < nt; it++) {
+	  sft[it] *= wht[it];
+	}
+      }
       sf_stretch4_invert_adj(false, pick, sft, picked);
       for (it=0; it < nt; it++) {
-	traces[i][it] += w*sft[it];
-	traces[j][it] -= w*picked[it];
+	traces[i][it] += sft[it];
+	traces[j][it] -= picked[it];
       }
     } else {
       sf_stretch4_invert(false, pick, picked, traces[j]);
       for (it=0; it < nt; it++) {
-	sft[it] = w*(traces[i][it] - picked[it]);
+	sft[it] = traces[i][it] - picked[it];
+      }
+      if (NULL != wht) {
+	for (it=0; it < nt; it++) {
+	  sft[it] *= wht[it];
+	}
       }
       sf_floatwrite(sft,nt,sfts);
     }
