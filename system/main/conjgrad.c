@@ -314,7 +314,7 @@ int main(int argc, char* argv[])
 
 		   if (NULL != known) { 
 		       sf_intread(mask,mbuf,known);
-		       for (i=0; i < mbuf; i++) { sf_warning("%d %d",i,mask[i]); if (mask[i]) buf[i] = 0.0f; }
+		       for (i=0; i < mbuf; i++) { if (mask[i]) buf[i] = 0.0f; }
 		   }
 
 		   for (i=0; i < mbuf; i++) { rn += (double) buf[i] * buf[i]; }

@@ -9,13 +9,16 @@ n1 = getint(inp, "n1")
 n2 = leftsize(inp, 1)
 
 clip = getfloat("clip")
+if clip == :none
+   error("Need clip=")
+end
 
 trace = Array{Float32}(undef, n1)
 
 for i2 in 1:n2
-    floatread(inp, trace)
+    dataread!(inp, trace)
     clamp!(trace, -clip, clip)
-    floatwrite(out, trace)
+    datawrite(out, trace)
 end
 
 fileclose(inp)
