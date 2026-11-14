@@ -21,7 +21,7 @@
 int main(int argc, char* argv[])
 {
     int it, nt, ix, nx;
-    float ot, dt, ox, dx, t0, ti, x, *t, *p, v, *vt;
+    float ot, dt, ox, dx, t0, t1, t2, x, *t, *p, v, *vt;
     sf_file vel, tp;
 
     sf_init(argc,argv);
@@ -55,10 +55,10 @@ int main(int argc, char* argv[])
 	    t0 = ot+it*dt;
 	    v = vt[it];
 	    
-	    ti = sqrtf(t0*t0+x*x/(v*v));
-	    t[it] = ti;
-	    if (ti < dt) ti=dt; 
-	    p[it] = x/(ti*v*v);
+	    t1 = sqrtf(t0*t0+x*x/(v*v));
+	    t2 = sqrtf(t0*t0+(x+dx)*(x+dx)/(v*v));
+	    t[it] = t1;	    
+	    p[it] = (t2-t1)/dt;
 	}
 	t[nt] = ot-dt;
 	p[nt] = 0.0f;
