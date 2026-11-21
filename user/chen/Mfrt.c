@@ -126,9 +126,10 @@ int main(int argc, char* argv[])
        Each chunk is read serially, transformed in parallel with one
        frt handle (operator and LAPACK workspace) and one input/output
        buffer per slice, and then written serially in frequency order. */
-    nth = 1;
 #ifdef _OPENMP
     nth = omp_get_max_threads();
+#else
+    nth = 1;
 #endif
     if(nth > nw) nth = nw;
     if(nth < 1) nth = 1;
