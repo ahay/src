@@ -31,16 +31,16 @@ int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], dim;
     int n1, n2, nn, nw;
-    int iw;
+    int iw, iw0, ic, nc, nth;
     float d1, d2, o1, o2, ow, dw;
     sf_file in, out, ref;
     bool inv;
     int curv, mtd, niter;
     float x0, maxoff, mu, eta, rfreq, t1, t2;
     char buf[8];
-    void *h;
+    void **h;
 
-    sf_complex **ibuf, **obuf, **rbuf=NULL;
+    sf_complex ***ibuf, ***obuf, **rbuf=NULL;
 
     sf_init(argc, argv);
 
@@ -122,70 +122,99 @@ int main(int argc, char* argv[])
     sf_putfloat(out, "o1", o2);
     sf_putfloat(out, "d1", d2);
 
-    ibuf = sf_complexalloc2(n1, nn);
-    obuf = sf_complexalloc2(n2, nn);
+    /* Frequency slices are processed in chunks of nth slices.
+       Each chunk is read serially, transformed in parallel with one
+       frt handle (operator and LAPACK workspace) and one input/output
+       buffer per slice, and then written serially in frequency order. */
+#ifdef _OPENMP
+    nth = omp_get_max_threads();
+#else
+    nth = 1;
+#endif
+    if(nth > nw) nth = nw;
+    if(nth < 1) nth = 1;
 
-    if(inv)
-    {	
-	h =	sf_frt_init(mtd, curv,
-			    o2/x0, d2/x0, n2, 	// offset
-			    o1, d1, n1				// stepout
-	    );
-    }else{
-	h =	sf_frt_init(mtd, curv,
-			    o1/x0, d1/x0, n1, 	// offset
-			    o2, d2, n2				// stepout
-	    );
-	if(mtd == 3)
-	{
-	    sprintf(buf,"o%d",dim);
-	    if (!sf_histfloat(ref, buf, &rfreq)) 
-		sf_error("No o%d= in input", dim);
-	    sf_complexread(ibuf[0], n1*nn, ref);
-	    rbuf = sf_complexalloc2(n2, nn);
-	    sf_fhrt(h, rfreq, ibuf, rbuf, nn, mu, eta, niter);
-	    sf_fhrt_reg(rbuf, n2, nn, mu, eta);
-	}
+    ibuf = sf_complexalloc3(n1, nn, nth);
+    obuf = sf_complexalloc3(n2, nn, nth);
+    h = (void**) sf_alloc(nth, sizeof(void*));
+
+    for(ic=0; ic<nth; ic++)
+    {
+	if(inv)
+	    h[ic] = sf_frt_init(mtd, curv,
+				o2/x0, d2/x0, n2, 	// offset
+				o1, d1, n1		// stepout
+		);
+	else
+	    h[ic] = sf_frt_init(mtd, curv,
+				o1/x0, d1/x0, n1, 	// offset
+				o2, d2, n2		// stepout
+		);
     }
 
-#ifdef _OPENMP
-#pragma omp parallel for  ordered       \
-    schedule(dynamic,5)          \
-    private(iw)                  
-#endif
-    for(iw=0; iw<nw; iw++)
+    if(!inv && mtd == 3)
     {
-	sf_complexread(ibuf[0], n1*nn, in);
-	if(inv)	
-	    sf_ifart(h, ow+dw*iw, ibuf, obuf, nn);
-	else
+	sprintf(buf,"o%d",dim);
+	if (!sf_histfloat(ref, buf, &rfreq)) 
+	    sf_error("No o%d= in input", dim);
+	sf_complexread(ibuf[0][0], n1*nn, ref);
+	rbuf = sf_complexalloc2(n2, nn);
+	sf_fhrt(h[0], rfreq, ibuf[0], rbuf, nn, mu, eta, niter);
+	sf_fhrt_reg(rbuf, n2, nn, mu, eta);
+    }
+
+    for(iw0=0; iw0<nw; iw0+=nth)
+    {
+	nc = (nw-iw0 < nth)? nw-iw0: nth;
+
+	sf_complexread(ibuf[0][0], (size_t) n1*nn*nc, in);
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1) private(ic,iw)
+#endif
+	for(ic=0; ic<nc; ic++)
 	{
-	    switch(mtd)
+	    iw = iw0+ic;
+	    if(inv)	
+		sf_ifart(h[ic], ow+dw*iw, ibuf[ic], obuf[ic], nn);
+	    else
 	    {
-		case 1:
-		    sf_firt(h, ow+dw*iw, ibuf, obuf, nn, mu);
-		    break;
-		case 2:
-		    sf_fhrt(h, ow+dw*iw, ibuf, obuf, nn, mu, eta, niter);
-		    break;
-		case 3:
-		    sf_fcrt(h, ow+dw*iw, ibuf, obuf, rbuf, nn);
-		    break;
-		default:
-		    sf_fart(h, ow+dw*iw, ibuf, obuf, nn);
-		    break;
+		switch(mtd)
+		{
+		    case 1:
+			sf_firt(h[ic], ow+dw*iw, ibuf[ic], obuf[ic], nn, mu);
+			break;
+		    case 2:
+			sf_fhrt(h[ic], ow+dw*iw, ibuf[ic], obuf[ic], nn,
+				mu, eta, niter);
+			break;
+		    case 3:
+			sf_fcrt(h[ic], ow+dw*iw, ibuf[ic], obuf[ic], rbuf, nn);
+			break;
+		    default:
+			sf_fart(h[ic], ow+dw*iw, ibuf[ic], obuf[ic], nn);
+			break;
+		}
 	    }
 	}
 
-	sf_complexwrite(obuf[0], n2*nn, out);
+	sf_complexwrite(obuf[0][0], (size_t) n2*nn*nc, out);
     }
 
-    sf_frt_close(h);
+    for(ic=0; ic<nth; ic++) sf_frt_close(h[ic]);
+    free(h);
 
+    free(ibuf[0][0]);
     free(ibuf[0]);
     free(ibuf);
+    free(obuf[0][0]);
     free(obuf[0]);
     free(obuf);
+    if(rbuf != NULL)
+    {
+	free(rbuf[0]);
+	free(rbuf);
+    }
     return 0;
 }
 
